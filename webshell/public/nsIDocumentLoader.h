@@ -102,7 +102,7 @@ public:
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
 #ifdef NECKO
-                            PRUint32 aType = nsIChannel::LOAD_NORMAL,
+                            nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
 #else
                             nsURLReloadType aType = nsURLReload,
 #endif
@@ -111,7 +111,7 @@ public:
     NS_IMETHOD LoadSubDocument(const nsString& aURLSpec,
                                nsISupports* aExtraInfo = nsnull,
 #ifdef NECKO
-                               PRUint32 aType = nsIChannel::LOAD_NORMAL,
+                               nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
 #else
                                nsURLReloadType aType = nsURLReload,
 #endif

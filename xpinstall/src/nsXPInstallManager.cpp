@@ -290,9 +290,9 @@ nsXPInstallManager::OnStatus(nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsXPInstallManager::OnStartBinding(nsISupports *ctxt)
+nsXPInstallManager::OnStartRequest(nsISupports *ctxt)
 #else
-nsXPInstallManager::OnStartBinding(nsIURI* aURL, 
+nsXPInstallManager::OnStartRequest(nsIURI* aURL, 
                              const char *aContentType)
 #endif
 {
@@ -302,10 +302,10 @@ nsXPInstallManager::OnStartBinding(nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsXPInstallManager::OnStopBinding(nsISupports *ctxt, nsresult status, 
+nsXPInstallManager::OnStopRequest(nsISupports *ctxt, nsresult status, 
                                   const PRUnichar *errorMsg)
 #else
-nsXPInstallManager::OnStopBinding(nsIURI* aURL,
+nsXPInstallManager::OnStopRequest(nsIURI* aURL,
                                         nsresult status,
                                         const PRUnichar* aMsg)
 #endif

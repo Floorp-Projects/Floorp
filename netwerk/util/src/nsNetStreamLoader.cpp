@@ -44,8 +44,6 @@ public:
   NS_IMETHOD GetNumCharsRead(PRInt32* aNumBytes);
 
   // nsIStreamObserver methods
-  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
   NS_IMETHOD OnStartRequest(nsISupports *ctxt);
   NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
@@ -138,28 +136,16 @@ nsUnicharStreamLoader::GetNumCharsRead(PRInt32* aNumBytes)
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStartBinding(nsISupports *ctxt)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
-{
-  (*mFunc)(this, *mData, mRef, status);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsUnicharStreamLoader::OnStartRequest(nsISupports *ctxt)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsUnicharStreamLoader::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 {
+  (*mFunc)(this, *mData, mRef, status);
+
   return NS_OK;
 }
 

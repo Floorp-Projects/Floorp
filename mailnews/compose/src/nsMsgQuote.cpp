@@ -243,7 +243,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   }
 
   // Assuming this is an RFC822 message...
-  mimeParser->OnStartBinding(aURL, MESSAGE_RFC822);
+  mimeParser->OnStartRequest(aURL, MESSAGE_RFC822);
 
   // Just pump all of the data from the file into libmime...
   while (NS_SUCCEEDED(fileStream->PumpFileStream()))
@@ -253,7 +253,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
     mimeParser->OnDataAvailable(aURL, in, len);
   }
 
-  mimeParser->OnStopBinding(aURL, NS_OK, nsnull);
+  mimeParser->OnStopRequest(aURL, NS_OK, nsnull);
   in->Close();
   ptr->mTmpFileSpec->Delete(PR_FALSE);
   NS_RELEASE(ptr);

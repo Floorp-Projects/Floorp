@@ -48,11 +48,11 @@ public:
 
 	// I expect most protocols to override this method AND call into the base class
 	// the base class takes the url and sets the state of the url passed in to be running
-	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+	NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away.
 	// the base class implementation takes the url and sets the url state to NOT running.
-	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// Ideally, a protocol should only have to support the stream listener methods covered above. 
 	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using

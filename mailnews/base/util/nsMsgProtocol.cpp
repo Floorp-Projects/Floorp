@@ -142,14 +142,14 @@ NS_IMETHODIMP nsMsgProtocol::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStr
 	return ProcessProtocolState(aURL, aIStream, aLength);
 }
 
-NS_IMETHODIMP nsMsgProtocol::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
 	return aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
 	return aMsgUrl->SetUrlState(PR_FALSE, aStatus);

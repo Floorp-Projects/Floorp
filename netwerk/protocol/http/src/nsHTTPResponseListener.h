@@ -30,8 +30,8 @@ class nsIHTTPChannel;
 
 /* 
     The nsHTTPResponseListener class is the response reader listener that 
-    receives notifications of OnStartBinding, OnDataAvailable and 
-    OnStopBinding as the data is received from the server. Each instance 
+    receives notifications of OnStartRequest, OnDataAvailable and 
+    OnStopRequest as the data is received from the server. Each instance 
     of this class is tied to the corresponding transport that it reads the
     response data stream from. 
 
@@ -62,13 +62,11 @@ public:
                                PRUint32 aLength);
 
 
-    NS_IMETHOD OnStartBinding(nsISupports* context);
+    NS_IMETHOD OnStartRequest(nsISupports* context);
 
-    NS_IMETHOD OnStopBinding(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg);
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 protected:
     // nsHTTPResponseListener methods...

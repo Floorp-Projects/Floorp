@@ -167,7 +167,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIURI* aURL, nsIInpu
 	rv = mDestination->CopyData(aIStream, aLength);
 	return rv;
 }
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	nsCOMPtr<nsIMessage> message;
 	nsresult rv;
@@ -190,7 +190,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStatus(nsIURI* aURL, const PRUnicha
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsresult rv = NS_OK;
 	PRBool copySucceeded = (aStatus == NS_BINDING_SUCCEEDED);

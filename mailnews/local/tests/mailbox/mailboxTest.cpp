@@ -39,7 +39,7 @@
 // Oh one more thing. Data is passed from the mailbox protocol to the mailbox parse
 // through calls to ::OnDataAvailable which provides the mailbox parser with the url,
 // stream and the number of bytes available to be read.
-// A call to ::OnStopBinding is a signal to the mailbox parser that you've reached
+// A call to ::OnStopRequest is a signal to the mailbox parser that you've reached
 // the end of the file.
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -203,8 +203,8 @@ public:
 	NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} 
 	
 	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
-	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
+	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
@@ -597,7 +597,7 @@ NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIURI* aURL, nsIInputStream 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxTestDriver::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMailboxTestDriver::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	nsIMailboxUrl * mailboxUrl = nsnull;
 	if (aURL)
@@ -615,7 +615,7 @@ NS_IMETHODIMP nsMailboxTestDriver::OnStartBinding(nsIURI* aURL, const char *aCon
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxTestDriver::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMailboxTestDriver::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	nsIMailboxUrl * mailboxUrl = nsnull;
 	if (aURL)

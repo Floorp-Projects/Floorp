@@ -797,9 +797,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
+	nsMsgProtocol::OnStopRequest(aURL, aStatus, aMsg);
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
@@ -3728,7 +3728,11 @@ PRInt32 nsNNTPProtocol::Cancel()
   old_from = m_cancelFromHdr;
   id = m_cancelID;
 
+#ifdef NECKO
+  NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+#else
   NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kCNetSupportDialogCID,&rv);
+#endif
   if (NS_FAILED(rv)) return -1;  /* unable to get the dialog service */
 
   PR_ASSERT (id && newsgroups);
@@ -4883,9 +4887,9 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				// cache so we aren't creating new connections to process each request...
 				// but until that time, we always want to properly shutdown the connection
 
-				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopBinding to get called
+				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopRequest to get called
 				if (m_transport)
-					m_transport->OnStopBinding(mailnewsurl, 0, nsnull);
+					m_transport->OnStopRequest(mailnewsurl, 0, nsnull);
 				CloseSocket();
 				return NS_OK;
 				//SetFlag(NNTP_PAUSE_FOR_READ);

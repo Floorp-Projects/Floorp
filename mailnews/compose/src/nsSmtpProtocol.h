@@ -81,7 +81,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 private:
 	// Smtp Event Sinks

@@ -53,9 +53,9 @@ public:
   NS_IMETHOD GetBindInfo(nsIURI* aURL);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRInt32 Progress, PRInt32 ProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const nsString& aMsg);
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRInt32 length);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, PRInt32 status, const nsString& aMsg);
 
   PRBool IsDone() const { return mDone; }
   PRBool HaveError() const { return mError; }
@@ -104,7 +104,7 @@ StreamToFile::OnStatus(nsIURI* aURL, const nsString& aMsg)
 }
 
 NS_IMETHODIMP
-StreamToFile::OnStartBinding(nsIURI* aURL, const char *aContentType)
+StreamToFile::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
   return 0;
 }
@@ -128,7 +128,7 @@ StreamToFile::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream,
 
 
 NS_IMETHODIMP
-StreamToFile::OnStopBinding(nsIURI* aURL, PRInt32 status, const nsString& aMsg)
+StreamToFile::OnStopRequest(nsIURI* aURL, PRInt32 status, const nsString& aMsg)
 {
   mDone = PR_TRUE;
   if (0 != status) {

@@ -20,10 +20,16 @@
 
 interface nsIChannel;
 interface nsISimpleEnumerator;
+interface nsIStreamObserver;
 
+/**
+ * A load group maintains a collection of active URL requests. 
+ */
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest
 {
+    void Init(in nsILoadGroup parent);
+
     /**
      * Accesses the default load attributes for the group, returned as
      * a flag word. Setting the default load attributes will cause them
@@ -47,6 +53,23 @@ interface nsILoadGroup : nsIRequest
      * Enumerator element type: nsIChannel.
      */
     readonly attribute nsISimpleEnumerator Channels;
+
+    /**
+     * Adds an observer to the group. The observer's methods will be 
+     * called for each channel in the group.
+     */
+    void AddObserver(in nsIStreamObserver observer);
+
+    /**
+     * Removes an observer from the group.
+     */
+    void RemoveObserver(in nsIStreamObserver observer);
+
+    /**
+     * Returns the observers contained directly in this group.
+     * Enumerator element type: nsIStreamObserver.
+     */
+    readonly attribute nsISimpleEnumerator Observers;
 
     /**
      * Adds a new sub-group to the group.

@@ -163,10 +163,10 @@ nsURLFetcher::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream,
 * used to cancel the URL load..
 */
 nsresult
-nsURLFetcher::OnStartBinding(nsIURI* aURL, const char *aContentType)
+nsURLFetcher::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 #ifdef NS_DEBUG_richie
-  printf("nsURLFetcher::OnStartBinding() for Content-Type: %s\n", aContentType);
+  printf("nsURLFetcher::OnStartRequest() for Content-Type: %s\n", aContentType);
 #endif
 
   if (aContentType)
@@ -216,10 +216,10 @@ nsURLFetcher::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 * @return The return value is currently ignored.
 */
 nsresult
-nsURLFetcher::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsURLFetcher::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG_richie
-  printf("nsURLFetcher::OnStopBinding()\n");
+  printf("nsURLFetcher::OnStopRequest()\n");
 #endif
 
   //

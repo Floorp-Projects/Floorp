@@ -1299,6 +1299,7 @@ nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
     nsIURI* url = nsnull;
 #ifdef NECKO    // XXX we need to get passed in the nsILoadGroup here!
+//    nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
     result = NS_NewURI(&url, aHref, mDocumentBaseURL/*, group*/);
 #else
     nsILoadGroup* LoadGroup = nsnull;
@@ -1842,11 +1843,11 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
       nsAutoString absURL;
-      nsIURI* docURL = mDocument->GetDocumentURL();
-#ifdef NECKO
-      // XXX we need to be passed the nsILoadGroup here
+#ifdef NECKO    // XXX we need to get passed in the nsILoadGroup here!
+//      nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
       rv = NS_NewURI(&url, absURL/*, group*/);
 #else
+      nsIURI* docURL = mDocument->GetDocumentURL();
       nsILoadGroup* group = nsnull;
       rv = docURL->GetLoadGroup(&group);
       if ((NS_OK == rv) && group) {
@@ -1856,8 +1857,8 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       else {
         rv = NS_NewURL(&url, absURL);
       }
-#endif
       NS_RELEASE(docURL);
+#endif
       if (NS_OK != rv) {
         return rv;
       }

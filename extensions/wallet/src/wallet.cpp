@@ -420,7 +420,25 @@ Wallet_Localize(char* genericString) {
 /**********************/
 
 PUBLIC PRBool
-Wallet_Confirm(char * szMessage) {
+Wallet_Confirm(char * szMessage)
+{
+#ifdef NECKO
+  PRBool retval = PR_TRUE; /* default value */
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+
+  const nsString message = szMessage;
+  res = dialog->Confirm(message.GetUnicode(), &retval);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+
+  return retval;
+#else
   PRBool retval = PR_TRUE; /* default value */
   nsINetSupportDialogService* dialog = NULL;
   nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
@@ -434,10 +452,23 @@ Wallet_Confirm(char * szMessage) {
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
   return retval;
+#endif
 }
 
 PUBLIC void
-Wallet_Alert(char * szMessage) {
+Wallet_Alert(char * szMessage)
+{
+#ifdef NECKO
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return;     // XXX should return the error
+  }
+
+  const nsString message = szMessage;
+  res = dialog->Alert(message.GetUnicode());
+  return;     // XXX should return the error
+#else
   nsINetSupportDialogService* dialog = NULL;
   nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
   nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
@@ -450,10 +481,33 @@ Wallet_Alert(char * szMessage) {
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
   return;
+#endif
 }
 
 PUBLIC PRBool
-Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue) {
+Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
+{
+#ifdef NECKO
+  PRBool retval = PR_TRUE; /* default value */
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    *checkValue = 0;
+    return retval;
+  }
+
+  const nsString message = szMessage;
+  const nsString checkMessage = szCheckMessage;
+  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
+  if (NS_FAILED(res)) {
+    *checkValue = 0;
+  }
+  if (*checkValue!=0 && *checkValue!=1) {
+    *checkValue = 0; /* this should never happen but it is happening!!! */
+  }
+  return retval;
+#else
   PRBool retval = PR_TRUE; /* default value */
   nsINetSupportDialogService* dialog = NULL;
   nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
@@ -471,9 +525,36 @@ Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
   return retval;
+#endif
 }
 
-char * wallet_GetString(char * szMessage) {
+char * wallet_GetString(char * szMessage)
+{
+#ifdef NECKO
+  nsString password;
+  PRBool retval;
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return NULL;     // XXX should return the error
+  }
+
+  const nsString message = szMessage;
+  PRUnichar* pwd;
+  res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
+  if (NS_FAILED(res)) {
+    return NULL;
+  }
+  password = pwd;
+  delete[] pwd;
+
+  if (retval) {
+    return password.ToNewCString();
+  } else {
+    return NULL; /* user pressed cancel */
+  }
+#else
   nsString password;
   PRBool retval;
   nsINetSupportDialogService* dialog = NULL;
@@ -492,6 +573,7 @@ char * wallet_GetString(char * szMessage) {
   } else {
     return NULL; /* user pressed cancel */
   }
+#endif
 }
 
 /**********************************************************************************/

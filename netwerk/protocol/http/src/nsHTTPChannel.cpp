@@ -91,6 +91,12 @@ NS_IMPL_RELEASE(nsHTTPChannel);
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsHTTPChannel::IsPending(PRBool *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::Cancel(void)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -100,12 +100,9 @@ public:
 
 #ifdef NECKO
 	// nsIStreamObserver
-	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
-							 const PRUnichar *errorMsg);
-	NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt);
 	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
-							 const PRUnichar *errorMsg) { return NS_OK; }
+							 const PRUnichar *errorMsg);
 
 	// nsIStreamListener
 	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
@@ -113,10 +110,10 @@ public:
 #else
 	// stream observer
 
-	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
+	NS_IMETHOD	OnStartRequest(nsIURI *aURL, const char *aContentType);
 	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	 // stream listener
 	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
@@ -245,9 +242,9 @@ NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, nsIStreamListener::GetIID());
 
 NS_IMETHODIMP
 #ifdef NECKO
-RelatedLinksStreamListener::OnStartBinding(nsISupports *ctxt)
+RelatedLinksStreamListener::OnStartRequest(nsISupports *ctxt)
 #else
-RelatedLinksStreamListener::OnStartBinding(nsIURI *aURL, const char *aContentType)
+RelatedLinksStreamListener::OnStartRequest(nsIURI *aURL, const char *aContentType)
 #endif
 {
 	 nsAutoString		trueStr("true");
@@ -281,10 +278,10 @@ RelatedLinksStreamListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-RelatedLinksStreamListener::OnStopBinding(nsISupports *ctxt, nsresult status, 
+RelatedLinksStreamListener::OnStopRequest(nsISupports *ctxt, nsresult status, 
 										  const PRUnichar *errorMsg) 
 #else
-RelatedLinksStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+RelatedLinksStreamListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
 #endif
 {
 	 nsAutoString		trueStr("true");

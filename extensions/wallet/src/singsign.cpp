@@ -172,8 +172,34 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
 }
 
 PRBool
-si_PromptUsernameAndPassword
-        (char *szMessage, char **szUsername, char **szPassword) {
+si_PromptUsernameAndPassword(char *szMessage, char **szUsername, char **szPassword)
+{
+#ifdef NECKO
+  nsString username;
+  nsString password;
+  PRBool retval;
+
+  nsresult res;
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+
+  const nsString message = szMessage;
+  PRUnichar* usr;
+  PRUnichar* pwd;
+  res = dialog->PromptUsernameAndPassword(message.GetUnicode(), &usr, &pwd, &retval);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+  username = usr;
+  delete[] usr;
+  password = pwd;
+  delete[] pwd;
+  *szUsername = username.ToNewCString();
+  *szPassword = password.ToNewCString();
+  return retval;
+#else
     nsString username;
     nsString password;
     PRBool retval;
@@ -191,10 +217,37 @@ si_PromptUsernameAndPassword
   *szUsername = username.ToNewCString();
   *szPassword = password.ToNewCString();
   return retval;
+#endif
 }
 
 char*
-si_PromptPassword (char *szMessage) {
+si_PromptPassword(char *szMessage)
+{
+#ifdef NECKO
+  nsString password;
+  PRBool retval;
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+
+  const nsString message = szMessage;
+  PRUnichar* pwd;
+  res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+  password = pwd;
+  delete[] pwd;
+
+  if (retval) {
+    return password.ToNewCString();
+  } else {
+    return NULL; /* user pressed cancel */
+  }
+#else
   nsString password;
   PRBool retval;
   nsINetSupportDialogService* dialog = NULL;
@@ -213,10 +266,39 @@ si_PromptPassword (char *szMessage) {
   } else {
     return NULL; /* user pressed cancel */
   }
+#endif
 }
 
 char*
-si_Prompt(char *szMessage, char* szDefaultUsername) {
+si_Prompt(char *szMessage, char* szDefaultUsername)
+{
+#ifdef NECKO
+  nsString defaultUsername = szDefaultUsername;
+  nsString username;
+  PRBool retval;
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+
+  const nsString message = szMessage;
+  PRUnichar* usr;
+  res = dialog->Prompt(message.GetUnicode(), defaultUsername.GetUnicode(),
+                       &usr, &retval);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+  username = usr;
+  delete[] usr;
+
+  if (retval) {
+    return username.ToNewCString();
+  } else {
+    return NULL; /* user pressed cancel */
+  }
+#else
   nsString defaultUsername = szDefaultUsername;
   nsString username;
   PRBool retval;
@@ -236,12 +318,38 @@ si_Prompt(char *szMessage, char* szDefaultUsername) {
   } else {
     return NULL; /* user pressed cancel */
   }
+#endif
 }
 
 PRBool
-si_SelectDialog
-    (const char* szMessage, char** pList, int16* pCount)
+si_SelectDialog(const char* szMessage, char** pList, int16* pCount)
 {
+#ifdef NECKO
+  PRBool retval = PR_TRUE; /* default value */
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+
+  const nsString message = szMessage;
+#ifdef xxx
+  dialog->Select(message, pList, pCount, &retval);
+#else
+  for (int i=0; i<*pCount; i++) {
+    nsString msg = "user = ";
+    msg += pList[i];
+    msg += "?";
+    res = dialog->Confirm(msg.GetUnicode(), &retval);
+    if (NS_SUCCEEDED(res) && retval) {
+      *pCount = i;
+      break;
+    }
+  }
+#endif
+  return retval;
+#else
   PRBool retval = PR_TRUE; /* default value */
   nsINetSupportDialogService* dialog = NULL;
   nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
@@ -268,6 +376,7 @@ si_SelectDialog
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
   return retval;
+#endif
 }
 
 /*

@@ -69,9 +69,9 @@ public:
                                PRUint32 aLength);
 
 	// stream observer methods
-    NS_IMETHOD OnStartBinding(nsISupports* context);
+    NS_IMETHOD OnStartRequest(nsISupports* context);
 
-    NS_IMETHOD OnStopBinding(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
                              nsIString* aMsg);
 
@@ -124,17 +124,17 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsISupports *context,
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStartBinding(nsISupports *context) {
+NS_IMETHODIMP TestConsumer::OnStartRequest(nsISupports *context) {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnStartBinding: URL: %p, Content type: %s\n", mUrl, "XXX some context");
+        printf("\n+++ TestConsumer::OnStartRequest: URL: %p, Content type: %s\n", mUrl, "XXX some context");
     }
 
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStopBinding(nsISupports *context, nsresult aStatus, nsIString *aMsg) {
+NS_IMETHODIMP TestConsumer::OnStopRequest(nsISupports *context, nsresult aStatus, nsIString *aMsg) {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnStopBinding... URL: %p status: %d\n", mUrl, aStatus);
+        printf("\n+++ TestConsumer::OnStopRequest... URL: %p status: %d\n", mUrl, aStatus);
     }
 
     if (NS_FAILED(aStatus)) {

@@ -1108,14 +1108,14 @@ nsSilentDownloadListener::OnStatus(nsIURI* aURL,
 }
 
 NS_IMETHODIMP
-nsSilentDownloadListener::OnStartBinding(nsIURI* aURL, 
+nsSilentDownloadListener::OnStartRequest(nsIURI* aURL, 
 				             const char *aContentType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSilentDownloadListener::OnStopBinding(nsIURI* aURL,
+nsSilentDownloadListener::OnStopRequest(nsIURI* aURL,
 				            nsresult status,
 				            const PRUnichar* aMsg)
 {

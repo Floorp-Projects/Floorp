@@ -64,12 +64,9 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
 
 #ifdef NECKO
         // nsIStreamObserver
-        NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-        NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
-                                 const PRUnichar *errorMsg);
-        NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+        NS_IMETHOD OnStartRequest(nsISupports *ctxt);
         NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
-                                 const PRUnichar *errorMsg) { return NS_OK; }
+                                 const PRUnichar *errorMsg);
         // nsIStreamListener
         NS_IMETHOD OnDataAvailable(nsISupports *ctxt, 
                                    nsIInputStream *inStr,
@@ -80,9 +77,9 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
         NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
         NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
         NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-        NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+        NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
         NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
-        NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+        NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 #endif
         
         // IXPINotifier methods

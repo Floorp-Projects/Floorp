@@ -38,7 +38,7 @@ class nsHTTPChannel;
     saved for later reuse. 
 
     This is also the observer class for writing to the transport. This
-    receives notifications of OnStartBinding and OnStopBinding as the
+    receives notifications of OnStartRequest and OnStopRequest as the
     request is being written out to the server. Each instance of this 
     class is tied to the corresponding transport that it writes the 
     request to. 
@@ -239,12 +239,10 @@ public:
     NS_IMETHOD          GetUserAgent(char* *o_Value);
 
     // nsIStreamObserver functions
-    NS_IMETHOD OnStartBinding(nsISupports* context);
-    NS_IMETHOD OnStopBinding(nsISupports* context,
-               nsresult aStatus,
-               const PRUnichar* aMsg);
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsISupports* context,
+                             nsresult aStatus,
+                             const PRUnichar* aMsg);
 
     // Finally our own methods...
     /*

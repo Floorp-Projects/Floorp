@@ -122,6 +122,13 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsFileTransport::IsPending(PRBool *result)
+{
+    *result = mState != ENDED;
+    return NS_OK; 
+}
+
+NS_IMETHODIMP
 nsFileTransport::Cancel(void)
 {
     nsresult rv = NS_OK;
@@ -265,7 +272,7 @@ nsFileTransport::Process(void)
           nsISupports* fs;
           nsFileSpec spec(mPath);
 
-          mStatus = mListener->OnStartBinding(mContext);  // always send the start notification
+          mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewTypicalInputFileStream(&fs, spec);
@@ -312,7 +319,7 @@ nsFileTransport::Process(void)
           nsISupports* fs;
           nsFileSpec spec(mPath);
 
-          mStatus = mListener->OnStartBinding(mContext);  // always send the start notification
+          mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewTypicalOutputFileStream(&fs, spec);
@@ -342,7 +349,7 @@ nsFileTransport::Process(void)
           mFileStream = nsnull;
 
           // XXX where do we get the error message?
-          (void)mListener->OnStopBinding(mContext, mStatus, nsnull);
+          (void)mListener->OnStopRequest(mContext, mStatus, nsnull);
 
           mState = ENDED;
           break;

@@ -36,19 +36,19 @@ nsHTTPRequestObserver::~nsHTTPRequestObserver()
 NS_IMPL_ISUPPORTS(nsHTTPRequestObserver,nsCOMTypeInfo<nsIStreamObserver>::GetIID());
 
 NS_IMETHODIMP
-nsHTTPRequestObserver::OnStartBinding(nsISupports* /*i_pContext*/)
+nsHTTPRequestObserver::OnStartRequest(nsISupports* /*i_pContext*/)
 {
     //TODO globally replace printf with trace calls. 
-    //printf("nsHTTPRequestObserver::OnStartBinding...\n");
+    //printf("nsHTTPRequestObserver::OnStartRequest...\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPRequestObserver::OnStopBinding(nsISupports* i_pContext,
+nsHTTPRequestObserver::OnStopRequest(nsISupports* i_pContext,
                                  nsresult iStatus,
                                  const PRUnichar* i_pMsg)
 {
-    //printf("nsHTTPRequestObserver::OnStopBinding...\n");
+    //printf("nsHTTPRequestObserver::OnStopRequest...\n");
     // if we could write successfully... 
     if (NS_SUCCEEDED(iStatus)) 
     {

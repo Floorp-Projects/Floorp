@@ -240,13 +240,29 @@ nsresult nsDefaultProtocolHelper::HandleNotification(nsIBlockingNotification *aC
  	PRInt32 result;
   nsresult rv;
   
+#ifdef NECKO
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+#else
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+#endif
   
  	if (NS_FAILED(rv))
  		return NS_ERROR_FAILURE;
-  if ( dialog )
-   	dialog->PromptUserAndPassword( aText, aUser, aPass, &result );                  
-  
+  if ( dialog ) {
+#ifdef NECKO
+    PRUnichar* usr;
+    PRUnichar* pwd;
+   	rv = dialog->PromptUsernameAndPassword(aText.GetUnicode(), &usr, &pwd, &result); 
+    if (NS_SUCCEEDED(rv)) {
+      aUser = usr;
+      delete[] usr;
+      aPass = pwd;
+      delete[] pwd;
+    }
+#else
+   	dialog->PromptUserAndPassword( aText, aUser, aPass, &result ); 
+#endif
+  }
   if ( result == 1 )
   	bResult =  NS_NOTIFY_SUCCEEDED;
   else

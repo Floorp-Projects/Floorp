@@ -294,11 +294,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
       case eSocketState_Connected:
         // Fire a notification for read...
         if (mReadListener) {
-          mReadListener->OnStartBinding(mReadContext);
+          mReadListener->OnStartRequest(mReadContext);
         }
         // Fire a notification for write...
         if (mWriteObserver) {
-          mWriteObserver->OnStartBinding(mWriteContext);
+          mWriteObserver->OnStartRequest(mWriteContext);
         }
         break;
 
@@ -312,7 +312,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         // Fire a notification that the read has finished...
         if (eSocketState_DoneWrite != mCurrentState) {
           if (mReadListener) {
-            mReadListener->OnStopBinding(mReadContext, rv, nsnull);
+            mReadListener->OnStopRequest(mReadContext, rv, nsnull);
             NS_RELEASE(mReadListener);
             NS_IF_RELEASE(mReadContext);
           }
@@ -324,7 +324,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         // Fire a notification that the write has finished...
         if (eSocketState_DoneRead != mCurrentState) {
           if (mWriteObserver) {
-            mWriteObserver->OnStopBinding(mWriteContext, rv, nsnull);
+            mWriteObserver->OnStopRequest(mWriteContext, rv, nsnull);
             NS_RELEASE(mWriteObserver);
             NS_IF_RELEASE(mWriteContext);
           }
@@ -912,6 +912,14 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 // nsIRequest implementation...
 // --------------------------------------------------------------------------
 //
+NS_IMETHODIMP
+nsSocketTransport::IsPending(PRBool *result)
+{
+  *result = mCurrentState != eSocketState_Created
+    && mCurrentState != eSocketState_Closed;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsSocketTransport::Cancel(void)
 {

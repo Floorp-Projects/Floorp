@@ -60,10 +60,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsIStreamListener:
 
-    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
     NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
     NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+    NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
     NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
     NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);

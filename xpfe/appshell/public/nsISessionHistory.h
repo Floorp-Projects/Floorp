@@ -22,7 +22,9 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsIChannel.h"
+#else
 #include "nsILoadAttribs.h"
 #endif // NECKO
 
@@ -65,7 +67,7 @@ public:
    * Reload the current history entry
    */
 #ifdef NECKO
-  NS_IMETHOD Reload(nsIWebShell * aPrev, PRUint32 aReloadFlags) = 0;
+  NS_IMETHOD Reload(nsIWebShell * aPrev, nsLoadFlags aReloadFlags) = 0;
 #else
   NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType) = 0;
 #endif

@@ -145,8 +145,8 @@ nsFtpConnectionThread::Run() {
 
 
     // tell the user that we've begun the transaction.
-    nsFtpOnStartBindingEvent* event =
-        new nsFtpOnStartBindingEvent(mListener, nsnull);
+    nsFtpOnStartRequestEvent* event =
+        new nsFtpOnStartRequestEvent(mListener, nsnull);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -197,8 +197,8 @@ nsFtpConnectionThread::Run() {
                 {
                 // We have error'd out. Stop binding and pass the error back to the user.
                 PRUnichar* errorMsg = nsnull;
-                nsFtpOnStopBindingEvent* event =
-                    new nsFtpOnStopBindingEvent(mListener, nsnull);
+                nsFtpOnStopRequestEvent* event =
+                    new nsFtpOnStopRequestEvent(mListener, nsnull);
                 if (!event)
                     return NS_ERROR_OUT_OF_MEMORY;
 

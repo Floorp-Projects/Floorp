@@ -92,7 +92,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
@@ -101,26 +101,26 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURI* aURL, const char *aConte
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that it's time to start...
-		m_mailboxParser->OnStartBinding(aURL, aContentType);
+		m_mailboxParser->OnStartRequest(aURL, aContentType);
 
 	}
 	else if(m_mailboxCopyHandler) 
-		m_mailboxCopyHandler->OnStartBinding(aURL, aContentType); 
+		m_mailboxCopyHandler->OnStartRequest(aURL, aContentType); 
 
 	return NS_OK;
 
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
-		m_mailboxParser->OnStopBinding(aURL, 0, nsnull);
+		m_mailboxParser->OnStopRequest(aURL, 0, nsnull);
 	}
 	else if (m_mailboxCopyHandler) 
-		m_mailboxCopyHandler->OnStopBinding(aURL, 0, nsnull); 
+		m_mailboxCopyHandler->OnStopRequest(aURL, 0, nsnull); 
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
 		DoneReadingMessage();
@@ -148,7 +148,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, c
 	// is coming from netlib so they are never going to ping us again with on data available. This means
 	// we'll never be going through the Process loop...
 
-	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
+	nsMsgProtocol::OnStopRequest(aURL, aStatus, aMsg);
 	return CloseSocket(); 
 }
 
@@ -293,7 +293,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 
 	// leave our state alone so when the next chunk of the mailbox comes in we jump to this state
 	// and repeat....how does this process end? Well when the file is done being read in, core net lib
-	// will issue an ::OnStopBinding to us...we'll use that as our sign to drop out of this state and to
+	// will issue an ::OnStopRequest to us...we'll use that as our sign to drop out of this state and to
 	// close the protocol instance...
 
 	return 0; 

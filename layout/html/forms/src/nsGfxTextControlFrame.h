@@ -55,16 +55,14 @@ public:
 
 #ifdef NECKO
   // nsIStreamObserver methods:
-  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; } 
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; } 
+  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 #else
   // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 #endif
 
 protected:

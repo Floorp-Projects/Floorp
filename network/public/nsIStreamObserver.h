@@ -45,7 +45,7 @@ public:
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType) = 0;
+    NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType) = 0;
 
     /**
      * Notify the observer that progress as occurred for the URL load.<BR>
@@ -68,10 +68,10 @@ public:
      * @param msg   A text string describing the error.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) = 0;
+    NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) = 0;
 };
 
-/* Generic status codes for OnStopBinding */
+/* Generic status codes for OnStopRequest */
 #define NS_BINDING_SUCCEEDED    NS_OK
 #define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
 #define NS_BINDING_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)

@@ -59,14 +59,14 @@ NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
 	// we have an error.
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(aURL, &rv);
-	printf("\n+++ nsMsgMailboxParser::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
+	printf("\n+++ nsMsgMailboxParser::OnStartRequest: URL: %p, Content type: %s\n", aURL, aContentType);
 
 	if (NS_SUCCEEDED(rv) && runningUrl)
 	{
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURI* aURL, const char *aCont
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	DoneParsingFolder();
 	// what can we do? we can close the stream?
@@ -1361,7 +1361,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	m_inboxFileStream = inboxFileStream;
 #endif
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
-	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
+	// the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
 	nsCOMPtr<nsIMsgDatabase> mailDB;
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
 	if (NS_SUCCEEDED(rv) && mailDB)

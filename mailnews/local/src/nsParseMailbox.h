@@ -176,10 +176,10 @@ public:
 	// OnDataAvailable. We then read and process the incoming data from the input stream. 
 	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
 
-	NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+	NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// Ideally, a protocol should only have to support the stream listener methods covered above. 
 	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using

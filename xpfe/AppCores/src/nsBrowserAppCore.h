@@ -27,6 +27,7 @@
 #include "nsIDOMBrowserAppCore.h"
 #include "nsBaseAppCore.h"
 #ifdef NECKO
+#include "nsIPrompt.h"
 #else
 #include "nsINetSupport.h"
 #endif
@@ -52,6 +53,7 @@ class nsIFindComponent;
 class nsBrowserAppCore : public nsBaseAppCore, 
                          public nsIDOMBrowserAppCore,
 #ifdef NECKO
+                         public nsIPrompt,
 #else
                          public nsINetSupport,
 #endif
@@ -73,7 +75,11 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
+#ifdef NECKO
+    NS_IMETHOD    Reload(nsLoadFlags aType);
+#else
     NS_IMETHOD    Reload(PRInt32 aType);
+#endif
     NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
@@ -126,6 +132,15 @@ class nsBrowserAppCore : public nsBaseAppCore,
                                         const char *aCommand );
 #endif
 
+#ifdef NECKO
+    // nsIPrompt
+    NS_IMETHOD Alert(const PRUnichar *text);
+    NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
+    NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
+    NS_IMETHOD Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval);
+    NS_IMETHOD PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval);
+    NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
+#else
     // nsINetSupport
     NS_IMETHOD_(void) Alert(const nsString &aText);
   
@@ -142,6 +157,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                        nsString &aPassword);  
+#endif
 
     // nsIObserver
     NS_DECL_IOBSERVER
@@ -152,7 +168,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD GoBack(nsIWebShell * aPrev);
 #ifdef NECKO
-	NS_IMETHOD Reload(nsIWebShell * aPrev, PRUint32 aType);
+	NS_IMETHOD Reload(nsIWebShell * aPrev, nsLoadFlags aType);
 #else
 	NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aType);
 #endif  /* NECKO */

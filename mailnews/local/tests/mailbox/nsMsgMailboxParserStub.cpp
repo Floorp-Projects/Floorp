@@ -45,9 +45,9 @@ public:
     NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
     NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
     NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
-    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+    NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 
 protected:
     ~nsMsgMailboxParserStub();
@@ -88,9 +88,9 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnStatus(nsIURI* aURL, const PRUnichar* aM
     return 0;
 }
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgMailboxParserStub::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
-	printf("\n+++ nsMsgMailboxParserStub::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
+	printf("\n+++ nsMsgMailboxParserStub::OnStartRequest: URL: %p, Content type: %s\n", aURL, aContentType);
     return 0;
 }
 
@@ -127,11 +127,11 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnDataAvailable(nsIURI* aURL, nsIInputStre
 }
 
 
-NS_IMETHODIMP nsMsgMailboxParserStub::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParserStub::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 {
 	// on stop binding is called by the mailbox protocol when there is no more data forthcoming...
 
-    printf("\n+++ nsMsgMailboxParserStub::OnStopBinding... URL: %p status: %d\n", aURL, status);
+    printf("\n+++ nsMsgMailboxParserStub::OnStopRequest... URL: %p status: %d\n", aURL, status);
 
     /* The document has been loaded, so drop out of the message pump... */
     return 0;

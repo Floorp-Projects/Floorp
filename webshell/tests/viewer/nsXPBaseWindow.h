@@ -91,18 +91,15 @@ public:
 
 #ifdef NECKO
   // nsIStreamObserver
-	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
-		const PRUnichar *errorMsg);
-	NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt);
 	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
-		const PRUnichar *errorMsg) { return NS_OK; }
+                           const PRUnichar *errorMsg);
 #else
   // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 #endif
 
   // nsIWebShellContainer
@@ -122,6 +119,7 @@ public:
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
+#ifndef NECKO
   // nsINetSupport
   NS_IMETHOD_(void) Alert(const nsString &aText);
   NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
@@ -133,6 +131,7 @@ public:
                                             nsString &aPassword);
   NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                      nsString &aPassword);
+#endif
 
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
 

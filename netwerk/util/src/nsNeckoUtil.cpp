@@ -20,6 +20,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsIAllocator.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -40,12 +41,11 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
     // XXX if the string is unicode, GetBuffer() returns null. 
     // XXX we need a strategy to deal w/ unicode specs (if there should
     // XXX even be such a thing)
-    const char* specStr = spec.GetBuffer();
-    if (!specStr)
-        specStr = spec.ToNewCString(); // this forces a single byte char*
+    char* specStr = spec.ToNewCString(); // this forces a single byte char*
+    if (specStr == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = NS_NewURI(result, specStr, baseURI);
-    if (specStr)
-        nsCRT::free((char*)specStr);
+    nsAllocator::Free(specStr);
     return rv;
 }
 

@@ -33,7 +33,11 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
   if (!msg)
     return NS_ERROR_FAILURE;
 
+#ifdef NECKO
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+#else
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+#endif
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -61,7 +65,11 @@ nsMsgDisplayMessageByString(char *msg)
   if ((!msg) || (!*msg))
     return NS_ERROR_FAILURE;
 
+#ifdef NECKO
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+#else
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+#endif
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -90,7 +98,11 @@ nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
   if (!msg)
     return NS_ERROR_FAILURE;
 
+#ifdef NECKO
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
+#else
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);  
+#endif
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   
@@ -121,7 +133,11 @@ nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer)
   if ((!msg) || (!*msg))
     return NS_ERROR_FAILURE;
 
+#ifdef NECKO
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
+#else
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);  
+#endif
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   

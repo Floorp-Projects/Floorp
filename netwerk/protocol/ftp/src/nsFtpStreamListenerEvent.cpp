@@ -72,25 +72,25 @@ nsFtpStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// OnStartBinding...
+// OnStartRequest...
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFtpOnStartBindingEvent::HandleEvent()
+nsFtpOnStartRequestEvent::HandleEvent()
 {
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener;
-  return receiver->OnStartBinding(mContext);
+  return receiver->OnStartRequest(mContext);
 }
 /*
 NS_IMETHODIMP 
-nsMarshalingStreamObserver::OnStartBinding(nsISupports* context)
+nsMarshalingStreamObserver::OnStartRequest(nsISupports* context)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
-    nsOnStartBindingEvent* event = 
-        new nsOnStartBindingEvent(this, context);
+    nsOnStartRequestEvent* event = 
+        new nsOnStartRequestEvent(this, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -159,16 +159,16 @@ nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
 */
 ////////////////////////////////////////////////////////////////////////////////
 //
-// OnStopBinding
+// OnStopRequest
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-nsFtpOnStopBindingEvent::~nsFtpOnStopBindingEvent()
+nsFtpOnStopRequestEvent::~nsFtpOnStopRequestEvent()
 {
 }
 
 nsresult
-nsFtpOnStopBindingEvent::Init(nsresult status, PRUnichar* aMsg)
+nsFtpOnStopRequestEvent::Init(nsresult status, PRUnichar* aMsg)
 {
     mStatus = status;
     mMessage = aMsg;
@@ -176,22 +176,22 @@ nsFtpOnStopBindingEvent::Init(nsresult status, PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP
-nsFtpOnStopBindingEvent::HandleEvent()
+nsFtpOnStopRequestEvent::HandleEvent()
 {
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener;
-  return receiver->OnStopBinding(mContext, mStatus, mMessage);
+  return receiver->OnStopRequest(mContext, mStatus, mMessage);
 }
 /*
 NS_IMETHODIMP 
-nsMarshalingStreamObserver::OnStopBinding(nsISupports* context,
+nsMarshalingStreamObserver::OnStopRequest(nsISupports* context,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
-    nsOnStopBindingEvent* event = 
-        new nsOnStopBindingEvent(this, context);
+    nsOnStopRequestEvent* event = 
+        new nsOnStopRequestEvent(this, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 

@@ -46,26 +46,16 @@ public:
   NS_DECL_ISUPPORTS
 
   // IStreamListener interface...
-  NS_IMETHOD OnStartBinding(nsISupports* context);
+  NS_IMETHOD OnStartRequest(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
                              nsIInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
-  NS_IMETHOD OnStopBinding(nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
-
-  NS_IMETHOD OnStartRequest(nsISupports* context) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           const PRUnichar* aMsg) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+                           const PRUnichar* aMsg);
 
 };
 
@@ -85,9 +75,9 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,kIStreamListenerIID);
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStartBinding(nsISupports* context)
+InputTestConsumer::OnStartRequest(nsISupports* context)
 {
-  printf("+++ OnStartBinding +++\n");
+  printf("+++ OnStartRequest +++\n");
   return NS_OK;
 }
 
@@ -112,12 +102,12 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStopBinding(nsISupports* context,
+InputTestConsumer::OnStopRequest(nsISupports* context,
                          nsresult aStatus,
                          const PRUnichar* aMsg)
 {
   gKeepRunning = 0;
-  printf("+++ OnStopBinding +++\n");
+  printf("+++ OnStopRequest +++\n");
   return NS_OK;
 }
 

@@ -64,18 +64,16 @@ public:
 
 #ifdef NECKO
   // nsIStreamObserver methods:
-  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
   // nsIStreamListener methods:
   NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
   // nsIStreamListener
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus,
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus,
                            const PRUnichar* aMsg);
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
@@ -607,9 +605,9 @@ NS_IMPL_ISUPPORTS(PluginListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
 #ifdef NECKO
-PluginListener::OnStartBinding(nsISupports *ctxt)
+PluginListener::OnStartRequest(nsISupports *ctxt)
 #else
-PluginListener::OnStartBinding(nsIURI* aURL, const char *contentType)
+PluginListener::OnStartRequest(nsIURI* aURL, const char *contentType)
 #endif
 {
 #ifdef NECKO
@@ -634,9 +632,9 @@ PluginListener::OnStartBinding(nsIURI* aURL, const char *contentType)
     return NS_ERROR_FAILURE;
   }
 #ifdef NECKO
-  return mNextStream->OnStartBinding(ctxt);
+  return mNextStream->OnStartRequest(ctxt);
 #else
-  return mNextStream->OnStartBinding(aURL, contentType);
+  return mNextStream->OnStartRequest(aURL, contentType);
 #endif
 }
 
@@ -663,9 +661,9 @@ PluginListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-PluginListener::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+PluginListener::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 #else
-PluginListener::OnStopBinding(nsIURI* aURL, nsresult aStatus,
+PluginListener::OnStopRequest(nsIURI* aURL, nsresult aStatus,
                               const PRUnichar* aMsg)
 #endif
 {
@@ -673,9 +671,9 @@ PluginListener::OnStopBinding(nsIURI* aURL, nsresult aStatus,
     return NS_ERROR_FAILURE;
   }
 #ifdef NECKO
-  return mNextStream->OnStopBinding(ctxt, status, errorMsg);
+  return mNextStream->OnStopRequest(ctxt, status, errorMsg);
 #else
-  return mNextStream->OnStopBinding(aURL, aStatus, aMsg);
+  return mNextStream->OnStopRequest(aURL, aStatus, aMsg);
 #endif
 }
 

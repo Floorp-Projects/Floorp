@@ -93,10 +93,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     progID += scheme;
     progID.ToCString(buf, MAX_NET_PROGID_LENGTH);
 
-    nsIProtocolHandler* handler;
-    rv = nsServiceManager::GetService(buf, nsCOMTypeInfo<nsIProtocolHandler>::GetIID(),
-                                      (nsISupports**)&handler);
-    
+    NS_WITH_SERVICE(nsIProtocolHandler, handler, buf, &rv);
     if (NS_FAILED(rv)) return rv;
 
     *result = handler;
@@ -328,10 +325,21 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
 }
 
 NS_IMETHODIMP
-nsIOService::NewLoadGroup(nsILoadGroup **result)
+nsIOService::NewLoadGroup(nsILoadGroup* parent, nsILoadGroup **result)
 {
-    return nsLoadGroup::Create(nsnull, nsCOMTypeInfo<nsILoadGroup>::GetIID(), 
-                               (void**)result);
+    nsresult rv;
+    nsILoadGroup* group;
+    rv = nsLoadGroup::Create(nsnull, nsCOMTypeInfo<nsILoadGroup>::GetIID(), 
+                             (void**)&group);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = group->Init(parent);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(group);
+        return rv;
+    }
+    *result = group;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

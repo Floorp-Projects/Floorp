@@ -392,23 +392,21 @@ public:
     NS_IMETHOD OnProgress(nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
     NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMmsg);
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; }
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);  
 
 #else
   //nsIStreamObserver interface
 
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
 
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
 
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
   //nsIStreamListener interface
 
@@ -449,10 +447,10 @@ private:
   nsPluginStreamType      mStreamType;
   nsIPluginHost           *mHost;
   PRBool                  mGotProgress;
-  PRBool				  mOnStartBinding;
+  PRBool				  mOnStartRequest;
 
   PRBool				  mCacheDone;
-  PRBool				  mOnStopBinding;
+  PRBool				  mOnStopRequest;
   nsresult				  mStatus;
 
 #ifdef USE_CACHE
@@ -480,27 +478,24 @@ public:
 	NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMsg);
 
     // nsIStreamObserver methods:
-	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
-		const PRUnichar *errorMsg);
-	NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt);
 	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
-		const PRUnichar *errorMsg) { return NS_OK; }
+                             const PRUnichar *errorMsg);
 	
 	// nsIStreamListener methods:
 	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, 
-		PRUint32 sourceOffset, PRUint32 count);
+                               PRUint32 sourceOffset, PRUint32 count);
 
 #else
   //nsIStreamObserver interface
 
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
 
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
 
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
   //nsIStreamListener interface
 
@@ -564,7 +559,7 @@ NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
 
 #ifdef NECKO
 NS_IMETHODIMP
-nsPluginCacheListener::OnStartBinding(nsISupports* ctxt)
+nsPluginCacheListener::OnStartRequest(nsISupports* ctxt)
 {
 	char* aContentType = nsnull;
 	nsIURI* aURL = nsnull;
@@ -579,7 +574,7 @@ nsPluginCacheListener::OnStartBinding(nsISupports* ctxt)
 	}
 	// I have delibrately left out the remaining processing. 
 	// which should just be copied over from the other version of 
-	// OnStartBinding.
+	// OnStartRequest.
 
 	if (aContentType)
 		nsCRT::free(aContentType);
@@ -588,7 +583,7 @@ nsPluginCacheListener::OnStartBinding(nsISupports* ctxt)
 }
 #else
 NS_IMETHODIMP 
-nsPluginCacheListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
+nsPluginCacheListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 #ifdef USE_CACHE
 	nsString urlString;
@@ -697,11 +692,11 @@ nsPluginCacheListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, P
 
 NS_IMETHODIMP 
 #ifdef NECKO
-nsPluginCacheListener::OnStopBinding(nsISupports* aContext, 
+nsPluginCacheListener::OnStopRequest(nsISupports* aContext, 
 	nsresult aStatus, 
 	const PRUnichar* aMsg)
 #else
-nsPluginCacheListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsPluginCacheListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 #endif // NECKO
 {
 #ifdef USE_CACHE
@@ -772,10 +767,10 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mSetUpListener = PR_FALSE;
   mHost = nsnull;
   mGotProgress = PR_FALSE;
-  mOnStartBinding = PR_FALSE;
+  mOnStartRequest = PR_FALSE;
   mStreamType = nsPluginStreamType_Normal;
 
-  mOnStopBinding = PR_FALSE;
+  mOnStopRequest = PR_FALSE;
   mCacheDone = PR_FALSE;
   mStatus = NS_OK;
 }
@@ -935,9 +930,9 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
 
 
 #ifdef NECKO
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsISupports* aContext)
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartRequest(nsISupports* aContext)
 #else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
   nsresult  rv = NS_OK;
@@ -993,7 +988,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURI* aURL, const cha
   if(mGotProgress == PR_TRUE && mSetUpListener == PR_FALSE)
 	   rv = SetUpStreamListener(aURL);
 
-  mOnStartBinding = PR_TRUE;
+  mOnStartRequest = PR_TRUE;
 #ifdef NECKO
   nsCRT::free(aContentType);
 #endif //NECKO
@@ -1021,7 +1016,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIURI* aURL, PRUint32 aPro
 		if (NS_FAILED(rv)) return rv;
 #endif
   mPluginStreamInfo->SetLength(aProgressMax);
-  if(mOnStartBinding == PR_TRUE && mSetUpListener == PR_FALSE)
+  if(mOnStartRequest == PR_TRUE && mSetUpListener == PR_FALSE)
 	rv = SetUpStreamListener(aURL);
 
   mGotProgress = PR_TRUE;
@@ -1097,7 +1092,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
   }
   else
   {
-    // if we don't read from the stream, OnStopBinding will never be called
+    // if we don't read from the stream, OnStopRequest will never be called
     char* buffer = new char[aLength];
     PRUint32 amountRead;
     rv = aIStream->Read(buffer, aLength, &amountRead);
@@ -1107,12 +1102,12 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
 }
 
 #ifdef NECKO
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(
 	nsISupports* aContext,
 	nsresult aStatus, 
 	const PRUnichar* aMsg)
 #else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 #endif // NECKO
 {
   nsresult rv = NS_OK;
@@ -1146,7 +1141,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(nsIURI* aURL, nsresult a
 		mStatus = aStatus;
   }
 
-  mOnStopBinding = PR_TRUE;
+  mOnStopRequest = PR_TRUE;
 #ifdef NECKO
   }
 #endif
@@ -1222,9 +1217,9 @@ nsPluginStreamListenerPeer::OnFileAvailable(const char* aFilename)
 	if((rv = mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aFilename)) != NS_OK)
 		return rv;
 
-	// if OnStopBinding has already been called, we need to make sure the plugin gets notified
-	// we do this here because OnStopBinding must always be called after OnFileAvailable
-	if(mOnStopBinding)
+	// if OnStopRequest has already been called, we need to make sure the plugin gets notified
+	// we do this here because OnStopRequest must always be called after OnFileAvailable
+	if(mOnStopRequest)
 		rv = mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, mStatus);
 
 	mCacheDone = PR_TRUE;
@@ -2068,7 +2063,7 @@ nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]
 		LoadPlugins();
 	
 	nsPluginTag* plugin = mPlugins;
-	for (int i = 0; i < aPluginCount && plugin != nsnull; i++, plugin = plugin->mNext) {
+	for (PRUint32 i = 0; i < aPluginCount && plugin != nsnull; i++, plugin = plugin->mNext) {
 		nsIDOMPlugin* domPlugin = new DOMPluginImpl(plugin);
 		NS_IF_ADDREF(domPlugin);
 		aPluginArray[i] = domPlugin;

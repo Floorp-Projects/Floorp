@@ -30,10 +30,6 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartBinding(nsISupports* context);
-    NS_IMETHOD OnStopBinding(nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports* context);
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
@@ -99,21 +95,6 @@ nsSyncStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
     return NS_NOINTERFACE; 
-}
-
-NS_IMETHODIMP 
-nsSyncStreamListener::OnStartBinding(nsISupports* context)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSyncStreamListener::OnStopBinding(nsISupports* context,
-                                    nsresult aStatus,
-                                    const PRUnichar* aMsg)
-{
-    // XXX what do we do with the status and error message?
-    return mOutputStream->Close();
 }
 
 NS_IMETHODIMP 

@@ -339,10 +339,10 @@ nsStreamConverter::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream,
 * used to cancel the URL load..
 */
 nsresult
-nsStreamConverter::OnStartBinding(nsIURI* aURL, const char *aContentType)
+nsStreamConverter::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 #ifdef NS_DEBUG
-  // printf("nsStreamConverter::OnStartBinding() for Content-Type: %s\n", aContentType);
+  // printf("nsStreamConverter::OnStartRequest() for Content-Type: %s\n", aContentType);
 #endif
 
   return NS_OK;
@@ -386,10 +386,10 @@ nsStreamConverter::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 * @return The return value is currently ignored.
 */
 nsresult
-nsStreamConverter::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsStreamConverter::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG
-  // printf("nsStreamConverter::OnStopBinding()\n");
+  // printf("nsStreamConverter::OnStopRequest()\n");
 #endif
 
   //

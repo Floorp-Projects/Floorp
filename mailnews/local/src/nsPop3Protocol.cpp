@@ -2648,7 +2648,7 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURI* aURL, nsIInputStream* aIn
                 m_nsIPop3Sink->EndMailDelivery();
 
             if (m_transport)
-                m_transport->OnStopBinding(mailnewsurl, 0, nsnull);
+                m_transport->OnStopRequest(mailnewsurl, 0, nsnull);
 
 			if (mailnewsurl)
 				mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
@@ -2715,7 +2715,7 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURI* aURL, nsIInputStream* aIn
                 m_pop3ConData->next_state = POP3_FREE;
             
             if (m_transport)
-                m_transport->OnStopBinding(mailnewsurl, 0, nsnull);
+                m_transport->OnStopRequest(mailnewsurl, 0, nsnull);
 
 			if (mailnewsurl)
 				mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);

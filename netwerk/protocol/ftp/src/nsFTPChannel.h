@@ -37,6 +37,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest methods:
+    NS_IMETHOD IsPending(PRBool *result);
     NS_IMETHOD Cancel();
     NS_IMETHOD Suspend();
     NS_IMETHOD Resume();
@@ -63,14 +64,10 @@ public:
     NS_IMETHOD SetStreamListener(nsIStreamListener* aListener);
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartBinding(nsISupports* context);
-    NS_IMETHOD OnStopBinding(nsISupports* context,
+    NS_IMETHOD OnStartRequest(nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg);
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt,
-                             nsresult status,
-                             const PRUnichar *errorMsg);
 
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,

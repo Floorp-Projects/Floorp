@@ -945,7 +945,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURI* aURL, nsIInputStream *aISt
 	return res;
 }
 
-NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;
@@ -957,7 +957,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURI* aURL, const char *aContentT
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;

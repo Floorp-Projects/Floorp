@@ -81,7 +81,7 @@ public:
   * @return The return value is currently ignored.  In the future it may be
   * used to cancel the URL load..
   */
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   
   /**
   * Notify the observer that progress as occurred for the URL load.<BR>
@@ -104,7 +104,7 @@ public:
   * @param msg   A text string describing the error.
   * @return The return value is currently ignored.
   */
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 
 private:

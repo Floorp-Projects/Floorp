@@ -112,19 +112,17 @@ public:
 
 #ifdef NECKO
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
 	// stream observer
 
-	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
+	NS_IMETHOD	OnStartRequest(nsIURI *aURL, const char *aContentType);
 	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// stream listener
 	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
@@ -1511,9 +1509,9 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 
 NS_IMETHODIMP
 #ifdef NECKO
-SearchDataSourceCallback::OnStartBinding(nsISupports *ctxt)
+SearchDataSourceCallback::OnStartRequest(nsISupports *ctxt)
 #else
-SearchDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
+SearchDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aContentType)
 #endif
 {
 	nsAutoString		trueStr("true");
@@ -1521,7 +1519,7 @@ SearchDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 	nsresult		rv;
 
 #ifdef	DEBUG
-	printf("SearchDataSourceCallback::OnStartBinding entered.\n");
+	printf("SearchDataSourceCallback::OnStartRequest entered.\n");
 #endif
 
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
@@ -1554,9 +1552,9 @@ SearchDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-SearchDataSourceCallback::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) 
+SearchDataSourceCallback::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) 
 #else
-SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
 #endif
 {
 	nsAutoString		trueStr("true");
@@ -1581,7 +1579,7 @@ SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PR
 	if (!mLine)
 	{
 #ifdef	DEBUG
-		printf(" *** SearchDataSourceCallback::OnStopBinding:  no data.\n\n");
+		printf(" *** SearchDataSourceCallback::OnStopRequest:  no data.\n\n");
 #endif
 
 		return(NS_OK);

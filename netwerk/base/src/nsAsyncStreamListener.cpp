@@ -29,10 +29,6 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartBinding(nsISupports* context);
-    NS_IMETHOD OnStopBinding(nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports* context);
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
@@ -72,18 +68,6 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnStartBinding(nsISupports* context) 
-    { 
-        return nsAsyncStreamObserver::OnStartBinding(context); 
-    }
-
-    NS_IMETHOD OnStopBinding(nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg) 
-    { 
-        return nsAsyncStreamObserver::OnStopBinding(context, aStatus, aMsg); 
-    }
-
     NS_IMETHOD OnStartRequest(nsISupports* context) 
     { 
         return nsAsyncStreamObserver::OnStartRequest(context); 
@@ -193,128 +177,6 @@ NS_IMPL_ISUPPORTS(nsAsyncStreamObserver, nsCOMTypeInfo<nsIStreamObserver>::GetII
 NS_IMPL_ISUPPORTS_INHERITED(nsAsyncStreamListener, 
                             nsAsyncStreamObserver, 
                             nsIStreamListener);
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// OnStartBinding...
-//
-////////////////////////////////////////////////////////////////////////////////
-
-class nsOnStartBindingEvent : public nsStreamListenerEvent
-{
-public:
-    nsOnStartBindingEvent(nsAsyncStreamObserver* listener, 
-                          nsISupports* context)
-        : nsStreamListenerEvent(listener, context), mContentType(nsnull) {}
-    virtual ~nsOnStartBindingEvent();
-
-    NS_IMETHOD HandleEvent();
-
-protected:
-    char*       mContentType;
-};
-
-nsOnStartBindingEvent::~nsOnStartBindingEvent()
-{
-    if (mContentType)
-        delete[] mContentType;
-}
-
-NS_IMETHODIMP
-nsOnStartBindingEvent::HandleEvent()
-{
-  nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  return receiver->OnStartBinding(mContext);
-}
-
-NS_IMETHODIMP 
-nsAsyncStreamObserver::OnStartBinding(nsISupports* context)
-{
-    nsresult rv = GetStatus();
-    if (NS_FAILED(rv)) return rv;
-
-    nsOnStartBindingEvent* event = 
-        new nsOnStartBindingEvent(this, context);
-    if (event == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = event->Fire(mEventQueue);
-    if (NS_FAILED(rv)) goto failed;
-    return rv;
-
-  failed:
-    delete event;
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// OnStopBinding
-//
-////////////////////////////////////////////////////////////////////////////////
-
-class nsOnStopBindingEvent : public nsStreamListenerEvent
-{
-public:
-    nsOnStopBindingEvent(nsAsyncStreamObserver* listener, 
-                         nsISupports* context)
-        : nsStreamListenerEvent(listener, context),
-          mStatus(NS_OK), mMessage(nsnull) {}
-    virtual ~nsOnStopBindingEvent();
-
-    nsresult Init(nsresult status, const PRUnichar* aMsg);
-    NS_IMETHOD HandleEvent();
-
-protected:
-    nsresult    mStatus;
-    PRUnichar*  mMessage;
-};
-
-nsOnStopBindingEvent::~nsOnStopBindingEvent()
-{
-}
-
-nsresult
-nsOnStopBindingEvent::Init(nsresult status, const PRUnichar* aMsg)
-{
-    mStatus = status;
-    mMessage = (PRUnichar*)aMsg;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOnStopBindingEvent::HandleEvent()
-{
-  nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  return receiver->OnStopBinding(mContext, mStatus, mMessage);
-}
-
-NS_IMETHODIMP 
-nsAsyncStreamObserver::OnStopBinding(nsISupports* context,
-                                          nsresult aStatus,
-                                          const PRUnichar* aMsg)
-{
-    nsresult rv;
-
-    //
-    // The OnStopBindiong event should always be fired, so do not 
-    // check the status...
-    //
-    nsOnStopBindingEvent* event = 
-        new nsOnStopBindingEvent(this, context);
-    if (event == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = event->Init(aStatus, aMsg);
-    if (NS_FAILED(rv)) goto failed;
-    rv = event->Fire(mEventQueue);
-    if (NS_FAILED(rv)) goto failed;
-    return rv;
-
-  failed:
-    delete event;
-    return rv;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //

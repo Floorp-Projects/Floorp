@@ -569,7 +569,7 @@ public:
    * Reload the current history entry
    */
 #ifdef NECKO
-  NS_IMETHOD Reload(nsIWebShell * aPrev, PRUint32 aReloadFlags);
+  NS_IMETHOD Reload(nsIWebShell * aPrev, nsLoadFlags aReloadFlags);
 #else
   NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType);
 #endif
@@ -966,7 +966,7 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsSessionHistory::Reload(nsIWebShell * aPrev, PRUint32 aReloadFlags)
+nsSessionHistory::Reload(nsIWebShell * aPrev, nsLoadFlags aReloadFlags)
 #else
 nsSessionHistory::Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType)
 #endif

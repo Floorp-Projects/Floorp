@@ -1632,9 +1632,9 @@ EnderTempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-EnderTempObserver::OnStartBinding(nsISupports *ctxt)
+EnderTempObserver::OnStartRequest(nsISupports *ctxt)
 #else
-EnderTempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
+EnderTempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
   return NS_OK;
@@ -1642,10 +1642,10 @@ EnderTempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-EnderTempObserver::OnStopBinding(nsISupports *ctxt, nsresult status,
+EnderTempObserver::OnStopRequest(nsISupports *ctxt, nsresult status,
                                  const PRUnichar *errorMsg)
 #else
-EnderTempObserver::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+EnderTempObserver::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
   if (PR_TRUE==mFirstCall)
