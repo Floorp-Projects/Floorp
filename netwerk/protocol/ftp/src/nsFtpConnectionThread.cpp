@@ -798,8 +798,8 @@ nsFtpConnectionThread::S_user() {
             rv = mURL->GetHost(getter_Copies(host));
             if (NS_FAILED(rv)) return rv;
             if (message.Length() < 1) {
-                message = "Enter username and password for "; //TODO localize it!
-                message += host;
+                message.AssignWithConversion("Enter username and password for "); //TODO localize it!
+                message.AppendWithConversion(host);
             }
 
             rv = proxyprompter->PromptUsernameAndPassword(message.GetUnicode(),
@@ -811,7 +811,7 @@ nsFtpConnectionThread::S_user() {
             mUsername = user;
             mPassword = passwd;
         }
-        usernameStr.Append(mUsername);    
+        usernameStr.AppendWithConversion(mUsername);    
     }
     usernameStr.Append(CRLF);
 
@@ -870,16 +870,16 @@ nsFtpConnectionThread::S_pass() {
             PRUnichar *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
-            nsAutoString title("Password");
+            nsAutoString title; title.AssignWithConversion("Password");
             
             if (message.Length() < 1) {
                 nsXPIDLCString host;
                 rv = mURL->GetHost(getter_Copies(host));
                 if (NS_FAILED(rv)) return rv;
-                message = "Enter password for "; //TODO localize it!
+                message.AssignWithConversion("Enter password for "); //TODO localize it!
 		        message += mUsername;
-                message += " on ";
-                message += host;
+                message.AppendWithConversion(" on ");
+                message.AppendWithConversion(host);
             }
             rv = proxyprompter->PromptPassword(message.GetUnicode(),
                         title.GetUnicode(),
@@ -890,7 +890,7 @@ nsFtpConnectionThread::S_pass() {
                 return NS_ERROR_FAILURE;
             mPassword = passwd;
         }
-        passwordStr.Append(mPassword);    
+        passwordStr.AppendWithConversion(mPassword);    
     }
     passwordStr.Append(CRLF);
 
@@ -1163,9 +1163,9 @@ nsFtpConnectionThread::S_list() {
     NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString fromStr("text/ftp-dir-");
+    nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
     SetDirMIMEType(fromStr);
-    nsAutoString toStr("application/http-index-format");
+    nsAutoString toStr; toStr.AssignWithConversion("application/http-index-format");
 
     rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(),
                                              mListener, mURL, getter_AddRefs(converterListener));
@@ -1601,7 +1601,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     } else {
         if ((const char*)uname && *(const char*)uname) {
             mAnonymous = PR_FALSE;
-            mUsername.Assign(uname);
+            mUsername.AssignWithConversion(uname);
         }
     }
 
@@ -1610,7 +1610,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     if (NS_FAILED(rv))
         return rv;
     else
-        mPassword.Assign(password);
+        mPassword.AssignWithConversion(password);
     
     // setup the connection cache key
     nsXPIDLCString host;
@@ -1764,12 +1764,12 @@ nsFtpConnectionThread::SetDirMIMEType(nsString& aString) {
     // "text/ftp-dir-SERVER_TYPE" where SERVER_TYPE represents the server we're talking to.
     switch (mServerType) {
     case FTP_UNIX_TYPE:
-        aString.Append("unix");
+        aString.AppendWithConversion("unix");
         break;
     case FTP_NT_TYPE:
-        aString.Append("nt");
+        aString.AppendWithConversion("nt");
         break;
     default:
-        aString.Append("generic");
+        aString.AppendWithConversion("generic");
     }
 }

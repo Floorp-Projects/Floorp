@@ -93,7 +93,7 @@ nsFtpProtocolHandler::Init() {
 
     nsCOMPtr<nsIObserverService> obsServ = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->AddObserver(this, topic.GetUnicode());
     }
 
@@ -262,7 +262,7 @@ nsFtpProtocolHandler::Observe(nsISupports     *aSubject,
     // remove ourself from the observer service.
     NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         obsServ->RemoveObserver(this, topic.GetUnicode());
     }
     return NS_OK;
