@@ -2182,12 +2182,21 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   }
   
   // else we have a non collapsed selection
-  // figure out if the enpoints are in nodes that can be merged
+  // first adjust the selection
+  res = ExpandSelectionForDeletion(aSelection);
+  if (NS_FAILED(res)) return res;
+  
+  // refresh start and end points
+  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+  if (NS_FAILED(res)) return res;
+  if (!startNode) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMNode> endNode;
   PRInt32 endOffset;
   res = mHTMLEditor->GetEndNodeAndOffset(aSelection, address_of(endNode), &endOffset);
   if (NS_FAILED(res)) return res; 
-  
+  if (!endNode) return NS_ERROR_FAILURE;
+
+  // figure out if the enpoints are in nodes that can be merged  
   // adjust surrounding whitespace in preperation to delete selection
   if (!bPlaintext)
   {
@@ -4583,6 +4592,139 @@ nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOf
     node = tmp;
   }
 
+  return res;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// ExpandSelectionForDeletion: this promotes our selection to include blocks
+// that have all their children selected.
+//                  
+PRBool
+nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
+{
+  if (!aSelection) 
+    return NS_ERROR_NULL_POINTER;
+  
+  // don't need to touch collapsed selections
+  PRBool bCollapsed;
+  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (bCollapsed) return res;
+
+  PRInt32 rangeCount;
+  res = aSelection->GetRangeCount(&rangeCount);
+  if (NS_FAILED(res)) return res;
+  
+  // we don't need to mess with cell selections, and we assume multirange selections are those.
+  if (rangeCount != 1) return NS_OK;
+  
+  // find current sel start and end
+  nsCOMPtr<nsIDOMRange> range;
+  res = aSelection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+  if (!range) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode> selStartNode, selEndNode, selCommon;
+  PRInt32 selStartOffset, selEndOffset;
+  
+  res = range->GetStartContainer(getter_AddRefs(selStartNode));
+  if (NS_FAILED(res)) return res;
+  res = range->GetStartOffset(&selStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = range->GetEndContainer(getter_AddRefs(selEndNode));
+  if (NS_FAILED(res)) return res;
+  res = range->GetEndOffset(&selEndOffset);
+  if (NS_FAILED(res)) return res;
+
+  // find current selection common block parent
+  res = range->GetCommonAncestorContainer(getter_AddRefs(selCommon));
+  if (NS_FAILED(res)) return res;
+  if (!IsBlockNode(selCommon))
+    selCommon = nsHTMLEditor::GetBlockNodeParent(selCommon);
+
+  // set up for loops and cache our root element
+  PRBool stillLooking = PR_TRUE;
+  nsCOMPtr<nsIDOMNode> visNode;
+  PRInt32 visOffset=0;
+  PRInt16 wsType;
+  nsCOMPtr<nsIDOMElement> rootElement;
+  res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElement));
+  
+  // find previous visible thingy before start of selection
+  if (!(selStartNode!=selCommon || selStartNode!=rootElement))
+  {
+    while (stillLooking)
+    {
+      nsWSRunObject wsObj(mHTMLEditor, selStartNode, selStartOffset);
+      res = wsObj.PriorVisibleNode(selStartNode, selStartOffset, address_of(visNode), &visOffset, &wsType);
+      if (NS_FAILED(res)) return res;
+      if (wsType == nsWSRunObject::eThisBlock)
+      {
+        // we want to keep looking up.  But stop if we are crossing table element
+        // boundaries, or if we hit the root.
+        if ( nsHTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
+            (selCommon == wsObj.mStartReasonNode)                    ||
+            (rootElement == wsObj.mStartReasonNode) )
+        {
+          stillLooking = PR_FALSE;
+        }
+        else
+        { 
+          nsEditor::GetNodeLocation(wsObj.mStartReasonNode, address_of(selStartNode), &selStartOffset);
+        }
+      }
+      else
+      {
+        stillLooking = PR_FALSE;
+      }
+    }
+  }
+  
+  stillLooking = PR_TRUE;
+  // find next visible thingy after end of selection
+  if (!(selStartNode!=selCommon || selStartNode!=rootElement))
+  {
+    while (stillLooking)
+    {
+      nsWSRunObject wsObj(mHTMLEditor, selEndNode, selEndOffset);
+      res = wsObj.NextVisibleNode(selEndNode, selEndOffset, address_of(visNode), &visOffset, &wsType);
+      if (NS_FAILED(res)) return res;
+      if (wsType == nsWSRunObject::eBreak)
+      {
+        if (mHTMLEditor->IsVisBreak(wsObj.mEndReasonNode))
+        {
+          stillLooking = PR_FALSE;
+        }
+        else
+        { 
+          nsEditor::GetNodeLocation(wsObj.mEndReasonNode, address_of(selEndNode), &selEndOffset);
+          ++selEndOffset;
+        }
+      }
+      else if (wsType == nsWSRunObject::eThisBlock)
+      {
+        // we want to keep looking up.  But stop if we are crossing table element
+        // boundaries, or if we hit the root.
+        if ( nsHTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
+            (rootElement == wsObj.mEndReasonNode))
+        {
+          stillLooking = PR_FALSE;
+        }
+        else
+        { 
+          nsEditor::GetNodeLocation(wsObj.mEndReasonNode, address_of(selEndNode), &selEndOffset);
+          ++selEndOffset;
+        }
+       }
+      else
+      {
+        stillLooking = PR_FALSE;
+      }
+    }
+  }
+  // now set the selection to the new range
+  aSelection->Collapse(selStartNode, selStartOffset);
+  aSelection->Extend(selEndNode, selEndOffset);
+  
   return res;
 }
 
