@@ -348,6 +348,10 @@ nsLineLayout::WordBreakReflow()
 nsresult
 nsLineLayout::ReflowMappedChild(nsReflowCommand* aReflowCommand)
 {
+  if (1 == 1) {
+    return ReflowChild(aReflowCommand);
+  }
+
   // XXX look at reflow command and look at the next frame to get the
   // command and if it's mKidFrame then pass through to ReflowChild
   // otherwise don't
