@@ -2015,10 +2015,10 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
         rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
 
         if (NS_SUCCEEDED(rv) && presShell) {
-		      /* Pass OnStartDocument notifications to the docloaderobserver
-           * so that urlbar, forward/back buttons will
-		       * behave properly when going to named anchors
-			     */
+           /* Pass OnStartDocument notifications to the docloaderobserver
+            * so that urlbar, forward/back buttons will
+            * behave properly when going to named anchors
+            */
            nsCOMPtr<nsIChannel> dummyChannel;
            rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
            if (NS_FAILED(rv)) return rv;
@@ -2147,6 +2147,7 @@ nsWebShell::LoadURI(nsIURI * aUri,
     mHistoryIndex++;
   }
   else {
+	  
     // Replace the current history index with this URL
     nsString* u = (nsString*) mHistory.ElementAt(mHistoryIndex);
     if (nsnull != u) {
@@ -2278,28 +2279,29 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       }
   }
 
-  /*
-   * Before the new page is added to the session history,
-   * save the history information of the previous page in
-   * session history
+  /* 
+   * Save the history state for the current index iff this loadurl() request
+   * is not from SH. When the request comes from SH, aModifyHistory will
+   * be false and nsSessionHistory.cpp takes of this.
    */
-
-   nsCOMPtr<nsISupports>  historyState=nsnull;
-   rv = GetHistoryState(getter_AddRefs(historyState));
-   // Get the history object for the previous page.
-   if (NS_SUCCEEDED(rv) && shist) {
-        PRInt32 indix=0;
-        shist->GetCurrentIndex(&indix);
-        // Save it in session history
-        shist->SetHistoryObjectForIndex(indix, historyState);
-   }
+  if (shist) {
+	 PRInt32  indix;
+     shist->GetCurrentIndex(&indix);
+     if (indix >= 0 && (aModifyHistory)) {
+       nsCOMPtr<nsISupports>  historyState;
+       rv = GetHistoryState(getter_AddRefs(historyState));
+	   if (NS_SUCCEEDED(rv) && historyState)
+          shist->SetHistoryObjectForIndex(indix, historyState);
+	 }
+  }
   /* Set the History state object for the current page in the
    * presentation shell. If it is a new page being visited,
    * aHistoryState is null. If the load is coming from
    * session History, it will be set to the cached history object by
    * session History.
    */
-  SetHistoryState(aHistoryState);
+  if (aHistoryState)
+    SetHistoryState(aHistoryState);
  
   /*
    * Set mURL to spec so that session history can get 
@@ -2315,12 +2317,12 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
         ret = shist->Add(this);
   }
 
+
   /* If  we are going "Back" from a non-frame page to a frame page,
    * session history  will change the mURL to the right value
    * for smoother redraw. So, create a new nsIURI based on mURL,
    * so that it will work right in such situations.
    */
-
   nsAutoString urlstr(mURL);
   nsCOMPtr<nsIURI>   newURI;
   rv = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
@@ -2431,7 +2433,7 @@ nsWebShell::Back(void)
 NS_IMETHODIMP
 nsWebShell::CanBack(void)
 {
-  return (mHistoryIndex  > mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
+  return ((mHistoryIndex-1)  > - 1 ? NS_OK : NS_COMFALSE);
 }
 
 NS_IMETHODIMP
@@ -2449,7 +2451,6 @@ nsWebShell::CanForward(void)
 NS_IMETHODIMP
 nsWebShell::GoTo(PRInt32 aHistoryIndex)
 {
-#ifdef OLD_HISTORY
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex < mHistory.Count())) {
@@ -2481,13 +2482,6 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                    nsnull);      // referrer
   }
   return rv;
-#else
-   if (mSHist)
-     return mSHist->Goto(aHistoryIndex, this, PR_FALSE);
-   return NS_OK;
-
-
-#endif
 
 }
 
@@ -2735,7 +2729,11 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
       rv = docv->GetPresShell(*getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv)) {
         rv = shell->GetHistoryState((nsILayoutHistoryState**) aLayoutHistoryState);
-		NS_ADDREF(*aLayoutHistoryState);
+		  /* The following line was added by mistake in one of the previous checkins. It 
+		   * causes a leak of nsHistorylayoutState. But removing it causes a crash. 
+		   * Eric Pollmann(pollmann@netscape.com) is investigating it. Bug # 16496
+       */
+		   NS_ADDREF(*aLayoutHistoryState);
       }
     }
   }
