@@ -48,8 +48,8 @@ pref("font.size.variable.x-western", 15);
 pref("font.size.fixed.x-western", 12);
 pref("font.size.minimum-size.x-western", 10);
 
-// turn on universal character detection
-pref("intl.charset.detector", "universal_charset_detector");
+// set character detection (should be same as mozilla)
+pref("intl.charset.detector", "chrome://navigator/locale/navigator.properties");
 
 pref("chimera.store_passwords_with_keychain", true);
 pref("chimera.keychain_passwords_autofill", true);
