@@ -1069,6 +1069,7 @@ function makePrefForm(d)
 {
     writePrefInput(d, 'enable_ssl2');
     writePrefInput(d, 'enable_ssl3');
+    writePrefInput(d, 'enable_tls');
     writePrefInput(d, 'client_auth_auto_select');
     writePrefInput(d, 'default_email_cert');
     writePrefInput(d, 'warn_entering_secure');
@@ -1100,48 +1101,52 @@ function makeClientAuthPref(d)
 
 function enableClientAuthAutoSelect()
 {
-    top.client_auth_auto_select = true;
+    client_auth_auto_select = true;
 }
 
 function disableClientAuthAutoSelect()
 {
-    top.client_auth_auto_select = false;
+    client_auth_auto_select = false;
 }
 
 // creates the HTML string for SSL cipher family prefs
 var enableSSL2Str = {adv_enable_SSL2};
 var enableSSL3Str = {adv_enable_SSL3};
+var enableTLSStr = {adv_enable_TLS};
 function toggleSSL2Cipher()
 {
-  if (top.enable_ssl2) {
-    top.enable_ssl2 = false;
-  } else {
-    top.enable_ssl2 = true;
-  }
+  enable_ssl2 = !enable_ssl2;
 }
 
 function toggleSSL3Cipher()
 {
-  if (top.enable_ssl3) {
-    top.enable_ssl3 = false;
-  } else {
-    top.enable_ssl3 = true;
-  }
+  enable_ssl3 = !enable_ssl3;
+}
+
+function toggleTLSCipher()
+{
+  enable_tls = !enable_tls;
 }
 
 function makeSSLCipherPref(d)
 {
     d.write('<tr><td><input type=checkbox name="enable_ssl2" value="true" ');
-    if (enable_ssl2 == true) {
+    if (enable_ssl2) {
         d.write('checked ');
     }
     d.writeln('onClick="top.toggleSSL2Cipher();"></td><td><p>' + enableSSL2Str + '</p></td></tr>');
 
     d.write('<tr><td><input type=checkbox name="enable_ssl3" value="true" ');
-    if (enable_ssl3 == true) {
+    if (enable_ssl3) {
         d.write('checked ');
     }
     d.writeln('onClick="top.toggleSSL3Cipher();"></td><td><p>' + enableSSL3Str + '</p></td></tr>');
+
+    d.write('<tr><td><input type=checkbox name="enable_tls" value="true" ');
+    if (enable_tls) {
+        d.write('checked ');
+    }
+    d.writeln('onClick="top.toggleTLSCipher();"></td><td><p>' + enableTLSStr + '</p></td></tr>');
 }
 
 // these functions create the HTML strings for various navigator & messenger
@@ -1195,6 +1200,7 @@ function setPrefsBeforeSubmit(f)
 {
     f.enable_ssl2.value = enable_ssl2;
     f.enable_ssl3.value = enable_ssl3;
+    f.enable_tls.value = enable_tls;
     f.client_auth_auto_select.value = client_auth_auto_select;
     f.default_email_cert.value = new String(default_email_cert);
     f.warn_entering_secure.value = warn_entering_secure;
