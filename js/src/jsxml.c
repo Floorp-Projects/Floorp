@@ -1443,12 +1443,12 @@ static JSXML *
 ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                uintN flags)
 {
-    JSXML *xml, *kid, *attr;
+    JSXML *xml, *kid, *attr, *attrj;
     JSString *str;
-    uint32 length, n, i;
+    uint32 length, n, i, j;
     JSParseNode *pn2, *pn3, *head, **pnp;
     JSXMLNamespace *ns;
-    JSXMLQName *qn;
+    JSXMLQName *qn, *attrjqn;
     JSXMLClass xml_class;
 
 #define PN2X_SKIP_CHILD ((JSXML *) 1)
@@ -1692,6 +1692,24 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             if (!qn) {
                 xml->xml_attrs.length = i;
                 goto fail;
+            }
+
+            /*
+             * Enforce "Well-formedness constraint: Unique Att Spec", part 2:
+             * this time checking local name and namespace URI.
+             */
+            for (j = 0; j < i; j++) {
+                attrj = XMLARRAY_MEMBER(&xml->xml_attrs, j, JSXML);
+                attrjqn = attrj->name;
+                if (!js_CompareStrings(attrjqn->uri, qn->uri) &&
+                    !js_CompareStrings(attrjqn->localName, qn->localName)) {
+                    js_ReportCompileErrorNumber(cx, pn2,
+                                                JSREPORT_PN | JSREPORT_ERROR,
+                                                JSMSG_DUPLICATE_XML_ATTR,
+                                                js_ValueToPrintableString(cx,
+                                                    ATOM_KEY(pn2->pn_atom)));
+                    goto fail;
+                }
             }
 
             pn2 = pn2->pn_next;
@@ -2252,19 +2270,10 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
     length = newlength = JSSTRING_LENGTH(str);
     for (cp = start = JSSTRING_CHARS(str), end = cp + length; cp < end; cp++) {
         c = *cp;
-        if (c == '<'
-#if 0
-            /*
-             * XXX Erratum: escaping > is unnecessary, and doing so breaks
-             *     tests/e4x/Expressions/11.1.4.js Section 19.
-             */
-            || c == '>'
-#endif
-            ) {
+        if (c == '<' || c == '>')
             newlength += 3;
-        } else if (c == '&') {
+        else if (c == '&')
             newlength += 4;
-        }
     }
     if ((sb && STRING_BUFFER_OFFSET(sb) != 0) || newlength > length) {
         JSStringBuffer localSB;
@@ -2280,10 +2289,8 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
             c = *cp;
             if (c == '<')
                 js_AppendCString(sb, js_lt_entity_str);
-#if 0
             else if (c == '>')
                 js_AppendCString(sb, js_gt_entity_str);
-#endif
             else if (c == '&')
                 js_AppendCString(sb, js_amp_entity_str);
             else
