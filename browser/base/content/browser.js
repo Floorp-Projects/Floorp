@@ -2482,7 +2482,7 @@ function OpenTaskURL( inURL )
 
 function goAboutDialog()
 {
-  window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,chrome,resizable=no");
 }
 
 

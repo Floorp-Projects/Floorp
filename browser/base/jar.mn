@@ -6,6 +6,8 @@ browser.jar:
         content/browser/customizeToolbar.xul          (content/customizeToolbar.xul)
         content/browser/customizeToolbar.js           (content/customizeToolbar.js)
         content/browser/customizeToolbar.css          (content/customizeToolbar.css)
+        content/browser/about.gif                     (content/about.gif)
+        content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 
 classic.jar:
         skin/classic/browser/browser.css              (skin/browser.css)
@@ -41,6 +43,7 @@ en-US.jar:
         locale/en-US/browser/browser.dtd              (locale/browser.dtd)
         locale/en-US/browser/browser.properties       (locale/browser.properties)
         locale/en-US/browser/customizeToolbar.dtd     (locale/customizeToolbar.dtd)
+        locale/en-US/browser/aboutDialog.dtd          (locale/aboutDialog.dtd)
 
 US.jar:
         locale/US/browser-region/region.properties    (locale/region.properties)
