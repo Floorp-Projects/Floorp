@@ -145,7 +145,6 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
 
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
-static nsresult    initialize_default_icon (void);
   
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
@@ -215,7 +214,6 @@ nsWindow::nsWindow()
 
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
-        initialize_default_icon();
     }
     
     if (mLastDragMotionWindow == this)
@@ -914,7 +912,7 @@ nsWindow::SetTitle(const nsString& aTitle)
 }
 
 NS_IMETHODIMP
-nsWindow::SetIcon(const nsAString& anIconSpec)
+nsWindow::SetIcon(const nsAString& aIconSpec)
 {
     if (!mShell)
         return NS_OK;
@@ -931,7 +929,7 @@ nsWindow::SetIcon(const nsAString& anIconSpec)
     chromeDir->GetPath(iconPath);
 
     // Now take input path...
-    nsAutoString iconSpec(anIconSpec);
+    nsAutoString iconSpec(aIconSpec);
     // ...append ".xpm" to it
     iconSpec.Append(NS_LITERAL_STRING(".xpm"));
 
@@ -949,18 +947,10 @@ nsWindow::SetIcon(const nsAString& anIconSpec)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString aPath;
-    pathConverter->GetNativePath(aPath);
+    nsCAutoString path;
+    pathConverter->GetNativePath(path);
 
-    LOG(("nsWindow::SetIcon using path %s\n", aPath.get()));
-
-    GdkPixbuf *iconPixbuf = gdk_pixbuf_new_from_file(aPath.get(), NULL);
-    if (!iconPixbuf)
-        return NS_ERROR_FAILURE;
-
-    gtk_window_set_icon(GTK_WINDOW(mShell), iconPixbuf);
-    g_object_unref(G_OBJECT(iconPixbuf));
-    return NS_OK;
+    return SetWindowIcon(path);
 }
 
 NS_IMETHODIMP
@@ -2033,6 +2023,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         mIsTopLevel = PR_TRUE;
         if (mWindowType == eWindowType_dialog) {
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+            SetDefaultIcon();
             gtk_window_set_type_hint(GTK_WINDOW(mShell),
                                      GDK_WINDOW_TYPE_HINT_DIALOG);
             gtk_window_set_transient_for(GTK_WINDOW(mShell),
@@ -2069,6 +2060,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         }
         else { // must be eWindowType_toplevel
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+            SetDefaultIcon();
             // each toplevel window gets its own window group
             mWindowGroup = gtk_window_group_new();
             // and add ourselves to the window group
@@ -2469,6 +2461,52 @@ nsWindow::SetupPluginPort(void)
     XSync(GDK_DISPLAY(), False);
 
     return (void *)GDK_WINDOW_XWINDOW(mDrawingarea->inner_window);
+}
+
+nsresult
+nsWindow::SetWindowIcon(nsCString &aPath)
+{
+    LOG(("window [%p] Loading icon from %s\n", (void *)this, aPath.get()));
+
+    GdkPixbuf *icon = gdk_pixbuf_new_from_file(aPath.get(), NULL);
+    if (!icon)
+        return NS_ERROR_FAILURE;
+
+    GList *list = NULL;
+    list = g_list_append(list, icon);
+    gtk_window_set_icon_list(GTK_WINDOW(mShell), list);
+    g_object_unref(G_OBJECT(icon));
+    g_list_free(list);
+
+    return NS_OK;
+}
+
+void
+nsWindow::SetDefaultIcon(void)
+{
+    // Set up the default window icon
+    nsresult rv;
+    nsCOMPtr<nsIFile> chromeDir;
+    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR,
+                                getter_AddRefs(chromeDir));
+    if (NS_FAILED(rv))
+        return;
+
+    nsAutoString defaultPath;
+    chromeDir->GetPath(defaultPath);
+            
+    defaultPath.Append(NS_LITERAL_STRING("/icons/default/default.xpm"));
+
+    nsCOMPtr<nsILocalFile> defaultPathConverter;
+    rv = NS_NewLocalFile(defaultPath, PR_TRUE,
+                         getter_AddRefs(defaultPathConverter));
+    if (NS_FAILED(rv))
+        return;
+
+    nsCAutoString path;
+    defaultPathConverter->GetNativePath(path);
+
+    SetWindowIcon(path);
 }
 
 void
@@ -3187,47 +3225,6 @@ initialize_prefs(void)
         if (NS_SUCCEEDED(rv))
             gRaiseWindows = val;
     }
-
-    return NS_OK;
-}
-
-/* static */
-nsresult
-initialize_default_icon(void)
-{
-    // Set up the default icon for all windows
-    nsresult rv;
-    nsCOMPtr<nsIFile> chromeDir;
-    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR,
-                                getter_AddRefs(chromeDir));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsAutoString defaultPath;
-    chromeDir->GetPath(defaultPath);
-            
-    defaultPath.Append(NS_LITERAL_STRING("/icons/default/default.xpm"));
-
-    nsCOMPtr<nsILocalFile> defaultPathConverter;
-    rv = NS_NewLocalFile(defaultPath, PR_TRUE,
-                         getter_AddRefs(defaultPathConverter));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCAutoString aPath;
-    defaultPathConverter->GetNativePath(aPath);
-
-    LOG(("Loading default icon from %s\n", aPath.get()));
-
-    GdkPixbuf *defaultIcon = gdk_pixbuf_new_from_file(aPath.get(), NULL);
-    if (!defaultIcon)
-        return NS_ERROR_FAILURE;
-
-    GList *list = NULL;
-    list = g_list_append(list, defaultIcon);
-    gtk_window_set_default_icon_list(list);
-    g_object_unref(G_OBJECT(defaultIcon));
-    g_list_free(list);
 
     return NS_OK;
 }

@@ -121,7 +121,7 @@ public:
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsString& aTitle);
-    NS_IMETHOD         SetIcon(const nsAString& anIconSpec);
+    NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
     NS_IMETHOD         WidgetToScreen(const nsRect& aOldRect,
@@ -253,6 +253,8 @@ private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     void               GetContainerWindow(nsWindow  **aWindow);
     void              *SetupPluginPort(void);
+    nsresult           SetWindowIcon(nsCString &aPath);
+    void               SetDefaultIcon(void);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
