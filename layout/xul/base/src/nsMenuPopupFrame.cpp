@@ -912,7 +912,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   PRBool anchoredToParent = PR_FALSE;
   PRBool readjustAboveBelow = PR_FALSE;
 
-  NS_ERROR("aaa");
   if ( aXPos != -1 || aYPos != -1 ) {
   
     // for this case, we've been handed a specific x/y location (in client coordinates) for
