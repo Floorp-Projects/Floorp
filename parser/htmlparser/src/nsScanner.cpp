@@ -266,8 +266,10 @@ nsScanner::~nsScanner() {
  *  @return  
  */
 void nsScanner::RewindToMark(void){
-  mCountRemaining += (Distance(mMarkPosition, mCurrentPosition));
-  mCurrentPosition = mMarkPosition;
+  if (mSlidingBuffer) {
+    mCountRemaining += (Distance(mMarkPosition, mCurrentPosition));
+    mCurrentPosition = mMarkPosition;
+  }
 }
 
 
@@ -297,6 +299,9 @@ void nsScanner::Mark() {
  * @return  error code 
  */
 PRBool nsScanner::UngetReadable(const nsAString& aBuffer) {
+  if (!mSlidingBuffer) {
+    return PR_FALSE;
+  }
 
   mSlidingBuffer->UngetReadable(aBuffer,mCurrentPosition);
   mSlidingBuffer->BeginReading(mCurrentPosition); // Insertion invalidated our iterators
@@ -316,7 +321,6 @@ PRBool nsScanner::UngetReadable(const nsAString& aBuffer) {
  * @return  error code 
  */
 nsresult nsScanner::Append(const nsAString& aBuffer) {
-  
   mTotalRead += aBuffer.Length();
   AppendToBuffer(aBuffer);
   return NS_OK;
@@ -1335,6 +1339,11 @@ void nsScanner::AppendASCIItoBuffer(const char* aData, PRUint32 aLen)
  *  @return  nada
  */
 void nsScanner::CopyUnusedData(nsString& aCopyBuffer) {
+  if (!mSlidingBuffer) {
+    aCopyBuffer.Truncate();
+    return;
+  }
+
   nsScannerIterator start, end;
   start = mCurrentPosition;
   end = mEndPosition;
