@@ -11,31 +11,45 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;"
         onload="Startup();"
-        width="200"
-        height="120"
+        width="400"
+        height="170"
         buttons="accept">
 
   <script type="application/x-javascript" src="chrome://browser/content/downloads/downloadProperties.js"/>
 
-  <grid>
+  <grid flex="1">
     <columns>
       <column/>
-      <column/>
+      <column flex="1"/>
     </columns>
     <rows>
-      <row>
-        <label value="&dateStarted.label;" class="bold"/>
-        <label id="dateStarted"/>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&downloadedFrom.label;" class="bold"/>
+        </hbox>
+        <textbox id="source" readonly="true"/>
       </row>
-      <separator class="thin"/>
-      <row>
-        <label value="&dateEnded.label;" class="bold"/>
-        <label id="dateEnded"/>
+      <spacer flex="1"/>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&path.label;" class="bold"/>
+        </hbox>
+        <textbox id="path" readonly="true"/>
+      </row>
+      <spacer flex="1"/>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&dateStarted.label;" class="bold"/>          
+        </hbox>        
+        <hbox flex="1">
+          <label id="dateStarted"/>
+          <spacer flex="1"/>
+          <label value="&dateEnded.label;" class="bold"/>
+          <label id="dateEnded"/>
+        </hbox>
       </row>
     </rows>
   </grid>
-
-  <spacer flex="1"/>
   <separator class="groove"/>
 </dialog>
     
