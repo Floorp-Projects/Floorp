@@ -73,6 +73,8 @@ public:
                      PRInt32 aLength,
                      PRBool aNotify);
 
+  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
+
 protected:
   nsGenericDOMDataNode mInner;
 };
@@ -296,5 +298,37 @@ nsTextNode::SetText(const char* aBuffer, PRInt32 aLength,
   if (aNotify && (nsnull != mInner.mDocument)) {
     mInner.mDocument->ContentChanged(this, nsnull);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextNode::IsOnlyWhitespace(PRBool* aResult)
+{
+  nsTextFragment& frag = mInner.mText;
+  if (frag.Is2b()) {
+    const PRUnichar* cp = frag.Get2b();
+    const PRUnichar* end = cp + frag.GetLength();
+    while (cp < end) {
+      PRUnichar ch = *cp++;
+      if (!XP_IS_SPACE(ch)) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
+    }
+  }
+  else {
+    const char* cp = frag.Get1b();
+    const char* end = cp + frag.GetLength();
+    while (cp < end) {
+      PRUnichar ch = PRUnichar(*(unsigned char*)cp);
+      cp++;
+      if (!XP_IS_SPACE(ch)) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
+    }
+  }
+
+  *aResult = PR_TRUE;
   return NS_OK;
 }
