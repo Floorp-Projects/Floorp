@@ -1139,6 +1139,13 @@ function checkForDirectoryListing()
  * XXX - this must move into XBL binding/equiv! Do not want to pollute
  *       navigator.js with functionality that can be encapsulated into
  *       browser widget. TEMPORARY!
+ *
+ * NOTE: Any changes to this routine need to be mirrored in ChromeListener::FindTitleText()
+ *       (located in mozilla/embedding/browser/webBrowser/nsDocShellTreeOwner.cpp)
+ *       which performs the same function, but for embedded clients that
+ *       don't use a XUL/JS layer. It is important that the logic of
+ *       these two routines be kept more or less in sync.
+ *       (pinkerton)
  **/
 function FillInHTMLTooltip(tipElement)
 {
