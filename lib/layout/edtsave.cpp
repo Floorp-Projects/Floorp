@@ -859,8 +859,7 @@ CEditSaveObject::CEditSaveObject( CEditBuffer *pBuffer,
         m_finishedOpt( finishedOpt ),
         m_bKeepImagesWithDoc( bKeepImagesWithDoc ),
         m_bAutoAdjustLinks( bAutoAdjustLinks ),
-        m_backgroundIndex(IgnoreImage),
-        m_fontDefIndex(IgnoreImage) {
+        m_backgroundIndex(IgnoreImage) {
 }
 
 CEditSaveObject::~CEditSaveObject(){
@@ -1081,11 +1080,20 @@ XP_Bool CEditSaveObject::AddAllFiles(char **ppIncludedFiles){
             m_backgroundIndex = CheckAddFile( pPageData->pBackgroundImage, NULL, ppIncludedFiles, 
                 m_bKeepImagesWithDoc && !pPageData->bBackgroundNoSave );
         }
-
+        // We now support > 1 FontDefURL per page
+        int iFontDefCount = m_pBuffer->m_FontDefURL.Size();
+        for( int i = 0; i < iFontDefCount; i++ )
+        {
+            intn iIndex = CheckAddFile( m_pBuffer->m_FontDefURL[i], NULL, ppIncludedFiles, 
+                                        m_bKeepImagesWithDoc && !m_pBuffer->m_FontDefNoSave[i] );
+            m_FontDefIndex.Add(iIndex);
+        }
+#if 0
         if ( pPageData->pFontDefURL && *pPageData->pFontDefURL ){
             m_fontDefIndex = CheckAddFile( pPageData->pFontDefURL, NULL, ppIncludedFiles, 
                 m_bKeepImagesWithDoc && !pPageData->bFontDefNoSave );
         }
+#endif
     }
     m_pBuffer->FreePageData( pPageData );
 
@@ -1452,11 +1460,13 @@ char *CEditSaveObject::FixupLinks(){
     // If there is a background Image, make it the first one.
     FixupLink(m_backgroundIndex,&m_pBuffer->m_pBackgroundImage,pDestPathURL,&badLinks);
 
-    FixupLink(m_fontDefIndex, &m_pBuffer->m_pFontDefURL, pDestPathURL,&badLinks);
+    // We now support > 1 FontDefURLs
+    int iFontDefCount = m_pBuffer->m_FontDefURL.Size();
+    for( int i; i < iFontDefCount; i++ )
+        FixupLink(m_FontDefIndex[i], &m_pBuffer->m_FontDefURL[i], pDestPathURL, &badLinks);
 
     // regular images.
-    CEditElement *pImage = m_pBuffer->m_pRoot->FindNextElement( 
-                                   &CEditElement::FindImage, 0 );
+    CEditElement *pImage = m_pBuffer->m_pRoot->FindNextElement( &CEditElement::FindImage, 0 );
     while( pImage ){
         pData = pImage->Image()->GetImageData();
 

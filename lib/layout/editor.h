@@ -262,7 +262,9 @@ typedef struct _EDT_CellLayoutData EDT_CellLayoutData;
 // Editor selections
 
 // template declarations
+Declare_GrowableArray(XP_Bool,XP_Bool)                  // TXP_GrowableArray_XP_Bool
 Declare_GrowableArray(int32,int32)                      // TXP_GrowableArray_int32
+Declare_GrowableArray(intn,intn)                        // TXP_GrowableArray_intn
 Declare_GrowableArray(ED_Link,ED_Link*)                 // TXP_GrowableArray_ED_Link
 Declare_GrowableArray(EDT_MetaData,EDT_MetaData*)       // TXP_GrowableArray_EDT_MetaData
 Declare_GrowableArray(pChar,char*)                      // TXP_GrowableArray_pChar
@@ -3017,8 +3019,10 @@ public:
     char *m_pTitle;
     char *m_pBackgroundImage;
     XP_Bool m_bBackgroundNoSave;
-    char *m_pFontDefURL;
-    XP_Bool m_bFontDefNoSave;
+    // Bug 117881: There may be > 1 FontDef LINK per page, so use an growable array
+    //char *m_pFontDefURL;
+    TXP_GrowableArray_pChar m_FontDefURL;
+    TXP_GrowableArray_XP_Bool m_FontDefNoSave;
     char *m_pBaseTarget;
     char *m_pBodyExtra;
     CEditImageLoader *m_pLoadingImage;
@@ -3437,10 +3441,8 @@ public:
     static void FreePageData( EDT_PageData* pData );
     void SetImageAsBackground();
     
-    intn MetaDataCount( );
     intn FindMetaData( EDT_MetaData *pMetaData );
-    intn FindMetaData( XP_Bool bHttpEquiv, char* pName );
-    intn FindMetaDataIndex( EDT_MetaData *pMetaData );
+    intn FindContentTypeIndex();
     EDT_MetaData* MakeMetaData( XP_Bool bHttpEquiv, char *pName, char*pContent );
     EDT_MetaData* GetMetaData( intn n );
     void SetMetaData( EDT_MetaData *pMetaData );
@@ -4175,7 +4177,9 @@ private:
     XP_Bool m_bKeepImagesWithDoc;
     XP_Bool m_bAutoAdjustLinks;
     intn m_backgroundIndex;
-    intn m_fontDefIndex;
+    // Must use array since we now support > 1 FontDefURL per page
+    //intn m_fontDefIndex;
+    TXP_GrowableArray_intn m_FontDefIndex;
 
 public:
     CEditSaveObject( CEditBuffer *pBuffer, 

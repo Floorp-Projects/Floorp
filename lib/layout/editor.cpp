@@ -2092,7 +2092,7 @@ void EDT_SetImageAsBackground( MWContext *pContext ){
 
 intn EDT_MetaDataCount( MWContext *pContext ){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) 0;
-    return pEditBuffer->MetaDataCount();
+    return pEditBuffer->m_metaData.Size();
 }
 
 EDT_MetaData* EDT_GetMetaData( MWContext *pContext, intn n ){

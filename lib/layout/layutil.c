@@ -3712,7 +3712,7 @@ int32 lo_GetRowSpan(LO_Element *pCellElement)
 
 int32 lo_GetColSpan(LO_Element *pCellElement)
 {
-    XP_ASSERT(pCellElement->type == LO_CELL);
+    XP_ASSERT(pCellElement && pCellElement->type == LO_CELL);
     if( pCellElement && pCellElement->lo_any.type == LO_CELL &&
         pCellElement->lo_cell.table_cell )
     {
@@ -3724,8 +3724,14 @@ int32 lo_GetColSpan(LO_Element *pCellElement)
 /* TODO: CHANGE THIS TO GET LEFT, TOP, RIGHT, OR BOTTOM SEPARATELY? */
 int32 lo_GetCellPadding(LO_Element *pCellElement)
 {
-    XP_ASSERT(pCellElement->type == LO_CELL);
-    return ((lo_TableRec*)pCellElement->lo_cell.table)->inner_top_pad;
+    XP_ASSERT(pCellElement && pCellElement->type == LO_CELL);
+    
+    if( pCellElement && pCellElement->type == LO_CELL &&
+        pCellElement->lo_cell.table )
+    {
+        return ((lo_TableRec*)pCellElement->lo_cell.table)->inner_top_pad;
+    }
+    return 0;
 }
 
 LO_Element * lo_GetLastElementInList( LO_Element *eleList )

@@ -1396,11 +1396,14 @@ void CEditBuffer::ParseLink(PA_Tag* pTag, CEditElement*& pElement, intn& retVal)
 
 void CEditBuffer::ParseLinkFontDef(PA_Tag* pTag, CEditElement*& /*pElement*/, intn& /*retVal*/){
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
-    if ( m_pFontDefURL ) {
-        XP_FREE(m_pFontDefURL);
+
+    char *pFontDefURL = edt_FetchParamString(pTag, PARAM_SRC, INTL_GetCSIWinCSID(c));
+    if( pFontDefURL )
+    {
+        m_FontDefURL.Add(pFontDefURL);
+        XP_Bool bFontDefNoSave = edt_FetchParamBoolExist(pTag, PARAM_NOSAVE, GetRAMCharSetID());
+        m_FontDefNoSave.Add(bFontDefNoSave);
     }
-    m_pFontDefURL = edt_FetchParamString(pTag, PARAM_SRC, INTL_GetCSIWinCSID(c));
-    m_bFontDefNoSave = edt_FetchParamBoolExist(pTag, PARAM_NOSAVE, GetRAMCharSetID());
 }
 
 
@@ -1507,8 +1510,6 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_pTitle(0),
         m_pBackgroundImage(0),
         m_bBackgroundNoSave(FALSE),
-        m_pFontDefURL(0),
-        m_bFontDefNoSave(FALSE),
         m_pBodyExtra(0),
         m_pLoadingImage(0),
         m_pSaveObject(0),
@@ -1620,6 +1621,7 @@ CEditBuffer::~CEditBuffer(){
     // Delete meta data
     for(intn i = 0; i < m_metaData.Size(); i++ ) {
         FreeMetaData(m_metaData[i]);
+        m_metaData.Delete(i);
     }
     ResetParseStateStack();
     CGlobalHistoryGroup::GetGlobalHistoryGroup()->DeleteLog(this);
@@ -3318,6 +3320,10 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
             pContainer->SetType(P_DESC_TITLE);
 #endif
         }
+        else if ( tagType == P_DESC_TITLE )
+        {
+            pContainer->SetType(P_DESC_TEXT);
+        }
     }
     return pContainer;
 }
@@ -4062,12 +4068,18 @@ void CEditBuffer::MorphContainerSelection( TagType t, CEditSelection& selection 
         // TODO: CHECK THE EFFECTS OF <BR> AFTER A LIST ITEM
         if( pList )
         {
+            TagType type = pList->GetType();
             // If we are changing an item in a list to something other than
-            //   a listitem - this means terminate the list
-            if( t != P_LIST_ITEM )
+            //   a valid list item for that type of list,
+            //   this means terminate the list
+            if( (type == P_DESC_LIST && 
+                 !(t == P_DESC_TITLE || t == P_DESC_TEXT)) ||
+                (type != P_BLOCKQUOTE && type != P_DESC_LIST && t != P_LIST_ITEM ) )
+            {
                 TerminateList(pContainer);
-            else
+            } else {
                 pPrevList = pList;
+            }
         }
         else if( t == P_LIST_ITEM )
         {
@@ -4176,27 +4188,32 @@ void CEditBuffer::ToggleList2(intn iTagType, CEditSelection& /*selection*/)
     XP_Bool bIsMyList = FALSE;
     XP_Bool bIsDescList = FALSE;
 
-    if ( nParagraphFormat == P_LIST_ITEM || iTagType == P_DESC_LIST ) {
+    if ( nParagraphFormat == P_LIST_ITEM || iTagType == P_DESC_LIST )
+    {
         pData = GetListData();
         bIsMyList = ( pData && pData->iTagType == iTagType );
     }
     bIsDescList = bIsMyList && (iTagType == P_DESC_LIST);
 
     if ( (nParagraphFormat == P_LIST_ITEM || bIsDescList)
-         && bIsMyList ) {
-        // WILL THIS ALONE UNDO THE LIST?
+         && bIsMyList )
+    {
+        // This will remove any list container
         MorphContainer(P_NSDT);
-        Outdent();
-    } else {
-        if ( !pData ) {
-            // Must be indendented
-            Indent();
+    } 
+    else 
+    {
+        if ( !pData )
+        {
             // Create a numbered list item ONLY if not Description list
+            // (This will automatically indent, i.e., create the list container)
             if (nParagraphFormat != P_LIST_ITEM && iTagType != P_DESC_LIST) {
                 MorphContainer(P_LIST_ITEM);
             }
             pData = GetListData();
-        } else if (nParagraphFormat == P_LIST_ITEM && iTagType == P_DESC_LIST ){
+        } 
+        else if (nParagraphFormat == P_LIST_ITEM && iTagType == P_DESC_LIST )
+        {
             // We are converting an existing list item into
             //   a description, so remove the list item
             MorphContainer(P_DESC_TITLE);
@@ -4204,15 +4221,15 @@ void CEditBuffer::ToggleList2(intn iTagType, CEditSelection& /*selection*/)
         }
 
 
-        if ( pData && (pData->iTagType != iTagType) ){
+        if ( pData && (pData->iTagType != iTagType) )
+        {
             pData->iTagType = iTagType;
             pData->eType = ED_LIST_TYPE_DEFAULT;
             SetListData(pData);
         }
     }
-    if ( pData ) {
+    if ( pData )
         EDT_FreeListData(pData);
-    }
 }
 
 void CEditBuffer::SetParagraphAlign( ED_Alignment eAlign ){
@@ -5646,10 +5663,13 @@ EDT_PageData* CEditBuffer::GetPageData(){
     pData->pBackgroundImage = ( m_pBackgroundImage
                     ? XP_STRDUP( m_pBackgroundImage )
                     : 0 );
-    pData->pFontDefURL = ( m_pFontDefURL
-                    ? XP_STRDUP( m_pFontDefURL )
-                    : 0 );
-    pData->bFontDefNoSave = m_bFontDefNoSave;
+    // FEs aren't using this now - maybe remove?
+    // Or pass entire m_FontDefURL and m_FontDefNoSave arrays?
+    // This was used by CEditSaveObject::AddAllFiles(),
+    //  but now we access m_FontDefURL and m_FontDefNoSave directly,
+    pData->pFontDefURL = 0;
+    pData->bFontDefNoSave = FALSE;
+
     return pData;
 }
 
@@ -5705,7 +5725,9 @@ void CEditBuffer::SetPageData( EDT_PageData* pData ){
     }  
     m_bBackgroundNoSave = pData->bBackgroundNoSave;
 
-    // Font reference
+    // Font reference - not set by FEs yet
+#if 0
+// This is the old stuff
     if(m_pFontDefURL != NULL)  {
         XP_FREE(m_pFontDefURL);
         m_pFontDefURL = NULL;
@@ -5714,6 +5736,7 @@ void CEditBuffer::SetPageData( EDT_PageData* pData ){
         m_pFontDefURL = XP_STRDUP(pData->pFontDefURL);  
     }  
     m_bFontDefNoSave = pData->bFontDefNoSave;
+#endif
 
     // Note: all LO_SetDocumentColor calls
     //       and LO_SetBackgroundImage are done in RefreshLayout
@@ -5755,51 +5778,46 @@ void CEditBuffer::SetImageAsBackground()
 }
 
 // MetaData
-
-intn CEditBuffer::MetaDataCount( ){
-    intn i = 0;
-    intn iRetVal = 0;
-    while( i < m_metaData.Size() ){
-        if( m_metaData[i] != 0 ){
-            iRetVal++;
-        }
-        i++;
-    }
-    return iRetVal;
-}
-
-intn CEditBuffer::FindMetaData( EDT_MetaData *pMetaData ){
-    return FindMetaData(pMetaData->bHttpEquiv, pMetaData->pName);
-}
-
-intn CEditBuffer::FindMetaData(XP_Bool bHttpEquiv, char* pName){
-    intn i = 0;
-    intn iRetVal = 0;
-    while( i < m_metaData.Size() ){
-        if( m_metaData[i] != 0 ){
-            if( (!!bHttpEquiv == !!m_metaData[i]->bHttpEquiv)
-                    && XP_STRCMP( m_metaData[i]->pName, pName) == 0 ){
-                return iRetVal;
-            }
-            iRetVal++;
-        }
-        i++;
-    }
-    return -1;
-}
-
-intn CEditBuffer::FindMetaDataIndex( EDT_MetaData *pMetaData ){
-    intn i = 0;
-    while( i < m_metaData.Size() ){
-        if( m_metaData[i] != 0 ){
-            if( (!!pMetaData->bHttpEquiv == !!m_metaData[i]->bHttpEquiv)
-                    && XP_STRCMP( m_metaData[i]->pName, pMetaData->pName) == 0 ){
+intn CEditBuffer::FindMetaData( EDT_MetaData *pMetaData )
+{
+    intn iCount = m_metaData.Size();
+    for( intn i = 0; i < iCount; i++ )
+    {
+        if( (!!pMetaData->bHttpEquiv == !!m_metaData[i]->bHttpEquiv)
+             && XP_STRCMP( m_metaData[i]->pName, pMetaData->pName) == 0 )
+        {
+            // No previous value, so we can stop at first name found
+            if( pMetaData->pPrevContent == 0 )
+                return i;
+            
+            // Check for previous value - match item only if
+            //   old content string is found
+            // This allows us to replace specific NAME/CONTENT items
+            //   and allow > 1 items to have the same NAME
+            char *pContent = m_metaData[i]->pContent;
+            if( pContent &&
+                ( pContent == pMetaData->pPrevContent ||
+                 XP_STRCMP( pContent, pMetaData->pPrevContent) == 0 ) )
+            {
                 return i;
             }
         }
-        i++;
     }
     return -1;
+}
+
+intn CEditBuffer::FindContentTypeIndex()
+{
+    intn iIndex = 0;
+    EDT_MetaData *pData = EDT_NewMetaData();
+    if( pData )
+    {
+        pData->bHttpEquiv = TRUE;
+        pData->pName = CONTENT_TYPE;
+        iIndex = FindMetaData(pData);
+        XP_FREE( pData );
+   }
+   return iIndex;
 }
 
 EDT_MetaData* CEditBuffer::MakeMetaData( XP_Bool bHttpEquiv, char *pName, char*pContent ){
@@ -5839,7 +5857,7 @@ EDT_MetaData* CEditBuffer::GetMetaData( int n ){
 }
 
 void CEditBuffer::SetMetaData( EDT_MetaData *pData ){
-    intn i = FindMetaDataIndex( pData );
+    intn i = FindMetaData( pData );
     if ( ! (pData && pData->pContent && *(pData->pContent)) ) {
         // We've been asked to erase an entry
         if ( i == -1 ) {
@@ -5849,7 +5867,9 @@ void CEditBuffer::SetMetaData( EDT_MetaData *pData ){
         else {
             // Erase the entry.
             FreeMetaData( m_metaData[i] );
-            m_metaData[i] = NULL;
+            // Delete the entry from the list
+            // (this now shuffles pointers so no gaps in list)
+            m_metaData.Delete(i);
         }
     }
     else {
@@ -5867,17 +5887,29 @@ void CEditBuffer::SetMetaData( EDT_MetaData *pData ){
 }
 
 void CEditBuffer::DeleteMetaData( EDT_MetaData *pData ){
-    intn i = FindMetaDataIndex( pData );
+    intn i = FindMetaData( pData );
     if( i != -1 ){
         FreeMetaData( m_metaData[i] );
-        m_metaData[i] = 0;
+        // Shuffle pointers to replace deleted item
+        m_metaData.Delete(i);
     }
 }
 
 void CEditBuffer::FreeMetaData( EDT_MetaData *pData ){
-    if ( pData ) {
+    if ( pData )
+    {
         if( pData->pName ) XP_FREE( pData->pName );
-        if( pData->pContent ) XP_FREE( pData->pContent );
+        if( pData->pContent )
+        {
+            // pPrevContent is set to pContent to allow multiple tags
+            //   with same NAME but different CONTENT when parsing a doc)
+            if( pData->pPrevContent && 
+                pData->pPrevContent != pData->pContent )
+            {
+                XP_FREE( pData->pPrevContent );
+            }
+            XP_FREE( pData->pContent );
+        }
         XP_FREE( pData );
     }
 }
@@ -5901,6 +5933,11 @@ void CEditBuffer::ParseMetaTag( PA_Tag *pTag ){
     // if we got one or the other, add it to the list of meta tags.
     if( pName ){
         EDT_MetaData *pData = MakeMetaData( bHttpEquiv, pName, pContent );
+        // We want to allow multiple entries with the same NAME,
+        //  as long as CONTENT is different. So setting these the same
+        //  will make FindMetaData() match CONTENT as well as NAME
+        //  when deciding to replace and existing meta entry
+        pData->pPrevContent = pData->pContent;
         SetMetaData( pData );
         FreeMetaData( pData );
     }
@@ -7142,7 +7179,8 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
             SetTableInsertPoint(pCell);
         }
 
-        if( m_SelectedEdCells.Size() > 1 )
+        int iSelectedCount = m_SelectedEdCells.Size();
+        if( iSelectedCount > 1 )
         {
             // NOTE: If previous selection was a set of cells or row or column,
             //   and new iHitType == ED_HIT_SEL_CELL,
@@ -7173,14 +7211,33 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
         if( pData )
         {
             // Fill supplied struct with data for next cell
-            EDT_TableCellData *pNextData = pCell->GetData();
-            if( pNextData )
+            EDT_TableCellData *pNewData = pCell->GetData();
+            if( pNewData )
             {
+                // Set initial mask to that of the new focus cell
+                pData->mask = pNewData->mask;
                 // Set all bits in mask so all values are copied
-                // This does not change current pData->mask
-                pNextData->mask = -1;
-                edt_CopyTableCellData(pData, pNextData);
-                EDT_FreeTableCellData(pNextData);
+                // This does not change pData->mask
+                pNewData->mask = -1;
+                edt_CopyTableCellData(pData, pNewData);
+                EDT_FreeTableCellData(pNewData);
+
+                if( iSelectedCount > 1 )
+                {
+                    // Go through all selected cells to set mask bits 
+                    //  that tell what attributes are the same or mixed state
+                    //  for all selected cells
+                    for( intn i = 0; i < iSelectedCount; i++ )
+                    {
+                        // Skip current cell when comparing data
+                        if( m_SelectedEdCells[i] != pCell )
+                            m_SelectedEdCells[i]->MaskData(pData);
+                    }
+
+                    // Override ColSpan and RowSpan mask bit
+                    //  to NOT allow changing it when > 1 cell is selected
+                    pData->mask &= ~(CF_COLSPAN | CF_ROWSPAN);
+                }
             }
         }
     }
@@ -7884,10 +7941,12 @@ char* CEditBuffer::GetAllDocumentFiles(XP_Bool **ppSelected,XP_Bool bKeepImagesW
         return NULL;
     }
 
-    // Font Ref.
-    if( m_pFontDefURL && *m_pFontDefURL) {
-      AddToBufferUnique(buf,selected,pDocURL,m_pFontDefURL,
-            bKeepImagesWithDoc && !m_bFontDefNoSave);
+    int iFontDefCount = m_FontDefURL.Size();
+    if( iFontDefCount)
+    {
+        for( int i = 0; i < iFontDefCount; i++ )
+            AddToBufferUnique(buf, selected, pDocURL, m_FontDefURL[i],
+                              bKeepImagesWithDoc && !m_FontDefNoSave[i]);
     }
 
     // Background image.
@@ -8949,12 +9008,12 @@ void CEditBuffer::AppendTitle( char *pTitle ){
 
 void CEditBuffer::PrintMetaData( CPrintState *pPrintState ){
     // According to RFC 2070, print the charset http-equiv as soon as possible.
-    int contentTypeID = FindMetaData(TRUE, CONTENT_TYPE);
-    if ( contentTypeID >= 0 ) {
-        PrintMetaData(pPrintState, contentTypeID);
+    int contentTypeIndex = FindContentTypeIndex();
+    if ( contentTypeIndex >= 0 ) {
+        PrintMetaData(pPrintState, contentTypeIndex);
     }
     for( int i = 0; i < m_metaData.Size(); i++ ){
-        if ( i != contentTypeID ) {
+        if ( i != contentTypeIndex ) {
             PrintMetaData(pPrintState, i);
         }
     }
@@ -8994,28 +9053,29 @@ void CEditBuffer::PrintMetaData( CPrintState *pPrintState, int index ){
     }
 }
 
-void CEditBuffer::PrintDocumentHead( CPrintState *pPrintState ){
+void CEditBuffer::PrintDocumentHead( CPrintState *pPrintState )
+{
     XP_Bool bPageComposer = ! IsComposeWindow();
 
     XP_Bool bHaveBaseTarget = m_pBaseTarget && *m_pBaseTarget;
-    XP_Bool bHaveFontDefURL = m_pFontDefURL && *m_pFontDefURL;
+    int     iFontDefCount = m_FontDefURL.Size();
     CParseState* pParseState = GetParseState();
     XP_Bool bHaveHeadTags = pParseState->m_pJavaScript != NULL;
     XP_Bool bNeedHead = bPageComposer
-        || bHaveBaseTarget || bHaveFontDefURL
+        || bHaveBaseTarget || (iFontDefCount > 0)
         || bHaveHeadTags;
     
     // Unfortunately, we don't conform to any standard DOCTYPE yet.
-    // cmanske: TODO: NEED TO SEE IF WE CAN WRITE THIS NOW - ITS IMPORTANT!
-    // TODO: Put DOCTYPE string in allxpstr.h and .rc???
     pPrintState->m_pOut->Printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n");
 
     pPrintState->m_pOut->Printf("<HTML>\n");
     
-    if ( bNeedHead ) {
+    if ( bNeedHead )
+    {
         pPrintState->m_pOut->Printf("<HEAD>\n");
 
-        if ( bPageComposer ) {
+        if ( bPageComposer )
+        {
             // Print the MetaData first because it includes the charset, which can affect the way the
             // title is parsed. See RFC 2070.
             PrintMetaData( pPrintState );
@@ -9028,54 +9088,55 @@ void CEditBuffer::PrintDocumentHead( CPrintState *pPrintState ){
         }
 
         // Print BASE TARGET if nescessary
-        if ( bHaveBaseTarget ) {
+        if ( bHaveBaseTarget )
+        {
             pPrintState->m_pOut->Printf("   <BASE TARGET=%s>\n",
                 edt_MakeParamString( m_pBaseTarget ));
         }
 
-        // Print the font ref if nescessary
-        if ( bHaveFontDefURL ){
+        // Print the font refs if nescessary
+        for( int i = 0; i < iFontDefCount; i++ )
+        {
             pPrintState->m_pOut->Printf("   <LINK REL=FONTDEF SRC=%s",
-                edt_MakeParamString( m_pFontDefURL ));
-            if ( m_bFontDefNoSave ) {
+                                        edt_MakeParamString( m_FontDefURL[i] ));
+            if ( m_FontDefNoSave[i] )
                 pPrintState->m_pOut->Printf(" NOSAVE");
-            }
+
             pPrintState->m_pOut->Printf(">\n");
         }
-        if( bHaveHeadTags ){
+        if( bHaveHeadTags )
             Write(pParseState->m_pJavaScript, pPrintState->m_pOut);
-        }
+
         pPrintState->m_pOut->Printf("</HEAD>\n");
     }
 
-    if ( IsBodyTagRequired() ) {
+    if ( IsBodyTagRequired() )
+    {
         // print the contents of the body tag.
         pPrintState->m_pOut->Printf("<BODY");
-        if( m_colorText.IsDefined() ) {
+        if( m_colorText.IsDefined() )
             pPrintState->m_pOut->Printf(" TEXT=\"#%06lX\"", m_colorText.GetAsLong() );
-        }
-        if( m_colorBackground.IsDefined() ) {
-            pPrintState->m_pOut->Printf(" BGCOLOR=\"#%06lX\"", m_colorBackground.GetAsLong() );
-        }
-        if( m_colorLink.IsDefined() ) {
-            pPrintState->m_pOut->Printf(" LINK=\"#%06lX\"", m_colorLink.GetAsLong() );
-        }
-        if( m_colorFollowedLink.IsDefined() ) {
-            pPrintState->m_pOut->Printf(" VLINK=\"#%06lX\"", m_colorFollowedLink.GetAsLong() );
-        }
-        if( m_colorActiveLink.IsDefined() ) {
-            pPrintState->m_pOut->Printf(" ALINK=\"#%06lX\"", m_colorActiveLink.GetAsLong() );
-        }
-        if( m_pBackgroundImage && *m_pBackgroundImage) {
-            pPrintState->m_pOut->Printf(" BACKGROUND=%s", edt_MakeParamString(m_pBackgroundImage) );
-        }
-        if ( m_bBackgroundNoSave ) {
-            pPrintState->m_pOut->Printf(" NOSAVE");
-        }
 
-        if( m_pBodyExtra && *m_pBodyExtra ) {
+        if( m_colorBackground.IsDefined() )
+            pPrintState->m_pOut->Printf(" BGCOLOR=\"#%06lX\"", m_colorBackground.GetAsLong() );
+
+        if( m_colorLink.IsDefined() )
+            pPrintState->m_pOut->Printf(" LINK=\"#%06lX\"", m_colorLink.GetAsLong() );
+
+        if( m_colorFollowedLink.IsDefined() )
+            pPrintState->m_pOut->Printf(" VLINK=\"#%06lX\"", m_colorFollowedLink.GetAsLong() );
+
+        if( m_colorActiveLink.IsDefined() )
+            pPrintState->m_pOut->Printf(" ALINK=\"#%06lX\"", m_colorActiveLink.GetAsLong() );
+
+        if( m_pBackgroundImage && *m_pBackgroundImage)
+            pPrintState->m_pOut->Printf(" BACKGROUND=%s", edt_MakeParamString(m_pBackgroundImage) );
+
+        if ( m_bBackgroundNoSave )
+            pPrintState->m_pOut->Printf(" NOSAVE");
+
+        if( m_pBodyExtra && *m_pBodyExtra )
             pPrintState->m_pOut->Printf(" %s", m_pBodyExtra );
-        }
 
         pPrintState->m_pOut->Printf(">\n");
     }
@@ -10030,9 +10091,16 @@ void CEditBuffer::FinishedLoad2()
     // Initialize correct witdth data for all tables and cells in document
     FixupTableData();
     
+    // Flag set during buffer creation to tell 
+    //  if we imported a text file
+    if( m_bImportText )
+        ConvertCurrentDocToNewDoc();
+
     if ( bShouldSendOpenEvent ) {
 		History_entry * hist_entry = SHIST_GetCurrent(&(m_pContext->hist));
         char* pURL = hist_entry ? hist_entry->address : 0;
+        // DANGER! DANGER! In mail composer, the current edit buffer may be deleted
+        //   during this process, so DON'T ACCESS ANY "this" MEMBERS AFTER THIS
         EDT_PerformEvent(m_pContext, "open", pURL, TRUE, FALSE, edt_OpenDoneCB, m_pContext);
     }
     else {
@@ -10042,10 +10110,6 @@ void CEditBuffer::FinishedLoad2()
         // Make current doc the most-recently-edited in prefs history list
         EDT_SyncEditHistory( m_pContext );
     }
-    // Flag set during buffer creation to tell 
-    //  if we imported a text file
-    if( m_bImportText )
-        ConvertCurrentDocToNewDoc();
 }
 
 void CEditBuffer::ConvertCurrentDocToNewDoc()
@@ -10063,16 +10127,6 @@ void CEditBuffer::ConvertCurrentDocToNewDoc()
     
     // Should be the same as pEntry->Address???
     char *pBaseURL = LO_GetBaseURL(m_pContext);
-
-    // Call Java Plugin hook for pages to be closed,
-    //  BUT only if it really was an lockable source
-    int iType = NET_URL_Type(pBaseURL);
-    if( iType == FTP_TYPE_URL ||
-        iType == HTTP_TYPE_URL ||
-        iType == SECURE_HTTP_TYPE_URL ||
-        iType == FILE_TYPE_URL ){
-        EDT_PreClose(m_pContext, pBaseURL, NULL, NULL);
-    }
 
     // Walk the tree and find all HREFs.
     CEditElement *pLeaf = m_pRoot->FindNextElement( 
@@ -16332,7 +16386,7 @@ void CEditBuffer::SetEncoding(int16 csid) {
 }
 
 XP_Bool CEditBuffer::HasEncoding() {
-    return FindMetaData(TRUE, CONTENT_TYPE) >= 0;
+    return FindContentTypeIndex() >= 0;
 }
 
 // Used for QA only - Ctrl+Alt+Shift+N accelerator for automated testing
