@@ -776,7 +776,8 @@ il_size(il_container *ic)
 
     /* If the display front-end doesn't support scaling, IMGCBIF_NewPixmap will
        set the image and mask dimensions to scaled_width and scaled_height. */
-    nsresult rv = img_cx->img_cb->NewPixmap(img_cx->dpy_cx, ic->dest_width,
+    nsresult rv;
+    rv = img_cx->img_cb->NewPixmap(img_cx->dpy_cx, ic->dest_width,
                               ic->dest_height, ic->image, ic->mask);
     if (NS_FAILED(rv))
            return MK_OUT_OF_MEMORY;   
@@ -786,6 +787,8 @@ il_size(il_container *ic)
 
     if (ic->mask && !ic->mask->haveBits)
         return MK_OUT_OF_MEMORY;
+
+    rv = img_cx->img_cb->SetImageNaturalDimensions(ic->image, src_width, src_height);
 
     /* Adjust the total cache byte count to reflect any departure from the
        original predicted byte count for this image. */
@@ -1082,7 +1085,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
       NS_RELEASE(ic->imgdec);
   ic->imgdec = imgdec;
   
-  rv = imgdec->ImgDInit();
+  rv = ic->imgdec->ImgDInit();
 
   if(NS_FAILED(rv)){
     NS_RELEASE(ic->imgdec);
@@ -1488,11 +1491,11 @@ il_image_complete(il_container *ic)
                     ILTRACE(1,("il: loop %s", ic->url_address));
 
                     if(ic->net_cx){ 
-                    netRequest = ic->net_cx->CreateURL(ic->fetch_url, USE_IMG_CACHE);
-                    if (!netRequest) {   /* OOM */
-                        il_container_complete(ic);
-                        break;
-                    }
+                        netRequest = ic->net_cx->CreateURL(ic->fetch_url, USE_IMG_CACHE);
+                        if (!netRequest) {   /* OOM */
+                            il_container_complete(ic);
+                            break;
+                        }
                     }else{
                         il_container_complete(ic);
                         break;
@@ -1546,8 +1549,8 @@ il_image_complete(il_container *ic)
 
                         /* Suppress thermo & progress bar */
                         /* Call to netlib for net cache data happens here. */
-                                  netRequest->SetBackgroundLoad(PR_TRUE);
-                                  reader = IL_NewNetReader(ic);
+                        netRequest->SetBackgroundLoad(PR_TRUE);
+                        reader = IL_NewNetReader(ic);
 
 
                         /* using lclient insures we are using an active image request */
@@ -1986,6 +1989,7 @@ IL_GetImage(const char* image_url,
         return NULL;
     }
     err = ic->net_cx->GetURL(url, cache_reload_policy, reader, PR_FALSE);
+
     /* Release reader, GetURL will keep a ref to it. */
     NS_RELEASE(reader);
     return image_req;
