@@ -1198,7 +1198,7 @@ var nsJoinTableCellsCommand =
       // We need a cell and either > 1 selected cell or a sibling cell to the right
       // (Note that editorShell returns "td" for "th" also)
       // (This is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
-      if (cell && tagNameObj.value != "td")
+      if (cell && tagNameObj.value == "td")
         return ( (countObj.value > 1) ||
                  (cell.nextSibling && 
                   (cell.nextSibling.tagName == "TD" ||
