@@ -82,6 +82,8 @@
         popup;
       ]]></field>
       
+      <property name="controller" onget="return this.mController;" readonly="true"/>
+
       <property name="popupOpen"
                 onget="return this.popup.popupOpen;"
                 onset="if (val) this.openPopup(); else this.closePopup();"/>
@@ -434,7 +436,7 @@
           if (!this.mPopupOpen) {
             if (!this.mInput) {
               this.mInput = aInput;
-              this.view = this.mInput.mController;
+              this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
               this.invalidate();
             }
 

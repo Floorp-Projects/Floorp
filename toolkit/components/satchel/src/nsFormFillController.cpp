@@ -84,7 +84,7 @@ nsFormFillController::nsFormFillController() :
 {
   NS_INIT_ISUPPORTS();
 
-  mController = do_GetService("@mozilla.org/autocomplete/controller;1");
+  mController = do_CreateInstance("@mozilla.org/autocomplete/controller;1");
 
   mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");
   mPopups = do_CreateInstance("@mozilla.org/supports-array;1");
@@ -205,6 +205,14 @@ nsFormFillController::GetPopup(nsIAutoCompletePopup **aPopup)
 {
   *aPopup = mFocusedPopup;
   NS_IF_ADDREF(*aPopup);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetController(nsIAutoCompleteController **aController)
+{
+  *aController = mController;
+  NS_IF_ADDREF(*aController);
   return NS_OK;
 }
 
