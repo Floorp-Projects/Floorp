@@ -15,11 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsCOMPtr.h"
-#include "nsIModule.h"
 #define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
 #undef NS_IMPL_IDS
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
 
 #include "pratom.h"
 #include "nsCharDetDll.h"
@@ -308,7 +308,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
   }
 
   // get the registry
-  nsIRegistry::Key key;
+  nsRegistryKey key;
   nsIRegistry* registry;
   rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
                                     nsIRegistry::GetIID(),

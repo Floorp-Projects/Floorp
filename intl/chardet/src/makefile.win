@@ -32,7 +32,7 @@ CSRCS= \
 	$(NULL)
 
 CPPSRCS= \
-         nsCharDetDll.cpp \
+         nsCharDetModule.cpp \
          nsMetaCharsetObserver.cpp \
          nsXMLEncodingObserver.cpp \
          nsObserverBase.cpp \
@@ -43,7 +43,7 @@ CPPSRCS= \
 	$(NULL)
 
 CPP_OBJS= \
-        .\$(OBJDIR)\nsCharDetDll.obj \
+        .\$(OBJDIR)\nsCharDetModule.obj \
         .\$(OBJDIR)\nsMetaCharsetObserver.obj \
         .\$(OBJDIR)\nsXMLEncodingObserver.obj \
         .\$(OBJDIR)\nsObserverBase.obj \
