@@ -50,11 +50,9 @@
 
 #if defined (XP_UNIX)
 #define USER_ENVIRONMENT_VARIABLE "USER"
-#define LOGNAME_ENVIRONMENT_VARIABLE "LOGNAME"
 #define HOME_ENVIRONMENT_VARIABLE "HOME"
 #define PROFILE_NAME_ENVIRONMENT_VARIABLE "PROFILE_NAME"
 #define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
-#define DEFAULT_UNIX_PROFILE_NAME "default"
 #elif defined (XP_BEOS)
 #endif
 
@@ -1015,6 +1013,8 @@ nsProfileAccess::ProfileExists(const PRUnichar *profileName)
 nsresult
 nsProfileAccess::Get4xProfileInfo(const char *registryName)
 {
+    NS_ASSERTION(registryName, "Invalid registryName");
+
     nsresult rv = NS_OK;
     mNumOldProfiles = 0;
 
@@ -1023,8 +1023,6 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
     if (NS_FAILED(rv)) return rv;
 
 #if defined(XP_PC) || defined(XP_MAC)
-    NS_ASSERTION(registryName, "Invalid registryName");
-
     nsCOMPtr<nsIRegistry> oldReg(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     rv = oldReg->Open(registryName);
@@ -1121,22 +1119,16 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 #elif defined (XP_BEOS)
 #else
 /* XP_UNIX */
-        nsCAutoString unixProfileName( PR_GetEnv(PROFILE_NAME_ENVIRONMENT_VARIABLE) );
-        nsCAutoString unixProfileDirectory( PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE) );
+        char *unixProfileName = PR_GetEnv(PROFILE_NAME_ENVIRONMENT_VARIABLE);
+        char *unixProfileDirectory = PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE);
 
         if (!unixProfileName || 
             !unixProfileDirectory || 
             (PL_strlen(unixProfileName) == 0) || 
             (PL_strlen(unixProfileDirectory) == 0)) 
         {
+            unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
             unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
-            unixProfileName = PR_GetEnv(LOGNAME_ENVIRONMENT_VARIABLE);
-            if ( !unixProfileName || (PL_strlen(unixProfileName) == 0) ) {
-              unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
-            }
-            if ( !unixProfileName || (PL_strlen(unixProfileName) == 0) ) {
-              unixProfileName = DEFAULT_UNIX_PROFILE_NAME;
-            }
         }
 
         PRBool exists = PR_FALSE;;
