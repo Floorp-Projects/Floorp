@@ -92,3 +92,7 @@ box[hide] {
 	display: none;
 }
 
+titledbutton#Throbber
+{
+        list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+} 

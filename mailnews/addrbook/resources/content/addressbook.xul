@@ -74,7 +74,6 @@
 <!ENTITY searchButton.img "resource:/res/toolbar/TB_Search.gif">
 <!ENTITY searchButton.label ".Search">  
 <!ENTITY showNames.label "Show names containing:">  
-<!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
 <!ENTITY throbber.url "http://www.mozilla.org/"> 
 ]> 
 
@@ -193,7 +192,7 @@
 			<titledbutton src="&searchButton.img;" align="bottom" value="&searchButton.label;" onclick="AbSearch()"/>
 			<spring flex="100%"/>
 
-			<titledbutton src="&throbber.img;" align="right" onclick="MsgHome('&throbber.url;')"/>
+			<titledbutton id="Throbber" align="right" onclick="MsgHome('&throbber.url;')"/>
 		</toolbar>
 	</toolbox>
 
