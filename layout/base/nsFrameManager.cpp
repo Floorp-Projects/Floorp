@@ -1192,7 +1192,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         oldContext->RemapStyle(aPresContext, PR_FALSE);
         if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
-          aChangeList.AppendChange(aFrame, content, aMinChange = NS_STYLE_HINT_REFLOW);
+          aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
         }
       }
       NS_RELEASE(oldContext);
@@ -1227,7 +1227,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
               oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
               if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
-                aChangeList.AppendChange(aFrame, content, aMinChange = NS_STYLE_HINT_REFLOW);
+                aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
               }
             }
             NS_RELEASE(newExtraContext);
@@ -1264,7 +1264,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                 (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
             aChangeList.AppendChange(nsnull, ((undisplayed->mContent) ? undisplayed->mContent : localContent), 
-                                     aMinChange = NS_STYLE_HINT_FRAMECHANGE);
+                                     NS_STYLE_HINT_FRAMECHANGE);
           }
           NS_RELEASE(undisplayedContext);
         }
