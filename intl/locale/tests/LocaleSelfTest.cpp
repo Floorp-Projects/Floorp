@@ -372,6 +372,59 @@ static void TestSortPrint1(nsString *string_array, int len)
   cout << "\n";
 }
 
+static void DebugPrintCompResult(nsString string1, nsString string2, int result)
+{
+#ifdef WIN32
+    wchar_t *wchstring = new_wchar(string1);
+    if (wchstring) {
+      wprintf(L"%s ", wchstring);
+      delete_wchar(wchstring);
+    }
+
+    switch ((int)result) {
+    case 0:
+      printf("==");
+      break;
+    case 1:
+      printf(">");
+      break;
+    case -1:
+      printf("<");
+      break;
+    }
+
+    wchstring = new_wchar(string2);
+    if (wchstring) {
+      wprintf(L" %s\n", wchstring);
+      delete_wchar(wchstring);
+    }
+#else
+    // Warning: casting to char*
+    char *cstr = string1.ToNewCString();
+    
+    if (cstr) {
+      cout << cstr << ' ';
+      delete [] cstr;
+    }
+    switch ((int)result) {
+    case 0:
+      cout << "==";
+      break;
+    case 1:
+      cout << '>';
+      break;
+    case -1:
+      cout << '<';
+      break;
+    }
+    cstr = string2.ToNewCString();
+    if (cstr) {
+      cout << ' ' << cstr << '\n';
+      delete [] cstr;
+    }
+#endif
+}
+
 static int compare1( const void *arg1, const void *arg2 )
 {
   nsString string1, string2;
@@ -393,24 +446,7 @@ static int compare1( const void *arg1, const void *arg2 )
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateSortKey");
   NS_ASSERTION(NS_SUCCEEDED((PRBool)(result == result2)), "result unmatch");
   if (g_verbose) {
-    // Warning: casting to char*
-    char *cstr = string1.ToNewCString();
-    cout << cstr << ' ';
-    delete [] cstr;
-    switch ((int)result) {
-    case 0:
-      cout << "==";
-      break;
-    case 1:
-      cout << '>';
-      break;
-    case -1:
-      cout << '<';
-      break;
-    }
-    cstr = string2.ToNewCString();
-    cout << ' ' << cstr << '\n';
-    delete [] cstr;
+    DebugPrintCompResult(string1, string2, result);
   }
 
   return (int) result;
