@@ -1132,18 +1132,18 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
-	nsresult result;
-	nsWindow* checkFocusedWidget;
+  nsresult result;
+  nsWindow* checkFocusedWidget;
 
-	// get the focused widget
-	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
-	if (!focusedWidget)
-		focusedWidget = mTopLevelWidget;
-	
-	// nsEvent
-	switch (aOSEvent.what)
-	{
-		case keyUp:
+  // get the focused widget
+  nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
+  if (!focusedWidget)
+    focusedWidget = mTopLevelWidget;
+  
+  // nsEvent
+  switch (aOSEvent.what)
+  {
+    case keyUp:
       {
         nsKeyEvent keyUpEvent(NS_KEY_UP);
         InitializeKeyEvent(keyUpEvent, aOSEvent, focusedWidget, NS_KEY_UP);
@@ -1151,7 +1151,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
         break;
       }
 
-    case keyDown:	
+    case keyDown:
       {
         nsKeyEvent keyDownEvent(NS_KEY_DOWN), keyPressEvent(NS_KEY_PRESS);
         InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, NS_KEY_DOWN);
@@ -1194,9 +1194,9 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
         result = focusedWidget->DispatchWindowEvent(keyPressEvent);
         break;
       }
-	}
+  }
 
-	return result;
+  return result;
 }
 
 
@@ -1554,12 +1554,14 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			macPoint = topLeft(portRect);
 			::LocalToGlobal(&macPoint);
 			mTopLevelWidget->MoveToGlobalPoint(macPoint.h, macPoint.v);
+			retVal = PR_TRUE;
 			break;
 		}
 
 		case inGrow:
 		{
       ResizeEvent ( whichWindow );
+      retVal = PR_TRUE;
       break;
 		}
 
@@ -1571,6 +1573,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			}
 			gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_XUL_CLOSE);		
 			// mTopLevelWidget->Destroy(); (this, by contrast, would immediately close the window)
+			retVal = PR_TRUE;
 			break;
 		}
 
@@ -1643,7 +1646,14 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
     			contextMenuEvent.isControl = PR_FALSE;    			
 					widgetHit->DispatchMouseEvent(contextMenuEvent);
         } 
-			} 
+
+        // If we found a widget to dispatch to, say we handled the event.
+        // The meaning of the result of DispatchMouseEvent() is ambiguous.
+        // In Gecko terms, it means "continue processing", but that doesn't
+        // say if the event was really handled (which is a simplistic notion
+        // to Gecko).
+        retVal = PR_TRUE;
+			}
 						
 			gEventDispatchHandler.SetWidgetHit(widgetHit);
 			sMouseInWidgetHit = PR_TRUE;
@@ -1656,12 +1666,14 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 		{
 			gEventDispatchHandler.DispatchSizeModeEvent(mTopLevelWidget,
 				partCode == inZoomIn ? nsSizeMode_Normal : nsSizeMode_Maximized);
+			retVal = PR_TRUE;
 			break;
 		}
 
 #if TARGET_CARBON
     case inToolbarButton:           // we get this part on Mac OS X only
       gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_OS_TOOLBAR);		
+      retVal = PR_TRUE;
       break;
 #endif
     
@@ -1696,7 +1708,12 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	nsWindow* widgetHit = gEventDispatchHandler.GetWidgetHit();
 
 	if ( widgetReleased )
-		retVal |= widgetReleased->DispatchMouseEvent(mouseEvent);
+	{
+		widgetReleased->DispatchMouseEvent(mouseEvent);
+		// If we found a widget to dispatch the event to, say that we handled it
+		// (see comments in HandleMouseDownEvent()).
+		retVal = PR_TRUE;
+	}
 	
 	if ( widgetReleased != widgetHit ) {
 	  //XXX we should send a mouse exit event to the last widget, right?!?! But
@@ -1741,7 +1758,8 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 			sMouseInWidgetHit = inWidgetHit;
 			mouseEvent.message = (inWidgetHit ? NS_MOUSE_ENTER : NS_MOUSE_EXIT);
 		}
-		retVal |= lastWidgetHit->DispatchMouseEvent(mouseEvent);
+		lastWidgetHit->DispatchMouseEvent(mouseEvent);
+		retVal = PR_TRUE;
 	}
 	else
 	{
@@ -1753,7 +1771,8 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 			{
 				mouseEvent.widget = lastWidgetPointed;
 				mouseEvent.message = NS_MOUSE_EXIT;
-				retVal |= lastWidgetPointed->DispatchMouseEvent(mouseEvent);
+				lastWidgetPointed->DispatchMouseEvent(mouseEvent);
+				retVal = PR_TRUE;
 			}
 
       gEventDispatchHandler.SetWidgetPointed(widgetPointed);
@@ -1765,13 +1784,17 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 			{
 				mouseEvent.widget = widgetPointed;
 				mouseEvent.message = NS_MOUSE_ENTER;
-				retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
+				widgetPointed->DispatchMouseEvent(mouseEvent);
+				retVal = PR_TRUE;
 			}
 		}
 		else
 		{
 			if (widgetPointed)
-				retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
+			{
+				widgetPointed->DispatchMouseEvent(mouseEvent);
+				retVal = PR_TRUE;
+			}
 		}
 	}
 

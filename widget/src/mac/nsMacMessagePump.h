@@ -85,22 +85,24 @@ public:
   
 	void			DoMessagePump();
 	PRBool		GetEvent(EventRecord &theEvent);
-	void			DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
+	// returns true if handled
+	PRBool		DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
 	void			StartRunning() {mRunning = PR_TRUE;}
 	void			StopRunning() {mRunning = PR_FALSE;}
 
 private:  
 
-	void 			DoMouseDown(EventRecord &anEvent);
-	void			DoMouseUp(EventRecord &anEvent);
-	void			DoMouseMove(EventRecord &anEvent);
-	void			DoUpdate(EventRecord &anEvent);
-	void 			DoKey(EventRecord &anEvent);
+  // these all return PR_TRUE if the event was handled
+	PRBool 			DoMouseDown(EventRecord &anEvent);
+	PRBool			DoMouseUp(EventRecord &anEvent);
+	PRBool			DoMouseMove(EventRecord &anEvent);
+	PRBool			DoUpdate(EventRecord &anEvent);
+	PRBool 			DoKey(EventRecord &anEvent);
 #if USE_MENUSELECT
-	void 			DoMenu(EventRecord &anEvent, long menuResult);
+	PRBool 			DoMenu(EventRecord &anEvent, long menuResult);
 #endif
-	void 			DoDisk(const EventRecord &anEvent);
-	void			DoActivate(EventRecord &anEvent);
+	PRBool 			DoDisk(const EventRecord &anEvent);
+	PRBool			DoActivate(EventRecord &anEvent);
 	void			DoIdle(EventRecord &anEvent);
 
 	PRBool		DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);

@@ -396,15 +396,18 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 //=================================================================
 /*  Dispatch a single event
  *  @param   theEvent - the event to dispatch
+ *  @return  A boolean which states whether we handled the event
  */
-void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
+PRBool nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 {
+  PRBool handled = PR_FALSE;
+  
   if (aRealEvent == PR_TRUE)
   {
 
 #if DEBUG && !defined(XP_MACOSX)
     if ((anEvent->what != kHighLevelEvent) && SIOUXHandleOneEvent(anEvent))
-      return;
+      return PR_TRUE;
 #endif
 
     switch(anEvent->what)
@@ -412,27 +415,27 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
       case keyUp:
       case keyDown:
       case autoKey:
-        DoKey(*anEvent);
+        handled = DoKey(*anEvent);
         break;
 
       case mouseDown:
-        DoMouseDown(*anEvent);
+        handled = DoMouseDown(*anEvent);
         break;
 
       case mouseUp:
-        DoMouseUp(*anEvent);
+        handled = DoMouseUp(*anEvent);
         break;
 
       case updateEvt:
-        DoUpdate(*anEvent);
+        handled = DoUpdate(*anEvent);
         break;
 
       case activateEvt:
-        DoActivate(*anEvent);
+        handled = DoActivate(*anEvent);
         break;
 
       case diskEvt:
-        DoDisk(*anEvent);
+        handled = DoDisk(*anEvent);
         break;
 
       case osEvt:
@@ -446,11 +449,11 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
             else
               nsToolkit::AppInBackground();   // suspend message
 
-            DoMouseMove(*anEvent);
+            handled = DoMouseMove(*anEvent);
             break;
 
           case mouseMovedMessage:
-            DoMouseMove(*anEvent);
+            handled = DoMouseMove(*anEvent);
             break;
         }
         }
@@ -458,7 +461,8 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
       
       case kHighLevelEvent:
         ::AEProcessAppleEvent(anEvent);
-      break;
+        handled = PR_TRUE;
+        break;
 
     }
   }
@@ -471,12 +475,15 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 
     // yield to other threads
     ::PR_Sleep(PR_INTERVAL_NO_WAIT);
+    handled = PR_FALSE;
   }
 
   if (mRunning)
     Repeater::DoRepeaters(*anEvent);
 
   NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+
+  return handled;
 }
 
 #pragma mark -
@@ -486,7 +493,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 //
 //-------------------------------------------------------------------------
 //#include "ProfilerUtils.h"
-void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
+PRBool nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 {
   WindowPtr whichWindow = reinterpret_cast<WindowPtr>(anEvent.message);
   
@@ -496,6 +503,7 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
   // The app can do its own updates here
   DispatchOSEventToRaptor(anEvent, whichWindow);
   ::EndUpdate(whichWindow);
+  return PR_TRUE;
 }
 
 
@@ -504,15 +512,19 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 // DoMouseDown
 //
 //-------------------------------------------------------------------------
-void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
+PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 {
   WindowPtr     whichWindow;
   WindowPartCode        partCode;
-
+  PRBool  handled = PR_FALSE;
+  
   partCode = ::FindWindow(anEvent.where, &whichWindow);
   
   switch (partCode)
   {
+      case inNoWindow:
+        break;
+
       case inCollapseBox:   // we never seem to get this.
       case inSysWindow:
         if ( gRollupListener && gRollupWidget )
@@ -532,12 +544,13 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         {
           nsWatchTask::GetTask().Suspend();       
           long menuResult = ::MenuSelect(anEvent.where);
+          handled = PR_TRUE;
           nsWatchTask::GetTask().Resume();
 #if USE_MENUSELECT
           if (HiWord(menuResult) != 0)
           {
             menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
-            DoMenu(anEvent, menuResult);
+            handled = DoMenu(anEvent, menuResult);
           }
 #endif
         }
@@ -549,7 +562,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
       {
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         if ( IsWindowHilited(whichWindow) || (gRollupListener && gRollupWidget) )
-          DispatchOSEventToRaptor(anEvent, whichWindow);
+          handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         else {
           nsCOMPtr<nsIWidget> topWidget;
           nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(topWidget) );
@@ -585,6 +598,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
               else
                 macWindow->ComeToFront();
             }
+            handled = PR_TRUE;
           }
         }
         break;
@@ -637,7 +651,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         anEvent.where.h += newTopLeft.h - oldTopLeft.h;
         anEvent.where.v += newTopLeft.v - oldTopLeft.v;
         
-        DispatchOSEventToRaptor(anEvent, whichWindow);
+        handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         break;
       }
 
@@ -694,6 +708,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
                 DoUpdate(updateEvent);
             }
           }
+          handled = PR_TRUE;
         }
         else
         {
@@ -718,7 +733,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
           ::LocalToGlobal(&newPt);
           newPt.h -= 8, newPt.v -= 8;
           anEvent.where = newPt;  // important!
-          DispatchOSEventToRaptor(anEvent, whichWindow);
+          handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         }
         break;
       }
@@ -729,7 +744,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         if (::TrackGoAway(whichWindow, anEvent.where)) {
           nsWatchTask::GetTask().Resume();        
-          DispatchOSEventToRaptor(anEvent, whichWindow);
+          handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         }
         nsWatchTask::GetTask().Resume();        
         break;
@@ -752,7 +767,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
           //    otherwise nsMacEventHandler::HandleMouseDownEvent won't get
           //    the right partcode for the click location
           
-          DispatchOSEventToRaptor(anEvent, whichWindow);
+          handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         }
         nsWatchTask::GetTask().Resume();
         break;
@@ -761,12 +776,14 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
       case inToolbarButton:           // Mac OS X only
         nsWatchTask::GetTask().Suspend();       
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
-        DispatchOSEventToRaptor(anEvent, whichWindow);
+        handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         nsWatchTask::GetTask().Resume();        
         break;
 #endif
 
   }
+
+  return handled;
 }
 
 
@@ -775,7 +792,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 // DoMouseUp
 //
 //-------------------------------------------------------------------------
-void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
+PRBool nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
 {
     WindowPtr     whichWindow;
     PRInt16       partCode;
@@ -789,7 +806,12 @@ void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
     // the widget so that it can deactivate itself.
     whichWindow = GetFrontApplicationWindow();
   }
-  DispatchOSEventToRaptor(anEvent, whichWindow);
+  
+  PRBool handled = DispatchOSEventToRaptor(anEvent, whichWindow);
+  // consume mouse ups in the title bar, since nsMacWindow doesn't do that for us
+  if (partCode == inDrag)
+    handled = PR_TRUE;
+  return handled;
 }
 
 //-------------------------------------------------------------------------
@@ -797,12 +819,13 @@ void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
 // DoMouseMove
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
+PRBool nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 {
   // same thing as DoMouseUp
   WindowPtr     whichWindow;
   PRInt16       partCode;
-
+  PRBool        handled = PR_FALSE;
+  
   if (mMouseRgn)
   {
     Point globalMouse = anEvent.where;    
@@ -818,11 +841,12 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
   */
 #if TARGET_CARBON
   if (whichWindow == nil || !::IsWindowCollapsed(whichWindow))
-    DispatchOSEventToRaptor(anEvent, whichWindow);
+    handled = DispatchOSEventToRaptor(anEvent, whichWindow);
 #else
   if (whichWindow == nil || !::EmptyRgn(((WindowRecord *) whichWindow)->contRgn))
-    DispatchOSEventToRaptor(anEvent, whichWindow);
+    handled = DispatchOSEventToRaptor(anEvent, whichWindow);
 #endif
+  return handled;
 }
 
 
@@ -833,10 +857,11 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 // This is called for keydown, keyup, and key repeating events. So we need
 // to be careful not to do things twice.
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoKey(EventRecord &anEvent)
+PRBool nsMacMessagePump::DoKey(EventRecord &anEvent)
 {
+  PRBool handled = PR_FALSE;
   {
-    DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
+    handled = DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
 #if USE_MENUSELECT
     /* we want to call this if cmdKey is pressed and no other modifier keys are pressed */
     if((!handled) && (anEvent.what == keyDown) && (anEvent.modifiers == cmdKey) )
@@ -847,10 +872,12 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
       {
           menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
         DoMenu(anEvent, menuResult);
+        handled = PR_TRUE;
       }
     }
 #endif
   }
+  return handled;
 }
 
 
@@ -859,7 +886,7 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 // DoDisk
 //
 //-------------------------------------------------------------------------
-void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
+PRBool nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 {
 #if !TARGET_CARBON
   if (HiWord(anEvent.message) != noErr)
@@ -870,6 +897,9 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
     ::DIBadMount(pt, (SInt32) anEvent.message);
     ::DIUnload();
   }
+  return PR_TRUE;
+#else
+  return PR_FALSE;
 #endif
 }
 
@@ -882,7 +912,7 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 extern Boolean SIOUXIsAppWindow(WindowPtr window);
 
 #if USE_MENUSELECT
-void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
+PRBool nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
   // The app can handle its menu commands here or
   // in the nsNativeBrowserWindow and nsNativeViewerApp
@@ -906,15 +936,15 @@ void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
       ::OpenDeskAcc(daName);
       ::SetPort(savePort);
       HiliteMenu(0);
-      return;
+      return PR_TRUE;
     }
   }
 
   // Note that we still give Raptor a shot at the event as it will eventually
   // handle the About... selection
-  DispatchMenuCommandToRaptor(anEvent, menuResult);
-
+  PRBool handled = DispatchMenuCommandToRaptor(anEvent, menuResult);
   HiliteMenu(0);
+  return handled;
 }
 #endif
 
@@ -923,7 +953,7 @@ void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 // DoActivate
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
+PRBool nsMacMessagePump::DoActivate(EventRecord &anEvent)
 {
   WindowPtr whichWindow = (WindowPtr)anEvent.message;
   nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
@@ -949,7 +979,7 @@ void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
       ::HiliteWindow(whichWindow,FALSE);
   }
 
-  DispatchOSEventToRaptor(anEvent, whichWindow);
+  return DispatchOSEventToRaptor(anEvent, whichWindow);
 }
 
 
@@ -1004,7 +1034,6 @@ PRBool  nsMacMessagePump::DispatchOSEventToRaptor(
 }
 
 
-
 #if USE_MENUSELECT
 
 //-------------------------------------------------------------------------
@@ -1027,8 +1056,13 @@ PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
   return handled;
 }
 
-#endif
+#endif // USE_MENUSELECT
 
+//-------------------------------------------------------------------------
+//
+// CarbonMouseHandler
+//
+//-------------------------------------------------------------------------
 pascal OSStatus nsMacMessagePump::CarbonMouseHandler(
                           EventHandlerCallRef nextHandler,
                           EventRef theEvent, void *userData)
@@ -1040,21 +1074,20 @@ pascal OSStatus nsMacMessagePump::CarbonMouseHandler(
   if (err != noErr)
     return eventNotHandledErr;
 
+  // Only handle middle click events here.  Let the rest fall through to
+  // WaitNextEvent().
+  if (button != kEventMouseButtonTertiary)
+    return eventNotHandledErr;
+
   EventRecord theRecord;
   if (!::ConvertEventRefToEventRecord(theEvent, &theRecord)) {
-    if (button == kEventMouseButtonTertiary) {
-      // This will return FALSE on a middle click event; that's to let us know
-      // it's giving us a nullEvent, which is expected since Classic events
-      // don't support the middle button normally.
-      //
-      // We know better, so let's restore the actual event kind.
-      UInt32 kind = ::GetEventKind(theEvent);
-      theRecord.what = (kind == kEventMouseDown) ? mouseDown : mouseUp;
-    } else {
-      // Or maybe it's the tenth swirlygig button wheel being twist-clicked.
-      // Just pretend we never saw it...
-      return eventNotHandledErr;
-    }
+    // This will return FALSE on a middle click event; that's to let us know
+    // it's giving us a nullEvent, which is expected since Classic events
+    // don't support the middle button normally.
+    //
+    // We know better, so let's restore the actual event kind.
+    UInt32 kind = ::GetEventKind(theEvent);
+    theRecord.what = (kind == kEventMouseDown) ? mouseDown : mouseUp;
   }
 
   // Classic mouse events don't record the button specifier. The message
@@ -1064,7 +1097,7 @@ pascal OSStatus nsMacMessagePump::CarbonMouseHandler(
 
   // Process the modified event internally
   nsMacMessagePump *pump = (nsMacMessagePump*)userData;
-  pump->DispatchEvent(PR_TRUE, &theRecord);
-  return noErr;
+  PRBool handled = pump->DispatchEvent(PR_TRUE, &theRecord);
+  return handled ? noErr : eventNotHandledErr;
 }
 
