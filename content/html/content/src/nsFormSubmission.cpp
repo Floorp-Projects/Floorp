@@ -86,17 +86,20 @@ public:
       mEncoder(aEncoder),
       mFormProcessor(aFormProcessor),
       mBidiOptions(aBidiOptions)
-  { };
-  virtual ~nsFormSubmission() { };
+  {
+  };
+  virtual ~nsFormSubmission()
+  {
+  };
 
   NS_DECL_ISUPPORTS
 
   //
   // nsIFormSubmission
   //
-  NS_IMETHOD SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                      nsIContent* aSource, nsIPresContext* aPresContext,
-                      nsIDocShell** aDocShell, nsIRequest** aRequest);
+  virtual nsresult SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
+                            nsIContent* aSource, nsIPresContext* aPresContext,
+                            nsIDocShell** aDocShell, nsIRequest** aRequest);
 
   /**
    * Called to initialize the submission.  Perform any initialization that may
@@ -110,10 +113,10 @@ protected:
    * Given a URI and the current submission, create the final URI and data
    * stream that will be submitted.  Subclasses *must* implement this.
    *
-   * @param aURL the URL being submitted to [INOUT]
+   * @param aURI the URI being submitted to [INOUT]
    * @param aPostDataStream a data stream for POST data [OUT]
    */
-  NS_IMETHOD GetEncodedSubmission(nsIURI* aURL,
+  NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream) = 0;
 
   // Helpers
@@ -251,23 +254,28 @@ public:
                  PRInt32 aMethod)
     : nsFormSubmission(aCharset, aEncoder, aFormProcessor, aBidiOptions),
       mMethod(aMethod)
-  { }
-  virtual ~nsFSURLEncoded() { }
- 
+  {
+  }
+  virtual ~nsFSURLEncoded()
+  {
+  }
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIFormSubmission
-  NS_IMETHOD AddNameValuePair(nsIDOMHTMLElement* aSource,
-                              const nsAString& aName,
-                              const nsAString& aValue);
-  NS_IMETHOD AddNameFilePair(nsIDOMHTMLElement* aSource,
-                             const nsAString& aName,
-                             const nsAString& aFilename,
-                             nsIInputStream* aStream,
-                             const nsACString& aContentType,
-                             PRBool aMoreFilesToCome);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const
-      { *aAcceptsFiles = PR_FALSE; return NS_OK; }
+  virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
+                                    const nsAString& aName,
+                                    const nsAString& aValue);
+  virtual nsresult AddNameFilePair(nsIDOMHTMLElement* aSource,
+                                   const nsAString& aName,
+                                   const nsAString& aFilename,
+                                   nsIInputStream* aStream,
+                                   const nsACString& aContentType,
+                                   PRBool aMoreFilesToCome);
+  virtual PRBool AcceptsFiles() const
+  {
+    return PR_FALSE;
+  }
 
   NS_IMETHOD Init();
 
@@ -305,7 +313,7 @@ NS_IMPL_RELEASE_INHERITED(nsFSURLEncoded, nsFormSubmission)
 NS_IMPL_ADDREF_INHERITED(nsFSURLEncoded, nsFormSubmission)
 NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSURLEncoded, nsFormSubmission)
 
-NS_IMETHODIMP
+nsresult
 nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
                                  const nsAString& aName,
                                  const nsAString& aValue)
@@ -360,7 +368,7 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFSURLEncoded::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                 const nsAString& aName,
                                 const nsAString& aFilename,
@@ -368,7 +376,7 @@ nsFSURLEncoded::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                 const nsACString& aContentType,
                                 PRBool aMoreFilesToCome)
 {
-  return AddNameValuePair(aSource,aName,aFilename);
+  return AddNameValuePair(aSource, aName, aFilename);
 }
 
 //
@@ -576,17 +584,19 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIFormSubmission
-  NS_IMETHOD AddNameValuePair(nsIDOMHTMLElement* aSource,
-                              const nsAString& aName,
-                              const nsAString& aValue);
-  NS_IMETHOD AddNameFilePair(nsIDOMHTMLElement* aSource,
-                             const nsAString& aName,
-                             const nsAString& aFilename,
-                             nsIInputStream* aStream,
-                             const nsACString& aContentType,
-                             PRBool aMoreFilesToCome);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const
-      { *aAcceptsFiles = PR_TRUE; return NS_OK; }
+  virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
+                                    const nsAString& aName,
+                                    const nsAString& aValue);
+  virtual nsresult AddNameFilePair(nsIDOMHTMLElement* aSource,
+                                   const nsAString& aName,
+                                   const nsAString& aFilename,
+                                   nsIInputStream* aStream,
+                                   const nsACString& aContentType,
+                                   PRBool aMoreFilesToCome);
+  virtual PRBool AcceptsFiles() const
+  {
+    return PR_TRUE;
+  }
 
   NS_IMETHOD Init();
 
@@ -722,7 +732,7 @@ nsFSMultipartFormData::ProcessAndEncode(nsIDOMHTMLElement* aSource,
 //
 // nsIFormSubmission
 //
-NS_IMETHODIMP
+nsresult
 nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
                                         const nsAString& aName,
                                         const nsAString& aValue)
@@ -744,7 +754,7 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                        const nsAString& aName,
                                        const nsAString& aFilename,
@@ -891,21 +901,24 @@ public:
                 nsIFormProcessor* aFormProcessor,
                 PRInt32 aBidiOptions)
     : nsFormSubmission(aCharset, aEncoder, aFormProcessor, aBidiOptions)
-  { }
-  virtual ~nsFSTextPlain() { }
- 
+  {
+  }
+  virtual ~nsFSTextPlain()
+  {
+  }
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIFormSubmission
-  NS_IMETHOD AddNameValuePair(nsIDOMHTMLElement* aSource,
-                              const nsAString& aName,
-                              const nsAString& aValue);
-  NS_IMETHOD AddNameFilePair(nsIDOMHTMLElement* aSource,
-                             const nsAString& aName,
-                             const nsAString& aFilename,
-                             nsIInputStream* aStream,
-                             const nsACString& aContentType,
-                             PRBool aMoreFilesToCome);
+  virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
+                                    const nsAString& aName,
+                                    const nsAString& aValue);
+  virtual nsresult AddNameFilePair(nsIDOMHTMLElement* aSource,
+                                   const nsAString& aName,
+                                   const nsAString& aFilename,
+                                   nsIInputStream* aStream,
+                                   const nsACString& aContentType,
+                                   PRBool aMoreFilesToCome);
 
   NS_IMETHOD Init();
 
@@ -913,8 +926,10 @@ protected:
   // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const
-      { *aAcceptsFiles = PR_FALSE; return NS_OK; }
+  virtual PRBool AcceptsFiles() const
+  {
+    return PR_FALSE;
+  }
 
 private:
   nsString mBody;
@@ -924,7 +939,7 @@ NS_IMPL_RELEASE_INHERITED(nsFSTextPlain, nsFormSubmission)
 NS_IMPL_ADDREF_INHERITED(nsFSTextPlain, nsFormSubmission)
 NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSTextPlain, nsFormSubmission)
 
-NS_IMETHODIMP
+nsresult
 nsFSTextPlain::AddNameValuePair(nsIDOMHTMLElement* aSource,
                                 const nsAString& aName,
                                 const nsAString& aValue)
@@ -950,7 +965,7 @@ nsFSTextPlain::AddNameValuePair(nsIDOMHTMLElement* aSource,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFSTextPlain::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                const nsAString& aName,
                                const nsAString& aFilename,
@@ -992,7 +1007,8 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
     // Append the body to and force-plain-text args to the mailto line
     nsCString escapedBody;
-    escapedBody.Adopt(nsEscape(NS_ConvertUCS2toUTF8(mBody).get(), url_XAlphas));
+    escapedBody.Adopt(nsEscape(NS_ConvertUTF16toUTF8(mBody).get(),
+                               url_XAlphas));
 
     path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
 
@@ -1070,14 +1086,13 @@ SendJSWarning(nsIHTMLContent* aContent,
   //
   // Get the document URL to use as the filename
   //
-  nsCAutoString documentURLSpec;
-  {
-    nsIDocument* document = aContent->GetDocument();
-    if (document) {
-      nsIURI *documentURL = document->GetDocumentURL();
-      NS_ENSURE_TRUE(documentURL, NS_ERROR_UNEXPECTED);
-      documentURL->GetPath(documentURLSpec);
-    }
+  nsCAutoString documentURISpec;
+
+  nsIDocument* document = aContent->GetDocument();
+  if (document) {
+    nsIURI *documentURI = document->GetDocumentURI();
+    NS_ENSURE_TRUE(documentURI, NS_ERROR_UNEXPECTED);
+    documentURI->GetPath(documentURISpec);
   }
 
   //
@@ -1108,7 +1123,7 @@ SendJSWarning(nsIHTMLContent* aContent,
   NS_ENSURE_TRUE(scriptError, NS_ERROR_UNEXPECTED);
 
   rv = scriptError->Init(warningStr.get(),
-                         NS_ConvertUTF8toUCS2(documentURLSpec).get(),
+                         NS_ConvertUTF8toUTF16(documentURISpec).get(),
                          nsnull, (uintN)0,
                          0, nsIScriptError::warningFlag,
                          "HTML");
@@ -1199,18 +1214,18 @@ GetSubmissionFromForm(nsIHTMLContent* aForm,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
+nsresult
+nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
                            nsIContent* aSource, nsIPresContext* aPresContext,
                            nsIDocShell** aDocShell, nsIRequest** aRequest)
 {
   nsresult rv;
 
   //
-  // Finish encoding (get post data stream and URL)
+  // Finish encoding (get post data stream and URI)
   //
   nsCOMPtr<nsIInputStream> postDataStream;
-  rv = GetEncodedSubmission(aActionURL, getter_AddRefs(postDataStream));
+  rv = GetEncodedSubmission(aActionURI, getter_AddRefs(postDataStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   //
@@ -1221,7 +1236,7 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
   return handler->OnLinkClickSync(aSource, eLinkVerb_Replace,
-                                  aActionURL,
+                                  aActionURI,
                                   PromiseFlatString(aTarget).get(),
                                   postDataStream, nsnull,
                                   aDocShell, aRequest);
@@ -1438,7 +1453,7 @@ nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
     if (formControl) {
       if (formControl->GetType() == NS_FORM_INPUT_HIDDEN) {
-        return new NS_ConvertASCIItoUCS2(mCharset);
+        return new NS_ConvertASCIItoUTF16(mCharset);
       }
     }
   }

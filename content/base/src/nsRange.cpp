@@ -606,18 +606,12 @@ nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
 }
   
 
-nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
+void nsRange::RemoveFromListOf(nsIDOMNode* aNode)
 {
-  if (!aNode) 
-    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
-  nsresult res;
-  nsCOMPtr<nsIContent> cN = do_QueryInterface(aNode, &res);
-  if (NS_FAILED(res)) 
-    return res;
-
-  res = cN->RangeRemove(NS_STATIC_CAST(nsIDOMRange*,this));
-  return res;
+  if (content) 
+    content->RangeRemove(NS_STATIC_CAST(nsIDOMRange *, this));
 }
 
 

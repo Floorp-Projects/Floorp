@@ -773,7 +773,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
         if (doc) { 
           // Set the referrer
-          loadInfo->SetReferrer(doc->GetDocumentURL());
+          loadInfo->SetReferrer(doc->GetDocumentURI());
         }
       }
     }
@@ -1137,7 +1137,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
       nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(domDoc);
       if (doc) {
-        baseURI = doc->GetBaseURL();
+        baseURI = doc->GetBaseURI();
       }
     }
   }

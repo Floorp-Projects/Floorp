@@ -88,11 +88,10 @@ public:
    * @param aCompileEventHandlers whether to initialize the event handlers in
    *        the document (used by nsXULElement)
    */
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers)
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers)
   {
     mDocument = aDocument;
-    return NS_OK;
   }
 
   /**
@@ -110,7 +109,7 @@ public:
    * pointer, so subclasses which use those bits should override this.
    * @param aParent the new parent content to set (could be null)
    */
-  NS_IMETHOD_(void) SetParent(nsIContent* aParent)
+  virtual void SetParent(nsIContent* aParent)
   {
     mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent);
   }
@@ -120,20 +119,20 @@ public:
    * @see nsIAnonymousContentCreator
    * @return whether this content is anonymous
    */
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const = 0;
+  virtual PRBool IsNativeAnonymous() const = 0;
 
   /**
    * Set whether this content is anonymous
    * @see nsIAnonymousContentCreator
    * @param aAnonymous whether this content is anonymous
    */
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) = 0;
+  virtual void SetNativeAnonymous(PRBool aAnonymous) = 0;
 
   /**
    * Get the namespace that this element's tag is defined in
    * @param aResult the namespace [OUT]
    */
-  NS_IMETHOD GetNameSpaceID(PRInt32* aResult) const = 0;
+  virtual void GetNameSpaceID(PRInt32* aResult) const = 0;
 
   /**
    * Get the tag for this element. This will always return a non-null
@@ -143,35 +142,36 @@ public:
 
   /**
    * Get the NodeInfo for this element
-   * @param aResult the tag [OUT]
+   * @return the nodes node info
    */
-  NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const = 0;
+  virtual nsINodeInfo * GetNodeInfo() const = 0;
 
   /**
    * Tell whether this element can contain children
-   * @param aResult whether this element can contain children [OUT]
+   * @return whether this element can contain children
    */
-  NS_IMETHOD_(PRBool) CanContainChildren() const = 0;
+  virtual PRBool CanContainChildren() const = 0;
 
   /**
    * Get the number of children
-   * @param aResult the number of children [OUT]
+   * @return the number of children
    */
-  NS_IMETHOD_(PRUint32) GetChildCount() const = 0;
+  virtual PRUint32 GetChildCount() const = 0;
 
   /**
    * Get a child by index
-   * @param aIndex the index of the child to get, or null if index out of bounds
-   * @param aResult the child [OUT]
+   * @param aIndex the index of the child to get, or null if index out
+   *               of bounds
+   * @return the child
    */
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const = 0;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const = 0;
 
   /**
    * Get the index of a child within this content
    * @param aPossibleChild the child to get the index
-   * @param aIndex the index of the child, or -1 if not a child [OUT]
+   * @return the index of the child, or -1 if not a child
    */
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const = 0;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const = 0;
 
   /**
    * Insert a content node at a particular index.
@@ -183,8 +183,8 @@ public:
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
    */
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                           PRBool aNotify, PRBool aDeepSetDocument) = 0;
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
   /**
    * Remove a child and replace it with another.
@@ -195,8 +195,8 @@ public:
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
    */
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-                            PRBool aNotify, PRBool aDeepSetDocument) = 0;
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
   /**
    * Append a content node to the end of the child list.
@@ -206,8 +206,8 @@ public:
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
    */
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument) = 0;
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument) = 0;
 
   /**
    * Remove a child from this content node.
@@ -216,21 +216,21 @@ public:
    * @param aNotify whether to notify the document that the replace has
    *        occurred
    */
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify) = 0;
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify) = 0;
 
   /**
    * Returns an atom holding the name of the attribute of type ID on
    * this content node (if applicable).  Returns null for non-element
    * content nodes.
    */
-  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const = 0;
+  virtual nsIAtom *GetIDAttributeName() const = 0;
 
   /**
    * Returns an atom holding the name of the "class" attribute on this
    * content node (if applicable).  Returns null for non-element
    * content nodes.
    */
-  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const = 0;
+  virtual nsIAtom *GetClassAttributeName() const = 0;
 
   /**
    * Normalizes an attribute name and returns it as a nodeinfo if an attribute
@@ -242,7 +242,7 @@ public:
    * @param aStr the unparsed attribute string
    * @return the node info. May be nsnull.
    */
-  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr) = 0;
+  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -257,8 +257,8 @@ public:
    * @param aNotify specifies how whether or not the document should be
    *        notified of the attribute change.
    */
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify) = 0;
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -273,8 +273,8 @@ public:
    * @param aNotify specifies whether or not the document should be
    *        notified of the attribute change.
    */
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify) = 0;
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify) = 0;
 
   /**
    * Get the current value of the attribute. This returns a form that is
@@ -289,8 +289,8 @@ public:
    * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
    *         non-empty value (==NS_OK)
    */
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsAString& aResult) const = 0;
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                           nsAString& aResult) const = 0;
 
   /**
    * Get the current value and prefix of the attribute. This returns a form
@@ -306,8 +306,8 @@ public:
    * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
    *         non-empty value (==NS_OK)
    */
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom** aPrefix, nsAString& aResult) const = 0;
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom** aPrefix, nsAString& aResult) const = 0;
 
   /**
    * Determine if an attribute has been set (empty string or otherwise).
@@ -316,7 +316,7 @@ public:
    * @param aAttr the attribute name
    * @return whether an attribute exists
    */
-  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const = 0;
+  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const = 0;
 
   /**
    * Remove an attribute so that it is no longer explicitly specified.
@@ -326,8 +326,8 @@ public:
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change
    */
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
-                       PRBool aNotify) = 0;
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
+                             PRBool aNotify) = 0;
 
 
   /**
@@ -339,17 +339,15 @@ public:
    * @param aPrefix the attribute prefix [OUT]
    *
    */
-  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
-                           PRInt32* aNameSpaceID,
-                           nsIAtom** aName,
-                           nsIAtom** aPrefix) const = 0;
+  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                 nsIAtom** aName, nsIAtom** aPrefix) const = 0;
 
   /**
    * Get the number of all specified attributes.
    *
-   * @returns the number of attributes
+   * @return the number of attributes
    */
-  NS_IMETHOD_(PRUint32) GetAttrCount() const = 0;
+  virtual PRUint32 GetAttrCount() const = 0;
 
   /**
    * Inform content of range ownership changes.  This allows content
@@ -363,16 +361,18 @@ public:
    * Inform content that it owns one or both range endpoints
    * @param aRange the range the content owns
    */
-  NS_IMETHOD RangeAdd(nsIDOMRange* aRange) = 0;
+  virtual nsresult RangeAdd(nsIDOMRange* aRange) = 0;
+
   /**
    * Inform content that it no longer owns either range endpoint
    * @param aRange the range the content no longer owns
    */
-  NS_IMETHOD RangeRemove(nsIDOMRange* aRange) = 0;
+  virtual void RangeRemove(nsIDOMRange* aRange) = 0;
+
   /**
    * Get the list of ranges that have either endpoint in this content
    * item.
-   * @returns the list of ranges owned partially by this content. The
+   * @return the list of ranges owned partially by this content. The
    * nsVoidArray is owned by the content object and its lifetime is
    * controlled completely by the content object.
    */
@@ -410,11 +410,10 @@ public:
    * @param aEventStatus the status returned from the function.  Generally
    *        nsEventStatus_eIgnore
    */
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus) = 0;
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus) = 0;
 
   /**
    * Get a unique ID for this piece of content.
@@ -433,7 +432,9 @@ public:
    * Set the unique content ID for this content.
    * @param aID the ID to set
    */
-  NS_IMETHOD SetContentID(PRUint32 aID) = 0;
+  virtual void SetContentID(PRUint32 aID)
+  {
+  }
 
   /**
    * Set the focus on this content.  This is generally something for the event
@@ -446,7 +447,10 @@ public:
    * @param aPresContext the pres context
    * @see nsGenericHTMLElement::SetElementFocus()
    */
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) = 0;
+  virtual void SetFocus(nsIPresContext* aPresContext)
+  {
+  }
+
   /**
    * Remove the focus on this content.  This is generally something for the
    * event state manager to do, not ordinary people.  Ordinary people should do
@@ -458,7 +462,9 @@ public:
    * @param aPresContext the pres context
    * @see nsGenericHTMLElement::SetElementFocus()
    */
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) = 0;
+  virtual void RemoveFocus(nsIPresContext* aPresContext)
+  {
+  }
 
   /**
    * Sets content node with the binding responsible for our construction (and
@@ -467,7 +473,8 @@ public:
    *
    * @param aContent the new binding parent
    */
-  NS_IMETHOD SetBindingParent(nsIContent* aContent) = 0;
+  virtual nsresult SetBindingParent(nsIContent* aContent) = 0;
+
   /**
    * Gets content node with the binding responsible for our construction (and
    * existence).  Used by anonymous content (XBL-generated). null for all
@@ -475,7 +482,7 @@ public:
    *
    * @return the binding parent
    */
-  NS_IMETHOD_(nsIContent*) GetBindingParent() const = 0;
+  virtual nsIContent *GetBindingParent() const = 0;
 
   /**
    * Bit-flags to pass (or'ed together) to IsContentOfType()
@@ -504,14 +511,14 @@ public:
    *        eHTML, eHTML_FORM_CONTROL, eXUL)
    * @return whether the content matches ALL flags passed in
    */
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) = 0;
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const = 0;
 
   /**
    * Get the event listener manager, the guy you talk to to register for events
    * on this element.
    * @param aResult the event listener manager [OUT]
    */
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
+  virtual nsresult GetListenerManager(nsIEventListenerManager** aResult) = 0;
 
   /**
    * Get the base URL for any relative URLs within this piece
@@ -519,9 +526,9 @@ public:
    * but certain content carries a local base for backward
    * compatibility.
    *
-   * @param aBaseURL the base URL [OUT]
+   * @return the base URI
    */
-  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const = 0;
+  virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
 
   /**
    * This method is called when the parser finishes creating the element.  This
@@ -550,7 +557,9 @@ public:
    * element and then call setAttribute() directly, at which point
    * DoneCreatingElement() has already been called and is out of the picture).
    */
-  NS_IMETHOD DoneCreatingElement() = 0;
+  virtual void DoneCreatingElement()
+  {
+  }
 
 #ifdef DEBUG
   /**
@@ -558,14 +567,15 @@ public:
    * file stream. Use aIndent as the base indent during formatting.
    * Returns NS_OK unless a file error occurs.
    */
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   /**
    * Dump the content (and anything it contains) out to the given
    * file stream. Use aIndent as the base indent during formatting.
    * Returns NS_OK unless a file error occurs.
    */
-  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
+  virtual void DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
+                           PRBool aDumpAll = PR_TRUE) const = 0;
 #endif
 
 protected:

@@ -150,7 +150,7 @@ nsMediaDocument::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMediaDocument::StartDocumentLoad(const char*         aCommand,
                                    nsIChannel*         aChannel,
                                    nsILoadGroup*       aLoadGroup,
@@ -306,7 +306,7 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                        const nsAString& aStatus)
 {
   nsXPIDLString fileStr;
-  nsCOMPtr<nsIURI> uri = do_QueryInterface(mDocumentURL);
+  nsCOMPtr<nsIURI> uri = do_QueryInterface(mDocumentURI);
   if (uri) {
     nsCAutoString fileName;
     nsCOMPtr<nsIURL> url = do_QueryInterface(uri);

@@ -866,7 +866,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
   aURL->GetScheme(otherScheme);
   
   nsCAutoString scheme;
-  aBoundDoc->GetDocumentURL()->GetScheme(scheme);
+  aBoundDoc->GetDocumentURI()->GetScheme(scheme);
 
   // First we need to load our binding.
   *aResult = nsnull;

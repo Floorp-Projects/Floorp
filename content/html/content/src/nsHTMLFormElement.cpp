@@ -104,8 +104,9 @@ public:
     mIsSubmitting(PR_FALSE),
     mDeferSubmission(PR_FALSE),
     mPendingSubmission(nsnull),
-    mSubmittingRequest(nsnull) { }
-
+    mSubmittingRequest(nsnull)
+  {
+  }
 
   virtual ~nsHTMLFormElement();
 
@@ -169,15 +170,17 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify) {
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify)
+  {
     // This will end up calling the other SetAttr().
     return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
   }
@@ -526,7 +529,7 @@ nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            const nsAString& aValue, PRBool aNotify)
 {
@@ -663,14 +666,13 @@ nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
                                                           aValue, aResult);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
   nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(mDocument);
-  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                                           aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                             aCompileEventHandlers);
   
   nsCOMPtr<nsIHTMLDocument> newDocument = do_QueryInterface(mDocument);
   if (oldDocument != newDocument) {
@@ -682,12 +684,10 @@ nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       newDocument->AddedForm();
     }
   }
-
-  return rv;
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent,
                                   nsIDOMEvent** aDOMEvent,
@@ -1272,8 +1272,8 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   }
 
   // Get base URL
-  nsIURI *docURL = mDocument->GetDocumentURL();
-  NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
+  nsIURI *docURI = mDocument->GetDocumentURI();
+  NS_ENSURE_TRUE(docURI, NS_ERROR_UNEXPECTED);
 
   // If an action is not specified and we are inside
   // a HTML document then reload the URL. This makes us
@@ -1291,11 +1291,10 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
       return NS_OK;
     }
 
-    rv = docURL->Clone(getter_AddRefs(actionURL));
+    rv = docURI->Clone(getter_AddRefs(actionURL));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(getter_AddRefs(baseURL));
+    nsCOMPtr<nsIURI> baseURL = GetBaseURI();
     NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
     if (!baseURL) {
       return NS_OK; // No base URL -> exit early, see Bug 30721
@@ -1311,7 +1310,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   //
   nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
-  rv = securityManager->CheckLoadURI(docURL, actionURL,
+  rv = securityManager->CheckLoadURI(docURI, actionURL,
                                      nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -71,11 +71,10 @@ public:
 
   // These override the SetAttr methods in nsGenericHTMLElement (need
   // both here to silence compiler warnings).
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
 
   // nsIFramesetElement
   NS_IMETHOD GetRowSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
@@ -210,7 +209,7 @@ nsHTMLFrameSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Cols, cols)
 NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)
 
-NS_IMETHODIMP
+nsresult
 nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -251,23 +250,19 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
     }
   }
   
-  rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID,
-                                              aAttribute,
-                                              aValue,
+  rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aAttribute, aValue,
                                               aNotify);
   mCurrentRowColHint = NS_STYLE_HINT_REFLOW;
   
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLFrameSetElement::SetAttr(nsINodeInfo* aNodeInfo,
                                const nsAString& aValue,
                                PRBool aNotify)
 {
-  return nsGenericHTMLContainerElement::SetAttr(aNodeInfo,
-                                                aValue,
-                                                aNotify);
+  return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
 

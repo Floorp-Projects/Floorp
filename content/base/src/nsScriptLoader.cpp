@@ -429,12 +429,12 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   // Check to see if we have a src attribute.
   aElement->GetSrc(src);
   if (!src.IsEmpty()) {
-    nsCOMPtr<nsIURI> baseURI, scriptURI;
+    nsCOMPtr<nsIURI> scriptURI;
 
     // Use the SRC attribute value to load the URL
     nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
     NS_ASSERTION(content, "nsIDOMHTMLScriptElement not implementing nsIContent");
-    content->GetBaseURL(getter_AddRefs(baseURI));
+    nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
     rv = NS_NewURI(getter_AddRefs(scriptURI), src, nsnull, baseURI);
 
     if (NS_FAILED(rv)) {
@@ -442,7 +442,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     }
 
     // Check that the containing page is allowed to load this URI.
-    nsIURI *docURI = mDocument->GetDocumentURL();
+    nsIURI *docURI = mDocument->GetDocumentURI();
     if (!docURI) {
       return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
     }
@@ -496,7 +496,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
           httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                         NS_LITERAL_CSTRING("*/*"),
                                         PR_FALSE);
-          httpChannel->SetReferrer(mDocument->GetDocumentURL());
+          httpChannel->SetReferrer(mDocument->GetDocumentURI());
         }
         rv = NS_NewStreamLoader(getter_AddRefs(loader), channel, this, request);
       }
@@ -508,7 +508,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   } else {
     request->mLoading = PR_FALSE;
     request->mIsInline = PR_TRUE;
-    request->mURI = mDocument->GetDocumentURL();
+    request->mURI = mDocument->GetDocumentURI();
 
     nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aElement));
     if (scriptElement) {

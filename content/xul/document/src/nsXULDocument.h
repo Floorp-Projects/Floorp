@@ -95,17 +95,17 @@ public:
     virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
     virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup);
 
-    NS_IMETHOD StartDocumentLoad(const char* aCommand,
-                                 nsIChannel *channel,
-                                 nsILoadGroup* aLoadGroup,
-                                 nsISupports* aContainer,
-                                 nsIStreamListener **aDocListener,
-                                 PRBool aReset = PR_TRUE,
-                                 nsIContentSink* aSink = nsnull);
+    virtual nsresult StartDocumentLoad(const char* aCommand,
+                                       nsIChannel *channel,
+                                       nsILoadGroup* aLoadGroup,
+                                       nsISupports* aContainer,
+                                       nsIStreamListener **aDocListener,
+                                       PRBool aReset = PR_TRUE,
+                                       nsIContentSink* aSink = nsnull);
 
     virtual nsIPrincipal* GetPrincipal();
 
-    NS_IMETHOD SetPrincipal(nsIPrincipal *aPrincipal);
+    virtual void SetPrincipal(nsIPrincipal *aPrincipal);
 
     virtual void SetContentType(const nsAString& aContentType);
 
@@ -130,11 +130,11 @@ public:
     virtual void AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute, PRInt32 aModType);
 
-    NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-                              nsEvent* aEvent,
-                              nsIDOMEvent** aDOMEvent,
-                              PRUint32 aFlags,
-                              nsEventStatus* aEventStatus);
+    virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus* aEventStatus);
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);

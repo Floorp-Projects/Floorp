@@ -508,7 +508,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     mIsScopeClear = PR_FALSE;
 
     if (doc) {
-      docURL = doc->GetDocumentURL();
+      docURL = doc->GetDocumentURI();
     } else {
       docURL = nsnull;
     }
@@ -2913,7 +2913,7 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
   nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
   if (pm && doc) {
     PRUint32 permission = nsIPopupWindowManager::ALLOW_POPUP;
-    pm->TestPermission(doc->GetDocumentURL(), &permission);
+    pm->TestPermission(doc->GetDocumentURI(), &permission);
     blocked = (permission == nsIPopupWindowManager::DENY_POPUP);
   }
   return blocked;
@@ -3101,7 +3101,7 @@ GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
   contextWindow->GetDocument(getter_AddRefs(domdoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
   if (doc)
-    baseURL = doc->GetBaseURL();
+    baseURL = doc->GetBaseURI();
 
   // use the base URI to build what would have been the popup's URI
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
@@ -5438,7 +5438,7 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
       caller->GetDocument(getter_AddRefs(callerDOMdoc));
       nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDOMdoc));
       if (callerDoc)
-        baseURI = callerDoc->GetDocumentURL();
+        baseURI = callerDoc->GetDocumentURI();
     }
   }
 

@@ -133,8 +133,8 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 
   nsCOMPtr<nsIDOMDocument> kungFuDeathGrip(doc);
 
-  doc->SetDocumentURL(aBaseURI);
-  doc->SetBaseURL(aBaseURI);
+  doc->nsIDocument::SetDocumentURI(aBaseURI);
+  doc->SetBaseURI(aBaseURI);
 
   if (aDoctype) {
     nsCOMPtr<nsIDOMNode> tmpNode;
@@ -422,7 +422,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     }
   }
 
-  nsIURI *baseURI = mDocumentURL;
+  nsIURI *baseURI = mDocumentURI;
   nsCAutoString charset;
 
   if (callingContext) {
@@ -437,7 +437,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
 
       if (doc) {
-        baseURI = doc->GetBaseURL();
+        baseURI = doc->GetBaseURI();
         charset = doc->GetDocumentCharacterSet();
       }
     }
@@ -465,8 +465,8 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     return NS_OK;
   }
 
-  SetDocumentURL(uri);
-  SetBaseURL(uri);
+  this->nsIDocument::SetDocumentURI(uri);
+  SetBaseURI(uri);
 
   // Store script context, if any, in case we encounter redirect
   // (because we need it there)
@@ -575,7 +575,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                  nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
@@ -917,7 +917,7 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsAutoString emptyStr;
   emptyStr.Truncate();
   rv = NS_NewDOMDocument(getter_AddRefs(newDoc), emptyStr, emptyStr,
-                         newDocType, mDocumentURL);
+                         newDocType, mDocumentURI);
   if (NS_FAILED(rv)) return rv;
 
   if (aDeep) {

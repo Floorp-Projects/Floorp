@@ -65,11 +65,11 @@ public:
 
   // nsIContent
   virtual nsIAtom *Tag() const;
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
 
 protected:

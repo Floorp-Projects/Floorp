@@ -681,7 +681,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
-        mBaseURL = doc->GetBaseURL();
+        mBaseURL = doc->GetBaseURI();
 
         if (!mNeverAnimate && mBaseURL) {
             PRBool isChrome = PR_FALSE;
@@ -697,7 +697,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
 
         if (mLangService) {
           doc->AddCharSetObserver(this);
-          UpdateCharSet(PromiseFlatCString(doc->GetDocumentCharacterSet()).get());
+          UpdateCharSet(doc->GetDocumentCharacterSet().get());
         }
       }
     }

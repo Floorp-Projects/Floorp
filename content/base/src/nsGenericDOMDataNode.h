@@ -167,64 +167,61 @@ public:
                        const nsAString& aArg);
 
   // Implementation for nsIContent
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD_(void) SetParent(nsIContent* aParent);
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
-  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
-  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
-  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
-  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                       PRBool aNotify);
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                     nsAString& aResult) const;
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                     nsIAtom** aPrefix, nsAString& aResult) const;
-  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
-  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                           nsIAtom** aName, nsIAtom** aPrefix) const;
-  NS_IMETHOD_(PRUint32) GetAttrCount() const;
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual void SetParent(nsIContent* aParent);
+  virtual PRBool IsNativeAnonymous() const;
+  virtual void SetNativeAnonymous(PRBool aAnonymous);
+  virtual void GetNameSpaceID(PRInt32* aID) const;
+  virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom *GetClassAttributeName() const;
+  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                           nsAString& aResult) const;
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                           nsIAtom** aPrefix, nsAString& aResult) const;
+  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
+  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                 nsIAtom** aName, nsIAtom** aPrefix) const;
+  virtual PRUint32 GetAttrCount() const;
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
   virtual PRUint32 ContentID() const;
-  NS_IMETHOD SetContentID(PRUint32 aID);
-  NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
-  NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
+  virtual nsresult RangeAdd(nsIDOMRange* aRange);
+  virtual void RangeRemove(nsIDOMRange* aRange);
   virtual const nsVoidArray *GetRangeList() const;
-  NS_IMETHOD SetFocus(nsIPresContext *aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext *aPresContext);
 
-  NS_IMETHOD_(nsIContent*) GetBindingParent() const;
-  NS_IMETHOD SetBindingParent(nsIContent* aParent);
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  virtual nsIContent *GetBindingParent() const;
+  virtual nsresult SetBindingParent(nsIContent* aParent);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-  NS_IMETHOD GetBaseURL(nsIURI** aURI) const;
-  NS_IMETHOD DoneCreatingElement();
+  virtual nsresult GetListenerManager(nsIEventListenerManager **aResult);
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
-  NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
-  NS_IMETHOD_(PRBool) CanContainChildren() const;
-  NS_IMETHOD_(PRUint32) GetChildCount() const;
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument);
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsINodeInfo *GetNodeInfo() const;
+  virtual PRBool CanContainChildren() const;
+  virtual PRUint32 GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   // nsITextContent
   NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn);

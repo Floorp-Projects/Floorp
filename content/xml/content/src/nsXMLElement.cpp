@@ -144,7 +144,7 @@ NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
 
-NS_IMETHODIMP
+nsresult
 nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                       const nsAString& aValue,
                       PRBool aNotify)
@@ -153,7 +153,7 @@ nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                             aNotify);
 }
 
-NS_IMETHODIMP 
+nsresult
 nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
                       const nsAString& aValue,
                       PRBool aNotify)
@@ -174,8 +174,8 @@ nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
   return nsGenericContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-static nsresult DocShellToPresContext(nsIDocShell *aShell,
-                                      nsIPresContext **aPresContext)
+static nsresult
+DocShellToPresContext(nsIDocShell *aShell, nsIPresContext **aPresContext)
 {
   *aPresContext = nsnull;
 
@@ -187,8 +187,9 @@ static nsresult DocShellToPresContext(nsIDocShell *aShell,
   return ds->GetPresContext(aPresContext);
 }
 
-static nsresult CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI,
-                             nsIDocument* aDocument, nsIURI **aAbsURI)
+static nsresult
+CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI, nsIDocument* aDocument,
+             nsIURI **aAbsURI)
 {
   *aAbsURI = nsnull;
 
@@ -211,7 +212,8 @@ static nsresult CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI,
   return rv;
 }
 
-static inline nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
+static inline
+nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
 {
   if (NS_SUCCEEDED(aRv)) {
     switch(aVerb) {
@@ -305,9 +307,8 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
         }
 
         // base
-        nsCOMPtr<nsIURI> base;
-        rv = GetBaseURL(getter_AddRefs(base));
-        if (NS_FAILED(rv))
+        nsCOMPtr<nsIURI> base = GetBaseURI();
+        if (!base)
           break;
 
         // href= ?
@@ -335,7 +336,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   return rv;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                              nsEvent* aEvent,
                              nsIDOMEvent** aDOMEvent,
@@ -405,15 +406,14 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
             verb = eLinkVerb_Embed;
           }
 
-          nsCOMPtr<nsIURI> baseURL;
-          GetBaseURL(getter_AddRefs(baseURL));
+          nsCOMPtr<nsIURI> baseURI = GetBaseURI();
           nsCOMPtr<nsIURI> uri;
           ret = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                           href,
                                                           mDocument,
-                                                          baseURL);
+                                                          baseURI);
           if (NS_SUCCEEDED(ret)) {
-            ret = TriggerLink(aPresContext, verb, baseURL, uri, target,
+            ret = TriggerLink(aPresContext, verb, baseURI, uri, target,
                               PR_TRUE);
           }
 
@@ -467,16 +467,15 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           break;
         }
 
-        nsCOMPtr<nsIURI> baseURL;
-        GetBaseURL(getter_AddRefs(baseURL));
+        nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
         nsCOMPtr<nsIURI> uri;
         ret = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                         href,
                                                         mDocument,
-                                                        baseURL);
+                                                        baseURI);
         if (NS_SUCCEEDED(ret)) {
-          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, uri,
+          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI, uri,
                             target, PR_FALSE);
         }
         

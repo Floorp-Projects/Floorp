@@ -958,7 +958,9 @@ NS_IMETHODIMP nsAccessible::TakeFocus()
   if (!content) {
     return NS_ERROR_FAILURE;
   }
-  return content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
+  content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent)

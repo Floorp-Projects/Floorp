@@ -107,30 +107,28 @@ public:
   NS_IMETHOD SetLinkState(nsLinkState aState);
   NS_IMETHOD GetHrefURI(nsIURI** aURI);
 
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void RemoveFocus(nsIPresContext* aPresContext);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                       PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
 protected:
   // The cached visited state
   nsLinkState mLinkState;
-
 };
 
 
@@ -226,7 +224,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 
 
-NS_IMETHODIMP
+void
 nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
@@ -237,34 +235,38 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult rv =
-    nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                               aCompileEventHandlers);
+  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                             aCompileEventHandlers);
 
   // Register the access key for the new document.
   if (documentChanging && mDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
 {
-  return SetElementFocus(PR_FALSE);
+  SetElementFocus(PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
 {
-  return SetElementFocus(PR_TRUE);
+  SetElementFocus(PR_TRUE);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext) {
+    return;
+  }
+
   // don't make the link grab the focus if there is no link handler
   nsCOMPtr<nsILinkHandler> handler;
   nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
@@ -293,29 +295,24 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
       }
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext) {
+    return;
+  }
+
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
-  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIEventStateManager> esm;
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
-  if (esm) {
-    if (!mDocument)
-      return NS_ERROR_NULL_POINTER;
-
-    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (esm && mDocument) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -339,7 +336,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 // XXX support suppress in here
-NS_IMETHODIMP
+nsresult
 nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
@@ -640,7 +637,7 @@ nsHTMLAnchorElement::GetHrefURI(nsIURI** aURI)
   return GetHrefURIForAnchors(aURI);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue,
                              PRBool aNotify)
@@ -668,16 +665,16 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetAttr(nsINodeInfo* aNodeInfo,
-                             const nsAString& aValue,
+nsresult
+nsHTMLAnchorElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                              PRBool aNotify)
 {
   return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-NS_IMETHODIMP
-nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify)
+nsresult
+nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                               PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     SetLinkState(eLinkState_Unknown);

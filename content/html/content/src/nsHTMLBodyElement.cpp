@@ -116,8 +116,8 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
@@ -495,7 +495,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
@@ -506,8 +506,8 @@ nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     // destroy old style rule since the sheet will probably change
     NS_RELEASE(mContentStyleRule);
   }
-  return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                                    aCompileEventHandlers);
+  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                             aCompileEventHandlers);
 }
 
 static 

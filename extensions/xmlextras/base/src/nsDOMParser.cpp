@@ -482,7 +482,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
         if (doc) {
-          baseURI = doc->GetBaseURL();
+          baseURI = doc->GetBaseURI();
         }
       }
     }

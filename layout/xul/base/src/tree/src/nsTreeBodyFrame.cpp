@@ -1933,7 +1933,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
       // The page is currently being torn down.  Why bother.
       return NS_ERROR_FAILURE;
 
-    mContent->GetBaseURL(getter_AddRefs(baseURI));
+    baseURI = mContent->GetBaseURI();
 
     nsCOMPtr<nsIURI> srcURI;
     // XXX origin charset needed
@@ -1949,7 +1949,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 
     mImageGuard = PR_TRUE;
     // XXX: initialDocumentURI is NULL!
-    rv = il->LoadImage(srcURI, nsnull, doc->GetDocumentURL(), nsnull,
+    rv = il->LoadImage(srcURI, nsnull, doc->GetDocumentURI(), nsnull,
                        imgDecoderObserver, doc, nsIRequest::LOAD_NORMAL,
                        nsnull, nsnull, getter_AddRefs(imageRequest));
     mImageGuard = PR_FALSE;

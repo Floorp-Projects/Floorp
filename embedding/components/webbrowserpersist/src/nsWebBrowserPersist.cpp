@@ -1401,13 +1401,13 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
 
     // Persist the main document
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
-    mURI = doc->GetDocumentURL();
+    mURI = doc->GetDocumentURI();
 
     nsCOMPtr<nsIURI> oldBaseURI = mCurrentBaseURI;
     nsCAutoString oldCharset(mCurrentCharset);
 
     // Store the base URI and the charset
-    mCurrentBaseURI = doc->GetBaseURL();
+    mCurrentBaseURI = doc->GetBaseURI();
     mCurrentCharset = doc->GetDocumentCharacterSet();
 
     // Does the caller want to fixup the referenced URIs and save those too?

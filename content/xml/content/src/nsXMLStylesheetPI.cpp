@@ -63,8 +63,8 @@ public:
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIContent
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
 
   // nsStyleLinkElement
   NS_IMETHOD GetCharset(nsAString& aCharset);
@@ -101,17 +101,15 @@ nsXMLStylesheetPI::~nsXMLStylesheetPI()
 
 // nsIContent
 
-NS_IMETHODIMP
+void
 nsXMLStylesheetPI::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
   nsCOMPtr<nsIDocument> oldDoc = mDocument;
-  nsresult rv = nsXMLProcessingInstruction::SetDocument(aDocument, aDeep,
-                                                        aCompileEventHandlers);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet(oldDoc);
-  }
-  return rv;
+  nsXMLProcessingInstruction::SetDocument(aDocument, aDeep,
+                                          aCompileEventHandlers);
+
+  UpdateStyleSheet(oldDoc);
 }
 
 
@@ -171,7 +169,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
   nsIURI *baseURL;
   nsCAutoString charset;
   if (mDocument) {
-    baseURL = mDocument->GetBaseURL();
+    baseURL = mDocument->GetBaseURI();
     charset = mDocument->GetDocumentCharacterSet();
   } else {
     baseURL = nsnull;

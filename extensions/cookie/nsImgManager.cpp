@@ -213,7 +213,7 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
           return NS_OK;
       }
 
-      nsIURI *baseURI = doc->GetBaseURL();
+      nsIURI *baseURI = doc->GetBaseURI();
       if (!baseURI)
         return rv;
 

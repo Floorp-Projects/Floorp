@@ -92,7 +92,6 @@
 #include "nsISupportsArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrameManager.h"
-#include "nsIAttributeContent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsLegendFrame.h"
@@ -1394,7 +1393,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     case eStyleContentType_Attr:
       {  
-        nsIAtom* attrName = nsnull;
+        nsCOMPtr<nsIAtom> attrName;
         PRInt32 attrNameSpace = kNameSpaceID_None;
         PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
         if (-1 != barIndex) {
@@ -1404,11 +1403,11 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
           attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
           contentString.Cut(0, barIndex + 1);
           if (contentString.Length()) {
-            attrName = NS_NewAtom(contentString);
+            attrName = do_GetAtom(contentString);
           }
         }
         else {
-          attrName = NS_NewAtom(contentString);
+          attrName = do_GetAtom(contentString);
         }
 
         // Creates the content and frame and return if successful
@@ -1416,27 +1415,22 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
         if (attrName) {
           nsIFrame*   textFrame = nsnull;
           nsCOMPtr<nsIContent> content;
-          rv = NS_NewAttributeContent(getter_AddRefs(content));
+          rv = NS_NewAttributeContent(aContent, attrNameSpace, attrName,
+                                      getter_AddRefs(content));
 
-          nsCOMPtr<nsIAttributeContent> attrContent(do_QueryInterface(content));
-          if (attrContent) {
-            attrContent->Init(aContent, attrNameSpace, attrName);  
+          // Set aContent as the parent content and set the document
+          // object. This way event handling works
+          content->SetParent(aContent);
+          content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
-            // Set aContent as the parent content and set the document
-            // object. This way event handling works
-            content->SetParent(aContent);
-            content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+          // Create a text frame and initialize it
+          NS_NewTextFrame(shell, &textFrame);
+          textFrame->Init(aPresContext, content, aParentFrame, aStyleContext,
+                          nsnull);
 
-            // Create a text frame and initialize it
-            NS_NewTextFrame(shell, &textFrame);
-            textFrame->Init(aPresContext, content, aParentFrame, aStyleContext,
-                            nsnull);
-
-            // Return the text frame
-            *aFrame = textFrame;
-            rv = NS_OK;
-          }
-          NS_RELEASE(attrName);
+          // Return the text frame
+          *aFrame = textFrame;
+          rv = NS_OK;
         }
         return rv;
       }
@@ -3392,7 +3386,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         else
 #endif 
 #ifdef MOZ_SVG
-        if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(&nameSpaceID)) && 
+        if (aDocElement->GetNameSpaceID(&nameSpaceID),
             (nameSpaceID == kNameSpaceID_SVG)) {
           rv = NS_NewSVGOuterSVGFrame(aPresShell, aDocElement, &contentFrame);
           if (NS_FAILED(rv)) {
@@ -5056,22 +5050,29 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       content->SetParent(aParent);
       content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
+      nsresult rv;
 #ifdef MOZ_XUL
-      // Only cut XUL scrollbars off if they're not in a XUL document.  This allows
-      // scrollbars to be styled from XUL (although not from XML or HTML).
-      nsIAtom* tag = content->Tag();
-      if (tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollcorner) {
+      // Only cut XUL scrollbars off if they're not in a XUL document.
+      // This allows scrollbars to be styled from XUL (although not
+      // from XML or HTML).
+      nsINodeInfo *ni = content->GetNodeInfo();
+
+      if (ni && (ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
+                 ni->Equals(nsXULAtoms::scrollcorner, kNameSpaceID_XUL))) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
         if (xulDoc)
-          content->SetBindingParent(aParent);
-        else content->SetBindingParent(content);
+          rv = content->SetBindingParent(aParent);
+        else
+          rv = content->SetBindingParent(content);
       }
       else
 #endif
-        content->SetBindingParent(content);
-    
+        rv = content->SetBindingParent(content);
+
+      NS_ENSURE_SUCCESS(rv, rv);
+
       nsIFrame * newFrame = nsnull;
-      nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
+      rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
       if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
         aChildItems.AddChild(newFrame);
       }
@@ -6784,8 +6785,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
                                           nsStyleContext*          aStyleContext,
                                           nsFrameItems&            aFrameItems)
 {
-  NS_ASSERTION(NS_SUCCEEDED(aContent->GetNameSpaceID(&aNameSpaceID)) && 
-            (aNameSpaceID == kNameSpaceID_SVG), "SVG frame constructed in wrong namespace");
+  NS_ASSERTION((aContent->GetNameSpaceID(&aNameSpaceID),
+                (aNameSpaceID == kNameSpaceID_SVG)),
+               "SVG frame constructed in wrong namespace");
 
   nsresult  rv = NS_OK;
   PRBool isAbsolutelyPositioned = PR_FALSE;

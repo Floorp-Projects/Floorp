@@ -153,8 +153,8 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   // XXXbz GetOwnerDocument
   nsIDocument* doc = nodeInfo->GetDocument();
 
-  mContent->GetBaseURL(aBaseURI);
-  
+  nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
   if (htmlContainer) {
     htmlContainer->GetCSSLoader(*aCSSLoader);
@@ -177,6 +177,8 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   // should not be
   (*aCSSParser)->SetCaseSensitive(!mContent->IsContentOfType(nsIContent::eHTML) ||
                                   nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+
+  base.swap(*aBaseURI);
 
   return NS_OK;
 }

@@ -61,7 +61,7 @@ nsSVGDocument::~nsSVGDocument() {
 
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGDocument::StartDocumentLoad(const char* aCommand,
                                  nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
@@ -107,8 +107,8 @@ NS_IMETHODIMP
 nsSVGDocument::GetDomain(nsAString& aDomain) {
   nsCAutoString domain;
 
-  if (mDocumentURL) {
-    nsresult rv = mDocumentURL->GetHost(domain);
+  if (mDocumentURI) {
+    nsresult rv = mDocumentURI->GetHost(domain);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -121,8 +121,8 @@ NS_IMETHODIMP
 nsSVGDocument::GetURL(nsAString& aURL) {
   nsCAutoString url;
 
-  if (mDocumentURL) {
-    nsresult rv = mDocumentURL->GetSpec(url);
+  if (mDocumentURI) {
+    nsresult rv = mDocumentURI->GetSpec(url);
     if (NS_FAILED(rv)) return rv;    
   }
 

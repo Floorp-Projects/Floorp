@@ -628,7 +628,7 @@ nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
-    NS_IF_ADDREF(*aBaseURI = doc->GetBaseURL());
+    NS_IF_ADDREF(*aBaseURI = doc->GetBaseURI());
   }
 
   return NS_OK;

@@ -173,7 +173,7 @@ nsFrameLoader::LoadFrame()
   }
 
   // Make an absolute URI
-  nsIURI *base_uri = doc->GetBaseURL();
+  nsIURI *base_uri = doc->GetBaseURI();
 
   const nsACString &doc_charset = doc->GetDocumentCharacterSet();
 

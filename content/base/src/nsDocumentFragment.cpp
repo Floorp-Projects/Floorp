@@ -127,44 +127,49 @@ public:
   NS_DECL_NSIDOM3NODE
 
   // nsIContent
-  NS_IMETHOD_(void) SetParent(nsIContent* aParent) { }
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue,
-                     PRBool aNotify)
-    { return NS_OK; }
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify)
-    { return NS_OK; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsAString& aResult) const
-    { return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsIAtom** aPrefix, nsAString& aResult) const
-    { return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-                       PRBool aNotify)
-    { return NS_OK; }
-  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
-                           PRInt32* aNameSpaceID,
-                           nsIAtom** aName,
-                           nsIAtom** aPrefix) const
-    {
-      *aNameSpaceID = kNameSpaceID_None;
-      *aName = nsnull;
-      *aPrefix = nsnull;
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus)
-    {
-      NS_ENSURE_ARG_POINTER(aEventStatus);
-      *aEventStatus = nsEventStatus_eIgnore;
-      return NS_OK;
-    }
+  virtual void SetParent(nsIContent* aParent) { }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue,
+                           PRBool aNotify)
+  {
+    return NS_OK;
+  }
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify)
+  {
+    return NS_OK;
+  }
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                           nsAString& aResult) const
+  {
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                           nsIAtom** aPrefix, nsAString& aResult) const
+  {
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                             PRBool aNotify)
+  {
+    return NS_OK;
+  }
+  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                 nsIAtom** aName, nsIAtom** aPrefix) const
+  {
+    *aNameSpaceID = kNameSpaceID_None;
+    *aName = nsnull;
+    *aPrefix = nsnull;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags, nsEventStatus* aEventStatus)
+  {
+    NS_ENSURE_ARG_POINTER(aEventStatus);
+    *aEventStatus = nsEventStatus_eIgnore;
+    return NS_OK;
+  }
 
 protected:
   nsCOMPtr<nsIDocument> mOwnerDocument;

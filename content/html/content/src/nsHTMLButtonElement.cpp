@@ -102,19 +102,18 @@ public:
                           nsAString& aResult) const;
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void RemoveFocus(nsIPresContext* aPresContext);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
 protected:
   PRInt8 mType;
@@ -280,13 +279,17 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMETHODIMP
 nsHTMLButtonElement::Blur()
 {
-  return SetElementFocus(PR_FALSE);
+  SetElementFocus(PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
 {
-  return SetElementFocus(PR_TRUE);
+  SetElementFocus(PR_TRUE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -327,20 +330,23 @@ nsHTMLButtonElement::Click()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
+
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None,
                                                 nsHTMLAtoms::disabled,
                                                 disabled)) {
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+  if (esm) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
   }
 
@@ -350,18 +356,16 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
+
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
-  nsresult rv = NS_OK;
-
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
@@ -369,15 +373,10 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
-
-    if (!mDocument)
-      return NS_ERROR_NULL_POINTER;
-
-    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+  if (esm && mDocument) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
-
-  return rv;
 }
 
 static const nsHTMLValue::EnumTable kButtonTypeTable[] = {
@@ -433,7 +432,7 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
                                                               aValue, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,

@@ -153,12 +153,11 @@ nsSVGStyleValue::UpdateStyleRule(nsIContent* aContent)
   }
 
   NS_ASSERTION(aContent, "need content node for base URL");
-  nsCOMPtr <nsIURI> baseURL;
-  aContent->GetBaseURL(getter_AddRefs(baseURL));
-  
+  nsCOMPtr <nsIURI> baseURI = aContent->GetBaseURI();
+
   nsCOMPtr<nsICSSParser> css = do_CreateInstance(kCSSParserCID);
   NS_ASSERTION(css, "can't get a css parser");
   if (!css) return;    
 
-  css->ParseStyleAttribute(mValue, baseURL, getter_AddRefs(mRule)); 
+  css->ParseStyleAttribute(mValue, baseURI, getter_AddRefs(mRule)); 
 }

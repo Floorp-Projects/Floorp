@@ -174,18 +174,19 @@ public:
                                nsIContent* aSubmitElement);
 
   // nsIContent
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-  NS_IMETHOD SetFocus(nsIPresContext* aContext);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                       PRBool aNotify);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual void SetFocus(nsIPresContext* aContext);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
 protected:
   already_AddRefed<nsIContent> GetForContent();
@@ -307,7 +308,7 @@ nsHTMLLabelElement::SetHtmlFor(const nsAString& aValue)
                                                     value, PR_TRUE);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
@@ -318,16 +319,13 @@ nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult rv =
-    nsGenericHTMLContainerFormElement::SetDocument(aDocument, aDeep,
-                                                   aCompileEventHandlers);
+  nsGenericHTMLContainerFormElement::SetDocument(aDocument, aDeep,
+                                                 aCompileEventHandlers);
 
   // Register the access key for the new document.
   if (documentChanging && mDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
-
-  return rv;
 }
 
 static PRBool
@@ -353,7 +351,7 @@ EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
@@ -380,7 +378,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
     switch (aEvent->message) {
       case NS_MOUSE_LEFT_CLICK:
         // Focus the for content.
-        rv = content->SetFocus(aPresContext);
+        content->SetFocus(aPresContext);
         // This sends the event twice down parts of its path.  Oh well.
         // This is needed for:
         //  * Making radio buttons and checkboxes get checked.
@@ -412,17 +410,14 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLLabelElement::SetFocus(nsIPresContext* aContext)
 {
   // Since we don't have '-moz-user-focus: normal', the only time
   // |SetFocus| will be called is when the accesskey is activated.
   nsCOMPtr<nsIContent> content = GetForContent();
   if (content)
-    return content->SetFocus(aContext);
-
-  // Do nothing (yes, really)!
-  return NS_OK;
+    content->SetFocus(aContext);
 }
 
 nsresult
@@ -438,7 +433,7 @@ nsHTMLLabelElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             const nsAString& aValue, PRBool aNotify)
 {
@@ -457,14 +452,14 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLLabelElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                             PRBool aNotify)
 {
   return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                               PRBool aNotify)
 {

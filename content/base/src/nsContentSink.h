@@ -73,7 +73,7 @@ protected:
   nsContentSink();
   virtual ~nsContentSink();
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURL,
+  nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
                 nsISupports* aContainer, nsIChannel* aChannel);
 
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
@@ -103,8 +103,8 @@ protected:
 
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIParser>           mParser;
-  nsCOMPtr<nsIURI>              mDocumentURL;
-  nsCOMPtr<nsIURI>              mDocumentBaseURL;
+  nsCOMPtr<nsIURI>              mDocumentURI;
+  nsCOMPtr<nsIURI>              mDocumentBaseURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
   nsCOMPtr<nsINodeInfoManager>  mNodeInfoManager;

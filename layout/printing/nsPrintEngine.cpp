@@ -1852,7 +1852,7 @@ nsPrintEngine::GetWebShellTitleAndURL(nsIWebShell* aWebShell,
     *aTitle = ToNewUnicode(docTitle);
   }
 
-  nsIURI* url = aDoc->GetDocumentURL();
+  nsIURI* url = aDoc->GetDocumentURI();
   if (!url) return;
 
   nsCAutoString urlCStr;

@@ -249,15 +249,15 @@ public:
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup);
 
-  NS_IMETHOD StartDocumentLoad(const char* aCommand,
-                               nsIChannel* aChannel,
-                               nsILoadGroup* aLoadGroup,
-                               nsISupports* aContainer,
-                               nsIStreamListener **aDocListener,
-                               PRBool aReset = PR_TRUE,
-                               nsIContentSink* aContentSink = nsnull);
+  virtual nsresult StartDocumentLoad(const char* aCommand,
+                                     nsIChannel* aChannel,
+                                     nsILoadGroup* aLoadGroup,
+                                     nsISupports* aContainer,
+                                     nsIStreamListener **aDocListener,
+                                     PRBool aReset = PR_TRUE,
+                                     nsIContentSink* aContentSink = nsnull);
 
-  NS_IMETHOD StopDocumentLoad();
+  virtual void StopDocumentLoad();
 
   /**
    * Return the principal responsible for this document.
@@ -267,7 +267,7 @@ public:
   /**
    * Set the principal responsible for this document.
    */
-  NS_IMETHOD SetPrincipal(nsIPrincipal *aPrincipal);
+  virtual void SetPrincipal(nsIPrincipal *aPrincipal);
 
   /**
    * Get the Content-Type of this document.
@@ -280,10 +280,7 @@ public:
    */
   virtual void SetContentType(const nsAString& aContentType);
 
-  /**
-   * Return the base URL for relative URLs in the document. May return null (or the document URL).
-   */
-  NS_IMETHOD SetBaseURL(nsIURI* aURL);
+  virtual nsresult SetBaseURI(nsIURI* aURI);
 
   /**
    * Get/Set the base target of a link in a document.
@@ -300,12 +297,12 @@ public:
   /**
    * Add an observer that gets notified whenever the charset changes.
    */
-  NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver);
+  virtual nsresult AddCharSetObserver(nsIObserver* aObserver);
 
   /**
    * Remove a charset observer.
    */
-  NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
+  virtual void RemoveCharSetObserver(nsIObserver* aObserver);
 
   /**
    * Return the Line Breaker for the document
@@ -328,15 +325,16 @@ public:
    * it's presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
    */
-  NS_IMETHOD CreateShell(nsIPresContext* aContext,
-                         nsIViewManager* aViewManager,
-                         nsStyleSet* aStyleSet,
-                         nsIPresShell** aInstancePtrResult);
-  NS_IMETHOD_(PRBool) DeleteShell(nsIPresShell* aShell);
-  NS_IMETHOD_(PRUint32) GetNumberOfShells() const;
-  NS_IMETHOD_(nsIPresShell *) GetShellAt(PRUint32 aIndex) const;
+  virtual nsresult CreateShell(nsIPresContext* aContext,
+                               nsIViewManager* aViewManager,
+                               nsStyleSet* aStyleSet,
+                               nsIPresShell** aInstancePtrResult);
+  virtual PRBool DeleteShell(nsIPresShell* aShell);
+  virtual PRUint32 GetNumberOfShells() const;
+  virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const;
 
-  NS_IMETHOD SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc);
+  virtual nsresult SetSubDocumentFor(nsIContent *aContent,
+                                     nsIDocument* aSubDoc);
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
 
@@ -346,9 +344,9 @@ public:
    * Get the direct children of the document - content in
    * the prolog, the root content and content in the epilog.
    */
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
-  NS_IMETHOD_(PRUint32) GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  virtual PRUint32 GetChildCount() const;
 
   /**
    * Get the style sheets owned by this document.
@@ -366,7 +364,7 @@ public:
   virtual void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
 
-  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
+  virtual void InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
   virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             PRBool aApplicable);
 
@@ -447,8 +445,12 @@ public:
   virtual void GetXMLDeclaration(nsAString& aVersion,
                                  nsAString& aEncoding,
                                  nsAString& Standalone);
-  NS_IMETHOD_(PRBool) IsCaseSensitive();
-  NS_IMETHOD_(PRBool) IsScriptEnabled();
+  virtual PRBool IsScriptEnabled();
+
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -522,10 +524,6 @@ public:
 
   // nsIScriptObjectPrincipal
   NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
-
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
 
   virtual nsresult Init();
 

@@ -75,17 +75,18 @@ public:
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
   // nsIContent
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument);
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
 protected:
 
@@ -177,7 +178,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLOptGroupElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLOptGroupElement, Label, label)
 
 
-NS_IMETHODIMP
+nsresult
 nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                       nsEvent* aEvent,
                                       nsIDOMEvent** aDOMEvent,
@@ -224,7 +225,7 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
 }
 
 // nsIContent
-NS_IMETHODIMP
+nsresult
 nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                      PRBool aDeepSetDocument)
 {
@@ -242,7 +243,7 @@ nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                                       aDeepSetDocument);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                      PRBool aNotify, PRBool aDeepSetDocument)
 {
@@ -258,7 +259,7 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                                       aDeepSetDocument);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                       PRBool aNotify, PRBool aDeepSetDocument)
 {
@@ -275,7 +276,7 @@ nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                                        aDeepSetDocument);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsCOMPtr<nsISelectElement> sel;

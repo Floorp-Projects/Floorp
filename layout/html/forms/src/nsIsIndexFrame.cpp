@@ -417,44 +417,44 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
 
     // Resolve url to an absolute url
-    nsIURI *docURL = document->GetBaseURL();
+    nsIURI *docURL = document->GetBaseURI();
     if (!docURL) {
       NS_ERROR("No Base URL found in Form Submit!\n");
       return NS_OK; // No base URL -> exit early, see Bug 30721
     }
 
-      // If an action is not specified and we are inside 
-      // a HTML document then reload the URL. This makes us
-      // compatible with 4.x browsers.
-      // If we are in some other type of document such as XML or
-      // XUL, do nothing. This prevents undesirable reloading of
-      // a document inside XUL.
+    // If an action is not specified and we are inside 
+    // a HTML document then reload the URL. This makes us
+    // compatible with 4.x browsers.
+    // If we are in some other type of document such as XML or
+    // XUL, do nothing. This prevents undesirable reloading of
+    // a document inside XUL.
 
-      nsresult rv;
-      nsCOMPtr<nsIHTMLDocument> htmlDoc;
-      htmlDoc = do_QueryInterface(document, &rv);
-      if (NS_FAILED(rv)) {   
-        // Must be a XML, XUL or other non-HTML document type
-        // so do nothing.
-        return NS_OK;
-      } 
+    nsresult rv;
+    nsCOMPtr<nsIHTMLDocument> htmlDoc;
+    htmlDoc = do_QueryInterface(document, &rv);
+    if (NS_FAILED(rv)) {   
+      // Must be a XML, XUL or other non-HTML document type
+      // so do nothing.
+      return NS_OK;
+    } 
 
-      // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
-      // passed a zero length rel path.
-      nsCAutoString relPath;
-      docURL->GetSpec(relPath);
-      if (!relPath.IsEmpty()) {
-        CopyUTF8toUTF16(relPath, href);
+    // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
+    // passed a zero length rel path.
+    nsCAutoString relPath;
+    docURL->GetSpec(relPath);
+    if (!relPath.IsEmpty()) {
+      CopyUTF8toUTF16(relPath, href);
 
-        // If re-using the same URL, chop off old query string (bug 25330)
-        PRInt32 queryStart = href.FindChar('?');
-        if (kNotFound != queryStart) {
-          href.Truncate(queryStart);
-        }
-      } else {
-        NS_ERROR("Rel path couldn't be formed in form submit!\n");
-        return NS_ERROR_OUT_OF_MEMORY;
+      // If re-using the same URL, chop off old query string (bug 25330)
+      PRInt32 queryStart = href.FindChar('?');
+      if (kNotFound != queryStart) {
+        href.Truncate(queryStart);
       }
+    } else {
+      NS_ERROR("Rel path couldn't be formed in form submit!\n");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Add the URI encoded form values to the URI
     // Get the scheme of the URI.

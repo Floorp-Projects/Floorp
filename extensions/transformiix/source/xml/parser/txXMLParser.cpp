@@ -83,7 +83,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     nsIDocument* loaderDocument = txXPathNativeNode::getDocument(aLoader);
 
     nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
-    nsIURI *loaderUri = loaderDocument->GetDocumentURL();
+    nsIURI *loaderUri = loaderDocument->GetDocumentURI();
     NS_ENSURE_TRUE(loaderUri, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIChannel> channel;

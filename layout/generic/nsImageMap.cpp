@@ -455,7 +455,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
     nsIDocument* doc = nodeInfo->GetDocument();
     nsCAutoString urlSpec;
     if (doc) {
-      nsIURI *uri = doc->GetDocumentURL();
+      nsIURI *uri = doc->GetDocumentURI();
       if (uri) {
         uri->GetSpec(urlSpec);
       }
@@ -949,9 +949,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
     if (area->IsInside(aX, aY)) {
       if (area->GetHasURL()) {
         // Set the image loader's source URL and base URL
-        nsCOMPtr<nsIURI> baseUri;
-
-        mMap->GetBaseURL(getter_AddRefs(baseUri));
+        nsCOMPtr<nsIURI> baseUri = mMap->GetBaseURI();
 
         if (!baseUri) {
           return PR_FALSE;

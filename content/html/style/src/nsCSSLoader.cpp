@@ -1040,7 +1040,7 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
       NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
-      aLinkingContent->GetBaseURL(getter_AddRefs(sheetURI));
+      sheetURI = aLinkingContent->GetBaseURI();
     }
 
     rv = NS_NewCSSStyleSheet(aSheet, sheetURI);
@@ -1352,7 +1352,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                                   NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
                                   PR_FALSE);
     if (mDocument) {
-      nsIURI *documentURI = mDocument->GetDocumentURL();
+      nsIURI *documentURI = mDocument->GetDocumentURI();
       NS_ASSERTION(documentURI, "Null document uri is bad!");
       if (documentURI) {
         httpChannel->SetReferrer(documentURI);
@@ -1638,7 +1638,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_INITIALIZED);
 
   // Check whether we should even load
-  nsIURI *docURI = mDocument->GetDocumentURL();
+  nsIURI *docURI = mDocument->GetDocumentURI();
   if (!docURI) return NS_ERROR_FAILURE;
   nsresult rv = CheckLoadAllowed(docURI, aURL, aElement);
   if (NS_FAILED(rv)) return rv;

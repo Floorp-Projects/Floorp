@@ -273,7 +273,7 @@ int main (int argc, char* argv[])
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(pDOMDocument);
     if (doc) {
       nsCAutoString spec;
-      doc->GetDocumentURL()->GetSpec(spec);
+      doc->GetDocumentURI()->GetSpec(spec);
       printf("Document URI=\"%s\"\n",spec.get());
     }
   }

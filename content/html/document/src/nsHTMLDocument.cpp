@@ -394,7 +394,7 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 
 
 void
-nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
+nsHTMLDocument::BaseResetToURI(nsIURI *aURI)
 {
   nsresult rv = NS_OK;
 
@@ -412,12 +412,12 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
   mImageMaps.Clear();
   mForms = nsnull;
 
-  if (aURL) {
+  if (aURI) {
     if (!mAttrStyleSheet) {
-      rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURL, this);
+      rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURI, this);
     }
     else {
-      rv = mAttrStyleSheet->Reset(aURL);
+      rv = mAttrStyleSheet->Reset(aURI);
     }
     if (NS_SUCCEEDED(rv)) {
       // tell the world about our new style sheet
@@ -425,10 +425,10 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 
       if (!mStyleAttrStyleSheet) {
         rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet),
-                                     aURL, this);
+                                     aURI, this);
       }
       else {
-        rv = mStyleAttrStyleSheet->Reset(aURL);
+        rv = mStyleAttrStyleSheet->Reset(aURI);
       }
       if (NS_SUCCEEDED(rv)) {
         // tell the world about our new style sheet
@@ -451,7 +451,7 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHTMLDocument::CreateShell(nsIPresContext* aContext,
                             nsIViewManager* aViewManager,
                             nsStyleSet* aStyleSet,
@@ -779,7 +779,7 @@ nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
   return;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
                                   nsILoadGroup* aLoadGroup,
@@ -822,8 +822,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsCOMPtr<nsIURI> aURL;
-  rv = aChannel->GetURI(getter_AddRefs(aURL));
+  nsCOMPtr<nsIURI> uri;
+  rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -884,10 +884,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsCAutoString scheme;
-  aURL->GetScheme(scheme);
+  uri->GetScheme(scheme);
 
   nsCAutoString urlSpec;
-  aURL->GetSpec(urlSpec);
+  uri->GetSpec(urlSpec);
 
   PRInt32 charsetSource = kCharsetUninitialized;
   nsCAutoString charset;
@@ -989,15 +989,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     else {
       if (IsXHTML()) {
         nsCOMPtr<nsIXMLContentSink> xmlsink;
-
-        rv = NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, aURL,
+        rv = NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, uri,
                                   docShell, aChannel);
 
         sink = xmlsink;
       } else {
         nsCOMPtr<nsIHTMLContentSink> htmlsink;
 
-        rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, aURL,
+        rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, uri,
                                    docShell, aChannel);
 
         sink = htmlsink;
@@ -1009,21 +1008,19 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     mParser->SetContentSink(sink);
-    // parser the content of the URL
-    mParser->Parse(aURL, nsnull, PR_FALSE, (void *)this);
+    // parser the content of the URI
+    mParser->Parse(uri, nsnull, PR_FALSE, (void *)this);
   }
 
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::StopDocumentLoad()
 {
   if (mParser) {
     mParser->Terminate();
   }
-
-  return NS_OK;
 }
 
 // static
@@ -1517,7 +1514,7 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
   nsDocument::FlushPendingNotifications(aFlushReflows, aUpdateViews);
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsHTMLDocument::IsCaseSensitive()
 {
   return IsXHTML();
@@ -1832,10 +1829,10 @@ NS_IMETHODIMP
 nsHTMLDocument::GetBaseURI(nsAString &aURI)
 {
   aURI.Truncate();
-  nsIURI *uri = mDocumentBaseURL; // WEAK
+  nsIURI *uri = mDocumentBaseURI; // WEAK
 
   if (!uri) {
-    uri = mDocumentURL;
+    uri = mDocumentURI;
   }
 
   if (uri) {
@@ -2030,8 +2027,8 @@ nsHTMLDocument::GetURL(nsAString& aURL)
 {
   nsCAutoString str;
 
-  if (mDocumentURL) {
-    mDocumentURL->GetSpec(str);
+  if (mDocumentURI) {
+    mDocumentURI->GetSpec(str);
   }
 
   CopyUTF8toUTF16(str, aURL);
@@ -2281,7 +2278,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 {
   // not having a cookie service isn't an error
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
-  if (service && mDocumentURL) {
+  if (service && mDocumentURI) {
     nsCOMPtr<nsIPrompt> prompt;
     nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(GetScriptGlobalObject()));
     if (window) {
@@ -2307,14 +2304,14 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 
 // static
 nsresult
-nsHTMLDocument::GetSourceDocumentURL(nsIURI** sourceURL)
+nsHTMLDocument::GetSourceDocumentURI(nsIURI** sourceURI)
 {
   // XXX Tom said this reminded him of the "Six Degrees of
   // Kevin Bacon" game. We try to get from here to there using
   // whatever connections possible. The problem is that this
   // could break if any of the connections along the way change.
   // I wish there were a better way.
-  *sourceURL = nsnull;
+  *sourceURI = nsnull;
 
   // XXX This will fail on non-DOM contexts :(
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -2325,14 +2322,14 @@ nsHTMLDocument::GetSourceDocumentURL(nsIURI** sourceURL)
     return NS_OK; // No document in the window
   }
 
-  NS_IF_ADDREF(*sourceURL = doc->GetDocumentURL());
+  NS_IF_ADDREF(*sourceURI = doc->GetDocumentURI());
 
-  return sourceURL ? NS_OK : NS_ERROR_FAILURE;
+  return sourceURI ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
+nsHTMLDocument::OpenCommon(nsIURI* aSourceURI)
 {
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
@@ -2360,7 +2357,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
-  rv = NS_NewChannel(getter_AddRefs(channel), aSourceURL, nsnull, group);
+  rv = NS_NewChannel(getter_AddRefs(channel), aSourceURI, nsnull, group);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -2444,7 +2441,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIHTMLContentSink> sink;
 
-    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL,
+    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURI,
                                docshell, channel);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2486,21 +2483,21 @@ nsHTMLDocument::Open()
 NS_IMETHODIMP
 nsHTMLDocument::Open(nsIDOMDocument** aReturn)
 {
-  // XXX The URL of the newly created document will match
+  // XXX The URI of the newly created document will match
   // that of the source document. Is this right?
 
   // XXX This will fail on non-DOM contexts :(
-  nsCOMPtr<nsIURI> sourceURL;
-  nsresult rv = GetSourceDocumentURL(getter_AddRefs(sourceURL));
+  nsCOMPtr<nsIURI> sourceURI;
+  nsresult rv = GetSourceDocumentURI(getter_AddRefs(sourceURI));
 
-  // Recover if we had a problem obtaining the source URL
-  if (!sourceURL) {
-    rv = NS_NewURI(getter_AddRefs(sourceURL),
+  // Recover if we had a problem obtaining the source URI
+  if (!sourceURI) {
+    rv = NS_NewURI(getter_AddRefs(sourceURI),
                    NS_LITERAL_CSTRING("about:blank"));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = OpenCommon(sourceURL);
+  rv = OpenCommon(sourceURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(this, aReturn);
@@ -2628,13 +2625,13 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
 
   nsCAutoString spec;
 
-  if (mDocumentURL) {
-    rv = mDocumentURL->GetSpec(spec);
+  if (mDocumentURI) {
+    rv = mDocumentURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!mDocumentURL || nsCRT::strcasecmp(spec.get(), "about:blank") == 0) {
-    // The current document's URL and principal are empty or "about:blank".
+  if (!mDocumentURI || nsCRT::strcasecmp(spec.get(), "about:blank") == 0) {
+    // The current document's URI and principal are empty or "about:blank".
     // By writing to this document, the script acquires responsibility for the
     // document for security purposes. Thus a document.write of a script tag
     // ends up producing a script with the same principals as the script
@@ -2650,7 +2647,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
       subject->GetURI(getter_AddRefs(subjectURI));
 
       if (subjectURI) {
-        mDocumentURL = subjectURI;
+        mDocumentURI = subjectURI;
         mPrincipal = subject;
       }
     }
@@ -3801,7 +3798,7 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   nsresult rv = NS_OK;
   nsCAutoString url, originalSpec;
 
-  mDocumentURL->GetSpec(originalSpec);
+  mDocumentURI->GetSpec(originalSpec);
 
   // Generate the wyciwyg url
   url = NS_LITERAL_CSTRING("wyciwyg://")
@@ -3891,14 +3888,14 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
 
   nsresult rv = NS_OK;
   nsCAutoString url;
-  mDocumentURL->GetSpec(url);
+  mDocumentURI->GetSpec(url);
   // test if the above works if document.domain is set for Midas document
   // (www.netscape.com --> netscape.com)
   if (!url.Equals("about:blank")) {
     // If we're 'about:blank' then we don't care who can edit us.
     // If we're not about:blank, then we need to check sameOrigin.
     rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(nsnull,
-                                                               mDocumentURL);
+                                                               mDocumentURI);
     if (NS_FAILED(rv))
       return rv;
   }

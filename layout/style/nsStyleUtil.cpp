@@ -497,8 +497,7 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
         aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, val);
 
         // It's an XLink. Resolve it relative to aContent's base URI.
-        nsCOMPtr<nsIURI> baseURI;
-        aContent->GetBaseURL(getter_AddRefs(baseURI));
+        nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
         nsCOMPtr<nsIURI> absURI;
         // XXX should we make sure to get the right charset off the document?

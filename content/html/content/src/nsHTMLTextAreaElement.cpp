@@ -118,13 +118,13 @@ public:
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument);
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
@@ -133,14 +133,15 @@ public:
                                     PRInt32 aModType,
                                     nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void RemoveFocus(nsIPresContext* aPresContext);
 
-  nsresult GetInnerHTML(nsAString& aInnerHTML);
-  nsresult SetInnerHTML(const nsAString& aInnerHTML);
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
@@ -265,19 +266,25 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Blur()
 {
-  return SetElementFocus(PR_FALSE);
+  SetElementFocus(PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Focus() 
 {
-  return SetElementFocus(PR_TRUE);
+  SetElementFocus(PR_TRUE);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
+
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
 
@@ -285,11 +292,13 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
       nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_None,
                                                  nsHTMLAtoms::disabled,
                                                  disabled)) {
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+  if (esm) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
   }
 
@@ -301,17 +310,16 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
     // Could call SelectAll(aPresContext) here to automatically
     // select text when we receive focus.
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
+
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
-  nsresult rv = NS_OK;
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
@@ -320,17 +328,11 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
-  if (esm) {
-    if (!mDocument)
-      return NS_ERROR_NULL_POINTER;
-
-    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (esm && mDocument) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -533,7 +535,7 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
   return ReplaceContentsWithText(aDefaultValue, PR_TRUE);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                      PRBool aNotify, PRBool aDeepSetDocument)
 {
@@ -546,7 +548,7 @@ nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                       PRBool aNotify, PRBool aDeepSetDocument)
 {
@@ -559,7 +561,7 @@ nsHTMLTextAreaElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                      PRBool aDeepSetDocument)
 {
@@ -572,7 +574,7 @@ nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsresult rv;
@@ -661,7 +663,7 @@ nsHTMLTextAreaElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aM
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                       nsEvent* aEvent,
                                       nsIDOMEvent** aDOMEvent,
@@ -731,13 +733,13 @@ nsHTMLTextAreaElement::DoneAddingChildren()
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
