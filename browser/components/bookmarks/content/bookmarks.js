@@ -476,7 +476,7 @@ var BookmarksCommand = {
       var ix = data.indexOf("\n");
       items = data.substring(0, ix != -1 ? ix : data.length);
       name  = data.substring(ix);
-      if (!BMSVC.IsBookmarked(items))
+      if (!BMSVC.isBookmarked(items))
         // XXX: we should infer the best charset
         BookmarksUtils.createBookmark(null, items, null, name);
       items = [items];
@@ -1444,7 +1444,7 @@ var BookmarksUtils = {
         break;
       case "text/x-moz-url":
       case "text/unicode":
-        if (!BMSVC.IsBookmarked(uri)) {
+        if (!BMSVC.isBookmarked(uri)) {
           var charSet = aDragSession.sourceDocument ? 
                         aDragSession.sourceDocument.characterSet : null;
           rSource = BookmarksUtils.createBookmark(null, uri, charSet, extra);
