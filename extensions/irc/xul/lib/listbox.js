@@ -62,7 +62,7 @@ function lbox_remove (stuff)
     {
         if (option.firstChild == stuff)
         {
-            this.container.removeChild (option);
+            this.listContainer.removeChild (option);
             return true;
         }
         option = option.nextSibling;

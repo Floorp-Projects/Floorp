@@ -50,6 +50,8 @@ function onInputCompleteLine(e)
 
     if (e.target.getAttribute ("expanded") != "YES")
     {
+        e.line = e.line.replace (/\n/g, "");
+        
         if (e.line[0] == client.COMMAND_CHAR)
         {
             var ary = e.line.substr(1, e.line.length).match (/(\S+)? ?(.*)/);
@@ -140,7 +142,7 @@ function onInputCompleteLine(e)
         }
         else /* plain text */
         {
-            client.sayToCurrentTarget (e.target.value);
+            client.sayToCurrentTarget (e.line);
             e.target.value = "";            
         }
     }
@@ -230,8 +232,8 @@ function cli_ime (e)
 {
     if (e.channel)
     {
+        e.inputData = filterOutput (e.inputData, "ACTION", "!ME");
         e.channel.act (e.inputData);
-        client.channel.display (e.inputData, "ACTION", "!ME");
     }
 }
 
@@ -283,13 +285,16 @@ client.onInputEval =
 function cli_ieval (e)
 {
 
+    if (e.inputData.indexOf ("\n") != -1)
+        e.inputData = "\n" + e.inputData + "\n";
+    
     try
     {
         rv = String(eval (e.inputData));
         if (rv.indexOf ("\n") == -1)
-            client.display ("(" + e.inputData + ") " + rv, "EVAL");
+            client.display ("{" + e.inputData + "} " + rv, "EVAL");
         else
-            client.display ("(" + e.inputData + ")\n" + rv, "EVAL");
+            client.display ("{" + e.inputData + "}\n" + rv, "EVAL");
     }
     catch (ex)
     {

@@ -73,7 +73,7 @@
 
 .msg[user="!ME"] {
 
-	text-decoration: underline;
+	background: lightgrey;
 
 }
 
@@ -94,7 +94,7 @@
 
 .msg-data[msgtype="ACTION"] {
 
-	color: red;
+	color: darkred;
 
 }
 
@@ -125,7 +125,7 @@
 
 .msg-user[user="!ME"] {
 
-	color: orange;
+	color: darkgreen;
 
 }
 

@@ -25,6 +25,7 @@ CIRCNetwork.prototype.INITIAL_CHANNEL = "";
 CIRCNetwork.prototype.MAX_MESSAGES = 50;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
+CIRCServer.prototype.VERSION_RPLY += "ChatZilla test client #3";
 
 CIRCUser.prototype.MAX_MESSAGES = 100;
 
@@ -135,7 +136,6 @@ function setCurrentObject (obj)
 
 function addHistory (source, obj)
 {
-
     if (!source.messages)
     {
         source.messages = document.createElement ("span");
@@ -230,16 +230,29 @@ function getTBForObject (source)
     
 }
 
+function filterOutput (msg, msgtype)
+{
+
+    for (var f in client.outputFilters)
+        if (client.outputFilters[f].enabled)
+            msg = client.outputFilters[f].func(msg, msgtype);
+
+    client.currentObject.display (msg, msgtype, "!ME");
+    
+    return msg;
+    
+}            
+    
 client.sayToCurrentTarget =
 function cli_say(msg)
 {
 
-    dd ("sayToCurrentTarget '" + msg + "'");
     switch (client.currentObject.TYPE)
     {
         case "IRCChannel":
         case "IRCUser":
         case "IRCChanUser":
+            msg = filterOutput (msg, "PRIVMSG");
             client.currentObject.say (msg);
             break;
 
@@ -479,7 +492,10 @@ function chan_display (message, msgtype, nick)
                 msgContainer.appendChild (nickText);
             }
 
-            addHistory (this.users[nick], msgContainer);
+            if (nick == "!ME")
+                addHistory (this.users[this.parent.me.nick], msgContainer);
+            else
+                addHistory (this.users[nick], msgContainer);
             
         }
 
