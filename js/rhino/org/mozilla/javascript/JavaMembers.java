@@ -102,7 +102,7 @@ class JavaMembers {
             throw new RuntimeException("unexpected IllegalAccessException "+
                                        "accessing Java field");
         } catch (InvocationTargetException e) {
-            throw new WrappedException(e);
+            throw new WrappedException(e.getTargetException());
         }
         // Need to wrap the object before we return it.
         scope = ScriptableObject.getTopLevelScope(scope);
@@ -214,7 +214,7 @@ class JavaMembers {
                 throw new RuntimeException("unexpected IllegalAccessException " +
                                            "accessing Java field");
             } catch (InvocationTargetException e) {
-                throw new WrappedException(e);
+                throw new WrappedException(e.getTargetException());
             }
         }
         else {

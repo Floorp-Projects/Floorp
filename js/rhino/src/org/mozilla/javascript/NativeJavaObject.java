@@ -691,7 +691,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         } catch (IllegalArgumentException argEx) {
             throw new EvaluatorException("JSObject constructor doesn't want [Scriptable]!");
         } catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
+            throw WrappedException.wrapException(e.getTargetException());
         } catch (IllegalAccessException accessEx) {
             throw new EvaluatorException("JSObject constructor is protected/private!");
         }
