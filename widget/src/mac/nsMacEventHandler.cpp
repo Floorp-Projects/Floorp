@@ -101,12 +101,17 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 															EventRecord&		aOSEvent,
 															long						aMenuResult)
 {
-	// get focused widget
-	nsWindow*	focusedWidget = mTopLevelWidget;
-
-				//¥TODO:	should get the focus from the toolkit and
-				//				propagate the event all the way up to the window
-				//				if it's not handled by the different parents
+	// get the focused widget
+	nsWindow*	focusedWidget = nsnull;
+	nsToolkit* toolkit = (nsToolkit*)mTopLevelWidget->GetToolkit();
+	if (toolkit)
+	{
+		focusedWidget = toolkit->GetFocus();
+		NS_RELEASE(toolkit);
+	}
+	
+	if (focusedWidget == nsnull)
+		focusedWidget = mTopLevelWidget;
 
 
 	// nsEvent
@@ -125,7 +130,31 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	menuEvent.mMenuItem	= nsnull;						//¥TODO: initialize mMenuItem
 	menuEvent.mCommand	= aMenuResult;
 
-	return (focusedWidget->DispatchWindowEvent(menuEvent));
+	// dispatch the menu event: if it is not processed by the focused widget,
+	// propagate the event through the different parents all the way up to the window
+	PRBool eventHandled = focusedWidget->DispatchWindowEvent(menuEvent);
+	if (! eventHandled)
+	{
+		nsIWidget* grandParent;
+		nsIWidget* parent = focusedWidget->GetParent();
+		while (parent)
+		{
+			menuEvent.widget = parent;
+			eventHandled = ((nsWindow*)parent)->DispatchWindowEvent(menuEvent);
+			if (eventHandled)
+			{
+				NS_IF_RELEASE(parent);
+				break;
+			}
+			else
+			{
+				grandParent = parent->GetParent();
+				NS_IF_RELEASE(parent);
+				parent = grandParent;
+			}
+		}
+	}
+	return eventHandled;
 }
 
 
