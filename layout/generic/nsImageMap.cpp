@@ -138,6 +138,64 @@ is_space(char c)
           c == '\v');
 }
 
+static void logMessage(nsIContent*      aContent,
+                       const nsAString& aCoordsSpec,
+                       PRInt32          aFlags,
+                       const PRUnichar* aMessageName) {
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return;
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return;
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    do_GetService(kCStringBundleServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return;
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = stringBundleService->CreateBundle(
+         "chrome://global/locale/layout_errors.properties",
+         getter_AddRefs(bundle));
+  if (NS_FAILED(rv))
+    return;
+  nsXPIDLString errorText;
+  rv =
+    bundle->FormatStringFromName(aMessageName,
+                                 nsnull, 0,
+                                 getter_Copies(errorText));
+  if (NS_FAILED(rv))
+    return;
+
+  // XXX GetOwnerDocument
+  nsINodeInfo *nodeInfo = aContent->GetNodeInfo();
+  NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
+
+  nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
+  nsCAutoString urlSpec;
+  if (doc) {
+    nsIURI *uri = doc->GetDocumentURI();
+    if (uri) {
+      uri->GetSpec(urlSpec);
+    }
+  }
+  rv = errorObject->Init(errorText.get(),
+                         NS_ConvertUTF8toUCS2(urlSpec).get(), /* file name */
+                         PromiseFlatString(NS_LITERAL_STRING("coords=\"") +
+                                           aCoordsSpec +
+                                           NS_LITERAL_STRING("\"")).get(), /* source line */
+                         0, /* line number */
+                         0, /* column number */
+                         aFlags,
+                         "ImageMap");
+  if (NS_FAILED(rv))
+    return;
+
+  consoleService->LogMessage(errorObject);
+}
+
 // XXX straight copy from laymap.c
 static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
 {
@@ -387,57 +445,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
   }
 
   if (!saneRect) {
-    // Report the error to the console.
-    nsresult rv;
-    nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return;
-    nsCOMPtr<nsIScriptError> errorObject =
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return;
-    nsCOMPtr<nsIStringBundleService> stringBundleService =
-      do_GetService(kCStringBundleServiceCID, &rv);
-    if (NS_FAILED(rv))
-      return;
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = stringBundleService->CreateBundle(
-           "chrome://global/locale/layout_errors.properties",
-           getter_AddRefs(bundle));
-    if (NS_FAILED(rv))
-      return;
-    nsXPIDLString errorText;
-    rv =
-      bundle->FormatStringFromName(NS_LITERAL_STRING("ImageMapRectBoundsError").get(),
-                                   nsnull, 0,
-                                   getter_Copies(errorText));
-    if (NS_FAILED(rv))
-      return;
-
-    // XXX GetOwnerDocument
-    nsINodeInfo *nodeInfo = mArea->GetNodeInfo();
-    NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
-
-    nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
-    nsCAutoString urlSpec;
-    if (doc) {
-      nsIURI *uri = doc->GetDocumentURI();
-      if (uri) {
-        uri->GetSpec(urlSpec);
-      }
-    }
-    rv = errorObject->Init(errorText.get(),
-                           NS_ConvertUTF8toUCS2(urlSpec).get(), /* file name */
-                           PromiseFlatString(aSpec).get(), /* source line */
-                           0, /* line number */
-                           0, /* column number */
-                           flag,
-                           "ImageMap");
-    if (NS_FAILED(rv))
-      return;
-
-    consoleService->LogMessage(errorObject);
+    logMessage(mArea, aSpec, flag, NS_LITERAL_STRING("ImageMapRectBoundsError").get());
   }
 }
 
@@ -499,6 +507,7 @@ class PolyArea : public Area {
 public:
   PolyArea(nsIContent* aArea);
 
+  virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC);
@@ -508,6 +517,25 @@ public:
 PolyArea::PolyArea(nsIContent* aArea)
   : Area(aArea)
 {
+}
+
+void PolyArea::ParseCoords(const nsAString& aSpec)
+{
+  Area::ParseCoords(aSpec);
+
+  if (mNumCoords >= 2) {
+    if (mNumCoords & 1U) {
+      logMessage(mArea,
+                 aSpec,
+                 nsIScriptError::warningFlag,
+                 NS_LITERAL_STRING("ImageMapPolyOddNumberOfCoords").get());
+    }
+  } else {
+    logMessage(mArea,
+               aSpec,
+               nsIScriptError::errorFlag,
+               NS_LITERAL_STRING("ImageMapPolyWrongNumberOfCoords").get());
+  }
 }
 
 PRBool PolyArea::IsInside(nscoord x, nscoord y) const
@@ -622,6 +650,7 @@ class CircleArea : public Area {
 public:
   CircleArea(nsIContent* aArea);
 
+  virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC);
@@ -631,6 +660,36 @@ public:
 CircleArea::CircleArea(nsIContent* aArea)
   : Area(aArea)
 {
+}
+
+void CircleArea::ParseCoords(const nsAString& aSpec)
+{
+  Area::ParseCoords(aSpec);
+
+  PRBool wrongNumberOfCoords = PR_FALSE;
+  PRInt32 flag = nsIScriptError::warningFlag;
+  if (mNumCoords >= 3) {
+    if (mCoords[2] < 0) {
+      logMessage(mArea,
+                 aSpec,
+                 nsIScriptError::errorFlag,
+                 NS_LITERAL_STRING("ImageMapCircleNegativeRadius").get());
+    }
+  
+    if (mNumCoords > 3) {
+      wrongNumberOfCoords = PR_TRUE;
+    }
+  } else {
+    wrongNumberOfCoords = PR_TRUE;
+    flag = nsIScriptError::errorFlag;
+  }
+
+  if (wrongNumberOfCoords) {
+    logMessage(mArea,
+               aSpec,
+               flag,
+               NS_LITERAL_STRING("ImageMapCircleWrongNumberOfCoords").get());
+  }
 }
 
 PRBool CircleArea::IsInside(nscoord x, nscoord y) const
