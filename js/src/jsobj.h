@@ -237,6 +237,8 @@ extern const char js_isPrototypeOf_str[];
 extern const char js_propertyIsEnumerable_str[];
 extern const char js_defineGetter_str[];
 extern const char js_defineSetter_str[];
+extern const char js_lookupGetter_str[];
+extern const char js_lookupSetter_str[];
 
 extern void
 js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,

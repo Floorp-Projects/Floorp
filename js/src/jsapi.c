@@ -1124,11 +1124,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
 #define ATOM_OFFSET(name)       offsetof(JSAtomState, name##Atom)
 #define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
-#define TAG_ATOM_OFFSET(name)   ((const char *) ATOM_OFFSET(name))
-#define TAG_CHAR_STRING(name)   name
-#define UNTAG_ATOM_OFFSET(ptr)  ((size_t)(ptr))
-#define UNTAG_CHAR_STRING(ptr)  ptr
-#define IS_ATOM_OFFSET(ptr)     ((size_t)(ptr) < sizeof(JSAtomState))
 
 /*
  * Table of class initializers and their atom offsets in rt->atomState.
@@ -1168,86 +1163,105 @@ static struct {
  */
 typedef struct JSStdName {
     JSObjectOp  init;
-    const char  *name;          /* tagged (const char *) or atom offset */
+    size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
+    const char  *name;          /* null if atom is pre-pinned, else name */
 } JSStdName;
 
 static JSAtom *
-StdNameToAtom(JSContext *cx, const char *name)
+StdNameToAtom(JSContext *cx, JSStdName *stdn)
 {
-    if (IS_ATOM_OFFSET(name))
-        return OFFSET_TO_ATOM(cx->runtime, UNTAG_ATOM_OFFSET(name));
-    name = UNTAG_CHAR_STRING(name);
-    return js_Atomize(cx, name, strlen(name), 0);
+    size_t offset;
+    JSAtom *atom;
+    const char *name;
+
+    offset = stdn->atomOffset;
+    atom = OFFSET_TO_ATOM(cx->runtime, offset);
+    if (!atom) {
+        name = stdn->name;
+        if (name) {
+            atom = js_Atomize(cx, name, strlen(name), ATOM_PINNED);
+            OFFSET_TO_ATOM(cx->runtime, offset) = atom;
+        }
+    }
+    return atom;
 }
+
+#define EAGERLY_PINNED_ATOM(name)   ATOM_OFFSET(name), NULL
+#define LAZILY_PINNED_ATOM(name)    ATOM_OFFSET(lazy.name), js_##name##_str
 
 static JSStdName standard_class_names[] = {
     /* ECMA requires that eval be a direct property of the global object. */
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(eval)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(eval)},
 
     /* Global properties and functions defined by the Number class. */
-    {js_InitNumberClass,        TAG_CHAR_STRING(js_NaN_str)},
-    {js_InitNumberClass,        TAG_CHAR_STRING(js_Infinity_str)},
-    {js_InitNumberClass,        TAG_CHAR_STRING(js_isNaN_str)},
-    {js_InitNumberClass,        TAG_CHAR_STRING(js_isFinite_str)},
-    {js_InitNumberClass,        TAG_CHAR_STRING(js_parseFloat_str)},
-    {js_InitNumberClass,        TAG_CHAR_STRING(js_parseInt_str)},
+    {js_InitNumberClass,        LAZILY_PINNED_ATOM(NaN)},
+    {js_InitNumberClass,        LAZILY_PINNED_ATOM(Infinity)},
+    {js_InitNumberClass,        LAZILY_PINNED_ATOM(isNaN)},
+    {js_InitNumberClass,        LAZILY_PINNED_ATOM(isFinite)},
+    {js_InitNumberClass,        LAZILY_PINNED_ATOM(parseFloat)},
+    {js_InitNumberClass,        LAZILY_PINNED_ATOM(parseInt)},
 
     /* String global functions. */
 #ifndef MOZILLA_CLIENT
     /* These two are predefined in a backward-compatible way by the DOM. */
-    {js_InitStringClass,        TAG_CHAR_STRING(js_escape_str)},
-    {js_InitStringClass,        TAG_CHAR_STRING(js_unescape_str)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(escape)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(unescape)},
 #endif
-    {js_InitStringClass,        TAG_CHAR_STRING(js_decodeURI_str)},
-    {js_InitStringClass,        TAG_CHAR_STRING(js_encodeURI_str)},
-    {js_InitStringClass,        TAG_CHAR_STRING(js_decodeURIComponent_str)},
-    {js_InitStringClass,        TAG_CHAR_STRING(js_encodeURIComponent_str)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(decodeURI)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(encodeURI)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(decodeURIComponent)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(encodeURIComponent)},
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        TAG_CHAR_STRING(js_uneval_str)},
+    {js_InitStringClass,        LAZILY_PINNED_ATOM(uneval)},
 #endif
 
     /* Exception constructors. */
 #if JS_HAS_ERROR_EXCEPTIONS
-    {js_InitExceptionClasses,   TAG_ATOM_OFFSET(Error)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_InternalError_str)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_EvalError_str)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_RangeError_str)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_ReferenceError_str)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_SyntaxError_str)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_TypeError_str)},
-    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_URIError_str)},
+    {js_InitExceptionClasses,   EAGERLY_PINNED_ATOM(Error)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(InternalError)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(EvalError)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(RangeError)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(ReferenceError)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(SyntaxError)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(TypeError)},
+    {js_InitExceptionClasses,   LAZILY_PINNED_ATOM(URIError)},
 #endif
 
-    {NULL,                      NULL}
+    {NULL,                      0, NULL}
 };
 
 static JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(proto)},
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(parent)},
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(count)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(proto)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(parent)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(count)},
 #if JS_HAS_TOSOURCE
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(toSource)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(toSource)},
 #endif
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(toString)},
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(toLocaleString)},
-    {js_InitObjectClass,        TAG_ATOM_OFFSET(valueOf)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(toString)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(toLocaleString)},
+    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(valueOf)},
 #if JS_HAS_OBJ_WATCHPOINT
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_watch_str)},
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_unwatch_str)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(watch)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(unwatch)},
 #endif
 #if JS_HAS_NEW_OBJ_METHODS
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_hasOwnProperty_str)},
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_isPrototypeOf_str)},
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_propertyIsEnumerable_str)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(hasOwnProperty)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(isPrototypeOf)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(propertyIsEnumerable)},
 #endif
 #if JS_HAS_GETTER_SETTER
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_defineGetter_str)},
-    {js_InitObjectClass,        TAG_CHAR_STRING(js_defineSetter_str)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(defineGetter)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(defineSetter)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(lookupGetter)},
+    {js_InitObjectClass,        LAZILY_PINNED_ATOM(lookupSetter)},
 #endif
 
-    {NULL,                      NULL}
+    {NULL,                      0, NULL}
 };
+
+#undef EAGERLY_PINNED_ATOM
+#undef LAZILY_PINNED_ATOM
 
 JS_PUBLIC_API(JSBool)
 JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
@@ -1290,7 +1304,9 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     if (!init) {
         /* Try less frequently used top-level functions and constants. */
         for (i = 0; standard_class_names[i].init; i++) {
-            atom = StdNameToAtom(cx, standard_class_names[i].name);
+            atom = StdNameToAtom(cx, &standard_class_names[i]);
+            if (!atom)
+                return JS_FALSE;
             if (idstr == ATOM_TO_STRING(atom)) {
                 init = standard_class_names[i].init;
                 break;
@@ -1304,7 +1320,9 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
              * yet been initialized.
              */
             for (i = 0; object_prototype_names[i].init; i++) {
-                atom = StdNameToAtom(cx, object_prototype_names[i].name);
+                atom = StdNameToAtom(cx, &object_prototype_names[i]);
+                if (!atom)
+                    return JS_FALSE;
                 if (idstr == ATOM_TO_STRING(atom)) {
                     init = standard_class_names[i].init;
                     break;
@@ -1372,11 +1390,6 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 
 #undef ATOM_OFFSET
 #undef OFFSET_TO_ATOM
-#undef TAG_ATOM_OFFSET
-#undef TAG_CHAR_STRING
-#undef UNTAG_ATOM_OFFSET
-#undef UNTAG_CHAR_STRING
-#undef IS_ATOM_OFFSET
 
 JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx)

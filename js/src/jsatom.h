@@ -142,7 +142,7 @@ struct JSAtomState {
     JSAtom              *booleanAtoms[2];
     JSAtom              *nullAtom;
 
-    /* Various built-in or commonly-used atoms. */
+    /* Various built-in or commonly-used atoms, pinned on first context. */
     JSAtom              *ArgumentsAtom;
     JSAtom              *ArrayAtom;
     JSAtom              *BooleanAtom;
@@ -179,6 +179,39 @@ struct JSAtomState {
     JSAtom              *toSourceAtom;
     JSAtom              *toStringAtom;
     JSAtom              *valueOfAtom;
+
+    /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
+    struct {
+        JSAtom          *EvalErrorAtom;
+        JSAtom          *InfinityAtom;
+        JSAtom          *InternalErrorAtom;
+        JSAtom          *NaNAtom;
+        JSAtom          *RangeErrorAtom;
+        JSAtom          *ReferenceErrorAtom;
+        JSAtom          *SyntaxErrorAtom;
+        JSAtom          *TypeErrorAtom;
+        JSAtom          *URIErrorAtom;
+        JSAtom          *decodeURIAtom;
+        JSAtom          *decodeURIComponentAtom;
+        JSAtom          *defineGetterAtom;
+        JSAtom          *defineSetterAtom;
+        JSAtom          *encodeURIAtom;
+        JSAtom          *encodeURIComponentAtom;
+        JSAtom          *escapeAtom;
+        JSAtom          *hasOwnPropertyAtom;
+        JSAtom          *isFiniteAtom;
+        JSAtom          *isNaNAtom;
+        JSAtom          *isPrototypeOfAtom;
+        JSAtom          *lookupGetterAtom;
+        JSAtom          *lookupSetterAtom;
+        JSAtom          *parseFloatAtom;
+        JSAtom          *parseIntAtom;
+        JSAtom          *propertyIsEnumerableAtom;
+        JSAtom          *unescapeAtom;
+        JSAtom          *unevalAtom;
+        JSAtom          *unwatchAtom;
+        JSAtom          *watchAtom;
+    } lazy;
 
 #ifdef JS_THREADSAFE
     JSThinLock          lock;
