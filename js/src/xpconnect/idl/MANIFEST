@@ -10,3 +10,4 @@ xpccomponents.idl
 xpcexception.idl
 xpcjsid.idl
 nsIScriptError.idl
+mozIJSSubScriptLoader.idl
