@@ -186,7 +186,7 @@
               }
             }
             catch (e) {
-dump("error in refresh sort:"+e)
+              dump("error in refresh sort:"+e)
             }
           }
 
@@ -390,6 +390,89 @@ dump("error in refresh sort:"+e)
         ]]></body>
       </method>
 
+      # This function saves the current selection state before the tree is rebuilt
+      # following a command execution. This allows us to remember which item(s)
+      # was/were selected so that the user does not need to constantly refocus the 
+      # tree to perform a sequence of commands. 
+      <field name="_savedSelection">[]</field>
+      <method name="saveSelection">
+        <body><![CDATA[
+          var selection = this.treeBoxObject.view.selection;
+          var rangeCount = selection.getRangeCount();
+          var ranges = [];
+          var min = {}; var max = {};
+          for (var i = 0; i < rangeCount; ++i) {
+            selection.getRangeAt(i, min, max);
+            ranges.push({min: min.value, max: max.value});
+          }
+          this._savedSelection = ranges;
+        ]]></body>
+      </method>
+      
+      # This function restores the selection appropriately after a command executes. 
+      # This is necessary because most commands trigger a rebuild of the tree which
+      # destroys the selection. The restoration of selection is handled in three 
+      # different ways depending on the type of command that has been executed:
+      #  1) Commands that remove rows:
+      #       The row immediately after the first range in the selection is selected, 
+      #       if there is no row immediately after the first range the item before it
+      #       is selected
+      #  2) Commands that insert rows:
+      #       The newly inserted rows are selected
+      #  3) Commands that do not change the row count 
+      #       The row(s) that was/were operated on remain selected.
+      # 
+      # The calls to save/restore are placed in the doCommand method and thus all
+      # commands must pass through this gate. The result is that this method becomes
+      # the POLICY CENTER FOR POST-VIEW/EDIT SELECTION CHANGES.
+      <method name="restoreSelection">
+        <parameter name="aCommand"/>
+        <body><![CDATA[ 
+          var oldRanges = this._savedSelection;
+          var newRanges = [];
+
+          switch(aCommand) {
+          // [Category 1] - Commands that remove rows
+          case "cmd_bm_cut":
+          case "cmd_bm_delete":
+            // Since rows have been removed, the row immediately after the first range 
+            // in the original selection now has the index of the first item in the first
+            // range. 
+            var nextRow = oldRanges[0].min;
+            newRanges.push({min: nextRow, max: nextRow});
+            break;
+          // [Category 2] - Commands that insert rows
+          case "cmd_bm_paste":
+          case "cmd_bm_import":
+          case "cmd_bm_movebookmark":
+          case "cmd_bm_newbookmark":
+          case "cmd_bm_newfolder":
+          case "cmd_bm_newseparator":
+            // All items inserted will be selected. The implementation of this model
+            // is left to |preUpdateTreeSelection|, called when an insert transaction is
+            // executed, and |updateTreeSelection| called here. 
+            this.updateTreeSelection();
+            break;
+          // [Category 3] - Commands that do not alter the row count
+          case "cmd_bm_copy":
+          case "cmd_bm_properties":
+          case "cmd_bm_rename":
+          case "cmd_bm_setnewbookmarkfolder":
+          case "cmd_bm_setpersonaltoolbarfolder":
+          case "cmd_bm_setnewsearchfolder":
+          case "cmd_bm_export":
+          default:
+            // The selection is unchanged.
+            newRanges = oldRanges;
+            break;
+          }
+          
+          var newSelection = this.treeBoxObject.view.selection;
+          for (i = 0; i < newRanges.length; ++i)
+            newSelection.rangedSelect(newRanges[i].min, newRanges[i].max, true);
+        ]]></body>
+      </method>
+          
       <field name="_itemToBeToggled">  []</field>
       <field name="_parentToBeToggled">[]</field>
       <method name="preUpdateTreeSelection">
@@ -397,7 +480,7 @@ dump("error in refresh sort:"+e)
         <body><![CDATA[
           aTxn = aTxn.wrappedJSObject;
           var type = aTxn.type;
-          if (type != "remove" && type != "insert")
+          if (type != "insert" || type != "remove")
             return;
           for (var i=0; i<aTxn.item.length; ++i) {
             this._itemToBeToggled  .push(aTxn.item  [i]);
@@ -543,13 +626,16 @@ dump("error in refresh sort:"+e)
             observer.beginUpdateBatch(this.db);
             BookmarksController.doCommand(aCommand, selection, target);
             observer.endUpdateBatch(this.db);
+
+            this.mOuter.saveSelection();
+
             var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
             this.mOuter.treeBoxObject.selection.currentIndex=-1;
             this.mOuter.tree.builder.rebuild();
             // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
             // if the first visible row is not 0
             this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-            this.mOuter.updateTreeSelection();
+            this.mOuter.restoreSelection(aCommand);
           }
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = false;
         }
@@ -613,16 +699,19 @@ dump("error in refresh sort:"+e)
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
           observer.endUpdateBatch(this.db);
+          this.mOuter.saveSelection();
           this.mOuter.treeBoxObject.selection.currentIndex=-1;
           this.mOuter.treeBuilder.rebuild();
           // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
           // if the first visible row is not 0
           this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-          this.mOuter.updateTreeSelection();
+          // A drop is an insertion operation like a paste, we want to trigger the same type
+          // of selection restoration model. 
+          this.mOuter.restoreSelection("cmd_bm_paste");
           // use of a timer to speedup
           var This = this.mOuter;
           setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
-dump("6:"+(Date.now()-date)+"\n")
+          dump("6:"+(Date.now()-date)+"\n")
         },
 
         onToggleOpenState: function (aRow)
@@ -654,7 +743,7 @@ dump("6:"+(Date.now()-date)+"\n")
     
         onSelectionChanged: function ()
         {
-dump("ONSELECTION CHANGED\n")
+          dump("ONSELECTION CHANGED\n")
           var selection = this.mOuter.getTreeSelection();
           this.mOuter._selection = selection;
           this.mOuter._target    = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE);

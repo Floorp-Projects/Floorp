@@ -565,7 +565,9 @@
           // warning: this is not the function called in BookmarksController.onCommandUpdate
           var selection = this.mOuter._selection;
           var target    = this.mOuter._target;
-          return BookmarksController.isCommandEnabled(aCommand, selection, target);
+          if (selection)
+            return BookmarksController.isCommandEnabled(aCommand, selection, target);
+          return false;
         },
 
         doCommand: function (aCommand)
