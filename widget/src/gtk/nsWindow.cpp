@@ -216,6 +216,7 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
 		     this);
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "size_allocate",
 		     GTK_SIGNAL_FUNC(DoResize),
@@ -644,9 +645,6 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   g_print("nsWindow::OnResize\n");
 #endif
 
-  if (GetResized() == PR_TRUE)
-    return FALSE;
-
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
@@ -813,7 +811,7 @@ gint DoRefresh(gpointer call_data)
     pevent.rect = (nsRect *)&bounds;
     win->OnPaint(pevent);
 
-    gtk_timeout_add(50, (GtkFunction)ResetResize, win);
+    gtk_timeout_add(10, (GtkFunction)ResetResize, win);
     return FALSE;
 }
 
@@ -823,6 +821,8 @@ void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
   g_print("DoResized called\n");
   nsWindow *win = (nsWindow*)data;
 
+  gtk_layout_freeze(GTK_LAYOUT(w));
+
   nsRect bounds;
   bounds.width = allocation->width;
   bounds.height = allocation->height;
@@ -831,18 +831,16 @@ void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
   win->SetResizeRect(bounds);
 
   if (!win->GetResized()) {
-  DoRefresh(win);
-}
-/*
-  if (!win->GetResized()) {
     if (win->IsChild()) {
+      DoRefresh(win);
     }
     else {
       gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
     }
   }
-*/
+
   win->SetResized(PR_TRUE);
+  gtk_layout_thaw(GTK_LAYOUT(w));
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
