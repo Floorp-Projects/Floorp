@@ -83,6 +83,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISound.h"
@@ -372,30 +373,13 @@ NS_IMETHODIMP nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic
     // When a window closes, we have to remove it and all of it's subwindows
     // from mManualFindWindows so that we don't leak. 
     // Eek, lots of work for such a simple thing.
-    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(aSubject));
-    if (!domWin)
-      return NS_OK;
+    nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aSubject));
+    NS_ENSURE_TRUE(ifreq, NS_OK);
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    domWin->GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    if (!doc)
-      return NS_OK;
-
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
-    if (!presShell)
-      return NS_OK;
-
-    nsCOMPtr<nsIPresContext> presContext;
-    presShell->GetPresContext(getter_AddRefs(presContext));
-    if (!presContext)
-      return NS_OK;
-
-    // Don't listen for events on chrome windows
-    nsCOMPtr<nsISupports> pcContainer;
-    presContext->GetContainer(getter_AddRefs(pcContainer));
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
+    nsCOMPtr<nsIWebNavigation> webNav;
+    ifreq->GetInterface(NS_GET_IID(nsIWebNavigation), getter_AddRefs(webNav));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
+    NS_ENSURE_TRUE(docShell, NS_OK);
 
     nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
     docShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll, 
@@ -407,12 +391,14 @@ NS_IMETHODIMP nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic
     PRBool hasMoreDocShells;
     while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) 
            && hasMoreDocShells) {
-      docShellEnumerator->GetNext(getter_AddRefs(pcContainer));
-      nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(pcContainer));
+      nsCOMPtr<nsISupports> container;
+      docShellEnumerator->GetNext(getter_AddRefs(container));
+      nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(container));
       if (ifreq) {
+        nsCOMPtr<nsIDOMWindow> domWin;
         ifreq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWin));
-        if (domWin) {
-          nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
+        nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
+        if (windowSupports) {
           PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
           if (index >= 0)
             mManualFindWindows->RemoveElementAt(index);
@@ -1218,29 +1204,15 @@ NS_IMETHODIMP nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin,
 {
   *aIsAutoStartOn = PR_FALSE;
 
-  if (!aDOMWin)
-    return NS_OK;
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aDOMWin));
+  NS_ENSURE_TRUE(ifreq, NS_OK);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aDOMWin->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc)
-    return NS_OK;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell)
-    return NS_OK;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext)
-    return NS_OK;
-
+  nsCOMPtr<nsIWebNavigation> webNav;
+  ifreq->GetInterface(NS_GET_IID(nsIWebNavigation), getter_AddRefs(webNav));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(webNav));
+  NS_ENSURE_TRUE(treeItem, NS_OK);
+  
   // Don't listen for events on chrome windows
-  nsCOMPtr<nsISupports> pcContainer;
-  presContext->GetContainer(getter_AddRefs(pcContainer));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
   PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
   if (treeItem) 
     treeItem->GetItemType(&itemType);
@@ -1263,6 +1235,12 @@ NS_IMETHODIMP nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin,
   // do our check from here rather than create a new interface or attribute on 
   // the browser element. 
   // XXX We'll use autotypeaheadfind="false" in future trunk builds
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aDOMWin->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_TRUE(doc, NS_OK);
+
   nsCOMPtr<nsIDocument> parentDoc;
   doc->GetParentDocument(getter_AddRefs(parentDoc));
   if (parentDoc) {
