@@ -39,17 +39,17 @@ int main(int argc, char *argv[])
   }
 
   if (nparam == 0) {
-    fprintf(stderr, "ESC{%s%sBEL\n", code, sparam);
-    fprintf(stdout, "\033{%s%s\007", code, sparam);
+    fprintf(stderr, "ESC{%s%s\\n\n", code, sparam);
+    fprintf(stdout, "\033{%s%s\n", code, sparam);
   } else if (nparam == 1) {
-    fprintf(stderr, "ESC{%s%s%sBEL\n", param1, code, sparam);
-    fprintf(stdout, "\033{%s%s%s\007", param1, code, sparam);
+    fprintf(stderr, "ESC{%s%s%s\\n\n", param1, code, sparam);
+    fprintf(stdout, "\033{%s%s%s\n", param1, code, sparam);
   } else if (nparam == 2) {
-    fprintf(stderr, "ESC{%s;%s%s%sBEL\n", param1, param2, code, sparam);
-    fprintf(stdout, "\033{%s;%s%s%s\007", param1, param2, code, sparam);
+    fprintf(stderr, "ESC{%s;%s%s%s\\n\n", param1, param2, code, sparam);
+    fprintf(stdout, "\033{%s;%s%s%s\n", param1, param2, code, sparam);
   } else {
-    fprintf(stderr, "ESC{%s;%s;%s%s%sBEL\n", param1, param2, param3, code, sparam);
-    fprintf(stdout, "\033{%s;%s;%s%s%s\007", param1, param2, param3, code, sparam);
+    fprintf(stderr, "ESC{%s;%s;%s%s%s\\n\n", param1, param2, param3, code, sparam);
+    fprintf(stdout, "\033{%s;%s;%s%s%s\n", param1, param2, param3, code, sparam);
   }
 
   return 0;
