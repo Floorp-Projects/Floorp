@@ -50,10 +50,10 @@
 #include "nsIDocument.h"
 #include "prmem.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
+#include "nsIWalletService.h"
 #include "nsIServiceManager.h"
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -504,9 +504,9 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
 
     if (nsnull != URLName) {
       /* invoke single-signon to get previously-used value of text */
-      nsINetService *service;
-      nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                            kINetServiceIID,
+      nsIWalletService *service;
+      nsresult res = nsServiceManager::GetService(kWalletServiceCID,
+                                            kIWalletServiceIID,
                                             (nsISupports **)&service);
       if ((NS_OK == res) && (nsnull != service)) {
         char* valueString = NULL;
