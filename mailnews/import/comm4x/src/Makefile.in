@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impComm4xMail
 LIBRARY_NAME	= impComm4xMail
+SHORT_LIBNAME	= imp4Mail
 IS_COMPONENT	= 1
 
 REQUIRES	= xpcom \
