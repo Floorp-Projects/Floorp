@@ -91,7 +91,7 @@ public:
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aTarget) const;
+  NS_IMETHOD GetBaseTarget(nsAWritableString& aTarget);
   NS_IMETHOD SetBaseTarget(const nsAReadableString& aTarget);
 
   NS_IMETHOD SetLastModified(const nsAReadableString& aLastModified);

@@ -1089,7 +1089,7 @@ nsHTMLDocument::GetBaseURL(nsIURI*& aURL) const
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetBaseTarget(nsAWritableString& aTarget) const
+nsHTMLDocument::GetBaseTarget(nsAWritableString& aTarget)
 {
   if (nsnull != mBaseTarget) {
     aTarget.Assign(*mBaseTarget);
