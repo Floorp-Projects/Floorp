@@ -72,7 +72,7 @@ interface nsIProfile : nsISupports {
 
     void startApprunner(in string profileName);
 
-    void migrateProfile(in string profileName);
+    void migrateProfile(in string profileName, in boolean showProgressAsModalWindow);
 
     string getCookie();
 

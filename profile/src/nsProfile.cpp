@@ -55,10 +55,6 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
-#if 0
-#define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
-#endif
-
 #if defined (XP_UNIX)
 #define USER_ENVIRONMENT_VARIABLE "USER"
 #define HOME_ENVIRONMENT_VARIABLE "HOME"
@@ -463,19 +459,18 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 rv = Get4xProfileCount(&num4xProfiles);
                 if (NS_FAILED(rv)) return rv;
                 
-				PRInt32 numProfiles = 0;
-				GetProfileCount(&numProfiles);
+		PRInt32 numProfiles = 0;
+		GetProfileCount(&numProfiles);
                 if (num4xProfiles == 0 && numProfiles == 0) {
+		    // show the create profile wizard
                     profileURLStr = PROFILE_WIZARD_URL;
                 }
-#ifdef AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE
-                else if (num4xProfiles == 1) {
+                else if (num4xProfiles == 1 && numProfiles == 0) {
+		    // automatically migrate the one 4.x profile
                     MigrateAllProfiles();
                 }
-                else if (num4xProfiles > 1) {
-#else
-		else {
-#endif /* AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE */
+                else {
+		    // show the profile manager
                     profileURLStr = PROFILE_MANAGER_URL;
                 }
             }
@@ -1771,9 +1766,8 @@ nsresult nsProfile::UpdateMozProfileRegistry()
 // Set the profile to the current profile....debatable.
 // Calls PrefMigration service to do the Copy and Diverge
 // of 4x Profile information
-NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
+NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName, PRBool showProgressAsModalWindow)
 {
-
 	nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
@@ -1824,7 +1818,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
     rv = GetStringFromSpec(oldProfDir, getter_Copies(oldProfDirStr));
     if (NS_FAILED(rv)) return rv;
     rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  // you can do this a bunch of times.
-    rv = pPrefMigrator->ProcessPrefs();
+    rv = pPrefMigrator->ProcessPrefs(showProgressAsModalWindow);
 	if (NS_FAILED(rv)) return rv;
 
     rv = OpenRegistry();
@@ -2213,7 +2207,7 @@ NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 	nsresult rv = NS_OK;
 	for (PRInt32 i=0; i < mNumOldProfiles; i++)
 	{
-		rv = MigrateProfile(mOldProfiles[i]);
+		rv = MigrateProfile(mOldProfiles[i], PR_FALSE /* don't show progress as modal window */);
 		if (NS_FAILED(rv)) return rv;
 	}
 
