@@ -411,7 +411,6 @@ protected:
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
     nsCOMPtr<nsIWebBrowserFind> mFind;
-    nsPoint                    mCurrentScrollbarPref; // this document only
     nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name

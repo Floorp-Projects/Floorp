@@ -78,7 +78,6 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "nsParserUtils.h"
-#include "nsIScrollable.h"
 #include "nsRect.h"
 #include "nsGenericElement.h"
 #include "nsIWebNavigation.h"
@@ -832,12 +831,6 @@ nsXMLContentSink::PopContent()
 void
 nsXMLContentSink::StartLayout()
 {
-  // Reset scrolling to default settings for this shell.
-  // This must happen before the initial reflow, when we create the root frame
-  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mDocShell));
-  if (scrollableContainer) {
-    scrollableContainer->ResetScrollbarPreferences();
-  }
   PRBool topLevelFrameset = PR_FALSE;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   if (docShellAsItem) {
