@@ -729,16 +729,8 @@ nsTextTransformer::LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
 #endif
     }
   }
-  else if (mLanguageSpecificTransformType ==
-           eLanguageSpecificTransformType_Korean) {
-    for (PRInt32 i = 0; i < aLen; i++) {
-      if (aText[i] == 0x5C) { // BACKSLASH
-        aText[i] = 0x20A9; // WON SIGN
-        SetHasMultibyte(PR_TRUE);        
-        *aWasTransformed = PR_TRUE;
-      }
-    }
-  }
+  /* we once do transformation for Korean, but later decide to remove it */
+  /* see bug 88050 for more information */
 }
 
 PRUnichar*
