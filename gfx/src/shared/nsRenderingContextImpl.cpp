@@ -99,6 +99,11 @@ nsTransform2D       *theTransform;
       theTransform->SetToIdentity();  
 	    theTransform->AddScale(app2dev, app2dev);
 
+#ifdef XP_UNIX
+      srcRect.SetRect(0,0,tvrect.width,tvrect.height);
+      SetClipRect(srcRect, nsClipCombine_kReplace, clip);
+#endif
+
       // copy the initial image to our buffer, this takes twips and converts to pixels.. 
       // which is what the image is in
       this->DrawImage(aImage,0,0,aWidth,aHeight);
