@@ -56,6 +56,12 @@ _MD_SET_PRIORITY(_MDThread *thread, PRUintn newPri)
 PRStatus
 _MD_InitializeThread(PRThread *thread)
 {
+	/*
+	 * set the pointers to the stack-pointer and frame-pointer words in the
+	 * context structure; this is for debugging use.
+	 */
+	thread->md.sp = _MD_GET_SP_PTR(thread);
+	thread->md.fp = _MD_GET_FP_PTR(thread);
 	return PR_SUCCESS;
 }
 
