@@ -127,13 +127,6 @@ oeDatePicker.onpopupshowing = function( popup )
    oeDatePicker.gOriginalDate = new Date( startDate );
    oeDatePicker.gSelectedDate = new Date( startDate );
    
-   // Avoid problems when changing months if the date is at the end of the month
-   // i.e. if date is 31 march and you do a setmonth to april, the month would 
-   // actually be set to may, beacause april only has 30 days.
-   // This is why we keep the original date around.
-   
-   oeDatePicker.gSelectedDate.setDate( 1 );   
-    
    // draw the year based on the selected date
    
    oeDatePicker.redrawYear();
@@ -226,6 +219,21 @@ oeDatePicker.clickMonth = function( newMonthItem, newMonthNumber )
    if( oeDatePicker.gSelectedMonthItem  == newMonthItem )
    {
       return;
+   }
+
+   // Avoid problems when changing months if the date is at the end of the month
+   // i.e. if date is 31 march and you do a setmonth to april, the month would
+   // actually be set to may, beacause april only has 30 days.
+   // This is why we keep the original date around.
+
+   var oldDate = oeDatePicker.gSelectedDate.getDate();
+   var yearNumber = oeDatePicker.gSelectedDate.getFullYear();
+   
+   var lastDayOfMonth = DateUtils.getLastDayOfMonth( yearNumber, newMonthNumber-1 );
+
+   if ( oldDate > lastDayOfMonth )
+   {
+       oeDatePicker.gSelectedDate.setDate(lastDayOfMonth);
    }
    
    // update the selected date
