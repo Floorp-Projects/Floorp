@@ -75,7 +75,21 @@ nsXULBrowserElement::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
-   NS_ERROR("Not Yet Implemented");
+   nsCOMPtr<nsIContent> content(do_QueryInterface(mOuter));
+   nsCOMPtr<nsIDocument> document;
+   content->GetDocument(*getter_AddRefs(document));
 
-   return NS_ERROR_FAILURE;
+   // First we need to obtain the popup set frame that encapsulates the target popup.
+   // Without a popup set, we're dead in the water.
+   nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(document->GetShellAt(0));
+   if(!presShell)
+      return NS_OK;
+
+   nsCOMPtr<nsISupports> subShell;
+   presShell->GetSubShellFor(content, getter_AddRefs(subShell));
+   if(!subShell)
+      return NS_OK;
+
+   CallQueryInterface(subShell, aWebBrowser);
+   return NS_OK;
 }
