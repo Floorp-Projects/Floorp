@@ -137,8 +137,8 @@ function Startup()
   var usemap = globalElement.getAttribute("usemap");
   if (usemap)
   {
-    mapname = usemap.substring(1, usemap.length);
-    mapCollection = editorShell.editorDocument.getElementsByName(mapname);
+    var mapname = usemap.substring(1, usemap.length);
+    var mapCollection = editorShell.editorDocument.getElementsByName(mapname);
     if (mapCollection[0] != null)
     {
       imageMap = mapCollection[0];
@@ -551,7 +551,7 @@ function removeImageMap()
   globalElement.removeAttribute("usemap");
   if (imageMap){
     canRemoveImageMap = false;
-    SetElementEnabledByID( "removeImageMap", false);
+    SetElementEnabledById( "removeImageMap", false);
     editorShell.DeleteElement(imageMap);
     insertNewIMap = true;
     globalMap = null;
@@ -716,7 +716,7 @@ function onOK()
 	  // Assign to map if there is one
 	  if ( globalMap )
 	  {
-      mapName = globalMap.getAttribute("name");
+      var mapName = globalMap.getAttribute("name");
       dump("mapName = "+mapName+"\n");
       if (mapName != "")
       {
