@@ -20,8 +20,10 @@
 
 class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IOleClientSite,
-						public IOleInPlaceSite,
-						public IOleControlSite
+						public IOleInPlaceSiteWindowless,
+						public IOleControlSite,
+						public IAdviseSinkEx,
+						public IDispatch
 {
 	// Handle to parent window
 	HWND m_hwndParent;
@@ -37,6 +39,8 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	BOOL m_bUIActive;
 	// Flag indicating if control is in-place locked and cannot be deactivated
 	BOOL m_bInPlaceLocked;
+	// Flag indicating if control is windowless
+	BOOL m_bWindowless;
 
 	// Raw pointer to the object
 	CComPtr<IUnknown> m_spObject;
@@ -44,6 +48,22 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	CComQIPtr<IViewObject, &IID_IViewObject> m_spIViewObject;
 	// Pointer to objects IOleObject interface
 	CComQIPtr<IOleObject, &IID_IOleObject> m_spIOleObject;
+	CComQIPtr<IOleInPlaceObject, &IID_IOleInPlaceObject> m_spIOleInPlaceObject;
+
+	// Ambient properties
+
+	// Locale ID
+	LCID m_nAmbientLocale;
+	// Foreground colour
+	COLORREF m_clrAmbientForeColor;
+	// Background colour
+	COLORREF m_clrAmbientBackColor;
+	// Flag indicating if control should hatch itself
+	bool m_bAmbientShowHatching;
+	// Flag indicating if control should have grab handles
+	bool m_bAmbientShowGrabHandles;
+	// Flag indicating if control is in edit/user mode
+	bool m_bAmbientUserMode;
 
 public:
 	CControlSite();
@@ -55,13 +75,41 @@ BEGIN_COM_MAP(CControlSite)
 	COM_INTERFACE_ENTRY(IOleWindow)
 	COM_INTERFACE_ENTRY(IOleClientSite)
 	COM_INTERFACE_ENTRY(IOleInPlaceSite)
+	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSite, IOleInPlaceSiteWindowless)
+//	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteEx, IOleInPlaceSiteWindowless)
+//	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless)
 	COM_INTERFACE_ENTRY(IOleControlSite)
+	COM_INTERFACE_ENTRY(IDispatch)
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx)
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx)
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx)
 END_COM_MAP()
 
-
-	virtual HRESULT InitNew(REFCLSID clsid);
-	virtual HRESULT SetObjectPos(const RECT &rcPos);
+	virtual HRESULT Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos, IStream *pInitStream);
+	virtual HRESULT Detach();
+	virtual HRESULT GetControlUnknown(IUnknown **ppObject);
+	virtual HRESULT SetPosition(const RECT &rcPos);
+	virtual HRESULT Draw(HDC hdc);
 	virtual HRESULT DoVerb(LONG nVerb, LPMSG lpMsg = NULL);
+
+	// IDispatch
+	virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo);
+	virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(/* [in] */ UINT iTInfo, /* [in] */ LCID lcid, /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo);
+	virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(/* [in] */ REFIID riid, /* [size_is][in] */ LPOLESTR __RPC_FAR *rgszNames, /* [in] */ UINT cNames, /* [in] */ LCID lcid, /* [size_is][out] */ DISPID __RPC_FAR *rgDispId);
+	virtual /* [local] */ HRESULT STDMETHODCALLTYPE Invoke(/* [in] */ DISPID dispIdMember, /* [in] */ REFIID riid, /* [in] */ LCID lcid, /* [in] */ WORD wFlags, /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams, /* [out] */ VARIANT __RPC_FAR *pVarResult, /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo, /* [out] */ UINT __RPC_FAR *puArgErr);
+
+	// IAdviseSink implementation
+    virtual /* [local] */ void STDMETHODCALLTYPE OnDataChange(/* [unique][in] */ FORMATETC __RPC_FAR *pFormatetc, /* [unique][in] */ STGMEDIUM __RPC_FAR *pStgmed);
+    virtual /* [local] */ void STDMETHODCALLTYPE OnViewChange(/* [in] */ DWORD dwAspect, /* [in] */ LONG lindex);
+    virtual /* [local] */ void STDMETHODCALLTYPE OnRename(/* [in] */ IMoniker __RPC_FAR *pmk);
+    virtual /* [local] */ void STDMETHODCALLTYPE OnSave(void);
+    virtual /* [local] */ void STDMETHODCALLTYPE OnClose(void);
+
+	// IAdviseSink2
+	virtual /* [local] */ void STDMETHODCALLTYPE OnLinkSrcChange(/* [unique][in] */ IMoniker __RPC_FAR *pmk);
+
+	// IAdviseSinkEx implementation
+    virtual /* [local] */ void STDMETHODCALLTYPE OnViewStatusChange(/* [in] */ DWORD dwViewStatus);
 
 	// IOleWindow implementation
 	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE GetWindow(/* [out] */ HWND __RPC_FAR *phwnd);
@@ -87,6 +135,25 @@ END_COM_MAP()
 	virtual HRESULT STDMETHODCALLTYPE DeactivateAndUndo(void);
 	virtual HRESULT STDMETHODCALLTYPE OnPosRectChange(/* [in] */ LPCRECT lprcPosRect);
 
+	// IOleInPlaceSiteEx implementation
+	virtual HRESULT STDMETHODCALLTYPE OnInPlaceActivateEx(/* [out] */ BOOL __RPC_FAR *pfNoRedraw, /* [in] */ DWORD dwFlags);
+	virtual HRESULT STDMETHODCALLTYPE OnInPlaceDeactivateEx(/* [in] */ BOOL fNoRedraw);
+	virtual HRESULT STDMETHODCALLTYPE RequestUIActivate(void);
+
+	// IOleInPlaceSiteWindowless implementation
+	virtual HRESULT STDMETHODCALLTYPE CanWindowlessActivate(void);
+	virtual HRESULT STDMETHODCALLTYPE GetCapture(void);
+	virtual HRESULT STDMETHODCALLTYPE SetCapture(/* [in] */ BOOL fCapture);
+	virtual HRESULT STDMETHODCALLTYPE GetFocus(void);
+	virtual HRESULT STDMETHODCALLTYPE SetFocus(/* [in] */ BOOL fFocus);
+	virtual HRESULT STDMETHODCALLTYPE GetDC(/* [in] */ LPCRECT pRect, /* [in] */ DWORD grfFlags, /* [out] */ HDC __RPC_FAR *phDC);
+	virtual HRESULT STDMETHODCALLTYPE ReleaseDC(/* [in] */ HDC hDC);
+	virtual HRESULT STDMETHODCALLTYPE InvalidateRect(/* [in] */ LPCRECT pRect, /* [in] */ BOOL fErase);
+	virtual HRESULT STDMETHODCALLTYPE InvalidateRgn(/* [in] */ HRGN hRGN, /* [in] */ BOOL fErase);
+	virtual HRESULT STDMETHODCALLTYPE ScrollRect(/* [in] */ INT dx, /* [in] */ INT dy, /* [in] */ LPCRECT pRectScroll, /* [in] */ LPCRECT pRectClip);
+	virtual HRESULT STDMETHODCALLTYPE AdjustRect(/* [out][in] */ LPRECT prc);
+	virtual HRESULT STDMETHODCALLTYPE OnDefWindowMessage(/* [in] */ UINT msg, /* [in] */ WPARAM wParam, /* [in] */ LPARAM lParam, /* [out] */ LRESULT __RPC_FAR *plResult);
+
 	// IOleControlSite implementation
 	virtual HRESULT STDMETHODCALLTYPE OnControlInfoChanged(void);
 	virtual HRESULT STDMETHODCALLTYPE LockInPlaceActive(/* [in] */ BOOL fLock);
@@ -96,5 +163,7 @@ END_COM_MAP()
 	virtual HRESULT STDMETHODCALLTYPE OnFocus(/* [in] */ BOOL fGotFocus);
 	virtual HRESULT STDMETHODCALLTYPE ShowPropertyFrame( void);
 };
+
+typedef CComObject<CControlSite> CControlSiteInstance;
 
 #endif
