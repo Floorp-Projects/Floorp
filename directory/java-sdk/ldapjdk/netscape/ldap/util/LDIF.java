@@ -91,6 +91,7 @@ public class LDIF implements Serializable {
         BufferedReader d = new BufferedReader(new InputStreamReader(ds, "UTF8"));
         m_reader = new LineReader(d);
         m_source = ds.toString();
+        m_decoder = new MimeBase64Decoder();
     }
 
     /**

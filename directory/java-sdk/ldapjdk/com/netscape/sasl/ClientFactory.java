@@ -34,7 +34,7 @@ public class ClientFactory implements SaslClientFactory {
     public ClientFactory() {
         _mechanismTable = new Hashtable();
         for( int i = 0; i < _mechanismNames.length; i++ ) {
-            _mechanismTable.put( _mechanismNames[i],
+            _mechanismTable.put( _mechanismNames[i].toLowerCase(),
                                  PACKAGENAME + '.' +
                                  _mechanismClasses[i] );
         }
@@ -81,7 +81,7 @@ public class ClientFactory implements SaslClientFactory {
         }
         for( int i = 0; (mechName == null) &&
                         (i < mechanisms.length); i++ ) {
-            mechName = (String)_mechanismTable.get( mechanisms[i] );
+            mechName = (String)_mechanismTable.get( mechanisms[i].toLowerCase() );
         }
         if ( mechName != null ) {
             try {

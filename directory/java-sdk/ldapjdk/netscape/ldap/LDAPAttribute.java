@@ -114,6 +114,9 @@ public class LDAPAttribute implements java.io.Serializable {
             Object[] vals = new Object[set.size()];
             for (int i = 0; i < set.size(); i++) {
                 vals[i] = ((BEROctetString)set.elementAt(i)).getValue();
+                if (vals[i] == null) {
+                    vals[i] = new byte[0];
+                }
             }
             setValues( vals );
         }
