@@ -740,11 +740,9 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       if(NS_SUCCEEDED(result)) {
         CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
         //XXX - Find a better soution to record content
-        //Added _plaintext to fix bug 46054.
         if(!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
            (theTag == eHTMLTag_textarea  ||
             theTag == eHTMLTag_xmp       || 
-            theTag == eHTMLTag_plaintext || 
             theTag == eHTMLTag_noscript  ||
             theTag == eHTMLTag_noframes)) {
           NS_ASSERTION(mPreserveTarget == eHTMLTag_unknown,

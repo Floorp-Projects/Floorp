@@ -595,8 +595,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
             }
           }
 
-          if(nodeType == eHTMLTag_plaintext ||
-             nodeType == eHTMLTag_script    ||
+          if(nodeType == eHTMLTag_script    ||
              nodeType == eHTMLTag_style     ||
              nodeType == eHTMLTag_textarea  ||
              nodeType == eHTMLTag_xmp) {

@@ -944,15 +944,6 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown);
 
     Initialize( 
-      /*tag*/                             eHTMLTag_plaintext,
-      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
-      /*special props, prop-range*/       kNone,kDefaultPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_plaintext); // Bug  56914
-
-    Initialize( 
       /*tag*/                             eHTMLTag_pre,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	

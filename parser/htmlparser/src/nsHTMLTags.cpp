@@ -199,8 +199,6 @@ static const PRUnichar sHTMLTagUnicodeName_p[] =
   {'p', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_param[] =
   {'p', 'a', 'r', 'a', 'm', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_plaintext[] =
-  {'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_pre[] =
   {'p', 'r', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_q[] =
