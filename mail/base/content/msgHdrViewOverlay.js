@@ -351,6 +351,9 @@ var messageHeaderSink = {
       UpdateMessageHeaders();
       if (gIsEditableMsgFolder)
         ShowEditMessageButton();
+      
+      for (index in gMessageListeners)
+        gMessageListeners[index].onEndHeaders();
     },
     processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
     {
