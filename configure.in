@@ -802,19 +802,36 @@ dnl System overrides of the defaults for target
 dnl ========================================================
 case "$target" in
 *-aix*)
+    AC_DEFINE(AIX)
     if test ! "$GNU_CC"; then
-	    # DSO_LDOPTS='-ldl -bM:SRE -p1 -brtl -bso -bexpall -bnoentry'
-	    DSO_LDOPTS='-ldl -p1 -brtl -bso -bsymbolic -bnortllib'
-	    DSO_CFLAGS='-qflag=w:w'
-	    DSO_PIC_CFLAGS='-DPIC'
+        DSO_LDOPTS='-qmkshrobj=1 -G -bnoentry'
+        DSO_CFLAGS='-qflag=w:w'
+        DSO_PIC_CFLAGS=
+        LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
+        MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
+        MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
+        AC_LANG_SAVE
+        AC_LANG_CPLUSPLUS
+        AC_MSG_CHECKING([for VisualAge C++ compiler version >= 5.0.2.0])
+        AC_TRY_COMPILE([],
+            [#if (__IBMCPP__ < 520)
+             #error "Bad compiler"
+             #endif],
+            _BAD_COMPILER=,_BAD_COMPILER=1)
+        if test -n "$_BAD_COMPILER"; then
+            AC_MSG_RESULT([no])    
+            AC_MSG_ERROR([VisualAge C++ version 5.0.2.0 or higher is required to build.])
+        else
+            AC_MSG_RESULT([yes])    
+        fi
+        AC_LANG_RESTORE
     fi
     case "${target_os}" in
     aix4.1*)
         DLL_SUFFIX='_shr.a'
         ;;
     esac
-    MKSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS) -o $@'
+    AC_CHECK_HEADERS(sys/inttypes.h)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
@@ -4634,42 +4651,6 @@ MOZ_ARG_ENABLE_STRING(meta-components,
 if test -n "$MOZ_STATIC_COMPONENTS" && test -n "$MOZ_META_COMPONENTS"; then
     AC_MSG_ERROR([Simultaneous use of meta-module-components & meta-components is not supported.])
 fi
-
-case "$target" in
-    *-*-aix*)
-	if test -z "${BUILD_STATIC_LIBS}" -o -n "${BUILD_SHARED_LIBS}"; then
-	    if test -f /usr/lpp/xlC/bin/makeC++SharedLib_r; then
-		AIX_SHLIB_BIN='/usr/lpp/xlC/bin/makeC++SharedLib_r'
-	    elif test -f /usr/vacpp/bin/makeC++SharedLib_r; then
-		AIX_SHLIB_BIN='/usr/vacpp/bin/makeC++SharedLib_r'
-	    elif test -f /usr/ibmcxx/bin/makeC++SharedLib_r; then
-		AIX_SHLIB_BIN='/usr/ibmcxx/bin/makeC++SharedLib_r'
-	    fi
-	    AC_PATH_PROG(AIX_SHLIB_BIN, makeC++SharedLib_r, :)
-	    if test ! -n "$AIX_SHLIB_BIN"; then
-		echo
-		echo "*** Unable to locate makeC++SharedLib_r, needed for creation of shared"
-		echo "*** libraries on AIX.  You will only be able to build static libraries."
-		echo
-		BUILD_STATIC_LIBS=1
-		BUILD_SHARED_LIBS=
-	    fi
-	fi
-	AC_SUBST(AIX_SHLIB_BIN)
-
-	dnl ========================================================
-	dnl Figure out if we are using a pre-5.0x version of the
-	dnl xlC compiler and if so, set flag
-	dnl ========================================================
-
-	if test ! "$GNU_CC" && test "$ac_cv_cpp_reinterpret_cast" = no ; then
-	   CXXFLAGS="$CXXFLAGS -DAIX_XLC_364"
-	   CFLAGS="$CFLAGS -DAIX_XLC_364"
-	fi
-
-	;;
-
-esac
 
 MOZ_COMPONENTLIB=
 MOZ_ARG_ENABLE_BOOL(componentlib,

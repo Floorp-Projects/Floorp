@@ -89,7 +89,7 @@ typedef JSIntn intn;
  * So we don't define these four types here to avoid conflicts in case
  * the code also includes sys/types.h.
  */
-#ifdef AIX4_3
+#if defined(AIX) && defined(HAVE_SYS_INTTYPES_H)
 #include <sys/inttypes.h>
 #else
 typedef JSInt64 int64;
@@ -106,7 +106,7 @@ typedef long int32;
 typedef JSInt16 int16;
 typedef JSInt8 int8;
 #endif /* HPUX */
-#endif /* AIX4_3 */
+#endif /* AIX && HAVE_SYS_INTTYPES_H */
 
 #endif	/* XP_BEOS */
 

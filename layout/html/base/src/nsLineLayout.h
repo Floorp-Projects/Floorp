@@ -398,9 +398,6 @@ protected:
   PerFrameData* mFrameFreeList;
   PRInt32 mInitialFramesFreed;
 
-#if defined(AIX_XLC_364)
-public:
-#endif
   struct PerSpanData {
     union {
       PerSpanData* mParent;
@@ -436,9 +433,6 @@ public:
       mLastFrame = pfd;
     }
   };
-#if defined(AIX_XLC_364)
-protected:
-#endif
   PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];
   PerSpanData* mSpanFreeList;
   PRInt32 mInitialSpansFreed;
