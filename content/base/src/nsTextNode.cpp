@@ -132,8 +132,7 @@ nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsCOMPtr<nsITextContent> textContent;
   nsresult rv = CloneContent(PR_TRUE, getter_AddRefs(textContent));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(textContent, aReturn);
 }
