@@ -173,3 +173,4 @@ file:///s:/mozilla/layout/html/tests/block/bugs/71594.html
 file:///s:/mozilla/layout/html/tests/block/bugs/81118.html
 file:///s:/mozilla/layout/html/tests/block/bugs/81776.html
 file:///s:/mozilla/layout/html/tests/block/bugs/82221.html
+file:///s:/mozilla/layout/html/tests/block/bugs/87543.html
