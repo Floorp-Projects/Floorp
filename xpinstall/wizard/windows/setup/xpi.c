@@ -183,7 +183,9 @@ HRESULT SmartUpdateJars()
     while(siCObject)
     {
       /* launch smartupdate engine for earch jar to be installed */
-      if((siCObject->dwAttributes & SIC_SELECTED) && !(siCObject->dwAttributes & SIC_LAUNCHAPP))
+      if((siCObject->dwAttributes & SIC_SELECTED)   &&
+        !(siCObject->dwAttributes & SIC_LAUNCHAPP) &&
+        !(siCObject->dwAttributes & SIC_DOWNLOAD_ONLY))
       {
         lFileCounter      = 0;
         lBarberCounter    = 0;

@@ -2196,6 +2196,8 @@ HRESULT ParseComponentAttributes(char *szAttribute)
     dwAttributes |= SIC_INVISIBLE;
   if(strstr(szBuf, "LAUNCHAPP") != NULL)
     dwAttributes |= SIC_LAUNCHAPP;
+  if(strstr(szBuf, "DOWNLOAD_ONLY") != NULL)
+    dwAttributes |= SIC_DOWNLOAD_ONLY;
 
   return(dwAttributes);
 }
@@ -3727,6 +3729,13 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
       ParsePath(szVariable, szBuf, MAX_BUF, PP_PATH_ONLY);
       lstrcpy(szVariable, szBuf);
     }
+  }
+  else if(lstrcmpi(szVariable, "JRE PATH") == 0)
+  {
+    /* Locate the "c:\Program Files\JavaSoft\JRE\1.3" directory */
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\JavaSoft\\Java Plug-in\\1.3", "JavaHome", szVariable, dwVariableSize);
+    if(*szVariable == '\0')
+      return(FALSE);
   }
   else if(lstrcmpi(szVariable, "SETUP PATH") == 0)
   {

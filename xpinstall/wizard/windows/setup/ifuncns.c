@@ -162,6 +162,7 @@ HRESULT CleanupCoreFile()
 HRESULT ProcessUncompressFile(DWORD dwTiming)
 {
   DWORD   dwIndex;
+  BOOL    bOnlyIfExists;
   char    szIndex[MAX_BUF];
   char    szBuf[MAX_BUF];
   char    szSection[MAX_BUF];
@@ -180,11 +181,19 @@ HRESULT ProcessUncompressFile(DWORD dwTiming)
       DecryptString(szSource, szBuf);
       GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
       DecryptString(szDestination, szBuf);
+      GetPrivateProfileString(szSection, "Only If Exists", "", szBuf, MAX_BUF, szFileIniConfig);
+      if(lstrcmpi(szBuf, "TRUE") == 0)
+        bOnlyIfExists = TRUE;
+      else
+        bOnlyIfExists = FALSE;
 
-      GetPrivateProfileString(szSection, "Message",     "", szBuf, MAX_BUF, szFileIniConfig);
-      ShowMessage(szBuf, TRUE);
-      FileUncompress(szSource, szDestination);
-      ShowMessage(szBuf, FALSE);
+      if((!bOnlyIfExists) || (bOnlyIfExists && FileExists(szDestination)))
+      {
+        GetPrivateProfileString(szSection, "Message",     "", szBuf, MAX_BUF, szFileIniConfig);
+        ShowMessage(szBuf, TRUE);
+        FileUncompress(szSource, szDestination);
+        ShowMessage(szBuf, FALSE);
+      }
     }
 
     ++dwIndex;

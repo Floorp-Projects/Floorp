@@ -50,6 +50,7 @@ void              DrawCheck(LPDRAWITEMSTRUCT lpdis);
 void              InvalidateLBCheckbox(HWND hwndListBox);
 void              ProcessWindowsMessages(void);
 void              CheckWizardStateCustom(DWORD dwDefault);
+void              SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected);
 
 
 #endif

@@ -114,6 +114,7 @@ typedef int PRInt32;
 #define SIC_INVISIBLE                   2
 #define SIC_LAUNCHAPP                   4
 #define SIC_DOWNLOAD_REQUIRED           8
+#define SIC_DOWNLOAD_ONLY               16
 
 /* OS: Operating System */
 #define OS_WIN95_DEBUTE                 1
