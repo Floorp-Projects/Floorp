@@ -204,9 +204,19 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
   if (mFlags.mNeedIntrinsicImageSize) {
     printf("intrinsic size ");
   }
-  printf("%d,%d; oldLoader=%p newLoader=%p\n",
+  printf("%d,%d; oldLoader=%p newLoader=%p",
          mComputedImageSize.width, mComputedImageSize.height,
          oldLoader, mImageLoader);
+  if (sizeToLoadWidth) {
+    printf(" sizeToLoadWidth=%d,%d",
+           sizeToLoadWidth->width, sizeToLoadWidth->height);
+  }
+  else {
+    printf(" autoImageSize=%s needIntrinsicImageSize=%s",
+           mFlags.mAutoImageSize ? "yes" : "no",
+           mFlags.mNeedIntrinsicImageSize ? "yes" : "no");
+  }
+  printf("\n");
 #endif
 
   if (oldLoader != mImageLoader) {
@@ -232,6 +242,13 @@ nsHTMLImageLoader::UpdateURLSpec(nsIPresContext* aPresContext,
   StartLoadImage(aPresContext);
 }
 
+#define MINMAX(_value,_min,_max) \
+    ((_value) < (_min)           \
+     ? (_min)                    \
+     : ((_value) > (_max)        \
+        ? (_max)                 \
+        : (_value)))
+
 PRBool
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsHTMLReflowState* aReflowState,
@@ -242,42 +259,89 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   PRBool fixedContentWidth = PR_FALSE;
   PRBool fixedContentHeight = PR_FALSE;
 
-  if (aReflowState) {
-    widthConstraint = aReflowState->mComputedWidth;
-    heightConstraint = aReflowState->mComputedHeight;
+  nscoord minWidth, maxWidth, minHeight, maxHeight;
 
-    // Determine whether the image has fixed content width and height
-    if (NS_UNCONSTRAINEDSIZE != widthConstraint) {
+  if (aReflowState) {
+    // Determine whether the image has fixed content width
+    widthConstraint = aReflowState->mComputedWidth;
+    minWidth = aReflowState->mComputedMinWidth;
+    maxWidth = aReflowState->mComputedMaxWidth;
+    if (NS_INTRINSICSIZE != widthConstraint) {
       fixedContentWidth = PR_TRUE;
     }
+    else if (mFlags.mHaveIntrinsicImageSize) {
+      // At this point we know that the width value was not
+      // constrained and that we now know the intrinsic size of the
+      // image.
+      //
+      // The css2 spec states that if a min/max width value is
+      // provided then it acts as a substitute value for the "width"
+      // property, if it applies. Therefore, we will force the
+      // fixedContentWidth flag to true in these cases.
+      if ((0 != minWidth) ||
+          (NS_UNCONSTRAINEDSIZE != maxWidth)) {
+        // Use the intrinsic image height for the min-max comparisons,
+        // since the width property is "auto".
+        widthConstraint = mIntrinsicImageSize.width;
+        fixedContentWidth = PR_TRUE;
+      }
+    }
+
+    // Determine whether the image has fixed content height
+    heightConstraint = aReflowState->mComputedHeight;
+    minHeight = aReflowState->mComputedMinHeight;
+    maxHeight = aReflowState->mComputedMaxHeight;
     if (NS_UNCONSTRAINEDSIZE != heightConstraint) {
       fixedContentHeight = PR_TRUE;
     }
+    else if (mFlags.mHaveIntrinsicImageSize) {
+      // At this point we know that the height value was not
+      // constrained and that we now know the intrinsic size of the
+      // image.
+      //
+      // The css2 spec states that if a min/max height value is
+      // provided then it acts as a substitute value for the "height"
+      // property, if it applies. Therefore, we will force the
+      // fixedContentHeight flag to true in these cases.
+      if ((0 != minHeight) ||
+          (NS_UNCONSTRAINEDSIZE != maxHeight)) {
+        // Use the intrinsic image height for the min-max comparisons,
+        // since the height property is "auto".
+        heightConstraint = mIntrinsicImageSize.height;
+        fixedContentHeight = PR_TRUE;
+      }
+    }
+  }
+  else {
+    minWidth = minHeight = 0;
+    maxWidth = maxHeight = NS_UNCONSTRAINEDSIZE;
   }
 
   for (;;) {
     PRBool haveComputedSize = PR_FALSE;
     PRBool needIntrinsicImageSize = PR_FALSE;
+
     nscoord newWidth, newHeight;
     mFlags.mAutoImageSize = PR_FALSE;
     mFlags.mNeedSizeNotification = PR_FALSE;
     if (fixedContentWidth) {
       if (fixedContentHeight) {
-        newWidth = widthConstraint;
-        newHeight = heightConstraint;
+        newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
+        newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
         haveComputedSize = PR_TRUE;
       }
       else {
         // We have a width, and an auto height. Compute height from
         // width once we have the intrinsic image size.
-        newWidth = widthConstraint;
+        newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
         if (mFlags.mHaveIntrinsicImageSize) {
           float width = mIntrinsicImageSize.width
             ? (float) mIntrinsicImageSize.width
             : (float) mIntrinsicImageSize.height;     // avoid divide by zero
           float height = (float) mIntrinsicImageSize.height;
           newHeight = (nscoord)
-            NSToIntRound(widthConstraint * height / width);
+            NSToIntRound(newWidth * height / width);
+          newHeight = MINMAX(newHeight, minHeight, maxHeight);
           haveComputedSize = PR_TRUE;
         }
         else {
@@ -290,14 +354,15 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     else if (fixedContentHeight) {
       // We have a height, and an auto width. Compute width from height
       // once we have the intrinsic image size.
-      newHeight = heightConstraint;
+      newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
       if (mFlags.mHaveIntrinsicImageSize) {
         float width = (float) mIntrinsicImageSize.width;
         float height = mIntrinsicImageSize.height
           ? (float) mIntrinsicImageSize.height
           : (float) mIntrinsicImageSize.width;         // avoid divide by zero
         newWidth = (nscoord)
-          NSToIntRound(heightConstraint * width / height);
+          NSToIntRound(newHeight * width / height);
+        newWidth = MINMAX(newWidth, minWidth, maxWidth);
         haveComputedSize = PR_TRUE;
       }
       else {
@@ -309,8 +374,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     else {
       mFlags.mAutoImageSize = PR_TRUE;
       if (mFlags.mHaveIntrinsicImageSize) {
-        newWidth = mIntrinsicImageSize.width;
-        newHeight = mIntrinsicImageSize.height;
+        newWidth = MINMAX(mIntrinsicImageSize.width, minWidth, maxWidth);
+        newHeight = MINMAX(mIntrinsicImageSize.height, minHeight, maxHeight);
         haveComputedSize = PR_TRUE;
       }
       else {
@@ -320,16 +385,20 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         mFlags.mNeedSizeNotification = PR_TRUE;
       }
     }
+
     mFlags.mNeedIntrinsicImageSize = needIntrinsicImageSize;
     mFlags.mHaveComputedSize = haveComputedSize;
     mComputedImageSize.width = newWidth;
     mComputedImageSize.height = newHeight;
 #ifdef NOISY_IMAGE_LOADING
     nsFrame::ListTag(stdout, mFrame);
-    printf(": %s%scomputedSize=%d,%d\n",
+    printf(": %s%scomputedSize=%d,%d min=%d,%d max=%d,%d fixed=%s,%s\n",
            mFlags.mNeedIntrinsicImageSize ? "need-instrinsic-size " : "",
            mFlags.mHaveComputedSize ? "have-computed-size " : "",
-           mComputedImageSize.width, mComputedImageSize.height);
+           mComputedImageSize.width, mComputedImageSize.height,
+           minWidth, minHeight, maxWidth, maxHeight,
+           fixedContentWidth ? "yes" : "no",
+           fixedContentHeight ? "yes" : "no");
 #endif
 
     // Load the image at the desired size
