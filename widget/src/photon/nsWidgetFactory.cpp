@@ -48,12 +48,18 @@
 #include "nsLookAndFeel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsSound.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
+
+#ifdef MOZ_ENABLE_XREMOTE
+#include "nsPhMozRemoteHelper.h"
+#endif
+
 #include "nsFilePicker.h"
 
 #include <prlog.h>
@@ -67,10 +73,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+
+#ifdef MOZ_ENABLE_XREMOTE
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhXRemoteWidgetHelper)
+#endif
+
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -105,6 +117,10 @@ static nsModuleComponentInfo components[] =
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
   { "HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter;1",
@@ -123,6 +139,14 @@ static nsModuleComponentInfo components[] =
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
 #endif // IBMBIDI
+
+#ifdef MOZ_ENABLE_XREMOTE
+	{	NS_IXREMOTEWIDGETHELPER_CLASSNAME,
+		NS_PHXREMOTEWIDGETHELPER_CID,
+		NS_IXREMOTEWIDGETHELPER_CONTRACTID,
+		nsPhXRemoteWidgetHelperConstructor },
+#endif
+
   { "Photon File Picker",
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",

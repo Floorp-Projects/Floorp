@@ -339,33 +339,44 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 			break;
 
 		case nsMaskRequirements_kNeeds1Bit:
+			{
 			mAlphaRowBytes = (aWidth + 7) / 8;
 			mAlphaDepth = 1;
 
 			// 32-bit align each row
 			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
-			mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
+			int alphasize = mAlphaRowBytes * aHeight;
+			mAlphaBits = new PRUint8[ alphasize ];
+			memset( mAlphaBits, 0, alphasize );
+
 			mAlphaWidth = aWidth;
 			mAlphaHeight = aHeight;
+			}
 			break;
 
 		case nsMaskRequirements_kNeeds8Bit:
+			{
 			mAlphaRowBytes = aWidth;
 			mAlphaDepth = 8;
 
 			// 32-bit align each row
 			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
-			mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
+
+			int alphasize = mAlphaRowBytes * aHeight;
+			mAlphaBits = new PRUint8[ alphasize ];
+			memset( mAlphaBits, 0, alphasize );
+
 			mAlphaWidth = aWidth;
 			mAlphaHeight = aHeight;
+			}
 			break;
 	}
 
 	mPhImage.image_tag = PtCRC((char *)mImageBits, mSizeImage);
 	mPhImage.image = (char *)mImageBits;
 	mPhImage.size.w = mWidth;
-	mPhImage.size.h = mHeight;
+	mPhImage.size.h = 0;
 	mRowBytes = mPhImage.bpl = mNumBytesPixel * mWidth;
 	mPhImage.type = type;
 	if (aMaskRequirements == nsMaskRequirements_kNeeds1Bit)
@@ -449,16 +460,19 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     		  map.bpp = mAlphaDepth;
     		  map.map = (char *)mAlphaBits;
     		  PgSetAlphaBlend(&map, 0);
+
     		  PgAlphaOn();
     		  PgDrawRepPhImagemx( &mPhImage, 0, &pos, &rep, &space );
     		  PgAlphaOff();
+
+					PgSetAlphaBlend( NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
     		}
     		PgSetMultiClip( 0, NULL );
 
 				return NS_OK;
 				}
 
-			else {
+			else if( mPhImage.size.h > 0 ) {
 
 				/* keeping the proportions, what is the size of mPhImageZoom that can give use the aDWidth and aDHeight? */
 				PRInt32 scaled_w = aDWidth * mPhImage.size.w / aSWidth;
@@ -503,10 +517,12 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 			map.bpp = mAlphaDepth;
 			map.map = (char *)mAlphaBits;
 			PgSetAlphaBlend(&map, 0);
+
 			PgAlphaOn();
 			PgDrawPhImagemx( &pos, use_zoom ? mPhImageZoom : &mPhImage, 0 );
 			PgAlphaOff();
-			
+
+			PgSetAlphaBlend( NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
 		}
 		PgSetMultiClip( 0, NULL );
 	}
@@ -557,9 +573,12 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 			map.bpp = mAlphaDepth;
 			map.map = (char *)mAlphaBits;
 			PgSetAlphaBlend(&map, 0);
+
 			PgAlphaOn();
 			PgDrawPhImagemx( &pos, &mPhImage, 0 );
 			PgAlphaOff();
+
+			PgSetAlphaBlend( NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
 		}
 	}
 
@@ -767,7 +786,7 @@ NS_IMETHODIMP nsImagePh::DrawToImage(nsIImage* aDstImage,
 		darea.size.w = sarea.size.w = aDWidth;
 		darea.size.h = sarea.size.h = aDHeight;
 
-		if ((aDWidth != mPhImage.size.w) || (aDHeight != mPhImage.size.h))
+		if( mPhImage.size.h > 0 && ( aDWidth != mPhImage.size.w || aDHeight != mPhImage.size.h ) )
 		{
 			release = 1;
 			if ((aDHeight * mPhImage.bpl) < IMAGE_SHMEM_THRESHOLD)

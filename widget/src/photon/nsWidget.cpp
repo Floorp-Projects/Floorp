@@ -429,7 +429,7 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
   // Only change cursor if it's changing
   if( aCursor != mCursor ) {
 
-  	unsigned short curs = 0;
+  	unsigned short curs = Ph_CURSOR_POINTER;
   	PgColor_t color = Ph_CURSOR_DEFAULT_COLOR;
 
     switch( aCursor ) {
@@ -534,7 +534,7 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
   		  break;
   		}
 
-  	if( mWidget && curs ) {
+  	if( mWidget ) {
   	  PtArg_t args[2];
 
 			PtSetArg( &args[0], Pt_ARG_CURSOR_TYPE, curs, 0 );
@@ -797,6 +797,7 @@ static struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_CANCEL,     Pk_Cancel, PR_FALSE },
   { NS_VK_BACK,       Pk_BackSpace, PR_FALSE },
   { NS_VK_TAB,        Pk_Tab, PR_FALSE },
+  { NS_VK_TAB,        Pk_KP_Tab, PR_FALSE },
   { NS_VK_CLEAR,      Pk_Clear, PR_FALSE },
   { NS_VK_RETURN,     Pk_Return, PR_FALSE },
   { NS_VK_SHIFT,      Pk_Shift_L, PR_FALSE },
@@ -898,11 +899,10 @@ inline void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     anEvent.point.y = 0;
 
     PRBool IsChar;
-    unsigned long keysym;
-    if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
-        keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
-		else
-				keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+    unsigned long vkey;
+		if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
+			vkey = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+		else vkey = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
@@ -911,16 +911,15 @@ inline void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
     if ((aEventType == NS_KEY_PRESS) && (IsChar == PR_TRUE)) {
       anEvent.charCode = aPhKeyEvent->key_sym;
-      anEvent.keyCode =  0;  /* I think the spec says this should be 0 */
+      anEvent.keyCode =  0; /* I think the spec says this should be 0 */
 
       if ((anEvent.isControl) || (anEvent.isAlt))
         anEvent.charCode = aPhKeyEvent->key_cap;
-	  	else
-	  	  anEvent.isShift = anEvent.isControl = anEvent.isAlt = anEvent.isMeta = PR_FALSE;
+			else anEvent.isShift = anEvent.isControl = anEvent.isAlt = anEvent.isMeta = PR_FALSE;
     	}
 		else {
  	    anEvent.charCode = 0; 
- 	    anEvent.keyCode  =  (keysym  & 0x00FF);
+ 	    anEvent.keyCode = vkey;
   	  }
   	}
 
@@ -1191,14 +1190,13 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 			pWidget->DispatchWindowEvent(&event);
 			}
 		}
-	else {
-  	if( sJustGotActivated ) {
-			sJustGotActivated = PR_FALSE;
-			pWidget->DispatchStandardEvent(NS_ACTIVATE);
-  		}
-		}
 
 	pWidget->DispatchStandardEvent(NS_GOTFOCUS);
+
+ 	if( sJustGotActivated ) {
+		sJustGotActivated = PR_FALSE;
+		pWidget->DispatchStandardEvent(NS_ACTIVATE);
+ 		}
 
   return Pt_CONTINUE;
 }

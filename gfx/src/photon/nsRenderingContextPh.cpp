@@ -452,7 +452,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine( nscoord aX0, nscoord aY0, nscoor
 {
 	mTranMatrix->TransformCoord( &aX0, &aY0 );
 	mTranMatrix->TransformCoord( &aX1, &aY1 );
-	
+
 	if( aY0 != aY1 ) aY1--;
 	if( aX0 != aX1 ) aX1--;
 	
@@ -464,7 +464,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine( nscoord aX0, nscoord aY0, nscoor
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1 ) 
 {
-	
 	if( aY0 != aY1 ) aY1--;
 	if( aX0 != aX1 ) aX1--;
 	
@@ -555,7 +554,33 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolygon( const nsPoint aPoints[], PRIn
 			pts[i].x = x;
 			pts[i].y = y;
 		}
+
 		UpdateGC();
+
+
+		if( aNumPoints == 4 ) {
+			/* this code makes the edges of the controls like buttons, texts etc appear less heavy */
+			int dx = pts[1].x - pts[0].x;
+			int dy = pts[1].y - pts[0].y;
+			if( !dx ) {
+				/* the edge is vertical - move us (0,1) closer to the other 2 points (2,3) */
+				pts[0].y++;
+				pts[1].y--;
+				int diff = pts[3].x > pts[0].x ? 1 : -1;
+				pts[0].x += diff;
+				pts[1].x += diff;
+				}
+			if( !dy ) {
+				/* the edge is horizontal - move the other 2 points (2,3) closer to us (0,1) */
+				pts[2].x++;
+				pts[3].x--;
+				int diff = pts[3].y > pts[0].y ? -1 : 1;
+				pts[2].y += diff;
+				pts[3].y += diff;
+				}
+			}
+
+
 		PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE );
 		delete [] pts;
 	}
@@ -581,7 +606,33 @@ NS_IMETHODIMP nsRenderingContextPh :: FillPolygon( const nsPoint aPoints[], PRIn
 			pts[i].x = x;
 			pts[i].y = y;
 		}
+
 		UpdateGC();
+
+
+		if( aNumPoints == 4 ) {
+			/* this code makes the edges of the controls like buttons, texts etc appear less heavy */
+			int dx = pts[1].x - pts[0].x;
+			int dy = pts[1].y - pts[0].y;
+			if( !dx ) {
+				/* the edge is vertical - move us (0,1) closer to the other 2 points (2,3) */
+				pts[0].y++;
+				pts[1].y--;
+				int diff = pts[3].x > pts[0].x ? 1 : -1;
+				pts[0].x += diff;
+				pts[1].x += diff;
+				}
+			if( !dy ) {
+				/* the edge is horizontal - move the other 2 points (2,3) closer to us (0,1) */
+				pts[2].x++;
+				pts[3].x--;
+				int diff = pts[3].y > pts[0].y ? -1 : 1;
+				pts[2].y += diff;
+				pts[3].y += diff;
+				}
+			}
+
+
 		PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_FILL );
 		delete [] pts;
 	}
@@ -680,54 +731,37 @@ NS_IMETHODIMP nsRenderingContextPh :: FillArc( nscoord aX, nscoord aY, nscoord a
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth ) 
 {
 	PhRect_t extent;
-	nsresult ret_code = NS_ERROR_FAILURE;
-	
-	aWidth = 0;	// Initialize to zero in case we fail.
-	
-	if( nsnull != mFontMetrics ) 
+
+	/* Check for the very common case of trying to get the width of a single space */
+	if( aString[0] == ' ' && aLength == 1 )
+		return mFontMetrics->GetSpaceWidth(aWidth);
+
+	if( PfExtentText( &extent, NULL, mPhotonFontName, aString, aLength ) )
 	{
-		if( PfExtentText( &extent, NULL, mPhotonFontName, aString, aLength ) )
-		{
-			aWidth = NSToCoordRound((int) ((extent.lr.x - extent.ul.x + 1) * mP2T));
-			ret_code = NS_OK;
-		}
+		aWidth = NSToCoordRound((int) ((extent.lr.x - extent.ul.x + 1) * mP2T));
+		return NS_OK;
 	}
-	else 
-		ret_code = NS_ERROR_FAILURE;
 	
-	return ret_code;
+	aWidth = 0;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID ) 
 {
-	nsresult ret_code = NS_ERROR_FAILURE;
-	
-	aWidth = 0;	// Initialize to zero in case we fail.
-	if( nsnull != mFontMetrics ) {
-		NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
-		ret_code = GetWidth( theUnicodeString.get(), strlen(theUnicodeString.get()), aWidth );
-	}
-	if( nsnull != aFontID ) 
-		*aFontID = 0;
-	return ret_code;
+	NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
+	const char *s = theUnicodeString.get();
+	return GetWidth( s, strlen(s), aWidth );
 }
 
 NS_IMETHODIMP nsRenderingContextPh::GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
 													  nsTextDimensions& aDimensions, PRInt32* aFontID)
 {
-	nsresult ret_code = NS_ERROR_FAILURE;
-
-	aDimensions.Clear();
-	if( nsnull != mFontMetrics ) {
-		mFontMetrics->GetMaxAscent(aDimensions.ascent);
-		mFontMetrics->GetMaxDescent(aDimensions.descent);
+	mFontMetrics->GetMaxAscent(aDimensions.ascent);
+	mFontMetrics->GetMaxDescent(aDimensions.descent);
 		
-		NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
-		ret_code = GetWidth( theUnicodeString.get(), strlen(theUnicodeString.get()), aDimensions.width );
-	}
-	if (nsnull != aFontID)
-		*aFontID = 0;
-	return NS_OK;
+	NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
+	const char *s = theUnicodeString.get();
+	return GetWidth( s, strlen(s), aDimensions.width );
 }
 
 NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLength,
@@ -742,25 +776,39 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLe
 	PgSetFont( mPhotonFontName );
 
 
+#if 0 /* turn this feature off since it has problems */
 	if( !aSpacing ) {
+#endif
 		mTranMatrix->TransformCoord( &aX, &aY );
 		PhPoint_t pos = { aX, aY };
 		PgDrawTextChars( aString, aLength, &pos, Pg_TEXT_LEFT);
+#if 0 /* turn this feature off since it has problems */
 		}
 	else {
+		nscoord* trSpacing;
+		nscoord trSpacingArray[500];
+		if( aLength > 500 )
+			trSpacing = new nscoord[aLength];
+		else trSpacing = trSpacingArray;
+
+		mTranMatrix->ScaleXCoords(aSpacing, aLength, trSpacing);
+
 		nscoord x = aX;
 		nscoord y = aY;
-		const char* end = aString + aLength;
-		while( aString < end ) {
-			char ch = *aString++;
-			nscoord xx = x;
-			nscoord yy = y;
-			mTranMatrix->TransformCoord(&xx, &yy);
-			PhPoint_t pos = { xx, yy };
-			PgDrawText( &ch, 1, &pos, Pg_TEXT_LEFT);
-			x += *aSpacing++;
+		mTranMatrix->TransformCoord(&x, &y);
+		PhPoint_t pos = { x, y };
+
+		const char *current = aString;
+		for( int i=0; i<aLength; i++ ) {
+			PgDrawText( current++, 1, &pos, Pg_TEXT_LEFT);
+			pos.x += trSpacing[i];
 		}
+
+	if( trSpacing != trSpacingArray )
+		delete [] trSpacing;
 	}
+#endif
+
 	return NS_OK;
 }
 

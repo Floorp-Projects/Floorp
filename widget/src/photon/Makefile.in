@@ -32,8 +32,8 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetPhModule
 REQUIRES    = xpcom \
-		string \
-		      appshell \
+				string \
+		    appshell \
 			  gfx \
 			  pref \
 			  dom \
@@ -61,6 +61,11 @@ CPPSRCS		= \
 		nsFilePicker.cpp \
 		nsSound.cpp \
 		$(NULL)
+
+ifdef MOZ_ENABLE_XREMOTE
+REQUIRES += xremoteservice
+CPPSRCS += nsPhMozRemoteHelper.cpp
+endif
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 

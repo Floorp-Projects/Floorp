@@ -256,7 +256,7 @@ public:
 	 inline
    NS_IMETHODIMP GetWidth(char aC, nscoord& aWidth)
 		{ // Check for the very common case of trying to get the width of a single space
-			if(aC == ' ' && nsnull != mFontMetrics )
+			if(aC == ' ')
 			  return mFontMetrics->GetSpaceWidth(aWidth);
 			return GetWidth( &aC, 1, aWidth );
 		}
@@ -306,7 +306,6 @@ public:
 	 inline
    NS_IMETHODIMP GetTextDimensions(const char* aString, PRUint32 aLength, nsTextDimensions& aDimensions)
 		{
-		aDimensions.Clear();
 		mFontMetrics->GetMaxAscent(aDimensions.ascent);
 		mFontMetrics->GetMaxDescent(aDimensions.descent);
 		return GetWidth(aString, aLength, aDimensions.width);
@@ -314,7 +313,7 @@ public:
 
    NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
 								nsTextDimensions& aDimensions, PRInt32 *aFontID);
-   
+
 	 inline
    NS_IMETHODIMP DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 		{

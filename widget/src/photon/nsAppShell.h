@@ -80,7 +80,8 @@ public:
 
 private:
   nsIEventQueue* mEventQueue;
-  int			 mFD;
+  int	mFD;
+	static PRBool mPtInited;
 
 };
 

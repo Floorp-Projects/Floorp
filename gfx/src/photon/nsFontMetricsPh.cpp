@@ -233,7 +233,6 @@ printf( "\tCall PfLoadMetrics for NSFullFontName=%s\n", NSFullFontName );
 
 		gFontMetricsCache->Put(&key, node);
 
-		PfLoadFont( NSFullFontName, PHFONT_LOAD_METRICS, nsnull );
 		PfLoadMetrics( NSFullFontName );
 	  }
 

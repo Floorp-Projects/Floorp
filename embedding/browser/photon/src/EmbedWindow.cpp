@@ -544,7 +544,10 @@ EmbedWindow::OnHideTooltip(void)
   return NS_OK;
 }
 
+
 // nsIDNSListener
+
+#if 0
 
 /* void OnStartLookup (in nsISupports ctxt, in string hostname); */
 NS_IMETHODIMP EmbedWindow::OnStartLookup(nsISupports *ctxt, const char *hostname)
@@ -586,9 +589,10 @@ NS_IMETHODIMP EmbedWindow::OnFound(nsISupports *ctxt, const char *hostname, nsHo
 
     return NS_OK;
 }
+#endif
 
 /* void OnStopLookup (in nsISupports ctxt, in string hostname, in nsresult status); */
-NS_IMETHODIMP EmbedWindow::OnStopLookup(nsISupports *ctxt, const char *hostname, nsresult status)
+NS_IMETHODIMP EmbedWindow::OnLookupComplete(nsIDNSRequest *aRequest, nsIDNSRecord *aRecord, nsresult aStatus)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -57,7 +57,7 @@ protected:
   NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, 
                                     PRInt32 aWhichClipboard );
-nsresult GetFormat(const char* aMimeStr, PhClipHeader *cliphdr );
+nsresult GetFormat(const char* aMimeStr, char *format );
 
   PRBool  mIgnoreEmptyNotification;
 	inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
