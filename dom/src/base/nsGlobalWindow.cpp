@@ -3378,18 +3378,12 @@ NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
   if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
     if (mDocShell) {
       nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
-      nsIDocCharset* docCS = (nsIDocCharset*)docCharset.get();
-      NS_ASSERTION(docCS, "This MUST support this interface!");
-      NS_ADDREF(docCS);
-      *aSink = docCS;
+      *aSink = docCharset;
     }
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
     if (mDocShell) {
-      nsCOMPtr<nsIWebNavigation> webNavigation(do_QueryInterface(mDocShell));
-      nsIWebNavigation* webNav = (nsIWebNavigation*)webNavigation.get();
-      NS_ASSERTION(webNav, "This MUST support this interface!");
-      NS_ADDREF(webNav);
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
       *aSink = webNav;
     }
   }
@@ -3399,10 +3393,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
       mDocShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer) {
         nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
-        nsIWebBrowserPrint* print = (nsIWebBrowserPrint*)webBrowserPrint.get();
-        NS_ASSERTION(print, "This MUST support this interface!");
-        NS_ADDREF(print);
-        *aSink = print;
+        *aSink = webBrowserPrint;
       }
     }
   }
