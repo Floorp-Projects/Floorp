@@ -28,6 +28,7 @@
 #include "nsIView.h"
 #include "nsIPtr.h"
 #include "nsIReflowCommand.h"
+#include "nsCSSRendering.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -151,13 +152,12 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect)
 {
-  // for debug...
-  /*
-  if (nsIFrame::GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(0,0,128));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
+  const nsStyleColor* myColor =
+    (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+  if (nsnull != myColor) {
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, mRect, *myColor);
   }
-  */
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   return NS_OK;
