@@ -82,6 +82,16 @@ PRBool    nsToolkit::mW2KXP_CP936 = PR_FALSE;
 PRBool    nsToolkit::mIsWinXP     = PR_FALSE;
 
 #ifdef MOZ_AIMM
+
+DEFINE_GUID(IID_IActiveIMMApp, 
+0x08c0e040, 0x62d1, 0x11d1, 0x93, 0x26, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
+
+DEFINE_GUID(CLSID_CActiveIMM,
+0x4955DD33, 0xB159, 0x11d0, 0x8F, 0xCF, 0x0, 0xAA, 0x00, 0x6B, 0xCC, 0x59);
+
+DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
+0xb5cf2cfa, 0x8aeb, 0x11d1, 0x93, 0x64, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
+
 IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
 PRInt32        nsToolkit::gAIMMCount = 0;
 #endif
@@ -96,6 +106,12 @@ PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
 //
 // Dll entry point. Keep the dll instance
 //
+
+#if defined(__GNUC__)
+// If DllMain gets name mangled, it won't be seen.
+extern "C" {
+#endif
+
 BOOL APIENTRY DllMain(  HINSTANCE hModule, 
                         DWORD reason, 
                         LPVOID lpReserved )
@@ -119,6 +135,11 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 
     return TRUE;
 }
+
+#if defined(__GNUC__)
+} // extern "C"
+#endif
+
 #endif
 
 //
@@ -745,6 +766,7 @@ void nsToolkit::CreateInternalWindow(PRThread *aThread)
                                        NULL,
                                        nsToolkit::mDllInstance,
                                        NULL);
+
     VERIFY(mDispatchWnd);
 }
 

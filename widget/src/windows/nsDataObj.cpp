@@ -56,7 +56,9 @@
 #include "nsCRT.h"
 
 #include "OLE2.h"
+#ifndef __MINGW32__
 #include "URLMON.h"
+#endif
 #include "shlobj.h"
 
 #if 0

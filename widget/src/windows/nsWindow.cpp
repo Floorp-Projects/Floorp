@@ -896,9 +896,11 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
- 
+
+#ifndef __MINGW32__ 
   if (!nsWindow::uMSH_MOUSEWHEEL)
     nsWindow::uMSH_MOUSEWHEEL = RegisterWindowMessage(MSH_MOUSEWHEEL);
+#endif
 }
 
 
@@ -4608,6 +4610,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 (osversion.dwMajorVersion == 4) &&
                 (osversion.dwMinorVersion == 0))
               {
+#ifndef __MINGW32__
                 // This is the Windows 95 case
                 HWND hdlMsWheel = FindWindow(MSH_WHEELMODULE_CLASS,
                                              MSH_WHEELMODULE_TITLE);
@@ -4619,6 +4622,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                                                       0);
                   }
                 }
+#endif
               }
             else if (osversion.dwMajorVersion >= 4) {
               // This is the Win98/NT4/Win2K case

@@ -55,6 +55,8 @@
 
 #include "nsVoidArray.h"
 
+#include <imm.h>
+
 class nsNativeDragTarget;
 class nsIRollupListener;
 

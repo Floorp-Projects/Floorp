@@ -39,7 +39,9 @@
 #ifndef _IENUMFE_H_
 #define _IENUMFE_H_
 #include "OLE2.h"
+#ifndef __MINGW32__
 #include "URLMON.h"
+#endif
 
 /*
  * IEnumFORMATETC object that is created from

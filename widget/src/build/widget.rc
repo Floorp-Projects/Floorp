@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "..\\windows\\resource.h"
-#include <winres.h>
+#include <winresrc.h>
 #include <dlgs.h>
 
 IDC_SELECTANCHOR        CURSOR  DISCARDABLE     "res\\select.cur"
