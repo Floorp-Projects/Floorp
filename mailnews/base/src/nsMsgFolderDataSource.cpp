@@ -210,6 +210,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
                                                 nsISimpleEnumerator** targets)
 {
   nsresult rv = NS_RDF_NO_VALUE;
+  if(!targets)
+	  return NS_ERROR_NULL_POINTER;
+
+  *targets = nsnull;
 
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv))
@@ -219,28 +223,32 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       nsCOMPtr<nsIEnumerator> subFolders;
 
       rv = folder->GetSubFolders(getter_AddRefs(subFolders));
-      if (NS_FAILED(rv)) return rv;
-      nsAdapterEnumerator* cursor =
-        new nsAdapterEnumerator(subFolders);
-      if (cursor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(cursor);
-      *targets = cursor;
-      rv = NS_OK;
+      if (NS_SUCCEEDED(rv))
+	  {
+		  nsAdapterEnumerator* cursor =
+			new nsAdapterEnumerator(subFolders);
+		  if (cursor == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		  NS_ADDREF(cursor);
+		  *targets = cursor;
+		  rv = NS_OK;
+	  }
     }
     else if (peq(kNC_MessageChild, property))
     {
       nsCOMPtr<nsIEnumerator> messages;
 
       rv = folder->GetMessages(getter_AddRefs(messages));
-      if (NS_FAILED(rv)) return rv;
-      nsAdapterEnumerator* cursor =
-        new nsAdapterEnumerator(messages);
-      if (cursor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(cursor);
-      *targets = cursor;
-      rv = NS_OK;
+      if (NS_SUCCEEDED(rv))
+	  {
+		  nsAdapterEnumerator* cursor =
+			new nsAdapterEnumerator(messages);
+		  if (cursor == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		  NS_ADDREF(cursor);
+		  *targets = cursor;
+		  rv = NS_OK;
+	  }
     }
     else if(peq(kNC_Name, property) || peq(kNC_SpecialFolder, property))
     {
@@ -253,7 +261,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       rv = NS_OK;
     }
   }
-  else {
+  if(!*targets)
+  {
 	  //create empty cursor
 	  nsCOMPtr<nsISupportsArray> assertions;
       NS_NewISupportsArray(getter_AddRefs(assertions));
@@ -349,29 +358,8 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
-  
-	nsCOMPtr<nsIEnumerator>  subFolders;
-  if (NS_SUCCEEDED(folder->GetSubFolders(getter_AddRefs(subFolders))))
-    {
-	    if(NS_SUCCEEDED(subFolders->First()))
-		{
-			nsCOMPtr<nsISupports> firstFolder;
-			rv = subFolders->CurrentItem(getter_AddRefs(firstFolder));
-			if (NS_SUCCEEDED(rv))
-				(*arcs)->AppendElement(kNC_Child);
-		}
-    }
-  
-  nsCOMPtr<nsIEnumerator> messages;
-  if(NS_SUCCEEDED(folder->GetMessages(getter_AddRefs(messages)))) {
-    if(NS_SUCCEEDED(messages->First()))
-	{
-		nsCOMPtr<nsISupports> firstMessage;
-		rv = messages->CurrentItem(getter_AddRefs(firstMessage));
-		if(NS_SUCCEEDED(rv))
-	      (*arcs)->AppendElement(kNC_MessageChild);
-	}
-  }
+  (*arcs)->AppendElement(kNC_Child);
+  (*arcs)->AppendElement(kNC_MessageChild);
   
   return NS_OK;
 }
@@ -586,11 +574,7 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createTotalMessagesNode(folder, target);
 	else if (peq(kNC_TotalUnreadMessages, property))
 		rv = createUnreadMessagesNode(folder, target);
-  else if (peq(kNC_Child, property))
-    rv = createFolderChildNode(folder,target);
-  else if (peq(kNC_MessageChild, property))
-      rv = createFolderMessageNode(folder,target);
-  
+ 
   return rv;
 }
 
