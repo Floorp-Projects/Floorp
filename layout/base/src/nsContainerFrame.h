@@ -196,6 +196,10 @@ public:
    */
   static nsIFrame* FrameAt(nsIFrame* aFrame, PRInt32 aIndex);
 
+  // XXX needs to be virtual so that nsBlockFrame can override it
+  virtual PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+                                        nsIFrame* aChild);
+
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
@@ -250,7 +254,6 @@ protected:
    *
    * @param   aChild child this child's next-in-flow
    */
-  PRBool  DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
 
  /**
   * Push aFromChild and its next siblings to the next-in-flow. Change the
