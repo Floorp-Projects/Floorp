@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "msgCore.h" // for pre-compiled headers...
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
