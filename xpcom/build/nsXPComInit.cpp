@@ -85,7 +85,6 @@
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsAppFileLocationProvider.h"
 #include "nsICategoryManager.h"
 #include "nsStringStream.h"
 
@@ -372,14 +371,10 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
             
         }
-        if (!appFileLocationProvider) {
-            appFileLocationProvider = new nsAppFileLocationProvider;
-            if (!appFileLocationProvider)
-                return NS_ERROR_OUT_OF_MEMORY;
+        if (appFileLocationProvider) {
+            rv = dirService->RegisterProvider(appFileLocationProvider);
+            if (NS_FAILED(rv)) return rv;
         }
-        rv = dirService->RegisterProvider(appFileLocationProvider);
-        if (NS_FAILED(rv)) return rv;
-        
         
         rv = compMgr->Init();
         if (NS_FAILED(rv))
