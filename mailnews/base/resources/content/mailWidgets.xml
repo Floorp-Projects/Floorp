@@ -863,7 +863,13 @@
          time = datePicker.value;
         else
          time = new Date();
-        datePicker.setAttribute("value",convertDateToString(time));
+        // do .value instead of .setAttribute("value", xxx);
+        // to work around for bug #179412
+        // (caused by bug #157210)
+        //
+        // the searchvalue widget has two textboxes
+        // one for text, one as a placeholder for a date / calendar widget
+        datePicker.value = convertDateToString(time);
 
         // initialize the address book picker
         this.initialize(document.getAnonymousNodes(this)[4], bundle);
