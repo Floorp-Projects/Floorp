@@ -69,6 +69,7 @@ LINK			= -ilink
 AR			= -ilib /noignorecase /nologo /Out:$(subst /,\\,$@)
 RANLIB 			= @echo RANLIB
 BSDECHO 		= @echo BSDECHO
+STRIP			= @echo STRIP
 NSINSTALL 		= nsinstall
 INSTALL			= $(NSINSTALL)
 MAKE_OBJDIR 		= if test ! -d $(OBJDIR); then mkdir $(OBJDIR); fi

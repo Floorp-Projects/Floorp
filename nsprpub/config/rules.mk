@@ -301,9 +301,6 @@ else
 	$(AR) $(OBJS) $(AR_EXTRA_ARGS)
 endif # USE_AUTOCONF
 endif
-ifdef BUILD_OPT
-	$(STRIP) $@
-endif
 	$(RANLIB) $@
 
 ifeq ($(OS_TARGET), WIN16)
