@@ -4728,6 +4728,14 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 {
   nsresult rv = NS_OK;
 
+  if(mParser) {
+    // make sure to unblock the parser before evaluating the script,
+    // we must unblock the parser even if loading the script failed or
+    // if the script was empty, if we don't, the parser will never be
+    // unblocked.
+    mParser->UnblockParser();
+  }
+
   if (stringLen) {
     nsAutoString characterSet;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
@@ -4840,10 +4848,6 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 
       if (NS_FAILED(rv))
         return rv;
-
-      if(mParser) {
-        mParser->UnblockParser(); // make sure to unblock the parser before evaluating the script
-      }
 
       rv = EvaluateScript(mUnicodeXferBuf, mScriptURI, 1,
                           mScriptLanguageVersion);
