@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.36 $ 
-# $Date: 2002/05/03 23:16:53 $ 
+# $Revision: 1.37 $ 
+# $Date: 2002/05/04 01:51:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.36 $ )[1];
+$VERSION = ( qw $Revision: 1.37 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -340,14 +340,14 @@ sub status_table_start {
 
 sub is_break_cell {
     my ($tree,$time,$last_treestate) = @_;
-    
-    
+
     $is_state_same = (
                       !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
                       ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
                       );
     
     $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
+
     $is_break_cell = ( !($is_state_same) || ($is_author_data) );
     
     return $is_break_cell;
@@ -374,6 +374,10 @@ sub status_table_row {
    return @outrow;
   }
     
+  if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+      $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
+  }
+
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
   # apply_db_updates().  It is possible that there are no treestates at
@@ -414,16 +418,9 @@ sub status_table_row {
 
   }
 
-  if (defined($DATABASE{$tree}{$next_time}{'treestate'})) {
-      $LAST_TREESTATE = $DATABASE{$tree}{$next_time}{'treestate'};
-  }
-
   # Do we need a multiline empty cell or do we have data?
 
-  if  (
-       ( $next_time < $row_times->[$row_index] ) ||
-       (!(defined($DATABASE{$tree}{$next_time}{'author'})))
-       ) {
+  if ( $next_time < $row_times->[$row_index] ) {
       
       # now convert the break time to a rowspan.
 
@@ -452,6 +449,8 @@ sub status_table_row {
 
       return @outrow;
   }
+
+  # ----Where VC Data gets renderd-----
 
   $NEXT_ROW{$tree} = $row_index + 1;
 
