@@ -44,10 +44,6 @@ extern char *sys_errlist[];
 extern int sys_nerr;
 #endif
 
-#if 0
-/* for XP_GetString() */
-#include <xpgetstr.h>
-#endif
 int XFE_CANT_MOVE_MAIL = 0;
 int XFE_CANT_GET_NEW_MAIL_LOCK_FILE_EXISTS = 0;
 int XFE_CANT_GET_NEW_MAIL_UNABLE_TO_CREATE_LOCK_FILE = 0;

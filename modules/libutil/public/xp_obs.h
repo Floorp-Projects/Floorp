@@ -23,12 +23,8 @@
 #ifndef _xp_observer_h_
 #define _xp_observer_h_
 
-#if 0
-#include "platform.h"
-#else
 #ifndef _platform_h_
 typedef int NS_Error;
-#endif
 #endif
 
 #include "prtypes.h"

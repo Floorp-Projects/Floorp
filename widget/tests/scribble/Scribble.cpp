@@ -50,7 +50,6 @@
 #include "nsIImageRequest.h"
 #include "nsIImageObserver.h"
 #include "nsIImageGroup.h"
-#include "net.h"
 
 ScribbleApp scribbleData;
 
