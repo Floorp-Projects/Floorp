@@ -270,13 +270,13 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 	if (dbFileSpec)
 	{
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-		nsIMsgDatabase *mailDB = nsnull;
+		nsCOMPtr<nsIMsgDatabase> mailDB;
 
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
 		nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), 
 														 (void **) getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			rv = mailDBFactory->Open((nsFileSpec&) *dbFileSpec, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+			rv = mailDBFactory->Open((nsFileSpec&) *dbFileSpec, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
 		if (mailDB) // did we get a db back?
 		{
 			mailDB->GetMsgHdrForKey(messageKey, getter_AddRefs(msgHdr));
