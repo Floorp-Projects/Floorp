@@ -1831,6 +1831,14 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
                           aContainingBlockHeight);
     }
   }
+  /* Check for blinking text. */
+  mBlinks = (parentReflowState && parentReflowState->mBlinks);
+  if (!mBlinks) {
+    const nsStyleTextReset* st;
+    frame->GetStyleData(eStyleStruct_TextReset,
+                        (const nsStyleStruct*&)st);
+    mBlinks = (st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK);
+  }
 }
 
 // Compute the box data for block and block-replaced elements in the
