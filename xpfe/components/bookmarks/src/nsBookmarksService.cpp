@@ -1033,6 +1033,12 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
         attrStart += sizeof(kOpenHeading)-1;
     }
 
+    // free up any allocated data in field table BEFORE processing
+    for (BookmarkField *field = fields; field->mName; ++field)
+    {
+        NS_IF_RELEASE(field->mValue);
+    }
+
     // loop over attributes
     while((attrStart < lineLen) && (aLine[attrStart] != '>'))
     {
@@ -1059,6 +1065,11 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
                     if (data.Length() > 0)
                     {
+                        // XXX Bug 58421 We should not ever hit this assertion
+                        NS_ASSERTION(!field->mValue, "Field already has a value");
+                        // but prevent a leak if we do hit it
+                        NS_IF_RELEASE(field->mValue);
+
                         nsresult rv = (*field->mParse)(field->mProperty, data, &field->mValue);
                         if (NS_FAILED(rv)) break;
                     }
@@ -1203,7 +1214,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 	}
     }
 
-    // free up any allocated data in field table
+    // free up any allocated data in field table AFTER processing
     for (BookmarkField *field = fields; field->mName; ++field)
     {
         NS_IF_RELEASE(field->mValue);
