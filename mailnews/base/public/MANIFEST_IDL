@@ -30,12 +30,7 @@ nsIMsgCopyService.idl
 nsIMsgCopyServiceListener.idl
 nsIMsgStatusFeedback.idl
 nsIMsgMailNewsUrl.idl
-<<<<<<< MANIFEST_IDL
-nsIMsgHdr.idl
-nsIMsgWindowData.idl
-=======
 nsIMsgWindow.idl
->>>>>>> 1.18
 nsIUrlListenerManager.idl
 nsIMsgProtocolInfo.idl
 nsIMsgRDFDataSource.idl
