@@ -348,7 +348,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
   }
 
   // account the spacing
-  aDesiredStretchSize.width += mCharOffset.x + nscoord( mRightSpace * em );
+  aDesiredStretchSize.width += nscoord( (mLeftSpace + mRightSpace) * em );
 
   // adjust the offsets of our children to leave the spacing
   if (0 < mCharOffset.x || 0 < mCharOffset.y) {

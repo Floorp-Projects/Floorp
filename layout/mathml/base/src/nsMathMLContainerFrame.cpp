@@ -250,9 +250,6 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
             aPresContext.ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
                                                       PR_FALSE, getter_AddRefs(newStyleContext));          
             if (newStyleContext && newStyleContext.get() != lastStyleContext) {
-              break;
-            }
-            else {
               // create a new frame and append it as sole child of the last created frame
               nsIFrame* newFrame = nsnull;
               NS_NewMathMLContainerFrame(&newFrame);
@@ -268,6 +265,9 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
               }
               lastStyleContext = newStyleContext;
               lastFrame = newFrame;    
+            }
+            else {
+              break;
             }
           }
           if (nsnull != firstFrame) { // at least one new frame was created
