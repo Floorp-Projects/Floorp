@@ -24,7 +24,7 @@
 
 
 //¥NETSCAPE: added this definition
-//#define QAP_BUILD
+#define QAP_BUILD
 
 // The internal name of the QA Partner 4.0 driver
 #define QAP_DRIVER_NAME     "\p.QAP40"
@@ -258,12 +258,12 @@ typedef struct scrollbarinfo
 class CQAPartnerTableMixin
 {
 public:
-					CQAPartnerTableMixin(LTableView *);
-			virtual	~CQAPartnerTableMixin();
+					CQAPartnerTableMixin(LTableView *inView) : mTableView(inView) { };
+			virtual	~CQAPartnerTableMixin() { };
 
 	virtual void	QapGetListInfo (PQAPLISTINFO pInfo) = 0;
 	virtual Ptr		QapAddCellToBuf(Ptr pBuf, Ptr pLimit, const STableCell& sTblCell) = 0;
-	virtual short	QapGetListContents(Ptr pBuf, short index);
+	virtual short	QapGetListContents(Ptr pBuf, short index) { return 0; };
 
 protected:
 	LTableView *	mTableView;
