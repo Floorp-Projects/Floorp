@@ -7,6 +7,7 @@
 
 <!ENTITY timeElapsed "Elapsed Time:">
 <!ENTITY timeLeft    "Time Left:">
+<!ENTITY progress    "Progress:">
 
 <!ENTITY dialogCancel.label "Cancel"> 
 
@@ -65,3 +66,7 @@
 
     #1 will be replaced by the percentage of the file that has been saved -->
 <!ENTITY percentMsg "#1&#037;">
+
+<!ENTITY keepProgressDialogUpMsg.label "Keep this window open after the download is complete.">
+<!ENTITY openFolder.label "Reveal Location">
+<!ENTITY open.label "Launch File">
