@@ -1491,7 +1491,11 @@ NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
     if (!locator) return NS_ERROR_FAILURE;
     
     rv = locator->ForgetProfileDir();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+	//temporary printf
+	printf("failed to forget the profile dir\n"); 
+	return rv;
+    }
 
 	/*
 	 * Need to load new profile prefs.
@@ -1507,7 +1511,11 @@ NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
 	NS_WITH_SERVICE(nsIBookmarksService, bookmarks, kBookmarksCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 	rv = bookmarks->ReadBookmarks();
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) {
+		//temporary printf
+		printf("failed to read bookmarks\n");
+		return rv;
+	}
 
     rv = CloseRegistry();
     if (NS_FAILED(rv)) return rv;
