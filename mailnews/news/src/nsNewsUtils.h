@@ -25,6 +25,9 @@
 static const char kNewsRootURI[] = "news:/";
 static const char kNewsMessageRootURI[] = "news_message:/";
 
+#define kNewsRootURILen 6
+#define kNewsMessageRootURILen 14
+
 extern nsresult
 nsGetNewsRoot(const char* hostname, nsFileSpec &result);
 
