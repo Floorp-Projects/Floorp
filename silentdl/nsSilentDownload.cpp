@@ -660,7 +660,7 @@ nsSilentDownloadTask::LoadScript(void)
             if (rv == NS_OK)
             {
                 rv = mWindow->GetWebShell(mWebShell);
-                mWebShell->LoadURL(mScript);
+                mWebShell->LoadURL(mScript.GetUnicode());
             }
             else
             {
@@ -676,7 +676,7 @@ nsSilentDownloadTask::LoadScript(void)
     {
         if (mWebShell)
         {
-            mWebShell->LoadURL(mScript);
+            mWebShell->LoadURL(mScript.GetUnicode());
         }
         else
         {
