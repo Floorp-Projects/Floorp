@@ -44,6 +44,7 @@
 #endif
 
 #include "plstr.h"
+#include "prenv.h"
 
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
@@ -114,7 +115,32 @@ void nsSpecialFileSpec::operator = (Type aType)
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
         case App_UserProfileDirectory50:
-            NS_NOTYETIMPLEMENTED("Write me!");
+            {
+                // The app profile directory comes from the profile manager.
+                // Once the profile manager knows which profile needs to be accessed
+                // it needs to tell us "somehow" about the directory. I think we can
+                // provide a static method for that communication.
+
+                // And if the profile manager doesn't return anything, we got to fallback
+                // to these. For now I am using these until the profile stuff picks up and
+                // we know how to get the absolute fallback for all platforms
+                // UNIX	: ~/.mozilla
+                // WIN	: ./profile
+                // MAC	: ./profile
+#ifdef XP_UNIX
+                // ~/.mozilla
+                *this = PR_GetEnv("HOME");
+                *this += ".mozilla";
+#elif defined(XP_MAC)
+                // XXX Fix Me. For now use ./profile
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrnetWorkingDirectory);
+                *this += "profile";
+#else /* XP_PC */
+                // XXX Fix Me. For now use ./profile
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrnetWorkingDirectory);
+                *this += "profile";
+#endif
+            }
             break;    
         
         case App_PreferencesFile30:
