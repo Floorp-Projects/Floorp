@@ -66,23 +66,6 @@ public:
                              nsIRDFResource* aResource,
                              nsIContent** aResult);
 
-    NS_IMETHOD SetAllAttributesOnElement(nsIContent *aParentNode, nsIContent *aNode, nsIRDFResource *res);
-    NS_IMETHOD FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
-    NS_IMETHOD IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
-    NS_IMETHOD PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIContent *aTemplate,
-                    nsIContent *treeCell, nsIContent* aElement, PRBool isUnique,
-                    nsIRDFResource* aProperty, nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
-    NS_IMETHOD CreateWidgetItem(nsIContent* aElement, nsIRDFResource* aProperty,
-				nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
-
-    enum eUpdateAction { eSet, eClear };
-
-    NS_IMETHOD UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
-                                         nsIContent* aTreeItemElement,
-                                         eUpdateAction aAction,
-                                         nsIRDFResource* aProperty,
-                                         nsIRDFNode* aValue);
-
     // nsIRDFObserver interface
     NS_IMETHOD OnAssert(nsIRDFResource* aSource,
                         nsIRDFResource* aProperty,
@@ -109,6 +92,46 @@ public:
     NS_DECL_IDOMELEMENTOBSERVER
 
     // Implementation methods
+    nsresult
+    SetAllAttributesOnElement(nsIContent *aParentNode, nsIContent *aNode, nsIRDFResource *res);
+    
+    nsresult
+    FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
+
+    nsresult
+    IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
+
+    PRBool
+    IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
+
+    nsresult
+    BuildContentFromTemplate(nsIContent *aTemplateNode,
+                             nsIContent *aRealNode,
+                             PRBool aIsUnique,
+                             nsIRDFResource* aValue,
+                             PRInt32 aNaturalOrderPos);
+
+    nsresult
+    CreateWidgetItem(nsIContent* aElement,
+                     nsIRDFResource* aProperty,
+                     nsIRDFResource* aValue,
+                     PRInt32 aNaturalOrderPos);
+
+    enum eUpdateAction { eSet, eClear };
+
+    nsresult
+    SynchronizeUsingTemplate(nsIContent *aTemplateNode,
+                             nsIContent* aRealNode,
+                             eUpdateAction aAction,
+                             nsIRDFResource* aProperty,
+                             nsIRDFNode* aValue);
+
+    nsresult
+    CreateContainerContents(nsIContent* aElement, nsIRDFResource* aResource);
+
+    nsresult
+    CreateTemplateContents(nsIContent* aElement, const nsString& aTemplateID);
+
     nsresult
     EnsureElementHasGenericChild(nsIContent* aParent,
                                  PRInt32 aNameSpaceID,
@@ -204,9 +227,11 @@ protected:
     static nsINameSpaceManager* gNameSpaceManager;
 
     static nsIAtom* kContainerAtom;
+    static nsIAtom* kLazyContentAtom;
     static nsIAtom* kIsContainerAtom;
     static nsIAtom* kXULContentsGeneratedAtom;
-    static nsIAtom* kItemContentsGeneratedAtom;
+    static nsIAtom* kTemplateContentsGeneratedAtom;
+    static nsIAtom* kContainerContentsGeneratedAtom;
     static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kOpenAtom;
@@ -220,7 +245,6 @@ protected:
     static nsIAtom* kRootcontainmentAtom;
     static nsIAtom* kTemplateAtom;
     static nsIAtom* kRuleAtom;
-    static nsIAtom* kTreeContentsGeneratedAtom;
     static nsIAtom* kTextAtom;
     static nsIAtom* kPropertyAtom;
     static nsIAtom* kInstanceOfAtom;

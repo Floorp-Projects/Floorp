@@ -172,7 +172,6 @@ private:
     static nsIAtom	*kTreeColAtom;
     static nsIAtom	*kTreeItemAtom;
     static nsIAtom	*kResourceAtom;
-    static nsIAtom	*kTreeContentsGeneratedAtom;
     static nsIAtom	*kNameAtom;
     static nsIAtom	*kSortAtom;
     static nsIAtom	*kSortDirectionAtom;
@@ -234,7 +233,6 @@ nsIAtom* XULSortServiceImpl::kTreeChildrenAtom;
 nsIAtom* XULSortServiceImpl::kTreeColAtom;
 nsIAtom* XULSortServiceImpl::kTreeItemAtom;
 nsIAtom* XULSortServiceImpl::kResourceAtom;
-nsIAtom* XULSortServiceImpl::kTreeContentsGeneratedAtom;
 nsIAtom* XULSortServiceImpl::kNameAtom;
 nsIAtom* XULSortServiceImpl::kSortAtom;
 nsIAtom* XULSortServiceImpl::kSortDirectionAtom;
@@ -263,7 +261,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kTreeColAtom         		= NS_NewAtom("treecol");
 		kTreeItemAtom        		= NS_NewAtom("treeitem");
 		kResourceAtom        		= NS_NewAtom("resource");
-		kTreeContentsGeneratedAtom	= NS_NewAtom("treecontentsgenerated");
 		kNameAtom			= NS_NewAtom("Name");
 		kSortAtom			= NS_NewAtom("sortActive");
 		kSortDirectionAtom		= NS_NewAtom("sortDirection");
@@ -358,7 +355,6 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_RELEASE(kTreeColAtom);
 	        NS_RELEASE(kTreeItemAtom);
 	        NS_RELEASE(kResourceAtom);
-	        NS_RELEASE(kTreeContentsGeneratedAtom);
 	        NS_RELEASE(kNameAtom);
 	        NS_RELEASE(kSortAtom);
 	        NS_RELEASE(kSortDirectionAtom);
@@ -1121,14 +1117,6 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			}
 
 			RemoveAllChildren(container);
-			if (NS_FAILED(rv = container->UnsetAttribute(kNameSpaceID_None,
-			                        kTreeContentsGeneratedAtom,
-			                        PR_FALSE)))
-			{
-#ifdef	DEBUG
-				printf("unable to clear contents-generated attribute\n");
-#endif
-			}
 			
 			// insert sorted children			
 			numChildren = 0;
@@ -1450,15 +1438,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
-
-	if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
-		kTreeContentsGeneratedAtom,PR_FALSE)))
-	{
-	}
-	if (NS_SUCCEEDED(rv = treeParent->UnsetAttribute(kNameSpaceID_None,
-		kTreeContentsGeneratedAtom,PR_FALSE)))
-	{
-	}
 
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
 	return(NS_OK);
