@@ -238,7 +238,6 @@ typedef struct _Pop3ConData {
     PRBool only_check_for_new_mail;
   	nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
     
-    PRBool password_failed;     /* flag for password querying */
     void *msg_closure;
     PRInt32	bytes_received_in_message; 
     PRInt32	total_folder_size;
@@ -278,6 +277,13 @@ typedef struct _Pop3ConData {
     PRBool get_url;
     PRBool seenFromHeader;
 } Pop3ConData;
+
+// State Flags (Note, I use the word state in terms of storing 
+// state information about the connection (authentication, have we sent
+// commands, etc. I do not intend it to refer to protocol state)
+#define POP3_PAUSE_FOR_READ			0x00000001  /* should we pause for the next read */
+#define POP3_PASSWORD_FAILED		0x00000002
+
 
 class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer
 {

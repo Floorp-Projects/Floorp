@@ -423,7 +423,7 @@ const char * nsPop3Protocol::GetPassword()
 	//	   for the password this session by checking with the server...If it has a pwd use it!!!
 	// (3) otherwise prompt the user for a password and then remember that password in the server
 
-	if (m_password.IsEmpty())
+	if (m_password.IsEmpty() || TestFlag(POP3_PASSWORD_FAILED))
 	{
 		nsCOMPtr<nsIMsgIncomingServer> server;
 		nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_nsIPop3URL);
@@ -432,12 +432,15 @@ const char * nsPop3Protocol::GetPassword()
 		server->GetPassword(getter_Copies(serverPassword));
 
 		// (2) see if the server already knows the password and use it if does...
-		if (serverPassword && nsCRT::strlen(serverPassword) > 0) 
+		// side note....if the password failed sign is present then we should ignore the server password
+		// and prompt the user for it again.
+		if (!TestFlag(POP3_PASSWORD_FAILED) && serverPassword && nsCRT::strlen(serverPassword) > 0) 
 			m_password = serverPassword;
 		else
 		{	
 			// (3) prompt the user for the password
 			// we don't have one so ask the user for it.
+			ClearFlag(POP3_PASSWORD_FAILED);
 			nsresult rv = NS_OK;
 			NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 			if (NS_SUCCEEDED(rv))
@@ -869,7 +872,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
         if (m_pop3ConData->only_check_for_new_mail)
             return MK_POP3_PASSWORD_UNDEFINED;
 
-        m_pop3ConData->password_failed = PR_TRUE;
+		SetFlag(POP3_PASSWORD_FAILED);
         m_pop3ConData->next_state = POP3_ERROR_DONE;	/* close */
         m_pop3ConData->pause_for_read = PR_FALSE;		   /* try again right away */
         m_pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED | POP3_XSENDER_UNDEFINED |
@@ -2344,7 +2347,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 
 #if 0            
             PR_ASSERT(net_pop3_username);
-            if (m_pop3ConData->password_failed)
+            if (TestFlag(POP3_PASSWORD_FAILED))
                 fmt2 =
                     XP_GetString( XP_THE_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC );
             else if (!net_pop3_password)
@@ -2385,12 +2388,12 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 password = SI_PromptPassword
                     (ce->window_id,
                      prompt, usernameAndHost,
-                     PR_FALSE, !m_pop3ConData->password_failed);
-                m_pop3ConData->password_failed = PR_FALSE;
+                     PR_FALSE, !TestFlag(POP3_PASSWORD_FAILED));
+				ClearFlag(POP3_PASSWORD_FAILED);
                 PR_Free(usernameAndHost);
 #else
                 PR_FREEIF (host);
-                m_pop3ConData->password_failed = PR_FALSE;
+                ClearFlag(POP3_PASSWORD_FAILED);
                 password = FE_PromptPassword
                     (ce->window_id, prompt);
 #endif
@@ -2699,7 +2702,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 m_pop3ConData->msg_closure = NULL;
                 m_nsIPop3Sink->AbortMailDelivery();
             }
-            
+
+           
             if(m_pop3ConData->msg_del_started)
             {
 #if 0
@@ -2717,7 +2721,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                     }
                 }
 #endif
-                PR_ASSERT (!m_pop3ConData->password_failed);
+                PR_ASSERT (!TestFlag(POP3_PASSWORD_FAILED));
                 m_nsIPop3Sink->AbortMailDelivery();
 #if 0
                 if (context)
@@ -2725,11 +2729,18 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 PR_FREEIF(statusString);
 #endif 
             }
-            
-            if (m_pop3ConData->password_failed)
+
+            			if (TestFlag(POP3_PASSWORD_FAILED))
+
+            if (TestFlag(POP3_PASSWORD_FAILED))
+			{
                 /* We got here because the password was wrong, so go
                    read a new one and re-open the connection. */
                 m_pop3ConData->next_state = POP3_READ_PASSWORD;
+				m_pop3ConData->command_succeeded = PR_TRUE;
+				status = 0;
+				break;
+			}
             else
                 /* Else we got a "real" error, so finish up. */
                 m_pop3ConData->next_state = POP3_FREE;       
