@@ -70,10 +70,12 @@ if (!param()) {
                                      -size=>20))));
     print submit(-name=>"Log in");
     print hr();
-    print p("If you do not yet have a mozilla.org account, or you have one " .
-            "but have forgotten your password, please fill in your e-mail " .
-            "address above, and click <nobr>here: " .
-            submit({name=>"mailMePassword"}, "Email me a password") . "</nobr>");
+    print p("If you think you should be able to use this system, but you haven't been issued a login, please send mail to " .
+            a({href=>"mailto:terry\@mozilla.org"}, "terry") . ".");
+#     print p("If you do not yet have a mozilla.org account, or you have one " .
+#             "but have forgotten your password, please fill in your e-mail " .
+#             "address above, and click <nobr>here: " .
+#             submit({name=>"mailMePassword"}, "Email me a password") . "</nobr>");
     exit;
 }
 
