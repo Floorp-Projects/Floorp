@@ -31,6 +31,7 @@
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsHTMLParts.h"
+#include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMDocumentFragment.h"
@@ -114,6 +115,7 @@ public:
                          nsIContent* aContent);
 
   nsresult AddText(const nsString& aString);
+  nsresult AddTextToContent(nsIHTMLContent* aContent,const nsString& aText);
   nsresult FlushText();
 
   void ProcessBaseTag(nsIHTMLContent* aContent);
@@ -314,7 +316,32 @@ nsHTMLFragmentContentSink::EndContext(PRInt32 aID)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
 {
-  return NS_OK;
+  nsresult result=NS_OK;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  result = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull, 
+                                         kNameSpaceID_None,
+                                         *getter_AddRefs(nodeInfo));
+  if(NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIHTMLContent> content=nsnull;
+    result = NS_NewHTMLTitleElement(getter_AddRefs(content), nodeInfo);
+
+    if (NS_SUCCEEDED(result)) {
+      nsIContent *parent = GetCurrentContent();
+  
+      if (nsnull == parent) {
+        parent = mRoot;
+      }
+      
+      result=parent->AppendChildTo(content, PR_FALSE);
+      
+      if (NS_SUCCEEDED(result)) {       
+        result=AddTextToContent(content,aValue);
+      }
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -333,13 +360,13 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
 {
   // XXX Not likely to get a head in the fragment
-  return OpenContainer(aNode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::CloseHead(const nsIParserNode& aNode)
 {
-  return CloseContainer(aNode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -566,7 +593,16 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
             }
           }
 
-          if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
+          if(nodeType == eHTMLTag_plaintext || 
+             nodeType == eHTMLTag_script    ||
+             nodeType == eHTMLTag_style     ||
+             nodeType == eHTMLTag_textarea  ||
+             nodeType == eHTMLTag_xmp) {
+            
+            // Create a text node holding the content
+            result=AddTextToContent(content,aNode.GetSkippedContent());
+          }
+          else if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
               || nodeType == eHTMLTag_input)    // elements with 'SRC='
               AddBaseTagInfo(content);
           else if (nodeType == eHTMLTag_base)
@@ -742,6 +778,28 @@ nsHTMLFragmentContentSink::AddText(const nsString& aString)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsString& aText) {
+  NS_ASSERTION(aContent !=nsnull, "can't add text w/o a content");
+
+  nsresult result=NS_OK;
+  
+  if(aContent) {
+    if (aText.Length() > 0) {
+      nsCOMPtr<nsIContent> text;
+      result = NS_NewTextNode(getter_AddRefs(text));
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDOMText> tc=do_QueryInterface(text,&result);
+        if (NS_SUCCEEDED(result)) {
+          tc->SetData(aText);
+        }
+        result=aContent->AppendChildTo(text, PR_FALSE);
+      }
+    }
+  }
+  return result;
 }
 
 nsresult
