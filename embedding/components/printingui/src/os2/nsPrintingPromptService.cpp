@@ -55,7 +55,7 @@
 #include "nsIPrintOptions.h"
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
-static const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
+static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-service;1";
 
 static const char *kPrintDialogURL         = "chrome://global/content/printdialog.xul";
 static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";
@@ -200,7 +200,7 @@ NS_IMETHODIMP
 nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const PRUnichar *printerName, nsIPrintSettings *printSettings)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv)) {
     PRBool displayed;
     rv = printService->DisplayJobProperties(printerName, printSettings, &displayed);
