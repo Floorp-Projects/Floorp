@@ -52,6 +52,9 @@ which is an event with display information added to it is included here as well.
 #include "nsIAbCard.h"
 #include "nsIMsgAttachment.h"
 #endif
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIServiceManager.h"
 
 #define strcasecmp strcmp
 
@@ -301,6 +304,26 @@ oeICalEventImpl::oeICalEventImpl()
     NS_NewISupportsArray(getter_AddRefs(m_attachments));
     NS_NewISupportsArray(getter_AddRefs(m_contacts));
     m_calendar=nsnull;
+
+    //Some defaults may have been changed in the prefs
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if ( NS_SUCCEEDED(rv) && prefBranch ) {
+        nsXPIDLCString tmpstr;
+        PRInt32 tmpint;
+        rv = prefBranch->GetIntPref("calendar.alarms.onforevents", &tmpint);
+        if (NS_SUCCEEDED(rv))
+            m_hasalarm = tmpint;
+        rv = prefBranch->GetIntPref("calendar.alarms.eventalarmlen", &tmpint);
+        if (NS_SUCCEEDED(rv))
+            m_alarmlength = tmpint;
+        rv = prefBranch->GetCharPref("calendar.alarms.eventalarmunit", getter_Copies(tmpstr));
+        if (NS_SUCCEEDED(rv))
+            SetAlarmUnits( PromiseFlatCString( tmpstr ).get() );
+        rv = prefBranch->GetCharPref("calendar.alarms.emailaddress", getter_Copies(tmpstr));
+        if (NS_SUCCEEDED(rv)) {
+            SetAlarmEmailAddress( PromiseFlatCString( tmpstr ).get() );
+        }
+    }
 }
 
 oeICalEventImpl::~oeICalEventImpl()

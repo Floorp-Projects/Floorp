@@ -47,6 +47,9 @@ of the event object which adds fields exclusive to tasks.
 #include "oeICalTodoImpl.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIServiceManager.h"
 
 #define strcasecmp strcmp
 
@@ -95,6 +98,22 @@ oeICalTodoImpl::oeICalTodoImpl()
         m_completed = nsnull;
 	}
     m_percent = 0;
+
+    //Some defaults are different for todos, apply them
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if ( NS_SUCCEEDED(rv) && prefBranch ) {
+        nsXPIDLCString tmpstr;
+        PRInt32 tmpint;
+        rv = prefBranch->GetIntPref("calendar.alarms.onfortodos", &tmpint);
+        if (NS_SUCCEEDED(rv))
+            SetAlarm( tmpint );
+        rv = prefBranch->GetIntPref("calendar.alarms.todoalarmlen", &tmpint);
+        if (NS_SUCCEEDED(rv))
+            SetAlarmLength( tmpint );
+        rv = prefBranch->GetCharPref("calendar.alarms.todoalarmunit", getter_Copies(tmpstr));
+        if (NS_SUCCEEDED(rv))
+            SetAlarmUnits( PromiseFlatCString( tmpstr ).get() );
+    }
 }
 
 oeICalTodoImpl::~oeICalTodoImpl()

@@ -192,19 +192,10 @@ function loadCalendarEventDialog()
    
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
-   if( "new" == args.mode ) {
-       gEvent.alarm = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.onfortodos", 0 );
-       gEvent.alarmLength = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.todoalarmlen", DEFAULT_ALARM_LENGTH );
-       gEvent.alarmUnits = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.todoalarmunit", "minutes" );
-   }
-
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
    setFieldValue( "alarm-trigger-relation", gEvent.getParameter( "ICAL_RELATED_PARAMETER" ) );
-
-   if( gEvent.alarmEmailAddress == "" && "new" == args.mode )
-      gEvent.alarmEmailAddress = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.emailaddress", "" );
 
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
    {

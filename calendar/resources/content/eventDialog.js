@@ -196,24 +196,14 @@ function loadCalendarEventDialog()
          setFieldValue( "status-field", "ICAL_STATUS_CANCELLED" );
       break;
    }
-   if( "edit" == args.mode )
-      setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
+   setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
 
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
-   if( "new" == args.mode ) {
-       gEvent.alarm = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.onforevents", 0 );
-       gEvent.alarmLength = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.eventalarmlen", DEFAULT_ALARM_LENGTH );
-       gEvent.alarmUnits = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.eventalarmunit", "minutes" );
-   }
-
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
    setFieldValue( "alarm-trigger-relation", gEvent.getParameter( "ICAL_RELATED_PARAMETER" ) );
-
-   if( gEvent.alarmEmailAddress == "" && "new" == args.mode )
-      gEvent.alarmEmailAddress = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.emailaddress", "" );
 
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
    {
