@@ -74,7 +74,7 @@ nsLDAPProtocolHandler::GetScheme(char **result)
 NS_IMETHODIMP
 nsLDAPProtocolHandler::GetDefaultPort(PRInt32 *result)
 {
-  *result = (PRInt32)389;
+  *result = 389;
   return NS_OK;
 }
 
@@ -97,7 +97,7 @@ nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // validates the URI on SetSpec().  alternatively, we could call 
     // ldap_url_parse and friends here.
     //
-    rv = url->SetSpec((char*)aSpec);
+    rv = url->SetSpec(aSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // this is a getter, so we need to AddRef on the way out
@@ -115,7 +115,8 @@ nsLDAPProtocolHandler::NewChannel(nsIURI* uri,
   nsresult rv;
   nsLDAPChannel *channel;
 
-  rv = nsLDAPChannel::Create(nsnull, NS_GET_IID(nsIChannel),(void **)&channel);
+  rv = nsLDAPChannel::Create(nsnull, NS_GET_IID(nsIChannel),
+			     NS_REINTERPRET_CAST(void **, &channel));
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = channel->Init(uri);
