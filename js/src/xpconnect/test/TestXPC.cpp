@@ -1,3 +1,24 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/* Tests for XPConnect - hacked together while deveolpment continues. */
+
+#include <stdio.h>
 
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
@@ -6,135 +27,26 @@
 #include "nsIXPCScriptable.h"
 #include "nsIServiceManager.h"
 #include "jsapi.h"
-#include <stdio.h>
 #include "xpclog.h"
 
-
-// XXX this should not be necessary, but the nsIAllocator service is not being 
-// started right now.
-#include "nsAllocator.h"
-#include "nsRepository.h"
-
-/***************************************************************************/
-/***************************************************************************/
-// copying in the contents of nsAllocator.cpp as a test...
+#include "nsIAllocator.h"
 
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
-nsAllocator::nsAllocator(nsISupports* outer)
-{
-    NS_INIT_AGGREGATED(outer);
-}
-
-nsAllocator::~nsAllocator(void)
-{
-}
-
-NS_IMPL_AGGREGATED(nsAllocator);
-
-NS_METHOD
-nsAllocator::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
-{
-    if (NULL == aInstancePtr) {                                            
-        return NS_ERROR_NULL_POINTER;                                        
-    }                                                                      
-    if (aIID.Equals(kIAllocatorIID) || 
-        aIID.Equals(nsISupports::IID())) {
-        *aInstancePtr = (void*) this; 
-        AddRef(); 
-        return NS_OK; 
-    } 
-    return NS_NOINTERFACE;
-}
-
-NS_METHOD
-nsAllocator::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
-{
-    if (outer && !aIID.Equals(nsISupports::IID()))
-        return NS_NOINTERFACE;   // XXX right error?
-    nsAllocator* mm = new nsAllocator(outer);
-    if (mm == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    mm->AddRef();
-    if (aIID.Equals(nsISupports::IID()))
-        *aInstancePtr = mm->GetInner();
-    else
-        *aInstancePtr = mm;
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-NS_METHOD_(void*)
-nsAllocator::Alloc(PRUint32 size)
-{
-    return PR_Malloc(size);
-}
-
-NS_METHOD_(void*)
-nsAllocator::Realloc(void* ptr, PRUint32 size)
-{
-    return PR_Realloc(ptr, size);
-}
-
-NS_METHOD
-nsAllocator::Free(void* ptr)
-{
-    PR_Free(ptr);
-    return NS_OK;
-}
-
-NS_METHOD
-nsAllocator::HeapMinimize(void)
-{
+#ifdef XP_PC
+#define XPCOM_DLL  "xpcom32.dll"
+#else
 #ifdef XP_MAC
-    // This used to live in the memory allocators no Mac, but does no more
-    // Needs to be hooked up in the new world.
-//    CallCacheFlushers(0x7fffffff);
+#define XPCOM_DLL  "XPCOM_DLL"
+#else
+#define XPCOM_DLL  "libxpcom.so"
 #endif
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-nsAllocatorFactory::nsAllocatorFactory(void)
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-nsAllocatorFactory::~nsAllocatorFactory(void)
-{
-}
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsAllocatorFactory, kIFactoryIID);
-
-NS_METHOD
-nsAllocatorFactory::CreateInstance(nsISupports *aOuter,
-                                   REFNSIID aIID,
-                                   void **aResult)
-{
-    return nsAllocator::Create(aOuter, aIID, aResult);
-}
-
-NS_METHOD
-nsAllocatorFactory::LockFactory(PRBool aLock)
-{
-    return NS_OK;       // XXX what?
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/***************************************************************************/
-/***************************************************************************/
+#endif
 
 static void RegAllocator()
 {
-    static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-    nsRepository::RegisterFactory(kAllocatorCID, NULL, NULL,
-                                  (nsIFactory*)new nsAllocatorFactory(),
-                                  PR_FALSE);
+    nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 }    
 
 
