@@ -4027,6 +4027,7 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
 static inline PRBool
 IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame)
 {
+  NS_PRECONDITION(aFrame, "null frame pointer");
   nsFrameState  state;
   PRBool        result = PR_FALSE;
 
@@ -4375,7 +4376,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             nsIFrame* firstChild;
             parentFrame->FirstChild(nsnull, &firstChild);
 
-            if (IsGeneratedContentFor(aContainer, firstChild)) {
+            if (firstChild && IsGeneratedContentFor(aContainer, firstChild)) {
               // Insert the new frames after the :before pseudo-element
               prevSibling = firstChild;
             }
