@@ -48,10 +48,10 @@ nsSyncStreamListener::~nsSyncStreamListener()
     NS_IF_RELEASE(mOutputStream);
 }
 
-NS_IMPL_ISUPPORTS3(nsSyncStreamListener, 
-                   nsISyncStreamListener,
-                   nsIStreamListener,
-                   nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSyncStreamListener, 
+                              nsISyncStreamListener,
+                              nsIStreamListener,
+                              nsIStreamObserver)
 
 NS_IMETHODIMP 
 nsSyncStreamListener::OnStartRequest(nsIChannel* channel, nsISupports* context)
