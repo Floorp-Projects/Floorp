@@ -39,6 +39,14 @@
 
 #include "StdAfx.h"
 
+#include "npapi.h"
+
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMLocation.h"
+
 #include "XPCBrowser.h"
 
 IEBrowser::IEBrowser()
@@ -47,6 +55,33 @@ IEBrowser::IEBrowser()
 
 IEBrowser::~IEBrowser()
 {
+}
+
+HRESULT IEBrowser::Init(PluginInstanceData *pData)
+{
+    mData = pData;
+
+    // Get the location URL
+    nsCOMPtr<nsIDOMWindow> window;
+    NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &window);
+    if (window)
+    {
+        nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
+        if (windowInternal)
+        {
+            nsCOMPtr<nsIDOMLocation> location;
+            nsAutoString href;
+            windowInternal->GetLocation(getter_AddRefs(location));
+            if (location &&
+                NS_SUCCEEDED(location->GetHref(href)))
+            {
+                const PRUnichar *s = href.get();
+                mLocationURL.Attach(::SysAllocString(s));
+            }
+        }
+    }
+    
+    return S_OK;
 }
 
 // IWebBrowser
@@ -190,7 +225,8 @@ HRESULT STDMETHODCALLTYPE IEBrowser::get_LocationName(
 HRESULT STDMETHODCALLTYPE IEBrowser::get_LocationURL(
     BSTR *LocationURL)
 {
-    return E_NOTIMPL;
+    *LocationURL = mLocationURL.Copy();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE IEBrowser::get_Busy(
@@ -235,8 +271,10 @@ HRESULT STDMETHODCALLTYPE IEBrowser::get_Name(
 HRESULT STDMETHODCALLTYPE IEBrowser::get_HWND(
     long __RPC_FAR *pHWND)
 {
-    // TODO
-    return E_NOTIMPL;
+    HWND hwnd = NULL;
+    NPN_GetValue(mData->pPluginInstance, NPNVnetscapeWindow, &hwnd);
+    *((HWND *)pHWND) = hwnd;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE IEBrowser::get_FullName(

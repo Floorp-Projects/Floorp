@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,6 +57,7 @@
 #define USE_PLUGIN
 
 // ATL headers
+#define _ATL_DEBUG_QI
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
 //something, but do not change the name of _Module

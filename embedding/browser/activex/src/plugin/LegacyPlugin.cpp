@@ -43,7 +43,6 @@
 #include "npapi.h"
 
 #include "nsISupports.h"
-#include "nsString.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 #include "XPConnect.h"
@@ -54,6 +53,163 @@
 #endif
 
 #include "LegacyPlugin.h"
+
+
+///////////////////////////////////////////////////////////////////////////////
+// These are constants to control certain behaviours
+
+// Flag determines if only controls marked safe for scripting will be instantiated
+const BOOL kSafeForScriptingControlsOnly = FALSE;
+// Flag determines if controls should be downloaded and installed if there is a
+// codebase specified
+const BOOL kDownloadControlsIfMissing = TRUE;
+// Flag determines whether the plugin will complain to the user if a page
+// contains a control it cannot load
+const BOOL kDisplayErrorMessages = FALSE;
+// Registry keys containing lists of controls that the plugin explicitly does
+// or does not support.
+const TCHAR *kControlsToAllowKey = _T("Software\\Mozilla\\ActiveX\\Whitelist\\CLSID");
+const TCHAR *kControlsToDenyKey = _T("Software\\Mozilla\\ActiveX\\Blacklist\\CLSID");
+
+
+///////////////////////////////////////////////////////////////////////////////
+// CInstallControlProgress
+
+class CInstallControlProgress :
+    public CComObjectRootEx<CComSingleThreadModel>,
+    public IBindStatusCallback,
+    public IWindowForBindingUI
+{
+public:
+    CInstallControlProgress()
+    {
+    }
+
+    BOOL mBindingInProgress;
+    HRESULT mResult;
+    NPP mNPP;
+
+protected:
+    virtual ~CInstallControlProgress()
+    {
+    }
+public:
+BEGIN_COM_MAP(CInstallControlProgress)
+    COM_INTERFACE_ENTRY(IBindStatusCallback)
+    COM_INTERFACE_ENTRY(IWindowForBindingUI)
+END_COM_MAP()
+
+// IBindStatusCallback
+    HRESULT STDMETHODCALLTYPE OnStartBinding(DWORD dwReserved, 
+                                            IBinding __RPC_FAR *pib)
+    {
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE GetPriority(LONG __RPC_FAR *pnPriority)
+    {
+        return S_OK;
+    }
+        
+    HRESULT STDMETHODCALLTYPE OnLowResource(DWORD reserved)
+    {
+        return S_OK;
+    }
+        
+    HRESULT STDMETHODCALLTYPE OnProgress(ULONG ulProgress, 
+                                         ULONG ulProgressMax, 
+                                         ULONG ulStatusCode, 
+                                         LPCWSTR szStatusText)
+    {
+        switch (ulStatusCode)
+        {
+        case BINDSTATUS_BEGINDOWNLOADDATA:
+        case BINDSTATUS_DOWNLOADINGDATA:
+        case BINDSTATUS_ENDDOWNLOADDATA:
+            {
+                char szMsg[100];
+                _snprintf(szMsg, sizeof(szMsg) - 1, "Downloading control (%lu of %lu)", ulProgress, ulProgressMax);
+                szMsg[sizeof(szMsg) - 1] = '\0';
+                NPN_Status(mNPP, szMsg);
+            }
+            break;
+        case BINDSTATUS_FINDINGRESOURCE:
+        case BINDSTATUS_CONNECTING:
+        case BINDSTATUS_REDIRECTING:
+        case BINDSTATUS_BEGINDOWNLOADCOMPONENTS:
+        case BINDSTATUS_INSTALLINGCOMPONENTS:
+        case BINDSTATUS_ENDDOWNLOADCOMPONENTS:
+        case BINDSTATUS_USINGCACHEDCOPY:
+        case BINDSTATUS_SENDINGREQUEST:
+        case BINDSTATUS_CLASSIDAVAILABLE:
+        case BINDSTATUS_MIMETYPEAVAILABLE:
+        case BINDSTATUS_CACHEFILENAMEAVAILABLE:
+        case BINDSTATUS_BEGINSYNCOPERATION:
+        case BINDSTATUS_ENDSYNCOPERATION:
+        case BINDSTATUS_BEGINUPLOADDATA:
+        case BINDSTATUS_UPLOADINGDATA:
+        case BINDSTATUS_ENDUPLOADDATA:
+        case BINDSTATUS_PROTOCOLCLASSID:
+        case BINDSTATUS_ENCODING:
+        case BINDSTATUS_CLASSINSTALLLOCATION:
+        case BINDSTATUS_DECODING:
+        case BINDSTATUS_LOADINGMIMEHANDLER:
+        default:
+            /* do nothing */
+            break;
+        }
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE OnStopBinding(HRESULT hresult, LPCWSTR szError)
+    {
+        mBindingInProgress = FALSE;
+        mResult = hresult;
+        NPN_Status(mNPP, "");
+        return S_OK;
+    }
+        
+    HRESULT STDMETHODCALLTYPE GetBindInfo(DWORD __RPC_FAR *pgrfBINDF, 
+                                                        BINDINFO __RPC_FAR *pbindInfo)
+    {
+        *pgrfBINDF = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE |
+                    BINDF_GETNEWESTVERSION | BINDF_NOWRITECACHE;
+        pbindInfo->cbSize = sizeof(BINDINFO);
+        pbindInfo->szExtraInfo = NULL;
+        memset(&pbindInfo->stgmedData, 0, sizeof(STGMEDIUM));
+        pbindInfo->grfBindInfoF = 0;
+        pbindInfo->dwBindVerb = 0;
+        pbindInfo->szCustomVerb = NULL;
+        return S_OK;
+    }
+        
+    HRESULT STDMETHODCALLTYPE OnDataAvailable(DWORD grfBSCF, 
+                                              DWORD dwSize, 
+                                              FORMATETC __RPC_FAR *pformatetc, 
+                                              STGMEDIUM __RPC_FAR *pstgmed)
+    {
+        return E_NOTIMPL;
+    }
+      
+    HRESULT STDMETHODCALLTYPE OnObjectAvailable(REFIID riid, 
+                                                IUnknown __RPC_FAR *punk)
+    {
+        return S_OK;
+    }
+
+// IWindowForBindingUI
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(
+        /* [in] */ REFGUID rguidReason,
+        /* [out] */ HWND *phwnd)
+    {
+        HWND hwnd = NULL;
+        NPN_GetValue(mNPP, NPNVnetscapeWindow, &hwnd);
+        *phwnd = hwnd;
+        return S_OK;
+    }
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 
 // NPP_Initialize
@@ -111,7 +267,8 @@ NPError NewScript(const char *pluginType,
     CActiveScriptSiteInstance::CreateInstance(&pScriptSite);
 
     // TODO support ActiveScript
-    MessageBox(NULL, _T("ActiveScript not supported yet!"), NULL, MB_OK);
+    if (kDisplayErrorMessages)
+        MessageBox(NULL, _T("ActiveScript not supported yet!"), NULL, MB_OK);
     return NPERR_GENERIC_ERROR;
 }
 
@@ -122,39 +279,90 @@ static BOOL WillHandleCLSID(const CLSID &clsid)
         return FALSE;
     }
 
-    const BOOL kRestrictControls = FALSE;
-    if (!kRestrictControls)
+    // Check the Internet Explorer list of vulnerable controls
+    CRegKey keyExplorer;
+    if (keyExplorer.Open(HKEY_LOCAL_MACHINE,
+        _T("SOFTWARE\\Microsoft\\Internet Explorer\\ActiveX Compatibility"), KEY_READ) == ERROR_SUCCESS)
     {
-        return TRUE;
+        LPOLESTR szCLSID = NULL;
+        ::StringFromCLSID(clsid, &szCLSID);
+        if (szCLSID)
+        {
+            CRegKey keyCLSID;
+            USES_CONVERSION;
+            if (keyCLSID.Open(keyExplorer, W2T(szCLSID), KEY_READ) == ERROR_SUCCESS)
+            {
+                DWORD dwType = REG_DWORD;
+                DWORD dwFlags = 0;
+                DWORD dwBufSize = sizeof(dwFlags);
+                if (::RegQueryValueEx(keyCLSID, _T("Compatibility Flags"),
+                    NULL, &dwType, (LPBYTE) &dwFlags, &dwBufSize) == ERROR_SUCCESS)
+                {
+                    // Flags for this reg key
+                    const DWORD kKillBit = 0x00000400;
+                    if (dwFlags & kKillBit)
+                    {
+                        ::CoTaskMemFree(szCLSID);
+                        return FALSE;
+                    }
+                }
+            }
+            ::CoTaskMemFree(szCLSID);
+        }
     }
 
-    // Check if the CLSID belongs to a limited number the plugin is prepared to support
-    CRegKey key;
-    if (key.Open(HKEY_LOCAL_MACHINE, _T("Software\\Mozilla\\ActiveX\\CLSID"), KEY_READ) != ERROR_SUCCESS)
+    // Check if the CLSID belongs to a list that the plugin does not support
+    CRegKey keyDeny;
+    if (keyDeny.Open(HKEY_LOCAL_MACHINE, kControlsToDenyKey, KEY_READ) == ERROR_SUCCESS)
     {
-        return FALSE;
+        // Enumerate CLSIDs looking for this one
+        int i = 0;
+        do {
+            USES_CONVERSION;
+            TCHAR szCLSID[64];
+            const DWORD nLength = sizeof(szCLSID) / sizeof(szCLSID[0]);
+            if (::RegEnumKey(keyDeny, i++, szCLSID, nLength) != ERROR_SUCCESS)
+            {
+                break;
+            }
+            szCLSID[nLength - 1] = TCHAR('\0');
+            CLSID clsidToCompare = GUID_NULL;
+            if (SUCCEEDED(::CLSIDFromString(T2OLE(szCLSID), &clsidToCompare)) &&
+                ::IsEqualCLSID(clsid, clsidToCompare))
+            {
+                return FALSE;
+            }
+        } while (1);
+        keyDeny.Close();
     }
 
-    // Enumerate CLSIDs looking for this one
-    int i = 0;
-    do {
-        USES_CONVERSION;
-        TCHAR szCLSID[64];
-        const DWORD nLength = sizeof(szCLSID) / sizeof(szCLSID[0]);
-        if (::RegEnumKey(key, i++, szCLSID, nLength) != ERROR_SUCCESS)
-        {
-            break;
-        }
-        szCLSID[nLength - 1] = TCHAR('\0');
-        CLSID clsidToCompare = GUID_NULL;
-        if (SUCCEEDED(::CLSIDFromString(T2OLE(szCLSID), &clsidToCompare)) &&
-            ::IsEqualCLSID(clsid, clsidToCompare))
-        {
-            return TRUE;
-        }
-    } while (1);
+    // Check if the CLSID belongs to a list that the plugin only supports
+    CRegKey keyAllow;
+    if (keyAllow.Open(HKEY_LOCAL_MACHINE, kControlsToAllowKey, KEY_READ) == ERROR_SUCCESS)
+    {
+        // Enumerate CLSIDs looking for this one
+        int i = 0;
+        do {
+            USES_CONVERSION;
+            TCHAR szCLSID[64];
+            const DWORD nLength = sizeof(szCLSID) / sizeof(szCLSID[0]);
+            if (::RegEnumKey(keyAllow, i, szCLSID, nLength) != ERROR_SUCCESS)
+            {
+                // An empty list means all controls are allowed.
+                return (i == 0) ? TRUE : FALSE;
+            }
+            ++i;
+            szCLSID[nLength - 1] = TCHAR('\0');
+            CLSID clsidToCompare = GUID_NULL;
+            if (SUCCEEDED(::CLSIDFromString(T2OLE(szCLSID), &clsidToCompare)) &&
+                ::IsEqualCLSID(clsid, clsidToCompare))
+            {
+                return TRUE;
+            }
+        } while (1);
+    }
 
-    return FALSE;
+    return TRUE;
 }
 
 NPError NewControl(const char *pluginType,
@@ -237,13 +445,14 @@ NPError NewControl(const char *pluginType,
                 continue;
             }
 
-            nsAutoString paramValue; paramValue.AssignWithConversion(argv[i]);
+            USES_CONVERSION;
+            CComBSTR paramValue(A2W(argv[i]));
 
             // Check for existing params with the same name
             BOOL bFound = FALSE;
-            for (PropertyList::const_iterator it = pl.begin(); it != pl.end(); it++)
+            for (unsigned long i = 0; i < pl.GetSize(); i++)
             {
-                if (wcscmp((BSTR) (*it).szName, (BSTR) paramName) == 0)
+                if (wcscmp(pl.GetNameOf(i), (BSTR) paramName) == 0)
                 {
                     bFound = TRUE;
                     break;
@@ -256,7 +465,7 @@ NPError NewControl(const char *pluginType,
                 continue;
             }
 
-            CComVariant vsValue(paramValue.get());
+            CComVariant vsValue(paramValue);
             CComVariant vIValue; // Value converted to int
             CComVariant vRValue; // Value converted to real
             CComVariant vBValue; // Value converted to bool
@@ -276,12 +485,8 @@ NPError NewControl(const char *pluginType,
                 vValue = vBValue;
             }
 
-
             // Add named parameter to list
-            Property p;
-            p.szName = paramName;
-            p.vValue = vValue;
-            pl.push_back(p);
+            pl.AddNamedProperty(paramName, vValue);
         }
     }
 
@@ -300,6 +505,7 @@ NPError NewControl(const char *pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
+    pSite->m_bSafeForScriptingObjectsOnly = kSafeForScriptingControlsOnly;
     pSite->m_bSupportWindowlessActivation = FALSE;
     pSite->AddRef();
 
@@ -308,26 +514,88 @@ NPError NewControl(const char *pluginType,
     xpc_GetServiceProvider(pData, &sp);
     if (sp)
         pSite->SetServiceProvider(sp);
+    CComQIPtr<IOleContainer> container  = sp;
+    if (container)
+        pSite->SetContainer(container);
 #endif
 
     // TODO check the object is installed and at least as recent as
     //      that specified in szCodebase
 
     // Create the object
-    if (FAILED(pSite->Create(clsid, pl)))
+    HRESULT hr;
+    if (!kDownloadControlsIfMissing || !codebase.m_str)
     {
-        USES_CONVERSION;
-        LPOLESTR szClsid;
-        StringFromCLSID(clsid, &szClsid);
-        TCHAR szBuffer[256];
-        _stprintf(szBuffer, _T("Could not create the control %s. Check that it has been installed on your computer and that this page correctly references it."), OLE2T(szClsid));
-        MessageBox(NULL, szBuffer, _T("ActiveX Error"), MB_OK | MB_ICONWARNING);
-        CoTaskMemFree(szClsid);
+        hr = pSite->Create(clsid, pl);
+    }
+    else if (codebase.m_str)
+    {
+        CComObject<CInstallControlProgress> *pProgress = NULL;
+        CComPtr<IBindCtx> spBindCtx;
+        CComPtr<IBindStatusCallback> spOldBSC;
+        CComObject<CInstallControlProgress>::CreateInstance(&pProgress);
+        pProgress->AddRef();
+        CreateBindCtx(0, &spBindCtx);
+        RegisterBindStatusCallback(spBindCtx, dynamic_cast<IBindStatusCallback *>(pProgress), &spOldBSC, 0);
 
+        hr = pSite->Create(clsid, pl, codebase, spBindCtx);
+        if (hr == MK_S_ASYNCHRONOUS)
+        {
+            pProgress->mNPP = pData->pPluginInstance;
+            pProgress->mBindingInProgress = TRUE;
+            pProgress->mResult = E_FAIL;
+
+            // Spin around waiting for binding to complete
+            HANDLE hFakeEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+            while (pProgress->mBindingInProgress)
+            {
+                MSG msg;
+                // Process pending messages
+                while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+                {
+                    if (!::GetMessage(&msg, NULL, 0, 0))
+                    {
+                        pProgress->mBindingInProgress = FALSE;
+                        break;
+                    }
+                    ::TranslateMessage(&msg);
+                    ::DispatchMessage(&msg);
+                }
+                if (!pProgress->mBindingInProgress)
+                    break;
+                // Sleep for a bit or the next msg to appear
+                ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 500, QS_ALLEVENTS);
+            }
+            ::CloseHandle(hFakeEvent);
+
+            hr = pProgress->mResult;
+            if (SUCCEEDED(hr))
+            {
+                hr = pSite->Create(clsid, pl);
+            }
+        }
+        if (pProgress)
+        {
+            RevokeBindStatusCallback(spBindCtx, dynamic_cast<IBindStatusCallback *>(pProgress));
+            pProgress->Release();
+        }
+    }
+    if (FAILED(hr))
+    {
+        if (kDisplayErrorMessages)
+        {
+            USES_CONVERSION;
+            LPOLESTR szClsid;
+            StringFromCLSID(clsid, &szClsid);
+            TCHAR szBuffer[256];
+            _stprintf(szBuffer, _T("Could not create the control %s. Check that it has been installed on your computer and that this page correctly references it."), OLE2T(szClsid));
+            MessageBox(NULL, szBuffer, _T("ActiveX Error"), MB_OK | MB_ICONWARNING);
+            CoTaskMemFree(szClsid);
+        }
         pSite->Release();
         return NPERR_GENERIC_ERROR;
     }
-
+    
     nsEventSinkInstance *pSink = NULL;
     nsEventSinkInstance::CreateInstance(&pSink);
     if (pSink)
