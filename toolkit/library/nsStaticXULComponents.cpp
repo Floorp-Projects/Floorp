@@ -121,6 +121,9 @@
 #ifdef MOZ_WIDGET_PHOTON
 #define WIDGET_MODULES MODULE(nsWidgetPhModule)
 #endif
+#ifdef MOZ_WIDGET_QT
+#define WIDGET_MODULES MODULE(nsWidgetQtModule)
+#endif
 
 #ifdef MOZ_ENABLE_XPRINT
 #define XPRINT_MODULES MODULE(nsGfxXprintModule)
