@@ -56,8 +56,11 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #ifdef NS_DEBUG
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
+#undef NOISY_MAX_ELEMENT_SIZE
 #else
 #undef NOISY_FIRST_LINE
+#undef REALLY_NOISY_FIRST_LINE
+#undef NOISY_MAX_ELEMENT_SIZE
 #endif
 
 #ifdef REALLY_NOISY_FIRST_LINE
@@ -2168,6 +2171,11 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
     // Store away the final value
     aMetrics.maxElementSize->width = maxWidth;
     aMetrics.maxElementSize->height = maxHeight;
+#ifdef NOISY_MAX_ELEMENT_SIZE
+    ListTag(stdout);
+    printf(": max-element-size:%d,%d desired:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height);
+#endif
   }
 
   // Compute the combined area of our children
@@ -2479,7 +2487,7 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
     }
 
     // Apply any clear-after semantics the line might have
-    nscoord y0, dy;
+//XXX    nscoord y0, dy;
     switch (lastCleanLine->mBreakType) {
     case NS_STYLE_CLEAR_LEFT:
     case NS_STYLE_CLEAR_RIGHT:
@@ -2487,13 +2495,15 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                      ("line %p: ClearFloaters: y=%d, break-type=%d\n",
                       lastCleanLine, aState.mY, lastCleanLine->mBreakType));
-      y0 = aState.mY;
+//XXX      y0 = aState.mY;
       aState.ClearFloaters(lastCleanLine->mBreakType);
+#if 0
       dy = aState.mY - y0;
       if (dy > aState.mPrevBottomMargin) {
         aState.mPrevBottomMargin = dy;
         aState.mPrevMarginFlags |= ALREADY_APPLIED_BOTTOM_MARGIN;
       }
+#endif
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                      ("  cleared floaters, now y=%d\n", aState.mY));
       break;
@@ -4598,6 +4608,7 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
     if (0 != mPrevBottomMargin) {
       mY += mPrevBottomMargin;
       mPrevMarginFlags |= ALREADY_APPLIED_BOTTOM_MARGIN;
+      mPrevBottomMargin = 0;
     }
 
     // Because we are in the middle of reflowing a placeholder frame
