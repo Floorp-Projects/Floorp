@@ -65,8 +65,7 @@
 #include "nsRDFCID.h"
 
 #include "nsIContent.h"
-#include "nsITextContent.h"
-#include "nsTextFragment.h"
+#include "nsIDOMText.h"
 
 #include "nsVoidArray.h"
 
@@ -93,7 +92,7 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,    NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,   NS_INAMESPACEMANAGER_IID);
 
 static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
-static NS_DEFINE_IID(kITextContentIID,        NS_ITEXT_CONTENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID,            NS_IDOMTEXT_IID);
 
 static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
@@ -564,25 +563,21 @@ GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val)
 
 	for (childIndex=0; childIndex<numChildren; childIndex++)
 	{
-		if (NS_FAILED(rv = node->ChildAt(childIndex, *getter_AddRefs(child))))	break;;
-		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	break;
-		// XXX is this the correct way to get text?  Probably not...
+		if (NS_FAILED(rv = node->ChildAt(childIndex, *getter_AddRefs(child))))
+            break;
+		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))
+            break;
 		if (nameSpaceID != sortInfo->kNameSpaceID_XUL)
 		{
-			nsITextContent	*text = nsnull;
-			if (NS_SUCCEEDED(rv = child->QueryInterface(kITextContentIID, (void **)&text)))
-			{
-				const nsTextFragment	*textFrags;
-				PRInt32		numTextFrags;
-				if (NS_SUCCEEDED(rv = text->GetText(textFrags, numTextFrags)))
-				{
-					const char *value = textFrags->Get1b();
-					PRInt32 len = textFrags->GetLength();
-					val.SetString(value, len);
-					found = PR_TRUE;
-					break;
-				}
-			}
+            // Get text using the DOM
+            nsCOMPtr<nsIDOMText> domText;
+            rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(domText));
+            if (NS_FAILED(rv))
+                break;
+            val.Truncate();
+            domText->GetData(val);
+            found = true;
+            break;
 		}
 	}
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
@@ -1150,19 +1145,19 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 		{
 			for (PRInt32 loop=0; loop<indentLevel; loop++) printf("    ");
 			printf("(Non-XUL node)  ");
-			nsITextContent	*text = nsnull;
-			if (NS_SUCCEEDED(rv = child->QueryInterface(kITextContentIID, (void **)&text)))
+            nsCOMPtr<nsIDOMText> text;
+            rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(text));
+			if (NS_SUCCEEDED(rv))
 			{
 				for (PRInt32 indentLoop=0; indentLoop<indentLevel; indentLoop++) printf("    ");
-				printf("(kITextContentIID)  ");
+				printf("(kIDOMTextIID)  ");
 
-				const nsTextFragment	*textFrags;
-				PRInt32		numTextFrags;
-				if (NS_SUCCEEDED(rv = text->GetText(textFrags, numTextFrags)))
-				{
-					const char *val = textFrags->Get1b();
-					PRInt32 len = textFrags->GetLength();
-					if (val)	printf("value='%.*s'", len, val);
+                nsAutoString val;
+                text->GetData(val);
+                if (val.Length()) {
+                    printf("value='");
+                    fputs(val, stdout);
+                    printf("'");
 				}
 			}
 			printf("\n");
