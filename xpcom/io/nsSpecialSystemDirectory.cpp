@@ -23,90 +23,68 @@
  */
 
 #include "nsSpecialSystemDirectory.h"
-
+#include "nsDebug.h"
 
 #ifdef XP_MAC
 #include <Folders.h>
-#elif defined XP_PC
+#elif defined(XP_PC)
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #endif
 
 
-nsSpecialSystemDirectory::nsSpecialSystemDirectory()
-:    nsFileSpec(nsnull)
-{
-}
+//nsSpecialSystemDirectory::nsSpecialSystemDirectory()
+//:    nsFileSpec(nsnull)
+//{
+//}
 
 nsSpecialSystemDirectory::nsSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory)
 :    nsFileSpec(nsnull)
 {
-    SetSpecialSystemDirectory(aSystemSystemDirectory, this);
+    *this = aSystemSystemDirectory;
 }
 
 nsSpecialSystemDirectory::~nsSpecialSystemDirectory()
 {
 }
 
-
 void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirectory)
 {
-    SetSpecialSystemDirectory(aSystemSystemDirectory, this);
-}
-
-
-void
-nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory, nsFileSpec* fileSpec)
-{
-
-    
-#ifdef XP_MAC
-    OSErr  osErr;
-    FSSpec aMacSpec;
-#elif defined XP_PC
-    char path[_MAX_PATH];
-    PRInt32 len;
-#endif
-
-    *fileSpec  = nsnull;
-
-
+    *this = nsnull;
     switch (aSystemSystemDirectory)
     {
         
         case OS_DriveDirectory:
 #ifdef XP_PC
         {
-            len = GetWindowsDirectory( path, _MAX_PATH );
+            char path[_MAX_PATH];
+            PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
             if (len)
             {
                 if ( path[1] == ':' && path[2] == '\\' )
-                {
                     path[3] = 0;
-                    *fileSpec = path;
-                }
             }
+            *this = path;
         }
-#elif defined XP_MAC
+#elif defined(XP_MAC)
         {
-            if (GetFSSpecFromSystemEnum(kVolumeRootFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kVolumeRootFolderType;
         }
 #else
-        *fileSpec = "/";
+        *this = "/";
 #endif
         break;
 
             
         case OS_TemporaryDirectory:
 #ifdef XP_PC
-
-            if ( GetEnvironmentVariable(TEXT("TMP"),path,_MAX_PATH)==0) 
-                if (GetEnvironmentVariable(TEXT("TEMP"),path,_MAX_PATH))
+            char path[_MAX_PATH];
+            if ( GetEnvironmentVariable(TEXT("TMP"), path, _MAX_PATH) == 0 ) 
+                if (GetEnvironmentVariable(TEXT("TEMP"), path, _MAX_PATH))
                 {
                     // still not set!
-                    len = GetWindowsDirectory( path, _MAX_PATH );
+                    PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
                     if (len)
                     {
                         strcat( path, "temp" );
@@ -114,96 +92,91 @@ nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSys
                 }
 
             strcat( path, "\\" );
-           *fileSpec = path;
-#elif defined XP_MAC
-            if (GetFSSpecFromSystemEnum(kTemporaryFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = path;
+#elif defined(XP_MAC)
+            *this = kTemporaryFolderType;
         
-#elif defined XP_UNIX
-            *fileSpec = "/tmp/";
+#elif defined(XP_UNIX)
+            *this = "/tmp/";
 #endif
         break;
 
+        case OS_CurrentProcessDirectory:
+            NS_NOTYETIMPLEMENTED("Please do so");
+            break;
+
 #ifdef XP_MAC
         case Mac_SystemDirectory:
-            if (GetFSSpecFromSystemEnum(kSystemFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kSystemFolderType;
             break;
 
         case Mac_DesktopDirectory:
-            if (GetFSSpecFromSystemEnum(kDesktopFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kDesktopFolderType;
             break;
 
         case Mac_TrashDirectory:
-            if (GetFSSpecFromSystemEnum(kTrashFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kTrashFolderType;
             break;
 
         case Mac_StartupDirectory:
-            if (GetFSSpecFromSystemEnum(kStartupFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kStartupFolderType;
             break;
 
         case Mac_ShutdownDirectory:
-            if (GetFSSpecFromSystemEnum(kShutdownFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kShutdownFolderType;
             break;
 
         case Mac_AppleMenuDirectory:
-            if (GetFSSpecFromSystemEnum(kAppleMenuFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec
+            *this = kAppleMenuFolderType;
             break;
 
         case Mac_ControlPanelDirectory:
-            if (GetFSSpecFromSystemEnum(kControlPanelFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kControlPanelFolderType;
             break;
 
         case Mac_ExtensionDirectory:
-            if (GetFSSpecFromSystemEnum(kExtensionFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kExtensionFolderType;
             break;
 
         case Mac_FontsDirectory:
-            if (GetFSSpecFromSystemEnum(kFontsFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kFontsFolderType;
             break;
 
         case Mac_PreferencesDirectory:
-            if (GetFSSpecFromSystemEnum(kPreferencesFolderType, aMacSpec) == noErr)
-                *fileSpec = aMacSpec;
+            *this = kPreferencesFolderType;
             break;
 #endif
             
 #ifdef XP_PC
         case Win_SystemDirectory:
         {    
-            len = GetSystemDirectory( path, _MAX_PATH );
+            char path[_MAX_PATH];
+            PRInt32 len = GetSystemDirectory( path, _MAX_PATH );
         
             // Need enough space to add the trailing backslash
-            if(len > _MAX_PATH-2)
+            if (len > _MAX_PATH-2)
                 break;
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            *fileSpec = path;
+            *this = path;
 
             break;
         }
 
         case Win_WindowsDirectory:
         {    
-            len = GetWindowsDirectory( path, _MAX_PATH );
+            char path[_MAX_PATH];
+            PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
             
             // Need enough space to add the trailing backslash
-            if(len > _MAX_PATH-2)
+            if (len > _MAX_PATH-2)
                 break;
             
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            *fileSpec = path;
+            *this = path;
             break;
         }
 
@@ -211,11 +184,11 @@ nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSys
 
 #ifdef XP_UNIX
         case Unix_LocalDirectory:
-            *fileSpec = "/usr/local/netscape/";
+            *this = "/usr/local/netscape/";
             break;
 
         case Unix_LibDirectory:
-            *fileSpec = "/usr/local/lib/netscape/";
+            *this = "/usr/local/lib/netscape/";
             break;
 #endif        
 
@@ -227,39 +200,41 @@ nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSys
 
 
 #ifdef XP_MAC
-
-OSErr GetFSSpecFromSystemEnum(OSType folderType, FSSpec* folderSpec)
+//----------------------------------------------------------------------------------------
+nsSpecialSystemDirectory::nsSpecialSystemDirectory(OSType folderType)
+//----------------------------------------------------------------------------------------
 {
-#if WHEN_MCMULLEN_REVIEWS
-    OSErr err;
-	short vRefNum;
-	long dirID;
-    
+	*this = folderType;
+}
 
-    err = FindFolder(kOnSystemDisk,folderType,true,&vRefNum,&dirID);
-	if (err != noErr)
-		return err;
-
-    folderSpec.vRefNum = 0; // Initialize them to 0
-    folderSpec.parID = 0;
-    
+//----------------------------------------------------------------------------------------
+void nsSpecialSystemDirectory::operator = (OSType folderType)
+//----------------------------------------------------------------------------------------
+{
     CInfoPBRec cinfo;
     DirInfo *dipb=(DirInfo *)&cinfo;
     
-    dipb->ioNamePtr = (StringPtr)&folderSpec.name;
-    dipb->ioVRefNum = vRefNum;
-    dipb->ioFDirIndex = -1;
-    dipb->ioDrDirID = dirID;
-    
-    err = PBGetCatInfoSync(&cinfo);
-        
-    if (err == noErr)
-    {
-        folderSpec.vRefNum = dipb->ioVRefNum;
-        folderSpec.parID = dipb->ioDrParID;
-    }
+    // Call FindFolder to fill in the vrefnum and dirid
+    mError = NS_FILE_RESULT(
+        FindFolder(
+            kOnSystemDisk,
+            folderType,
+            true,
+            &dipb->ioVRefNum,
+            &dipb->ioDrDirID));
+	if (NS_FAILED(mError))
+		return;
 
-    return err;
-#endif
+    mSpec.name[0] = '\0';
+    dipb->ioNamePtr = (StringPtr)&mSpec.name;
+    dipb->ioFDirIndex = -1;
+    
+    mError = PBGetCatInfoSync(&cinfo);
+        
+    if (NS_SUCCEEDED(mError))
+    {
+        mSpec.vRefNum = dipb->ioVRefNum;
+        mSpec.parID = dipb->ioDrParID;
+    }
 }
-#endif
+#endif // XP_MAC

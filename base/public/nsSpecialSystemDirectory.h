@@ -38,43 +38,43 @@ class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
     public:
         enum SystemDirectories
         {
-            OS_DriveDirectory         =   1,
-            OS_TemporaryDirectory     =   2,
+            OS_DriveDirectory         =   1
+        ,   OS_TemporaryDirectory     =   2
+        ,   OS_CurrentProcessDirectory=   3
 
-            Mac_SystemDirectory       =   101,
-            Mac_DesktopDirectory      =   102,
-            Mac_TrashDirectory        =   103,  
-            Mac_StartupDirectory      =   104,
-            Mac_ShutdownDirectory     =   105,
-            Mac_AppleMenuDirectory    =   106,
-            Mac_ControlPanelDirectory =   107,
-            Mac_ExtensionDirectory    =   108,
-            Mac_FontsDirectory        =   109,
-            Mac_PreferencesDirectory  =   110,
+        ,   Mac_SystemDirectory       =   101
+        ,   Mac_DesktopDirectory      =   102
+        ,   Mac_TrashDirectory        =   103
+        ,   Mac_StartupDirectory      =   104
+        ,   Mac_ShutdownDirectory     =   105
+        ,   Mac_AppleMenuDirectory    =   106
+        ,   Mac_ControlPanelDirectory =   107
+        ,   Mac_ExtensionDirectory    =   108
+        ,   Mac_FontsDirectory        =   109
+        ,   Mac_PreferencesDirectory  =   110
         
-            Win_SystemDirectory       =   201,
-            Win_WindowsDirectory      =   202,
+        ,   Win_SystemDirectory       =   201
+        ,   Win_WindowsDirectory      =   202
         
-            Unix_LocalDirectory       =   301,
-            Unix_LibDirectory         =   302
-    
+        ,   Unix_LocalDirectory       =   301
+        ,   Unix_LibDirectory         =   302    
         };
 
-        nsSpecialSystemDirectory();
-        nsSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory);
-        ~nsSpecialSystemDirectory();
+                    //nsSpecialSystemDirectory();
+                    nsSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory);
+        
+    virtual         ~nsSpecialSystemDirectory();
 
-        void    operator = (SystemDirectories aSystemSystemDirectory);
+    void            operator = (SystemDirectories aSystemSystemDirectory);
+ 
+#ifdef XP_MAC
+    void            operator = (OSType folderType);
+                    nsSpecialSystemDirectory(OSType folderType);
+#endif
 
-    private:
-        void SetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory, nsFileSpec *fileSpec);
+private:
+    void            operator = (const char* inPath) { *(nsFileSpec*)this = inPath; }
 
-        #ifdef XP_MAC
-            OSErr GetFSSpecFromSystemEnum(OSType folderType, FSSpec* folderSpec);
-        #endif
-
-};
-
-
+}; // class NS_BASE nsSpecialSystemDirectory
 
 #endif

@@ -165,6 +165,7 @@ class nsIOutputStream;
 class nsIInputStream;
 class nsOutputFileStream;
 class nsInputFileStream;
+class nsOutputConsoleStream;
 class nsString;
 
 //========================================================================================
@@ -232,6 +233,9 @@ class NS_BASE nsFileSpec
         void                    operator = (const nsFileSpec& inOther);
         void                    operator = (const nsPersistentFileDescriptor& inOther);
 
+        PRBool                  operator ==(const nsFileSpec& inOther) const;
+        PRBool                  operator !=(const nsFileSpec& inOther) const;
+
 #ifndef XP_MAC
                                 operator const char* () const { return mPath; }
                                     // This is the only automatic conversion to const char*
@@ -248,6 +252,8 @@ class NS_BASE nsFileSpec
                                     ConstStr255Param name);
                                 nsFileSpec(const FSSpec& inSpec)
                                     : mSpec(inSpec), mError(NS_OK) {}
+        void                    operator = (const FSSpec& inSpec)
+                                    { mSpec = inSpec; mError = NS_OK; }
 
                                 operator FSSpec* () { return &mSpec; }
                                 operator const FSSpec* const () { return &mSpec; }
@@ -266,7 +272,15 @@ class NS_BASE nsFileSpec
 #endif // end of Macintosh utility methods.
 
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
-        nsresult                Error() const { return mError; }
+        nsresult                Error() const
+                                {
+                                    #ifndef XP_MAC 
+                                    if (!mPath && NS_SUCCEEDED(mError)) 
+                                        ((nsFileSpec*)this)->mError = NS_FILE_FAILURE; 
+                                    #endif 
+                                    return mError;
+                                }
+        PRBool                  Failed() const { return NS_FAILED(Error()); }
 
 
         friend                  NS_BASE nsOutputStream& operator << (
@@ -358,7 +372,7 @@ class NS_BASE nsFileSpec
         // Data
         //--------------------------------------------------
 
-    private:
+    protected:
                                 friend class nsFilePath;
 #ifdef XP_MAC
         FSSpec                  mSpec;
@@ -401,7 +415,8 @@ class NS_BASE nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
 
-                                operator const char* const () { return mURL; }
+                                operator const char* const () { return mURL; } // deprecated.
+        const char*             GetAsString() const { return mURL; }
 
         friend                  NS_BASE nsOutputStream& operator << (
                                      nsOutputStream& s, const nsFileURL& spec);
@@ -413,7 +428,7 @@ class NS_BASE nsFileURL
     private:
         // Should not be defined (only nsFilePath is to be treated as strings.
                                 operator char* ();
-    private:
+    protected:
                                 friend class nsFilePath; // to allow construction of nsFilePath
         char*                   mURL;
 #ifdef XP_MAC
@@ -475,6 +490,10 @@ class NS_BASE nsFilePath
 
 //========================================================================================
 class NS_BASE nsPersistentFileDescriptor
+// To save information about a file's location in another file, initialize
+// one of these from your nsFileSpec, and then write this out to your output stream.
+// To retrieve the info, create one of these, read its value from an input stream.
+// and then make an nsFileSpec from it.
 //========================================================================================
 {
     public:
@@ -485,7 +504,7 @@ class NS_BASE nsPersistentFileDescriptor
         void					operator = (const nsPersistentFileDescriptor& inPath);
         
         // Conversions
-                                nsPersistentFileDescriptor(const nsFileSpec& inPath);
+        NS_EXPLICIT             nsPersistentFileDescriptor(const nsFileSpec& inPath);
         void					operator = (const nsFileSpec& inPath);
         
     	nsresult                Read(nsIInputStream* aStream);
@@ -503,7 +522,7 @@ class NS_BASE nsPersistentFileDescriptor
                                      // DON'T FREE the returned data!
         void                    SetData(const void* inData, PRInt32 inSize);
 
-    private:
+    protected:
 
         char*                   mDescriptorString;
 
