@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,41 +19,92 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *    Stuart Parmenter <pavlov@netscape.com>
  */
 
 #include "prmem.h"
 #include "nsRegionXlib.h"
 #include "xregion.h"
 
+// #define DEBUG_REGIONS 1
+
+#ifdef DEBUG_REGIONS
+static int nRegions;
+#endif
+
+Region nsRegionXlib::copyRegion = 0;
+
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 nsRegionXlib::nsRegionXlib()
 {
+#ifdef DEBUG_REGIONS
+    ++nRegions;
+      printf("REGIONS+ = %i\n", nRegions);
+#endif
+
   NS_INIT_REFCNT();
 
   mRegion = nsnull;
-  mRegionType = eRegionComplexity_empty;
 }
 
 nsRegionXlib::~nsRegionXlib()
 {
+#ifdef DEBUG_REGIONS
+  --nRegions;
+  printf("REGIONS- = %i\n", nRegions);
+#endif
+  
   if (mRegion)
     ::XDestroyRegion(mRegion);
+  mRegion = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(nsRegionXlib, nsIRegion)
 
+Region
+nsRegionXlib::GetCopyRegion()
+{
+  if (!copyRegion)
+    copyRegion = ::XCreateRegion();
+  return copyRegion;
+}
+
+Region
+nsRegionXlib::xlib_region_copy(Region region)
+{
+  Region nRegion;
+  nRegion = XCreateRegion();
+
+  XUnionRegion(region, GetCopyRegion(), nRegion);
+
+  return nRegion;
+}
+
+Region nsRegionXlib::xlib_region_from_rect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+  XRectangle rect;
+  Region nRegion;
+
+  rect.x = aX;
+  rect.y = aY;
+  rect.width = aWidth;
+  rect.height = aHeight;
+
+  nRegion = XCreateRegion();
+
+  XUnionRectWithRegion(&rect, GetCopyRegion(), nRegion);
+
+  return nRegion;
+}
+
 nsresult
 nsRegionXlib::Init()
 {
-  //NS_ASSERTION(!mRegion, "already initialized");
   if (mRegion) {
     ::XDestroyRegion(mRegion);
     mRegion = nsnull;
   }
-
-  mRegion = ::XCreateRegion();
-  mRegionType = eRegionComplexity_empty;
 
   return NS_OK;
 }
@@ -60,34 +112,17 @@ nsRegionXlib::Init()
 void
 nsRegionXlib::SetTo(const nsIRegion &aRegion)
 {
+  Init();
   nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
- 
-  SetRegionEmpty(); 
- 
-  Region nRegion = XCreateRegion();
-  ::XUnionRegion(mRegion, pRegion->mRegion, nRegion);
-  ::XDestroyRegion(mRegion);
-  mRegion = nRegion;
+
+  mRegion = xlib_region_copy(pRegion->mRegion);
 }
 
 void
 nsRegionXlib::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  SetRegionEmpty();
-
-  XRectangle r;
-
-  r.x = aX;
-  r.y = aY;
-  r.width = aWidth;
-  r.height = aHeight;
-
-  Region nRegion = ::XCreateRegion();
-  Region tRegion = ::XCreateRegion();
-  ::XUnionRectWithRegion(&r, tRegion, nRegion);
-  ::XDestroyRegion(mRegion);
-  ::XDestroyRegion(tRegion);
-  mRegion = nRegion;
+  Init();
+  mRegion = xlib_region_from_rect(aX, aY, aWidth, aHeight);
 }
 
 void
@@ -104,7 +139,7 @@ nsRegionXlib::Intersect(const nsIRegion &aRegion)
 void
 nsRegionXlib::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
+  Region tRegion = xlib_region_from_rect(aX, aY, aWidth, aHeight);
   
   Region nRegion = XCreateRegion();
 
@@ -117,47 +152,98 @@ nsRegionXlib::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 void
 nsRegionXlib::Union(const nsIRegion &aRegion)
 {
-   nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
- 
-   Region nRegion = XCreateRegion();
-   ::XUnionRegion(mRegion, pRegion->mRegion, nRegion);
-   ::XDestroyRegion(mRegion);
-   mRegion = nRegion;
+  nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
+
+  if (pRegion->mRegion && !::XEmptyRegion(pRegion->mRegion)) {
+    if (mRegion) {
+      if (::XEmptyRegion(mRegion)) {
+        ::XDestroyRegion(mRegion);
+        mRegion = xlib_region_copy(pRegion->mRegion);
+      } else {
+        Region nRegion = ::XCreateRegion();
+        ::XUnionRegion(mRegion, pRegion->mRegion, nRegion);
+        ::XDestroyRegion(mRegion);
+        mRegion = nRegion;
+      }
+    } else
+      mRegion = xlib_region_copy(pRegion->mRegion);
+  }
 }
 
 void
 nsRegionXlib::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
- 
-  Region nRegion = XCreateRegion();
-  ::XUnionRegion(mRegion, tRegion, nRegion);
-  ::XDestroyRegion(mRegion);
-  ::XDestroyRegion(tRegion);
-  mRegion = nRegion;
+  if (mRegion) {
+    XRectangle rect;
+    
+    rect.x = aX;
+    rect.y = aY;
+    rect.width = aWidth;
+    rect.height = aHeight;
+
+    if (rect.width > 0 && rect.height > 0) {
+      if (::XEmptyRegion(mRegion)) {
+        ::XDestroyRegion(mRegion);
+        mRegion = xlib_region_from_rect(aX, aY, aWidth, aHeight);
+      } else {
+        Region nRegion = ::XCreateRegion();
+        ::XUnionRectWithRegion(&rect, mRegion, nRegion);
+        ::XDestroyRegion(mRegion);
+        mRegion = nRegion;
+      }
+    }
+  } else {
+    mRegion = xlib_region_from_rect(aX, aY, aWidth, aHeight);
+  }
 }
 
 void
 nsRegionXlib::Subtract(const nsIRegion &aRegion)
 {
+#ifdef DEBUG_REGIONS
+  printf("nsRegionXlib::Subtract ");
+#endif
   nsRegionXlib * pRegion = (nsRegionXlib *)&aRegion;
-  
-  Region nRegion = XCreateRegion();
-  ::XSubtractRegion(mRegion, pRegion->mRegion, nRegion);
-  ::XDestroyRegion(mRegion);
-  mRegion = nRegion;
+
+  if (pRegion->mRegion) {
+    if (mRegion) {
+#ifdef DEBUG_REGIONS
+    printf("-");
+#endif
+      Region nRegion = ::XCreateRegion();
+      ::XSubtractRegion(mRegion, pRegion->mRegion, nRegion);
+      ::XDestroyRegion(mRegion);
+      mRegion = nRegion;
+    } else {
+#ifdef DEBUG_REGIONS
+    printf("+");
+#endif
+      mRegion = ::XCreateRegion();
+      ::XSubtractRegion(GetCopyRegion(), pRegion->mRegion, mRegion);
+    }
+  }
+#ifdef DEBUG_REGIONS
+    printf("\n");
+#endif
 }
 
 void
 nsRegionXlib::Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
-  
-  Region nRegion = XCreateRegion();
-  ::XSubtractRegion(mRegion, tRegion, nRegion);
-  ::XDestroyRegion(mRegion);
-  ::XDestroyRegion(tRegion);
-  mRegion = nRegion;
+  if (mRegion) {
+    Region tRegion = xlib_region_from_rect(aX, aY, aWidth, aHeight);
+
+    Region nRegion = ::XCreateRegion();
+    ::XSubtractRegion(mRegion, tRegion, nRegion);
+    ::XDestroyRegion(mRegion);
+    ::XDestroyRegion(tRegion);
+    mRegion = nRegion;
+  } else {
+    Region tRegion = xlib_region_from_rect(aX, aY, aWidth, aHeight);
+    mRegion = XCreateRegion();
+    ::XSubtractRegion(GetCopyRegion(), tRegion, mRegion);
+    ::XDestroyRegion(tRegion);
+  }
 }
 
 PRBool
@@ -172,22 +258,38 @@ PRBool
 nsRegionXlib::IsEqual(const nsIRegion &aRegion)
 {
   nsRegionXlib *pRegion = (nsRegionXlib *)&aRegion;
-  
-  return ::XEqualRegion(mRegion, pRegion->mRegion);
+
+  if (mRegion && pRegion->mRegion) {
+    return ::XEqualRegion(mRegion, pRegion->mRegion);
+  } else if (!mRegion && !pRegion->mRegion) {
+    return PR_TRUE;
+  } else if ((mRegion && !pRegion->mRegion) ||
+      (!mRegion && pRegion->mRegion)) {
+    return PR_FALSE;
+  }
+
+  return PR_FALSE;
 }
 
 void
 nsRegionXlib::GetBoundingBox(PRInt32 *aX, PRInt32 *aY,
                              PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  XRectangle r;
+  if (mRegion) {
+    XRectangle r;
 
-  ::XClipBox(mRegion, &r);
+    ::XClipBox(mRegion, &r);
 
-  *aX = r.x;
-  *aY = r.y;
-  *aWidth = r.width;
-  *aHeight = r.height;
+    *aX = r.x;
+    *aY = r.y;
+    *aWidth = r.width;
+    *aHeight = r.height;
+  } else {
+    *aX = 0;
+    *aY = 0;
+    *aWidth = 0;
+    *aHeight = 0;
+  }
 }
 
 void
@@ -202,39 +304,43 @@ PRBool
 nsRegionXlib::ContainsRect(PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
-  return ::XRectInRegion(mRegion, aX, aY, aWidth, aHeight);
+  return (::XRectInRegion(mRegion, aX, aY, aWidth, aHeight) == RectangleIn) ?
+    PR_TRUE : PR_FALSE;
 }
 
 NS_IMETHODIMP
 nsRegionXlib::GetRects(nsRegionRectSet **aRects)
 {
+  *aRects = nsnull;
+
+  if (!mRegion)
+    return NS_OK;
+
   nsRegionRectSet   *rects;
   int               nbox;
-  BOX               *pbox;  
+  BOX               *pbox;
   nsRegionRect      *rect;
-  
+
   NS_ASSERTION(!(nsnull == aRects), "bad ptr");
  
   //code lifted from old xfe. MMP
-     
+
   pbox = mRegion->rects;
   nbox = mRegion->numRects;
  
   rects = *aRects;
 
-  if ((nsnull == rects) || (rects->mRectsLen < (PRUint32)nbox))
-  {
-    void *buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + (sizeof(nsRegionRect
-) * (nbox - 1)));
-    
-    if (nsnull == buf)
-    {
+  if ((nsnull == rects) || (rects->mRectsLen < (PRUint32)nbox)) {
+    void *buf = PR_Realloc(rects, sizeof(nsRegionRectSet) +
+                           (sizeof(nsRegionRect) * (nbox - 1)));
+
+    if (nsnull == buf) {
       if (nsnull != rects)
         rects->mNumRects = 0;
  
       return NS_OK;
     }
-  
+
     rects = (nsRegionRectSet *)buf;
     rects->mRectsLen = nbox;
   }
@@ -243,8 +349,7 @@ nsRegionXlib::GetRects(nsRegionRectSet **aRects)
   rects->mArea = 0;
   rect = &rects->mRects[0];
 
-  while (nbox--)
-  {
+  while (nbox--) {
     rect->x = pbox->x1;
     rect->width = (pbox->x2 - pbox->x1);
     rect->y = pbox->y1;
@@ -290,28 +395,19 @@ nsRegionXlib::GetRegionComplexity(nsRegionComplexity &aComplexity) const
 }
 
 void nsRegionXlib::SetRegionEmpty()
-{ 
+{
   if (!IsEmpty()) { 
     ::XDestroyRegion(mRegion);
-    mRegion = XCreateRegion();
   }
 }
 
-Region
-nsRegionXlib::CreateRectRegion(PRInt32 aX,
-                               PRInt32 aY,
-                               PRInt32 aWidth,
-                               PRInt32 aHeight)
+NS_IMETHODIMP
+nsRegionXlib::GetNumRects(PRUint32 *aRects) const
 {
-  Region tRegion = XCreateRegion();
-  XRectangle r;
+  if (!mRegion)
+    *aRects = 0;
 
-  r.x = aX;
-  r.y = aY;
-  r.width = aWidth;
-  r.height = aHeight;
-  
-  ::XUnionRectWithRegion(&r, tRegion, tRegion);
+  *aRects = mRegion->numRects;
 
-  return (tRegion);
-} 
+  return NS_OK;
+}
