@@ -1572,14 +1572,22 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 
 		case inContent:
 		{
-		  // don't allow clicks that rolled up a popup through to the content area.
-      if ( ignoreClickInContent )
-        break;
+			// don't allow clicks that rolled up a popup through to the content area.
+			if ( ignoreClickInContent )
+				break;
 						
 			nsMouseEvent mouseEvent;
 			PRUint32 mouseButton = NS_MOUSE_LEFT_BUTTON_DOWN;
 			if ( aOSEvent.modifiers & controlKey )
 			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
+
+			// We've hacked our events to include the button.
+			// Normally message is undefined in mouse click/drag events.
+			if ( aOSEvent.message == kEventMouseButtonSecondary )
+			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
+			if ( aOSEvent.message == kEventMouseButtonTertiary )
+			  mouseButton = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 
 #if !TARGET_CARBON
@@ -1669,7 +1677,16 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	PRBool retVal = PR_FALSE;
 
 	nsMouseEvent mouseEvent;
-	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_UP);
+	PRUint32 mouseButton = NS_MOUSE_LEFT_BUTTON_UP;
+
+	// We've hacked our events to include the button.
+	// Normally message is undefined in mouse click/drag events.
+	if ( aOSEvent.message == kEventMouseButtonSecondary )
+		mouseButton = NS_MOUSE_RIGHT_BUTTON_UP;
+	if ( aOSEvent.message == kEventMouseButtonTertiary )
+		mouseButton = NS_MOUSE_MIDDLE_BUTTON_UP;
+
+	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 
 	nsWindow* widgetReleased = (nsWindow*)mouseEvent.widget;
 	nsWindow* widgetHit = gEventDispatchHandler.GetWidgetHit();
@@ -1774,13 +1791,17 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	static SInt16	sLastClickCount = 0;
 	
 	// we're going to time double-clicks from mouse *up* to next mouse *down*
-	if (aMessage == NS_MOUSE_LEFT_BUTTON_UP)
+	if (aMessage == NS_MOUSE_LEFT_BUTTON_UP  ||
+      aMessage == NS_MOUSE_RIGHT_BUTTON_UP ||
+      aMessage == NS_MOUSE_MIDDLE_BUTTON_UP)
 	{
 		// remember when this happened for the next mouse down
 		sLastMouseUp = aOSEvent.when;
 		sLastWhere = aOSEvent.where;
 	}
-	else if (aMessage == NS_MOUSE_LEFT_BUTTON_DOWN)
+	else if (aMessage == NS_MOUSE_LEFT_BUTTON_DOWN  ||
+           aMessage == NS_MOUSE_RIGHT_BUTTON_DOWN ||
+           aMessage == NS_MOUSE_MIDDLE_BUTTON_DOWN)
 	{
 		// now look to see if we want to convert this to a double- or triple-click
 		const short kDoubleClickMoveThreshold	= 5;

@@ -109,9 +109,11 @@ private:
 #endif
 
 	PRBool		BrowserIsBusy();
-	
+
 	WindowPtr GetFrontApplicationWindow();
 
+  static pascal OSStatus	CarbonMouseHandler(EventHandlerCallRef nextHandler,
+                                            EventRef theEvent, void *userData);
 };
 
 
