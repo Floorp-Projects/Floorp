@@ -90,6 +90,8 @@ public:
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
+    if (!aFlagsToUpdate && !aScriptLevelIncrement)
+      return NS_OK;
     PRInt32 index = 0;
     nsIFrame* childFrame = mFrames.FirstChild();
     while (childFrame) {
@@ -105,9 +107,8 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext*  aPresContext,
-                       nsIStyleContext* aParentContext,
-                       PRInt32          aParentScriptLevel)
+  ReResolveScriptStyle(nsIPresContext* aPresContext,
+                       PRInt32         aParentScriptLevel)
   {
     PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
     return NS_OK;

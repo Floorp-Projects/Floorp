@@ -59,6 +59,14 @@ public:
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
+  NS_IMETHOD
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate);
+
 protected:
   nsMathMLmoverFrame();
   virtual ~nsMathMLmoverFrame();

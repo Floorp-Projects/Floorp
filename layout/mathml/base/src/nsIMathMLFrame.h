@@ -277,9 +277,8 @@ public:
   * http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
   */
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext*  aPresContext,
-                       nsIStyleContext* aParentContext,
-                       PRInt32          aParentScriptLevel) = 0;
+  ReResolveScriptStyle(nsIPresContext* aPresContext,
+                       PRInt32         aParentScriptLevel) = 0;
 };
 
 // struct used by a frame to modulate its presentation

@@ -461,6 +461,68 @@ nsMathMLmfracFrame::AttributeChanged(nsIPresContext* aPresContext,
                           aAttribute, aModType, aHint);
 }
 
+NS_IMETHODIMP
+nsMathMLmfracFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+                                           PRInt32         aScriptLevelIncrement,
+                                           PRUint32        aFlagsValues,
+                                           PRUint32        aFlagsToUpdate)
+{
+  // mfrac is special... The REC says:
+  // The <mfrac> element sets displaystyle to "false", or if it was already
+  // false increments scriptlevel by 1, within numerator and denominator.
+  // @see similar peculiarities for <mover>, <munder>, <munderover>
+
+  // This means that
+  // 1. If our displaystyle is being changed from true to false, we have
+  //    to propagate an inner scriptlevel increment to our children
+  // 2. If the displaystyle is changed from false to true, we have to undo
+  //    any incrementation that was done on the inner scriptlevel
+
+  if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsToUpdate)) {
+    if (mInnerScriptLevel > mPresentationData.scriptLevel) {
+      // we get here if our displaystyle is currently false
+      NS_ASSERTION(!NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags), "out of sync");
+      if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
+        // ...and is being set to true, so undo the inner increment now
+        mInnerScriptLevel = mPresentationData.scriptLevel;
+        UpdatePresentationDataFromChildAt(aPresContext, 0, -1, -1, 0, 0);
+      }
+    }
+    else {
+      // case of mInnerScriptLevel == mPresentationData.scriptLevel, our
+      // current displaystyle is true; we increment the inner scriptlevel if
+      // our displaystyle is about to be set to false; since mInnerScriptLevel
+      // is changed, we can only get here once
+      NS_ASSERTION(NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags), "out of sync");
+      if (!NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
+        mInnerScriptLevel = mPresentationData.scriptLevel + 1;
+        UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 1, 0, 0);
+      }
+    }
+  }
+
+  mInnerScriptLevel += aScriptLevelIncrement;
+  return nsMathMLContainerFrame::
+    UpdatePresentationData(aPresContext, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+}
+
+NS_IMETHODIMP
+nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                                      PRInt32         aFirstIndex,
+                                                      PRInt32         aLastIndex,
+                                                      PRInt32         aScriptLevelIncrement,
+                                                      PRUint32        aFlagsValues,
+                                                      PRUint32        aFlagsToUpdate)
+{
+  // The <mfrac> element sets displaystyle to "false" within numerator and
+  // denominator so we disable the displaystyle bit to retain what we set earlier
+  aFlagsToUpdate &= ~NS_MATHML_DISPLAYSTYLE;
+  aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
+  return nsMathMLContainerFrame::
+    UpdatePresentationDataFromChildAt(aPresContext, aFirstIndex, aLastIndex,
+      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+}
+
 // ----------------------
 // the Style System will use these to pass the proper style context to our MathMLChar
 NS_IMETHODIMP

@@ -106,6 +106,52 @@ nsMathMLmunderoverFrame::UpdatePresentationData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsMathMLmunderoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                                           PRInt32         aFirstIndex,
+                                                           PRInt32         aLastIndex,
+                                                           PRInt32         aScriptLevelIncrement,
+                                                           PRUint32        aFlagsValues,
+                                                           PRUint32        aFlagsToUpdate)
+{
+  // munderover is special... The REC says:
+  // Within underscript, <munder> always sets displaystyle to "false", 
+  // but increments scriptlevel by 1 only when accentunder is "false".
+  // Within underscript, <munderover> always sets displaystyle to "false",
+  // but increments scriptlevel by 1 only when accentunder is "false". 
+  // This means that
+  // 1. don't allow displaystyle to change in the underscript & overscript
+  // 2a if the value of the accent is changed, we need to recompute the
+  //    scriptlevel of the underscript. The problem is that the accent
+  //    can change in the <mo> deep down the embellished hierarchy
+  // 2b if the value of the accent is changed, we need to recompute the
+  //    scriptlevel of the overscript. The problem is that the accent
+  //    can change in the <mo> deep down the embellished hierarchy
+
+  // Do #1 here, prevent displaystyle to be changed in the underscript & overscript
+  PRInt32 index = 0;
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (childFrame) {
+    if ((index >= aFirstIndex) &&
+        ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
+      if (index > 0) {
+        // disable the flag
+        aFlagsToUpdate &= ~NS_MATHML_DISPLAYSTYLE;
+        aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
+      }
+      PropagatePresentationDataFor(aPresContext, childFrame,
+        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    }
+    index++;
+    childFrame->GetNextSibling(&childFrame);
+  }
+  return NS_OK;
+
+  // XXX For #2, if the inner <mo> changes, is has to trigger 
+  // XXX a re-computation of all flags that depend on its state
+  // XXX in the entire embellished hierarchy
+}
+
+NS_IMETHODIMP
 nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                              nsIAtom*        aListName,
                                              nsIFrame*       aChildList)

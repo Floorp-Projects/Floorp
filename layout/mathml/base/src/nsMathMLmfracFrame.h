@@ -113,6 +113,20 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
+  UpdatePresentationData(nsIPresContext* aPresContext,
+                         PRInt32         aScriptLevelIncrement,
+                         PRUint32        aFlagsValues,
+                         PRUint32        aFlagsToUpdate);
+
+  NS_IMETHOD
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate);
+
+  NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
@@ -126,6 +140,7 @@ public:
     //    while the denominator is compressed
     PRInt32 increment =
        NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) ? 0 : 1;
+    mInnerScriptLevel = mPresentationData.scriptLevel + increment;
     UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
       ~NS_MATHML_DISPLAYSTYLE,
        NS_MATHML_DISPLAYSTYLE);
@@ -171,6 +186,7 @@ protected:
     return PR_FALSE;
   }
 
+  PRInt32 mInnerScriptLevel;
   nsRect  mLineRect;
   nsMathMLChar* mSlashChar;
 };

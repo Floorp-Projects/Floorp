@@ -554,20 +554,28 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIPresContext* aPresContex
                                                      PRUint32        aFlagsValues,
                                                      PRUint32        aFlagsToUpdate)
 {
+  if (!aFlagsToUpdate && !aScriptLevelIncrement)
+    return;
   nsIMathMLFrame* mathMLFrame;
   aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
   if (mathMLFrame) {
     // update
     mathMLFrame->UpdatePresentationData(aPresContext,
       aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    // propagate using the base method to make sure that the control
+    // is passed on to MathML frames that may be overloading the method
+    mathMLFrame->UpdatePresentationDataFromChildAt(aPresContext,
+      0, -1, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
   }
-  // propagate down the subtrees
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame) {
-    PropagatePresentationDataFor(aPresContext, childFrame,
-      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-    childFrame->GetNextSibling(&childFrame);
+  else {
+    // propagate down the subtrees
+    nsIFrame* childFrame;
+    aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    while (childFrame) {
+      PropagatePresentationDataFor(aPresContext, childFrame,
+        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+      childFrame->GetNextSibling(&childFrame);
+    }
   }
 }
 
@@ -599,7 +607,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
 
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
-    if (0 == gap) {
+    if (!gap) {
       // unset any -moz-math-font-size attribute without notifying that we want a reflow
       content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize, PR_FALSE);
     }
@@ -681,7 +689,15 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
   nsIFrame* childFrame;
   aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
-    PropagateScriptStyleFor(aPresContext, childFrame, aParentScriptLevel);
+    childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+      // propagate using the base method to make sure that the control
+      // is passed on to MathML frames that may be overloading the method
+      mathMLFrame->ReResolveScriptStyle(aPresContext, aParentScriptLevel);
+    }
+    else {
+      PropagateScriptStyleFor(aPresContext, childFrame, aParentScriptLevel);
+    }
     childFrame->GetNextSibling(&childFrame);
   }
 }
