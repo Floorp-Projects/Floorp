@@ -243,7 +243,9 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
 
 /*
  * Finalize table's data, free its entry storage using table->ops->freeTable,
- * and zero all of *table.
+ * and leave its members unchanged from their last live values (which leaves
+ * pointers dangling).  If you want to burn cycles clearing table, it's up to
+ * your code to call memset.
  */
 extern JS_PUBLIC_API(void)
 JS_DHashTableFinish(JSDHashTable *table);
