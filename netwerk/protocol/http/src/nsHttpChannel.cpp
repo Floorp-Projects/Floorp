@@ -2129,7 +2129,7 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
             nsXPIDLCString prehost;
             referrer->GetPreHost(getter_Copies(prehost));
             if (prehost && *prehost) {
-                PRUint32 prehostLoc = PRUint32(ref.Find(prehost, PR_TRUE));
+                PRUint32 prehostLoc = PRUint32(ref.Find(prehost.get(), PR_TRUE));
                 ref.Cut(prehostLoc, nsCharTraits<char>::length(prehost) + 1); // + 1 for @
             }
             mRequestHead.SetHeader(nsHttp::Referer, ref.get());
