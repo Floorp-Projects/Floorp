@@ -54,7 +54,7 @@ use IPC::Open2;
 my %pipes;
 while (<>) {
     my $line = $_;
-    if ($line =~ /^([ \|0-9-]*)(.*) \[([^ ]*) \+(0x[0-9A-F]{8})\](.*)$/) {
+    if ($line =~ /^([ \|0-9-]*)(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$/) {
         my $before = $1; # allow preservation of balance trees
         my $badsymbol = $2;
         my $file = $3;
