@@ -303,6 +303,9 @@ ifneq ($(POLICY),)
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
 endif
 
+get_objs:
+	@echo $(OBJS)
+
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
@@ -312,6 +315,10 @@ $(LIBRARY): $(OBJS)
 ifeq ($(OS_TARGET), WIN16)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	wlib +$(SHARED_LIBRARY)
+endif
+
+ifdef SHARED_LIBRARY_LIBS
+SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(addprefix $(dir)/,$(shell $(MAKE) -C $(dir) --no-print-directory get_objs)))
 endif
 
 $(SHARED_LIBRARY): $(OBJS)
@@ -344,7 +351,7 @@ else
 	$(LINK_DLL) -MAP $(DLLBASE) $(OBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS)
 endif
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 	chmod +x $@
 endif
 endif

@@ -33,11 +33,11 @@
 CORE_DEPTH = ../..
 DEPTH      = ../..
 
-DIRS = crmf jar \
+DIRS = crmf jar pkcs7 \
     certhigh pk11wrap cryptohi \
     softoken certdb crypto \
     util freebl nss pkcs12 fortcrypt \
-    base ckfw pkcs7 smime ssl
+    base ckfw smime ssl
 #
 # these dirs are not built at the moment
 #
