@@ -196,7 +196,7 @@ IConvAdaptor::Reset()
                 zero_size_out     = 0;
 
     iconv(mConverter, 
-          &zero_char_in_ptr,
+          (char **)&zero_char_in_ptr,
           &zero_size_in,
           &zero_char_out_ptr,
           &zero_size_out);
