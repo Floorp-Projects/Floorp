@@ -2987,6 +2987,11 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;
 
+  /* mChromeEventHandler goes dangling in the middle of this
+     function under some circumstances (events that destroy
+     the window) without this addref. */
+  nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip(mChromeEventHandler);
+
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
     aEvent->flags = NS_EVENT_FLAG_NONE;
