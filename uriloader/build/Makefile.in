@@ -57,12 +57,22 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../prefetch \
 		$(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LOCAL_INCLUDES += -I$(srcdir)/../exthandler/mac
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += \
+        $(TK_LIBS) \
+        $(NULL)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= shell32.lib

@@ -48,12 +48,8 @@ XPIDLSRCS	= \
 		nsIPopupWindowManager.idl \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-XPIDLSRCS	+= nsIInternetConfigService.idl
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 XPIDLSRCS	+= nsINativeAppSupportWin.idl
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
