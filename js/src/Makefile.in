@@ -29,7 +29,7 @@ endif
 
 DIRS	+=	fdlibm
 
-DIRS 	+=	xpconnect
+# DIRS 	+=	xpconnect
 
 LIBRARY_NAME	= $(MOZ_LIB_JS_PREFIX)js
 
