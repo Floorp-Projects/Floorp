@@ -20,7 +20,8 @@
 
 #include "xptcprivate.h"
 
-#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__bsdi__) || defined(NTO) || defined(__BEOS__)
+#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
+    defined(__bsdi__) || defined(NTO) || defined(__BEOS__) || defined(__sun__)
 
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
