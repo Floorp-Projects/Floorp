@@ -167,6 +167,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* should we use a secure channel? */
   attribute boolean isSecure;
 
+  /* should we use secure authentication? */
+  attribute boolean useSecAuth;
+
   /* can server support a secure channel? */
   readonly attribute boolean isSecureServer;
 

@@ -452,6 +452,9 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
       rv = server->GetIsSecure(&isSecure);
       NS_ENSURE_SUCCESS(rv,rv);
 
+      rv = server->GetUseSecAuth(&m_useSecAuth);
+      NS_ENSURE_SUCCESS(rv,rv);
+
       m_pop3Server = do_QueryInterface(server);
       if (m_pop3Server)
         m_pop3Server->GetPop3CapabilityFlags(&m_pop3ConData->capability_flags);
@@ -1010,13 +1013,24 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 
 PRInt32 nsPop3Protocol::ProcessAuth()
 {
-    if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
-        m_pop3ConData->next_state = POP3_SEND_USERNAME;
+    if(m_useSecAuth)
+    {
+      if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+          m_pop3ConData->next_state = POP3_SEND_USERNAME;
+      else
+          return(Error(POP3_SERVER_ERROR));
+    }
     else
-    if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
-        m_pop3ConData->next_state = POP3_AUTH_LOGIN;
-    else // don't combine with if POP3_HAS_AUTH_CRAM_MD5 above!
-        m_pop3ConData->next_state = POP3_SEND_USERNAME;
+    {
+        if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
+            m_pop3ConData->next_state = POP3_AUTH_LOGIN;
+        else
+        if (TestCapFlag(POP3_HAS_AUTH_USER))
+            // don't combine with if POP3_HAS_AUTH_CRAM_MD5 above!
+            m_pop3ConData->next_state = POP3_SEND_USERNAME;
+        else
+            return(Error(POP3_SERVER_ERROR));
+    }
 
     m_pop3ConData->pause_for_read = PR_FALSE;
 
@@ -1024,13 +1038,11 @@ PRInt32 nsPop3Protocol::ProcessAuth()
 }
 
 PRInt32 nsPop3Protocol::AuthFallback()
-    {
+{
     if (m_pop3ConData->command_succeeded)
         m_pop3ConData->next_state = POP3_SEND_PASSWORD;
     else
     {
-        m_pop3ConData->command_succeeded = PR_TRUE;
-
         // If one authentication failed, we're going to
         // fall back on a less secure login method.
         if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
@@ -1041,11 +1053,13 @@ PRInt32 nsPop3Protocol::AuthFallback()
             // if LOGIN or USER enabled,
             // it was the username which was wrong
             // no fallback but return error
-        return(Error(POP3_SERVER_ERROR));
+        return(Error(POP3_USERNAME_FAILURE));
 
-      m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
 
-      m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+        m_pop3ConData->command_succeeded = PR_TRUE;
+
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
     }
 
     if (TestCapFlag(POP3_AUTH_MECH_UNDEFINED))
@@ -1098,20 +1112,25 @@ PRInt32 nsPop3Protocol::SendUsername()
 
     nsCAutoString cmd;
 
-    if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
-        cmd = "AUTH CRAM-MD5";
-    else
-    if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
-	{
-        char *base64Str =
-            PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
-        cmd = base64Str;
-        PR_Free(base64Str);
+    if (m_useSecAuth)
+    {
+        if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+            cmd = "AUTH CRAM-MD5";
     }
-    else 
-	{
-        cmd = "USER ";
-        cmd += m_username;
+    else
+    {
+        if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
+	    {
+            char *base64Str =
+                PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
+            cmd = base64Str;
+            PR_Free(base64Str);
+        }
+        else 
+        {
+            cmd = "USER ";
+            cmd += m_username;
+        }
     }
     cmd += CRLF;
 
@@ -1139,47 +1158,60 @@ PRInt32 nsPop3Protocol::SendPassword()
     }
 
     nsCAutoString cmd;
-    if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+    if (m_useSecAuth)
     {
-      char buffer[512];
-      unsigned char digest[DIGEST_LENGTH];
+        if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+        {
+            char buffer[512];
+            unsigned char digest[DIGEST_LENGTH];
 
-      char *decodedChallenge = PL_Base64Decode(m_commandResponse.get(), 
-      m_commandResponse.Length(), nsnull);
+            char *decodedChallenge = PL_Base64Decode(m_commandResponse.get(), 
+            m_commandResponse.Length(), nsnull);
 
-      rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), password.get(), password.Length(), digest);
+            if (decodedChallenge)
+                rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), password.get(), password.Length(), digest);
+            else
+                rv = NS_ERROR_FAILURE;
 
-      if (NS_SUCCEEDED(rv) && digest)
-      {
-        nsCAutoString encodedDigest;
-        char hexVal[8];
+            if (NS_SUCCEEDED(rv) && digest)
+            {
+                nsCAutoString encodedDigest;
+                char hexVal[8];
 
-        for (PRUint32 j=0; j<16; j++) 
-	{
-          PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
-          encodedDigest.Append(hexVal); 
+                for (PRUint32 j=0; j<16; j++) 
+                {
+                    PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
+                    encodedDigest.Append(hexVal); 
+                }
+
+                PR_snprintf(buffer, sizeof(buffer), "%s %s", m_username.get(), encodedDigest.get());
+                char *base64Str = PL_Base64Encode(buffer, strlen(buffer), nsnull);
+                cmd = base64Str;
+                PR_Free(base64Str);
+            }
+
+            if (NS_FAILED(rv))
+                ClearFlag(POP3_HAS_AUTH_CRAM_MD5);
         }
-
-        PR_snprintf(buffer, sizeof(buffer), "%s %s", m_username.get(), encodedDigest.get());
-        char *base64Str = PL_Base64Encode(buffer, strlen(buffer), nsnull);
-        cmd = base64Str;
-        PR_Free(base64Str);
-      }
-    }
-    else
-    if (TestCapFlag(POP3_HAS_AUTH_LOGIN)) 
-	{
-        char * base64Str = 
-            PL_Base64Encode(password, PL_strlen(password), nsnull);
-        cmd = base64Str;
-        PR_Free(base64Str);
     }
     else
     {
-        cmd = "PASS ";
-        cmd += (const char *) password;    
+        if (TestCapFlag(POP3_HAS_AUTH_LOGIN)) 
+        {
+            char * base64Str = 
+                PL_Base64Encode(password, PL_strlen(password), nsnull);
+            cmd = base64Str;
+            PR_Free(base64Str);
+        }
+        else
+        {
+            cmd = "PASS ";
+            cmd += (const char *) password;    
+        }
     }
     cmd += CRLF;
+
+    m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
 
     m_pop3ConData->next_state_after_response =  (m_pop3ConData->get_url) 
       ? POP3_SEND_GURL : POP3_SEND_STAT;

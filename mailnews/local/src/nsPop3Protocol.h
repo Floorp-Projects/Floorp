@@ -183,7 +183,6 @@ typedef struct Pop3MsgInfo {
 } Pop3MsgInfo;
 
 typedef struct _Pop3ConData {
-    
     PRBool leave_on_server;     /* Whether we're supposed to leave messages
                                    on server. */
     PRInt32 size_limit;         /* Leave messages bigger than this on the
@@ -313,6 +312,8 @@ private:
   Pop3ConData* m_pop3ConData;
   void FreeMsgInfo();
   void Abort();
+
+  PRBool m_useSecAuth;
 
   void SetCapFlag(PRUint32 flag);
   void ClearCapFlag(PRUint32 flag);
