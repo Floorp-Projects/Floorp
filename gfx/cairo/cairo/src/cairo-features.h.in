@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl Worth <cworth@east.isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #ifndef CAIRO_FEATURES_H
@@ -49,9 +49,13 @@
 
 #define @XCB_SURFACE_FEATURE@
 
+#define @WIN32_SURFACE_FEATURE@
+
 #define @GLITZ_SURFACE_FEATURE@
 
 #define @FT_FONT_FEATURE@
+
+#define @WIN32_FONT_FEATURE@
 
 #define @ATSUI_FONT_FEATURE@
 

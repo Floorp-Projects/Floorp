@@ -1,0 +1,154 @@
+<!-- ##### SECTION Title ##### -->
+cairo_pattern_t
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF cairo_pattern_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION cairo_pattern_create_for_surface ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_create_linear ##### -->
+<para>
+
+</para>
+
+@x0: 
+@y0: 
+@x1: 
+@y1: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_create_radial ##### -->
+<para>
+
+</para>
+
+@cx0: 
+@cy0: 
+@radius0: 
+@cx1: 
+@cy1: 
+@radius1: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_reference ##### -->
+<para>
+
+</para>
+
+@pattern: 
+
+
+<!-- ##### FUNCTION cairo_pattern_destroy ##### -->
+<para>
+
+</para>
+
+@pattern: 
+
+
+<!-- ##### FUNCTION cairo_pattern_add_color_stop ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@offset: 
+@red: 
+@green: 
+@blue: 
+@alpha: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_set_matrix ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@matrix: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_matrix ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@matrix: 
+@Returns: 
+
+
+<!-- ##### ENUM cairo_extend_t ##### -->
+<para>
+
+</para>
+
+@CAIRO_EXTEND_NONE: 
+@CAIRO_EXTEND_REPEAT: 
+@CAIRO_EXTEND_REFLECT: 
+
+<!-- ##### FUNCTION cairo_pattern_set_extend ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@extend: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_extend ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_set_filter ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@filter: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_filter ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@Returns: 
+
+

@@ -23,18 +23,23 @@
  * Author: Carl Worth, Red Hat, Inc.
  */
 
-#ifndef _PIXMAN_XORG_COMPAT_H_
-#define _PIXMAN_XORG_COMPAT_H_
+#ifndef _PIXMAN_XSERVER_COMPAT_H_
+#define _PIXMAN_XSERVER_COMPAT_H_
 
 /* This is a compatibility header file, designed to make it easier to
- * copy files directly from the xorg server into the implementation of
- * libpixman.
+ * synchronize files between libpixman and the xserver repository.
  *
- * The intended usage is that when copying files from the server, the
- * only change necessary should be to replace the block of include
- * directives with:
+ * Of course, long-term we would instead like to have the X server
+ * depend on libpixman to eliminate the code duplication. But for now,
+ * we at least make it easy to share files.
  *
- *	#include "pixman-xorg-compat.h"
+ * The libpixman code base regards the xserver repository as canonical
+ * for any shared files, so changes should be pushed up there. Then,
+ * to merge changes back down into libpixman, the process should be to
+ * simply copy the file and to replace the block of include directives
+ * with:
+ *
+ *	#include "pixman-xserver-compat.h"
  */
 
 /* First, include the primary internal header file for libpixman. */
@@ -44,13 +49,18 @@
 /* Then, define any names that the server code will be expecting in
  * terms of libpixman names. */
 
-typedef pixman_bits_t		FbBits;
-typedef pixman_image_t*		PicturePtr;
-
 typedef uint8_t			CARD8;
 typedef uint16_t		CARD16;
-
 typedef int16_t			INT16;
+
+typedef int			Bool;
+#define FALSE 0
+#define TRUE  1
+
+typedef pixman_bits_t		FbBits;
+typedef pixman_image_t*		PicturePtr;
+typedef pixman_box16_t		BoxRec;
+typedef pixman_box16_t*		BoxPtr;
 
 typedef pixman_point_fixed_t	xPointFixed;
 typedef pixman_line_fixed_t	xLineFixed;

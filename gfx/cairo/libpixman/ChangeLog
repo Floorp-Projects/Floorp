@@ -1,3 +1,95 @@
+2005-03-07  Carl Worth  <cworth@cworth.org>
+
+	* RELEASING: Add notes on using -head suffix for PIXMAN_VERSION.
+
+	* NEWS: Add notes for snapshot 0.1.4.
+
+	* configure.in: Increment version to 0.1.4.
+
+2005-03-04  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c (pixman_composite_trapezoids): Intersect bounds of
+	trapezoids with the bounds of the destination surface before
+	creating an intermediate surface.
+
+2005-03-04  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c (pixman_composite_trapezoids): Add comment from
+	xserver's mitrap.c.
+
+2005-03-04  David Reveman  <davidr@novell.com>
+
+	* src/pixman.h: 
+	* src/ictrap.c: Add pixman_add_trapezoids.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
+	* src/icimage.c (miIsSolidAlpha): Port from render/mipict.c.
+
+	* src/ictrap.c (pixman_composite_trapezoids): Merge in
+	optimization from render/mitrap.c for op==ADD and solid alpha src.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman-xserver-compat.h (BoxRec, BoxPtr, Bool, TRUE, FALSE):
+	Add a few more things that might be helpful when moving more files
+	over from xserver.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
+	* src/icint.h:
+	* src/ictrap.c: Move definitions of MIN and MAX macros from
+	ictrap.c to icint.h.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c (pixman_composite_trapezoids): Remove dead "if
+	(!format)" code which also makes things more in synch with the
+	server's mitrap.c.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c: Restore original copyright and license which must
+	have been inadvertently changed.
+
+2005-03-02  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman-xserver-compat.h: Fix comment to clarify that
+	libpixman regards the xserver repository as its canonical upstream
+	for some files.
+
+	* src/ic.c, src/icblt.c, src/icbltone.c, src/iccolor.c,
+	src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h,
+	src/icint.h, src/icpixels.c, src/icrect.c, src/icrop.h,
+	src/icstipple.c, src/ictransform.c, src/ictrap.c, src/ictri.c,
+	src/icutil.c, src/pixman.h, src/slim_internal.h: Convert file
+	encodings from ISO-8859 to UTF-8.
+
+2005-02-21  Carl Worth  <cworth@cworth.org>
+
+	* src/renderedge.h: Add only-just-better-than-ASCII-art diagram
+	showing all macros used in locating sub-pixel sample rows/columns.
+	
+	* src/renderedge.h (RenderEdgeStepSmall, RenderEdgeStepBig): Add
+	missing protective parentheses around macro parameter usage.
+
+2005-02-21  Carl Worth  <cworth@cworth.org>
+
+	* src/ic.c: 
+	* src/icint.h: Move definition of __inline for non-gcc from ic.c
+	to icint.h so it applies to more code in the implementation.
+
+2005-02-06  Owen Taylor  <otaylor@redhat.com>
+
+	* configure.in: Add AC_PREREQ(2.54) to help the Debian 
+	auto-guess-which-configure-version hack.
+
+2005-01-26  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman.h: Use 32-bits for pixman_bits_t, even on 64-bit
+	platforms. This should fix bug #2335 as well as rendering problems
+	seen on 64-bit platforms.
+
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
 	* NEWS: Add notes for snapshot 0.1.3.

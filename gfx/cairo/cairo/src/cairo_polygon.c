@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include <stdlib.h>

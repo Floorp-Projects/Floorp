@@ -1,0 +1,45 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>XLib Backend</title><meta name="generator" content="DocBook XSL Stylesheets V1.65.1"><link rel="home" href="index.html" title="Cairo: A Vector Graphics Library"><link rel="up" href="pt02.html" title="Part II. Reference"><link rel="previous" href="cairo-XCB-Backend.html" title="XCB Backend"><meta name="generator" content="GTK-Doc V1.3 (XML mode)"><link rel="stylesheet" href="style.css" type="text/css"><link rel="part" href="pt01.html" title="Part I. Tutorial"><link rel="part" href="pt02.html" title="Part II. Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><table class="navigation" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2"><tr valign="middle"><td><a accesskey="p" href="cairo-XCB-Backend.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td><td><a accesskey="u" href="pt02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td><td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td><th width="100%" align="center">Cairo: A Vector Graphics Library</th></tr></table><div class="refentry" lang="en"><a name="cairo-XLib-Backend"></a><div class="titlepage"><div></div><div></div></div><div class="refnamediv"><table width="100%"><tr><td valign="top"><h2><span class="refentrytitle">XLib Backend</span></h2><p>XLib Backend &#8212; </p></td><td valign="top" align="right"></td></tr></table></div><div class="refsynopsisdiv"><h2>Synopsis</h2><pre class="synopsis">
+
+
+
+void        <a href="cairo-XLib-Backend.html#cairo-set-target-drawable">cairo_set_target_drawable</a>       (<a href="cairo-cairo-t.html#cairo-t">cairo_t</a> *cr,
+                                             Display *dpy,
+                                             Drawable drawable);
+<a href="cairo-cairo-surface-t.html#cairo-surface-t">cairo_surface_t</a>* <a href="cairo-XLib-Backend.html#cairo-xlib-surface-create">cairo_xlib_surface_create</a>  (Display *dpy,
+                                             Drawable drawable,
+                                             Visual *visual,
+                                             <a href="cairo-cairo-t.html#cairo-format-t">cairo_format_t</a> format,
+                                             Colormap colormap);
+</pre></div><div class="refsect1" lang="en"><a name="id2739388"></a><h2>Description</h2><p>
+
+</p></div><div class="refsect1" lang="en"><a name="id2739397"></a><h2>Details</h2><div class="refsect2" lang="en"><a name="id2739403"></a><h3><a name="cairo-set-target-drawable"></a>cairo_set_target_drawable ()</h3><a class="indexterm" name="id2739411"></a><pre class="programlisting">void        cairo_set_target_drawable       (<a href="cairo-cairo-t.html#cairo-t">cairo_t</a> *cr,
+                                             Display *dpy,
+                                             Drawable drawable);</pre><p>
+Directs output for a <a href="cairo-cairo-t.html#cairo-t"><span class="type">cairo_t</span></a> to an Xlib drawable.  <i class="parameter"><tt>drawable</tt></i> must
+be a Window or Pixmap on the default screen of <i class="parameter"><tt>dpy</tt></i> using the
+default colormap and visual.  Using this function is slow because
+the function must retrieve information about <i class="parameter"><tt>drawable</tt></i> from the X
+server.
+ 
+The combination of <a href="cairo-XLib-Backend.html#cairo-xlib-surface-create"><tt class="function">cairo_xlib_surface_create()</tt></a> and
+<a href="cairo-cairo-t.html#cairo-set-target-surface"><tt class="function">cairo_set_target_surface()</tt></a> is somewhat more flexible, although
+it still is slow.</p><p>
+
+</p><div class="variablelist"><table border="0"><col align="left" valign="top"><tbody><tr><td><span class="term"><i class="parameter"><tt>cr</tt></i> :</span></td><td> a <a href="cairo-cairo-t.html#cairo-t"><span class="type">cairo_t</span></a>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>dpy</tt></i> :</span></td><td> an X display
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>drawable</tt></i> :</span></td><td> a window or pixmap on the default screen of <i class="parameter"><tt>dpy</tt></i>
+</td></tr></tbody></table></div></div><hr><div class="refsect2" lang="en"><a name="id2681239"></a><h3><a name="cairo-xlib-surface-create"></a>cairo_xlib_surface_create ()</h3><a class="indexterm" name="id2681247"></a><pre class="programlisting"><a href="cairo-cairo-surface-t.html#cairo-surface-t">cairo_surface_t</a>* cairo_xlib_surface_create  (Display *dpy,
+                                             Drawable drawable,
+                                             Visual *visual,
+                                             <a href="cairo-cairo-t.html#cairo-format-t">cairo_format_t</a> format,
+                                             Colormap colormap);</pre><p>
+
+</p><div class="variablelist"><table border="0"><col align="left" valign="top"><tbody><tr><td><span class="term"><i class="parameter"><tt>dpy</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>drawable</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>visual</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>format</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><i class="parameter"><tt>colormap</tt></i> :</span></td><td>
+</td></tr><tr><td><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></td><td>
+
+
+</td></tr></tbody></table></div></div></div></div><table class="navigation" width="100%" summary="Navigation footer" cellpadding="2" cellspacing="0"><tr valign="middle"><td align="left"><a accesskey="p" href="cairo-XCB-Backend.html"><b>&lt;&lt; XCB Backend</b></a></td><td align="right"></td></tr></table></body></html>

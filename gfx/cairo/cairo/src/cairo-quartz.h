@@ -31,16 +31,19 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_QUARTZ_H
 #define CAIRO_QUARTZ_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_QUARTZ_SURFACE
 
 #include <Carbon/Carbon.h>
+
+CAIRO_BEGIN_DECLS
 
 void
 cairo_set_target_quartz_context(   	cairo_t		*cr,
@@ -52,6 +55,8 @@ cairo_surface_t *
 cairo_quartz_surface_create (   CGContextRef    context,
 				int		width,
 				int		height);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 #endif /* CAIRO_QUARTZ_H */

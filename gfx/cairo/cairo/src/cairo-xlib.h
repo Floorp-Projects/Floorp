@@ -31,16 +31,19 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_XLIB_H
 #define CAIRO_XLIB_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_XLIB_SURFACE
 
 #include <X11/extensions/Xrender.h>
+
+CAIRO_BEGIN_DECLS
 
 /* XXX: This shold be renamed to cairo_set_target_xlib to match the
  * other backends */
@@ -65,6 +68,8 @@ cairo_xlib_surface_create (Display		*dpy,
 cairo_status_t
 cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);
 */
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 #endif /* CAIRO_XLIB_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2003 Carl Worth
+ * Copyright Â© 2003 Carl Worth
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -33,9 +33,14 @@
 #include <string.h>
 #include <limits.h>
 
-
-
 #include "slim_internal.h"
+
+#ifndef __GNUC__
+#define __inline
+#endif
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 /* C89 has implementation-defined behavior for % with negative operands.
    C99 has well-defined behavior which is that / with integers rounds toward zero

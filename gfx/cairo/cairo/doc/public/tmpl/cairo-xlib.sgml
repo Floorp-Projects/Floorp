@@ -1,0 +1,39 @@
+<!-- ##### SECTION Title ##### -->
+XLib Backend
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION cairo_set_target_drawable ##### -->
+<para>
+
+</para>
+
+@cr: 
+@dpy: 
+@drawable: 
+
+
+<!-- ##### FUNCTION cairo_xlib_surface_create ##### -->
+<para>
+
+</para>
+
+@dpy: 
+@drawable: 
+@visual: 
+@format: 
+@colormap: 
+@Returns: 
+
+

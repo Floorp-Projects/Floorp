@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-Glitz-backend">
+<refmeta>
+<refentrytitle>Glitz backend</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Glitz backend</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="void">void</link>        <link linkend="cairo-set-target-glitz">cairo_set_target_glitz</link>          (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="glitz-surface-t">glitz_surface_t</link> *surface);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-glitz-surface-create">cairo_glitz_surface_create</link> (<link linkend="glitz-surface-t">glitz_surface_t</link> *surface);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-set-target-glitz"/>cairo_set_target_glitz ()</title>
+<indexterm><primary>cairo_set_target_glitz</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_glitz          (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="glitz-surface-t">glitz_surface_t</link> *surface);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-glitz-surface-create"/>cairo_glitz_surface_create ()</title>
+<indexterm><primary>cairo_glitz_surface_create</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_glitz_surface_create (<link linkend="glitz-surface-t">glitz_surface_t</link> *surface);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>surface</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

@@ -31,16 +31,19 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
-
-#include <cairo.h>
 
 #ifndef CAIRO_GLITZ_H
 #define CAIRO_GLITZ_H
+
+#include <cairo.h>
+
 #ifdef  CAIRO_HAS_GLITZ_SURFACE
 
 #include <glitz.h>
+
+CAIRO_BEGIN_DECLS
 
 void
 cairo_set_target_glitz (cairo_t *cr,
@@ -48,6 +51,8 @@ cairo_set_target_glitz (cairo_t *cr,
 
 cairo_surface_t *
 cairo_glitz_surface_create (glitz_surface_t *surface);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #endif /* CAIRO_GLITZ_H */

@@ -1,0 +1,38 @@
+<!-- ##### SECTION Title ##### -->
+Quartz Backend
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION cairo_set_target_quartz_context ##### -->
+<para>
+
+</para>
+
+@cr: 
+@context: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION cairo_quartz_surface_create ##### -->
+<para>
+
+</para>
+
+@context: 
+@width: 
+@height: 
+@Returns: 
+
+

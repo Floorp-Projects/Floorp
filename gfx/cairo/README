@@ -5,18 +5,13 @@ file included in this directory.
 
 VERSIONS:
 
-  cairo 0.3.0
-  libpixman 0.1.3
+  cairo 0.4.0
+  libpixman 0.1.4
 
 PATCHES:
 
-  quartz-surface.diff - quartz backend get/set surface behave
-    differently than cairo expects, so partially transparent objects
-    tend to blend towards opaque the more that is drawn.  Short term
-    inefficient workaround of clearing the buffer on each set.
+  subdirs.diff - don't build test/ or doc/.
 
-  font-backend.diff - upstream patch to configure.in to make sure
-    that a font backend is available.
+  stdint.diff - select between inttypes.h and stdint.h for AIX.
 
-  stdint.diff - add checking for appropriate stdint.h/inttypes.h
-    header to include.  Needed for AIX.
+  quartz.diff - update cairo quartz/atsui backend for 0.4.0, reenable.

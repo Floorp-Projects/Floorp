@@ -32,7 +32,7 @@
  *
  * Contributor(s):
  *      Olivier Andrieu <oliv__a@users.sourceforge.net>
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include <png.h>
@@ -185,62 +185,65 @@ _cairo_png_surface_pixels_per_inch (void *abstract_surface)
     return 96.0;
 }
 
-static cairo_image_surface_t *
-_cairo_png_surface_get_image (void *abstract_surface)
+static cairo_status_t
+_cairo_png_surface_acquire_source_image (void                    *abstract_surface,
+					 cairo_image_surface_t  **image_out,
+					 void                   **image_extra)
 {
     cairo_png_surface_t *surface = abstract_surface;
+    
+    *image_out = surface->image;
 
-    cairo_surface_reference (&surface->image->base);
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    return surface->image;
+static void
+_cairo_png_surface_release_source_image (void                   *abstract_surface,
+					 cairo_image_surface_t  *image,
+					 void                   *image_extra)
+{
 }
 
 static cairo_status_t
-_cairo_png_surface_set_image (void			*abstract_surface,
-			      cairo_image_surface_t	*image)
+_cairo_png_surface_acquire_dest_image (void                    *abstract_surface,
+				       cairo_rectangle_t       *interest_rect,
+				       cairo_image_surface_t  **image_out,
+				       cairo_rectangle_t       *image_rect,
+				       void                   **image_extra)
 {
     cairo_png_surface_t *surface = abstract_surface;
+    
+    image_rect->x = 0;
+    image_rect->y = 0;
+    image_rect->width = surface->image->width;
+    image_rect->height = surface->image->height;
+    
+    *image_out = surface->image;
 
-    if (image == surface->image)
-	return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    /* XXX: Need to call _cairo_image_surface_set_image here, but it's
-       not implemented yet. */
+static void
+_cairo_png_surface_release_dest_image (void                   *abstract_surface,
+				       cairo_rectangle_t      *interest_rect,
+				       cairo_image_surface_t  *image,
+				       cairo_rectangle_t      *image_rect,
+				       void                   *image_extra)
+{
+}
 
+static cairo_status_t
+_cairo_png_surface_clone_similar (void			*abstract_surface,
+				  cairo_surface_t	*src,
+				  cairo_surface_t     **clone_out)
+{
     return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_status_t
-_cairo_png_surface_set_matrix (void		*abstract_surface,
-			       cairo_matrix_t	*matrix)
-{
-    cairo_png_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_matrix (surface->image, matrix);
-}
-
-static cairo_status_t
-_cairo_png_surface_set_filter (void		*abstract_surface,
-			       cairo_filter_t	filter)
-{
-    cairo_png_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_filter (surface->image, filter);
-}
-
-static cairo_status_t
-_cairo_png_surface_set_repeat (void		*abstract_surface,
-			       int		repeat)
-{
-    cairo_png_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_repeat (surface->image, repeat);
 }
 
 static cairo_int_status_t
 _cairo_png_surface_composite (cairo_operator_t	operator,
-			      cairo_surface_t	*generic_src,
-			      cairo_surface_t	*generic_mask,
+			      cairo_pattern_t	*src,
+			      cairo_pattern_t	*mask,
 			      void		*abstract_dst,
 			      int		src_x,
 			      int		src_y,
@@ -266,10 +269,14 @@ _cairo_png_surface_fill_rectangles (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_png_surface_composite_trapezoids (cairo_operator_t	operator,
-					 cairo_surface_t		*generic_src,
+					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
-					 int			x_src,
-					 int			y_src,
+					 int			src_x,
+					 int			src_y,
+					 int			dst_x,
+					 int			dst_y,
+					 unsigned int		width,
+					 unsigned int		height,
 					 cairo_trapezoid_t	*traps,
 					 int			num_traps)
 {
@@ -297,18 +304,20 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 	rows[i] = surface->image->data + i * surface->image->stride;
 
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (png == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (png == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto BAIL1;
+    }
 
     info = png_create_info_struct (png);
     if (info == NULL) {
-	png_destroy_write_struct (&png, NULL);
-	return CAIRO_STATUS_NO_MEMORY;
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto BAIL2;
     }
 
     if (setjmp (png_jmpbuf (png))) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL;
+	goto BAIL2;
     }
     
     png_init_io (png, surface->file);
@@ -332,7 +341,7 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 	break;
     default:
 	status = CAIRO_STATUS_NULL_POINTER;
-	goto BAIL;
+	goto BAIL2;
     }
 
     png_set_IHDR (png, info,
@@ -365,9 +374,9 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 
     surface->copied = 1;
 
-BAIL:
+BAIL2:
     png_destroy_write_struct (&png, &info);
-
+BAIL1:
     free (rows);
 
     return status;
@@ -397,29 +406,20 @@ _cairo_png_surface_set_clip_region (void *abstract_surface,
     return _cairo_image_surface_set_clip_region (surface->image, region);
 }
 
-static cairo_int_status_t
-_cairo_png_surface_create_pattern (void *abstract_surface,
-                                   cairo_pattern_t *pattern,
-                                   cairo_box_t *extents)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_create_similar,
     _cairo_png_surface_destroy,
     _cairo_png_surface_pixels_per_inch,
-    _cairo_png_surface_get_image,
-    _cairo_png_surface_set_image,
-    _cairo_png_surface_set_matrix,
-    _cairo_png_surface_set_filter,
-    _cairo_png_surface_set_repeat,
+    _cairo_png_surface_acquire_source_image,
+    _cairo_png_surface_release_source_image,
+    _cairo_png_surface_acquire_dest_image,
+    _cairo_png_surface_release_dest_image,
+    _cairo_png_surface_clone_similar,
     _cairo_png_surface_composite,
     _cairo_png_surface_fill_rectangles,
     _cairo_png_surface_composite_trapezoids,
     _cairo_png_surface_copy_page,
     _cairo_png_surface_show_page,
     _cairo_png_surface_set_clip_region,
-    _cairo_png_surface_create_pattern,
     NULL /* show_glyphs */
 };

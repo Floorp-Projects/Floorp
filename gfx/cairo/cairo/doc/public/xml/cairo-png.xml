@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-PNG-Backend">
+<refmeta>
+<refentrytitle>PNG Backend</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>PNG Backend</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="void">void</link>        <link linkend="cairo-set-target-png">cairo_set_target_png</link>            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-png-surface-create">cairo_png_surface_create</link>   (<link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-set-target-png"/>cairo_set_target_png ()</title>
+<indexterm><primary>cairo_set_target_png</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_png            (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>file</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-png-surface-create"/>cairo_png_surface_create ()</title>
+<indexterm><primary>cairo_png_surface_create</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_png_surface_create   (<link linkend="FILE:CAPS">FILE</link> *file,
+                                             <link linkend="cairo-format-t">cairo_format_t</link> format,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>file</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>format</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

@@ -1,0 +1,42 @@
+<!-- ##### SECTION Title ##### -->
+PS Backend
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION cairo_set_target_ps ##### -->
+<para>
+
+</para>
+
+@cr: 
+@file: 
+@width_inches: 
+@height_inches: 
+@x_pixels_per_inch: 
+@y_pixels_per_inch: 
+
+
+<!-- ##### FUNCTION cairo_ps_surface_create ##### -->
+<para>
+
+</para>
+
+@file: 
+@width_inches: 
+@height_inches: 
+@x_pixels_per_inch: 
+@y_pixels_per_inch: 
+@Returns: 
+
+

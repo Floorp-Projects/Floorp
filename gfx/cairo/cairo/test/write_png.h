@@ -1,5 +1,5 @@
 /*
- * Copyright © 2003 USC, Information Sciences Institute
+ * Copyright Â© 2003 USC, Information Sciences Institute
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -29,7 +29,7 @@
 #define WRITE_PNG_H
 
 void
-write_png_argb32 (char *buffer, char *filename,
+write_png_argb32 (char *buffer, FILE * file,
 		  int width, int height, int stride);
 
 #endif

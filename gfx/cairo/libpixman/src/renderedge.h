@@ -1,5 +1,5 @@
 /*
- * $Id: renderedge.h,v 1.1 2005/02/24 20:08:55 tor%cs.brown.edu Exp $
+ * $Id: renderedge.h,v 1.8 2006/02/03 04:49:30 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -26,6 +26,45 @@
 #define _RENDEREDGE_H_
 
 #include "pixman-xserver-compat.h"
+
+/* Here is a drawing of the sample grid for the 4-bit alpha case,
+   along with indications of the various defined terms:
+
+                STEP_Y_SMALL
+┌─────┬─────┬─────┐  ↓
+│•••••│•••••│•••••│ ─── ⟵── Y_FRAC_FIRST
+│•••••│•••••│•••••│ ───
+│•••••│•••••│•••••│  ↑  ⟵── Y_FRAC_LAST
+├─────┼─────┼─────┤
+│•••••│•••••│•••••│
+│•••••│•••••│•••••│  ↓
+│•••••│•••••│•••••│ ───
+├─────┼─────┼─────┤ STEP_Y_BIG
+│•••••│•••••│•••••│ ───
+│•••••│•••••│•••••│  ↑
+│•••••│•••••│•••••│
+└─────┴─────┴─────┘
+ │   │ ││ ⟶│ │⟵STEP_X_BIG
+ │   │⟶││⟵STEP_X_SMALL
+ │   │
+ │   └ X_FRAC_LAST
+ │
+ └ X_FRAC_FIRST
+
+N = 4 		(# of bits of alpha)
+MAX_ALPHA = 15	(# of samples per pixel)
+N_X_FRAC = 5	(# of sample columns per pixel)
+N_Y_FRAC = 3	(# of sample rows per column)
+STEP_X_SMALL	(distance between sample columns within a pixel)
+STEP_X_BIG	(distance between sample columns across pixel boundaries)
+STEP_Y_SMALL	(distance between sample rows within a pixel)
+STEP_Y_BIG	(distance between sample rows across pixel boundaries)
+X_FRAC_FIRST	(sub-pixel position of first sample column in pixel)
+X_FRAC_LAST	(sub-pixel position of last  sample column in pixel)
+Y_FRAC_FIRST	(sub-pixel position of first sample row in pixel)
+Y_FRAC_LAST	(sub-pixel position of last  sample row pixel)
+
+*/
 
 #define MAX_ALPHA(n)	((1 << (n)) - 1)
 #define N_Y_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) - 1)
@@ -69,12 +108,12 @@ typedef struct {
  * Step across a small sample grid gap
  */
 #define RenderEdgeStepSmall(edge) { \
-    edge->x += edge->stepx_small;   \
-    edge->e += edge->dx_small;	    \
-    if (edge->e > 0)		    \
+    (edge)->x += (edge)->stepx_small;   \
+    (edge)->e += (edge)->dx_small;	    \
+    if ((edge)->e > 0)		    \
     {				    \
-	edge->e -= edge->dy;	    \
-	edge->x += edge->signdx;    \
+	(edge)->e -= (edge)->dy;	    \
+	(edge)->x += (edge)->signdx;    \
     }				    \
 }
 
@@ -82,12 +121,12 @@ typedef struct {
  * Step across a large sample grid gap
  */
 #define RenderEdgeStepBig(edge) {   \
-    edge->x += edge->stepx_big;	    \
-    edge->e += edge->dx_big;	    \
-    if (edge->e > 0)		    \
+    (edge)->x += (edge)->stepx_big;	    \
+    (edge)->e += (edge)->dx_big;	    \
+    if ((edge)->e > 0)		    \
     {				    \
-	edge->e -= edge->dy;	    \
-	edge->x += edge->signdx;    \
+	(edge)->e -= (edge)->dy;	    \
+	(edge)->x += (edge)->signdx;    \
     }				    \
 }
 

@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,293 +32,129 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
+ *      Graydon Hoare <graydon@redhat.com>
+ *      Owen Taylor <otaylor@redhat.com>
  */
 
 #include "cairoint.h"
 
-/* First we implement a global font cache for named fonts. */
-
-typedef struct {
-    cairo_cache_entry_base_t base;
-    const char *family;
-    cairo_font_slant_t slant;
-    cairo_font_weight_t weight;    
-} cairo_font_cache_key_t;
-
-typedef struct {
-    cairo_font_cache_key_t key;
-    cairo_unscaled_font_t *unscaled;
-} cairo_font_cache_entry_t;
-
-static unsigned long
-_font_cache_hash (void *cache, void *key)
-{
-    unsigned long hash;
-    cairo_font_cache_key_t *in;
-    in = (cairo_font_cache_key_t *) key;
-
-    /* 1607 and 1451 are just a couple random primes. */
-    hash = _cairo_hash_string (in->family);
-    hash += ((unsigned long) in->slant) * 1607;
-    hash += ((unsigned long) in->weight) * 1451;
-    return hash;
-}
-
-
-static int
-_font_cache_keys_equal (void *cache,
-			void *k1,
-			void *k2)
-{
-    cairo_font_cache_key_t *a, *b;
-    a = (cairo_font_cache_key_t *) k1;
-    b = (cairo_font_cache_key_t *) k2;
-    
-    return (strcmp (a->family, b->family) == 0) 
-	&& (a->weight == b->weight)
-	&& (a->slant == b->slant);
-}
-
-
-static cairo_status_t
-_font_cache_create_entry (void *cache,
-			  void *key,
-			  void **return_value)
-{
-    const cairo_font_backend_t *backend = CAIRO_FONT_BACKEND_DEFAULT;
-    cairo_font_cache_key_t *k;
-    cairo_font_cache_entry_t *entry;
-    k = (cairo_font_cache_key_t *) key;
-
-    /* XXX: The current freetype backend may return NULL, (for example
-     * if no fonts are installed), but I would like to guarantee that
-     * the toy API always returns at least *some* font, so I would
-     * like to build in some sort fo font here, (even a really lame,
-     * ugly one if necessary). */
-
-    entry = malloc (sizeof (cairo_font_cache_entry_t));
-    if (entry == NULL)
-	goto FAIL;
-
-    entry->key.slant = k->slant;
-    entry->key.weight = k->weight;
-    entry->key.family = strdup(k->family);
-    if (entry->key.family == NULL)
-	goto FREE_ENTRY;
-
-    entry->unscaled = backend->create (k->family, k->slant, k->weight);
-    if (entry->unscaled == NULL)
-	goto FREE_FAMILY;
-    
-    /* Not sure how to measure backend font mem; use a simple count for now.*/
-    entry->key.base.memory = 1;
-    *return_value = entry;
-    return CAIRO_STATUS_SUCCESS;
-    
- FREE_FAMILY:
-    free ((void *) entry->key.family);
-
- FREE_ENTRY:
-    free (entry);
-   
- FAIL:
-    return CAIRO_STATUS_NO_MEMORY;
-}
-
-static void
-_font_cache_destroy_entry (void *cache,
-			   void *entry)
-{
-    cairo_font_cache_entry_t *e;
-    
-    e = (cairo_font_cache_entry_t *) entry;
-    _cairo_unscaled_font_destroy (e->unscaled);
-    free ((void *) e->key.family);
-    free (e);
-}
-
-static void 
-_font_cache_destroy_cache (void *cache)
-{
-    free (cache);
-}
-
-static const cairo_cache_backend_t cairo_font_cache_backend = {
-    _font_cache_hash,
-    _font_cache_keys_equal,
-    _font_cache_create_entry,
-    _font_cache_destroy_entry,
-    _font_cache_destroy_cache
-};
-
-static void
-_lock_global_font_cache (void)
-{
-    /* FIXME: implement locking. */
-}
-
-static void
-_unlock_global_font_cache (void)
-{
-    /* FIXME: implement locking. */
-}
-
-static cairo_cache_t *
-_global_font_cache = NULL;
-
-static cairo_cache_t *
-_get_global_font_cache (void)
-{
-    if (_global_font_cache == NULL) {
-	_global_font_cache = malloc (sizeof (cairo_cache_t));
-	
-	if (_global_font_cache == NULL)
-	    goto FAIL;
-	
-	if (_cairo_cache_init (_global_font_cache,
-			       &cairo_font_cache_backend,
-			       CAIRO_FONT_CACHE_NUM_FONTS_DEFAULT))
-	    goto FAIL;
-    }
-
-    return _global_font_cache;
-    
- FAIL:
-    if (_global_font_cache)
-	free (_global_font_cache);
-    _global_font_cache = NULL;
-    return NULL;
-}
-
-
 /* Now the internal "unscaled + scale" font API */
 
-cairo_unscaled_font_t *
-_cairo_unscaled_font_create (const char           *family, 
-			     cairo_font_slant_t   slant, 
-			     cairo_font_weight_t  weight)
+cairo_private cairo_status_t
+_cairo_font_create (const char           *family, 
+		    cairo_font_slant_t   slant, 
+		    cairo_font_weight_t  weight,
+		    cairo_font_scale_t   *sc,
+		    cairo_font_t         **font)
 {
-    cairo_cache_t * cache;
-    cairo_font_cache_key_t key;
-    cairo_font_cache_entry_t *font;
-    cairo_status_t status;
+    const cairo_font_backend_t *backend = CAIRO_FONT_BACKEND_DEFAULT;
 
-    _lock_global_font_cache ();
-    cache = _get_global_font_cache ();
-    if (cache == NULL) {
-	_unlock_global_font_cache ();
-	return NULL;
-    }
-
-    key.family = family;
-    key.slant = slant;
-    key.weight = weight;
-    
-    status = _cairo_cache_lookup (cache, &key, (void **) &font);
-    if (status) {
-	_unlock_global_font_cache ();
-	return NULL;
-    }
-
-    _cairo_unscaled_font_reference (font->unscaled);
-    _unlock_global_font_cache ();
-    return font->unscaled;
+    return backend->create (family, slant, weight, sc, font);
 }
 
 void
-_cairo_font_init (cairo_font_t *scaled, 
-		  cairo_font_scale_t *scale, 
-		  cairo_unscaled_font_t *unscaled)
+_cairo_font_init (cairo_font_t               *font, 
+		  cairo_font_scale_t         *scale,
+		  const cairo_font_backend_t *backend)
 {
-    scaled->scale = *scale;
-    scaled->unscaled = unscaled;
-    scaled->refcount = 1;
+    font->scale = *scale;
+    font->refcount = 1;
+    font->backend = backend;
 }
 
-cairo_status_t
-_cairo_unscaled_font_init (cairo_unscaled_font_t 	*font, 
-			   const cairo_font_backend_t	*backend)
+void
+_cairo_unscaled_font_init (cairo_unscaled_font_t      *font, 
+			   const cairo_font_backend_t *backend)
 {
     font->refcount = 1;
     font->backend = backend;
-    return CAIRO_STATUS_SUCCESS;
 }
 
-
 cairo_status_t
-_cairo_unscaled_font_text_to_glyphs (cairo_unscaled_font_t 	*font,
-				     cairo_font_scale_t 	*scale,
-				     const unsigned char 	*utf8, 
-				     cairo_glyph_t 		**glyphs, 
-				     int 			*num_glyphs)
+_cairo_font_text_to_glyphs (cairo_font_t           *font,
+			    const unsigned char    *utf8, 
+			    cairo_glyph_t 	  **glyphs, 
+			    int 		   *num_glyphs)
 {
-    return font->backend->text_to_glyphs (font, scale, utf8, glyphs, num_glyphs);
+    return font->backend->text_to_glyphs (font, utf8, glyphs, num_glyphs);
 }
 
 cairo_status_t
-_cairo_unscaled_font_glyph_extents (cairo_unscaled_font_t	*font,
-				    cairo_font_scale_t 		*scale,			   
-				    cairo_glyph_t 		*glyphs,
-				    int 			num_glyphs,
-				    cairo_text_extents_t 	*extents)
+_cairo_font_glyph_extents (cairo_font_t	        *font,
+			   cairo_glyph_t 	*glyphs,
+			   int 			num_glyphs,
+			   cairo_text_extents_t *extents)
 {
-    return font->backend->glyph_extents(font, scale, glyphs, num_glyphs, extents);
+    return font->backend->glyph_extents(font, glyphs, num_glyphs, extents);
 }
 
 
 cairo_status_t
-_cairo_unscaled_font_glyph_bbox (cairo_unscaled_font_t	*font,
-				 cairo_font_scale_t	*scale,
-				 cairo_glyph_t          *glyphs,
-				 int                    num_glyphs,
-				 cairo_box_t		*bbox)
+_cairo_font_glyph_bbox (cairo_font_t	*font,
+			cairo_glyph_t  *glyphs,
+			int             num_glyphs,
+			cairo_box_t	*bbox)
 {
-    return font->backend->glyph_bbox (font, scale, glyphs, num_glyphs, bbox);
+    return font->backend->glyph_bbox (font, glyphs, num_glyphs, bbox);
 }
 
 cairo_status_t
-_cairo_unscaled_font_show_glyphs (cairo_unscaled_font_t	*font,
-				  cairo_font_scale_t	*scale,
-				  cairo_operator_t       operator,
-				  cairo_surface_t        *source,
-				  cairo_surface_t        *surface,
-				  int                    source_x,
-				  int                    source_y,
-				  cairo_glyph_t          *glyphs,
-				  int                    num_glyphs)
+_cairo_font_show_glyphs (cairo_font_t	        *font,
+			 cairo_operator_t       operator,
+			 cairo_pattern_t        *pattern,
+			 cairo_surface_t        *surface,
+			 int                    source_x,
+			 int                    source_y,
+			 int			dest_x,
+			 int			dest_y,
+			 unsigned int		width,
+			 unsigned int		height,
+			 cairo_glyph_t          *glyphs,
+			 int                    num_glyphs)
 {
     cairo_status_t status;
     if (surface->backend->show_glyphs != NULL) {
-	status = surface->backend->show_glyphs (font, scale, operator, source, 
-						surface, source_x, source_y,
+	status = surface->backend->show_glyphs (font, operator, pattern, 
+						surface,
+						source_x, source_y,
+						dest_x, dest_y,
+						width, height,
 						glyphs, num_glyphs);
 	if (status == CAIRO_STATUS_SUCCESS)
 	    return status;
     }
 
     /* Surface display routine either does not exist or failed. */
-    return font->backend->show_glyphs (font, scale, operator, source, 
-				       surface, source_x, source_y,
+    return font->backend->show_glyphs (font, operator, pattern, 
+				       surface,
+				       source_x, source_y,
+				       dest_x, dest_y,
+				       width, height,
 				       glyphs, num_glyphs);
 }
 
 cairo_status_t
-_cairo_unscaled_font_glyph_path (cairo_unscaled_font_t	*font,
-				 cairo_font_scale_t 	*scale,
-				 cairo_glyph_t		*glyphs, 
-				 int			num_glyphs,
-				 cairo_path_t        	*path)
+_cairo_font_glyph_path (cairo_font_t	   *font,
+			cairo_glyph_t	   *glyphs, 
+			int		    num_glyphs,
+			cairo_path_t       *path)
 {
-    return font->backend->glyph_path (font, scale, glyphs, num_glyphs, path);
+    return font->backend->glyph_path (font, glyphs, num_glyphs, path);
+}
+
+void
+_cairo_font_get_glyph_cache_key (cairo_font_t            *font,
+				 cairo_glyph_cache_key_t *key)
+{
+  font->backend->get_glyph_cache_key (font, key);
 }
 
 cairo_status_t
-_cairo_unscaled_font_font_extents (cairo_unscaled_font_t	*font,
-				   cairo_font_scale_t		*scale,
-				   cairo_font_extents_t		*extents)
+_cairo_font_font_extents (cairo_font_t	       *font,
+			  cairo_font_extents_t *extents)
 {
-    return font->backend->font_extents(font, scale, extents);
+    return font->backend->font_extents (font, extents);
 }
 
 void
@@ -332,8 +169,7 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font)
     if (--(font->refcount) > 0)
 	return;
 
-    if (font->backend)
-	font->backend->destroy (font);
+    font->backend->destroy_unscaled_font (font);
 }
 
 
@@ -352,37 +188,154 @@ cairo_font_destroy (cairo_font_t *font)
     if (--(font->refcount) > 0)
 	return;
 
-    if (font->unscaled)
-	_cairo_unscaled_font_destroy (font->unscaled);
-
-    free (font);
+    font->backend->destroy_font (font);
 }
 
-void
-cairo_font_set_transform (cairo_font_t *font, 
-			  cairo_matrix_t *matrix)
+/**
+ * cairo_font_extents:
+ * @font: a #cairo_font_t
+ * @font_matrix: the font transformation for which this font was
+ *    created. (See cairo_transform_font()). This is needed
+ *    properly convert the metrics from the font into user space.
+ * @extents: a #cairo_font_extents_t which to store the retrieved extents.
+ * 
+ * Gets the metrics for a #cairo_font_t. 
+ * 
+ * Return value: %CAIRO_STATUS_SUCCESS on success. Otherwise, an
+ *  error such as %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_status_t
+cairo_font_extents (cairo_font_t         *font,
+		    cairo_matrix_t       *font_matrix,
+		    cairo_font_extents_t *extents)
 {
-    double dummy;
-    cairo_matrix_get_affine (matrix,
-			     &font->scale.matrix[0][0],
-			     &font->scale.matrix[0][1],
-			     &font->scale.matrix[1][0],
-			     &font->scale.matrix[1][1],
-			     &dummy, &dummy);    
+    cairo_int_status_t status;
+    double  font_scale_x, font_scale_y;
+
+    status = _cairo_font_font_extents (font, extents);
+
+    if (!CAIRO_OK (status))
+      return status;
+    
+    _cairo_matrix_compute_scale_factors (font_matrix,
+					 &font_scale_x, &font_scale_y,
+					 /* XXX */ 1);
+    
+    /* 
+     * The font responded in unscaled units, scale by the font
+     * matrix scale factors to get to user space
+     */
+    
+    extents->ascent *= font_scale_y;
+    extents->descent *= font_scale_y;
+    extents->height *= font_scale_y;
+    extents->max_x_advance *= font_scale_x;
+    extents->max_y_advance *= font_scale_y;
+      
+    return status;
 }
 
+/**
+ * cairo_font_glyph_extents:
+ * @font: a #cairo_font_t
+ * @font_matrix: the font transformation for which this font was
+ *    created. (See cairo_transform_font()). This is needed
+ *    properly convert the metrics from the font into user space.
+ * @glyphs: an array of glyph IDs with X and Y offsets.
+ * @num_glyphs: the number of glyphs in the @glyphs array
+ * @extents: a #cairo_text_extents_t which to store the retrieved extents.
+ * 
+ * cairo_font_glyph_extents() gets the overall metrics for a string of
+ * glyphs. The X and Y offsets in @glyphs are taken from an origin of 0,0. 
+ **/
 void
-cairo_font_current_transform (cairo_font_t *font, 
-			      cairo_matrix_t *matrix)
+cairo_font_glyph_extents (cairo_font_t          *font,
+			  cairo_matrix_t        *font_matrix,
+			  cairo_glyph_t         *glyphs, 
+			  int                   num_glyphs,
+			  cairo_text_extents_t  *extents)
 {
-    cairo_matrix_set_affine (matrix,
-			     font->scale.matrix[0][0],
-			     font->scale.matrix[0][1],
-			     font->scale.matrix[1][0],
-			     font->scale.matrix[1][1],
-			     0, 0);
-}
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t origin_glyph;
+    cairo_text_extents_t origin_extents;
+    int i;
+    double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0;
+    double x_pos = 0.0, y_pos = 0.0;
+    int set = 0;
 
+    if (!num_glyphs)
+    {
+	extents->x_bearing = 0.0;
+	extents->y_bearing = 0.0;
+	extents->width = 0.0;
+	extents->height = 0.0;
+	extents->x_advance = 0.0;
+	extents->y_advance = 0.0;
+	
+	return;
+    }
+
+    for (i = 0; i < num_glyphs; i++)
+    {
+	double		x, y;
+	double		wm, hm;
+	
+	origin_glyph = glyphs[i];
+	origin_glyph.x = 0.0;
+	origin_glyph.y = 0.0;
+	status = _cairo_font_glyph_extents (font,
+					    &origin_glyph, 1,
+					    &origin_extents);
+	
+	/*
+	 * Transform font space metrics into user space metrics
+	 * by running the corners through the font matrix and
+	 * expanding the bounding box as necessary
+	 */
+	x = origin_extents.x_bearing;
+	y = origin_extents.y_bearing;
+	cairo_matrix_transform_point (font_matrix,
+				      &x, &y);
+
+	for (hm = 0.0; hm <= 1.0; hm += 1.0)
+	    for (wm = 0.0; wm <= 1.0; wm += 1.0)
+	    {
+		x = origin_extents.x_bearing + origin_extents.width * wm;
+		y = origin_extents.y_bearing + origin_extents.height * hm;
+		cairo_matrix_transform_point (font_matrix,
+					      &x, &y);
+		x += glyphs[i].x;
+		y += glyphs[i].y;
+		if (!set)
+		{
+		    min_x = max_x = x;
+		    min_y = max_y = y;
+		    set = 1;
+		}
+		else
+		{
+		    if (x < min_x) min_x = x;
+		    if (x > max_x) max_x = x;
+		    if (y < min_y) min_y = y;
+		    if (y > max_y) max_y = y;
+		}
+	    }
+
+	x = origin_extents.x_advance;
+	y = origin_extents.y_advance;
+	cairo_matrix_transform_point (font_matrix,
+				      &x, &y);
+	x_pos = glyphs[i].x + x;
+	y_pos = glyphs[i].y + y;
+    }
+
+    extents->x_bearing = min_x - glyphs[0].x;
+    extents->y_bearing = min_y - glyphs[0].y;
+    extents->width = max_x - min_x;
+    extents->height = max_y - min_y;
+    extents->x_advance = x_pos - glyphs[0].x;
+    extents->y_advance = y_pos - glyphs[0].y;
+}
 
 /* Now we implement functions to access a default global image & metrics
  * cache. 
@@ -398,7 +351,8 @@ _cairo_glyph_cache_hash (void *cache, void *key)
 	^ ((unsigned long) in->scale.matrix[0][0]) 
 	^ ((unsigned long) in->scale.matrix[0][1]) 
 	^ ((unsigned long) in->scale.matrix[1][0]) 
-	^ ((unsigned long) in->scale.matrix[1][1]) 
+	^ ((unsigned long) in->scale.matrix[1][1])
+        ^ (in->flags * 1451) /* 1451 is just an abitrary prime */
 	^ in->index;
 }
 
@@ -412,6 +366,7 @@ _cairo_glyph_cache_keys_equal (void *cache,
     b = (cairo_glyph_cache_key_t *) k2;
     return (a->index == b->index)
 	&& (a->unscaled == b->unscaled)
+	&& (a->flags == b->flags)
 	&& (a->scale.matrix[0][0] == b->scale.matrix[0][0])
 	&& (a->scale.matrix[0][1] == b->scale.matrix[0][1])
 	&& (a->scale.matrix[1][0] == b->scale.matrix[1][0])

@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="cairo-Quartz-Backend">
+<refmeta>
+<refentrytitle>Quartz Backend</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>CAIRO Library</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Quartz Backend</refname><refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv><title>Synopsis</title>
+
+<synopsis>
+
+
+
+<link linkend="void">void</link>        <link linkend="cairo-set-target-quartz-context">cairo_set_target_quartz_context</link> (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="CGContextRef">CGContextRef</link> context,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+<link linkend="cairo-surface-t">cairo_surface_t</link>* <link linkend="cairo-quartz-surface-create">cairo_quartz_surface_create</link>
+                                            (<link linkend="CGContextRef">CGContextRef</link> context,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);
+</synopsis>
+</refsynopsisdiv>
+
+
+
+
+
+
+
+
+
+<refsect1>
+<title>Description</title>
+<para>
+
+</para>
+</refsect1>
+
+<refsect1>
+<title>Details</title>
+<refsect2>
+<title><anchor id="cairo-set-target-quartz-context"/>cairo_set_target_quartz_context ()</title>
+<indexterm><primary>cairo_set_target_quartz_context</primary></indexterm><programlisting><link linkend="void">void</link>        cairo_set_target_quartz_context (<link linkend="cairo-t">cairo_t</link> *cr,
+                                             <link linkend="CGContextRef">CGContextRef</link> context,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>cr</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>context</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2>
+<title><anchor id="cairo-quartz-surface-create"/>cairo_quartz_surface_create ()</title>
+<indexterm><primary>cairo_quartz_surface_create</primary></indexterm><programlisting><link linkend="cairo-surface-t">cairo_surface_t</link>* cairo_quartz_surface_create
+                                            (<link linkend="CGContextRef">CGContextRef</link> context,
+                                             <link linkend="int">int</link> width,
+                                             <link linkend="int">int</link> height);</programlisting>
+<para>
+
+</para><variablelist role="params">
+<varlistentry><term><parameter>context</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>width</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>height</parameter>&nbsp;:</term>
+<listitem><simpara>
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&nbsp;:</term><listitem><simpara>
+
+
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+
+
+
+</refentry>

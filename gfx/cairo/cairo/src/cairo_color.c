@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
@@ -67,7 +67,8 @@ _cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blu
 }
 
 void
-_cairo_color_get_rgb (cairo_color_t *color, double *red, double *green, double *blue)
+_cairo_color_get_rgb (const cairo_color_t *color,
+		      double *red, double *green, double *blue)
 {
     if (red)
 	*red   = color->red;
