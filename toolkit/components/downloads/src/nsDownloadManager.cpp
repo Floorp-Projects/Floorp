@@ -1453,6 +1453,10 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
   nsCOMPtr<nsIWebProgressListener> wpl(do_QueryElementAt(mDownloads, aIndex));
   nsIWebProgressListener* temp = wpl.get();
   nsDownload* dl = NS_STATIC_CAST(nsDownload*, temp);
+  // Sometimes we get XPInstall progress notifications after everything is done, and there's
+  // no more active downloads... this null check is to prevent a crash in this case.
+  if (!dl) 
+    return NS_ERROR_FAILURE;
 
   switch (aState) {
   case nsIXPIProgressDialog::DOWNLOAD_START:
@@ -1478,7 +1482,7 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
     break;
   case nsIXPIProgressDialog::DIALOG_CLOSE:
     // Close now, if we're allowed to. 
-    gObserverService->NotifyObservers(nsnull, "xpinstall-dialog-close", nsnull);                     
+    gObserverService->NotifyObservers(nsnull, "xpinstall-dialog-close", nsnull);
 
     if (!gStoppingDownloads) {
       nsCOMPtr<nsIStringBundleService> sbs(do_GetService("@mozilla.org/intl/stringbundle;1"));
