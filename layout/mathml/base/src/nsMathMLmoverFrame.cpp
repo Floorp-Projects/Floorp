@@ -143,8 +143,8 @@ nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresConte
   }
   return NS_OK;
 
-  // For #2, the base class will trigger a re-build of all automatic data
-  // in the embellished hierarchy when an accent attribute is changed
+  // For #2, changing the accent attribute will trigger a re-build of
+  // all automatic data in the embellished hierarchy
 }
 
 NS_IMETHODIMP
