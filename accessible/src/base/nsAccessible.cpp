@@ -492,6 +492,30 @@ NS_IMETHODIMP nsAccessible::GetAccName(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsAccessible::GetAccDescription(nsAString& aDescription)
+{
+  // There are 3 conditions that make an accessible have no accDescription:
+  // 1. it's a text node; or
+  // 2. it doesn't have an accName; or
+  // 3. its title attribute equals to its accName nsAutoString name; 
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(mDOMNode));
+  if (!textContent) {
+    nsAutoString name;
+    GetAccName(name);
+    if (!name.IsEmpty()) {
+      // If there's already a name, we'll expose a description.if it's different than the name
+      // If there is no name, then we know the title should really be exposed there
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+      if (elt)
+        elt->GetAttribute(NS_LITERAL_STRING("title"), aDescription);
+      if (!elt || aDescription == name)
+        aDescription.Truncate();
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAccessible::GetAccKeyboardShortcut(nsAString& _retval)
 {
   static PRInt32 gGeneralAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
