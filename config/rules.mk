@@ -369,6 +369,12 @@ run_viewer: $(DIST)/bin/viewer
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	viewer
 
+run_apprunner: $(DIST)/bin/apprunner
+	cd $(DIST)/bin; \
+	MOZILLA_HOME= ; \
+	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
+	apprunner
+
 clean clobber::
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
@@ -993,7 +999,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(OBJDIR) $(DIRS)
 
 envirocheck::
 	@echo -----------------------------------
