@@ -101,7 +101,7 @@ public:
 	NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
-	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
+	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName ,nsIMsgWindow *msgWindow);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder** newFolder);
 
   NS_IMETHOD Compact();
@@ -109,7 +109,7 @@ public:
 	NS_IMETHOD Delete ();
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
   NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
-	NS_IMETHOD Rename (const PRUnichar *aNewName);
+	NS_IMETHOD Rename (const PRUnichar *aNewName, nsIMsgWindow *msgWindow);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
 	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
@@ -151,6 +151,7 @@ protected:
     nsresult WriteStartOfNewMessage();
   nsresult IsChildOfTrash(PRBool *result);
   nsresult RecursiveSetDeleteIsMoveTrash(PRBool bVal);
+  nsresult AlertFolderExists(nsIMsgWindow *msgWindow);
 
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't

@@ -119,14 +119,14 @@ public:
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
     
-	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
+	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName,nsIMsgWindow *msgWindow );
 	NS_IMETHOD AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, nsIMsgFolder **child);
   NS_IMETHODIMP CreateStorageIfMissing(nsIUrlListener* urlListener);
     
   NS_IMETHOD Compact();
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const PRUnichar *newName);
+	NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
     NS_IMETHOD GetNoSelect(PRBool *aResult);
 
