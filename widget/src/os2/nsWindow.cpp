@@ -3398,7 +3398,7 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
    return NS_OK;
 } 
 
-NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec) 
+NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec) 
 {
   // Assume the given string is a local identifier for an icon file.
 
