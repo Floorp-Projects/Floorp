@@ -329,14 +329,8 @@ sub GetGreSpecialID
 {
   my($aDirMozTopSrc)                    = @_;
   my($fileBuildID)                      = "$aDirMozTopSrc/config/nsBuildID.h";
-  my($greID)                            = undef;
-  my($initEmptyValues)                  = 0;
-  my($versionMilestone)                 = GetProductMilestoneVersion($aDirMozTopSrc, $aDirMozTopSrc, $initEmptyValues);
 
-  $greID = GetProductBuildID($fileBuildID, "GRE_BUILD_ID");
-  return($versionMilestone);
-#  return($greID);
-#  return($versionMilestone . "_$greID");
+  return(GetProductBuildID($fileBuildID, "GRE_BUILD_ID"));
 }
 
 # GetGreFileVersion()
