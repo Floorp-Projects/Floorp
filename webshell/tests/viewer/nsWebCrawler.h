@@ -96,6 +96,8 @@ public:
 
   void SetOutputDir(const nsString& aOutputDir);
 
+  void DumpRegressionData(nsIWebShell* aWebShell,
+                          nsIURI*      aURL);
   void SetRegressionDir(const nsString& aOutputDir);
 
   void SetEnableRegression(PRBool aSetting) {
@@ -142,7 +144,7 @@ protected:
   /** generate an output name from a URL */
   FILE* GetOutputFile(nsIURI *aURL, nsString& aOutputName);
 
-  nsIPresShell* GetPresShell();
+  nsIPresShell* GetPresShell(nsIWebShell* aWebShell = nsnull);
 
   void PerformRegressionTest(const nsString& aOutputName);
 
@@ -164,10 +166,14 @@ protected:
   PRBool mHaveURLList;
   PRBool mJiggleLayout;
   PRBool mPostExit;
-  PRInt32 mDelay;
+  PRInt32 mDelay;     // first delay encountered from command line or delay:= in file
+  PRInt32 mLastDelay; // last  delay encountered from command line or delay:= in file 
   PRInt32 mMaxPages;
 
   nsString mCurrentURL;
+  nsIURI*      mLastURL;
+  nsIWebShell* mLastWebShell;
+
   PRTime mStartLoad;
   PRBool mVerbose;
   PRBool mRegressing;
