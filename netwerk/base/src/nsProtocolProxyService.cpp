@@ -91,7 +91,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     nsXPIDLCString tempString;
     if (bChangeAll || !PL_strcmp(pref, "network.proxy.http"))
     {
-        mHTTPProxyHost = nsnull;
+        mHTTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.http", 
                 getter_Copies(tempString));
         if (NS_SUCCEEDED(rv) && tempString && *tempString)
@@ -109,7 +109,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
 
     if (bChangeAll || !PL_strcmp(pref, "network.proxy.ftp"))
     {
-        mFTPProxyHost = nsnull;
+        mFTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.ftp", 
                 getter_Copies(tempString));
         if (NS_SUCCEEDED(rv) && tempString && *tempString)
@@ -226,4 +226,11 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
     return NS_OK;
 }
 
-    
+NS_IMETHODIMP
+nsProtocolProxyService::GetProxyEnabled(PRBool* o_Enabled)
+{
+    if (!o_Enabled)
+        return NS_ERROR_NULL_POINTER;
+    *o_Enabled = mUseProxy;
+    return NS_OK;
+}
