@@ -7,3 +7,6 @@ java/webclient/classes_spec/Makefile
 java/webclient/src_share/Makefile
 java/webclient/src_moz/Makefile
 java/webclient/src_moz/motif/Makefile
+java/waterfall/wf_moz6/Makefile
+java/waterfall/wf_moz6/public/Makefile
+java/waterfall/wf_moz6/src/Makefile
