@@ -23,7 +23,6 @@
 /* this section copied from the hand written nsISupports.h */
 
 #include "nsDebug.h"
-#include "nsTraceRefcnt.h"
 #include "nsID.h"
 #include "nsIID.h"
 #include "nsError.h"
@@ -66,6 +65,7 @@ typedef unsigned long nsrefcnt;
 typedef PRUint32 nsrefcnt;
 #endif
 
+#include "nsTraceRefcnt.h"
 
 /**
  * Base class for all XPCOM objects to use. This macro forces the C++
@@ -119,18 +119,6 @@ public:
    * @return The resulting reference count.
    */
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
-
-#if XPIDL_JS_STUBS
-  // XXX Scriptability hack...
-  static NS_EXPORT_(JSObject*) InitJSClass(JSContext* cx) {
-    return 0;
-  }
-
-  static NS_EXPORT_(JSObject*) GetJSObject(JSContext* cx, nsISupports* priv) {
-    NS_NOTYETIMPLEMENTED("nsISupports isn't XPIDL scriptable yet");
-    return 0;
-  }
-#endif
 
   //@}
 };
@@ -196,10 +184,12 @@ public:
  * @param _class The name of the class implementing the method
  */
 #define NS_IMPL_ADDREF(_class)                               \
-NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                \
+NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
 {                                                            \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  \
-  return ++mRefCnt;                                          \
+  ++mRefCnt;                                                 \
+  NS_LOG_ADDREF(this, mRefCnt, __FILE__, __LINE__);          \
+  return mRefCnt;                                            \
 }
 
 /**
@@ -207,10 +197,12 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                \
  * @param _class The name of the class implementing the method
  */
 #define NS_IMPL_RELEASE(_class)                        \
-NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                         \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)         \
 {                                                      \
   NS_PRECONDITION(0 != mRefCnt, "dup release");        \
-  if (--mRefCnt == 0) {                                \
+  --mRefCnt;                                           \
+  NS_LOG_RELEASE(this, mRefCnt, __FILE__, __LINE__);   \
+  if (mRefCnt == 0) {                                  \
     NS_DELETEXPCOM(this);                              \
     return 0;                                          \
   }                                                    \
@@ -668,6 +660,18 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     ((0 != (_ptr)) ? (_ptr)->Release() : 0);  \
     (_ptr) = 0;                               \
   PR_END_MACRO
+#endif
+
+#ifdef MOZ_LOG_REFCNT
+#define NS_LOG_ADDREF(_ptr, _refcnt, _file, _line) \
+  nsTraceRefcnt::LogAddRef((_ptr), (_refcnt), (_file), (_line))
+
+#define NS_LOG_RELEASE(_ptr, _refcnt, _file, _line) \
+  nsTraceRefcnt::LogRelease((_ptr), (_refcnt), (_file), (_line))
+
+#else
+#define NS_LOG_ADDREF(_file, _line, _ptr, _refcnt)
+#define NS_LOG_RELEASE(_file, _line, _ptr, _refcnt)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
