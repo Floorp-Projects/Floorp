@@ -76,7 +76,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         
         if (newVersion == nsnull)
         {
-            delete [] qualifiedRegNameString;
+            Recycle(qualifiedRegNameString);
             *error = nsInstall::OUT_OF_MEMORY;
             return;
         }
@@ -91,7 +91,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         
         if (newVersion == nsnull)
         {
-            delete [] qualifiedRegNameString;
+            Recycle(qualifiedRegNameString);
             delete oldVersion;
             *error = nsInstall::OUT_OF_MEMORY;
             return;
@@ -114,13 +114,13 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
             areTheyEqual == nsIDOMInstallVersion::BLD_DIFF_MINUS   )
         {
             // the file to be installed is OLDER than what is on disk.  Return error
-            delete [] qualifiedRegNameString;
+            Recycle(qualifiedRegNameString);
             *error = areTheyEqual;
             return;
         }
     }
 
-    delete [] qualifiedRegNameString;
+    Recycle(qualifiedRegNameString);
 
     mFinalFile = new nsFileSpec(folderSpec);
     

@@ -114,7 +114,7 @@ char* nsInstallUninstall::toString()
     }
 
     if (temp)
-        delete [] temp;
+         Recycle(temp);
 
     return buffer;
 }

@@ -276,8 +276,8 @@ nsWinReg::NativeCreateKey(const nsString& subkey, const nsString& classname)
     }
 #endif
 
-    if (subkeyCString)    delete [] subkeyCString;
-    if (classnameCString) delete [] classnameCString;
+    if (subkeyCString)     Recycle(subkeyCString);
+    if (classnameCString)  Recycle(classnameCString);
 
     return result;
 }
@@ -294,7 +294,7 @@ nsWinReg::NativeDeleteKey(const nsString& subkey)
     result = RegDeleteKey( root, subkeyCString );
 #endif
 
-    if (subkeyCString) delete [] subkeyCString;
+    if (subkeyCString)  Recycle(subkeyCString);
 
     return result;
 }
@@ -317,8 +317,8 @@ nsWinReg::NativeDeleteValue(const nsString& subkey, const nsString& valname)
         RegCloseKey( newkey );
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
 
     return result;
 #else
@@ -349,9 +349,9 @@ nsWinReg::NativeSetValueString(const nsString& subkey, const nsString& valname, 
         RegCloseKey( newkey );
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
-    if (valueCString)   delete [] valueCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
+    if (valueCString)    Recycle(valueCString);
 
     return result;
 }
@@ -384,8 +384,8 @@ nsWinReg::NativeGetValueString(const nsString& subkey, const nsString& valname, 
         *aReturn = (char*)valbuf;
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
 }
 
 PRInt32
@@ -407,8 +407,8 @@ nsWinReg::NativeSetValueNumber(const nsString& subkey, const nsString& valname, 
         RegCloseKey( newkey );
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
 
     return result;
 }
@@ -441,8 +441,8 @@ nsWinReg::NativeGetValueNumber(const nsString& subkey, const nsString& valname, 
         *aReturn = valbuf;
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
 }
 
 PRInt32
@@ -472,8 +472,8 @@ nsWinReg::NativeSetValue(const nsString& subkey, const nsString& valname, nsWinR
         RegCloseKey( newkey );
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
 
     return result;
 #else
@@ -512,8 +512,8 @@ nsWinReg::NativeGetValue(const nsString& subkey, const nsString& valname)
         RegCloseKey( newkey );
     }
 
-    if (subkeyCString)  delete [] subkeyCString;
-    if (valnameCString) delete [] valnameCString;
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
 
     return value;
 #else

@@ -1333,7 +1333,7 @@ InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   tempStr = b0.ToNewCString();
   printf("Install:\t%s\n", tempStr);
 
-  delete [] tempStr;
+  Recycle(tempStr);
 
   return JS_TRUE;
 }

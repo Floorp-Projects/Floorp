@@ -113,7 +113,7 @@ PRInt32 nsInstallDelete::Complete()
         if (temp)
         {
             err = VR_Remove(temp);
-            delete [] temp;
+            Recycle(temp);
         }
     }
 
@@ -153,7 +153,7 @@ char* nsInstallDelete::toString()
             nsCRT::free(rsrcVal);
         }
         if (temp)
-            delete [] temp;
+            Recycle(temp);
     }
     else
     {
@@ -234,7 +234,7 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
     }
     
     if(tempCString)
-        delete [] tempCString;
+        Recycle(tempCString);
 
     if (mFinalFile->Exists())
     {
