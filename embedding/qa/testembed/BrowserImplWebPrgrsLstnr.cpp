@@ -116,7 +116,6 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 {
 	char theDocType[100];
 	char theStateType[100];
-//	char theTotalString[1000];
 	int displayMode = 1;
 	nsCString stringMsg;
 	nsCString totalMsg;

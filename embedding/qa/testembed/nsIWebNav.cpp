@@ -82,10 +82,10 @@ NavElement UrlTable[] = {
    {"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
    {"ftp://ftp.netscape.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY},
    {"ftp://ftp.mozilla.org/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
-   {"https://www.worldcom.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
+   {"https://www.motorola.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
    {"https://www.amazon.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY},
    {"about:plugins", nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE},
-   {"javascript: alert('Test!')", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"javascript: document.write('Test!')", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"file://C|/Program Files", nsIWebNavigation::LOAD_FLAGS_NONE}
 };
 
