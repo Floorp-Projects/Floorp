@@ -37,6 +37,7 @@ XPIDLSRCS	= \
 		nsIMarkupDocumentViewer.idl	\
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\
+		nsIWebNavigation.idl		\
 		$(NULL)
 
 CPPSRCS		= \
