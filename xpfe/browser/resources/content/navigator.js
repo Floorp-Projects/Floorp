@@ -17,6 +17,7 @@
  */
 
   var appCore = null;
+  var useOldAppCore = true; // Set this to false to use new replacement for the browser app core.
   var prefwindow = null;
   var appCoreName = "";
   var defaultStatus = "default status text";
@@ -50,32 +51,60 @@ function UpdateBookmarksLastVisitiedDate(event)
 	if (bmks)	bmks.UpdateBookmarkLastVisitedDate(document.getElementById('urlbar').value);
 }
 
+  function createBrowserInstance() {
+    appCore = Components
+                .classes[ "component://netscape/appshell/component/browser/instance" ]
+                  .createInstance( Components.interfaces.nsIBrowserInstance );
+    if ( !appCore ) {
+        dump( "Error creating browser instance (window)\n" );
+    }
+  }
+
   function Startup()
   {
-    dump("Doing Startup...\n");
-    dump("Creating browser app core\n");
-    appCore = new BrowserAppCore();
-    if (appCore != null) {
-      dump("BrowserAppCore has been created.\n");
-	  appCoreName = "BrowserAppCore." + ( new Date() ).getTime().toString();
-	  appCore.Init( appCoreName );
-	  appCore.setWebShellWindow(window);
-	  appCore.setToolbarWindow(window);
-	  tryToSetContentWindow();
+    if ( useOldAppCore ) {
+        dump("Doing Startup...\n");
+        dump("Creating browser app core\n");
+        appCore = new BrowserAppCore();
+        if (appCore != null) {
+            dump("BrowserAppCore has been created.\n");
+            appCoreName = "BrowserAppCore." + ( new Date() ).getTime().toString();
+            appCore.Init( appCoreName );
+            appCore.setWebShellWindow(window);
+            appCore.setToolbarWindow(window);
+            tryToSetContentWindow();
+        }
+    } else {
+        dump("Doing navigator.js Startup...\n");
+        createBrowserInstance();
+        if (appCore != null) {
+            appCore.setWebShellWindow(window);
+            appCore.setToolbarWindow(window);
+            tryToSetContentWindow();
+        }
     }
 
     // Add a capturing event listener to the content window so we'll
     // be notified when onloads complete.
     window.addEventListener("load", UpdateHistory, true);
     window.addEventListener("load", UpdateBookmarksLastVisitiedDate, true);
+
+    // Check for window.arguments[0].  If present, go to that url.
+    if ( window.arguments && window.arguments[0] ) {
+        dump( "Got new-fashioned arg:" + window.arguments[0] + "\n" );
+        // Load it using yet another psuedo-onload handler.
+        onLoadViaOpenDialog();
+    }
   }
 
   function Shutdown() {
     // Close the app core.
     if ( appCore ) {
         appCore.close();
-        // Remove app core from app core manager.
-        XPAppCoresManager.Remove( appCore );
+        if ( useOldAppCore ) {
+            // Remove app core from app core manager.
+            XPAppCoresManager.Remove( appCore );
+        }
     }
   }
 
@@ -95,6 +124,16 @@ function UpdateBookmarksLastVisitiedDate(event)
         // Remember that we want this url.
         explicitURL = true;
     }
+  }
+
+  function onLoadViaOpenDialog() {
+    // See if load in progress (loading default page).
+    if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
+        dump( "Stopping load of default initial page\n" );
+        appCore.stop();
+    }
+    dump( "Loading page specified via openDialog\n" );
+    appCore.loadUrl( window.arguments[0] );
   }
 
   function tryToSetContentWindow() {
@@ -554,23 +593,7 @@ function OpenSearch(tabName, searchStr)
   function BrowserOpenWindow()
   {
     //opens a window where users can select a web location to open
-    core = XPAppCoresManager.Find("toolkitCore");
-    if ( !core ) {
-        core = new ToolkitCore();
-        if ( core ) {
-            core.Init("toolkitCore");
-        }
-    }
-    if ( core ) {
-        //core.ShowWindowWithArgs( "resource:/res/samples/openLocation.xul", window, appCoreName );
-        var name = appCoreName.replace( /\./, /\_/ );
-        // Note: 
-        //  This been changed now that initrinisc sizing works.
-        //  we simply call opendialog without handing over concrete size params 
-        window.openDialog( "chrome://navigator/content/openLocation.xul", name+"_openLocation", "chrome", appCoreName );
-    } else {
-        dump("Error; can't create toolkitCore\n");
-    }
+    window.openDialog( "chrome://navigator/content/openLocation.xul", null, "chrome", appCore );
   }
   
   function BrowserOpenFileWindow()
@@ -652,22 +675,7 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserClose()
   {
-    dump("BrowserClose\n");
-  // Currently window.close doesn't work unless the window was opened from JS
-  //	 window.close();
-  
-   core = XPAppCoresManager.Find("toolkitCore");
-    if ( !core ) {
-        core = new ToolkitCore();
-        if ( core ) {
-            core.Init("toolkitCore");
-        }
-    }
-    if ( core ) {
-        core.CloseWindow( window );
-    } else {
-        dump("Error can't create toolkitCore\n");
-    }
+  	 window.close();
   }
 
   function BrowserExit()
@@ -682,7 +690,7 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserSelectAll() {
     if (appCore != null) {
-        appCore.selectAll();      
+        appCore.selectAll();
     } else {
         dump("BrowserAppCore has not been created!\n");
     }
@@ -850,17 +858,21 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserViewSource()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      var url = window.content.location;
-      dump("Opening view of source for" + url + "\n");
-      toolkitCore.ShowWindowWithArgs("chrome://navigator/content/viewSource.xul", window, url);
+    if ( useOldAppCore ) {
+        var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+        if (!toolkitCore) {
+          toolkitCore = new ToolkitCore();
+          if (toolkitCore) {
+            toolkitCore.Init("ToolkitCore");
+          }
+        }
+        if (toolkitCore) {
+          var url = window.content.location;
+          dump("Opening view of source for" + url + "\n");
+          toolkitCore.ShowWindowWithArgs("chrome://navigator/content/viewSource.xul", window, url);
+        }
+    } else {
+        window.openDialog( "chrome://navigator/content/viewSource.xul", null, "all,dialog=no", window.content.location );
     }
   }
 
