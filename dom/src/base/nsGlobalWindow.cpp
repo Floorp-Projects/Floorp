@@ -3185,16 +3185,15 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
         docShellAsItem->GetItemType(&type);
         if (type == nsIDocShellTreeItem::typeChrome) {
-          nsCOMPtr<nsIBrowserWindow> browser;
-          if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
-            // We got a browser window interface
+          nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mWebShell));
+          if(docShellAsWin) {
             JSString *jsString = JS_ValueToString(aContext, *aVp);
             if (!jsString) {
               result = PR_FALSE;
             }
             else {
               const PRUnichar* uniTitle = JS_GetStringChars(jsString);
-              browser->SetTitle(uniTitle);
+              docShellAsWin->SetTitle(uniTitle);
             }
           }
         }
