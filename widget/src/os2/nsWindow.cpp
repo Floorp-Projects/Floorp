@@ -3262,8 +3262,26 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
      char * title = new char[length];
      if (title)
      {
+          
+       PRUnichar* uchtemp = ToNewUnicode(aTitle);
+       for (int i=0;i<aTitle.Length();i++) {
+         switch (uchtemp[i]) {
+           case 0x2018:
+           case 0x2019:
+             uchtemp[i] = 0x0027;
+             break;
+           case 0x201C:
+           case 0x201D:
+             uchtemp[i] = 0x0022;
+             break;
+           case 0x2014:
+             uchtemp[i] = 0x002D;
+             break;
+         }
+       }
+
        int outlen = ::WideCharToMultiByte( 0, 
-                      aTitle.get(), aTitle.Length(),
+                      uchtemp, aTitle.Length(),
                       title, length);
        if ( outlen >= 0) {
          if (outlen > MAX_TITLEBAR_LENGTH) {
@@ -3280,6 +3298,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
            WinSetWindowText( hwndTitleBar, title );
          }
        }
+       nsMemory::Free(uchtemp);
        delete [] title;
      }
    }
