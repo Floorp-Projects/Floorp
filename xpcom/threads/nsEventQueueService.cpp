@@ -22,7 +22,7 @@
 
 #include "nsEventQueueService.h"
 #include "prmon.h"
-#include "nsComponentManager.h"
+#include "nsIComponentManager.h"
 #include "nsIEventQueue.h"
 #include "nsIThread.h"
 #include "nsPIEventQueueChain.h"
