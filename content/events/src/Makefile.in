@@ -54,7 +54,9 @@ REQUIRES	= xpcom \
 		  widget \
 		  caps \
 		  xpconnect \
+		  webshell \
 		  docshell \
+		  htmlparser \
 		  pref \
 		  view \
 		  necko \
@@ -68,6 +70,8 @@ CPPSRCS		= \
 		nsDOMMutationEvent.cpp \
 		nsPrivateTextRange.cpp \
 		nsDOMEventGroup.cpp \
+		nsXMLEventsManager.cpp \
+		nsXMLEventsElement.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -75,8 +79,11 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	= -I$(srcdir)/../../html/base/src \
+LOCAL_INCLUDES	= \
+             -I$(srcdir)/../../base/src \
+             -I$(srcdir)/../../html/base/src \
              -I$(srcdir)/../../xul/content/src \
+             -I$(srcdir)/../../xml/content/src \
              -I$(srcdir)/../../../dom/src/base \
              $(NULL)
 

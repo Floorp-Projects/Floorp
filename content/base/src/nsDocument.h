@@ -102,6 +102,7 @@ class nsIDTD;
 class nsXPathDocumentTearoff;
 class nsIRadioVisitor;
 class nsIFormControl;
+class nsXMLEventsManager;
 struct nsRadioGroupStruct;
 
 
@@ -493,6 +494,8 @@ public:
   // Already declared in nsIDocument
 
   virtual nsresult Init();
+  
+  virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement);
 
   virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
@@ -582,6 +585,7 @@ protected:
   nsCOMPtr<nsICSSLoader> mCSSLoader;
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
+  nsRefPtr<nsXMLEventsManager> mXMLEventsManager;
 
   nsCOMPtr<nsIScriptEventManager> mScriptEventManager;
 

@@ -54,6 +54,7 @@
 #define kRDFNameSpaceURI "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define kXULNameSpaceURI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
+#define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
 
 //-----------------------------------------------------------
 // Name Space 
@@ -354,6 +355,7 @@ nsresult NameSpaceManagerImpl::Init()
   AddNameSpace(NS_LITERAL_STRING(kRDFNameSpaceURI), kNameSpaceID_RDF);
   AddNameSpace(NS_LITERAL_STRING(kXULNameSpaceURI), kNameSpaceID_XUL);
   AddNameSpace(NS_LITERAL_STRING(kSVGNameSpaceURI), kNameSpaceID_SVG);
+  AddNameSpace(NS_LITERAL_STRING(kXMLEventsNameSpaceURI), kNameSpaceID_XMLEvents);
 
   return NS_OK;
 }
@@ -462,6 +464,9 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
     return NS_NewSVGElement(aResult, aNodeInfo);
   }
 #endif
+  if (aElementType == kNameSpaceID_XMLEvents) {
+    return NS_NewXMLEventsElement(aResult, aNodeInfo);
+  }
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
@@ -478,6 +483,7 @@ NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
 #ifdef MOZ_SVG
          aNameSpaceID == kNameSpaceID_SVG ||
 #endif
+         aNameSpaceID == kNameSpaceID_XMLEvents ||
          PR_FALSE;
 }
 
