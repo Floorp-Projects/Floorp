@@ -70,6 +70,7 @@ $(DEPTH)/build/build_number: FORCE
 	$(PERL) $(srcdir)/bdate.pl > $@
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/viewSource.xul $@
+	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/appshell/public/nsBuildID.h $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) $(srcdir)/set-timebomb.pl 0 30
