@@ -826,7 +826,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // to ourselves
   PRInt32 type;
   GetType(&type);
-  if (type == NS_FORM_INPUT_FILE) {
+  if (type == NS_FORM_INPUT_FILE ||
+      type == NS_FORM_INPUT_TEXT ) {
     // If the event is starting here that's fine.  If it's not
     // init'ing here it started beneath us and needs modification.
     if (!(NS_EVENT_FLAG_INIT & aFlags)) {
@@ -896,7 +897,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Finish the special file control processing...
-  if (type == NS_FORM_INPUT_FILE) {
+  if (type == NS_FORM_INPUT_FILE ||
+      type == NS_FORM_INPUT_TEXT ) {
     // If the event is starting here that's fine.  If it's not
     // init'ing here it started beneath us and needs modification.
     if (!(NS_EVENT_FLAG_INIT & aFlags)) {
