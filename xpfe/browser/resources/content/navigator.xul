@@ -24,6 +24,7 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
@@ -306,15 +307,18 @@ Contributor(s): ______________________________________. -->
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
     <box id="appcontent" align="vertical" flex="100%"
-      onclick="return contentAreaClick(event);"
-      ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
-      ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-      ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
+         ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
       <!-- this box is temporary, pending XBLified <browser> -->
       <box id="browser" flex="1">
-        <browser context="contentAreaContextMenu" type="content-primary" id="content"
-          src="about:blank" flex="1" tooltip="aHTMLTooltip" onmouseover="if (throbberElement) EnableBusyCursor(throbberElement.getAttribute('busy') == 'true')"/>
+        <browser id="content" type="content-primary" src="about:blank"
+                 flex="1" tooltip="aHTMLTooltip"
+                 context="contentAreaContextMenu"
+                 onmouseover="if (throbberElement)
+                                EnableBusyCursor(throbberElement.getAttribute('busy') == 'true');"   
+                 onclick="return contentAreaClick(event);"
+                 ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
       </box>
       
       <statusbar id="status-bar" class="chromeclass-status">
