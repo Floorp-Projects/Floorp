@@ -1,6 +1,6 @@
---- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Sat Sep  8 11:36:22 2001
-+++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Sat Sep  8 11:37:14 2001
-@@ -338,120 +338,7 @@
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Wed Oct 31 10:51:59 2001
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Wed Oct 31 10:52:40 2001
+@@ -347,119 +347,7 @@
    <menu id="tasksMenu"/>
    
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
@@ -82,7 +82,6 @@
 -
 -     <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
 -
--     <menuitem label="&domviewer.label;" oncommand="window._content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
 -     <menuitem label="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
 -     <menuitem label="&editor-test-page.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
 -     <menuitem label="&flush-memory.label;" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />

@@ -1,0 +1,27 @@
+--- mozilla/modules/libpref/src/unix/unix.js.psfonts	Thu Oct 25 11:57:36 2001
++++ mozilla/modules/libpref/src/unix/unix.js	Thu Oct 25 11:59:03 2001
+@@ -257,8 +257,10 @@
+ pref("print.psnativefont.ar", "");
+ pref("print.psnativefont.el", "");
+ pref("print.psnativefont.he", "");
+-pref("print.psnativefont.ja", "");
+-pref("print.psnativefont.ko", "");
++pref("print.psnativecode.ja", "euc-jp");
++pref("print.psnativefont.ja", "Ryumin-Light-EUC-H");
++pref("print.psnativecode.ko", "euc-kr");
++pref("print.psnativefont.ko", "Baekmuk-Gulim-KSC-EUC-H");
+ pref("print.psnativefont.th", "");
+ pref("print.psnativefont.tr", "");
+ pref("print.psnativefont.x-baltic", "");
+@@ -267,7 +269,9 @@
+ pref("print.psnativefont.x-unicode", "");
+ pref("print.psnativefont.x-user-def", "");
+ pref("print.psnativefont.x-western", "");
+-pref("print.psnativefont.zh-CN", "");
+-pref("print.psnativefont.zh-TW", "");
++pref("print.psnativecode.zh-CN", "gb2312");
++pref("print.psnativefont.zh-CN", "BousungEG-Light-GB-GB-EUC-H");
++pref("print.psnativecode.zh-TW", "big5");
++pref("print.psnativefont.zh-TW", "ShanHeiSun-Light-B5-H");
+ 
+ pref("mail.signature_date", 0);
