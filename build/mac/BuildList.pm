@@ -119,7 +119,7 @@ sub BuildMozilla()
 		BuildProject(":mozilla:lib:libmocha:macbuild:LibMocha.mcp",							"LibMocha$D.o");	
 		BuildProject(":mozilla:network:macbuild:network.mcp",								"Network$D.o");
 
-		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",							"CustomStaticLibs$D.o");
+		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",							"CustomStaticLib$D.o");
 		
 		if ( $main::MOZ_LITE == 0 )
 			{
