@@ -68,6 +68,12 @@ PR_EXTERN(PRStatus) PR_CNotify(void *address);
 */
 PR_EXTERN(PRStatus) PR_CNotifyAll(void *address);
 
+/*
+** Set a callback to be invoked each time a monitor is recycled from the cache
+** freelist, with the monitor's cache-key passed in address.
+*/
+PR_EXTERN(void) PR_CSetOnMonitorRecycle(void (*callback)(void *address));
+
 PR_END_EXTERN_C
 
 #endif /* prcmon_h___ */
