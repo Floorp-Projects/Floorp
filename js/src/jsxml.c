@@ -1444,7 +1444,6 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                uintN flags)
 {
     JSXML *xml, *kid, *attr;
-    JSBool inLRS;
     JSString *str;
     uint32 length, n, i;
     JSParseNode *pn2, *pn3, *head, **pnp;
@@ -1460,7 +1459,8 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
      * garbage collection.
      */
     xml = NULL;
-    inLRS = JS_FALSE;
+    if (!JS_EnterLocalRootScope(cx))
+        return NULL;
     switch (pn->pn_type) {
       case TOK_XMLELEM:
         length = inScopeNSes->length;
@@ -1501,6 +1501,11 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                 goto fail;
             }
 
+            /* Store kid in xml right away, to protect it from GC. */
+            XMLARRAY_SET_MEMBER(&xml->xml_kids, i, kid);
+            kid->parent = xml;
+            ++i;
+
             /* XXX where is this documented in an XML spec, or in E4X? */
             if ((flags & XSF_IGNORE_WHITESPACE) &&
                 n > 1 && kid->xml_class == JSXML_CLASS_TEXT) {
@@ -1509,10 +1514,6 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                     goto fail;
                 kid->xml_value = str;
             }
-
-            XMLARRAY_SET_MEMBER(&xml->xml_kids, i, kid);
-            kid->parent = xml;
-            ++i;
         }
 
         JS_ASSERT(i == n);
@@ -1520,15 +1521,12 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         if (n < pn->pn_count - 2)
             XMLArrayTrim(&xml->xml_kids);
         XMLARRAY_TRUNCATE(cx, inScopeNSes, length);
-        return xml;
+        break;
 
       case TOK_XMLLIST:
         xml = js_NewXML(cx, JSXML_CLASS_LIST);
         if (!xml)
             return NULL;
-
-        if ((flags & XSF_PRECOMPILED_ROOT) && !js_GetXMLObject(cx, xml))
-            goto fail;
 
         n = pn->pn_count;
         if (!XMLArraySetCapacity(cx, &xml->xml_kids, n))
@@ -1564,7 +1562,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         xml->xml_kids.length = n;
         if (n < pn->pn_count)
             XMLArrayTrim(&xml->xml_kids);
-        return xml;
+        break;
 
       case TOK_XMLSTAGO:
       case TOK_XMLPTAGC:
@@ -1576,9 +1574,6 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
 
         xml = js_NewXML(cx, JSXML_CLASS_ELEMENT);
         if (!xml)
-            goto fail;
-        inLRS = JS_EnterLocalRootScope(cx);
-        if (!inLRS)
             goto fail;
 
         /* First pass: check syntax and process namespace declarations. */
@@ -1746,9 +1741,6 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
                 return PN2X_SKIP_CHILD;
 
-            inLRS = JS_EnterLocalRootScope(cx);
-            if (!inLRS)
-                goto fail;
             qn = ParseNodeToQName(cx, pn, inScopeNSes, JS_FALSE);
             if (!qn)
                 goto fail;
@@ -1775,8 +1767,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         goto syntax;
     }
 
-    if (inLRS)
-        JS_LeaveLocalRootScope(cx);
+    JS_LeaveLocalRootScope(cx);
     if ((flags & XSF_PRECOMPILED_ROOT) && !js_GetXMLObject(cx, xml))
         return NULL;
     return xml;
@@ -1787,8 +1778,7 @@ syntax:
     js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR,
                                 JSMSG_BAD_XML_MARKUP);
 fail:
-    if (inLRS)
-        JS_LeaveLocalRootScope(cx);
+    JS_LeaveLocalRootScope(cx);
     return NULL;
 }
 
@@ -2138,6 +2128,97 @@ bad:
 }
 
 /*
+ * ECMA-357 10.2.1 Steps 5-7 pulled out as common subroutines of XMLToXMLString
+ * and their library-public js_* counterparts.  The guts of MakeXMLCDataString,
+ * MakeXMLCommentString, and MakeXMLPIString are further factored into a common
+ * MakeXMLSpecialString subroutine.
+ *
+ * These functions take ownership of sb->base, if sb is non-null, in all cases
+ * of success or failure.
+ */
+static JSString *
+MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
+                     JSString *str, JSString *str2,
+                     const jschar *prefix, size_t prefixlength,
+                     const jschar *suffix, size_t suffixlength)
+{
+    JSStringBuffer localSB;
+    size_t length, length2, newlength;
+    jschar *bp, *base;
+
+    if (!sb) {
+        sb = &localSB;
+        js_InitStringBuffer(sb);
+    }
+
+    length = JSSTRING_LENGTH(str);
+    length2 = str2 ? JSSTRING_LENGTH(str2) : 0;
+    newlength = STRING_BUFFER_OFFSET(sb) +
+                prefixlength + length + ((length2 != 0) ? 1 + length2 : 0) +
+                suffixlength;
+    bp = base = (jschar *)
+                JS_realloc(cx, sb->base, (newlength + 1) * sizeof(jschar));
+    if (!bp) {
+        js_FinishStringBuffer(sb);
+        return NULL;
+    }
+
+    bp += STRING_BUFFER_OFFSET(sb);
+    js_strncpy(bp, prefix, prefixlength);
+    bp += prefixlength;
+    js_strncpy(bp, JSSTRING_CHARS(str), length);
+    bp += length;
+    if (length2 != 0) {
+        *bp++ = (jschar) ' ';
+        js_strncpy(bp, JSSTRING_CHARS(str2), length2);
+        bp += length2;
+    }
+    js_strncpy(bp, suffix, suffixlength);
+    bp[suffixlength] = 0;
+
+    str = js_NewString(cx, base, newlength, 0);
+    if (!str)
+        free(base);
+    return str;
+}
+
+static JSString *
+MakeXMLCDATAString(JSContext *cx, JSStringBuffer *sb, JSString *str)
+{
+    static const jschar cdata_prefix_ucNstr[] = {'<', '!',
+                                                 'C', 'D', 'A', 'T', 'A',
+                                                 '['};
+    static const jschar cdata_suffix_ucNstr[] = {']', ']', '>'};
+
+    return MakeXMLSpecialString(cx, sb, str, NULL,
+                                cdata_prefix_ucNstr, 8,
+                                cdata_suffix_ucNstr, 3);
+}
+
+static JSString *
+MakeXMLCommentString(JSContext *cx, JSStringBuffer *sb, JSString *str)
+{
+    static const jschar comment_prefix_ucNstr[] = {'<', '!', '-', '-'};
+    static const jschar comment_suffix_ucNstr[] = {'-', '-', '>'};
+
+    return MakeXMLSpecialString(cx, sb, str, NULL,
+                                comment_prefix_ucNstr, 4,
+                                comment_suffix_ucNstr, 3);
+}
+
+static JSString *
+MakeXMLPIString(JSContext *cx, JSStringBuffer *sb, JSString *name,
+                JSString *value)
+{
+    static const jschar pi_prefix_ucNstr[] = {'<', '?'};
+    static const jschar pi_suffix_ucNstr[] = {'?', '>'};
+
+    return MakeXMLSpecialString(cx, sb, name, value,
+                                pi_prefix_ucNstr, 2,
+                                pi_suffix_ucNstr, 2);
+}
+
+/*
  * ECMA-357 10.2.1 17(d-g) pulled out into a common subroutine that appends
  * equals, a double quote, an attribute value, and a closing double quote.
  */
@@ -2157,7 +2238,9 @@ AppendAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *valstr)
 
 /*
  * ECMA-357 10.2.1.1 EscapeElementValue helper method.
- * This function takes ownership of sb->base, if sb is non-null, in all cases.
+ *
+ * This function takes ownership of sb->base, if sb is non-null, in all cases
+ * of success or failure.
  */
 static JSString *
 EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
@@ -2448,19 +2531,12 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 {
     JSBool pretty, indentKids;
     JSStringBuffer sb;
-    JSString *str, *name, *prefix, *kidstr;
-    size_t length, newlength, namelength;
-    jschar *bp, *base;
+    JSString *str, *prefix, *kidstr;
     uint32 i, n;
     JSXMLArray empty, decls, ancdecls;
     JSXMLNamespace *ns, *ns2;
     uintN nextIndentLevel;
     JSXML *attr, *kid;
-
-    static const jschar comment_prefix_ucNstr[] = {'<', '!', '-', '-'};
-    static const jschar comment_suffix_ucNstr[] = {'-', '-', '>'};
-    static const jschar pi_prefix_ucNstr[] = {'<', '?'};
-    static const jschar pi_suffix_ucNstr[] = {'?', '>'};
 
     if (!GetBooleanXMLSetting(cx, js_prettyPrinting_str, &pretty))
         return NULL;
@@ -2470,7 +2546,6 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         js_RepeatChar(&sb, ' ', indentLevel);
     str = NULL;
 
-    /* XXXbe Erratum? should CDATA be handled specially? */
     switch (xml->xml_class) {
       case JSXML_CLASS_TEXT:
         /* Step 4. */
@@ -2489,58 +2564,11 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
       case JSXML_CLASS_COMMENT:
         /* Step 6. */
-        str = xml->xml_value;
-        length = JSSTRING_LENGTH(str);
-        newlength = STRING_BUFFER_OFFSET(&sb) + 4 + length + 3;
-        bp = base = (jschar *)
-                    JS_realloc(cx, sb.base, (newlength + 1) * sizeof(jschar));
-        if (!bp) {
-            js_FinishStringBuffer(&sb);
-            return NULL;
-        }
-
-        bp += STRING_BUFFER_OFFSET(&sb);
-        js_strncpy(bp, comment_prefix_ucNstr, 4);
-        bp += 4;
-        js_strncpy(bp, JSSTRING_CHARS(str), length);
-        bp += length;
-        js_strncpy(bp, comment_suffix_ucNstr, 3);
-        bp[3] = 0;
-        str = js_NewString(cx, base, newlength, 0);
-        if (!str)
-            free(base);
-        return str;
+        return MakeXMLCommentString(cx, &sb, xml->xml_value);
 
       case JSXML_CLASS_PROCESSING_INSTRUCTION:
         /* Step 7. */
-        name = xml->name->localName;
-        namelength = JSSTRING_LENGTH(name);
-        str = xml->xml_value;
-        length = JSSTRING_LENGTH(str);
-        newlength = STRING_BUFFER_OFFSET(&sb) + 2 + namelength + 1 + length + 2;
-        bp = base = (jschar *)
-                    JS_realloc(cx, sb.base, (newlength + 1) * sizeof(jschar));
-        if (!bp) {
-            js_FinishStringBuffer(&sb);
-            return NULL;
-        }
-
-        bp += STRING_BUFFER_OFFSET(&sb);
-        js_strncpy(bp, pi_prefix_ucNstr, 2);
-        bp += 2;
-        js_strncpy(bp, JSSTRING_CHARS(name), namelength);
-        bp += namelength;
-        if (length != 0) {
-            *bp++ = (jschar) ' ';
-            js_strncpy(bp, JSSTRING_CHARS(str), length);
-            bp += length;
-        }
-        js_strncpy(bp, pi_suffix_ucNstr, 2);
-        bp[2] = 0;
-        str = js_NewString(cx, base, newlength, 0);
-        if (!str)
-            free(base);
-        return str;
+        return MakeXMLPIString(cx, &sb, xml->name->localName, xml->xml_value);
 
       case JSXML_CLASS_LIST:
         /* ECMA-357 10.2.2. */
@@ -7708,9 +7736,9 @@ js_CloneXMLObject(JSContext *cx, JSObject *obj)
     return NewXMLObject(cx, xml);
 }
 
-JSBool
+JSObject *
 js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
-                       JSString *value, JSObject **objp)
+                       JSString *value)
 {
     uintN flags;
     JSObject *obj;
@@ -7718,34 +7746,45 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
     JSXMLQName *qn;
 
     if (!GetXMLSettingFlags(cx, &flags))
-        return JS_FALSE;
+        return NULL;
 
-    *objp = NULL;
-    switch (xml_class) {
-      case JSXML_CLASS_COMMENT:
-        if (flags & XSF_IGNORE_COMMENTS)
-            return JS_TRUE;
-        break;
-      case JSXML_CLASS_PROCESSING_INSTRUCTION:
-        if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
-            return JS_TRUE;
-        break;
-      default:;
+    if ((xml_class == JSXML_CLASS_COMMENT &&
+         (flags & XSF_IGNORE_COMMENTS)) ||
+        (xml_class == JSXML_CLASS_PROCESSING_INSTRUCTION &&
+         (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS))) {
+        return js_NewXMLObject(cx, JSXML_CLASS_TEXT);
     }
 
     obj = js_NewXMLObject(cx, xml_class);
     if (!obj)
-        return JS_FALSE;
+        return NULL;
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     if (name) {
         qn = js_NewXMLQName(cx, cx->runtime->emptyString, NULL, name);
         if (!qn)
-            return JS_FALSE;
+            return NULL;
         xml->name = qn;
     }
     xml->xml_value = value;
-    *objp = obj;
-    return JS_TRUE;
+    return obj;
+}
+
+JSString *
+js_MakeXMLCDATAString(JSContext *cx, JSString *str)
+{
+    return MakeXMLCDATAString(cx, NULL, str);
+}
+
+JSString *
+js_MakeXMLCommentString(JSContext *cx, JSString *str)
+{
+    return MakeXMLCommentString(cx, NULL, str);
+}
+
+JSString *
+js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str)
+{
+    return MakeXMLPIString(cx, NULL, name, str);
 }
 
 #endif /* JS_HAS_XML_SUPPORT */

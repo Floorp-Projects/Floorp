@@ -4267,6 +4267,25 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             str = ATOM_TO_STRING(pn2->pn_atom);
             break;
 
+          case TOK_XMLCDATA:
+            str = js_MakeXMLCDATAString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            if (!str)
+                return JS_FALSE;
+            break;
+
+          case TOK_XMLCOMMENT:
+            str = js_MakeXMLCommentString(cx, ATOM_TO_STRING(pn2->pn_atom));
+            if (!str)
+                return JS_FALSE;
+            break;
+
+          case TOK_XMLPI:
+            str = js_MakeXMLPIString(cx, ATOM_TO_STRING(pn2->pn_atom),
+                                         ATOM_TO_STRING(pn2->pn_atom2));
+            if (!str)
+                return JS_FALSE;
+            break;
+
           default:
             JS_ASSERT(*pnp == pn1);
             if ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) &&
