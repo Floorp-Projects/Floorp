@@ -1249,7 +1249,7 @@ public class Parser
 
     }
 
-    private Object argumentList(Object listNode)
+    private void argumentList(Object listNode)
         throws IOException, ParserException
     {
         boolean matched;
@@ -1268,7 +1268,6 @@ public class Parser
             mustMatchToken(Token.RP, "msg.no.paren.arg");
         }
         decompiler.addToken(Token.RP);
-        return listNode;
     }
 
     private Object memberExpr(boolean allowCallSyntax)
@@ -1288,13 +1287,12 @@ public class Parser
             decompiler.addToken(Token.NEW);
 
             /* Make a NEW node to append to. */
-            pn = nf.createLeaf(Token.NEW);
-            nf.addChildToBack(pn, memberExpr(false));
+            pn = nf.createCallOrNew(Token.NEW, memberExpr(false));
 
             if (ts.matchToken(Token.LP)) {
                 decompiler.addToken(Token.LP);
                 /* Add the arguments to pn, if any are supplied. */
-                pn = argumentList(pn);
+                argumentList(pn);
             }
 
             /* XXX there's a check in the C source against
@@ -1341,12 +1339,11 @@ public class Parser
                 decompiler.addToken(Token.RB);
             } else if (allowCallSyntax && tt == Token.LP) {
                 /* make a call node */
-
-                pn = nf.createUnary(Token.CALL, pn);
                 decompiler.addToken(Token.LP);
+                pn = nf.createCallOrNew(Token.CALL, pn);
 
                 /* Add the arguments to pn, if any are supplied. */
-                pn = argumentList(pn);
+                argumentList(pn);
             } else {
                 ts.ungetToken(tt);
 
@@ -1533,7 +1530,7 @@ public class Parser
 
     private boolean ok; // Did the parse encounter an error?
 
-    private ScriptOrFnNode currentScriptOrFn;
+    ScriptOrFnNode currentScriptOrFn;
 
     private int nestingOfWith;
 

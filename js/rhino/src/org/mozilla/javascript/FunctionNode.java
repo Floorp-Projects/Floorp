@@ -53,8 +53,8 @@ public class FunctionNode extends ScriptOrFnNode {
         return itsNeedsActivation;
     }
 
-    boolean setRequiresActivation(boolean b) {
-        return itsNeedsActivation = b;
+    void setRequiresActivation() {
+        itsNeedsActivation = true;
     }
 
     public boolean getCheckThis() {

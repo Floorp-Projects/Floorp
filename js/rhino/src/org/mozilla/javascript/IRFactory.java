@@ -106,6 +106,7 @@ class IRFactory
      */
     Object createName(String name)
     {
+        checkActivationName(name, Token.NAME);
         return Node.newString(Token.NAME, name);
     }
 
@@ -220,7 +221,7 @@ class IRFactory
         int functionCount = fnNode.getFunctionCount();
         if (functionCount != 0) {
             // Functions containing other functions require activation objects
-            fnNode.setRequiresActivation(true);
+            fnNode.setRequiresActivation();
             for (int i = 0; i != functionCount; ++i) {
                 FunctionNode fn = fnNode.getFunctionNode(i);
                 // nested function expression statements overrides var
@@ -601,6 +602,7 @@ class IRFactory
      */
     Object createWith(Object obj, Object body, int lineno)
     {
+        setRequiresActivation();
         Node result = new Node(Token.BLOCK, lineno);
         result.addChildToBack(new Node(Token.ENTERWITH, (Node)obj));
         Node bodyNode = new Node(Token.WITH, (Node) body, lineno);
@@ -824,6 +826,32 @@ class IRFactory
         return new Node(nodeType, childNode);
     }
 
+    Object createCallOrNew(int nodeType, Object childNode)
+    {
+        Node child = (Node)childNode;
+        int type = Node.NON_SPECIALCALL;
+        if (child.getType() == Token.NAME) {
+            String name = child.getString();
+            if (name.equals("eval")) {
+                type = Node.SPECIALCALL_EVAL;
+            } else if (name.equals("With")) {
+                type = Node.SPECIALCALL_WITH;
+            }
+        } else if (child.getType() == Token.GETPROP) {
+            String name = child.getLastChild().getString();
+            if (name.equals("eval")) {
+                type = Node.SPECIALCALL_EVAL;
+            }
+        }
+        Node node = new Node(nodeType, child);
+        if (type != Node.NON_SPECIALCALL) {
+            // Calls to these functions require activation objects.
+            setRequiresActivation();
+            node.putIntProp(Node.SPECIALCALL_PROP, type);
+        }
+        return node;
+    }
+
     Object createIncDec(int nodeType, boolean post, Object child)
     {
         Node childNode = (Node)child;
@@ -902,6 +930,8 @@ class IRFactory
                 Node result = new Node(nodeType, left);
                 result.putIntProp(Node.SPECIAL_PROP_PROP, special);
                 return result;
+            } else {
+                checkActivationName(id, Token.GETPROP);
             }
             break;
 
@@ -1184,6 +1214,37 @@ class IRFactory
                 break;
         }
         return false;
+    }
+
+    private void checkActivationName(String name, int token)
+    {
+        boolean activation = false;
+        if (parser.currentScriptOrFn.getType() == Token.FUNCTION) {
+            if ("arguments".equals(name)
+                || (parser.compilerEnv.activationNames != null
+                    && parser.compilerEnv.activationNames.containsKey(name)))
+            {
+                activation = true;
+            } else if ("length".equals(name)) {
+                if (token == Token.GETPROP
+                    && parser.compilerEnv.getLanguageVersion()
+                       == Context.VERSION_1_2)
+                {
+                    // Use of "length" in 1.2 requires an activation object.
+                    activation = true;
+                }
+            }
+        }
+        if (activation) {
+            ((FunctionNode)parser.currentScriptOrFn).setRequiresActivation();
+        }
+    }
+
+    private void setRequiresActivation()
+    {
+        if (parser.currentScriptOrFn.getType() == Token.FUNCTION) {
+            ((FunctionNode)parser.currentScriptOrFn).setRequiresActivation();
+        }
     }
 
     // Only needed to call reportCurrentLineError.

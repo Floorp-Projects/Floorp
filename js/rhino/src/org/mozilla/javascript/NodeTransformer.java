@@ -185,10 +185,6 @@ public class NodeTransformer
 
               case Token.WITH:
               {
-                if (inFunction) {
-                    // With statements require an activation object.
-                    ((FunctionNode) tree).setRequiresActivation(true);
-                }
                 loops.push(node);
                 Node leave = node.getNext();
                 if (leave.getType() != Token.LEAVEWITH) {
@@ -336,23 +332,13 @@ public class NodeTransformer
                 break;
               }
 
-              case Token.CALL: {
-                int callType = getSpecialCallType(tree, node);
-                if (callType != Node.NON_SPECIALCALL) {
-                    node.putIntProp(Node.SPECIALCALL_PROP, callType);
-                }
+              case Token.CALL:
                 visitCall(node, tree);
                 break;
-              }
 
-              case Token.NEW: {
-                int callType = getSpecialCallType(tree, node);
-                if (callType != Node.NON_SPECIALCALL) {
-                    node.putIntProp(Node.SPECIALCALL_PROP, callType);
-                }
+              case Token.NEW:
                 visitNew(node, tree);
                 break;
-              }
 
               case Token.DOT:
               {
@@ -396,10 +382,6 @@ public class NodeTransformer
                 if (bind == null || bind.getType() != Token.BINDNAME)
                     break;
                 String name = bind.getString();
-                if (isActivationNeeded(name)) {
-                    // use of "arguments" requires an activation object.
-                    ((FunctionNode) tree).setRequiresActivation(true);
-                }
                 if (tree.hasParamOrVar(name)) {
                     if (type == Token.SETNAME) {
                         node.setType(Token.SETVAR);
@@ -413,31 +395,11 @@ public class NodeTransformer
                 break;
               }
 
-              case Token.GETPROP:
-                if (inFunction) {
-                    Node n = node.getFirstChild().getNext();
-                    String name = n == null ? "" : n.getString();
-                    if (isActivationNeeded(name)
-                        || (name.equals("length")
-                            && compilerEnv.getLanguageVersion()
-                               == Context.VERSION_1_2))
-                    {
-                        // Use of "arguments" or "length" in 1.2 requires
-                        // an activation object.
-                        ((FunctionNode) tree).setRequiresActivation(true);
-                    }
-                }
-                break;
-
               case Token.NAME:
               {
                 if (!inFunction || inWithStatement())
                     break;
                 String name = node.getString();
-                if (isActivationNeeded(name)) {
-                    // Use of "arguments" requires an activation object.
-                    ((FunctionNode) tree).setRequiresActivation(true);
-                }
                 if (tree.hasParamOrVar(name)) {
                     node.setType(Token.GETVAR);
                 }
@@ -462,37 +424,6 @@ public class NodeTransformer
                 return true;
         }
         return false;
-    }
-
-    /**
-     * Return true if the node is a call to a function that requires
-     * access to the enclosing activation object.
-     */
-    private static int getSpecialCallType(Node tree, Node node)
-    {
-        Node left = node.getFirstChild();
-        int type = Node.NON_SPECIALCALL;
-        if (left.getType() == Token.NAME) {
-            String name = left.getString();
-            if (name.equals("eval")) {
-                type = Node.SPECIALCALL_EVAL;
-            } else if (name.equals("With")) {
-                type = Node.SPECIALCALL_WITH;
-            }
-        } else {
-            if (left.getType() == Token.GETPROP) {
-                String name = left.getLastChild().getString();
-                if (name.equals("eval")) {
-                    type = Node.SPECIALCALL_EVAL;
-                }
-            }
-        }
-        if (type != Node.NON_SPECIALCALL) {
-            // Calls to these functions require activation objects.
-            if (tree.getType() == Token.FUNCTION)
-                ((FunctionNode) tree).setRequiresActivation(true);
-        }
-        return type;
     }
 
     private static Node addBeforeCurrent(Node parent, Node previous,
@@ -529,18 +460,6 @@ public class NodeTransformer
         int lineno = stmt.getLineno();
         String sourceName = tree.getSourceName();
         compilerEnv.reportSyntaxError(message, sourceName, lineno, null, 0);
-    }
-
-    private boolean isActivationNeeded(String name)
-    {
-        if ("arguments".equals(name))
-            return true;
-        if (compilerEnv.activationNames != null
-            && compilerEnv.activationNames.containsKey(name))
-        {
-            return true;
-        }
-        return false;
     }
 
     private ObjArray loops;
