@@ -314,6 +314,39 @@ PRBool nsStyleSpacing::GetBorderPadding(nsMargin& aBorderPadding) const
 }
 
 
+PRUint8 nsStyleSpacing::GetBorderStyle(PRUint8 aSide) const
+{
+  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  return (mBorderStyle[aSide] & 0x7F); 
+}
+
+void nsStyleSpacing::SetBorderStyle(PRUint8 aSide, PRUint8 aStyle)
+{
+  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  mBorderStyle[aSide] &= 0x80; 
+  mBorderStyle[aSide] |= (aStyle & 0x7F);
+
+}
+
+nscolor nsStyleSpacing::GetBorderColor(PRUint8 aSide) const
+{
+  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  return mBorderColor[aSide]; 
+}
+
+void nsStyleSpacing::SetBorderColor(PRUint8 aSide, nscolor aColor) 
+{
+  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  mBorderColor[aSide] = aColor; 
+  mBorderStyle[aSide] |= 0x80; 
+}
+
+void nsStyleSpacing::ClearBorderStyleHighBit(PRUint8 aSide)
+{
+  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side");
+  mBorderStyle[aSide] &= 0x7F;
+}
+
 
 struct StyleSpacingImpl: public nsStyleSpacing {
   StyleSpacingImpl(void)
@@ -321,7 +354,7 @@ struct StyleSpacingImpl: public nsStyleSpacing {
   {}
 
   void ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext);
-  void RecalcData(nsIPresContext* aPresContext);
+  void RecalcData(nsIPresContext* aPresContext, nscolor color);
 };
 
 void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext)
@@ -334,15 +367,19 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   mBorder.SetTop(medium);
   mBorder.SetRight(medium);
   mBorder.SetBottom(medium);
-  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE;
-  mBorderColor[0] = NS_RGB(0, 0, 0);
-  mBorderColor[1] = NS_RGB(0, 0, 0);
-  mBorderColor[2] = NS_RGB(0, 0, 0);
-  mBorderColor[3] = NS_RGB(0, 0, 0);
 
+  
+  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;  
+  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE; 
+  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE; 
+  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE;  
+
+  
+  mBorderColor[0] = NS_RGB(0, 0, 0);  
+  mBorderColor[1] = NS_RGB(0, 0, 0);  
+  mBorderColor[2] = NS_RGB(0, 0, 0);  
+  mBorderColor[3] = NS_RGB(0, 0, 0); 
+  
   mHasCachedMargin = PR_FALSE;
   mHasCachedPadding = PR_FALSE;
   mHasCachedBorder = PR_FALSE;
@@ -387,7 +424,7 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
   return 0;
 }
 
-void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext)
+void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext, nscolor color)
 {
   if (IsFixedData(mMargin, PR_FALSE)) {
     nsStyleCoord  coord;
@@ -415,30 +452,30 @@ void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext)
     mHasCachedPadding = PR_FALSE;
   }
 
-  if (((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_LEFT]) || IsFixedUnit(mBorder.GetLeftUnit(), PR_TRUE)) &&
-      ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_TOP]) || IsFixedUnit(mBorder.GetTopUnit(), PR_TRUE)) &&
-      ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_RIGHT]) || IsFixedUnit(mBorder.GetRightUnit(), PR_TRUE)) &&
-      ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_BOTTOM]) || IsFixedUnit(mBorder.GetBottomUnit(), PR_TRUE))) {
+  if (((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_LEFT))|| IsFixedUnit(mBorder.GetLeftUnit(), PR_TRUE)) &&
+      ((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_TOP)) || IsFixedUnit(mBorder.GetTopUnit(), PR_TRUE)) &&
+      ((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_RIGHT))|| IsFixedUnit(mBorder.GetRightUnit(), PR_TRUE)) &&
+      ((NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_BOTTOM))|| IsFixedUnit(mBorder.GetBottomUnit(), PR_TRUE))) {
     nsStyleCoord  coord;
-    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_LEFT]) {
+    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_LEFT)) {
       mCachedBorder.left = 0;
     }
     else {
       mCachedBorder.left = CalcCoord(mBorder.GetLeft(coord), kBorderWidths, 3);
     }
-    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_TOP]) {
+    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_TOP)) {
       mCachedBorder.top = 0;
     }
     else {
       mCachedBorder.top = CalcCoord(mBorder.GetTop(coord), kBorderWidths, 3);
     }
-    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_RIGHT]) {
+    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_RIGHT)) {
       mCachedBorder.right = 0;
     }
     else {
       mCachedBorder.right = CalcCoord(mBorder.GetRight(coord), kBorderWidths, 3);
     }
-    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_BOTTOM]) {
+    if (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(NS_SIDE_BOTTOM)) {
       mCachedBorder.bottom = 0;
     }
     else {
@@ -455,8 +492,17 @@ void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext)
     mCachedBorderPadding = mCachedPadding;
     mCachedBorderPadding += mCachedBorder;
   }
-
-
+  
+  
+  if((mBorderStyle[NS_SIDE_TOP] & NS_STYLE_HAS_BORDER_COLOR) != NS_STYLE_HAS_BORDER_COLOR)
+    mBorderColor[NS_SIDE_TOP] = color;
+  if((mBorderStyle[NS_SIDE_BOTTOM] & NS_STYLE_HAS_BORDER_COLOR) != NS_STYLE_HAS_BORDER_COLOR)
+    mBorderColor[NS_SIDE_BOTTOM] = color;
+  if((mBorderStyle[NS_SIDE_LEFT]& NS_STYLE_HAS_BORDER_COLOR) != NS_STYLE_HAS_BORDER_COLOR)
+    mBorderColor[NS_SIDE_LEFT] = color;
+  if((mBorderStyle[NS_SIDE_RIGHT] & NS_STYLE_HAS_BORDER_COLOR) != NS_STYLE_HAS_BORDER_COLOR)
+    mBorderColor[NS_SIDE_RIGHT] = color;
+	
   // XXX fixup missing border colors
 
 }
@@ -1178,7 +1224,9 @@ void StyleContextImpl::ForceUnique(void)
 
 void StyleContextImpl::RecalcAutomaticData(nsIPresContext* aPresContext)
 {
-  mSpacing.RecalcData(aPresContext);
+  mSpacing.RecalcData(aPresContext, mColor.mColor);
+
+  
 }
 
 void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
