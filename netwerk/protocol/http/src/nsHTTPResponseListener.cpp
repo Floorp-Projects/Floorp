@@ -793,14 +793,14 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Client Error: 4xx
     //
     case 4:
-		PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-			("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
-			this, statusCode));
-		if (statusCode == 401)
-		{
-			rv = ProcessAuthentication(statusCode);
-		}
-		break;
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+            ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
+            this, statusCode));
+        if (statusCode == 401)
+        {
+            rv = ProcessAuthentication(statusCode);
+        }
+        break;
     //
     // Server Error: 5xx
     //
@@ -839,13 +839,13 @@ nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 
       rv = mConnection->Redirect(location, getter_AddRefs(channel));
       if (NS_SUCCEEDED(rv)) {
-		//
-		// Disconnect the consumer from this response listener...  This allows
-		// the entity that follows to be discarded without notifying the 
-		// consumer...
-		//
-		NS_RELEASE(mConsumer);
-		mResponseContext = nsnull;
+        //
+        // Disconnect the consumer from this response listener...  This allows
+        // the entity that follows to be discarded without notifying the 
+        // consumer...
+        //
+        NS_RELEASE(mConsumer);
+        mResponseContext = nsnull;
       }
   }
   return rv;
@@ -854,30 +854,30 @@ nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 nsresult
 nsHTTPResponseListener::ProcessAuthentication(PRInt32 aStatusCode)
 {
-	NS_ASSERTION(aStatusCode == 401, "We don't handle other types of errors!"); // thats all we handle for now... 
-	if (aStatusCode != 401)
-		return NS_OK; // Let life go on...
+    NS_ASSERTION(aStatusCode == 401, "We don't handle other types of errors!"); // thats all we handle for now... 
+    if (aStatusCode != 401)
+        return NS_OK; // Let life go on...
 
-	nsresult rv = NS_OK;
-	nsXPIDLCString challenge; // identifies the auth type and realm.
+    nsresult rv = NS_OK;
+    nsXPIDLCString challenge; // identifies the auth type and realm.
 
-	if (NS_FAILED(rv = mResponse->GetHeader(
+    if (NS_FAILED(rv = mResponse->GetHeader(
                 nsHTTPAtoms::WWW_Authenticate, 
                 getter_Copies(challenge))))
-		return rv; // We can't send user-password without this challenge.
+        return rv; // We can't send user-password without this challenge.
 
-	if (!challenge || !*challenge) // can we do * on an XPIDLCString? check... todo
-		return rv;
+    if (!challenge || !*challenge) // can we do * on an XPIDLCString? check... todo
+        return rv;
 
-	nsCOMPtr<nsIChannel> channel;
-	if (NS_FAILED(rv = mConnection->Authenticate(challenge, getter_AddRefs(channel))))
-		return rv;
-	//
-	// Disconnect the consumer from this response listener...  This allows
-	// the entity that follows to be discarded without notifying the 
-	// consumer...
-	//
-	NS_RELEASE(mConsumer);
-	mResponseContext = nsnull;
-	return rv;
+    nsCOMPtr<nsIChannel> channel;
+    if (NS_FAILED(rv = mConnection->Authenticate(challenge, getter_AddRefs(channel))))
+        return rv;
+    //
+    // Disconnect the consumer from this response listener...  This allows
+    // the entity that follows to be discarded without notifying the 
+    // consumer...
+    //
+    NS_RELEASE(mConsumer);
+    mResponseContext = nsnull;
+    return rv;
 }

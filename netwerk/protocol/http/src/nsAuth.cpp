@@ -20,18 +20,18 @@
 #include "nsCRT.h"
 
 nsAuth::nsAuth(nsIURI* iURI):
-	encodedString(0),
-	password(0),
-	realm(0),
-	username(0),
-	uri(iURI) // Need to do a weak com ptr here. 
+    encodedString(0),
+    password(0),
+    realm(0),
+    username(0),
+    uri(iURI) // Need to do a weak com ptr here. 
 {
 }
 
 nsAuth::~nsAuth()
 {
-	CRTFREEIF(encodedString);
-	CRTFREEIF(username);
-	CRTFREEIF(password);
-	CRTFREEIF(realm);
+    CRTFREEIF(encodedString);
+    CRTFREEIF(username);
+    CRTFREEIF(password);
+    CRTFREEIF(realm);
 }

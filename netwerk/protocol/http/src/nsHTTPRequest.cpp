@@ -42,20 +42,21 @@
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
-nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, 
-    nsIChannel* i_pTransport):
+nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method, 
+    nsIChannel* i_Transport):
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mRequest(nsnull)
+    mRequest(nsnull),
+    mUsingProxy(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
-    mURI = do_QueryInterface(i_pURL);
+    mURI = do_QueryInterface(i_URL);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPRequest [this=%x].\n", this));
 
-    mTransport = i_pTransport;
+    mTransport = i_Transport;
 
     // Send Host header by default
     if (HTTP_ZERO_NINE != mVersion)
@@ -68,7 +69,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
 
     // Send */*. We're no longer chopping MIME-types for acceptance.
     // MIME based content negotiation has died.
-    SetHeader(nsHTTPAtoms::Accept, "*/*");    
+    SetHeader(nsHTTPAtoms::Accept, "*/*");
 }
 
 nsHTTPRequest::~nsHTTPRequest()
@@ -208,7 +209,8 @@ nsHTTPRequest::Build()
     // Write the request method and HTTP version.
     lineBuffer.Append(MethodToString(mMethod));
 
-    rv = mURI->GetPath(getter_Copies(autoBuffer));
+    rv = mUsingProxy ? mURI->GetSpec(getter_Copies(autoBuffer)) : 
+        mURI->GetPath(getter_Copies(autoBuffer));
     lineBuffer.Append(autoBuffer);
     
     //Trim off the # portion if any...
@@ -313,6 +315,8 @@ nsHTTPRequest::Build()
         if (NS_FAILED(stream->Read(tempBuff, length, &length)))
         {
             NS_ASSERTION(0, "Failed to read post data!");
+            delete[] tempBuff;
+            tempBuff = 0;
             return NS_ERROR_FAILURE;
         }
         else
@@ -327,6 +331,7 @@ nsHTTPRequest::Build()
             NS_ASSERTION(writtenLength == length, "Failed to write post data!");
         }
         delete[] tempBuff;
+        tempBuff = 0;
     }
     else 
     {
@@ -423,7 +428,7 @@ nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
+nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPRequest [this=%x]. Starting to write request to server.\n",
@@ -432,9 +437,9 @@ nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
+nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                              nsresult iStatus,
-                             const PRUnichar* i_pMsg)
+                             const PRUnichar* i_Msg)
 {
     nsresult rv = iStatus;
     
@@ -450,9 +455,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
         pListener = new nsHTTPResponseListener(mConnection);
         if (pListener) {
             NS_ADDREF(pListener);
-            rv = mTransport->AsyncRead(0, -1,
-                                       i_pContext, 
-                                       pListener);
+            rv = mTransport->AsyncRead(0, -1, i_Context, pListener);
             NS_RELEASE(pListener);
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -475,7 +478,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
         (void) mConnection->GetResponseContext(getter_AddRefs(consumerContext));
         rv = mConnection->GetResponseDataListener(getter_AddRefs(consumer));
         if (consumer) {
-            consumer->OnStopRequest(mConnection, consumerContext, iStatus, i_pMsg);
+            consumer->OnStopRequest(mConnection, consumerContext, iStatus, i_Msg);
         }
         // Notify the channel that the request has finished
         mConnection->ResponseCompleted(mTransport, iStatus);
@@ -488,17 +491,25 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::SetTransport(nsIChannel* i_pTransport)
+nsHTTPRequest::SetTransport(nsIChannel* i_Transport, PRBool i_UsingProxy)
 {
     NS_ASSERTION(!mTransport, "Transport being overwritten!");
-    mTransport = i_pTransport;
+    mTransport = i_Transport;
+    mUsingProxy = i_UsingProxy;
+    if (mUsingProxy)
+    {
+        // Additional headers for proxy usage
+        SetHeader(nsHTTPAtoms::Pragma, "no-cache");
+        // When Keep-Alive gets ready TODO
+        //SetHeader(nsHTTPAtoms::Proxy-Connection, "Keep-Alive");
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::SetConnection(nsHTTPChannel* i_pConnection)
+nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
 {
-    mConnection = i_pConnection;
+    mConnection = i_Connection;
     return NS_OK;
 }
 

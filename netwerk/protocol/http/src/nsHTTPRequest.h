@@ -60,7 +60,7 @@ class nsHTTPRequest : public nsIStreamObserver,
 public:
 
     // Constructor and destructor
-    nsHTTPRequest(nsIURI* i_URL=0, HTTPMethod i_Method=HM_GET, nsIChannel* i_pTranport = nsnull);
+    nsHTTPRequest(nsIURI* i_URL=0, HTTPMethod i_Method=HM_GET, nsIChannel* i_Tranport = nsnull);
     virtual ~nsHTTPRequest();
 
     NS_DECL_ISUPPORTS
@@ -105,9 +105,10 @@ public:
     */
     NS_IMETHOD          GetInputStream(nsIInputStream* *o_Stream);
 
-    NS_IMETHOD          SetTransport(nsIChannel* i_pTransport);
+    NS_IMETHOD          SetTransport(nsIChannel* i_Transport, 
+                            PRBool i_UsingProxy = PR_FALSE);
 
-    NS_IMETHOD          SetConnection(nsHTTPChannel* i_pConnection);
+    NS_IMETHOD          SetConnection(nsHTTPChannel* i_Connection);
 
 protected:
 
@@ -144,6 +145,7 @@ protected:
     nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
+    PRBool                      mUsingProxy;
 };
 
 #define NS_HTTP_REQUEST_SEGMENT_SIZE     (4*1024)
