@@ -27,6 +27,7 @@
 #define nsIRDFNode_h__
 
 #include "nscore.h"
+#include "rdf.h"
 #include "nsISupports.h"
 
 // {0F78DA50-8321-11d2-8EAC-00805F29F370}
@@ -52,7 +53,7 @@
  *
  */
 
-class nsIRDFNode : public nsISupports {
+class NS_RDF nsIRDFNode : public nsISupports {
 public:
     static const nsIID& IID() { static nsIID iid = NS_IRDFNODE_IID; return iid; }
 
@@ -71,7 +72,7 @@ public:
 #define NS_IRDFRESOURCE_IID \
 { 0xe0c493d1, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
-class nsIRDFResource : public nsIRDFNode {
+class NS_RDF nsIRDFResource : public nsIRDFNode {
 public:
     static const nsIID& IID() { static nsIID iid = NS_IRDFRESOURCE_IID; return iid; }
 
@@ -96,7 +97,7 @@ public:
 #define NS_IRDFLITERAL_IID \
 { 0xe0c493d2, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
-class nsIRDFLiteral : public nsIRDFNode {
+class NS_RDF nsIRDFLiteral : public nsIRDFNode {
 public:
     static const nsIID& IID() { static nsIID iid = NS_IRDFLITERAL_IID; return iid; }
 

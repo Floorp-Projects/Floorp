@@ -20,12 +20,13 @@
 #define nsRDFResource_h__
 
 #include "nsIRDFNode.h"
+#include "nscore.h"
 
 /**
  * This simple base class implements nsIRDFResource, and can be used as a
  * superclass for more sophisticated resource implementations.
  */
-class nsRDFResource : public nsIRDFResource {
+class NS_RDF nsRDFResource : public nsIRDFResource {
 public:
 
     NS_DECL_ISUPPORTS
@@ -43,7 +44,7 @@ public:
     virtual ~nsRDFResource(void);
 
 protected:
-    const char* mURI;
+    char* mURI;
     
 };
 

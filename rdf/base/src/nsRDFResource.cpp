@@ -18,22 +18,39 @@
 
 #include "nsRDFResource.h"
 #include "nsCRT.h"
+#include "nsIServiceManager.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFNodeIID, NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRDFResource::nsRDFResource(const char* uri)
-    : mURI(uri)
+    : mURI(nsCRT::strdup(uri))
 {
+    NS_INIT_REFCNT();
 }
 
 nsRDFResource::~nsRDFResource(void)
 {
+    nsresult rv;
+
+    nsIRDFService* mgr;
+    rv = nsServiceManager::GetService(kRDFServiceCID,
+                                      nsIRDFService::IID(),
+                                      (nsISupports**) &mgr);
+
+    PR_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_SUCCEEDED(rv)) {
+        mgr->UnCacheResource(this);
+        nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
+    }
+
+    // N.B. that we need to free the URI *after* we un-cache the resource,
+    // due to the way that the resource manager is implemented.
+    delete[] mURI;
 }
 
 NS_IMPL_ADDREF(nsRDFResource)
@@ -46,13 +63,10 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(kIRDFResourceIID) ||
-        iid.Equals(kIRDFNodeIID) ||
+    if (iid.Equals(nsIRDFResource::IID()) ||
+        iid.Equals(nsIRDFNode::IID()) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFResource*, this);
-    }
-
-    if (*result != nsnull) {
         AddRef();
         return NS_OK;
     }
@@ -63,12 +77,12 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRDFNode methods:
 
-NS_METHOD
+NS_IMETHODIMP
 nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result) const
 {
     nsresult rv;
     nsIRDFResource* resource;
-    if (NS_SUCCEEDED(node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+    if (NS_SUCCEEDED(node->QueryInterface(nsIRDFResource::IID(), (void**)&resource))) {
         rv = EqualsResource(resource, result);
         NS_RELEASE(resource);
     }
@@ -82,7 +96,7 @@ nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result) const
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRDFResource methods:
 
-NS_METHOD
+NS_IMETHODIMP
 nsRDFResource::GetValue(const char* *uri) const
 {
     if (!uri)
@@ -91,7 +105,7 @@ nsRDFResource::GetValue(const char* *uri) const
     return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsRDFResource::EqualsResource(const nsIRDFResource* resource, PRBool* result) const
 {
     if (!resource || !result)
@@ -99,13 +113,13 @@ nsRDFResource::EqualsResource(const nsIRDFResource* resource, PRBool* result) co
 
     const char *uri;
     if (NS_SUCCEEDED(resource->GetValue(&uri))) {
-        return EqualsString(uri, result) ? NS_OK : NS_ERROR_FAILURE;
+        return NS_SUCCEEDED(EqualsString(uri, result)) ? NS_OK : NS_ERROR_FAILURE;
     }
 
     return NS_ERROR_FAILURE;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsRDFResource::EqualsString(const char* uri, PRBool* result) const
 {
     if (!uri || !result)
