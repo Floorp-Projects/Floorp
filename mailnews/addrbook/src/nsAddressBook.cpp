@@ -1282,8 +1282,10 @@ NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migr
 
     fileSpec->CloseStream();
 
-    // Commit the changes.
-    return(db->Commit(nsAddrDBCommitType::kLargeCommit));
+    // Commit the changes if 'db' is set.
+    if (db)
+      rv = db->Commit(nsAddrDBCommitType::kLargeCommit);
+    return rv;
 }
 
 #define CSV_DELIM ","
