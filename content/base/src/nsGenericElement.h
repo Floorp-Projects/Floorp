@@ -68,41 +68,80 @@ class nsDOMAttributeMap;
 class nsIURI;
 class nsINodeInfo;
 
-// Class that holds the child list of a content element and also
-// implements the nsIDOMNodeList interface.
+/**
+ * Class that implements the nsIDOMNodeList interface (a list of children of
+ * the content), by holding a reference to the content and delegating GetLength
+ * and Item to its existing child list.
+ * @see nsIDOMNodeList
+ */
 class nsChildContentList : public nsGenericDOMNodeList 
 {
 public:
+  /**
+   * @param aContent the content whose children will make up the list
+   */
   nsChildContentList(nsIContent *aContent);
   virtual ~nsChildContentList();
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
   
+  /** Drop the reference to the content */
   void DropReference();
 
 private:
+  /** The content whose children make up the list (weak reference) */
   nsIContent *mContent;
 };
 
-// There are a set of DOM- and scripting-specific instance variables
-// that may only be instantiated when a content object is accessed
-// through the DOM. Rather than burn actual slots in the content
-// objects for each of these instance variables, we put them off
-// in a side structure that's only allocated when the content is
-// accessed through the DOM.
+/**
+ * There are a set of DOM- and scripting-specific instance variables
+ * that may only be instantiated when a content object is accessed
+ * through the DOM. Rather than burn actual slots in the content
+ * objects for each of these instance variables, we put them off
+ * in a side structure that's only allocated when the content is
+ * accessed through the DOM.
+ */
 struct nsDOMSlots
 {
+  /**
+   * An object implementing nsIDOMNodeList for this content (childNodes)
+   * @see nsIDOMNodeList
+   * @see nsGenericHTMLLeafElement::GetChildNodes
+   */
   nsChildContentList *mChildNodes;
+  /**
+   * The .style attribute (an interface that forwards to the actual style rules)
+   * @see nsGenericHTMLElement::GetStyle
+   */
   nsDOMCSSDeclaration *mStyle;
+  /**
+   * An object implementing nsIDOMNamedNodeMap for this content (attributes)
+   * @see nsGenericElement::GetAttributes
+   */
   nsDOMAttributeMap* mAttributeMap;
+  /**
+   * A list of ranges whose endpoints are contained within this nsIContent.
+   * @see nsGenericElement::GetRangeList
+   * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/
+   */
   nsVoidArray *mRangeList;
+  /**
+   * The event listener manager for this content (contains a list of listeners)
+   * @see nsGenericElement::GetListenerManager
+   */
   nsIEventListenerManager* mListenerManager;
-  nsIContent* mBindingParent; // The nearest enclosing content node with a
-                              // binding that created us. [Weak]
+  /**
+   * The nearest enclosing content node with a binding that created us. [weak]
+   * @see nsGenericElement::GetBindingParent
+   */
+  nsIContent* mBindingParent;
 };
 
 
+/**
+ * A tearoff class for nsGenericElement to implement the nsIDOM3Node functions
+ */
 class nsNode3Tearoff : public nsIDOM3Node
 {
   NS_DECL_ISUPPORTS
@@ -120,11 +159,16 @@ private:
 };
 
 
-// nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
-// nsGenericDOMDataNode classes for implemeting the interfaces
-// nsIDOMEventReceiver and nsIDOMEventTarget
-
 #define NS_EVENT_TEAROFF_CACHE_SIZE 4
+
+/**
+ * nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
+ * nsGenericDOMDataNode classes for implementing the interfaces
+ * nsIDOMEventReceiver and nsIDOMEventTarget
+ *
+ * Use the method nsDOMEventRTTearoff::Create() to create one of these babies.
+ * @see nsDOMEventRTTearoff::Create
+ */
 
 class nsDOMEventRTTearoff : public nsIDOMEventReceiver
 {
@@ -140,9 +184,11 @@ private:
   static nsDOMEventRTTearoff *mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
   static PRUint32 mCachedEventTearoffCount;
 
-  // This method gets called by Release() when it's time to delete the
-  // this object, in stead of always deleting the object we'll put the
-  // object in the cache if unless the cache is already full.
+  /**
+   * This method gets called by Release() when it's time to delete the
+   * this object, in stead of always deleting the object we'll put the
+   * object in the cache if unless the cache is already full.
+   */
   void LastRelease();
 
   nsresult GetEventReceiver(nsIDOMEventReceiver **aReceiver);
@@ -150,9 +196,15 @@ private:
 public:
   virtual ~nsDOMEventRTTearoff();
 
-  // Use this static method to create instances of this tearoff class.
+  /**
+   * Use this static method to create instances of nsDOMEventRTTearoff.
+   * @param aContent the content to create a tearoff for
+   */
   static nsDOMEventRTTearoff *Create(nsIContent *aContent);
 
+  /**
+   * Call before shutdown to clear the cache and free memory for this class.
+   */
   static void Shutdown();
 
   // nsISupports
@@ -170,12 +222,18 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
 private:
-  // Strong reference back to the content object from where an
-  // instance of this class was 'torn off'
+  /**
+   * Strong reference back to the content object from where an instance of this
+   * class was 'torn off'
+   */
   nsCOMPtr<nsIContent> mContent;
 };
 
 
+/**
+ * A generic base class for DOM elements, implementing many nsIContent,
+ * nsIDOMNode and nsIDOMElement methods.
+ */
 class nsGenericElement : public nsIHTMLContent
 {
 public:
@@ -184,13 +242,19 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  /**
+   * Initialize this element given a NodeInfo object
+   * @param aNodeInfo information about this type of node
+   */
   nsresult Init(nsINodeInfo *aNodeInfo);
 
-  // If QI fails on an element, call this method to let the binding
-  // manager have a chance...
+  /**
+   * Called during QueryInterface to give the binding manager a chance to
+   * get an interface for this element.
+   */
   nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  // Free globals, to be called from module destructor
+  /** Free globals, to be called from module destructor */
   static void Shutdown();
 
   // nsIContent interface methods
@@ -340,19 +404,48 @@ public:
                             PRBool* aReturn);
 
   // Generic DOMNode implementations
+  /**
+   * Generic implementation of InsertBefore to be called by subclasses
+   * @see nsIDOMNode::InsertBefore
+   */
   nsresult  doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                            nsIDOMNode** aReturn);
+  /**
+   * Generic implementation of ReplaceChild to be called by subclasses
+   * @see nsIDOMNode::ReplaceChild
+   */
   nsresult  doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                            nsIDOMNode** aReturn);
+  /**
+   * Generic implementation of RemoveChild to be called by subclasses
+   * @see nsIDOMNode::RemoveChild
+   */
   nsresult  doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
 
   //----------------------------------------
 
+  // XXX Unused.  Remove.
   nsresult RenderFrame(nsIPresContext*);
 
+  /**
+   * Add a script event listener with the given attr name (like onclick)
+   * and with the value as JS
+   * @param aAttribute the event listener name
+   * @param aValue the JS to attach
+   */
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
                                   const nsAString& aValue);
 
+  /**
+   * Load a link, putting together the proper URL from the pieces given.
+   * @param aPresContext the pres context.
+   * @param aVerb how the link will be loaded (replace page, new window, etc.)
+   * @param aBaseURL the base URL to start with (content.baseURL, may be null)
+   * @param aURLSpec the URL of the link (may be relative)
+   * @param aTargetSpec the target (like target=, may be null)
+   * @param aClick whether this was a click or not (if false, it assumes you
+   *        just hovered over the link)
+   */
   nsresult TriggerLink(nsIPresContext* aPresContext,
                        nsLinkVerb aVerb,
                        nsIURI* aBaseURL,
@@ -360,16 +453,45 @@ public:
                        const nsString& aTargetSpec,
                        PRBool aClick);
 
+  /**
+   * Take two text nodes and append the second to the first.
+   * @param aFirst the node which will contain first + second [INOUT]
+   * @param aSecond the node which will be appended
+   */
   nsresult JoinTextNodes(nsIContent* aFirst,
                          nsIContent* aSecond);
 
+  /**
+   * Set .document in the immediate children of said content (but not in
+   * content itself).  SetDocument() in the children will recursively call
+   * this.
+   *
+   * @param aContent the content to get the children of
+   * @param aDocument the document to set
+   * @param aCompileEventHandlers whether to initialize the event handlers in
+   *        the document (used by nsXULElement)
+   */
   static void SetDocumentInChildrenOf(nsIContent* aContent, 
 				      nsIDocument* aDocument, PRBool aCompileEventHandlers);
 
+  /**
+   * Check whether a spec feature/version is supported.
+   * @param aFeature the feature ("Views", "Core", "HTML", "Range" ...)
+   * @param aVersion the version ("1.0", "2.0", ...)
+   * @param aReturn whether the feature is supported or not [OUT]
+   */
   static nsresult InternalIsSupported(const nsAString& aFeature,
                                       const nsAString& aVersion,
                                       PRBool* aReturn);
 
+  /**
+   * Quick helper to determine whether there are any mutation listeners
+   * of a given type that apply to this content (are at or above it).
+   * @param aContent the content to look for listeners for
+   * @param aType the type of listener (NS_EVENT_BITS_MUTATION_*)
+   * @return whether there are mutation listeners of the specified type for
+   *         this content or not
+   */
   static PRBool HasMutationListeners(nsIContent* aContent,
                                      PRUint32 aType);
 
@@ -378,22 +500,47 @@ protected:
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
 #endif
 
+  /**
+   * Get mDOMSlots, or create it if it doesn't exist
+   * @returen the DOMSlots for this content object
+   */
   nsDOMSlots *GetDOMSlots();
+  /**
+   * Clear mDOMSlots if there is nothing in it.
+   */
   void MaybeClearDOMSlots();
 
+  /** The document for this content */
   nsIDocument* mDocument;                   // WEAK
+  /** The parent content */
   nsIContent* mParent;                      // WEAK
   
+  /** Information about this type of node */
   nsINodeInfo* mNodeInfo;                   // OWNER
+  /** The DOMSlots for this content (see nsDOMSlots for info) */
   nsDOMSlots *mDOMSlots;                    // OWNER
+  /**
+   * A unique content ID (used for layout save/restore)
+   * @see FrameManager::GenerateStateKey
+   */
   PRUint32 mContentID;
 };
 
+/**
+ * A generic element that contains children
+ */
 class nsGenericContainerElement : public nsGenericElement {
 public:
   nsGenericContainerElement();
   virtual ~nsGenericContainerElement();
 
+  /**
+   * Copy attributes and children from another content object
+   * @param aSrcContent the object to copy from
+   * @param aDest the destination object
+   * @param aDeep whether to copy children
+   */
+  // XXX This can probably be static
   NS_IMETHOD CopyInnerTo(nsIContent* aSrcContent,
                          nsGenericContainerElement* aDest,
                          PRBool aDeep);
@@ -481,7 +628,12 @@ protected:
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
 #endif
 
+  /**
+   * The attributes (stored as nsGenericAttribute*)
+   * @see nsGenericAttribute
+   * */
   nsVoidArray* mAttributes;
+  /** The list of children (stored as nsIContent*) */
   nsSmallVoidArray mChildren;
 };
 
@@ -494,24 +646,28 @@ protected:
   {0x9c, 0x60, 0x6c, 0xa2, 0x75, 0x35, 0x09, 0xeb} }
 
 // nsIDocumentFragment interface
+/**
+ * These methods are supposed to be used when *all* children of a
+ * document fragment are moved at once into a new parent w/o
+ * changing the relationship between the children. If the moving
+ * operation fails and some children were moved to a new parent and
+ * some weren't, ReconnectChildren() should be called to remove the
+ * children from their possible new parent and re-insert the
+ * children into the document fragment. Once the operation is
+ * complete and all children are successfully moved into their new
+ * parent DropChildReferences() should be called so that the
+ * document fragment will loose its references to the children.
+ */
 class nsIDocumentFragment : public nsIDOMDocumentFragment
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTFRAGMENT_IID)
 
-  // These methods are supposed to be used when *all* children of a
-  // document fragment are moved at once into a new parent w/o
-  // changing the relationship between the children. If the moving
-  // operation fails and some children were moved to a new parent and
-  // some weren't, ReconnectChildren() should be called to remove the
-  // children from their possible new parent and re-insert the
-  // children into the document fragment. Once the operation is
-  // complete and all children are successfully moved into their new
-  // parent DropChildReferences() should be called so that the
-  // document fragment will loose its references to the children.
-
+  /** Tell the children their parent is gone */
   NS_IMETHOD DisconnectChildren() = 0;
+  /** Put all children back in the fragment */
   NS_IMETHOD ReconnectChildren() = 0;
+  /** Drop references to children */
   NS_IMETHOD DropChildReferences() = 0;
 };
 
