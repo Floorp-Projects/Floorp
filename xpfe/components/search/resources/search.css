@@ -89,3 +89,42 @@ treeitem > treerow.searchresult > treecell > titledbutton:active {
 treeitem[selected="true"] > treerow.searchresult { 
   background-color: transparent;
 }
+
+
+
+.searchpanel-outerbox {
+	padding: 8px 4px 4px 4px;
+}
+
+.indented-label {
+	padding-left: 8px;
+}
+
+titledbutton.panelbtn {
+	margin-left: 1em; 
+	margin-right: 1em; 
+}
+
+tree[singleclick="true"] treeitem > treerow > treecell > titledbutton {
+	cursor: pointer;
+}
+
+tree[singleclick="true"] treeitem > treerow > treecell {
+	color: black;
+	text-decoration: none;
+}
+
+tree[singleclick="true"] treeitem > treerow > treecell:hover {
+	color: blue;
+	text-decoration: underline;
+}
+
+tree[singleclick="true"] treeitem > treerow > treecell:active {
+	color: red;
+	text-decoration: underline;
+}
+
+/*undo regular search tree selection look*/
+tree[singleclick="true"] treeitem[selected="true"] > treerow { 
+  background-color: transparent;
+}
