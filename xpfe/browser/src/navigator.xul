@@ -37,7 +37,7 @@ Contributor(s): ______________________________________. -->
 <!ENTITY newBlankPageCmd.label "Blank Window">
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromDraftCmd.label "Page using Draft">
-<!ENTITY openCmd.label "Open...">
+<!ENTITY openCmd.label "Open File or Location...">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY editPageCmd.label "Edit Page">
 <!ENTITY offlineMenu.label "Offline">
