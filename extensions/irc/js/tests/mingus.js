@@ -337,7 +337,8 @@ f = function (e)
 }
 
 bot.personality.addHook
-    (/(smile)|(rotfl)|(lmao)|(rotflmao)|(you(.)?re funny)|(look happy)|(you(.)?re smart)/i, f);
+    (/(smile)|(rotfl)|(lmao)|(rotflmao)|(look happy)|(you(.)?re smart)/i, f); 
+/*    (/(smile)|(rotfl)|(lmao)|(rotflmao)|(you(.)?re funny)|(look happy)|(you(.)?re smart)/i, f); */
 
 f = function (e)
 {
@@ -362,3 +363,5 @@ f = function (e)
 }
 
 bot.personality.addHook (/(look confused)|(i like windows)/i, f);
+
+delete f;

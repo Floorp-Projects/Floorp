@@ -60,6 +60,8 @@ function CBSConnection ()
     this._sockService = sockService.QueryInterface
         (Components.interfaces.nsISocketTransportService);
 
+    this.wrappedJSObject = this;
+
 }
 
 CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
@@ -161,11 +163,14 @@ CBSConnection.prototype.readData = function(timeout)
     return rv;
 }
 
-CBSConnection.prototype.startAsyncRead =
-function (server)
+if (jsenv.HAS_DOCUMENT)
 {
-    this._channel.asyncRead (new StreamListener (server), this);
-
+    CBSConnection.prototype.startAsyncRead =
+    function (server)
+    {
+        this._channel.asyncRead (new StreamListener (server), this);
+        
+    }
 }
 
 function StreamListener(server)
@@ -189,7 +194,15 @@ function (channel, ctxt, status, errorMsg)
 StreamListener.prototype.onDataAvailable =
 function (channel, ctxt, inStr, sourceOffset, count)
 {
-    if (!this.lastInStr)
+    ctxt = ctxt.wrappedJSObject;
+    if (!ctxt)
+    {
+        dd ("*** Can't get wrappedJSObject from ctxt in " +
+            "StreamListener.onDataAvailable ***");
+        return;
+    }
+    
+    if (!ctxt._inputStream)
         ctxt._inputStream = toScriptableInputStream (inStr);
 
     var ev = new CEvent ("server", "data-available", this.server,
@@ -197,4 +210,3 @@ function (channel, ctxt, inStr, sourceOffset, count)
     ev.line = ctxt.readData(0);
     this.server.parent.eventPump.addEvent (ev);
 }
-

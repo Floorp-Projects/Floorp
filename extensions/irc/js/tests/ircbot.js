@@ -88,7 +88,7 @@ function init(obj)
 
     obj.networks["efnet"] =
         new CIRCNetwork ("efnet", [
-                         {name: "irc.idle.net", port: 6667},
+                         {name: "irc.mcs.net", port: 6667},
                          {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
 

@@ -97,7 +97,7 @@ function (outer, iid) {
 function IRCContentHandler ()
 {}
 
-IRCContentHandler.prototype.queryInterface =
+IRCContentHandler.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsIContentHandler))
@@ -199,7 +199,7 @@ function BogusChannel (aURI)
     this.originalURI = aURI;
 }
 
-BogusChannel.prototype.queryInterface =
+BogusChannel.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsIChannel) && !iid.equals(nsIRequest) &&
