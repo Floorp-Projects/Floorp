@@ -25,8 +25,11 @@ Rights Reserved.
 <!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
 <!ENTITY warnOnSendAccelKey.label         "Confirm when using keyboard shortcut to send message">
 <!ENTITY warnOnSendAccelKey.accesskey      "o">
-<!ENTITY playSound.label                  "Play a sound when new messages arrive">
+<!ENTITY newMessagesArrive.label          "When new messages arrive:">
+<!ENTITY playSound.label                  "Play a sound">
 <!ENTITY playSound.accesskey              "P">
+<!ENTITY showAnimatedAlert.label          "Show an alert">
+<!ENTITY showAnimatedAlert.accesskey      "S">
 <!ENTITY soundFile.label                  "Sound file:">
 <!ENTITY defaultSound.label               "Play default sound">
 <!ENTITY browse.label                     "Browse">
