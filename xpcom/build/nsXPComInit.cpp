@@ -480,6 +480,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentQ));
         }
     }
+    // XPCOM is officially in shutdown mode NOW
+    // Set this only after the observers have been notified as this
+    // will cause servicemanager to become inaccessible.
+    gXPCOMShuttingDown = PR_TRUE;
 
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
@@ -493,11 +497,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         currentQ->ProcessPendingEvents();
         currentQ = 0;
     }
-
-    // XPCOM is officially in shutdown mode NOW
-    // Set this only after the observers have been notified as this
-    // will cause servicemanager to become inaccessible.
-    gXPCOMShuttingDown = PR_TRUE;
 
 #ifndef XPCOM_STANDALONE
     // Release the global case converter
