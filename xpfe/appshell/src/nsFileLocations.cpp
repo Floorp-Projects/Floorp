@@ -599,7 +599,7 @@ nsFileLocator::~nsFileLocator()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsFileLocator, nsIFileLocator);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileLocator, nsIFileLocator);
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileLocator::GetFileLocation(
