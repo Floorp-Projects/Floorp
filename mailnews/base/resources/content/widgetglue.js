@@ -24,51 +24,6 @@
  * and then calls a function/command in commandglue
  */
 
-// Default Controller object
-var DefaultController =
-{
-    supportsCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_undo":
-			case "cmd_redo":
-				return true;
-			
-			default:
-				return false;
-		}
-	},
-
-	isCommandEnabled: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_undo":
-			case "cmd_redo":
-				return true;
-			
-			default:
-				return false;
-		}
-	},
-
-	doCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_undo":
-				messenger.Undo();
-				break;
-			
-			case "cmd_redo":
-				messenger.Redo();
-				break;
-		}
-	}
-};
-
-
 // Controller object for folder pane
 var FolderPaneController =
 {
@@ -142,8 +97,10 @@ var ThreadPaneController =
 			case "cmd_selectAll":
 			case "cmd_delete":
 			case "button_delete":
+			case "cmd_undo":
+			case "cmd_redo":
 				return true;
-			
+
 			default:
 				return false;
 		}
@@ -173,6 +130,12 @@ var ThreadPaneController =
 				}
 				return ( numSelected > 0 );
 			
+			case "cmd_undo":
+			case "cmd_redo":
+				// FIX ME - these commands should be calling the back-end code to determine if
+				// they should be enabled, this hack of always enabled can then be fixed.
+				return true;
+
 			default:
 				return false;
 		}
@@ -197,6 +160,14 @@ var ThreadPaneController =
 			
 			case "button_delete":
 				MsgDeleteMessage(true);
+				break;
+			
+			case "cmd_undo":
+				messenger.Undo();
+				break;
+			
+			case "cmd_redo":
+				messenger.Redo();
 				break;
 		}
 	}

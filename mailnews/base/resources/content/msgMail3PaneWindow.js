@@ -281,7 +281,6 @@ function InitPanes()
 	if(folderTree)
 		OnLoadFolderPane(folderTree);
 		
-	top.controllers.appendController(DefaultController);
 	SetupCommandUpdateHandlers();
 }
 
