@@ -3424,3 +3424,4 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
 
   return ret;
 }
+
