@@ -88,8 +88,6 @@ interface nsIMsgFolder : nsIFolder {
 
 	boolean DisplayRecipients();
 
-	void ReadDBFolderInfo(in boolean force);
-
 	readonly attribute string relativePathName;
 	readonly attribute unsigned long sizeOnDisk;
 

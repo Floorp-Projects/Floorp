@@ -145,9 +145,6 @@ class nsIMsgFolder : public nsIFolder {
   /* boolean DisplayRecipients (); */
   NS_IMETHOD DisplayRecipients(PRBool *_retval) = 0;
 
-  /* void ReadDBFolderInfo (in boolean force); */
-  NS_IMETHOD ReadDBFolderInfo(PRBool force) = 0;
-
   /* readonly attribute string relativePathName; */
   NS_IMETHOD GetRelativePathName(char * *aRelativePathName) = 0;
 
