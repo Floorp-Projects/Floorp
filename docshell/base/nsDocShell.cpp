@@ -1164,8 +1164,7 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
    if(!parent)
       {
       nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(mTreeOwner));
-      if(!treeOwnerAsWin)
-         return NS_OK;
+      NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
       treeOwnerAsWin->SetTitle(aTitle);
       }
@@ -1584,7 +1583,7 @@ nsDocShellInitInfo* nsDocShell::InitInfo()
    return mInitInfo = new nsDocShellInitInfo();
 }
 
-nsresult nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
+NS_IMETHODIMP nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    PRInt32* aOffset)
 {
    NS_ENSURE_ARG_POINTER(aChild || aParent);
@@ -1613,7 +1612,7 @@ nsresult nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    return NS_ERROR_FAILURE;
 }
 
-nsresult nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
+NS_IMETHODIMP nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
 {
    NS_ENSURE_ARG_POINTER(aOutScrollView);
    
@@ -1630,7 +1629,7 @@ nsresult nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
    return NS_OK;
 } 
 
-nsresult nsDocShell::EnsureContentListener()
+NS_IMETHODIMP nsDocShell::EnsureContentListener()
 {
    if(mContentListener)
       return NS_OK;
@@ -1644,7 +1643,7 @@ nsresult nsDocShell::EnsureContentListener()
    return NS_OK;
 }
 
-nsresult nsDocShell::EnsureScriptEnvironment()
+NS_IMETHODIMP nsDocShell::EnsureScriptEnvironment()
 {
    if(mScriptContext)
       return NS_OK;
@@ -1663,6 +1662,60 @@ nsresult nsDocShell::EnsureScriptEnvironment()
       getter_AddRefs(mScriptContext)), NS_ERROR_FAILURE);
 
    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetTarget(const PRUnichar* aName, nsIDocShellTreeItem** aShell)
+{
+   nsAutoString name(aName);
+
+   if(!name.Length() || name.EqualsIgnoreCase("_self"))
+      {
+      *aShell = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+      }
+   else if(name.EqualsIgnoreCase("_blank"))
+      {
+      NS_ENSURE_SUCCESS(CreateTargetLocation(nsnull, aShell), NS_ERROR_FAILURE);
+      }
+   else if(name.EqualsIgnoreCase("_parent"))
+      {
+      GetSameTypeParent(aShell);
+      if(!*aShell)
+         *aShell = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+      }
+   else if(name.EqualsIgnoreCase("_top"))
+      {
+      NS_ENSURE_SUCCESS(GetSameTypeRootTreeItem(aShell), NS_ERROR_FAILURE);
+      }
+   else if(name.EqualsIgnoreCase("_content"))
+      {
+      if(mTreeOwner)
+         mTreeOwner->FindItemWithName(aName, nsnull, aShell);
+      else
+         {
+         NS_ERROR("Someone isn't setting up the tree owner.  You might like to try that."
+            "Things will.....you know, work.");
+         }
+      }
+   else
+      {
+      NS_ENSURE_SUCCESS(FindItemWithName(aName, nsnull, aShell), NS_ERROR_FAILURE);
+      if(!*aShell)
+         {
+         NS_ENSURE_SUCCESS(CreateTargetLocation(aName, aShell), NS_ERROR_FAILURE);
+         }
+      }
+
+   NS_IF_ADDREF(*aShell);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::CreateTargetLocation(const PRUnichar* aName, 
+   nsIDocShellTreeItem** aShell)
+{
+   // XXX Implement
+   NS_ERROR("Not Yet IMplemented");
+   return NS_ERROR_FAILURE;
 }
 
 void nsDocShell::SetCurrentURI(nsIURI* aUri)

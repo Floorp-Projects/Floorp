@@ -108,6 +108,8 @@ protected:
    NS_IMETHOD GetRootScrollableView(nsIScrollableView** aOutScrollView);
    NS_IMETHOD EnsureContentListener();
    NS_IMETHOD EnsureScriptEnvironment();
+   NS_IMETHOD GetTarget(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
+   NS_IMETHOD CreateTargetLocation(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
 
    void SetCurrentURI(nsIURI* aUri);
    NS_IMETHOD CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
