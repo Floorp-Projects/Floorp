@@ -344,7 +344,7 @@ nsTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
   PRInt32 type;
   GetType(&type);
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-   nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+   result = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
 /* XXX REMOVE 
    nsIDOMHTMLInputElement* textElem = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
@@ -386,30 +386,68 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (mWidget) {
     nsITextWidget* text = nsnull;
     result = mWidget->QueryInterface(kITextWidgetIID, (void**)&text);
-    if ((nsHTMLAtoms::value == aAttribute) && (nsnull != text)) {
+    if ((NS_OK == result) && (nsnull != text)) {
+      if (nsHTMLAtoms::value == aAttribute) {
         nsString value;
         /*XXXnsresult rv = */GetText(&value, PR_TRUE);
         PRUint32 ignore;
         text->SetText(value, ignore);
         nsFormFrame::StyleChangeReflow(aPresContext, this);
-    } else if (nsHTMLAtoms::size == aAttribute) {
-      nsFormFrame::StyleChangeReflow(aPresContext, this);
-    } else if ((nsHTMLAtoms::maxlength == aAttribute) && (nsnull != text)) {
-      PRInt32 maxLength;
-      nsresult rv = GetMaxLength(&maxLength);
-      if (NS_CONTENT_ATTR_NOT_THERE != rv) {
-        text->SetMaxTextLength(maxLength);
+      } else if (nsHTMLAtoms::maxlength == aAttribute) {
+        PRInt32 maxLength;
+        nsresult rv = GetMaxLength(&maxLength);
+        if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+          text->SetMaxTextLength(maxLength);
+        }
+      } else if (nsHTMLAtoms::readonly == aAttribute) {
+        PRBool oldReadOnly;
+        text->SetReadOnly(nsFormFrame::GetReadonly(this),oldReadOnly);
       }
-    } else if ((nsHTMLAtoms::readonly == aAttribute) && (nsnull != text)) {
-      PRBool oldReadOnly;
-      text->SetReadOnly(nsFormFrame::GetReadonly(this),oldReadOnly);
+      else if (nsHTMLAtoms::size == aAttribute) {
+        nsFormFrame::StyleChangeReflow(aPresContext, this);
+      }
+      // Allow the base class to handle common attributes supported
+      // by all form elements... 
+      else {
+        result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+      }
+      NS_RELEASE(text);
     }
-    // Allow the base class to handle common attributes supported
-    // by all form elements... 
-    else {
-      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    // XXX Ick, create an common interface that has the functionality of nsTextHelper
+    else { // We didn't get a Text, is it a TextArea?
+      nsITextAreaWidget* textArea = nsnull;
+      result = mWidget->QueryInterface(kITextAreaWidgetIID, (void**)&textArea);
+      if ((NS_OK == result) && (nsnull != textArea)) {
+        if (nsHTMLAtoms::value == aAttribute) {
+          nsString value;
+          /*XXXnsresult rv = */GetText(&value, PR_TRUE);
+          PRUint32 ignore;
+          textArea->SetText(value, ignore);
+          nsFormFrame::StyleChangeReflow(aPresContext, this);
+        } else if (nsHTMLAtoms::maxlength == aAttribute) {
+          PRInt32 maxLength;
+          nsresult rv = GetMaxLength(&maxLength);
+          if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+            textArea->SetMaxTextLength(maxLength);
+          }
+        } else if (nsHTMLAtoms::readonly == aAttribute) {
+          PRBool oldReadOnly;
+          textArea->SetReadOnly(nsFormFrame::GetReadonly(this),oldReadOnly);
+        }
+        else if (nsHTMLAtoms::size == aAttribute) {
+          nsFormFrame::StyleChangeReflow(aPresContext, this);
+        }
+        // Allow the base class to handle common attributes supported
+        // by all form elements... 
+        else {
+          result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+        }
+        NS_RELEASE(textArea);
+      }
+      else { // We didn't get a Text or TextArea.  Uh oh...
+        result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+      }
     }
-    NS_IF_RELEASE(text);
   }
 
   return result;
@@ -808,7 +846,8 @@ void nsTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
-    SetTextControlFrameState(aValue);                                         }
+    SetTextControlFrameState(aValue);
+  }
   else {
     return nsFormControlFrame::SetProperty(aName, aValue);
   }
