@@ -114,7 +114,12 @@ nsXPCArbitraryScriptable::GetProperty(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(retval, "bad param");
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
+
+    // js_ObjectOps.getProperty, under the strict option, will warn about an
+    // undefined property reference.  So we suppress JSOPTION_STRICT here.
+    uint32 oldopts = JS_SetOptions(cx, JS_GetOptions(cx) & ~JSOPTION_STRICT);
     *retval = js_ObjectOps.getProperty(cx, obj, id, vp);
+    JS_SetOptions(cx, oldopts);
     return NS_OK;
 }
 
