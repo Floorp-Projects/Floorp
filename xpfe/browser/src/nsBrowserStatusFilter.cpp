@@ -266,13 +266,14 @@ nsBrowserStatusFilter::OnSecurityChange(nsIWebProgress *aWebProgress,
 nsresult
 nsBrowserStatusFilter::StartDelayTimer()
 {
-    nsresult rv;
-
     NS_ASSERTION(!DelayInEffect(), "delay should not be in effect");
 
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
-    mTimer->InitWithFuncCallback(TimeoutHandler, this, 400, 
-                                 nsITimer::TYPE_ONE_SHOT);
+    if (!mTimer)
+      return NS_ERROR_FAILURE;
+
+    nsresult rv = mTimer->InitWithFuncCallback(TimeoutHandler, this, 400, 
+                                               nsITimer::TYPE_ONE_SHOT);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
