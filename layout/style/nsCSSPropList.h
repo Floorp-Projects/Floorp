@@ -163,6 +163,7 @@ CSS_PROP(font-stretch, font_stretch, REFLOW)
 CSS_PROP(font-style, font_style, REFLOW)
 CSS_PROP(font-variant, font_variant, REFLOW)
 CSS_PROP(font-weight, font_weight, REFLOW)
+CSS_PROP(-moz-force-broken-image-icon, force_broken_image_icon, FRAMECHANGE) // bug 58646
 CSS_PROP(height, height, REFLOW)
 CSS_PROP(-moz-image-region, image_region, REFLOW)
 CSS_PROP(-x-image-region-bottom, image_region_bottom, REFLOW)

@@ -1389,6 +1389,7 @@ nsStyleUIReset::nsStyleUIReset(void)
   mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   mKeyEquivalent = PRUnichar(0); // XXX what type should this be?
   mResizer = NS_STYLE_RESIZER_AUTO;
+  mForceBrokenImageIcon = 0;
 }
 
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource) 
@@ -1396,6 +1397,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
   mUserSelect = aSource.mUserSelect;
   mKeyEquivalent = aSource.mKeyEquivalent;
   mResizer = aSource.mResizer;
+  mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
 }
 
 nsStyleUIReset::~nsStyleUIReset(void) 
@@ -1404,8 +1406,9 @@ nsStyleUIReset::~nsStyleUIReset(void)
 
 PRInt32 nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
 {
-  if (mResizer == aOther.mResizer) {
-    if (mUserSelect == aOther.mUserSelect) {
+  if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {
+    if (mResizer == aOther.mResizer &&
+        mUserSelect == aOther.mUserSelect) {
       if (mKeyEquivalent == aOther.mKeyEquivalent) {
         return NS_STYLE_HINT_NONE;
       }
@@ -1413,6 +1416,5 @@ PRInt32 nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
     }
     return NS_STYLE_HINT_VISUAL;
   }
-  
-  return NS_STYLE_HINT_VISUAL;
+  return NS_STYLE_HINT_FRAMECHANGE;
 }

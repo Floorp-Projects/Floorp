@@ -110,3 +110,6 @@ span[-moz-smiley="s7"] {
   background-image: url(chrome://editor/content/images/undecided_n.gif);
 }
 
+img {
+  -moz-force-broken-image-icon: 1;
+}

@@ -114,6 +114,12 @@
 #define NS_ICON_LOADING_IMAGE (0)
 #define NS_ICON_BROKEN_IMAGE  (1)
 
+// sizes (pixels) for image icon, padding and border frame
+#define ICON_SIZE        (16)
+#define ICON_PADDING     (3)
+#define ALT_BORDER_WIDTH (1)
+
+
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
 
@@ -653,7 +659,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
       mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
       if (usemap.IsEmpty()) {
         // check if we want to honor the ALT text in the IMG frame, or let the preShell make it into inline text
-        //  - if QuirksMode, and the IMG has a size, then render the ALT text in the ING frame
+        //  - if QuirksMode, and the IMG has a size, then render the ALT text in the IMG frame
         //    UNLESS there is a pref set to force inline alt text
         PRBool useSizedBox = PR_FALSE;
         PRBool prefForceInlineAltText = mIconLoad ? mIconLoad->mPrefForceInlineAltText : PR_FALSE;
@@ -667,11 +673,24 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
         
-        // wrap it all up
-        useSizedBox = !prefForceInlineAltText &&
-                      HaveFixedSize(*stylePosition) && 
-                      mode == eCompatibility_NavQuirks &&
-                      !mImageBlocked;
+        // check for being in Composer: if we are, we always show the size-box
+        PRBool forceIcon = PR_FALSE;
+
+        // check for style property that indicates the icon should always be shown
+        const nsStyleUIReset* styleData;
+        GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&) styleData);
+        if (styleData->mForceBrokenImageIcon) {
+          forceIcon = PR_TRUE;
+        }
+
+        // wrap it all up: use the size box if
+        // - in editor
+        // - not forcing inline alt text, have fixed size, in quirks mode, image not blocked
+        useSizedBox = forceIcon ||
+                      (!prefForceInlineAltText &&
+                       HaveFixedSize(*stylePosition) && 
+                       mode == eCompatibility_NavQuirks &&
+                       !mImageBlocked);
 
         if (!useSizedBox) {
           // let the presShell handle converting this into the inline alt text frame
@@ -745,18 +764,39 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // check to see if the size is already known by the image container.
   if (mLoads[0].mIntrinsicSize.width == 0 &&
       mLoads[0].mIntrinsicSize.height == 0) {
+    PRBool needMinIconSizing = PR_FALSE;
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
     if (mLoads[0].mRequest) {
       nsCOMPtr<imgIContainer> con;
       mLoads[0].mRequest->GetImage(getter_AddRefs(con));
       if (con) {
-        float p2t;
         nscoord width, height;
 
-        aPresContext->GetPixelsToTwips(&p2t);
         con->GetWidth(&width);
         con->GetHeight(&height);
         mLoads[0].mIntrinsicSize.width = NSIntPixelsToTwips(width, p2t);
         mLoads[0].mIntrinsicSize.height = NSIntPixelsToTwips(height, p2t);
+      } else {
+        // no image container, so we may need to synthesize a minimum size for the image icons
+        needMinIconSizing = PR_TRUE;
+      }
+    } else {
+      // no request, so we may need to synthesize a minimum size for the image icons
+      needMinIconSizing = PR_TRUE;
+    }
+
+    if (needMinIconSizing) {
+      // XXX:  we need this in composer, but it is also good for general quirks mode to always
+      // XXX:  have room for the icon
+      // check for quirks mode
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      if (mode == eCompatibility_NavQuirks) {
+        // image request is null or image size not known, probably an invalid image specified
+        // - make the image big enough for the icon (it may not be used if inline alt expansion is used instead)
+        mLoads[0].mIntrinsicSize.width = NSIntPixelsToTwips(ICON_SIZE+(2*(ICON_PADDING+ALT_BORDER_WIDTH)), p2t);
+        mLoads[0].mIntrinsicSize.height = NSIntPixelsToTwips(ICON_SIZE+(2*(ICON_PADDING+ALT_BORDER_WIDTH)), p2t);
       }
     }
   }
@@ -1088,10 +1128,6 @@ struct nsRecessedBorder : public nsStyleBorder {
   }
 };
 
-#define ICON_SIZE        (16)
-#define ICON_PADDING     (6)
-#define ALT_BORDER_WIDTH (1)
-
 void
 nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -1106,6 +1142,12 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   nscoord borderEdgeWidth;
   aPresContext->GetScaledPixelsToTwips(&p2t);
   borderEdgeWidth = NSIntPixelsToTwips(ALT_BORDER_WIDTH, p2t);
+
+  // if inner area is empty, then make it big enough for at least the icon
+  if (inner.IsEmpty()){
+    inner.SizeBy(2*(NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING+ALT_BORDER_WIDTH,p2t)),
+                 2*(NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING+ALT_BORDER_WIDTH,p2t)));
+  }
 
   // Make sure we have enough room to actually render the border within
   // our frame bounds
@@ -1249,6 +1291,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status (unless image is blocked, in which case we show nothing)
+
 #ifndef SUPPRESS_LOADING_ICON
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
           (!mImageBlocked || mIconLoad->mPrefAllImagesBlocked)) {

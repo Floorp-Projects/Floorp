@@ -946,7 +946,8 @@ nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
     mKeyEquivalent(nsnull),
     mUserFocus(aCopy.mUserFocus),
     mResizer(aCopy.mResizer),
-    mCursor(nsnull)
+    mCursor(nsnull),
+    mForceBrokenImageIcon(aCopy.mForceBrokenImageIcon)
 {
   MOZ_COUNT_CTOR(nsCSSUserInterface);
   CSS_IF_COPY(mCursor, nsCSSValueList);
@@ -988,7 +989,9 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
     cursor->mValue.AppendToString(buffer, eCSSProperty_cursor);
     cursor = cursor->mNext;
   }
-  
+
+  mForceBrokenImageIcon.AppendToString(buffer,eCSSProperty_force_broken_image_icon);
+
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 #endif
@@ -1894,7 +1897,8 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
     case eCSSProperty_key_equivalent:
     case eCSSProperty_user_focus:
     case eCSSProperty_resizer:
-    case eCSSProperty_cursor: {
+    case eCSSProperty_cursor:
+    case eCSSProperty_force_broken_image_icon: {
       CSS_ENSURE(UserInterface) {
         switch (aProperty) {
           case eCSSProperty_user_input:       theUserInterface->mUserInput = aValue;      break;
@@ -1914,7 +1918,8 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
               CSS_IF_DELETE(theUserInterface->mCursor->mNext);
             }
             break;
-          
+          case eCSSProperty_force_broken_image_icon: theUserInterface->mForceBrokenImageIcon = aValue; break;
+
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
@@ -4567,7 +4572,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_key_equivalent:
     case eCSSProperty_user_focus:
     case eCSSProperty_resizer:
-    case eCSSProperty_cursor: {
+    case eCSSProperty_cursor:
+    case eCSSProperty_force_broken_image_icon: {
       CSS_VARONSTACK_GET(UserInterface);
       if (nsnull != theUserInterface) {
         switch (aProperty) {
@@ -4586,7 +4592,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
               aValue = theUserInterface->mCursor->mValue;
             }
             break;
-          
+          case eCSSProperty_force_broken_image_icon: aValue = theUserInterface->mForceBrokenImageIcon; break;
+
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }

@@ -240,6 +240,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
   // in nsCSSDeclaration objects but because it's needed on the
   // stack when the struct is used in WalkRuleTree.
   nsCSSValue mLang;
+
   // temp fix for bug 24000 
   nsCSSValue mBreakBefore;
   nsCSSValue mBreakAfter;
@@ -420,6 +421,7 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSValue      mResizer;
   
   nsCSSValueList* mCursor;
+  nsCSSValue      mForceBrokenImageIcon;
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW

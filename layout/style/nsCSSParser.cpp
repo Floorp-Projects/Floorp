@@ -3760,6 +3760,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_height:
   case eCSSProperty_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
+  case eCSSProperty_force_broken_image_icon:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
   case eCSSProperty_caption_side:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK, 
                         nsCSSProps::kCaptionSideKTable);
