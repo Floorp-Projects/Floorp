@@ -76,7 +76,7 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
 }
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 nsPresContext::nsPresContext()
@@ -97,7 +97,6 @@ nsPresContext::nsPresContext()
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = eImageAnimation_Normal;
   
-  mLookAndFeel = nsnull;
   mShell = nsnull;
 
 #ifdef _WIN32
@@ -136,8 +135,6 @@ nsPresContext::~nsPresContext()
 
   if (mEventManager)
     mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
-
-  NS_IF_RELEASE(mLookAndFeel);
 
   // Unregister preference callbacks
   if (mPrefs) {
@@ -461,14 +458,10 @@ nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
   }
   nsresult result = NS_OK;
   if (! mLookAndFeel) {
-    result = nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
-                                                kILookAndFeelIID, (void**)&mLookAndFeel);
-    if (NS_FAILED(result)) {
-      mLookAndFeel = nsnull;
-    }
+    mLookAndFeel = do_GetService(kLookAndFeelCID,&result);
   }
-  NS_IF_ADDREF(mLookAndFeel);
   *aLookAndFeel = mLookAndFeel;
+  NS_IF_ADDREF(*aLookAndFeel);
   return result;
 }
 

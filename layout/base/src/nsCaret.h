@@ -60,6 +60,7 @@ class nsCaret : public nsICaret,
 		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *inDOMSel);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 		NS_IMETHOD 		EraseCaret();
+    NS_IMETHOD    SetCaretWidth(nscoord aPixels);
 	
 	  //nsIDOMSelectionListener interface
 	  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
@@ -93,7 +94,8 @@ class nsCaret : public nsICaret,
     nsCOMPtr<nsITimer> mBlinkTimer;
 
 		PRUint32			mBlinkRate;					// time for one cyle (off then on), in milliseconds
-		nscoord				mCaretWidth;				// caret width in twips
+		nscoord				mCaretTwipsWidth;		// caret width in twips
+		nscoord				mCaretPixelsWidth;	// caret width in pixels
 		
 		PRBool				mVisible;						// is the caret blinking
 		PRBool				mReadOnly;					// it the caret in readonly state (draws differently)

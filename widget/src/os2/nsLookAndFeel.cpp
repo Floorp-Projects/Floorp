@@ -276,7 +276,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_CaretBlinkTime:
         svalue = SV_CURSORRATE;
         break;
-    case eMetric_CaretWidthTwips:
+    case eMetric_SingleLineCaretWidth:
+    case eMetric_MultiLineCaretWidth:
         // Sigh - this is in 'twips', should be in 'app units', but there's no
         // DC anyway so we can't work it out!
 
@@ -292,7 +293,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         //   * we'll get an nsIDeviceContext here
         //
         // For now, lets assume p2t = 20.
-        aMetric = 20 * ulPels;
+        aMetric = 1 * ulPels;
         break;
 // Windows     aMetric = 30;
         break;
