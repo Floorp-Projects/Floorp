@@ -155,10 +155,10 @@
   }
 
   .progressmeter-progressbar {
-    min-height			   : 9px;
-    height             : 9px;
-    border-left: 1px solid #293342;
-    border-right: 1px solid #293342;
+    min-height          : 9px;
+    max-height          : 9px;
+    border-left         : 1px solid #293342;
+    border-right        : 1px solid #293342;
   }
 
   .progress-bar {
