@@ -14,7 +14,7 @@
 
 CXX = c++
 OPTIMIZER = -g
-CXXFLAGS = $(OPTIMIZER) -Wall
+CXXFLAGS = $(OPTIMIZER) -Wall -Wp,-MD,.deps-$<
 CXXF = $(CXX) $(CXXFLAGS)
 
 MKSHLIB = $(CXX) -shared
@@ -46,7 +46,7 @@ TARGETS = leaky $(LIBMALLOC) TestLeaky TestPreload $(LIBPRELOAD) ShowLibs
 default all: $(TARGETS)
 
 clean:
-	rm -f core malloc-log malloc-map *.o
+	rm -f core malloc-log malloc-map *.o .deps*
 
 clobber: clean
 	rm -f $(TARGETS)
@@ -72,3 +72,5 @@ $(LIBPRELOAD): LibPreload.o
 
 ShowLibs: ShowLibs.cpp
 	$(CXXF) -o $@ ShowLibs.cpp
+
+-include .deps-*
