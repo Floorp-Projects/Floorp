@@ -142,12 +142,13 @@ OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool 
 //    HTTP, HTTPS, FTP, GOPHER, CHROME
 //   are mapped like so:
 //
-//   HKCU\SOFTWARE\Classes\<protocol>\
-//     DefaultIcon                      (default)   REG_SZ  <appname>,1
-//     shell\open\command               (default)   REG_SZ  <appname> -url "%1"
-//     shell\open\ddeexec               (default)   REG_SZ  "%1",,-1,0,,,,
-//                       \application   (default)   REG_SZ  Firefox
-//                       \topic         (default)   REG_SZ  WWW_OpenURL
+// HKCU\SOFTWARE\Classes\<protocol>\
+//   DefaultIcon                    (default)         REG_SZ  <appname>,1
+//   shell\open\command             (default)         REG_SZ <appname> -url "%1"
+//   shell\open\ddeexec             (default)         REG_SZ  "%1",,-1,0,,,,
+//   shell\open\ddeexec             NoActivateHandler REG_SZ
+//                     \application (default)         REG_SZ  Firefox
+//                     \topic       (default)         REG_SZ  WWW_OpenURL
 //                    
 //
 // - Windows XP Start Menu Browser
@@ -256,18 +257,23 @@ static SETTING gSettings[] = {
 
 static SETTING gDDESettings[] = {
   { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION  },
+  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION  },
   { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "", DDE_COMMAND, NO_SUBSTITUTION  },
+  { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
   { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION  },
   { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION  }
 };
