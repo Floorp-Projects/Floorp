@@ -75,7 +75,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
  
 
 nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength, 
-                           const nsString& stringIn, PRUint32* outLen)
+                                       const nsString& stringIn, PRUint32* outLen)
 {
   // Currently, no length change by the normalization.
   // API returns number of bytes when LCMAP_SORTKEY is specified 
@@ -85,8 +85,8 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
   return NS_OK;
 }
 
-nsresult nsCollationWin::CreateSortKey(const nsCollationStrength strength, 
-                           const nsString& stringIn, PRUint8* key, PRUint32* outLen)
+nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength, 
+                                          const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   int byteLen;
   nsAutoString stringNormalized(stringIn);

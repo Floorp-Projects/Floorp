@@ -84,6 +84,7 @@ static nsresult CreateCollationKey(nsICollation *t, nsCollationStrength strength
 {
   nsresult res;
   
+  // create a raw collation key
   res = t->GetSortKeyLen(strength, stringIn, keyLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
@@ -92,10 +93,22 @@ static nsresult CreateCollationKey(nsICollation *t, nsCollationStrength strength
   if (NULL == *aKey) {
     cout << "\tFailed!! memory allocation failed.\n";
   }
-  res = t->CreateSortKey(strength, stringIn, *aKey, keyLength);
+  res = t->CreateRawSortKey(strength, stringIn, *aKey, keyLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
+
+  // create a key in nsString
+  nsString aKeyString;
+  res = t->CreateSortKey(strength, stringIn, aKeyString);
+  if(NS_FAILED(res)) {
+    cout << "\tFailed!! return value != NS_OK\n";
+  }
+
+  // compare the generated key
+  nsString tempString;
+  tempString.SetString((PRUnichar *) *aKey, *keyLength / sizeof(PRUnichar));
+  NS_ASSERTION(aKeyString == tempString, "created key mismatch");
 
   return res;
 }
@@ -237,12 +250,12 @@ static void TestCollation(nsILocale *locale)
       }
       cout << "keyLength: " << keyLength1 << "\n";
 
-      cout << "Test 4 - CreateSortKey():\n";
+      cout << "Test 4 - CreateRawSortKey():\n";
       aKey1 = (PRUint8 *) new PRUint8[keyLength1];
       if (NULL == aKey1) {
         cout << "\tFailed!! memory allocation failed.\n";
       }
-      res = t->CreateSortKey(kCollationCaseSensitive, string2, aKey1, &keyLength1);
+      res = t->CreateRawSortKey(kCollationCaseSensitive, string2, aKey1, &keyLength1);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
@@ -272,24 +285,24 @@ static void TestCollation(nsILocale *locale)
       }
       cout << "\n";
 
-      cout << "Test 5 - CompareSortKey():\n";
+      cout << "Test 5 - CompareRawSortKey():\n";
       res = CreateCollationKey(t, kCollationCaseSensitive, string1, &aKey3, &keyLength3);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
 
-      res = t->CompareSortKey(aKey1, keyLength1, aKey3, keyLength3, &result);
+      res = t->CompareRawSortKey(aKey1, keyLength1, aKey3, keyLength3, &result);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
       cout << "case sensitive comparison (string1 vs string2): " << result << "\n";
-      res = t->CompareSortKey(aKey3, keyLength3, aKey1, keyLength1, &result);
+      res = t->CompareRawSortKey(aKey3, keyLength3, aKey1, keyLength1, &result);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
       cout << "case sensitive comparison (string2 vs string1): " << result << "\n";
 
-      res = t->CompareSortKey(aKey2, keyLength2, aKey3, keyLength3, &result);
+      res = t->CompareRawSortKey(aKey2, keyLength2, aKey3, keyLength3, &result);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
@@ -314,12 +327,12 @@ static void TestCollation(nsILocale *locale)
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
-      res = t->CompareSortKey(aKey1, keyLength1, aKey2, keyLength2, &result);
+      res = t->CompareRawSortKey(aKey1, keyLength1, aKey2, keyLength2, &result);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
       cout << "case sensitive comparison (string1 vs string3): " << result << "\n";
-      res = t->CompareSortKey(aKey1, keyLength1, aKey3, keyLength3, &result);
+      res = t->CompareRawSortKey(aKey1, keyLength1, aKey3, keyLength3, &result);
       if(NS_FAILED(res)) {
         cout << "\tFailed!! return value != NS_OK\n";
       }
@@ -387,7 +400,7 @@ static int compare2( const void *arg1, const void *arg2 )
   keyrec1 = (collation_rec *) arg1;
   keyrec2 = (collation_rec *) arg2;
 
-  res = g_collationInst->CompareSortKey(keyrec1->aKey, keyrec1->aLength, 
+  res = g_collationInst->CompareRawSortKey(keyrec1->aKey, keyrec1->aLength, 
                                         keyrec2->aKey, keyrec2->aLength, &result);
 
   return (int) result;
@@ -567,6 +580,10 @@ static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, F
 
   res = factoryInst->Release();
 
+  for (int i = 0; i < 5; i++) {
+    delete [] key_array[i].aKey;
+  }
+
   cout << "==============================\n";
   cout << "Finish sort Test \n";
   cout << "==============================\n";
@@ -718,7 +735,7 @@ static char* find_option(int argc, char** argv, char* arg)
 int main(int argc, char** argv) {
   nsresult res; 
 
-#if !XP_PC
+#ifdef XP_MAC
   res = nsComponentManager::RegisterComponent(kCollationFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
@@ -751,7 +768,7 @@ int main(int argc, char** argv) {
 	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
   if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
 
-  res = localeFactory->GetSystemLocale(&locale);
+  res = localeFactory->GetApplicationLocale(&locale);
   if (NS_FAILED(res) || locale == nsnull) cout << "GetSystemLocale failed\n";
 
 	localeFactory->Release();
