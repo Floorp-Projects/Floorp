@@ -2540,6 +2540,9 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     td = STAN_GetDefaultTrustDomain();
     NSSITEM_FROM_SECITEM(&subject, &cert->derSubject);
     token = PK11Slot_GetNSSToken(slot);
+    if (!nssToken_IsPresent(token)) {
+	return SECSuccess;
+    }
     collection = nssCertificateCollection_Create(td, NULL);
     if (!collection) {
 	return SECFailure;
@@ -2627,6 +2630,10 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
     pk11cb.callback = callback;
     pk11cb.arg = arg;
+    token = PK11Slot_GetNSSToken(slot);
+    if (!nssToken_IsPresent(token)) {
+	return SECSuccess;
+    }
     if (nickname->data[nickname->len-1] != '\0') {
 	nick = nssUTF8_Create(NULL, nssStringType_UTF8String, 
 	                      nickname->data, nickname->len);
@@ -2635,7 +2642,6 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
 	nick = (NSSUTF8 *)nickname->data;
     }
     td = STAN_GetDefaultTrustDomain();
-    token = PK11Slot_GetNSSToken(slot);
     collection = nssCertificateCollection_Create(td, NULL);
     if (!collection) {
 	goto loser;
@@ -2722,6 +2728,9 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     NSSCertificate **certs;
     nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
     tok = PK11Slot_GetNSSToken(slot);
+    if (!nssToken_IsPresent(tok)) {
+	return SECSuccess;
+    }
     collection = nssCertificateCollection_Create(td, NULL);
     if (!collection) {
 	return SECFailure;
