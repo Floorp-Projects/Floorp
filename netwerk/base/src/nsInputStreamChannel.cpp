@@ -334,10 +334,12 @@ nsStreamIOChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         }
     }
 
+#if 0
     if (mContentType == nsnull) {
         rv = mStreamIO->Open(&mContentType, &mContentLength);
         if (NS_FAILED(rv)) goto done;
     }
+#endif
     rv = mFileTransport->AsyncRead(this, ctxt);
 
   done:
@@ -394,10 +396,12 @@ nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream,
         }
     }
 
+#if 0
     if (mContentType == nsnull) {
         rv = mStreamIO->Open(&mContentType, &mContentLength);
         if (NS_FAILED(rv)) goto done;
     }
+#endif
     rv = mFileTransport->AsyncWrite(fromStream, this, ctxt);
 
   done:
