@@ -198,7 +198,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     // Get the Global History DataSource
     mRDFService->GetDataSource("rdf:history", &mDataSource);
     // Get the Date Folder Root
-    mRDFService->GetResource("NC:HistoryByDate", &mRootResource);
+    mRDFService->GetResource(nsDependentCString("NC:HistoryByDate"), &mRootResource);
   
     [mOutlineView setTarget: self];
     [mOutlineView setDoubleAction: @selector(openHistoryItem:)];
