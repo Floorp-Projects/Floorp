@@ -39,6 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsMai.h"
 #include "nsDocAccessibleWrap.h"
 #include "nsAccessibleEventData.h"
 
@@ -46,7 +47,6 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#define YBL_SHORT 1
 //----- nsDocAccessibleWrap -----
 
 /*
@@ -89,9 +89,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
     NS_ENSURE_ARG_POINTER(aAccessible);
 
     nsresult rv = NS_ERROR_FAILURE;
-#ifdef YBL_SHORT
-    return rv;
-#else
 
     nsAccessibleWrap *accWrap =
         NS_STATIC_CAST(nsAccessibleWrap *, aAccessible);
@@ -173,13 +170,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                     newAccWrap->GetAtkObject());
                 rv = NS_OK;
             }
-            /* ??? YBL it is different now, can we still unref them */
-            /*
-            if (oldAccWrap)
-                g_object_unref(oldAccWrap->GetAtkObject());
-            if (newAccWrap)
-                g_object_unref(newAccWrap->GetAtkObject());
-            */
             break;
 
         case PROP_TABLE_COLUMN_DESCRIPTION:
@@ -363,8 +353,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                    pAtkChildrenChange->index,
                                    childAccWrap->GetAtkObject(),
                                    NULL);
-            /* ??? YBL same as above ??? */
-            // g_object_unref(childAccWrap->GetAtkObject());
         }
         else {
             g_signal_emit_by_name (accWrap->GetAtkObject(),
@@ -402,7 +390,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         break;
     }
 
-    g_object_unref(accWrap->GetAtkObject());
     return rv;
 }
 
@@ -477,5 +464,4 @@ TranslateAState(PRUint32 aAccState)
     default:
         return ATK_STATE_INVALID;
     }
-#endif
 }

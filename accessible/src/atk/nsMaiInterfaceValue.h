@@ -21,7 +21,9 @@
  * Portions created by Sun Microsystems are Copyright (C) 2002 Sun
  * Microsystems, Inc. All Rights Reserved.
  *
- * Original Author: Bolian Yin (bolian.yin@sun.com)
+ * Original Author: Silvia Zhao (silvia.zhao@sun.com)
+ *
+ * Contributor(s): 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,38 +39,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
+#ifndef __MAI_INTERFACE_VALUE_H__
+#define __MAI_INTERFACE_VALUE_H__
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
-                                           nsIWeakReference* aShell):
-    nsRootAccessible(aDOMNode, aShell)
-{
-    MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->AddRootAccessible(this);
-}
+#include "nsMaiInterface.h"
+#include "nsIAccessibleValue.h"
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
+class MaiInterfaceValue: public MaiInterface
 {
-    MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->RemoveRootAccessible(this);
-}
+public:
+    MaiInterfaceValue(nsAccessibleWrap*);
+    ~MaiInterfaceValue();
 
-NS_IMETHODIMP nsRootAccessibleWrap::GetAccParent(nsIAccessible **  aAccParent)
-{
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    nsresult rv = NS_OK;
-    if (root) {
-        NS_IF_ADDREF(*aAccParent = root);
-    }
-    else {
-        *aAccParent = nsnull;
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
-}
+    virtual MaiInterfaceType GetType();
+    virtual const GInterfaceInfo *GetInterfaceInfo();
+};
+
+#endif /* __MAI_INTERFACE_VALUE_H__ */

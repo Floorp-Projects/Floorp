@@ -39,40 +39,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <atk/atk.h>
-#include <glib.h>
-#include <glib-object.h>
-
+#include "nsMai.h"
 #include "nsAccessibleWrap.h"
 #include "nsString.h"
 
+#include "nsMaiInterfaceComponent.h"
+#include "nsMaiInterfaceAction.h"
+#include "nsMaiInterfaceText.h"
+#include "nsMaiInterfaceEditableText.h"
+#include "nsMaiInterfaceSelection.h"
+#include "nsMaiInterfaceValue.h"
+#include "nsMaiInterfaceHypertext.h"
+#include "nsMaiInterfaceTable.h"
+
 /* MaiAtkObject */
-
-#define MAI_TYPE_ATK_OBJECT             (mai_atk_object_get_type ())
-#define MAI_ATK_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                                         MAI_TYPE_ATK_OBJECT, MaiAtkObject))
-#define MAI_ATK_OBJECT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), \
-                                         MAI_TYPE_ATK_OBJECT, \
-                                         MaiAtkObjectClass))
-#define MAI_IS_ATK_OBJECT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                                         MAI_TYPE_ATK_OBJECT))
-#define MAI_IS_ATK_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), \
-                                         MAI_TYPE_ATK_OBJECT))
-#define MAI_ATK_OBJECT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                                         MAI_TYPE_ATK_OBJECT, \
-                                         MaiAtkObjectClass))
-
-//typedef struct _MaiAtkObject                MaiAtkObject;
-typedef struct _MaiAtkObjectClass           MaiAtkObjectClass;
 
 /**
  * This MaiAtkObject is a thin wrapper, in the MAI namespace, for AtkObject
  */
-
-struct _MaiAtkObject
+struct MaiAtkObject
 {
     AtkObject parent;
-
     /*
      * The nsAccessibleWrap whose properties and features are exported
      * via this object instance.
@@ -80,19 +67,15 @@ struct _MaiAtkObject
     nsAccessibleWrap *accWrap;
 };
 
-struct _MaiAtkObjectClass
+struct MaiAtkObjectClass
 {
     AtkObjectClass parent_class;
 };
 
-GType mai_atk_object_get_type(void);
-
 #ifdef MAI_LOGGING
-gint num_created_mai_object = 0;
-gint num_deleted_mai_object = 0;
+PRInt32 sMaiAtkObjCreated = 0;
+PRInt32 sMaiAtkObjDeleted = 0;
 #endif
-
-static nsresult CheckMaiAtkObject(AtkObject *aAtkObj);
 
 G_BEGIN_DECLS
 /* callbacks for MaiAtkObject */
@@ -176,59 +159,244 @@ mai_atk_object_get_type(void)
     return type;
 }
 
+PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
+PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
+
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
                                    nsIWeakReference *aShell)
     : nsAccessible(aNode, aShell),
-      mMaiAtkObject(nsnull)
+      mMaiAtkObject(nsnull),
+      mInterfaces(nsnull),
+      mInterfaceCount(0)
 {
 #ifdef MAI_LOGGING
-    num_created_mai_object++;
+    ++mAccWrapCreated;
 #endif
-    MAI_LOG_DEBUG(("==nsAccessibleWrap creating this=0x%x,total %d created\n",
-                   (unsigned int)this, num_created_mai_object));
+    MAI_LOG_DEBUG(("==nsAccessibleWrap creating: this=%p,total=%d left=%d\n",
+                   (void*)this, mAccWrapCreated,
+                  (mAccWrapCreated-mAccWrapDeleted)));
 }
 
 nsAccessibleWrap::~nsAccessibleWrap()
 {
 
 #ifdef MAI_LOGGING
-    num_deleted_mai_object++;
+    ++mAccWrapDeleted;
 #endif
-    MAI_LOG_DEBUG(("==nsAccessibleWrap deleting this=0x%x, total %d deleted\n",
-                   (unsigned int)this, num_deleted_mai_object));
+    MAI_LOG_DEBUG(("==nsAccessibleWrap deleting: this=%p,total=%d left=%d\n",
+                   (void*)this, mAccWrapDeleted,
+                   (mAccWrapCreated-mAccWrapDeleted)));
 
     if (mMaiAtkObject) {
-        mMaiAtkObject->accWrap = nsnull;
+        MAI_ATK_OBJECT(mMaiAtkObject)->accWrap = nsnull;
         g_object_unref(mMaiAtkObject);
     }
+    if (mInterfaces)
+        for (int index = 0; index < MAI_INTERFACE_NUM; ++index)
+            delete mInterfaces[index];
 }
 
 AtkObject *
 nsAccessibleWrap::GetAtkObject(void)
 {
     if (mMaiAtkObject)
-        return ATK_OBJECT(mMaiAtkObject);
+        return mMaiAtkObject;
 
     CreateMaiInterfaces();
-    mMaiAtkObject = (MaiAtkObject*) g_object_new(MAI_TYPE_ATK_OBJECT, NULL);
-    g_return_val_if_fail(mMaiAtkObject != NULL, NULL);
+    mMaiAtkObject =
+        NS_REINTERPRET_CAST(AtkObject *,
+                            g_object_new(GetMaiAtkType(), NULL));
+    NS_ENSURE_TRUE(mMaiAtkObject, nsnull);
 
-    atk_object_initialize(ATK_OBJECT(mMaiAtkObject), this);
-    ATK_OBJECT(mMaiAtkObject)->role = ATK_ROLE_INVALID;
-    ATK_OBJECT(mMaiAtkObject)->layer = ATK_LAYER_INVALID;
-    MAI_LOG_DEBUG(("nsAccessibleWrap: Create MaiAtkObject=%p for AccWrap=%p\n",
-                   (void*)mMaiAtkObject, (void*)this));
-
-    return ATK_OBJECT(mMaiAtkObject);
+    atk_object_initialize(mMaiAtkObject, this);
+    mMaiAtkObject->role = ATK_ROLE_INVALID;
+    mMaiAtkObject->layer = ATK_LAYER_INVALID;
+    return mMaiAtkObject;
 }
 
 /* private */
-void
+nsresult
 nsAccessibleWrap::CreateMaiInterfaces(void)
 {
-    return;
+    typedef MaiInterface * MaiInterfacePointer;
+    if (!mInterfaces) {
+        mInterfaces = new MaiInterfacePointer[MAI_INTERFACE_NUM];
+        for (PRUint16 index = 0; index < MAI_INTERFACE_NUM; ++index) {
+            mInterfaces[index] = nsnull;
+        }
+        NS_ENSURE_TRUE(mInterfaces, NS_ERROR_OUT_OF_MEMORY);
+    }
+    // Add Interfaces for each nsIAccessible.ext interfaces
+
+    nsresult rv;
+
+    // the Component interface are supported by all nsIAccessible
+    MaiInterfaceComponent *maiInterfaceComponent =
+        new MaiInterfaceComponent(this);
+    NS_ENSURE_TRUE(maiInterfaceComponent, NS_ERROR_OUT_OF_MEMORY);
+    rv = AddMaiInterface(maiInterfaceComponent);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Add Action interface if the action count is more than zero.
+    PRUint8 actionCount = 0;
+    rv = GetAccNumActions(&actionCount);
+    if (NS_SUCCEEDED(rv) && actionCount > 0) {
+        MaiInterfaceAction *maiInterfaceAction = new MaiInterfaceAction(this);
+        NS_ENSURE_TRUE(maiInterfaceAction, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceAction);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    //nsIAccessibleText
+    nsCOMPtr<nsIAccessibleText> accessInterfaceText;
+    QueryInterface(NS_GET_IID(nsIAccessibleText),
+                   getter_AddRefs(accessInterfaceText));
+    if (accessInterfaceText) {
+        MaiInterfaceText *maiInterfaceText = new MaiInterfaceText(this);
+        NS_ENSURE_TRUE(maiInterfaceText, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceText);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    //nsIAccessibleEditableText
+    nsCOMPtr<nsIAccessibleEditableText> accessInterfaceEditableText;
+    QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
+                   getter_AddRefs(accessInterfaceEditableText));
+    if (accessInterfaceEditableText) {
+        MaiInterfaceEditableText *maiInterfaceEditableText =
+            new MaiInterfaceEditableText(this);
+        NS_ENSURE_TRUE(maiInterfaceEditableText, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceEditableText);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    //nsIAccessibleSelection
+    nsCOMPtr<nsIAccessibleSelectable> accessInterfaceSelection;
+    QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
+                   getter_AddRefs(accessInterfaceSelection));
+    if (accessInterfaceSelection) {
+        MaiInterfaceSelection *maiInterfaceSelection =
+            new MaiInterfaceSelection(this);
+        NS_ENSURE_TRUE(maiInterfaceSelection, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceSelection);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    //nsIAccessibleValue
+    nsCOMPtr<nsIAccessibleValue> accessInterfaceValue;
+    QueryInterface(NS_GET_IID(nsIAccessibleValue),
+                   getter_AddRefs(accessInterfaceValue));
+    if (accessInterfaceValue) {
+        MaiInterfaceValue *maiInterfaceValue = new MaiInterfaceValue(this);
+        NS_ENSURE_TRUE(maiInterfaceValue, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceValue);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    //nsIAccessibleHypertext
+    nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
+    QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
+                   getter_AddRefs(accessInterfaceHypertext));
+    if (accessInterfaceHypertext) {
+        MaiInterfaceHypertext *maiInterfaceHypertext =
+            new MaiInterfaceHypertext(this, mWeakShell);
+        NS_ENSURE_TRUE(maiInterfaceHypertext, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceHypertext);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    //nsIAccessibleTable
+    nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
+    QueryInterface(NS_GET_IID(nsIAccessibleTable),
+                   getter_AddRefs(accessInterfaceTable));
+    if (accessInterfaceTable) {
+        MaiInterfaceTable *maiInterfaceTable = new MaiInterfaceTable(this);
+        NS_ENSURE_TRUE(maiInterfaceTable, NS_ERROR_OUT_OF_MEMORY);
+        rv = AddMaiInterface(maiInterfaceTable);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return rv;
 }
 
+nsresult
+nsAccessibleWrap::AddMaiInterface(MaiInterface *aMaiIface)
+{
+    NS_ENSURE_ARG_POINTER(aMaiIface);
+    MaiInterfaceType aMaiIfaceType = aMaiIface->GetType();
+
+    if ((aMaiIfaceType <= MAI_INTERFACE_INVALID) ||
+        (aMaiIfaceType >= MAI_INTERFACE_NUM))
+        return NS_ERROR_FAILURE;
+
+    // if same type of If has been added, release previous one
+    if (mInterfaces[aMaiIfaceType]) {
+        delete mInterfaces[aMaiIfaceType];
+    }
+    mInterfaces[aMaiIfaceType] = aMaiIface;
+    mInterfaceCount++;
+    return NS_OK;
+}
+
+MaiInterface *
+nsAccessibleWrap::GetMaiInterface(PRInt16 aIfaceType)
+{
+    NS_ENSURE_TRUE(aIfaceType > MAI_INTERFACE_INVALID, nsnull);
+    NS_ENSURE_TRUE(aIfaceType < MAI_INTERFACE_NUM, nsnull);
+    return mInterfaces[aIfaceType];
+}
+
+PRUint32
+nsAccessibleWrap::GetMaiAtkType(void)
+{
+    GType type;
+    static const GTypeInfo tinfo = {
+        sizeof(MaiAtkObjectClass),
+        (GBaseInitFunc) NULL,
+        (GBaseFinalizeFunc) NULL,
+        (GClassInitFunc) NULL,
+        (GClassFinalizeFunc) NULL,
+        NULL, /* class data */
+        sizeof(MaiAtkObject), /* instance size */
+        0, /* nb preallocs */
+        (GInstanceInitFunc) NULL,
+        NULL /* value table */
+    };
+
+    if (mInterfaceCount == 0)
+        return MAI_TYPE_ATK_OBJECT;
+
+    type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
+                                  nsAccessibleWrap::GetUniqueMaiAtkTypeName(),
+                                  &tinfo, GTypeFlags(0));
+
+    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
+        if (!mInterfaces[index])
+            continue;
+        g_type_add_interface_static(type,
+                                    mInterfaces[index]->GetAtkType(),
+                                    mInterfaces[index]->GetInterfaceInfo());
+    }
+    return type;
+}
+
+PRUint32 nsAccessibleWrap::mAtkTypeNameIndex = 0;
+
+const char *
+nsAccessibleWrap::GetUniqueMaiAtkTypeName(void)
+{
+#define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(gulong)*8/4+1 < 30 */
+
+    static gchar namePrefix[] = "MaiAtkType";   /* size = 10 */
+    static gchar name[MAI_ATK_TYPE_NAME_LEN + 1];
+
+    sprintf(name, "%s%lx", namePrefix, mAtkTypeNameIndex++);
+    name[MAI_ATK_TYPE_NAME_LEN] = '\0';
+
+    MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));
+
+    return name;
+}
 
 /* static functions for ATK callbacks */
 void
@@ -254,8 +422,10 @@ classInitCB(AtkObjectClass *aClass)
 void
 initializeCB(AtkObject *aAtkObj, gpointer aData)
 {
-    g_return_if_fail(MAI_IS_ATK_OBJECT(aAtkObj));
-    g_return_if_fail(aData != NULL);
+    NS_ASSERTION((MAI_IS_ATK_OBJECT(aAtkObj)), "Invalid AtkObject");
+    NS_ASSERTION(aData, "Invalid Data to init AtkObject");
+    if (!aAtkObj || !aData)
+        return;
 
     /* call parent init function */
     /* AtkObjectClass has not a "initialize" function now,
@@ -268,6 +438,13 @@ initializeCB(AtkObject *aAtkObj, gpointer aData)
     /* initialize object */
     MAI_ATK_OBJECT(aAtkObj)->accWrap =
         NS_STATIC_CAST(nsAccessibleWrap*, aData);
+
+#ifdef MAI_LOGGING
+    ++sMaiAtkObjCreated;
+#endif
+    MAI_LOG_DEBUG(("MaiAtkObj Create obj=%p for AccWrap=%p, all=%d, left=%d\n",
+                   (void*)aAtkObj, (void*)aData, sMaiAtkObjCreated,
+                   (sMaiAtkObjCreated-sMaiAtkObjDeleted)));
 }
 
 void
@@ -276,7 +453,13 @@ finalizeCB(GObject *aObj)
     if (!MAI_IS_ATK_OBJECT(aObj))
         return;
     NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap == nsnull, "AccWrap NOT null");
-    MAI_LOG_DEBUG(("====release MaiAtkObject=0x%x\n", (guint)aObj));
+
+#ifdef MAI_LOGGING
+    ++sMaiAtkObjDeleted;
+#endif
+    MAI_LOG_DEBUG(("MaiAtkObj Delete obj=%p, all=%d, left=%d\n",
+                   (void*)aObj, sMaiAtkObjCreated,
+                   (sMaiAtkObjCreated-sMaiAtkObjDeleted)));
 
     // call parent finalize function
     // finalize of GObjectClass will unref the accessible parent if has
@@ -501,9 +684,11 @@ Returned AtkStatusSet never contain the following AtkStates.
 ******************************************************************************/
 
 void
-nsAccessibleWrap::TranslateStates(PRUint32 aAccState, AtkStateSet *state_set)
+nsAccessibleWrap::TranslateStates(PRUint32 aAccState, void *aAtkStateSet)
 {
-    g_return_if_fail(state_set);
+    if (!aAtkStateSet)
+        return;
+    AtkStateSet *state_set = NS_STATIC_CAST(AtkStateSet *, aAtkStateSet);
 
     if (aAccState & nsIAccessible::STATE_SELECTED)
         atk_state_set_add_state (state_set, ATK_STATE_SELECTED);
@@ -585,6 +770,7 @@ nsAccessibleWrap::TranslateStates(PRUint32 aAccState, AtkStateSet *state_set)
 
 }
 
+// Check if aAtkObj is a valid MaiAtkObject
 nsresult
 CheckMaiAtkObject(AtkObject *aAtkObj)
 {
@@ -594,4 +780,15 @@ CheckMaiAtkObject(AtkObject *aAtkObj)
     NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj,
                    NS_ERROR_FAILURE);
     return NS_OK;
+}
+
+// Check if aAtkObj is a valid MaiAtkObject, and return the nsAccessibleWrap
+// for it.
+nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
+{
+    NS_ENSURE_TRUE(MAI_IS_ATK_OBJECT(aAtkObj), nsnull);
+    nsAccessibleWrap * tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
+    NS_ENSURE_TRUE(tmpAccWrap != nsnull, nsnull);
+    NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, nsnull);
+    return tmpAccWrap;
 }

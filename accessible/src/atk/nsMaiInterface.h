@@ -23,6 +23,8 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
+ * Contributor(s): 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,38 +39,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __MAI_INTERFACE_H__
+#define __MAI_INTERFACE_H__
+
 #include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
-                                           nsIWeakReference* aShell):
-    nsRootAccessible(aDOMNode, aShell)
-{
-    MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->AddRootAccessible(this);
-}
+enum MaiInterfaceType {
+    MAI_INTERFACE_INVALID,  /* 0 */
+    MAI_INTERFACE_COMPONENT,
+    MAI_INTERFACE_ACTION,
+    MAI_INTERFACE_VALUE,
+    MAI_INTERFACE_EDITABLE_TEXT,
+    MAI_INTERFACE_HYPERLINK,
+    MAI_INTERFACE_HYPERTEXT,
+    MAI_INTERFACE_SELECTION,
+    MAI_INTERFACE_TABLE,
+    MAI_INTERFACE_TEXT,
+    MAI_INTERFACE_NUM   /* 10 */
+};
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
-{
-    MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->RemoveRootAccessible(this);
-}
+class nsAccessibleWrap;
 
-NS_IMETHODIMP nsRootAccessibleWrap::GetAccParent(nsIAccessible **  aAccParent)
+/* MaiInterface is the base class for all the MAI interface class (e.g.
+ * MaiInterfaceAction, MaiInterfaceComponent, etc).
+ *
+ * Descendents of MaiInterface provide all the implementation for corresponding
+ * interfaces in ATK, and map them onto nsIAccessible interfaces.
+ */
+class MaiInterface
 {
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    nsresult rv = NS_OK;
-    if (root) {
-        NS_IF_ADDREF(*aAccParent = root);
-    }
-    else {
-        *aAccParent = nsnull;
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
-}
+public:
+    MaiInterface(nsAccessibleWrap *aAccWrap);
+    virtual ~MaiInterface();
+
+    GType GetAtkType();
+    virtual MaiInterfaceType GetType() = 0;
+    virtual const GInterfaceInfo *GetInterfaceInfo() = 0;
+};
+
+#endif   /* __MAI_INTERFACE_H__ */

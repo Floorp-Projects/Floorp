@@ -23,6 +23,8 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
+ * Contributor(s): 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,38 +39,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __MAI_HYPERLINK_H__
+#define __MAI_HYPERLINK_H__
+
+
+#include "nsString.h"
 #include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
+#include "nsIAccessibleHyperLink.h"
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
-                                           nsIWeakReference* aShell):
-    nsRootAccessible(aDOMNode, aShell)
-{
-    MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->AddRootAccessible(this);
-}
+struct _AtkHyperlink;
+typedef struct _AtkHyperlink                      AtkHyperlink;
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
-{
-    MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->RemoveRootAccessible(this);
-}
+/*
+ * MaiHyperlink is a auxiliary class for MaiInterfaceHyperText.
+ */
 
-NS_IMETHODIMP nsRootAccessibleWrap::GetAccParent(nsIAccessible **  aAccParent)
+class MaiHyperlink : public nsAccessNodeWrap
 {
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    nsresult rv = NS_OK;
-    if (root) {
-        NS_IF_ADDREF(*aAccParent = root);
+public:
+    MaiHyperlink(nsIAccessibleHyperLink *aAcc,
+                 nsIDOMNode *aNode, nsIWeakReference* aShell);
+    ~MaiHyperlink();
+    NS_IMETHOD GetUniqueID(void **aUniqueID);
+
+public:
+    AtkHyperlink *GetAtkHyperlink(void);
+    nsIAccessibleHyperLink *GetAccHyperlink(void) {
+        return mHyperlink;
     }
-    else {
-        *aAccParent = nsnull;
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
-}
+
+protected:
+    nsCOMPtr<nsIAccessibleHyperLink> mHyperlink;
+    AtkHyperlink *mMaiAtkHyperlink;
+public:
+    static nsresult Initialize(AtkHyperlink *aObj, MaiHyperlink *aClass);
+};
+#endif /* __MAI_HYPERLINK_H__ */

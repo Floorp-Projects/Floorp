@@ -23,6 +23,8 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
+ * Contributor(s): 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,38 +39,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
+#ifndef __MAI_INTERFACE_ACTION_H__
+#define __MAI_INTERFACE_ACTION_H__
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
-                                           nsIWeakReference* aShell):
-    nsRootAccessible(aDOMNode, aShell)
-{
-    MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->AddRootAccessible(this);
-}
+#include "nsMaiInterface.h"
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
+class MaiInterfaceAction: public MaiInterface
 {
-    MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        root->RemoveRootAccessible(this);
-}
+public:
+    MaiInterfaceAction(nsAccessibleWrap*);
+    virtual ~MaiInterfaceAction();
 
-NS_IMETHODIMP nsRootAccessibleWrap::GetAccParent(nsIAccessible **  aAccParent)
-{
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    nsresult rv = NS_OK;
-    if (root) {
-        NS_IF_ADDREF(*aAccParent = root);
+    virtual MaiInterfaceType GetType();
+    virtual const GInterfaceInfo *GetInterfaceInfo();
+
+    const char *GetName() {
+        return NS_ConvertUCS2toUTF8(mName).get(); 
     }
-    else {
-        *aAccParent = nsnull;
-        rv = NS_ERROR_FAILURE;
+    void SetName(nsAString &aString) { mName = aString; }
+
+    const char *GetKeyBinding() {
+        return NS_ConvertUCS2toUTF8(mKeyBinding).get(); 
     }
-    return rv;
-}
+    void SetKeyBinding(nsAString &aString) { mKeyBinding = aString; }
+private:
+    nsString mName;
+    nsString mKeyBinding;
+};
+
+#endif /* __MAI_INTERFACE_ACTION_H__ */

@@ -47,44 +47,20 @@
 
 #include "prlog.h"
 
-extern PRLogModuleInfo *gMaiLog;
-
 #ifdef PR_LOGGING
 #define MAI_LOGGING
 #endif /* #ifdef PR_LOGGING */
 
-#ifdef MAI_LOGGING
-#define MAI_LOG(level, args) \
-PR_BEGIN_MACRO \
-    if (!gMaiLog) { \
-        gMaiLog = PR_NewLogModule("Mai"); \
-        PR_ASSERT(gMaiLog); \
-    } \
-    PR_LOG(gMaiLog, (level), args); \
-PR_END_MACRO
-#else
-#define MAI_LOG(level, args) 
-#endif
-
-#define MAI_LOG_DEBUG(args) MAI_LOG(PR_LOG_DEBUG, args)
-#define MAI_LOG_WARNING(args) MAI_LOG(PR_LOG_WARNING, args)
-#define MAI_LOG_ERROR(args) MAI_LOG(PR_LOG_ERROR, args)
+class nsAccessibleWrap;
+class MaiInterface;
 
 struct _AtkObject;
-struct _AtkStateSet;
-struct _MaiAtkObject;
-struct _GHashTable;
-
 typedef struct _AtkObject AtkObject;
-typedef struct _AtkStateSet AtkStateSet;
-typedef struct _MaiAtkObject MaiAtkObject;
-typedef struct _GHashTable GHashTable;
 
 /**
  * nsAccessibleWrap, and its descendents in atk directory provide the
  * implementation of AtkObject.
  */
-
 class nsAccessibleWrap: public nsAccessible
 {
 public:
@@ -93,24 +69,30 @@ public:
 
 #ifdef MAI_LOGGING
     virtual void DumpnsAccessibleWrapInfo(int aDepth) {}
+    static PRInt32 mAccWrapCreated;
+    static PRInt32 mAccWrapDeleted;
 #endif
 
 public:
     virtual AtkObject *GetAtkObject(void);
+    MaiInterface *GetMaiInterface(PRInt16 aIfaceType);
 
     static void TranslateStates(PRUint32 aAccState,
-                                AtkStateSet *state_set);
+                                void *aAtkStateSet);
 protected:
-    MaiAtkObject *mMaiAtkObject;
+    AtkObject *mMaiAtkObject;
 
 private:
-    void CreateMaiInterfaces(void);
+    nsresult CreateMaiInterfaces(void);
+    nsresult AddMaiInterface(MaiInterface *aMaiIface);
+    PRUint32 GetMaiAtkType(void);
 
+    static const char * GetUniqueMaiAtkTypeName(void);
+    static PRUint32 mAtkTypeNameIndex;
+
+
+    MaiInterface **mInterfaces;
+    PRUint32 mInterfaceCount;
 };
-
-#ifdef MAI_LOGGING
-extern PRInt32 num_created_mai_object;
-extern PRInt32 num_deleted_mai_object;
-#endif
 
 #endif /* __NS_ACCESSIBLE_WRAP_H__ */

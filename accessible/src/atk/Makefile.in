@@ -76,6 +76,16 @@ CPPSRCS = \
   nsHTMLLinkAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
   nsHTMLBlockAccessible.cpp \
+  nsMaiInterface.cpp \
+  nsMaiInterfaceComponent.cpp \
+  nsMaiInterfaceAction.cpp \
+  nsMaiInterfaceText.cpp \
+  nsMaiInterfaceEditableText.cpp \
+  nsMaiInterfaceSelection.cpp \
+  nsMaiInterfaceValue.cpp \
+  nsMaiHyperlink.cpp \
+  nsMaiInterfaceHypertext.cpp \
+  nsMaiInterfaceTable.cpp \
   $(NULL)
 
 #ifdef MOZ_XUL

@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsMai.h"
 #include "nsAppRootAccessible.h"
 #include "prlink.h"
 
@@ -346,6 +347,7 @@ nsAppRootAccessible::nsAppRootAccessible():
 
 nsAppRootAccessible::~nsAppRootAccessible()
 {
+    MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
 }
 
 /* virtual functions */
@@ -380,11 +382,6 @@ nsAppRootAccessible::DumpMaiObjectInfo(int aDepth)
 }
 #endif
 */
-
-void
-nsAppRootAccessible::Initialize(void)
-{
-}
 
 NS_IMETHODIMP nsAppRootAccessible::Init()
 {
@@ -454,9 +451,16 @@ NS_IMETHODIMP nsAppRootAccessible::GetAccParent(nsIAccessible **  aAccParent)
 NS_IMETHODIMP nsAppRootAccessible::GetChildAt(PRInt32 aChildNum,
                                               nsIAccessible **aChild)
 {
-    nsCOMPtr<nsIWeakReference> childWeakRef;
-    *aChild = nsnull;
+    PRUint32 count = 0;
     nsresult rv = NS_OK;
+    *aChild = nsnull;
+    if (mChildren)
+        rv = mChildren->GetLength(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (aChildNum >= NS_STATIC_CAST(PRInt32, count))
+        return NS_ERROR_INVALID_ARG;
+
+    nsCOMPtr<nsIWeakReference> childWeakRef;
     rv = mChildren->QueryElementAt(aChildNum, NS_GET_IID(nsIWeakReference),
                                    getter_AddRefs(childWeakRef));
     if (childWeakRef) {
@@ -516,20 +520,40 @@ NS_IMETHODIMP nsAppRootAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPr
     return NS_OK;  
 }
 
+AtkObject *
+nsAppRootAccessible::GetAtkObject(void)
+{
+    if (mMaiAtkObject)
+        return mMaiAtkObject;
+
+    mMaiAtkObject =
+        NS_REINTERPRET_CAST(AtkObject *,
+                            g_object_new(MAI_TYPE_ATK_OBJECT, NULL));
+    NS_ENSURE_TRUE(mMaiAtkObject, nsnull);
+
+    atk_object_initialize(mMaiAtkObject, this);
+    mMaiAtkObject->role = ATK_ROLE_INVALID;
+    mMaiAtkObject->layer = ATK_LAYER_INVALID;
+    return mMaiAtkObject;
+}
+
 nsresult
 nsAppRootAccessible::AddRootAccessible(nsRootAccessibleWrap *aRootAccWrap)
 {
     NS_ENSURE_ARG_POINTER(aRootAccWrap);
 
     nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIAccessibleDocument> docAcc;
+    rv = aRootAccWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
+                                      getter_AddRefs(docAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // weak reference
-    rv = mChildren->AppendElement(NS_STATIC_CAST(nsISupports *,
-                                                 NS_STATIC_CAST(nsIAccessibleDocument*, aRootAccWrap)),
-                                  PR_TRUE);
+    // add by weak reference
+    rv = mChildren->AppendElement(docAcc, PR_TRUE);
+
+#ifdef MAI_LOGGING
     PRUint32 count = 0;
     mChildren->GetLength(&count);
-
     if (NS_SUCCEEDED(rv)) {
         MAI_LOG_DEBUG(("\nAdd RootAcc=%p OK, count=%d\n",
                        (void*)aRootAccWrap, count));
@@ -537,6 +561,7 @@ nsAppRootAccessible::AddRootAccessible(nsRootAccessibleWrap *aRootAccWrap)
     else
         MAI_LOG_DEBUG(("\nAdd RootAcc=%p Failed, count=%d\n",
                        (void*)aRootAccWrap, count));
+#endif
 
     return rv;
 }
@@ -545,14 +570,36 @@ nsresult
 nsAppRootAccessible::RemoveRootAccessible(nsRootAccessibleWrap *aRootAccWrap)
 {
     NS_ENSURE_ARG_POINTER(aRootAccWrap);
-    PRUint32 index = 0;
-    nsresult rv = mChildren->IndexOf(0, NS_STATIC_CAST(nsISupports *,
-                                                       NS_STATIC_CAST(nsIAccessibleDocument*, aRootAccWrap)),
-                                     &index);
-    if (NS_SUCCEEDED(rv))
-        rv = mChildren->RemoveElementAt(index);
 
-    MAI_LOG_DEBUG(("\nRemove RootAcc=%p\n", (void*)aRootAccWrap));
+    PRUint32 index = 0;
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIAccessibleDocument> docAcc;
+    rv = aRootAccWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
+                                      getter_AddRefs(docAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // we must use weak ref to get the index
+    nsCOMPtr<nsIWeakReference> weakPtr =
+        getter_AddRefs(NS_GetWeakReference(docAcc));
+    rv = mChildren->IndexOf(0, weakPtr, &index);
+
+#ifdef MAI_LOGGING
+    PRUint32 count = 0;
+    mChildren->GetLength(&count);
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = mChildren->RemoveElementAt(index);
+        MAI_LOG_DEBUG(("\nRemove RootAcc=%p, count=%d\n",
+                       (void*)aRootAccWrap, (count-1)));
+    }
+    else
+        MAI_LOG_DEBUG(("\nFail to Remove RootAcc=%p, count=%d\n",
+                       (void*)aRootAccWrap, count));
+#else
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mChildren->RemoveElementAt(index);
+
+#endif
     return rv;
 }
 

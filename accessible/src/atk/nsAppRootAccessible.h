@@ -88,10 +88,7 @@ public:
     NS_IMETHOD GetAccFirstChild(nsIAccessible * *aAccFirstChild);
     NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
 
-    /* virtual functions from nsAccessibleWrap */
-    virtual void Initialize(void);
-    //    virtual void Finalize(void);
-
+    virtual AtkObject *GetAtkObject(void);
     nsresult AddRootAccessible(nsRootAccessibleWrap *aRootAccWrap);
     nsresult RemoveRootAccessible(nsRootAccessibleWrap *aRootAccWrap);
 private:
