@@ -21,17 +21,18 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "ImageCache.h"
+#include "imgCache.h"
 
 #ifdef MOZ_NEW_CACHE
 
 #include "prlog.h"
-
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo *gImgLog;
 #else
 #define gImgLog
 #endif
+
+#include "imgRequest.h"
 
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
@@ -42,56 +43,113 @@ extern PRLogModuleInfo *gImgLog;
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 
-static nsCOMPtr<nsICacheSession> gSession = nsnull;
+#endif /* MOZ_NEW_CACHE */
 
-ImageCache::ImageCache()
+NS_IMPL_ISUPPORTS1(imgCache, imgICache)
+
+imgCache::imgCache()
 {
+  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
-ImageCache::~ImageCache()
+imgCache::~imgCache()
 {
   /* destructor code */
 }
 
-void GetCacheSession(nsICacheSession **_retval)
+/* void clearCache (in boolean chrome); */
+NS_IMETHODIMP imgCache::ClearCache(PRBool chrome)
 {
-  if (!gSession) {
-    nsCOMPtr<nsICacheService> cacheService(do_GetService("@mozilla.org/network/cache-service;1"));
-    if (!cacheService) {
-      NS_WARNING("Unable to get the cache service");
-      return;
-    }
+  if (chrome)
+    return imgCache::ClearChromeImageCache();
+  else
+    return imgCache::ClearImageCache();
+}
 
-    cacheService->CreateSession("images", nsICache::NOT_STREAM_BASED, PR_FALSE, getter_AddRefs(gSession));
-    if (!gSession) {
-      NS_WARNING("Unable to create a cache session");
-      return;
-    }
+#ifdef MOZ_NEW_CACHE
+
+static nsCOMPtr<nsICacheSession> gSession = nsnull;
+static nsCOMPtr<nsICacheSession> gChromeSession = nsnull;
+
+void GetCacheSession(nsIURI *aURI, nsICacheSession **_retval)
+{
+  NS_ASSERTION(aURI, "Null URI!");
+
+  PRBool isChrome = PR_FALSE;
+  aURI->SchemeIs("chrome", &isChrome);
+
+  if (gSession && !isChrome) {
+    *_retval = gSession;
+    NS_ADDREF(*_retval);
+    return;
   }
 
-  *_retval = gSession;
-  NS_IF_ADDREF(*_retval);
+  if (gChromeSession && isChrome) {
+    *_retval = gChromeSession;
+    NS_ADDREF(*_retval);
+    return;
+  }
+
+  nsCOMPtr<nsICacheService> cacheService(do_GetService("@mozilla.org/network/cache-service;1"));
+  if (!cacheService) {
+    NS_WARNING("Unable to get the cache service");
+    return;
+  }
+
+  nsCOMPtr<nsICacheSession> newSession;
+  cacheService->CreateSession(isChrome ? "image-chrome" : "image",
+                              nsICache::NOT_STREAM_BASED,
+                              PR_FALSE, getter_AddRefs(newSession));
+
+  if (!newSession) {
+    NS_WARNING("Unable to create a cache session");
+    return;
+  }
+
+  if (isChrome)
+    gChromeSession = newSession;
+  else
+    gSession = newSession;
+
+  *_retval = newSession;
+  NS_ADDREF(*_retval);
 }
 
 
-void ImageCache::Shutdown()
+void imgCache::Shutdown()
 {
   gSession = nsnull;
+  gChromeSession = nsnull;
 }
 
-PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry)
+
+nsresult imgCache::ClearChromeImageCache()
+{
+  if (!gChromeSession)
+    return NS_OK;
+
+  return gChromeSession->EvictEntries();
+}
+
+nsresult imgCache::ClearImageCache()
+{
+  if (!gSession)
+    return NS_OK;
+
+  return gSession->EvictEntries();
+}
+
+PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("ImageCache::Put\n"));
+         ("imgCache::Put\n"));
 
   nsresult rv;
 
   nsCOMPtr<nsICacheSession> ses;
-  GetCacheSession(getter_AddRefs(ses));
-
-  if (!ses)
-    return PR_FALSE;
+  GetCacheSession(aKey, getter_AddRefs(ses));
+  if (!ses) return PR_FALSE;
 
   nsXPIDLCString spec;
   aKey->GetSpec(getter_Copies(spec));
@@ -100,10 +158,11 @@ PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescripto
 
   rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_WRITE, getter_AddRefs(entry));
 
-  if (!entry || NS_FAILED(rv))
+  if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
 
-  entry->SetCacheElement(NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(imgIRequest*, request)));
+  nsCOMPtr<nsISupports> sup(do_QueryInterface(NS_STATIC_CAST(imgIRequest*, request)));
+  entry->SetCacheElement(sup);
 
   entry->MarkValid();
 
@@ -113,18 +172,16 @@ PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescripto
   return PR_TRUE;
 }
 
-PRBool ImageCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
+PRBool imgCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
-       ("ImageCache::Get\n"));
+         ("imgCache::Get\n"));
 
   nsresult rv;
 
   nsCOMPtr<nsICacheSession> ses;
-  GetCacheSession(getter_AddRefs(ses));
-
-  if (!ses)
-    return PR_FALSE;
+  GetCacheSession(aKey, getter_AddRefs(ses));
+  if (!ses) return PR_FALSE;
 
   nsXPIDLCString spec;
   aKey->GetSpec(getter_Copies(spec));
@@ -133,7 +190,7 @@ PRBool ImageCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescrip
 
   rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_READ, getter_AddRefs(entry));
 
-  if (!entry || NS_FAILED(rv))
+  if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
 
   nsCOMPtr<nsISupports> sup;
@@ -150,18 +207,16 @@ PRBool ImageCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescrip
 }
 
 
-PRBool ImageCache::Remove(nsIURI *aKey)
+PRBool imgCache::Remove(nsIURI *aKey)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("ImageCache::Remove\n"));
+         ("imgCache::Remove\n"));
 
   nsresult rv;
 
   nsCOMPtr<nsICacheSession> ses;
-  GetCacheSession(getter_AddRefs(ses));
-
-  if (!ses)
-    return PR_FALSE;
+  GetCacheSession(aKey, getter_AddRefs(ses));
+  if (!ses) return PR_FALSE;
 
   nsXPIDLCString spec;
   aKey->GetSpec(getter_Copies(spec));
@@ -170,7 +225,7 @@ PRBool ImageCache::Remove(nsIURI *aKey)
 
   rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_READ, getter_AddRefs(entry));
 
-  if (!entry || NS_FAILED(rv))
+  if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
 
   entry->Doom();
@@ -179,3 +234,4 @@ PRBool ImageCache::Remove(nsIURI *aKey)
 }
 
 #endif /* MOZ_NEW_CACHE */
+

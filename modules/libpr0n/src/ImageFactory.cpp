@@ -24,15 +24,15 @@
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 
+#include "imgCache.h"
 #include "imgContainer.h"
 #include "imgLoader.h"
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 
-#include "ImageCache.h"
-
 // objects that just require generic constructors
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequest)
@@ -40,6 +40,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 
 static nsModuleComponentInfo components[] =
 {
+  { "image cache",
+    NS_IMGCACHE_CID,
+    "@mozilla.org/image/cache;1",
+    imgCacheConstructor, },
   { "image container",
     NS_IMGCONTAINER_CID,
     "@mozilla.org/image/container;1",
@@ -61,7 +65,7 @@ static nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 ImageModuleDestructor(nsIModule *self)
 {
-  ImageCache::Shutdown();
+  imgCache::Shutdown();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR("nsImageLib2Module", components, ImageModuleDestructor)

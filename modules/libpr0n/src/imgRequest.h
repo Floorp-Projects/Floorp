@@ -26,8 +26,6 @@
 
 #include "imgIRequest.h"
 
-#include "nsIRunnable.h"
-
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "imgIContainer.h"
@@ -47,6 +45,8 @@
 class nsICacheEntryDescriptor;
 #endif
 
+class imgRequestProxy;
+
 #define NS_IMGREQUEST_CID \
 { /* 9f733dd6-1dd1-11b2-8cdf-effb70d1ea71 */         \
      0x9f733dd6,                                     \
@@ -56,10 +56,10 @@ class nsICacheEntryDescriptor;
 }
 
 enum {
-  onStartDecode = 0x1,
-  onStartContainer = 0x2,
-  onStopContainer = 0x4,
-  onStopDecode = 0x8,
+  onStartDecode = 0x01,
+  onStartContainer = 0x02,
+  onStopContainer = 0x04,
+  onStopDecode = 0x08,
   onStopRequest = 0x16
 };
 
@@ -74,13 +74,16 @@ public:
 
   /* additional members */
   nsresult Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry);
-  nsresult AddObserver(imgIDecoderObserver *observer);
-  nsresult RemoveObserver(imgIDecoderObserver *observer, nsresult status);
-
-  PRBool RemoveFromCache();
+  nsresult AddProxy(imgRequestProxy *proxy);
+  nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus);
 
   void SniffMimeType(const char *buf, PRUint32 len);
 
+protected:
+  void RemoveFromCache();
+  nsresult GetResultFromStatus();
+
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
