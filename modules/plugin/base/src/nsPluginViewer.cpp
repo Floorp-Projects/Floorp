@@ -448,13 +448,17 @@ PluginViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 nsEventStatus PR_CALLBACK
 HandlePluginEvent(nsGUIEvent *aEvent)
 {
-  if( (*aEvent).message == NS_PLUGIN_ACTIVATE) {
-    (nsIWidget*)((*aEvent).widget)->SetFocus();
-  }
-#ifdef XP_MAC
+  if (aEvent == nsnull || aEvent->widget == nsnull)   //null pointer check
+    return nsEventStatus_eIgnore;
+
+  if( aEvent->message == NS_PLUGIN_ACTIVATE)  
+    (nsIWidget*)(aEvent->widget)->SetFocus();  // send focus to child window
+
+#ifdef XP_MAC   // on Mac, we store a pointer to this class as native data in the widget
   PluginViewerImpl * pluginViewer;
-  (nsIWidget*)((*aEvent).widget)->GetClientData((PluginViewerImpl *)pluginViewer);
-  return pluginViewer->mOwner->ProcessEvent(*aEvent);
+  (nsIWidget*)(aEvent->widget)->GetClientData((PluginViewerImpl *)pluginViewer);
+  if (pluginViewer != nsnull && pluginViewer->mOwner != nsnull)
+    return pluginViewer->mOwner->ProcessEvent(*aEvent);
 #endif
   return nsEventStatus_eIgnore;
 }
