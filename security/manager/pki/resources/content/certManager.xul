@@ -72,7 +72,7 @@
         <hbox flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
-                  accesskey="h" 
+                  accesskey="&certmgr.helpButtonAccessKey;"
                   oncommand="doHelpButton();"/>
         </hbox>
       </row>

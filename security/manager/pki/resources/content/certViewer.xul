@@ -68,11 +68,11 @@
         <hbox align="right" flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
-                  accesskey="h" 
+                  accesskey="&certmgr.helpButtonAccessKey;"
                   oncommand="openHelp('chrome://help/content/help.xul?cert_details');"/>
           <button id="closeButton" class="normal" 
                   label="&certmgr.close.label;" 
-                  accesskey="c"
+                  accesskey="&certmgr.closeWindowAccessKey;"
                   oncommand="window.close();"/>
         </hbox>
       </row>

@@ -91,3 +91,6 @@
 <!ENTITY certmgr.fields.label "Field Value">
 <!ENTITY certmgr.hierarchy.label "Certificate Hierarchy">
 
+<!-- access key definitions -->
+<!ENTITY certmgr.helpButtonAccessKey "h">
+<!ENTITY certmgr.closeWindowAccessKey "c">
