@@ -53,6 +53,7 @@ REQUIRES	= string \
 		  caps \
 		  xpconnect \
 		  js \
+		  layout \
 		  $(NULL)
 
 LIBRARY_NAME	= commandhandler_s

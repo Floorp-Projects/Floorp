@@ -87,7 +87,6 @@
 
 #include "nsICaret.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
@@ -398,18 +397,14 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 
     // Attach nsTypeAheadController to window
     // so it can handle / and ' shortcuts to start text and link search
-    nsCOMPtr<nsIDOMWindowInternal> winInternal = 
-      do_QueryInterface(aSubject);
-    if (winInternal) {
+    nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(aSubject);
+    if (privateWindow) {
       nsCOMPtr<nsIControllers> controllers;
-      winInternal->GetControllers(getter_AddRefs(controllers));
+      privateWindow->GetControllers(getter_AddRefs(controllers));
       NS_ENSURE_TRUE(controllers, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(topLevelWindow));
-      NS_ENSURE_TRUE(privateWindow, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIFocusController> focusController;
-      privateWindow->GetRootFocusController(getter_AddRefs(focusController));
+      nsIFocusController *focusController =
+        privateWindow->GetRootFocusController();
       NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIController> controller = 
@@ -2387,9 +2382,9 @@ nsTypeAheadFind::GetChromeEventHandler(nsIDOMWindow *aDOMWin,
                                        nsIDOMEventTarget **aChromeTarget)
 {
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aDOMWin));
-  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  nsIChromeEventHandler *chromeEventHandler = nsnull;
   if (privateDOMWindow) {
-    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
   }
 
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));

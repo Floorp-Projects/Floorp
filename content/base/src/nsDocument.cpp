@@ -94,7 +94,6 @@
 #include "nsIPrivateDOMImplementation.h"
 
 #include "nsIDOMWindowInternal.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 
 #include "nsIBoxObject.h"

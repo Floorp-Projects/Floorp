@@ -54,7 +54,6 @@
 #include "nsString.h"
 
 class nsIDOMElement;
-class nsPIDOMWindow;
 class nsIFocusController;
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,

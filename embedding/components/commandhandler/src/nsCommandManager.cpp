@@ -325,8 +325,7 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
   if (!window)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIFocusController> focusController;
-  rv = window->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = window->GetRootFocusController();
   if (!focusController)
     return NS_ERROR_FAILURE;
 

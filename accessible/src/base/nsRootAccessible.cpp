@@ -146,7 +146,7 @@ nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
   nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
   if (privateDOMWindow) {
-    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
   }
 
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));

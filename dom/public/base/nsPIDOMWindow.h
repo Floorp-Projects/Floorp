@@ -45,56 +45,78 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIChromeEventHandler.h"
+#include "nsIDOMDocument.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
 
 class nsIDocShell;
-class nsIDOMWindowInternal;
-class nsIChromeEventHandler;
 class nsIFocusController;
+class nsTimeoutImpl;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x3aa80781, 0x7e6a, 0x11d3, \
- { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
+{ 0x7e12a2d6, 0x9a2a, 0x4907, \
+ { 0xab, 0x85, 0x01, 0x34, 0xe3, 0xa8, 0x1a, 0x3f } }
 
-class nsPIDOMWindow : public nsISupports
+class nsPIDOMWindow : public nsIDOMWindowInternal
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOW_IID)
 
-  NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult) = 0;
-  NS_IMETHOD GetPrivateRoot(nsIDOMWindowInternal** aResult) = 0;
+  virtual nsPIDOMWindow* GetPrivateRoot() = 0;
 
-  NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty,
-                               nsISupports** aObject) = 0;
+  virtual nsresult GetObjectProperty(const PRUnichar* aProperty,
+                                     nsISupports** aObject) = 0;
 
   // This is private because activate/deactivate events are not part
   // of the DOM spec.
-  NS_IMETHOD Activate() = 0;
-  NS_IMETHOD Deactivate() = 0;
+  virtual nsresult Activate() = 0;
+  virtual nsresult Deactivate() = 0;
 
-  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aHandler) = 0;
+  nsIChromeEventHandler* GetChromeEventHandler()
+  {  
+    return mChromeEventHandler;
+  }
 
-  NS_IMETHOD HasMutationListeners(PRUint32 aMutationEventType,
-                                  PRBool* aResult) = 0;
-  NS_IMETHOD SetMutationListeners(PRUint32 aType) = 0;
+  PRBool HasMutationListeners(PRUint32 aMutationEventType)
+  {
+    return (mMutationBits & aMutationEventType) != 0;
+  }
 
-  NS_IMETHOD GetRootFocusController(nsIFocusController** aResult) = 0;
+  void SetMutationListeners(PRUint32 aType) { mMutationBits |= aType; }
+
+  virtual nsIFocusController* GetRootFocusController() = 0;
 
   // GetExtantDocument provides a backdoor to the DOM GetDocument accessor
-  NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument) = 0;
-
-  NS_IMETHOD ReallyCloseWindow() = 0;
+  nsIDOMDocument* GetExtantDocument() { return mDocument; }
 
   // Internal getter/setter for the frame element, this version of the
   // getter crosses chrome boundaries whereas the public scriptable
   // one doesn't for security reasons.
-  NS_IMETHOD GetFrameElementInternal(nsIDOMElement** aFrameElement) = 0;
-  NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement) = 0;
+  nsIDOMElement* GetFrameElementInternal() { return mFrameElement; }
+  void SetFrameElementInternal(nsIDOMElement *aFrameElement)
+  {
+    mFrameElement = aFrameElement;
+  }
 
-  NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult) = 0;
-  NS_IMETHOD IsPopupSpamWindow(PRBool *aResult) = 0;
-  NS_IMETHOD SetPopupSpamWindow(PRBool aPopup) = 0;
+  PRBool IsLoadingOrRunningTimeout() const
+  {
+    return mIsDocumentLoaded || mRunningTimeout;
+  }
 
-  NS_IMETHOD SetOpenerScriptURL(nsIURI* aURI) = 0;
+  virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
+
+protected:
+  nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // strong
+  nsCOMPtr<nsIDOMDocument> mDocument; // strong
+  nsIDOMElement *mFrameElement; // weak
+  nsCOMPtr<nsIURI> mOpenerScriptURL; // strong; used to determine whether to clear scope
+  nsTimeoutImpl         *mRunningTimeout;
+
+  PRUint32               mMutationBits;
+
+  PRBool                 mIsDocumentLoaded;
 };
 
 #endif // nsPIDOMWindow_h__

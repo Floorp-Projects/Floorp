@@ -4219,7 +4219,7 @@ nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
     nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryReferent(mDocumentContainer);
     nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(ir);
     if (windowPrivate) {
-        windowPrivate->GetRootFocusController(aFocusController);
+        NS_IF_ADDREF(*aFocusController = windowPrivate->GetRootFocusController());
     } else
         *aFocusController = nsnull;
 }

@@ -3966,9 +3966,9 @@ nsPrintEngine::FindFocusedDOMWindow()
     nsIScriptGlobalObject* theSGO = theDoc->GetScriptGlobalObject();
     nsCOMPtr<nsPIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
     if(theDOMWindow){
-      nsCOMPtr<nsIFocusController> focusController;
-      theDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
-      if(focusController){
+      nsIFocusController *focusController =
+        theDOMWindow->GetRootFocusController();
+      if (focusController) {
         nsCOMPtr<nsIDOMWindowInternal> theDOMWin;
         focusController->GetFocusedWindow(getter_AddRefs(theDOMWin));
         if(theDOMWin && IsWindowsInOurSubTree(theDOMWin)){

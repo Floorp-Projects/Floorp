@@ -114,17 +114,21 @@ class nsIDocShellLoadInfo;
 
 
 class GlobalWindowImpl : public nsIScriptGlobalObject,
-                         public nsIDOMWindowInternal,
+                         public nsPIDOMWindow,
                          public nsIDOMJSWindow,
                          public nsIScriptObjectPrincipal,
                          public nsIDOMEventReceiver,
                          public nsIDOM3EventTarget,
-                         public nsPIDOMWindow,
                          public nsIDOMViewCSS,
                          public nsSupportsWeakReference,
                          public nsIInterfaceRequestor
 {
 public:
+  // public methods
+  nsPIDOMWindow* GetPrivateParent();
+  // callback for close event
+  void ReallyCloseWindow();
+
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -175,27 +179,14 @@ public:
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsPIDOMWindow
-  NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult);
-  NS_IMETHOD GetPrivateRoot(nsIDOMWindowInternal** aResult);
-  NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty,
-                               nsISupports** aObject);
-  NS_IMETHOD Activate();
-  NS_IMETHOD Deactivate();
-  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aHandler);
-  NS_IMETHOD HasMutationListeners(PRUint32 aMutationEventType,
-                                  PRBool* aResult);
-  NS_IMETHOD SetMutationListeners(PRUint32 aEventType);
-  NS_IMETHOD GetRootFocusController(nsIFocusController** aResult);
-  NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument);
+  virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
+  virtual NS_HIDDEN_(nsresult) GetObjectProperty(const PRUnichar* aProperty,
+                                                 nsISupports** aObject);
+  virtual NS_HIDDEN_(nsresult) Activate();
+  virtual NS_HIDDEN_(nsresult) Deactivate();
+  virtual NS_HIDDEN_(nsIFocusController*) GetRootFocusController();
 
-  NS_IMETHOD ReallyCloseWindow();
-  NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult);
-  NS_IMETHOD IsPopupSpamWindow(PRBool *aResult);
-  NS_IMETHOD SetPopupSpamWindow(PRBool aPopup);
-
-  NS_IMETHOD GetFrameElementInternal(nsIDOMElement** aFrameElement);
-  NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement);
-  NS_IMETHOD SetOpenerScriptURL(nsIURI* aURI);
+  virtual NS_HIDDEN_(void) SetOpenerScriptURL(nsIURI* aURI);
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -220,6 +211,10 @@ protected:
 
   // Get the parent, returns null if this is a toplevel window
   nsIDOMWindowInternal *GetParentInternal();
+
+  // popup tracking
+  PRBool         IsPopupSpamWindow() const { return mIsPopupSpam; }
+  void           SetPopupSpamWindow(PRBool aPopup) { mIsPopupSpam = aPopup; }
 
   // Window Control Functions
   NS_IMETHOD OpenInternal(const nsAString& aUrl,
@@ -281,7 +276,6 @@ protected:
   // these cycles, ownership of such members must be released in
   // |CleanUp| and |SetDocShell|.
   nsCOMPtr<nsIScriptContext>    mContext;
-  nsCOMPtr<nsIDOMDocument>      mDocument;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
@@ -299,13 +293,10 @@ protected:
   nsRefPtr<BarPropImpl>         mScrollbars;
   nsTimeoutImpl*                mTimeouts;
   nsTimeoutImpl**               mTimeoutInsertionPoint;
-  nsTimeoutImpl*                mRunningTimeout;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
-  PRUint32                      mMutationBits;
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
-  PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
   PRPackedBool                  mFullScreen;
   PRPackedBool                  mIsClosed;
   PRPackedBool                  mOpenerWasCleared;
@@ -317,11 +308,9 @@ protected:
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference
   nsEvent*                      mCurrentEvent;
-  nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // [Strong] We break it when we get torn down.
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
   nsCOMPtr<nsIPrincipal>        mDocumentPrincipal;
-  nsCOMPtr<nsIURI>              mOpenerScriptURL; // Used to determine whether to clear scope
 
   // XXX We need mNavigatorHolder because we make two SetNewDocument()
   // calls when transitioning from page to page. This keeps a reference
@@ -331,8 +320,6 @@ protected:
   // See bug 163645 for more on why we need this and bug 209607 for info
   // on how we can remove the need for this.
   nsCOMPtr<nsIXPConnectJSObjectHolder> mNavigatorHolder;
-
-  nsIDOMElement*                mFrameElement; // WEAK
 
   friend class nsDOMScriptableHelper;
   static nsIXPConnect *sXPConnect;

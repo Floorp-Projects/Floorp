@@ -50,7 +50,6 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
-#include "nsPIDOMWindow.h"
 
 ///  Unsorted Includes
 

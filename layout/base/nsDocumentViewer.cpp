@@ -568,15 +568,11 @@ nsresult
 DocumentViewerImpl::SyncParentSubDocMap()
 {
   nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mContainer));
-  nsCOMPtr<nsIDOMWindowInternal> win(do_GetInterface(item));
-  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(win));
+  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(item));
   nsCOMPtr<nsIContent> content;
 
   if (mDocument && pwin) {
-    nsCOMPtr<nsIDOMElement> frame_element;
-    pwin->GetFrameElementInternal(getter_AddRefs(frame_element));
-
-    content = do_QueryInterface(frame_element);
+    content = do_QueryInterface(pwin->GetFrameElementInternal());
   }
 
   if (content) {
@@ -2787,17 +2783,12 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
 
-  // get the internal dom window
-  nsCOMPtr<nsIDOMWindowInternal> internalWin(do_QueryInterface(document->GetScriptGlobalObject(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // get the private dom window
-  nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(internalWin, &rv));
+  nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(document->GetScriptGlobalObject(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get the focus controller
-  nsCOMPtr<nsIFocusController> focusController;
-  privateWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = privateWin->GetRootFocusController();
   NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
 
   // get the popup node

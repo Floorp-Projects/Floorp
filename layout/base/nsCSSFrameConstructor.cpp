@@ -120,7 +120,6 @@ static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 #include "nsIDOMWindowInternal.h"
-#include "nsPIDOMWindow.h"
 #include "nsIMenuFrame.h"
 
 #include "nsBox.h"

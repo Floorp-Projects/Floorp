@@ -144,9 +144,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     
     nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
-    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-    piWindow->GetChromeEventHandler(getter_AddRefs(chromeHandler));
-    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
+    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(piWindow->GetChromeEventHandler()));
     if ( rec )
       rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
   }

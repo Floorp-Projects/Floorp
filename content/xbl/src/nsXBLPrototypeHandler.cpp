@@ -279,7 +279,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
         privateWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       }
 
-      privateWindow->GetRootFocusController(getter_AddRefs(focusController));
+      focusController = privateWindow->GetRootFocusController();
     }
 
     NS_LossyConvertUCS2toASCII command(mHandlerText);
@@ -365,9 +365,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // that.
   if (focusedWin) {
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(focusedWin));
-    nsCOMPtr<nsIDOMWindowInternal> rootWin;
-    piWin->GetPrivateRoot(getter_AddRefs(rootWin));
-    boundGlobal = do_QueryInterface(rootWin);
+    boundGlobal = do_QueryInterface(piWin->GetPrivateRoot());
   }
   else boundGlobal = do_QueryInterface(aReceiver);
 

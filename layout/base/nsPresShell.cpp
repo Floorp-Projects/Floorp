@@ -4304,8 +4304,8 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     if (document){
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(document->GetScriptGlobalObject());
       if(ourWindow) {
-        nsCOMPtr<nsIFocusController> focusController;
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        nsIFocusController *focusController =
+          ourWindow->GetRootFocusController();
         if (focusController) {
           PRBool dontScroll;
           focusController->GetSuppressFocusScroll(&dontScroll);
@@ -4553,8 +4553,7 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
   if (ourWindow) {
-    nsCOMPtr<nsIFocusController> focusController;
-    ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+    nsIFocusController *focusController = ourWindow->GetRootFocusController();
     if (focusController) {
       nsCOMPtr<nsIDOMElement> focusedElement;
       focusController->GetFocusedElement(getter_AddRefs(focusedElement));
@@ -4867,9 +4866,9 @@ void
 PresShell::UnsuppressAndInvalidate()
 {
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
-  nsCOMPtr<nsIFocusController> focusController;
+  nsIFocusController *focusController = nsnull;
   if (ourWindow)
-    ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+    focusController = ourWindow->GetRootFocusController();
   if (focusController)
     // Suppress focus.  The act of tearing down the old content viewer
     // causes us to blur incorrectly.
@@ -5844,8 +5843,8 @@ PresShell::HandleEvent(nsIView         *aView,
           // sends IME event to pre-focused element
           nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
           if (ourWindow) {
-            nsCOMPtr<nsIFocusController> focusController;
-            ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+            nsIFocusController *focusController =
+              ourWindow->GetRootFocusController();
             if (focusController) {
               PRBool active = PR_FALSE;
               // check input focus is in Mozilla

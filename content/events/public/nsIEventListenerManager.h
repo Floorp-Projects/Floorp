@@ -47,6 +47,7 @@ class nsIDOMEventListener;
 class nsIScriptContext;
 class nsIDOMEventTarget;
 class nsIDOMEventGroup;
+class nsIAtom;
 
 /*
  * Event listener manager interface.

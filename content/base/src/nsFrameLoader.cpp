@@ -358,8 +358,7 @@ nsFrameLoader::Destroy()
   }
 
   // Let our window know that we are gone
-  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mDocShell));
-  nsCOMPtr<nsPIDOMWindow> win_private(do_QueryInterface(win));
+  nsCOMPtr<nsPIDOMWindow> win_private(do_GetInterface(mDocShell));
   if (win_private) {
     win_private->SetFrameElementInternal(nsnull);
   }
@@ -562,8 +561,7 @@ nsFrameLoader::EnsureDocShell()
   nsCOMPtr<nsIDOMElement> frame_element(do_QueryInterface(mOwnerContent));
   NS_ASSERTION(frame_element, "frame loader owner element not a DOM element!");
 
-  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mDocShell));
-  nsCOMPtr<nsPIDOMWindow> win_private(do_QueryInterface(win));
+  nsCOMPtr<nsPIDOMWindow> win_private(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(win_private, NS_ERROR_UNEXPECTED);
 
   win_private->SetFrameElementInternal(frame_element);

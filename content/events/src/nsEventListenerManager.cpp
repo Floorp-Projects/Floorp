@@ -1931,8 +1931,8 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
     if (doc) {
       nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       if (privWindow) {
-        nsCOMPtr<nsIFocusController> focusController;
-        privWindow->GetRootFocusController(getter_AddRefs(focusController));
+        nsIFocusController *focusController =
+          privWindow->GetRootFocusController();
         if (focusController)
           focusController->GetFocusedElement(getter_AddRefs(currentFocus));
       }

@@ -180,7 +180,7 @@ protected:
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsIPresContext* aPresContext);
   void FlushPendingEvents(nsIPresContext* aPresContext);
-  already_AddRefed<nsIFocusController> GetFocusControllerForDocument(nsIDocument* aDocument);
+  nsIFocusController* GetFocusControllerForDocument(nsIDocument* aDocument);
 
   typedef enum {
     eAccessKeyProcessingNormal = 0,

@@ -1047,8 +1047,7 @@ nsWebShell::GetControllerForCommand ( const char * inCommand, nsIController** ou
   
   nsCOMPtr<nsPIDOMWindow> window ( do_QueryInterface(mScriptGlobal) );
   if ( window ) {
-    nsCOMPtr<nsIFocusController> focusController;
-    rv = window->GetRootFocusController ( getter_AddRefs(focusController) );
+    nsIFocusController *focusController = window->GetRootFocusController();
     if ( focusController )
       rv = focusController->GetControllerForCommand ( inCommand, outController );
   } // if window
