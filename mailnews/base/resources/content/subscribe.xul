@@ -29,15 +29,18 @@ Rights Reserved.
         width="500"
         height="400"
         persist="width height screenX screenY"
+        buttons="accept,cancel,help"
         onload="SubscribeOnLoad()"
         onunload="SubscribeOnUnload()"
         ondialogaccept="return subscribeOK();"
-        ondialogcancel="return subscribeCancel();">
-        
+        ondialogcancel="return subscribeCancel();"
+        ondialoghelp="return doHelpButton();">   
+     
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <grid flex="1" style="width: 40em; height: 25em;">
     <columns>

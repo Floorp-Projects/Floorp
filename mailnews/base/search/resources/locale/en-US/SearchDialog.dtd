@@ -8,6 +8,8 @@
 <!ENTITY searchButton.accesskey      "S">
 <!ENTITY resetButton.label           "Clear">
 <!ENTITY resetButton.accesskey       "C">
+<!ENTITY helpButton.label            "Help">
+<!ENTITY helpButton.accesskey        "l">
 <!ENTITY optionsButton.label         "Options">
 <!ENTITY closeButton.label           "Close">
 <!ENTITY openButton.label            "Open">

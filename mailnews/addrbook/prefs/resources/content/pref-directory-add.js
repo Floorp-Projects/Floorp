@@ -342,3 +342,10 @@ function onCancel()
 {	  
   window.opener.gUpdate = false;
 }
+
+
+// called by Help button in platform overlay
+function doHelpButton()
+{
+  openHelp("mail_ldap_properties");
+}

@@ -34,9 +34,11 @@ Contributors:
         title="&MsgSelect.label;"
         width="450" height="400"
         persist="width height"
+        buttons="accept,cancel,help"
         onload="selectOnLoad();"
         ondialogaccept="return selectOkButton();"
-        ondialogcancel="return selectCancelButton();">
+        ondialogcancel="return selectCancelButton();"
+        ondialoghelp="return doHelpButton();">
 		
 <script src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>

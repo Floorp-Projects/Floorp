@@ -53,6 +53,7 @@ Rights Reserved.
   <script src="chrome://messenger/content/mailWindowOverlay.js"/>
   <script src="chrome://messenger/content/commandglue.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <commands id="commands">
     <commandset id="mailSearchItems"
@@ -79,11 +80,16 @@ Rights Reserved.
  
         </hbox>
         <hbox align="center">
-             <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true" accesskey="&searchSubfolders.accesskey;"/>
-             <spacer flex="2"/>
-             <button label="&resetButton.label;" oncommand="onReset(event);" accesskey="&resetButton.accesskey;"/>
+           <spacer flex="2"/>
+           <button label="&resetButton.label;" oncommand="onReset(event);" accesskey="&resetButton.accesskey;"/>
+         </hbox>
+         <hbox align="center">
+           <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true" accesskey="&searchSubfolders.accesskey;"/>
+           <spacer flex="2"/>
+           <button label="&helpButton.label;" align="end" oncommand="openHelp('search_messages');" accesskey="&helpButton.accesskey;"/> 
          </hbox>
       </vbox>
+
 
       <hbox flex="1">
         <vbox id="searchTermListBox" flex="1"/>

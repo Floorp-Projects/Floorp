@@ -509,3 +509,8 @@ function onSubscribeTreeKeyPress(event)
   }
 }
 
+
+function doHelpButton() 
+{
+  openHelp("mail-subscribe");
+}

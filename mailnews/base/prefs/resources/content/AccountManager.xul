@@ -8,8 +8,10 @@
         title="&accountManagerTitle.label;"
         width="&account-manager.width;" height="&account-manager.height;"
         persist="screenX screenY width height"
+        buttons="accept,cancel,help"
         onload="onLoad(event);"
-        ondialogaccept="return onAccept();">
+        ondialogaccept="return onAccept();"
+        ondialoghelp="return doHelpButton();">
 
 <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>

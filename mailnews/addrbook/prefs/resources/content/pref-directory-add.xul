@@ -32,10 +32,13 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newDirectoryTitle.label;"
         onload="Startup();"
+        buttons="accept,cancel,help"
         ondialogaccept="return onAccept();"
-        ondialogcancel="return onCancel();">
+        ondialogcancel="return onCancel();"
+        ondialoghelp="return doHelpButton();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory-add.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
 
   <keyset id="keyset"/>
