@@ -32,6 +32,7 @@ $DEBUG					= 1;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
 $USE_XPIDL				= 1;	# turn on to use the XPIDL plugin to generate files.
 $MOZ_FULLCIRCLE			= 0;
+$PROFILE				= 0;
 
 $pull{all} 				= 0;
 $pull{lizard} 			= 0;
