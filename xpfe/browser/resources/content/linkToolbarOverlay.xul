@@ -183,7 +183,7 @@
             <menupopup id="link-alternate-popup" />
           </menu>
 
-          <menuseparator collapsed="true" id="misc-seperator" />
+          <menuseparator collapsed="true" id="misc-separator" />
 
         </menupopup>
       </toolbarbutton>

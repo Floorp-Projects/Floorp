@@ -136,13 +136,16 @@ function()
   if (!linkToolbarUI.isLinkToolbarEnabled())
     return;
 
+  if (!linkToolbarHandler.hasItems)
+    return;
+
   linkToolbarUI.doClear();
 }
 
 LinkToolbarUI.prototype.doClear =
 function()
 {
-  this.hideMiscellaneousSeperator();
+  hideMiscellaneousSeparator();
   linkToolbarHandler.clearAllItems();
 }
 
@@ -185,17 +188,6 @@ function(checkedItem)
     this.doClear();
 }
 
-LinkToolbarUI.prototype.showMiscellaneousSeperator =
-function()
-{
-  document.getElementById("misc-seperator").removeAttribute("collapsed");
-}
-
-LinkToolbarUI.prototype.hideMiscellaneousSeperator =
-function()
-{
-  document.getElementById("misc-seperator").setAttribute("collapsed", "true");
-}
 LinkToolbarUI.prototype.initLinkbarVisibilityMenu = 
 function()
 {
