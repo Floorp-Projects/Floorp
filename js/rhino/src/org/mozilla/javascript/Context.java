@@ -660,9 +660,9 @@ public class Context {
             (new NativeNumber()).scopeInit(this, scope, sealed);
             (new NativeDate()).scopeInit(this, scope, sealed);
             (new NativeMath()).scopeInit(this, scope, sealed);
+            (new NativeWith()).scopeInit(this, scope, sealed);
                                 
             String[] classes = { "NativeCall",          "Call",
-                                 "NativeWith",          "With",
                                  "regexp.NativeRegExp", "RegExp",
                                  "NativeScript",        "Script",
                                };

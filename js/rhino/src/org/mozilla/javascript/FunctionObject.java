@@ -372,23 +372,12 @@ public class FunctionObject extends NativeFunction {
                          ScriptableObject.PERMANENT |
                          ScriptableObject.READONLY;
         defineProperty("prototype", prototype, attr);
+
+        defineProperty(prototype, "constructor", this, attr);
+
         String name = prototype.getClassName();
-        if (!name.equals("With")) {
-            // A "With" object would delegate these calls to the prototype:
-            // not the right thing to do here!
-            if (prototype instanceof ScriptableObject) {
-                ((ScriptableObject) prototype).defineProperty("constructor",
-                                                              this, attr);
-            } else {
-                prototype.put("constructor", prototype, this);
-            }
-        }
-        if (scope instanceof ScriptableObject) {
-            ((ScriptableObject) scope).defineProperty(name, this,
-                ScriptableObject.DONTENUM);
-        } else {
-            scope.put(name, scope, this);
-        }
+        defineProperty(scope, name, this, ScriptableObject.DONTENUM);
+
         setParentScope(scope);
     }
 

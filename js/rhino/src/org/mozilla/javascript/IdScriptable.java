@@ -326,36 +326,25 @@ public abstract class IdScriptable extends ScriptableObject
 
         int constructorId = mapNameToId("constructor");
         if (constructorId > 0) {
-            setPrototype(getObjectPrototype(scope));
-
-            String name = getClassName();
 
             IdFunction ctor = newIdFunction(constructorId);
-            ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
-            ctor.setParentScope(scope);
-            ctor.setPrototype(getFunctionPrototype(scope));
-            setParentScope(ctor);
-
-            ctor.setImmunePrototypeProperty(this);
-
+            ctor.initAsConstructor(scope, this);
             fillConstructorProperties(cx, ctor, sealed);
-
-            if (!name.equals("With")) {
-                // A "With" object would delegate these calls to the prototype:
-                // not the right thing to do here!
-                cacheIdValue(constructorId, ctor);
-            }
-            else {
-                cacheIdValue(constructorId, NOT_FOUND);
-            }
-
             if (sealed) {
                 ctor.sealObject();
                 ctor.addPropertyAttribute(READONLY);
+            }
+
+            setParentScope(ctor);
+            setPrototype(getObjectPrototype(scope));
+            cacheIdValue(constructorId, ctor);
+
+            if (sealed) {
                 sealObject();
             }
 
-            defineProperty(scope, name, ctor, ScriptableObject.DONTENUM);
+            defineProperty(scope, getClassName(), ctor,
+                           ScriptableObject.DONTENUM);
         }
     }
 

@@ -140,9 +140,14 @@ public class IdFunction extends ScriptableObject implements Function
     }
 
     public Scriptable getPrototype() {
-        // For native functions this is not called often so it is better
-        // to run this expensive operation here and not in constructor
-        return getFunctionPrototype(getParentScope());
+        // Lazy initialization of prototype: for native functions this
+        // may not be called at all
+        Scriptable proto = super.getPrototype(); 
+        if (proto == null) {
+            proto = getFunctionPrototype(getParentScope());
+            setPrototype(proto);
+        }
+        return proto;
     }
 
     // Copied from NativeFunction
@@ -174,6 +179,16 @@ public class IdFunction extends ScriptableObject implements Function
         sb.append(getArity());
         sb.append("] }");
         return sb.toString();
+    }
+    
+    /** Prepare to be used as constructor .
+     ** @param scope constructor scope
+     ** @param prototype DontEnum, DontDelete, ReadOnly prototype property 
+     ** of the constructor */
+    public void initAsConstructor(Scriptable scope, Scriptable prototype) {
+        setFunctionType(FUNCTION_AND_CONSTRUCTOR);
+        setParentScope(scope);
+        setImmunePrototypeProperty(prototype);
     }
     
     /** Make value as DontEnum, DontDelete, ReadOnly

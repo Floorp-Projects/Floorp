@@ -1217,14 +1217,15 @@ public class ScriptRuntime {
                 return NativeGlobal.evalSpecial(cx, scope, thisArg, args,
                                                 filename, lineNumber);
             }
+            if (name.equals("With") && cl == NativeWith.class) {
+                return NativeWith.newWithSpecial(cx, args, f, !isCall);
+            }
         }
         else if (fun instanceof FunctionObject) {
             FunctionObject fo = (FunctionObject) fun;
             Member m = fo.method;
             Class cl = m.getDeclaringClass();
             String name = m.getName();
-            if (name.equals("With") && cl == NativeWith.class)
-                return NativeWith.newWithSpecial(cx, args, fo, !isCall);
             if (name.equals("jsFunction_exec") && cl == NativeScript.class)
                 return ((NativeScript)jsThis).exec(cx, ScriptableObject.getTopLevelScope(scope));
             if (name.equals("exec")
