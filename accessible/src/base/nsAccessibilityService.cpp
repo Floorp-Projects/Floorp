@@ -103,7 +103,6 @@
 
 nsAccessibilityService::nsAccessibilityService()
 {
-  NS_INIT_ISUPPORTS();
   nsLayoutAtoms::AddRefAtoms();
 }
 
@@ -296,8 +295,12 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
         nsCOMPtr<nsIWeakReference> innerWeakShell =
           do_GetWeakReference(innerPresShell);
 
+        // In these variable names, "outer" relates to the nsHTMLIFrameAccessible,
+        // as opposed to the nsHTMLIFrameRootAccessible which is "inner".
+        // The outer node is a <browser> or <iframe> tag, whereas the inner node
+        // corresponds to the inner document root.
         nsHTMLIFrameRootAccessible *innerRootAccessible =
-          new nsHTMLIFrameRootAccessible(aDOMNode, innerWeakShell);
+          new nsHTMLIFrameRootAccessible(innerWeakShell);
 
         if (innerRootAccessible) {
           nsHTMLIFrameAccessible *outerRootAccessible =
@@ -305,15 +308,12 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
                                        outerWeakShell, sub_doc);
 
           if (outerRootAccessible) {
-            innerRootAccessible->Init(outerRootAccessible);
             *_retval = outerRootAccessible;
-            if (*_retval) {
-              NS_ADDREF(*_retval);
-              return NS_OK;
-            }
+            NS_ADDREF(*_retval);
+            return NS_OK;
           }
-          else // don't leak the innerRoot
-            delete innerRootAccessible;
+          // don't leak the innerRoot
+          delete innerRootAccessible;
         }
       }
     }

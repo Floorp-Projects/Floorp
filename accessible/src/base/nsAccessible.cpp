@@ -435,8 +435,6 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
 //-----------------------------------------------------
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNode(aNode), mPresShell(aShell), mSiblingIndex(eSiblingsUninitialized)
 {
-  NS_INIT_ISUPPORTS();
-
 #ifdef NS_DEBUG_X
    {
      nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
@@ -561,8 +559,14 @@ NS_IMETHODIMP nsAccessible::GetAccId(PRInt32 *aAccId)
 
 NS_IMETHODIMP nsAccessible::CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList)
 {
-  if (aParent)
-    mParent = aParent;
+  if (aParent) {
+    PRUint32 role = 0;
+    aParent->GetAccRole(&role);
+    // prevent from invalid caching nsHTMLIFrameRootAccessible
+    if (role != ROLE_NOTHING) {
+      mParent = aParent;
+    }
+  }
   if (aSiblingList) 
     mSiblingList = aSiblingList;
   mSiblingIndex = aSiblingIndex;

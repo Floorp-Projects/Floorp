@@ -48,7 +48,6 @@ NS_IMPL_ISUPPORTS1(nsGenericAccessible, nsIAccessible)
 
 nsGenericAccessible::nsGenericAccessible()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

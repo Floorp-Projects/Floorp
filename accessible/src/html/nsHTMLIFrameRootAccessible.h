@@ -93,34 +93,14 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
   NS_DECL_ISUPPORTS_INHERITED
 
   public:
-    nsHTMLIFrameRootAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+    nsHTMLIFrameRootAccessible(nsIWeakReference* aShell);
     virtual ~nsHTMLIFrameRootAccessible();
 
-    /* attribute wstring accName; */
-    NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
-
-    /* nsIAccessible getAccNextSibling (); */
-    NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-
-    /* nsIAccessible getAccPreviousSibling (); */
-    NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
+    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
 
     // ----- nsIAccessibleEventReceiver -------------------
     NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
     NS_IMETHOD RemoveAccessibleEventListener();
-
-  protected:
-    void Init();
-
-  public:
-    void Init(nsIAccessible *aOuterAccessible);
-
-    // In these variable names, "outer" relates to the nsHTMLIFrameAccessible, as opposed to the 
-    // nsHTMLIFrameRootAccessible which is "inner".
-    // The outer node is a <browser> or <iframe> tag, whereas the inner node corresponds to the inner document root.
-
-    nsCOMPtr<nsIDOMNode> mOuterNode;
-    nsCOMPtr<nsIAccessible> mOuterAccessible;
 };
 
 
