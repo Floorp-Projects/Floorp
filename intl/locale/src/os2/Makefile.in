@@ -17,7 +17,7 @@
 #
 
 DEPTH		= ../../../..
-topsrcdir		= @top_srcdir@
+topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
