@@ -54,12 +54,10 @@ import java.lang.reflect.Constructor;
 
 public class Codegen extends Interpreter
 {
-    public Object compile(Scriptable scope,
-                          CompilerEnvirons compilerEnv,
-                          ScriptOrFnNode scriptOrFn,
+    public Object compile(CompilerEnvirons compilerEnv,
+                          ScriptOrFnNode tree,
                           String encodedSource,
-                          boolean returnFunction,
-                          Object securityDomain)
+                          boolean returnFunction)
     {
         int serial;
         synchronized (globalLock) {
@@ -68,56 +66,66 @@ public class Codegen extends Interpreter
         String mainClassName = "org.mozilla.javascript.gen.c"+serial;
 
         byte[] mainClassBytes = compileToClassFile(compilerEnv, mainClassName,
-                                                   scriptOrFn, encodedSource,
+                                                   tree, encodedSource,
                                                    returnFunction);
 
-        Exception e = null;
-        Class result = null;
-        GeneratedClassLoader
-            loader = SecurityController.createLoader(null, securityDomain);
+        return new Object[] { mainClassName, mainClassBytes };
+    }
 
+    public Script createScriptObject(Object bytecode,
+                                     Object staticSecurityDomain)
+    {
+        Class cl = defineClass(bytecode, staticSecurityDomain);
+
+        Script script;
         try {
-            result = loader.defineClass(mainClassName, mainClassBytes);
-            loader.linkClass(result);
+            script = (Script)cl.newInstance();
+        } catch (Exception ex) {
+            throw new RuntimeException
+                ("Unable to instantiate compiled class:"+ex.toString());
+        }
+        return script;
+    }
+
+    public Function createFunctionObject(Context cx, Scriptable scope,
+                                         Object bytecode,
+                                         Object staticSecurityDomain)
+    {
+        Class cl = defineClass(bytecode, staticSecurityDomain);
+
+        NativeFunction f;
+        try {
+            Constructor ctor = cl.getConstructors()[0];
+            Object[] initArgs = { scope, cx, new Integer(0) };
+            f = (NativeFunction)ctor.newInstance(initArgs);
+        } catch (Exception ex) {
+            throw new RuntimeException
+                ("Unable to instantiate compiled class:"+ex.toString());
+        }
+        return f;
+    }
+
+    private static Class defineClass(Object bytecode,
+                                     Object staticSecurityDomain)
+    {
+        Object[] nameBytesPair = (Object[])bytecode;
+        String className = (String)nameBytesPair[0];
+        byte[] classBytes = (byte[])nameBytesPair[1];
+
+        GeneratedClassLoader loader;
+        loader = SecurityController.createLoader(null, staticSecurityDomain);
+
+        Exception e;
+        try {
+            Class cl = loader.defineClass(className, classBytes);
+            loader.linkClass(cl);
+            return cl;
         } catch (SecurityException x) {
             e = x;
         } catch (IllegalArgumentException x) {
             e = x;
         }
-        if (e != null)
-            throw new RuntimeException("Malformed optimizer package " + e);
-
-        if (returnFunction) {
-            Context cx = Context.getCurrentContext();
-            NativeFunction f;
-            try {
-                Constructor ctor = result.getConstructors()[0];
-                Object[] initArgs = { scope, cx, new Integer(0) };
-                f = (NativeFunction)ctor.newInstance(initArgs);
-            } catch (Exception ex) {
-                throw new RuntimeException
-                    ("Unable to instantiate compiled class:"+ex.toString());
-            }
-            OptRuntime.initFunction(
-                f, FunctionNode.FUNCTION_STATEMENT, scope, cx);
-            return f;
-        } else {
-            Script script;
-            try {
-                script = (Script) result.newInstance();
-            } catch (Exception ex) {
-                throw new RuntimeException
-                    ("Unable to instantiate compiled class:"+ex.toString());
-            }
-            return script;
-        }
-    }
-
-    public void notifyDebuggerCompilationDone(Context cx,
-                                              ScriptOrFnNode scriptOrFn,
-                                              String debugSource)
-    {
-        throw new RuntimeException("NOT SUPPORTED");
+        throw new RuntimeException("Malformed optimizer package " + e);
     }
 
     byte[] compileToClassFile(CompilerEnvirons compilerEnv,
@@ -543,17 +551,13 @@ public class Codegen extends Interpreter
         cfw.add(ByteCode.PUTFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
 
         // Call
-        // NativeFunction.initScriptFunction(version, "", varNamesArray, 0)
-
+        // NativeFunction.initScriptObject(version, varNamesArray)
         cfw.addLoadThis();
         cfw.addPush(compilerEnv.getLanguageVersion());
-        cfw.addPush(""); // Function name
         pushParamNamesArray(cfw, script);
-        cfw.addPush(0); // No parameters, only varnames
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                    "org/mozilla/javascript/NativeFunction",
-                    "initScriptFunction",
-                    "(ILjava/lang/String;[Ljava/lang/String;I)V");
+                      "org/mozilla/javascript/NativeFunction",
+                      "initScriptObject", "(I[Ljava/lang/String;)V");
 
         cfw.add(ByteCode.RETURN);
         // 1 parameter = this
@@ -628,6 +632,8 @@ public class Codegen extends Interpreter
 
         // Call NativeFunction.initScriptFunction
         cfw.addLoadThis();
+        cfw.addALoad(CONTEXT_ARG);
+        cfw.addALoad(SCOPE_ARG);
         cfw.addPush(compilerEnv.getLanguageVersion());
         cfw.addPush(ofn.fnode.getFunctionName());
         pushParamNamesArray(cfw, ofn.fnode);
@@ -635,14 +641,13 @@ public class Codegen extends Interpreter
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                       "org/mozilla/javascript/NativeFunction",
                       "initScriptFunction",
-                      "(ILjava/lang/String;[Ljava/lang/String;I)V");
-
-        cfw.addLoadThis();
-        cfw.addALoad(SCOPE_ARG);
-        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                      "org/mozilla/javascript/ScriptableObject",
-                      "setParentScope",
-                      "(Lorg/mozilla/javascript/Scriptable;)V");
+                      "(Lorg/mozilla/javascript/Context;"
+                      +"Lorg/mozilla/javascript/Scriptable;"
+                      +"I"
+                      +"Ljava/lang/String;"
+                      +"[Ljava/lang/String;"
+                      +"I"
+                      +")V");
 
         // precompile all regexp literals
         int regexpCount = ofn.fnode.getRegexpCount();
@@ -2123,10 +2128,10 @@ class BodyCodegen
                     codegen.mainClassSignature);
         }
 
-        // Dup function reference for function expressions to have it
-        // on top of the stack when initFunction returns
         if (functionType == FunctionNode.FUNCTION_EXPRESSION) {
-            cfw.add(ByteCode.DUP);
+            // Leave closure object on stack and do not pass it to
+            // initFunction which suppose to connect statements to scope
+            return;
         }
         cfw.addPush(functionType);
         cfw.addALoad(variableObjectLocal);

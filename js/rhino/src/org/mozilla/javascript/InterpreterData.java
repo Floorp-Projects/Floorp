@@ -49,13 +49,9 @@ final class InterpreterData implements Serializable, DebuggableScript
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
 
-    InterpreterData(SecurityController securityController,
-                    Object securityDomain,
-                    int languageVersion,
+    InterpreterData(int languageVersion,
                     String sourceFile, String encodedSource)
     {
-        this.securityController = securityController;
-        this.securityDomain = securityDomain;
         this.languageVersion = languageVersion;
         this.itsSourceFile = sourceFile;
         this.encodedSource = encodedSource;
@@ -66,8 +62,6 @@ final class InterpreterData implements Serializable, DebuggableScript
     InterpreterData(InterpreterData parent)
     {
         this.parentData = parent;
-        this.securityController = parent.securityController;
-        this.securityDomain = parent.securityDomain;
         this.languageVersion = parent.languageVersion;
         this.itsSourceFile = parent.itsSourceFile;
         this.encodedSource = parent.encodedSource;
@@ -81,13 +75,9 @@ final class InterpreterData implements Serializable, DebuggableScript
         itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
     }
 
-    SecurityController securityController;
-    Object securityDomain;
-
     String itsName;
     String itsSourceFile;
     boolean itsNeedsActivation;
-    boolean itsFromEvalCode;
     boolean itsCheckThis;
     int itsFunctionType;
 

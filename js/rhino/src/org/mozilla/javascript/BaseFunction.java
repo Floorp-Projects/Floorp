@@ -487,26 +487,18 @@ public class BaseFunction extends IdScriptableObject implements Function
             linep[0] = 1;
         }
 
-        String sourceName = ScriptRuntime.
+        String sourceURI = ScriptRuntime.
             makeUrlForGeneratedScript(false, filename, linep[0]);
 
         Scriptable global = ScriptableObject.getTopLevelScope(scope);
 
-        // Compile the function with opt level of -1 to force interpreter
+        ErrorReporter reporter;
+        reporter = DefaultErrorReporter.forEval(cx.getErrorReporter());
+
+        // Compile with explicit interpreter instance to force interpreter
         // mode.
-        int savedLevel = cx.optimizationLevel;
-        cx.optimizationLevel = -1;
-        NativeFunction fn;
-        try {
-            fn = (NativeFunction) cx.compileFunction(global, source,
-                                                     sourceName, 1,
-                                                     null);
-        }
-        finally { cx.optimizationLevel = savedLevel; }
-
-        ScriptRuntime.setFunctionProtoAndParent(global, fn);
-
-        return fn;
+        return cx.compileFunction(global, source, new Interpreter(), reporter,
+                                  sourceURI, 1, null);
     }
 
     protected int findPrototypeId(String s)

@@ -2203,17 +2203,11 @@ public class ScriptRuntime {
         ErrorReporter reporter;
         reporter = DefaultErrorReporter.forEval(cx.getErrorReporter());
 
-        // Compile the reader with opt level of -1 to force interpreter
+        // Compile with explicit interpreter instance to force interpreter
         // mode.
-        int savedLevel = cx.optimizationLevel;
-        cx.optimizationLevel = -1;
-        Script script;
-        try {
-            script = cx.compileString((String)x, reporter, sourceName, 1, null);
-        } finally {
-            cx.optimizationLevel = savedLevel;
-        }
-        ((InterpretedScript)script).itsData.itsFromEvalCode = true;
+        Script script = cx.compileString((String)x, new Interpreter(),
+                                         reporter, sourceName, 1, null);
+        ((InterpretedFunction)script).evalScriptFlag = true;
 
         // if the compile fails, an error has been reported by the
         // compiler, but we need to stop execution to avoid
@@ -2910,7 +2904,7 @@ public class ScriptRuntime {
     }
 
     public static void setFunctionProtoAndParent(Scriptable scope,
-                                                 Function fn)
+                                                 BaseFunction fn)
     {
         fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
@@ -2920,7 +2914,6 @@ public class ScriptRuntime {
                                     NativeFunction function, int type,
                                     boolean fromEvalCode)
     {
-        setFunctionProtoAndParent(scope, function);
         if (type == FunctionNode.FUNCTION_STATEMENT) {
             String name = function.functionName;
             if (name != null && name.length() != 0) {
@@ -2944,6 +2937,8 @@ public class ScriptRuntime {
                 }
                 scope.put(name, scope, function);
             }
+        } else {
+            throw Kit.codeBug();
         }
     }
 

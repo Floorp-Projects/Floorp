@@ -257,12 +257,10 @@ public class Interpreter
         return validIcode(bytecode) || validTokenCode(bytecode);
     }
 
-    public Object compile(Scriptable scope,
-                          CompilerEnvirons compilerEnv,
+    public Object compile(CompilerEnvirons compilerEnv,
                           ScriptOrFnNode tree,
                           String encodedSource,
-                          boolean returnFunction,
-                          Object staticSecurityDomain)
+                          boolean returnFunction)
     {
         this.compilerEnv = compilerEnv;
         new NodeTransformer().transform(tree);
@@ -275,56 +273,36 @@ public class Interpreter
             tree = tree.getFunctionNode(0);
         }
 
-        Context cx = Context.getContext();
-        SecurityController sc = cx.getSecurityController();
-        Object dynamicDomain;
-        if (sc != null) {
-            dynamicDomain = sc.getDynamicSecurityDomain(staticSecurityDomain);
-        } else {
-            if (staticSecurityDomain != null) {
-                throw new IllegalArgumentException();
-            }
-            dynamicDomain = null;
-        }
-
         scriptOrFn = tree;
-        itsData = new InterpreterData(sc, dynamicDomain,
-                                      compilerEnv.getLanguageVersion(),
+        itsData = new InterpreterData(compilerEnv.getLanguageVersion(),
                                       scriptOrFn.getSourceName(),
                                       encodedSource);
         itsData.topLevel = true;
 
         if (returnFunction) {
             generateFunctionICode();
-            return createFunction(cx, scope, itsData, false);
         } else {
             generateICodeFromTree(scriptOrFn);
-            return new InterpretedScript(itsData);
         }
+
+        return itsData;
     }
 
-    public void notifyDebuggerCompilationDone(Context cx,
-                                              Object scriptOrFunction,
-                                              String debugSource)
+    public Script createScriptObject(Object bytecode,
+                                     Object staticSecurityDomain)
     {
-        InterpreterData idata;
-        if (scriptOrFunction instanceof InterpretedScript) {
-            idata = ((InterpretedScript)scriptOrFunction).itsData;
-        } else {
-            idata = ((InterpretedFunction)scriptOrFunction).itsData;
-        }
-        notifyDebugger_r(cx, idata, debugSource);
+        InterpreterData idata = (InterpreterData)bytecode;
+        return InterpretedFunction.createScript(itsData,
+                                                staticSecurityDomain);
     }
 
-    private static void notifyDebugger_r(Context cx, InterpreterData idata,
-                                         String debugSource)
+    public Function createFunctionObject(Context cx, Scriptable scope,
+                                         Object bytecode,
+                                         Object staticSecurityDomain)
     {
-        cx.debugger.handleCompilationDone(cx, idata, debugSource);
-        if (idata.itsNestedFunctions != null) {
-            for (int i = 0; i != idata.itsNestedFunctions.length; ++i) {
-                notifyDebugger_r(cx, idata.itsNestedFunctions[i], debugSource);
-            }
-        }
+        InterpreterData idata = (InterpreterData)bytecode;
+        return InterpretedFunction.createFunction(cx, scope, itsData,
+                                                  staticSecurityDomain);
     }
 
     private void generateFunctionICode()
@@ -1953,55 +1931,37 @@ public class Interpreter
                                              idata.encodedSourceEnd);
     }
 
-    private static Scriptable[] wrapRegExps(Context cx, Scriptable scope,
-                                            InterpreterData idata)
+    private static void initFunction(Context cx, Scriptable scope,
+                                     InterpretedFunction parent, int index)
     {
-        if (idata.itsRegExpLiterals == null) Kit.codeBug();
-
-        RegExpProxy rep = ScriptRuntime.checkRegExpProxy(cx);
-        int N = idata.itsRegExpLiterals.length;
-        Scriptable[] array = new Scriptable[N];
-        for (int i = 0; i != N; ++i) {
-            array[i] = rep.wrapRegExp(cx, scope, idata.itsRegExpLiterals[i]);
-        }
-        return array;
-    }
-
-    private static InterpretedFunction createFunction(Context cx,
-                                                      Scriptable scope,
-                                                      InterpreterData idata,
-                                                      boolean fromEvalCode)
-    {
-        InterpretedFunction fn = new InterpretedFunction(idata);
-        if (idata.itsRegExpLiterals != null) {
-            fn.itsRegExps = wrapRegExps(cx, scope, idata);
-        }
-        ScriptRuntime.initFunction(cx, scope, fn, idata.itsFunctionType,
-                                   fromEvalCode);
-        return fn;
+        InterpretedFunction fn;
+        fn = InterpretedFunction.createFunction(cx, scope, parent, index);
+        ScriptRuntime.initFunction(cx, scope, fn, fn.idata.itsFunctionType,
+                                   parent.evalScriptFlag);
     }
 
     static Object interpret(Context cx, Scriptable scope, Scriptable thisObj,
                             Object[] args, double[] argsDbl,
                             int argShift, int argCount,
-                            NativeFunction fnOrScript,
-                            InterpreterData idata)
-        throws JavaScriptException
+                            InterpretedFunction fnOrScript)
     {
-        if (cx.interpreterSecurityDomain != idata.securityDomain) {
+        if (cx.interpreterSecurityDomain != fnOrScript.securityDomain) {
             if (argsDbl != null) {
                 args = getArgsArray(args, argsDbl, argShift, argCount);
             }
-            SecurityController sc = idata.securityController;
+            SecurityController sc = fnOrScript.securityController;
             Object savedDomain = cx.interpreterSecurityDomain;
-            cx.interpreterSecurityDomain = idata.securityDomain;
+            cx.interpreterSecurityDomain = fnOrScript.securityDomain;
             try {
-                return sc.callWithDomain(idata.securityDomain, cx, fnOrScript,
-                                         scope, thisObj, args);
+                return fnOrScript.securityController.callWithDomain(
+                        fnOrScript.securityDomain, cx, fnOrScript, scope,
+                        thisObj, args);
             } finally {
                 cx.interpreterSecurityDomain = savedDomain;
             }
         }
+
+        InterpreterData idata = fnOrScript.idata;
 
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
@@ -2055,7 +2015,6 @@ public class Interpreter
         }
 
         if (idata.itsFunctionType != 0) {
-            InterpretedFunction f = (InterpretedFunction)fnOrScript;
             if (!idata.useDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }
@@ -2071,7 +2030,7 @@ public class Interpreter
             }
         } else {
             ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
-                                     idata.itsFromEvalCode);
+                                     fnOrScript.evalScriptFlag);
         }
 
         if (idata.itsNestedFunctions != null) {
@@ -2080,21 +2039,29 @@ public class Interpreter
             for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
                 InterpreterData fdata = idata.itsNestedFunctions[i];
                 if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
-                    createFunction(cx, scope, fdata, idata.itsFromEvalCode);
+                    initFunction(cx, scope, fnOrScript, i);
                 }
             }
         }
 
-        // Wrapped regexps for functions are stored in InterpretedFunction
-        // but for script which should not contain references to scope
-        // the regexps re-wrapped during each script execution
         Scriptable[] scriptRegExps = null;
+        if (idata.itsRegExpLiterals != null) {
+            // Wrapped regexps for functions are stored in InterpretedFunction
+            // but for script which should not contain references to scope
+            // the regexps re-wrapped during each script execution
+            if (idata.itsFunctionType != 0) {
+                scriptRegExps = fnOrScript.functionRegExps;
+            } else {
+                scriptRegExps = fnOrScript.createRegExpWraps(cx, scope);
+            }
+        }
 
         if (debuggerFrame != null) {
             debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
 
         InterpreterData savedData = cx.interpreterData;
+        int savedLineIndex = cx.interpreterLineIndex;
         cx.interpreterData = idata;
         cx.interpreterLineIndex = idata.firstLinePC;
 
@@ -2638,9 +2605,8 @@ switch (op) {
             // Inlining of InterpretedFunction.call not to create
             // argument array
             InterpretedFunction ifun = (InterpretedFunction)fun;
-            stack[stackTop] = interpret(cx, funScope, funThisObj,
-                                        stack, sDbl, calleeArgShft, indexReg,
-                                        ifun, ifun.itsData);
+            stack[stackTop] = interpret(cx, funScope, funThisObj, stack, sDbl,
+                                        calleeArgShft, indexReg, ifun);
         } else {
             Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft,
                                             indexReg);
@@ -2685,9 +2651,8 @@ switch (op) {
             // argument array
             InterpretedFunction f = (InterpretedFunction)lhs;
             Scriptable newInstance = f.createObject(cx, scope);
-            Object callResult = interpret(cx, scope, newInstance,
-                                          stack, sDbl, calleeArgShft, indexReg,
-                                          f, f.itsData);
+            Object callResult = interpret(cx, scope, newInstance, stack, sDbl,
+                                          calleeArgShft, indexReg, f);
             if (callResult instanceof Scriptable && callResult != undefined) {
                 stack[stackTop] = callResult;
             } else {
@@ -2883,30 +2848,17 @@ switch (op) {
     case Icode_SCOPE :
         stack[++stackTop] = scope;
         continue Loop;
-    case Icode_CLOSURE_EXPR : {
-        InterpreterData closureData = idata.itsNestedFunctions[indexReg];
-        stack[++stackTop] = createFunction(cx, scope, closureData,
-                                           idata.itsFromEvalCode);
+    case Icode_CLOSURE_EXPR :
+        stack[++stackTop] = InterpretedFunction.createFunction(cx, scope,
+                                                               fnOrScript,
+                                                               indexReg);
         continue Loop;
-    }
-    case Icode_CLOSURE_STMT : {
-        InterpreterData closureData = idata.itsNestedFunctions[indexReg];
-        createFunction(cx, scope, closureData, idata.itsFromEvalCode);
+    case Icode_CLOSURE_STMT :
+        initFunction(cx, scope, fnOrScript, indexReg);
         continue Loop;
-    }
-    case Token.REGEXP : {
-        Scriptable regexp;
-        if (idata.itsFunctionType != 0) {
-            regexp = ((InterpretedFunction)fnOrScript).itsRegExps[indexReg];
-        } else {
-            if (scriptRegExps == null) {
-                scriptRegExps = wrapRegExps(cx, scope, idata);
-            }
-            regexp = scriptRegExps[indexReg];
-        }
-        stack[++stackTop] = regexp;
+    case Token.REGEXP :
+        stack[++stackTop] = scriptRegExps[indexReg];
         continue Loop;
-    }
     case Icode_LITERAL_NEW :
         // indexReg: number of values in the literal
         ++stackTop;
@@ -3101,6 +3053,7 @@ switch (op) {
         } // end of interpreter loop
 
         cx.interpreterData = savedData;
+        cx.interpreterLineIndex = savedLineIndex;
 
         if (debuggerFrame != null) {
             if (javaException != null) {

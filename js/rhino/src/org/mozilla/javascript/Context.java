@@ -1253,8 +1253,8 @@ public class Context
             throw new IllegalArgumentException(
                 "Line number can not be negative:"+lineno);
         }
-        return (Script) compile(null, in, null, sourceName, lineno,
-                                securityDomain, false, null);
+        return (Script) compileImpl(null, in, null, sourceName, lineno,
+                                    securityDomain, false, null, null);
     }
 
     /**
@@ -1280,18 +1280,20 @@ public class Context
             throw new IllegalArgumentException(
                 "Line number can not be negative:"+lineno);
         }
-        return compileString(source, null, sourceName, lineno, securityDomain);
+        return compileString(source, null, null, sourceName, lineno,
+                             securityDomain);
     }
 
     final Script compileString(String source,
+                               Interpreter compiler,
                                ErrorReporter compilationErrorReporter,
                                String sourceName, int lineno,
                                Object securityDomain)
     {
         try {
-            return (Script) compile(null, null, source, sourceName, lineno,
-                                    securityDomain, false,
-                                    compilationErrorReporter);
+            return (Script) compileImpl(null, null, source, sourceName, lineno,
+                                        securityDomain, false,
+                                        compiler, compilationErrorReporter);
         } catch (IOException ex) {
             // Should not happen when dealing with source as string
             throw new RuntimeException();
@@ -1319,9 +1321,20 @@ public class Context
                                           String sourceName, int lineno,
                                           Object securityDomain)
     {
+        return compileFunction(scope, source, null, null, sourceName, lineno,
+                               securityDomain);
+    }
+
+    final Function compileFunction(Scriptable scope, String source,
+                                   Interpreter compiler,
+                                   ErrorReporter compilationErrorReporter,
+                                   String sourceName, int lineno,
+                                   Object securityDomain)
+    {
         try {
-            return (Function) compile(scope, null, source, sourceName, lineno,
-                                      securityDomain, true, null);
+            return (Function) compileImpl(scope, null, source, sourceName,
+                                          lineno, securityDomain, true,
+                                          compiler, compilationErrorReporter);
         }
         catch (IOException ioe) {
             // Should never happen because we just made the reader
@@ -2287,11 +2300,12 @@ public class Context
         return formatter.format(arguments);
     }
 
-    private Object compile(Scriptable scope,
-                           Reader sourceReader, String sourceString,
-                           String sourceName, int lineno,
-                           Object securityDomain, boolean returnFunction,
-                           ErrorReporter compilationErrorReporter)
+    private Object compileImpl(Scriptable scope,
+                               Reader sourceReader, String sourceString,
+                               String sourceName, int lineno,
+                               Object securityDomain, boolean returnFunction,
+                               Interpreter compiler,
+                               ErrorReporter compilationErrorReporter)
         throws IOException
     {
         if (securityDomain != null && securityController == null) {
@@ -2337,20 +2351,44 @@ public class Context
             }
         }
 
-        Interpreter compiler = createCompiler();
+        if (compiler == null) {
+            compiler = createCompiler();
+        }
 
         String encodedSource = p.getEncodedSource();
 
-        Object result = compiler.compile(scope, compilerEnv,
-                                         tree, encodedSource,
-                                         returnFunction,
-                                         securityDomain);
+        Object bytecode = compiler.compile(compilerEnv,
+                                           tree, encodedSource,
+                                           returnFunction);
+
         if (debugger != null) {
             if (sourceString == null) Kit.codeBug();
-            compiler.notifyDebuggerCompilationDone(this, result,
-                                                   sourceString);
+            if (bytecode instanceof DebuggableScript) {
+                DebuggableScript dscript = (DebuggableScript)bytecode;
+                notifyDebugger_r(this, dscript, sourceString);
+            } else {
+                throw new RuntimeException("NOT SUPPORTED");
+            }
         }
+
+        Object result;
+        if (returnFunction) {
+            result = compiler.createFunctionObject(this, scope, bytecode,
+                                                   securityDomain);
+        } else {
+            result = compiler.createScriptObject(bytecode, securityDomain);
+        }
+
         return result;
+    }
+
+    private static void notifyDebugger_r(Context cx, DebuggableScript dscript,
+                                         String debugSource)
+    {
+        cx.debugger.handleCompilationDone(cx, dscript, debugSource);
+        for (int i = 0; i != dscript.getFunctionCount(); ++i) {
+            notifyDebugger_r(cx, dscript.getFunction(i), debugSource);
+        }
     }
 
     private static Class codegenClass = Kit.classOrNull(
@@ -2562,7 +2600,7 @@ public class Context
     private boolean generatingDebugChanged;
     private boolean generatingSource=true;
     private boolean compileFunctionsWithDynamicScopeFlag;
-    int optimizationLevel;
+    private int optimizationLevel;
     private WrapFactory wrapFactory;
     Debugger debugger;
     private Object debuggerData;

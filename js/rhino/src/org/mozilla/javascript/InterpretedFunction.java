@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Igor Bukanov
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -35,40 +36,126 @@
 
 package org.mozilla.javascript;
 
-import java.io.Serializable;
-
-final class InterpretedFunction extends NativeFunction
-    implements Serializable
+final class InterpretedFunction extends NativeFunction implements Script
 {
+    InterpreterData idata;
+    SecurityController securityController;
+    Object securityDomain;
+    Scriptable[] functionRegExps;
+    boolean evalScriptFlag; // true if script corresponds to eval() code
 
-    static final long serialVersionUID = -6235150451107527319L;
-
-    InterpretedFunction(InterpreterData theData)
+    private InterpretedFunction(InterpreterData idata,
+                                Object staticSecurityDomain)
     {
-        itsData = theData;
-        initScriptFunction(itsData.languageVersion, itsData.itsName,
-                           itsData.argNames, itsData.argCount);
+        this.idata = idata;
+
+        // Always get Context from the current thread to
+        // avoid security breaches via passing mangled Context instances
+        // with bogus SecurityController
+        Context cx = Context.getContext();
+        SecurityController sc = cx.getSecurityController();
+        Object dynamicDomain;
+        if (sc != null) {
+            dynamicDomain = sc.getDynamicSecurityDomain(staticSecurityDomain);
+        } else {
+            if (staticSecurityDomain != null) {
+                throw new IllegalArgumentException();
+            }
+            dynamicDomain = null;
+        }
+
+        this.securityController = sc;
+        this.securityDomain = dynamicDomain;
+    }
+
+    private InterpretedFunction(InterpretedFunction parent, int index)
+    {
+        this.idata = parent.idata.itsNestedFunctions[index];
+        this.securityController = parent.securityController;
+        this.securityDomain = parent.securityDomain;
+    }
+
+    /**
+     * Create script from compiled bytecode.
+     */
+    static InterpretedFunction createScript(InterpreterData idata,
+                                            Object staticSecurityDomain)
+    {
+        InterpretedFunction f;
+        f = new InterpretedFunction(idata, staticSecurityDomain);
+        f.initScriptObject(idata.languageVersion, idata.argNames);
+        return f;
+    }
+
+    /**
+     * Create function compiled from Function(...) constructor.
+     */
+    static InterpretedFunction createFunction(Context cx,Scriptable scope,
+                                              InterpreterData idata,
+                                              Object staticSecurityDomain)
+    {
+        InterpretedFunction f;
+        f = new InterpretedFunction(idata, staticSecurityDomain);
+        f.initInterpretedFunction(cx, scope);
+        return f;
+    }
+
+    /**
+     * Create function embedded in script or another function.
+     */
+    static InterpretedFunction createFunction(Context cx, Scriptable scope,
+                                              InterpretedFunction  parent,
+                                              int index)
+    {
+        InterpretedFunction f = new InterpretedFunction(parent, index);
+        f.initInterpretedFunction(cx, scope);
+        return f;
+    }
+
+    Scriptable[] createRegExpWraps(Context cx, Scriptable scope)
+    {
+        if (idata.itsRegExpLiterals == null) Kit.codeBug();
+
+        RegExpProxy rep = ScriptRuntime.checkRegExpProxy(cx);
+        int N = idata.itsRegExpLiterals.length;
+        Scriptable[] array = new Scriptable[N];
+        for (int i = 0; i != N; ++i) {
+            array[i] = rep.wrapRegExp(cx, scope, idata.itsRegExpLiterals[i]);
+        }
+        return array;
+    }
+
+    private void initInterpretedFunction(Context cx, Scriptable scope)
+    {
+        initScriptFunction(cx, scope, idata.languageVersion, idata.itsName,
+                           idata.argNames, idata.argCount);
+        if (idata.itsRegExpLiterals != null) {
+            functionRegExps = createRegExpWraps(cx, scope);
+        }
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         if (!ScriptRuntime.hasTopCall(cx)) {
             return ScriptRuntime.doTopCall(this, cx, scope, thisObj, args);
         }
-        return Interpreter.interpret(cx, scope, thisObj,
-                                     args, null, 0, args.length,
-                                     this, itsData);
+        return Interpreter.interpret(cx, scope, thisObj, args, null,
+                                     0, args.length, this);
+    }
+
+    public Object exec(Context cx, Scriptable scope)
+    {
+        if (idata.itsFunctionType != 0) {
+            // Can only be applied to scripts
+            throw new IllegalStateException();
+        }
+        return call(cx, scope, scope, ScriptRuntime.emptyArgs);
     }
 
     public String getEncodedSource()
     {
-        return Interpreter.getEncodedSource(itsData);
+        return Interpreter.getEncodedSource(idata);
     }
-
-    InterpreterData itsData;
-    boolean itsUseDynamicScope;
-    Scriptable[] itsRegExps;
 }
 

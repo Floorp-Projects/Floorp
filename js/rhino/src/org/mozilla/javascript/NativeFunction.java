@@ -46,7 +46,8 @@ package org.mozilla.javascript;
 public class NativeFunction extends BaseFunction
 {
 
-    public final void initScriptFunction(int version, String functionName,
+    public final void initScriptFunction(Context cx, Scriptable scope,
+                                         int version, String functionName,
                                          String[] argNames, int argCount)
     {
         if (!(argNames != null
@@ -63,6 +64,25 @@ public class NativeFunction extends BaseFunction
         this.functionName = functionName;
         this.argNames = argNames;
         this.argCount = argCount;
+        this.version = version;
+
+        ScriptRuntime.setFunctionProtoAndParent(scope, this);
+    }
+
+    public final void initScriptObject(int version, String[] varNames)
+    {
+        if (varNames == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (!(this.argNames == null)) {
+            // Initialization can only be done once
+            throw new IllegalStateException();
+        }
+
+        this.functionName = "";
+        this.argNames = varNames;
+        this.argCount = 0;
         this.version = version;
     }
 
