@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsSupportsPrimitives.h"
@@ -100,8 +101,9 @@ NS_IMETHODIMP nsSupportsIDImpl::ToString(char **_retval)
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
-
-/***************************************************************************/
+/*****************************************************************************
+ * nsSupportsStringImpl
+ *****************************************************************************/
 
 NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
                    nsISupportsPrimitive)
@@ -114,32 +116,32 @@ nsSupportsStringImpl::nsSupportsStringImpl()
 
 nsSupportsStringImpl::~nsSupportsStringImpl()
 {
-    if(mData)
-      nsMemory::Free(mData);
+    if (mData)
+        nsMemory::Free(mData);
 }
 
 NS_IMETHODIMP nsSupportsStringImpl::GetType(PRUint16 *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
-    *aType = TYPE_STRING;
 
+    *aType = TYPE_STRING;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
 {
-    NS_ASSERTION(aData, "Bad pointer");
-    if(mData)
-    {
-        *aData = (char*) nsMemory::Clone(mData,
-                                (nsCRT::strlen(mData)+1)*sizeof(char));
-        return *aData ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = NS_OK;
+    *aData = nsnull;
+
+    // copy the buffer
+    if (mData) {
+        size_t size((mLength + 1) * sizeof(char));
+        *aData = NS_STATIC_CAST(char*, nsMemory::Clone(mData, size));
+        if (!(*aData))
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-    {
-        *aData = nsnull;
-        return NS_OK;
-    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsSupportsStringImpl::SetData(const char *aData)
@@ -150,27 +152,67 @@ NS_IMETHODIMP nsSupportsStringImpl::SetData(const char *aData)
 NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
 {
     return GetData(_retval);
-}  
+}
 
-NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength, const char *aData)
+NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(const PRUint32 aLength,
+                                                      const char *aData)
 {
-    if(mData)
-      nsMemory::Free(mData);
-    if(aData) {
-        mData = NS_STATIC_CAST(char*, nsMemory::Alloc((aLength+1)*sizeof(char)));
-        if ( mData ) {
-          nsCRT::memcpy ( mData, aData, aLength*sizeof(char) );
-          mData[aLength] = NS_STATIC_CAST(char, 0);
-        }
+    // if the new string length is the same as the old,
+    // just copy into the old buffer to avoid reallocating
+    if ((aLength == mLength) && aData) {
+        nsCRT::memcpy(mData, aData, aLength * sizeof(char));
+        return NS_OK;
+    }
+
+    // otherwise, we'll have to allocate a new buffer, copy
+    // into that new buffer, and adopt it
+    char* newData(nsnull);
+    if (aData) {
+        // allocate a new buffer
+        size_t size((aLength + 1) * sizeof(char));
+        newData = NS_STATIC_CAST(char*, nsMemory::Alloc(size));
+        // copy into that buffer if it was successfully allocated
+        if (newData)
+            nsCRT::memcpy(newData, aData, aLength * sizeof(char));
         else
-          return NS_ERROR_OUT_OF_MEMORY;
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // if we've succeeded so far, adopt the new buffer. the adopt
+    // function handles the null buffer case
+    return AdoptDataWithLength(aLength, newData);
+}
+
+NS_IMETHODIMP nsSupportsStringImpl::AdoptData(char *aData)
+{
+    return AdoptDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
+}
+
+NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(const PRUint32 aLength,
+                                                        char *aData)
+{
+    // free current buffer
+    if (mData)
+        nsMemory::Free(mData);
+
+    // subsume new buffer, null or not
+    mData = aData;
+
+    if (mData) {
+        // set length of new buffer
+        mLength = aLength;
+        // always make sure we're null-terminated
+        mData[mLength] = NS_STATIC_CAST(char, 0);
     }
     else
-        mData = nsnull;
+        mLength = 0;
+
     return NS_OK;
 }
 
-/***************************************************************************/
+/*****************************************************************************
+ * nsSupportsWStringImpl
+ *****************************************************************************/
 
 NS_IMPL_ISUPPORTS2(nsSupportsWStringImpl, nsISupportsWString,
                    nsISupportsPrimitive)
@@ -183,32 +225,32 @@ nsSupportsWStringImpl::nsSupportsWStringImpl()
 
 nsSupportsWStringImpl::~nsSupportsWStringImpl()
 {
-    if(mData)
-      nsMemory::Free(mData);
+    if (mData)
+        nsMemory::Free(mData);
 }
 
 NS_IMETHODIMP nsSupportsWStringImpl::GetType(PRUint16 *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
-    *aType = TYPE_WSTRING;
 
+    *aType = TYPE_WSTRING;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
 {
-    NS_ASSERTION(aData, "Bad pointer");
-    if(mData)
-    {
-        *aData = (PRUnichar*) nsMemory::Clone(mData,
-                                (nsCRT::strlen(mData)+1)*sizeof(PRUnichar));
-        return *aData ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = NS_OK;
+    *aData = nsnull;
+
+    // copy the buffer
+    if (mData) {
+        size_t size((mLength + 1) * sizeof(PRUnichar));
+        *aData = NS_STATIC_CAST(PRUnichar*, nsMemory::Clone(mData, size));
+        if (!(*aData))
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-    {
-        *aData = nsnull;
-        return NS_OK;
-    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsSupportsWStringImpl::SetData(const PRUnichar *aData)
@@ -219,28 +261,63 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetData(const PRUnichar *aData)
 NS_IMETHODIMP nsSupportsWStringImpl::ToString(PRUnichar **_retval)
 {
     return GetData(_retval);
-}  
-
-// NOTE: assumes |length| does not include the null and null terminates itself. |length|
-// is in characters, not bytes.
-NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength, const PRUnichar *aData)
-{
-    if(mData)
-      nsMemory::Free(mData);
-    if(aData) {
-        mData = NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc((aLength+1)*sizeof(PRUnichar)));
-        if ( mData ) {
-          nsCRT::memcpy ( mData, aData, aLength*sizeof(PRUnichar) );
-          mData[aLength] = NS_STATIC_CAST(PRUnichar, 0);
-        }
-        else
-          return NS_ERROR_OUT_OF_MEMORY;
-    }
-    else
-        mData = nsnull;
-    return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(const PRUint32 aLength,
+                                                       const PRUnichar *aData)
+{
+    // if the new string length is the same as the old,
+    // just copy into the old buffer to avoid reallocating
+    if ((aLength == mLength) && aData) {
+        nsCRT::memcpy(mData, aData, aLength * sizeof(PRUnichar));
+        return NS_OK;
+    }
+
+    // otherwise, we'll have to allocate a new buffer, copy
+    // into that new buffer, and adopt it
+    PRUnichar* newData(nsnull);
+    if (aData) {
+        // allocate a new buffer
+        size_t size((aLength + 1) * sizeof(PRUnichar));
+        newData = NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc(size));
+        // copy into that buffer if it was successfully allocated
+        if (newData)
+            nsCRT::memcpy(newData, aData, aLength * sizeof(PRUnichar));
+        else
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // if we've succeeded so far, adopt the new buffer. the adopt
+    // function handles the null buffer case
+    return AdoptDataWithLength(aLength, newData);
+}
+
+NS_IMETHODIMP nsSupportsWStringImpl::AdoptData(PRUnichar *aData)
+{
+    return AdoptDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
+}
+
+NS_IMETHODIMP nsSupportsWStringImpl::AdoptDataWithLength(const PRUint32 aLength,
+                                                         PRUnichar *aData)
+{
+    // free current buffer
+    if (mData)
+        nsMemory::Free(mData);
+
+    // subsume new buffer, null or not
+    mData = aData;
+
+    if (mData) {
+        // set length of new buffer
+        mLength = aLength;
+        // always make sure we're null-terminated
+        mData[mLength] = NS_STATIC_CAST(PRUnichar, 0);
+    }
+    else
+        mLength = 0;
+
+    return NS_OK;
+}
 
 /***************************************************************************/
 

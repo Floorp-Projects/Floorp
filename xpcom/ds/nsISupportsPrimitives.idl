@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 /* nsISupports wrappers for single primitive pieces of data. */
@@ -66,10 +67,24 @@ interface nsISupportsString : nsISupportsPrimitive
     attribute string data;
     string toString();
 
-      // do not include space for null termination in |length|. It is handled
-      // internally.
+    /**
+     * Note: setting |data| and using |setDataWithLength| make a copy of
+     * the data string argument. Using |adoptData| and |adoptDataWithLength|,
+     * which are not scriptable, subsumes the data string as the internal
+     * buffer.
+     *
+     * Also note that the |length| param should not include space for a null
+     * terminator, nor should it account for the size of a char. It should
+     * only be the number of characters for which there is space in the string.
+     */
+
     void setDataWithLength(in unsigned long length,
                            [size_is(length)] in string data);
+
+    [noscript] void adoptData(in charPtr data);
+
+    [noscript] void adoptDataWithLength(in unsigned long length,
+                                        [size_is(length)] in charPtr data);
 };
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
@@ -78,10 +93,24 @@ interface nsISupportsWString : nsISupportsPrimitive
     attribute wstring data;
     wstring toString();
 
-      // do not include space for null termination in |length|. It is handled
-      // internally. |length| is in characters, not in bytes.
+    /**
+     * Note: setting |data| and using |setDataWithLength| make a copy of
+     * the data string argument. Using |adoptData| and |adoptDataWithLength|,
+     * which are not scriptable, subsumes the data string as the internal
+     * buffer.
+     *
+     * Also note that the |length| param should not include space for a null
+     * terminator, nor should it account for the size of a char. It should
+     * only be the number of characters for which there is space in the string.
+     */
+
     void setDataWithLength(in unsigned long length,
                            [size_is(length)] in wstring data);
+
+    [noscript] void adoptData(in unicharPtr data);
+
+    [noscript] void adoptDataWithLength(in unsigned long length,
+                                        [size_is(length)] in unicharPtr data);
 };
 
 /**

@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 /* Root idl declarations to be used by all. */
@@ -53,6 +54,7 @@ typedef unsigned long       size_t;
 
 [ptr]         native voidPtr(void);
 [ptr]         native charPtr(char);
+[ptr]         native unicharPtr(PRUnichar);
 
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);

@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #ifndef nsSupportsPrimitives_h__
@@ -54,6 +55,7 @@ public:
 
 private:
     char *mData;
+    PRUint32 mLength;
 };
 
 /***************************************************************************/
@@ -70,6 +72,7 @@ public:
 
 private:
     PRUnichar *mData;
+    PRUint32 mLength;
 };
 
 /***************************************************************************/
