@@ -619,10 +619,13 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
   if (ok) {
     if (aIsUndefined) *aIsUndefined = JSVAL_IS_VOID(val);
     JSString* jsstring = ::JS_ValueToString(mContext, val);
-    if (jsstring)
-      aRetValue.Assign(NS_REINTERPRET_CAST(const PRUnichar*, ::JS_GetStringChars(jsstring)));
-    else
+    if (jsstring) {
+      aRetValue.Assign(NS_REINTERPRET_CAST(const PRUnichar*,
+                                           ::JS_GetStringChars(jsstring)),
+                       ::JS_GetStringLength(jsstring));
+    } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   else {
     if (aIsUndefined) *aIsUndefined = PR_TRUE;
@@ -756,10 +759,13 @@ nsJSContext::ExecuteScript(void* aScriptObject,
       *aIsUndefined = JSVAL_IS_VOID(val);
     if (aRetValue) {
       JSString* jsstring = ::JS_ValueToString(mContext, val);
-      if (jsstring)
-        aRetValue->Assign(NS_REINTERPRET_CAST(const PRUnichar*, ::JS_GetStringChars(jsstring)));
-      else
+      if (jsstring) {
+        aRetValue->Assign(NS_REINTERPRET_CAST(const PRUnichar*,
+                                              ::JS_GetStringChars(jsstring)),
+                          ::JS_GetStringLength(jsstring));
+      } else {
         rv = NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   } else {
     if (aIsUndefined)
