@@ -30,6 +30,7 @@ static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 NS_IMPL_ISUPPORTS(nsBaseWidget, kIWidgetIID)
 NS_IMPL_ISUPPORTS(nsBaseWidget::Enumerator, kIEnumeratorIID)
 
+
 //-------------------------------------------------------------------------
 //
 // Setup initial tooltip rectangles
@@ -229,11 +230,10 @@ nsIEnumerator* nsBaseWidget::GetChildren()
       return nsnull;
 
     // Make a copy of our enumerator
-    Enumerator * children = new Enumerator;  //*** BUG: created with refcnt = 1 already
+    Enumerator * children = new Enumerator;
     if ( !children )
     	return nsnull;
-    NS_ADDREF(children);                     //*** this is wrong, given the bug above, but should remain
-                                             //***  because we need to addref it in the correct case
+    NS_ADDREF(children);
     do
     {
       nsCOMPtr<nsISupports> currentChild;
@@ -263,6 +263,7 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
   if (!mChildren) {
     mChildren = new Enumerator;
+    NS_IF_ADDREF(mChildren);
   }
 
   mChildren->Append(aChild);
@@ -424,7 +425,7 @@ void nsBaseWidget::OnDestroy()
 
 nsBaseWidget::Enumerator::Enumerator()
 {
-  mRefCnt = 1;
+  mRefCnt = 0;
   mCurrentPosition = 0;
 }
 
