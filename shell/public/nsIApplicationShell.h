@@ -43,6 +43,7 @@ public:
 
   NS_IMETHOD Run() = 0;
 
+
 };
 
 extern NS_WEB nsresult NS_NewApplicationShell(nsIApplicationShell** aInstancePtrResult);
