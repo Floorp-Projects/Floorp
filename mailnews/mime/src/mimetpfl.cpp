@@ -434,8 +434,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       preface += " style=\"";
       preface += style;
       preface += '"';
-      PR_FREEIF(style);
     }
+    PR_FREEIF(style);
     preface += '>';
   }
   while(quoteleveldiff<0) {
