@@ -918,11 +918,11 @@ function MailCheckBeforeOfflineChange()
 		"centerscreen,chrome,modal,titlebar,resizable=no", args);
 	 if(args.result == 1) { 
 	   // download news, download mail, send unsent messages, go offline when done, msg window
-	   offlineManager.synchronizeForOffline(false, true, true, true, msgWindow);
+	   offlineManager.synchronizeForOffline(false, true, false, true, msgWindow);
 	 }
 	 else if(args.result == 2) { 
 	   // download news, download mail, send unsent messages, go offline when done, msg window
-	   offlineManager.synchronizeForOffline(false, false, true, true, msgWindow);
+	   offlineManager.synchronizeForOffline(false, false, false, true, msgWindow);
 	 }
 	 else if(args.result == 3) { 
 	   return false;
@@ -930,11 +930,11 @@ function MailCheckBeforeOfflineChange()
 	 break;
        case 1:
          // download news, download mail, send unsent messages, go offline when done, msg window
-	 offlineManager.synchronizeForOffline(false, true, true, true, msgWindow);
+	 offlineManager.synchronizeForOffline(false, true, false, true, msgWindow);
 	 break;
        case 2:
          // download news, download mail, send unsent messages, go offline when done, msg window
-	 offlineManager.synchronizeForOffline(false, false, true, true, msgWindow);
+	 offlineManager.synchronizeForOffline(false, false, false, true, msgWindow);
 	 break;
        }
    }
