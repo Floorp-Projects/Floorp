@@ -462,7 +462,7 @@ PRInt32 Right(nsString& aCopy,PRInt32 aCount) const;
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-PRInt32 Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount=-1);
+PRInt32 Insert(const nsString& aCopy,PRInt32 anOffset,PRInt32 aCount=-1);
 
 /**
  * Insert a single unicode char into this string at
