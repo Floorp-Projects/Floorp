@@ -188,7 +188,7 @@ nsMappedAttributes::Equals(const nsMappedAttributes* aOther) const
   PRUint32 i;
   for (i = 0; i < mAttrCount; ++i) {
     if (!Attrs()[i].mName.Equals(aOther->Attrs()[i].mName) ||
-        !Attrs()[i].mValue.EqualsIgnoreCase(aOther->Attrs()[i].mValue)) {
+        !Attrs()[i].mValue.Equals(aOther->Attrs()[i].mValue)) {
       return PR_FALSE;
     }
   }
