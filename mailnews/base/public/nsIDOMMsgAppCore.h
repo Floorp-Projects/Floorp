@@ -1,21 +1,28 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIDOMMsgAppcore.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIDOMMsgAppCore.idl
  */
 
-#ifndef __gen_nsIDOMMsgAppcore_h__
-#define __gen_nsIDOMMsgAppcore_h__
+#ifndef __gen_nsIDOMMsgAppCore_h__
+#define __gen_nsIDOMMsgAppCore_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsIDOMWindow.h" /* interface nsIDOMWindow */
-#include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
-#include "nsRDFInterfaces.h" /* interface nsRDFInterfaces */
-#include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
-#include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
+class nsIDOMWindow; /* forward decl */
+class nsIDOMNodeList; /* forward decl */
+class nsIDOMXULTreeElement; /* forward decl */
+class nsIDOMXULElement; /* forward decl */
+class nsIRDFCompositeDataSource; /* forward decl */
+#include "nsIDOMWindow.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULElement.h"
+#include "nsIRDFCompositeDataSource.h"
+
 
 /* starting interface:    nsIDOMMsgAppCore */
 
@@ -78,4 +85,4 @@ nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
  
 
 
-#endif /* __gen_nsIDOMMsgAppcore_h__ */
+#endif /* __gen_nsIDOMMsgAppCore_h__ */

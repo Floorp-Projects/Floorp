@@ -6,10 +6,19 @@
 #define __gen_nsICopyMessageListener_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsIMsgThread.h" /* interface nsIMsgThread */
+#include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "MailNewsTypes.h" /* interface MailNewsTypes */
+#include "nsICollection.h" /* interface nsICollection */
 #include "nsIInputStream.h" /* interface nsIInputStream */
 #include "nsIBaseStream.h" /* interface nsIBaseStream */
-#include "nsID.h" /* interface nsID */
+#include "nsIMsgFolder.h" /* interface nsIMsgFolder */
+#include "nsIFolderListener.h" /* interface nsIFolderListener */
+#include "nsrootidl.h" /* interface nsrootidl */
+#include "nsIMsgHdr.h" /* interface nsIMsgHdr */
+#include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIMessage.h" /* interface nsIMessage */
+#include "nsIFolder.h" /* interface nsIFolder */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"

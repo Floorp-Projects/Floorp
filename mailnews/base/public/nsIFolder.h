@@ -8,6 +8,7 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 
 #ifdef XPIDL_JS_STUBS

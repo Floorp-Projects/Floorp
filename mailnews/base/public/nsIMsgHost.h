@@ -6,7 +6,7 @@
 #define __gen_nsIMsgHost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"

@@ -8,7 +8,7 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgSignature.h" /* interface nsIMsgSignature */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"

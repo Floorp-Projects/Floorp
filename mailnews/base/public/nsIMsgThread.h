@@ -7,13 +7,14 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-class nsIMsgDBHdr; /* forward decl */
+class nsIMsgHdr; /* forward decl */
 
 /* starting interface:    nsIMsgThread */
 
@@ -41,16 +42,16 @@ class nsIMsgThread : public nsISupports {
   /* readonly attribute unsigned long numUnreadChildren; */
   NS_IMETHOD GetNumUnreadChildren(PRUint32 *aNumUnreadChildren) = 0;
 
-  /* void AddChild (in nsIMsgHdr child, in boolean threadInThread); */
+  /* void AddChild (in nsIMsgDBHdr child, in boolean threadInThread); */
   NS_IMETHOD AddChild(nsIMsgDBHdr *child, PRBool threadInThread) = 0;
 
-  /* nsIMsgHdr GetChildAt (in long index); */
+  /* nsIMsgDBHdr GetChildAt (in long index); */
   NS_IMETHOD GetChildAt(PRInt32 index, nsIMsgDBHdr **_retval) = 0;
 
-  /* nsIMsgHdr GetChild (in nsMsgKey msgKey); */
+  /* nsIMsgDBHdr GetChild (in nsMsgKey msgKey); */
   NS_IMETHOD GetChild(nsMsgKey msgKey, nsIMsgDBHdr **_retval) = 0;
 
-  /* nsIMsgHdr GetChildHdrAt (in long index); */
+  /* nsIMsgDBHdr GetChildHdrAt (in long index); */
   NS_IMETHOD GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **_retval) = 0;
 
   /* void RemoveChildAt (in long index); */

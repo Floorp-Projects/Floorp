@@ -7,10 +7,10 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgThread.h" /* interface nsIMsgThread */
-#include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIFolder.h" /* interface nsIFolder */
@@ -20,7 +20,9 @@
 #include "jsapi.h"
 #endif
 #include "nsFileSpec.h"
+#include "nsISupportsArray.h"
 
+class nsISupportsArray; /* forward decl */
 class nsIMessage; /* forward decl */
 
 /* starting interface:    nsIMsgFolder */

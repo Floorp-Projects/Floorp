@@ -6,14 +6,18 @@
 #define __gen_nsIMsgMessageService_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
+#include "nsIUrlListener.h" /* interface nsIUrlListener */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-class nsIUrlListener; /* forward decl */
 class nsIURL; /* forward decl */
 class nsIStreamListener; /* forward decl */
+#include "nsIURL.h"
+#include "nsIStreamListener.h"
+    
+
 
 /* starting interface:    nsIMsgMessageService */
 

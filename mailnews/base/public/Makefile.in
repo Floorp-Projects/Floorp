@@ -19,10 +19,11 @@ DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
+MODULE		= mailnews
 
 include $(DEPTH)/config/autoconf.mk
-
-IDLSRCS =				  \
+NO_GEN_XPT=1
+XPIDLSRCS =				  \
 		nsIMsgHost.idl		  \
 		nsIMsgFolder.idl	  \
 		nsIDOMMsgAppCore.idl	\
@@ -31,6 +32,7 @@ IDLSRCS =				  \
 		nsIMessage.idl			\
 		nsIMsgThread.idl	\
 		nsIMsgMessageService.idl \
+		nsIUrlListener.idl	\
 		$(NULL)
 
 EXPORTS =				\

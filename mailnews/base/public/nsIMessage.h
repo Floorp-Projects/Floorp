@@ -7,12 +7,12 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgThread.h" /* interface nsIMsgThread */
-#include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIMsgFolder.h" /* interface nsIMsgFolder */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIMsgHdr.h" /* interface nsIMsgHdr */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIFolder.h" /* interface nsIFolder */
 
