@@ -47,6 +47,9 @@ const nsMsgKey_None = 0xFFFFFFFF;
 const nsMsgViewIndex_None = 0xFFFFFFFF;
 const kMailCheckOncePrefName = "mail.startup.enabledMailCheckOnce";
 
+// from nsMsgFolderFlags.h
+const MSG_FOLDER_FLAG_ELIDED = 0x10;
+
 var gFolderTree; 
 var gMessagePane;
 var gThreadTree;
@@ -682,26 +685,12 @@ function Create3PaneGlobals()
 // PerformExpand() for all servers that are open at startup.            
 function PerformExpandForAllOpenServers()
 {
-    var folderTree = GetFolderTree();
-    var view = folderTree.treeBoxObject.view;
-    for (var i = 0; i < view.rowCount; i++)
+    var servers = accountManager.allServers;
+    for (var i = 0; i < servers.Count(); i++)
     {
-        if (view.isContainer(i))
-        {
-            var folderResource = GetFolderResource(folderTree, i);
-            var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-            var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer"); 
-            if (isServer == "true")
-            {
-                if (view.isContainerOpen(i))
-                {
-                    var server = msgFolder.server;
-                    // Don't do this for imap servers. See bug #41943
-                    if (server.type != "imap")
-                        server.performExpand(msgWindow);
-                }
-            }
-        }
+        var server = servers.QueryElementAt(i, Components.interfaces.nsIMsgIncomingServer);
+        if (server.type != "imap" && !server.rootMsgFolder.getFlag(MSG_FOLDER_FLAG_ELIDED))
+            server.performExpand(msgWindow);
     }
 }
 
