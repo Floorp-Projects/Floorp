@@ -942,10 +942,19 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
       if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) {
         const nsString& theKey2=aNode.GetKeyAt(1);
         if(theKey2.EqualsIgnoreCase("CONTENT")) {
-          nsScanner* theScanner=mParser->GetScanner();
-          if(theScanner) {
-            const nsString& theValue=aNode.GetValueAt(1);
-            theScanner->SetDocumentCharset(theValue);
+            nsScanner* theScanner=mParser->GetScanner();
+            if(theScanner) {
+              const nsString& theValue=aNode.GetValueAt(1);
+              PRInt32 charsetValueStart = theValue.RFind("charset=", PR_TRUE ) ;
+              if(kNotFound != charsetValueStart) {	
+                 charsetValueStart += 8; // 8 = "charset=".length 
+                 PRInt32 charsetValueEnd = theValue.FindCharInSet("\'\";", charsetValueStart  );
+                 if(kNotFound == charsetValueEnd ) 
+                    charsetValueEnd = theValue.Length();
+                 nsAutoString theCharset;
+                 theValue.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
+                 theScanner->SetDocumentCharset(theCharset, kCharsetFromMetaTag);
+              } //if
           } //if
         }
       } //if

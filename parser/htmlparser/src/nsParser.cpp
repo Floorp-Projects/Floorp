@@ -225,6 +225,7 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
   return old;
 }
 
+
 /**
  *  Call this method once you've created a parser, and want to instruct it
  *  about the command which caused the parser to be constructed. For example,
@@ -526,6 +527,24 @@ PRBool nsParser::EnableParser(PRBool aState){
 nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
+  nsAutoString charset;
+  nsCharsetSource charsetSource;
+
+  // XXXX get HTTP charset here
+  // charset =
+  // charsetSource = kCharsetFromHTTPHeader;
+
+  // XXXX get User Prefernce charset here
+  // charset =
+  // charsetSource = kCharsetFromUserDefault;
+
+  // XXXX get Doc Type Default (e.g. UTF-8 for XML)
+
+  // XXX We should really put if doc == html for the following line
+  charset = "ISO-8859-1";
+  charsetSource = kCharsetFromDocTypeDefault;
+
+
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
   if(aURL) {
@@ -533,7 +552,7 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
-    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE),aURL,aListener);
+    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, charset, charsetSource),aURL,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
       pc->mContextType=CParserContext::eCTURL;
@@ -555,10 +574,27 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
+
+  nsAutoString charset;
+  nsCharsetSource charsetSource;
+
+  // XXXX get HTTP charset here
+  // charset =
+  // charsetSource = kCharsetFromHTTPHeader;
+
+  // XXXX get User Prefernce charset here
+  // charset =
+  // charsetSource = kCharsetFromUserDefault;
+
+  // XXXX get Doc Type Default (e.g. UTF-8 for XML)
+
+  // XXX We should really put if doc == html for the following line
+  charset = "ISO-8859-1";
+  charsetSource = kCharsetFromDocTypeDefault;
   
   //ok, time to create our tokenizer and begin the process
   nsAutoString theUnknownFilename("unknown");
-  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename,aStream,PR_FALSE),&aStream,0);
+  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename,aStream, charset, charsetSource,PR_FALSE),&aStream,0);
   if(pc) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;
@@ -593,6 +629,22 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
   }
 #endif
 
+  nsAutoString charset;
+  nsCharsetSource charsetSource;
+
+  // XXXX get HTTP charset here
+  // charset =
+  // charsetSource = kCharsetFromHTTPHeader;
+
+  // XXXX get User Prefernce charset here
+  // charset =
+  // charsetSource = kCharsetFromUserDefault;
+
+  // XXXX get Doc Type Default (e.g. UTF-8 for XML)
+
+  // XXX We should really put if doc == html for the following line
+  charset = "ISO-8859-1";
+  charsetSource = kCharsetFromDocTypeDefault;
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!
 
@@ -607,7 +659,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  {
       //only make a new context if we dont have one, OR if we do, but has a different context key...
-      pc=new CParserContext(new nsScanner(mUnusedInput),aKey,0);
+      pc=new CParserContext(new nsScanner(mUnusedInput, charset, charsetSource),aKey, 0);
       if(pc) {
         PushContext(*pc);
         pc->mStreamListenerState=eOnStart;  
