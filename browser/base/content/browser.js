@@ -3383,6 +3383,19 @@ nsContextMenu.prototype = {
             addresses = url.substr( 7 );
         }
 
+        // Let's try to unescape it using a character set
+        // in case the address is not ASCII.
+        try {
+          var characterSet = Components.lookupMethod(this.target.ownerDocument, "characterSet")
+                                       .call(this.target.ownerDocument);
+          const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                         .getService(Components.interfaces.nsITextToSubURI);
+          addresses = textToSubURI.unEscapeNonAsciiURI(characterSet, addresses);
+        }
+        catch(ex) {
+          // Do nothing.
+        }
+
         var clipboard = this.getService( "@mozilla.org/widget/clipboardhelper;1",
                                          Components.interfaces.nsIClipboardHelper );
         clipboard.copyString(addresses);
