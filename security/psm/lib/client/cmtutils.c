@@ -496,6 +496,8 @@ CMT_DestroyDataConnection(PCMT_CONTROL control, CMTSocket sock)
     PCMT_DATA ptr, pptr = NULL;
     int rv=CMTSuccess;
 
+    if (!control) return rv;
+
     control->sockFuncs.close(sock);
     for (ptr = control->cmtDataConnections; ptr != NULL;
 	 pptr = ptr, ptr = ptr->next) {
