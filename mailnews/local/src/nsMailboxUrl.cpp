@@ -36,6 +36,8 @@
 #include "nsMsgDBCID.h"
 #include "nsIMsgHdr.h"
 
+#include "nsXPIDLString.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -97,17 +99,16 @@ static char *nsMailboxGetURI(char *nativepath)
         // check if filepath begins with serverPath
         PRInt32 len = PL_strlen(serverPath);
         if (PL_strncasecmp(serverPath, filePath, len) == 0) {
-            char *hostname;
-            rv = server->GetHostName(&hostname);
+            nsXPIDLCString serverURI;
+            rv = server->GetServerURI(getter_Copies(serverURI));
             if (NS_FAILED(rv)) continue;
             
             // the relpath is just past the serverpath
             char *relpath = nativepath + len;
             // skip past leading / if any
             while (*relpath == '/') relpath++;
-            uri = PR_smprintf("mailbox://%s/%s", hostname, relpath);
+            uri = PR_smprintf("%s/%s", (const char*)serverURI, relpath);
 
-            PL_strfree(hostname);
             break;
         }
     }
