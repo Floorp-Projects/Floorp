@@ -148,7 +148,7 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
     // actually have > 1 drag item.
     FORMATETC fe2;
     SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-    if ( mDataObject->QueryGetData(&fe2) ) {
+    if ( mDataObject->QueryGetData(&fe2) == S_OK ) {
       STGMEDIUM stm;
       if ( mDataObject->GetData(&fe2, &stm) ) {      
         HDROP hdrop = (HDROP) GlobalLock(stm.hGlobal);
