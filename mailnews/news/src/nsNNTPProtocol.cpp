@@ -3095,10 +3095,12 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 #endif
 	}
 
-	 rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
-	 PR_ASSERT(NS_SUCCEEDED(rv));
-
-	m_numArticlesLoaded++;
+	rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process the XOVERLINE");
+	
+	if (NS_SUCCEEDED(rv)) {
+		m_numArticlesLoaded++;
+        }
 
 	PR_FREEIF(line);
     return status; /* keep going */

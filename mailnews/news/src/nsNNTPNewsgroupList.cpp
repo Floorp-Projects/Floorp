@@ -587,6 +587,8 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
 	m_newsDB->CreateNewHdr(*message_number, getter_AddRefs(newMsgHdr));
   	if (NS_FAILED(rv)) return rv;           
+	NS_ASSERTION(newMsgHdr, "CreateNewHdr didn't fail, but it returned a null newMsgHdr");
+	if (!newMsgHdr) return NS_ERROR_NULL_POINTER;
 
 	GET_TOKEN (); /* subject */
 	if (line)
