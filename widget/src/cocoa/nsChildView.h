@@ -213,8 +213,7 @@ public:
   virtual void      CalcWindowRegions();
 
   virtual PRBool      PointInWidget(Point aThePoint);
-  virtual nsChildView*    FindWidgetHit(Point aThePoint);
-
+  
   virtual PRBool      DispatchWindowEvent(nsGUIEvent& event);
   virtual PRBool      DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
   virtual void      AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
