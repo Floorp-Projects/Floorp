@@ -50,15 +50,6 @@ nsWalletlibService::nsWalletlibService()
 
 nsWalletlibService::~nsWalletlibService()
 {
-  nsIObserverService *svc = 0;
-  nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
-                                              nsIObserverService::GetIID(),
-                                              (nsISupports**)&svc );
-  if ( NS_SUCCEEDED( rv ) && svc ) {
-    nsString  topic(NS_FORMSUBMIT_SUBJECT);
-    rv = svc->RemoveObserver( this, topic.GetUnicode());
-    nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
-  }
 }
 
 NS_IMETHODIMP
