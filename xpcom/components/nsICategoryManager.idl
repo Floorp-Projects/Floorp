@@ -108,3 +108,12 @@ interface nsICategoryManager : nsISupports
                                    in nsICategoryHandler handler,
                                    in nsICategoryHandler previous);
 };
+
+%{C++
+#define NS_CATEGORYMANAGER_PROGID     "mozilla.categorymanager.1"
+#define NS_CATEGORYMANAGER_CLASSNAME  "Category Manager"
+/* 16d222a6-1dd2-11b2-b693-f38b02c021b2 */
+#define NS_CATEGORYMANAGER_CID \
+{ 0x16d222a6, 0x1dd2, 0x11b2, \
+  {0xb6, 0x93, 0xf3, 0x8b, 0x02, 0xc0, 0x21, 0xb2} }
+%}
