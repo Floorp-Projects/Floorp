@@ -25,10 +25,7 @@
 
 class nsIMsgThread : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGTHREAD_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGTHREAD_IID)
 
   /* attribute nsMsgKey threadKey; */
   NS_IMETHOD GetThreadKey(nsMsgKey *aThreadKey) = 0;

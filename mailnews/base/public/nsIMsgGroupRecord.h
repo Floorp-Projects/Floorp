@@ -6,19 +6,13 @@
 #define __gen_nsIMsgGroupRecord_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
 
-
-/* starting interface nsIMsgGroupRecord */
+/* starting interface:    nsIMsgGroupRecord */
 
 /* {4ed03c60-b256-11d2-b7f0-00805f05ffa5} */
 #define NS_IMSGGROUPRECORD_IID_STR "4ed03c60-b256-11d2-b7f0-00805f05ffa5"
@@ -28,28 +22,25 @@
 
 class nsIMsgGroupRecord : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGGROUPRECORD_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGGROUPRECORD_IID)
 
   /* void Init (in voidStar parent, in string partname, in long long time, in long uniqueid, in long fileoffset, in char delimiter); */
-  NS_IMETHOD Init(void* parent, char *partname, PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset, char delimiter) = 0;
+  NS_IMETHOD Init(void* parent, const char *partname, PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset, char delimiter) = 0;
 
   /* void InitFromParent (in nsIMsgGroupRecord parent, in string saveline, in long savelinelength, in long fileoffset); */
-  NS_IMETHOD InitFromParent(nsIMsgGroupRecord *parent, char *saveline, PRInt32 savelinelength, PRInt32 fileoffset) = 0;
+  NS_IMETHOD InitFromParent(nsIMsgGroupRecord *parent, const char *saveline, PRInt32 savelinelength, PRInt32 fileoffset) = 0;
 
   /* void InitFromFile (in nsIMsgGroupRecord parent, in string partname, in long long time, in long uniqueid, in long fileoffset); */
-  NS_IMETHOD InitFromFile(nsIMsgGroupRecord *parent, char *partname, PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset) = 0;
+  NS_IMETHOD InitFromFile(nsIMsgGroupRecord *parent, const char *partname, PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset) = 0;
 
   /* void InitializeSibling (); */
   NS_IMETHOD InitializeSibling() = 0;
 
   /* short GroupNameCompare (in string name1, in string name2, in char delimeter, in boolean caseSensitive); */
-  NS_IMETHOD GroupNameCompare(char *name1, char *name2, char delimeter, PRBool caseSensitive, PRInt16 *_retval) = 0;
+  NS_IMETHOD GroupNameCompare(const char *name1, const char *name2, char delimeter, PRBool caseSensitive, PRInt16 *_retval) = 0;
 
   /* nsIMsgGroupRecord FindDescendent (in string name); */
-  NS_IMETHOD FindDescendent(char *name, nsIMsgGroupRecord **_retval) = 0;
+  NS_IMETHOD FindDescendent(const char *name, nsIMsgGroupRecord **_retval) = 0;
 
   /* readonly attribute nsIMsgGroupRecord parent; */
   NS_IMETHOD GetParent(nsIMsgGroupRecord * *aParent) = 0;
