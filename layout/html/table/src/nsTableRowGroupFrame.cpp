@@ -568,7 +568,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   //          row-spanning cells didn't change prior calculations. Since we are guaranteed 
   //          to have found the max height spanners the first time through, we know we only 
   //          need two passes, not an arbitrary number.
-  nscoord deltaY = 0;
+  nscoord yOrigin = 0;
   nscoord lastCount = (hasRowSpanningCell) ? 2 : 1;
   for (PRInt32 counter = 0; counter <= lastCount; counter++) {
     rowFrame = GetFirstFrame();
@@ -700,24 +700,22 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
         // If this is the last pass then resize the row to its final size and move the
         // row's position if the previous rows have caused a shift
         if (lastCount == counter) {
-          PRBool movedFrame = (deltaY != 0);
           nsRect rowBounds;
-  
-          // Move the row to the correct position
-          rowFrame->GetRect(rowBounds); // added
-          rowBounds.y += deltaY;
-  
-          // Adjust our running delta
+          rowFrame->GetRect(rowBounds); 
+
+          PRBool movedFrame = (rowBounds.y != yOrigin);  
           nscoord rowHeight = (rowHeights[rowIndex] > 0) ? rowHeights[rowIndex] : 0;
-          deltaY += rowHeight - rowBounds.height;
   
           // Resize the row to its final size and position
+          rowBounds.y = yOrigin;
           rowBounds.height = rowHeight;
           rowFrame->SetRect(aPresContext, rowBounds);
 
           if (movedFrame) {
             nsTableFrame::RePositionViews(aPresContext, rowFrame);
           }
+          // set the origin of the next row.
+          yOrigin += rowHeight + cellSpacingY;
         }
           
         rowIndex++;
