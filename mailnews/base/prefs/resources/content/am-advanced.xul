@@ -2,7 +2,17 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY advancedSettings.label "Advanced Settings">
+<!ENTITY smtpServer.label "SMTP Server">
+<!ENTITY smtpDesc.label "Some email accounts require a unique outgoing mail server.">
+<!ENTITY smtpHostname.label "SMTP Server Hostname">
+<!ENTITY smtpUsername.label "SMTP Server Login">
+<!ENTITY mailFolderLoc.label "Mail Folder Location">
+<!ENTITY storeMailHere.label "Store mail in this folder">
+<!ENTITY chooseFolderButton.label "Choose Folder">
+]>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -10,29 +20,28 @@
       onload = "">
 
 <box align="vertical" style="width: 100%">
-<html:div>Advanced Settings</html:div>
-  <html:div>SMTP Server</html:div>
+<html:div>&advancedSettings.label;</html:div>
+  <html:div>&smtpServer.label;</html:div>
 <box align="vertical" class="cleanborder">
-  <html:div>Some email accounts require a unique
-            outgoing mail server.</html:div>
+  <html:div>&smtpDesc.label;</html:div>
   <box align="horizontal">
-     <html:div>SMTP Server Hostname</html:div>
+     <html:div>&smtpHostname.label;</html:div>
      <spring flex="100%"/>
      <html:input type="text"/>
   </box>
   <box align="horizontal">
-     <html:div>SMTP Server Login</html:div>
+     <html:div>&smtpUsername.label;</html:div>
      <spring flex="100%"/>
      <html:input type="text"/>
   </box>
 </box>
 
-<html:div>Mail Folder Location</html:div>
+<html:div>&mailFolderLoc.label;</html:div>
 <box align="vertical" class="cleanborder">
-  <html:div>Store mail in this folder</html:div>
+  <html:div>&storeMailHere.label;</html:div>
   <box align="horizontal">
     <html:input type="text" flex="100%"/>
-    <html:button type="button">Choose Folder...</html:button>
+    <titledbutton value="&chooseFolderButton.label;"/>
   </box>
 </box>
 </box>
