@@ -64,10 +64,6 @@ class mozXMLTermSession
    */
   NS_IMETHOD Finalize(void);
 
-  /** Sets XMLTerm flag to indicate XMLTerm needs to be resized
-   */
-  NS_IMETHOD NeedsResizing(void);
-
   /** Resizes XMLterm to match a resized window.
    * @param lineTermAux LineTermAux object to be resized (may be null)
    */
@@ -76,8 +72,11 @@ class mozXMLTermSession
   /** Preprocesses user input before it is transmitted to LineTerm
    * @param aString (inout) input data to be preprocessed
    * @param consumed (output) true if input data has been consumed
+   * @param checkSize (output) true if terminal size needs to be checked
    */
-  NS_IMETHOD Preprocess(const nsString& aString, PRBool& consumed);
+  NS_IMETHOD Preprocess(const nsString& aString,
+                        PRBool& consumed,
+                        PRBool& checkSize);
 
   /** Reads all available data from LineTerm and displays it;
    * returns when no more data is available.
@@ -699,9 +698,6 @@ protected:
 
   /** restore input echo flag */
   PRBool               mRestoreInputEcho;
-
-  /** needs resizing flag */
-  PRBool               mNeedsResizing;
 
   /** shell prompt string */
   nsString             mShellPrompt;

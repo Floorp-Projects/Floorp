@@ -418,6 +418,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
      dump("clickCount="+eventObj.clickCount+"\n");
 
+     var shiftClick = eventObj.shiftKey;
      var dblClick = (eventObj.clickCount == 2);
 
      // Execute shell commands only on double-click for safety
@@ -497,7 +498,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
            suffix = "";
          }
 
-         if (window.windowsMode === "on") {
+         if (shiftClick || (window.windowsMode === "on")) {
            action = "createln";
            sendStr = prefix + filename + suffix;
 
