@@ -33,7 +33,7 @@ function clicked(event, target) {
     }
   } else {
     if (event.clickCount == 2) {
-      top.OpenBookmarkURL(target, 'bookmarksTree');
+      top.OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
     }
   }
 }

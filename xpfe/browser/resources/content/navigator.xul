@@ -226,7 +226,7 @@ Contributor(s): ______________________________________. -->
       // we can get this button into rdf. We can't allow drags on this
       // container so we have to be able to identify it (bug 19588).
       //     - pinkerton
-      <menu datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" ref="NC:BookmarksRoot">
+      <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" ref="NC:BookmarksRoot">
         <titledbutton class="bookmarkFolder" align="right" container="true"
           value="&bookmarksButton.label;" crop="right"/>
         <template>
@@ -248,7 +248,7 @@ Contributor(s): ______________________________________. -->
             <menupopup>
               <menuitem align="left" uri="..." 
                 value="rdf:http://home.netscape.com/NC-rdf#Name"
-                oncommand="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
+                oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"/>
             </menupopup>
           </rule>
         </template>
@@ -274,7 +274,8 @@ Contributor(s): ______________________________________. -->
 		      </rule>
 		      <rule parent="box">
 		        <titledbutton class="bookmarkbutton" uri="rdf:*" align="left" 
-		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right" oncommand="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
+		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
+		          oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
 		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
 		      </rule>
 
@@ -295,7 +296,8 @@ Contributor(s): ______________________________________. -->
 		      <rule>
 		        <menupopup>
 		          <menuitem align="left" uri="..." 
-		            value="rdf:http://home.netscape.com/NC-rdf#Name"  oncommand="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
+		            value="rdf:http://home.netscape.com/NC-rdf#Name"
+		            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
 		        </menupopup>
 		      </rule>
 		    </template>
