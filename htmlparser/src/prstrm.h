@@ -27,6 +27,17 @@
 #include "prio.h"
 #include <iostream.h>
 
+#ifdef XP_MAC
+
+class PRofstream : public ofstream
+{
+public:
+	inline void attach(PRFileDesc *) {};
+};
+
+#else
+
+
 #if defined(__GNUC__)
 #define _PRSTR_BP _strbuf
 #define _PRSTR_DELBUF(x)    /* as nothing */
@@ -103,4 +114,5 @@ public:
 	void close();
 };
 
+#endif /* XP_MAC */
 #endif /* __PRSTRM */
