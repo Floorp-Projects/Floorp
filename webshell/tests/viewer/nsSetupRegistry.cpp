@@ -171,7 +171,6 @@ NS_SetupRegistry()
   static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
   static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
   static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
-  static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
 
   nsComponentManager::RegisterComponentLib(kCMenuBarCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCMenuCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
