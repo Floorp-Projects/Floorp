@@ -25,7 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base browser
+DIRS = base components browser
 
 ifdef MOZ_ENABLE_GTK
 DIRS += tests/gtkEmbed
