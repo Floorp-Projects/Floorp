@@ -57,9 +57,16 @@ public class JavaAdapter extends ScriptableObject {
         Class[] interfaces = new Class[interfaceCount];
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = (Scriptable) args[args.length - 1];
-        Class adapterClass = createAdapterClass(cx, obj, adapterName, 
-                                                superClass, interfaces, 
-                                                null, null);
+        
+        ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
+        Class adapterClass = (Class) generatedClasses.get(sig);
+        if (adapterClass == null) {
+            adapterClass = createAdapterClass(cx, obj, adapterName, 
+                                              superClass, interfaces, 
+                                              null, null);
+            generatedClasses.put(sig, adapterClass);
+        }
+        
         Class[] ctorParms = { Scriptable.class };
         Object[] ctorArgs = { obj };
         Object v = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
@@ -85,13 +92,13 @@ public class JavaAdapter extends ScriptableObject {
                 cfw.addInterface(interfaces[i].getName());
         }
         
-        generateCtor(cfw, adapterName, superClass);
+        String superName = superClass.getName().replace('.', '/');
+        generateCtor(cfw, adapterName, superName);
         if (scriptClassName != null)
-            generateEmptyCtor(cfw, adapterName, superClass, scriptClassName);
+            generateEmptyCtor(cfw, adapterName, superName, scriptClassName);
         
         Hashtable generatedOverrides = new Hashtable();
         Hashtable generatedMethods = new Hashtable();
-        Hashtable generatedSupers = new Hashtable();
         
         // generate methods to satisfy all specified interfaces.
         for (int i = 0; i < interfacesCount; i++) {
@@ -110,7 +117,7 @@ public class JavaAdapter extends ScriptableObject {
                                    method.getParameterTypes(),
                                    method.getReturnType());
                     generatedOverrides.put(methodKey, methodKey);
-                    generatedMethods.put(method.getName(), Boolean.TRUE);
+                    generatedMethods.put(methodName, Boolean.TRUE);
                 }
             }
         }
@@ -120,7 +127,6 @@ public class JavaAdapter extends ScriptableObject {
 
         // generate any additional overrides that the object might contain.
         Method[] methods = superClass.getMethods();
-        String superName = superClass.getName().replace('.', '/');
         for (int j = 0; j < methods.length; j++) {
             Method method = methods[j];
             int mods = method.getModifiers();
@@ -145,14 +151,13 @@ public class JavaAdapter extends ScriptableObject {
                     generatedOverrides.put(methodKey, method);
                     generatedMethods.put(methodName, Boolean.TRUE);
                 }
-                // if a method was overridden, generate a "protected" method
-                // that lets the delegate call the superclass' version
-                if (!isAbstractMethod && !generatedSupers.containsKey(methodKey)) {
+                // if a method was overridden, generate a "super$method"
+                // which lets the delegate call the superclass' version.
+                if (!isAbstractMethod) {
                     generateSuper(cfw, adapterName, superName,
                                   methodName, methodSignature,
                                   method.getParameterTypes(),
                                   method.getReturnType());
-                    generatedSupers.put(methodKey, method);
                 }
             }
         }
@@ -215,12 +220,52 @@ public class JavaAdapter extends ScriptableObject {
             Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
             return ss.defineClass(adapterName, bytes, securityDomain);
         } else {
-            if (classLoader == null)
-                classLoader = new MyClassLoader();
             classLoader.defineClass(adapterName, bytes);
             return classLoader.loadClass(adapterName, true);
         }
     }
+    
+    static class ClassSignature {
+    	Class mSuperClass;
+    	Class[] mInterfaces;
+    	Object[] mProperties;
+    
+    	ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj) {
+    		mSuperClass = superClass;
+    		mInterfaces = interfaces;
+    		mProperties = jsObj.getIds();
+	    }
+	    
+	    public boolean equals(Object obj) {
+	    	if (obj instanceof ClassSignature) {
+	    		ClassSignature sig = (ClassSignature) obj;
+	    		if (mSuperClass == sig.mSuperClass) {
+    				Class[] interfaces = sig.mInterfaces;
+	    			if (mInterfaces != interfaces) {
+	    				if (mInterfaces == null || interfaces == null)
+	    					return false;
+	    				if (mInterfaces.length != interfaces.length)
+	    					return false;
+	    				for (int i = 0; i < interfaces.length; i++)
+	    					if (mInterfaces[i] != interfaces[i])
+	    						return false;
+	    			}
+	    			Object[] properties = sig.mProperties;
+	    			if (mProperties.length != properties.length)
+	    				return false;
+	    			for (int i = 0; i < properties.length; i++)
+	    				if (!mProperties[i].equals(properties[i]))
+	    					return false;
+	    			return true;
+	    		}
+	    	}
+	    	return false;
+	    }
+	    
+	    public int hashCode() {
+	    	return mSuperClass.hashCode();
+	    }
+	}
 
     /**
      * Utility method, which dynamically binds a Context to the current thread, 
@@ -251,7 +296,7 @@ public class JavaAdapter extends ScriptableObject {
     }
     
     private static void generateCtor(ClassFileWriter cfw, String adapterName, 
-                                     Class superClass) 
+                                     String superName) 
     {
         cfw.startMethod("<init>", 
                         "(Lorg/mozilla/javascript/Scriptable;)V",
@@ -259,9 +304,7 @@ public class JavaAdapter extends ScriptableObject {
         
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESPECIAL,
-                superClass.getName().replace('.', '/'), 
-                "<init>", "()", "V");
+        cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
         
         // Save parameter in instance variable "self"
         cfw.add(ByteCode.ALOAD_0);  // this
@@ -285,16 +328,13 @@ public class JavaAdapter extends ScriptableObject {
     }
 
     private static void generateEmptyCtor(ClassFileWriter cfw, String adapterName, 
-                                          Class superClass, 
-                                          String scriptClassName) 
+                                          String superName, String scriptClassName) 
     {
         cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
         
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESPECIAL,
-                superClass.getName().replace('.', '/'), 
-                "<init>", "()", "V");
+        cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
         
         // Load script class
         cfw.add(ByteCode.NEW, scriptClassName);
@@ -761,6 +801,7 @@ public class JavaAdapter extends ScriptableObject {
         }
     }
     
-    private static int serial;
-    private static MyClassLoader classLoader;
+    private static int serial = 0;
+    private static MyClassLoader classLoader = new MyClassLoader();
+    private static Hashtable generatedClasses = new Hashtable(7);
 }
