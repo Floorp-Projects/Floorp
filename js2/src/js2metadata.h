@@ -1029,6 +1029,7 @@ class JS2Metadata : public JS2Object {
 public:
     
     JS2Metadata(World &world);
+    virtual ~JS2Metadata()	{ }
 
     CompilationData *startCompilationUnit(BytecodeContainer *newBCon, const String &source, const String &sourceLocation);
     void restoreCompilationUnit(CompilationData *oldData);
