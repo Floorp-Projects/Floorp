@@ -1966,6 +1966,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     g_print("platformLen is %d\n", platformLen);
 #endif
     
+
+    // maybe using XTextStyle would work as we want... i doubt it though.
     status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XCompoundTextStyle,
                                        &prop);
 
@@ -1976,6 +1978,30 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 #endif
       XSetWMProperties(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
                        &prop, &prop, NULL, 0, NULL, NULL, NULL);
+
+      // TWM sucks and doesn't support compound text.. argh
+      XTextProperty tmpProp;
+      status = XGetWMName(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
+                          &tmpProp);
+      if (status != Success) {
+        if (prop.value) // free from the previous attempt
+          XFree(prop.value);
+        int xret = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XStringStyle,
+                                             &prop);
+        if (xret == Success) {
+          XSetWMProperties(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
+                           &prop, &prop, NULL, 0, NULL, NULL, NULL);
+        } else {
+          // we're fucked, set it however we can.
+          gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
+        }
+      } else {
+        if (tmpProp.value)
+          XFree(tmpProp.value);
+      }
+
+      if (prop.value)
+        XFree(prop.value);
 
       nsMemory::Free(platformText);
       // free properties list?
