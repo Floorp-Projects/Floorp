@@ -741,10 +741,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_BLOCK_SPACE_MGR & mState)
     autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
 
-  // See if it's an incremental reflow command and we're not the target
+  // See if it's an incremental reflow command
   if (mAbsoluteContainer.HasAbsoluteFrames() &&
-      eReflowReason_Incremental == aReflowState.reason &&
-      !aReflowState.path->mReflowCommand) {
+      eReflowReason_Incremental == aReflowState.reason) {
     // Give the absolute positioning code a chance to handle it
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
