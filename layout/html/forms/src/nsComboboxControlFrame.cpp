@@ -2258,7 +2258,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
              eventReceiver->AddEventListenerByIID(mButtonListener, NS_GET_IID(nsIDOMMouseListener));
           }
 
-          btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
+          btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
           aChildList.AppendElement(btnContent);
         }
       }      

@@ -221,7 +221,7 @@ public:
 
 protected:
 
-  nsresult  UpdateTextInputCommands(const nsString& commandsToUpdate);
+  nsresult  UpdateTextInputCommands(const nsAString& commandsToUpdate);
 
 protected:
 
@@ -406,7 +406,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
   mSelectionWasCollapsed = collapsed;
   mKnowSelectionCollapsed = PR_TRUE;
 
-  return UpdateTextInputCommands(NS_ConvertASCIItoUCS2("select"));
+  return UpdateTextInputCommands(NS_LITERAL_STRING("select"));
 }
 
 //EDITOR INTERFACE
@@ -477,7 +477,7 @@ NS_IMETHODIMP nsTextInputListener::DidDo(nsITransactionManager *aManager,
   if (undoCount == 1)
   {
     if (mFirstDoOfFirstUndo)
-      UpdateTextInputCommands(NS_ConvertASCIItoUCS2("undo"));
+      UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
 
     mFirstDoOfFirstUndo = PR_FALSE;
   }
@@ -500,7 +500,7 @@ NS_IMETHODIMP nsTextInputListener::DidUndo(nsITransactionManager *aManager,
   if (undoCount == 0)
     mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
 
-  UpdateTextInputCommands(NS_ConvertASCIItoUCS2("undo"));
+  UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
   
   return NS_OK;
 }
@@ -515,7 +515,7 @@ NS_IMETHODIMP nsTextInputListener::WillRedo(nsITransactionManager *aManager,
 NS_IMETHODIMP nsTextInputListener::DidRedo(nsITransactionManager *aManager,  
   nsITransaction *aTransaction, nsresult aRedoResult)
 {
-  UpdateTextInputCommands(NS_ConvertASCIItoUCS2("undo"));
+  UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
   return NS_OK;
 }
 
@@ -557,7 +557,7 @@ NS_IMETHODIMP nsTextInputListener::DidMerge(nsITransactionManager *aManager,
 
 
 
-nsresult nsTextInputListener::UpdateTextInputCommands(const nsString& commandsToUpdate)
+nsresult nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
 {
   if (!mFrame) return NS_ERROR_NOT_INITIALIZED;
   

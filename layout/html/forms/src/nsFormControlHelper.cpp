@@ -135,10 +135,10 @@ void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame 
 void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
 {
   // Windows linebreaks: Map CRLF to LF:
-  aString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"), NS_ConvertASCIItoUCS2("\n"));
+  aString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(), NS_LITERAL_STRING("\n").get());
 
   // Mac linebreaks: Map any remaining CR to LF:
-  aString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"), NS_ConvertASCIItoUCS2("\n"));
+  aString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(), NS_LITERAL_STRING("\n").get());
 }
 
 PRBool nsFormControlHelper::GetBool(const nsAReadableString& aValue)
