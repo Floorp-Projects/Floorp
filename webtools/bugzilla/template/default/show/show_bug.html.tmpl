@@ -287,9 +287,10 @@
       </th>
       <td>
         [% bug.votes %]&nbsp;&nbsp;&nbsp;
-        <a href="showvotes.cgi?bug_id=[% bug.bug_id %]">Show votes for this 
-          bug</a>&nbsp;&nbsp;&nbsp;
-        <a href="showvotes.cgi?voteon=[% bug.bug_id %]">Vote for this bug</a>
+        <a href="votes.cgi?action=show_bug&bug_id=[% bug.bug_id %]">Show 
+        votes for this bug</a>&nbsp;&nbsp;&nbsp;
+        <a href="votes.cgi?action=show_user&bug_id=[% bug.bug_id %]">Vote 
+        for this bug</a>
       </td>
     </tr>
   </table>

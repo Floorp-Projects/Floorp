@@ -1410,7 +1410,7 @@ Actions:
 };
     if ($loggedin) {
         if ($::anyvotesallowed) {
-            $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>\n";
+            $html .= " | <A HREF=\"votes.cgi?action=show_user\">My votes</A>\n";
         }
     }
     if ($loggedin) {

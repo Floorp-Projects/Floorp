@@ -97,7 +97,7 @@ function normal_keypress_handler( aEvent ) {
       <text class="text-link" onclick="load_relative_url('[% mybugsurl FILTER html %]')" value="my bugs"/>
 [% END %]
 [% IF anyvotesallowed && username %]
-      <text class="text-link" onclick="load_relative_url('showvotes.cgi')" value="my votes"/>
+      <text class="text-link" onclick="load_relative_url('votes.cgi?action=show_user')" value="my votes"/>
 [% END %]
 
 [% FOREACH name = namedqueries %]
