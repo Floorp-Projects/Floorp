@@ -28,7 +28,6 @@ MODULE		= find
 LIBRARY_NAME	= find_s
 REQUIRES	= string \
 		  xpcom \
-		  txtsvc \
 		  dom \
 		  docshell \
 		  gfx \
@@ -37,7 +36,6 @@ REQUIRES	= string \
 		  widget \
 		  htmlparser \
 		  necko \
-		  pref \
 		  unicharutil \
 		  lwbrk \
 		  $(NULL)
