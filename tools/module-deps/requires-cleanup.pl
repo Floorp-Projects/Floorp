@@ -89,7 +89,7 @@ sub domakefile {
 
   $srcdir or die "No srcdir found in file $dir/Makefile";
 
-  open MAKE, "<$curdir/$srcdir/Makefile.in" or die "Couldn't find file 'Makefile.in' in $srcdir";
+  open MAKE, "<$curdir/$srcdir/Makefile.in" or die "Couldn't find file 'Makefile.in' in $curdir/$srcdir";
 
   my @lastLines; # buffer to store last three lines in (to emulate diff -B3)
   my $i;
