@@ -394,6 +394,16 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     return rv;
 }
 
+
+static nsHTTPHandler * 
+nsHTTPHandler::GetInstance(void)
+{
+    static nsHTTPHandler* pHandler = new nsHTTPHandler();
+    NS_ADDREF(pHandler);
+    return pHandler;
+};
+
+
 nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
 {
     nsresult rv;

@@ -112,12 +112,7 @@ public:
     NS_IMETHOD      FollowRedirects(PRBool bFollow=PR_TRUE);
 
     // Singleton function
-    static nsHTTPHandler* GetInstance(void)
-    {
-        static nsHTTPHandler* pHandler = new nsHTTPHandler();
-        NS_ADDREF(pHandler);
-        return pHandler;
-    };
+    static nsHTTPHandler* GetInstance(void);
 
     // Functions from nsIHTTPProtocolHandler
     NS_DECL_NSIHTTPPROTOCOLHANDLER
