@@ -1423,10 +1423,11 @@ bool Class::implements(const Interface &i) const
 
 static const char *forbiddenClasses[] = {
   //"System",                // references System.securityManager which has longs
-  "CharToByteConverter",   // references System.getProperty, has finally
+  //"CharToByteConverter",   // references System.getProperty, has finally
   //"Math",                  // Has float and double
   //"Float",
   //"Double"
+    ""
 };
 
 static const numForbiddenClasses = sizeof(forbiddenClasses)/sizeof(forbiddenClasses[0]);
