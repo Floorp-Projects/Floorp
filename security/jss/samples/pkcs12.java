@@ -48,7 +48,6 @@ import org.mozilla.jss.pkcs12.*;
 import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.asn1.*;
 import org.mozilla.jss.util.*;
-import org.mozilla.jss.pkix.*;
 import org.mozilla.jss.pkix.primitive.*;
 import org.mozilla.jss.pkix.cert.*;
 
@@ -79,8 +78,7 @@ public class pkcs12 {
 
         // initialize CryptoManager. This is necessary because there is
         // crypto involved with decoding a PKCS #12 file
-        CryptoManager.initialize( args[0]+"/secmod.db",
-            args[0]+"/key3.db", args[0]+"/cert7.db");
+        CryptoManager.initialize( args[0] );
 		CryptoManager manager = CryptoManager.getInstance();
 
         // Decode the P12 file
@@ -201,6 +199,7 @@ public class pkcs12 {
 					// import the key into the key3.db
 					CryptoToken tok = manager.getTokenByName("Internal Key Storage Token");
 					CryptoStore store = tok.getCryptoStore();
+                    tok.login( new ConsolePasswordCallback());
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					pki.encode(baos);
 					store.importPrivateKey(baos.toByteArray(),
