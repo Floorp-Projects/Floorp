@@ -372,8 +372,7 @@ NS_IMETHODIMP mozXMLTermStream::Close(void)
 
   nsresult status = NS_OK;
   nsAutoString errorMsg;
-  result = mStreamListener->OnStopRequest(mChannel, mContext,
-                                          status, errorMsg.GetUnicode());
+  result = mStreamListener->OnStopRequest(mChannel, mContext, status);
   if (NS_FAILED(result))
     return result;
 
