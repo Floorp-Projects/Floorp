@@ -121,29 +121,23 @@ class nsAutoRangeLock
 
 
 
-// Returns -1 if point1 < point2, 1, if point1 > point2,
-// 0 if error or if point1 == point2. 
-PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                      nsIDOMNode* aParent2, PRInt32 aOffset2)
+/* static */
+PRInt32
+nsRange::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                       nsIDOMNode* aParent2, PRInt32 aOffset2)
 {
-  if (aParent1 == aParent2 && aOffset1 == aOffset2)
-    return 0;
-  nsIDOMRange* range;
-  if (NS_FAILED(NS_NewRange(&range)))
-    return 0;
-  nsresult res = range->SetStart(aParent1, aOffset1);
-  if (NS_FAILED(res))
-    return 0;
-  res = range->SetEnd(aParent2, aOffset2);
-  NS_RELEASE(range);
-  if (NS_SUCCEEDED(res))
-    return -1;
-  else
-    return 1;
+  if (aParent1 == aParent2) {
+    return (aOffset1 < aOffset2) ? -1 :
+      ((aOffset1 > aOffset2) ? 1 : 0);
+  }
+
+  return IsIncreasing(aParent1, aOffset1, aParent2, aOffset2) ? -1 : 1;
 }
 
 // Utility routine to detect if a content node intersects a range
-PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
+/* static */
+PRBool
+nsRange::IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
 {
   // create a pair of dom points that expresses location of node:
   //     NODE(start), NODE(end)
@@ -279,19 +273,15 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   if (!outEndOffset)
     return PR_FALSE;
     
-  nsCOMPtr<nsIDOMNode> theDOMNode( do_QueryInterface(aNode) );
-  theDOMNode->GetParentNode(getter_AddRefs(*outParent));
+  nsIContent* parent = aNode->GetParent();
 
-  if (!(*outParent)) // special case for root node
+  if (!parent) // special case for root node
   {
     // can't make a parent/offset pair to represent start or 
     // end of the root node, becasue it has no parent.
     // so instead represent it by (node,0) and (node,numChildren)
     *outParent = do_QueryInterface(aNode);
-    nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
-    if (!cN)
-      return PR_FALSE;
-    PRUint32 indx = cN->GetChildCount();
+    PRUint32 indx = aNode->GetChildCount();
     if (!indx)
       return PR_FALSE;
     *outStartOffset = 0;
@@ -299,7 +289,8 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   }
   else
   {
-    *outStartOffset = nsRange::IndexOf(theDOMNode);
+    *outParent = do_QueryInterface(parent);
+    *outStartOffset = parent->IndexOf(aNode);
     *outEndOffset = *outStartOffset+1;
   }
   return PR_TRUE;
@@ -354,15 +345,15 @@ NS_IMPL_ISUPPORTS1(nsRangeUtils, nsIRangeUtils)
  
 NS_IMETHODIMP_(PRInt32) 
 nsRangeUtils::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                                     nsIDOMNode* aParent2, PRInt32 aOffset2)
+                            nsIDOMNode* aParent2, PRInt32 aOffset2)
 {
-  return ::ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
+  return nsRange::ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
 }
 
 NS_IMETHODIMP_(PRBool) 
 nsRangeUtils::IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
 {
-  return ::IsNodeIntersectsRange( aNode,  aRange);
+  return nsRange::IsNodeIntersectsRange( aNode,  aRange);
 }
 
 NS_IMETHODIMP
