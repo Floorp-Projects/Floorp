@@ -426,12 +426,10 @@ case "$target" in
 
 *-hpux*)
     DLL_SUFFIX="sl"
-    DSO_PIC_CFLAGS="+Z"
-    if test "$GNU_CC"; then
-	DSO_LDOPTS="$DSO_LDOPTS -Wl,-E"
-    else
+    DSO_LDOPTS='-b -E -L$(DIST)/bin'
+    if test ! "$GNU_CC"; then
 	DSO_CFLAGS=""
-	DSO_LDOPTS='-b -E -L$(DIST)/bin'
+	DSO_PIC_CFLAGS="+Z"
     fi
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
