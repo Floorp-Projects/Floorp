@@ -211,4 +211,7 @@ HG25430
 };
 #endif
 
+#define NEWS_PORT 119
+#define SECURE_NEWS_PORT 563
+
 #endif /* NNTPCore_H__ */
