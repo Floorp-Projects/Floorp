@@ -191,14 +191,6 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFFileSystemDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFSearchDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFSearchDataSource((nsIRDFDataSource**) &inst)))
-            return rv;
-    }
-    else if (mClassID.Equals(kRDFFindDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFFindDataSource((nsIRDFDataSource**) &inst)))
-            return rv;
-    }
     else if (mClassID.Equals(kRDFFTPDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFFTPDataSource((nsIRDFDataSource**) &inst)))
             return rv;
