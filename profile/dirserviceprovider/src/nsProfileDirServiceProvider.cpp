@@ -233,6 +233,9 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
     }
   }
   else if (inAtom == sApp_BookmarksFile50) {
+#ifdef XP_MACOSX
+    *persistant = PR_FALSE; // See bug 192124
+#endif
     rv = mProfileDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(BOOKMARKS_FILE_50_NAME);
