@@ -383,6 +383,7 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 		while (dataOffset < strOffset) {
 			tag = (PRUint8) pBytes[dataOffset];
 
+      data = 0; // make sure all bytes are 0 before copying 3 bytes over.
 			memcpy( &data, &(pBytes[dataOffset + 1]), 3);
 			switch( tag) {
 				case 0x80: // id record
