@@ -50,7 +50,8 @@ public:
 	NS_IMETHOD			GetImapUidValidity(PRInt32 *result)  = 0;
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity)  = 0;
 
-	NS_IMETHOD			SetVersion(PRUint16 version)  = 0;
+	NS_IMETHOD			SetVersion(PRUint32 version)  = 0;
+	NS_IMETHOD			GetVersion(PRUint32 *result) = 0;
 
 	NS_IMETHOD			GetLastMessageLoaded(nsMsgKey *result) = 0;
 	NS_IMETHOD			SetLastMessageLoaded(nsMsgKey lastLoaded) = 0;

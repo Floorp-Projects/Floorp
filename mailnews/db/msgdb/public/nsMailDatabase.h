@@ -48,14 +48,13 @@ public:
 
 	virtual nsresult		DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator);
 
-//	virtual int				GetCurVersion() {return kMailDBVersion;}
 	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);
 	nsresult				GetFolderName(nsString &folderName);
 	virtual nsMailDatabase	*GetMailDB() {return this;}
 	MSG_Master		*GetMaster() {return m_master;}
 	void			SetMaster(MSG_Master *master) {m_master = master;}
 
-	virtual int				GetCurVersion() {return kMailDBVersion;}
+	virtual PRUint32		GetCurVersion() {return kMailDBVersion;}
 	virtual MSG_FolderInfo *GetFolderInfo();
 	
 	// for offline imap queued operations

@@ -64,7 +64,8 @@ public:
 	NS_IMETHOD			GetImapUidValidity(PRInt32 *result) ;
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
 
-	NS_IMETHOD			SetVersion(PRUint16 version) ;
+	NS_IMETHOD			SetVersion(PRUint32 version) ;
+	NS_IMETHOD			GetVersion(PRUint32 *result);
 
 	NS_IMETHOD			GetLastMessageLoaded(nsMsgKey *result);
 	NS_IMETHOD			SetLastMessageLoaded(nsMsgKey lastLoaded);
@@ -76,7 +77,6 @@ public:
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr);
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
-
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
 	// accessor methods.
@@ -179,7 +179,7 @@ protected:
 	mdb_token			m_totalPendingMessagesColumnToken;
 	mdb_token			m_unreadPendingMessagesColumnToken;
 	mdb_token			m_expiredMarkColumnToken;
-
+	mdb_token			m_versionColumnToken;
 };
 
 #endif

@@ -41,6 +41,7 @@ static const char *	kUnreadPendingMessagesColumnName = "unreadPendingMsgs";
 static const char * kMailboxNameColumnName = "mailboxName";
 static const char * kKnownArtsSetColumnName = "knownArts";
 static const char * kExpiredMarkColumnName = "expiredMark";
+static const char * kVersionColumnName = "version";
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
@@ -215,6 +216,7 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 		store->StringToToken(env,  kTotalPendingMessagesColumnName, &m_totalPendingMessagesColumnToken);
 		store->StringToToken(env,  kUnreadPendingMessagesColumnName, &m_unreadPendingMessagesColumnToken);
 		store->StringToToken(env,  kExpiredMarkColumnName, &m_expiredMarkColumnToken);
+		store->StringToToken(env,  kVersionColumnName, &m_versionColumnToken);
 		m_mdbTokensInitialized  = PR_TRUE;
 	}
 	return ret;
@@ -230,14 +232,22 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
 	GetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
 	GetInt32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
 	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
+	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
 	return ret;
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetVersion(PRUint16 version)
+NS_IMETHODIMP nsDBFolderInfo::SetVersion(PRUint32 version)
 {
 	m_version = version; 
+	return SetUint32PropertyWithToken(m_versionColumnToken, (PRUint32) m_version);
+}
+
+NS_IMETHODIMP nsDBFolderInfo::GetVersion(PRUint32 *version)
+{
+	*version = m_version; 
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP nsDBFolderInfo::SetHighWater(nsMsgKey highWater, PRBool force /* = FALSE */)
 {
@@ -370,12 +380,14 @@ NS_IMETHODIMP nsDBFolderInfo::GetNumNewMessages(PRInt32 *result)
 
 NS_IMETHODIMP	nsDBFolderInfo::GetNumMessages(PRInt32 *result) 
 {
-	return m_numMessages;
+	*result = m_numMessages;
+	return NS_OK;;
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::GetNumVisibleMessages(PRInt32 *result) 
 {
-	return m_numVisibleMessages;
+	*result = m_numVisibleMessages;
+	return NS_OK;
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::GetFlags(PRInt32 *result)

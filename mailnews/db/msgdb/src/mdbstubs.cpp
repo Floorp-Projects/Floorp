@@ -587,12 +587,13 @@ mdb_err nsIMdbTableRowCursor::NextRowOid  ( // get row id of next row in the tab
     mdbOid* outOid, // out row oid
     mdb_pos* outRowPos)
 {
-	nsIMdbRow *curRow;
+	nsIMdbRow *curRow = NULL;
 	if (m_pos < 0)
 		m_pos = 0;
 
 	*outRowPos = m_pos;
-	curRow = (nsIMdbRow *) m_table->m_rows.ElementAt(m_pos++);
+	if (m_table)
+		curRow = (nsIMdbRow *) m_table->m_rows.ElementAt(m_pos++);
 	if (curRow)
 		*outOid = curRow->m_oid;
 	else
@@ -680,7 +681,7 @@ mdb_err mdbCellImpl::Write(nsIOFileStream *stream)
 	return 0;
 }
 
-const int kLineBufLength = 400;
+const int kLineBufLength = 1000;
 
 mdb_err mdbCellImpl::Read(nsIOFileStream *stream)
 {

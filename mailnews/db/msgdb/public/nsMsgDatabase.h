@@ -205,10 +205,11 @@ public:
 	// but also useful to tell the summary to mark itself invalid
 	virtual nsresult	SetSummaryValid(PRBool valid = TRUE);
 
-	static nsIMdbFactory		*GetMDBFactory();
-	nsDBFolderInfo *GetDBFolderInfo() {return m_dbFolderInfo;}
-	nsIMdbEnv		*GetEnv() {return m_mdbEnv;}
-	nsIMdbStore	*GetStore() {return m_mdbStore;}
+	static nsIMdbFactory	*GetMDBFactory();
+	nsDBFolderInfo			*GetDBFolderInfo() {return m_dbFolderInfo;}
+	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
+	nsIMdbStore				*GetStore() {return m_mdbStore;}
+	virtual PRUint32		GetCurVersion();
 
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
 

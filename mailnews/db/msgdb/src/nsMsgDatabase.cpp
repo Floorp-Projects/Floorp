@@ -38,7 +38,7 @@ static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
 #endif
 
 
-
+const int kMsgDBVersion = 1;
 
 nsDBChangeAnnouncer::nsDBChangeAnnouncer()
 {
@@ -449,6 +449,7 @@ nsresult nsMsgDatabase::InitNewDB()
 		if (dbFolderInfo)
 		{
 			err = dbFolderInfo->AddToNewMDB();
+			dbFolderInfo->SetVersion(GetCurVersion());
 			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
 			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
@@ -1405,6 +1406,11 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 	}
     
 	*pResult = result;
+}
+
+PRUint32 nsMsgDatabase::GetCurVersion()
+{
+	return kMsgDBVersion;
 }
 
 nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
