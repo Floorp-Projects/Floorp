@@ -1514,7 +1514,11 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
       {
         MenuHandle   nextHandle;
         nextVisibleMenu->GetNativeData((void **)&nextHandle);
-        nextMenuID = (nextHandle) ? (**nextHandle).menuID : mMacMenuID + 1;            
+        #if TARGET_CARBON
+        nextMenuID = (nextHandle) ? ::GetMenuID(nextHandle) : mMacMenuID + 1;        
+        #else
+        nextMenuID = (nextHandle) ? (**nextHandle).menuID : mMacMenuID + 1;
+        #endif
       }
       else
       {
@@ -1559,7 +1563,11 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
           {
             MenuHandle   nextHandle;
             nextVisibleMenu->GetNativeData((void **)&nextHandle);
-            nextMenuID = (nextHandle) ? (**nextHandle).menuID : mMacMenuID + 1;            
+	        #if TARGET_CARBON
+	        nextMenuID = (nextHandle) ? ::GetMenuID(nextHandle) : mMacMenuID + 1;        
+	        #else
+	        nextMenuID = (nextHandle) ? (**nextHandle).menuID : mMacMenuID + 1;
+	        #endif
           }
           else
           {

@@ -52,8 +52,10 @@ nsWatchTask :: nsWatchTask ( )
 
 nsWatchTask :: ~nsWatchTask ( ) 
 {
+#if !TARGET_CARBON
   if ( mInstallSucceeded )
     ::VRemove ( (QElemPtr)&mTask );
+#endif
   InitCursor();
 }
 
@@ -68,6 +70,7 @@ nsWatchTask :: ~nsWatchTask ( )
 void
 nsWatchTask :: Start ( )
 {
+#if !TARGET_CARBON
   // get the watch cursor and lock it high
   CursHandle watch = ::GetCursor ( watchCursor );
   if ( !watch )
@@ -76,12 +79,13 @@ nsWatchTask :: Start ( )
   
   // setup the task
   mTask.qType = vType;
-	mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
+  mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
   mTask.vblCount = kRepeatInterval;
   mTask.vblPhase = 0;
   
   // install it
   mInstallSucceeded = ::VInstall((QElemPtr)&mTask) == noErr;
+#endif
 
 } // Start
 
@@ -102,7 +106,12 @@ nsWatchTask :: DoWatchTask ( nsWatchTask* inSelf )
 {
   if ( inSelf->mChecksum == 'mozz' ) {
     if ( !inSelf->mSuspended  ) {
-      if ( !inSelf->mBusy && !LMGetCrsrBusy() ) {
+      #if TARGET_CARBON
+ 	  PRBool busy = inSelf->mBusy;
+ 	  #else
+ 	  PRBool busy = inSelf->mBusy && LMGetCrsrBusy();
+ 	  #endif   
+      if ( !busy ) {
         if ( ::TickCount() - inSelf->mTicks > kTicksToShowWatch ) {
           ::SetCursor ( &(inSelf->mWatchCursor) );
           inSelf->mBusy = PR_TRUE;
