@@ -64,7 +64,7 @@
 <!ENTITY certmgr.deleteusercert.aftername "Once you have deleted this certificate, you will not be able to read mail that has been encrypted with it.">
 
 <!ENTITY certmgr.certname "Certificate Name">
-<!ENTITY certmgr.tokenname "Token Name">
+<!ENTITY certmgr.tokenname "Security Device">
 <!ENTITY certmgr.verified "Verified">
 <!ENTITY certmgr.purpose "Purpose">
 <!ENTITY certmgr.issued "Issued On">

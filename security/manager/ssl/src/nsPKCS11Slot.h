@@ -18,53 +18,58 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Terry Hayes <thayes@netscape.com>
+ *   Ian McGreer <mcgreer@netscape.com>
  */
 
-#ifndef __NS_PK11TOKENDB_H__
-#define __NS_PK11TOKENDB_H__
+#ifndef __NS_PKCS11SLOT_H__
+#define __NS_PKCS11SLOT_H__
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsISupports.h"
-#include "nsIPK11TokenDB.h"
-#include "nsISupportsArray.h"
-#include "nsNSSHelper.h"
+#include "nsIPKCS11Slot.h"
+#include "nsString.h"
 #include "pk11func.h"
 
-class nsPK11Token : public nsIPK11Token
+class nsPKCS11Slot : public nsIPKCS11Slot
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPK11TOKEN
+  NS_DECL_NSIPKCS11SLOT
 
-  nsPK11Token(PK11SlotInfo *slot);
-  virtual ~nsPK11Token();
-  /* additional members */
+  nsPKCS11Slot(PK11SlotInfo *slot);
+  virtual ~nsPKCS11Slot();
 
 private:
-  friend class nsPK11TokenDB;
 
-  nsString mTokenName;
-  nsString mTokenLabel, mTokenManID, mTokenHWVersion, mTokenFWVersion;
-  nsString mTokenSerialNum;
   PK11SlotInfo *mSlot;
-  nsCOMPtr<nsIInterfaceRequestor> mUIContext;
+  nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
 };
 
-class nsPK11TokenDB : public nsIPK11TokenDB
+class nsPKCS11Module : public nsIPKCS11Module
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPK11TOKENDB
+  NS_DECL_NSIPKCS11MODULE
 
-  nsPK11TokenDB();
-  virtual ~nsPK11TokenDB();
+  nsPKCS11Module(SECMODModule *module);
+  virtual ~nsPKCS11Module();
+
+private:
+  SECMODModule *mModule;
+};
+
+class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPKCS11MODULEDB
+
+  nsPKCS11ModuleDB();
+  virtual ~nsPKCS11ModuleDB();
   /* additional members */
 };
 
-#define NS_PK11TOKENDB_CID \
-{ 0xb084a2ce, 0x1dd1, 0x11b2, \
-  { 0xbf, 0x10, 0x83, 0x24, 0xf8, 0xe0, 0x65, 0xcc }}
+#define NS_PKCS11MODULEDB_CID \
+{ 0xff9fbcd7, 0x9517, 0x4334, \
+  { 0xb9, 0x7a, 0xce, 0xed, 0x78, 0x90, 0x99, 0x74 }}
 
 #endif

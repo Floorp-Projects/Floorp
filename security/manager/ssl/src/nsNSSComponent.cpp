@@ -490,18 +490,17 @@ nsNSSComponent::Init()
 #endif
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
-  rv = InitializeNSS();
-  if (NS_FAILED(rv)) {
-    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS.\n"));
-    return rv;
-  }
-
   rv = InitializePIPNSSBundle();
   if (NS_FAILED(rv)) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to create pipnss bundle.\n"));
     return rv;
   }      
   ConfigureInternalPKCS11Token();
+  rv = InitializeNSS();
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS.\n"));
+    return rv;
+  }
   InstallLoadableRoots();
   RegisterCertContentListener();
   RegisterProfileChangeObserver();

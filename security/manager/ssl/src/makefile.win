@@ -91,6 +91,7 @@ OBJS = \
     .\$(OBJDIR)\nsKeygenHandler.obj \
     .\$(OBJDIR)\nsCertOutliner.obj \
     .\$(OBJDIR)\nsNSSASN1Object.obj \
+    .\$(OBJDIR)\nsPKCS11Slot.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

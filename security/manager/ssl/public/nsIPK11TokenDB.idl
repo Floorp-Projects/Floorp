@@ -42,6 +42,12 @@ interface nsIPK11Token : nsISupports
    */
   readonly attribute wstring tokenName;
 
+  readonly attribute wstring tokenLabel;
+  readonly attribute wstring tokenManID;
+  readonly attribute wstring tokenHWVersion;
+  readonly attribute wstring tokenFWVersion;
+  readonly attribute wstring tokenSerialNumber;
+
   /*
    * Login information
    */
@@ -86,4 +92,6 @@ interface nsIPK11TokenDB : nsISupports
    * List all tokens
    */
   nsIEnumerator listTokens();
+
 };
+

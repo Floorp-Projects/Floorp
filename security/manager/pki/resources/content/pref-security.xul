@@ -85,9 +85,8 @@
 &managedevices.text;
 </html>
     <box halign="left" autostretch="never">
-      <button class="dialog" label="&managedevices.button;" disabled="true"
-        oncommand="window.openDialog('chrome://pip/content/device_manager.xul', '',
-                       'modal=yes,resizable,chrome');" />
+      <button class="dialog" label="&managedevices.button;" disabled="false"
+        oncommand="openDeviceManager();" />
     </box>
   </titledbox>
 
