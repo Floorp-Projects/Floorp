@@ -266,8 +266,6 @@ function unifinderDeleteToDoCommand( DoNotConfirm )
       }
    }
    gICalLib.batchMode = false;
-
-   toDoUnifinderRefresh();
 }
 
 function checkboxClick( ThisToDo, completed )
