@@ -613,7 +613,12 @@ AC_CHECK_LIB(posix4, shm_open)
 AC_CHECK_LIB(w, iswupper)
 AC_CHECK_LIB(l, yywrap,,
     AC_CHECK_LIB(fl, yywrap))
-AC_CHECK_LIB(IDL, IDL_file_set,BUILD_XPIDL=1)
+AC_CHECK_LIB(IDL, IDL_file_set,BUILD_XPIDL=1,
+  [echo libIDL will be required starting the week of 12-APR-1999.]
+  [echo Get yourself an RPM our source package from ftp://ftp.mozilla.org/]
+  [echo before your tree is HOSED.]
+  [echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.]
+  [sleep 3])
 
 dnl Replace `main' with a function in -lC_r:
 dnl AC_CHECK_LIB(C_r, main)
