@@ -48,6 +48,10 @@ void			*htTimerID = NULL;
 _htmlElementPtr         htmlElementList = NULL;
 static int32		htCounter = 0;
 
+HT_Pane			gNavigationTemplate = NULL;
+HT_Pane			gChromeTemplate = NULL;
+HT_Pane			gManagementTemplate = NULL;
+
 char *			gNavCenterDataSources1[15] = {
 			"rdf:localStore", "rdf:remoteStore", "rdf:remoteStore", "rdf:history",
 			 /* "rdf:ldap", */ "rdf:esftp", /* "rdf:mail", */
@@ -89,9 +93,6 @@ extern char		*gRLForbiddenDomains;
 
 void			FE_Print(const char *pUrl);	/* XXX this should be added to fe_proto.h */
 
-HT_Pane gNavigationTemplate = NULL;
-HT_Pane gChromeTemplate = NULL;
-HT_Pane gManagementTemplate = NULL;
 
 
 void
@@ -1146,7 +1147,8 @@ HT_NewToolbarPane(HT_Notification notify)
 
 
 HT_Pane
-paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify, PRBool autoFlushFlag, PRBool autoOpenFlag, PRBool useColumns)
+paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify,
+		PRBool autoFlushFlag, PRBool autoOpenFlag, PRBool useColumns)
 {
 	HT_Pane			pane;
 	HT_View			view;
@@ -1303,7 +1305,10 @@ HT_NewQuickFilePane(HT_Notification notify)
 	return(pane);
 }
 
-HT_Pane newTemplatePane(char* templateName)
+
+
+HT_Pane
+newTemplatePane(char* templateName)
 {
 	HT_Pane			pane = NULL;
 	RDF_Resource		tmpl;
@@ -1313,6 +1318,7 @@ HT_Pane newTemplatePane(char* templateName)
 		
 	return(pane);
 }
+
 
 
 PR_PUBLIC_API(HT_Pane)
@@ -1514,6 +1520,7 @@ newHTPaneDB()
 {
 	return gNCDB;
 }
+
 
 
 RDF
@@ -5078,6 +5085,7 @@ ht_isURLReal(HT_Resource node)
 }
 
 
+
 PR_PUBLIC_API(PRBool)
 HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData)
 {
@@ -5098,6 +5106,7 @@ HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeD
 	return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gManagementTemplate)),
 							  token, tokenType, nodeData);
 }
+
 
 
 PR_PUBLIC_API(PRBool)
@@ -7898,11 +7907,21 @@ HT_DropURLOn(HT_Resource dropTarget, char* url)
 
 
 
-void
+char *
 possiblyCleanUpTitle (char* title)
 {
-	int16 n = charSearch(-51, title);
-	if (n > -1) title[n] = '\0';
+	char		*newTitle = NULL;
+	int16		n;
+
+	if (title != NULL)
+	{
+		if ((newTitle = copyString(title)) != NULL)
+		{
+			n = charSearch(-51, newTitle);
+			if (n > -1) newTitle[n] = '\0';
+		}
+	}
+	return(newTitle);
 }
 
 
@@ -7911,9 +7930,15 @@ PR_PUBLIC_API(HT_DropAction)
 HT_DropURLAndTitleOn(HT_Resource dropTarget, char* url, char *title)
 {
 	HT_DropAction		ac;
+	char			*newTitle;
 
-	possiblyCleanUpTitle(title);
-	ac = dropURLOn(dropTarget, url, title, 0);
+	newTitle = possiblyCleanUpTitle(title);
+	ac = dropURLOn(dropTarget, url, newTitle, 0);
+	if (newTitle != NULL)
+	{
+		freeMem(newTitle);
+		newTitle = NULL;
+	}
 	resynchContainer (dropTarget);
 	refreshItemList(dropTarget, HT_EVENT_VIEW_REFRESH);
 	return (ac);
@@ -8111,9 +8136,15 @@ PR_PUBLIC_API(HT_DropAction)
 HT_DropURLAndTitleAtPos(HT_Resource dropTarget, char* url, char *title, PRBool before)
 {
 	HT_DropAction		ac;
+	char			*newTitle;
 
-	possiblyCleanUpTitle(title);
-	ac = copyRDFLinkURLAt(dropTarget, url, title, before);
+	newTitle = possiblyCleanUpTitle(title);
+	ac = copyRDFLinkURLAt(dropTarget, url, newTitle, before);
+	if (newTitle != NULL)
+	{
+		freeMem(newTitle);
+		newTitle = NULL;
+	}
 	resynchContainer (dropTarget->parent);
 	refreshItemList(dropTarget, HT_EVENT_VIEW_REFRESH);
 	return (ac);
@@ -9318,7 +9349,6 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 	RDF_Resource			nu;
 	RDFT				sp;
 	char				*nm;
-
 	
 	sp = htPane->htdb;
 	if (sp == NULL) return;
@@ -9386,7 +9416,10 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
 }
 
 
-void cleanupInt (HT_Pane htPane, HT_URLSiteMapAssoc *nsmp, RDF_Resource parent) {
+
+void
+cleanupInt (HT_Pane htPane, HT_URLSiteMapAssoc *nsmp, RDF_Resource parent)
+{
  while (nsmp != NULL) {    
     HT_URLSiteMapAssoc *next;
     HTDEL(htPane->htdb, nsmp->sitemap, gCoreVocab->RDF_parent,
@@ -9403,8 +9436,11 @@ void cleanupInt (HT_Pane htPane, HT_URLSiteMapAssoc *nsmp, RDF_Resource parent) 
   }
 }
 
+
+
 void
-PaneDeleteSBPCleanup (HT_Pane htPane) {  
+PaneDeleteSBPCleanup (HT_Pane htPane)
+{
   cleanupInt(htPane, htPane->sbp, gNavCenter->RDF_Sitemaps);
   cleanupInt(htPane, htPane->smp, gNavCenter->RDF_Top);  
   freeMem(htPane->windowURL);
