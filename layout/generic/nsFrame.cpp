@@ -3984,6 +3984,28 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
   return PR_FALSE;
 }
 
+void
+nsFrame::SetDefaultBackgroundColor(nsIPresContext* aPresContext)
+{
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
+  if (shell) {
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
+
+    if (vm) {
+      nsStyleColor color;
+      mStyleContext->GetStyle(eStyleStruct_Color, color);
+
+      vm->SetDefaultBackgroundColor(
+          (color.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) == 0
+             ? color.mBackgroundColor
+             : NS_RGBA(0, 0, 0, 0));
+    }
+  }
+}
+
 #ifdef IBMBIDI
 /**
  *  retrieve Bidi property of this frame

@@ -1302,6 +1302,15 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *border, *outline, mStyleContext, 0);
       
+      // See if we need to cache the background color
+      nsIFrame* parent = nsnull;
+      GetParent(&parent);
+      nsIAtom* parentType = nsnull;
+      parent->GetFrameType(&parentType);
+      if (nsLayoutAtoms::rootFrame == parentType) {
+        SetDefaultBackgroundColor(aPresContext);
+      }
+
       // The sole purpose of this is to trigger display
       //  of the selection window for Named Anchors,
       //  which don't have any children and normally don't

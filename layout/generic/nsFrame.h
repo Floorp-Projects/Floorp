@@ -464,6 +464,10 @@ protected:
 
   static void XMLQuote(nsString& aString);
 
+  // Helper function that sets the view manager's default background to be
+  // the background of this frame.
+  void SetDefaultBackgroundColor(nsIPresContext* aPresContext);
+
   virtual PRBool ParentDisablesSelection() const;
 
   // Set the overflow clip rect into the rendering-context. Used for block-level
