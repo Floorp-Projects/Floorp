@@ -107,6 +107,7 @@ NS_DECL_CLASSINFO(nsSOAPPropertyBag)
 NS_DECL_CLASSINFO(nsSOAPPropertyBagEnumerator)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBuiltinSchemaCollection)
 NS_DECL_CLASSINFO(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchema)
 NS_DECL_CLASSINFO(nsSchemaBuiltinType)
@@ -486,6 +487,9 @@ static const nsModuleComponentInfo components[] = {
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPArrayType), nsnull, 
     &NS_CLASSINFO_NAME(nsSOAPArrayType), nsIClassInfo::DOM_OBJECT },
+  { "Builtin Schema Collection", NS_BUILTINSCHEMACOLLECTION_CID,
+    NS_BUILTINSCHEMACOLLECTION_CONTRACTID, 
+    nsBuiltinSchemaCollectionConstructor },
   { "WSDLLoader", NS_WSDLLOADER_CID, NS_WSDLLOADER_CONTRACTID,
     nsWSDLLoaderConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsWSDLLoader), nsnull,

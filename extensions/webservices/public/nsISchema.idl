@@ -211,6 +211,10 @@ interface nsISchemaComplexType : nsISchemaType {
   nsISchemaAttributeComponent getAttributeByName(in AString name);
 
   readonly attribute boolean abstract;
+  
+  readonly attribute boolean isArray;
+  readonly attribute nsISchemaType arrayType;
+  readonly attribute PRUint32 arrayDimension;
 };
 
 [scriptable, uuid(3c14a029-6f4e-11d5-9b46-000064657374)]

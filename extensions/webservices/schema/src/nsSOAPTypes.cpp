@@ -23,8 +23,9 @@
 
 #include "nsSchemaPrivate.h"
 
-nsSOAPArray::nsSOAPArray(const nsAReadableString& aTargetNamespace)
-  : mTargetNamespace(aTargetNamespace)
+nsSOAPArray::nsSOAPArray(const nsAReadableString& aTargetNamespace,
+                         nsISchemaType* aAnyType)
+  : mTargetNamespace(aTargetNamespace), mAnyType(aAnyType)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -160,7 +161,33 @@ nsSOAPArray::GetAbstract(PRBool *aAbstract)
   return NS_OK;
 }
 
+/* readonly attribute boolean isArray; */
+NS_IMETHODIMP
+nsSOAPArray::GetIsArray(PRBool* aIsArray) 
+{
+  NS_ENSURE_ARG_POINTER(aIsArray);
+  *aIsArray = PR_TRUE;
+  return NS_OK;
+}
 
+/* readonly attribute nsISchemaType arrayType; */
+NS_IMETHODIMP
+nsSOAPArray::GetArrayType(nsISchemaType** aArrayType)
+{
+  NS_ENSURE_ARG_POINTER(aArrayType);
+  *aArrayType = mAnyType;
+  NS_ADDREF(*aArrayType);
+  return NS_OK;
+}
+
+/* readonly attribute PRUint32 arrayDimension; */
+NS_IMETHODIMP
+nsSOAPArray::GetArrayDimension(PRUint32* aDimension)
+{
+  NS_ENSURE_ARG_POINTER(aDimension);
+  *aDimension = 1;
+  return NS_OK;
+}
 
 nsSOAPArrayType::nsSOAPArrayType(const nsAReadableString& aTargetNamespace)
   : mTargetNamespace(aTargetNamespace)

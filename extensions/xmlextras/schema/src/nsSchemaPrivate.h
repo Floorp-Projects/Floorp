@@ -177,6 +177,20 @@ protected:
   nsSupportsArray mFacets;
 };
 
+class nsComplexTypeArrayInfo {
+public:
+  nsComplexTypeArrayInfo(nsISchemaType* aType, PRUint32 aDimension) :
+    mType(aType), mDimension(aDimension) {}
+  ~nsComplexTypeArrayInfo() {}
+
+  void GetType(nsISchemaType** aType) { *aType = mType; NS_ADDREF(*aType); }
+  PRUint32 GetDimension() { return mDimension; }
+
+private:
+  nsCOMPtr<nsISchemaType> mType;
+  PRUint32 mDimension;
+};
+
 class nsSchemaComplexType : public nsSchemaComponentBase,
                             public nsISchemaComplexType
 {
@@ -195,6 +209,7 @@ public:
   NS_IMETHOD SetSimpleBaseType(nsISchemaSimpleType* aSimpleBaseType);
   NS_IMETHOD SetModelGroup(nsISchemaModelGroup* aModelGroup);
   NS_IMETHOD AddAttribute(nsISchemaAttributeComponent* aAttribute);
+  NS_IMETHOD SetArrayInfo(nsISchemaType* aType, PRUint32 aDimension);
   
 protected:
   nsString mName;
@@ -206,6 +221,7 @@ protected:
   nsSupportsArray mAttributes;
   nsSupportsHashtable mAttributesHash;
   PRPackedBool mAbstract;
+  nsComplexTypeArrayInfo* mArrayInfo;
 };
 
 class nsSchemaTypePlaceholder : public nsSchemaComponentBase,
@@ -494,7 +510,8 @@ protected:
 class nsSOAPArray : public nsISchemaComplexType
 {
 public:
-  nsSOAPArray(const nsAReadableString& aTargetNamespace);
+  nsSOAPArray(const nsAReadableString& aTargetNamespace,
+              nsISchemaType* aAnyType);
   virtual ~nsSOAPArray();
 
   NS_DECL_ISUPPORTS
@@ -504,6 +521,7 @@ public:
 
 protected:
   nsString mTargetNamespace;
+  nsCOMPtr<nsISchemaType> mAnyType;
 };
 
 class nsSOAPArrayType : public nsISchemaRestrictionType

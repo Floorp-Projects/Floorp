@@ -128,6 +128,28 @@ public:
   static nsIAtom* sPattern_atom;
 };
 
+class nsBuiltinSchemaCollection : public nsISchemaCollection
+{
+public:
+  nsBuiltinSchemaCollection();
+  virtual ~nsBuiltinSchemaCollection();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCHEMACOLLECTION
+
+protected:
+  nsresult GetBuiltinType(const nsAReadableString& aName,
+                          const nsAReadableString& aNamespace,
+                          nsISchemaType** aType);
+  nsresult GetSOAPType(const nsAReadableString& aName,
+                       const nsAReadableString& aNamespace,
+                       nsISchemaType** aType);
+
+protected:
+  nsSupportsHashtable mBuiltinTypesHash;
+  nsSupportsHashtable mSOAPTypeHash;
+};
+
 class nsSchemaLoader : public nsISchemaLoader,
                        public nsISchemaCollection
 {
@@ -215,12 +237,6 @@ protected:
                             nsIDOMElement* aContext,
                             const nsAReadableString& aTypeName,
                             nsISchemaType** aType);
-  nsresult GetBuiltinType(const nsAReadableString& aName,
-                          const nsAReadableString& aNamespace,
-                          nsISchemaType** aType);
-  nsresult GetSOAPType(const nsAReadableString& aName,
-                       const nsAReadableString& aNamespace,
-                       nsISchemaType** aType);
 
   void GetUse(nsIDOMElement* aElement, 
               PRUint16* aUse);
@@ -233,13 +249,23 @@ protected:
   nsresult GetResolvedURI(const nsAReadableString& aSchemaURI,
                           const char* aMethod, nsIURI** aURI);
 
-  static PRBool IsSchemaNamespace(const nsAReadableString& aNamespace);
-  static PRBool IsSOAPNamespace(const nsAReadableString& aNamespace);
+  nsresult ParseArrayType(nsSchema* aSchema,
+                          nsIDOMElement* aAttrElement,
+                          const nsAReadableString& aStr,
+                          nsISchemaType** aType,
+                          PRUint32* aDimension);
+  nsresult ParseDimensions(nsSchema* aSchema,
+                           nsIDOMElement* aAttrElement,
+                           const nsAReadableString& aStr,
+                           nsISchemaType* aBaseType,
+                           nsISchemaType** aArrayType,
+                           PRUint32* aDimension);
+  void ConstructArrayName(nsISchemaType* aType,
+                          nsAWritableString& aName);
 
 protected:
-  nsSupportsHashtable mBuiltinTypesHash;
-  nsSupportsHashtable mSOAPTypeHash;
   nsSupportsHashtable mSchemas;
+  nsCOMPtr<nsISchemaCollection> mBuiltinCollection;
 };
 
 #endif // __nsSchemaLoader_h__

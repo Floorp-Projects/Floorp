@@ -386,6 +386,323 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////
+//
+// nsBuiltinSchemaCollection implementation
+//
+////////////////////////////////////////////////////////////
+nsBuiltinSchemaCollection::nsBuiltinSchemaCollection()
+{
+  NS_INIT_ISUPPORTS();
+  if (!nsSchemaAtoms::sAnyType_atom) {
+    nsSchemaAtoms::CreateSchemaAtoms();
+  }
+}
+
+nsBuiltinSchemaCollection::~nsBuiltinSchemaCollection()
+{
+  mBuiltinTypesHash.Reset();
+  mSOAPTypeHash.Reset();
+}
+
+NS_IMPL_ISUPPORTS1(nsBuiltinSchemaCollection,
+                   nsISchemaCollection)
+
+/* nsISchema getSchema (in AString targetNamespace); */
+NS_IMETHODIMP 
+nsBuiltinSchemaCollection::GetSchema(const nsAReadableString & targetNamespace,
+                                     nsISchema **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  return NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE;
+}
+
+/* nsISchemaElement getElement (in AString name, in AString namespace); */
+NS_IMETHODIMP 
+nsBuiltinSchemaCollection::GetElement(const nsAReadableString & aName, 
+                                      const nsAReadableString & aNamespace, 
+                                      nsISchemaElement **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+/* nsISchemaAttribute getAttribute (in AString name, in AString namespace); */
+NS_IMETHODIMP 
+nsBuiltinSchemaCollection::GetAttribute(const nsAReadableString & aName, 
+                                        const nsAReadableString & aNamespace, 
+                                        nsISchemaAttribute **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+static PRBool
+IsSchemaNamespace(const nsAReadableString& aNamespace)
+{
+  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE)) ||
+      aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE))) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
+}
+
+static PRBool
+IsSOAPNamespace(const nsAReadableString& aNamespace)
+{
+  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
+      aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE))) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }  
+}
+
+/* nsISchemaType getType (in AString name, in AString namespace); */
+NS_IMETHODIMP 
+nsBuiltinSchemaCollection::GetType(const nsAReadableString & aName, 
+                                   const nsAReadableString & aNamespace, 
+                                   nsISchemaType **_retval)
+{
+  if (IsSchemaNamespace(aNamespace)) {
+    return GetBuiltinType(aName, aNamespace, _retval);
+  }
+
+  if (IsSOAPNamespace(aNamespace)) {
+    return GetSOAPType(aName, aNamespace, _retval);
+  }
+  
+  return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
+}
+
+nsresult
+nsBuiltinSchemaCollection::GetBuiltinType(const nsAReadableString& aName,
+                                          const nsAReadableString& aNamespace,
+                                          nsISchemaType** aType)
+{
+  nsresult rv = NS_OK;
+  nsAutoString concat(aName);
+  concat.Append(aNamespace);
+  nsStringKey key(concat);
+  nsCOMPtr<nsISupports> sup = dont_AddRef(mBuiltinTypesHash.Get(&key));
+  if (sup) {
+    rv = CallQueryInterface(sup, aType);
+  }
+  else {
+    nsCOMPtr<nsIAtom> typeName = dont_AddRef(NS_NewAtom(aName));
+    PRUint16 typeVal;
+    if (typeName == nsSchemaAtoms::sAnyType_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYTYPE;
+    }
+    else if (typeName == nsSchemaAtoms::sString_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
+    }
+    else if (typeName == nsSchemaAtoms::sNormalizedString_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING;
+    }
+    else if (typeName == nsSchemaAtoms::sToken_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN;
+    }
+    else if (typeName == nsSchemaAtoms::sByte_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_BYTE;
+    }
+    else if (typeName == nsSchemaAtoms::sUnsignedByte_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE;
+    }
+    else if (typeName == nsSchemaAtoms::sBase64Binary_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY;
+    }
+    else if (typeName == nsSchemaAtoms::sHexBinary_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY;
+    }
+    else if (typeName == nsSchemaAtoms::sInteger_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER;
+    }
+    else if (typeName == nsSchemaAtoms::sPositiveInteger_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER;
+    }
+    else if (typeName == nsSchemaAtoms::sNegativeInteger_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER;
+    }
+    else if (typeName == nsSchemaAtoms::sNonnegativeInteger_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER;
+    }
+    else if (typeName == nsSchemaAtoms::sNonpositiveInteger_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER;
+    }
+    else if (typeName == nsSchemaAtoms::sInt_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_INT;
+    }
+    else if (typeName == nsSchemaAtoms::sUnsignedInt_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT;
+    }
+    else if (typeName == nsSchemaAtoms::sLong_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_LONG;
+    }
+    else if (typeName == nsSchemaAtoms::sUnsignedLong_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG;
+    }
+    else if (typeName == nsSchemaAtoms::sShort_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_SHORT;
+    }
+    else if (typeName == nsSchemaAtoms::sUnsignedShort_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT;
+    }
+    else if (typeName == nsSchemaAtoms::sDecimal_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL;
+    }
+    else if (typeName == nsSchemaAtoms::sFloat_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT;
+    }
+    else if (typeName == nsSchemaAtoms::sDouble_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE;
+    }
+    else if (typeName == nsSchemaAtoms::sBoolean_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN;
+    }
+    else if (typeName == nsSchemaAtoms::sTime_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_TIME;
+    }
+    else if (typeName == nsSchemaAtoms::sDateTime_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME;
+    }
+    else if (typeName == nsSchemaAtoms::sDuration_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DURATION;
+    }
+    else if (typeName == nsSchemaAtoms::sDate_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DATE;
+    }
+    else if (typeName == nsSchemaAtoms::sGMonth_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH;
+    }
+    else if (typeName == nsSchemaAtoms::sGYear_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR;
+    }
+    else if (typeName == nsSchemaAtoms::sGYearMonth_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH;
+    }
+    else if (typeName == nsSchemaAtoms::sGDay_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GDAY;
+    }
+    else if (typeName == nsSchemaAtoms::sGMonthDay_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY;
+    }
+    else if (typeName == nsSchemaAtoms::sName_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NAME;
+    }
+    else if (typeName == nsSchemaAtoms::sQName_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_QNAME;
+    }
+    else if (typeName == nsSchemaAtoms::sNCName_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME;
+    }
+    else if (typeName == nsSchemaAtoms::sAnyUri_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI;
+    }
+    else if (typeName == nsSchemaAtoms::sLanguage_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE;
+    }
+    else if (typeName == nsSchemaAtoms::sID_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ID;
+    }
+    else if (typeName == nsSchemaAtoms::sIDREF_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_IDREF;
+    }
+    else if (typeName == nsSchemaAtoms::sIDREFS_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS;
+    }
+    else if (typeName == nsSchemaAtoms::sENTITY_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ENTITY;
+    }
+    else if (typeName == nsSchemaAtoms::sENTITIES_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ENTITIES;
+    }
+    else if (typeName == nsSchemaAtoms::sNOTATION_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NOTATION;
+    }
+    else if (typeName == nsSchemaAtoms::sNMTOKEN_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN;
+    }
+    else if (typeName == nsSchemaAtoms::sNMTOKENS_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS;
+    }
+    else {
+      NS_ERROR("Unknown builtin type");
+      return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
+    }
+
+    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal,
+                                                           aNamespace);
+    if (!builtin) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    sup = builtin;
+    mBuiltinTypesHash.Put(&key, sup);
+    
+    *aType = builtin;
+    NS_ADDREF(*aType);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsBuiltinSchemaCollection::GetSOAPType(const nsAReadableString& aName,
+                                       const nsAReadableString& aNamespace,
+                                       nsISchemaType** aType)
+{
+  nsresult rv = NS_OK;
+  nsAutoString concat(aNamespace);
+  concat.Append(aName);
+  nsStringKey key(concat);
+  nsCOMPtr<nsISupports> sup = dont_AddRef(mSOAPTypeHash.Get(&key));
+  if (sup) {
+    rv = CallQueryInterface(sup, aType);
+  }
+  else {
+    if (aName.Equals(NS_LITERAL_STRING("Array"))) {
+      nsCOMPtr<nsISchemaType> anyType;
+      rv = GetBuiltinType(NS_LITERAL_STRING("anyType"),
+                          NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE),
+                          getter_AddRefs(anyType));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      nsSOAPArray* array = new nsSOAPArray(aNamespace, anyType);
+      if (!array) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      sup = array;
+      mSOAPTypeHash.Put(&key, sup);
+    
+      *aType = array;
+      NS_ADDREF(*aType);
+    }
+    else if (aName.Equals(NS_LITERAL_STRING("arrayType"))) {
+      nsSOAPArrayType* arrayType = new nsSOAPArrayType(aNamespace);
+      if (!arrayType) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      sup = arrayType;
+      mSOAPTypeHash.Put(&key, sup);
+    
+      *aType = arrayType;
+      NS_ADDREF(*aType);
+    }
+    else {
+      rv = NS_ERROR_SCHEMA_UNKNOWN_TYPE;
+    }
+  }
+
+  return rv;
+}
 
 ////////////////////////////////////////////////////////////
 //
@@ -396,14 +713,11 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
 nsSchemaLoader::nsSchemaLoader()
 {
   NS_INIT_ISUPPORTS();
-  if (!nsSchemaAtoms::sAnyType_atom) {
-    nsSchemaAtoms::CreateSchemaAtoms();
-  }
+  mBuiltinCollection = do_GetService(NS_BUILTINSCHEMACOLLECTION_CONTRACTID);
 }
 
 nsSchemaLoader::~nsSchemaLoader()
 {
-  mBuiltinTypesHash.Reset();
 }
 
 NS_IMPL_ISUPPORTS2_CI(nsSchemaLoader, 
@@ -462,42 +776,14 @@ nsSchemaLoader::GetAttribute(const nsAReadableString & aName,
   return schema->GetAttributeByName(aName, _retval);
 }
 
-PRBool
-nsSchemaLoader::IsSchemaNamespace(const nsAReadableString& aNamespace)
-{
-  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE)) ||
-      aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE))) {
-    return PR_TRUE;
-  }
-  else {
-    return PR_FALSE;
-  }
-}
-
-PRBool
-nsSchemaLoader::IsSOAPNamespace(const nsAReadableString& aNamespace)
-{
-  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
-      aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE))) {
-    return PR_TRUE;
-  }
-  else {
-    return PR_FALSE;
-  }  
-}
-
 /* nsISchemaType getType (in AString name, in AString namespace); */
 NS_IMETHODIMP 
 nsSchemaLoader::GetType(const nsAReadableString & aName, 
                         const nsAReadableString & aNamespace, 
                         nsISchemaType **_retval)
 {
-  if (IsSchemaNamespace(aNamespace)) {
-    return GetBuiltinType(aName, aNamespace, _retval);
-  }
-
-  if (IsSOAPNamespace(aNamespace)) {
-    return GetSOAPType(aName, aNamespace, _retval);
+  if (IsSchemaNamespace(aNamespace) || IsSOAPNamespace(aNamespace)) {
+    return mBuiltinCollection->GetType(aName, aNamespace, _retval);
   }
 
   nsCOMPtr<nsISchema> schema;
@@ -813,221 +1099,6 @@ ParseQualifiedName(nsIDOMElement* aContext,
 }
 
 nsresult
-nsSchemaLoader::GetSOAPType(const nsAReadableString& aName,
-                            const nsAReadableString& aNamespace,
-                            nsISchemaType** aType)
-{
-  nsresult rv = NS_OK;
-  nsAutoString concat(aNamespace);
-  concat.Append(aName);
-  nsStringKey key(concat);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mSOAPTypeHash.Get(&key));
-  if (sup) {
-    rv = CallQueryInterface(sup, aType);
-  }
-  else {
-    if (aName.Equals(NS_LITERAL_STRING("Array"))) {
-      nsSOAPArray* array = new nsSOAPArray(aNamespace);
-      if (!array) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      sup = array;
-      mSOAPTypeHash.Put(&key, sup);
-    
-      *aType = array;
-      NS_ADDREF(*aType);
-    }
-    else if (aName.Equals(NS_LITERAL_STRING("arrayType"))) {
-      nsSOAPArrayType* arrayType = new nsSOAPArrayType(aNamespace);
-      if (!arrayType) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      sup = arrayType;
-      mSOAPTypeHash.Put(&key, sup);
-    
-      *aType = arrayType;
-      NS_ADDREF(*aType);
-    }
-    else {
-      rv = NS_ERROR_SCHEMA_UNKNOWN_TYPE;
-    }
-  }
-
-  return rv;
-}
-
-nsresult
-nsSchemaLoader::GetBuiltinType(const nsAReadableString& aName,
-                               const nsAReadableString& aNamespace,
-                               nsISchemaType** aType)
-{
-  nsresult rv = NS_OK;
-  nsAutoString concat(aName);
-  concat.Append(aNamespace);
-  nsStringKey key(concat);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mBuiltinTypesHash.Get(&key));
-  if (sup) {
-    rv = CallQueryInterface(sup, aType);
-  }
-  else {
-    nsCOMPtr<nsIAtom> typeName = dont_AddRef(NS_NewAtom(aName));
-    PRUint16 typeVal;
-    if (typeName == nsSchemaAtoms::sAnyType_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYTYPE;
-    }
-    else if (typeName == nsSchemaAtoms::sString_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
-    }
-    else if (typeName == nsSchemaAtoms::sNormalizedString_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING;
-    }
-    else if (typeName == nsSchemaAtoms::sToken_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN;
-    }
-    else if (typeName == nsSchemaAtoms::sByte_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_BYTE;
-    }
-    else if (typeName == nsSchemaAtoms::sUnsignedByte_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE;
-    }
-    else if (typeName == nsSchemaAtoms::sBase64Binary_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY;
-    }
-    else if (typeName == nsSchemaAtoms::sHexBinary_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY;
-    }
-    else if (typeName == nsSchemaAtoms::sInteger_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER;
-    }
-    else if (typeName == nsSchemaAtoms::sPositiveInteger_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER;
-    }
-    else if (typeName == nsSchemaAtoms::sNegativeInteger_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER;
-    }
-    else if (typeName == nsSchemaAtoms::sNonnegativeInteger_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER;
-    }
-    else if (typeName == nsSchemaAtoms::sNonpositiveInteger_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER;
-    }
-    else if (typeName == nsSchemaAtoms::sInt_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_INT;
-    }
-    else if (typeName == nsSchemaAtoms::sUnsignedInt_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT;
-    }
-    else if (typeName == nsSchemaAtoms::sLong_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_LONG;
-    }
-    else if (typeName == nsSchemaAtoms::sUnsignedLong_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG;
-    }
-    else if (typeName == nsSchemaAtoms::sShort_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_SHORT;
-    }
-    else if (typeName == nsSchemaAtoms::sUnsignedShort_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT;
-    }
-    else if (typeName == nsSchemaAtoms::sDecimal_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL;
-    }
-    else if (typeName == nsSchemaAtoms::sFloat_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT;
-    }
-    else if (typeName == nsSchemaAtoms::sDouble_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE;
-    }
-    else if (typeName == nsSchemaAtoms::sBoolean_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN;
-    }
-    else if (typeName == nsSchemaAtoms::sTime_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_TIME;
-    }
-    else if (typeName == nsSchemaAtoms::sDateTime_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME;
-    }
-    else if (typeName == nsSchemaAtoms::sDuration_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DURATION;
-    }
-    else if (typeName == nsSchemaAtoms::sDate_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_DATE;
-    }
-    else if (typeName == nsSchemaAtoms::sGMonth_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH;
-    }
-    else if (typeName == nsSchemaAtoms::sGYear_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR;
-    }
-    else if (typeName == nsSchemaAtoms::sGYearMonth_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH;
-    }
-    else if (typeName == nsSchemaAtoms::sGDay_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GDAY;
-    }
-    else if (typeName == nsSchemaAtoms::sGMonthDay_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY;
-    }
-    else if (typeName == nsSchemaAtoms::sName_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NAME;
-    }
-    else if (typeName == nsSchemaAtoms::sQName_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_QNAME;
-    }
-    else if (typeName == nsSchemaAtoms::sNCName_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME;
-    }
-    else if (typeName == nsSchemaAtoms::sAnyUri_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI;
-    }
-    else if (typeName == nsSchemaAtoms::sLanguage_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE;
-    }
-    else if (typeName == nsSchemaAtoms::sID_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ID;
-    }
-    else if (typeName == nsSchemaAtoms::sIDREF_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_IDREF;
-    }
-    else if (typeName == nsSchemaAtoms::sIDREFS_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS;
-    }
-    else if (typeName == nsSchemaAtoms::sENTITY_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ENTITY;
-    }
-    else if (typeName == nsSchemaAtoms::sENTITIES_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ENTITIES;
-    }
-    else if (typeName == nsSchemaAtoms::sNOTATION_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NOTATION;
-    }
-    else if (typeName == nsSchemaAtoms::sNMTOKEN_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN;
-    }
-    else if (typeName == nsSchemaAtoms::sNMTOKENS_atom) {
-      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS;
-    }
-    else {
-      NS_ERROR("Unknown builtin type");
-      return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
-    }
-
-    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal,
-                                                           aNamespace);
-    if (!builtin) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    sup = builtin;
-    mBuiltinTypesHash.Put(&key, sup);
-    
-    *aType = builtin;
-    NS_ADDREF(*aType);
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
                                  nsIDOMElement* aContext,
                                  const nsAReadableString& aTypeName,
@@ -1173,9 +1244,9 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     if (!schemaType) {
       nsAutoString ns;
       aElement->GetNamespaceURI(ns);
-      rv = GetBuiltinType(NS_LITERAL_STRING("anyType"),
-                          ns,
-                          getter_AddRefs(schemaType));
+      rv = GetType(NS_LITERAL_STRING("anyType"),
+                   ns,
+                   getter_AddRefs(schemaType));
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1269,6 +1340,125 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
   return NS_OK;
 }
 
+void
+nsSchemaLoader::ConstructArrayName(nsISchemaType* aType,
+                                   nsAWritableString& aName)
+{
+  nsAutoString typeName;
+  
+  aType->GetName(typeName);
+  aName.Assign(NS_LITERAL_STRING("ArrayOf") + typeName);
+}
+
+nsresult
+nsSchemaLoader::ParseDimensions(nsSchema* aSchema,
+                                nsIDOMElement* aAttrElement,
+                                const nsAReadableString& aStr,
+                                nsISchemaType* aBaseType,
+                                nsISchemaType** aArrayType,
+                                PRUint32* aDimension)
+{
+  nsReadingIterator<PRUnichar> iter, done_reading;
+  aStr.BeginReading(iter);
+  aStr.EndReading(done_reading);
+
+  PRUint32 dimension = 1;
+  PRUnichar uc = *iter++;
+  if (uc != PRUnichar('[')) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  while (iter != done_reading) {
+    uc = *iter++;
+    if (uc == PRUnichar(',')) {
+      dimension++;
+    }
+    else if (uc == PRUnichar(']')) {
+      break;
+    }
+  }
+  *aDimension = dimension;
+
+  while ((iter != done_reading) && (*iter == PRUnichar(' '))) {
+    ++iter;
+  }
+
+  // If there's still more to go, then create an array type
+  // based on the base and continue to parse
+  if ((iter != done_reading) && (*iter == PRUnichar('['))) {
+    nsAutoString name;
+    nsCOMPtr<nsISchemaType> myArrayType;
+    PRUint32 myDimension;
+    
+    nsresult rv = ParseDimensions(aSchema, aAttrElement,
+                                  nsDependentSubstring(iter, done_reading),
+                                  aBaseType, getter_AddRefs(myArrayType), 
+                                  &myDimension);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    ConstructArrayName(myArrayType, name);
+    nsSchemaComplexType* typeInst = new nsSchemaComplexType(aSchema,
+                                                            name, 
+                                                            PR_FALSE);
+    if (!typeInst) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsCOMPtr<nsISchemaComplexType> complexType = typeInst;
+
+    nsCOMPtr<nsISchemaType> soapArray;
+    rv = GetType(NS_LITERAL_STRING("Array"),
+                 NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE),
+                 getter_AddRefs(soapArray));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    typeInst->SetContentModel(nsISchemaComplexType::CONTENT_MODEL_ELEMENT_ONLY);
+    typeInst->SetDerivation(nsISchemaComplexType::DERIVATION_RESTRICTION_COMPLEX,
+                            soapArray);
+    typeInst->SetArrayInfo(myArrayType, myDimension);
+
+    *aArrayType = typeInst;
+  }
+  else {
+    *aArrayType = aBaseType;
+  }
+  NS_ADDREF(*aArrayType);
+
+  return NS_OK;
+}
+
+nsresult
+nsSchemaLoader::ParseArrayType(nsSchema* aSchema,
+                               nsIDOMElement* aAttrElement,
+                               const nsAReadableString& aStr,
+                               nsISchemaType** aType,
+                               PRUint32* aDimension)
+{
+  PRInt32 offset;
+  
+  offset = aStr.FindChar(PRUnichar('['));
+  if (offset == -1) {
+    return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
+  }
+  nsDependentSubstring typeStr(aStr, 0, offset);
+          
+  nsCOMPtr<nsISchemaType> type;
+  nsresult rv = GetNewOrUsedType(aSchema, aAttrElement, typeStr, 
+                                 getter_AddRefs(type));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  nsDependentSubstring dimensionStr(aStr, offset, 
+                                    aStr.Length() - offset);
+  return ParseDimensions(aSchema, aAttrElement, dimensionStr, type,
+                         aType, aDimension);
+}
+
+
 nsresult
 nsSchemaLoader::ProcessComplexTypeBody(nsSchema* aSchema, 
                                        nsIDOMElement* aElement,
@@ -1354,6 +1544,35 @@ nsSchemaLoader::ProcessComplexTypeBody(nsSchema* aSchema,
       rv = aComplexType->AddAttribute(attribute);
       if (NS_FAILED(rv)) {
         return rv;
+      }
+
+      // XXX WSDL ugliness making itself into schemas. Hopefully this
+      // mechanism for specifying an array type in schemas will die
+      // when the Schema WG address qualified names in attribute
+      // default values.
+      if (tagName == nsSchemaAtoms::sAttribute_atom) {
+#define NS_WSDL_NAMESPACE "http://schemas.xmlsoap.org/wsdl/"
+        nsAutoString arrayType;
+        childElement->GetAttributeNS(NS_LITERAL_STRING(NS_WSDL_NAMESPACE),
+                                     NS_LITERAL_STRING("arrayType"), 
+                                     arrayType);
+        if (!arrayType.IsEmpty()) {
+          nsCOMPtr<nsISchemaType> arraySchemaType;
+          PRUint32 arrayDimension;
+          rv = ParseArrayType(aSchema, 
+                              childElement,
+                              arrayType, 
+                              getter_AddRefs(arraySchemaType),
+                              &arrayDimension);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+
+          rv = aComplexType->SetArrayInfo(arraySchemaType, arrayDimension);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+        }
       }
     }
   }
@@ -2295,7 +2514,7 @@ nsSchemaLoader::ProcessAttribute(nsSchema* aSchema,
   nsAutoString defaultValue, fixedValue;
   aElement->GetAttribute(NS_LITERAL_STRING("default"), defaultValue);
   aElement->GetAttribute(NS_LITERAL_STRING("fixed"), fixedValue);
-  
+
   PRUint16 use;
   GetUse(aElement, &use);
 

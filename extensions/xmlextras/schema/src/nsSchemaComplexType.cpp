@@ -33,13 +33,16 @@ nsSchemaComplexType::nsSchemaComplexType(nsSchema* aSchema,
                                          PRBool aAbstract)
   : nsSchemaComponentBase(aSchema), mName(aName), mAbstract(aAbstract),
     mContentModel(CONTENT_MODEL_ELEMENT_ONLY), 
-    mDerivation(DERIVATION_SELF_CONTAINED)
+    mDerivation(DERIVATION_SELF_CONTAINED), mArrayInfo(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
 
 nsSchemaComplexType::~nsSchemaComplexType()
 {
+  if (mArrayInfo) {
+    delete mArrayInfo;
+  }
 }
 
 NS_IMPL_ISUPPORTS3_CI(nsSchemaComplexType, 
@@ -283,6 +286,47 @@ nsSchemaComplexType::GetAbstract(PRBool *aAbstract)
   return NS_OK;
 }
 
+/* readonly attribute boolean isArray; */
+NS_IMETHODIMP
+nsSchemaComplexType::GetIsArray(PRBool* aIsArray) 
+{
+  NS_ENSURE_ARG_POINTER(aIsArray);
+
+  *aIsArray = (mArrayInfo != nsnull);
+
+  return NS_OK;
+}
+
+/* readonly attribute nsISchemaType arrayType; */
+NS_IMETHODIMP
+nsSchemaComplexType::GetArrayType(nsISchemaType** aArrayType)
+{
+  NS_ENSURE_ARG_POINTER(aArrayType);
+
+  if (!mArrayInfo) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mArrayInfo->GetType(aArrayType);
+
+  return NS_OK;
+}
+
+/* readonly attribute PRUint32 arrayDimension; */
+NS_IMETHODIMP
+nsSchemaComplexType::GetArrayDimension(PRUint32* aDimension)
+{
+  NS_ENSURE_ARG_POINTER(aDimension);
+
+  if (!mArrayInfo) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aDimension = mArrayInfo->GetDimension();
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsSchemaComplexType::SetContentModel(PRUint16 aContentModel)
 {
@@ -332,3 +376,17 @@ nsSchemaComplexType::AddAttribute(nsISchemaAttributeComponent* aAttribute)
   return NS_OK;  
 }
 
+NS_IMETHODIMP
+nsSchemaComplexType::SetArrayInfo(nsISchemaType* aType, PRUint32 aDimension)
+{
+  if (mArrayInfo) {
+    delete mArrayInfo;
+  }
+
+  mArrayInfo = new nsComplexTypeArrayInfo(aType, aDimension);
+  if (!mArrayInfo) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}

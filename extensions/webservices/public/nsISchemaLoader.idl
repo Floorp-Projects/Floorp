@@ -51,6 +51,13 @@ interface nsISchemaLoadListener : nsISupports {
 
 #define NS_SCHEMALOADER_CONTRACTID "@mozilla.org/xmlextras/schemas/schemaloader;1"
 
+#define NS_BUILTINSCHEMACOLLECTION_CID                \
+{ /* a83b0823-f10e-4235-9859-88a5abd2ed54 */          \
+ 0xa83b0823, 0xf10e, 0x4235,                          \
+{0x98, 0x59, 0x88, 0xa5, 0xab, 0xd2, 0xed, 0x54}}
+
+#define NS_BUILTINSCHEMACOLLECTION_CONTRACTID "@mozilla.org/xmlextras/schemas/builtinschemacollection;1"
+
 #define NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 1)
 #define NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 2)
 #define NS_ERROR_SCHEMA_UNKNOWN_TYPE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 3)
