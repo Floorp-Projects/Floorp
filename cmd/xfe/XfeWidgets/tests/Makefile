@@ -29,6 +29,7 @@ DEPTH			= ../../../..
 ifdef eXFE_WIDGETS_BUILD_UNUSED
 UNUSED_DIRS		= \
 				XfeComboBox \
+				XfeCaption \
 				$(NULL)
 endif
 

@@ -28,7 +28,6 @@ DEPTH			= ../../../../..
 ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_CSRCS		= \
 				ChromeTest.c \
-				ComboBoxTest.c \
 				FontChooserTest.c \
 				FrameShellTest.c \
 				$(NULL)

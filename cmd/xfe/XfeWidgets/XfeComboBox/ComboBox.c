@@ -34,6 +34,7 @@
 
 #include <Xm/TextF.h>
 #include <Xm/List.h>
+#include <Xm/RepType.h>
 
 #include <Xfe/Button.h>
 #include <Xfe/Arrow.h>

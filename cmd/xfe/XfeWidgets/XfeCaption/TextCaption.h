@@ -18,60 +18,48 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/ComboBoxStringDefs.h>								*/
-/* Description:	XfeComboBox string definitions.							*/
+/* Name:		<Xfe/TextCaption.h>										*/
+/* Description:	XfeTextCaption widget public header file.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeComboBoxStringDefs_h_			/* start ComboBoxStringDefs.h*/
-#define _XfeComboBoxStringDefs_h_
+#ifndef _XfeTextCaption_h_						/* start TextCaption.h	*/
+#define _XfeTextCaption_h_
+
+#include <Xfe/Caption.h>
+
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Callback Names														*/
+/* XfeTextCaption class names											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-								   
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Resource Names														*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define XmNarrow						"arrow"
-#define XmNlistFontList					"listFontList"
-#define XmNshareShell					"shareShell"
-#define XmNshell						"shell"
-#define XmNtitleShadowThickness			"titleShadowThickness"
-#define XmNtitleShadowType				"titleShadowType"
+externalref WidgetClass xfeTextCaptionWidgetClass;
+
+typedef struct _XfeTextCaptionClassRec *		XfeTextCaptionWidgetClass;
+typedef struct _XfeTextCaptionRec *				XfeTextCaptionWidget;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Class Names															*/
+/* XfeTextCaption subclass test macro									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmCListFontList					"ListFontList"
-#define XmCShareShell					"ShareShell"
+#define XfeIsTextCaption(w)	XtIsSubclass(w,xfeTextCaptionWidgetClass)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Things that conflict with Motif 2.x									*/
+/* XfeTextCaption public methods										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#if XmVersion < 2000
-#define XmNcomboBoxType					"comboBoxType"
-#define XmCComboBoxType					"ComboBoxType"
-#define XmRComboBoxType					"ComboBoxType"
-#endif
-
+extern Widget
+XfeCreateTextCaption			(Widget		pw,
+								 String		name,
+								 Arg *		av,
+								 Cardinal	ac);
 /*----------------------------------------------------------------------*/
-/*																		*/
-/* Things that conflict elsewhere										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#ifndef XmNlist
-#define XmNlist							"list"
-#endif
 
+XFE_END_CPLUSPLUS_PROTECTION
 
-#endif										/* end ComboBoxStringDefs.h	*/
+#endif											/* end Caption.h		*/

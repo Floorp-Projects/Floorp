@@ -18,60 +18,87 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/ComboBoxStringDefs.h>								*/
-/* Description:	XfeComboBox string definitions.							*/
+/* Name:		<Xfe/TextCaptionP.h>									*/
+/* Description:	XfeTextCaption widget private header file.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeComboBoxStringDefs_h_			/* start ComboBoxStringDefs.h*/
-#define _XfeComboBoxStringDefs_h_
+#ifndef _XfeTextCaptionP_h_						/* start TextCaptionP.h	*/
+#define _XfeTextCaptionP_h_
+
+#include <Xfe/CaptionP.h>
+#include <Xfe/TextCaption.h>
+
+XFE_BEGIN_CPLUSPLUS_PROTECTION
+	
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeTextCaptionClassPart												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef struct
+{
+	XtPointer			extension;				/* extension			*/ 
+} XfeTextCaptionClassPart;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Callback Names														*/
+/* XfeTextCaptionClassRec												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-								   
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Resource Names														*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define XmNarrow						"arrow"
-#define XmNlistFontList					"listFontList"
-#define XmNshareShell					"shareShell"
-#define XmNshell						"shell"
-#define XmNtitleShadowThickness			"titleShadowThickness"
-#define XmNtitleShadowType				"titleShadowType"
+typedef struct _XfeTextCaptionClassRec
+{
+    CoreClassPart				core_class;
+    CompositeClassPart			composite_class;
+    ConstraintClassPart			constraint_class;
+    XmManagerClassPart			manager_class;
+    XfeManagerClassPart			xfe_manager_class;
+    XfeCaptionClassPart			xfe_caption_class;
+	XfeTextCaptionClassPart		xfe_text_caption_class;
+} XfeTextCaptionClassRec;
+
+externalref XfeTextCaptionClassRec xfeTextCaptionClassRec;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Class Names															*/
+/* XfeTextCaptionPart													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmCListFontList					"ListFontList"
-#define XmCShareShell					"ShareShell"
+typedef struct _XfeTextCaptionPart
+{
+	/* Text resources */
+	XmString			text_string;			/* Text string			*/
+	XmFontList			text_font_list;			/* Text font list		*/
+
+    /* Private data -- Dont even look past this comment -- */
+} XfeTextCaptionPart;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Things that conflict with Motif 2.x									*/
+/* XfeTextCaptionRec													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#if XmVersion < 2000
-#define XmNcomboBoxType					"comboBoxType"
-#define XmCComboBoxType					"ComboBoxType"
-#define XmRComboBoxType					"ComboBoxType"
-#endif
+typedef struct _XfeTextCaptionRec
+{
+    CorePart			core;
+    CompositePart		composite;
+    ConstraintPart		constraint;
+    XmManagerPart		manager;
+    XfeManagerPart		xfe_manager;
+    XfeCaptionPart		xfe_caption;
+    XfeTextCaptionPart	xfe_text_caption;
+} XfeTextCaptionRec;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Things that conflict elsewhere										*/
+/* XfeTextCaptionPart Access Macro										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#ifndef XmNlist
-#define XmNlist							"list"
-#endif
+#define _XfeTextCaptionPart(w) \
+&(((XfeTextCaptionWidget) w) -> xfe_text_caption)
 
+XFE_END_CPLUSPLUS_PROTECTION
 
-#endif										/* end ComboBoxStringDefs.h	*/
+#endif											/* end TextCaptionP.h	*/
+

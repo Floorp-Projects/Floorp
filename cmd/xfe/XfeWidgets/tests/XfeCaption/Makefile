@@ -16,37 +16,29 @@
 # Reserved.
 
 
-##########################################################################
-#
-# Name:			Makefile
-# Description:	Makefile for Xfe Widgets and related libraries
-# Author:		Ramiro Estrugo <ramiro@netscape.com>
-#
-##########################################################################
+# 
 
-DEPTH			= ../../..
+DEPTH			= ../../../../..
 
-ifdef XFE_WIDGETS_BUILD_TESTS
-TEST_DIRS		= \
+CSRCS			= \
+				CaptionTest.c \
+				TextCaptionTest.c \
+				$(NULL)
+
+REQUIRES		= \
 				XfeTest \
-				tests \
-				$(NULL)
-endif
-
-ifdef eXFE_WIDGETS_BUILD_UNUSED
-UNUSED_DIRS		= \
 				XfeCaption \
-				XfeComboBox \
-				$(NULL)
-endif
-
-DIRS			= \
-				Xfe \
 				XfeBm \
-				$(UNUSED_DIRS) \
-				$(TEST_DIRS)
+				XfeWidgets
+
+STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
+SHARED_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.shared))
 
 include $(DEPTH)/config/rules.mk
+include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
 
-tests::
-	@$(MAKE) all XFE_WIDGETS_BUILD_TESTS=1
+all:: $(STATIC_PROGS) $(SHARED_PROGS)
+install:: $(STATIC_PROGS) $(SHARED_PROGS)
+
+shared: $(SHARED_PROGS)
+static: $(STATIC_PROGS)

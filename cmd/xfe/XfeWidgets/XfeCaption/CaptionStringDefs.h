@@ -18,14 +18,14 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/ComboBoxStringDefs.h>								*/
-/* Description:	XfeComboBox string definitions.							*/
+/* Name:		<Xfe/CaptionStringDefs.h>								*/
+/* Description:	XfeCaption string definitions.							*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeComboBoxStringDefs_h_			/* start ComboBoxStringDefs.h*/
-#define _XfeComboBoxStringDefs_h_
+#ifndef _XfeCaptionStringDefs_h_			/* start CaptionStringDefs.h*/
+#define _XfeCaptionStringDefs_h_
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -38,40 +38,36 @@
 /* Resource Names														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmNarrow						"arrow"
-#define XmNlistFontList					"listFontList"
-#define XmNshareShell					"shareShell"
-#define XmNshell						"shell"
-#define XmNtitleShadowThickness			"titleShadowThickness"
-#define XmNtitleShadowType				"titleShadowType"
+#define XmNcaptionLayout				"captionLayout"
+#define XmNchild						"child"
+#define XmNchildResize					"childResize"
+#define XmNmaxChildHeight				"maxChildHeight"
+#define XmNmaxChildWidth				"maxChildWidth"
+#define XmNtitleDirection				"titleDirection"
+#define XmNtitleHorizontalAlignment		"TitleHorizontalAlignment"
+#define XmNtitleVerticalAlignment		"TitleVerticalAlignment"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Class Names															*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmCListFontList					"ListFontList"
-#define XmCShareShell					"ShareShell"
+#define XmCCaptionHorizontalAlignment	"CaptionHorizontalAlignment"
+#define XmCCaptionLayout				"CaptionLayout"
+#define XmCCaptionVerticalAlignment		"CaptionVerticalAlignment"
+#define XmCChild						"Child"
+#define XmCChildResize					"ChildResize"
+#define XmCMaxChildHeight				"MaxChildHeight"
+#define XmCMaxChildWidth				"MaxChildWidth"
+#define XmCTitleDirection				"TitleDirection"
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Things that conflict with Motif 2.x									*/
+/* Representation Types													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#if XmVersion < 2000
-#define XmNcomboBoxType					"comboBoxType"
-#define XmCComboBoxType					"ComboBoxType"
-#define XmRComboBoxType					"ComboBoxType"
-#endif
+#define XmRCaptionHorizontalAlignment	"CaptionHorizontalAlignment"
+#define XmRCaptionLayout				"CaptionLayout"
+#define XmRCaptionVerticalAlignment		"CaptionVerticalAlignment"
 
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Things that conflict elsewhere										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#ifndef XmNlist
-#define XmNlist							"list"
-#endif
-
-
-#endif										/* end ComboBoxStringDefs.h	*/
+#endif										/* end CaptionStringDefs.h	*/

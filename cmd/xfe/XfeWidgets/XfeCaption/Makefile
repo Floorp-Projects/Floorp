@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,34 +19,37 @@
 ##########################################################################
 #
 # Name:			Makefile
-# Description:	Makefile for Xfe Widgets and related libraries
+# Description:	Makefile for XfeCaption library
 # Author:		Ramiro Estrugo <ramiro@netscape.com>
 #
 ##########################################################################
 
-DEPTH			= ../../..
 
-ifdef XFE_WIDGETS_BUILD_TESTS
-TEST_DIRS		= \
-				XfeTest \
-				tests \
+DEPTH			= ../../../..
+
+# XfeWidgets headers are exported to dist/public/XfeCaption/Xfe.  We use
+# the 'Xfe' directory to avoid the hasstle of having to remember yet another
+# include prefix.
+MODULE			= XfeCaption/Xfe
+
+LIBRARY_NAME	= XfeCaption
+
+CSRCS			= \
+				Caption.c \
+				TextCaption.c \
 				$(NULL)
-endif
 
-ifdef eXFE_WIDGETS_BUILD_UNUSED
-UNUSED_DIRS		= \
+REQUIRES		= \
 				XfeCaption \
-				XfeComboBox \
-				$(NULL)
-endif
+				XfeWidgets
 
-DIRS			= \
-				Xfe \
-				XfeBm \
-				$(UNUSED_DIRS) \
-				$(TEST_DIRS)
+
+EXPORTS			= \
+				Caption.h \
+				CaptionP.h \
+				TextCaption.h \
+				TextCaptionP.h \
+				CaptionStringDefs.h \
+				$(NULL)
 
 include $(DEPTH)/config/rules.mk
-
-tests::
-	@$(MAKE) all XFE_WIDGETS_BUILD_TESTS=1
