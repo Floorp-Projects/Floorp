@@ -127,7 +127,7 @@ NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLButtonElement::nsHTMLButtonElement()
 {
-  mType = NS_FORM_BUTTON_BUTTON; // default
+  mType = NS_FORM_BUTTON_SUBMIT; // default
 }
 
 nsHTMLButtonElement::~nsHTMLButtonElement()
