@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -74,7 +75,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULDOCUMENT_POPUPELEMENT:
@@ -82,16 +83,17 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
-        if (NS_SUCCEEDED(a->GetPopupElement(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetPopupElement(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -100,16 +102,17 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
-        if (NS_SUCCEEDED(a->GetTooltipElement(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetTooltipElement(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -118,16 +121,17 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.commanddispatcher", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMXULCommandDispatcher* prop;
-        if (NS_SUCCEEDED(a->GetCommandDispatcher(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetCommandDispatcher(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -160,7 +164,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULDOCUMENT_POPUPELEMENT:
@@ -168,14 +172,13 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIElementIID, "Element",
                                                 cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
         a->SetPopupElement(prop);
@@ -187,14 +190,13 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIElementIID, "Element",
                                                 cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
         a->SetTooltipElement(prop);
@@ -250,6 +252,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 
@@ -258,14 +261,13 @@ XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementbyid",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -276,14 +278,14 @@ XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function getElementById requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetElementById(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetElementById(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -300,6 +302,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -309,14 +312,13 @@ XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementsbyattribute",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -327,15 +329,15 @@ XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function getElementsByAttribute requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->GetElementsByAttribute(b0, b1, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetElementsByAttribute(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -352,6 +354,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULDocumentPersist(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -360,14 +363,13 @@ XULDocumentPersist(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.persist",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -378,15 +380,15 @@ XULDocumentPersist(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function persist requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->Persist(b0, b1)) {
-      return JS_FALSE;
+    result = nativeThis->Persist(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

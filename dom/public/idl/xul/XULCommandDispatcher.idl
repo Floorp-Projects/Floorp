@@ -6,10 +6,10 @@ interface XULCommandDispatcher {
 	attribute Element focusedElement;
 	attribute Window focusedWindow;
 
-	void addCommand(in Element listener);
-	void removeCommand(in Element listener);
+	void addCommandUpdater(in Element updater, in DOMString events, in DOMString targets);
+	void removeCommandUpdater(in Element updater);
 
-	void updateCommands();
+	void updateCommands(in DOMString eventName);
 
 	xpidl nsIController getController();
 	void setController(in xpidl nsIController controller);

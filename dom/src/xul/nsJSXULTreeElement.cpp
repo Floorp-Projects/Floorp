@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -70,7 +71,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULTREEELEMENT_SELECTEDITEMS:
@@ -78,16 +79,17 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selecteditems", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNodeList* prop;
-        if (NS_SUCCEEDED(a->GetSelectedItems(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetSelectedItems(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -96,16 +98,17 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectedcells", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNodeList* prop;
-        if (NS_SUCCEEDED(a->GetSelectedCells(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetSelectedCells(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -138,7 +141,7 @@ SetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -191,6 +194,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -198,14 +202,13 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitem",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -216,8 +219,7 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function selectItem requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -225,11 +227,12 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->SelectItem(b0)) {
-      return JS_FALSE;
+    result = nativeThis->SelectItem(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -246,6 +249,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -253,14 +257,13 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcell",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -271,8 +274,7 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function selectCell requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -280,11 +282,12 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->SelectCell(b0)) {
-      return JS_FALSE;
+    result = nativeThis->SelectCell(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -301,20 +304,20 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementClearItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearitemselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -325,8 +328,9 @@ XULTreeElementClearItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
 
   {
 
-    if (NS_OK != nativeThis->ClearItemSelection()) {
-      return JS_FALSE;
+    result = nativeThis->ClearItemSelection();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -343,20 +347,20 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementClearCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearcellselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -367,8 +371,9 @@ XULTreeElementClearCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
 
   {
 
-    if (NS_OK != nativeThis->ClearCellSelection()) {
-      return JS_FALSE;
+    result = nativeThis->ClearCellSelection();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -385,6 +390,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -392,14 +398,13 @@ XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.additemtoselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -410,8 +415,7 @@ XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function addItemToSelection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -419,11 +423,12 @@ XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->AddItemToSelection(b0)) {
-      return JS_FALSE;
+    result = nativeThis->AddItemToSelection(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -440,6 +445,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -447,14 +453,13 @@ XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removeitemfromselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -465,8 +470,7 @@ XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function removeItemFromSelection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -474,11 +478,12 @@ XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->RemoveItemFromSelection(b0)) {
-      return JS_FALSE;
+    result = nativeThis->RemoveItemFromSelection(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -495,6 +500,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -502,14 +508,13 @@ XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.addcelltoselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -520,8 +525,7 @@ XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function addCellToSelection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -529,11 +533,12 @@ XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->AddCellToSelection(b0)) {
-      return JS_FALSE;
+    result = nativeThis->AddCellToSelection(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -550,6 +555,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -557,14 +563,13 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removecellfromselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -575,8 +580,7 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function removeCellFromSelection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -584,11 +588,12 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->RemoveCellFromSelection(b0)) {
-      return JS_FALSE;
+    result = nativeThis->RemoveCellFromSelection(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -605,6 +610,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -612,14 +618,13 @@ XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.toggleitemselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -630,8 +635,7 @@ XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function toggleItemSelection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -639,11 +643,12 @@ XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->ToggleItemSelection(b0)) {
-      return JS_FALSE;
+    result = nativeThis->ToggleItemSelection(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -660,6 +665,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -667,14 +673,13 @@ XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.togglecellselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -685,8 +690,7 @@ XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function toggleCellSelection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -694,11 +698,12 @@ XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->ToggleCellSelection(b0)) {
-      return JS_FALSE;
+    result = nativeThis->ToggleCellSelection(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -715,6 +720,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
   nsIDOMXULElementPtr b1;
 
@@ -723,14 +729,13 @@ XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitemrange",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -741,8 +746,7 @@ XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function selectItemRange requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -750,18 +754,19 @@ XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIXULElementIID,
                                            "XULElement",
                                            cx,
                                            argv[1])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->SelectItemRange(b0, b1)) {
-      return JS_FALSE;
+    result = nativeThis->SelectItemRange(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -778,6 +783,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMXULElementPtr b0;
   nsIDOMXULElementPtr b1;
 
@@ -786,14 +792,13 @@ XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcellrange",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -804,8 +809,7 @@ XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function selectCellRange requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -813,18 +817,19 @@ XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
                                            "XULElement",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIXULElementIID,
                                            "XULElement",
                                            cx,
                                            argv[1])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->SelectCellRange(b0, b1)) {
-      return JS_FALSE;
+    result = nativeThis->SelectCellRange(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -841,20 +846,20 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectall",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -865,8 +870,9 @@ XULTreeElementSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
 
-    if (NS_OK != nativeThis->SelectAll()) {
-      return JS_FALSE;
+    result = nativeThis->SelectAll();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -883,20 +889,20 @@ PR_STATIC_CALLBACK(JSBool)
 XULTreeElementInvertSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.invertselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -907,8 +913,9 @@ XULTreeElementInvertSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   {
 
-    if (NS_OK != nativeThis->InvertSelection()) {
-      return JS_FALSE;
+    result = nativeThis->InvertSelection();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

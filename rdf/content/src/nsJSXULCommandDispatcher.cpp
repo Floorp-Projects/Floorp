@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -73,7 +74,7 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
@@ -81,16 +82,17 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
-        if (NS_SUCCEEDED(a->GetFocusedElement(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetFocusedElement(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -99,16 +101,17 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
-        if (NS_SUCCEEDED(a->GetFocusedWindow(&prop))) {
+        nsresult result = NS_OK;
+        result = a->GetFocusedWindow(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -141,7 +144,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
@@ -149,14 +152,13 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIElementIID, "Element",
                                                 cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
         a->SetFocusedElement(prop);
@@ -168,14 +170,13 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIWindowIID, "Window",
                                                 cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
         a->SetFocusedWindow(prop);
@@ -225,27 +226,29 @@ ResolveXULCommandDispatcher(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method AddCommand
+// Native method AddCommandUpdater
 //
 PR_STATIC_CALLBACK(JSBool)
-XULCommandDispatcherAddCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherAddCommandUpdater(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMElementPtr b0;
+  nsAutoString b1;
+  nsAutoString b2;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.addcommand",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.addcommandupdater",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -255,9 +258,8 @@ XULCommandDispatcherAddCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
 
   {
-    if (argc < 1) {
-      JS_ReportError(cx, "Function addCommand requires 1 parameter");
-      return JS_FALSE;
+    if (argc < 3) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -265,11 +267,14 @@ XULCommandDispatcherAddCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *
                                            "Element",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (NS_OK != nativeThis->AddCommand(b0)) {
-      return JS_FALSE;
+    result = nativeThis->AddCommandUpdater(b0, b1, b2);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -280,12 +285,13 @@ XULCommandDispatcherAddCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
 
 //
-// Native method RemoveCommand
+// Native method RemoveCommandUpdater
 //
 PR_STATIC_CALLBACK(JSBool)
-XULCommandDispatcherRemoveCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherRemoveCommandUpdater(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -293,14 +299,13 @@ XULCommandDispatcherRemoveCommand(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.removecommand",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.removecommandupdater",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -311,8 +316,7 @@ XULCommandDispatcherRemoveCommand(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function removeCommand requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -320,11 +324,12 @@ XULCommandDispatcherRemoveCommand(JSContext *cx, JSObject *obj, uintN argc, jsva
                                            "Element",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->RemoveCommand(b0)) {
-      return JS_FALSE;
+    result = nativeThis->RemoveCommandUpdater(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -341,20 +346,21 @@ PR_STATIC_CALLBACK(JSBool)
 XULCommandDispatcherUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.updatecommands",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -364,9 +370,15 @@ XULCommandDispatcherUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsv
   }
 
   {
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
 
-    if (NS_OK != nativeThis->UpdateCommands()) {
-      return JS_FALSE;
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->UpdateCommands(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -383,6 +395,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULCommandDispatcherGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIController* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -390,14 +403,13 @@ XULCommandDispatcherGetController(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.getcontroller",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -408,8 +420,9 @@ XULCommandDispatcherGetController(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   {
 
-    if (NS_OK != nativeThis->GetController(&nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetController(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     // n.b., this will release nativeRet
@@ -427,6 +440,7 @@ PR_STATIC_CALLBACK(JSBool)
 XULCommandDispatcherSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIControllerPtr b0;
 
   *rval = JSVAL_NULL;
@@ -434,14 +448,13 @@ XULCommandDispatcherSetController(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.setcontroller",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -452,17 +465,17 @@ XULCommandDispatcherSetController(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function setController requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**) &b0,
                                            kIControllerIID, cx, argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->SetController(b0)) {
-      return JS_FALSE;
+    result = nativeThis->SetController(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -506,9 +519,9 @@ static JSPropertySpec XULCommandDispatcherProperties[] =
 //
 static JSFunctionSpec XULCommandDispatcherMethods[] = 
 {
-  {"addCommand",          XULCommandDispatcherAddCommand,     1},
-  {"removeCommand",          XULCommandDispatcherRemoveCommand,     1},
-  {"updateCommands",          XULCommandDispatcherUpdateCommands,     0},
+  {"addCommandUpdater",          XULCommandDispatcherAddCommandUpdater,     3},
+  {"removeCommandUpdater",          XULCommandDispatcherRemoveCommandUpdater,     1},
+  {"updateCommands",          XULCommandDispatcherUpdateCommands,     1},
   {"getController",          XULCommandDispatcherGetController,     0},
   {"setController",          XULCommandDispatcherSetController,     1},
   {0}

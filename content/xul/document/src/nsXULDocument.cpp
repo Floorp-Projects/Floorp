@@ -206,12 +206,7 @@ static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 ////////////////////////////////////////////////////////////////////////
 // Standard vocabulary items
 
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
-
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-#define XUL_NAMESPACE_URI_PREFIX XUL_NAMESPACE_URI "#"
-DEFINE_RDF_VOCAB(XUL_NAMESPACE_URI_PREFIX, XUL, element);
 
 static PRLogModuleInfo* gMapLog;
 static PRLogModuleInfo* gXULLog;
@@ -806,11 +801,26 @@ public:
     nsresult CloseWidgetItem(nsIContent* aElement);
     nsresult RebuildWidgetItem(nsIContent* aElement);
 
-    nsresult
-    AddElementToMap(nsIContent* aElement, PRBool aDeep);
+    // The whole point of this little mess (yeah, that's right, who's
+    // your daddy?) is that everytime a new content subtree gets added
+    // or removed from the document, we'll need to iterate over it and
+    // do a bit o' work. This is the helper routine that does it.
+    typedef nsresult (XULDocumentImpl::*nsContentIteratorCallback)(nsIContent* aElement, void* aClosure);
 
     nsresult
-    RemoveElementFromMap(nsIContent* aElement, PRBool aDeep);
+    DoForSubtree(nsIContent* aElement, nsContentIteratorCallback aCallback, void* aClosure);
+
+    nsresult
+    AddElementToDocument(nsIContent* aElement, void* aClosure);
+
+    nsresult
+    RemoveElementFromDocument(nsIContent* aElement, void* aClosure);
+
+    nsresult
+    AddElementToMap(nsIContent* aElement);
+
+    nsresult
+    RemoveElementFromMap(nsIContent* aElement);
 
     static PRIntn
     RemoveElementsFromMapByContent(nsIRDFResource* aResource,
@@ -850,23 +860,21 @@ protected:
 protected:
     // pseudo constants
     static PRInt32 gRefCnt;
-    static nsIAtom*  kContainerContentsGeneratedAtom;
+
+    static nsIAtom*  kCommandUpdaterAtom;
+    static nsIAtom*  kEventsAtom;
     static nsIAtom*  kIdAtom;
     static nsIAtom*  kObservesAtom;
     static nsIAtom*  kOpenAtom;
     static nsIAtom*  kPersistAtom;
     static nsIAtom*  kRefAtom;
     static nsIAtom*  kRuleAtom;
+    static nsIAtom*  kTargetsAtom;
     static nsIAtom*  kTemplateAtom;
-    static nsIAtom*  kTemplateContentsGeneratedAtom;
-    static nsIAtom*  kXULContentsGeneratedAtom;
 
     static nsIAtom** kIdentityAttrs[];
 
     static nsIRDFService* gRDFService;
-    static nsIRDFResource* kRDF_instanceOf;
-    static nsIRDFResource* kRDF_type;
-    static nsIRDFResource* kXUL_element;
 
     static nsINameSpaceManager* gNameSpaceManager;
     static PRInt32 kNameSpaceID_XUL;
@@ -939,21 +947,19 @@ protected:
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
-nsIAtom* XULDocumentImpl::kContainerContentsGeneratedAtom;
+
+nsIAtom* XULDocumentImpl::kCommandUpdaterAtom;
+nsIAtom* XULDocumentImpl::kEventsAtom;
 nsIAtom* XULDocumentImpl::kIdAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
 nsIAtom* XULDocumentImpl::kOpenAtom;
 nsIAtom* XULDocumentImpl::kPersistAtom;
 nsIAtom* XULDocumentImpl::kRefAtom;
 nsIAtom* XULDocumentImpl::kRuleAtom;
+nsIAtom* XULDocumentImpl::kTargetsAtom;
 nsIAtom* XULDocumentImpl::kTemplateAtom;
-nsIAtom* XULDocumentImpl::kTemplateContentsGeneratedAtom;
-nsIAtom* XULDocumentImpl::kXULContentsGeneratedAtom;
 
 nsIRDFService* XULDocumentImpl::gRDFService;
-nsIRDFResource* XULDocumentImpl::kRDF_instanceOf;
-nsIRDFResource* XULDocumentImpl::kRDF_type;
-nsIRDFResource* XULDocumentImpl::kXUL_element;
 
 nsINameSpaceManager* XULDocumentImpl::gNameSpaceManager;
 PRInt32 XULDocumentImpl::kNameSpaceID_XUL;
@@ -986,16 +992,16 @@ XULDocumentImpl::XULDocumentImpl(void)
     }*/
 
     if (gRefCnt++ == 0) {
-        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
+        kCommandUpdaterAtom             = NS_NewAtom("commandupdater");
+        kEventsAtom                     = NS_NewAtom("events");
         kIdAtom                         = NS_NewAtom("id");
         kObservesAtom                   = NS_NewAtom("observes");
         kOpenAtom                       = NS_NewAtom("open");
         kPersistAtom                    = NS_NewAtom("persist");
         kRefAtom                        = NS_NewAtom("ref");
         kRuleAtom                       = NS_NewAtom("rule");
+        kTargetsAtom                    = NS_NewAtom("targets");
         kTemplateAtom                   = NS_NewAtom("template");
-        kTemplateContentsGeneratedAtom  = NS_NewAtom("templatecontentsgenerated");
-        kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
 
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
@@ -1004,12 +1010,6 @@ XULDocumentImpl::XULDocumentImpl(void)
                                           (nsISupports**) &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF Service");
-
-        if (gRDFService) {
-            gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf);
-            gRDFService->GetResource(kURIRDF_type,       &kRDF_type);
-            gRDFService->GetResource(kURIXUL_element,    &kXUL_element);
-        }
 
         rv = nsServiceManager::GetService(kNameSpaceManagerCID,
                                           nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
@@ -1098,25 +1098,21 @@ XULDocumentImpl::~XULDocumentImpl()
     }
     
     if (--gRefCnt == 0) {
-        NS_IF_RELEASE(kContainerContentsGeneratedAtom);
+        NS_IF_RELEASE(kCommandUpdaterAtom);
+        NS_IF_RELEASE(kEventsAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
+        NS_IF_RELEASE(kTargetsAtom);
         NS_IF_RELEASE(kTemplateAtom);
-        NS_IF_RELEASE(kTemplateContentsGeneratedAtom);
-        NS_IF_RELEASE(kXULContentsGeneratedAtom);
 
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
             gRDFService = nsnull;
         }
-
-        NS_IF_RELEASE(kRDF_instanceOf);
-        NS_IF_RELEASE(kRDF_type);
-        NS_IF_RELEASE(kXUL_element);
 
         if (gXULUtils) {
             nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
@@ -2080,6 +2076,14 @@ XULDocumentImpl::EndLoad()
         NS_POSTCONDITION(mRootContent != nsnull, "unable to create root content");
         if (! mRootContent)
             return NS_ERROR_UNEXPECTED;
+
+        // Do any initial hookup that needs to happen.
+        //
+        // XXX Because we are now doing this, maybe we can remove all
+        // the code from the RDFXULBuilderImpl that adds and removes
+        // elements from the element map?
+        rv = DoForSubtree(mRootContent, AddElementToDocument, nsnull);
+        if (NS_FAILED(rv)) return rv;
     }
 
     StartLayout();
@@ -2143,7 +2147,7 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
 
             // That'll have removed _both_ the 'ref' and 'id' entries from
             // the map. So add 'em back now.
-            rv = AddElementToMap(aElement, PR_FALSE);
+            rv = AddElementToMap(aElement);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -2218,7 +2222,7 @@ XULDocumentImpl::ContentAppended(nsIContent* aContainer,
             rv = aContainer->ChildAt(i, *getter_AddRefs(child));
             if (NS_FAILED(rv)) return rv;
 
-            rv = AddElementToMap(child, PR_TRUE);
+            rv = DoForSubtree(child, AddElementToDocument, nsnull);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -2239,10 +2243,9 @@ XULDocumentImpl::ContentInserted(nsIContent* aContainer,
                                  nsIContent* aChild,
                                  PRInt32 aIndexInContainer)
 {
-    // First update our element map
     {
         nsresult rv;
-        rv = AddElementToMap(aChild, PR_TRUE);
+        rv = DoForSubtree(aChild, AddElementToDocument, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2263,13 +2266,12 @@ XULDocumentImpl::ContentReplaced(nsIContent* aContainer,
                                  nsIContent* aNewChild,
                                  PRInt32 aIndexInContainer)
 {
-    // First update our element map
     {
         nsresult rv;
-        rv = RemoveElementFromMap(aOldChild, PR_TRUE);
+        rv = DoForSubtree(aOldChild, RemoveElementFromDocument, nsnull);
         if (NS_FAILED(rv)) return rv;
 
-        rv = AddElementToMap(aNewChild, PR_TRUE);
+        rv = DoForSubtree(aNewChild, AddElementToDocument, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2290,10 +2292,9 @@ XULDocumentImpl::ContentRemoved(nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32 aIndexInContainer)
 {
-    // First update our element map
     {
         nsresult rv;
-        rv = RemoveElementFromMap(aChild, PR_TRUE);
+        rv = DoForSubtree(aChild, RemoveElementFromDocument, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -3358,11 +3359,111 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     return NS_OK;
 }
 
+nsresult
+XULDocumentImpl::DoForSubtree(nsIContent* aElement, nsContentIteratorCallback aCallback, void* aClosure)
+{
+    // Recursively apply aCallback to aElement and its children.
+    nsresult rv;
+
+    rv = (this->*aCallback)(aElement, aClosure);
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 count;
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
+    if (NS_FAILED(rv)) return rv;
+
+    while (--count >= 0) {
+        nsCOMPtr<nsIContent> child;
+        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = DoForSubtree(child, aCallback, aClosure);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+XULDocumentImpl::AddElementToDocument(nsIContent* aElement, void* aClosure)
+{
+    // Do a bunch of work that's necessary when an element gets added
+    // to the XUL Document.
+    nsresult rv;
+
+    // 1. Add the element to the resource-to-element map
+    rv = AddElementToMap(aElement);
+    if (NS_FAILED(rv)) return rv;
+
+    // 2. If the element is a 'command updater' (i.e., has a
+    // "commandupdater='true'" attribute), then add the element to the
+    // document's command dispatcher
+    nsAutoString value;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+        nsAutoString events;
+        rv = aElement->GetAttribute(kNameSpaceID_None, kEventsAtom, events);
+
+        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+            events = "*";
+
+        nsAutoString targets;
+        rv = aElement->GetAttribute(kNameSpaceID_None, kTargetsAtom, targets);
+
+        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+            targets = "*";
+
+        nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
+        NS_ASSERTION(domelement != nsnull, "not a DOM element");
+        if (! domelement)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = mCommandDispatcher->AddCommandUpdater(domelement, events, targets);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+XULDocumentImpl::RemoveElementFromDocument(nsIContent* aElement, void* aClosure)
+{
+    // Do a bunch of cleanup to remove an element from the XUL
+    // document.
+    nsresult rv;
+
+    // 1. Remove the element from the resource-to-element map
+    rv = RemoveElementFromMap(aElement);
+    if (NS_FAILED(rv)) return rv;
+
+    // 2. If the element is a 'command updater', then remove the
+    // element from the document's command dispatcher.
+    nsAutoString value;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+        nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
+        NS_ASSERTION(domelement != nsnull, "not a DOM element");
+        if (! domelement)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = mCommandDispatcher->RemoveCommandUpdater(domelement);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+// Attributes that are used with getElementById() and the
+// resource-to-element map.
 nsIAtom** XULDocumentImpl::kIdentityAttrs[] = { &kIdAtom, &kRefAtom, nsnull };
 
 nsresult
-XULDocumentImpl::AddElementToMap(nsIContent* aElement, PRBool aDeep)
+XULDocumentImpl::AddElementToMap(nsIContent* aElement)
 {
+    // Look at the element's 'id' and 'ref' attributes, and if set,
+    // add pointers in the resource-to-element map to the element.
     nsresult rv;
 
     PRInt32 nameSpaceID;
@@ -3386,29 +3487,14 @@ XULDocumentImpl::AddElementToMap(nsIContent* aElement, PRBool aDeep)
         }
     }
 
-    if (aDeep) {
-        PRInt32 count;
-        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-        rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
-        if (NS_FAILED(rv)) return rv;
-
-        while (--count > 0) {
-            nsCOMPtr<nsIContent> child;
-            rv = aElement->ChildAt(count, *getter_AddRefs(child));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = AddElementToMap(child, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
     return NS_OK;
 }
 
 
 nsresult
-XULDocumentImpl::RemoveElementFromMap(nsIContent* aElement, PRBool aDeep)
+XULDocumentImpl::RemoveElementFromMap(nsIContent* aElement)
 {
+    // Remove the element from the resource-to-element map.
     nsresult rv;
 
     PRInt32 nameSpaceID;
@@ -3429,22 +3515,6 @@ XULDocumentImpl::RemoveElementFromMap(nsIContent* aElement, PRBool aDeep)
                 rv = mResources.Remove(resource, aElement);
                 if (NS_FAILED(rv)) return rv;
             }
-        }
-    }
-
-    if (aDeep) {
-        PRInt32 count;
-        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-        rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
-        if (NS_FAILED(rv)) return rv;
-
-        while (--count > 0) {
-            nsCOMPtr<nsIContent> child;
-            rv = aElement->ChildAt(count, *getter_AddRefs(child));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = RemoveElementFromMap(child, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -4692,7 +4762,5 @@ XULDocumentImpl::RebuildWidgetItem(nsIContent* aElement)
 
     return NS_OK;
 }
-
-
 
 
