@@ -207,6 +207,74 @@ protected:
 }; // class nsAutoCString
 
 //========================================================================================
+class NS_BASE nsSimpleCharString
+//  An envelope for char*: reference counted. Used internally by all the nsFileSpec
+//  classes below.
+//========================================================================================
+{
+public:
+                                 nsSimpleCharString();
+                                 nsSimpleCharString(const char*);
+                                 nsSimpleCharString(const nsString&);
+                                 nsSimpleCharString(const nsSimpleCharString&);
+                                 nsSimpleCharString(const char* inData, PRUint32 inLength);
+                                 
+                                 ~nsSimpleCharString();
+                                 
+    void                         operator = (const char*);
+    void                         operator = (const nsString&);
+    void                         operator = (const nsSimpleCharString&);
+                                 
+                                 operator const char*() const { return mData ? mData->mString : 0; }
+                                 operator char* ()
+                                 {
+                                     ReallocData(Length()); // requires detaching if shared...
+                                     return mData ? mData->mString : 0;
+                                 }
+    PRBool                       operator == (const char*);
+    PRBool                       operator == (const nsString&);
+    PRBool                       operator == (const nsSimpleCharString&);
+
+    void                         operator += (const char* inString);
+    nsSimpleCharString           operator + (const char* inString) const;
+    
+    char                         operator [](int i) const { return mData ? mData->mString[i] : 0; }
+    char&                        operator [](int i)
+                                 {
+                                     if (i >= (int)Length())
+                                         ReallocData(i + 1);
+                                     return mData->mString[i]; // caveat appelator
+                                 }
+    char&                        operator [](unsigned int i) { return (*this)[(int)i]; }
+    
+    void                         Catenate(const char* inString1, const char* inString2);
+   
+    void                         SetToEmpty(); 
+    PRBool                       IsEmpty() const { return Length() == 0; }
+    
+    PRUint32                     Length() const { return mData ? mData->mLength : 0; }
+    void                         CopyFrom(const char* inData, PRUint32 inLength);
+    void                         LeafReplace(char inSeparator, const char* inLeafName);
+    char*                        GetLeaf(char inSeparator) const; // use PR_Free()
+    void                         Unescape();
+
+protected:
+
+    void                         AddRefData();
+    void                         ReleaseData();
+    void                         ReallocData(PRUint32 inLength);
+
+// DATA
+protected:
+    struct Data {
+        int         mRefCount;
+        PRUint32    mLength;
+        char        mString[1];
+        };
+    Data*                        mData;
+}; // class nsSimpleCharString
+
+//========================================================================================
 class NS_BASE nsFileSpec
 //    This is whatever each platform really prefers to describe files as.  Declared first
 //  because the other two types have an embedded nsFileSpec object.
@@ -255,7 +323,7 @@ class NS_BASE nsFileSpec
                                     long parID,
                                     ConstStr255Param name);
                                 nsFileSpec(const FSSpec& inSpec)
-                                    : mSpec(inSpec), mError(NS_OK), mPath(nsnull) {}
+                                    : mSpec(inSpec), mError(NS_OK) {}
         void                    operator = (const FSSpec& inSpec)
                                     { mSpec = inSpec; mError = NS_OK; }
 
@@ -284,7 +352,7 @@ class NS_BASE nsFileSpec
         nsresult                Error() const
                                 {
                                     #ifndef XP_MAC 
-                                    if (!mPath && NS_SUCCEEDED(mError)) 
+                                    if (mPath.IsEmpty() && NS_SUCCEEDED(mError)) 
                                         ((nsFileSpec*)this)->mError = NS_FILE_FAILURE; 
                                     #endif 
                                     return mError;
@@ -413,7 +481,7 @@ class NS_BASE nsFileSpec
 #ifdef XP_MAC
         FSSpec                  mSpec;
 #endif
-        char*                   mPath;
+        nsSimpleCharString      mPath;
         nsresult                mError;
 }; // class nsFileSpec
 
@@ -450,8 +518,10 @@ class NS_BASE nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
 
-                                operator const char* () const { return mURL; } // deprecated.
-        const char*             GetAsString() const { return mURL; }
+        void                    operator +=(const char* inRelativeUnixPath);
+        nsFileURL               operator +(const char* inRelativeUnixPath) const;
+                                operator const char* () const { return (const char*)mURL; } // deprecated.
+        const char*             GetAsString() const { return (const char*)mURL; }
 
         friend                  NS_BASE nsOutputStream& operator << (
                                      nsOutputStream& s, const nsFileURL& spec);
@@ -460,12 +530,11 @@ class NS_BASE nsFileURL
                                 // Accessor to allow quick assignment to a mFileSpec
         const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
 #endif
-    private:
-        // Should not be defined (only nsFilePath is to be treated as strings.
-                                operator char* ();
+
     protected:
                                 friend class nsFilePath; // to allow construction of nsFilePath
-        char*                   mURL;
+        nsSimpleCharString      mURL;
+
 #ifdef XP_MAC
         // Since the path on the macintosh does not uniquely specify a file (volumes
         // can have the same name), stash the secret nsFileSpec, too.
@@ -493,10 +562,6 @@ class NS_BASE nsFilePath
                                     // This is the only automatic conversion to const char*
                                     // that is provided, and it allows the
                                     // path to be "passed" to NSPR file routines.
-                                operator char* () { return mPath; }
-                                    // This is the only automatic conversion to string
-                                    // that is provided, because a naked string should
-                                    // only mean a standard file path.
 
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const char* inString);
@@ -508,6 +573,9 @@ class NS_BASE nsFilePath
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);
 
+        void                    operator +=(const char* inRelativeUnixPath);
+        nsFilePath              operator +(const char* inRelativeUnixPath) const;
+
 #ifdef XP_MAC
     public:
                                 // Accessor to allow quick assignment to a mFileSpec
@@ -516,7 +584,7 @@ class NS_BASE nsFilePath
 
     private:
 
-        char*                    mPath;
+        nsSimpleCharString       mPath;
 #ifdef XP_MAC
         // Since the path on the macintosh does not uniquely specify a file (volumes
         // can have the same name), stash the secret nsFileSpec, too.
@@ -533,7 +601,7 @@ class NS_BASE nsPersistentFileDescriptor
 //========================================================================================
 {
     public:
-                                nsPersistentFileDescriptor() : mDescriptorString(nsnull) {}
+                                nsPersistentFileDescriptor() {}
                                     // For use prior to reading in from a stream
                                 nsPersistentFileDescriptor(const nsPersistentFileDescriptor& inPath);
         virtual                 ~nsPersistentFileDescriptor();
@@ -553,14 +621,13 @@ class NS_BASE nsPersistentFileDescriptor
         friend class nsFileSpec;
 
     private:
-        // Here are the ways to get data in and out of a file.
-        void                    GetData(void*& outData, PRInt32& outSize) const;
-                                     // DON'T FREE the returned data!
-        void                    SetData(const void* inData, PRInt32 inSize);
+
+        void                    GetData(nsSimpleCharString& outData, PRInt32& outSize) const;
+        void                    SetData(const nsSimpleCharString& inData, PRInt32 inSize);
 
     protected:
 
-        char*                   mDescriptorString;
+        nsSimpleCharString      mDescriptorString;
 
 }; // class nsPersistentFileDescriptor
 
@@ -569,16 +636,16 @@ class NS_BASE nsDirectoryIterator
 //  Example:
 //
 //       nsFileSpec parentDir(...); // directory over whose children we shall iterate
-//       for (nsDirectoryIterator i(parentDir); i; i++)
+//       for (nsDirectoryIterator i(parentDir); i.Exists(); i++)
 //       {
-//              // do something with (const nsFileSpec&)i
+//              // do something with i.Spec()
 //       }
 //
 //  or:
 //
-//       for (nsDirectoryIterator i(parentDir, PR_FALSE); i; i--)
+//       for (nsDirectoryIterator i(parentDir, PR_FALSE); i.Exists(); i--)
 //       {
-//              // do something with (const nsFileSpec&)i
+//              // do something with i.Spec()
 //       }
 //
 //  Currently, the only platform on which backwards iteration actually goes backwards
@@ -599,6 +666,9 @@ class NS_BASE nsDirectoryIterator
 	    nsDirectoryIterator&    operator --(); // moves to the previous item, if any.
 	    nsDirectoryIterator&    operator --(int) { return --(*this); } // post-decrement.
 	                            operator nsFileSpec&() { return mCurrent; }
+	    
+	    nsFileSpec&             Spec() { return mCurrent; }
+	     
 	private:
 	    nsFileSpec              mCurrent;
 	    PRBool                  mExists;

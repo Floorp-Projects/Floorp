@@ -61,39 +61,38 @@ extern "C" int statvfs(const char *, struct statvfs *);
 #endif
  
  //----------------------------------------------------------------------------------------
-void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
+void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
 // Canonify, make absolute, and check whether directories exist
 //----------------------------------------------------------------------------------------
 {
-    if (!ioPath)
+    if (ioPath.IsEmpty())
         return;
     if (inMakeDirs)
     {
         const mode_t mode = 0700;
-        nsFileSpecHelpers::MakeAllDirectories(ioPath, mode);
+        nsFileSpecHelpers::MakeAllDirectories((const char*)ioPath, mode);
     }
     char buffer[MAXPATHLEN];
     errno = 0;
     *buffer = '\0';
-    char* canonicalPath = realpath(ioPath, buffer);
+    char* canonicalPath = realpath((const char*)ioPath, buffer);
     if (!canonicalPath)
     {
         // Linux's realpath() is pathetically buggy.  If the reason for the nil
         // result is just that the leaf does not exist, strip the leaf off,
         // process that, and then add the leaf back.
-        char* allButLeaf = nsFileSpecHelpers::StringDup(ioPath);
-        if (!allButLeaf)
+        nsSimpleCharString allButLeaf(ioPath);
+        if (allButLeaf.IsEmpty())
             return;
-        char* lastSeparator = strrchr(allButLeaf, '/');
+        char* lastSeparator = strrchr((char*)allButLeaf, '/');
         if (lastSeparator)
         {
             *lastSeparator = '\0';
-            canonicalPath = realpath(allButLeaf, buffer);
+            canonicalPath = realpath((const char*)allButLeaf, buffer);
             strcat(buffer, "/");
             // Add back the leaf
             strcat(buffer, ++lastSeparator);
         }
-        delete [] allButLeaf;
     }
     if (!canonicalPath && *ioPath != '/' && !inMakeDirs)
     {
@@ -106,21 +105,21 @@ void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
         }
     }
     if (canonicalPath)
-        nsFileSpecHelpers::StringAssign(ioPath, canonicalPath);
+        ioPath = canonicalPath;
 } // nsFileSpecHelpers::Canonify
 
 //----------------------------------------------------------------------------------------
 void nsFileSpec::SetLeafName(const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::LeafReplace(mPath, '/', inLeafName);
+    mPath.LeafReplace('/', inLeafName);
 } // nsFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
 char* nsFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
-    return nsFileSpecHelpers::GetLeaf(mPath, '/');
+    return mPath.GetLeaf('/');
 } // nsFileSpec::GetLeafName
 
 //----------------------------------------------------------------------------------------
@@ -172,9 +171,9 @@ PRBool nsFileSpec::IsDirectory() const
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::StringAssign(outSpec.mPath, mPath);
+    outSpec.mPath = mPath;
     char* cp = strrchr(outSpec.mPath, '/');
-    if (cp)
+    if (cp++)
         *cp = '\0';
 } // nsFileSpec::GetParent
 
@@ -182,14 +181,14 @@ void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 void nsFileSpec::operator += (const char* inRelativePath)
 //----------------------------------------------------------------------------------------
 {
-    if (!inRelativePath || !mPath)
+    if (!inRelativePath || mPath.IsEmpty())
         return;
     
     char endChar = mPath[strlen(mPath) - 1];
     if (endChar == '/')
-        nsFileSpecHelpers::ReallocCat(mPath, "x");
+        mPath += "x";
     else
-        nsFileSpecHelpers::ReallocCat(mPath, "/x");
+        mPath += "/x";
     SetLeafName(inRelativePath);
 } // nsFileSpec::operator +=
 
@@ -304,16 +303,11 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
     if (inParentDirectory.IsDirectory() && (! IsDirectory() ) )
     {
         char *leafname = GetLeafName();
-        char* destPath = nsFileSpecHelpers::StringDup(
-            inParentDirectory.GetCString(),
-            strlen(inParentDirectory.GetCString()) + 1 + strlen(leafname));
-        strcat(destPath, "/");
-        strcat(destPath, leafname);
+        nsSimpleCharString destPath(inParentDirectory.GetCString());
+        destPath += "/";
+        destPath += leafname;
         delete [] leafname;
-
         result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), destPath));
-        
-        delete [] destPath;
     }
     return result;
 } // nsFileSpec::Copy
@@ -325,24 +319,20 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory) const
     // We can only copy into a directory, and (for now) can not copy entire directories
     nsresult result = NS_FILE_FAILURE;
 
-    if (inNewParentDirectory.IsDirectory() && (! IsDirectory() ) )
+    if (inNewParentDirectory.IsDirectory() && !IsDirectory())
     {
         char *leafname = GetLeafName();
-        char* destPath
-            = nsFileSpecHelpers::StringDup(
-                inNewParentDirectory.GetCString(),
-                strlen(inNewParentDirectory.GetCString()) + 1 + strlen(leafname));
-        strcat(destPath, "/");
-        strcat(destPath, leafname);
+        nsSimpleCharString destPath(inNewParentDirectory.GetCString());
+        destPath += "/";
+        destPath += leafname;
         delete [] leafname;
 
-        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), destPath));
+        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), (const char*)destPath));
         if (result == NS_OK)
-	{
-    // cast to fix const-ness
-		((nsFileSpec*)this)->Delete(PR_FALSE);
-	}
-	delete [] destPath;
+        {
+            // cast to fix const-ness
+            ((nsFileSpec*)this)->Delete(PR_FALSE);
+        }
     }
     return result;
 } 
@@ -355,13 +345,8 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
     
     if (! IsDirectory())
     {
-        char* fileNameWithArgs
-	        = nsFileSpecHelpers::StringDup(mPath, strlen(mPath) + 1 + strlen(inArgs));
-        strcat(fileNameWithArgs, " ");
-        strcat(fileNameWithArgs, inArgs);
-
+        nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;
         result = NS_FILE_RESULT(system(fileNameWithArgs));
-        delete [] fileNameWithArgs; 
     } 
 
     return result;
@@ -373,14 +358,14 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
     char curdir [MAXPATHLEN];
-    if (!mPath || !*mPath)
+    if (mPath.IsEmpty())
     {
         (void) getcwd(curdir, MAXPATHLEN);
         if (!curdir)
             return ULONG_MAX;  /* hope for the best as we did in cheddar */
     }
     else
-        sprintf(curdir, "%.200s", mPath);
+        sprintf(curdir, "%.200s", (const char*)mPath);
  
     struct STATFS fs_buf;
     if (STATFS(curdir, &fs_buf) < 0)

@@ -35,37 +35,36 @@
 #endif 
 
 //----------------------------------------------------------------------------------------
-void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
+void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
 // Canonify, make absolute, and check whether directories exist. This
 // takes a (possibly relative) native path and converts it into a
 // fully qualified native path.
 //----------------------------------------------------------------------------------------
 {
-  if (!ioPath)
-      return;
+    if (ioPath.IsEmpty())
+        return;
   
-  if (inMakeDirs)
-  {
-      const int mode = 0700;
-      char* unixStylePath = nsFileSpecHelpers::StringDup(ioPath);
-      nsFileSpecHelpers::NativeToUnix(unixStylePath);
-      nsFileSpecHelpers::MakeAllDirectories(unixStylePath, mode);
-      delete[] unixStylePath;
-  }
-  char buffer[_MAX_PATH];
-  errno = 0;
-  *buffer = '\0';
-  char* canonicalPath = _fullpath(buffer, ioPath, _MAX_PATH);
+    if (inMakeDirs)
+    {
+        const int mode = 0700;
+        nsSimpleCharString unixStylePath = ioPath;
+        nsFileSpecHelpers::NativeToUnix(unixStylePath);
+        nsFileSpecHelpers::MakeAllDirectories((const char*)unixStylePath, mode);
+    }
+    char buffer[_MAX_PATH];
+    errno = 0;
+    *buffer = '\0';
+    char* canonicalPath = _fullpath(buffer, ioPath, _MAX_PATH);
 
-  NS_ASSERTION( canonicalPath[0] != '\0', "Uh oh...couldn't convert" );
-  if (canonicalPath[0] == '\0')
-      return;
+    NS_ASSERTION( canonicalPath[0] != '\0', "Uh oh...couldn't convert" );
+    if (canonicalPath[0] == '\0')
+        return;
 
-  nsFileSpecHelpers::StringAssign(ioPath, canonicalPath);
-}
+    ioPath = canonicalPath;
+} // nsFileSpecHelpers::Canonify
 
 //----------------------------------------------------------------------------------------
-void nsFileSpecHelpers::UnixToNative(char*& ioPath)
+void nsFileSpecHelpers::UnixToNative(nsSimpleCharString& ioPath)
 // This just does string manipulation.  It doesn't check reality, or canonify, or
 // anything
 //----------------------------------------------------------------------------------------
@@ -73,55 +72,49 @@ void nsFileSpecHelpers::UnixToNative(char*& ioPath)
 	// Allow for relative or absolute.  We can do this in place, because the
 	// native path is never longer.
 	
-	if (!ioPath || !*ioPath)
+	if (ioPath.IsEmpty())
 		return;
 		
-	char* src = ioPath;
-	if (*ioPath == '/')
-    {
-      // Strip initial slash for an absolute path
-      src++;
-    }
-		
-	// Convert the vertical slash to a colon
-	char* cp = src + 1;
-	
-	// If it was an absolute path, check for the drive letter
-	if (*ioPath == '/' && strstr(cp, "|/") == cp)
-    *cp = ':';
-	
-	// Convert '/' to '\'.
-	while (*++cp)
-    {
-      if (*cp == '/')
-        *cp = '\\';
-    }
+    // Strip initial slash for an absolute path
+	char* src = (char*)ioPath;
+	if (*src == '/')
+	{
+		// Since it was an absolute path, check for the drive letter
+		char* colonPointer = src + 2;
+		if (strstr(src, "|/") == colonPointer)
+	        *colonPointer = ':';
+	    // allocate new string by copying from ioPath[1]
+	    nsSimpleCharString temp = src + 1;
+	    ioPath = temp;
+	}
 
-	if (*ioPath == '/') {
-    for (cp = ioPath; *cp; ++cp)
-      *cp = *(cp + 1);
-  }
-}
+	src = (char*)ioPath;
+		
+	// Convert '/' to '\'.
+	while (*++src)
+    {
+        if (*src == '/')
+            *src = '\\';
+    }
+} // nsFileSpecHelpers::UnixToNative
 
 //----------------------------------------------------------------------------------------
-void nsFileSpecHelpers::NativeToUnix(char*& ioPath)
+void nsFileSpecHelpers::NativeToUnix(nsSimpleCharString& ioPath)
 // This just does string manipulation.  It doesn't check reality, or canonify, or
 // anything.  The unix path is longer, so we can't do it in place.
 //----------------------------------------------------------------------------------------
 {
-	if (!ioPath || !*ioPath)
+	if (ioPath.IsEmpty())
 		return;
 		
 	// Convert the drive-letter separator, if present
-	char* temp = nsFileSpecHelpers::StringDup("/", 1 + strlen(ioPath));
+	nsSimpleCharString temp("/");
 
-	char* cp = ioPath + 1;
-	if (strstr(cp, ":\\") == cp) {
+	char* cp = (char*)ioPath + 1;
+	if (strstr(cp, ":\\") == cp)
 		*cp = '|';    // absolute path
-  }
-  else {
-    *temp = '\0'; // relative path
-  }
+    else
+        temp[0] = '\0'; // relative path
 	
 	// Convert '\' to '/'
 	for (; *cp; cp++)
@@ -129,17 +122,14 @@ void nsFileSpecHelpers::NativeToUnix(char*& ioPath)
       if (*cp == '\\')
         *cp = '/';
     }
-
 	// Add the slash in front.
-	strcat(temp, ioPath);
-	StringAssign(ioPath, temp);
-	delete [] temp;
+	temp += ioPath;
+	ioPath = temp;
 }
 
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
-:	mPath(NULL)
 {
 	*this = inPath;
 }
@@ -148,7 +138,7 @@ nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
-	nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath);
+	mPath = (const char*)inPath;
 	nsFileSpecHelpers::UnixToNative(mPath);
 	mError = NS_OK;
 } // nsFileSpec::operator =
@@ -156,7 +146,6 @@ void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
-:	mPath(NULL)
 {
 	*this = inSpec;
 } // nsFilePath::nsFilePath
@@ -165,7 +154,7 @@ nsFilePath::nsFilePath(const nsFileSpec& inSpec)
 void nsFilePath::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-	nsFileSpecHelpers::StringAssign(mPath, inSpec.mPath);
+	mPath = inSpec.mPath;
 	nsFileSpecHelpers::NativeToUnix(mPath);
 } // nsFilePath::operator =
 
@@ -173,14 +162,14 @@ void nsFilePath::operator = (const nsFileSpec& inSpec)
 void nsFileSpec::SetLeafName(const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
-	nsFileSpecHelpers::LeafReplace(mPath, '\\', inLeafName);
+	mPath.LeafReplace('\\', inLeafName);
 } // nsFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
 char* nsFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
-	return nsFileSpecHelpers::GetLeaf(mPath, '\\');
+    return mPath.GetLeaf('\\');
 } // nsFileSpec::GetLeafName
 
 //----------------------------------------------------------------------------------------
@@ -232,9 +221,9 @@ PRBool nsFileSpec::IsDirectory() const
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
-	nsFileSpecHelpers::StringAssign(outSpec.mPath, mPath);
+	outSpec.mPath = mPath;
 	char* cp = strrchr(outSpec.mPath, '\\');
-	if (cp)
+	if (cp++)
 		*cp = '\0';
 } // nsFileSpec::GetParent
 
@@ -242,19 +231,18 @@ void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 void nsFileSpec::operator += (const char* inRelativePath)
 //----------------------------------------------------------------------------------------
 {
-	if (!inRelativePath || !mPath)
+	if (!inRelativePath || mPath.IsEmpty())
 		return;
 	
-	if (mPath[strlen(mPath) - 1] == '\\')
-		nsFileSpecHelpers::ReallocCat(mPath, "x");
+	if (mPath[mPath.Length() - 1] == '\\')
+		mPath += "x";
 	else
-		nsFileSpecHelpers::ReallocCat(mPath, "\\x");
+		mPath += "\\x";
 	
 	// If it's a (unix) relative path, make it native
-	char* dosPath = nsFileSpecHelpers::StringDup(inRelativePath);
+	nsSimpleCharString dosPath = inRelativePath;
 	nsFileSpecHelpers::UnixToNative(dosPath);
 	SetLeafName(dosPath);
-	delete [] dosPath;
 } // nsFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
@@ -309,80 +297,54 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
 //----------------------------------------------------------------------------------------
 {
     // We can only copy into a directory, and (for now) can not copy entire directories
-
     if (inParentDirectory.IsDirectory() && (! IsDirectory() ) )
     {
         char *leafname = GetLeafName();
-        char* destPath = nsFileSpecHelpers::StringDup(inParentDirectory, ( strlen(inParentDirectory) + 1 + strlen(leafname) ) );
-        strcat(destPath, "\\");
-        strcat(destPath, leafname);
+        nsSimpleCharString destPath(inParentDirectory.GetCString());
+        destPath += "\\";
+        destPath += leafname;
         delete [] leafname;
         
         // CopyFile returns non-zero if succeeds
-        int copyOK = CopyFile(*this, destPath, true);
-
-        delete[] destPath;
-
+        int copyOK = CopyFile(GetCString(), destPath, true);
         if (copyOK)
-        {
             return NS_OK;
-        }
     }
-
     return NS_FILE_FAILURE;
 } // nsFileSpec::Copy
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Move(const nsFileSpec& nsNewParentDirectory) const
+nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory) const
 //----------------------------------------------------------------------------------------
 {
     // We can only copy into a directory, and (for now) can not copy entire directories
-
-    if (nsNewParentDirectory.IsDirectory() && (! IsDirectory() ) )
+    if (inNewParentDirectory.IsDirectory() && (! IsDirectory() ) )
     {
         char *leafname = GetLeafName();
-        char *destPath = nsFileSpecHelpers::StringDup(nsNewParentDirectory, ( strlen(nsNewParentDirectory) + 1 + strlen(leafname) ));
-        strcat(destPath, "\\");
-        strcat(destPath, leafname);
+        nsSimpleCharString destPath(inNewParentDirectory.GetCString());
+        destPath += "\\";
+        destPath += leafname;
         delete [] leafname;
 
         // MoveFile returns non-zero if succeeds
-        int copyOK = MoveFile(*this, destPath);
- 
-        delete [] destPath;
-
+        int copyOK = MoveFile(GetCString(), destPath);
         if (copyOK)
-        {
             return NS_OK;
-        }
     }
-
     return NS_FILE_FAILURE;
 } // nsFileSpec::Move
 
 //----------------------------------------------------------------------------------------
 nsresult nsFileSpec::Execute(const char* inArgs ) const
 //----------------------------------------------------------------------------------------
-{
-    
-    if (! IsDirectory())
+{    
+    if (!IsDirectory())
     {
-        char* fileNameWithArgs = NULL;
-
-	    fileNameWithArgs = nsFileSpecHelpers::StringDup(mPath, ( strlen(mPath) + 1 + strlen(inArgs) ) );
-        strcat(fileNameWithArgs, " ");
-        strcat(fileNameWithArgs, inArgs);
-
-        int execResult = WinExec( fileNameWithArgs, SW_NORMAL );
-        
-        delete [] fileNameWithArgs;
-
+	    nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;
+        int execResult = WinExec( fileNameWithArgs, SW_NORMAL );     
         if (execResult > 31)
-        {
             return NS_OK;
-        }
     }
-
     return NS_FILE_FAILURE;
 } // nsFileSpec::Execute
 
@@ -391,13 +353,13 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
 	char aDrive[_MAX_DRIVE + 2];
-	_splitpath( mPath, aDrive, NULL, NULL, NULL);
+	_splitpath( (const char*)mPath, aDrive, NULL, NULL, NULL);
 
 	if (aDrive[0] == '\0')
 	{
         // The back end is always trying to pass us paths that look
         //   like /c|/netscape/mail.  See if we've got one of them
-        if (strlen(mPath) > 2 && mPath[0] == '/' && mPath[2] == '|')
+        if (mPath.Length() > 2 && mPath[0] == '/' && mPath[2] == '|')
         {
             aDrive[0] = mPath[1];
             aDrive[1] = ':';
