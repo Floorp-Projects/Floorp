@@ -102,7 +102,9 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
   mParent = aParent;
   NS_IF_ADDREF(mParent);
   mMenuBar = gtk_menu_bar_new();
-  mParent->SetMenuBar(this);
+#if FIX_HASNT_BEEN_FOUND_YET
+  mParent->SetMenuBar(this);  /* RIGHT HERE PAV */
+#endif
   gtk_widget_show(mMenuBar);
   return NS_OK;
 
