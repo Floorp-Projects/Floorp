@@ -528,6 +528,11 @@ nsPermissionManager::Read()
   nsresult rv;
   
   if (!mPermissionsFile) {
+    // For backwards compatibility, add those types when not yet set.
+    mTypeArray[0] = PL_strdup("cookie");
+    mTypeArray[1] = PL_strdup("image");
+    mTypeArray[2] = PL_strdup("popup");
+
     return NS_ERROR_FAILURE;
   }
 
@@ -568,6 +573,7 @@ nsPermissionManager::Read()
       if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
         continue;
       }
+      NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) != -1, "Corrupt cookperm.txt file");
       mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
 
       continue;
@@ -637,12 +643,14 @@ nsPermissionManager::Read()
     }
   }
 
-  mChangedList = PR_FALSE;
+  // Old files, without the part that defines the types, assume 0 is cookie
+  // etc. So add those types, but make sure not to overwrite types from new
+  // style files.
+  GetTypeIndex("cookie", PR_TRUE);
+  GetTypeIndex("image", PR_TRUE);
+  GetTypeIndex("popup", PR_TRUE);
 
-  // For backwards compatibility, add those types when not yet set.
-  if (!mTypeArray[0]) mTypeArray[0] = PL_strdup("cookie");
-  if (!mTypeArray[1]) mTypeArray[1] = PL_strdup("image");
-  if (!mTypeArray[2]) mTypeArray[2] = PL_strdup("popup");
+  mChangedList = PR_FALSE;
 
   return NS_OK;
 }
