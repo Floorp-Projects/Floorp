@@ -408,7 +408,21 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt3
                                 aProxyHost,
                                 aProxyPort, 
                                 aProxyType);
-
+        if (NS_SUCCEEDED(rv)) {
+            if (*aProxyType == nsnull || !PL_strcasecmp("direct", *aProxyType)) {
+                if (*aProxyHost) {
+                    nsMemory::Free(*aProxyHost);
+                    *aProxyHost = nsnull;
+                }
+                if (*aProxyType) {
+                    nsMemory::Free(*aProxyType);
+                    *aProxyType = nsnull;
+                }
+                *aProxyPort = -1;				 
+            } else if (*aProxyPort <= 0) {
+                *aProxyPort = -1;
+            }                      
+        }
         return rv;
     }
     
