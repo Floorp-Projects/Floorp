@@ -76,6 +76,7 @@ DIRS +=				\
   view				\
   widget			\
   layout			\
+  db				\
   rdf				\
   webshell			\
   editor			\
