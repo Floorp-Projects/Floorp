@@ -346,12 +346,12 @@ nsNSSSocketInfo::TLSStepUp()
   if (SECSuccess != SSL_ResetHandshake(mFd, PR_FALSE))
     return NS_ERROR_FAILURE;
 
-  mFirstWrite = PR_TRUE;
-
   // This is a work around for NSS bug 56924 which is scheduled
   // for a fix in NSS 3.3, but we're currently on version 3.2.1,
   // so we need this work around.
   PR_Write(mFd, nsnull, 0);
+
+  mFirstWrite = PR_TRUE;
 
   return NS_OK;
 }
