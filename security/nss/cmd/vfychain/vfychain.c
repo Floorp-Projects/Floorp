@@ -277,7 +277,7 @@ breakout:
     if (secStatus != SECSuccess) {
 	exitErr("NSS_Init");
     }
-
+    SECU_RegisterDynamicOids();
 
     while (status == PL_OPT_OK) {
 	switch(optstate->option) {

@@ -34,7 +34,7 @@
 /*
  * Test program for client-side OCSP.
  *
- * $Id: ocspclnt.c,v 1.5 2003/04/01 18:55:16 bishakhabanerjee%netscape.com Exp $
+ * $Id: ocspclnt.c,v 1.6 2004/01/29 22:48:56 nelsonb%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -1116,6 +1116,7 @@ main (int argc, char **argv)
 	SECU_PrintError (program_name, "NSS_Init failed");
 	goto prdone;
     }
+    SECU_RegisterDynamicOids();
 
     if (prequest + presponse) {
 	data = read_file_into_item (in_file, siBuffer);

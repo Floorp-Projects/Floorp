@@ -73,15 +73,15 @@ int checkInteger(SECItem *intItem, char *fieldName, int verbose)
     if (verbose) {
 	printf("Checking %s\n", fieldName);
     }
-    
+
     len = intItem->len;
-    
+
     if (len && (intItem->data[0] & 0x80)) {
 	printf("PROBLEM: %s is NEGATIVE 2's-complement integer.\n",
 	       fieldName);
     }
-    
-    
+
+
     /* calculate bit length and check for unnecessary leading zeros */
     bitlen = len << 3;
     if (len > 1 && intItem->data[0] == 0) {
@@ -112,28 +112,28 @@ void checkName(CERTName *n, char *fieldName, int verbose)
     if (verbose) {
 	printf("Checking %s\n", fieldName);
     }
-    
+
     v = CERT_GetCountryName(n);
     if (!v) {
 	printf("PROBLEM: %s lacks Country Name (C)\n",
 	       fieldName);
     }
     PORT_Free(v);
-    
+
     v = CERT_GetOrgName(n);
     if (!v) {
 	printf("PROBLEM: %s lacks Organization Name (O)\n",
 	       fieldName);
     }
     PORT_Free(v);
-    
+
     v = CERT_GetOrgUnitName(n);
     if (!v) {
 	printf("WARNING: %s lacks Organization Unit Name (OU)\n",
 	       fieldName);
     }
     PORT_Free(v);	
-    
+
     v = CERT_GetCommonName(n);
     if (!v) {
 	printf("PROBLEM: %s lacks Common Name (CN)\n",
@@ -150,8 +150,8 @@ void checkName(CERTName *n, char *fieldName, int verbose)
  * signature algorithm oid (at the SignedData level) and oid in DigestInfo.
  *
  */
-     
-     
+
+
 /* Returns the tag for the hash algorithm in the given signature algorithm */
      static
      int hashAlg(int sigAlgTag) {
@@ -196,17 +196,17 @@ OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
     int sigAlgTag;
     int hashAlgTag;
     int showDigestOid=0;
-    
+
     cx = VFY_CreateContext(key, sig, SECOID_GetAlgorithmTag(sigAlgorithm),
 			   NULL);
     if (cx == NULL)
 	return SECFailure;
-    
+
     sigAlgOid = SECOID_FindOID(&sigAlgorithm->algorithm);
     if (sigAlgOid == 0)
 	return SECFailure;
     sigAlgTag = sigAlgOid->offset;
-    
+
     hashAlgTag = hashAlg(sigAlgTag);
     if (hashAlgTag == -1) {
 	printf("PROBLEM: Unsupported Digest Algorithm in DigestInfo");
@@ -226,14 +226,14 @@ OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
 			    &oiddata->oid, "PROBLEM: UNKNOWN OID", 0);
 	}
     }
-    
+
     rv = VFY_Begin(cx);
     if (rv == SECSuccess) {
 	rv = VFY_Update(cx, buf, len);
 	if (rv == SECSuccess)
 	    rv = VFY_End(cx);
     }
-    
+
     VFY_DestroyContext(cx, PR_TRUE);
     return rv;
 }
@@ -247,31 +247,31 @@ OurVerifySignedData(CERTSignedData *sd, CERTCertificate *cert)
     SECItem sig;
     SECKEYPublicKey *pubKey = 0;
     SECStatus rv;
-    
+
     /* check the certificate's validity */
     rv = CERT_CertTimesValid(cert);
     if ( rv ) {
 	return(SECFailure);
     }
-    
+
     /* get cert's public key */
     pubKey = CERT_ExtractPublicKey(cert);
     if ( !pubKey ) {
 	return(SECFailure);
     }
-    
+
     /* check the signature */
     sig = sd->signature;
     DER_ConvertBitString(&sig);
     rv = OurVerifyData(sd->data.data, sd->data.len, pubKey, &sig,
 		       &sd->signatureAlgorithm);
-    
+
     SECKEY_DestroyPublicKey(pubKey);
-    
+
     if ( rv ) {
 	return(SECFailure);
     }
-    
+
     return(SECSuccess);
 }
 
@@ -283,22 +283,22 @@ CERTCertificate *createEmptyCertificate(void)
 {
     PRArenaPool *arena = 0;
     CERTCertificate *c = 0;
-    
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( !arena ) {
 	return 0;
     }
-    
-    
+
+
     c = (CERTCertificate *) PORT_ArenaZAlloc(arena, sizeof(CERTCertificate));
-    
+
     if (c) {
 	c->referenceCount = 1;
 	c->arena = arena;
     } else {
 	PORT_FreeArena(arena,PR_TRUE);
     }
-    
+
     return c;
 }    
 
@@ -325,33 +325,33 @@ int main(int argc, char **argv)
     PLOptState *optstate;
     PLOptStatus status;
 
-	PORT_Memset(&md5WithRSAEncryption, 0, sizeof(md5WithRSAEncryption));
-	PORT_Memset(&md2WithRSAEncryption, 0, sizeof(md2WithRSAEncryption));
-	PORT_Memset(&sha1WithRSAEncryption, 0, sizeof(sha1WithRSAEncryption));
-	PORT_Memset(&rsaEncryption, 0, sizeof(rsaEncryption));
-    
+    PORT_Memset(&md5WithRSAEncryption, 0, sizeof(md5WithRSAEncryption));
+    PORT_Memset(&md2WithRSAEncryption, 0, sizeof(md2WithRSAEncryption));
+    PORT_Memset(&sha1WithRSAEncryption, 0, sizeof(sha1WithRSAEncryption));
+    PORT_Memset(&rsaEncryption, 0, sizeof(rsaEncryption));
+
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
-    
+
     optstate = PL_CreateOptState(argc, argv, "aAvf");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case 'v':
 	    verbose = 1;
 	    break;
-	    
+
 	  case 'f':
 	    force = 1;
 	    break;
-	    
+
 	  case 'a':
 	    ascii = 1;
 	    break;
-	    
+
 	  case 'A':
 	    issuerAscii = 1;
 	    break;
-	    
+
 	  case '\0':
 	    if (!inFileName)
 		inFileName = PL_strdup(optstate->value);
@@ -367,32 +367,32 @@ int main(int argc, char **argv)
 	/* insufficient or excess args */
 	Usage(progName);
     }
-    
+
     inFile = PR_Open(inFileName, PR_RDONLY, 0);
     if (!inFile) {
 	fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
 	                 progName, inFileName);
 	exit(1);
     }
-    
+
     issuerCertFile = PR_Open(issuerCertFileName, PR_RDONLY, 0);
     if (!issuerCertFile) {
 	fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
 	                 progName, issuerCertFileName);
 	exit(1);
     }
-    
-	if (SECU_ReadDERFromFile(&derCert, inFile, ascii) != SECSuccess) {
+
+    if (SECU_ReadDERFromFile(&derCert, inFile, ascii) != SECSuccess) {
 	printf("Couldn't read input certificate as DER binary or base64\n");
 	exit(1);
     }
-    
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == 0) {
 	fprintf(stderr,"%s: can't allocate scratch arena!", progName);
 	exit(1);
     }
-    
+
     if (issuerCertFile) {
 	CERTSignedData *issuerCertSD=0;
 	if (SECU_ReadDERFromFile(&derIssuerCert, issuerCertFile, issuerAscii)
@@ -400,8 +400,7 @@ int main(int argc, char **argv)
 	    printf("Couldn't read issuer certificate as DER binary or base64.\n");
 	    exit(1);
 	}
-	issuerCertSD = (CERTSignedData *) PORT_ArenaZAlloc(arena,
-							sizeof(CERTSignedData));
+	issuerCertSD = PORT_ArenaZNew(arena, CERTSignedData);
 	if (!issuerCertSD) {
 	    fprintf(stderr,"%s: can't allocate issuer signed data!", progName);
 	    exit(1);
@@ -428,13 +427,13 @@ int main(int argc, char **argv)
 	    exit(1);
 	}
     }
-    
-    signedData = (CERTSignedData *) PORT_ArenaZAlloc(arena,sizeof(CERTSignedData));
+
+    signedData =  PORT_ArenaZNew(arena,CERTSignedData);
     if (!signedData) {
 	fprintf(stderr,"%s: can't allocate signedData!", progName);
 	exit(1);
     }
-    
+
     rv = SEC_ASN1DecodeItem(arena, signedData, 
                             SEC_ASN1_GET(CERT_SignedDataTemplate), 
 			    &derCert);
@@ -443,17 +442,17 @@ int main(int argc, char **argv)
 		progName);
 	exit(1);
     }
-    
+
     if (verbose) {
 	printf("Decoded ok as X509 SIGNED data.\n");
     }
-    
+
     cert = createEmptyCertificate();
     if (!cert) {
 	fprintf(stderr, "%s: can't allocate cert", progName);
 	exit(1);
     }
-    
+
     rv = SEC_ASN1DecodeItem(arena, cert, 
                         SEC_ASN1_GET(CERT_CertificateTemplate), 
 			&signedData->data);
@@ -462,16 +461,16 @@ int main(int argc, char **argv)
 		progName);
 	exit(1);
     }
-    
-    
+
+
     if (verbose) {
 	printf("Decoded ok as an X509 certificate.\n");
     }
-    
-    
+
+    SECU_RegisterDynamicOids();
     rv = SECU_PrintSignedData(stdout, &derCert, "Certificate", 0,
 			      SECU_PrintCertificate);
-    
+
     if (rv) {
 	fprintf(stderr, "%s: Unable to pretty print cert. Error: %d\n",
 		progName, PORT_GetError());
@@ -479,25 +478,25 @@ int main(int argc, char **argv)
 	    exit(1);
 	}
     }
-    
-    
+
+
     /* Do various checks on the cert */
-    
+
     printf("\n");
-    
+
     /* Check algorithms */
     SECOID_SetAlgorithmID(arena, &md5WithRSAEncryption,
 		       SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION, NULL);
-    
+
     SECOID_SetAlgorithmID(arena, &md2WithRSAEncryption,
 		       SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION, NULL);
-    
+
     SECOID_SetAlgorithmID(arena, &sha1WithRSAEncryption,
 		       SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION, NULL);
 
     SECOID_SetAlgorithmID(arena, &rsaEncryption,
 		       SEC_OID_PKCS1_RSA_ENCRYPTION, NULL);
-    
+
     {
 	int isMD5RSA = (SECOID_CompareAlgorithmID(&cert->signature,
 					       &md5WithRSAEncryption) == 0);
@@ -505,45 +504,45 @@ int main(int argc, char **argv)
 					       &md2WithRSAEncryption) == 0);
 	int isSHA1RSA = (SECOID_CompareAlgorithmID(&cert->signature,
 					       &sha1WithRSAEncryption) == 0);
-	
+
 	if (verbose) {
 	    printf("\nDoing algorithm checks.\n");
 	}
-	
+
 	if (!(isMD5RSA || isMD2RSA || isSHA1RSA)) {
 	    printf("PROBLEM: Signature not PKCS1 MD5, MD2, or SHA1 + RSA.\n");
 	} else if (!isMD5RSA) {
 	    printf("WARNING: Signature not PKCS1 MD5 with RSA Encryption\n");
 	}
-	
+
 	if (SECOID_CompareAlgorithmID(&cert->signature,
 				   &signedData->signatureAlgorithm)) {
 	    printf("PROBLEM: Algorithm in sig and certInfo don't match.\n");
 	}
     }
-    
+
     if (SECOID_CompareAlgorithmID(&cert->subjectPublicKeyInfo.algorithm,
 			       &rsaEncryption)) {
 	printf("PROBLEM: Public key algorithm is not PKCS1 RSA Encryption.\n");
     }
-    
+
     /* Check further public key properties */
     spk = cert->subjectPublicKeyInfo.subjectPublicKey;
     DER_ConvertBitString(&spk);
-    
+
     if (verbose) {
 	printf("\nsubjectPublicKey DER\n");
 	rv = DER_PrettyPrint(stdout, &spk, PR_FALSE);
 	printf("\n");
     }
-    
+
     rsapubkey = (SECKEYPublicKey *) 
 	             PORT_ArenaZAlloc(arena,sizeof(SECKEYPublicKey));
     if (!rsapubkey) {
 	fprintf(stderr, "%s: rsapubkey allocation failed.\n", progName);
 	exit(1);
     }
-    
+
     rv = SEC_ASN1DecodeItem(arena, rsapubkey, 
                             SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate), &spk);
     if (rv) {
@@ -574,12 +573,12 @@ int main(int argc, char **argv)
 	    printf("WARNING: Public exponent not any of: 3, 17, 65537\n");
 	}
     }
-    
-    
+
+
     /* Name checks */
     checkName(&cert->issuer, "Issuer Name", verbose);
     checkName(&cert->subject, "Subject Name", verbose);
-    
+
     if (issuerCert) {
 	SECComparison c =
 	    CERT_CompareName(&cert->issuer, &issuerCert->subject);
@@ -595,8 +594,8 @@ int main(int argc, char **argv)
     } else {
 	printf("INFO: Certificate is NOT self-signed.\n");
     }
-    
-    
+
+
     /* Validity time check */
     if (CERT_CertTimesValid(cert) == SECSuccess) {
 	printf("INFO: Inside validity period of certificate.\n");
@@ -604,7 +603,7 @@ int main(int argc, char **argv)
 	printf("PROBLEM: Not in validity period of certificate.\n");
 	invalid = 1;
     }
-    
+
     /* Signature check if self-signed */
     if (selfSigned && !invalid) {
 	if (rsapubkey->u.rsa.modulus.len) {
@@ -632,7 +631,7 @@ int main(int argc, char **argv)
     } else {
 	printf("INFO: Not checking signature.\n");
     }
-    
+
     return 0;    
 }
 

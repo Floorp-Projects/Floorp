@@ -417,6 +417,7 @@ main(int argc, char **argv)
 	if (secStatus != SECSuccess) {
 		exitErr("NSS_Init");
 	}
+	SECU_RegisterDynamicOids();
 
 	/* All cipher suites except RSA_NULL_MD5 are enabled by 
 	 * Domestic Policy. */
