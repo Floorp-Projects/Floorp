@@ -192,7 +192,10 @@ public class NativeScript extends NativeFunction implements Script
                         : ScriptRuntime.toString(args[0]);
 
         Script script = compile(cx, scope, source);
-        return new NativeScript(script);
+        NativeScript nscript = new NativeScript(script);
+        nscript.setParentScope(scope);
+        nscript.setPrototype(getClassPrototype(scope, "Script"));
+        return nscript;
     }
 
     private Scriptable js_compile(Context cx, Scriptable scope, String source)
