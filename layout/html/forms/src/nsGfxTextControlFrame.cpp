@@ -892,7 +892,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
   // calculate the the desired size for the text control
   // use the suggested size if it has been set
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsHTMLReflowState suggestedReflowState(aReflowState);
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
