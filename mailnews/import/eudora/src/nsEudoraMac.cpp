@@ -726,7 +726,7 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 					
         nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
-        pop3Server->SetLeaveMessagesOnServer(*pStrs[kLeaveOnServerStr])[0] == 'Y' ? PR_TRUE : PR_FALSE);
+        pop3Server->SetLeaveMessagesOnServer(*pStrs[kLeaveOnServerStr][0] == 'Y' ? PR_TRUE : PR_FALSE);
 
         // Fiddle with the identities
 				SetIdentities( accMgr, account, pStrs);
