@@ -1918,8 +1918,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
 			char	*uri = getSearchURI(src);
 			if (uri)
 			{
-				rv = bookmarks->AddBookmarkImmediately(NS_ConvertUTF8toUTF16(uri).get(),
-                                               name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
+				rv = bookmarks->AddBookmarkImmediately(uri, name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
 				Recycle(uri);
 			}
 		}
@@ -1982,8 +1981,11 @@ InternetSearchDataSource::addQueryToBookmarks(nsIRDFResource *src)
 	{
 		nsCOMPtr<nsIBookmarksService> bookmarks (do_QueryInterface(datasource));
 		if (bookmarks)
-			rv = bookmarks->AddBookmarkImmediately(uriUni, value.get(),
-                                             nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
+		{
+			nsXPIDLCString  uriUTF8;
+			uriUTF8.Adopt(ToNewUTF8String(nsDependentString(uriUni)));
+			rv = bookmarks->AddBookmarkImmediately((const char *)uriUTF8, value.get(), nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
+		}
 	}
 
 	return(NS_OK);
