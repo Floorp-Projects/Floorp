@@ -248,6 +248,7 @@ components\necko_jar.xpt
 components\necko_res.xpt                
 components\necko_strconv.xpt
 components\necko_file.xpt
+components\necko_cache.xpt
 components\necko_cookie.xpt         
             
 ; psm2
