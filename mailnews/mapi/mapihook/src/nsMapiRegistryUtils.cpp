@@ -52,8 +52,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define EXE_EXTENSION ".exe" 
 #define USERAGENT_VERSION_PREF "general.useragent.misc"
 #define USERAGENT_VERSION_NS_PREF "general.useragent.vendorSub"
@@ -83,7 +81,7 @@ void nsMapiRegistryUtils::getVarValue(const PRUnichar * varName, nsAutoString & 
 {
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(
-                                         kStringBundleServiceCID, &rv));
+                                         NS_STRINGBUNDLE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && bundleService) {
         nsCOMPtr<nsIStringBundle> brandBundle;
         rv = bundleService->CreateBundle(
@@ -708,7 +706,7 @@ nsresult nsMapiRegistryUtils::MakeMapiStringBundle(nsIStringBundle ** aMapiStrin
     }
 
     nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(
-                                     kStringBundleServiceCID, &rv));
+                                     NS_STRINGBUNDLE_CONTRACTID, &rv));
     if (NS_FAILED(rv) || !bundleService) return NS_ERROR_FAILURE;
 
     rv = bundleService->CreateBundle(

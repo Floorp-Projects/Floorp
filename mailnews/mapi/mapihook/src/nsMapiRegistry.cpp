@@ -48,8 +48,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 /** Implementation of the nsIMapiRegistry interface.
  *  Use standard implementation of nsISupports stuff.
  */

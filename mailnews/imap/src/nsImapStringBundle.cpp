@@ -43,9 +43,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define IMAP_MSGS_URL       "chrome://messenger/locale/imapMsgs.properties"
 
 extern "C" 
@@ -64,7 +61,7 @@ nsresult
 IMAPGetStringBundle(nsIStringBundle **aBundle)
 {
   nsresult rv=NS_OK;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!stringService) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIStringBundle> stringBundle;

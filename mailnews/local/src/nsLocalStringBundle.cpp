@@ -43,9 +43,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define LOCAL_MSGS_URL       "chrome://messenger/locale/localMsgs.properties"
 
 nsLocalStringService::nsLocalStringService()
@@ -96,7 +93,7 @@ nsresult
 nsLocalStringService::InitializeStringBundle()
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
 

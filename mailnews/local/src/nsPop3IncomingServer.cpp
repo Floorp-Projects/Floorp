@@ -57,7 +57,6 @@
 #include "nsIMsgLocalMailFolder.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
                              nsMsgIncomingServer,
