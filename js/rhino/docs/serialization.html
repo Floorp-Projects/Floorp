@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+    
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    
+  <meta name="Author" content="Norris Boyd">
+    
+  <meta name="GENERATOR" content="Mozilla/4.72 [en]C-NSCP  (WinNT; U) [Netscape]">
+    
+  <meta name="KeyWords" content="Rhino, JavaScript, Java">
+  <title>Serialization</title>
+</head>
+ <body bgcolor="#ffffff">
+ 
+<script src="owner.js"></script>  
+<center> 
+<h1>Serialization</h1>
+</center>
+ 
+<script>document.write(owner());</script>  <br>
+<script>
+	var d = new Date(document.lastModified);
+	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
+	document.write('<br>');
+</script>  
+<center> 
+<hr width="100%"></center>
+  
+<p>Beginning with Rhino 1.5 Release 3 it is possible to serialize JavaScript
+objects, including functions and scripts. However, &nbsp;serialization of
+code in compilation mode has some significant limitations.. Serialization
+provides a way to save the state of an object and write it out to a file
+or send it across a network connection. <br>
+&nbsp; </p>
+<h2>Simple serialization example</h2>
+The Rhino shell has two new top-level functions, serialize and deserialize.
+They're intended mainly as examples of the use of serialization:<br>
+<pre>$&nbsp;java org.mozilla.javascript.tools.shell.Main<br>js&gt; function f() { return 3; }<br>js&gt; serialize(f, "f.ser")<br>js&gt; quit()<br><br>$&nbsp;java org.mozilla.javascript.tools.shell.Main<br>js&gt; f = deserialize("f.ser")<br><br>function f() {<br>    return 3;<br>}<br><br>js&gt; f()<br>3<br>js&gt;</pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+<pre></pre>
+Here we see a simple case of a function being serialized to a file and then
+read into a new instance of Rhino and called. <br>
+<br>
+<h2>Rhino serialization APIs</h2>
+Two new classes, ScriptableOutputStream and ScriptableInputStream, were introduced
+to handle serialization of Rhino classes. These classes extend ObjectOutputStream
+and ObjectInputStream respectively. Writing an object to a file can be done
+in a few lines of Java code:<br>
+<pre>FileOutputStream fos = new FileOutputStream(filename);<br>ScriptableOutputStream out = new ScriptableOutputStream(fos, scope);<br>out.writeObject(obj);<br>out.close();</pre>
+<p>Here filename is the file to write to, obj is the object or function to
+write, and scope is the top-level scope containing obj.&nbsp;</p>
+<p>Reading the serialized object back into memory is similarly simple:</p>
+<pre>FileInputStream fis = new FileInputStream(filename);<br>ObjectInputStream in = new ScriptableInputStream(fis, scope);<br>Object deserialized = in.readObject();<br>in.close();<br></pre>
+<p>Again, we need the scope to create our serialization stream class. </p>
+<p>So why do we need these specialized stream classes instead of simply using
+ObjectOutputStream and ObjectInputStream? To understand the answer we must
+know what goes on behind the scenes when Rhino serializes objects. </p>
+<h2>How Rhino serialization works</h2>
+By default, Java serialization of an object also serializes objects that
+are referred to by that object. Upon deserialization the initial object and
+the objects it refers to are all created and the references between the objects
+are resolved. <br>
+<br>
+However, for JavaScript this creates a problem. JavaScript objects contain
+references to prototypes and to parent scopes. Default serialization would
+serialize the object or function we desired but would also serialize Object.prototype
+or even possibly the entire top-level scope and everything it refers to!
+We want to be able to serialize a JavaScript object and then deserialize
+it into a new scope and have all of the references from the deserialized
+object to prototypes and parent scopes resolved correctly to refer to objects
+in the new scope. <br>
+<br>
+ScriptableOutputStream takes a scope as a parameter to its constructor. If
+in the process of serialization it encounters a reference to the scope it
+will serialize a marker that will be resolved to the new scope upon deserialization.
+It is also possible to add names of objects to a list in the ScriptableOutputStream
+object. These objects will also be saved as markers upon serialization and
+resolved in the new scope upon deserialization. Use the addExcludedName method
+of ScriptableOutputStream to add new names. By default, ScriptableOutputStream
+excludes all the names defined using Context.initStandardObjects.<br>
+<br>
+If you are using Rhino serialization in an environment where you always define,
+say, a constructor "Foo", you should add the following code before calling
+writeObject:<br>
+<pre>out.addExcludedName("Foo");<br>out.addExcludedName("Foo.prototype");<br></pre>
+This code will prevent Foo and Foo.prototype from being serialized and will
+cause references to Foo or Foo.prototype to be resolved to the objects in
+the new scope upon deserialization. Exceptions will be thrown if Foo or Foo.prototype
+cannot be found the scopes used in either ScriptableOutputStream or ScriptableInputStream.<br>
+ <br>
+<h2>Rhino serialization in compilation mode</h2>
+ Serialization works well with objects and with functions and scripts in
+interpretive mode. However, you can run into problems with serialization
+of compiled functions and scripts:<br>
+<pre>$&nbsp;cat test.js<br>function f() { return 3; }<br>serialize(f, "f.ser");<br>g = deserialize("f.ser");<br>print(g());<br>$&nbsp;java&nbsp;org.mozilla.javascript.tools.shell.Main -opt -1 test.js<br>3<br>$&nbsp;java&nbsp;org.mozilla.javascript.tools.shell.Main test.js<br>js: uncaught JavaScript exception: java.lang.ClassNotFoundException: c1<br></pre>
+<p>The problem is that Java serialization has no built-in way to serialize
+Java classes themselves. (It might be possible to save the Java bytecodes
+in an array and then load the class upon deserialization, but at best that
+would eat up a lot of memory for just this feature.) One way around this
+is to compile the functions using the jsc tool: </p>
+<pre>$&nbsp;cat f.js<br>function f() { return 3; }<br>$&nbsp;java -classpath js.jar org.mozilla.javascript.tools.jsc.Main f.js<br>$&nbsp;cat test2.js<br>loadClass("f");<br>serialize(f, "f.ser");<br>g = deserialize("f.ser");<br>print(g());<br>$&nbsp;java -classpath 'js.jar;.' org.mozilla.javascript.tools.shell.Main test2.js<br>3<br></pre>
+<p>&nbsp;Now the function f is compiled to a Java class, but that class is
+then made available in the classpath so serialization works. This isn't that
+interesting an example since compiling a function to a class and then loading
+it accomplishes the same as serializing an interpreted function, but it becomes
+more relevant if you wish to serialize JavaScript objects that have references
+to compiled functions. </p>
+<h3>  
+<hr width="100%"><br>
+ <a href="index.html">back to top</a>
+</h3>
+  
+</body>
+</html>
