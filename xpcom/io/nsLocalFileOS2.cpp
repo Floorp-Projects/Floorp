@@ -2091,7 +2091,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
 {
     nsresult rv;
-    char* ePath = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+    char* ePath = (char*) nsMemory::Clone((char*)mWorkingPath, strlen(mWorkingPath)+1);
     if (ePath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     // Replace \ with / to convert to an url
