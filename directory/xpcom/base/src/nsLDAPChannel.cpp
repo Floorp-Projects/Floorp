@@ -1,4 +1,5 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -32,7 +33,7 @@
  * GPL.
  */
 
-#include "nsLDAP.h"
+#include "nsLDAPInternal.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPChannel.h"
 #include "nsString.h"
@@ -51,13 +52,14 @@
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 static NS_DEFINE_IID(kILoadGroupIID, NS_ILOADGROUP_IID);
+static NS_DEFINE_IID(kIProgressEventSink, NS_IPROGRESSEVENTSINK_IID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
-			      nsILDAPMessageListener);
+                              nsILDAPMessageListener);
 
 nsLDAPChannel::nsLDAPChannel()
 {
-  NS_INIT_ISUPPORTS();
+    NS_INIT_ISUPPORTS();
 }
 
 nsLDAPChannel::~nsLDAPChannel()
@@ -79,7 +81,8 @@ nsLDAPChannel::Init(nsIURI *uri)
 
     // create an LDAP connection
     //
-    mConnection = do_CreateInstance("mozilla.network.ldapconnection", &rv);
+    mConnection = do_CreateInstance("@mozilla.org/network/ldap-connection;1", 
+                                    &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // i think that in the general case, it will be worthwhile to leave the
@@ -94,17 +97,17 @@ nsLDAPChannel::Init(nsIURI *uri)
     // get the proxy object manager
     //
     nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-	do_GetService(kProxyObjectManagerCID, &rv);
+        do_GetService(kProxyObjectManagerCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv); 
 
     // and use it to get a proxy for this callback, saving it off in mCallback
     //
     rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-					kILDAPMessageListenerIID,
-					NS_STATIC_CAST(nsILDAPMessageListener *
-						       , this),
-					PROXY_ASYNC|PROXY_ALWAYS,
-					getter_AddRefs(mCallback));
+                                        kILDAPMessageListenerIID,
+                                        NS_STATIC_CAST(nsILDAPMessageListener *
+                                                       , this),
+                                        PROXY_ASYNC|PROXY_ALWAYS,
+                                        getter_AddRefs(mCallback));
     NS_ENSURE_SUCCESS(rv, rv);
 #else 	
     mCallback = this;
@@ -118,19 +121,19 @@ nsLDAPChannel::Init(nsIURI *uri)
 NS_METHOD
 nsLDAPChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  nsresult rv;
+    nsresult rv;
 
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
 
-  nsLDAPChannel* ldapChannel = new nsLDAPChannel();
-  if (ldapChannel == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
+    nsLDAPChannel* ldapChannel = new nsLDAPChannel();
+    if (ldapChannel == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(ldapChannel);
-  rv = ldapChannel->QueryInterface(aIID, aResult);
-  NS_RELEASE(ldapChannel);
-  return rv;
+    NS_ADDREF(ldapChannel);
+    rv = ldapChannel->QueryInterface(aIID, aResult);
+    NS_RELEASE(ldapChannel);
+    return rv;
 }
 
 // nsIRequest methods
@@ -138,15 +141,15 @@ nsLDAPChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsLDAPChannel::GetName(PRUnichar* *result)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetName");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::IsPending(PRBool *result)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::IsPending");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::IsPending");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -168,31 +171,31 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     //
     if (mCurrentOperation) {
 
-	// if this fails in a non-debug build, there's not much we can do
-	//
-	rv = mCurrentOperation->Abandon();
-	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-		     "mCurrentOperation->Abandon() failed\n");
+        // if this fails in a non-debug build, there's not much we can do
+        //
+        rv = mCurrentOperation->Abandon();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
+                     "mCurrentOperation->Abandon() failed\n");
     }
 
     // if the read pipe exists and hasn't already been closed, close it
     //
     if (mReadPipeOut != 0 && !mReadPipeClosed) {
 
-	// if this fails in a non-debug build, there's not much we can do
-	//
-	rv = mReadPipeOut->Close();
-	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-		     "mReadPipeOut->Close() failed");
+        // if this fails in a non-debug build, there's not much we can do
+        //
+        rv = mReadPipeOut->Close();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
+                     "mReadPipeOut->Close() failed");
     }
 
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
         rv = mLoadGroup->RemoveChannel(this, mResponseContext, aStatus,
-				       nsnull);
+                                       nsnull);
         if (NS_FAILED(rv)) 
-	    return rv;
+            return rv;
     }
 
     // call listener's onstoprequest
@@ -200,7 +203,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     if (mUnproxiedListener) {
         rv = mListener->OnStopRequest(this, mResponseContext, aStatus, nsnull);
         if (NS_FAILED(rv)) 
-	    return rv;
+            return rv;
     }
 
     return NS_OK;
@@ -216,8 +219,8 @@ nsLDAPChannel::Suspend(void)
 NS_IMETHODIMP
 nsLDAPChannel::Resume(void)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::Resume");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::Resume");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIChannel methods
@@ -226,17 +229,17 @@ nsLDAPChannel::Resume(void)
 NS_IMETHODIMP
 nsLDAPChannel::SetOriginalURI(nsIURI *aOriginalURI)
 {
-  mOriginalURI = aOriginalURI;
-  return NS_OK;
+    mOriginalURI = aOriginalURI;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::GetOriginalURI(nsIURI **aOriginalURI)
 {
-  *aOriginalURI = mOriginalURI ? mOriginalURI : mURI;
-  NS_IF_ADDREF(*aOriginalURI);
+    *aOriginalURI = mOriginalURI ? mOriginalURI : mURI;
+    NS_IF_ADDREF(*aOriginalURI);
 
-  return NS_OK;
+    return NS_OK;
 }
 
 // getter and setter for URI attribute:
@@ -248,16 +251,16 @@ nsLDAPChannel::GetOriginalURI(nsIURI **aOriginalURI)
 NS_IMETHODIMP
 nsLDAPChannel::SetURI(nsIURI* aURI)
 {
-  mURI = aURI;
-  return NS_OK;
+    mURI = aURI;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::GetURI(nsIURI* *aURI)
 {
-  *aURI = mURI;
-  NS_IF_ADDREF(*aURI);
-  return NS_OK;
+    *aURI = mURI;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK;
 }
 
 // getter and setter for transferOffset attribute:
@@ -270,15 +273,15 @@ nsLDAPChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsLDAPChannel::SetTransferOffset(PRUint32 newOffset)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetTransferOffset");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::GetTransferOffset(PRUint32 *offset)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetTransferOffset");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for transferCount attribute
@@ -298,15 +301,15 @@ nsLDAPChannel::GetTransferOffset(PRUint32 *offset)
 NS_IMETHODIMP
 nsLDAPChannel::SetTransferCount(PRInt32 newCount)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetTransferCount");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::GetTransferCount(PRInt32 *count)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetTransferCount");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for loadAttributes attribute:
@@ -320,15 +323,15 @@ nsLDAPChannel::GetTransferCount(PRInt32 *count)
 NS_IMETHODIMP
 nsLDAPChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-  *aLoadAttributes = mLoadAttributes;
-  return NS_OK;
+    *aLoadAttributes = mLoadAttributes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-  mLoadAttributes = aLoadAttributes;
-  return NS_OK;
+    mLoadAttributes = aLoadAttributes;
+    return NS_OK;
 }
 
 // getter and setter for contentType attribute:
@@ -341,21 +344,21 @@ nsLDAPChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 NS_IMETHODIMP
 nsLDAPChannel::GetContentType(char* *aContentType)
 {
-  NS_ENSURE_ARG_POINTER(aContentType);
+    NS_ENSURE_ARG_POINTER(aContentType);
 
-  *aContentType = nsCRT::strdup(TEXT_PLAIN);
-  if (!*aContentType) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    return NS_OK;
-  }
+    *aContentType = nsCRT::strdup(TEXT_PLAIN);
+    if (!*aContentType) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        return NS_OK;
+    }
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetContentType(const char *contenttype)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetContentType");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetContentType");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for contentLength attribute:
@@ -366,15 +369,15 @@ nsLDAPChannel::SetContentType(const char *contenttype)
 NS_IMETHODIMP
 nsLDAPChannel::GetContentLength(PRInt32 *)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetContentLength");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetContentLength(PRInt32)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetContentLength");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for the owner attribute:
@@ -390,17 +393,17 @@ nsLDAPChannel::SetContentLength(PRInt32)
 NS_IMETHODIMP
 nsLDAPChannel::GetOwner(nsISupports* *aOwner)
 {
-  *aOwner = mOwner;
-  NS_IF_ADDREF(*aOwner);
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetOwner(nsISupports *aOwner)
 {
-  mOwner = aOwner;
-  return NS_OK;
+    mOwner = aOwner;
+    return NS_OK;
 }
 
 // getter and setter for the loadGroup attribute:
@@ -410,10 +413,10 @@ nsLDAPChannel::SetOwner(nsISupports *aOwner)
 NS_IMETHODIMP
 nsLDAPChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
-  *aLoadGroup = mUnproxiedLoadGroup;
-  NS_IF_ADDREF(*aLoadGroup);
+    *aLoadGroup = mUnproxiedLoadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
   
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -434,15 +437,15 @@ nsLDAPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
     // get the proxy object manager
     //
     nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-	do_GetService(kProxyObjectManagerCID, &rv);
+        do_GetService(kProxyObjectManagerCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv); 
 
     // and use it to get and save a proxy for the load group
     //
     rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, kILoadGroupIID,
-					mUnproxiedLoadGroup, 
-					PROXY_SYNC|PROXY_ALWAYS,
-					getter_AddRefs(mLoadGroup));
+                                        mUnproxiedLoadGroup, 
+                                        PROXY_SYNC|PROXY_ALWAYS,
+                                        getter_AddRefs(mLoadGroup));
     NS_ENSURE_SUCCESS(rv, rv);
 
 #endif
@@ -458,23 +461,67 @@ nsLDAPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 //
 NS_IMETHODIMP
 nsLDAPChannel::GetNotificationCallbacks(nsIInterfaceRequestor* 
-					*aNotificationCallbacks)
+                                        *aNotificationCallbacks)
 {
-  *aNotificationCallbacks = mCallbacks;
-  NS_IF_ADDREF(*aNotificationCallbacks);
+    *aNotificationCallbacks = mCallbacks;
+    NS_IF_ADDREF(*aNotificationCallbacks);
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* 
-					aNotificationCallbacks)
+                                        aNotificationCallbacks)
 {
-  mCallbacks = aNotificationCallbacks;
+    nsresult rv;
 
-  return NS_OK;
+    // save off the callbacks
+    //
+    mCallbacks = aNotificationCallbacks;
+    if (mCallbacks) {
+
+        // get the (unproxied) event sink interface 
+        //
+        nsCOMPtr<nsIProgressEventSink> eventSink;
+        rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
+                                      getter_AddRefs(eventSink));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): "
+                     "mCallbacks->GetInterface failed");
+            return NS_ERROR_FAILURE;
+        }
+
+#if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
+        mEventSink = eventSink;
+#else
+        // get the proxy object manager
+        //
+        nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
+            do_GetService(kProxyObjectManagerCID, &rv);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): "
+                     "couldn't get proxy object manager");
+            return NS_ERROR_FAILURE;
+        }
+
+        // and use it to get a proxy for this callback, saving it off 
+        // in mEventSink
+        //
+        rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                            kIProgressEventSink,
+                                            eventSink,
+                                            PROXY_ASYNC | PROXY_ALWAYS,
+                                            getter_AddRefs(mEventSink));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): "
+                     "couldn't get proxy for event sink");
+            return NS_ERROR_FAILURE;
+        }
+#endif
+    }
+
+    return NS_OK;
 }
-
 
 // getter for securityInfo attribute:
 //
@@ -483,8 +530,8 @@ nsLDAPChannel::SetNotificationCallbacks(nsIInterfaceRequestor*
 NS_IMETHODIMP
 nsLDAPChannel::GetSecurityInfo(nsISupports* *aSecurityInfo)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetSecurityInfo");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetSecurityInfo");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for bufferSegmentSize attribute
@@ -500,15 +547,15 @@ nsLDAPChannel::GetSecurityInfo(nsISupports* *aSecurityInfo)
 NS_IMETHODIMP
 nsLDAPChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetBufferSegmentSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetBufferSegmentSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // getter and setter for the bufferMaxSize attribute
@@ -523,15 +570,15 @@ nsLDAPChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
 NS_IMETHODIMP
 nsLDAPChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetBufferMaxSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetBufferMaxSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Returns a local file to the channel's data if one exists, null otherwise.
@@ -556,15 +603,15 @@ nsLDAPChannel::GetLocalFile(nsIFile* *aFile)
 NS_IMETHODIMP
 nsLDAPChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetPipeLiningAllowed");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetPipeLiningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetPipeliningAllowed");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIChannel operations
@@ -579,8 +626,8 @@ nsLDAPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 NS_IMETHODIMP
 nsLDAPChannel::OpenInputStream(nsIInputStream* *result)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::OpenInputStream");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::OpenInputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Opens a blocking output stream to the URL's specified destination.
@@ -590,8 +637,8 @@ nsLDAPChannel::OpenInputStream(nsIInputStream* *result)
 NS_IMETHODIMP
 nsLDAPChannel::OpenOutputStream(nsIOutputStream* *result)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::OpenOutputStream");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::OpenOutputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Reads asynchronously from the URL's specified source. Notifications
@@ -606,7 +653,7 @@ nsLDAPChannel::OpenOutputStream(nsIOutputStream* *result)
 //                in nsISupports ctxt);
 NS_IMETHODIMP
 nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
-			 nsISupports* aCtxt)
+                         nsISupports* aCtxt)
 {
     nsresult rv;
     nsXPIDLCString host;
@@ -620,7 +667,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     // add ourselves to the appropriate loadgroup
     //
     if (mLoadGroup) {
-	mLoadGroup->AddChannel(this, mResponseContext);
+        mLoadGroup->AddChannel(this, mResponseContext);
     }
 
     // slurp out relevant pieces of the URL
@@ -631,12 +678,12 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     rv = mURI->GetPort(&port);
     NS_ENSURE_SUCCESS(rv, rv);
     if (port == -1)
-	port = LDAP_PORT;
+        port = LDAP_PORT;
 
     // we don't currently allow for a default host
     //
     if (nsCRT::strlen(host) == 0)
-	return NS_ERROR_MALFORMED_URI;
+        return NS_ERROR_MALFORMED_URI;
 
     // since the LDAP SDK does all the socket management, we don't have
     // an underlying transport channel to create an nsIInputStream to hand
@@ -644,14 +691,14 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     //
     if (!mReadPipeIn) {
     
-	// get a new pipe, propagating any error upwards
-	//
-	rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), 
-			getter_AddRefs(mReadPipeOut), 
-			NS_PIPE_DEFAULT_SEGMENT_SIZE, 
-			NS_PIPE_DEFAULT_BUFFER_SIZE,
-			PR_TRUE, PR_FALSE, nsnull);
-	NS_ENSURE_SUCCESS(rv, rv);
+        // get a new pipe, propagating any error upwards
+        //
+        rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), 
+                        getter_AddRefs(mReadPipeOut), 
+                        NS_PIPE_DEFAULT_SEGMENT_SIZE, 
+                        NS_PIPE_DEFAULT_BUFFER_SIZE,
+                        PR_TRUE, PR_FALSE, nsnull);
+        NS_ENSURE_SUCCESS(rv, rv);
     } 
 
     // get an AsyncStreamListener to proxy for mListener, if we're
@@ -662,7 +709,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     mListener = aListener;
 #else
     rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), 
-				   mUnproxiedListener, NS_UI_THREAD_EVENTQ);
+                                   mUnproxiedListener, NS_UI_THREAD_EVENTQ);
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
@@ -678,8 +725,8 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 
     // create and initialize an LDAP operation (to be used for the bind)
     //	
-    mCurrentOperation = do_CreateInstance("mozilla.network.ldapoperation", 
-					  &rv);
+    mCurrentOperation = do_CreateInstance(
+        "@mozilla.org/network/ldap-operation;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // our OnLDAPMessage accepts all result callbacks
@@ -693,13 +740,13 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     rv = mCurrentOperation->SimpleBind(NULL);
     if (NS_FAILED(rv)) {
 
-	// XXXdmose better error handling / passthrough; deal with password
-	//
+        // XXXdmose better error handling / passthrough; deal with password
+        //
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, "mCurrentOperation->SimpleBind failed. rv=%d\n",
-		   rv);
+        PR_fprintf(PR_STDERR, "mCurrentOperation->SimpleBind failed. rv=%d\n",
+                   rv);
 #endif
-	return(rv);
+        return(rv);
     }
 
     return NS_OK;
@@ -718,31 +765,31 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 //                 in nsISupports ctxt);
 NS_IMETHODIMP
 nsLDAPChannel::AsyncWrite(nsIInputStream* fromStream,
-			  nsIStreamObserver* observer,
-			  nsISupports* ctxt)
+                          nsIStreamObserver* observer,
+                          nsISupports* ctxt)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::AsyncWrite");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::AsyncWrite");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsLDAPChannel::pipeWrite(char *str)
+nsLDAPChannel::pipeWrite(const char *str)
 {
-  PRUint32 bytesWritten=0;
-  nsresult rv = NS_OK;
+    PRUint32 bytesWritten=0;
+    nsresult rv = NS_OK;
 
-  rv = mReadPipeOut->Write(str, strlen(str), &bytesWritten);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = mReadPipeOut->Write(str, strlen(str), &bytesWritten);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXXdmose deal more gracefully with an error here
-  //
-  rv = mListener->OnDataAvailable(this, mResponseContext, 
-				  mReadPipeIn, mReadPipeOffset, 
-				  nsCRT::strlen(str));
-  NS_ENSURE_SUCCESS(rv, rv);
+    // XXXdmose deal more gracefully with an error here
+    //
+    rv = mListener->OnDataAvailable(this, mResponseContext, 
+                                    mReadPipeIn, mReadPipeOffset, 
+                                    nsCRT::strlen(str));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  mReadPipeOffset += bytesWritten;
-  return NS_OK;
+    mReadPipeOffset += bytesWritten;
+    return NS_OK;
 }
 
 /**
@@ -759,31 +806,31 @@ nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage, PRInt32 aRetVal)
     switch (aRetVal) {
 
     case LDAP_RES_BIND:
-	// a bind has completed
-	return OnLDAPBind(aMessage);
-	break;
+        // a bind has completed
+        return OnLDAPBind(aMessage);
+        break;
 
     case LDAP_RES_SEARCH_ENTRY:
 
-	// a search entry has been returned
-	//
-	return OnLDAPSearchEntry(aMessage);
-	break;
+        // a search entry has been returned
+        //
+        return OnLDAPSearchEntry(aMessage);
+        break;
 
     case LDAP_RES_SEARCH_RESULT:
 
-	// the search is finished; we're all done
-	//	
-	return OnLDAPSearchResult(aMessage);
-	break;
+        // the search is finished; we're all done
+        //	
+        return OnLDAPSearchResult(aMessage);
+        break;
 
     default:
-	// XXX bogus.  but for now..
-	//
+        // XXX bogus.  but for now..
+        //
 #ifdef DEBUG	
-	PR_fprintf(PR_STDERR, "unexpected LDAP message received.\n");
+        PR_fprintf(PR_STDERR, "unexpected LDAP message received.\n");
 #endif
-	break;
+        break;
     }
 
     return NS_OK;
@@ -804,8 +851,8 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 
     // create and initialize an LDAP operation (to be used for the bind)
     //	
-    mCurrentOperation = do_CreateInstance("mozilla.network.ldapoperation", 
-					  &rv);
+    mCurrentOperation = do_CreateInstance(
+        "@mozilla.org/network/ldap-operation;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mCurrentOperation->Init(mConnection, mCallback);
@@ -822,7 +869,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     rv = url->GetDn(getter_Copies(baseDn));
     NS_ENSURE_SUCCESS(rv, rv);
     if (nsCRT::strlen(baseDn) == 0) {
-	return NS_ERROR_MALFORMED_URI;
+        return NS_ERROR_MALFORMED_URI;
     }
 
     // get the scope
@@ -841,7 +888,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     // XXX failure is a reasonable thing; don't assert
     //
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
-	   ("bind completed; starting search\n"));
+           ("bind completed; starting search\n"));
     rv = mCurrentOperation->SearchExt(baseDn, scope, filter, 0, LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);
     
@@ -863,9 +910,9 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     rv = aMessage->GetErrorCode(&errorCode);
     if ( NS_FAILED(rv) ) {
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(errorCode));
+        PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(errorCode));
 #endif
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     // we're done with the current operation.  cause nsCOMPtr to Release() it
@@ -878,27 +925,33 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     //
     if (mReadPipeOut != 0 && !mReadPipeClosed) {
 
-	// if this fails in a non-debug build, there's not much we can do
-	//
-	rv = mReadPipeOut->Close();
-	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-		     "mReadPipeOut->Close() failed");
+        // if this fails in a non-debug build, there's not much we can do
+        //
+        rv = mReadPipeOut->Close();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::OnLDAPSearchResult(): "
+                     "mReadPipeOut->Close() failed");
     }
 
     // remove self from loadgroup to stop the throbber
     //
     if (mLoadGroup) {
         rv = mLoadGroup->RemoveChannel(this, mResponseContext, NS_OK, nsnull);
-        if (NS_FAILED(rv)) 
-	    return rv;
+        if (NS_FAILED(rv)) {
+            NS_WARNING("nsLDAPChannel::OnSearchResult(): "
+                       "mLoadGroup->RemoveChannel() failed");
+            return rv;
+        }
     }
 
     // call listener's onstoprequest
     //
     if (mListener) {
         rv = mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
-        if (NS_FAILED(rv)) 
-	    return rv;
+        if (NS_FAILED(rv)) {
+            NS_WARNING("nsLDAPChannel::OnSearchResult(): "
+                       "mListener->OnStopRequest failed\n");
+            return rv;
+        }
     }
 
     return NS_OK;
@@ -912,69 +965,73 @@ nsresult
 nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
     nsresult rv;
-    char *dn, *attr;
+    nsXPIDLCString dn;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("entry returned!\n"));
 
     // get the DN
     // XXX better err handling
     //
-    rv = aMessage->GetDn(&dn);
+    rv = aMessage->GetDn(getter_Copies(dn));
     NS_ENSURE_SUCCESS(rv, rv);
 
     this->pipeWrite("dn: ");
     this->pipeWrite(dn);
     this->pipeWrite("\n");
 
-    ldap_memfree(dn);
+    char **attrs;
+    PRUint32 attrCount;
 
-    // fetch the attributes
+    // get an array of all the attribute names
+    // XXX better error-handling
     //
-    for (rv = aMessage->FirstAttribute(&attr);
-	 attr != NULL;
-	 rv = aMessage->NextAttribute(&attr)) {
+    rv = aMessage->GetAttributes(&attrCount, &attrs);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-	if ( NS_FAILED(rv) ) {
-#ifdef DEBUG
-	    PR_fprintf(PR_STDERR, "failure getting attribute\n");
-#endif		    
-	    return rv;
-	}
-
-	int i;
-	char **vals;
-	PRUint32 attrCount;
-
-	// get the values of this attribute
-	// XXX better failure handling
-	//
-	rv = aMessage->GetValues(attr, &attrCount, &vals);
-	if (NS_FAILED(rv)) {
-#ifdef DEBUG
-	    PR_fprintf(PR_STDERR, "aMessage->GetValues\n");
-#endif
-	    return rv;;
-	}
-
-	// print all values of this attribute
-	for ( i=0 ; vals[i] != NULL; i++ ) {
-	    this->pipeWrite(attr);
-	    this->pipeWrite(": ");
-	    this->pipeWrite(vals[i]);
-	    this->pipeWrite("\n");
-	}
-
-	ldap_value_free(vals);
-	ldap_memfree(attr);
+    // XXX is this an error?  should log in non-debug console too?
+    //
+    if (!attrCount) {
+        NS_WARNING("Warning: entry received with no attributes");
     }
+
+    // iterate through the attributes
+    //
+    for ( PRUint32 i=0 ; i < attrCount ; i++ ) {
+
+        char **vals;
+        PRUint32 valueCount;
+
+        // get the values of this attribute
+        // XXX better failure handling
+        //
+        rv = aMessage->GetValues(attrs[i], &valueCount, &vals);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("nsLDAPChannel:OnLDAPSearchEntry(): "
+                       "aMessage->GetValues() failed\n");
+            NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
+            return rv;;
+        }
+
+        // print all values of this attribute
+        //
+        for ( PRUint32 j=0 ; vals[j] != NULL; ++j ) {
+            this->pipeWrite(attrs[i]);
+            this->pipeWrite(": ");
+            this->pipeWrite(vals[j]);
+            this->pipeWrite("\n");
+        }
+
+        ldap_value_free(vals);
+    }
+    NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
 
     // XXXdmose better error handling
     //
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, "aMessage: error getting attribute\n");
+        PR_fprintf(PR_STDERR, "aMessage: error getting attribute\n");
 #endif
-	return rv;
+        return rv;
     }
 
     // separate this entry from the next
