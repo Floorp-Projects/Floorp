@@ -90,6 +90,7 @@ private:
 #elif defined (XP_OS2)
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sOS2Directory;
+    static nsIAtom *sHomeDirectory;
     static nsIAtom *sDesktopDirectory;
 #elif defined (XP_PC) 
     static nsIAtom *sSystemDirectory;
