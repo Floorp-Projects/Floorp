@@ -32,8 +32,8 @@ Rights Reserved.
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectAddressWindow.title;"
         class="dialog"
-        width="640" height="480"
-        style="width:100%; height:100%; padding:0px"
+        width="680" height="480"
+        style="padding:0px"
         onload="OnLoadSelectAddress()"
         align="vertical">
 
@@ -47,7 +47,7 @@ Rights Reserved.
 	<keyset id="keyset"/>
 
 	<!-- Thin box across top, show names containing & stop, search buttons -->
-	<box align="horizontal" style="width:100%; padding:0px; padding-top:2px; padding-bottom:2px">
+	<box align="horizontal" style="padding:0px; padding-top:2px; padding-bottom:2px">
 		<html:div flex="100%" style="vertical-align: middle;">
 			<html:label for="searchtext" tabindex="0">&search.label;</html:label>
 			<html:input type="text" id="searchtext" flex="100%"/>
@@ -67,9 +67,9 @@ Rights Reserved.
 			
 			<!-- dir tree -->
 			<box align="horizontal"
-				 style="width:200px; height:100%; background-color:white; border-right:solid black 1px">
+				 style="width:180px; height:100%; background-color:white; border-right:solid black 1px">
 				<!-- FIX ME - div is hack to make tree scroll properly -->
-				<html:div style="width:100px;height:100px" flex="1">
+				<html:div style="width:100px; height:100px; min-width:10px" flex="1">
 					<tree id="dirTree"/>
 				</html:div>
 			</box>
@@ -84,13 +84,13 @@ Rights Reserved.
 					<box flex="100%" align="vertical"
 						 style="background-color:white; border-bottom:solid black 1px">
 						<!-- FIX ME - div is hack to make tree scroll properly -->
-						<html:div style="width:100px;height:100px" flex="1">
+						<html:div style="width:100px; height:100px; min-width:10px" flex="1">
 							<tree id="resultsTree"/>
 						</html:div>
 					</box>
 					
 					<!-- Box that holds (to,cc,bcc buttons) -->
-					<box align="horizontal" style="padding:0.3em; border-bottom:solid black 1px">
+					<box align="horizontal" style="padding:0.3em; border-bottom:solid black 1px; min-width:10px">
 						<spring flex="50%"/>
 						<titledbutton id="toButton" value="&toButton.label;" class="dialog push" onclick="SelectAddressToButton()"/>	
 						<spring style="width:10px"/>
@@ -105,7 +105,7 @@ Rights Reserved.
 				
 				<!-- Address bucket -->
 				<box align="vertical" style="height:170px; background-color:white; border-top:solid black 1px">
-					<html:div style="width:100px;height:100px" flex="1">
+					<html:div style="width:100px;height:100px; min-width:10px" flex="1">
 						<tree id="addressBucket" style="width:100%; height:100%">
 							<treecol style="width:100%"/>
 							<treechildren id="bucketBody"/>

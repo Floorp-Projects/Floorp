@@ -79,25 +79,25 @@ function SelectAddressOKButton()
 				cell = row.childNodes[0];
 				if ( cell.childNodes &&  cell.childNodes.length )
 				{
-					text = cell.childNodes[0];
-					if ( text && text.data && text.data.length )
+					text = cell.getAttribute('value');
+					if ( text )
 					{
-						switch ( text.data[0] )
+						switch ( text[0] )
 						{
 							case prefixTo[0]:
 								if ( toAddress )
 									toAddress += ", ";
-								toAddress += text.data.substring(prefixTo.length, text.data.length);
+								toAddress += text.substring(prefixTo.length, text.length);
 								break;
 							case prefixCc[0]:
 								if ( ccAddress )
 									ccAddress += ", ";
-								ccAddress += text.data.substring(prefixCc.length, text.data.length);
+								ccAddress += text.substring(prefixCc.length, text.length);
 								break;
 							case prefixBcc[0]:
 								if ( bccAddress )
 									bccAddress += ", ";
-								bccAddress += text.data.substring(prefixBcc.length, text.data.length);
+								bccAddress += text.substring(prefixBcc.length, text.length);
 								break;
 						}
 					}
@@ -159,9 +159,8 @@ function AddAddressIntoBucket(address)
 	var item = document.createElement('treeitem');
 	var row = document.createElement('treerow');
 	var cell = document.createElement('treecell');
-	var text = document.createTextNode(address);
+	cell.setAttribute('value', address);
 	
-	cell.appendChild(text);
 	row.appendChild(cell);
 	item.appendChild(row);
 	body.appendChild(item);

@@ -32,6 +32,8 @@ Rights Reserved.
 		  style="width:100%; height:100%"
 		  ref="abdirectory://"
 		  datasources="rdf:addressdirectory"
+		  rdf:containment="http://home.netscape.com/NC-rdf#child"
+		  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild"
 		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 		  onblur="goOnEvent(this,'blur')"
 		  allownegativeassertions="false"
@@ -51,9 +53,7 @@ Rights Reserved.
 
 		<treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
 
-		<treechildren id="dirTreeBody"
-					  rdf:containment="http://home.netscape.com/NC-rdf#child"
-					  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
+		<treechildren id="dirTreeBody">
 		</treechildren>
 	</tree>
 
