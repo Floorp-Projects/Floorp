@@ -390,16 +390,13 @@ NS_IMETHODIMP nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  printf("nsMenuItem::MenuSelect called \n");
-  if (mListener) {
-    mListener->MenuItemSelected(aMenuEvent);
-  }
+  DoCommand();
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  DoCommand();
+  //DoCommand();
   return nsEventStatus_eIgnore;
 }
 

@@ -112,11 +112,13 @@ protected:
   nsIMenu    * mMenuParent;
 
   nsISupportsArray * mItems;
-  nsIMenuListener * mListener;
+  nsIMenuListener  * mListener;
 
+  nsIWidget     * mParentWindow;
   nsIDOMNode    * mDOMNode;
   nsIDOMElement * mDOMElement;
   nsIWebShell   * mWebShell;
+  bool            mConstructed;
 };
 
 #endif // nsMenu_h__
