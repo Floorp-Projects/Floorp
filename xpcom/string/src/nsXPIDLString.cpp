@@ -147,11 +147,15 @@ nsXPIDLString::shared_buffer_handle_type*
 nsXPIDLString::GetSharedEmptyBufferHandle()
   {
     static shared_buffer_handle_type* sBufferHandle = nsnull;
+    static char_type null_char = char_type(0);
 
     if (!sBufferHandle) {
-      sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
-                                              PRUint32(1), (self_type*)nsnull);
-      sBufferHandle->AcquireReference();
+      sBufferHandle = new nsNonDestructingSharedBufferHandle<char_type>(&null_char, &null_char, 1);
+      sBufferHandle->AcquireReference(); // To avoid the |Destroy|
+                                         // mechanism unless threads
+                                         // race to set the refcount, in
+                                         // which case we'll pull the
+                                         // same trick in |Destroy|.
     }
     return sBufferHandle;
   }
@@ -225,11 +229,15 @@ nsXPIDLCString::shared_buffer_handle_type*
 nsXPIDLCString::GetSharedEmptyBufferHandle()
   {
     static shared_buffer_handle_type* sBufferHandle = nsnull;
+    static char_type null_char = char_type(0);
 
     if (!sBufferHandle) {
-      sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
-                                              PRUint32(1), (self_type*)nsnull);
-      sBufferHandle->AcquireReference();
+      sBufferHandle = new nsNonDestructingSharedBufferHandle<char_type>(&null_char, &null_char, 1);
+      sBufferHandle->AcquireReference(); // To avoid the |Destroy|
+                                         // mechanism unless threads
+                                         // race to set the refcount, in
+                                         // which case we'll pull the
+                                         // same trick in |Destroy|.
     }
     return sBufferHandle;
   }

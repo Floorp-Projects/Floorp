@@ -220,14 +220,7 @@ class nsSharedBufferHandle
           mutable_this->set_refcount( get_refcount()+1 );
         }
 
-      void
-      ReleaseReference() const
-        {
-          nsSharedBufferHandle<CharT>* mutable_this = NS_CONST_CAST(nsSharedBufferHandle<CharT>*, this);
-          if ( !mutable_this->set_refcount( get_refcount()-1 ) )
-            delete mutable_this;
-              // hmm, what if |kIsUserAllocator| and |kIsSingleAllocationWithBuffer|?
-        }
+      void ReleaseReference() const;
 
       PRBool
       IsReferenced() const
@@ -311,6 +304,57 @@ class nsSharedBufferHandleWithAllocator
   };
 
 
+// Derive from this class to implement a |Destroy| method.
+template <class CharT>
+class nsSharedBufferHandleWithDestroy
+    : public nsSharedBufferHandle<CharT>
+  {
+    public:
+      // why is this needed again?
+      typedef PRUint32                          size_type;
+
+      nsSharedBufferHandleWithDestroy( CharT* aDataStart, CharT* aDataEnd, size_type aStorageLength)
+          : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd,
+                                        aStorageLength, PR_FALSE)
+        {
+          this->mFlags |=
+              this->kIsUserAllocator | this->kIsSingleAllocationWithBuffer;
+        }
+
+      virtual void Destroy() = 0;
+
+      // This doesn't really need to be |virtual|, but it saves us from
+      // having to turn off gcc warnings that might be useful to
+      // someone.
+      virtual ~nsSharedBufferHandleWithDestroy() { }
+
+
+  };
+
+template <class CharT>
+class nsNonDestructingSharedBufferHandle
+    : public nsSharedBufferHandleWithDestroy<CharT>
+  {
+    public:
+      // why is this needed again?
+      typedef PRUint32                          size_type;
+
+      nsNonDestructingSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd, size_type aStorageLength)
+          : nsSharedBufferHandleWithDestroy<CharT>(aDataStart, aDataEnd,
+                                                   aStorageLength)
+        {
+        }
+
+      virtual void Destroy()
+        {
+          // Oops, threads raced to set the refcount.  Set the refcount
+          // back to 1.
+          set_refcount(1);
+        }
+
+  };
+
+
 template <class CharT>
 nsStringAllocator<CharT>&
 nsSharedBufferHandle<CharT>::get_allocator() const
@@ -335,6 +379,24 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
       {
         CharT* string_storage = this->mDataStart;
         get_allocator().Deallocate(string_storage);
+      }
+  }
+
+template <class CharT>
+void
+nsSharedBufferHandle<CharT>::ReleaseReference() const
+  {
+    nsSharedBufferHandle<CharT>* mutable_this = NS_CONST_CAST(nsSharedBufferHandle<CharT>*, this);
+    if ( !mutable_this->set_refcount( get_refcount()-1 ) )
+      {
+        if ( ~mFlags & (kIsUserAllocator|kIsSingleAllocationWithBuffer) )
+          delete mutable_this;
+        else
+          // If |kIsUserAllocator| and |kIsSingleAllocationWithBuffer|,
+          // the handle is an |nsSharedBufferHandleWithDestroy<CharT>|,
+          // so call its |Destroy| method.
+          NS_STATIC_CAST(nsSharedBufferHandleWithDestroy<CharT>*,
+                         mutable_this)->Destroy();
       }
   }
 

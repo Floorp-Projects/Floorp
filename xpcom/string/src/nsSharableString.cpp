@@ -100,15 +100,10 @@ nsSharableString::SetCapacity( size_type aNewCapacity )
 void
 nsSharableString::SetLength( size_type aNewLength )
   {
-    if ( !mBuffer->IsMutable() || aNewLength > mBuffer->DataLength() )
-      {
-        SetCapacity(aNewLength);
-        mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
-      }
-    else
-      {
-        mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
-      }
+    if ( !mBuffer->IsMutable() || aNewLength >= mBuffer->StorageLength() )
+      SetCapacity(aNewLength);
+    mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
+
     // This is needed for |Truncate| callers and also for some callers
     // (such as nsAString::do_AppendFromReadable) that are manipulating
     // the internals of the string.  It also makes sense to do this
@@ -166,11 +161,15 @@ nsSharableString::shared_buffer_handle_type*
 nsSharableString::GetSharedEmptyBufferHandle()
   {
     static shared_buffer_handle_type* sBufferHandle = nsnull;
+    static char_type null_char = char_type(0);
 
     if (!sBufferHandle) {
-      sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
-                                              PRUint32(1), (self_type*)nsnull);
-      sBufferHandle->AcquireReference();
+      sBufferHandle = new nsNonDestructingSharedBufferHandle<char_type>(&null_char, &null_char, 1);
+      sBufferHandle->AcquireReference(); // To avoid the |Destroy|
+                                         // mechanism unless threads
+                                         // race to set the refcount, in
+                                         // which case we'll pull the
+                                         // same trick in |Destroy|.
     }
     return sBufferHandle;
   }
@@ -265,15 +264,10 @@ nsSharableCString::SetCapacity( size_type aNewCapacity )
 void
 nsSharableCString::SetLength( size_type aNewLength )
   {
-    if ( !mBuffer->IsMutable() || aNewLength > mBuffer->DataLength() )
-      {
-        SetCapacity(aNewLength);
-        mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
-      }
-    else
-      {
-        mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
-      }
+    if ( !mBuffer->IsMutable() || aNewLength >= mBuffer->StorageLength() )
+      SetCapacity(aNewLength);
+    mBuffer->DataEnd( mBuffer->DataStart() + aNewLength );
+
     // This is needed for |Truncate| callers and also for some callers
     // (such as nsACString::do_AppendFromReadable) that are manipulating
     // the internals of the string.  It also makes sense to do this
@@ -331,11 +325,15 @@ nsSharableCString::shared_buffer_handle_type*
 nsSharableCString::GetSharedEmptyBufferHandle()
   {
     static shared_buffer_handle_type* sBufferHandle = nsnull;
+    static char_type null_char = char_type(0);
 
     if (!sBufferHandle) {
-      sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
-                                              PRUint32(1), (self_type*)nsnull);
-      sBufferHandle->AcquireReference();
+      sBufferHandle = new nsNonDestructingSharedBufferHandle<char_type>(&null_char, &null_char, 1);
+      sBufferHandle->AcquireReference(); // To avoid the |Destroy|
+                                         // mechanism unless threads
+                                         // race to set the refcount, in
+                                         // which case we'll pull the
+                                         // same trick in |Destroy|.
     }
     return sBufferHandle;
   }
