@@ -32,14 +32,6 @@
  *
  */
 
-
-/* need to define these in order to avoid conflict with those 
-   defined in obsolete/prototypes.h (included from prtypes.h), see npapi.h */
-#define _UINT16
-#define _UINT32
-#define _INT16
-#define _INT32
-
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include "npapi.h"

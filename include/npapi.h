@@ -22,7 +22,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.7 $
+ *  npapi.h $Revision: 3.8 $
  *  Netscape client plug-in API spec
  */
 
@@ -33,6 +33,13 @@
 #pragma pack(1)
 #endif
 
+/* 
+ * NO_NSPR_10_SUPPORT disables the inclusion 
+ * of obsolete/protypes.h, whose int16, uint16, 
+ * int32, and uint32 typedefs conflict with those 
+ * in this file. 
+ */ 
+#define NO_NSPR_10_SUPPORT
 #include "jri.h"                /* Java Runtime Interface */
 
 #if defined (__OS2__ ) || defined (OS2)
