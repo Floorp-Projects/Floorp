@@ -61,6 +61,7 @@
 #include "nsIImapIncomingServer.h"
 #include "nsINntpIncomingServer.h"
 #include "nsINoIncomingServer.h"
+#include "nsIMsgProtocolInfo.h"
 #include "nsEscape.h"
 
 #include "nsIUserInfo.h"
@@ -495,7 +496,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
                                             (const char *)mLocalFoldersHostname,
                             "none", getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
@@ -1071,7 +1072,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
                             (const char *)mLocalFoldersHostname,
                             "none", getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // notice, no identity for local mail
   rv = account->SetIncomingServer(server);
@@ -1191,7 +1192,7 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   //
   rv = accountManager->CreateIncomingServer(username, MOVEMAIL_FAKE_HOST_NAME,
                             "movemail", getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
@@ -1319,7 +1320,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   //
   rv = accountManager->CreateIncomingServer(username, hostname, "pop3",
                             getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // if we got a valid port from above, set it here
   if (port > 0) {
@@ -1549,7 +1550,13 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     PR_smprintf("mail.imap.server.%s.userName", hostAndPort);
   rv = m_prefs->CopyCharPref(imapUsernamePref, getter_Copies(username));
   PR_FREEIF(imapUsernamePref);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool isSecure = PR_FALSE;
+  char *imapIsSecurePref = PR_smprintf("mail.imap.server.%s.isSecure", hostAndPort);
+  rv = m_prefs->GetBoolPref(imapIsSecurePref, &isSecure);
+  PR_FREEIF(imapIsSecurePref);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // get the old host (and possibly port)
   PRInt32 port = -1;
@@ -1572,12 +1579,27 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(username, hostname, "imap",
                             getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  // now start migrating 4.x prefs
   if (port > 0) {
-    server->SetPort(port);
+      rv = server->SetPort(port);
+      NS_ENSURE_SUCCESS(rv,rv);
   }
+  else {
+      if (isSecure) {
+          nsCOMPtr <nsIMsgProtocolInfo> protocolInfo = do_GetService("@mozilla.org/messenger/protocol/info;1?type=imap", &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+  
+          rv = protocolInfo->GetDefaultServerPort(PR_TRUE, &port);
+          NS_ENSURE_SUCCESS(rv,rv);
+
+          rv = server->SetPort(port);
+          NS_ENSURE_SUCCESS(rv,rv);
+      }
+  }
+
+  rv = server->SetIsSecure(isSecure);
+  NS_ENSURE_SUCCESS(rv,rv);
 
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;
@@ -1714,7 +1736,6 @@ nsMessengerMigrator::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_BOOL_PREF("mail.imap.server.%s.offline_download",hostAndPort,imapServer,SetOfflineDownload)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.override_namespaces",hostAndPort,imapServer,SetOverrideNamespaces)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.using_subscription",hostAndPort,imapServer,SetUsingSubscription)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.isSecure",hostAndPort,server,SetIsSecure)
 
   return NS_OK;
 }
@@ -2169,15 +2190,27 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	nsCOMPtr<nsIMsgIncomingServer> server;
     rv = accountManager->CreateIncomingServer(nsnull, hostname, "nntp",
                               getter_AddRefs(server));
-	if (NS_FAILED(rv)) return rv;
-    
-	// now upgrade all the prefs
+    NS_ENSURE_SUCCESS(rv,rv);
+ 
     if (port > 0) {
-      server->SetPort(port);
+        rv = server->SetPort(port);
+        NS_ENSURE_SUCCESS(rv,rv);
+    }
+    else {
+        if (isSecure) {
+            nsCOMPtr <nsIMsgProtocolInfo> protocolInfo = do_GetService("@mozilla.org/messenger/protocol/info;1?type=nntp", &rv);
+            NS_ENSURE_SUCCESS(rv,rv);
+    
+            rv = protocolInfo->GetDefaultServerPort(PR_TRUE, &port);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            rv = server->SetPort(port);
+            NS_ENSURE_SUCCESS(rv,rv);
+        }
     }
 
     rv = server->SetIsSecure(isSecure);
-	if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 
 #ifdef DEBUG_MIGRATOR
 	PRInt32 portValue;
