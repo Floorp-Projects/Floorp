@@ -55,11 +55,11 @@
 <!ENTITY centerPopup.value "in the center">
 <!ENTITY wrapRightPopup.value "wrap around right side">
 <!ENTITY wrapLeftPopup.value "wrap around left side">
-<!ENTITY bottomIcon.url "chrome://editor/skin/images/ED_imgalignbottom.gif">
-<!ENTITY topIcon.url "chrome://editor/skin/images/ED_imgaligntop.gif">
-<!ENTITY centerIcon.url "chrome://editor/skin/images/ED_imgalignmiddle.gif">
-<!ENTITY wrapRightIcon.url "chrome://editor/skin/images/ED_imgalignleft.gif">
-<!ENTITY wrapLeftIcon.url "chrome://editor/skin/images/ED_imgalignright.gif">
+<!ENTITY bottomIcon.url "chrome://editor/skin/images/img-align-bottom.gif">
+<!ENTITY topIcon.url "chrome://editor/skin/images/img-align-top.gif">
+<!ENTITY centerIcon.url "chrome://editor/skin/images/img-align-middle.gif">
+<!ENTITY wrapRightIcon.url "chrome://editor/skin/images/img-align-left.gif">
+<!ENTITY wrapLeftIcon.url "chrome://editor/skin/images/img-align-right.gif">
 
 <!-- These controls are in the Spacing Fieldset of the expanded area -->
 <!ENTITY spacingFieldset.label "Spacing">
