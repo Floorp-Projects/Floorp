@@ -680,7 +680,10 @@ static const char *kMethodBodyBeginStr = "\n"
 "  if (argc >= %d) {\n";
 
 static const char *kMethodObjectParamStr = "\n"
-"    if (JSVAL_IS_OBJECT(argv[%d])) {\n"
+"    if (JSVAL_IS_NULL(argv[%d])){\n"
+"      b%d = nsnull;\n"
+"    }\n"
+"    else if (JSVAL_IS_OBJECT(argv[%d])) {\n"
 "      nsISupports *supports%d = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[%d]));\n"
 "      NS_ASSERTION(nsnull != supports%d, \"null pointer\");\n"
 "\n"
@@ -689,17 +692,15 @@ static const char *kMethodObjectParamStr = "\n"
 "        return JS_FALSE;\n"
 "      }\n"
 "    }\n"
-"    else if (JSVAL_IS_NULL(argv[%d])){\n"
-"      b%d = nsnull;\n"
-"    }\n"
 "    else {\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
 #define JSGEN_GENERATE_OBJECTPARAM(buffer, paramNum, paramType) \
-    sprintf(buffer, kMethodObjectParamStr, paramNum, paramNum,  \
+    sprintf(buffer, kMethodObjectParamStr, paramNum, paramNum, \
+            paramNum, paramNum,  \
             paramNum, paramNum, paramNum, paramNum, paramType,  \
-            paramNum,  paramNum, paramNum)
+            paramNum)
 
 
 static const char *kMethodStringParamStr = "\n"
