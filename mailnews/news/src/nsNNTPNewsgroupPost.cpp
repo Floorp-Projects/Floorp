@@ -69,6 +69,7 @@ nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
     m_messageBuffer=nsnull;
     
     m_isControl=PR_FALSE;
+	m_postMessageFile = nsnull;
 }
 
 nsNNTPNewsgroupPost::~nsNNTPNewsgroupPost()
@@ -79,6 +80,7 @@ nsNNTPNewsgroupPost::~nsNNTPNewsgroupPost()
 
     PR_FREEIF(m_body);
     PR_FREEIF(m_messageBuffer);
+    NS_IF_RELEASE(m_postMessageFile);
 }
 
 nsresult
@@ -220,20 +222,26 @@ nsNNTPNewsgroupPost::GetMessageID(char **messageID)
 nsresult
 nsNNTPNewsgroupPost::SetPostMessageFile(nsIFileSpec * aPostMessageFile)
 {
-    if (!aPostMessageFile) return NS_ERROR_NULL_POINTER;
-    
-#ifdef DEBUG_NEWS
-    printf("SetPostMessageFile(%s)\n",(const char *)aPostMessageFile);
-#endif
-    m_postMessageFile = aPostMessageFile;
-    return NS_OK;
+	NS_LOCK_INSTANCE();
+	if (aPostMessageFile)
+	{
+		NS_IF_RELEASE(m_postMessageFile);
+		m_postMessageFile = aPostMessageFile;
+		NS_IF_ADDREF(m_postMessageFile);
+	}
+	NS_UNLOCK_INSTANCE();
+	return NS_OK;
 }
 
 nsresult 
 nsNNTPNewsgroupPost::GetPostMessageFile(nsIFileSpec ** aPostMessageFile)
 {
-    if (!aPostMessageFile) return NS_ERROR_NULL_POINTER;
-    
-    *aPostMessageFile = m_postMessageFile;
+	NS_LOCK_INSTANCE();
+	if (aPostMessageFile)
+	{
+		*aPostMessageFile = m_postMessageFile;
+		NS_IF_ADDREF(m_postMessageFile);
+	}
+    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }

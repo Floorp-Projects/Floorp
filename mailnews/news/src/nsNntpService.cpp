@@ -429,7 +429,7 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 }
 
 nsresult 
-nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames)
+nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, char **newsUrlSpec)
 {
   nsresult rv = NS_OK;
   nsCAutoString host;
@@ -546,9 +546,6 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
   if (host.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  nsCAutoString urlStr = kNewsRootURI;
-  urlStr += "/";
-  urlStr += (const char *)host;
 
   // if the user tried to post to one newsgroup, set that information in the 
   // nntp url.  this can save them an authentication, if they've already logged in
@@ -558,15 +555,8 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
     if (NS_FAILED(rv)) return rv;
   }
 
-  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
-
-  if (mailnewsurl) {
-    mailnewsurl->SetSpec((const char *)urlStr);
-    mailnewsurl->SetPort(NEWS_PORT);
-  }
-  else {
-    return NS_ERROR_FAILURE;
-  }   
+  *newsUrlSpec = PR_smprintf("%s/%s",kNewsRootURI,(const char *)host);
+  if (!*newsUrlSpec) return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -740,12 +730,16 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
 
   nntpUrl->SetNewsAction(nsINntpUrl::ActionPostArticle);
 
-  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames);
+  nsXPIDLCString newsUrlSpec;
+  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, getter_Copies(newsUrlSpec));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
   if (!mailnewsurl) return NS_ERROR_FAILURE;
 
+  mailnewsurl->SetSpec((const char *)newsUrlSpec);
+  mailnewsurl->SetPort(NEWS_PORT);
+  
   if (aUrlListener) // register listener if there is one...
     mailnewsurl->RegisterListener(aUrlListener);
   

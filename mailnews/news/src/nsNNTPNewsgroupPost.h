@@ -112,7 +112,7 @@ public:
     static char *AppendAndAlloc(char *string, const char *newSubstring,
                                 PRBool withComma);
 private:
-    nsCOMPtr<nsIFileSpec>  m_postMessageFile;
+    nsIFileSpec *m_postMessageFile;
     char *m_header[HEADER_LAST+1];
     static const char *m_headerName[HEADER_LAST+1];
     
