@@ -107,7 +107,7 @@ function AddPermission() {
 
 function enterNewSite(site) {
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Components.interfaces.nsIPromptService);
+                                .getService(Components.interfaces.nsIPromptService);
 
   var stringBundle = document.getElementById("stringBundle");
   var message = stringBundle.getString("enterSiteName");
@@ -115,7 +115,7 @@ function enterNewSite(site) {
 
   var name = (!site ? {} : site);
   if (!promptService.prompt(window, title, message, name, null, {}))
-      return;
+      return null;
   var host = name.value.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
   try {
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -125,18 +125,20 @@ function enterNewSite(site) {
     return host;
   } catch(ex) {
     // if we get here, the user has managed to enter something that couldn't get parsed to a real URI
-    // call this function again, with the string originally entered pre-populated
     var alertTitle = stringBundle.getString("addSiteFailedTitle");
     var alertMsg = stringBundle.getFormattedString("addSiteFailedMessage",[host]);
     promptService.alert(window, alertTitle, alertMsg);
-    enterNewSite(name);
   }
+  return null;
 }
 
 function onPopupPrefsOK()
 {
+  if (!nsIPermissionManager)
+    nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  permissionmanager = permissionmanager.QueryInterface(nsIPermissionManager);
 
   var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features.xul"].userData;
   if ('deletedPermissions' in dataObject) {
@@ -159,8 +161,11 @@ function onPopupPrefsOK()
 
 function onImagePrefsOK()
 {
+  if (!nsIPermissionManager)
+    nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  permissionmanager = permissionmanager.QueryInterface(nsIPermissionManager);
 
   var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features-images.xul"].userData;
   if ('deletedPermissions' in dataObject) {
