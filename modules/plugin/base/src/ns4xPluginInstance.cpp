@@ -763,9 +763,26 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   peer->GetMode(&mode);
   peer->GetMIMEType(&mimetype);
 
-#ifdef XP_UNIX
-  // hack swliveconnect argument for flash plugins on unix,
-  // because if it set flash corrupts the stack in NPP_NewProc call (bug 149336)
+  // Some older versions of Flash have a bug in them
+  // that causes the stack to become currupt if we
+  // pass swliveconect=1 in the NPP_NewProc arrays.
+  // See bug 149336 (UNIX), bug 186287 (Mac)
+  //
+  // The code below disables the attribute unless
+  // the environment variable:
+  // MOZILLA_PLUGIN_DISABLE_FLASH_SWLIVECONNECT_HACK
+  // is set.
+  //
+  // It is okay to disable this attribute because
+  // back in 4.x, scripting required liveconnect to
+  // start Java which was slow. Scripting no longer
+  // requires starting Java and is quick plus controled
+  // from the browser, so Flash now ignores this attribute.
+  //
+  // This code can not be put at the time of creating
+  // the array because we may need to examine the
+  // stream header to determine we want Flash.
+
   static const char flashMimeType[] = "application/x-shockwave-flash";
   static const char blockedParam[] = "swliveconnect";
   if (count && !PL_strcasecmp(mimetype, flashMimeType)) {
@@ -795,7 +812,6 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
       }
     }
   }
-#endif
 
   // Assign mPeer now and mark this instance as started before calling NPP_New 
   // because the plugin may call other NPAPI functions, like NPN_GetURLNotify,
