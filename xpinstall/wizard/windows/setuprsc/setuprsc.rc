@@ -321,10 +321,10 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DLG_DISK_SPACE_CHECK_SYS_MSG 
-                            "Setup has detected insufficient disk space on: %s Required: %s Available: %sThis folder is where some Windows related files need to be installed to.  You will need to make available more disk space by uninstalling some software.  You if have already done so, you can click Retry, or if you would like to cancel the setup, click Cancel."
+    IDS_DLG_DISK_SPACE_CHECK_CRUTIAL_MSG 
+                            "Setup has detected insufficient disk space to continue with installation on %s for the path: %sRequired: %sAvailable: %sClick Retry if more disk space has been made available, or click Cancel to cancel Setup."
     IDS_DLG_DISK_SPACE_CHECK_MSG 
-                            "Setup has detected insufficient disk space on: %s Required: %s Available: %sfor the selection[s] chosen.  Would you like to go back and make changes to either the destination folder or other selection[s]?"
+                            "Setup has detected insufficient disk space to continue with installation on %s for the path: %sRequired: %sAvailable: %sClick OK to go back and choose a different destination path, or click Cancel to cancel Setup."
     IDS_ERROR_CREATE_DIRECTORY 
                             "Could not create folder: %sMake sure you have access to create the folder."
     IDS_STR_FILE_NUMBER     "File count:"

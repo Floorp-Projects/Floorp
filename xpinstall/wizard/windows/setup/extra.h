@@ -61,6 +61,8 @@ void              SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
 char              *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible);
 siC               *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs);
 ULONGLONG         SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible);
+ULONGLONG         SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible);
+ULONGLONG         SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible);
 void              InitSiComponents(char *szFileIni);
 HRESULT           ParseComponentAttributes(char *szBuf);
 void              InitSiComponents(char *szFileIni);
@@ -108,6 +110,7 @@ BOOL              IsWin95Debute(void);
 ULONGLONG         GetDiskSpaceRequired(DWORD dwType);
 ULONGLONG         GetDiskSpaceAvailable(LPSTR szPath);
 HRESULT           VerifyDiskSpace(void);
+HRESULT           ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPSTR szPath, BOOL bCrutialMsg);
 void              SetCustomType(void);
 void              GetAlternateArchiveSearchPath(LPSTR lpszCmdLine);
 BOOL              NeedReboot(void);

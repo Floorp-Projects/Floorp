@@ -815,13 +815,8 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
-         returns value in bytes, therefore a division by 1000 is required to be in
-         kilobytes */
-      if((ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath)) > 1000)
-        ullDSBuf /= 1000;
-      else
-        ullDSBuf = 0;
-
+         returns value in kbytes */
+      ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
       _ui64toa(ullDSBuf, tchBuffer, 10);
       ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
       RemoveBackSlash(szBuf);
@@ -929,7 +924,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       bReturn = TRUE;
 
       /* update the disk space required info in the dialog.  It is already
-         in Kilobytes (unlike what GetDiskSpaceAvailable() returns) */
+         in Kilobytes */
       ullDSBuf = GetDiskSpaceRequired(DSR_DESTINATION);
       _ui64toa(ullDSBuf, tchBuffer, 10);
       ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
@@ -1448,15 +1443,20 @@ void DlgSequenceNext()
       do
       {
         hrValue = VerifyDiskSpace();
-        if(hrValue == FALSE)
+        if(hrValue == IDOK)
         {
           /* show previous visible window */
           DlgSequencePrev();
           break;
         }
+        else if(hrValue == IDCANCEL)
+        {
+          AskCancelDlg(hWndMain);
+          hrValue = IDRETRY;
+        }
       }while(hrValue == IDRETRY);
 
-      if(hrValue == FALSE)
+      if(hrValue == IDOK)
       {
         /* break out of this case because we need to show the previous dialog */
         break;
