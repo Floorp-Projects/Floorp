@@ -1323,7 +1323,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
         else if(0!=strchr(datalistTags,aChild)) {
           //we now allow DT/DD inside a paragraph, so long as a DL is open...
           if(PR_TRUE==HasOpenContainer(eHTMLTag_dl))
-            result=PR_TRUE;
+            if(PR_TRUE==HasOpenContainer(eHTMLTag_dt))
+              result=PR_FALSE;
+          else result=PR_TRUE;
         }
         else result=PRBool(0!=strchr(gTagSet2,aChild)); break;
       }
@@ -1490,7 +1492,8 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
       //opening unless a table is actually already opened.
     case eHTMLTag_tr:       case eHTMLTag_thead:    
     case eHTMLTag_tfoot:    case eHTMLTag_tbody:    
-    case eHTMLTag_td:
+    case eHTMLTag_td:       case eHTMLTag_th:
+    case eHTMLTag_caption:
       if(PR_FALSE==HasOpenContainer(eHTMLTag_table))
         result=PR_TRUE;
       break;
@@ -1876,7 +1879,8 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
       break;
   }
   if(kNotFound!=theGatePos)
-    result=PRBool(theGatePos>tagPos);
+    if(kNotFound!=tagPos)
+      result=PRBool(theGatePos>tagPos);
   return result;
 }
 
