@@ -219,6 +219,22 @@ function SortThreadPane(column, sortKey)
 	if(!node)
 		return false;
 
+	return SortColumn(node, sortKey);
+
+
+}
+
+function SortFolderPane(column, sortKey)
+{
+	var node = FindInSidebar(frames[0].frames[0], column)
+	if(!node)
+		return false;
+	return SortColumn(node, sortKey);
+}
+
+function SortColumn(node, sortKey)
+{
+
 	var rdfCore = XPAppCoresManager.Find("RDFCore");
 	if (!rdfCore)
 	{
@@ -244,7 +260,6 @@ function SortThreadPane(column, sortKey)
     rdfCore.doSort(node, sortKey, sortDirection);
 
     return(true);
-
 
 }
 
@@ -532,6 +547,7 @@ function AddDataSources()
 
 function OnLoadFolderPane(folderTree)
 {
+	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#Name');
 	//Add folderDataSource and accountManagerDataSource to folderPane
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);

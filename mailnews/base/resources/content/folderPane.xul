@@ -53,7 +53,7 @@
 	</rule>
   </template>
 
-  <treecol style="width:60%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width:60%" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol style="width:20%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
   <treecol style="width:20%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
