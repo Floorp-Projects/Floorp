@@ -303,12 +303,8 @@ function SetupNewMenuItem(folderResource, numSelected, isServer, serverType, spe
 function ShowMenuItem(id, showItem)
 {
   var item = document.getElementById(id);
-  if(item)
-  {
-    var showing = (item.getAttribute('hidden') !='true');
-    if(showItem != showing)
-      item.setAttribute('hidden', showItem ? '' : 'true');
-  }
+  if(item && item.hidden != "true") 
+    item.hidden = !showItem;
 }
 
 function EnableMenuItem(id, enableItem)
@@ -347,11 +343,11 @@ function fillMessagePaneContextMenu()
 
   var isNewsgroup = false;
 
-  if (numSelected == 1) {
+  if (numSelected == 1)
     isNewsgroup = IsNewsMessage(message);
-    }
 
-  var hideMailItems = AreBrowserItemsShowing();
+  // don't show mail items for links/images, just show related items.
+  var hideMailItems = gContextMenu.onImage || gContextMenu.onLink;
 
   SetupEditAsNewMenuItem("messagePaneContext-editAsNew", numSelected, (numSelected == 0 || hideMailItems));
   SetupReplyToSenderMenuItem("messagePaneContext-replySender", numSelected, (numSelected == 0 || hideMailItems));
@@ -368,76 +364,35 @@ function fillMessagePaneContextMenu()
   SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
 
   //Figure out separators
-  ShowMenuItem("messagePaneContext-sep-open", ShowMessagePaneOpenSeparator());
-  ShowMenuItem("messagePaneContext-sep-reply", ShowMessagePaneReplySeparator());
-  ShowMenuItem("messagePaneContext-sep-edit", ShowMessagePaneEditSeparator());
-  ShowMenuItem("messagePaneContext-sep-link", ShowMessagePaneLinkSeparator());
-  ShowMenuItem("messagePaneContext-sep-image", ShowMessagePaneImageSeparator());
-  ShowMenuItem("messagePaneContext-sep-copy", ShowMessagePaneCopySeparator());
+  ShowMenuItem("messagePaneContext-sep-open", ShowSeparator("messagePaneContext-sep-open"));
+  ShowMenuItem("messagePaneContext-sep-reply", ShowSeparator("messagePaneContext-sep-reply"));
+  ShowMenuItem("messagePaneContext-sep-edit", ShowSeparator("messagePaneContext-sep-edit"));
+  ShowMenuItem("messagePaneContext-sep-link", ShowSeparator("messagePaneContext-sep-link"));
+  ShowMenuItem("messagePaneContext-sep-image", ShowSeparator("messagePaneContext-sep-image"));
+  ShowMenuItem("messagePaneContext-sep-copy", ShowSeparator("messagePaneContext-sep-copy"));
+  
+  if (!hideMailItems)
+    ShowMenuItem("messagePaneContext-sep-edit", false);
 }
 
-function AreBrowserItemsShowing()
+function ShowSeparator(aSeparatorID)
 {
-  return(IsMenuItemShowing("context-openlink") ||
-    IsMenuItemShowing("context-editlink") ||
-    IsMenuItemShowing("context-viewimage") ||
-    IsMenuItemShowing("context-copylink") ||
-    IsMenuItemShowing("context-copyimage") ||
-    IsMenuItemShowing("context-savelink") ||
-    IsMenuItemShowing("context-saveimage") ||
-    IsMenuItemShowing("context-bookmarklink"));
-}
-
-function ShowMessagePaneOpenSeparator()
-{
-  return(IsMenuItemShowing("context-selectall") ||
-    IsMenuItemShowing("context-copy"));
-}
-
-function ShowMessagePaneReplySeparator()
-{
-  return (IsMenuItemShowing("messagePaneContext-replySender") ||
-    IsMenuItemShowing("messagePaneContext-replyNewsgroup") ||
-    IsMenuItemShowing("messagePaneContext-replyAll") ||
-    IsMenuItemShowing("messagePaneContext-forward") ||
-    IsMenuItemShowing("messagePaneContext-editAsNew"));
-}
-
-function ShowMessagePaneEditSeparator()
-{
-  return (IsMenuItemShowing("messagePaneContext-moveMenu") ||
-    IsMenuItemShowing("messagePaneContext-copyMenu") ||
-    IsMenuItemShowing("messagePaneContext-copyMessageUrl") ||
-    IsMenuItemShowing("messagePaneContext-saveAs") ||
-    IsMenuItemShowing("messagePaneContext-print") ||
-    IsMenuItemShowing("messagePaneContext-delete"));
-}
-
-function ShowMessagePaneLinkSeparator()
-{
-  return (IsMenuItemShowing("context-openlink") ||
-    IsMenuItemShowing("context-editlink"));
-}
-
-function ShowMessagePaneImageSeparator()
-{
-  return (IsMenuItemShowing("context-viewimage"));
-}
-
-function ShowMessagePaneCopySeparator()
-{
-  return (IsMenuItemShowing("context-copylink") ||
-    IsMenuItemShowing("context-copyimage"));
+  var separator = document.getElementById(aSeparatorID);
+  var sibling = separator.previousSibling;
+  while (sibling && sibling.localName != "menuseparator") {
+    if (sibling.getAttribute("hidden") != "true")
+      return true;
+    sibling = sibling.previousSibling;
+  }
+  return false;
 }
 
 function IsMenuItemShowing(menuID)
 {
 
   var item = document.getElementById(menuID);
-  if(item)
-  {
-    return(item.getAttribute('hidden') !='true');
-  }
+  if (item)
+    return item.hidden != "true";
   return false;
 }
 
