@@ -286,14 +286,15 @@ pref("mail.identity.default.stationery_folder","mailbox://nobody@Local%20Folders
 pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
 
-
 // by default, only collect addresses the user sends to (outgoing)
 // incoming is all spam anyways
 pref("mail.collect_email_address_incoming", false);
 pref("mail.collect_email_address_outgoing", true);
 pref("mail.collect_email_address_newsgroup", false);
-pref("mail.collect_email_address_enable_size_limit", true);
-pref("mail.collect_email_address_size_limit", 700);
+
+// by default, use the Personal Addressbook for collection
+pref("mail.collect_addressbook","moz-abmdbdirectory://abook.mab");
+
 pref("mail.default_sendlater_uri","mailbox://nobody@Local%20Folders/Unsent%20Messages");
 
 pref("mail.server.default.port", -1);
