@@ -497,7 +497,7 @@ function onOKCommand()
     }
 
     /* wire up attendees */
-    //evenet.clearAttendees();
+    event.removeAllAttendees();
     attendeeList = document.getElementById("bucketBody").getElementsByTagName("treecell");
     for (var i = 0; i < attendeeList.length; i++) {
         label = attendeeList[i].getAttribute("label");
@@ -1591,7 +1591,8 @@ function processComponentType()
 function onIniviteAdd()
 {
     textBox = document.getElementById("invite-email-field");
-    addAttendee(textBox.value);
+    var email = "mailto:" + textBox.value;
+    addAttendee(email);
 }
 
 function addAttendee(email)
