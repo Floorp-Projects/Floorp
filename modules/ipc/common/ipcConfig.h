@@ -52,9 +52,15 @@
 #define IPC_PORT                14400
 #define IPC_SOCKET_TYPE         nsnull
 #define IPC_DEFAULT_SOCKET_PATH ""
+
+#ifdef XP_UNIX
+#define IPC_DAEMON_APP_NAME     "mozipcd"
+#define IPC_PATH_SEP_CHAR       '/'
+#else
 #define IPC_DAEMON_APP_NAME     "mozipcd.exe"
 #define IPC_PATH_SEP_CHAR       '\\'
-#define IPC_PATH_SEP_CHAR_S     "\\"
+#endif
+
 #else
 //
 // use UNIX domain socket
@@ -64,7 +70,6 @@
 #define IPC_DEFAULT_SOCKET_PATH "/tmp/sock"
 #define IPC_DAEMON_APP_NAME     "mozipcd"
 #define IPC_PATH_SEP_CHAR       '/'
-#define IPC_PATH_SEP_CHAR_S     "/"
 #endif
 
 

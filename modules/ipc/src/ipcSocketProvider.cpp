@@ -35,7 +35,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "private/pprio.h"
+
 #include "ipcSocketProvider.h"
+#include "ipcLog.h"
+
+static PRDescIdentity ipcIOLayerIdentity;
+static PRIOMethods    ipcIOLayerMethods;
+
+static PRStatus PR_CALLBACK
+ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr, PRIntervalTime timeout)
+{ 
+    if (!fd || !fd->lower)
+        return PR_FAILURE;
+
+    PRStatus status;
+
+    status = fd->lower->methods->connect(fd->lower, addr, timeout);
+    if (status != PR_SUCCESS)
+        return status;
+
+    //
+    // now that we have a connected socket; do some security checks on the
+    // file descriptor.
+    //
+    //   (1) make sure owner matches
+    //   (2) make sure permissions match expected permissions
+    //
+    // if these conditions aren't met then bail.
+    //
+    int unix_fd = PR_FileDesc2NativeHandle(fd->lower);  
+
+    struct stat st;
+    if (fstat(unix_fd, &st) == -1) {
+        LOG(("ipcIOLayerConnect: stat failed\n"));
+        return PR_FAILURE;
+    }
+
+    if (st.st_uid != getuid() && st.st_uid != geteuid()) {
+        LOG(("ipcIOLayerConnect: uid check failed\n"));
+        return PR_FAILURE;
+    }
+
+    return PR_SUCCESS;
+}
+    
+static void InitIPCMethods()
+{
+    ipcIOLayerIdentity = PR_GetUniqueIdentity("moz:ipc-layer");
+
+    ipcIOLayerMethods = *PR_GetDefaultIOMethods();
+    ipcIOLayerMethods.connect = ipcIOLayerConnect;
+}
 
 NS_IMETHODIMP
 ipcSocketProvider::NewSocket(const char *host,
@@ -45,8 +100,32 @@ ipcSocketProvider::NewSocket(const char *host,
                              PRFileDesc **fd,
                              nsISupports **securityInfo)
 {
-    *fd = PR_OpenTCPSocket(PR_AF_LOCAL);
+    static PRBool firstTime = PR_TRUE;
+    if (firstTime) {
+        InitIPCMethods();
+        firstTime = PR_FALSE;
+    }
+
+    PRFileDesc *sock = PR_OpenTCPSocket(PR_AF_LOCAL);
+    if (!sock) return NS_ERROR_OUT_OF_MEMORY;
+
+    PRFileDesc *layer = PR_CreateIOLayerStub(ipcIOLayerIdentity, &ipcIOLayerMethods);
+    if (!layer)
+        goto loser;
+    layer->secret = NULL;
+
+    if (PR_PushIOLayer(sock, PR_GetLayersIdentity(sock), layer) != PR_SUCCESS)
+        goto loser;
+
+    *fd = sock;
     return NS_OK;
+
+loser:
+    if (layer)
+        layer->dtor(layer);
+    if (sock)
+        PR_Close(sock);
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -48,16 +48,20 @@ EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= ipc
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  pref \
-		  $(NULL)
+REQUIRES = \
+        xpcom \
+        string \
+        necko \
+        pref \
+        $(NULL)
 
-CPPSRCS		= \
-			ipcService.cpp \
-			ipcTransport.cpp \
-			ipcSocketProvider.cpp
+CPPSRCS = \
+        ipcService.cpp \
+        ipcTransport.cpp
+
+ifneq ($(OS_ARCH),WINNT)
+CPPSRC += ipcSocketProvider.cpp
+endif
 
 LOCAL_INCLUDES = \
         -I$(srcdir)/../common \

@@ -35,9 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef XP_UNIX
+#include <pwd.h>
+#include <unistd.h>
+#include <sys/types.h>
+#endif
+
 #include "plstr.h"
 
+#include "nsIFile.h"
 #include "nsIServiceManager.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -144,10 +153,12 @@ ipcService::Init()
     if (appName.IsEmpty())
         appName = NS_LITERAL_CSTRING("test-app");
 
-    // XXX use directory service to locate socket
-    rv = mTransport->Init(appName,
-                          NS_LITERAL_CSTRING(IPC_DEFAULT_SOCKET_PATH),
-                          this);
+    // get socket path from directory service
+    nsCAutoString socketPath;
+    if (NS_FAILED(GetSocketPath(socketPath)))
+        socketPath = NS_LITERAL_CSTRING(IPC_DEFAULT_SOCKET_PATH);
+
+    rv = mTransport->Init(appName, socketPath, this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -180,10 +191,32 @@ ipcService::HandleQueryResult(const ipcMessage *rawMsg, PRBool succeeded)
         info = nsnull;
     }
 
-    query->mObserver->OnClientStatus(query->mReqToken, info, cStatus);
+    query->mObserver->OnClientStatus(query->mReqToken, cStatus, info);
 
     NS_IF_RELEASE(info);
     mQueryQ.DeleteFirst();
+}
+
+nsresult
+ipcService::GetSocketPath(nsACString &socketPath)
+{
+    nsCOMPtr<nsIFile> file;
+    NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
+    if (!file)
+        return NS_ERROR_FAILURE;
+#ifdef XP_UNIX
+    // XXX may want to use getpwuid_r when available
+    struct passwd *pw = getpwuid(geteuid());
+    if (!pw)
+        return NS_ERROR_UNEXPECTED;
+    nsCAutoString leaf;
+    leaf = NS_LITERAL_CSTRING(".mozilla-ipc-")
+         + nsDependentCString(pw->pw_name);
+    file->AppendNative(leaf);
+#endif
+    file->AppendNative(NS_LITERAL_CSTRING("ipcd"));
+    file->GetNativePath(socketPath);
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

@@ -103,9 +103,10 @@ public:
 NS_IMPL_ISUPPORTS1(myIpcClientObserver, ipcIClientObserver)
 
 NS_IMETHODIMP
-myIpcClientObserver::OnClientStatus(PRUint32 aReqToken, ipcIClientInfo *aClientInfo, PRUint32 aStatus)
+myIpcClientObserver::OnClientStatus(PRUint32 aReqToken, PRUint32 aStatus, ipcIClientInfo *aClientInfo)
 {
-    printf("*** got client status [token=%u info=%p status=%u]\n", aReqToken, (void *) aClientInfo, aStatus);
+    printf("*** got client status [token=%u status=%u info=%p]\n",
+            aReqToken, aStatus, (void *) aClientInfo);
 
     if (aClientInfo) {
         PRUint32 cID;
