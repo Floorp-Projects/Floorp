@@ -165,7 +165,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   mColPos = 0;
   mIndent = 0;
   mCiteQuote = PR_FALSE;
-  mDoOutput = PR_FALSE;
+  mDoFragment = PR_FALSE;
   mBufferSize = 0;
   mBufferLength = 0;
   mBuffer = nsnull;
@@ -283,8 +283,7 @@ USE_GENERAL_CLOSE_METHOD(CloseFrameset)
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::DoFragment(PRBool aFlag) 
 {
-  if (aFlag)
-    mDoOutput = PR_TRUE;
+  mDoFragment = aFlag;
   return NS_OK; 
 }
 
@@ -352,7 +351,6 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddComment(const nsIParserNode& aNode)
 {
   // Skip comments in plaintext output
-  mDoOutput = PR_FALSE;
   return NS_OK;
 }
 
@@ -375,6 +373,25 @@ nsHTMLToTXTSinkStream::GetValueOfAttribute(const nsIParserNode& aNode,
   return NS_ERROR_NOT_AVAILABLE;
 }
     
+PRBool nsHTMLToTXTSinkStream::DoOutput()
+{
+  PRBool inBody = PR_FALSE;
+
+  // Loop over the tag stack and see if we're inside a body,
+  // and not inside a markup_declaration
+  for (PRUint32 i = 0; i < mTagStackIndex; ++i)
+  {
+    if (mTagStack[i] == eHTMLTag_markupDecl
+        || mTagStack[i] == eHTMLTag_comment)
+      return PR_FALSE;
+
+    if (mTagStack[i] == eHTMLTag_body)
+      inBody = PR_TRUE;
+  }
+
+  return mDoFragment || inBody;
+}
+
 /**
   * This method is used to a general container. 
   * This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
@@ -398,22 +415,21 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       else
         InitEncoder(mCharsetOverride);
     }
-  }
-
-  if (type == eHTMLTag_body)
-  {
-    mDoOutput = PR_TRUE;
-
-    // Would be cool to figure out here whether we have a
-    // preformatted style attribute.  It's hard, though.
-
     return NS_OK;
   }
-  if (!mDoOutput)
-    return NS_OK;
 
   if (mTagStackIndex < TagStackSize)
     mTagStack[mTagStackIndex++] = type;
+
+  if (type == eHTMLTag_body)
+  {
+    // Would be cool to figure out here whether we have a
+    // preformatted style attribute.  It's hard, though.
+    return NS_OK;
+  }
+
+  if (!DoOutput())
+    return NS_OK;
 
   if (type == eHTMLTag_ol)
   {
@@ -491,24 +507,10 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
 
-  if (type == eHTMLTag_body)
-  {
-    mDoOutput = PR_FALSE;
-    return NS_OK;
-  }
-
-  else if (type == eHTMLTag_comment)
-  {
-    mDoOutput = PR_TRUE;
-    return NS_OK;
-  }
-  if (!mDoOutput)
-    return NS_OK;
-
   if (mTagStackIndex > 0)
     --mTagStackIndex;
 
-  else if (type == eHTMLTag_ol)
+  if (type == eHTMLTag_ol)
     --mOLStackIndex;
 
   else if (type == eHTMLTag_blockquote)
@@ -520,16 +522,14 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   }
 
   // End current line if we're ending a block level tag
-  if (IsBlockLevel(type))
+  if (IsBlockLevel(type) && type != eHTMLTag_body && type != eHTMLTag_html
+      && type != eHTMLTag_comment)
   {
     if (mColPos != 0)
     {
-      //if (mFlags & nsIDocumentEncoder::OutputFormatted)
-      {
-        nsAutoString temp(NS_LINEBREAK);
-        Write(temp);
-        mColPos = 0;
-      }
+      nsAutoString temp(NS_LINEBREAK);
+      Write(temp);
+      mColPos = 0;
     }
   }
   return NS_OK;
@@ -550,7 +550,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   
   nsString text = aNode.GetText();
 
-  if (mDoOutput == PR_FALSE)
+  if (!DoOutput())
     return NS_OK;
 
   if (type == eHTMLTag_text)
