@@ -69,6 +69,9 @@ static PRLock* gTraceLock;
 
 static PLHashTable* gBloatView;
 static PLHashTable* gTypesToLog;
+static PLHashTable* gObjectsToLog;
+static PLHashTable* gSerialNumbers;
+static PRInt32 gNextSerialNumber;
 
 static PRBool gLogging;
 static PRBool gLogToLeaky;
@@ -329,6 +332,13 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   return entry;
 }
 
+static PRIntn DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
+{
+  fprintf((FILE*) aClosure, "%d\n", PRInt32(aHashEntry->value));
+  return HT_ENUMERATE_NEXT;
+}
+
+
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
 nsresult
@@ -372,6 +382,11 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
   total.DumpTotal(gBloatView->nentries, out);
 
   PL_HashTableEnumerateEntries(gBloatView, dump, out);
+
+  if (gSerialNumbers) {
+    fprintf(out, "\n\nSerial Numbers of Leaked Objects:\n");
+    PL_HashTableEnumerateEntries(gSerialNumbers, DumpSerialNumbers, out);
+  }
 
 done:
   gLogging = wasLogging;
@@ -420,6 +435,28 @@ static PRBool LogThisType(const char* aTypeName)
   return nsnull != he;
 }
 
+static PRInt32 EnsureSerialNumber(void* aPtr)
+{
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
+  if (hep && *hep) {
+    return PRInt32((*hep)->value);
+  }
+  else {
+    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(aPtr), aPtr, (void*)(++gNextSerialNumber));
+    return gNextSerialNumber;
+  }
+}
+
+static void RecycleSerialNumberPtr(void* aPtr)
+{
+  PL_HashTableRemove(gSerialNumbers, aPtr);
+}
+
+static PRBool LogThisObj(PRInt32 aSerialNumber)
+{
+  return nsnull != PL_HashTableLookup(gObjectsToLog, (const void*)(aSerialNumber));
+}
+
 static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
 {
   const char* value = getenv(envVar);
@@ -452,6 +489,12 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
     }
   }
   return PR_FALSE;
+}
+
+
+static PLHashNumber HashNumber(const void* aKey)
+{
+  return PLHashNumber(aKey);
 }
 
 static void InitTraceLog(void)
@@ -520,6 +563,50 @@ static void InitTraceLog(void)
         }
         PL_HashTableAdd(gTypesToLog, nsCRT::strdup(cp), (void*)1);
         fprintf(stdout, "%s ", cp);
+        if (!cm) break;
+        *cm = ',';
+        cp = cm + 1;
+      }
+      fprintf(stdout, "\n");
+    }
+
+    gSerialNumbers = PL_NewHashTable(256,
+                                     HashNumber,
+                                     PL_CompareValues,
+                                     PL_CompareValues,
+                                     NULL, NULL);
+  }
+
+  const char* objects = getenv("XPCOM_MEM_LOG_OBJECTS");
+  if (objects) {
+    gObjectsToLog = PL_NewHashTable(256,
+                                    HashNumber,
+                                    PL_CompareValues,
+                                    PL_CompareValues,
+                                    NULL, NULL);
+
+    if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- unable to log specific objects\n");
+    }
+    else if (!gRefcntsLog) {
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- but XPCOM_MEM_REFCNT_LOG is not defined\n");
+    }
+    else {
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- only logging these objects: ");
+      const char* cp = objects;
+      for (;;) {
+        char* cm = strchr(cp, ',');
+        if (cm) {
+          *cm = '\0';
+        }
+        PRInt32 serialno = 0;
+        while (*cp) {
+          serialno *= 10;
+          serialno += *cp - '0';
+          ++cp;
+        }
+        PL_HashTableAdd(gObjectsToLog, (const void*)serialno, (void*)1);
+        fprintf(stdout, "%d ", serialno);
         if (!cm) break;
         *cm = ',';
         cp = cm + 1;
@@ -987,22 +1074,28 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
     PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
+    PRInt32 serialno = 0;
+    if (gSerialNumbers && loggingThisType) {
+      serialno = EnsureSerialNumber(aPtr);
+    }
+
     if (aRefCnt == 1 && gAllocLog && loggingThisType) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X Create\n",
-              aClazz, PRInt32(aPtr));
+      fprintf(gAllocLog, "\n<%s> 0x%08X %d Create\n",
+              aClazz, serialno, PRInt32(aPtr));
       WalkTheStack(gAllocLog);
     }
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogAddRefCall instead to get file and line numbers.)
-    if (gRefcntsLog && loggingThisType) {
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+    if (gRefcntsLog && loggingThisType && loggingThisObject) {
       if (gLogToLeaky) {
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
       }
       else {
         // Can't use PR_LOG(), b/c it truncates the line
         fprintf(gRefcntsLog,
-                "\n<%s> 0x%08X AddRef %d\n", aClazz, PRInt32(aPtr), aRefCnt);
+                "\n<%s> 0x%08X %d AddRef %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
         WalkTheStack(gRefcntsLog);
       }
     }
@@ -1036,14 +1129,20 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogReleaseCall instead to get file and line numbers.)
     PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
-    if (gRefcntsLog && loggingThisType) {
+    PRInt32 serialno = 0;
+    if (gSerialNumbers && loggingThisType) {
+      serialno = EnsureSerialNumber(aPtr);
+    }
+
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+    if (gRefcntsLog && loggingThisType && loggingThisObject) {
       if (gLogToLeaky) {
         (*leakyLogRelease)(aPtr, aRefCnt + 1, aRefCnt);
       }
       else {
         // Can't use PR_LOG(), b/c it truncates the line
         fprintf(gRefcntsLog,
-                "\n<%s> 0x%08X Release %d\n", aClazz, PRInt32(aPtr), aRefCnt);
+                "\n<%s> 0x%08X %d Release %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
         WalkTheStack(gRefcntsLog);
       }
     }
@@ -1055,9 +1154,13 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     // using LogDeleteXPCOM instead to get file and line numbers.)
     if (aRefCnt == 0 && gAllocLog && loggingThisType) {
       fprintf(gAllocLog,
-              "\n<%s> 0x%08X Destroy\n",
-              aClazz, PRInt32(aPtr));
+              "\n<%s> 0x%08X %d Destroy\n",
+              aClazz, PRInt32(aPtr), serialno);
       WalkTheStack(gAllocLog);
+    }
+
+    if (aRefCnt == 0 && gSerialNumbers && loggingThisType) {
+      RecycleSerialNumberPtr(aPtr);
     }
 #endif
 
