@@ -46,48 +46,9 @@
 #include "nsFileSpec.h"
 #include "nsReadableUtils.h"
 
-nsRecyclingAllocator* nsScanner::gAllocator = nsnull;
-
-static void nsScannerRecycle(void *aPtr, void *aClientData)
-{
-  nsScanner::gAllocator->Free(aPtr);
-}
-
-static void *nsScannerAllocate(PRUint32 size)
-{
-  return nsScanner::gAllocator->Malloc(size);
-}
-
-/**
- * Helper funciton to convert raw 8bit char * to unicode
- *
- * aStr : input 8bit string
- * aLen : length of input string aStr
- * aDest : Destination unicode buffer. Null terminated.
- * aDestLength : size of destination buffer. Must be atleast aLen+1.
- *
- * return 0 if conversion succeeded
- * returns -1, if there is not enough space in destination buffer, 
- */
-static int RawToUnicode(const char *aStr, PRInt32 aLen, PRUnichar *aDest, PRUint32 aDestLength)
-{
-  // Alert if someone if passing null buffers to us
-  NS_ASSERTION(aStr && aDest, "Null buffers");
-
-  // Error checking
-  if (!aStr || !aDest || (PRInt32)aDestLength < aLen+1)
-    return -1;
-
-  while (*aStr)
-    *aDest++ = (unsigned char) *aStr++;
-  *aDest = 0;
-  return 0;
-}
-
-
-nsScannerString::nsScannerString(PRUnichar* aStorageStart, PRUnichar* aDataEnd,
-                                 PRUnichar* aStorageEnd, nsFreeProc *aFreeProc)
-    : nsSlidingString(aStorageStart, aDataEnd, aStorageEnd, aFreeProc)
+nsScannerString::nsScannerString(PRUnichar* aStorageStart, 
+                                 PRUnichar* aDataEnd, 
+                                 PRUnichar* aStorageEnd) : nsSlidingString(aStorageStart, aDataEnd, aStorageEnd)
 {
 }
 
@@ -146,15 +107,13 @@ MOZ_DECL_CTOR_COUNTER(nsScanner)
 nsScanner::nsScanner(const nsAString& anHTMLString, const nsString& aCharset, PRInt32 aSource)
 {
   MOZ_COUNT_CTOR(nsScanner);
-  InitAllocator();
-  mSlidingBuffer = nsnull;
+
+  PRUnichar* buffer = ToNewUnicode(anHTMLString);
   mTotalRead = anHTMLString.Length();
-  if (mTotalRead)
-  {
-    AppendToBuffer(anHTMLString);
-    mSlidingBuffer->BeginReading(mCurrentPosition);
-  }
+  mSlidingBuffer = nsnull;
   mCountRemaining = 0;
+  AppendToBuffer(buffer, buffer+mTotalRead, buffer+mTotalRead);
+  mSlidingBuffer->BeginReading(mCurrentPosition);
   mMarkPosition = mCurrentPosition;
   mIncremental=PR_FALSE;
   mOwnsStream=PR_FALSE;
@@ -178,7 +137,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
     mFilename(aFilename)
 {
   MOZ_COUNT_CTOR(nsScanner);
-  InitAllocator();
+
   mSlidingBuffer = nsnull;
   mIncremental=PR_TRUE;
   mCountRemaining = 0;
@@ -207,7 +166,7 @@ nsScanner::nsScanner(const nsAString& aFilename,nsInputStream& aStream,const nsS
     mFilename(aFilename)
 {  
   MOZ_COUNT_CTOR(nsScanner);
-  InitAllocator();
+
   mSlidingBuffer = nsnull;
   mIncremental=PR_FALSE;
   mCountRemaining = 0;
@@ -350,8 +309,12 @@ PRBool nsScanner::UngetReadable(const nsAReadableString& aBuffer) {
  * @return  error code 
  */
 nsresult nsScanner::Append(const nsAReadableString& aBuffer) {
-  AppendToBuffer(aBuffer);
-  mTotalRead += aBuffer.Length();
+  
+  PRUnichar* buffer = ToNewUnicode(aBuffer);
+  PRUint32 bufLen = aBuffer.Length();
+  mTotalRead += bufLen;
+
+  AppendToBuffer(buffer, buffer+bufLen, buffer+bufLen);
 
   return NS_OK;
 }
@@ -369,8 +332,8 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen){
   if(mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
     mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
-    start = unichars = (PRUnichar*) nsScannerAllocate((unicharBufLen+1) * sizeof(PRUnichar));
-    NS_ENSURE_TRUE(unichars, NS_ERROR_OUT_OF_MEMORY);
+    start = unichars = (PRUnichar*)nsMemory::Alloc((unicharBufLen+1) * sizeof(PRUnichar));
+    NS_ENSURE_TRUE(unichars,NS_ERROR_OUT_OF_MEMORY);
 	  
     PRInt32 totalChars = 0;
     PRInt32 unicharLength = unicharBufLen;
@@ -412,7 +375,9 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen){
     res = NS_OK; 
   }
   else {
-    AppendToBuffer(aBuffer, aLen);
+    nsDependentCString str(aBuffer, aLen);
+    unichars = ToNewUnicode(str);
+    AppendToBuffer(unichars, unichars+aLen, unichars+aLen);
     mTotalRead+=aLen;
   }
 
@@ -446,18 +411,23 @@ nsresult nsScanner::FillBuffer(void) {
   }
   else {
     PRInt32 numread=0;
-    char buf[kBufsize+1];
+    char* buf = new char[kBufsize+1];
     buf[kBufsize]=0;
 
     if(mInputStream) {
     	numread = mInputStream->read(buf, kBufsize);
-      if (0 == numread)
+      if (0 == numread) {
+        delete [] buf;
         return kEOF;
+      }
     }
 
     if((0<numread) && (0==result)) {
-      AppendToBuffer(buf, numread);
+      nsDependentCString str(buf, numread);
+      PRUnichar* unichars = ToNewUnicode(str);
+      AppendToBuffer(unichars, unichars+numread, unichars+kBufsize+1);
     }
+    delete [] buf;
     mTotalRead+=numread;
   }
 
@@ -1422,32 +1392,12 @@ void nsScanner::ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
   }
 }
 
-void nsScanner::AppendToBuffer(const nsAString &aData)
-{
-  PRUint32 len = aData.Length();
-  PRUnichar* buffer = (PRUnichar *) nsScannerAllocate(len * sizeof(PRUnichar));
-  if (buffer) {
-    CopyUnicodeTo(aData, 0, buffer, len);
-    AppendToBuffer(buffer, buffer+len, buffer+len);
-  }
-}
-
-void nsScanner::AppendToBuffer(const char *aData, PRUint32 aLen)
-{
-    PRUnichar *buffer = (PRUnichar*) nsScannerAllocate((aLen+1) * sizeof(PRUnichar));
-    if (buffer)
-    {
-      RawToUnicode(aData, aLen, buffer, aLen+1);
-      AppendToBuffer(buffer, buffer+aLen, buffer+aLen);
-    }
-}
-
 void nsScanner::AppendToBuffer(PRUnichar* aStorageStart, 
                                PRUnichar* aDataEnd, 
                                PRUnichar* aStorageEnd)
 {
   if (!mSlidingBuffer) {
-    mSlidingBuffer = new nsScannerString(aStorageStart, aDataEnd, aStorageEnd, nsScannerRecycle);
+    mSlidingBuffer = new nsScannerString(aStorageStart, aDataEnd, aStorageEnd);
     mSlidingBuffer->BeginReading(mCurrentPosition);
     mMarkPosition = mCurrentPosition;
     mSlidingBuffer->EndReading(mEndPosition);
