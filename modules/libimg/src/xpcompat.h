@@ -87,7 +87,7 @@
 #define XP_VSPRINTF               	vsprintf
 
 #if !defined(XP_RANDOM) || !defined(XP_SRANDOM)   /* defined in both xp_mcom.h and xp_str.h */
-#ifdef HAVE_RANDOM
+#if defined(HAVE_RANDOM) && !defined(__QNX__)     /* QNX 4.24 _has_ random, but no prototype */
 #define XP_RANDOM		random
 #define XP_SRANDOM(seed)	srandom((seed))
 #else
