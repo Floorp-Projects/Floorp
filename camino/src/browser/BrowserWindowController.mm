@@ -2571,6 +2571,18 @@ enum BWCOpenDest {
   [mTabBrowser selectTabViewItemAtIndex:replaceExisting ? 0 : curNumTabs];
 }
 
+-(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra
+{
+  [self openURLArray:urlArray replaceExistingTabs:YES];
+  if (closeExtra) {
+    int closeIndex = [urlArray count];
+    int closeCount = [mTabBrowser numberOfTabViewItems] - closeIndex;
+    for (int i = 0; i < closeCount; i++) {
+      [[mTabBrowser tabViewItemAtIndex:closeIndex] closeTab];
+    }
+  }
+}
+
 -(BrowserTabViewItem*)createNewTabItem
 {
   BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];

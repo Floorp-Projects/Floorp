@@ -404,7 +404,7 @@ const int kReuseWindowOnAE = 2;
     else if (openInNewTab)
       [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO];
     else
-      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
+      [browserWindowController openURLArrayReplacingTabs:[(BookmarkFolder *)item childURLs] closeExtraTabs:[item isGroup]];
   }
 }
 

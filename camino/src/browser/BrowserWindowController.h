@@ -286,6 +286,7 @@ typedef enum
 - (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
 
 - (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting;
+- (void)openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra;
 
 -(BrowserTabViewItem*)createNewTabItem;
 
