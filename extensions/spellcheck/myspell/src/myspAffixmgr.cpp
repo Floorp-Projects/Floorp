@@ -510,9 +510,11 @@ PRBool myspAffixMgr::check(const nsAFlatString &word)
     return PR_TRUE;
 
   PRBool good=PR_FALSE;
-  rv = mPersonalDictionary->Check(word.get(), mLanguage.get(), &good);
-  if(NS_FAILED(rv))
-    return PR_FALSE;
+  if (mPersonalDictionary) {
+    rv = mPersonalDictionary->Check(word.get(), mLanguage.get(), &good);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+  }
   return good;
 }
 
