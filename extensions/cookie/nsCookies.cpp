@@ -496,7 +496,7 @@ COOKIE_GetCookie(char * address) {
       /* check for expired cookies */
       if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
         /* expire and remove the cookie */
-        cookie_list->RemoveElementAt(i);
+        cookie_list->RemoveElementAt(i--); /* decr i so next cookie isn't skipped */
         deleteCookie((void*)cookie_s, nsnull);
         cookie_changed = PR_TRUE;
         continue;
