@@ -844,7 +844,7 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 
     	char *convertedName =
             fServerConnection.CreateUtf7ConvertedString(boxname, PR_FALSE);
-    	PR_Free(boxname);
+    	PL_strfree(boxname);
     	boxname = convertedName;
     }
 
@@ -861,7 +861,8 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 		//if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
 		boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
 		boxSpec->connection->GetCurrentUrl()->GetHost(&boxSpec->hostName);
-		PR_FREEIF( boxname);
+        if (boxname)
+            PL_strfree( boxname);
 		// storage for the boxSpec is now owned by server connection
 		fServerConnection.DiscoverMailboxSpec(boxSpec);
 		
