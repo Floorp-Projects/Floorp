@@ -156,17 +156,9 @@ namespace JSTypes {
     
         const JSValue& getProperty(const String& name)
         {
-        #ifdef XP_MAC
             JSProperties::const_iterator i = mProperties.find(name);
             if (i != mProperties.end())
                 return i->second;
-        #else
-            // XXX should use map.find() to do this efficiently, but
-            // unfortunately, find() returns an iterator that is different
-            // on different STL implementations.
-            if (mProperties.count(name))
-                return mProperties[name];
-        #endif
             if (mPrototype)
                 return mPrototype->getProperty(name);
             return kUndefinedValue;
