@@ -36,17 +36,21 @@
 #include "nsSDR.h"
 #include "nsFSDR.h"
 #include "nsCrypto.h"
-
+#include "nsKeygenHandler.h"
 //For the NS_CRYPTO_PROGID define
 #include "nsDOMCID.h"
 
 #include "nsCURILoader.h"
+#include "nsISupportsUtils.h"
 
 // Define SDR object constructor
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kFormProcessorCID,   NS_IFORMPROCESSOR_CID); 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFSecretDecoderRing, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCrypto, init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPkcs11, init)
 
 static nsModuleComponentInfo components[] =
 {
@@ -133,8 +137,42 @@ static nsModuleComponentInfo components[] =
         NS_CRYPTO_CID,
         NS_CRYPTO_PROGID,
         nsCryptoConstructor
+    },
+    {
+        NS_PKCS11_CLASSNAME,
+        NS_PKCS11_CID,
+        NS_PKCS11_PROGID,
+        nsPkcs11Constructor
     }
 
 };
 
+#if 0
 NS_IMPL_NSGETMODULE("PSMComponent", components);
+#endif
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFile* location,
+                                          nsIModule** result)
+{
+  nsresult rv;
+  // Put in code to register KEYGEN form input handler.
+  rv= NS_NewGenericModule("PSMComponent",
+                          sizeof(components) / sizeof(components[0]),
+                          components, nsnull, result);
+  // Register a form processor. The form processor has the opportunity to 
+  // modify the value's passed during form submission. 
+  nsKeygenFormProcessor* testFormProcessor = new nsKeygenFormProcessor(); 
+  nsCOMPtr<nsISupports> formProcessor; 
+  rv = testFormProcessor->QueryInterface(kISupportsIID, 
+                                         getter_AddRefs(formProcessor)); 
+  if (NS_SUCCEEDED(rv) && formProcessor) { 
+    rv = nsServiceManager::RegisterService(kFormProcessorCID, formProcessor); 
+  } 
+  return rv;
+}
+
+
+
+
+

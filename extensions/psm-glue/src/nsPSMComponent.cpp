@@ -523,13 +523,19 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
                                PROTOCOL_VERSION, 
                                profilenameC, 
                                (char*)profileSpec.GetNativePathCString());        
-
+        
         if (psmStatus == CMTFailure)
         {  
             PR_FREEIF(profileName);       
             goto failure;
         }
         
+        if (InitPSMEventLoop(mControl) != PR_SUCCESS)
+        {
+            PR_FREEIF(profileName);       
+            goto failure;
+        }
+            
         if (NS_FAILED(PassPrefs()))
         {  
             PR_FREEIF(profileName);       
@@ -926,3 +932,4 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   Recycle(commonChar);
   return rv;
 }
+

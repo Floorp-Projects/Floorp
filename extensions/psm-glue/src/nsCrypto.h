@@ -24,10 +24,15 @@
 #include "nsIDOMCRMFObject.h"
 #include "nsIDOMCrypto.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIDOMPkcs11.h"
 
 #define NS_CRYPTO_CLASSNAME "Crypto JavaScript Class"
 #define NS_CRYPTO_CID \
   {0x929d9320, 0x251e, 0x11d4, { 0x8a, 0x7c, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3} }
+
+#define NS_PKCS11_CLASSNAME "Pkcs11 JavaScript Class"
+#define NS_PKCS11_CID \
+  {0x74b7a390, 0x3b41, 0x11d4, { 0x8a, 0x80, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3} }
 
 class nsIPSMComponent;
 class nsIDOMScriptObjectFactory;
@@ -70,6 +75,7 @@ public:
   static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult);
   static nsIDOMScriptObjectFactory *gScriptObjectFactory;
   static nsIPrincipal* GetScriptPrincipal(JSContext *cx);
+  static const char *kPSMComponentProgID;
 
  private:
 
@@ -77,7 +83,30 @@ public:
   nsString         mVersionString;
   PRBool           mVersionStringSet;
   void            *mScriptObject;
-  static const char *kPSMComponentProgID;
 };
 
+class nsPkcs11 : public nsIDOMPkcs11,
+                 public nsIScriptObjectOwner {
+public:
+  nsPkcs11();
+  virtual ~nsPkcs11();
+
+  nsresult init();
+  NS_DECL_ISUPPORTS
+  NS_DECL_IDOMPKCS11
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
+
+private:
+  nsIPSMComponent *mPSM;
+  void            *mScriptObject;
+};
+
+nsresult
+getPSMComponent(nsIPSMComponent ** retPSM);
+
 #endif //_nsCrypto_h_
+
+
+
+

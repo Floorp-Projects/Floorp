@@ -28,12 +28,15 @@
 #include "nsIPSMComponent.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIDOMWindow.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIThreadManager.h"
 #include "nsJSUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsIPrincipal.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jscntxt.h"
@@ -51,6 +54,23 @@
 #define JS_ERROR_USER_CANCEL JS_ERROR"userCancel"
 #define JS_ERROR_INTERNAL    JS_ERROR"internalError"
 #define JS_ERROR_ARGC_ERR    JS_ERROR"incorrect number of parameters"
+
+#undef REPORT_INCORRECT_NUM_ARGS
+
+#define JS_OK_ADD_MOD                      3
+#define JS_OK_DEL_EXTERNAL_MOD             2
+#define JS_OK_DEL_INTERNAL_MOD             1
+
+#define JS_ERR_INTERNAL                   -1
+#define JS_ERR_USER_CANCEL_ACTION         -2
+#define JS_ERR_INCORRECT_NUM_OF_ARGUMENTS -3
+#define JS_ERR_DEL_MOD                    -4
+#define JS_ERR_ADD_MOD                    -5
+#define JS_ERR_BAD_MODULE_NAME            -6
+#define JS_ERR_BAD_DLL_NAME               -7
+#define JS_ERR_BAD_MECHANISM_FLAGS        -8
+#define JS_ERR_BAD_CIPHER_ENABLE_FLAGS    -9
+#define JS_ERR_ADD_DUPLICATE_MOD         -10
 
 /*
  * This structure is used to store information for one key generation.
@@ -112,10 +132,12 @@ private:
 };
 
 const char * nsCrypto::kPSMComponentProgID = PSM_COMPONENT_PROGID;
+static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsCrypto, nsIDOMCrypto,nsIScriptObjectOwner)
 NS_IMPL_ISUPPORTS2(nsCRMFObject, nsIDOMCRMFObject,nsIScriptObjectOwner)
 NS_IMPL_ISUPPORTS2(nsCryptoRunnable, nsIRunnable,nsISupports);
+NS_IMPL_ISUPPORTS2(nsPkcs11, nsIDOMPkcs11, nsIScriptObjectOwner);
 
 nsIEventQueue* getUIEventQueue();
 
@@ -133,17 +155,23 @@ nsCrypto::~nsCrypto()
 }
 
 nsresult
-nsCrypto::init()
+getPSMComponent(nsIPSMComponent ** retPSM)
 {
   nsresult rv;
   nsISupports *psm;
   
-  rv = nsServiceManager::GetService(kPSMComponentProgID, 
+  rv = nsServiceManager::GetService(nsCrypto::kPSMComponentProgID, 
 				    NS_GET_IID(nsIPSMComponent), &psm);
   if (rv == NS_OK) 
-    mPSM = (nsIPSMComponent *)psm;
+    *retPSM = (nsIPSMComponent *)psm;
   
   return rv;
+}
+
+nsresult
+nsCrypto::init()
+{
+  return getPSMComponent(&mPSM);
 }
 
 nsIDOMScriptObjectFactory* nsCrypto::gScriptObjectFactory=nsnull;
@@ -1305,4 +1333,310 @@ nsCryptoRunnable::Run() {
 }
 
 
+nsPkcs11::nsPkcs11()
+{
+  NS_INIT_REFCNT();
+  mPSM = nsnull;
+  mScriptObject = nsnull;
+}
+
+nsPkcs11::~nsPkcs11()
+{
+  NS_IF_RELEASE(mPSM);
+}
+
+nsresult
+nsPkcs11::init()
+{
+  return getPSMComponent(&mPSM);
+}
+
+NS_IMETHODIMP
+nsPkcs11::SetScriptObject(void* aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPkcs11::GetScriptObject(nsIScriptContext *aContext, 
+                          void** aScriptObject)
+{
+  nsresult rv = NS_OK;
+  
+  if (mScriptObject == nsnull) {
+    nsIDOMScriptObjectFactory *factory=nsnull;
+    
+    rv = nsCrypto::GetScriptObjectFactory(&factory);
+    if (rv == NS_OK) {
+      nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+      rv = factory->NewScriptPkcs11(aContext, 
+                                (nsISupports *)(nsIDOMPkcs11 *)this, 
+                                (nsISupports *)global, (void**)&mScriptObject);
+      NS_IF_RELEASE(factory);
+    }
+  }
+  *aScriptObject = mScriptObject;
+  return rv;
+}
+
+
+PRBool
+confirm_user(char *message)
+{
+  nsCOMPtr<nsIDOMWindow> hiddenWindow;
+  JSContext *jsContext;
+  PRBool confirmation = PR_FALSE;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
+                                               &jsContext); 
+    if (NS_SUCCEEDED(rv)) {
+      // set up arguments for window.confirm
+
+      void *stackPtr;
+      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", message);
+      if (argv) {
+        hiddenWindow->Confirm(jsContext, argv, 1, &confirmation);
+        JS_PopArguments(jsContext, stackPtr);
+      }
+    }
+  }
+  return confirmation;
+}
+
+void
+alertUser(char *message)
+{
+  nsCOMPtr<nsIDOMWindow> hiddenWindow;
+  JSContext *jsContext;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
+                                               &jsContext); 
+    if (NS_SUCCEEDED(rv)) {
+      // set up arguments for window.alert
+
+      void *stackPtr;
+      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", message);
+      if (argv) {
+        hiddenWindow->Alert(jsContext, argv, 1);
+        JS_PopArguments(jsContext, stackPtr);
+      }
+    }
+  }
+}
+
+//These defines are returned by PSM as the type of module deleted.
+/* Cryptographic module types */
+#define SECMOD_EXTERNAL 0       /* external module */
+#define SECMOD_INTERNAL 1       /* internal default module */
+#define SECMOD_FIPS     2       /* internal fips module */
+
+
+NS_IMETHODIMP
+nsPkcs11::Deletemodule(const nsString& aModuleName, PRInt32* aReturn)
+{
+  PCMT_CONTROL control;
+  char *errorString = nsnull, *warning = nsnull, *wholeMsg = nsnull;
+  nsresult rv;
+  CMTStatus status;
+  char *moduleName=nsnull, *modPrompt = nsnull, *successString = nsnull;
+  int moduleType, length;
+  PRBool okay;
+
+  rv = mPSM->GetControlConnection(&control);
+  if (NS_FAILED(rv)) {
+    goto loser;
+  }
+    
+  if (aModuleName.IsEmpty()) {
+    CMT_GetLocalizedString(control, SSM_STRING_BAD_MOD_NAME,
+                           &errorString);
+    *aReturn = JS_ERR_BAD_MODULE_NAME;
+    goto loser;
+  }
+  moduleName = aModuleName.ToNewCString();
+  status = CMT_GetLocalizedString(control, SSM_STRING_DEL_MOD_WARN,
+                                &warning);
+  if (status != CMTSuccess) {
+    *aReturn = JS_ERR_INTERNAL;
+    goto loser;
+  }
+  status = CMT_GetLocalizedString(control, SSM_STRING_MOD_PROMPT,
+                                  &modPrompt);
+  if (status != CMTSuccess) {
+    *aReturn = JS_ERR_INTERNAL;
+    goto loser;
+  }
+  length = strlen(warning) + strlen(modPrompt) +
+           strlen(moduleName) + 5;
+  
+  wholeMsg = new char[length];
+  if (!wholeMsg) {
+    *aReturn = JS_ERR_INTERNAL;
+    goto loser;
+  }
+  
+  wholeMsg[0] = '\0';
+  strcat(wholeMsg, warning);
+  strcat(wholeMsg, "\n");
+  strcat(wholeMsg, modPrompt);
+  strcat(wholeMsg, moduleName);
+  nsCRT::free(warning);
+  nsCRT::free(modPrompt);
+  okay = confirm_user(wholeMsg);
+  delete []wholeMsg;
+  //To avoid freeing up again in loser clause.
+  modPrompt = warning = wholeMsg = nsnull;
+  if (okay) {
+    /* Send a message telling PSM to delete this module*/
+    status = CMT_DeleteModule(control, moduleName, &moduleType);
+    delete []moduleName;
+    moduleName = nsnull;
+    if (status == CMTSuccess) {
+      if (moduleType == SECMOD_EXTERNAL) {
+        CMT_GetLocalizedString(control, SSM_STRING_EXT_MOD_DEL,
+                               &successString);
+        *aReturn = JS_OK_DEL_EXTERNAL_MOD;
+      } else {
+        *aReturn = JS_OK_DEL_INTERNAL_MOD;
+        CMT_GetLocalizedString(control, SSM_STRING_INT_MOD_DEL,
+                               &successString);
+      }
+    } else {
+      *aReturn = JS_ERR_DEL_MOD;
+      CMT_GetLocalizedString(control, SSM_STRING_MOD_DEL_FAIL,
+                             &errorString);
+      goto loser;
+    }
+  } else {
+    *aReturn = JS_ERR_USER_CANCEL_ACTION;
+  }
+  if (successString != NULL) {
+    alertUser(successString);
+    nsCRT::free(successString);
+  }
+  return NS_OK;
+ loser:
+  if (moduleName) {
+    delete []moduleName;
+  }
+  if (errorString != nsnull) {
+    alertUser(errorString);
+    nsCRT::free(errorString);
+  }
+  if (warning != nsnull) {
+    nsCRT::free(warning);
+  }
+  if (modPrompt != nsnull) {
+    nsCRT::free(modPrompt);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPkcs11::Addmodule(const nsString& aModuleName, 
+                    const nsString& aLibraryFullPath, 
+                    PRInt32 aCryptoMechanismFlags, 
+                    PRInt32 aCipherFlags, PRInt32* aReturn)
+{
+  char *warning = nsnull, *dllPrompt = nsnull, *modPrompt = nsnull;
+  char *confirmationMessage;
+  char *moduleName = nsnull, *libraryPath = nsnull;
+  char *errorString = nsnull;
+  CMTStatus status;
+  PCMT_CONTROL control = nsnull;
+  nsresult rv;
+  PRBool proceed;
+  PRInt32 length;
+
+  rv = mPSM->GetControlConnection(&control);
+  status = CMT_GetLocalizedString(control,
+                                  SSM_STRING_ADD_MOD_WARN,
+                                  &warning);
+  if (status != CMTSuccess) {
+    *aReturn = JS_ERR_INTERNAL;
+    goto loser;
+  }
+  
+  status = CMT_GetLocalizedString(control,
+                                  SSM_STRING_MOD_PROMPT,
+                                  &modPrompt);
+  if (status != CMTSuccess) {
+    *aReturn = JS_ERR_INTERNAL;
+    goto loser;
+  }
+  
+  status = CMT_GetLocalizedString(control,
+                                  SSM_STRING_DLL_PROMPT,
+                                  &dllPrompt);
+  if (status != CMTSuccess) {
+    *aReturn = JS_ERR_INTERNAL;
+    goto loser;
+  }
+
+  moduleName  = aModuleName.ToNewCString();
+  libraryPath = aLibraryFullPath.ToNewCString();
+
+  length = strlen(warning)   + strlen(modPrompt)   + strlen(moduleName) +
+           strlen(dllPrompt) + strlen(libraryPath) + 5;
+  confirmationMessage = new char[length];
+  if (!confirmationMessage)
+    goto loser;
+
+  
+  confirmationMessage[0] = '\0';
+  strcat(confirmationMessage, warning);
+  strcat(confirmationMessage, "\n");
+  strcat(confirmationMessage, modPrompt);
+  strcat(confirmationMessage, moduleName);
+  strcat(confirmationMessage, "\n");
+  strcat(confirmationMessage, dllPrompt);
+  strcat(confirmationMessage, libraryPath);
+  proceed = confirm_user(confirmationMessage);
+  delete []confirmationMessage;
+  
+  if (proceed) {
+    status = CMT_AddNewModule(control, moduleName, libraryPath,
+                              aCryptoMechanismFlags, aCipherFlags);
+    if (status == CMTSuccess) {
+      CMT_GetLocalizedString(control, SSM_STRING_ADD_MOD_SUCCESS,
+                             &errorString);
+      *aReturn = JS_OK_ADD_MOD;
+      goto loser;
+    } else if (status = (CMTStatus)-2) {
+      *aReturn = JS_ERR_ADD_DUPLICATE_MOD;
+      goto loser;
+    } else {
+      *aReturn = JS_ERR_ADD_MOD;
+      CMT_GetLocalizedString(control, SSM_STRING_ADD_MOD_FAILURE, 
+                             &errorString);
+      goto loser;
+    }
+  } else {
+    *aReturn = JS_ERR_USER_CANCEL_ACTION;
+  }
+  delete warning;
+  delete modPrompt;
+  delete dllPrompt;
+  return NS_OK;
+ loser:
+  if (warning)
+    delete warning;
+  if (modPrompt)
+    delete modPrompt;
+  if (dllPrompt)
+    delete dllPrompt;
+  //Alert the user about what actually happened.
+  if (errorString) {
+    alertUser(errorString);
+    PR_Free(errorString);
+  }
+  return NS_OK;
+}
 

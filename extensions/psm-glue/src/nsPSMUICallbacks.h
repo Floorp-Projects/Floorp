@@ -31,6 +31,7 @@
 #include "nsIPSMUIHandler.h"
 
 PRStatus InitPSMUICallbacks(PCMT_CONTROL gControl);
+PRStatus InitPSMEventLoop(PCMT_CONTROL gControl);
 PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char* pickledStatus, const char *hostName);
 
 

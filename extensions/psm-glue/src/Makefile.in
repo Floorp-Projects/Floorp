@@ -44,6 +44,7 @@ CPPSRCS	= \
 	nsSDR.cpp \
 	nsFSDR.cpp \
 	nsCrypto.cpp \
+	nsKeygenHandler.cpp \
 	$(NULL)
 
 CSRCS = \
