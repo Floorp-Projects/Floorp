@@ -89,6 +89,7 @@ public:
   nsIFileSpec           *mFileSpec;     // the file we are sending...
   nsMsgComposeAndSend   *mMsgSendObj;
   nsMsgDeliverMode      mMode;
+  CopyListener          *mCopyListener;
 };
 
 // Useful function for the back end...

@@ -110,6 +110,7 @@ CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
 
 nsMsgCopy::nsMsgCopy()
 {
+  mCopyListener = nsnull;
   mFileSpec = nsnull;
   mMsgSendObj = nsnull;
   mMode = nsMsgDeliverNow;
@@ -119,6 +120,8 @@ nsMsgCopy::~nsMsgCopy()
 {
   if (mMsgSendObj)
     NS_RELEASE(mMsgSendObj);
+  if (mCopyListener)
+    NS_RELEASE(mCopyListener);
 }
 
 nsresult
@@ -186,13 +189,14 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
-    CopyListener *copyListener = new CopyListener();
-    if (!copyListener)
+    mCopyListener = new CopyListener();
+    if (!mCopyListener)
       return MK_OUT_OF_MEMORY;
 
-    copyListener->SetMsgComposeAndSendObject(mMsgSendObj);
+    NS_ADDREF(mCopyListener);
+    mCopyListener->SetMsgComposeAndSendObject(mMsgSendObj);
     rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
-                                      copyListener, nsnull, txnMgr);
+                                      mCopyListener, nsnull, txnMgr);
 	}
 
 	return rv;
@@ -204,7 +208,10 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 {
   nsresult                  rv = NS_OK;
   nsIMsgFolder              *msgFolder= nsnull;
-  
+  PRUint32                  cnt = 0;
+  PRUint32                  subCnt = 0;
+  PRUint32                  i;
+
   //
   // get the current mail session....
   //
@@ -222,44 +229,55 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   if (!retval) 
     return nsnull; 
 
-  // Now that we have the server...we need to get the named message folder
-  nsCOMPtr<nsIMsgIncomingServer> inServer; 
-  inServer = do_QueryInterface(retval->ElementAt(0));
-  if(NS_FAILED(rv) || (!inServer))
+  // Ok, we have to look through the servers and try to find the server that
+  // has a valid folder of the type that interests us...
+  rv = retval->Count(&cnt);
+  if (NS_FAILED(rv))
     return nsnull;
 
-  nsIFolder *aFolder;
-  rv = inServer->GetRootFolder(&aFolder);
-  if (NS_FAILED(rv) || (!aFolder)) 
-    return nsnull;
-
-  nsCOMPtr<nsIMsgFolder> rootFolder;
-  rootFolder = do_QueryInterface(aFolder);
-  if(NS_FAILED(rv) || (!rootFolder))
-    return nsnull;
-
-  NS_RELEASE(aFolder);
-
-  PRUint32 numFolders = 0;
-  if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+  for (i=0; i<cnt; i++)
   {
-    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
-  }
-  else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
-  {
-    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
-  }
-  else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
-  {
-    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
-  }
-  else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
-  {
-    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+    // Now that we have the server...we need to get the named message folder
+    nsCOMPtr<nsIMsgIncomingServer> inServer; 
+    inServer = do_QueryInterface(retval->ElementAt(i));
+    if(NS_FAILED(rv) || (!inServer))
+      return nsnull;
+
+    nsIFolder *aFolder;
+    rv = inServer->GetRootFolder(&aFolder);
+    if (NS_FAILED(rv) || (!aFolder))
+      continue;
+
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    rootFolder = do_QueryInterface(aFolder);
+    NS_RELEASE(aFolder);
+
+    if(NS_FAILED(rv) || (!rootFolder))
+      return nsnull;
+
+    PRUint32 numFolders = 0;
+    msgFolder = nsnull;
+    if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+    {
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
+    }
+    else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+    {
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
+    }
+    else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+    {
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
+    }
+    else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+    {
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+    }
+    
+    if (NS_SUCCEEDED(rv) && (msgFolder)) 
+      break;
   }
 
-  if (NS_FAILED(rv) || (!msgFolder)) 
-    return nsnull;
   return msgFolder;
 }
 
