@@ -4958,7 +4958,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsISupportsArray *arrayOfNodes)
     curNode = do_QueryInterface(isupports);
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
-    nsAutoString curNodeTag;
+    nsAutoString curNodeTag, curBlockTag;
     nsEditor::GetTagString(curNode, curNodeTag);
     curNodeTag.ToLowerCase();
  
@@ -5031,15 +5031,17 @@ nsHTMLEditRules::RemoveBlockStyle(nsISupportsArray *arrayOfNodes)
         }
       }
       curBlock = mHTMLEditor->GetBlockNodeParent(curNode);
-      if ((curNodeTag.EqualsWithConversion("pre")) || 
-          (curNodeTag.EqualsWithConversion("p"))   ||
-          (curNodeTag.EqualsWithConversion("h1"))  ||
-          (curNodeTag.EqualsWithConversion("h2"))  ||
-          (curNodeTag.EqualsWithConversion("h3"))  ||
-          (curNodeTag.EqualsWithConversion("h4"))  ||
-          (curNodeTag.EqualsWithConversion("h5"))  ||
-          (curNodeTag.EqualsWithConversion("h6"))  ||
-          (curNodeTag.EqualsWithConversion("address")))
+      nsEditor::GetTagString(curBlock, curBlockTag);
+      curBlockTag.ToLowerCase();
+      if ((curBlockTag.EqualsWithConversion("pre")) || 
+          (curBlockTag.EqualsWithConversion("p"))   ||
+          (curBlockTag.EqualsWithConversion("h1"))  ||
+          (curBlockTag.EqualsWithConversion("h2"))  ||
+          (curBlockTag.EqualsWithConversion("h3"))  ||
+          (curBlockTag.EqualsWithConversion("h4"))  ||
+          (curBlockTag.EqualsWithConversion("h5"))  ||
+          (curBlockTag.EqualsWithConversion("h6"))  ||
+          (curBlockTag.EqualsWithConversion("address")))
       {
         firstNode = curNode;  
         lastNode = curNode;
