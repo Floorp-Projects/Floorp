@@ -205,6 +205,12 @@ protected:
 
   PRInt32 mNumNewBiffMessages;
   PRBool mIsCachable;
+
+  // these are previous set of new msgs, which we might
+  // want to run junk controls on. This is in addition to "new" hdrs
+  // in the db, which might get cleared because the user clicked away
+  // from the folder.
+  nsMsgKeyArray m_saveNewMsgs;
   //
   // stuff from the uri
   //
