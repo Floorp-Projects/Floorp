@@ -116,16 +116,16 @@ pages[ 5 ][ 1 ] = new method( "dialinf1.htm", "parent.content.go( '' )", true );
 // 1step and 2 step modes functionally differ at this point. Defaults to 2 step mode.
 pages[ 6 ] = new Array();
 pages[ 6 ][ 0 ] = new page( "dialinf1.htm", null, null );
-pages[ 6 ][ 1 ] = new method( "dial2stp.htm", "parent.content.go( '' )", true );
+pages[ 6 ][ 1 ] = new method( "dial2stp.htm", "parent.content.go( '2step' )", true );
+pages[ 6 ][ 2 ] = new method( "dial1stp.htm", "parent.content.go( '1step' )", true );
 
-// Checks the OneStepMode flag and transfers the control as required.
+// Takes 2 step path.
 pages[ 60 ] = new Array();
-pages[ 60 ][ 0 ] = new page( "dial2stp.htm", "Mode Selection", "OneStepMode" );
-pages[ 60 ][ 1 ] = new condition( "dial1stp.htm", "Mode Selection", "OneStepMode", "yes" );
-pages[ 60 ][ 2 ] = new method( "download.htm", "parent.content.go( 'New Path' )", true );
-pages[ 60 ][ 3 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
+pages[ 60 ][ 0 ] = new page( "dial2stp.htm", null, null);
+pages[ 60 ][ 1 ] = new method( "download.htm", "parent.content.go( 'New Path' )", true );
+pages[ 60 ][ 2 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
 
-// Following page is for 1 step path.
+// Takes 1 step path.
 pages[ 7 ] = new Array();
 pages[ 7 ][ 0 ] = new page( "dial1stp.htm", null, null );
 pages[ 7 ][ 1 ] = new method( "connect1.htm", "parent.content.go( 'New Path' )", true );
