@@ -460,7 +460,7 @@
     </menupopup>
     </menu>
 
-    <!-- Heading submenu -->
+    <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" value="&paragraphMenu.label;" accesskey="&formatparagraphmenu.accesskey;">
     <menupopup>
       <menuitem value="&paragraphNormalCmd.label;"      accesskey="&paragraphnormal.accesskey;"     oncommand="EditorSetParagraphFormat('normal')"/>
@@ -470,6 +470,16 @@
       <menuitem value="&paragraphListCmd.label;"        accesskey="&paragraphlist.accesskey;"       oncommand="EditorSetParagraphFormat('li')"/>
       <menuitem value="&paragraphDfnTermCmd.label;"     accesskey="&paragraphterm.accesskey;"       oncommand="EditorSetParagraphFormat('dt')"/>
       <menuitem value="&paragraphDfnDescCmd.label;"     accesskey="&paragraphdesc.accesskey;"       oncommand="EditorSetParagraphFormat('dd')"/>
+    </menupopup>
+    </menu>
+
+    <!-- List Style submenu -->
+    <menu id="listMenu" value="&listMenu.label;"        accesskey="&formatlistmenu.accesskey;">
+    <menupopup>
+      <menuitem value="&listNoneCmd.label;"             accesskey="&listnone.accesskey;"            oncommand="EditorSetParagraphFormat('ol')"/>
+      <menuitem value="&listBullettedCmd.label;"        accesskey="&listbulletted.accesskey;"       oncommand="EditorSetParagraphFormat('')"/>
+      <menuitem value="&listNumberedCmd.label;"         accesskey="&listnumbered.accesskey;"        oncommand="EditorSetParagraphFormat('normal')"/>
+      <menuitem value="&listDefinitionCmd.label;"       accesskey="&listdefinition.accesskey;"      oncommand="EditorSetParagraphFormat('normal')"/>
     </menupopup>
     </menu>
 

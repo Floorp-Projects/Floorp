@@ -376,7 +376,7 @@ function EditorShowClipboard()
 
 function EditorViewSource()
 {
-  window.openDialog( "chrome://editor/content/viewsource.xul", null, "all,dialog=no", window.content.location );
+  window.openDialog( "chrome://editor/content/viewsource.xul", "_blank", "all,dialog=no", window.content.location );
 }
 
 
@@ -400,6 +400,11 @@ function EditorSetParagraphFormat(paraFormat)
 {
   editorShell.paragraphFormat = paraFormat;
   contentWindow.focus();
+}
+
+function EditorSetListStyle(listType)
+{
+  // Write me! Replace EditorInsertList when working?
 }
 
 function EditorSetFontSize(size)
@@ -472,6 +477,9 @@ function EditorToggleStyle(styleName)
 {
   // see if the style is already set by looking at the observer node,
   // which is the appropriate button
+  // cmanske: I don't think we should depend on button state!
+  //  (this won't work for other list styles, anyway)
+  //  We need to get list type from document (See EditorSetListStyle)
   var theButton = document.getElementById(styleName + "Button");
   dump("Toggling style " + styleName + "\n");
   if (theButton)
@@ -547,19 +555,19 @@ function EditorInsertText(textToInsert)
 
 function EditorInsertHTML()
 {
-  window.openDialog("chrome://editor/content/EdInsSrc.xul","InsSrcDlg", "chrome,close,titlebar,modal", "");
+  window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal", "");
   contentWindow.focus();
 }
 
 function EditorInsertLink()
 {
-  window.openDialog("chrome://editor/content/EdLinkProps.xul","LinkDlg", "chrome,close,titlebar,modal");
+  window.openDialog("chrome://editor/content/EdLinkProps.xul","_blank", "chrome,close,titlebar,modal");
   contentWindow.focus();
 }
 
 function EditorInsertImage()
 {
-  window.openDialog("chrome://editor/content/EdImageProps.xul","ImageDlg", "chrome,close,titlebar,modal");
+  window.openDialog("chrome://editor/content/EdImageProps.xul","_blank", "chrome,close,titlebar,modal");
   contentWindow.focus();
 }
 
@@ -574,7 +582,7 @@ function EditorInsertHLine()
 
   if (hLine) {
     // We only open the dialog for an existing HRule
-    window.openDialog("chrome://editor/content/EdHLineProps.xul", "HLineDlg", "chrome,close,titlebar,modal");
+    window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
   } else {
     hLine = editorShell.CreateElementWithDefaults(tagName);
 
@@ -638,7 +646,7 @@ function EditorInsertHLine()
 
 function EditorInsertNamedAnchor()
 {
-  window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "NamedAnchorDlg", "chrome,close,titlebar,modal", "");
+  window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "_blank", "chrome,close,titlebar,modal", "");
   contentWindow.focus();
 }
 
@@ -661,7 +669,7 @@ function EditorInsertOrEditTable(insertAllowed)
     // Edit properties of existing table
     dump("Existing table found ... Editing its properties\n");
 
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "TableDlg", "chrome,close,titlebar,modal", "");
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "");
     contentWindow.focus();
   } else if(insertAllowed) {
     EditorInsertTable();
@@ -671,7 +679,7 @@ function EditorInsertOrEditTable(insertAllowed)
 function EditorInsertTable()
 {
   // Insert a new table
-  window.openDialog("chrome://editor/content/EdInsertTable.xul", "TableDlg", "chrome,close,titlebar,modal", "");
+  window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
   contentWindow.focus();
 }
 
@@ -779,7 +787,7 @@ function EditorToggleDisplayStyle()
 
 function EditorPrintPreview()
 {
-  window.openDialog("resource:/res/samples/printsetup.html", "PrintPreview", "chrome,close,titlebar", "");
+  window.openDialog("resource:/res/samples/printsetup.html", "_blank", "chrome,close,titlebar", "");
   contentWindow.focus();
 }
 
@@ -796,7 +804,7 @@ function CheckSpelling()
       if( firstMisspelledWord == "")
       {
         // No misspelled word - tell user
-        window.openDialog("chrome://editor/content/EdMessage.xul", "NoSpellError", 
+        window.openDialog("chrome://editor/content/EdMessage.xul", "_blank", 
                           "chrome,close,titlebar,modal", "",
                           editorShell.GetString("NoMisspelledWord"), 
                           editorShell.GetString("CheckSpelling"));
@@ -806,7 +814,7 @@ function CheckSpelling()
         dump("We found a MISSPELLED WORD\n");
         // Set spellChecker variable on window
         window.spellChecker = spellChecker;
-        window.openDialog("chrome://editor/content/EdSpellCheck.xul", "SpellDlg", "chrome,close,titlebar,modal", "", firstMisspelledWord);
+        window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank", "chrome,close,titlebar,modal", "", firstMisspelledWord);
       }
     }
     catch(ex) { 

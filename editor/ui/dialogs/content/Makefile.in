@@ -26,6 +26,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EdDialogCommon.js \
 		$(srcdir)/EdLinkProps.xul \
 		$(srcdir)/EdLinkProps.js \
+		$(srcdir)/EdListProps.xul \
+		$(srcdir)/EdListProps.js \
 		$(srcdir)/EdImageProps.xul \
 		$(srcdir)/EdImageProps.js \
 		$(srcdir)/EdInsSrc.xul \
