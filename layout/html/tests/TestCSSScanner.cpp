@@ -95,10 +95,12 @@ int main(int argc, char** argv)
     case eCSSToken_Ident:
     case eCSSToken_AtKeyword:
     case eCSSToken_String:
+    case eCSSToken_Function:
     case eCSSToken_WhiteSpace:
     case eCSSToken_URL:
     case eCSSToken_InvalidURL:
     case eCSSToken_ID:
+    case eCSSToken_HTMLComment:
       fputs(tok.mIdent, stdout);
       fputs("\n", stdout);
       break;
