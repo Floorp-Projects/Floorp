@@ -59,6 +59,7 @@ static PLHashTable *sCountHashTable = nsnull;
 PRLogModuleInfo *gWidgetLog = nsnull;
 PRLogModuleInfo *gWidgetFocusLog = nsnull;
 PRLogModuleInfo *gWidgetIMLog = nsnull;
+PRLogModuleInfo *gWidgetDrawLog = nsnull;
 #endif
 
 static gboolean event_processor_callback (GIOChannel *source,
@@ -92,6 +93,8 @@ nsAppShell::nsAppShell(void)
         gWidgetFocusLog = PR_NewLogModule("WidgetFocus");
     if (!gWidgetIMLog)
         gWidgetIMLog = PR_NewLogModule("WidgetIM");
+    if (!gWidgetDrawLog)
+        gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
 #endif
 }
 

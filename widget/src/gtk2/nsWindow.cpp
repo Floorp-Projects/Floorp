@@ -745,8 +745,8 @@ nsWindow::Invalidate(PRBool aIsSynchronous)
     rect.width = mBounds.width;
     rect.height = mBounds.height;
 
-    LOG(("Invalidate (all) [%p]: %d %d %d %d\n", (void *)this,
-         rect.x, rect.y, rect.width, rect.height));
+    LOGDRAW(("Invalidate (all) [%p]: %d %d %d %d\n", (void *)this,
+             rect.x, rect.y, rect.width, rect.height));
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
                                &rect, TRUE);
@@ -767,8 +767,8 @@ nsWindow::Invalidate(const nsRect &aRect,
     rect.width = aRect.width;
     rect.height = aRect.height;
 
-    LOG(("Invalidate (rect) [%p]: %d %d %d %d\n", (void *)this,
-         rect.x, rect.y, rect.width, rect.height));
+    LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d\n", (void *)this,
+             rect.x, rect.y, rect.width, rect.height));
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
                                &rect, TRUE);
@@ -789,15 +789,15 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
         GdkRectangle rect;
         gdk_region_get_clipbox(region, &rect);
 
-        LOG(("Invalidate (region) [%p]: %d %d %d %d\n", (void *)this,
-             rect.x, rect.y, rect.width, rect.height));
+        LOGDRAW(("Invalidate (region) [%p]: %d %d %d %d\n", (void *)this,
+                 rect.x, rect.y, rect.width, rect.height));
 
         gdk_window_invalidate_region(mDrawingarea->inner_window,
                                      region, TRUE);
     }
     else {
-        LOG(("Invalidate (region) [%p] with empty region\n",
-             (void *)this));
+        LOGDRAW(("Invalidate (region) [%p] with empty region\n",
+                 (void *)this));
     }
 
     return NS_OK;
@@ -1140,12 +1140,12 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     if (aEvent->window != mDrawingarea->inner_window)
         return FALSE;
 
-    LOG(("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
-         (void *)this,
-         (void *)aEvent->window,
-         GDK_WINDOW_XWINDOW(aEvent->window),
-         aEvent->area.x, aEvent->area.y,
-         aEvent->area.width, aEvent->area.height));
+    LOGDRAW(("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
+             (void *)this,
+             (void *)aEvent->window,
+             GDK_WINDOW_XWINDOW(aEvent->window),
+             aEvent->area.x, aEvent->area.y,
+             aEvent->area.width, aEvent->area.height));
 
     // ok, send out the paint event
     // XXX figure out the region/rect stuff!
