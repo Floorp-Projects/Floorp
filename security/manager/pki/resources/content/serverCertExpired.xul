@@ -21,12 +21,11 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
 <window
-  id="serverCertExpired" title="&serverCertExpired.title;"
+  id="serverCertExpired"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
-  height="270"
-  width="400"
+  width="300"
   onload="onLoad();"
 >
 <script src="chrome://global/content/strres.js" />
@@ -40,13 +39,13 @@
   <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel()"/>
 </keyset>
 
-<vbox style="margin: 5px;" flex="1">
+<vbox style="margin: 5px;" flex="100%">
 
-  <html id="message1" />
+  <html id="message1" flex="100%"/>
   <separator/>
-  <html id="message2" />
+  <html id="message2" flex="100%"/>
   <separator/>
-  <text value="&serverCertExpired.continue;" />
+  <text value="&serverCertExpired.continue;" flex="100%"/>
   <separator/>
   <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
