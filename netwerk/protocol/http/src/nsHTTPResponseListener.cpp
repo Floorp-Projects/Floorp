@@ -72,7 +72,7 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
     NS_IF_RELEASE(m_pConsumer);
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsIStreamListener::GetIID());
+NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -173,7 +173,7 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 
     // Cache the nsIHTTPChannel...
     if (i_pContext) {
-        rv = i_pContext->QueryInterface(nsIHTTPChannel::GetIID(), 
+        rv = i_pContext->QueryInterface(nsCOMTypeInfo<nsIHTTPChannel>::GetIID(), 
                                         (void**)&m_pConnection);
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -283,7 +283,7 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
         rv = pModules->GetNext(&supEntry);
         while (NS_SUCCEEDED(rv)) {
             nsINetModRegEntry *entry = nsnull;
-            rv = supEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&entry);
+            rv = supEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), (void**)&entry);
             NS_RELEASE(supEntry);
             if (NS_FAILED(rv)) {
                 NS_RELEASE(pModules);
@@ -317,7 +317,7 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
             rv = proxyObjectManager->GetProxyObject(lEventQ, 
                                                *lCID,
                                                nsnull,
-                                               nsIHTTPNotify::GetIID(),
+                                               nsCOMTypeInfo<nsIHTTPNotify>::GetIID(),
                                                /* XXX needs to be async */
                                                /*PROXY_ASYNC,*/
                                                PROXY_SYNC,

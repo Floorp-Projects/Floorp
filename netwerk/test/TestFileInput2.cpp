@@ -156,14 +156,14 @@ public:
         // Open the input stream:
         rv = NS_NewTypicalInputFileStream(&str, inSpec);
         if (NS_FAILED(rv)) goto done;
-        rv = str->QueryInterface(nsIInputStream::GetIID(), (void**)&inStr);
+        rv = str->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inStr);
         NS_RELEASE(str);
         if (NS_FAILED(rv)) goto done;
         
         // Open the output stream:
         rv = NS_NewTypicalOutputFileStream(&str, outSpec);
         if (NS_FAILED(rv)) goto done;
-        rv = str->QueryInterface(nsIOutputStream::GetIID(), (void**)&outStr);
+        rv = str->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&outStr);
         NS_RELEASE(str);
         if (NS_FAILED(rv)) goto done;
 
@@ -233,7 +233,7 @@ protected:
     PRUint32 mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS(FileSpecWorker, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(FileSpecWorker, nsCOMTypeInfo<nsIRunnable>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -340,7 +340,7 @@ protected:
     PRUint32 mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS(FileChannelWorker, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(FileChannelWorker, nsCOMTypeInfo<nsIRunnable>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -50,7 +50,7 @@ nsHttpProtocolHandler::~nsHttpProtocolHandler()
     if (mConnectionPool) delete mConnectionPool;
 }
 
-NS_IMPL_ISUPPORTS(nsHttpProtocolHandler, nsIProtocolHandler::GetIID());
+NS_IMPL_ISUPPORTS(nsHttpProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
@@ -98,7 +98,7 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 
     nsIUrl* url;
     rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
-                                            nsIUrl::GetIID(),
+                                            nsCOMTypeInfo<nsIUrl>::GetIID(),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
 
@@ -106,7 +106,7 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 
     nsIUrl* realUrl = nsnull;
     
-    rv = url->QueryInterface(nsIUrl::GetIID(), (void**)&realUrl);
+    rv = url->QueryInterface(nsCOMTypeInfo<nsIUrl>::GetIID(), (void**)&realUrl);
     if (NS_FAILED(rv)) return rv;
 
     // XXX this is the default port for http. we need to strip out the actual

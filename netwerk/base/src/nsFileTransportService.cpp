@@ -66,7 +66,7 @@ nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsFileTransportService, nsIFileTransportService::GetIID());
+NS_IMPL_ISUPPORTS(nsFileTransportService, nsCOMTypeInfo<nsIFileTransportService>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -89,7 +89,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_ISUPPORTS(URLLoadInfo,nsCOMTypeInfo<nsISupports>::GetIID());
+NS_IMPL_ISUPPORTS(URLLoadInfo,nsCOMTypeInfo<nsCOMTypeInfo><nsISupports>::GetIID());
 
 
 class TestHTTPEventSink : public nsIHTTPEventSink
@@ -126,7 +126,7 @@ TestHTTPEventSink::~TestHTTPEventSink()
 }
 
 
-NS_IMPL_ISUPPORTS(TestHTTPEventSink,nsIHTTPEventSink::GetIID());
+NS_IMPL_ISUPPORTS(TestHTTPEventSink,nsCOMTypeInfo<nsIHTTPEventSink>::GetIID());
 
 NS_IMETHODIMP
 TestHTTPEventSink::OnAwaitingInput(nsISupports* context)
@@ -214,7 +214,7 @@ InputTestConsumer::~InputTestConsumer()
 }
 
 
-NS_IMPL_ISUPPORTS(InputTestConsumer,nsIStreamListener::GetIID());
+NS_IMPL_ISUPPORTS(InputTestConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
 
 NS_IMETHODIMP
@@ -334,7 +334,7 @@ public:
         nsresult rv = NS_ERROR_FAILURE;
 
         if (nsCRT::strcmp(verb, "load") == 0) { // makeshift verb for now
-            if (eventSinkIID.Equals(nsIHTTPEventSink::GetIID())) {
+            if (eventSinkIID.Equals(nsCOMTypeInfo<nsIHTTPEventSink>::GetIID())) {
                 TestHTTPEventSink *sink;
 
                 sink = new TestHTTPEventSink();
@@ -349,7 +349,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS(nsEventSinkGetter, nsIEventSinkGetter::GetIID());
+NS_IMPL_ISUPPORTS(nsEventSinkGetter, nsCOMTypeInfo<nsIEventSinkGetter>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 

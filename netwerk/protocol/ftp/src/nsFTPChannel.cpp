@@ -68,15 +68,15 @@ NS_IMPL_RELEASE(nsFTPChannel);
 NS_IMETHODIMP
 nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsIFTPChannel::GetIID()) ||
-        aIID.Equals(nsIChannel::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIFTPChannel>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
         *aInstancePtr = NS_STATIC_CAST(nsIFTPChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIStreamListener::GetIID()) ||
-        aIID.Equals(nsIStreamObserver::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -100,7 +100,7 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
     NS_ADDREF(mEventQueue);
 
     nsIProgressEventSink* eventSink;
-    rv = getter->GetEventSink(verb, nsIProgressEventSink::GetIID(), 
+    rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIProgressEventSink>::GetIID(), 
                               (nsISupports**)&eventSink);
     if (NS_FAILED(rv)) return rv;
 

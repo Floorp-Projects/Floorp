@@ -89,7 +89,7 @@ nsDNSService::~nsDNSService()
 }
 
 
-NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService::GetIID());
+NS_IMPL_ISUPPORTS(nsDNSService, nsCOMTypeInfo<nsIDNSService>::GetIID());
 
 NS_METHOD
 nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)

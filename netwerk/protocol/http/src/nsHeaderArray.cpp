@@ -50,7 +50,7 @@ nsHeaderArray::QueryInterface(REFNSIID iid, void** result)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (iid.Equals(nsICollection::GetIID())) {
+    if (iid.Equals(nsCOMTypeInfo<nsICollection>::GetIID())) {
         *result = NS_STATIC_CAST(nsICollection*, this);
         NS_ADDREF_THIS();
         return NS_OK;

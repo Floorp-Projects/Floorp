@@ -71,17 +71,17 @@ nsHTTPResponse::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsIHTTPResponse::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPResponse>::GetIID())) {
         *aInstancePtr = (void*) ((nsIHTTPResponse*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIHTTPCommonHeaders::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPCommonHeaders>::GetIID())) {
         *aInstancePtr = (void*) ((nsIHTTPCommonHeaders*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIHeader::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIHeader>::GetIID())) {
         *aInstancePtr = (void*) ((nsIHeader*)this);
         NS_ADDREF_THIS();
         return NS_OK;

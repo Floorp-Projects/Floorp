@@ -74,8 +74,8 @@ nsHTTPChannel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsIHTTPChannel::GetIID()) ||
-        aIID.Equals(nsIChannel::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPChannel>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIHTTPChannel*, this);
         NS_ADDREF_THIS();
@@ -381,7 +381,7 @@ nsHTTPChannel::Open(void)
 #if 0
     nsCookieModTest *cookieTest = new nsCookieModTest();
     nsIHTTPNotify *cookieNot = nsnull;
-    rv = cookieTest->QueryInterface(nsIHTTPNotify::GetIID(), (void**)&cookieNot);
+    rv = cookieTest->QueryInterface(nsCOMTypeInfo<nsIHTTPNotify>::GetIID(), (void**)&cookieNot);
     if (NS_FAILED(rv)) return rv;
 
     nsIEventQueue* eventQa; 
@@ -417,7 +417,7 @@ nsHTTPChannel::Open(void)
     rv = pModules->GetNext(&supEntry);
     while (NS_SUCCEEDED(rv)) {
         nsINetModRegEntry *entry = nsnull;
-        rv = supEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&entry);
+        rv = supEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), (void**)&entry);
         NS_RELEASE(supEntry);
         if (NS_FAILED(rv)) {
             NS_RELEASE(pModules);
@@ -451,7 +451,7 @@ nsHTTPChannel::Open(void)
         rv = proxyObjectManager->GetProxyObject(lEventQ, 
                                            *lCID,
                                            nsnull,
-                                           nsIHTTPNotify::GetIID(),
+                                           nsCOMTypeInfo<nsIHTTPNotify>::GetIID(),
                                            PROXY_SYNC,
                                            (void**)&pNotify);
         NS_RELEASE(proxyObjectManager);

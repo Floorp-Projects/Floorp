@@ -62,7 +62,7 @@ nsNetFactory::~nsNetFactory()
     NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
-NS_IMPL_ISUPPORTS(nsNetFactory, nsIFactory::GetIID());
+NS_IMPL_ISUPPORTS(nsNetFactory, nsCOMTypeInfo<nsIFactory>::GetIID());
 
 NS_IMETHODIMP
 nsNetFactory::CreateInstance(nsISupports *aOuter,

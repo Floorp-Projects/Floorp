@@ -891,13 +891,13 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER; 
   } 
-  if (aIID.Equals(nsIChannel::GetIID()) ||
+  if (aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
       aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
-  if (aIID.Equals(nsIBufferObserver::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIBufferObserver>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 

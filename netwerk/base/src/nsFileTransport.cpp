@@ -104,13 +104,13 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER; 
     } 
-    if (aIID.Equals(nsIChannel::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
     } 
-    if (aIID.Equals(nsIRunnable::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
@@ -271,7 +271,7 @@ nsFileTransport::Process(void)
           mStatus = NS_NewTypicalInputFileStream(&fs, spec);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&mFileStream);
+          mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
@@ -318,7 +318,7 @@ nsFileTransport::Process(void)
           mStatus = NS_NewTypicalOutputFileStream(&fs, spec);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = fs->QueryInterface(nsIOutputStream::GetIID(), (void**)&mFileStream);
+          mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 

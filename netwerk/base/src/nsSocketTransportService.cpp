@@ -319,13 +319,13 @@ nsSocketTransportService::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER; 
   } 
-  if (aIID.Equals(nsISocketTransportService::GetIID()) ||
+  if (aIID.Equals(nsCOMTypeInfo<nsISocketTransportService>::GetIID()) ||
     aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsISocketTransportService*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
-  if (aIID.Equals(nsIRunnable::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
