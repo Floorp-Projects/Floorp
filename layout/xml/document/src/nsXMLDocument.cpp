@@ -353,15 +353,25 @@ nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
   return NS_OK;
 }
 
-void nsXMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
+void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
 {
-  if ((nsnull != mInlineStyleSheet) && (aSheet != mInlineStyleSheet)) {
-    aSet->InsertDocStyleSheetAfter(aSheet, mInlineStyleSheet);
+  if (aSheet == mAttrStyleSheet) {  // always first
+    mStyleSheets.InsertElementAt(aSheet, 0);
+  }
+  else if (aSheet == mInlineStyleSheet) {  // always last
+    mStyleSheets.AppendElement(aSheet);
   }
   else {
-    aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it in front
+    if (mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+      // keep attr sheet last
+      mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
+    }
+    else {
+      mStyleSheets.AppendElement(aSheet);
+    }
   }
 }
+
 
 // nsIDOMNode interface
 NS_IMETHODIMP 
