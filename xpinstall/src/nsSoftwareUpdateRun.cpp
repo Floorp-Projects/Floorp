@@ -295,7 +295,7 @@ extern "C" void RunInstallOnThread(void *data)
                                                 kISoftwareUpdateIID,
                                                 (nsISupports**)&softwareUpdate);
     
-    nsIXPInstallProgressNotifier *notifier;
+    nsIXPInstallProgress *notifier;
 
     if (NS_SUCCEEDED(rv))
     {

@@ -156,7 +156,7 @@ nsInstallInfo::GetArguments(nsString& args, PRUint32 index)
 {
     nsString aURL = GetFromURL(index);
 
-    PRInt32 result = aURL.RFind('?');
+    PRInt32 result = aURL.RFind("?");
     if (result != -1)
     {            
         aURL.Right(args, (aURL.Length() - result - 1) );  
@@ -1621,7 +1621,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
          
         // Get the extention of the file in the jar.
         
-        PRInt32 result = aJarfile.RFind('.');
+        PRInt32 result = aJarfile.RFind(".");
         if (result != -1)
         {            
             // We found an extention.  Add it to the tempfileName string

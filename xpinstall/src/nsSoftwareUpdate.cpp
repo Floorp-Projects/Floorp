@@ -40,6 +40,7 @@
 
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
+#include "nsInstallProgressDialog.h"
 
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
@@ -53,6 +54,10 @@
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
+
+#include "nsIEventQueueService.h"
+#include "nsProxyObjectManager.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -76,8 +81,8 @@ static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-
-
+static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_IID(kEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 
 nsSoftwareUpdate::nsSoftwareUpdate()
@@ -148,7 +153,56 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
     RegisterNotifier(logger);
+
+    nsIProxyObjectManager *manager;
+    nsInstallProgressDialog *dialog = new nsInstallProgressDialog();
+    nsInstallProgressDialog *proxy; 
+    nsISupports *dialogBase;
+
+    nsresult rv = dialog->QueryInterface(kISupportsIID, (void**)&dialogBase);
+
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                                kProxyObjectManagerIID,
+                                                (nsISupports **)&manager);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            // I am assuming that the thread that starts us up is the UI thread.  this will/may break
+            // I need to make a generic way of getting at the UI event queue.
+        
+            nsIEventQueueService *eventQService;
+            rv = nsServiceManager::GetService(NS_EVENTQUEUESERVICE_PROGID, 
+                                            kEventQueueServiceIID,
+                                            (nsISupports **)&eventQService);
+
+                                
+            if (NS_SUCCEEDED(rv))
+            {
+                nsIEventQueue *eventQ;
+                eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eventQ);
+
+                PLEventQueue *plEventQ;
+                eventQ->GetPLEventQueue(&plEventQ);
+
+                rv = manager->GetProxyObject(plEventQ, nsIXPInstallProgress::GetIID(), dialogBase, PROXY_SYNC, (void**)&proxy);
+                if (NS_SUCCEEDED(rv))
+                {
+                    RegisterNotifier(proxy);
+                }
+            }
+        }
+    }
+
+    if (dialog)
+        dialog->Release();
 }
+
+
+
+
+
 nsSoftwareUpdate::~nsSoftwareUpdate()
 {
 #ifdef NS_DEBUG
@@ -238,7 +292,7 @@ nsSoftwareUpdate::Shutdown()
 
 
 NS_IMETHODIMP 
-nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgressNotifier *notifier)
+nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgress *notifier)
 {
     // we are going to ignore the returned ID and enforce that once you 
     // register a notifier, you can not remove it.  This should at some
@@ -250,7 +304,7 @@ nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgressNotifier *notifier)
 }
 
 NS_IMETHODIMP
-nsSoftwareUpdate::GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier)
+nsSoftwareUpdate::GetTopLevelNotifier(nsIXPInstallProgress **notifier)
 {
     *notifier = mTopLevelObserver;
     return NS_OK;

@@ -22,7 +22,7 @@
  *     Douglas Turner <dougt@netscape.com>
  */
 
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIXPInstallProgress.h"
 #include "nsLoggingProgressNotifier.h"
 
 #include "nsFileSpec.h"
@@ -35,24 +35,28 @@
 
 nsLoggingProgressNotifier::nsLoggingProgressNotifier()
 {
+    NS_INIT_REFCNT();
 }
 
 nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
 {
 }
 
-void
-nsLoggingProgressNotifier::BeforeJavascriptEvaluation(void)
+NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, nsIXPInstallProgress::GetIID());
+
+NS_IMETHODIMP
+nsLoggingProgressNotifier::BeforeJavascriptEvaluation()
 {
     nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     logFile += "Install.log";
 
     mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
     mLogStream->seek(logFile.GetFileSize());
+    return NS_OK;
 }
 
-void
-nsLoggingProgressNotifier::AfterJavascriptEvaluation(void)
+NS_IMETHODIMP
+nsLoggingProgressNotifier::AfterJavascriptEvaluation()
 {
     char* time;
     GetTime(&time);
@@ -65,12 +69,14 @@ nsLoggingProgressNotifier::AfterJavascriptEvaluation(void)
     mLogStream->close();
     delete mLogStream;
     mLogStream = nsnull;
+
+    return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsLoggingProgressNotifier::InstallStarted(const char* UIPackageName)
 {
-    if (mLogStream == nsnull) return;
+    if (mLogStream == nsnull) return -1;
 
     char* time;
     GetTime(&time);
@@ -84,26 +90,28 @@ nsLoggingProgressNotifier::InstallStarted(const char* UIPackageName)
 
 
     PL_strfree(time);
+    return NS_OK;
 }
 
-long
+NS_IMETHODIMP
 nsLoggingProgressNotifier::ItemScheduled(const char* message )
 {
-    return 0;
+    return NS_OK;
 }
 
-void
-nsLoggingProgressNotifier::InstallFinalization(const char* message, long itemNum, long totNum )
+NS_IMETHODIMP
+nsLoggingProgressNotifier::InstallFinalization(const char* message, PRInt32 itemNum, PRInt32 totNum )
 {
-    if (mLogStream == nsnull) return;
+    if (mLogStream == nsnull) return -1;
 
     *mLogStream << "     Item [" << (itemNum+1) << "/" << totNum << "]\t" << message << nsEndl;
+    return NS_OK;
 }
 
-void
-nsLoggingProgressNotifier::InstallAborted(void)
+NS_IMETHODIMP
+nsLoggingProgressNotifier::InstallAborted()
 {
-    if (mLogStream == nsnull) return;
+    if (mLogStream == nsnull) return -1;
 
     char* time;
     GetTime(&time);
@@ -111,6 +119,7 @@ nsLoggingProgressNotifier::InstallAborted(void)
     *mLogStream << "     Aborted Installation at " << time << nsEndl << nsEndl;
 
     PL_strfree(time);
+    return NS_OK;
 }
 
 void 
