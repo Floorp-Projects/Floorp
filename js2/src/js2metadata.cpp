@@ -4080,24 +4080,24 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
         defineLocalMember(env, &world.identifiers["Error"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(evalErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["EvalError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(evalErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
         defineLocalMember(env, &world.identifiers["EvalError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(rangeErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["RangeError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(rangeErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
         defineLocalMember(env, &world.identifiers["RangeError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(referenceErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["ReferenceError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(referenceErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
         defineLocalMember(env, &world.identifiers["ReferenceError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(syntaxErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["SyntaxError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(syntaxErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
         defineLocalMember(env, &world.identifiers["SyntaxError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(typeErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["TypeError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(typeErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
         defineLocalMember(env, &world.identifiers["TypeError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(uriErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["UriError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(uriErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
-        defineLocalMember(env, &world.identifiers["UriError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["URIError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initErrorObject(this);
 
     }

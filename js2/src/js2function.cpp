@@ -124,23 +124,56 @@ namespace MetaData {
 //        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
     }
-#if 0
-    static js2val Function_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
+
+    static js2val Function_call(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
                 || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
                 || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
-            meta->reportError(Exception::typeError, "Function.valueOf called on something other than a function thing", meta->engine->errorPos());
-//        FunctionInstance *nfInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
+            meta->reportError(Exception::typeError, "Function.call called on something other than a function thing", meta->engine->errorPos());
+//        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
     }
-#endif
+
+    static js2val Function_apply(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    {
+        if (!JS2VAL_IS_OBJECT(thisValue) 
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
+            meta->reportError(Exception::typeError, "Function.apply called on something other than a function thing", meta->engine->errorPos());
+        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
+		js2val callThis = argv[0];
+		if (JS2VAL_IS_NULL(argv[0]) || JS2VAL_IS_UNDEFINED(argv[0]))
+			callThis = OBJECT_TO_JS2VAL(meta->glob);
+		else
+			callThis = meta->toObject(callThis);
+
+		js2val *argArray = NULL;
+		uint32 length = 0;
+		if ((argc > 1) && !JS2VAL_IS_NULL(argv[1]) && !JS2VAL_IS_UNDEFINED(argv[1])) {
+			if (!JS2VAL_IS_OBJECT(argv[1]) 
+					|| (JS2VAL_TO_OBJECT(argv[1])->kind != SimpleInstanceKind)
+					|| ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(argv[1])))->type != meta->arrayClass))
+				meta->reportError(Exception::typeError, "Function.apply passed a non-array argument list", meta->engine->errorPos());
+			
+			ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argv[1]));
+			uint32 length = getLength(meta, arrInst);
+			argArray = new js2val[length];
+			DEFINE_ARRAYROOTKEEPER(rk, argArray, length);
+			for (uint32 i = 0; i < length; i++)
+				meta->arrayClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
+		}
+        
+		return meta->invokeFunction(fnInst, callThis, argArray, 0, NULL);
+    }
+
     void initFunctionObject(JS2Metadata *meta)
     {
         FunctionData prototypeFunctions[] =
         {
             { "toString",            0, Function_toString },
-//            { "valueOf",             0, Function_valueOf  },
+            { "call",                1, Function_call  },
+            { "apply",               2, Function_apply  },
             { NULL }
         };
 
