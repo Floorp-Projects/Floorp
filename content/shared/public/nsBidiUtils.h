@@ -75,6 +75,7 @@
    * @param aBuffer is the string
    * @param aSize is the size of aBuffer
    * @param aNumFlag specifies the conversion to perform:
+   *        IBMBIDI_NUMERAL_NOMINAL:      don't do any conversion
    *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
    *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
    *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
@@ -146,7 +147,8 @@
 //  Numeral Style
 //  ------------------
 //  bidi.numeral
-#define IBMBIDI_NUMERAL_REGULAR       1 //  1 = regularcontextnumeralBidi *
+#define IBMBIDI_NUMERAL_NOMINAL       0 //  0 = nominalnumeralBidi *
+#define IBMBIDI_NUMERAL_REGULAR       1 //  1 = regularcontextnumeralBidi
 #define IBMBIDI_NUMERAL_HINDICONTEXT  2 //  2 = hindicontextnumeralBidi
 #define IBMBIDI_NUMERAL_ARABIC        3 //  3 = arabicnumeralBidi
 #define IBMBIDI_NUMERAL_HINDI         4 //  4 = hindinumeralBidi
@@ -169,7 +171,7 @@
          (IBMBIDI_TEXTTYPE_CHARSET<<4)          | \
          (IBMBIDI_CONTROLSTEXTMODE_LOGICAL<<8)  | \
          (IBMBIDI_CLIPBOARDTEXTMODE_SOURCE<<12) | \
-         (IBMBIDI_NUMERAL_REGULAR<<16)          | \
+         (IBMBIDI_NUMERAL_NOMINAL<<16)          | \
          (IBMBIDI_SUPPORTMODE_MOZILLA<<20)      | \
          (IBMBIDI_CHARSET_BIDI<<24))
 
