@@ -278,15 +278,15 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
     flavorList->GetElementAt ( i, getter_AddRefs(genericWrapper) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
     if ( currentFlavor ) {
-      // find MacOS flavor
+      // find MacOS flavor (but don't add it if it's not there)
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
-      FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
+      FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr, PR_FALSE);
 printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), macOSFlavor);
 	    
       // check if it is present in the current drag item.
       FlavorFlags unused;
-      if ( ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
+      if ( macOSFlavor && ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
 	      
 printf("flavor found\n");
         // we have it, pull it out of the drag manager. Put it into memory that we allocate
