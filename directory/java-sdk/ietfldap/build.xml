@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<!-- This file is intended for ANT, a Java based build tool.       -->
+<!-- ANT is availale from http://jakarta.apache.org/ant/index.html -->
+
+<!-- The default target includes compiling and making JAR files    -->
+
+<project default="jars" basedir=".">
+
+  <!-- ##################################################### -->
+  <!-- # Usage                                             # -->
+  <!-- ##################################################### -->
+  <target name="usage">
+    <echo>
+     ant compile  -> compiles source files
+     ant jars     -> makes jar files of compiled source
+     ant clean    -> guess
+    </echo>
+  </target>
+
+  <!-- ##################################################### -->
+  <!-- # Set Version numbers                               # -->
+  <!-- #   used only in Javadoc?                           # -->
+  <!-- ##################################################### -->
+
+  <property name="name" value="ietfldap"/>
+  <property name="version" value="0.1"/>
+  <property name="year" value="2001"/>
+
+<!-- 
+  <property name="build.compiler" value="classic"/>
+-->
+  <property name="debug" value="on"/>
+
+  <property name="src.dir" value="."/>
+
+  <property name="packages" value="org.*"/>
+
+  <property name="build.file" value="build.xml"/>
+  <property name="build.dir"  value="."/>
+  <property name="build.dest" value="./classes"/>
+  <property name="build.lib"  value="./lib"/>
+  <property name="build.javadocs"  value="./javadoc"/>
+
+  <property name="javadoc.private" value="false"/>
+  <property name="javadoc.protected" value="false"/>
+  <path id="javadoc.path">
+    <pathelement location="${src.dir}"/>
+  </path>
+
+  <property name="jaas.dir"         value="../ldapjdk/lib"/>
+  <property name="jsse.dir"         value="../ldapjdk/lib"/>
+
+  <!-- ##################################################### -->
+  <!-- # construct the classpath                           # -->
+  <!-- ##################################################### -->
+  <path id="class.path">
+    <pathelement location="${jaas.dir}/jaas.jar"/>
+    <pathelement location="${jsse.dir}/jsse.jar"/>
+    <pathelement location="${build.dest}"/>
+    <pathelement location="."/>
+  </path>
+
+  <property name="classpath" refid="class.path"/>
+
+
+  <!-- ##################################################### -->
+  <!-- # init - anything that needs to be done first of all# -->
+  <!-- ##################################################### -->
+  <target name="init">
+    <!-- Set the NOW property to the current time -->
+	<tstamp>
+	  <format property="NOW" pattern="MMMM dd yyyy HH:mm"/>
+	</tstamp>
+  </target>
+
+
+  <!-- ##################################################### -->
+  <!-- # classpath - echo the CLASSPATH that would be used # -->
+  <!-- ##################################################### -->
+  <target name="classpath">
+    <echo message="${classpath}"/>
+  </target>
+
+  <!-- ##################################################### -->
+  <!-- # compile                                           # -->
+  <!-- ##################################################### -->
+  <target name="compile" depends="init">
+    <mkdir dir="${build.dest}"/>
+    <javac srcdir="${src.dir}" 
+           destdir="${build.dest}" 
+           debug="${debug}"
+           excludes="${build.excludes}"
+		   deprecation="on"
+	       classpathref="class.path"/>
+	<copy todir="${build.dest}" >
+		<fileset dir="${src.dir}">
+		<exclude name="classes/**"/>
+		<include name="**/*.properties"/>
+		</fileset>
+	</copy>
+  </target>
+
+  <!-- ##################################################### -->
+  <!-- # jars                                              # -->
+  <!-- ##################################################### -->
+  <target name="jars" depends="compile">
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/${name}.jar"
+		basedir="${build.dest}"
+		includes="org/ietf/ldap/** LDAP*.class">
+	</jar>
+  </target>
+
+  <!-- ##################################################### -->
+  <!-- # javadoc                                           # -->
+  <!-- ##################################################### -->
+  <target name="javadoc" depends="init">
+    <mkdir dir="${build.javadocs}"/>
+    <javadoc  packagenames="${packages}"
+              sourcepathref="javadoc.path"
+	          classpathref="class.path"
+              destdir="${build.javadocs}"
+	          private="${javadoc.private}"
+	          protected="${javadoc.protected}"
+              author="true"
+              version="true"
+              use="true"
+              windowtitle="${name} API as of ${NOW}"
+			  link="http://java.sun.com/j2se/1.3/docs/api"
+              doctitle="${name}"
+              bottom="Subject to Netscape Public License">
+        <group title="Utilities" packages="org.ietf.ldap.util*"/>
+        <group title="Controls" packages="org.ietf.ldap.controls*"/>
+        <link href="http://java.sun.com/products/jdk/1.3/docs/api"/>
+    </javadoc>
+  </target>
+
+  <!-- ##################################################### -->
+  <!-- # clean                                             # -->
+  <!-- ##################################################### -->
+  <target name="clean">
+    <delete dir="${build.dest}"/>
+    <delete dir="${build.lib}"/>    
+    <delete dir="${build.javadocs}"/>
+  </target>
+
+</project>
