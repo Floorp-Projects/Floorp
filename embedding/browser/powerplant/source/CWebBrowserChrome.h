@@ -33,6 +33,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+#include "nsIContextMenuListener.h"
 
 // Other
 #include "nsIWebBrowser.h"
@@ -47,7 +48,8 @@ class CWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
                            public nsIBaseWindow,
                            public nsIPrompt,
-                           public nsIInterfaceRequestor
+                           public nsIInterfaceRequestor,
+                           public nsIContextMenuListener
 {
 friend class CBrowserWindow;
 
@@ -58,6 +60,7 @@ public:
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIPROMPT
    NS_DECL_NSIINTERFACEREQUESTOR
+   NS_DECL_NSICONTEXTMENULISTENER
 
 protected:
    CWebBrowserChrome();
@@ -69,6 +72,8 @@ protected:
 protected:
    CBrowserWindow*  mBrowserWindow;
    CBrowserShell*   mBrowserShell;
+   
+   nsCOMPtr<nsIPrompt> mPrompter;
    
    static vector<CWebBrowserChrome*> mgBrowserList;
 };
