@@ -1409,7 +1409,6 @@ nsFtpState::S_list() {
     NS_WITH_SERVICE(nsIStreamConverterService, streamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString httpIndexFormatStr; httpIndexFormatStr.AssignWithConversion("application/http-index-format");
     nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
     SetDirMIMEType(fromStr);
 
@@ -1427,22 +1426,16 @@ nsFtpState::S_list() {
 #endif
 
     if (mGenerateHTMLContent) {
-        nsAutoString textHTMLStr; textHTMLStr.AssignWithConversion("text/html");
-        nsCOMPtr<nsIStreamListener> converterListener2;
-        
-        rv = streamConvService->AsyncConvertData(httpIndexFormatStr.GetUnicode(), textHTMLStr.GetUnicode(),
-                                                 mListener, mURL, getter_AddRefs(converterListener2));
+        rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), NS_LITERAL_STRING("text/html").get(),
+                                                 mListener, mURL, getter_AddRefs(converterListener));
         
         if (NS_FAILED(rv)){
             PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) streamConvService->AsyncConvertData failed (rv=%d)\n", this, rv));
             return rv;
         }
-        
-        rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), httpIndexFormatStr.GetUnicode(),
-                                                 converterListener2, mURL, getter_AddRefs(converterListener));
     } else {
-    
-        rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), httpIndexFormatStr.GetUnicode(),
+        rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), 
+                                                 NS_LITERAL_STRING("application/http-index-format").get(),
                                                  mListener, mURL, getter_AddRefs(converterListener));
     }
 
