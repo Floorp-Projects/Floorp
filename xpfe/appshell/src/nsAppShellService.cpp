@@ -1131,6 +1131,8 @@ nsAppShellService::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width,
         nsAutoString cmdArgs; cmdArgs.AssignWithConversion(args);
         rv = OpenWindow(chromeUrlForTask, cmdArgs, height, width);
       }
+      else
+        rv = NS_ERROR_FAILURE;
     }
     
     // any failure case, do what we used to do:
