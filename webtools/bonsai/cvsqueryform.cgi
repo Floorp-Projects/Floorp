@@ -29,8 +29,11 @@ print "Content-type: text/html\n\n";
 LoadTreeConfig();
 $CVS_ROOT = $::FORM{'cvsroot'};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
-$::TreeID = $::FORM{'module'} 
-     if (exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
+if (exists $::FORM{'module'}) {
+    if (exists($::TreeInfo{$::FORM{'module'}}{'repository'})) {
+        $::TreeID = $::FORM{'module'} 
+    }
+}
 
 $modules = {};
 require 'modules.pl';
@@ -67,7 +70,9 @@ $bMultiRepos = (@reposList > 1);
 # This code sucks, I should rewrite it to be shorter
 #
 $Module = 'default';
-if( $::FORM{module} eq 'all' || $::FORM{module} eq '' ){
+
+if (!exists $::FORM{module} || $::FORM{module} eq 'all' ||
+      $::FORM{module} eq '') {
     print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
     if( $bMultiRepos ){
         print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
@@ -121,6 +126,9 @@ regexpradio('branchtype') .
 #
 # Query by directory
 #
+
+$::FORM{dir} ||= "";
+
 print "
 <tr>
 <th align=right>Directory:</th>
@@ -130,6 +138,8 @@ print "
 </td>
 </tr>
 ";
+
+$::FORM{file} ||= "";
 
 print "
 <tr>
@@ -145,6 +155,9 @@ regexpradio('filetype') . "
 #
 # Who
 #
+
+$::FORM{who} ||= "";
+
 print "
 <tr>
 <th align=right>Who:</th>
@@ -276,10 +289,13 @@ sub regexpradio {
     my ($c1, $c2, $c3);
 
     $c1 = $c2 = $c3 = "";
-    if( $::FORM{$name} eq 'regexp'){
+
+    my $n = $::FORM{$name} || "";
+
+    if( $n eq 'regexp'){
         $c2 = "checked";
     }
-    elsif( $::FORM{$name} eq 'notregexp'){
+    elsif( $n eq 'notregexp'){
         $c3 = "checked";
     }
     else {

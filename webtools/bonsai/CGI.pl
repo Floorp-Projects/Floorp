@@ -247,6 +247,9 @@ sub cvsmenu {
 
      LoadTreeConfig();
 
+     if (!defined $extra) {
+         $extra = "";
+     }
      print "<table border=1 bgcolor=#ffffcc $extra>\n";
      print "<tr><th>Menu</tr><tr><td><p>\n<dl>\n";
      
@@ -277,7 +280,7 @@ sub cvsmenu {
           }
           close EXTRA;
      }
-     
+
      $maintainer = Param('maintainer');
      print "</dl>
 <p></tr><tr><td>
