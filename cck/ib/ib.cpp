@@ -736,9 +736,12 @@ void endElement(void *userData, const char *name)
   {
     
     // If locked, write to the .cfg file. Don't care if it's default or not.
-    BOOL bLocked = ((CPrefElement*)userData)->IsLocked();
-    BOOL bDefault = ((CPrefElement*)userData)->IsDefault();
-    if (bLocked)
+    
+    BOOL bLocked      = ((CPrefElement*)userData)->IsLocked();
+    BOOL bRemoteAdmin = ((CPrefElement*)userData)->IsRemoteAdmin();
+    BOOL bDefault     = ((CPrefElement*)userData)->IsDefault();
+
+    if (bLocked && !bRemoteAdmin)
     {
       // Write the pref element to prefs file.
       ExtractXPIFile(gstrInstallFile, gstrCFGPrefFile);
@@ -758,7 +761,6 @@ void endElement(void *userData, const char *name)
     }
 
     // If remote admin, write to the .jsc file.
-    BOOL bRemoteAdmin = ((CPrefElement*)userData)->IsRemoteAdmin();
     if (bRemoteAdmin)
     {
       if (!FileExists(remoteAdminFile))
@@ -779,6 +781,49 @@ void endElement(void *userData, const char *name)
   }
 
 }
+
+
+// special case for homepage URL: if locked or remote admin, do the right thing.
+// otherwise, call the originally called ModifyProperties method
+
+BOOL ModifyHomepageURL(CString xpifile, CString entity, CString newvalue)
+{
+
+  bool bLocked      = GetGlobal("HomePageURLLocked") == "1";
+  bool bRemoteAdmin = GetGlobal("HomePageURLRemoteAdmin") == "1";
+
+  CString strPref   = "browser.startup.homepage";
+  CString strURL    = GetGlobal("HomePageURL");
+
+  if (bLocked && !bRemoteAdmin)
+  {
+    // Write the pref element to prefs file.
+    ExtractXPIFile(gstrInstallFile, gstrCFGPrefFile);
+    ModifyHashedPref(gstrCFGPrefFile, strPref, strURL, "string", TRUE); 
+  }
+   
+  // If remote admin, write to the .jsc file.
+
+  else if (bRemoteAdmin)
+  {
+    if (!FileExists(remoteAdminFile))
+    {
+      CString strComment;
+      strComment.Format("/* The Homepage URL should be %s */\n", strURL);
+      CreateNewFile(remoteAdminFile, strComment);
+    }
+
+    ModifyJS(remoteAdminFile, strPref, strURL, TRUE);
+  }
+
+  // not locked, or remote, just modify the property
+  
+  else
+    ModifyProperties(xpifile, entity, newvalue);
+
+  return TRUE;
+}
+
 
 
 // Sets the autoadmin.global_config_url in strPrefFile to strURL.
@@ -1236,6 +1281,7 @@ int interpret(char *cmd)
 			(strcmp(cmdname, "modifyJS") == 0) ||
 			(strcmp(cmdname, "modifyJS1") == 0) ||
 			(strcmp(cmdname, "modifyJS2") == 0) ||
+      (strcmp(cmdname, "modifyHomepageURL") == 0) ||
 			(strcmp(cmdname, "modifyProperties") == 0) ||
 			(strcmp(cmdname, "modifyHashedPrefString") == 0) ||
 			(strcmp(cmdname, "modifyHashedPrefInt") == 0) ||
@@ -1274,6 +1320,8 @@ int interpret(char *cmd)
 			ModifyHashedPref(xpifile,entity,newvalue, "int", TRUE);
 		else if (strcmp(cmdname, "modifyHashedPrefBool") == 0)
 			ModifyHashedPref(xpifile,entity,newvalue, "bool", TRUE);
+    else if (strcmp(cmdname, "modifyHomepageURL") == 0)
+      ModifyHomepageURL(xpifile,entity,newvalue);
 		else if (strcmp(cmdname, "modifyJS") == 0)
 			ModifyJS(xpifile,entity,newvalue, FALSE);
 		else if (strcmp(cmdname, "modifyProperties") == 0)
