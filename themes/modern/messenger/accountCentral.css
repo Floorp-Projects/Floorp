@@ -133,7 +133,10 @@ separator.thin {
   list-style-image: url("chrome://messenger/skin/icons/acct-prefs.gif");
 }
 
-#JunkSettings {
+#JunkSettingsMail {
   list-style-image: url("chrome://messenger/skin/icons/acct-filters.gif");
 }
 
+#JunkSettingsNews {
+  list-style-image: url("chrome://messenger/skin/icons/acct-filters.gif");
+}
