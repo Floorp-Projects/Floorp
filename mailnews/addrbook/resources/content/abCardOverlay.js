@@ -82,8 +82,14 @@ function OnLoadNewCard()
     // we'll fill these in here...
     if ("primaryEmail" in window.arguments[0])
       editCard.card.primaryEmail = window.arguments[0].primaryEmail;
-    if ("displayName" in window.arguments[0])
+    if ("displayName" in window.arguments[0]) {
       editCard.card.displayName = window.arguments[0].displayName;
+      // if we've got a display name, don't generate
+      // a display name (and over right the current display name)
+      // when the user types a first or last name
+      if (editCard.card.displayName.length)
+        editCard.generateDisplayName = false;
+    }
   }
 
   // set popup with address book names
