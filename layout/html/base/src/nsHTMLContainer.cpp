@@ -581,7 +581,13 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         family.StripChars("\"");
         family.StripWhitespace();
 
-        font->mFont.name = family;
+        if (family.EqualsIgnoreCase("monospace")) {
+          font->mFont = font->mFixedFont;
+        }
+        else {
+          font->mFont.name = family;
+          font->mFixedFont.name = family;
+        }
       }
 
       // pointSize: int, enum
@@ -589,9 +595,11 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       if (value.GetUnit() == eHTMLUnit_Integer) {
         // XXX should probably sanitize value
         font->mFont.size = parentFont->mFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+        font->mFixedFont.size = parentFont->mFixedFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
       }
       else if (value.GetUnit() == eHTMLUnit_Enumerated) {
         font->mFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+        font->mFixedFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
       }
       else {
         // size: int, enum
@@ -609,36 +617,14 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
           PRInt32 size = value.GetIntValue();
         
           const nsFont& normal = aPresContext->GetDefaultFont();  // XXX should be BASEFONT
+          const nsFont& normalFixed = aPresContext->GetDefaultFixedFont();  // XXX should be BASEFONT
 
-          if (value.GetUnit() == eHTMLUnit_Enumerated) {
-            size = ((0 < size) ? ((size < 8) ? size : 7) : 0); 
-            font->mFont.size = (nscoord)((float)normal.size * kFontScale[size - 1]);
+          if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
+            size = 3 + size;  // XXX should be BASEFONT, not three
           }
-          else {  // int (+/-)
-            if ((0 < size) && (size <= 7)) { // +
-              PRInt32 index;
-              for (index = 0; index < 6; index++)
-                if (parentFont->mFont.size < (nscoord)((float)normal.size * kFontScale[index]))
-                  break;
-              size = (index + size);
-              if (size < 0) size = 0;
-              if (size > 6) size = 6;
-              font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
-            }
-            else if ((-7 <= size) && (size < 0)) {
-              PRInt32 index;
-              for (index = 6; index > 0; index--)
-                if (parentFont->mFont.size > (nscoord)((float)normal.size * kFontScale[index]))
-                  break;
-              size = ((index + 1) + size);
-              if (size < 0) size = 0;
-              if (size > 6) size = 6;
-              font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
-            }
-            else if (0 == size) {
-              font->mFont.size = parentFont->mFont.size;
-            }
-          }
+          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+          font->mFont.size = (nscoord)((float)normal.size * kFontScale[size - 1]);
+          font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[size - 1]);
         }
       }
 
@@ -647,11 +633,13 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       if (value.GetUnit() == eHTMLUnit_Integer) { // +/-
         PRInt32 weight = parentFont->mFont.weight + value.GetIntValue();
         font->mFont.weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+        font->mFixedFont.weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
       }
       else if (value.GetUnit() == eHTMLUnit_Enumerated) {
         PRInt32 weight = value.GetIntValue();
         weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
         font->mFont.weight = weight;
+        font->mFixedFont.weight = weight;
       }
 
       // color: color
