@@ -513,8 +513,8 @@ sub PerformSubsts {
 
 sub trim {
     ($_) = (@_);
-    s/^\s*//g;
-    s/\s*$//g;
+    s/^\s+//g;
+    s/\s+$//g;
     return $_;
 }
 
