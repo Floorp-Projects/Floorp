@@ -90,7 +90,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsICmdLineHandler.h"
 
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 // Interface for "unknown content type handler" component/service.
 #include "nsIUnkContentTypeHandler.h"
@@ -123,23 +123,32 @@ static PRLogModuleInfo* gTimerLog = nsnull;
 #endif /* DEBUG || FORCE_PR_LOG */
 #endif
 
+// if DEBUG or MOZ_PERF_METRICS are defined, enable the PageCycler
+#ifdef DEBUG
+#define ENABLE_PAGE_CYCLER
+#endif
+#ifdef MOZ_PERF_METRICS
+#define ENABLE_PAGE_CYCLER
+#endif
+
+
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 
 /* Define Class IDs */
-static NS_DEFINE_CID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
-static NS_DEFINE_CID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
+static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
+static NS_DEFINE_CID(kCPrefServiceCID,          NS_PREF_CID);
 
 /* Define Interface IDs */
-static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
-static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
-static NS_DEFINE_IID(kIWebShellIID,              NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIAppShellServiceIID,      NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIStreamObserverIID,       NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kIWebShellWindowIID,       NS_IWEBSHELL_WINDOW_IID);
+static NS_DEFINE_IID(kIGlobalHistoryIID,        NS_IGLOBALHISTORY_IID);
+static NS_DEFINE_IID(kIWebShellIID,             NS_IWEB_SHELL_IID);
 
 #ifdef DEBUG                                                           
 static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
@@ -947,17 +956,24 @@ nsBrowserAppCore::LoadUrl(const PRUnichar * urlToLoad)
   return rv;
 }
 
-#ifdef DEBUG
+#ifdef ENABLE_PAGE_CYCLER
 #include "nsProxyObjectManager.h"
+#include "nsITimer.h"
+
+static void TimesUp(nsITimer *aTimer, void *aClosure);
+  // Timer callback: called when the timer fires
 
 class PageCycler : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
-  PageCycler(nsBrowserAppCore* appCore)
-    : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull) { 
+  PageCycler(nsBrowserAppCore* appCore, char *aTimeoutValue = nsnull)
+    : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull), mTimeoutValue(0) { 
     NS_INIT_REFCNT();
     NS_ADDREF(mAppCore);
+    if (aTimeoutValue){
+      mTimeoutValue = atol(aTimeoutValue);
+    }
   }
 
   virtual ~PageCycler() { 
@@ -1016,6 +1032,8 @@ public:
     else {
       // no more URLs, so quit the browser
       nsresult rv;
+      // make sure our timer is stopped first
+      StopTimer();
       NS_WITH_SERVICE(nsIAppShellService, appShellServ, kAppShellServiceCID, &rv);
       if(NS_FAILED(rv)) return rv;
       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, nsIProxyObjectManager::GetCID(), &rv);
@@ -1043,7 +1061,17 @@ public:
       nsAutoString url;
       rv = GetNextURL(url);
       if (NS_SUCCEEDED(rv)) {
+        // stop previous timer
+        StopTimer();
+        if (aSubject == this){
+          // if the aSubject arg is 'this' then we were called by the Timer
+          // Stop the current load and move on to the next
+          mAppCore->Stop();
+        }
+        // load the URL
         rv = mAppCore->LoadUrl(url.GetUnicode());
+        // start new timer
+        StartTimer();
       }
     }
     else {
@@ -1053,13 +1081,45 @@ public:
     }
     return rv;
   }
-  
+
+  const nsAutoString &GetLastRequest( void )
+  { 
+    return mLastRequest; 
+  }
+
+  // StartTimer: if mTimeoutValue is positive, then create a new timer
+  //             that will call the callback fcn 'TimesUp' to keep us cycling
+  //             through the URLs
+  nsresult StartTimer(void)
+  {
+    nsresult rv=NS_OK;
+    if (mTimeoutValue > 0){
+      rv=NS_NewTimer(getter_AddRefs(mShutdownTimer));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create timer for PageCycler...");
+      if (NS_SUCCEEDED(rv) && mShutdownTimer){
+        mShutdownTimer->Init(TimesUp, (void *)this, mTimeoutValue*1000);
+      }
+    }
+    return rv;
+  }
+
+  // StopTimer: if there is a timer, cancel it
+  nsresult StopTimer(void)
+  {
+    if (mShutdownTimer){
+      mShutdownTimer->Cancel();
+    }
+    return NS_OK;
+  }
+
 protected:
   nsBrowserAppCore*     mAppCore;
   nsFileSpec            mFile;
   char*                 mBuffer;
   char*                 mCursor;
   nsAutoString          mLastRequest;
+  nsCOMPtr<nsITimer>    mShutdownTimer;
+  PRUint32              mTimeoutValue;
 };
 
 NS_IMPL_ADDREF(PageCycler)
@@ -1070,7 +1130,27 @@ NS_INTERFACE_MAP_BEGIN(PageCycler)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
 
-#endif
+// TimesUp: callback for the PageCycler timer: called when we have waited too long
+// for the page to finish loading.
+// 
+// The aClosure argument is actually the PageCycler, 
+// so use it to stop the timer and call the Observe fcn to move on to the next URL
+// Note that we pass the PageCycler instance as the aSubject argument to the Observe
+// function. This is our indication that the Observe method is being called after a
+// timeout, allowing the PageCycler to do any necessary processing before moving on.
+void TimesUp(nsITimer *aTimer, void *aClosure)
+{
+  if(aClosure){
+    char urlBuf[64];
+    PageCycler *pCycler = (PageCycler *)aClosure;
+    pCycler->StopTimer();
+    pCycler->GetLastRequest().ToCString( urlBuf, sizeof(urlBuf), 0 );
+    fprintf(stderr,"########## PageCycler Timeout on URL: %s\n", urlBuf);
+    pCycler->Observe( pCycler, nsnull, (pCycler->GetLastRequest()).GetUnicode() );
+  }
+}
+
+#endif //ENABLE_PAGE_CYCLER
 
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadInitialPage(void)
@@ -1086,20 +1166,26 @@ nsBrowserAppCore::LoadInitialPage(void)
       return NS_ERROR_FAILURE;
     }
 
-#ifdef DEBUG
+#ifdef ENABLE_PAGE_CYCLER
     // First, check if there's a URL file to load (for testing), and if there 
     // is, process it instead of anything else.
     char* file = 0;
     rv = cmdLineArgs->GetCmdLineValue("-f", &file);
     if (NS_SUCCEEDED(rv) && file) {
-      PageCycler* bb = new PageCycler(this);
+      // see if we have a timeout value corresponding to the url-file
+      char *timeoutVal=nsnull;
+      rv = cmdLineArgs->GetCmdLineValue("-ftimeout", &timeoutVal);
+      // cereate the cool PageCycler instance
+      PageCycler* bb = new PageCycler(this, timeoutVal);
       if (bb == nsnull) {
         nsCRT::free(file);
+        nsCRT::free(timeoutVal);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       NS_ADDREF(bb);
       rv = bb->Init(file);
       nsCRT::free(file);
+      nsCRT::free(timeoutVal);
       if (NS_FAILED(rv)) return rv;
 
       nsAutoString str;
@@ -1109,32 +1195,29 @@ nsBrowserAppCore::LoadInitialPage(void)
       }
       NS_RELEASE(bb);
     }
-    else {
-#endif
-  
-    // Examine content URL.
-    if ( mContentAreaWebShell ) {
-      const PRUnichar *url = 0;
-      rv = mContentAreaWebShell->GetURL(&url );
-      /* Check whether url is valid. Otherwise we compare 0x00 with 
-         * "about:blank" and there by return from here with out 
-         * loading the command line url or default home page.
-         */
-      if ( NS_SUCCEEDED( rv ) && url ) {
-        if ( nsString(url) != "about:blank" ) {
-          // Something has already been loaded (probably via window.open),
-          // leave it be.
-          return NS_OK;
+    else 
+#endif //ENABLE_PAGE_CYCLER
+    {
+      // Examine content URL.
+      if ( mContentAreaWebShell ) {
+        const PRUnichar *url = 0;
+        rv = mContentAreaWebShell->GetURL(&url );
+        /* Check whether url is valid. Otherwise we compare 0x00 with 
+           * "about:blank" and there by return from here with out 
+           * loading the command line url or default home page.
+           */
+        if ( NS_SUCCEEDED( rv ) && url ) {
+          if ( nsString(url) != "about:blank" ) {
+            // Something has already been loaded (probably via window.open),
+            // leave it be.
+            return NS_OK;
+          }
         }
       }
-    }
 
-    // Get the URL to load
-    rv = cmdLineArgs->GetURLToLoad(&urlstr);
-
-#ifdef DEBUG
+      // Get the URL to load
+      rv = cmdLineArgs->GetURLToLoad(&urlstr);
     }
-#endif
 
     if (urlstr != nsnull) {
       // A url was provided. Load it
