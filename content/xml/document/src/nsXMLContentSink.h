@@ -43,7 +43,6 @@ class nsICSSStyleSheet;
 #include "nsSupportsArray.h"
 
 class nsIDocument;
-class nsIScriptObjectOwner;
 class nsIURI;
 class nsIWebShell;
 class nsIContent;
