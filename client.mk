@@ -211,15 +211,6 @@ NSS_CO_MODULE = mozilla/security/nss \
 		$(NULL)
 
 ifdef MOZ_NSS_AUTOCONF
-NSS_CO_MODULE += \
-		mozilla/security/build \
-		mozilla/security/Makefile.in \
-		mozilla/security/configure \
-		mozilla/security/configure.in \
-		mozilla/security/secmakefiles.sh \
-		mozilla/security/aclocal.m4 \
-		$(NULL)
-
 NSS_CO_TAG = NSS_CLIENT_BRANCH
 endif
 		
