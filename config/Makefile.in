@@ -90,10 +90,11 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 #update build number from within make script
-$(DEPTH)/build/build_number: $(OBJDIR)/bdate$(BIN_SUFFIX) FORCE
+$(DEPTH)/build/build_number: FORCE
 	@$(MAKE_OBJDIR)
 	$(RM) $@
-	$(OBJDIR)/bdate$(BIN_SUFFIX) > $@
+	$(PERL) $(srcdir)/bdate.pl > $@
+	$(PERL) $(srcdir)/aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)

@@ -42,7 +42,11 @@ CSRCS		= png.c \
 		  pngwutil.c \
 		  $(NULL)
 
-REQUIRES	= util nspr zlib
+REQUIRES	= util nspr
+
+ifndef MOZ_NATIVE_ZLIB
+REQUIRES	+= zlib
+endif
 
 LOCAL_INCLUDES	= -I$(srcdir)
 

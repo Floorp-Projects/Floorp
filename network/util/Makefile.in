@@ -27,13 +27,18 @@ LIBRARY_NAME	= netutil
 
 CSRCS		= \
 	mkreg.c	\
+	mkbuf.c	\
 	$(NULL)
 
-EXPORTS=$(srcdir)/mkreg.h
+EXPORTS=mkreg.h mkbuf.h
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/config.mk
 
-REQUIRES	= network
+REQUIRES	= network xp
 
 include $(topsrcdir)/config/rules.mk
+
+
 

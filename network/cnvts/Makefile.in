@@ -17,8 +17,8 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -60,12 +60,12 @@ EXPORTS= \
 
 ifndef MODULAR_NETLIB
 EXPORTS += \
-    cvmime.h	\
-    cvpics.h	\
+    cvmime.h    \
+    cvpics.h    \
     $(NULL)
 endif
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 REQUIRES	= network img lay layer util parse pref js \
 	security marimurl style zlib softupdt mimetype ldap
