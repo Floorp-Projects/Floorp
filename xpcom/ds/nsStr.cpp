@@ -189,19 +189,20 @@ void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
  */
 void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount,nsIMemoryAgent* anAgent){
 
-  ToRange(anOffset,0,aSource.mLength-1);
-  PRUint32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
-  PRUint32 theLength=(anOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-anOffset);
-  if(0<theLength){
-    if(aDest.mLength+theLength > aDest.mCapacity) {
-      GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
+  if(anOffset<aSource.mLength-1){
+    PRUint32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
+    PRUint32 theLength=(anOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-anOffset);
+    if(0<theLength){
+      if(aDest.mLength+theLength > aDest.mCapacity) {
+        GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
+      }
+
+      //now append new chars, starting at offset
+      (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
+
+      aDest.mLength+=theLength;
+      AddNullTerminator(aDest);
     }
-
-    //now append new chars, starting at offset
-    (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
-
-    aDest.mLength+=theLength;
-    AddNullTerminator(aDest);
   }
 }
 
@@ -220,31 +221,30 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
   //  3. You're inserting onto the 1..n-1 pos of a string (the hard case).
-  if(0<aSource.mLength){
-    ToRange(aDestOffset,0,aDest.mLength);
+  if((0<aSource.mLength) && (aDestOffset<aDest.mLength-1)){
     if(aDest.mLength){
       if(aDestOffset<aDest.mLength){
+        if(aSrcOffset<aSource.mLength-1) {
+          PRInt32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
+          PRInt32 theLength=(aSrcOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-aSrcOffset);
 
-        ToRange(aSrcOffset,0,aSource.mLength-1);
-        PRInt32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
-        PRInt32 theLength=(aSrcOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-aSrcOffset);
+          if(aSrcOffset<aSource.mLength) {
+              //here's the only new case we have to handle. 
+              //chars are really being inserted into our buffer...
+            GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
 
-        if(aSrcOffset<aSource.mLength) {
-            //here's the only new case we have to handle. 
-            //chars are really being inserted into our buffer...
-          GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
-
-            //shift the chars right by theDelta...
-          (*gShiftChars[aDest.mMultibyte][PR_TRUE])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
+              //shift the chars right by theDelta...
+            (*gShiftChars[aDest.mMultibyte][PR_TRUE])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       
-          //now insert new chars, starting at offset
-          (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
+            //now insert new chars, starting at offset
+            (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
 
-          //finally, make sure to update the string length...
-          aDest.mLength+=theLength;
+            //finally, make sure to update the string length...
+            aDest.mLength+=theLength;
 
-        }//if
-        //else nothing to do!
+          }//if
+          //else nothing to do!
+        }
       }
       else Append(aDest,aSource,0,aCount,anAgent);
     }
@@ -343,7 +343,7 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEli
    **************************************************************/
 
 
-PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
+PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool /*aIgnoreCase*/,PRUint32 anOffset) {
   PRInt32 index=anOffset-1;
   PRInt32 theMax=aDest.mLength-aTarget.mLength;
   if((aDest.mLength>0) && (aTarget.mLength>0)){
@@ -385,7 +385,7 @@ PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnor
  * @return
  */
 PRInt32 nsStr::FindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
-  PRInt32 result=gFindChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,0,aChar,aIgnoreCase);
+  PRInt32 result=gFindChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase);
   return result;
 }
 
@@ -415,7 +415,7 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
    **************************************************************/
 
 
-PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
+PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool /*aIgnoreCase*/,PRUint32 anOffset) {
   PRInt32 index=(anOffset ? anOffset : aDest.mLength-aTarget.mLength+1);
   if((aDest.mLength>0) && (aTarget.mLength>0)){
     PRInt32 theNewStartPos=-1;
@@ -460,7 +460,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
  * @return
  */
 PRInt32 nsStr::RFindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
-  PRInt32 result=gRFindChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,0,aChar,aIgnoreCase);
+  PRInt32 result=gRFindChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase);
   return result;
 }
 
@@ -472,11 +472,11 @@ PRInt32 nsStr::RFindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnor
  *  @return  
  */
 PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRUint32 anOffset) {
-  PRUint32 offset=aDest.mLength-anOffset;
+  PRInt32  offset=aDest.mLength-anOffset;
   PRInt32  thePos;
 
   while(--offset>=0) {
-    PRUnichar theChar=GetCharAt(aDest,offset);
+    PRUnichar theChar=GetCharAt(aDest,PRUint32(offset));
     thePos=gRFindChars[aSet.mMultibyte](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
     if(kNotFound!=thePos)
       return offset;
@@ -491,7 +491,7 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
  * @param 
  * @return  aDest<aSource=-1;aDest==aSource==0;aDest>aSource=1
  */
-PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 /*aCount*/,PRBool aIgnoreCase) {
   int minlen=(aSource.mLength<aDest.mLength) ? aSource.mLength : aDest.mLength;
 
   if(0==minlen) {
