@@ -396,7 +396,7 @@ namespace MetaData {
 
 #ifdef DEBUG
 
-    enum { BRANCH_OFFSET = 1, STR_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64 };
+    enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64 };
     struct {
         JS2Op op;
         char *name;
@@ -428,6 +428,8 @@ namespace MetaData {
         { eTrue,  "True", 0 },
         { eFalse,  "False", 0 },
         { eNull,  "Null", 0 },
+        { eUndefined,  "Undefined", 0 },
+        { eLongZero,  "0(64)", 0 },
         { eNumber,  "Number", FLOAT64 },
         { eRegExp,  "RegExp", U16 },
         { eUInt64,  "UInt64", 0 },
@@ -442,6 +444,8 @@ namespace MetaData {
         { eCallFinally,  "CallFinally", BRANCH_OFFSET },       // <branch displacement:s32>
         { eReturnFinally,  "ReturnFinally", 0 },
         { eHandler,  "Handler", 0 },
+
+        { eCoerce, "Coerce", TYPE_PTR },            // <type pointer:u32>
 
         { eFirst,  "First", 0 },
         { eNext,  "Next", 0 },
@@ -517,6 +521,13 @@ namespace MetaData {
                 int32 offset = BytecodeContainer::getOffset(pc);
                 stdOut << " " << offset << " --> " << (pc - start) + offset;
                 pc += sizeof(int32);
+            }
+            break;
+        case TYPE_PTR:
+            {
+                JS2Class *c = BytecodeContainer::getType(pc);
+                stdOut << " " << *c->name;
+                pc += sizeof(JS2Class *);
             }
             break;
         case STR_PTR:
@@ -615,8 +626,11 @@ namespace MetaData {
         case eLogicalNot:
             return 0;
 
-        case eIs:           // pop expr, pop type, bush boolean
+        case eIs:           // pop expr, pop type, push boolean
             return 1;
+
+        case eCoerce:       // pop value, push coerced value (type is arg)
+            return 0;
 
         case eTry:          // no exec. stack impact
         case eHandler:
@@ -636,6 +650,8 @@ namespace MetaData {
         case eNull:
         case eThis:
         case eRegExp:
+        case eUndefined:
+        case eLongZero:
             return 1;       // push literal value
 
         case eSlotWrite:

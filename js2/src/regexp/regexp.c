@@ -1521,7 +1521,7 @@ static REuint8 *emitREBytecode(REState *pState, REuint8 *pc, RENode *t)
     REuint8 *nextAltFixup, *nextTermFixup;
 
     while (t) {
-        *pc++ = t->kind;
+        *pc++ = (REuint8)(t->kind);
         switch (t->kind) {
         case REOP_EMPTY:
             --pc;
@@ -1592,16 +1592,16 @@ static REuint8 *emitREBytecode(REState *pState, REuint8 *pc, RENode *t)
             break;
         case REOP_QUANT:
             if ((t->data.quantifier.min == 0) && (t->data.quantifier.max == -1))
-                pc[-1] = (t->data.quantifier.greedy) 
-                                        ? REOP_STAR : REOP_MINIMALSTAR;
+                pc[-1] = (REuint8)((t->data.quantifier.greedy) 
+                                        ? REOP_STAR : REOP_MINIMALSTAR);
             else
             if ((t->data.quantifier.min == 0) && (t->data.quantifier.max == 1))
-                pc[-1] = (t->data.quantifier.greedy) 
-                                        ? REOP_OPT : REOP_MINIMALOPT;
+                pc[-1] = (REuint8)((t->data.quantifier.greedy) 
+                                        ? REOP_OPT : REOP_MINIMALOPT);
             else
             if ((t->data.quantifier.min == 1) && (t->data.quantifier.max == -1))
-                pc[-1] = (t->data.quantifier.greedy) 
-                                        ? REOP_PLUS : REOP_MINIMALPLUS;
+                pc[-1] = (REuint8)((t->data.quantifier.greedy) 
+                                        ? REOP_PLUS : REOP_MINIMALPLUS);
             else {
                 if (!t->data.quantifier.greedy) pc[-1] = REOP_MINIMALQUANT;
                 EMIT_ARG(pc, t->data.quantifier.min);

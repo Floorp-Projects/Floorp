@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\js\src" /I "../../RegExp" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\js\src" /I "../../RegExp" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -111,11 +111,19 @@ SOURCE=..\..\js2array.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\js2boolean.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\js2date.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\js2engine.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2error.cpp
 # End Source File
 # Begin Source File
 

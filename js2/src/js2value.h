@@ -85,6 +85,7 @@
 #define JS2VAL_NULL              OBJECT_TO_JS2VAL(0)
 #define JS2VAL_FALSE             BOOLEAN_TO_JS2VAL(false)
 #define JS2VAL_TRUE              BOOLEAN_TO_JS2VAL(true)
+#define JS2VAL_ZERO              INT_TO_JS2VAL(0)
 
 /* Predicates for type testing. */
 #define JS2VAL_IS_OBJECT(v)      ((JS2VAL_TAG(v) == JS2VAL_OBJECT) && !JS2VAL_IS_SPECIALREF(v))

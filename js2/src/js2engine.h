@@ -71,6 +71,8 @@ enum JS2Op {
     eTrue,
     eFalse,
     eNull,
+    eUndefined,
+    eLongZero,
     eNumber,
     eRegExp,
     eUInt64,
@@ -85,6 +87,8 @@ enum JS2Op {
     eCallFinally,       // <branch displacement:s32>
     eReturnFinally,
     eHandler,
+
+    eCoerce,            // <type pointer:u32>
 
     eFirst,
     eNext,

@@ -150,6 +150,9 @@ public:
     // XXX We lose StringAtom here (and is it safe to stash the address of a StringAtom?)
     // - is there any way of keeping StringAtoms themselves in a bytecodeContainer?
     
+    void addType(JS2Class *c)               { addPointer(c); }  // assume that classes are rooted already
+    static JS2Class *getType(void *pc)      { return (JS2Class *)(getPointer(pc)); }
+
 
 
     typedef std::vector<uint8> CodeBuffer;

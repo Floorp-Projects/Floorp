@@ -478,6 +478,7 @@ public:
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
     js2val implicitCoerce(JS2Metadata *meta, js2val newValue);
                                                 // A procedure to call when a value is assigned whose type is this class
+    void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
     bool isAncestor(JS2Class *heir);
 

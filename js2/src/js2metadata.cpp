@@ -576,7 +576,7 @@ namespace MetaData {
                             case Attribute::NoModifier:
                             case Attribute::Static: 
                                 {
-                                    // Set type to FUTURE_TYPE - it will be resolved during 'PreEval'. The value is either FUTURE_VALUE
+                                    // Set type to FUTURE_TYPE - it will be resolved during 'Setup'. The value is either FUTURE_VALUE
                                     // for 'const' - in which case the expression is compile time evaluated (or attempted) or set
                                     // to INACCESSIBLE until run time initialization occurs.
                                     Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
@@ -1187,7 +1187,7 @@ namespace MetaData {
         case StmtNode::Var:
         case StmtNode::Const:
             {
-                // Note that the code here is the PreEval code plus the emit of the Eval bytecode
+                // Note that the code here is the Setup code plus the emit of the Eval bytecode
                 VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);                
                 VariableBinding *vb = vs->bindings;
                 while (vb)  {
@@ -1209,6 +1209,12 @@ namespace MetaData {
                                         // is defined at run time.
                                         if (x.kind != Exception::compileExpressionError)
                                             throw x;
+                                        Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
+                                        if (r) r->emitReadBytecode(bCon, p->pos);
+                                        LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
+                                        lVal->variableMultiname->addNamespace(publicNamespace);
+                                        lVal->emitWriteBytecode(bCon, p->pos);      
+                                        bCon->emitOp(ePop, p->pos);
                                     }
                                 }
                                 else
@@ -1217,24 +1223,24 @@ namespace MetaData {
                                     reportError(Exception::compileExpressionError, "Missing compile time expression", p->pos);
                             }
                             else {
+                                // Not immutable
+                                ASSERT(JS2VAL_IS_INACCESSIBLE(v->value));
                                 if (vb->initializer) {
-                                    try {
-                                        js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                        v->value = type->implicitCoerce(this, newValue);
-                                    }
-                                    catch (Exception x) {
-                                        // If a compileExpressionError occurred, then the initialiser is not a compile-time 
-                                        // constant expression. In this case, ignore the error and leave the value of the 
-                                        // variable inaccessible until it is defined at run time.
-                                        if (x.kind != Exception::compileExpressionError)
-                                            throw x;
-                                        Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
-                                        if (r) r->emitReadBytecode(bCon, p->pos);
-                                        LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
-                                        lVal->variableMultiname->addNamespace(publicNamespace);
-                                        lVal->emitWriteBytecode(bCon, p->pos);      
-                                        bCon->emitOp(ePop, p->pos);
-                                    }
+                                    Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
+                                    if (r) r->emitReadBytecode(bCon, p->pos);
+                                    bCon->emitOp(eCoerce, p->pos);
+                                    bCon->addType(v->type);
+                                    LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
+                                    lVal->variableMultiname->addNamespace(publicNamespace);
+                                    lVal->emitWriteBytecode(bCon, p->pos);      
+                                    bCon->emitOp(ePop, p->pos);
+                                }
+                                else {
+                                    v->type->emitDefaultValue(bCon, p->pos);
+                                    LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
+                                    lVal->variableMultiname->addNamespace(publicNamespace);
+                                    lVal->emitWriteBytecode(bCon, p->pos);      
+                                    bCon->emitOp(ePop, p->pos);
                                 }
                             }
                         }
@@ -2991,7 +2997,7 @@ doUnary:
         writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
     }
 
-#define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
+#define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
 
     JS2Metadata::JS2Metadata(World &world) :
         world(world),
@@ -3007,20 +3013,20 @@ doUnary:
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
 
-        MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->object_StringAtom);
-        MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom);
-        MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom);
-        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, &world.identifiers["Boolean"]);
-        MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, &world.identifiers["general number"]);
-        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, &world.identifiers["Number"]);
-        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, &world.identifiers["Character"]);
-        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, &world.identifiers["String"]);
-        MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, &world.identifiers["namespace"]);
-        MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, &world.identifiers["attribute"]);
-        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, &world.identifiers["Class"]);
-        MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->Function_StringAtom);
-        MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, &world.identifiers["prototype"]);
-        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, &world.identifiers["Package"]);
+        MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->object_StringAtom, JS2VAL_VOID);
+        MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
+        MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom, JS2VAL_NULL);
+        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, &world.identifiers["Boolean"], JS2VAL_FALSE);
+        MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, &world.identifiers["general number"], engine->nanValue);
+        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, &world.identifiers["Number"], engine->nanValue);
+        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, &world.identifiers["Character"], JS2VAL_ZERO);
+        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, &world.identifiers["String"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, &world.identifiers["namespace"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, &world.identifiers["attribute"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, &world.identifiers["Class"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->Function_StringAtom, JS2VAL_NULL);
+        MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, &world.identifiers["prototype"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, &world.identifiers["Package"], JS2VAL_NULL);
 
         
 
@@ -3065,14 +3071,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 
 /*** ECMA 3  Date Class ***/
-        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"]);
+        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         defineStaticMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
  //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
 
 /*** ECMA 3  RegExp Class ***/
-        MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, &world.identifiers["RegExp"]);
+        MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, &world.identifiers["RegExp"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
         defineStaticMember(env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initRegExpObject(this);
@@ -3093,13 +3099,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initBooleanObject(this);
 
 /*** ECMA 3  Math Class ***/
-        MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"]);
+        MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
         defineStaticMember(env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initMathObject(this);
 
 /*** ECMA 3  Array Class ***/
-        MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, &world.identifiers["Array"]);
+        MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, &world.identifiers["Array"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineStaticMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
@@ -3110,25 +3116,25 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // XXX more here!
 
 /*** ECMA 3  Error Classes ***/
-        MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, &world.identifiers["Error"]);
+        MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, &world.identifiers["Error"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
         defineStaticMember(env, &world.identifiers["Error"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, &world.identifiers["EvalError"]);
+        MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, &world.identifiers["EvalError"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
         defineStaticMember(env, &world.identifiers["EvalError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, &world.identifiers["RangeError"]);
+        MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, &world.identifiers["RangeError"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
         defineStaticMember(env, &world.identifiers["RangeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, &world.identifiers["ReferenceError"]);
+        MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, &world.identifiers["ReferenceError"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
         defineStaticMember(env, &world.identifiers["ReferenceError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, &world.identifiers["SyntaxError"]);
+        MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, &world.identifiers["SyntaxError"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
         defineStaticMember(env, &world.identifiers["SyntaxError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, &world.identifiers["TypeError"]);
+        MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, &world.identifiers["TypeError"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
         defineStaticMember(env, &world.identifiers["TypeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, &world.identifiers["UriError"]);
+        MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, &world.identifiers["UriError"], JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
         defineStaticMember(env, &world.identifiers["UriError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initErrorObject(this);
@@ -4306,6 +4312,7 @@ deleteClassProperty:
             final(final),
             call(NULL),
             construct(JS2Engine::defaultConstructor),
+            defaultValue(JS2VAL_NULL),
             slotCount(super ? super->slotCount : 0),
             name(name)
     {
@@ -4346,6 +4353,24 @@ deleteClassProperty:
             return newValue;
         meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
         return JS2VAL_VOID;
+    }
+
+    void JS2Class::emitDefaultValue(BytecodeContainer *bCon, size_t pos)
+    {
+        if (JS2VAL_IS_NULL(defaultValue))
+            bCon->emitOp(eNull, pos);
+        else 
+        if (JS2VAL_IS_VOID(defaultValue))
+            bCon->emitOp(eUndefined, pos);
+        else 
+        if (JS2VAL_IS_BOOLEAN(defaultValue) && !JS2VAL_TO_BOOLEAN(defaultValue))
+            bCon->emitOp(eFalse, pos);
+        else
+        if ((JS2VAL_IS_LONG(defaultValue) || JS2VAL_IS_ULONG(defaultValue)) 
+                && (*JS2VAL_TO_LONG(defaultValue) == 0))
+            bCon->emitOp(eLongZero, pos);
+        else
+            NOT_REACHED("unrecognized default value");
     }
 
  /************************************************************************************
