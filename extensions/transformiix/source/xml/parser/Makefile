@@ -4,12 +4,17 @@ target: xml_parser
 BASE_PATH    = ../../base
 DOM_PATH     = ../dom
 PARSER_PATH  = .
+NET_PATH     = ../../net
 
 EXPAT_PARSER_PATH = xmlparse
 EXPAT_TOKEN_PATH = xmltok
 
-INCLUDE_PATH = -I$(PARSER_PATH) -I$(BASE_PATH) -I$(DOM_PATH) \
-               -I$(EXPAT_TOKEN_PATH) -I$(EXPAT_PARSER_PATH) -I-
+INCLUDE_PATH = -I$(PARSER_PATH)      \
+               -I$(BASE_PATH)        \
+               -I$(DOM_PATH)         \
+               -I$(NET_PATH)         \
+               -I$(EXPAT_TOKEN_PATH) \
+               -I$(EXPAT_PARSER_PATH) -I-
 
 EXPAT_OBJS = $(EXPAT_TOKEN_PATH)/xmltok.o \
              $(EXPAT_TOKEN_PATH)/xmlrole.o \

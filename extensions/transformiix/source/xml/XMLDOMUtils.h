@@ -21,18 +21,20 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.h,v 1.6 2000/08/26 04:41:16 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLDOMUtils.h,v 1.7 2000/08/27 05:58:57 kvisco%ziplink.net Exp $
  */
 
-/**
- * A utility class for use with XML DOM implementations
-**/
+
 #include "dom.h"
-#include "Expr.h"
+#include "NamespaceResolver.h"
 
 #ifndef TRANSFRMX_XMLDOMUTILS_H
 #define TRANSFRMX_XMLDOMUTILS_H
 
+
+/**
+ * A utility class for use with XML DOM implementations
+**/
 class XMLDOMUtils {
 
 public:
