@@ -107,6 +107,13 @@ nsresult nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   return res;
 }
 
+void nsJSContext::RunGC()
+{
+  if (nsnull != mContext) {
+    JS_GC(mContext);
+  }
+}
+
 nsresult nsJSContext::InitClasses()
 {
   nsresult res = NS_ERROR_FAILURE;
