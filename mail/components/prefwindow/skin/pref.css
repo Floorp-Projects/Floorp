@@ -37,7 +37,11 @@
 # ***** END LICENSE BLOCK *****
 */
 
-.listBox {
+@import url("chrome://messenger/skin/");
+@import url("chrome://communicator/skin/prefpanels.css");
+
+.listBox 
+{
   -moz-appearance: listbox;
   margin: 2px 4px;
   border: 2px solid;
@@ -47,6 +51,8 @@
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
 }
+
+/*** Styles for the pref category buttons **/
 
 .buttonBox {
   margin: 0px 5px 0px 0px !important;
@@ -152,4 +158,32 @@
 .extensionInfoArea {
   height: 93px;
   padding: 1px;
+}
+
+/* :::::: layout preference icons ::::: */
+
+#classic 
+{
+  min-height       : 32px;
+  list-style-image : url("chrome://messenger/skin/icons/winclassic.gif");
+}
+
+#wide 
+{
+  min-height       : 32px;
+  list-style-image : url("chrome://messenger/skin/icons/winwide.gif");
+}
+
+#vertical
+{
+  min-height       : 32px;
+  list-style-image : url("chrome://messenger/skin/icons/winvertical.gif");
+}
+
+/** advanced panel settings **/
+
+.settingsBox 
+{
+  margin: 5px;
+  padding: 5px;
 }

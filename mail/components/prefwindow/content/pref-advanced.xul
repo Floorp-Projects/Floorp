@@ -37,8 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/content/expanderBindings.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -78,13 +77,13 @@
   ]]>
   </script>
 
-  <vbox id="expanderCategories" class="listBox" flex="1" style="overflow: auto;">
+  <vbox id="expanderCategories" class="listBox settingsBox" flex="1" style="overflow: auto;">
     
     <!-- Privacy Settings -->
-
-    <expander id="privacySettings" class="prefExpander" label="&privacyTitle.label;" persist="open">
+      
+    <expander id="privacySettings" label="&privacyTitle.label;" open="true" persist="open" clearhidden="true">
       <label class="expanderDescription" value="&privacyFeature.label;" flex="1"/>
-
+      
       <vbox id="contentEnablingBox" class="indent">
 
         <checkbox id="networkImageDisableImagesInMailNews" 
@@ -111,9 +110,9 @@
     </expander>  
 
     <!-- Password management -->
-    <expander id="passwordManagement" class="prefExpander" label="&signonHeader.label;" persist="open">
-      <label class="expanderDescription" value="&signonDescription.label;" flex="1"/>
+    <expander id="passwordManagement" label="&signonHeader.label;" open="true" persist="open" clearhidden="true">
       <hbox pack="end">
+        <label class="expanderDescription" value="&signonDescription.label;" flex="1"/>
         <button label="&viewSignons.label;" accesskey="&viewSignons.accesskey;"
                 oncommand="editPasswords();"
                 id="viewStoredPassword"
@@ -143,8 +142,7 @@
      -->
 
     <!-- Return Receipts -->
-    <expander id="returnReceipts" class="prefExpander" label="&receiptSettings.label;" persist="open"> 
-      
+    <expander id="returnReceipts" label="&receiptSettings.label;" open="true" persist="open" clearhidden="true">       
       <label class="expanderDescription" value="&returnReceiptsDescription.label;" flex="1"/>
 
       <vbox id="returnReceiptSettings" class="indent">
@@ -212,7 +210,7 @@
     </expander>
 
     <!-- Connections -->
-    <expander id="connections" class="prefExpander" label="&lHeader.label;" persist="open">     
+    <expander id="connections"    label="&lHeader.label;" open="true" persist="open" clearhidden="true">     
       <label class="expanderDescription" value="&proxyTitle.label;" flex="1"/>      
       <radiogroup id="networkProxyType" prefstring="network.proxy.type">
           <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>

@@ -6,8 +6,6 @@ messenger.jar:
 +   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
 *+  content/messenger/pref-advanced.xul                                (content/pref-advanced.xul)
 *+  content/messenger/pref-advanced.js                                 (content/pref-advanced.js)
-*   content/messenger/expanderBindings.xml                             (content/expanderBindings.xml)
-*   content/messenger/expanderBindings.css                             (content/expanderBindings.css)
 
 comm.jar:
 +   content/communicator/pref/pref.xul                                 (content/pref.xul)
@@ -36,7 +34,6 @@ en-US.jar:
 
 classic.jar:
 +   skin/classic/communicator/pref/pref.css                            (skin/pref.css)
-+   skin/classic/messenger/prefPanels.css                              (skin/prefPanels.css)
     skin/classic/messenger/icons/winvertical.gif                       (skin/winvertical.gif)
     skin/classic/messenger/icons/mail-options.png                      (skin/mail-options.png)
 

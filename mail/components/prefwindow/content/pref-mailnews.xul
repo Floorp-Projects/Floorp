@@ -21,7 +21,8 @@
 #     rcassin@supernova.org
 #     Seth Spitzer <sspitzer@netscape.com>
 
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE overlay [
