@@ -61,6 +61,11 @@
 #define cookie_lifetimePref "network.cookie.lifetimeOption"
 #define cookie_lifetimeValue "network.cookie.lifetimeLimit"
 
+#define cookie_lifetimeEnabledPref "network.cookie.lifetime.enabled"
+#define cookie_lifetimeBehaviorPref "network.cookie.lifetime.behavior"
+#define cookie_lifetimeDaysPref "network.cookie.lifetime.days"
+#define cookie_p3pPref "network.cookie.p3p"
+
 static const char *kCookiesFileName = "cookies.txt";
 
 MODULE_PRIVATE time_t 
@@ -89,6 +94,41 @@ PRIVATE PERMISSION_BehaviorEnum cookie_behavior = PERMISSION_Accept;
 PRIVATE PRBool cookie_warning = PR_FALSE;
 PRIVATE COOKIE_LifetimeEnum cookie_lifetimeOpt = COOKIE_Normal;
 PRIVATE time_t cookie_lifetimeLimit = 90*24*60*60;
+PRIVATE time_t cookie_lifetimeDays;
+PRIVATE PRBool cookie_lifetimeCurrentSession;
+
+PRIVATE char* cookie_P3P = nsnull;
+
+/* cookie_P3P (above) consists of 8 characters having the following interpretation:
+ *   [0]: behavior for first-party cookies when site has no privacy policy
+ *   [1]: behavior for third-party cookies when site has no privacy policy
+ *   [2]: behavior for first-party cookies when site uses PII with no user consent
+ *   [3]: behavior for third-party cookies when site uses PII with no user consent
+ *   [4]: behavior for first-party cookies when site uses PII with implicit consent only
+ *   [5]: behavior for third-party cookies when site uses PII with implicit consent only
+ *   [6]: behavior for first-party cookies when site uses PII with explicit consent
+ *   [7]: behavior for third-party cookies when site uses PII with explicit consent
+ *
+ * note: PII = personally identifiable information
+ *
+ * each of the eight characters can be one of the following
+ *   'a': accept the cookie
+ *   'd': accept the cookie but downgrade it to a session cookie
+ *   'r': reject the cookie
+ *
+ * The following defines are used to refer to these character positions and values
+ */
+
+#define P3P_NoPolicy         0
+#define P3P_NoConsent        2
+#define P3P_ImplicitConsent  4
+#define P3P_ExplicitConsent  6
+
+#define P3P_Accept     'a'
+#define P3P_Downgrade  'd'
+#define P3P_Reject     'r'
+
+#define cookie_P3P_Default    "drdraaaa"
 
 PRIVATE nsVoidArray * cookie_list=0;
 
@@ -135,6 +175,7 @@ COOKIE_RemoveAll()
     cookie_changed = PR_TRUE;
     delete cookie_list;
     cookie_list = nsnull;
+    Recycle(cookie_P3P);
   }
 }
 
@@ -248,7 +289,7 @@ PRIVATE cookie_CookieStruct *
 cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
   cookie_CookieStruct * cookie_s;
   if (cookie_list == nsnull) {
-    return NULL;
+    return nsnull;
   }
   
   PRInt32 count = cookie_list->Count();
@@ -261,7 +302,7 @@ cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
       return(cookie_s);
     }
   }
-  return(NULL);
+  return(nsnull);
 }
 
 /* cookie utility functions */
@@ -337,7 +378,7 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
+  if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
@@ -349,7 +390,7 @@ cookie_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
   cookie_SetWarningPref(x);
@@ -361,7 +402,7 @@ cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
+  if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
     n = COOKIE_Normal;
   }
   cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
@@ -373,8 +414,57 @@ cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
+  if (!NS_FAILED(rv) && !NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
+  }
+  return 0;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_LifetimeEnabledPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
+    n = PR_FALSE;
+  }
+  cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
+  return 0;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_LifetimeBehaviorPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
+    n = 0;
+  }
+  cookie_SetLifetimeLimit((n==0) ? 0 : cookie_lifetimeDays);
+  cookie_lifetimeCurrentSession = (n==0);
+  return 0;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_LifetimeDaysPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (!prefs || !NS_FAILED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
+    cookie_lifetimeDays = n;
+    if (!cookie_lifetimeCurrentSession) {
+      cookie_SetLifetimeLimit(n);
+    }
+  }
+  return 0;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_P3PPrefChanged(const char * newpref, void * data) {
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (!prefs || NS_FAILED(prefs->CopyCharPref(cookie_p3pPref, &cookie_P3P))) {
+    cookie_P3P = PL_strdup(cookie_P3P_Default);
   }
   return 0;
 }
@@ -388,33 +478,59 @@ COOKIE_RegisterPrefCallbacks(void) {
   PRBool x;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (!prefs) {
+    return;
+  }
 
   // Initialize for cookie_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
-  prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, NULL);
+  prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, nsnull);
 
   // Initialize for cookie_warningPref
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
   cookie_SetWarningPref(x);
-  prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, NULL);
+  prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, nsnull);
 
-  // Initialize for cookie_lifetimePref
-  if (NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
-    n = COOKIE_Normal;
+  // Initialize for cookie_lifetime
+  cookie_SetLifetimePref(COOKIE_Normal);
+  cookie_lifetimeDays = 90;
+  cookie_lifetimeCurrentSession = PR_FALSE;
+
+  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
+    cookie_lifetimeDays = n;
   }
-  cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
-  prefs->RegisterCallback(cookie_lifetimePref, cookie_LifetimeOptPrefChanged, NULL);
+  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
+    cookie_lifetimeCurrentSession = (n==0);
+    cookie_SetLifetimeLimit((n==0) ? 0 : cookie_lifetimeDays);
+  }
+  if (!NS_FAILED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
+    cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
+  }
+  prefs->RegisterCallback(cookie_lifetimeEnabledPref, cookie_LifetimeEnabledPrefChanged, nsnull);
+  prefs->RegisterCallback(cookie_lifetimeBehaviorPref, cookie_LifetimeBehaviorPrefChanged, nsnull);
+  prefs->RegisterCallback(cookie_lifetimeDaysPref, cookie_LifetimeDaysPrefChanged, nsnull);
 
-  // Initialize for cookie_lifetimeValue
+  // Override cookie_lifetime initialization if the older prefs (with no UI) are used
+  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
+    cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
+  }
+  prefs->RegisterCallback(cookie_lifetimePref, cookie_LifetimeOptPrefChanged, nsnull);
+
   if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
   }
-  prefs->RegisterCallback(cookie_lifetimeValue, cookie_LifetimeLimitPrefChanged, NULL);
+  prefs->RegisterCallback(cookie_lifetimeValue, cookie_LifetimeLimitPrefChanged, nsnull);
+
+  // Initialize for P3P prefs
+  if (NS_FAILED(prefs->CopyCharPref(cookie_p3pPref, &cookie_P3P))) {
+    cookie_P3P = PL_strdup(cookie_P3P_Default);
+  }
+  prefs->RegisterCallback(cookie_p3pPref, cookie_P3PPrefChanged, nsnull);
 }
 
 PRBool
@@ -479,7 +595,7 @@ COOKIE_GetCookie(char * address) {
 
   /* disable cookies if the user's prefs say so */
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
-    return NULL;
+    return nsnull;
   }
   if (!PL_strncasecmp(address, "https", 5)) {
      isSecure = PR_TRUE;
@@ -487,7 +603,7 @@ COOKIE_GetCookie(char * address) {
 
   /* search for all cookies */
   if (cookie_list == nsnull) {
-    return NULL;
+    return nsnull;
   }
   char *host = CKutil_ParseURL(address, GET_HOST_PART);
   char *path = CKutil_ParseURL(address, GET_PATH_PART);
@@ -561,7 +677,7 @@ COOKIE_GetCookie(char * address) {
   PR_FREEIF(path);
   PR_FREEIF(host);
 
-  /* may be NULL */
+  /* may be nsnull */
   return(rv);
 }
 
@@ -610,6 +726,9 @@ cookie_SameDomain(char * currentHost, char * firstHost) {
 
 PRBool
 cookie_isForeign (char * curURL, char * firstURL) {
+  if (!firstURL) {
+    return PR_FALSE;
+  }
   char * curHost = CKutil_ParseURL(curURL, GET_HOST_PART);
   char * firstHost = CKutil_ParseURL(firstURL, GET_HOST_PART);
   char * curHostColon = 0;
@@ -640,6 +759,41 @@ cookie_isForeign (char * curURL, char * firstURL) {
   return retval;
 }
 
+/*
+ * returns P3P_NoPolicy, P3P_NoConsent, P3P_ImplicitConsent, or P3P_ExplicitConsent
+ * based on site
+ */
+int
+P3P_SitePolicy(char * curURL) {
+  // to be replaced with harishd's routine when available
+  return P3P_ImplicitConsent;
+}
+
+/*
+ * returns P3P_Accept, P3P_Downgrade, or P3P_Reject based on user's preferences
+ */
+int
+cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
+  NS_ASSERTION(policy == P3P_NoPolicy ||
+               policy == P3P_NoConsent ||
+               policy == P3P_ImplicitConsent ||
+               policy == P3P_ExplicitConsent,
+               "invalid value for p3p policy");
+  if (cookie_P3P && PL_strlen(cookie_P3P) == 8) {
+    return (foreign ? cookie_P3P[policy+1] : cookie_P3P[policy]);
+  } else {
+    return P3P_Accept;
+  }
+}
+
+/*
+ * returns P3P_Accept, P3P_Downgrade, or P3P_Reject based on user's preferences
+ */
+int
+cookie_P3PDecision (char * curURL, char * firstURL) {
+  return cookie_P3PUserPref(P3P_SitePolicy(curURL), cookie_isForeign(curURL, firstURL));
+}
+
 /* returns PR_TRUE if authorization is required
 ** 
 **
@@ -648,6 +802,11 @@ cookie_isForeign (char * curURL, char * firstURL) {
 */
 PUBLIC char *
 COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
+
+  if ((cookie_GetBehaviorPref() == PERMISSION_P3P) &&
+      (cookie_P3PDecision(address, firstAddress) == P3P_Reject)) {
+    return nsnull;
+  }
 
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       (!firstAddress || cookie_isForeign(address, firstAddress))) {
@@ -661,7 +820,7 @@ COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
      * have to resort to two prefs
      */
 
-    return NULL;
+    return nsnull;
   }
   return COOKIE_GetCookie(address);
 }
@@ -713,8 +872,8 @@ cookie_Count(char * host) {
 PRIVATE void
 cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, time_t timeToExpire) {
   cookie_CookieStruct * prev_cookie;
-  char *path_from_header=NULL, *host_from_header=NULL;
-  char *name_from_header=NULL, *cookie_from_header=NULL;
+  char *path_from_header=nsnull, *host_from_header=nsnull;
+  char *name_from_header=nsnull, *cookie_from_header=nsnull;
   char *cur_path = CKutil_ParseURL(curURL, GET_PATH_PART);
   char *cur_host = CKutil_ParseURL(curURL, GET_HOST_PART);
   char *semi_colon, *ptr, *equal;
@@ -797,7 +956,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     /* look for a domain */
     ptr = PL_strcasestr(semi_colon, "domain=");
     if(ptr) {
-      char *domain_from_header=NULL;
+      char *domain_from_header=nsnull;
       char *dot, *colon;
       int domain_length, cur_host_length;
 
@@ -872,7 +1031,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
        */
       nsresult rv;
       nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-      if (NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
+      if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
         pref_scd = PR_FALSE;
       }
       if ( pref_scd == PR_TRUE ) {
@@ -895,26 +1054,6 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       isDomain = PR_TRUE;
       // TRACEMSG(("Accepted domain: %s", host_from_header));
       PR_Free(domain_from_header);
-    }
-
-    /* now search for the expires header 
-     * NOTE: that this part of the parsing
-     * destroys the original part of the string
-     */
-    ptr = PL_strcasestr(semi_colon, "expires=");
-    if(ptr) {
-      char *date =  ptr+8;
-      /* terminate the string at the next semi-colon */
-      for(ptr=date; *ptr != '\0'; ptr++) {
-        if(*ptr == ';') {
-          *ptr = '\0';
-          break;
-        }
-      }
-      if(timeToExpire == 0) {
-        timeToExpire = cookie_ParseDate(date);
-      }
-      // TRACEMSG(("Have expires date: %ld", timeToExpire));
     }
   }
   if(!path_from_header) {
@@ -1082,7 +1221,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 
 PUBLIC void
 COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader) {
-  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, 0);
+  COOKIE_SetCookieStringFromHttp(curURL, nsnull, aPrompter, setCookieHeader, 0);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -1094,7 +1233,7 @@ COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 */
 
 PUBLIC void
-COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, char * setCookieHeader, char * server_date) {
+COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date) {
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
@@ -1112,9 +1251,22 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
    *  to based on his preference to deal with foreign cookies. If it's not inline, just set
    *  the cookie.
    */
-  char *ptr=NULL;
+  char *ptr=nsnull;
   time_t gmtCookieExpires=0, expires=0, sDate;
 
+  PRBool downgrade = PR_FALSE;
+
+  /* check to see if P3P pref is satisfied */
+  if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
+    PRInt32 decision = cookie_P3PDecision(curURL, firstURL);
+    if (decision == P3P_Reject) {
+      return;
+    }
+    if (decision == P3P_Downgrade) {
+      downgrade = PR_TRUE;
+    }
+  }
+ 
   /* check for foreign cookie if pref says to reject such */
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       cookie_isForeign(curURL, firstURL)) {
@@ -1130,7 +1282,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
 
   /* Get the time the cookie is supposed to expire according to the attribute*/
   ptr = PL_strcasestr(setCookieHeader, "expires=");
-  if(ptr) {
+  if(ptr && !downgrade) {
     char *date =  ptr+8;
     char origLast = '\0';
     for(ptr=date; *ptr != '\0'; ptr++) {
@@ -1462,11 +1614,11 @@ COOKIE_Enumerate
   if (cookie->expires) {
     /*
      * Cookie expiration times on mac will not be decoded correctly because
-     * they were based on get_current_time() instead of time(NULL) -- see comments in
+     * they were based on get_current_time() instead of time(nsnull) -- see comments in
      * get_current_time.  So we need to adjust for that now in order for the
      * display of the expiration time to be correct
      */
-    expiresTime = cookie->expires + (time(NULL) - get_current_time());
+    expiresTime = cookie->expires + (time(nsnull) - get_current_time());
   }
   // *expires = expiresTime; -- no good no mac, using next line instead
   LL_UI2L(*expires, expiresTime);

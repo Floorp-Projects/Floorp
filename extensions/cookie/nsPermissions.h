@@ -48,7 +48,8 @@
 typedef enum {
   PERMISSION_Accept,
   PERMISSION_DontAcceptForeign,
-  PERMISSION_DontUse
+  PERMISSION_DontUse,
+  PERMISSION_P3P
 } PERMISSION_BehaviorEnum;
 
 class nsIPrompt;
