@@ -19,7 +19,8 @@
 #  Rights Reserved.
 #  
 #  Contributor(s): 
-#    David Hyatt (hyatt@apple.com)
+#    David Hyatt  (hyatt@apple.com)
+#    Dean Tessman (dean_tessman@hotmail.com)
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
@@ -41,18 +42,16 @@
               
   <script type="application/x-javascript" src="chrome://browser/content/pageReport.js"/>
  
-  <description value="&unblockedPopupMsg.label;" collapsed="true" id="unblockedPopupMsg"/>
-
-  <vbox flex="1">
-    <description>
-      &intro.label;
-    </description>
-    <listbox style="height:10em" id="siteBox" onselect="siteSelected();" flex="1"/>
-    <separator class="thin"/>
-    <hbox>
-      <button label="&unblock.label;" id="unblockButton" oncommand="whitelistSite();" disabled="true"/>
-      <spacer flex="1"/>
-      <button dlgtype="accept" label="&done.label;" default="true" oncommand="window.close();"/>
-    </hbox>
-  </vbox>    
- </dialog>
+  <description>
+    &intro.label;
+  </description>
+  <listbox style="height:10em" id="siteBox" onselect="siteSelected();" flex="1"/>
+  <separator class="thin"/>
+  <hbox>
+    <button label="&unblock.label;" id="unblockButton" oncommand="whitelistSite();"
+      disabled="true" accesskey="&unblock.accesskey;"/>
+    <spacer flex="1"/>
+    <button dlgtype="accept" label="&done.label;" default="true"
+      oncommand="window.close();" accesskey="&done.accesskey;"/>
+  </hbox>
+</dialog>

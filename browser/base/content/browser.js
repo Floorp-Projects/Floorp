@@ -2653,7 +2653,7 @@ function displayPageReportFirstTime()
 function displayPageReport()
 {
     window.openDialog("chrome://browser/content/pageReport.xul", "_blank",
-                      "dialog=no,modal");
+                      "dialog,modal,resizable");
 }
 
 function nsBrowserContentListener(toplevelWindow, contentWindow)

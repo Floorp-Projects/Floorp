@@ -17,12 +17,12 @@
 # Rights Reserved.
 # 
 # Contributor(s): 
-#   David Hyatt (hyatt@apple.com)
+#   David Hyatt  (hyatt@apple.com)
+#   Dean Tessman (dean_tessman@hotmail.com)
 
 var gSiteBox;
 var gUnblockButton;
 var gPageReport;
-var gUPMsg;
 
 var permissionmanager =
         Components.classes["@mozilla.org/permissionmanager;1"]
@@ -34,9 +34,15 @@ function onLoad()
   gSiteBox = document.getElementById("siteBox");
   gUnblockButton = document.getElementById("unblockButton");
   gPageReport = opener.gBrowser.pageReport;
-  gUPMsg = document.getElementById("unblockedPopupMsg");
 
   buildSiteBox();
+  // select the first item using a delay, otherwise the listitems
+  // don't paint as selected.
+  setTimeout(selectFirstItem, 0);
+}
+
+function selectFirstItem()
+{
   gSiteBox.selectedIndex = 0;
 }
 
@@ -51,12 +57,8 @@ function buildSiteBox()
       }
     }
 
-    if (found) continue;
-
-    var listitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "listitem");
-    listitem.setAttribute("label", gPageReport[i]);
-    gSiteBox.appendChild(listitem);
+    if (!found)
+      gSiteBox.appendItem(gPageReport[i]);
   }
 }
 
@@ -71,13 +73,22 @@ function whitelistSite()
   if (!selectedItem)
     return;
 
+  var selectedIndex = gSiteBox.getIndexOfItem(selectedItem);
+
   var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
   uri.spec = selectedItem.label;
   permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.ALLOW_ACTION);
   gSiteBox.removeChild(selectedItem);
 
-  // XXXlocalize
-  alert(uri.host + gUPMsg.value);
-  document.documentElement.getButton("accept").focus();
-}
+  if (gSiteBox.getRowCount() == 0) {
+    // close if there are no other sites to whitelist
+    window.close();
+    return;
+  }
 
+  // make sure a site is selected
+  if (selectedIndex > gSiteBox.getRowCount() - 1)
+    selectedIndex -= 1;
+  gSiteBox.selectedIndex = selectedIndex;
+  document.documentElement.getButton("accept").focus()
+}

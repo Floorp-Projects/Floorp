@@ -4,6 +4,7 @@
 unrequested popup windows:">
 
 <!ENTITY done.label "Done">
-<!ENTITY unblock.label "Unblock Site">
+<!ENTITY done.accesskey "D">
 
-<!ENTITY unblockedPopupMsg.label " will now be able to open unrequested popup windows.">
+<!ENTITY unblock.label "Unblock Site">
+<!ENTITY unblock.accesskey "U">
