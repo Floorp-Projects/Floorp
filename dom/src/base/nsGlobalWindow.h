@@ -258,6 +258,8 @@ protected:
                        PRBool searchInFrames, PRBool showDialog, 
                        PRBool *aReturn);
 
+  nsresult ConvertCharset(const nsAString& aStr, char** aDest);
+
 protected:
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
