@@ -233,8 +233,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 			rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
 			if (NS_SUCCEEDED(rv) && newsGroupInfo)
 			{
-				nsAutoString knownArtsString (eOneByte);
-                nsMsgKey mark;
+				nsAutoString knownArtsString(eOneByte);
+                		nsMsgKey mark;
 				newsGroupInfo->GetKnownArtsSet(&knownArtsString);
                 
                 rv = newsGroupInfo->GetHighWater(&mark);

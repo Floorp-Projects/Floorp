@@ -219,7 +219,7 @@ nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri)
 		return NS_ERROR_NULL_POINTER;
   // need to convert news://hostname/.. to news_message://hostname/..
 
-  nsAutoString tailURI(baseURI, eOneByte);
+  nsCString tailURI(baseURI);
 
   // chop off news:/
 #if 0

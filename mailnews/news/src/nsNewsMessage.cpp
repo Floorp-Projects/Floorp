@@ -74,7 +74,8 @@ nsresult nsNewsMessage::GetFolderFromURI(nsIMsgFolder **folder)
 		nsString messageFolderURIStr;
 		nsMsgKey key;
 		nsParseNewsMessageURI(uri, messageFolderURIStr, &key);
-		nsAutoString folderOnly, folderURIStr (eOneByte);
+		nsString folderOnly(eOneByte);
+		nsString folderURIStr(eOneByte);
 
 		if (messageFolderURIStr.Find(kNewsMessageRootURI) != ((PRInt32)-1))			{
 			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() - kNewsMessageRootURILen);
