@@ -186,10 +186,7 @@ public:
     nsresult rv;
     nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
-    {
-      nsCAutoString temp(aText, aTextLen);
-      textToSubURI->UnEscapeAndConvert("UTF-8", temp.get(), getter_Copies(text));
-    }
+      textToSubURI->UnEscapeAndConvert("UTF-8",  PromiseFlatCString(Substring(aText, aText + aTextLen)).get(), getter_Copies(text));
   }
   ~searchTerm() {
     MOZ_COUNT_DTOR(searchTerm);
@@ -344,10 +341,8 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   // this saves us from recalculating this stuff on every row
   if (!matchSearchTerm->haveClosure) {
     PRInt32 err;
-    // nsXPIDLString doesn't have a ToInteger
-    // so convert it to an nsAutoString
-    nsAutoString temp(term->text);
-    matchSearchTerm->intValue =  temp.ToInteger(&err);
+    // Need to create an nsAutoString to use ToInteger
+    matchSearchTerm->intValue =  nsAutoString(term->text).ToInteger(&err);
     matchSearchTerm->now = NormalizeTime(PR_Now());
     if (err != 0) return PR_FALSE;
     matchSearchTerm->haveClosure = PR_TRUE;
