@@ -42,7 +42,7 @@ $db_user = "";
 $db_pass = "";
 $db_name = "";
 
-// map the mysql t_main.type enum into the right type
+// map the mysql main.type enum into the right type
 $ext_typemap = array('T' => 'theme',
                      'E' => 'extension',
                      'P' => 'plugin');
@@ -125,11 +125,14 @@ if ($reqVersion == 1) {
         !array_key_exists('appVersion', $_GET))
         bail ("Invalid request.");
 
-    $reqItemGuid = $_GET['id'];
-    $reqItemVersion = $_GET['version'];
-    $reqItemMaxAppVersion = $_GET['maxAppVersion'];
-    $reqTargetAppGuid = $_GET['appID'];
-    $reqTargetAppVersion = $_GET['appVersion'];
+    $reqItemGuid          = mysql_real_escape_string($_GET['id']);
+    $reqItemVersion       = mysql_real_escape_string($_GET['version']);
+    $reqItemMaxAppVersion = mysql_real_escape_string($_GET['maxAppVersion']);
+    $reqTargetAppGuid     = mysql_real_escape_string($_GET['appID']);
+    $reqTargetAppVersion  = mysql_real_escape_string($_GET['appVersion']);
+
+    // For backwards compatibility, not required.
+    $reqTargetOS = mysql_real_escape_string($_GET['appOS']);
 } else {
     // bail
     bail ("Bad request version received");
@@ -156,6 +159,7 @@ mysql_select_db ($db_name)
 //  - $reqItemVersion
 //  - $reqTargetAppGuid
 //  - $reqTargetAppVersion
+//  - $reqTargetOS
 //
 // We need to get:
 //  - extension GUID
@@ -165,21 +169,75 @@ mysql_select_db ($db_name)
 //  - app min version
 //  - app max version
 
-$query = "SELECT t_main.guid AS extguid,
-                 t_main.type AS exttype,
-                 t_version.version AS extversion,
-                 t_version.uri AS exturi,
-                 t_version.minappver AS appminver,
-                 t_version.maxappver AS appmaxver,
-                 t_applications.guid AS appguid
-          FROM t_main, t_version, t_applications
-          WHERE t_main.guid = '" . mysql_real_escape_string($reqItemGuid) . "' AND
-                t_main.id = t_version.id AND
-                t_version.appid = t_applications.appid AND
-                t_version.approved = 'YES' AND
-                t_applications.guid = '" . mysql_real_escape_string($reqTargetAppGuid) . "'";
+/* os from UMO database
+1 	ALL
+2 	Linux
+3 	MacOSX
+4 	BSD
+5 	Solaris
+6 	Windows
+*/
 
-$result = mysql_query ($query);
+$osid = 0;
+
+/* If we do not get the OS from the URI, try the UA */
+
+if ( ( $reqTargetOS == 'Linux' )
+  || ( strpos(getenv("HTTP_USER_AGENT"),"Linux") > 0 ) 
+   )
+{
+  $osid = 2;
+}
+if ( ( $reqTargetOS == 'Darwin' )
+  || ( strpos(getenv("HTTP_USER_AGENT"),"MAC") > 0 ) 
+   )
+{
+  $osid = 3;
+}
+if ( ( $reqTargetOS == 'BSD_OS' )
+  || ( strpos(getenv("HTTP_USER_AGENT"),"BSD") > 0 ) 
+   )
+{
+  $osid = 4;
+}
+if ( ( $reqTargetOS == 'SunOS' ) 
+  || ( strpos(getenv("HTTP_USER_AGENT"),"SOLARIS") > 0 ) 
+   )
+{
+  $osid = 5;
+}
+if ( ( $reqTargetOS == 'WINNT' )
+  || ( strpos(getenv("HTTP_USER_AGENT"),"WIN") > 0 ) 
+   )
+{
+  $osid = 6;
+}
+
+$query = 
+"SELECT main.guid AS extguid,
+        version.version AS extversion,
+        version.uri AS exturi,
+        version.minappver AS appminver,
+        version.maxappver AS appmaxver,
+        applications.guid AS appguid
+ FROM main
+   INNER JOIN version ON main.id = version.id
+   INNER JOIN applications ON version.appid = applications.appid ";
+
+/* We want to filter the results so that only OS=ALL and OS specific
+results show up. */
+
+$where = " WHERE main.guid = '" . $reqItemGuid . "' 
+             AND applications.guid = '" . $reqTargetAppGuid . "'
+             AND (version.OSID = 1 OR version.OSID = " . $osid . ")";
+
+/* Sort the result set so that the greatest OS Specific is the last one
+at each level. */
+
+$order = " ORDER BY version.MaxAppVer_int DESC, version.version 
+DESC, version.osid DESC";
+
+$result = mysql_query ($query . $where . $order);
 
 if (!$result) {
     bail ('Query error: ' . mysql_error());
@@ -187,33 +245,30 @@ if (!$result) {
 
 // info for this version
 $thisVersionData = '';
+
 // info for highest version
-$highestVersion = '';
 $highestVersionData = '';
 
 $itemType = '';
 
 while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) {
-    if (empty($itemType)) {
-        $itemType = $ext_typemap[$line['exttype']];
-    }
+  if (empty($itemType)) {
+    $itemType = $ext_typemap[$line['exttype']];
+  }
 
-    // is this row for the current version?
-    if ($line['extversion'] == $reqItemVersion) {
-        $thisVersionData = $line;
-    } else if (vercmp ($reqItemVersion, $line['extversion']) > 0) {
-        // did we already see an update with a higher version than this?
-        if ($highestVersion != '' && vercmp ($highestVersion, $line['extversion']) < 0)
-            continue;
+  // Do we already have the current or a newer one?
+  if (vercmp($line['extversion'], $reqItemVersion) <= 0 {
+    $thisVersionData = $line;
+    break;
+  }
 
-        // does this update support my current app version?
-        if (vercmp($line['appmaxver'], $reqTargetAppVersion) > 0 ||
-            vercmp($reqTargetAppVersion, $line['appminver']) > 0)
-            continue;
-
-        $highestVersion = $line['extversion'];
-        $highestVersionData = $line;
-    }
+  // Is this one compatible?
+  if (vercmp($line['appmaxver'], $reqTargetAppVersion) >= 0 &&
+      vercmp($line['appminver'], $reqTargetAppVersion) <= 0) {
+    $highestVersionData = $line;
+    break;
+  }
+  // Keep going until we find one that is
 }
 
 mysql_free_result ($result);
