@@ -44,7 +44,7 @@ function OpenURL(url)
     <xul:command name="nsCmd:ForwardMessage" onCommand="window.forwardmessage();"/>
     <xul:command name="nsCmd:DeleteMessage" onCommand="window.deletemessage();"/>
     <xul:command name="nsCmd:LoadURL1" onCommand="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
-    <xul:command name="nsCmd:LoadURL2" onCommand="OpenURL();"/>
+    <xul:command name="nsCmd:LoadURL2" onCommand="OpenURL('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
     <xul:command name="nsCmd:LoadURL3" onCommand="OpenURL();"/>
     <xul:command name="nsCmd:LoadURL4" onCommand="OpenURL();"/>
   </xul:commands>
