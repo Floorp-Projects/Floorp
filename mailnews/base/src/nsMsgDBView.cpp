@@ -4871,9 +4871,6 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
     if (aSucceeded)
     {
 
-      //freeze selection.
-      mOutlinerSelection->SetSelectEventsSuppressed(PR_TRUE);
-
       PRInt32 selectionCount; 
       //selection count cannot be zero, we would not be here
       mOutlinerSelection->GetRangeCount(&selectionCount);  
@@ -4896,9 +4893,6 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
         // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
         NoteChange(startRangeArray[i], -numRows, nsMsgViewNotificationCode::insertOrDelete);
       }
-
-      //unfreeze selection.
-      mOutlinerSelection->SetSelectEventsSuppressed(PR_FALSE);
 
       PR_FREEIF(startRangeArray);
       PR_FREEIF(endRangeArray);
