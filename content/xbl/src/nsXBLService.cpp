@@ -1223,14 +1223,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup);
   if (NS_FAILED(rv)) return rv;
 
-  // Call StartDocumentLoad
-  nsCOMPtr<nsIStreamListener> listener;
-  if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", channel, 
-                                               loadGroup, nsnull, getter_AddRefs(listener)))) {
-    NS_ERROR("Failure to init XBL doc prior to load.");
-    return rv;
-  }
-
   nsCOMPtr<nsIAtom> tagName;
   if (aBoundElement)
     aBoundElement->GetTag(*getter_AddRefs(tagName)); 
@@ -1238,10 +1230,20 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (tagName.get() == kScrollbarAtom || IsResourceURI(aURI))
     aForceSyncLoad = PR_TRUE;
 
-  if (!aForceSyncLoad) {
+  nsCOMPtr<nsIStreamListener> listener;
+  if(!aForceSyncLoad) {
+    if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
+                                                 channel, 
+                                                 loadGroup, 
+                                                 nsnull, 
+                                                 getter_AddRefs(listener)))) {
+      NS_ERROR("Failure to init XBL doc prior to load.");
+      return rv;
+    }
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
-    
+    NS_ENSURE_TRUE(xblListener,NS_ERROR_OUT_OF_MEMORY);
+
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
     rec->AddEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
 
@@ -1266,25 +1268,33 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   // Now do a blocking synchronous parse of the file.
   nsCOMPtr<nsIInputStream> in;
-  PRUint32 sourceOffset = 0;
   rv = channel->Open(getter_AddRefs(in));
 
   // If we couldn't open the channel, then just return.
   if (NS_FAILED(rv)) return NS_OK;
-  
-  request = do_QueryInterface(channel);
-  
-  NS_ASSERTION(request != nsnull, "no request info");
-  
-  NS_ASSERTION(in != nsnull, "no input stream");
-  if (! in) return NS_ERROR_FAILURE;
 
-  rv = NS_ERROR_OUT_OF_MEMORY;
+  request = do_QueryInterface(channel);
+
+  NS_ASSERTION(request != nsnull, "no request info");
+  NS_ASSERTION(in != nsnull, "no input stream");
+  
+  NS_ENSURE_TRUE(in,NS_ERROR_FAILURE);
+
   nsProxyStream* proxy = new nsProxyStream();
-  if (! proxy)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(proxy,NS_ERROR_OUT_OF_MEMORY);
+
+  // Call StartDocumentLoad
+  if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
+                                               channel, 
+                                               loadGroup, 
+                                               nsnull, 
+                                               getter_AddRefs(listener)))) {
+    NS_ERROR("Failure to init XBL doc prior to load.");
+    return rv;
+  }
 
   listener->OnStartRequest(request, nsnull);
+  
   while (PR_TRUE) {
     char buf[1024];
     PRUint32 readCount;
@@ -1297,6 +1307,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
     proxy->SetBuffer(buf, readCount);
 
+    PRUint32 sourceOffset = 0;
     rv = listener->OnDataAvailable(request, nsnull, proxy, sourceOffset, readCount);
     sourceOffset += readCount;
     if (NS_FAILED(rv))
