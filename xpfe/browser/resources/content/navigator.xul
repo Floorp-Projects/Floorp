@@ -442,6 +442,7 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&xptk8Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/beeptest.html'"/>
         <menuitem value="&xptk9Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/soundtest.html'"/>
         <menuitem value="&xptk10Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
+        <menuitem value="&xptk11Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/colorpicker.xul'"/>
        </menupopup>
 	  </menu>
      </menupopup>
