@@ -141,6 +141,24 @@ inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
  */
 NS_HIDDEN_(PRBool) net_FilterURIString(const char *str, nsACString& result);
 
+#if defined(XP_WIN) || defined(XP_OS2)
+/**
+ * On Win32 and OS/2 system's a back-slash in a file:// URL is equivalent to a
+ * forward-slash.  This function maps any back-slashes to forward-slashes.
+ *
+ * @param aURL
+ *        The URL string to normalize (UTF-8 encoded).  This can be a
+ *        relative URL segment.
+ * @param aResultBuf 
+ *        The resulting string is appended to this string.  If the input URL
+ *        is already normalized, then aResultBuf is unchanged.
+ *
+ * @returns false if aURL is already normalized.  Otherwise, returns true.
+ */
+NS_HIDDEN_(PRBool) net_NormalizeFileURL(const nsACString &aURL,
+                                        nsCString &aResultBuf);
+#endif
+
 /*****************************************************************************
  * generic string routines follow (XXX move to someplace more generic).
  */

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -574,6 +575,36 @@ net_FilterURIString(const char *str, nsACString& result)
 
     return writing;
 }
+
+#if defined(XP_WIN) || defined(XP_OS2)
+PRBool
+net_NormalizeFileURL(const nsACString &aURL, nsCString &aResultBuf)
+{
+    PRBool writing = PR_FALSE;
+
+    nsACString::const_iterator beginIter, endIter;
+    aURL.BeginReading(beginIter);
+    aURL.EndReading(endIter);
+
+    const char *begin = beginIter.get();
+
+    for (const char *s = begin; s != endIter.get(); ++s)
+    {
+        if (*s == '\\')
+        {
+            writing = PR_TRUE;
+            if (s > begin)
+                aResultBuf.Append(begin, s - begin);
+            aResultBuf += '/';
+            begin = s + 1;
+        }
+    }
+    if (writing && s > begin)
+        aResultBuf.Append(begin, s - begin);
+
+    return writing;
+}
+#endif
 
 //----------------------------------------------------------------------------
 // miscellaneous (i.e., stuff that should really be elsewhere)
