@@ -47,6 +47,9 @@
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
+#include "nsIDOMNSHTMLFrameElement.h"
+#include "nsIChromeEventHandler.h"
+#include "nsIFrameLoader.h"
 
 #include "nsIStatefulFrame.h"
 
@@ -874,6 +877,56 @@ protected:
 
   /** The form that contains this control */
   nsIForm* mForm;
+};
+
+//----------------------------------------------------------------------
+
+/**
+ * A helper class for frame elements
+ */
+
+class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
+                                  public nsIDOMNSHTMLFrameElement,
+                                  public nsIChromeEventHandler,
+                                  public nsIFrameLoaderOwner
+{
+public:
+  nsGenericHTMLFrameElement();
+  virtual ~nsGenericHTMLFrameElement();
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIDOMNSHTMLFrameElement
+  NS_DECL_NSIDOMNSHTMLFRAMEELEMENT
+
+  // nsIChromeEventHandler
+  NS_DECL_NSICHROMEEVENTHANDLER
+
+  // nsIFrameLoaderOwner
+  NS_IMETHOD GetFrameLoader(nsIFrameLoader **aFrameLoader);
+  NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
+
+  // nsIContent
+  virtual void SetParent(nsIContent *aParent);
+  virtual void SetDocument(nsIDocument *aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+
+protected:
+  // This doesn't really ensure a frame loade in all cases, only when
+  // it makes sense.
+  nsresult EnsureFrameLoader();
+  nsresult LoadSrc();
+  nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
+
+  nsCOMPtr<nsIFrameLoader> mFrameLoader;
 };
 
 //----------------------------------------------------------------------

@@ -36,26 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLFrameElement.h"
-#include "nsIDOMNSHTMLFrameElement.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIWebNavigation.h"
-#include "nsIChromeEventHandler.h"
-#include "nsIDocShell.h"
 #include "nsDOMError.h"
 
 
-class nsHTMLFrameElement : public nsGenericHTMLElement,
-                           public nsIDOMHTMLFrameElement,
-                           public nsIDOMNSHTMLFrameElement,
-                           public nsIChromeEventHandler
+class nsHTMLFrameElement : public nsGenericHTMLFrameElement,
+                           public nsIDOMHTMLFrameElement
 {
 public:
   nsHTMLFrameElement();
@@ -65,29 +56,25 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFrameElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFrameElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFrameElement::)
 
   // nsIDOMHTMLFrameElement
   NS_DECL_NSIDOMHTMLFRAMEELEMENT
 
-  // nsIDOMNSHTMLFrameElement
-  NS_DECL_NSIDOMNSHTMLFRAMEELEMENT
-
-  // nsIChromeEventHandler
-  NS_DECL_NSICHROMEEVENTHANDLER
-
+  // nsIContent
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
+  
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
@@ -133,10 +120,8 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFrameElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement, nsGenericHTMLElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement, nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -183,45 +168,7 @@ NS_IMPL_URI_ATTR(nsHTMLFrameElement, Src, src)
 NS_IMETHODIMP
 nsHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
-  NS_ENSURE_ARG_POINTER(aContentDocument);
-  *aContentDocument = nsnull;
-
-  if (!mDocument) {
-    return NS_OK;
-  }
-
-  nsIDocument* content_document = mDocument->GetSubDocumentFor(this);
-
-  if (!content_document) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(content_document, aContentDocument);
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
-{
-  NS_ENSURE_ARG_POINTER(aContentWindow);
-  *aContentWindow = nsnull;
-
-  nsCOMPtr<nsIDOMDocument> content_doc;
-
-  nsresult rv = GetContentDocument(getter_AddRefs(content_doc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(content_doc));
-
-  if (!doc) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMWindow> window (do_QueryInterface(doc->GetScriptGlobalObject()));
-
-  *aContentWindow = window;
-  NS_IF_ADDREF(*aContentWindow);
-
-  return NS_OK;
+  return nsGenericHTMLFrameElement::GetContentDocument(aContentDocument);
 }
 
 PRBool
@@ -230,7 +177,7 @@ nsHTMLFrameElement::ParseAttribute(nsIAtom* aAttribute,
                                    nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, nsGenericHTMLFrameElement::GetOwnerDocument());
   }
   if (aAttribute == nsHTMLAtoms::frameborder) {
     return ParseFrameborderValue(aValue, aResult);
@@ -245,7 +192,7 @@ nsHTMLFrameElement::ParseAttribute(nsIAtom* aAttribute,
     return ParseScrollingValue(aValue, aResult);
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLFrameElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
@@ -262,7 +209,8 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
+  return nsGenericHTMLFrameElement::AttributeToString(aAttribute, aValue,
+                                                      aResult);
 }
 
 static void
@@ -290,19 +238,3 @@ nsHTMLFrameElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
   aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
-
-
-//*****************************************************************************
-// nsHTMLFrameElement::nsIChromeEventHandler
-//*****************************************************************************   
-
-NS_IMETHODIMP
-nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
-                                      nsEvent* aEvent,
-                                      nsIDOMEvent** aDOMEvent,
-                                      PRUint32 aFlags, 
-                                      nsEventStatus* aEventStatus)
-{
-  return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
-}
-

@@ -36,30 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLIFrameElement.h"
-#include "nsIDOMNSHTMLFrameElement.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIFrameLoader.h"
+#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIWebNavigation.h"
 #include "nsMappedAttributes.h"
-#include "nsIChromeEventHandler.h"
 #include "nsDOMError.h"
 #include "nsRuleNode.h"
-#include "nsIDocShell.h"
-#include "nsIInterfaceRequestorUtils.h"
 
-class nsHTMLIFrameElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLIFrameElement,
-                            public nsIDOMNSHTMLFrameElement,
-                            public nsIChromeEventHandler,
-                            public nsIFrameLoaderOwner
+class nsHTMLIFrameElement : public nsGenericHTMLFrameElement,
+                            public nsIDOMHTMLIFrameElement
 {
 public:
   nsHTMLIFrameElement();
@@ -69,68 +57,27 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFrameElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFrameElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFrameElement::)
 
   // nsIDOMHTMLIFrameElement
   NS_DECL_NSIDOMHTMLIFRAMEELEMENT
 
-  // nsIDOMNSHTMLFrameElement
-  NS_DECL_NSIDOMNSHTMLFRAMEELEMENT
-
-  // nsIChromeEventHandler
-  NS_DECL_NSICHROMEEVENTHANDLER
-
-  // nsIFrameLoaderOwner
-  NS_IMETHOD GetFrameLoader(nsIFrameLoader **aFrameLoader);
-  NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
-
   // nsIContent
-  virtual void SetParent(nsIContent *aParent);
-  virtual void SetDocument(nsIDocument *aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
-
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify)
-  {
-    nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                                aValue, aNotify);
-
-    if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
-        aName == nsHTMLAtoms::src) {
-      return LoadSrc();
-    }
-
-    return rv;
-  }
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-
-protected:
-  // This doesn't really ensure a frame loade in all cases, only when
-  // it makes sense.
-  nsresult EnsureFrameLoader();
-  nsresult LoadSrc();
-
-  nsCOMPtr<nsIFrameLoader> mFrameLoader;
 };
 
 nsresult
@@ -166,9 +113,6 @@ nsHTMLIFrameElement::nsHTMLIFrameElement()
 
 nsHTMLIFrameElement::~nsHTMLIFrameElement()
 {
-  if (mFrameLoader) {
-    mFrameLoader->Destroy();
-  }
 }
 
 
@@ -176,11 +120,8 @@ NS_IMPL_ADDREF(nsHTMLIFrameElement)
 NS_IMPL_RELEASE(nsHTMLIFrameElement)
 
 // QueryInterface implementation for nsHTMLIFrameElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement, nsGenericHTMLElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement, nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLIFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLIFrameElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -227,139 +168,7 @@ NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width)
 NS_IMETHODIMP
 nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
-  NS_ENSURE_ARG_POINTER(aContentDocument);
-  *aContentDocument = nsnull;
-
-  nsresult rv = EnsureFrameLoader();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mFrameLoader) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocShell> doc_shell;
-  mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
-
-  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(doc_shell));
-
-  if (!win) {
-    return NS_OK;
-  }
-
-  return win->GetDocument(aContentDocument);
-}
-
-NS_IMETHODIMP
-nsHTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
-{
-  NS_ENSURE_ARG_POINTER(aContentWindow);
-
-  nsresult rv = EnsureFrameLoader();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mFrameLoader) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocShell> doc_shell;
-  mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
-
-  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(doc_shell));
-
-  *aContentWindow = win;
-  NS_IF_ADDREF(*aContentWindow);
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLIFrameElement::EnsureFrameLoader()
-{
-  if (!GetParent() || !mDocument || mFrameLoader) {
-    // If frame loader is there, we just keep it around, cached
-    return NS_OK;
-  }
-
-  nsresult rv = NS_NewFrameLoader(getter_AddRefs(mFrameLoader));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mFrameLoader->Init(this);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLIFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
-{
-  *aFrameLoader = mFrameLoader;
-  NS_IF_ADDREF(*aFrameLoader);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLIFrameElement::SetFrameLoader(nsIFrameLoader *aFrameLoader)
-{
-  mFrameLoader = aFrameLoader;
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLIFrameElement::LoadSrc()
-{
-  nsresult rv = EnsureFrameLoader();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mFrameLoader) {
-    return NS_OK;
-  }
-
-  rv = mFrameLoader->LoadFrame();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
-
-  return rv;
-}
-
-
-void
-nsHTMLIFrameElement::SetParent(nsIContent *aParent)
-{
-  nsGenericHTMLElement::SetParent(aParent);
-
-  // When parent is being set to null on the element's destruction, do not
-  // call LoadSrc().
-  if (!GetParent() || !mDocument) {
-    return;
-  }
-
-  LoadSrc();
-}
-
-void
-nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
-                                 PRBool aCompileEventHandlers)
-{
-  const nsIDocument *old_doc = mDocument;
-
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep,
-                                    aCompileEventHandlers);
-
-  if (!aDocument && mFrameLoader) {
-    // This iframe is being taken out of the document, destroy the
-    // iframe's frame loader (doing that will tear down the window in
-    // this iframe).
-
-    mFrameLoader->Destroy();
-
-    mFrameLoader = nsnull;
-  }
-
-  // When document is being set to null on the element's destruction,
-  // or when the document is being set to what the document already
-  // is, do not call LoadSrc().
-  if (GetParent() && aDocument && aDocument != old_doc) {
-    LoadSrc();
-  }
+  return nsGenericHTMLFrameElement::GetContentDocument(aContentDocument);
 }
 
 PRBool
@@ -389,7 +198,7 @@ nsHTMLIFrameElement::ParseAttribute(nsIAtom* aAttribute,
     return ParseAlignValue(aValue, aResult);
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLFrameElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
@@ -412,7 +221,8 @@ nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
+  return nsGenericHTMLFrameElement::AttributeToString(aAttribute, aValue,
+                                                      aResult);
 }
 
 static void
@@ -494,20 +304,5 @@ nsHTMLIFrameElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMap
 {
   aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
-}
-
-
-//*****************************************************************************
-// nsHTMLIFrameElement::nsIChromeEventHandler
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsHTMLIFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
-                                       nsEvent* aEvent,
-                                       nsIDOMEvent** aDOMEvent,
-                                       PRUint32 aFlags,
-                                       nsEventStatus* aEventStatus)
-{
-   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
 }
 
