@@ -504,6 +504,9 @@ public class Codegen extends Interpreter {
                             "[Ljava/lang/Object;)Ljava/lang/Object;",
                            1, false, true);
             generatePrologue(cx, tree, false, -1);
+            Object linenum = tree.getProp(Node.END_LINENO_PROP);
+            if (linenum != null)
+              classFile.addLineNumberEntry(((Integer) linenum).shortValue());
             tree.addChildToBack(new Node(TokenStream.RETURN));
             codegenBase = tree;
         }

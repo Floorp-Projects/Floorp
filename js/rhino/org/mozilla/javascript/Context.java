@@ -1758,11 +1758,16 @@ public final class Context {
         return errorCount == 0 ? result : null;
     }
 
-    /**
-     * A bit of a hack, but the only way to get filename and line
-     * number from an enclosing frame.
-     */
     static String getSourcePositionFromStack(int[] linep) {
+        Context cx = getCurrentContext();
+        if (cx.interpreterLine > 0 && cx.interpreterSourceFile != null) {
+            linep[0] = cx.interpreterLine;
+            return cx.interpreterSourceFile;
+        }
+        /**
+         * A bit of a hack, but the only way to get filename and line
+         * number from an enclosing frame.
+         */
         CharArrayWriter writer = new CharArrayWriter();
         RuntimeException re = new RuntimeException();
         re.printStackTrace(new PrintWriter(writer));
@@ -1794,12 +1799,6 @@ public final class Context {
             }
         }
 
-        // Not found; so we should try the interpreter data.
-        Context cx = getCurrentContext();
-        if (cx.interpreterLine > 0 && cx.interpreterSourceFile != null) {
-            linep[0] = cx.interpreterLine;
-            return cx.interpreterSourceFile;
-        }
         return null;
     }
 
@@ -1925,7 +1924,7 @@ public final class Context {
     private static Hashtable threadContexts = new Hashtable(11);
     private RegExpProxy regExpProxy;
     private Locale locale;
-    private boolean generatingDebug;
+    private boolean generatingDebug=true;
     private boolean generatingSource=true;
     private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
