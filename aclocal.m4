@@ -7,6 +7,7 @@ builtin(include, build/autoconf/glib.m4)dnl
 builtin(include, build/autoconf/gtk.m4)dnl
 builtin(include, build/autoconf/gdk-pixbuf.m4)dnl
 builtin(include, build/autoconf/libIDL.m4)dnl
+builtin(include, build/autoconf/nspr.m4)dnl
 dnl
 define(MOZ_TOPSRCDIR,.)dnl MOZ_TOPSRCDIR is used in altoptions.m4
 builtin(include, build/autoconf/altoptions.m4)dnl
