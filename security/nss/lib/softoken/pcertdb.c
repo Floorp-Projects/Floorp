@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.37 2002/11/26 07:07:20 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.38 2002/11/26 18:27:25 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2270,22 +2270,6 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 	PORT_SetError(SEC_ERROR_BAD_DATABASE);
 	goto loser;
     }
-    if (eaddrlen == 0 && dbentry->len > stdlen+1) {
-	/* verify the email addr extensions lengths are valid */
-	unsigned int totalLen = stdlen;
-	tmpbuf = &dbentry->data[stdlen];
-	nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
-	totalLen += 2;
-	for (i=0; i < nemailAddrs && totalLen+1 < dbentry->len; i++) {
-	    unsigned int nameLen = tmpbuf[0] << 8 | tmpbuf[1];
-	    tmpbuf += 2 + nameLen;
-	    totalLen += 2 + nameLen;
-	}
-	if (dbentry->len > totalLen) {
-	    PORT_SetError(SEC_ERROR_BAD_DATABASE);
-	    goto loser;
-	}
-    }
     
     entry->certKeys = (SECItem *)PORT_ArenaAlloc(arena,
 						 sizeof(SECItem) * ncerts);
@@ -2352,7 +2336,7 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     }
     
     /* is database entry correct length? */
-    if ( len != dbentry->len ){
+    if ( len > dbentry->len ){
 	PORT_SetError(SEC_ERROR_BAD_DATABASE);
 	goto loser;
     }
@@ -2383,7 +2367,7 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     end = &dbentry->data[dbentry->len];
     if ((eaddrlen == 0) && (tmpbuf+1 < end)) {
 	/* read in the additional email addresses */
-	entry->nemailAddrs = nemailAddrs;
+	entry->nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
 	entry->emailAddrs = (char **)
 		PORT_ArenaAlloc(arena, nemailAddrs * sizeof(char *));
 	if (entry->emailAddrs == NULL) {
@@ -2477,13 +2461,10 @@ NewDBSubjectEntry(SECItem *derSubject, SECItem *certKey,
 	    PORT_Free(emailAddr);
 	    goto loser;
 	}
-	entry->emailAddrs[0] = (char *)PORT_ArenaAlloc(arena, eaddrlen);
 	entry->emailAddrs[0] = PORT_ArenaStrdup(arena,emailAddr);
 	if (entry->emailAddrs[0]) {
 	    entry->nemailAddrs = 1;
-	} else {
-	    entry->emailAddrs[0] = NULL;
-	}
+	} 
 	
 	PORT_Free(emailAddr);
     } else {
@@ -2666,7 +2647,7 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 {
     PRBool save = PR_FALSE, delold = PR_FALSE;
     certDBEntrySubject *entry = NULL;
-    int index,i;
+    int index = -1, i;
     SECStatus rv;
    
     if (emailAddr) { 
@@ -2679,6 +2660,8 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
     entry = ReadDBSubjectEntry(dbhandle,derSubject);    
     if (entry == NULL) {
 	goto loser;
+    } else {
+	return SECSuccess;
     }
 
     if ( entry->emailAddrs ) {
