@@ -44,12 +44,14 @@ sub _initialize {
         if ($self->{schema}{$table}{INDEXES}) {
             foreach my $index (@{ $self->{schema}{$table}{INDEXES} }) {
                 if (ref($index) eq 'HASH') {
-                    delete($index->{TYPE}) if ($index->{TYPE} eq 'FULLTEXT');
+                    delete($index->{TYPE}) if (exists $index->{TYPE} 
+                        && $index->{TYPE} eq 'FULLTEXT');
                 }
             }
             foreach my $index (@{ $self->{abstract_schema}{$table}{INDEXES} }) {
                 if (ref($index) eq 'HASH') {
-                    delete($index->{TYPE}) if ($index->{TYPE} eq 'FULLTEXT');
+                    delete($index->{TYPE}) if (exists $index->{TYPE} 
+                        && $index->{TYPE} eq 'FULLTEXT');
                 }
             }
         }
@@ -85,5 +87,39 @@ sub _initialize {
     return $self;
 
 } #eosub--_initialize
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+# Overridden because Pg has such weird ALTER TABLE problems.
+sub get_add_column_ddl {
+    my ($self, $table, $column, $definition) = @_;
+
+    my @statements;
+    my $specific = $self->{db_specific};
+
+    my $type = $definition->{TYPE};
+    $type = $specific->{$type} if exists $specific->{$type};
+    push(@statements, "ALTER TABLE $table ADD COLUMN $column $type");
+
+    my $default = $definition->{DEFAULT};
+    # Replace any abstract default value (such as 'TRUE' or 'FALSE')
+    # with its database-specific implementation.
+    if (defined $default) {
+        $default = $specific->{$default} if exists $specific->{$default};
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
+                         . " SET DEFAULT $default");
+    }
+
+    if ($definition->{NOTNULL}) {
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
+                         . " SET NOT NULL");
+    }
+
+    if ($definition->{PRIMARYKEY}) {
+         push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
+                         . " SET ADD PRIMARY KEY");
+    }
+
+    return @statements;
+}
+
 1;

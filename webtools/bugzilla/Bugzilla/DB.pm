@@ -323,6 +323,31 @@ sub bz_setup_database {
 # Schema Modification Methods
 #####################################################################
 
+sub bz_add_column {
+    my ($self, $table, $name, $new_def) = @_;
+
+    # You can't add a NOT NULL column to a table with
+    # no DEFAULT statement.
+    if ($new_def->{NOTNULL} && !exists $new_def->{DEFAULT}) {
+        die "Failed adding the column ${table}.${name}:\n  You cannot add"
+            . " a NOT NULL column with no default to an existing table.\n";
+    }
+
+    my $current_def = $self->bz_column_info($table, $name);
+
+    if (!$current_def) {
+        my @statements = $self->_bz_real_schema->get_add_column_ddl(
+            $table, $name, $new_def);
+        print "Adding new column $name to table $table ...\n";
+        foreach my $sql (@statements) {
+            $self->do($sql);
+        }
+        $self->_bz_real_schema->set_column($table, $name, $new_def);
+        $self->_bz_store_real_schema;
+    }
+}
+
+
 # XXX - Need to make this cross-db compatible
 # XXX - This shouldn't print stuff to stdout
 sub bz_add_field ($$$) {
@@ -617,8 +642,11 @@ sub _bz_init_schema_storage {
         print "Initializing the new Schema storage...\n";
         my $store_me = $self->_bz_schema->serialize_abstract();
         my $schema_version = $self->_bz_schema->SCHEMA_VERSION;
-        $self->do("INSERT INTO bz_schema (schema_data, version) VALUES (?,?)",
-                  undef, ($store_me, $schema_version));
+        my $sth = $self->prepare("INSERT INTO bz_schema "
+                                 ." (schema_data, version) VALUES (?,?)");
+        $sth->bind_param(1, $store_me, $self->BLOB_TYPE);
+        $sth->bind_param(2, Bugzilla::DB::Schema::SCHEMA_VERSION);
+        $sth->execute();
     } 
     # Sanity check
     elsif ($table_size > 1) {
@@ -650,7 +678,7 @@ sub _bz_real_schema {
     # XXX - Should I do the undef check here instead of in checksetup?
 
     $self->{private_real_schema} = 
-        _bz_schema->deserialize_abstract($data, $version);
+        $self->_bz_schema->deserialize_abstract($data, $version);
 
     return $self->{private_real_schema};
 }
@@ -680,9 +708,12 @@ sub _bz_store_real_schema {
     # that we read from the database. So we use the actual hash
     # member instead of the subroutine call. If the hash
     # member is not defined, we will (and should) fail.
-    my $store_me = $self->{_bz_real_schema}->serialize_abstract();
-    $self->do("UPDATE bz_schema SET schema_data = ?, version = ?",
-              undef, $store_me, Bugzilla::DB::Schema::SCHEMA_VERSION);
+    my $store_me = $self->{private_real_schema}->serialize_abstract();
+    my $sth = $self->prepare("UPDATE bz_schema 
+                                 SET schema_data = ?, version = ?");
+    $sth->bind_param(1, $store_me, $self->BLOB_TYPE);
+    $sth->bind_param(2, Bugzilla::DB::Schema::SCHEMA_VERSION);
+    $sth->execute();
 }
 
 1;
@@ -714,7 +745,10 @@ Bugzilla::DB - Database access routines, using L<DBI>
   # Get the results
   my @result = $sth->fetchrow_array;
 
-  # Schema Changes
+  # Schema Modification
+  $dbh->bz_add_column($table, $name, \%definition);
+
+  # Schema Modification (DEPRECATED)
   $dbh->bz_add_field($table, $column, $definition);
   $dbh->bz_change_field_type($table, $column, $newtype);
   $dbh->bz_drop_field($table, $column);
@@ -1004,9 +1038,36 @@ These methods return information about data in the database.
               $column = name of column containing serial data type (scalar)
  Returns:     Last inserted ID (scalar)
 
+
 =head2 Schema Modification Methods
 
-These methods modify the current Bugzilla schema.
+These methods modify the current Bugzilla Schema.
+
+Where a parameter says "Abstract index/column definition", it returns/takes
+information in the formats defined for indexes and columns in
+C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
+
+=over 4
+
+=item C<bz_add_column($table, $name, \%definition)>
+
+ Description: Adds a new column to a table in the database. Prints out
+              a brief statement that it did so, to stdout.
+              Note that you cannot add a NOT NULL column that has no
+              default -- the database won't know what to set all
+              the NOT NULL values to.
+ Params:      $table = the table where the column is being added
+              $name  = the name of the new column
+              \%definition = Abstract column definition for the new column
+ Returns:     nothing
+
+=back
+
+
+=head2 Deprecated Schema Modification Methods
+
+These methods modify the current Bugzilla schema, for MySQL only. 
+Do not use them in new code.
 
 =over 4
 

@@ -32,6 +32,8 @@ package Bugzilla::DB::Schema;
 
 use strict;
 use Bugzilla::Error;
+use Bugzilla::Util;
+
 use Storable qw(dclone freeze thaw);
 
 =head1 NAME
@@ -1155,7 +1157,14 @@ sub get_type_ddl {
 
     my $type = $finfo->{TYPE};
     die "A valid TYPE was not specified for this column." unless ($type);
+
     my $default = $finfo->{DEFAULT};
+    # Replace any abstract default value (such as 'TRUE' or 'FALSE')
+    # with its database-specific implementation.
+    if ( defined $default && exists($self->{db_specific}->{$default}) ) {
+        $default = $self->{db_specific}->{$default};
+    }
+
     my $fkref = $self->{enable_references} ? $finfo->{REFERENCES} : undef;
     my $type_ddl = $self->{db_specific}{$type} || $type;
     $type_ddl .= " NOT NULL" if ($finfo->{NOTNULL});
@@ -1348,6 +1357,26 @@ sub _get_create_index_ddl {
 
 } #eosub--_get_create_index_ddl
 #--------------------------------------------------------------------------
+
+sub get_add_column_ddl {
+=item C<get_alter_ddl($table, $column, \%definition)>
+
+ Description: Generate SQL to add a column to a table.
+ Params:      $table - The table containing the column.
+              $column - The name of the column being added.
+              \%definition - The new definition for the column,
+                  in standard C<ABSTRACT_SCHEMA> format.
+ Returns:     An array of SQL statements.
+
+=cut
+    my ($self, $table, $column, $definition) = @_;
+
+    my $statement = "ALTER TABLE $table ADD COLUMN $column " .
+        $self->get_type_ddl($definition);
+
+    return ($statement);
+}
+
 sub get_column_abstract {
 
 =item C<get_column_abstract($table, $column)>
@@ -1367,7 +1396,8 @@ sub get_column_abstract {
     # Prevent a possible dereferencing of an undef hash, if the
     # table doesn't exist.
     if (exists $self->{abstract_schema}->{$table}) {
-        return $self->{abstract_schema}->{$table}{FIELDS}{$column};
+        my %fields = (@{ $self->{abstract_schema}{$table}{FIELDS} });
+        return $fields{$column};
     }
     return undef;
 }
@@ -1390,9 +1420,50 @@ sub get_index_abstract {
     # Prevent a possible dereferencing of an undef hash, if the
     # table doesn't exist.
     if (exists $self->{abstract_schema}->{$table}) {
-        return $self->{abstract_schema}->{$table}{INDEXES}{$index};
+        my %indexes = (@{ $self->{abstract_schema}{$table}{INDEXES} });
+        return $indexes{$index};
     }
     return undef;
+}
+
+sub set_column {
+
+=item C<set_column($table, $column, \%new_def)>
+
+ Description: Changes the definition of a column in this Schema object.
+              If the column doesn't exist, it will be added.
+              The table that you specify must already exist in the Schema.
+              NOTE: This does not affect the database on the disk.
+              Use the C<Bugzilla::DB> "Schema Modification Methods"
+              if you want to do that.
+ Params:      $table - The name of the table that the column is on.
+              $column - The name of the column.
+              \%new_def - The new definition for the column, in 
+                  C<ABSTRACT_SCHEMA> format.
+ Returns:     nothing
+
+=cut
+
+    my ($self, $table, $column, $new_def) = @_;
+
+    my $fields = \@{ $self->{schema}{$table}{FIELDS} };
+    my $abstract_fields = \@{ $self->{abstract_schema}{$table}{FIELDS} };
+
+    my $field_position = lsearch($fields, $column) + 1;
+    # If the column doesn't exist, then add it.
+    if (!$field_position) {
+        push(@$fields, $column);
+        push(@$fields, $new_def);
+        push(@$abstract_fields, $column);
+        push(@$abstract_fields, $new_def);
+    }
+    # We're modifying an existing column.
+    else {
+        splice(@$fields, $field_position, 1, $new_def);
+        splice(@$abstract_fields, $field_position, 1, $new_def);
+    }
+
+    $self->_adjust_schema();
 }
 
 
@@ -1439,14 +1510,14 @@ sub serialize_abstract {
 sub deserialize_abstract {
     my ($class, $serialized, $version) = @_;
 
-    my %thawed_hash = thaw($serialized);
+    my $thawed_hash = thaw($serialized);
 
     # At this point, we have no backwards-compatibility
     # code to write, so $version is ignored.
     # For what $version ought to be used for, see the
     # "private" section of the SCHEMA_VERSION docs.
 
-    return $class->new(undef, \%thawed_hash);
+    return $class->new(undef, $thawed_hash);
 }
 
 1;
