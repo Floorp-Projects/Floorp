@@ -200,7 +200,9 @@ registers, or set the value of a single register."},
             printFormat (stdOut, "%04X", (pc - iCode->its_iCode->begin()));
             stdOut << "]> ";
         
-            std::getline(mIn, line);
+            if (std::getline(mIn, line).eof())
+                std::exit(0);
+
             if (line.size() == 0)
                 line = lastLine;
             else
