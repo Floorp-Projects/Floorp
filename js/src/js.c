@@ -418,8 +418,10 @@ static JSBool
 my_BranchCallback(JSContext *cx, JSScript *script)
 {
     if (++gBranchCount == gBranchLimit) {
-        fprintf(gErrFile, "too much branching (%lu branch callbacks)\n",
-                gBranchLimit);
+        if (script->filename)
+            fprintf(gErrFile, "%s:", script->filename);
+        fprintf(gErrFile, "%u: script branches too much (%u callbacks)\n",
+                script->lineno, gBranchLimit);
         gBranchCount = 0;
         return JS_FALSE;
     }
