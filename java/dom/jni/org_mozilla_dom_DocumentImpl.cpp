@@ -25,6 +25,7 @@ Inc. All Rights Reserved.
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_DocumentImpl.h"
 
@@ -54,8 +55,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createAttribute: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env, 
+      "Document.createAttribute: NULL pointer");
     return NULL;
   }
 
@@ -63,8 +64,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createAttribute: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env, 
+      "Document.createAttribute: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -72,22 +73,28 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createAttribute: error %x\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createAttribute: failed", rv, exceptionType);
+
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createAttribute: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createAttribute: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createAttribute: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createAttribute: failed to set node ptr");
     return NULL;
   }
 
@@ -106,8 +113,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createCDATASection: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createCDATASection: NULL pointer");
     return NULL;
   }
 
@@ -115,8 +122,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
   jboolean iscopy = JNI_FALSE;
   const char* data = env->GetStringUTFChars(jdata, &iscopy);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createCDATASection: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createCDATASection: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -124,22 +131,27 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createCDATASection: error %x\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_SUPPORTED_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createCDATASection: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::cDataSectionClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createCDATASection: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createCDATASection: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createCDATASection: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createCDATASection: failed to set node ptr");
     return NULL;
   }
 
@@ -158,8 +170,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createComment: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createComment: NULL pointer");
     return NULL;
   }
 
@@ -167,8 +179,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
   jboolean iscopy = JNI_FALSE;
   const char* data = env->GetStringUTFChars(jdata, &iscopy);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createComment: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createComment: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -176,22 +188,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createComment: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createComment: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::commentClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createComment: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createComment: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createComment: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createComment: failed to set node ptr");
     return NULL;
   }
 
@@ -210,30 +222,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createDocumentFragme
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createDocumentFragment: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createDocumentFragment: NULL pointer");
     return NULL;
   }
 
   nsIDOMDocumentFragment* ret = nsnull;
   nsresult rv = doc->CreateDocumentFragment(&ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createDocumentFragment: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createDocumentFragment: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::documentFragmentClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createDocumentFragment: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createDocumentFragment: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createDocumentFragment: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createDocumentFragment: failed to set node ptr");
     return NULL;
   }
 
@@ -252,8 +264,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createElement: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createElement: NULL pointer");
     return NULL;
   }
 
@@ -261,8 +273,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
   jboolean iscopy = JNI_FALSE;
   const char* tagName = env->GetStringUTFChars(jtagName, &iscopy);
   if (!tagName) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createElement: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createElement: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -270,22 +282,28 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jtagName, tagName);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createElement: error %x\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createElement: failed", rv, exceptionType);
+
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::elementClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createElement: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createElement: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createElement: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createElement: failed to set node ptr");
     return NULL;
   }
 
@@ -304,8 +322,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createEntityReference: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEntityReference: NULL pointer");
     return NULL;
   }
 
@@ -313,8 +331,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createEntityReference: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEntityReference: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -323,22 +341,28 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createEntityReference: error %x\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_SUPPORTED_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEntityReference: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::entityReferenceClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createEntityReference: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEntityReference: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createEntityReference: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEntityReference: failed to set node ptr");
     return NULL;
   }
 
@@ -357,8 +381,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createProcessingInstruction: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createProcessingInstruction: NULL pointer");
     return NULL;
   }
 
@@ -367,15 +391,15 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
   jboolean iscopy2 = JNI_FALSE;
   const char* target = env->GetStringUTFChars(jtarget, &iscopy);
   if (!target) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createProcessingInstruction: GetStringUTFChars target failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createProcessingInstruction: GetStringUTFChars target failed");
     return NULL;
   }
 
   const char* data = env->GetStringUTFChars(jdata, &iscopy2);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createProcessingInstruction: GetStringUTFChars data failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createProcessingInstruction: GetStringUTFChars data failed");
     return NULL;
   }
 
@@ -385,22 +409,28 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jtarget, target);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createProcessingInstruction: error %x\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_SUPPORTED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createProcessingInstruction failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::processingInstructionClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createProcessingInstruction: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createProcessingInstruction: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createProcessingInstruction: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createProcessingInstruction: failed to set node ptr");
     return NULL;
   }
 
@@ -419,8 +449,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.createTextNode: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createTextNode: NULL pointer");
     return NULL;
   }
 
@@ -428,8 +458,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   jboolean iscopy = JNI_FALSE;
   const char* data = env->GetStringUTFChars(jdata, &iscopy);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createAttribute: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createAttribute: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -437,22 +467,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createTextNode: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createTextNode failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::textClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createTextNode: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createTextNode: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.createTextNode: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createTextNode: failed to set node ptr");
     return NULL;
   }
 
@@ -470,32 +500,29 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDoctype
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDoctype: NULL pointer\n"));
+  if (!doc) 
     return NULL;
-  }
 
   nsIDOMDocumentType* docType = nsnull;
   nsresult rv = doc->GetDoctype(&docType);
   if (NS_FAILED(rv) || !docType) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDoctype: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDoctype: failed", rv);
     return NULL;
   }
 
   jobject jDocType = env->AllocObject(JavaDOMGlobals::documentTypeClass);
   jobject jret = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDoctype: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDoctype: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jDocType, JavaDOMGlobals::nodePtrFID, (jlong) docType);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDoctype: failed to set node ptr: %x\n", docType));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDoctype: failed to set node ptr");
     return NULL;
   }
 
@@ -514,30 +541,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDocumentElement
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDocumentElement: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDocumentElement: NULL pointer");
     return NULL;
   }
 
   nsIDOMElement* element = nsnull;
   nsresult rv = doc->GetDocumentElement(&element);
   if (NS_FAILED(rv) || !element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDocumentElement: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDocumentElement: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::elementClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDocumentElement: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDocumentElement: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) element);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getDocumentElement: failed to set node ptr: %x\n", element));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getDocumentElement: failed to set node ptr");
     return NULL;
   }
 
@@ -556,8 +583,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getElementsByTagName: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagName: NULL pointer");
     return NULL;
   }
 
@@ -565,8 +592,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
   jboolean iscopy = JNI_FALSE;
   const char* tagName = env->GetStringUTFChars(jtagName, &iscopy);
   if (!tagName) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getElementsByTagName: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagName: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -574,22 +601,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jtagName, tagName);
   if (NS_FAILED(rv) || !elements) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getElementsByTagName: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagName: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::nodeListClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getElementsByTagName: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagName: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) elements);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getElementsByTagName: failed to set node ptr: %x\n", elements));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagName: failed to set node ptr");
     return NULL;
   }
 
@@ -608,30 +635,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getImplementation
   nsIDOMDocument* doc = (nsIDOMDocument*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getImplementation: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getImplementation: NULL pointer");
     return NULL;
   }
 
   nsIDOMDOMImplementation* impl = nsnull;
   nsresult rv = doc->GetImplementation(&impl);
   if (NS_FAILED(rv) || !impl) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getImplementation: error %x\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getImplementation: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::domImplementationClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getImplementation: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getImplementation: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) impl);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Document.getImplementation: failed to set node ptr: %x\n", impl));
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getImplementation: failed to set node ptr");
     return NULL;
   }
 

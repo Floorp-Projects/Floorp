@@ -16,6 +16,7 @@ Inc. All Rights Reserved.
 
 #include "prlog.h"
 #include "nsIDOMCharacterData.h"
+#include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_CharacterDataImpl.h"
 
@@ -30,16 +31,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.appendData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env, 
+      "CharacterData.appendData: NULL pointer");
     return;
   }
   
   jboolean iscopy = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy);
   if (!value) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.appendData: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.appendData: GetStringUTFChars failed");
     return;
   }
 
@@ -47,8 +48,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.appendData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.appendData: failed", rv, exceptionType);
     return;
   }
 }
@@ -64,15 +70,21 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.deleteData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.deleteData: NULL pointer");
     return;
   }
   
   nsresult rv = data->DeleteData((PRUint32) offset, (PRUint32) count);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.deleteData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "CharacterData.deleteData: failed", rv, exceptionType);
     return;
   }
 }
@@ -88,23 +100,28 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_getData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.getData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.getData: NULL pointer");
     return NULL;
   }
   
   nsString ret;
   nsresult rv = data->GetData(ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.getData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "CharacterData.getData: failed", rv, exceptionType);
     return NULL;
   }
 
   jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.getData: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.getData: NewString failed");
   }
 
   return jret;
@@ -121,16 +138,16 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_CharacterDataImpl_getLength
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.getLength: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.getLength: NULL pointer");
     return 0;
   }
   
   PRUint32 len = 0;
   nsresult rv = data->GetLength(&len);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.getLength: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.getLength: failed", rv);
     return 0;
   }
 
@@ -148,16 +165,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.insertData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.insertData: NULL pointer");
     return;
   }
   
   jboolean iscopy = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy);
   if (!value) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.insertData: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.insertData: GetStringUTFChars failed");
     return;
   }
 
@@ -165,8 +182,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.insertData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "CharacterData.insertData: failed", rv, exceptionType);
     return;
   }
 }
@@ -182,16 +205,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.replaceData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.replaceData: NULL pointer");
     return;
   }
   
   jboolean iscopy = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy);
   if (!value) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.replaceData: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.replaceData: GetStringUTFChars failed");
     return;
   }
 
@@ -199,8 +222,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.replaceData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "CharacterData.replaceData: failed", rv, exceptionType);
     return;
   }
 }
@@ -216,16 +245,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.setData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.setData: NULL pointer");
     return;
   }
   
   jboolean iscopy = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy);
   if (!value) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.setData: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.setData: GetStringUTFChars failed");
     return;
   }
 
@@ -233,8 +262,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.setData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "CharacterData.setData: failed", rv, exceptionType);
     return;
   }
 }
@@ -250,23 +284,29 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.substringData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,  
+      "CharacterData.substringData: NULL pointer");
     return NULL;
   }
 
   nsString ret;
   nsresult rv = data->SubstringData((PRUint32) offset, (PRUint32) count, ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.substringData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_DOMSTRING_SIZE_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "CharacterData.substringData: failed", rv, exceptionType);
     return NULL;
   }
 
   jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.substringData: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env, 
+      "CharacterData.substringData: NewString failed");
   }
 
   return jret;

@@ -19,6 +19,7 @@ Inc. All Rights Reserved.
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMDocument.h"
+#include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NodeImpl.h"
 
@@ -128,24 +129,31 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_appendChild
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.appendChild: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.appendChild: NULL pointer");
     return NULL;
   }
 
   nsIDOMNode* child = (nsIDOMNode*) 
     env->GetLongField(jchild, JavaDOMGlobals::nodePtrFID);
   if (!child) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.appendChild: NULL child pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.appendChild: NULL child pointer");
     return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->AppendChild(child, &ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.appendChild: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.appendChild: failed", rv, exceptionType);
     return NULL;
   }
 
@@ -163,8 +171,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_cloneNode
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.cloneNode: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.cloneNode: NULL pointer");
     return NULL;
   }
 
@@ -172,8 +180,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_cloneNode
   PRBool deep = jdeep == JNI_TRUE ? PR_TRUE : PR_FALSE;
   nsresult rv = node->CloneNode(deep, &ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.cloneNode: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.cloneNode: failed", rv);
     return NULL;
   }
 
@@ -190,17 +198,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getAttributes
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getAttributes: NULL pointer\n"));
+  if (!node) 
     return NULL;
-  }
 
   nsIDOMNamedNodeMap* nodeMap = nsnull;
   nsresult rv = node->GetAttributes(&nodeMap);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getAttributes: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getAttributes: failed", rv);
     return NULL;
   }
   if (!nodeMap) {
@@ -211,15 +216,15 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getAttributes
 
   jobject jret = env->AllocObject(JavaDOMGlobals::namedNodeMapClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getAttributes: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getAttributes: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) nodeMap);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getAttributes: failed to set node ptr: %x\n", nodeMap));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getAttributes: failed to set node ptr");
     return NULL;
   }
 
@@ -238,30 +243,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getChildNodes
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getChildNodes: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getChildNodes: NULL pointer");
     return NULL;
   }
 
   nsIDOMNodeList* nodeList = nsnull;
   nsresult rv = node->GetChildNodes(&nodeList);
   if (NS_FAILED(rv) || !nodeList) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getChildNodes: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getChildNodes: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::nodeListClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getChildNodes: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getChildNodes: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodeListPtrFID, (jlong) nodeList);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getChildNodes: failed to set node ptr: %x\n", nodeList));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getChildNodes: failed to set node ptr");
     return NULL;
   }
 
@@ -279,17 +284,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getFirstChild
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getFirstChild: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetFirstChild(&ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getFirstChild: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getFirstChild: failed", rv);
     return NULL;
   }
   if (!ret) {
@@ -311,17 +313,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getLastChild
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getLastChild: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetLastChild(&ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getLastChild: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getLastChild: failed", rv);
     return NULL;
   }
   if (!ret) {
@@ -343,17 +342,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getNextSibling
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getNextSibling: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetNextSibling(&ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNextSibling: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNextSibling: failed", rv);
     return NULL;
   }
 
@@ -371,23 +367,23 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeName
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getNodeName: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeName: NULL pointer");
     return NULL;
   }
 
   nsString ret;
   nsresult rv = node->GetNodeName(ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeName: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeName: failed", rv);
     return NULL;
   }
 
   jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeName: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeName: NewString failed");
     return NULL;
   }
 
@@ -405,16 +401,16 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_NodeImpl_getNodeType
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getNodeType: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeType: NULL pointer");
     return (jshort) NULL;
   }
 
   PRUint16 type;
   nsresult rv = node->GetNodeType(&type);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeType: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeType: failed", rv);
     return (jshort) NULL;
   }
 
@@ -473,20 +469,20 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_NodeImpl_getNodeType
   if (typeFID) {
       jclass nodeClass = env->GetObjectClass(jthis);
       if (!nodeClass) {
-	PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	       ("Node.getNodeType: GetObjectClass failed (%x)\n", jthis));
+        JavaDOMGlobals::ThrowException(env,
+	  "Node.getNodeType: GetObjectClass failed");
 	return ret;
       }
 
       ret = env->GetStaticShortField(nodeClass, typeFID);
       if (env->ExceptionOccurred()) {
-	PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	       ("Node.getNodeType: typeFID failed\n"));
+        JavaDOMGlobals::ThrowException(env,
+	  "Node.getNodeType: typeFID failed");
 	return ret;
       }
   } else {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeType: illegal type %d\n", type));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeType: illegal type");
   }
 
   return ret;
@@ -502,24 +498,26 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getNodeValue: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsString ret;
   nsresult rv = node->GetNodeValue(ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeValue: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeValue: failed", rv, exceptionType);
     return NULL;
   }
 
   jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeValue: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeValue: NewString failed");
     return NULL;
   }
 
@@ -536,31 +534,28 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getOwnerDocument
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getOwnerDocument: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsIDOMDocument* ret = nsnull;
   nsresult rv = node->GetOwnerDocument(&ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getOwnerDocument: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getOwnerDocument: failed", rv);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::documentClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getOwnerDocument: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getOwnerDocument: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getOwnerDocument: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getOwnerDocument: failed to set node ptr");
     return NULL;
   }
 
@@ -578,17 +573,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getParentNode
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getParentNode: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetParentNode(&ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getParentNode: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getParentNode: failed", rv);
     return NULL;
   }
 
@@ -605,17 +597,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getPreviousSibling
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.getPreviousSibling: NULL pointer\n"));
+  if (!node)
     return NULL;
-  }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetPreviousSibling(&ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getPreviousSibling: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getPreviousSibling: failed", rv);
     return NULL;
   }
 
@@ -633,16 +622,16 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_hasChildNodes
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.hasChildNodes: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.hasChildNodes: NULL pointer");
     return (jboolean) NULL;
   }
 
   PRBool ret = PR_FALSE;
   nsresult rv = node->HasChildNodes(&ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.hasChildNodes: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.hasChildNodes: failed", rv);
     return (jboolean) NULL;
   }
 
@@ -660,32 +649,40 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.insertBefore: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.insertBefore: NULL pointer");
     return NULL;
   }
 
   nsIDOMNode* newChild = (nsIDOMNode*) 
     env->GetLongField(jnewChild, JavaDOMGlobals::nodePtrFID);
   if (!newChild) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.insertBefore: NULL newChild pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.insertBefore: NULL newChild pointer");
     return NULL;
   }
 
   nsIDOMNode* refChild = (nsIDOMNode*) 
     env->GetLongField(jrefChild, JavaDOMGlobals::nodePtrFID);
   if (!refChild) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.insertBefore: NULL refChild pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.insertBefore: NULL refChild pointer");
     return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->InsertBefore(newChild, refChild, &ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.insertBefore: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
+        exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.insertBefore: failed", rv, exceptionType);
     return NULL;
   }
 
@@ -703,24 +700,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.removeChild: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.removeChild: NULL pointer");
     return NULL;
   }
 
   nsIDOMNode* oldChild = (nsIDOMNode*) 
     env->GetLongField(joldChild, JavaDOMGlobals::nodePtrFID);
   if (!oldChild) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.removeChild: NULL oldChild pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.removeChild: NULL oldChild pointer");
     return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->RemoveChild(oldChild, &ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.removeChild: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.removeChild: failed", rv, exceptionType);
     return NULL;
   }
 
@@ -738,32 +741,40 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_replaceChild
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.replaceChild: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.replaceChild: NULL pointer");
     return NULL;
   }
 
   nsIDOMNode* newChild = (nsIDOMNode*) 
     env->GetLongField(jnewChild, JavaDOMGlobals::nodePtrFID);
   if (!newChild) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.replaceChild: NULL newChild pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.replaceChild: NULL newChild pointer");
     return NULL;
   }
 
   nsIDOMNode* oldChild = (nsIDOMNode*) 
     env->GetLongField(joldChild, JavaDOMGlobals::nodePtrFID);
   if (!oldChild) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.replaceChild: NULL oldChild pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.replaceChild: NULL oldChild pointer");
     return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->ReplaceChild(newChild, oldChild, &ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.replaceChild: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.replaceChild: failed", rv, exceptionType);
     return NULL;
   }
 
@@ -781,16 +792,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Node.setNodeValue: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.setNodeValue: NULL pointer");
     return;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy);
   if (!value) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.setNodeValue: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Node.setNodeValue: GetStringUTFChars failed");
     return;
   }
 
@@ -798,8 +809,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.setNodeValue: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.setNodeValue: failed", rv, exceptionType);
+
     return;
   }
 }

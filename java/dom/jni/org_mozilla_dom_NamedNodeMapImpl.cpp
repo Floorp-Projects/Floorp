@@ -18,6 +18,7 @@ Inc. All Rights Reserved.
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNode.h"
 #include "javaDOMGlobals.h"
+#include "nsDOMError.h"
 #include "org_mozilla_dom_NamedNodeMapImpl.h"
 
 
@@ -32,16 +33,16 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getLength
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!map) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.getLength: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.getLength: NULL pointer");
     return 0;
   }
 
   PRUint32 length = 0;
   nsresult rv = map->GetLength(&length);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.getLength: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.getLength: failed", rv);
     return 0;
   }
 
@@ -59,8 +60,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!map) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.getNamedItem: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.getNamedItem: NULL pointer");
     return NULL;
   }
   
@@ -68,8 +69,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.getNamedItem: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.getNamedItem: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -77,22 +78,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv) || !node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.getNamedItem: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.getNamedItem: failed", rv);
     return NULL;
   }
 
   jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
   if (!jnode) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.getNamedItem: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.getNamedItem: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.getNamedItem: failed to set node ptr: %x\n", node));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.getNamedItem: failed to set node ptr");
     return NULL;
   }
 
@@ -111,30 +112,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_item
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!map) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.item: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.item: NULL pointer");
     return NULL;
   }
   
   nsIDOMNode* node = nsnull;
   nsresult rv = map->Item((PRUint32) jindex, &node);
   if (NS_FAILED(rv) || !node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.item: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.item: failed", rv);
     return NULL;
   }
 
   jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
   if (!jnode) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.item: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.item: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.item: failed to set node ptr: %x\n", node));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.item: failed to set node ptr");
     return NULL;
   }
 
@@ -153,8 +154,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!map) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.removeNamedItem: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.removeNamedItem: NULL pointer");
     return NULL;
   }
   
@@ -162,8 +163,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.removeNamedItem: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.removeNamedItem: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -171,22 +172,27 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv) || !node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.removeNamedItem: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.removeNamedItem: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
   if (!jnode) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.removeNamedItem: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.removeNamedItem: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.removeNamedItem: failed to set node ptr: %x\n", node));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.removeNamedItem: failed to set node ptr");
     return NULL;
   }
 
@@ -205,38 +211,45 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!map) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.setNamedItem: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.setNamedItem: NULL pointer");
     return NULL;
   }
   
   nsIDOMNode* arg = (nsIDOMNode*)
     env->GetLongField(jarg, JavaDOMGlobals::nodePtrFID);
   if (!arg) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.setNamedItem: NULL item pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.setNamedItem: NULL item pointer");
     return NULL;
   }
 
   nsIDOMNode* node = nsnull;
   nsresult rv = map->SetNamedItem(arg, &node);
   if (NS_FAILED(rv) || !node) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeMap.setNamedItem: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "NodeMap.setNamedItem: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
   if (!jnode) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.setNamedItem: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.setNamedItem: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NamedNodeMap.setNamedItem: failed to set node ptr: %x\n", node));
+    JavaDOMGlobals::ThrowException(env,
+      "NamedNodeMap.setNamedItem: failed to set node ptr");
     return NULL;
   }
 

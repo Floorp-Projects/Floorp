@@ -18,6 +18,7 @@ Inc. All Rights Reserved.
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNodeList.h"
+#include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_ElementImpl.h"
 
@@ -33,16 +34,16 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.getAttribute: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttribute: NULL pointer");
     return NULL;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* cname = env->GetStringUTFChars(jname, &iscopy);
   if (!cname) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttribute: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttribute: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -51,15 +52,15 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, cname);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttribute: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttribute: failed", rv);
     return NULL;
   }
 
   jstring jattr = env->NewString(attr.GetUnicode(), attr.Length());
   if (!jattr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttribute: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttribute: NewString failed");
     return NULL;
   }
 
@@ -77,16 +78,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.getAttributeNode: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttributeNode: NULL pointer");
     return NULL;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* cname = env->GetStringUTFChars(jname, &iscopy);
   if (!cname) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttributeNode: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttributeNode: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -95,22 +96,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, cname);
   if (NS_FAILED(rv) || !attr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttributeNode: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttributeNode: failed", rv);
     return NULL;
   }
 
   jobject jattr = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jattr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttributeNode: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttributeNode: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jattr, JavaDOMGlobals::nodePtrFID, (jlong) attr);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getAttributeNode: failed to set node ptr: %x\n", attr));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getAttributeNode: failed to set node ptr");
     return NULL;
   }
 
@@ -129,16 +130,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.getElementsByTagName: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagName: NULL pointer");
     return NULL;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* cname = env->GetStringUTFChars(jname, &iscopy);
   if (!cname) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getElementsByTagName: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagName: GetStringUTFChars failed");
     return NULL;
   }
 
@@ -147,22 +148,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, cname);
   if (NS_FAILED(rv) || !nodes) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getElementsByTagName: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagName: failed", rv);
     return NULL;
   }
 
   jobject jnodes = env->AllocObject(JavaDOMGlobals::nodeListClass);
   if (!jnodes) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getElementsByTagName: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagName: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jnodes, JavaDOMGlobals::nodeListPtrFID, (jlong) nodes);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getElementsByTagName: failed to set node ptr: %x\n", nodes));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagName: failed to set node ptr");
     return NULL;
   }
 
@@ -181,23 +182,23 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getTagName
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.getTagName: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getTagName: NULL pointer");
     return NULL;
   }
 
   nsString tagName;
   nsresult rv = element->GetTagName(tagName);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getTagName: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getTagName: failed", rv);
     return NULL;
   }
 
   jstring jTagName = env->NewString(tagName.GetUnicode(), tagName.Length());
   if (!jTagName) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.getTagName: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getTagName: NewString failed");
     return NULL;
   }
 
@@ -215,15 +216,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_normalize
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.normalize: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.normalize: NULL pointer");
     return;
   }
 
   nsresult rv = element->Normalize();
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.normalize: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.normalize: failed", rv);
     return;
   }
 }
@@ -239,16 +240,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.removeAttribute: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttribute: NULL pointer");
     return;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.removeAttribute: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttribute: GetStringUTFChars failed");
     return;
   }
 
@@ -256,8 +257,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.removeAttribute: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttribute: failed", rv, exceptionType);
     return;
   }
 }
@@ -273,38 +279,44 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNode
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.removeAttributeNode: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttributeNode: NULL pointer");
     return NULL;
   }
 
   nsIDOMAttr* oldAttr = (nsIDOMAttr*) 
     env->GetLongField(joldAttr, JavaDOMGlobals::nodePtrFID);
   if (!oldAttr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.removeAttributeNode: NULL arg pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttributeNode: NULL arg pointer");
     return NULL;
   }
 
   nsIDOMAttr* ret = nsnull;
   nsresult rv = element->RemoveAttributeNode(oldAttr, &ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.removeAttributeNode: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttributeNode: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jattr = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jattr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.removeAttributeNode: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttributeNode: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jattr, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.removeAttributeNode: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.removeAttributeNode: failed to set node ptr");
     return NULL;
   }
 
@@ -323,24 +335,24 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.setAttribute: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttribute: NULL pointer");
     return;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.setAttribute: GetStringUTFChars name failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttribute: GetStringUTFChars name failed");
     return;
   }
 
   jboolean iscopy2 = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy2);
   if (!value) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.setAttribute: GetStringUTFChars value failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttribute: GetStringUTFChars name failed");
     return;
   }
 
@@ -350,8 +362,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Element.setAttribute: failed (%x)\n", rv));
+
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttribute: failed", rv, exceptionType);
     return;
   }
 }
@@ -367,38 +388,45 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.setAttributeNode: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttributeNode: NULL pointer");
     return NULL;
   }
 
   nsIDOMAttr* newAttr = (nsIDOMAttr*) 
     env->GetLongField(jnewAttr, JavaDOMGlobals::nodePtrFID);
   if (!newAttr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.setAttributeNode: NULL arg pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttributeNode: NULL arg pointer");
     return NULL;
   }
 
   nsIDOMAttr* ret = nsnull;
   nsresult rv = element->SetAttributeNode(newAttr, &ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.setAttributeNode: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttributeNode: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jattr = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jattr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.setAttributeNode: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttributeNode: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jattr, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.setAttributeNode: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Element.setAttributeNode: failed to set node ptr");
     return NULL;
   }
 

@@ -58,17 +58,8 @@ jclass JavaDOMGlobals::domExceptionClass = NULL;
 jmethodID JavaDOMGlobals::domExceptionInitMID = NULL;
 jclass JavaDOMGlobals::runtimeExceptionClass = NULL;
 jmethodID JavaDOMGlobals::runtimeExceptionInitMID = NULL;
-jshort JavaDOMGlobals::exceptionCodeIndexSize = 0;
-jshort JavaDOMGlobals::exceptionCodeDomStringSize = 0;
-jshort JavaDOMGlobals::exceptionCodeHierarchyRequest = 0;
-jshort JavaDOMGlobals::exceptionCodeWrongDocument = 0;
-jshort JavaDOMGlobals::exceptionCodeInvalidCharacter = 0;
-jshort JavaDOMGlobals::exceptionCodeNoDataAllowed = 0;
-jshort JavaDOMGlobals::exceptionCodeNoModificationAllowed = 0;
-jshort JavaDOMGlobals::exceptionCodeNotFound = 0;
-jshort JavaDOMGlobals::exceptionCodeNotSupported = 0;
-jshort JavaDOMGlobals::exceptionCodeInuseAttribute = 0;
-const char* const JavaDOMGlobals::exceptionMessage[] = 
+
+const char* const JavaDOMGlobals::DOM_EXCEPTION_MESSAGE[] = 
   {"Invalid DOM error code",
    "Index is out of bounds",
    "Could not fit text",
@@ -226,8 +217,6 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
   textClass = (jclass) env->NewGlobalRef(textClass);
   if (!textClass) return;
 
-// caching DOMException class, init and field IDs
-
   domExceptionClass = env->FindClass("org/mozilla/dom/DOMExceptionImpl");
   if (!domExceptionClass) return;
   domExceptionClass = (jclass) env->NewGlobalRef(domExceptionClass);
@@ -243,78 +232,6 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
   runtimeExceptionInitMID = 
     env->GetMethodID(runtimeExceptionClass, "<init>", "(Ljava/lang/String;)V");
   if (!runtimeExceptionInitMID) return;
-
-  jfieldID exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "INDEX_SIZE_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeIndexSize = 
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "DOMSTRING_SIZE_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeDomStringSize =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "HIERARCHY_REQUEST_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeHierarchyRequest =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "WRONG_DOCUMENT_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeWrongDocument =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "INVALID_CHARACTER_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeInvalidCharacter =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "NO_DATA_ALLOWED_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeNoDataAllowed =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "NO_MODIFICATION_ALLOWED_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeNoModificationAllowed =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "NOT_FOUND_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeNotFound =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "NOT_SUPPORTED_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeNotSupported =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-  exceptionCodeFID = 
-    env->GetStaticFieldID(domExceptionClass, "INUSE_ATTRIBUTE_ERR", "S");
-  if (!exceptionCodeFID) return;
-  exceptionCodeInuseAttribute =
-    env->GetStaticShortField(domExceptionClass, exceptionCodeFID);
-  if (env->ExceptionOccurred()) return;
-
-// end DOMException caching
 }
 
 void JavaDOMGlobals::Destroy(JNIEnv *env) 
@@ -596,51 +513,55 @@ void JavaDOMGlobals::TakeOutGarbage()
 }
 
 // caller must return from JNI immediately after calling this function
-void JavaDOMGlobals::ThrowDOMException(JNIEnv *env, jshort code)
-{
-  PR_LOG(log, PR_LOG_ERROR, 
-	 ("JavaDOMGlobals::ThrowDOMException: (%x) %s\n", 
-	  code, exceptionMessage[code]));
+void JavaDOMGlobals::ThrowException(JNIEnv *env,
+                                    const char * message,
+                                    nsresult rv,
+                                    ExceptionType exceptionType) {
 
-  // probably redundant check... this should not happen
-  // if it does, we prefer to throw the original exception
-  if (env->ExceptionOccurred())
-    return;
+  jthrowable newException = NULL;
 
-  jstring message = env->NewStringUTF(exceptionMessage[code]);
+  if (exceptionType == EXCEPTION_DOM) {
+    PR_LOG(log, PR_LOG_ERROR, 
+           ("JavaDOMGlobals::ThrowException: (%x) %s: %s\n", 
+            NS_ERROR_GET_CODE(rv), 
+            message ? message : "", 
+            DOM_EXCEPTION_MESSAGE[NS_ERROR_GET_CODE(rv)]));
 
-  jthrowable newException = 
-    (jthrowable)env->NewObject(domExceptionClass, 
-                               domExceptionInitMID,
-                               code,
-                               message);
+    jstring jmessage = 
+      env->NewStringUTF(DOM_EXCEPTION_MESSAGE[NS_ERROR_GET_CODE(rv)]);
+
+    newException = 
+      (jthrowable)env->NewObject(domExceptionClass, 
+                                 domExceptionInitMID,
+                                 NS_ERROR_GET_CODE(rv),
+                                 message);
+  } else {
+    char buffer[256];
+    const char* msg = message;
+    if (rv != NS_OK) {
+      sprintf(buffer, 
+              "(%x.%x) %s",
+              NS_ERROR_GET_MODULE(rv),
+              NS_ERROR_GET_CODE(rv),
+              message ? message : "");
+      msg = buffer;
+    }
+
+    PR_LOG(log, PR_LOG_ERROR, 
+           ("JavaDOMGlobals::ThrowException: %s\n", msg));
+
+    jstring jmessage = env->NewStringUTF(msg);
+
+    jthrowable newException = 
+      (jthrowable)env->NewObject(runtimeExceptionClass, 
+                                 runtimeExceptionInitMID,
+                                 jmessage);
+
+  }
+
   if (newException != NULL) {
     env->Throw(newException);
   } 
 
   // an exception is thrown in any case
-} 
-
-// caller must return from JNI immediately after calling this function
-void JavaDOMGlobals::ThrowException(JNIEnv *env, const char * message)
-{
-  PR_LOG(log, PR_LOG_ERROR, 
-	 ("JavaDOMGlobals::ThrowException: %s\n", message));
-
-  // probably redundant check... this should not happen
-  // if it does, we prefer to throw the original exception
-  if (env->ExceptionOccurred())
-    return;
-
-  jstring msg = env->NewStringUTF(message);
-
-  jthrowable newException = 
-    (jthrowable)env->NewObject(runtimeExceptionClass, 
-                               runtimeExceptionInitMID,
-                               msg);
-  if (newException != NULL) {
-    env->Throw(newException);
-  } 
-
-  // an exception is thrown in any case
-} 
+}

@@ -16,6 +16,7 @@ Inc. All Rights Reserved.
 
 #include "prlog.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_ProcessingInstructionImpl.h"
 
@@ -31,23 +32,23 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getData
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!pi) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("ProcessingInstruction.getData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.getData: NULL pointer");
     return NULL;
   }
 
   nsString ret;
   nsresult rv = pi->GetData(ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.getData: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.getData: failed", rv);
     return NULL;
   }
 
   jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.getData: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.getData: NewString failed");
     return NULL;
   }
 
@@ -65,23 +66,23 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getTarg
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!pi) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("ProcessingInstruction.getTarget: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.getTarget: NULL pointer");
     return NULL;
   }
 
   nsString ret;
   nsresult rv = pi->GetData(ret);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.getTarget: failed (%x)\n", rv));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.getTarget: failed", rv);
     return NULL;
   }
 
   jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.getTarget: NewString failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.getTarget: NewString failed");
     return NULL;
   }
 
@@ -99,24 +100,29 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!pi) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("ProcessingInstruction.setData: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.setData: NULL pointer");
     return;
   }
 
   jboolean iscopy = JNI_FALSE;
   const char* data = env->GetStringUTFChars(jdata, &iscopy);
   if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.setData: GetStringUTFChars failed\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.setData: GetStringUTFChars failed");
     return;
   }
   nsresult rv = pi->SetData(data);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
   if (NS_FAILED(rv)) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.setData: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "ProcessingInstruction.setData: failed", rv, exceptionType);
     return;
   }
 }

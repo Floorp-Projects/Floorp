@@ -19,6 +19,7 @@ Inc. All Rights Reserved.
 
 #include "jni.h"
 #include "prclist.h"
+#include "nsError.h"
 
 class nsISupports;
 class nsIDOMNode;
@@ -66,17 +67,11 @@ class JavaDOMGlobals {
   static jmethodID domExceptionInitMID;
   static jclass runtimeExceptionClass;
   static jmethodID runtimeExceptionInitMID;
-  static jshort exceptionCodeIndexSize;
-  static jshort exceptionCodeDomStringSize;
-  static jshort exceptionCodeHierarchyRequest;
-  static jshort exceptionCodeWrongDocument;
-  static jshort exceptionCodeInvalidCharacter;
-  static jshort exceptionCodeNoDataAllowed;
-  static jshort exceptionCodeNoModificationAllowed;
-  static jshort exceptionCodeNotFound;
-  static jshort exceptionCodeNotSupported;
-  static jshort exceptionCodeInuseAttribute;
-  static const char* const exceptionMessage[];
+
+  static const char* const DOM_EXCEPTION_MESSAGE[];
+
+  typedef enum ExceptionType { EXCEPTION_RUNTIME, 
+			       EXCEPTION_DOM } ExceptionType;
   
   static PRLogModuleInfo* log;
   static PRCList garbage;
@@ -90,10 +85,10 @@ class JavaDOMGlobals {
   static void AddToGarbage(nsISupports* domObject);
   static void TakeOutGarbage();
 
-  static void ThrowDOMException(JNIEnv *env,
-                                jshort code);
   static void ThrowException(JNIEnv *env,
-                             const char * message);
+                             const char * message = NULL,
+                             nsresult rv = NS_OK,
+                             ExceptionType exceptionType = EXCEPTION_RUNTIME);
 };
   
 #endif /* __JavaDOMGlobals_h__ */

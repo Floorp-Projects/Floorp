@@ -16,6 +16,7 @@ Inc. All Rights Reserved.
 
 #include "prlog.h"
 #include "nsIDOMText.h"
+#include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_TextImpl.h"
 
@@ -31,30 +32,36 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_TextImpl_splitText
   nsIDOMText* text = (nsIDOMText*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!text) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Text.splitText: NULL pointer\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Text.splitText: NULL pointer");
     return NULL;
   }
 
   nsIDOMText* ret = nsnull;
   nsresult rv = text->SplitText((PRUint32) joffset, &ret);
   if (NS_FAILED(rv) || !ret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Text.splitText: failed (%x)\n", rv));
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR)) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Text.splitText: failed", rv, exceptionType);
     return NULL;
   }
 
   jobject jret = env->AllocObject(JavaDOMGlobals::textClass);
   if (!jret) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Text.splitText: failed to allocate object\n"));
+    JavaDOMGlobals::ThrowException(env,
+      "Text.splitText: failed to allocate object");
     return NULL;
   }
 
   env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) ret);
   if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Text.splitText: failed to set node ptr: %x\n", ret));
+    JavaDOMGlobals::ThrowException(env,
+      "Text.splitText: failed to set node ptr");
     return NULL;
   }
 
