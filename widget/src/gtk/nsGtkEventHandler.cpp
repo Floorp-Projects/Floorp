@@ -602,12 +602,12 @@ open_unicode_decoder(void) {
   return decoder;
 }
 
+// GTK's text widget already does XIM, so we don't want to do this again
 gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
                                      gpointer p)
 {
   nsKeyEvent kevent;
   nsTextWidget* win = (nsTextWidget*)p;
-  int isModifier;
 
   // work around for annoying things.
   if (event->keyval == GDK_Tab)
@@ -631,22 +631,9 @@ gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  isModifier = event->state &(GDK_CONTROL_MASK|GDK_MOD1_MASK);
-
-  if (event->length || !isModifier) {
-    static nsIUnicodeDecoder *decoder = nsnull;
-    if (!decoder) {
-      decoder = open_unicode_decoder();
-    }
-    if (decoder) {
-      nsEventStatus status;
-      composition_start(event, (nsWindow*) win, &status);
-      composition_draw(event, (nsWindow*) win, decoder, &status);
-      composition_end(event, (nsWindow*) win, &status);
-    } else {
-      InitKeyPressEvent(event,p, kevent);
-      win->OnKey(kevent);
-    }
+  if (event->length) {
+    InitKeyPressEvent(event,p, kevent);
+    win->OnKey(kevent);
   }
 
   win->Release();
@@ -655,6 +642,7 @@ gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
   return PR_TRUE;
 }
 
+// GTK's text widget already does XIM, so we don't want to do this again
 gint handle_key_release_event_for_text(GtkWidget *w, GdkEventKey* event,
                                        gpointer p)
 {
@@ -713,10 +701,28 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
+#ifdef USE_XIM
+  if (event->length) {
+    static nsIUnicodeDecoder *decoder = nsnull;
+    if (!decoder) {
+      decoder = open_unicode_decoder();
+    }
+    if (decoder) {
+      nsEventStatus status;
+      composition_start(event, win, &status);
+      composition_draw(event, win, decoder, &status);
+      composition_end(event, win, &status);
+    } else {
+      InitKeyPressEvent(event,p, kevent);
+      win->OnKey(kevent);
+    }
+  }
+#else
   if (event->length) {
      InitKeyPressEvent(event,p,kevent);
      win->OnKey(kevent);
    }
+#endif
 
   win->Release();
   gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
