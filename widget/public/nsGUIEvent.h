@@ -212,7 +212,7 @@ enum nsDragDropEventStatus {
 #define NS_INPUT_EVENT      6
 #define NS_KEY_EVENT        7
 #define NS_MOUSE_EVENT      8
-#define NS_TOOLTIP_EVENT    9
+
 #define NS_MENU_EVENT       10
 #define NS_DRAGDROP_EVENT   11
 #define NS_TEXT_EVENT		12
@@ -251,10 +251,8 @@ enum nsDragDropEventStatus {
 // Tab control's selected tab has changed
 #define NS_TABCHANGE                    (NS_WINDOW_START + 35)
 
-// Tooltip should be shown
-#define NS_SHOW_TOOLTIP                 (NS_WINDOW_START + 36)
-// Tooltip should be hidden
-#define NS_HIDE_TOOLTIP                 (NS_WINDOW_START + 37)
+
+
 // Menu item selected
 #define NS_MENU_SELECTED                (NS_WINDOW_START + 38)
 

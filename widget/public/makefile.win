@@ -56,8 +56,6 @@ EXPORTS=nsui.h \
   nsIMenuListener.h \
   nsIToolkit.h \
   nsWidgetsCID.h \
-  nsITabWidget.h \
-  nsITooltipWidget.h \
   nsIAppShell.h \
   nsStringUtil.h \
   nsILookAndFeel.h \

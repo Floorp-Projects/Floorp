@@ -29,8 +29,6 @@ nsIFileWidget.h
 nsIMenuListener.h
 nsIToolkit.h
 nsWidgetsCID.h
-nsITabWidget.h
-nsITooltipWidget.h
 nsIAppShell.h
 nsILabel.h
 nsILookAndFeel.h

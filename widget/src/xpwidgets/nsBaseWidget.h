@@ -79,9 +79,6 @@ public:
     NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
     NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
     NS_IMETHOD              SetTitle(const nsString& aTitle); 
-    NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
-    NS_IMETHOD              RemoveTooltips();
-    NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
     NS_IMETHOD 				AddMenuListener(nsIMenuListener * aListener);

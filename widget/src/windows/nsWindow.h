@@ -114,9 +114,6 @@ public:
     NS_IMETHOD              SetTitle(const nsString& aTitle); 
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar); 
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
-    NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
-    NS_IMETHOD              RemoveTooltips();
-    NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD              BeginResizingChildren(void);
@@ -192,7 +189,6 @@ protected:
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
     PRBool DispatchStandardEvent(PRUint32 aMsg);
-    void AddTooltip(HWND hwndOwner, nsRect* aRect, int aId);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
     void GetNonClientBounds(nsRect &aRect);
@@ -212,7 +208,6 @@ protected:
     static      nsWindow* gCurrentWindow;
     nsPoint     mLastPoint;
     HWND        mWnd;
-    HWND        mTooltip;
     HPALETTE    mPalette;
     WNDPROC     mPrevWndProc;
 

@@ -48,8 +48,6 @@ CPPSRCS =              \
 	nsTextAreaWidget.cpp \
 	nsFileWidget.cpp     \
 	nsScrollbar.cpp      \
-	nsTabWidget.cpp      \
-	nsTooltipWidget.cpp  \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
 	nsLabel.cpp          \
@@ -85,8 +83,6 @@ OBJS =                             \
 	.\$(OBJDIR)\nsTextAreaWidget.obj \
 	.\$(OBJDIR)\nsFileWidget.obj     \
 	.\$(OBJDIR)\nsScrollbar.obj      \
-	.\$(OBJDIR)\nsTabWidget.obj      \
-	.\$(OBJDIR)\nsTooltipWidget.obj  \
 	.\$(OBJDIR)\nsAppShell.obj       \
 	.\$(OBJDIR)\nsLookAndFeel.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \

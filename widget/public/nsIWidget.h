@@ -578,37 +578,6 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
 
-    /**
-     * Set the collection of tooltip rectangles.
-     * A NS_SHOW_TOOLTIP event is generated when the mouse hovers over one
-     * of the rectangles. a NS_HIDE_TOOLTIP event is generated when the mouse
-     * is moved or a new tooltip is displayed.
-     *
-     * @param      aNumberOfTips    number of tooltip areas.
-     * @param      aTooltipArea     array of x,y,width,height rectangles specifying hot areas
-     *
-     */
-
-    NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]) = 0;
-
-    /**
-     * Update the collection of tooltip rectangles. The number of tooltips must
-     * match the original number of tooltips specified in SetTooltips. Must be called
-     * after calling SetTooltips.
-     *
-     * @param      aNewTips     array of x,y,width,height rectangles specifying the new hot areas
-     *
-     */
-
-    NS_IMETHOD UpdateTooltips(nsRect* aNewTips[]) = 0;
-
-    /**
-     * Remove the collection of tooltip rectangles.
-     */
-
-    NS_IMETHOD RemoveTooltips() = 0;
-
-
      /**
      * Convert from this widget coordinates to screen coordinates.
      *

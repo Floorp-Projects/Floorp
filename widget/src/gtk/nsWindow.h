@@ -73,10 +73,6 @@ public:
     NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
 
-    NS_IMETHOD           SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
-    NS_IMETHOD           UpdateTooltips(nsRect* aNewTips[]);
-    NS_IMETHOD           RemoveTooltips();
-
     NS_IMETHOD           BeginResizingChildren(void);
     NS_IMETHOD           EndResizingChildren(void);
     NS_IMETHOD           Destroy(void);

@@ -138,38 +138,6 @@ void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 }
 
-//-------------------------------------------------------------------------
-//
-// Setup initial tooltip rectangles
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Update all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::UpdateTooltips(nsRect* aNewTips[])
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Remove all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::RemoveTooltips()
-{
-  return NS_OK;
-}
-
 NS_METHOD nsWindow::Destroy()
 {
 #ifdef NOISY_DESTROY
