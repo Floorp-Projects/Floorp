@@ -38,7 +38,7 @@
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <broadcaster id="args" value=""/>
 
-<box align="vertical" debug="true">
+<box align="vertical">
   <box align="horizontal">
     <html:label for="MisspelledWord"> &misspelledWord.label; </html:label>
     <spring class="bigspacer"/>
