@@ -1022,10 +1022,19 @@ System.out.println();
             break;
         case '*':
         case '+':
-        case '}':
         case '?':
             reportError("msg.bad.quant", String.valueOf(src[state.cp - 1]));
             return false;
+        case '{':
+            /* Treat left-curly in a non-quantifier context as an error only
+             * if it's followed immediately by a decimal digit.
+             * This is an Perl extension.
+             */
+            if ((state.cp != state.cpend) && isDigit(src[state.cp])) {
+                reportError("msg.bad.quant", String.valueOf(src[state.cp - 1]));
+                return false;
+            }
+            // fall thru...
         default:
             state.result = new RENode(REOP_FLAT);
             state.result.chr = c;
@@ -1069,19 +1078,21 @@ System.out.println();
                     int max = -1;
                     int errIndex = state.cp++;
 
-                    state.result = new RENode(REOP_QUANT);
-
                     c = src[state.cp];
                     if (isDigit(c)) {
                         ++state.cp;
                         min = getDecimalValue(c, state);
                         c = src[state.cp];
+                    } else {
+                        /* For Perl etc. compatibility, if a curly is not
+                         * followed by a proper digit, back off from it
+                         * being a quantifier, and chew it up as a literal
+                         * atom next time instead.
+                         */
+                        --state.cp;
+                        return true;
                     }
-                    else {
-                        reportError("msg.bad.quant",
-                                    String.valueOf(src[state.cp]));
-                        return false;
-                    }
+                    state.result = new RENode(REOP_QUANT);
                     if ((min >> 16) != 0) {
                         reportError("msg.overlarge.max",
                                     String.valueOf(src[state.cp]));
@@ -1109,14 +1120,8 @@ System.out.println();
                                         String.valueOf(src[state.cp]));
                             return false;
                         }
-                    }
-                    else {
+                    } else {
                         max = min;
-                        if (max == 0) {
-                            reportError("msg.zero.quant",
-                                        String.valueOf(src[state.cp]));
-                            return false;
-                        }
                     }
                     state.result.min = min;
                     state.result.max = max;
