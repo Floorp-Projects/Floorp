@@ -451,8 +451,7 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
             nsCOMPtr<nsIFilePicker> filePicker =
                 do_CreateInstance("@mozilla.org/filepicker;1", &rv);
             if (NS_FAILED(rv)) return rv;
-            // XXX i18n fix me
-            filePicker->Init(nsnull, NS_LITERAL_STRING("Save Attachment").get(), nsIFilePicker::modeSave);
+            filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveAttachment").get()), nsIFilePicker::modeSave);
             filePicker->SetDefaultString(path.get());
             filePicker->AppendFilters(nsIFilePicker::filterAll);
             
@@ -746,7 +745,7 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
 
   filePicker->Init(
       nsnull, 
-      GetString(NS_LITERAL_STRING("Save Attachment").get()),
+      GetString(NS_LITERAL_STRING("SaveAttachment").get()),
       nsIFilePicker::modeSave
       );
   filePicker->SetDefaultString(defaultDisplayString.get());
@@ -803,7 +802,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     if (NS_FAILED(rv)) goto done;
     filePicker->Init(
         nsnull, 
-        GetString(NS_LITERAL_STRING("Save All Attachments").get()),
+        GetString(NS_LITERAL_STRING("SaveAllAttachments").get()),
         nsIFilePicker::modeGetFolder
         );
 
