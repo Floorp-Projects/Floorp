@@ -136,13 +136,13 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
     
     if (!js_ValueToNumber(cx, v, &d)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_BAD_ARRAY_LENGTH);
-            return JS_FALSE;
+                             JSMSG_BAD_ARRAY_LENGTH);
+        return JS_FALSE;
     }
     if (!js_DoubleToECMAUint32(cx, d, (uint32 *)lengthp)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_BAD_ARRAY_LENGTH);
-            return JS_FALSE;
+                             JSMSG_BAD_ARRAY_LENGTH);
+        return JS_FALSE;
     }
     if (JSDOUBLE_IS_NaN(d) || d != *lengthp) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1266,41 +1266,35 @@ static JSBool
 array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSObject *nobj, *aobj;
-    jsuint slot, length, alength;
-    jsid id, id2;
-    jsval v;
+    jsuint length, alength, slot;
     uintN i;
+    jsval v;
+    jsid id, id2;
 
+    /* Treat obj as the first argument; see ECMA 15.4.4.4. */
+    --argv;
+    JS_ASSERT(obj == JSVAL_TO_OBJECT(argv[0]));
+
+    /* Create a new Array object and store it in the rval local root. */
     nobj = js_NewArrayObject(cx, 0, NULL);
     if (!nobj)
 	return JS_FALSE;
+    *rval = OBJECT_TO_JSVAL(nobj);
 
-    /* Only add the first element as an array if it looks like one.  Treat the
-     * target the same way as the arguments.
-     */
-
-    /* XXXmccabe Might make sense to recast all of this as a do-while. */
-    if (js_HasLengthProperty(cx, obj, &length)) {
-	for (slot = 0; slot < length; slot++) {
-	    if (!IndexToId(cx, slot, &id))
-		return JS_FALSE;
-	    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-		return JS_FALSE;
-	    if (!OBJ_SET_PROPERTY(cx, nobj, id, &v))
-		return JS_FALSE;
-	}
-    } else {
-	length = 1;
-	v = OBJECT_TO_JSVAL(obj);
-	if (!OBJ_SET_PROPERTY(cx, nobj, JSVAL_ZERO, &v))
-	    return JS_FALSE;
-    }
-
-    for (i = 0; i < argc; i++) {
+    /* Loop over [0, argc] to concat args into nobj, expanding all Arrays. */
+    length = 0;
+    for (i = 0; i <= argc; i++) {
 	v = argv[i];
 	if (JSVAL_IS_OBJECT(v)) {
 	    aobj = JSVAL_TO_OBJECT(v);
-	    if (aobj && js_HasLengthProperty(cx, aobj, &alength)) {
+	    if (aobj && OBJ_GET_CLASS(cx, aobj) == &js_ArrayClass) {
+                if (!OBJ_GET_PROPERTY(cx, aobj,
+                                      (jsid)cx->runtime->atomState.lengthAtom,
+                                      &v)) {
+                    return JS_FALSE;
+                }
+                if (!ValueIsLength(cx, v, &alength))
+                    return JS_FALSE;
 		for (slot = 0; slot < alength; slot++) {
 		    if (!IndexToId(cx, slot, &id))
 			return JS_FALSE;
@@ -1323,7 +1317,6 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	length++;
     }
 
-    *rval = OBJECT_TO_JSVAL(nobj);
     return JS_TRUE;
 }
 
