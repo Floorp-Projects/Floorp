@@ -663,6 +663,26 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
     }
   }
+  else if (type == eHTMLTag_td)
+  {
+    // We are after a table cell an thus maybe between two cells.
+    // Something should be done to avoid the two cells to be written
+    // together. This really need some intelligence about how the
+    // contents in the cell looks.
+    // Fow now, I will only add a SPACE. Could be a TAB or something
+    // else but I'm not sure everything can handle the TAB so SPACE
+    // seems like a better solution.
+    if(!mInWhitespace) {
+      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
+      if(mCacheLine) {
+        AddToLine(nsAutoString(" ").GetUnicode(), 1);
+      } else {
+        nsAutoString space(" ");
+        WriteSimple(space);
+      }
+      mInWhitespace = PR_TRUE;
+    }
+  }
 
   // The rest of this routine is formatted output stuff,
   // which we should skip if we're not formatted:
@@ -687,26 +707,6 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     else if(mIndent >= gTabSize)
       mIndent -= gTabSize;
   }
-  else if (type == eHTMLTag_td)
-  {
-    // We are after a table cell an thus maybe between two cells.
-    // Something should be done to avoid the two cells to be written
-    // together. This really need some intelligence about how the
-    // contents in the cell looks.
-    // Fow now, I will only add a SPACE. Could be a TAB or something
-    // else but I'm not sure everything can handle the TAB so SPACE
-    // seems like a better solution.
-    if(!mInWhitespace) {
-      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
-      if(mCacheLine) {
-        AddToLine(nsAutoString(" ").GetUnicode(), 1);
-      } else {
-        nsAutoString space(" ");
-        WriteSimple(space);
-      }
-      mInWhitespace = PR_TRUE;
-    }
-  }
   else if (type == eHTMLTag_a)
   { // these brackets must stay here
     if (!mURL.IsEmpty())
@@ -729,7 +729,6 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 
   return NS_OK;
 }
-
 
 /**
   * This method is used to add a leaf to the currently 
@@ -758,16 +757,16 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   printf("        '%s'    ", text.ToNewCString());
 #endif
 
-  if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select)                                                                    
-  {                                                                             
-  // Don't output the contents of SELECT elements;                            
-// Might be nice, eventually, to output just the selected element.          
-    return NS_OK;                                                               
-  }                                                                             
-  else if (type == eHTMLTag_text)     
+  if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select)
+  {
+    // Don't output the contents of SELECT elements;
+    // Might be nice, eventually, to output just the selected element.
+    return NS_OK;
+  }
+  else if (type == eHTMLTag_text)
   {
     Write(text);
-  } 
+  }
   else if (type == eHTMLTag_entity)
   {
     PRUnichar entity = nsHTMLEntities::EntityToUnicode(aNode.GetText());
@@ -1223,8 +1222,11 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
       bol=totLen;
       mInWhitespace=PR_FALSE;
     } else {
-      if(mInWhitespace && (nextpos == bol) &&
-         !(mFlags & nsIDocumentEncoder::OutputPreformatted)) {
+      // There's still whitespace left in the string
+
+      // If we're already in whitespace and not preformatted, just skip it:
+      if (mInWhitespace && (nextpos == bol) && !mPreFormatted &&
+          !(mFlags & nsIDocumentEncoder::OutputPreformatted)) {
         // Skip whitespace
         bol++;
         continue;
@@ -1244,7 +1246,6 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
         bol++;
         continue;
       }
-
       
       if(!mCacheLine) {
         aString.Mid(tempstr,bol,nextpos-bol);
@@ -1261,7 +1262,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
          
          offsetIntoBuffer = aString.GetUnicode();
          offsetIntoBuffer = &offsetIntoBuffer[bol];
-         if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
+         if(mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
            // Preserve the real whitespace character
            nextpos++;
            AddToLine(offsetIntoBuffer, nextpos-bol);
