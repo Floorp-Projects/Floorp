@@ -1393,6 +1393,18 @@ nsBindingManager::FlushChromeBindings()
   return NS_OK;
 }
 
+// Used below to protect from recurring in QI calls through XPConnect.
+struct AntiRecursionData {
+  nsIContent* element; 
+  REFNSIID iid; 
+  AntiRecursionData* next;
+
+  AntiRecursionData(nsIContent* aElement, 
+                    REFNSIID aIID, 
+                    AntiRecursionData* aNext)
+    : element(aElement), iid(aIID), next(aNext) {}
+};
+
 NS_IMETHODIMP
 nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
                                            void** aResult)
@@ -1408,7 +1420,40 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       GetWrappedJS(aContent, getter_AddRefs(wrappedJS));
 
       if (wrappedJS) {
+        // Protect from recurring in QI calls through XPConnect. 
+        // This can happen when a second binding is being resolved.
+        // At that point a wrappedJS exists, but it doesn't yet know about
+        // the iid we are asking for. So, without this protection, 
+        // AggregatedQueryInterface would end up recurring back into itself
+        // through this code. 
+        //
+        // With this protection, when we detect the recursion we return 
+        // NS_NOINTERFACE in the inner call. The outer call will then fall 
+        // through (see below) and build a new chained wrappedJS for the iid.
+        //
+        // We're careful to not assume that only one direct nesting can occur
+        // because there is a call into JS in the middle and we can't assume 
+        // that this code won't be reached by some more complex nesting path.
+        //
+        // NOTE: We *assume* this is single threaded, so we can use a
+        // static linked list to do the check.
+
+        static AntiRecursionData* list = nsnull;
+
+        for (AntiRecursionData* p = list; p; p = p->next) {
+          if (p->element == aContent && p->iid.Equals(aIID)) {
+            *aResult = nsnull;
+            return NS_NOINTERFACE;
+          }
+        }
+
+        AntiRecursionData item(aContent, aIID, list);
+        list = &item;
+
         nsresult rv = wrappedJS->AggregatedQueryInterface(aIID, aResult);
+        
+        list = item.next;
+        
         if (*aResult)
           return rv;
         
