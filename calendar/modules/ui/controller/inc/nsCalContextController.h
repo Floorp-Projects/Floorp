@@ -20,7 +20,7 @@
 #define nsCalContextController_h___
 
 #include "nsICalContextController.h"
-#include "nsXPFCCanvas.h"
+#include "nsCalCanvas.h"
 
 #include "nsIXPFCSubject.h"
 #include "nsIXPFCCommand.h"
@@ -30,7 +30,7 @@
 
 class nsCalContextController : public nsICalContextController,
                                public nsIXPFCSubject,
-                               public nsXPFCCanvas
+                               public nsCalCanvas
 {
 public:
   nsCalContextController(nsISupports * aOuter);

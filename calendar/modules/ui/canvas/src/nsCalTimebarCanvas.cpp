@@ -329,6 +329,9 @@ nsresult nsCalTimebarCanvas :: SetChildTimeContext(nsCalTimebarCanvas * aCanvas,
 
   nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
 
+  NS_RELEASE(context_subject);
+  NS_RELEASE(context_observer);
+
   /*
    * TODO:  Add the increment here for the appropriate period
    */
@@ -337,6 +340,8 @@ nsresult nsCalTimebarCanvas :: SetChildTimeContext(nsCalTimebarCanvas * aCanvas,
 
 
   context->AddPeriod(nsCalPeriodFormat_kDay,increment);
+
+  NS_RELEASE(context);
 
   return NS_OK;
 }

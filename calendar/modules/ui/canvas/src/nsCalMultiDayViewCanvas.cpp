@@ -185,8 +185,10 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
     ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
   else
     ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_horizontal);
-
+  
   parent = canvas;
+
+  NS_RELEASE(canvas);
 
   /*
    * Add the Header Time Canvas
@@ -212,6 +214,8 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
     canvas->SetPreferredSize(nsSize(25,25));
     canvas->SetMinimumSize(nsSize(25,25));
     canvas->SetMaximumSize(nsSize(25,25));
+
+    NS_RELEASE(canvas);
 
   }
 
@@ -240,6 +244,8 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
   else
     ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_horizontal);
 
+  NS_RELEASE(canvas);
+
   /*
    * Add the status View Canvas
    */
@@ -262,6 +268,8 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
     canvas->SetPreferredSize(nsSize(25,25));
     canvas->SetMinimumSize(nsSize(25,25));
     canvas->SetMaximumSize(nsSize(25,25));
+
+    NS_RELEASE(canvas);
 
   }
 
@@ -443,6 +451,8 @@ nsEventStatus nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
         iterator->Next();
       }
 
+      NS_RELEASE(iterator);
+
       Layout();
 
       nsRect bounds;
@@ -559,12 +569,15 @@ nsresult nsCalMultiDayViewCanvas :: SetMultiDayLayout(nsLayoutAlignment aLayoutA
         iterator2->Next();
 
       }
+
+      NS_RELEASE(iterator2);
+
     }
-
-
-
+    
     iterator->Next();
   }
+
+  NS_IF_RELEASE(iterator);
 
   return res;
 }
@@ -632,10 +645,14 @@ nsresult nsCalMultiDayViewCanvas :: SetTimeContext(nsICalTimeContext * aContext)
       iterator2->Next();
 
     }
+
+    NS_RELEASE(iterator2);
        
     index++;
     iterator->Next();
   }
+
+  NS_RELEASE(iterator);
 
   return (nsCalMultiViewCanvas :: SetTimeContext(aContext));
 }

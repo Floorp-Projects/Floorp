@@ -41,7 +41,7 @@ static NS_DEFINE_IID(kCXPFCSubjectIID,          NS_IXPFC_SUBJECT_IID);
 
 #define kNotFound -1
 
-nsCalContextController :: nsCalContextController(nsISupports * aOuter) : nsXPFCCanvas(aOuter)
+nsCalContextController :: nsCalContextController(nsISupports * aOuter) : nsCalCanvas(aOuter)
 {
   NS_INIT_REFCNT();
 
@@ -86,7 +86,7 @@ nsresult nsCalContextController::QueryInterface(REFNSIID aIID, void** aInstanceP
     return NS_OK;                                                        
   }                                                                      
 
-  return (nsXPFCCanvas::QueryInterface(aIID, aInstancePtr));
+  return (nsCalCanvas::QueryInterface(aIID, aInstancePtr));
 
 }
 
@@ -124,7 +124,7 @@ nsresult nsCalContextController :: Init()
   mDuration->SetMinute(0);
   mDuration->SetSecond(0);
 
-  return (nsXPFCCanvas::Init());
+  return (nsCalCanvas::Init());
 }
 
 nsresult nsCalContextController :: Attach(nsIXPFCObserver * aObserver)
@@ -240,5 +240,5 @@ nsresult nsCalContextController :: SetParameter(nsString& aKey, nsString& aValue
   }
 
 
-  return (nsXPFCCanvas::SetParameter(aKey, aValue));
+  return (nsCalCanvas::SetParameter(aKey, aValue));
 }

@@ -150,22 +150,23 @@ nsCalXMLContentSink::nsCalXMLContentSink() : nsIHTMLContentSink()
 nsCalXMLContentSink::~nsCalXMLContentSink() 
 {
 
-  if (mOrphanCanvasList != nsnull) {
+  if (mOrphanCanvasList != nsnull) 
+  {
 
-	  nsIIterator * iterator;
+    nsIIterator * iterator;
 
-	  mOrphanCanvasList->CreateIterator(&iterator);
-	  iterator->Init();
+    mOrphanCanvasList->CreateIterator(&iterator);
+    iterator->Init();
 
     nsIXPFCCanvas * item;
 
-	  while(!(iterator->IsDone()))
-	  {
-		  item = (nsIXPFCCanvas *) iterator->CurrentItem();
-		  NS_RELEASE(item);
-		  iterator->Next();
-	  }
-	  NS_RELEASE(iterator);
+    while(!(iterator->IsDone()))
+    {
+      item = (nsIXPFCCanvas *) iterator->CurrentItem();
+      NS_RELEASE(item);
+      iterator->Next();
+    }
+    NS_RELEASE(iterator);
 
     mOrphanCanvasList->RemoveAll();
     NS_RELEASE(mOrphanCanvasList);
@@ -175,10 +176,28 @@ nsCalXMLContentSink::~nsCalXMLContentSink()
   NS_RELEASE(mTimeContextList);
   NS_RELEASE(mCanvasStack);
 
-  if (mControlList != nsnull) {
+  if (mControlList != nsnull) 
+  {
+
+    nsIIterator * iterator;
+
+    mControlList->CreateIterator(&iterator);
+    iterator->Init();
+
+    ControlListEntry * item;
+
+	while(!(iterator->IsDone()))
+	{
+		item = (ControlListEntry *) iterator->CurrentItem();
+		delete item;
+		iterator->Next();
+	}
+	NS_RELEASE(iterator);
+
     mControlList->RemoveAll();
     NS_RELEASE(mControlList);
   }
+
 }
 
 NS_IMPL_ADDREF(nsCalXMLContentSink)
@@ -289,6 +308,7 @@ NS_IMETHODIMP nsCalXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     NS_RELEASE(root);
   }
 
+  NS_RELEASE(object);
 
   return NS_OK;
 }
@@ -330,9 +350,7 @@ NS_IMETHODIMP nsCalXMLContentSink::ConsumeAttributes(const nsIParserNode& aNode,
    */
 
   if (control == PR_TRUE)
-  {
     mControlList->Append(new ControlListEntry(&aObject, scontrol));
-  }
 
   return NS_OK;
 }
@@ -341,11 +359,7 @@ NS_IMETHODIMP nsCalXMLContentSink::ConsumeAttributes(const nsIParserNode& aNode,
 NS_IMETHODIMP nsCalXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   nsIXPFCCanvas * canvas = (nsIXPFCCanvas *)mCanvasStack->Pop();  
-
-#if 0
   NS_IF_RELEASE(canvas);
-#endif
-
   return NS_OK;
 }
 
@@ -382,7 +396,10 @@ NS_IMETHODIMP nsCalXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, P
   }
 
   if (aPush == PR_TRUE)
+  {
     mCanvasStack->Push(canvas);
+    NS_ADDREF(canvas);
+  }
 
   NS_RELEASE(canvas);
 
@@ -542,6 +559,7 @@ NS_IMETHODIMP nsCalXMLContentSink::AddCtx(const nsIParserNode& aNode)
   ApplyContext(root, context);
 
   NS_RELEASE(root);
+  NS_RELEASE(context);
 
   return NS_OK;
 }
@@ -696,8 +714,9 @@ NS_IMETHODIMP nsCalXMLContentSink::AddControl(const nsIParserNode& aNode)
     NS_RELEASE(object);
   }
 
-  mOrphanCanvasList->Remove(child);
-  NS_RELEASE(child);
+  if (NS_OK == (mOrphanCanvasList->Remove(child)))
+    NS_RELEASE(child);
+
   return res;
 }
 
@@ -977,6 +996,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                       NS_RELEASE(msubject);
                     }
                   }
+                  NS_RELEASE(observer);
                 }
 
               }
@@ -1070,5 +1090,6 @@ nsIXPFCCanvas * nsCalXMLContentSink::CanvasFromName(nsString& aName)
 nsresult nsCalXMLContentSink::SetRootCanvas(nsIXPFCCanvas * aCanvas)
 {
   mCanvasStack->Push(aCanvas);
+  NS_ADDREF(aCanvas);
   return NS_OK;
 }

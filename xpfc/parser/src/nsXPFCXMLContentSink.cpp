@@ -356,9 +356,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     NS_IF_RELEASE(canvas);
   }
 
-  // XXX: Really need this for all states
-  if (mState == XPFC_PARSING_STATE_MENUBAR || mState == XPFC_PARSING_STATE_TOOLBAR)
-    NS_RELEASE(object);
+  NS_RELEASE(object);
 
   return NS_OK;
 }
@@ -385,10 +383,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     }
   }
 
-#if 0
   NS_IF_RELEASE(container);
-#endif
-
   return NS_OK;
 }
 
@@ -453,9 +448,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddLeaf(const nsIParserNode& aNode)
 
   }
 
-  // XXX: Really need this for all states
-  if (mState == XPFC_PARSING_STATE_MENUBAR || mState == XPFC_PARSING_STATE_TOOLBAR)
-    NS_RELEASE(object);
+  NS_RELEASE(object);
 
   return NS_OK;
 }
@@ -804,7 +797,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
 
     if (aPush == PR_TRUE)
-      mXPFCStack->Push(child_canvas);
+      PushComponent(child_canvas);
 
     NS_IF_RELEASE(child_canvas);
     NS_IF_RELEASE(container);
@@ -875,7 +868,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
     }
 
     if (aPush == PR_TRUE)
-      mXPFCStack->Push(container);
+      PushComponent(container);
 
     
     container->Release();
@@ -896,7 +889,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
       //mViewerContainer->GetToolbarManager()->AddDialog(container);
 
       if (aPush == PR_TRUE)
-        mXPFCStack->Push(container);
+        PushComponent(container);
 
     } else {
 
@@ -912,14 +905,13 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
         if (NS_OK == res)
         {
           parent_canvas->AddChildCanvas(child_canvas);
-        
-          //NS_RELEASE(parent_canvas);
+          NS_RELEASE(parent_canvas);
         }
 
         if (aPush == PR_TRUE)
-          mXPFCStack->Push(child_canvas);
-
-        //NS_RELEASE(child_canvas);
+          PushComponent(child_canvas);
+      
+        NS_RELEASE(child_canvas);
       }
 
     }
@@ -936,18 +928,13 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
     parent = (nsIXPFCCanvas *) mXPFCStack->Top();
 
-    if (parent == nsnull)
-    {
-      if (aPush == PR_TRUE)
-        mXPFCStack->Push(container);
-
-    } else {
-
+    if (parent != nsnull)
       parent->AddChildCanvas(container);
 
-      if (aPush == PR_TRUE)
-        mXPFCStack->Push(container);
-    }
+    if (aPush == PR_TRUE)
+      PushComponent(container);
+
+    NS_RELEASE(container);
 
     return NS_OK;
 
@@ -962,6 +949,13 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
 nsresult nsXPFCXMLContentSink::SetRootCanvas(nsIXPFCCanvas * aCanvas)
 {
-  mXPFCStack->Push(aCanvas);
+  PushComponent(aCanvas);
+  return NS_OK;
+}
+
+nsresult nsXPFCXMLContentSink::PushComponent(nsISupports* aComponent)
+{
+  mXPFCStack->Push(aComponent);
+  NS_ADDREF(aComponent);
   return NS_OK;
 }

@@ -81,6 +81,9 @@ private:
 public:
   NS_IMETHOD_(PRBool) IsContainer(const nsIParserNode& aNode);
 
+private:
+  NS_IMETHOD PushComponent(nsISupports* aComponent);
+
 
 private:
     nsIWebViewerContainer * mViewerContainer ;

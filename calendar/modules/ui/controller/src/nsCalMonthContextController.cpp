@@ -98,13 +98,18 @@ nsCalMonthContextController :: nsCalMonthContextController(nsISupports* outer) :
     m_HighlightBGColor = NS_RGB(255,0,0);
     m_ActionDateList = nsnull;
     SetDefaults();
-    Init();
 }
 
 nsCalMonthContextController :: ~nsCalMonthContextController()
 {
   if (m_pDates != 0)
       delete m_pDates;
+
+  if (nsnull != m_pValidPosMap)
+    PR_Free(m_pValidPosMap);
+
+  if (nsnull != m_pStartTimeMap)
+    PR_Free(m_pStartTimeMap);
 
   NS_IF_RELEASE(m_ActionDateList);
 
@@ -140,16 +145,27 @@ NS_IMPL_RELEASE(nsCalMonthContextController)
 
 nsresult nsCalMonthContextController :: Init()
 {
-  m_pDates = new JulianPtrArray();
+  if (nsnull == m_pDates)
+    m_pDates = new JulianPtrArray();
 
   /*
    * Create the Interactive date list array
    */
-  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
-  nsresult res = nsRepository::CreateInstance(kCVectorCID, nsnull, kCVectorCID, (void **)&m_ActionDateList);
-  if (NS_OK != res)
-    return res ;
-  m_ActionDateList->Init();
+
+  if (nsnull == m_ActionDateList)
+  {
+    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+
+    nsresult res = nsRepository::CreateInstance(kCVectorCID, 
+                                                nsnull, 
+                                                kCVectorCID, 
+                                                (void **)&m_ActionDateList);
+
+    if (NS_OK != res)
+      return res ;
+
+    m_ActionDateList->Init();
+  }
 
   nsFont font(m_sFontName /*"Arial"*/, NS_FONT_STYLE_NORMAL,
 		    NS_FONT_VARIANT_NORMAL,
