@@ -155,8 +155,10 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 aItemIndex ) {
 	nsresult rv = NS_ERROR_FAILURE;
 	nsCOMPtr<nsISupports> genericDataWrapper;
-	nsPrimitiveHelpers::CreatePrimitiveForData( mflavorStr, mData, mtmpDataLen, getter_AddRefs( genericDataWrapper ) );
-	rv = aTransferable->SetTransferData( mflavorStr, genericDataWrapper, mtmpDataLen );
+	if( mData ) {
+		nsPrimitiveHelpers::CreatePrimitiveForData( mflavorStr, mData, mtmpDataLen, getter_AddRefs( genericDataWrapper ) );
+		rv = aTransferable->SetTransferData( mflavorStr, genericDataWrapper, mtmpDataLen );
+		}
 	return rv;
 	}
 
