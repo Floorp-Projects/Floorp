@@ -48,7 +48,7 @@
 #include "nsNetCID.h"
 
 static const char kSecurityProperties[] =
-  "chrome://communicator/locale/webservices/security.properties";
+  "chrome://global/locale/webservices/security.properties";
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 

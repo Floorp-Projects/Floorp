@@ -2798,7 +2798,7 @@ nsresult nsScriptSecurityManager::Init()
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = bundleService->CreateBundle("chrome://communicator/locale/security/caps.properties", &sStrBundle);
+    rv = bundleService->CreateBundle("chrome://global/locale/security/caps.properties", &sStrBundle);
     NS_ENSURE_SUCCESS(rv, rv);
 
     //-- Register security check callback in the JS engine

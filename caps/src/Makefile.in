@@ -87,13 +87,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-CHROME_DIR = locales/en-US
-CHROME_L10N_DIR = communicator/locale/security
-
-CHROME_L10N    = \
-		caps.properties \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../include

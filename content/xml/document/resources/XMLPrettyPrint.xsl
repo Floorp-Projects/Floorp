@@ -36,7 +36,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/xml/prettyprint.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://global/locale/xml/prettyprint.dtd">
 
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
