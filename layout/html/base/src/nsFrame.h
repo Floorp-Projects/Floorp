@@ -239,10 +239,8 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  GetParentWithView(nsIPresContext* aPresContext, nsIFrame** aParent) const;
   NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsIPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
-  NS_IMETHOD  GetWindow(nsIPresContext* aPresContext, nsIWidget**) const;
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
 #ifdef NS_DEBUG
