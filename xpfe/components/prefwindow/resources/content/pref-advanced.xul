@@ -37,7 +37,9 @@
     
   ]]>
   </script>
-     
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+
         
   <box class="box-smallheader" title="&lHeader;"/>
 
@@ -53,7 +55,7 @@
               pref="true" preftype="bool" prefstring="advanced.mailftp"
               prefattribute="checked"/>
 
-    <separator/>
+    <separator class="thin"/>
     
     <html>&description.label;</html>
 	</titledbox>
