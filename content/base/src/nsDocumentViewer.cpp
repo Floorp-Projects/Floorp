@@ -2344,6 +2344,34 @@ DocumentViewerImpl::GetTextZoom(float* aTextZoom)
   return NS_OK;
 }
 
+static void
+SetChildAuthorStyleDisabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  PRBool styleDisabled  = *NS_STATIC_CAST(PRBool*, aClosure);
+  aChild->SetAuthorStyleDisabled(styleDisabled);
+}
+
+
+NS_IMETHODIMP
+DocumentViewerImpl::SetAuthorStyleDisabled(PRBool aStyleDisabled)
+{
+  if (mPresShell) {
+    nsresult rv = mPresShell->SetAuthorStyleDisabled(aStyleDisabled);
+    if (NS_FAILED(rv)) return rv;
+  }
+  return CallChildren(SetChildAuthorStyleDisabled, &aStyleDisabled);
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetAuthorStyleDisabled(PRBool* aStyleDisabled)
+{
+  *aStyleDisabled = PR_FALSE;
+  if (mPresShell) {
+    return mPresShell->GetAuthorStyleDisabled(aStyleDisabled);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
 {

@@ -70,6 +70,7 @@ public:
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aCompatMode) = 0;
   NS_IMETHOD SetPreferredSheet(const nsAString& aTitle) = 0;
+  NS_IMETHOD GetPreferredSheet(nsAString& aTitle) = 0;
 
   // Get/Recycle a CSS parser for general use
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,

@@ -327,6 +327,13 @@ CSSLoaderImpl::SetPreferredSheet(const nsAString& aTitle)
 }
 
 NS_IMETHODIMP
+CSSLoaderImpl::GetPreferredSheet(nsAString& aTitle)
+{
+  aTitle.Assign(mPreferredSheet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CSSLoaderImpl::GetParserFor(nsICSSStyleSheet* aSheet, 
                             nsICSSParser** aParser)
 {

@@ -628,6 +628,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3DocumentEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocumentStyle)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentRange)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentTraversal)
@@ -2550,6 +2551,18 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
   *aStyleSheets = mDOMStyleSheets;
   NS_ADDREF(*aStyleSheets);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetPreferredStylesheetSet(nsAString& aStyleTitle)
+{
+  if (mCSSLoader) {
+    mCSSLoader->GetPreferredSheet(aStyleTitle);
+  }
+  else {
+    aStyleTitle.Truncate();
+  }
   return NS_OK;
 }
 
