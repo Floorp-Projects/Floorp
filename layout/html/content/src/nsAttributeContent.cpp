@@ -159,6 +159,8 @@ public:
   // Implementation for nsITextContent
   NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
                    PRInt32& aNumFragmentsResult);
+  NS_IMETHOD GetTextLength(PRInt32* aLengthResult);
+  NS_IMETHOD CopyText(nsString& aResult);
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
@@ -168,6 +170,8 @@ public:
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
 
   //----------------------------------------
+
+  void ValidateTextFragment();
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
@@ -390,9 +394,8 @@ nsAttributeContent::GetRangeList(nsVoidArray*& aResult) const
 
 // Implementation of the nsITextContent interface
 
-nsresult
-nsAttributeContent::GetText(const nsTextFragment*& aFragmentsResult,
-                              PRInt32& aNumFragmentsResult)
+void
+nsAttributeContent::ValidateTextFragment()
 {
   if (nsnull != mContent) {
     nsAutoString result;
@@ -401,17 +404,56 @@ nsAttributeContent::GetText(const nsTextFragment*& aFragmentsResult,
     PRUnichar * text = result.ToNewUnicode();
     mText.SetTo(text, result.Length());
     delete text;
+  }
+  else {
+    mText.SetTo("", 0);
+  }
+}
 
+nsresult
+nsAttributeContent::GetText(const nsTextFragment*& aFragmentsResult,
+                            PRInt32& aNumFragmentsResult)
+{
+  ValidateTextFragment();
+  if (nsnull != mContent) {
     aFragmentsResult = &mText;
     aNumFragmentsResult = 1;
     return NS_OK;
   } 
+  // XXX is this a good idea, or should we just return an empty
+  // fragment with no data in it?
   return NS_ERROR_FAILURE;
 }
 
 nsresult
+nsAttributeContent::GetTextLength(PRInt32* aLengthResult)
+{
+  if (!aLengthResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  ValidateTextFragment();
+  *aLengthResult = mText.GetLength();
+  return NS_OK;
+}
+
+nsresult
+nsAttributeContent::CopyText(nsString& aResult)
+{
+  ValidateTextFragment();
+  if (mText.Is2b()) {
+    aResult.SetString(mText.Get2b(), mText.GetLength());
+  }
+  else {
+    aResult.SetString(mText.Get1b(), mText.GetLength());
+  }
+  return NS_OK;
+}
+
+// XXX shouldn't these update mContent's attribute?
+nsresult
 nsAttributeContent::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
-                              PRBool aNotify)
+                            PRBool aNotify)
 {
   NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
   if (aLength < 0) {
@@ -429,10 +471,11 @@ nsAttributeContent::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
   return NS_OK;
 }
 
+// XXX shouldn't these update mContent's attribute?
 nsresult
 nsAttributeContent::SetText(const char* aBuffer, 
-                              PRInt32 aLength,
-                              PRBool aNotify)
+                            PRInt32 aLength,
+                            PRBool aNotify)
 {
   NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
   if (aLength < 0) {
@@ -454,6 +497,8 @@ nsAttributeContent::SetText(const char* aBuffer,
 nsresult
 nsAttributeContent::IsOnlyWhitespace(PRBool* aResult)
 {
+  ValidateTextFragment();
+
   nsTextFragment& frag = mText;
   if (frag.Is2b()) {
     const PRUnichar* cp = frag.Get2b();
