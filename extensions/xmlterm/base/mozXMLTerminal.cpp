@@ -609,10 +609,9 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
     presContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID);
 
   // Get metrics for fixed font
-  nsCOMPtr<nsIFontMetrics> fontMetrics;
-  result = presContext->GetMetricsFor(*defaultFixedFont,
-                                      getter_AddRefs(fontMetrics));
-  if (NS_FAILED(result) || !fontMetrics)
+  nsCOMPtr<nsIFontMetrics> fontMetrics =
+    presContext->GetMetricsFor(*defaultFixedFont);
+  if (!fontMetrics)
     return result;
 
   // Get font height (includes leading?)
