@@ -29,19 +29,23 @@
 
 /*DSR050297 - this is based on types.h in the TCP/IP headers...               */
 /*I'm not including types.h because that causes all sorts of damage...        */
+#ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 120
+#endif
 
-#if defined(XP_OS2_DOUGSOCK)
-#ifndef BSD_SELECT
+/*#if defined(XP_OS2_DOUGSOCK)*/
+#if 1
+/*#ifndef BSD_SELECT*/
+#if 0
 #error you need BSD_SELECT defined in your command line for all files
 #endif
-#include <nerrno.h>
+/*#include <nerrno.h>*/
 #include <sys\socket.h>
 #include <sys\select.h>
 #include <sys\time.h>
 #include <sys\ioctl.h>
 #include <netdb.h>
-#include <utils.h>
+/*#include <utils.h>*/
 
 #else
 /*DSR072196 - replaced many files with pmwsock.h...*/
