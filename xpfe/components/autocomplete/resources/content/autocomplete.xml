@@ -55,6 +55,7 @@
       ]]></constructor>
 
       <destructor><![CDATA[
+        this.clearResults(false);
       ]]></destructor>
       
       <!-- =================== PUBLIC PROPERTIES =================== -->
@@ -313,7 +314,7 @@
         <body><![CDATA[
           var obj = this.convertIndexToSession(aIndex);
           if (obj && this.mLastResults[obj.session]) {
-            var nsIAutoCompleteItem = Components.interfaces.nsIAutoCompleteItem;
+            const nsIAutoCompleteItem = Components.interfaces.nsIAutoCompleteItem;
             if (obj.index >= 0) {
               var item = this.mLastResults[obj.session].items.QueryElementAt(obj.index, nsIAutoCompleteItem);
               return item;
@@ -1065,8 +1066,19 @@
       <!--  -->
       <method name="clearResultData">
         <body><![CDATA[
+          const nsIAutoCompleteItem =
+            Components.interfaces.nsIAutoCompleteItem;
           for (var name in this.mSessions) {
-            this.mLastResults[name] = null;
+            // clearing out mLastResults[name] does not guarantee that
+            // each result will go away right now (it might be gc'ed later)
+            // so we have to clear the 'param' element manually
+            var session = this.mLastResults[name];
+            if (session) {
+              const resultCount = session.items.Count();
+              for (var i=0; i<resultCount; i++)
+                  session.items.QueryElementAt(i, nsIAutoCompleteItem).param = null;
+              this.mLastResults[name] = null;
+            }
             this.mLastStatus[name] = null;
           }
         ]]></body>
