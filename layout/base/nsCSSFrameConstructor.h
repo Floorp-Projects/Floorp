@@ -35,6 +35,7 @@ class nsVoidArray;
 class nsIFrameManager;
 
 class nsFrameConstructorState;
+class nsIDOMHTMLSelectElement;
 
 class nsCSSFrameConstructor : public nsIStyleFrameConstruction {
 public:
@@ -489,6 +490,12 @@ protected:
                             nsIContent      *aContent, 
                             nsIFrame        *&aFrame,
                             nsIStyleContext *aStyleContext);
+
+  nsresult RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
+                                      nsIPresShell *  aPresShell,
+                                      nsIContent*     aContainer,
+                                      nsIContent*     aChild,
+                                      nsIDOMHTMLSelectElement * aSelectElement);
 
   PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
