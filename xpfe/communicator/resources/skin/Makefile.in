@@ -27,8 +27,15 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE = \
+		$(srcdir)/brand.css \
+		$(srcdir)/box.css \
 		$(srcdir)/button.css \
 		$(srcdir)/communicator.css \
+		$(srcdir)/menu.css \
+		$(srcdir)/menubutton.css \
+		$(srcdir)/splitter.css \
+		$(srcdir)/toolbar.css \
+		$(srcdir)/navbar-endbox.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

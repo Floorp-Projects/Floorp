@@ -26,8 +26,15 @@ include <$(DEPTH)\config\rules.mak>
 DISTBROWSER=$(DIST)\bin\chrome\communicator\skin
 
 install::
-	$(MAKE_INSTALL) button.css $(DISTBROWSER) \
+	$(MAKE_INSTALL) box.css $(DISTBROWSER)
+	$(MAKE_INSTALL) brand.css $(DISTBROWSER)
+	$(MAKE_INSTALL) button.css $(DISTBROWSER)
 	$(MAKE_INSTALL) communicator.css $(DISTBROWSER)
+	$(MAKE_INSTALL) menu.css $(DISTBROWSER)
+	$(MAKE_INSTALL) menubutton.css $(DISTBROWSER)
+	$(MAKE_INSTALL) splitter.css $(DISTBROWSER)
+	$(MAKE_INSTALL) toolbar.css $(DISTBROWSER)
+	$(MAKE_INSTALL) navbar-endbox.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\communicator\skin\*.*
