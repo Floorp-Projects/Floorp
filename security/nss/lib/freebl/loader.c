@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.5 2001/11/15 02:41:16 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.6 2001/11/30 23:21:48 relyea%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -320,6 +320,24 @@ RSA_PrivateKeyOp(RSAPrivateKey *  key,
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
   return (vector->p_RSA_PrivateKeyOp)(key, output, input);
+}
+
+SECStatus
+RSA_PrivateKeyOpDoubleChecked(RSAPrivateKey *key,
+                              unsigned char *output,
+                              const unsigned char *input)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_PrivateKeyOpDoubleChecked)(key, output, input);
+}
+
+SECStatus
+RSA_PrivateKeyCheck(RSAPrivateKey *key)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_PrivateKeyCheck)(key);
 }
 
 SECStatus 
@@ -931,3 +949,11 @@ PQG_DestroyVerify(PQGVerify *vfy)
   (vector->p_PQG_DestroyVerify)( vfy);
 }
 #endif
+
+void 
+BL_Cleanup(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_Cleanup)();
+}

@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.27 2001/11/14 23:03:20 ian.mcgreer%sun.com Exp $
+ * $Id: rsa.c,v 1.28 2001/11/30 23:21:49 relyea%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -967,3 +967,40 @@ cleanup:
     return rv;
 }
 
+/* cleanup at shutdown */
+void RSA_Cleanup(void)
+{
+    if (!coBPInit.initialized)
+	return;
+
+    while (!PR_CLIST_IS_EMPTY(&blindingParamsList.head))
+    {
+	struct RSABlindingParamsStr * rsabp = (struct RSABlindingParamsStr *)
+	    PR_LIST_HEAD(&blindingParamsList.head);
+	PR_REMOVE_LINK(&rsabp->link);
+	mp_clear(&rsabp->f);
+	mp_clear(&rsabp->g);
+	SECITEM_FreeItem(&rsabp->modulus,PR_FALSE);
+	PORT_Free(rsabp);
+    }
+
+    if (blindingParamsList.lock)
+    {
+	PZ_DestroyLock(blindingParamsList.lock);
+	blindingParamsList.lock = NULL;
+    }
+
+    coBPInit.initialized = 0;
+    coBPInit.inProgress = 0;
+    coBPInit.status = 0;
+}
+
+/*
+ * need a central place for this function to free up all the memory that
+ * free_bl may have allocated along the way. Currently only RSA does this,
+ * so I've put it here for now.
+ */
+void BL_Cleanup(void)
+{
+    RSA_Cleanup();
+}
