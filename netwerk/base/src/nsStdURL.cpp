@@ -35,6 +35,10 @@
 #include "nsILocalFile.h"
 #include "nsEscape.h"
 
+#ifdef XP_PC
+#include <windows.h>
+#endif
+
 static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
@@ -1028,7 +1032,13 @@ nsStdURL::SetFile(nsIFile * aFile)
         char* s = ePath;
 	    while (*s)
 	    {
-		    if (*s == '\\')
+                    // We need to call IsDBCSLeadByte because
+                    // Japanese windows can have 0x5C in the sencond byte 
+                    // of a Japanese character, for example 0x8F 0x5C is
+                    // one Japanese character
+                    if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+                        s++;
+		    } else if (*s == '\\')
 			    *s = '/';
 		    s++;
 	    }
