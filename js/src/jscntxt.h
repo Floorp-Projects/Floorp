@@ -382,12 +382,11 @@ struct JSContext {
     JSLocaleCallbacks   *localeCallbacks;
 
     /*
-     * cx->resolving is non-zero if we are init'ing standard classes lazily, or
-     * if we are otherwise recursing indirectly from js_LookupProperty through
-     * a JSClass.resolve hook.  It is used together with cx->resolvingTable to
+     * cx->resolvingTable is non-null and non-empty if we are initializing
+     * standard classes lazily, or if we are otherwise recursing indirectly
+     * from js_LookupProperty through a JSClass.resolve hook.  It is used to
      * limit runaway recursion (see jsapi.c and jsobj.c).
      */
-    uint32              resolving;
     JSDHashTable        *resolvingTable;
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
