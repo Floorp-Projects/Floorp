@@ -26,7 +26,7 @@
 #ifndef nsDateTimeHandler_h___
 #define nsDateTimeHandler_h___
 
-#include "nsIProtocolHandler.h"
+#include "nsIProxiedProtocolHandler.h"
 
 #define DATETIME_PORT 13
 
@@ -34,11 +34,12 @@
 #define NS_DATETIMEHANDLER_CID \
 { 0xaa27d2a0, 0xb71b, 0x11d3, { 0xa1, 0xa0, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } }
 
-class nsDateTimeHandler : public nsIProtocolHandler
+class nsDateTimeHandler : public nsIProxiedProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIPROXIEDPROTOCOLHANDLER
 
     // nsDateTimeHandler methods:
     nsDateTimeHandler();

@@ -26,7 +26,9 @@
 #ifndef nsFingerHandler_h___
 #define nsFingerHandler_h___
 
-#include "nsIProtocolHandler.h"
+#include "nsIProxiedProtocolHandler.h"
+
+class nsIProxyInfo;
 
 #define FINGER_PORT 79
 
@@ -35,11 +37,12 @@
 { 0x76d6d5d8, 0x1dd2, 0x11b2, \
    {0xb3, 0x61, 0x85, 0x0d, 0xdf, 0x15, 0xef, 0x07} }
 
-class nsFingerHandler : public nsIProtocolHandler
+class nsFingerHandler : public nsIProxiedProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIPROXIEDPROTOCOLHANDLER
 
     // nsFingerHandler methods:
     nsFingerHandler();

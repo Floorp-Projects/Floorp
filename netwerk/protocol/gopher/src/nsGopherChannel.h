@@ -38,6 +38,7 @@
 #include "nsIProxy.h"
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
+#include "nsIProxyInfo.h"
 
 class nsGopherChannel : public nsIChannel,
                         public nsIStreamListener {
@@ -56,7 +57,7 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIURI* uri);
+    nsresult Init(nsIURI* uri, nsIProxyInfo* proxyInfo);
 
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
@@ -82,6 +83,7 @@ protected:
     nsCOMPtr<nsISupports>               mResponseContext;
     nsCOMPtr<nsITransport>              mTransport;
     nsCOMPtr<nsIRequest>                mTransportRequest;
+    nsCOMPtr<nsIProxyInfo>              mProxyInfo;
     nsresult                            mStatus;
 
     nsresult SendRequest(nsITransport* aTransport);

@@ -103,9 +103,7 @@ nsHttpChannel::~nsHttpChannel()
 nsresult
 nsHttpChannel::Init(nsIURI *uri,
                     PRUint8 caps,
-                    const char *proxyHost,
-                    PRInt32 proxyPort,
-                    const char *proxyType)
+                    nsIProxyInfo *proxyInfo)
 {
     nsresult rv;
 
@@ -141,8 +139,7 @@ nsHttpChannel::Init(nsIURI *uri,
     LOG(("host=%s port=%d\n", host.get(), port));
 
     mConnectionInfo = new nsHttpConnectionInfo(host, port,
-                                               proxyHost, proxyPort,
-                                               proxyType, usingSSL);
+                                               proxyInfo, usingSSL);
     if (!mConnectionInfo)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mConnectionInfo);
@@ -172,10 +169,10 @@ nsHttpChannel::Init(nsIURI *uri,
     rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool useProxy = (proxyHost && !PL_strcmp(proxyType, "http"));
-
-    rv = nsHttpHandler::get()->AddStandardRequestHeaders(&mRequestHead.Headers(),
-                                                         caps, useProxy);
+    rv = nsHttpHandler::get()->
+        AddStandardRequestHeaders(&mRequestHead.Headers(),
+                                  caps,
+                                  mConnectionInfo->UsingHttpProxy());
     if (NS_FAILED(rv)) return rv;
 
     // check to see if authorization headers should be included
@@ -300,13 +297,11 @@ nsHttpChannel::SetupTransaction()
     NS_ADDREF(mTransaction);
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
-    // or socks does not count here).
+    // does not count here).
     nsXPIDLCString requestURIStr;
     const char* requestURI;
-    if (!mConnectionInfo->ProxyHost() ||
-        mConnectionInfo->UsingSSL() ||
-        !PL_strcmp(mConnectionInfo->ProxyType(), "socks") ||
-        !PL_strcmp(mConnectionInfo->ProxyType(), "socks4")) {
+    if (mConnectionInfo->UsingSSL() ||
+        !mConnectionInfo->UsingHttpProxy()) {
         rv = mURI->GetPath(getter_Copies(requestURIStr));
         if (NS_FAILED(rv)) return rv;
         requestURI = requestURIStr.get();
@@ -1055,10 +1050,12 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         else
             proxyPort = 80;
 
+        nsCOMPtr<nsIProxyInfo> pi;
+        rv = NS_NewProxyInfo("http", location, proxyPort, getter_AddRefs(pi));
+
         // talk to the http handler directly for this case
         rv = nsHttpHandler::get()->
-                NewProxyChannel(mURI, location, proxyPort, "http",
-                                getter_AddRefs(newChannel));
+                NewProxiedChannel(mURI, pi, getter_AddRefs(newChannel));
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -1509,8 +1506,7 @@ nsHttpChannel::AddAuthorizationHeaders()
 
         // check if proxy credentials should be sent
         const char *proxyHost = mConnectionInfo->ProxyHost();
-        const char *proxyType = mConnectionInfo->ProxyType();
-        if (proxyHost && !PL_strcmp(proxyType, "http")) {
+        if (proxyHost) {
             rv = authCache->GetCredentialsForPath(proxyHost,
                                                   mConnectionInfo->ProxyPort(),
                                                   nsnull, realm, creds);

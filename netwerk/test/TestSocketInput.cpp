@@ -163,7 +163,7 @@ main(int argc, char* argv[])
 
   nsITransport* transport;
 
-  rv = sts->CreateTransport(hostName, port, nsnull, -1, 0, 0, &transport);
+  rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, &transport);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIRequest> request;
     transport->AsyncRead(nsnull, new InputTestConsumer, 0, -1, 0, getter_AddRefs(request));

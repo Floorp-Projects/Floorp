@@ -109,7 +109,7 @@ nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
   m_startPosition = 0;
 
   rv = socketService->CreateTransportOfType(connectionType, aHostName,
-                                            aGetPort, nsnull, -1, 0, 0,
+                                            aGetPort, nsnull, 0, 0,
                                             getter_AddRefs(m_transport));
   if (NS_FAILED(rv)) return rv;
 

@@ -38,7 +38,7 @@
 #include "nsIURI.h"
 #include "nsDateTimeHandler.h"
 #include "nsIStreamListener.h"
-
+#include "nsIProxyInfo.h"
 
 class nsDateTimeChannel 
 : public nsIChannel, 
@@ -59,7 +59,7 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIURI* uri);
+    nsresult Init(nsIURI* uri, nsIProxyInfo* proxyInfo);
 
 protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
@@ -70,7 +70,8 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCString                           mContentType;
     PRInt32                             mContentLength;
-    nsCOMPtr<nsISupports>               mOwner; 
+    nsCOMPtr<nsISupports>               mOwner;
+    nsCOMPtr<nsIProxyInfo>              mProxyInfo;
 
     PRInt32                             mPort;
     nsXPIDLCString                      mHost;

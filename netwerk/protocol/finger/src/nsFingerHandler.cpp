@@ -43,7 +43,9 @@ nsFingerHandler::nsFingerHandler() {
 nsFingerHandler::~nsFingerHandler() {
 }
 
-NS_IMPL_ISUPPORTS1(nsFingerHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS2(nsFingerHandler,
+                   nsIProtocolHandler,
+                   nsIProxiedProtocolHandler)
 
 NS_METHOD
 nsFingerHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
@@ -74,8 +76,8 @@ nsFingerHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
-nsFingerHandler::GetURIType(PRInt16 *result) {
-    *result = URI_NORELATIVE | URI_NOAUTH;
+nsFingerHandler::GetProtocolFlags(PRUint32 *result) {
+    *result = URI_NORELATIVE | URI_NOAUTH | ALLOWS_PROXY;
     return NS_OK;
 }
 
@@ -105,13 +107,20 @@ nsFingerHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsFingerHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
+    return NewProxiedChannel(url, nsnull, result);
+}
+
+NS_IMETHODIMP
+nsFingerHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
+                                   nsIChannel* *result)
+{
     nsresult rv;
     
     nsFingerChannel* channel;
     rv = nsFingerChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(url);
+    rv = channel->Init(url, proxyInfo);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

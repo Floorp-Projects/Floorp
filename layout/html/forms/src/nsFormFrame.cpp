@@ -1273,10 +1273,6 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
       aData.AppendWithConversion(CRLF);
     } 
   aData += buf;
-  // Need to append CRLF to end of stream for compatability with Nav and IE
-  if (isPost) {
-    aData.AppendWithConversion(CRLF);
-  }
   return rv;
 }
 

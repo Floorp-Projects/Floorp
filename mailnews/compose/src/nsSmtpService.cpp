@@ -279,7 +279,7 @@ nsSmtpService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSmtpService::GetURIType(PRInt16 *result)
+NS_IMETHODIMP nsSmtpService::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_NORELATIVE;
     return NS_OK; 	

@@ -33,6 +33,8 @@
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
 
+class nsIProxyInfo;
+
 class nsFtpControlConnection  : public nsIStreamListener
 {
 public:
@@ -43,7 +45,7 @@ public:
 	nsFtpControlConnection(const char* host, PRUint32 port);
 	virtual ~nsFtpControlConnection();
     
-    nsresult Connect();
+    nsresult Connect(nsIProxyInfo* proxyInfo);
     nsresult Disconnect(nsresult status);
     nsresult Write(nsCString& command, PRBool suspend);
     

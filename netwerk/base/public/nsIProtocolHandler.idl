@@ -46,17 +46,32 @@ interface nsIProtocolHandler : nsISupports
 
     /* standard full uri, has authority component and 
        has concept of relative uris (http, ftp, ...) */
-    const short URI_STD    = 0;
+    const unsigned long URI_STD    = 0;
 
     /* no concept of relative uris, (about, rdf, javascript, finger, ...) */
-    const short URI_NORELATIVE = (1<<0);
+    const unsigned long URI_NORELATIVE = (1<<0);
 
     /* no authority component (file, ...) */
-    const short URI_NOAUTH         = (1<<1);
+    const unsigned long URI_NOAUTH         = (1<<1);
+
+    /* This uri can be proxied via a proxy (socks or http)
+     * (ie irc, smtp, http, etc). If the protocol supports transparent
+     * proxying, the handler should implement nsIProxiedProtocolHandler
+     * If it supports http proxying, then it should also set the flag
+     * ALLOWS_PROXY_HTTP (see below)
+     *
+     * @see nsIProxiedProtocolHandler
+     */
+    const unsigned long ALLOWS_PROXY      = (1<<2);
+
+    /* This uri can be proxied using an http proxy (ie http, ftp, etc).
+     * You need to have ALLOWS_PROXY set as well, if you want this to do anything
+     */
+    const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
 
     /* more to come as needed */
 
-    readonly attribute short URIType;
+    readonly attribute unsigned long protocolFlags;
 
     /**
      * Makes a URI object that is suitable for loading by this protocol.

@@ -61,7 +61,9 @@ nsGopherHandler::~nsGopherHandler() {
     PR_LOG(gGopherLog, PR_LOG_ALWAYS, ("~nsGopherHandler() called"));
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsGopherHandler, nsIProtocolHandler);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsGopherHandler,
+                              nsIProxiedProtocolHandler,
+                              nsIProtocolHandler);
 
 NS_METHOD
 nsGopherHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
@@ -91,8 +93,8 @@ nsGopherHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
-nsGopherHandler::GetURIType(PRInt16 *result) {
-    *result = URI_NORELATIVE;
+nsGopherHandler::GetProtocolFlags(PRUint32 *result) {
+    *result = URI_NORELATIVE | ALLOWS_PROXY | ALLOWS_PROXY_HTTP;
     return NS_OK;
 }
 
@@ -117,7 +119,8 @@ nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+nsGopherHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
+                                   nsIChannel* *result)
 {
     nsresult rv;    
     nsGopherChannel* channel;
@@ -125,13 +128,19 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
                                  (void**)&channel);
     if (NS_FAILED(rv)) return rv;
     
-    rv = channel->Init(url);
+    rv = channel->Init(url, proxyInfo);
     if (NS_FAILED(rv)) {
         return rv;
     }
 
     *result = channel;
     return rv;
+}
+
+NS_IMETHODIMP
+nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+{
+    return NewProxiedChannel(url, nsnull, result);
 }
 
 NS_IMETHODIMP 

@@ -466,7 +466,7 @@ NS_IMETHODIMP nsMailboxService::AllowPort(PRInt32 port, const char *scheme, PRBo
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxService::GetURIType(PRInt16 *result)
+NS_IMETHODIMP nsMailboxService::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_STD;
     return NS_OK; 	

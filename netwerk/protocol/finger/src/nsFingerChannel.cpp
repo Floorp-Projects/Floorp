@@ -62,7 +62,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsFingerChannel,
                               nsIRequestObserver)
 
 nsresult
-nsFingerChannel::Init(nsIURI* uri)
+nsFingerChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 {
     nsresult rv;
     nsXPIDLCString autoBuffer;
@@ -70,6 +70,7 @@ nsFingerChannel::Init(nsIURI* uri)
     NS_ASSERTION(uri, "no uri");
 
     mUrl = uri;
+    mProxyInfo = proxyInfo;
 
 //  For security reasons, we do not allow the user to specify a
 //  non-default port for finger: URL's.
@@ -197,7 +198,7 @@ nsFingerChannel::Open(nsIInputStream **_retval)
              do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, BUFFER_SEG_SIZE,
+    rv = socketService->CreateTransport(mHost, mPort, mProxyInfo, BUFFER_SEG_SIZE,
             BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
@@ -220,7 +221,7 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
              do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, BUFFER_SEG_SIZE,
+    rv = socketService->CreateTransport(mHost, mPort, mProxyInfo, BUFFER_SEG_SIZE,
       BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 

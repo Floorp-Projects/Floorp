@@ -3165,7 +3165,7 @@ NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapService::GetURIType(PRInt16 *result)
+NS_IMETHODIMP nsImapService::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_STD;
     return NS_OK;

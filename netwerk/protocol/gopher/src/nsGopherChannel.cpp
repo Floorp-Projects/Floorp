@@ -75,7 +75,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsGopherChannel,
                               nsIRequestObserver);
 
 nsresult
-nsGopherChannel::Init(nsIURI* uri)
+nsGopherChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 {
     nsresult rv;
 
@@ -84,6 +84,7 @@ nsGopherChannel::Init(nsIURI* uri)
         return NS_ERROR_MALFORMED_URI;
     
     mUrl = uri;
+    mProxyInfo = proxyInfo;
     
     nsXPIDLCString buffer;
 
@@ -244,8 +245,7 @@ nsGopherChannel::Open(nsIInputStream **_retval)
 
     rv = socketService->CreateTransport(mHost,
                                         mPort,
-                                        nsnull,
-                                        -1,
+                                        mProxyInfo,
                                         BUFFER_SEG_SIZE,
                                         BUFFER_MAX_SIZE,
                                         getter_AddRefs(mTransport));
@@ -284,8 +284,7 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 
     rv = socketService->CreateTransport(mHost,
                                         mPort,
-                                        nsnull,
-                                        -1,
+                                        mProxyInfo,
                                         BUFFER_SEG_SIZE,
                                         BUFFER_MAX_SIZE,
                                         getter_AddRefs(mTransport));

@@ -77,10 +77,10 @@ nsLDAPProtocolHandler::GetDefaultPort(PRInt32 *result)
   return NS_OK;
 }
 
-// getter method for uritype attribute
+// getter method for protocol flags attribute
 //
 NS_IMETHODIMP
-nsLDAPProtocolHandler::GetURIType(PRInt16 *result)
+nsLDAPProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
   *result = URI_NORELATIVE;
   return NS_OK;

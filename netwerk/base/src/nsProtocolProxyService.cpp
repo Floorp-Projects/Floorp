@@ -28,6 +28,7 @@
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsIEventQueueService.h"
+#include "nsIProtocolHandler.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -43,6 +44,7 @@ static PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService::nsProxyInfo, nsIProxyInfo);
 
 
 nsProtocolProxyService::nsProtocolProxyService():
@@ -324,26 +326,30 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
 
 // nsIProtocolProxyService
 NS_IMETHODIMP
-nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt32 *aProxyPort, char * *aProxyType) {
+nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
     nsresult rv = NS_OK;
     
     NS_ASSERTION(aURI, "need a uri folks.");
-    
-    NS_ENSURE_ARG_POINTER(aProxyHost);
-    NS_ENSURE_ARG_POINTER(aProxyType);
 
-    *aProxyHost = nsnull;
-    *aProxyType = nsnull;
-    *aProxyPort = -1;
-    
-    // we only know about http, https, ftp and gopher as yet...
-    // return nothing for others. See what happens otherwise in bug 81214
-    PRBool validScheme = PR_FALSE;
-    if ((NS_FAILED(aURI->SchemeIs("http", &validScheme)) || !validScheme) &&
-        (NS_FAILED(aURI->SchemeIs("https", &validScheme)) || !validScheme) &&
-        (NS_FAILED(aURI->SchemeIs("ftp", &validScheme)) || !validScheme ) &&
-        (NS_FAILED(aURI->SchemeIs("gopher", &validScheme)) || !validScheme))
-        return NS_OK;
+    *aResult = nsnull;
+
+    nsCOMPtr<nsIIOService> ios = do_GetService(kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString scheme;
+    rv = aURI->GetScheme(getter_Copies(scheme));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 flags;
+    rv = handler->GetProtocolFlags(&flags);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!(flags & nsIProtocolHandler::ALLOWS_PROXY))
+        return NS_OK; // Can't proxy this
 
     // if proxies are enabled and this host:port combo is
     // supposed to use a proxy, check for a proxy.
@@ -351,90 +357,115 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt3
         ((1 == mUseProxy) && !CanUseProxy(aURI))) {
         return NS_OK;
     }
+
+    nsProxyInfo* proxyInfo = nsnull;
+    NS_NEWXPCOM(proxyInfo, nsProxyInfo);
+    if (!proxyInfo)
+        return NS_ERROR_OUT_OF_MEMORY;
     
     // Proxy auto config magic...
     if (2 == mUseProxy)
     {
         if (!mPAC) {
             NS_ERROR("ERROR: PAC js component is null");
+            delete proxyInfo;
             return NS_ERROR_NULL_POINTER;
         }
 
          rv = mPAC->ProxyForURL(aURI, 
-                                aProxyHost,
-                                aProxyPort, 
-                                aProxyType);
-        if (NS_SUCCEEDED(rv)) {
-            if (*aProxyType == nsnull || !PL_strcasecmp("direct", *aProxyType)) {
-                if (*aProxyHost) {
-                    nsMemory::Free(*aProxyHost);
-                    *aProxyHost = nsnull;
-                }
-                if (*aProxyType) {
-                    nsMemory::Free(*aProxyType);
-                    *aProxyType = nsnull;
-                }
-                *aProxyPort = -1;				 
-            } else if (*aProxyPort <= 0) {
-                *aProxyPort = -1;
-            }                      
-        }
-        return rv;
+                                &proxyInfo->mHost,
+                                &proxyInfo->mPort, 
+                                &proxyInfo->mType);
+         if (NS_FAILED(rv) || !proxyInfo->Type() ||               // If: it didn't work
+             !PL_strcasecmp("direct", proxyInfo->Type()) ||       // OR we're meant to go direct
+             (PL_strcasecmp("http", proxyInfo->Type()) != 0 &&    // OR we're an http proxy...
+                !(flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP))) { // ... but we can't proxy with http
+             delete proxyInfo;                                    // don't proxy this
+         } else {
+             if (proxyInfo->Port() <= 0)
+                proxyInfo->mPort = -1;
+             NS_ADDREF(*aResult = proxyInfo);
+         }
+         return rv;
     }
     
-    nsXPIDLCString scheme;
-    rv = aURI->GetScheme(getter_Copies(scheme));
-    if (NS_FAILED(rv)) return rv;
+    // Nothing below here returns failure
+    NS_ADDREF(*aResult = proxyInfo);
+
+    PRBool isScheme = PR_FALSE;
 
     if (mHTTPProxyHost.get()[0] && mHTTPProxyPort > 0 &&
-        !PL_strcasecmp(scheme, "http")) {
-        *aProxyHost = PL_strdup(mHTTPProxyHost);
-        *aProxyType = PL_strdup("http");
-        *aProxyPort = mHTTPProxyPort;
+        NS_SUCCEEDED(aURI->SchemeIs("http", &isScheme)) && isScheme) {
+        proxyInfo->mHost = PL_strdup(mHTTPProxyHost);
+        proxyInfo->mType = PL_strdup("http");
+        proxyInfo->mPort = mHTTPProxyPort;
         return NS_OK;
     }
     
     if (mHTTPSProxyHost.get()[0] && mHTTPSProxyPort > 0 &&
-        !PL_strcasecmp(scheme, "https")) {
-        *aProxyHost = PL_strdup(mHTTPSProxyHost);
-        *aProxyType = PL_strdup("http");
-        *aProxyPort = mHTTPSProxyPort;
+        NS_SUCCEEDED(aURI->SchemeIs("https", &isScheme)) && isScheme) {
+        proxyInfo->mHost = PL_strdup(mHTTPSProxyHost);
+        proxyInfo->mType = PL_strdup("http");
+        proxyInfo->mPort = mHTTPSProxyPort;
         return NS_OK;
     }
     
     if (mFTPProxyHost.get()[0] && mFTPProxyPort > 0 &&
-        !PL_strcasecmp(scheme, "ftp")) {
-        *aProxyHost = PL_strdup(mFTPProxyHost);
-        *aProxyType = PL_strdup("http");
-        *aProxyPort = mFTPProxyPort;
+        NS_SUCCEEDED(aURI->SchemeIs("ftp", &isScheme)) && isScheme) {
+        proxyInfo->mHost = PL_strdup(mFTPProxyHost);
+        proxyInfo->mType = PL_strdup("http");
+        proxyInfo->mPort = mFTPProxyPort;
         return NS_OK;
     }
 
     if (mGopherProxyHost.get()[0] && mGopherProxyPort > 0 &&
-        !PL_strcasecmp(scheme, "gopher")) {
-        *aProxyHost = PL_strdup(mGopherProxyHost);
-        *aProxyType = PL_strdup("http");
-        *aProxyPort = mGopherProxyPort;
+        NS_SUCCEEDED(aURI->SchemeIs("gopher", &isScheme)) && isScheme) {
+        proxyInfo->mHost = PL_strdup(mGopherProxyHost);
+        proxyInfo->mType = PL_strdup("http");
+        proxyInfo->mPort = mGopherProxyPort;
         return NS_OK;
     }
     
     if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0 &&
         mSOCKSProxyVersion == 4) {
-        *aProxyHost = PL_strdup(mSOCKSProxyHost);
-        *aProxyPort = mSOCKSProxyPort;
-        *aProxyType = PL_strdup("socks4");
+        proxyInfo->mHost = PL_strdup(mSOCKSProxyHost);
+        proxyInfo->mPort = mSOCKSProxyPort;
+        proxyInfo->mType = PL_strdup("socks4");
         return NS_OK;
     }
 
     if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0 &&
         mSOCKSProxyVersion == 5) {
-        *aProxyHost = PL_strdup(mSOCKSProxyHost);
-        *aProxyPort = mSOCKSProxyPort;
-        *aProxyType = PL_strdup("socks");
+        proxyInfo->mHost = PL_strdup(mSOCKSProxyHost);
+        proxyInfo->mPort = mSOCKSProxyPort;
+        proxyInfo->mType = PL_strdup("socks");
         return NS_OK;
     }
 
+    NS_RELEASE(*aResult); // Will call destructor
     
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProtocolProxyService::NewProxyInfo(const char* type, const char* host,
+                                     PRInt32 port, nsIProxyInfo* *result)
+{
+    nsProxyInfo* proxyInfo = nsnull;
+    NS_NEWXPCOM(proxyInfo, nsProxyInfo);
+    if (!proxyInfo)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (type)
+        proxyInfo->mType = nsCRT::strdup(type);
+
+    if (host)
+        proxyInfo->mHost = nsCRT::strdup(host);
+
+    proxyInfo->mPort = port;
+
+    *result = proxyInfo;
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -612,4 +643,3 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         np = endproxy;
     }
 }
-

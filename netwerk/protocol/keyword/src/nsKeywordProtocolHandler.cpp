@@ -96,7 +96,7 @@ nsKeywordProtocolHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
-nsKeywordProtocolHandler::GetURIType(PRInt16 *result) {
+nsKeywordProtocolHandler::GetProtocolFlags(PRUint32 *result) {
     *result = URI_NORELATIVE | URI_NOAUTH;
     return NS_OK;
 }

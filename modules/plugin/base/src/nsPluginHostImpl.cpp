@@ -62,6 +62,8 @@
 #include "nsIScriptablePlugin.h"
 #include "nsICachingChannel.h"
 #include "nsHashtable.h"
+#include "nsIProxyInfo.h"
+
 #include "nsPluginLogging.h"
 #include "nsAppDirectoryServiceDefs.h"
 
@@ -1577,6 +1579,7 @@ NS_IMPL_ISUPPORTS3(nsPluginStreamListenerPeer,
                    nsIHttpHeaderVisitor)
 ////////////////////////////////////////////////////////////////////////
 
+
 /* Called as a result of GetURL and PostURL */
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL, 
@@ -2876,8 +2879,6 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   nsCOMPtr<nsIProtocolProxyService> proxyService;
   nsCOMPtr<nsIIOService> ioService;
   PRBool isProxyEnabled;
-  nsXPIDLCString proxyHost, proxyType;
-  PRInt32 proxyPort;
 
   proxyService = do_GetService(kProtocolProxyServiceCID, &res);
   if (NS_FAILED(res) || !proxyService) {
@@ -2907,19 +2908,30 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
     return res;
   }
 
+  nsCOMPtr<nsIProxyInfo> pi;
+
   res = proxyService->ExamineForProxy(uriIn, 
-                                      getter_Copies(proxyHost), 
-                                      &proxyPort, 
-                                      getter_Copies(proxyType));
+                                      getter_AddRefs(pi));
   if (NS_FAILED(res)) {
     return res;
   }
 
-  if (!isProxyEnabled || !proxyHost.get() || proxyPort <= 0) {
+  if (!pi || !pi->Host() || pi->Port() <= 0) {
     *result = PL_strdup("DIRECT");
-  }
-  else {
-    *result = PR_smprintf("PROXY %s:%d", (const char *) proxyHost, proxyPort);
+  } else if (!nsCRT::strcasecmp(pi->Type(), "http")) {
+    *result = PR_smprintf("PROXY %s:%d", pi->Host(), pi->Port());
+  } else if (!nsCRT::strcasecmp(pi->Type(), "socks4")) {
+    *result = PR_smprintf("SOCKS %s:%d", pi->Host(), pi->Port());
+  } else if (!nsCRT::strcasecmp(pi->Type(), "socks")) {
+    // XXX - this is socks5, but there is no API for us to tell the
+    // plugin that fact. SOCKS for now, in case the proxy server
+    // speaks SOCKS4 as well. See bug 78176
+    // For a long time this was returning an http proxy type, so
+    // very little is probably broken by this
+    *result = PR_smprintf("SOCKS %s:%d", pi->Host(), pi->Port());
+  } else {
+    NS_ASSERTION(PR_FALSE, "Unknown proxy type!");
+    *result = PL_strdup("DIRECT");
   }
 
   if (nsnull == *result) {

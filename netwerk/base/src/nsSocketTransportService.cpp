@@ -30,6 +30,7 @@
 #include "nsProxiedService.h"
 #include "nsString.h"
 #include "nsNetCID.h"
+#include "nsProtocolProxyService.h"
 
 #ifdef DEBUG
 // in debug builds this will be valid while the socket transport service is active.
@@ -541,13 +542,12 @@ nsSocketTransportService::Run(void)
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
-                                          const char* proxyHost, 
-                                          PRInt32 proxyPort, 
+                                          nsIProxyInfo* proxyInfo,
                                           PRUint32 bufferSegmentSize,
                                           PRUint32 bufferMaxSize, 
                                           nsITransport** aResult)
 {
-    return CreateTransportOfTypes(0, nsnull, aHost, aPort, proxyHost, proxyPort,
+    return CreateTransportOfTypes(0, nsnull, aHost, aPort, proxyInfo,
 				  bufferSegmentSize, bufferMaxSize, aResult);
 }
 
@@ -555,14 +555,13 @@ NS_IMETHODIMP
 nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                                 const char* aHost, 
                                                 PRInt32 aPort,
-                                                const char* proxyHost, 
-                                                PRInt32 proxyPort, 
+                                                nsIProxyInfo* proxyInfo,
                                                 PRUint32 bufferSegmentSize,
                                                 PRUint32 bufferMaxSize,
                                                 nsITransport** aResult)
 {
     const char * types[] = { aSocketType };
-    return CreateTransportOfTypes(1, types, aHost, aPort, proxyHost, proxyPort,
+    return CreateTransportOfTypes(1, types, aHost, aPort, proxyInfo,
 				  bufferSegmentSize, bufferMaxSize, aResult);
 }
 
@@ -571,8 +570,7 @@ nsSocketTransportService::CreateTransportOfTypes(PRUint32 socketTypeCount,
 						 const char* *aSocketTypes,
 						 const char* aHost,
 						 PRInt32 aPort,
-						 const char* proxyHost,
-						 PRInt32 proxyPort,
+						 nsIProxyInfo* aProxyInfo,
 						 PRUint32 bufferSegmentSize,
 						 PRUint32 bufferMaxSize,
 						 nsITransport** aResult)
@@ -597,21 +595,20 @@ nsSocketTransportService::CreateTransportOfTypes(PRUint32 socketTypeCount,
     // Create and initialize a new connection object...
     NS_NEWXPCOM(transport, nsSocketTransport);
     if (transport) {
-	rv = transport->Init(this, aHost, aPort, socketTypeCount, aSocketTypes, 
-			     proxyHost, proxyPort, bufferSegmentSize, bufferMaxSize);
-	if (NS_FAILED(rv)) {
-	    delete transport;
-	    transport = nsnull;
-	}
-    } 
-    else {
-	rv = NS_ERROR_OUT_OF_MEMORY;
+	    rv = transport->Init(this, aHost, aPort, socketTypeCount, aSocketTypes, 
+                             aProxyInfo, bufferSegmentSize, bufferMaxSize);
+    	if (NS_FAILED(rv)) {
+	        delete transport;
+	        transport = nsnull;
+	    }
+    } else {
+	    rv = NS_ERROR_OUT_OF_MEMORY;
     }
     
     // Set the reference count to one...
-    if (NS_SUCCEEDED(rv)) {
-	NS_ADDREF(transport);
-    } 
+    if (NS_SUCCEEDED(rv))
+    	NS_ADDREF(transport);
+ 
     *aResult = transport;
     
     return rv;

@@ -305,7 +305,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   nsCOMPtr<nsISocketTransportService> sts = 
            do_GetService(kSocketTransportServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = sts->CreateTransport(aHostName, aPort, nsnull, -1, 0, 0, &mTransport);
+    rv = sts->CreateTransport(aHostName, aPort, nsnull, 0, 0, &mTransport);
     if (NS_SUCCEEDED(rv)) {
       // Set up the notification callbacks to provide a progress event sink.
       // That way we exercise the progress notification proxy code.

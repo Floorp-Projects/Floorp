@@ -23,6 +23,8 @@
 #include "nsISupports.idl"
 #include "nsIURI.idl"
 
+interface nsIProxyInfo;
+
 %{C++
 #define NS_PROTOCOLPROXYSERVICE_CID                             \
 { /* E9B301C0-E0E4-11d3-A1A8-0050041CAF44 */                    \
@@ -34,7 +36,11 @@ interface nsIProtocolProxyService : nsISupports
 {
     readonly attribute PRBool proxyEnabled;
 
-    void examineForProxy(in nsIURI aURI, out string host, out long port, out string type);
+    /** Given a uri, return a proxyInfo */
+    nsIProxyInfo examineForProxy(in nsIURI aURI);
+
+    /** Return a proxyInfo with the given data */
+    nsIProxyInfo newProxyInfo(in string type, in string host, in long port);
 
     /**
     * Add additional items in the "No proxy for" list. This is above
