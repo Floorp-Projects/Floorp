@@ -350,12 +350,12 @@ interface(TreeState *state)
      * Build a sample implementation template.
      */
     if (strlen(className) >= 3 && className[2] == 'I') {
-        classNameImpl = strdup(className);
+        classNameImpl = xpidl_strdup(className);
         if (!classNameImpl)
             FAIL;
         memmove(&classNameImpl[2], &classNameImpl[3], strlen(classNameImpl) - 2);
     } else {
-        classNameImpl = strdup("_MYCLASS_");
+        classNameImpl = xpidl_strdup("_MYCLASS_");
         if (!classNameImpl)
             FAIL;
     }
