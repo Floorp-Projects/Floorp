@@ -99,6 +99,7 @@ viewer:Components:libpref.xpt
 viewer:Components:libutil.xpt
 viewer:Components:lwbrk.shlb 
 viewer:Components:mngdecoder.shlb
+viewer:Components:Mork.shlb 
 viewer:Components:mozBrowser.shlb 
 viewer:Components:mozBrowser.xpt 
 viewer:Components:mozcomps.xpt 
@@ -245,7 +246,6 @@ viewer:Components:mailnews.shlb
 viewer:Components:mailnews.xpt 
 viewer:Components:Mime.shlb 
 viewer:Components:Mime.xpt 
-viewer:Components:Mork.shlb 
 viewer:Components:MsgCompose.shlb 
 viewer:Components:MsgCompose.xpt 
 viewer:Components:MsgDB.shlb 
