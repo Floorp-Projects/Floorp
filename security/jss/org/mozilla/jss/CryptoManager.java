@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.13 $ $Date: 2002/10/18 23:58:58 $
+ * @version $Revision: 1.14 $ $Date: 2002/11/07 03:33:04 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -855,9 +855,6 @@ public final class CryptoManager implements TokenSupplier
                 instance.reloadModules();
             }
         }
-        if( values.removeSunProvider ) {
-            java.security.Security.removeProvider("SUN");
-        }
         if( values.installJSSProvider ) {
             // Force class load before we install the provider. Otherwise we get
             // an infinite loop as the Security manager tries to instantiate the
@@ -870,6 +867,9 @@ public final class CryptoManager implements TokenSupplier
                 Debug.trace(Debug.ERROR,
                     "Unable to install default provider");
             }
+        }
+        if( values.removeSunProvider ) {
+            java.security.Security.removeProvider("SUN");
         }
     }
 
