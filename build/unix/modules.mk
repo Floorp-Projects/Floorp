@@ -27,11 +27,7 @@ endif
 
 ifndef MOZ_NATIVE_NSPR
 # Do not regenerate Makefile for NSPR
-ifdef USE_NSPR_AUTOCONF
 NSPRPUB_DIR		= nsprpub
-else
-NSPRPUB_DIR		= $(topsrcdir)/nsprpub
-endif
 endif
 
 # BM_DIRS_mod: list of directories to traverse from toplevel Makefile 
