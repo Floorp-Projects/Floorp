@@ -277,7 +277,7 @@ function SwitchProfileManagerMode()
 function ChangeCaption( aCaption )
 {
   var caption = document.getElementById( "header" );
-  caption.setAttribute( "value", aCaption );
+  caption.setAttribute( "description", aCaption );
   document.title = aCaption;
 }
 
