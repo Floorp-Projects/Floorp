@@ -38,6 +38,7 @@
 #include "nsMsgAttachment.h"
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
+#include "nsNetUtil.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgAttachment, nsIMsgAttachment)
 
@@ -180,7 +181,7 @@ nsresult nsMsgAttachment::DeleteAttachment()
   nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv))
 	{
-    rv = urlFile->SetURL(mUrl.get());
+    NS_InitFileFromURLSpec(urlFile, mUrl.get());
     if (NS_SUCCEEDED(rv))
 	  {
       PRBool bExists = PR_FALSE;

@@ -2529,7 +2529,7 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
      return rv;
 
    nsXPIDLCString urlSpec;
-   rv = userChromeDir->GetURL(getter_Copies(urlSpec));
+   rv = NS_GetURLSpecFromFile(userChromeDir, getter_Copies(urlSpec));
    if (NS_FAILED(rv))
      return rv;
    aFileURL = urlSpec;
@@ -2550,7 +2550,7 @@ nsChromeRegistry::GetInstallRoot(nsCString& aFileURL)
     return NS_ERROR_FAILURE;
 
   nsXPIDLCString urlSpec;
-  rv = appChromeDir->GetURL(getter_Copies(urlSpec));
+  rv = NS_GetURLSpecFromFile(appChromeDir, getter_Copies(urlSpec));
   if (NS_FAILED(rv))
     return rv;
   aFileURL = urlSpec;
@@ -3084,7 +3084,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
        * all we want here is the canonical url
        */
       nsXPIDLCString chromeURLfoopy;
-      rv = chromeFile->GetURL(getter_Copies(chromeURLfoopy));
+      rv = NS_GetURLSpecFromFile(chromeFile, getter_Copies(chromeURLfoopy));
       if (NS_FAILED(rv))
         return rv;
       chromeURL = chromeURLfoopy;

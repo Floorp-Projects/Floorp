@@ -326,7 +326,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLCString fileurl;
-            filePath->GetURL(getter_Copies(fileurl));
+            NS_GetURLSpecFromFile(filePath, getter_Copies(fileurl));
             aOut.Assign(fileurl);
             return NS_OK;
         }

@@ -1231,7 +1231,7 @@ InternetSearchDataSource::GetCategoryList()
 
   rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
   if (NS_FAILED(rv)) return rv;
-  searchFile->GetURL(getter_Copies(searchFileURLSpec));
+  NS_GetURLSpecFromFile(searchFile, getter_Copies(searchFileURLSpec));
   if (NS_FAILED(rv)) return rv;
 	rv = remoteCategoryDataSource->Init(searchFileURLSpec);
   if (NS_FAILED(rv)) return rv;
@@ -3774,7 +3774,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if (icon)
 	{
 		nsXPIDLCString  iconFileURL;
-		if (NS_FAILED(rv = icon->GetURL(getter_Copies(iconFileURL))))
+		if (NS_FAILED(rv = NS_GetURLSpecFromFile(icon, getter_Copies(iconFileURL))))
 			return(rv);
 		iconURL.AssignWithConversion(iconFileURL);
 	}

@@ -75,7 +75,7 @@ static void* ProcessURLArg(char* str)
         if (NS_SUCCEEDED(rv))
         {
           nsXPIDLCString fileurl;
-          rv = file->GetURL(getter_Copies(fileurl));
+          rv = NS_GetURLSpecFromFile(file, getter_Copies(fileurl));
           if (NS_SUCCEEDED(rv) && fileurl.get())
             return NS_REINTERPRET_CAST(void*, nsCRT::strdup(fileurl.get()));
         }

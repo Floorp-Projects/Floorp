@@ -49,6 +49,7 @@
 #include "nsIFileChannel.h"
 #include "nsIFileSpec.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
@@ -125,7 +126,7 @@ nsMsgServiceProviderService::Init()
         continue;
 
       nsXPIDLCString urlSpec;
-      rv = dirEntry->GetURL(getter_Copies(urlSpec));
+      rv = NS_GetURLSpecFromFile(dirEntry, getter_Copies(urlSpec));
       rv = LoadDataSource(urlSpec);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
     }

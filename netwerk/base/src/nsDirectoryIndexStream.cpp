@@ -62,6 +62,7 @@ static PRLogModuleInfo* gLog;
 #include "nsCollationCID.h"
 #include "nsIPlatformCharset.h"
 #include "nsReadableUtils.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
@@ -214,7 +215,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
     mBuf.Append("300: ");
     nsXPIDLCString url;
-    rv = mDir->GetURL(getter_Copies(url));
+    rv = NS_GetURLSpecFromFile(mDir, getter_Copies(url));
     if (NS_FAILED(rv)) return rv;
     mBuf.Append(url);
     mBuf.Append('\n');

@@ -46,6 +46,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "prlog.h"
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
@@ -1614,7 +1615,7 @@ nsStandardURL::GetFile(nsIFile **result)
     nsCOMPtr<nsILocalFile> localFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    rv = localFile->SetURL(mSpec.get());
+    rv = NS_InitFileFromURLSpec(localFile, mSpec.get());
     if (NS_FAILED(rv)) return rv;
 
 #if defined(PR_LOGGING)
@@ -1637,7 +1638,7 @@ nsStandardURL::SetFile(nsIFile *file)
     nsresult rv;
     nsXPIDLCString url;
 
-    rv = file->GetURL(getter_Copies(url));
+    NS_GetURLSpecFromFile(file, getter_Copies(url));
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpec(url);

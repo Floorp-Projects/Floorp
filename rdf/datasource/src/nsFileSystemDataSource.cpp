@@ -256,7 +256,7 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
 
     nsCOMPtr<nsILocalFile> aDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID); 
 
-    rv = aDir->SetURL(uri);
+    rv = NS_InitFileFromURLSpec(aDir, uri);
     if (NS_FAILED(rv)) return(PR_FALSE);
 
     PRBool isDirFlag = PR_FALSE;

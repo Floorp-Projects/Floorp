@@ -50,6 +50,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURL.h"
+#include "nsNetUtil.h"
 #endif
 #ifndef NO_SUBSCRIPT_LOADER
 #include "mozJSSubScriptLoader.h"
@@ -1162,7 +1163,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         goto out;
     }
 
-    localFile->GetURL(getter_Copies(displayPath));   
+    NS_GetURLSpecFromFile(localFile, getter_Copies(displayPath));
     rv = localFile->OpenANSIFileDesc("r", &fileHandle);
     if (NS_FAILED(rv)) {
         global = nsnull;
