@@ -142,6 +142,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug2981-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2981-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug28933.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2997.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug30273.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3037-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3037-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30559.html
