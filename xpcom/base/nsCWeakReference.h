@@ -119,13 +119,13 @@ public:
     SetReference(aReferent);
   }
 
-  nsCWeakReference(const nsCWeakReference &aOriginal) {
+  nsCWeakReference(const nsCWeakReference<T> &aOriginal) {
     mProxy = aOriginal.mProxy;
     if (mProxy)
       mProxy->AddReference();
   }
 
-  nsCWeakReference& operator= (const nsCWeakReference &aOriginal) {
+  nsCWeakReference<T>& operator= (const nsCWeakReference<T> &aOriginal) {
     nsCWeakProxy *temp = mProxy;
     mProxy = aOriginal.mProxy;
     if (mProxy)
