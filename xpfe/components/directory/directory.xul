@@ -36,7 +36,9 @@
 
   <script src="chrome://communicator/content/directory/directory.js"></script>
 
-  <tree id="tree" datasources="rdf:files rdf:httpindex" flex="1" style="height:0px;" container="true" open="true" >
+  <tree id="tree" datasources="rdf:files rdf:httpindex" flex="1" style="height:0px;"
+      container="true" open="true"
+      ondraggesture="return BeginDragTree(event);">
       <template>
         <treechildren flex="1">
           <treeitem uri="..." persist="open"

@@ -179,3 +179,95 @@ function doSort(sortColName)
 	}
 	return(false);
 }
+
+
+
+var NC_NS  = "http://home.netscape.com/NC-rdf#";
+
+
+
+function BeginDragTree ( event )
+{
+  var tree = document.getElementById("tree");
+  if ( event.target == tree )
+    return(true);         // continue propagating the event
+
+  var database = tree.database;
+  if (!database)    return(false);
+
+  var RDF = 
+    Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+  if (!RDF) return(false);
+
+  var dragStarted = false;
+
+  var trans = 
+    Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+  if ( !trans ) return(false);
+
+  var genData = 
+    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+  if (!genData) return(false);
+
+  var genDataURL = 
+    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+  if (!genDataURL) return(false);
+
+  trans.addDataFlavor("text/unicode");
+  trans.addDataFlavor("moz/rdfitem");
+        
+  // ref/id (url) is on the <treeitem> which is two levels above the <treecell> which is
+  // the target of the event.
+  var id = event.target.parentNode.parentNode.getAttribute("ref");
+  if (!id || id=="")
+  {
+	id = event.target.parentNode.parentNode.getAttribute("id");
+  }
+
+  var parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("ref");
+  if (!parentID || parentID == "")
+  {
+	parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("id");
+  }
+
+  // if we can get node's name, append (space) name to url
+  var src = RDF.GetResource(id, true);
+  var prop = RDF.GetResource(NC_NS + "Name", true);
+  var target = database.GetTarget(src, prop, true);
+  if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+  if (target) target = target.Value;
+  if (target && (target != ""))
+  {
+      id = id + " " + target;
+  }
+
+  var trueID = id;
+  if (parentID != null)
+  {
+  	trueID += "\n" + parentID;
+  }
+  genData.data = trueID;
+  genDataURL.data = id;
+
+  trans.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
+  trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
+
+  var transArray = 
+    Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+  if ( !transArray )  return(false);
+
+  // put it into the transferable as an |nsISupports|
+  var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+  transArray.AppendElement(genTrans);
+  
+  var dragService = 
+    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+  if ( !dragService ) return(false);
+
+  var nsIDragService = Components.interfaces.nsIDragService;
+  dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                     nsIDragService.DRAGDROP_ACTION_MOVE );
+  dragStarted = true;
+
+  return(!dragStarted);
+}

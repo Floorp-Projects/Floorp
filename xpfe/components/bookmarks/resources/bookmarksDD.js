@@ -275,6 +275,7 @@ function DropOnTree ( event )
     Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
   if ( !trans )   return(false);
   trans.addDataFlavor("moz/rdfitem");
+  trans.addDataFlavor("text/x-moz-url");
   trans.addDataFlavor("text/unicode");
 
     var typeRes = RDF.GetResource(RDF_NS + "type");
@@ -297,32 +298,63 @@ function DropOnTree ( event )
     var sourceID = null;
     var parentID = null;
     var checkNameHack = false;
+    var name=null;
 
     if (bestFlavor.value == "moz/rdfitem")
     {
 	    // pull the URL out of the data object
-	    var data = dataObj.data.substring(0, len.value / 2);;
+	    var data = dataObj.data.substring(0, len.value / 2);
 
+        // moz/rdfitem allows parent ID specified on next line; check for it
 	    var cr = data.indexOf("\n");
 	    if (cr >= 0)
 	    {
 	    	sourceID = data.substr(0, cr);
 	    	parentID = data.substr(cr+1);
 	    }
+	    else
+	    {
+	        sourceID = data;
+	    }
     }
-    else
+    else if (bestFlavor.value == "text/x-moz-url")
+    {
+	    // pull the URL out of the data object
+	    var data = dataObj.data.substring(0, len.value / 2);
+	    sourceID = data;
+
+    	// we may need to synthesize a name (just use the URL)
+    	checkNameHack = true;
+    }
+    else if (bestFlavor.value == "text/unicode")
     {
     	sourceID = dataObj.data;
 
-	// XXX for the moment, if its a text/unicode drop
-	// we may need to synthesize a name (just use the URL)
-	checkNameHack = true;
+    	// we may need to synthesize a name (just use the URL)
+    	checkNameHack = true;
+    }
+    else
+    {
+        // unknown flavor, skip
+        continue;
+    }
+
+    // pull the (optional) name out of the URL
+    var space = sourceID.indexOf(" ");
+    if (space >= 0)
+    {
+        name = sourceID.substr(space+1);
+        sourceID = sourceID.substr(0, space);
     }
 
     dump("    Node #" + i + ": drop '" + sourceID + "'\n");
     dump("             from container '" + parentID + "'\n");
     dump("             action = '" + dropAction + "'\n");
     dump("             target = '" + targetID + "'\n");
+    if (name)
+    {
+        dump("             name = '" + name + "'\n");
+    }
 
     var sourceNode = RDF.GetResource(sourceID, true);
     if (!sourceNode)  continue;
@@ -392,37 +424,42 @@ function DropOnTree ( event )
       dirty = true;
     }
 
-    if (checkNameHack == true)
+    if ((checkNameHack == true) || (name != null))
     {
-	// XXX for the moment, if its a text/unicode drop
-	// we may need to synthesize a name (just use the URL)
-	var srcArc = RDF.GetResource(sourceID, true);
-	var propArc = RDF.GetResource(NC_NS + "Name", true);
-	if (srcArc && propArc && Bookmarks)
-	{
-		var targetArc = Bookmarks.GetTarget(srcArc, propArc, true);
-		if (!targetArc)
-		{
-			var defaultNameArc = RDF.GetLiteral(sourceID);
-			if (defaultNameArc)
-			{
-				Bookmarks.Assert(srcArc, propArc, defaultNameArc, true); 
-			}
-		}
-	}
+    	var srcArc = RDF.GetResource(sourceID, true);
+    	var propArc = RDF.GetResource(NC_NS + "Name", true);
+    	if (srcArc && propArc && Bookmarks)
+    	{
+    		var targetArc = Bookmarks.GetTarget(srcArc, propArc, true);
+    		if (!targetArc)
+    		{
+    		    // if no name, fallback to using the URL as the name
+    			var defaultNameArc = RDF.GetLiteral((name != null && name != "") ? name : sourceID);
+    			if (defaultNameArc)
+    			{
+    				Bookmarks.Assert(srcArc, propArc, defaultNameArc, true); 
+    			}
+    		}
+    	}
     }
   }
 
 	// should we move the node? (i.e. take it out of the source container?)
 	if ((parentNode != null) && (containerNode != parentNode))
 	{
-		RDFC.Init(Bookmarks, parentNode);
-		var nodeIndex = RDFC.IndexOf(sourceNode);
+	    try
+	    {
+    		RDFC.Init(Bookmarks, parentNode);
+    		var nodeIndex = RDFC.IndexOf(sourceNode);
 
-		if (nodeIndex >= 1)
-		{
-			RDFC.RemoveElementAt(nodeIndex, true, sourceNode);
-		}
+    		if (nodeIndex >= 1)
+    		{
+    			RDFC.RemoveElementAt(nodeIndex, true, sourceNode);
+    		}
+        }
+        catch(ex)
+        {
+        }
 	}
 
   if (dirty == true)
