@@ -91,6 +91,7 @@ XFE_ToolbarItem::getAncestorContext()
 HT_Resource
 XFE_ToolbarItem::getHtResource()
 {
+    return m_htResource;
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
