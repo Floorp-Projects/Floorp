@@ -258,5 +258,7 @@ viewer:Components:msgImport.shlb
 viewer:Components:msgImport.xpt
 viewer:Components:msgImportText.shlb
 viewer:Components:msgImportEudora.shlb
+viewer:Components:AbSyncSvc.shlb 
+viewer:Components:AbSyncSvc.xpt 
 viewer:chrome:messenger:* 
 viewer:res:Mailnews:*
