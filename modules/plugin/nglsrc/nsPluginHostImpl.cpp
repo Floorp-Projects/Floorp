@@ -1407,8 +1407,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 {
   // XXX don't we want to nuke the old mPlugins right now?
-  // XXX for new-style plugins, we should also call
-  //     nsIComponentManager::AutoRegister()
+      // we should. Otherwise LoadPlugins will add the same plugins to the list
+  // XXX for new-style plugins, we should also call nsIComponentManager::AutoRegister()
   mPluginsLoaded = PR_FALSE;
   return LoadPlugins();
 }
@@ -1870,7 +1870,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   }
 
 #ifdef NS_DEBUG
-  if(!aMimeType)
+  if(aMimeType)
     printf("InstantiateEmbededPlugin for %s\n",aMimeType);
 #endif
 
@@ -2318,8 +2318,7 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
 
-  if (PR_FALSE == mPluginsLoaded)
-    LoadPlugins();
+  LoadPlugins();
 
   // if we have a mimetype passed in, search the mPlugins linked 
   // list for a match
@@ -2379,8 +2378,7 @@ nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension,
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
 
-  if (PR_FALSE == mPluginsLoaded)
-    LoadPlugins();
+  LoadPlugins();
 
   // if we have a mimetype passed in, search the mPlugins linked 
   // list for a match
@@ -2524,28 +2522,26 @@ NS_IMPL_ISUPPORTS(DOMPluginImpl, nsIDOMPlugin::GetIID());
 NS_IMETHODIMP
 nsPluginHostImpl::GetPluginCount(PRUint32* aPluginCount)
 {
-	if (PR_FALSE == mPluginsLoaded)
-		LoadPlugins();
-	
-	PRUint32 count = 0;
-	
-	nsPluginTag* plugin = mPlugins;
-	while (plugin != nsnull) {
-		++count;
-		plugin = plugin->mNext;
-	}
-	
-	*aPluginCount = count;
-	
-	return NS_OK;
+  LoadPlugins();
+
+  PRUint32 count = 0;
+
+  nsPluginTag* plugin = mPlugins;
+  while (plugin != nsnull) {
+    ++count;
+    plugin = plugin->mNext;
+  }
+
+  *aPluginCount = count;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, 
                              nsIDOMPlugin* aPluginArray[])
 {
-  if (PR_FALSE == mPluginsLoaded)
-    LoadPlugins();
+  LoadPlugins();
   
   nsPluginTag* plugin = mPlugins;
   for (PRUint32 i = 0; i < aPluginCount && plugin != nsnull; 
@@ -2567,8 +2563,7 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
   
   aPlugin = nsnull;
   
-  if (PR_FALSE == mPluginsLoaded)
-    LoadPlugins();
+  LoadPlugins();
   
   // if we have a mimetype passed in, search the mPlugins 
   // linked list for a match
@@ -2604,8 +2599,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 		return NS_ERROR_ILLEGAL_VALUE;
 
 	// If plugins haven't been scanned yet, do so now
-	if (mPlugins == nsnull)
-		LoadPlugins();
+  LoadPlugins();
 
 	nsPluginTag* pluginTag;
 	if((rv = FindPluginEnabledForType(aMimeType, pluginTag)) == NS_OK)
@@ -2677,6 +2671,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
+  // do not do anything if it is already done
+  // use nsPluginHostImpl::ReloadPlugins to enforce loading
+  if(mPluginsLoaded)
+    return NS_OK;
+
     // retrieve a path for layout module. Needed for plugin mime types registration
     nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
     nsCOMPtr<nsIFile> path;
@@ -2795,6 +2794,11 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
+  // do not do anything if it is already done
+  // use nsPluginHostImpl::ReloadPlugins to enforce loading
+  if(mPluginsLoaded)
+    return NS_OK;
+
   // retrieve a path for layout module. Needed for plugin mime types registration
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
   nsCOMPtr<nsIFile> path;
