@@ -136,5 +136,5 @@ static nsModuleComponentInfo gComponents[] = {
       NS_MSG_POPSTRINGSERVICE_CONTRACTID, nsLocalStringServiceConstructor },
 };
 
-NS_IMPL_NSGETMODULE("local mail services", gComponents);
+NS_IMPL_NSGETMODULE(local_mail_services, gComponents);
 

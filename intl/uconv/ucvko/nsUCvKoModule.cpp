@@ -117,5 +117,5 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsUCvKoModule", components);
+NS_IMPL_NSGETMODULE(nsUCvKoModule, components);
 

@@ -79,6 +79,6 @@ textModuleDtor(nsIModule* self)
 }
 
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsTextImportModule", components, textModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsTextImportModule, components, textModuleDtor)
 
 

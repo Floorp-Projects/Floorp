@@ -36,5 +36,5 @@ static nsModuleComponentInfo components[] =
      PNGDecoder::Create }
 };
 
-NS_IMPL_NSGETMODULE("nsPNGModule", components)
+NS_IMPL_NSGETMODULE(nsPNGModule, components)
 

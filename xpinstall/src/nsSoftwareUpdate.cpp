@@ -721,5 +721,5 @@ static nsModuleComponentInfo components[] =
 
 
 
-NS_IMPL_NSGETMODULE("nsSoftwareUpdate", components)
+NS_IMPL_NSGETMODULE(nsSoftwareUpdate, components)
 

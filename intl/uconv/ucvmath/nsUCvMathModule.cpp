@@ -204,5 +204,5 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsUCvMathModule", components);
+NS_IMPL_NSGETMODULE(nsUCvMathModule, components);
 

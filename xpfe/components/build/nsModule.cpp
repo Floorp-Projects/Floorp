@@ -148,4 +148,4 @@ static nsModuleComponentInfo components[] = {
 #endif
 };
 
-NS_IMPL_NSGETMODULE("application", components)
+NS_IMPL_NSGETMODULE(application, components)

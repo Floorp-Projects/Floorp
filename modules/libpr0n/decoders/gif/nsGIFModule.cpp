@@ -37,5 +37,5 @@ static nsModuleComponentInfo components[] =
      nsGIFDecoder2Constructor, },
 };
 
-NS_IMPL_NSGETMODULE("nsGIFModule2", components)
+NS_IMPL_NSGETMODULE(nsGIFModule2, components)
 

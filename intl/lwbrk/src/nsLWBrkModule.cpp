@@ -37,4 +37,4 @@ static nsModuleComponentInfo components[] = {
      NS_LWBRK_CONTRACTID, nsLWBreakerFImpConstructor}
 };
 
-NS_IMPL_NSGETMODULE("nsLWBrkModule", components);
+NS_IMPL_NSGETMODULE(nsLWBrkModule, components);

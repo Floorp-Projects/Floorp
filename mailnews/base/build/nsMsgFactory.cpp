@@ -294,5 +294,5 @@ static nsModuleComponentInfo gComponents[] = {
 
 };
 
-NS_IMPL_NSGETMODULE("nsMsgBaseModule", gComponents)
+NS_IMPL_NSGETMODULE(nsMsgBaseModule, gComponents)
   

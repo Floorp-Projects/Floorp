@@ -173,4 +173,4 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerBeOSConstructor } 
 };   
 
-NS_IMPL_NSGETMODULE("nsGfxBeOSModule", components) 
+NS_IMPL_NSGETMODULE(nsGfxBeOSModule, components) 

@@ -61,4 +61,4 @@ static nsModuleComponentInfo components[] =
     nsAbSyncDriverConstructor }    
 };
 
-NS_IMPL_NSGETMODULE("nsAbSyncModule", components)
+NS_IMPL_NSGETMODULE(nsAbSyncModule, components)

@@ -53,4 +53,4 @@ static nsModuleComponentInfo components[] =
 };
 
 
-NS_IMPL_NSGETMODULE("nsInspectorModule", components)
+NS_IMPL_NSGETMODULE(nsInspectorModule, components)

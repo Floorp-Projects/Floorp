@@ -38,4 +38,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsNativeAppModule", components)
+NS_IMPL_NSGETMODULE(nsNativeAppModule, components)

@@ -25,6 +25,9 @@
 
 #include "prtypes.h"
 
+#define g_InstanceCount ucvlatin_g_InstanceCount
+#define g_LockCount ucvlatin_g_LockCount
+
 extern PRInt32 g_InstanceCount;
 extern PRInt32 g_LockCount;
 

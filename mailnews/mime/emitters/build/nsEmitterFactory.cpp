@@ -62,4 +62,4 @@ static nsModuleComponentInfo components[] =
     nsMimeXULEmitterConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsMimeEmitterModule", components)
+NS_IMPL_NSGETMODULE(nsMimeEmitterModule, components)

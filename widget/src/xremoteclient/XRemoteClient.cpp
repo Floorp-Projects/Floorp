@@ -489,5 +489,5 @@ static nsModuleComponentInfo components[] =
     XRemoteClientConstructor }
 };
 
-NS_IMPL_NSGETMODULE("XRemoteClientModule", components);
+NS_IMPL_NSGETMODULE(XRemoteClientModule, components);
   

@@ -304,4 +304,4 @@ static nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE("nsConvModule", components);
+NS_IMPL_NSGETMODULE(nsConvModule, components);

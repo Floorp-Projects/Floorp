@@ -184,4 +184,4 @@ static nsModuleComponentInfo components[] =
 };
 
   
-NS_IMPL_NSGETMODULE("nsMsgComposeModule", components)
+NS_IMPL_NSGETMODULE(nsMsgComposeModule, components)

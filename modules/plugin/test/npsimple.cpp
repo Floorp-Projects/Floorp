@@ -371,7 +371,7 @@ static nsModuleComponentInfo gComponentInfo[] = {
       SimplePluginInstance::UnregisterSelf },
 };
 
-NS_IMPL_NSGETMODULE("SimplePlugin", gComponentInfo);
+NS_IMPL_NSGETMODULE(SimplePlugin, gComponentInfo);
 
 
 

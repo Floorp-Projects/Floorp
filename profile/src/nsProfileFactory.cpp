@@ -35,4 +35,4 @@ static nsModuleComponentInfo components[] =
      }
 };
 
-NS_IMPL_NSGETMODULE("nsProfileModule", components);
+NS_IMPL_NSGETMODULE(nsProfileModule, components);

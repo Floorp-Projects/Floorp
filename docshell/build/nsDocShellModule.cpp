@@ -50,5 +50,5 @@ static nsModuleComponentInfo gDocShellModuleInfo[] = {
 
 // "docshell provider" to illustrate that this thing really *should*
 // be dispensing docshells rather than webshells.
-NS_IMPL_NSGETMODULE("docshell provider", gDocShellModuleInfo)
+NS_IMPL_NSGETMODULE(docshell_provider, gDocShellModuleInfo)
 

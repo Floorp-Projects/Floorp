@@ -31,4 +31,4 @@ static nsModuleComponentInfo gResComponents[] = {
     }
 2};
 
-NS_IMPL_NSGETMODULE("res", gResComponents)
+NS_IMPL_NSGETMODULE(res, gResComponents)

@@ -42,4 +42,4 @@ static nsModuleComponentInfo components[] = {
       NS_SINGLESIGNONPROMPT_CONTRACTID, nsSingleSignOnPromptConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsWalletModule", components)
+NS_IMPL_NSGETMODULE(nsWalletModule, components)

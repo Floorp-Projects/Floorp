@@ -31,4 +31,4 @@ static nsModuleComponentInfo gResComponents[] = {
     }
 };
 
-NS_IMPL_NSGETMODULE("finger", gResComponents)
+NS_IMPL_NSGETMODULE(finger, gResComponents)

@@ -42,5 +42,5 @@ static nsModuleComponentInfo components[] = {
       "@mozilla.org/walleteditor/walleteditor-world;1", WalletEditorImplConstructor },
 };
 
-NS_IMPL_NSGETMODULE("nsWalletViewerModule", components)
+NS_IMPL_NSGETMODULE(nsWalletViewerModule, components)
 

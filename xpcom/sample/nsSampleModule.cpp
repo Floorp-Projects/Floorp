@@ -113,4 +113,4 @@ static nsModuleComponentInfo components[] =
 //		NS_IMPL_NSGETMODULE_WITH_DTOR() instead of the vanilla
 //		NS_IMPL_NSGETMODULE()
 //
-NS_IMPL_NSGETMODULE("nsSampleModule", components)
+NS_IMPL_NSGETMODULE(nsSampleModule, components)

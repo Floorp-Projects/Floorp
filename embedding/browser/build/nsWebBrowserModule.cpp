@@ -49,7 +49,7 @@ static nsModuleComponentInfo components[] =
 
 // NSGetModule implementation.
 
-NS_IMPL_NSGETMODULE("Browser Embedding Module", components)
+NS_IMPL_NSGETMODULE(Browser_Embedding_Module, components)
 
 
 

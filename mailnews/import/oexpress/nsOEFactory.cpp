@@ -82,7 +82,7 @@ oeModuleDtor(nsIModule* self)
 	nsOEStringBundle::Cleanup();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsOEImport", components, oeModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsOEImport, components, oeModuleDtor)
 
 
 

@@ -47,4 +47,4 @@ nsGtkTimerModuleDtor(nsIModule *self)
     nsTimerGtk::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsGtkTimerModule", components, nsGtkTimerModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGtkTimerModule, components, nsGtkTimerModuleDtor)

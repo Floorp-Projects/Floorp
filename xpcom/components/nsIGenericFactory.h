@@ -113,21 +113,30 @@ NS_NewGenericModule(const char* moduleName,
                     nsModuleDestructorProc dtor,
                     nsIModule* *result);
 
+#ifdef MOZ_STATIC_COMPONENT_LIBS
+#  define NSGETMODULE_ENTRY_POINT(_name) NSGetModule_##_name
+#else
+#  define NSGETMODULE_ENTRY_POINT(_name) NSGetModule
+#endif
+
 #define NS_IMPL_NSGETMODULE(_name, _components)                              \
     NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, nsnull)
 
 #define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)             \
                                                                              \
-PRUint32 NSGetModule_components_count =                                      \
-           sizeof(_components) / sizeof(_components[0]);                     \
+enum {                                                                       \
+   NSGetModule_components_count =                                            \
+           sizeof(_components) / sizeof(_components[0])                      \
+};                                                                           \
                                                                              \
-nsModuleComponentInfo* NSGetModule_components = (_components);               \
+static nsModuleComponentInfo* NSGetModule_components = (_components);        \
                                                                              \
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,      \
-                                          nsIFile* location,                 \
-                                          nsIModule** result)                \
+extern "C" NS_EXPORT nsresult                                                \
+NSGETMODULE_ENTRY_POINT(_name) (nsIComponentManager *servMgr,                \
+                                nsIFile* location,                           \
+                                nsIModule** result)                          \
 {                                                                            \
-    return NS_NewGenericModule((_name),                                      \
+    return NS_NewGenericModule((#_name),                                     \
                                NSGetModule_components_count,                 \
                                NSGetModule_components,                       \
                                _dtor, result);                               \

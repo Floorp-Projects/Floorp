@@ -225,6 +225,6 @@ nsWidgetGTKModuleDtor(nsIModule *self)
   nsGtkIMEHelper::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsWidgetGTKModule",
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGTKModule,
                               components,
                               nsWidgetGTKModuleDtor)

@@ -253,7 +253,7 @@ static nsModuleComponentInfo gComponentInfo[] = {
       EventsPluginInstance::UnregisterSelf },
 };
 
-NS_IMPL_NSGETMODULE("EventsPlugin", gComponentInfo);
+NS_IMPL_NSGETMODULE(EventsPlugin, gComponentInfo);
 
 
 ////////////////////////////////////////////////////////////////////////////////

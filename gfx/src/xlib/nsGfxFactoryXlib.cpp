@@ -175,5 +175,5 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerXlibConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsGfxXlibModule", components)
+NS_IMPL_NSGETMODULE(nsGfxXlibModule, components)
 

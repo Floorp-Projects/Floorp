@@ -58,5 +58,5 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsTestDynamicModule", components)
+NS_IMPL_NSGETMODULE(nsTestDynamicModule, components)
 

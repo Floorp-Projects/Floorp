@@ -165,4 +165,4 @@ static nsModuleComponentInfo components[] =
     nsFileSpecWithUIImplConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsWidgetQTModule",components)
+NS_IMPL_NSGETMODULE(nsWidgetQTModule,components)

@@ -83,5 +83,5 @@ outlookModuleDtor(nsIModule* self)
 }
 
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsOutlookImport", components, outlookModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsOutlookImport, components, outlookModuleDtor)
 

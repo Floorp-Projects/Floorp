@@ -43,5 +43,5 @@ static nsModuleComponentInfo components[] =
     nsTimerQtConstructor }
 };
  
-NS_IMPL_NSGETMODULE("nsQtTimerModule",components) 
+NS_IMPL_NSGETMODULE(nsQtTimerModule,components) 
  

@@ -64,6 +64,6 @@ static nsModuleComponentInfo components[] =
 };
 
 
-NS_IMPL_NSGETMODULE("nsSecurityManagerModule", components);
+NS_IMPL_NSGETMODULE(nsSecurityManagerModule, components);
 
 

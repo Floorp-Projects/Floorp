@@ -231,4 +231,4 @@ static nsModuleComponentInfo components[] = {
 #endif  
 };
 
-NS_IMPL_NSGETMODULE("nsXMLExtrasModule", components)
+NS_IMPL_NSGETMODULE(nsXMLExtrasModule, components)

@@ -1082,5 +1082,5 @@ static nsModuleComponentInfo components[] = {
   
 };
 
-NS_IMPL_NSGETMODULE("nsBrowserModule", components)
+NS_IMPL_NSGETMODULE(nsBrowserModule, components)
 

@@ -65,4 +65,4 @@ xpcModuleDtor(nsIModule* self)
     nsJSRuntimeServiceImpl::FreeSingleton();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("xpconnect", components, xpcModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(xpconnect, components, xpcModuleDtor)

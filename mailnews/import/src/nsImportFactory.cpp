@@ -53,6 +53,6 @@ importModuleDtor(nsIModule* self)
 	nsImportStringBundle::Cleanup();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR( "nsImportServiceModule", components, importModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR( nsImportServiceModule, components, importModuleDtor)
 
 

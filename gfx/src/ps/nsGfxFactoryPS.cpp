@@ -38,5 +38,5 @@ static nsModuleComponentInfo components[] =
     nsDeviceContextPSConstructor }  
 };
 
-NS_IMPL_NSGETMODULE("nsGfxPSModule", components)
+NS_IMPL_NSGETMODULE(nsGfxPSModule, components)
 

@@ -87,7 +87,7 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsAccessProxy", components, AccessProxyModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsAccessProxy, components, AccessProxyModuleDtor)
 
 
 

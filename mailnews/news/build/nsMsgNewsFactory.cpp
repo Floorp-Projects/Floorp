@@ -125,6 +125,6 @@ static nsModuleComponentInfo components[] =
     nsNewsDownloadDialogArgsConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsMsgNewsModule", components)
+NS_IMPL_NSGETMODULE(nsMsgNewsModule, components)
 
 

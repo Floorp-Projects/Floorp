@@ -25,6 +25,9 @@
 
 #include "prtypes.h"
 
+#define g_InstanceCount nsUcharUtilModule_g_InstanceCount
+#define g_LockCount nsUcharUtilModule_g_LockCount
+
 extern "C" PRInt32 g_InstanceCount;
 extern "C" PRInt32 g_LockCount;
 

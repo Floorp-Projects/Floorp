@@ -43,4 +43,4 @@ static nsModuleComponentInfo gRDFDOMViewerModuleComponents[] =
       nsRDFDOMViewerElementConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsRDFDOMViewerModule", gRDFDOMViewerModuleComponents)
+NS_IMPL_NSGETMODULE(nsRDFDOMViewerModule, gRDFDOMViewerModuleComponents)

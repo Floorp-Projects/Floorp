@@ -79,4 +79,4 @@ static nsModuleComponentInfo gComponents[] = {
       NS_IMAPPROTOCOLINFO_CONTRACTID, nsImapServiceConstructor }
 };
 
-NS_IMPL_NSGETMODULE("IMAP factory", gComponents);
+NS_IMPL_NSGETMODULE(IMAP_factory, gComponents);

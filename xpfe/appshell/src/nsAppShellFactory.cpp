@@ -117,5 +117,5 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
 #endif
 };
 
-NS_IMPL_NSGETMODULE("appshell", gAppShellModuleInfo)
+NS_IMPL_NSGETMODULE(appshell, gAppShellModuleInfo)
 

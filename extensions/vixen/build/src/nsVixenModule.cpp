@@ -33,4 +33,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsVixenModule", components)
+NS_IMPL_NSGETMODULE(nsVixenModule, components)

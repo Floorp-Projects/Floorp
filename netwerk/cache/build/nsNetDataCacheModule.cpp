@@ -46,4 +46,4 @@ static nsModuleComponentInfo components[] = {
     { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_CONTRACTID,nsCacheManagerConstructor }
 };
 
-NS_IMPL_NSGETMODULE("Network Data Cache", components)
+NS_IMPL_NSGETMODULE(Network_Data_Cache, components)

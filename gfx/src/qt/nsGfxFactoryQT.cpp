@@ -154,5 +154,5 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerQTConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsGfxQTModule", components)
+NS_IMPL_NSGETMODULE(nsGfxQTModule, components)
 

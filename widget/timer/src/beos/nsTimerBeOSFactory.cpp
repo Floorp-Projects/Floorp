@@ -41,4 +41,4 @@ static nsModuleComponentInfo components[] =
     nsTimerBeOSConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsBeOSTimerModule", components)
+NS_IMPL_NSGETMODULE(nsBeOSTimerModule, components)

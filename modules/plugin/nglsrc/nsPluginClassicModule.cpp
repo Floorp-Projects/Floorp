@@ -76,5 +76,5 @@ nsPluginModuleDtor(nsIModule *self)
   ns4xPlugin::ReleaseStatics();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsClassicPluginModule", gComponentInfo,
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsClassicPluginModule, gComponentInfo,
                               nsPluginModuleDtor);

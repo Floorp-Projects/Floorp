@@ -38,5 +38,5 @@ static nsModuleComponentInfo components[] =
     nsPPMDecoderConstructor, },
 };
 
-NS_IMPL_NSGETMODULE("nsPPMDecoderModule", components)
+NS_IMPL_NSGETMODULE(nsPPMDecoderModule, components)
 

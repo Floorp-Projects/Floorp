@@ -154,4 +154,4 @@ static nsModuleComponentInfo components[] =
     nsAddbookProtocolHandler::Create }
 };
 
-NS_IMPL_NSGETMODULE("nsAbModule", components)
+NS_IMPL_NSGETMODULE(nsAbModule, components)

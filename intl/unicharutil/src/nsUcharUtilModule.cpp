@@ -101,5 +101,5 @@ static nsModuleComponentInfo components[] =
 #endif // IBMBIDI
 };
 
-NS_IMPL_NSGETMODULE("UcharUtil", components)
+NS_IMPL_NSGETMODULE(UcharUtil, components)
 

@@ -38,5 +38,5 @@ static nsModuleComponentInfo components[] =
     nsJPEGDecoderConstructor, },
 };
 
-NS_IMPL_NSGETMODULE("nsJPEGDecoderModule", components)
+NS_IMPL_NSGETMODULE(nsJPEGDecoderModule, components)
 

@@ -328,7 +328,7 @@ static nsModuleComponentInfo components[] = {
     nsUnknownContentTypeHandlerConstructor },
 };
 
-NS_IMPL_NSGETMODULE( "nsUnknownContentTypeHandler", components )
+NS_IMPL_NSGETMODULE(nsUnknownContentTypeHandler, components )
 
 /* nsISupports Implementation for the class */
 NS_IMPL_ISUPPORTS2(nsUnknownContentTypeHandler,

@@ -79,5 +79,5 @@ eudoraModuleDtor(nsIModule* self)
 }
 
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsEudoraImportModule", components, eudoraModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsEudoraImportModule, components, eudoraModuleDtor)
 

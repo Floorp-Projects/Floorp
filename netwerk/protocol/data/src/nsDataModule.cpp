@@ -32,7 +32,7 @@ static nsModuleComponentInfo components[] = {
       nsDataHandler::Create},
 };
 
-NS_IMPL_NSGETMODULE("nsDataProtocolModule", components)
+NS_IMPL_NSGETMODULE(nsDataProtocolModule, components)
 
 
 

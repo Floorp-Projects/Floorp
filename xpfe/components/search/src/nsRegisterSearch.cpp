@@ -49,5 +49,5 @@ static nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE("nsSearchModule", components)
+NS_IMPL_NSGETMODULE(nsSearchModule, components)
 

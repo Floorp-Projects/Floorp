@@ -1092,5 +1092,5 @@ static nsModuleComponentInfo components[] =
   { "Accept Language", NS_ACCEPTLANG_CID, NS_ACCEPTLANG_CONTRACTID, nsAcceptLangConstructor}
 };
 
-NS_IMPL_NSGETMODULE("nsStringBundleModule", components)
+NS_IMPL_NSGETMODULE(nsStringBundleModule, components)
 

@@ -68,5 +68,5 @@ static nsModuleComponentInfo components[] = {
   {nsnull, NS_XPCTESTDOMSTRING_CID,       "@mozilla.org/js/xpc/test/DOMString;1",       xpctest::ConstructXPCTestDOMString      }
 };
                                                                
-NS_IMPL_NSGETMODULE("xpconnect test", components)
+NS_IMPL_NSGETMODULE(xpconnect_test, components)
 

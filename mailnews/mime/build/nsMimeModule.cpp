@@ -76,4 +76,4 @@ static nsModuleComponentInfo gComponents[] = {
       nsnull, nsMimeHeadersConstructor }
 };
 
-NS_IMPL_NSGETMODULE("mime services", gComponents)
+NS_IMPL_NSGETMODULE(mime_services, gComponents)

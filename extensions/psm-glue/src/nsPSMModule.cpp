@@ -175,4 +175,4 @@ static nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE("PSMComponent", components);
+NS_IMPL_NSGETMODULE(PSMComponent, components);

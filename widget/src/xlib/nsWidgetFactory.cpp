@@ -225,6 +225,6 @@ nsWidgetXLIBModuleDtor(nsIModule *self)
   nsClipboard::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsWidgetXLIBModule",
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetXLIBModule,
                               components,
                               nsWidgetXLIBModuleDtor)
