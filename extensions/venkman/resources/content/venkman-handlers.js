@@ -123,7 +123,22 @@ console.onInputEval =
 function con_ieval (e)
 {
     if (e.inputData)
-        evalInTargetScope (e.inputData)
+    {       
+        display (e.inputData, MT_FEVAL_IN);
+        var rv = evalInTargetScope (e.inputData);
+        if (typeof rv != "undefined")
+        {
+            if (rv != null)
+            {
+                refreshResultsArray();
+                var l = $.length;
+                $[l] = rv;
+                display ("$[" + l + "] = " + formatValue (rv), MT_FEVAL_OUT);
+            }
+            else
+                display (formatValue (rv), MT_FEVAL_OUT);
+        }
+    }
     return true;
 }
 
@@ -131,7 +146,12 @@ console.onInputEvalD =
 function con_ievald (e)
 {
     if (e.inputData)
-        evalInDebuggerScope (e.inputData)
+    {       
+        display (e.inputData, MT_EVAL_IN);
+        var rv = evalInDebuggerScope (e.inputData)
+        if (typeof rv != "undefined")
+            display (String(rv), MT_EVAL_OUT);
+    }
     return true;
 }
 
@@ -192,7 +212,7 @@ function con_iprops (e, forceDebuggerScope)
         v = evalInDebuggerScope (e.inputData);
     else
         v = evalInTargetScope (e.inputData);
-
+    
     if (!(v instanceof jsdIValue))
     {
         display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, String(v)]),
@@ -200,6 +220,8 @@ function con_iprops (e, forceDebuggerScope)
         return false;
     }
     
+    display (getMsg(forceDebuggerScope ? MSN_PROPSD_HEADER : MSN_PROPS_HEADER,
+                    e.inputData));
     displayProperties(v);
     return true;
 }
