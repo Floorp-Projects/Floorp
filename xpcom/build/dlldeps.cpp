@@ -197,4 +197,8 @@ void XXXNeverCalled()
     }
     NS_NewInterfaceRequestorAggregation(nsnull, nsnull, nsnull);
     NS_NewHashPropertyBag(nsnull);
+    nsDependentString depstring;
+    depstring.Rebind(nsnull, PRUint32(0));
+    nsDependentCString depcstring;
+    depcstring.Rebind(nsnull, PRUint32(0));
 }

@@ -244,16 +244,8 @@ nsScannerSubstring::AsString() const
 
         if (mStart.mBuffer == mEnd.mBuffer) {
           // We only have a single fragment to deal with, so just return it
-          // as a substring.  We take advantage of the fact that |nsString| and
-          // |nsDependentSubstring| don't have any members that aren't on
-          // |nsSubstring|, so that have same same layout.  Furthermore,
-          // we know that the implementation of ~nsString() will not try
-          // to free the data if the string was constructed as a
-          // |nsDependentSubstring|.
-          
-          mFlattenedRep.~nsString(); // in case we have a buffer currently
-          new (&mutable_this->mFlattenedRep)
-            nsDependentSubstring(mStart.mPosition, mEnd.mPosition);
+          // as a substring.
+          mutable_this->mFlattenedRep.Rebind(mStart.mPosition, mEnd.mPosition);
         } else {
           // Otherwise, we need to copy the data into a flattened buffer.
           nsScannerIterator start, end;
@@ -430,6 +422,64 @@ nsScannerString::ReplaceCharacter(nsScannerIterator& aPosition, PRUnichar aChar)
 
 
   /**
+   * nsScannerSharedSubstring
+   */
+
+void
+nsScannerSharedSubstring::Rebind(const nsScannerIterator &aStart,
+                              const nsScannerIterator &aEnd)
+{
+  // If the start and end positions are inside the same buffer, we must
+  // acquire ownership of the buffer.  If not, we can optimize by not holding
+  // onto it.
+
+  Buffer *buffer = NS_CONST_CAST(Buffer*, aStart.buffer());
+  PRBool sameBuffer = buffer == aEnd.buffer();
+
+  nsScannerBufferList *bufferList;
+
+  if (sameBuffer) {
+    bufferList = aStart.mOwner->mBufferList;
+    bufferList->AddRef();
+    buffer->IncrementUsageCount();
+  }
+
+  if (mBufferList)
+    ReleaseBuffer();
+
+  if (sameBuffer) {
+    mBuffer = buffer;
+    mBufferList = bufferList;
+    mString.Rebind(aStart.mPosition, aEnd.mPosition);
+  } else {
+    mBuffer = nsnull;
+    mBufferList = nsnull;
+    CopyUnicodeTo(aStart, aEnd, mString);
+  }
+}
+
+void
+nsScannerSharedSubstring::ReleaseBuffer()
+{
+  NS_ASSERTION(mBufferList, "Should only be called with non-null mBufferList");
+  mBuffer->DecrementUsageCount();
+  mBufferList->DiscardUnreferencedPrefix(mBuffer);
+  mBufferList->Release();
+}
+
+void
+nsScannerSharedSubstring::MakeMutable()
+{
+  nsString temp(mString); // this will force a copy of the data
+  mString.Assign(temp);   // mString will now share the just-allocated buffer
+
+  ReleaseBuffer();
+
+  mBuffer = nsnull;
+  mBufferList = nsnull;
+}
+
+  /**
    * utils -- based on code from nsReadableUtils.cpp
    */
 
@@ -444,6 +494,22 @@ CopyUnicodeTo( const nsScannerIterator& aSrcStart,
     nsScannerIterator fromBegin(aSrcStart);
     
     copy_string(fromBegin, aSrcEnd, writer);
+  }
+
+void
+AppendUnicodeTo( const nsScannerIterator& aSrcStart,
+                 const nsScannerIterator& aSrcEnd,
+                 nsScannerSharedSubstring& aDest )
+  {
+    // Check whether we can just create a dependent string.
+    if (aDest.str().IsEmpty()) {
+      // We can just make |aDest| point to the buffer.
+      // This will take care of copying if the buffer spans fragments.
+      aDest.Rebind(aSrcStart, aSrcEnd);
+    } else {
+      // The dest string is not empty, so it can't be a dependent substring.
+      AppendUnicodeTo(aSrcStart, aSrcEnd, aDest.writable());
+    }
   }
 
 void

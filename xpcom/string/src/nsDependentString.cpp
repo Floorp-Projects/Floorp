@@ -16,11 +16,12 @@
  * The Original Code is Mozilla.
  *
  * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by IBM Corporation are Copyright (C) 2003
+ * Portions created by IBM Corporation are Copyright (C) 2004
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,49 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-void
-nsTDependentSubstring_CharT::Rebind( const abstract_string_type& readable, PRUint32 startPos, PRUint32 length )
-  {
-    // If we currently own a buffer, release it.
-    Finalize();
+#include "nsDependentString.h"
+#include "nsAlgorithm.h"
 
-    size_type strLength = readable.GetReadableBuffer((const char_type**) &mData);
+  // define nsDependentString
+#include "string-template-def-unichar.h"
+#include "nsTDependentString.cpp"
+#include "string-template-undef.h"
 
-    if (startPos > strLength)
-      startPos = strLength;
-
-    mData += startPos;
-    mLength = NS_MIN(length, strLength - startPos);
-
-    SetDataFlags(F_NONE);
-  }
-
-void
-nsTDependentSubstring_CharT::Rebind( const substring_type& str, PRUint32 startPos, PRUint32 length )
-  {
-    // If we currently own a buffer, release it.
-    Finalize();
-
-    size_type strLength = str.Length();
-
-    if (startPos > strLength)
-      startPos = strLength;
-
-    mData = NS_CONST_CAST(char_type*, str.Data()) + startPos;
-    mLength = NS_MIN(length, strLength - startPos);
-
-    SetDataFlags(F_NONE);
-  }
-
-void
-nsTDependentSubstring_CharT::Rebind( const char_type* start, const char_type* end )
-  {
-    NS_ASSERTION(start && end, "nsTDependentSubstring must wrap a non-NULL buffer");
-
-    // If we currently own a buffer, release it.
-    Finalize();
-
-    mData = NS_CONST_CAST(char_type*, start);
-    mLength = end - start;
-    SetDataFlags(F_NONE);
-  }
+  // define nsDependentCString
+#include "string-template-def-char.h"
+#include "nsTDependentString.cpp"
+#include "string-template-undef.h"

@@ -98,6 +98,10 @@ class nsTDependentString_CharT : public nsTString_CharT
           AssertValid();
         }
 
+      // Create a nsTDependentSubstring to be bound later
+      nsTDependentString_CharT()
+        : string_type() {}
+
       // XXX are you sure??
       // auto-generated copy-constructor OK
       // auto-generated copy-assignment operator OK
@@ -110,19 +114,10 @@ class nsTDependentString_CharT : public nsTString_CharT
 
       void Rebind( const char_type* data )
         {
-          mData = NS_CONST_CAST(char_type*, data);
-          mLength = char_traits::length(data);
-          SetDataFlags(F_TERMINATED);
-          AssertValid();
+          Rebind(data, char_traits::length(data));
         }
 
-      void Rebind( const char_type* data, size_type length )
-        {
-          mData = NS_CONST_CAST(char_type*, data);
-          mLength = length;
-          SetDataFlags(F_TERMINATED);
-          AssertValid();
-        }
+      NS_COM void Rebind( const char_type* data, size_type length );
 
       void Rebind( const char_type* start, const char_type* end )
         {

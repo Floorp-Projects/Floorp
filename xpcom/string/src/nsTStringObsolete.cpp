@@ -300,30 +300,6 @@ nsTString_CharT::StripChars( const char* aSet )
   }
 
 void
-nsTString_CharT::StripChar( char_type aChar, PRInt32 aOffset )
-  {
-    if (mLength == 0 || aOffset >= PRInt32(mLength))
-      return;
-
-    EnsureMutable(); // XXX do this lazily?
-
-    // XXXdarin this code should defer writing until necessary.
-
-    char_type* to   = mData + aOffset;
-    char_type* from = mData + aOffset;
-    char_type* end  = mData + mLength;
-
-    while (from < end)
-      {
-        char_type theChar = *from++;
-        if (aChar != theChar)
-          *to++ = theChar;
-      }
-    *to = char_type(0); // add the null
-    mLength = to - mData;
-  }
-
-void
 nsTString_CharT::StripWhitespace()
   {
     StripChars(kWhitespace);

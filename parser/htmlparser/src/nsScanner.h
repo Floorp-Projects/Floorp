@@ -194,7 +194,7 @@ class nsScanner {
        *  @param   aString - receives new data from stream
        *  @return  error code
        */
-      nsresult ReadTagIdentifier(nsString& aString);
+      nsresult ReadTagIdentifier(nsScannerSharedSubstring& aString);
 
       /**
        *  Consume characters until you run into a char that's not valid in an
@@ -205,8 +205,9 @@ class nsScanner {
        */
       nsresult ReadEntityIdentifier(nsString& aString);
       nsresult ReadNumber(nsString& aString,PRInt32 aBase);
-      nsresult ReadWhitespace(nsString& aString, 
-                              PRInt32& aNewlinesSkipped);
+      nsresult ReadWhitespace(nsScannerSharedSubstring& aString, 
+                              PRInt32& aNewlinesSkipped,
+                              PRBool& aHaveCR);
       nsresult ReadWhitespace(nsScannerIterator& aStart, 
                               nsScannerIterator& aEnd,
                               PRInt32& aNewlinesSkipped);
@@ -236,6 +237,10 @@ class nsScanner {
        */
       nsresult ReadUntil(nsAString& aString,
                          const nsReadEndCondition& aEndCondition, 
+                         PRBool addTerminal);
+
+      nsresult ReadUntil(nsScannerSharedSubstring& aString,
+                         const nsReadEndCondition& aEndCondition,
                          PRBool addTerminal);
 
       nsresult ReadUntil(nsScannerIterator& aStart,

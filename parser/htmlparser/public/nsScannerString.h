@@ -273,8 +273,10 @@ class nsScannerSubstring
       size_type            mLength;
 
       // these fields are used to implement AsString
-      nsString             mFlattenedRep;
+      nsDependentSubstring mFlattenedRep;
       PRBool               mIsDirty;
+
+      friend class nsScannerSharedSubstring;
   };
 
 
@@ -302,6 +304,52 @@ class nsScannerString : public nsScannerSubstring
 
 
   /**
+   * nsScannerSharedSubstring implements copy-on-write semantics for
+   * nsScannerSubstring.  When you call .writable(), it will copy the data
+   * and return a mutable string object.  This class also manages releasing
+   * the reference to the scanner buffer when it is no longer needed.
+   */
+
+class nsScannerSharedSubstring
+  {
+    public:
+      nsScannerSharedSubstring()
+        : mBuffer(nsnull), mBufferList(nsnull) { }
+
+      ~nsScannerSharedSubstring()
+        {
+          if (mBufferList)
+            ReleaseBuffer();
+        }
+
+        // Acquire a copy-on-write reference to the given substring.
+      NS_HIDDEN_(void) Rebind(const nsScannerIterator& aStart,
+                              const nsScannerIterator& aEnd);
+
+       // Get a mutable reference to this string
+      nsSubstring& writable()
+        {
+          if (mBufferList)
+            MakeMutable();
+
+          return mString;
+        }
+
+        // Get a const reference to this string
+      const nsSubstring& str() const { return mString; }
+
+    private:
+      typedef nsScannerBufferList::Buffer Buffer;
+
+      NS_HIDDEN_(void) ReleaseBuffer();
+      NS_HIDDEN_(void) MakeMutable();
+
+      nsDependentSubstring  mString;
+      Buffer               *mBuffer;
+      nsScannerBufferList  *mBufferList;
+  };
+
+  /**
    * nsScannerIterator works just like nsReadingIterator<CharT> except that
    * it knows how to iterate over a list of scanner buffers.
    */
@@ -322,6 +370,7 @@ class nsScannerIterator
       const nsScannerSubstring* mOwner;
 
       friend class nsScannerSubstring;
+      friend class nsScannerSharedSubstring;
 
     public:
       nsScannerIterator() {}
@@ -552,6 +601,11 @@ AppendUnicodeTo( const nsScannerSubstring& aSrc, nsAString& aDest )
     nsScannerIterator begin, end;
     AppendUnicodeTo(aSrc.BeginReading(begin), aSrc.EndReading(end), aDest);
   }
+
+void
+AppendUnicodeTo( const nsScannerIterator& aSrcStart,
+                 const nsScannerIterator& aSrcEnd,
+                 nsScannerSharedSubstring& aDest );
 
 PRBool
 FindCharInReadable( PRUnichar aChar,

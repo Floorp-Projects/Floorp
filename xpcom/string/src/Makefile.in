@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS		=				\
 		nsAString.cpp			\
+		nsDependentString.cpp		\
 		nsDependentSubstring.cpp	\
 		nsObsoleteAStringThunk.cpp	\
 		nsPrintfCString.cpp		\

@@ -52,22 +52,16 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
       NS_COM void Rebind( const abstract_string_type&, PRUint32 startPos, PRUint32 length = size_type(-1) );
       NS_COM void Rebind( const substring_type&, PRUint32 startPos, PRUint32 length = size_type(-1) );
 
-      void Rebind( const char_type* start, const char_type* end )
-        {
-          NS_ASSERTION(start && end, "nsTDependentSubstring must wrap a non-NULL buffer");
-          mData = NS_CONST_CAST(char_type*, start);
-          mLength = end - start;
-          SetDataFlags(F_NONE);
-        }
+      NS_COM void Rebind( const char_type* start, const char_type* end );
 
       nsTDependentSubstring_CharT( const abstract_string_type& str, PRUint32 startPos, PRUint32 length = size_type(-1) )
-        : substring_type(F_NONE)
+        : substring_type()
         {
           Rebind(str, startPos, length);
         }
 
       nsTDependentSubstring_CharT( const substring_type& str, PRUint32 startPos, PRUint32 length = size_type(-1) )
-        : substring_type(F_NONE)
+        : substring_type()
         {
           Rebind(str, startPos, length);
         }
@@ -77,6 +71,10 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
 
       nsTDependentSubstring_CharT( const const_iterator& start, const const_iterator& end )
         : substring_type(NS_CONST_CAST(char_type*, start.get()), end.get() - start.get(), F_NONE) {}
+
+      // Create a nsTDependentSubstring to be bound later
+      nsTDependentSubstring_CharT()
+        : substring_type() {}
 
       // auto-generated copy-constructor OK (XXX really?? what about base class copy-ctor?)
 
