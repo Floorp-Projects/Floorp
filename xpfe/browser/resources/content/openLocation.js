@@ -126,7 +126,13 @@ function onChooseFile()
 
     fp.show();
     if (fp.file.path && fp.file.path.length > 0)
-      dialog.input.value = fp.file.path;
+    {
+      // Hack to get a file: url from an nsIFile
+      var tempFileSpec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
+      tempFileSpec.nativePath = fp.file.path;
+      
+      dialog.input.value = tempFileSpec.URLString;
+    }
 
   } catch(ex) { }
 }
