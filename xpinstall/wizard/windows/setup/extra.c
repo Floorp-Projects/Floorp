@@ -2351,16 +2351,18 @@ HRESULT ProcessGre(greInfo *aGre)
      * during uninstall. */
     if(sgProduct.greType == GRE_LOCAL)
       wsprintf(greUninstallCommand,
-               "\"%s\" -mmi -ms -app %s -ua \"%s\" -reg_path %s",
+               "\"%s\" -mmi -ms -app \"%s %s\" -ua \"%s\" -reg_path %s",
                aGre->uninstallerAppPath,
                sgProduct.szProductNameInternal,
+               sgProduct.szUserAgent,
                aGre->userAgent,
                sgProduct.grePrivateKey);
     else
       wsprintf(greUninstallCommand,
-               "\"%s\" -mmi -ms -app %s -ua \"%s\"",
+               "\"%s\" -mmi -ms -app \"%s %s\" -ua \"%s\"",
                aGre->uninstallerAppPath,
                sgProduct.szProductNameInternal,
+               sgProduct.szUserAgent,
                aGre->userAgent);
     UpdateInstallLog(KEY_UNINSTALL_COMMAND, greUninstallCommand, DNU_UNINSTALL);
   }
