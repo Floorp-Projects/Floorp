@@ -183,8 +183,8 @@ Rights Reserved.
   </hbox>
 
 	<statusbar id="status-bar" class="mailwindow-statusbar">
-		<statusbarpanel id="unreadMessageCount" hidden="true" style="min-width: 5px"/>
-		<statusbarpanel id="totalMessageCount" hidden="true" style="min-width: 5px"/>
+		<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
+		<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
 	</statusbar>
 	
 	
