@@ -1,0 +1,6 @@
+<!ENTITY title.label "SmartUpdate">
+<!ENTITY header "SmartUpdate">
+<!ENTITY enableSU.label "Enable SmartUpdate">
+<!ENTITY requireConfirmation.label "Require manual confirmation of each install">
+<!ENTITY selectUninstall.label "To uninstall, select from the following list and click the uninstall button">
+<!ENTITY uninstallButton.label "Uninstall">
