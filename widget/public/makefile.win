@@ -61,6 +61,7 @@ EXPORTS=nsui.h \
   nsIMenuBar.h \
   nsIMenu.h \
   nsIMenuItem.h \
+  nsIContextMenu.h \
   nsIImageButton.h \
   nsIPopUpMenu.h \
   nsIMenuButton.h \
