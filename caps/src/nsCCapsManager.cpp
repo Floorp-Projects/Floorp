@@ -55,9 +55,10 @@ nsCCapsManager::GetPrincipalManager(nsIPrincipalManager * * iprinMan)
 }
 
 NS_IMETHODIMP
-nsCCapsManager::GetPrivilegeManager(nsIPrivilegeManager * * privMan)
+nsCCapsManager::GetPrivilegeManager(nsIPrivilegeManager **privMan)
 {
-	* privMan = (nsIPrivilegeManager *)nsPrivilegeManager::GetPrivilegeManager();
+	*privMan = (nsIPrivilegeManager *) 
+		 	nsPrivilegeManager::GetPrivilegeManager();
 	return NS_OK;
 }
 

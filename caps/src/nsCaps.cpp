@@ -192,13 +192,6 @@ nsCapsPrincipalToString(class nsIPrincipal *principal)
 	return prinStr;
 }
 
-PR_IMPLEMENT(PRBool) 
-nsCapsIsCodebaseExact(class nsIPrincipal *principal)
-{
-	PRInt16 prinType;
-	principal->GetType(& prinType);
-	return (prinType == (PRInt16) nsIPrincipal::PrincipalType_CodebaseExact) ? PR_TRUE : PR_FALSE;
-}
 /*
 PR_IMPLEMENT(const char *) 
 nsCapsPrincipalGetVendor(class nsIPrincipal *principal)

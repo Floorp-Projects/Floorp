@@ -64,9 +64,6 @@ nsCapsNewPrincipal(PRInt16 * principalType, void * key,
 PR_EXTERN(const char *) 
 nsCapsPrincipalToString(nsIPrincipal * principal);
 
-PR_EXTERN(PRBool) 
-nsCapsIsCodebaseExact(nsIPrincipal * principal);
-
 PR_EXTERN(const char *) 
 nsCapsPrincipalGetVendor(nsIPrincipal * principal);
 

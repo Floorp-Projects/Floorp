@@ -207,9 +207,8 @@ public:
   virtual void      Finalize(JSContext *aContext);
   
   // nsIScriptGlobalObjectData interface
-  NS_IMETHOD       GetPrincipal(nsIPrincipal * * prin);
-  NS_IMETHOD       SetPrincipal(nsIPrincipal * prin);
-  NS_IMETHOD       GetOrigin(nsIURI** aOrigin);
+  NS_IMETHOD        GetPrincipal(nsIPrincipal **prin);
+  NS_IMETHOD        SetPrincipal(nsIPrincipal *prin);
 
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
@@ -251,7 +250,7 @@ protected:
   HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
-  nsIPrincipal * mPrincipal;
+  nsIPrincipal *mPrincipal;
 
   BarPropImpl *mMenubar;
   BarPropImpl *mToolbar;

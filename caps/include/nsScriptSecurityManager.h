@@ -31,24 +31,35 @@
 
 class nsScriptSecurityManager : public nsIScriptSecurityManager {
 public:
-  nsScriptSecurityManager();
-  virtual ~nsScriptSecurityManager();
-  
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_SCRIPTSECURITYMANAGER_CID)
-  
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISCRIPTSECURITYMANAGER
-  
-  static nsScriptSecurityManager *
-  GetScriptSecurityManager();
-
+    nsScriptSecurityManager();
+    virtual ~nsScriptSecurityManager();
+    
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_SCRIPTSECURITYMANAGER_CID)
+        
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCRIPTSECURITYMANAGER
+    
+    static nsScriptSecurityManager *
+    GetScriptSecurityManager();
+    
 private:
-  char * GetCanonicalizedOrigin(JSContext *cx, const char* aUrlString);
-  NS_IMETHOD GetOriginFromSourceURL(nsIURI * origin, char * * result);
-  PRBool SameOrigins(JSContext *aCx, const char* aOrigin1, const char* aOrigin2);
-  PRInt32 CheckForPrivilege(JSContext *cx, char *prop_name, int priv_code);
-  char* FindOriginURL(JSContext *aCx, JSObject *aGlobal);
-  char* AddSecPolicyPrefix(JSContext *cx, char *pref_str);
-  char* GetSitePolicy(const char *org);
+    NS_IMETHOD
+    GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
+
+    NS_IMETHOD
+    GetObjectPrincipal(JSContext *aCx, JSObject *aObj, nsIPrincipal **result);
+
+    NS_IMETHOD
+    CheckPermissions(JSContext *aCx, JSObject *aObj, PRInt16 aTarget, 
+                     PRBool* result);
+    PRInt32 
+    GetSecurityLevel(JSContext *cx, char *prop_name, int priv_code);
+
+    char *
+    AddSecPolicyPrefix(JSContext *cx, char *pref_str);
+
+    char *
+    GetSitePolicy(const char *org);
 };
+
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/

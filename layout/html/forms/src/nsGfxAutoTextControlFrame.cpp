@@ -314,20 +314,21 @@ nsresult nsGfxAutoTextControlFrame::BuildScriptEventHandler(nsIScriptContext* aC
 		NS_RELEASE(globalData);
 	}
 	NS_IF_RELEASE(global);
-  JSPrincipals * jsprin;
-  prin->ToJSPrincipal(& jsprin);
+	JSPrincipals *jsprin;
+	prin->GetJSPrincipals(&jsprin);
+	JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
 	if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)mScriptObject))
 	{
-		JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
 		if (nsnull != aName)
 		{
 			JS_CompileUCFunctionForPrincipals(mJSContext, *mScriptObject, jsprin, aName,
 		           0, nsnull, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
 		           nsnull, 0);
+			JSPRINCIPALS_DROP(mJSContext, jsprin);
 			return NS_OK;
 		}
 	}
-	
+	JSPRINCIPALS_DROP(mJSContext, jsprin);
 	return NS_ERROR_FAILURE;
 }
 

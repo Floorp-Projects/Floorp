@@ -946,7 +946,7 @@ NS_IMETHODIMP
 nsTarget::HashCode(PRUint32 * code) 
 {
 	PRUint32 prinCode = 0;
-	if (itsPrincipal != NULL) itsPrincipal->HashCode(& prinCode);
+	//if (itsPrincipal != NULL) itsPrincipal->HashCode(& prinCode);
 	* code =  PL_HashString(itsName) + prinCode;
 	return NS_OK;
 }

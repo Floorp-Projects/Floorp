@@ -61,6 +61,7 @@
 #include "nsIParser.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIPrincipal.h"
 #include "nsIContentViewer.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h"
@@ -438,6 +439,8 @@ public:
 
     virtual nsIURI* GetDocumentURL() const;
 
+    virtual nsIPrincipal* GetDocumentPrincipal() const;
+
     virtual nsILoadGroup* GetDocumentLoadGroup() const;
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
@@ -765,6 +768,7 @@ protected:
     nsAutoString               mDocumentTitle;
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsCOMPtr<nsILoadGroup>     mDocumentLoadGroup;  // [OWNER] leads to loader
+    nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
     nsCOMPtr<nsIRDFResource>   mRootResource;       // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
     nsIDocument*               mParentDocument;     // [WEAK]
@@ -1130,6 +1134,10 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     mDocumentTitle.Truncate();
 
     mDocumentURL = syntheticURL;
+
+    rv = aChannel->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
+    if (NS_FAILED(rv)) return rv;
+
 #ifdef NECKO
     mDocumentLoadGroup = aLoadGroup;
 #else
@@ -1344,6 +1352,15 @@ XULDocumentImpl::GetDocumentURL() const
     NS_IF_ADDREF(result);
     return result;
 }
+
+nsIPrincipal* 
+XULDocumentImpl::GetDocumentPrincipal() const
+{
+    nsIPrincipal* result = mDocumentPrincipal;
+    NS_IF_ADDREF(result);
+    return result;
+}
+
 
 nsILoadGroup* 
 XULDocumentImpl::GetDocumentLoadGroup() const

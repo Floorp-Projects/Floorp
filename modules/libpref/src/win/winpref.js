@@ -157,36 +157,37 @@ pref("netinst.profile.show_dir_overwrite_msg",  true);
     Security information
 ***************************/
 /* DISABLE FOR NOW
-pref("js_security.default.htmlinputelement.value", 2);
+pref("security.policies", "default,chrome");
+pref("security.policy.default.htmlinputelement.value", "sameOrigin");
 
-pref("js_security.default.htmlimageelement.src", 2);
-pref("js_security.default.htmlimageelement.lowsrc", 2);
+pref("security.policy.default.htmlimageelement.src", "sameOrigin");
+pref("security.policy.default.htmlimageelement.lowsrc", "sameOrigin");
 
-pref("js_security.default.location.hash", 2);
-pref("js_security.default.location.host", 2);
-pref("js_security.default.location.hostname", 2);
-pref("js_security.default.location.pathname", 2);
-pref("js_security.default.location.port", 2);
-pref("js_security.default.location.protocol", 2);
-pref("js_security.default.location.search", 2);
-pref("js_security.default.location.replace", 2);
-pref("js_security.default.location.tostring", 2);
-pref("js_security.default.location.reload", 2);
-pref("js_security.default.location.replace", 2);
+pref("security.policy.default.location.hash", "sameOrigin");
+pref("security.policy.default.location.host", "sameOrigin");
+pref("security.policy.default.location.hostname", "sameOrigin");
+pref("security.policy.default.location.pathname", "sameOrigin");
+pref("security.policy.default.location.port", "sameOrigin");
+pref("security.policy.default.location.protocol", "sameOrigin");
+pref("security.policy.default.location.search", "sameOrigin");
+pref("security.policy.default.location.replace", "sameOrigin");
+pref("security.policy.default.location.tostring", "sameOrigin");
+pref("security.policy.default.location.reload", "sameOrigin");
+pref("security.policy.default.location.replace", "sameOrigin");
 
-pref("js_security.default.htmldocument.anchors", 2);
-pref("js_security.default.htmldocument.applets", 2);
-pref("js_security.default.htmldocument.cookie", 2);
-pref("js_security.default.htmldocument.domain", 2);
-pref("js_security.default.htmldocument.getelementbyid", 2);
-pref("js_security.default.htmldocument.getelementsbyname", 2);
-pref("js_security.default.htmldocument.embeds", 2);
-pref("js_security.default.htmldocument.forms", 2);
-pref("js_security.default.htmldocument.lastmodified", 2);
-pref("js_security.default.htmldocument.links", 2);
-pref("js_security.default.htmldocument.referrer", 2);
-pref("js_security.default.htmldocument.title", 2);
-pref("js_security.default.htmldocument.url", 2);
+pref("security.policy.default.htmldocument.anchors", "sameOrigin");
+pref("security.policy.default.htmldocument.applets", "sameOrigin");
+pref("security.policy.default.htmldocument.cookie", "sameOrigin");
+pref("security.policy.default.htmldocument.domain", "sameOrigin");
+pref("security.policy.default.htmldocument.getelementbyid", "sameOrigin");
+pref("security.policy.default.htmldocument.getelementsbyname", "sameOrigin");
+pref("security.policy.default.htmldocument.embeds", "sameOrigin");
+pref("security.policy.default.htmldocument.forms", "sameOrigin");
+pref("security.policy.default.htmldocument.lastmodified", "sameOrigin");
+pref("security.policy.default.htmldocument.links", "sameOrigin");
+pref("security.policy.default.htmldocument.referrer", "sameOrigin");
+pref("security.policy.default.htmldocument.title", "sameOrigin");
+pref("security.policy.default.htmldocument.url", "sameOrigin");
 */
 /*
   Need preference names for 

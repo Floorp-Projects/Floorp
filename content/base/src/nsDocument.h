@@ -32,6 +32,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIContent.h"
 #include "nsGenericDOMNodeList.h"
+#include "nsIPrincipal.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
@@ -133,6 +134,11 @@ public:
    * Return the URL for the document. May return null.
    */
   virtual nsIURI* GetDocumentURL() const;
+
+  /**
+   * Return the principal responsible for this document.
+   */
+  virtual nsIPrincipal* GetDocumentPrincipal() const;
 
   /**
    * Return the content (mime) type of this document.
@@ -449,6 +455,7 @@ protected:
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURI* mDocumentURL;
+  nsIPrincipal* mPrincipal;
   nsILoadGroup* mDocumentLoadGroup;
   nsString mCharacterSet;
   nsIDocument* mParentDocument;

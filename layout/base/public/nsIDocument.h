@@ -53,6 +53,7 @@ class nsILineBreaker;
 class nsIWordBreaker;
 class nsIDOMSelection;
 class nsIChannel;
+class nsIPrincipal;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -107,6 +108,11 @@ public:
    * Return the URL for the document. May return null.
    */
   virtual nsIURI* GetDocumentURL() const = 0;
+
+  /**
+   * Return the principal responsible for this document.
+   */
+  virtual nsIPrincipal* GetDocumentPrincipal() const = 0;
 
   /**
    * Return the LoadGroup for the document. May return null.

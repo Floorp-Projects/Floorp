@@ -57,8 +57,8 @@ public:
 
 	PRUint32 HashValue(void) const {
 		PRUint32 * code = 0;
-		itsPrincipal->HashCode(code);
-		return *code;
+		//itsPrincipal->HashCode(code);
+		return 0;
 	}
 
 	PRBool Equals(const nsHashKey * aKey) const {

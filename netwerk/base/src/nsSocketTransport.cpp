@@ -1723,3 +1723,16 @@ nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsSocketTransport::GetPrincipal(nsIPrincipal * *aPrincipal)
+{
+  *aPrincipal = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetPrincipal(nsIPrincipal * aPrincipal)
+{
+  return NS_OK;
+}
+

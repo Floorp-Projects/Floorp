@@ -46,8 +46,7 @@ nsUserTarget::~nsUserTarget(void)
 NS_IMETHODIMP
 nsUserTarget::EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * * result)
 {
-	PRInt16 prinType;
-	prin->GetType(& prinType);
+#if 0
 	PRInt16 privState = nsIPrivilege::PrivilegeState_Allowed;
 	PRInt16 privDuration = nsIPrivilege::PrivilegeDuration_Session;
 	if ((nsCapsGetRegistrationModeFlag()) && (prin != NULL)) {
@@ -59,5 +58,6 @@ nsUserTarget::EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * *
 		}
 	} 
 	* result = nsPrivilegeManager::FindPrivilege(privState, privDuration);
+#endif
 	return NS_OK;
 }

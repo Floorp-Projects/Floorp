@@ -294,6 +294,9 @@ PRBool
 nsPrivilegeManager::EnablePrincipalPrivilegeHelper(nsIScriptContext * context, nsITarget *target, 
 		PRInt32 callerDepth, nsIPrincipal * preferredPrin, void * data, nsITarget *impersonator)
 {
+#if 1
+	return PR_FALSE;
+#else
 	nsIPrincipalArray* callerPrinArray;
 	nsIPrincipal * useThisPrin = NULL;
 	/* Get the registered target */
@@ -358,6 +361,7 @@ nsPrivilegeManager::EnablePrincipalPrivilegeHelper(nsIScriptContext * context, n
 	PRBool result;
 	AskPermission(useThisPrin, target, data,& result);
 	return result;
+#endif
 }
 
 

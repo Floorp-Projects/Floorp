@@ -319,6 +319,19 @@ nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+{
+    *aPrincipal = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+{
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIHTTPChannel methods:
 

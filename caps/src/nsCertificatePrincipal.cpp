@@ -66,37 +66,16 @@ nsCertificatePrincipal::GetFingerPrint(char * * fingerPrint)
 
 
 NS_IMETHODIMP
-nsCertificatePrincipal::ToJSPrincipal(JSPrincipals * * jsprin)
+nsCertificatePrincipal::GetJSPrincipals(JSPrincipals **jsprin)
 {
 //  *jsprin = NS_STATIC_CAST(JSPrincipals *,this);
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsCertificatePrincipal::GetType(PRInt16 * type)
-{
-	type = & this->itsType;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::IsSecure(PRBool * result)
-{
-	*result =  (this->itsType == (PRInt16)nsIPrincipal::PrincipalType_Unknown) ? PR_FALSE : PR_TRUE;
-	return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToString(char **result)
 {
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::HashCode(PRUint32 * code) 
-{
-	code=0;
 	return NS_OK;
 }
 

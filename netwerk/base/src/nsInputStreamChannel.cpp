@@ -239,4 +239,17 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInputStreamChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+{
+    *aPrincipal = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+{
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////

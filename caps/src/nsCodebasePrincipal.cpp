@@ -15,128 +15,151 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* describes principals by thier orginating uris*/
+/* Describes principals by thier orginating uris */
 #include "nsCodebasePrincipal.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
+static char gFileScheme[] = "file";
 
 NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
 
 NS_IMETHODIMP
-nsCodebasePrincipal::ToJSPrincipal(JSPrincipals * * jsprin)
+nsCodebasePrincipal::GetJSPrincipals(JSPrincipals **jsprin)
 {
-    if (itsJSPrincipals.refcount == 0) {
-        NS_ADDREF(this);
+    if (itsJSPrincipals.nsIPrincipalPtr == nsnull) {
+        itsJSPrincipals.nsIPrincipalPtr = this;
+        NS_ADDREF(itsJSPrincipals.nsIPrincipalPtr);
+        // matching release in nsDestroyJSPrincipals
     }
     *jsprin = &itsJSPrincipals;
+    JSPRINCIPALS_HOLD(cx, *jsprin);
     return NS_OK;
-/*
-    char * cb;
-  this->GetURLString(& cb);
-  * jsprin = NS_STATIC_CAST(JSPrincipals *,this);
-  (* jsprin)->codebase = PL_strdup(cb);
-  return NS_OK;
-  */
 }
 
 NS_IMETHODIMP
-nsCodebasePrincipal::GetURLString(char **cburl)
+nsCodebasePrincipal::GetURI(nsIURI **uri) 
 {
-  return itsURL->GetSpec(cburl);
+    *uri = itsURI;
+    NS_ADDREF(*uri);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCodebasePrincipal::GetURL(nsIURI * * url) 
+nsCodebasePrincipal::ToString(char **result)
 {
-  return itsURL->Clone(url);
+    // NB TODO
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCodebasePrincipal::IsCodebaseExact(PRBool * result)
+nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
 {
-	* result = (this->itsType == nsIPrincipal::PrincipalType_CodebaseExact) ? PR_TRUE : PR_FALSE;
-	return NS_OK;
+    *result = PR_FALSE;
+    if (this == other) {
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    nsCOMPtr<nsICodebasePrincipal> otherCodebase;
+    if (!NS_SUCCEEDED(other->QueryInterface(
+            NS_GET_IID(nsICodebasePrincipal),
+            (void **) getter_AddRefs(otherCodebase))))
+    {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+    nsCOMPtr<nsIURI> otherURI;
+    if (!NS_SUCCEEDED(otherCodebase->GetURI(getter_AddRefs(otherURI)))) {
+        return NS_ERROR_FAILURE;
+    }
+    if (!itsURI || !NS_SUCCEEDED(otherURI->Equals(itsURI, result))) {
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
 }
+
 
 NS_IMETHODIMP
-nsCodebasePrincipal::IsCodebaseRegex(PRBool * result)
+nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
 {
-	* result = (itsType == nsIPrincipal::PrincipalType_CodebaseRegex) ? PR_TRUE : PR_FALSE;
-	return NS_OK;
-}
+    *result = PR_FALSE;
+    if (this == other) {
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    nsCOMPtr<nsICodebasePrincipal> otherCodebase;
+    if (!NS_SUCCEEDED(other->QueryInterface(
+            NS_GET_IID(nsICodebasePrincipal),
+            (void **) getter_AddRefs(otherCodebase))))
+    {
+        return NS_OK;
+    }
+    nsCOMPtr<nsIURI> otherURI;
+    if (!NS_SUCCEEDED(otherCodebase->GetURI(getter_AddRefs(otherURI)))) {
+        return NS_ERROR_FAILURE;
+    }
+    char *scheme1 = nsnull;
+    nsresult rv = otherURI->GetScheme(&scheme1);
+    char *scheme2 = nsnull;
+    if (NS_SUCCEEDED(rv))
+        rv = itsURI->GetScheme(&scheme2);
+    if (NS_SUCCEEDED(rv) && PL_strcmp(scheme1, scheme2) == 0) {
 
-NS_IMETHODIMP
-nsCodebasePrincipal::GetType(PRInt16 * type)
-{
-	* type = itsType;
-	return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsCodebasePrincipal::IsSecure(PRBool * result)
-{ 
-//	if ((0 == memcmp("https:", itsKey, strlen("https:"))) ||
-//      (0 == memcmp("file:", itsKey, strlen("file:"))))
-//    return PR_TRUE;
-	return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsCodebasePrincipal::ToString(char * * result)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCodebasePrincipal::HashCode(PRUint32 * code)
-{
-	(* code) = 0;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCodebasePrincipal::Equals(nsIPrincipal * other, PRBool * result)
-{
-  PRInt16 oType = 0;
-  other->GetType(& oType);
-  (* result) = (itsType == oType) ? PR_TRUE : PR_FALSE;	
-  if ((* result) != PR_TRUE) return NS_OK;
-  nsICodebasePrincipal * cbother;
-  nsXPIDLCString oCodebase, myCodebase;
-  other->QueryInterface(NS_GET_IID(nsICodebasePrincipal),(void * *)& cbother);
-  cbother->GetURLString(getter_Copies(oCodebase));
-  this->GetURLString(getter_Copies(myCodebase));
-  (* result) = (PL_strcmp(myCodebase, oCodebase) == 0) ? PR_TRUE : PR_FALSE;	
-  return NS_OK;
+        if (PL_strcmp(scheme1, gFileScheme) == 0) {
+            // All file: urls are considered to have the same origin.
+            *result = PR_TRUE;
+        } else {
+            // Need to check the host
+            char *host1 = nsnull;
+            rv = otherURI->GetHost(&host1);
+            char *host2 = nsnull;
+            if (NS_SUCCEEDED(rv))
+                rv = itsURI->GetHost(&host2);
+            *result = NS_SUCCEEDED(rv) && PL_strcmp(host1, host2) == 0;
+            if (*result) {
+                int port1;
+                rv = otherURI->GetPort(&port1);
+                int port2;
+                if (NS_SUCCEEDED(rv))
+                    rv = itsURI->GetPort(&port2);
+                *result = NS_SUCCEEDED(rv) && port1 == port2;
+            }
+            if (host1) nsCRT::free(host1);
+            if (host2) nsCRT::free(host2);
+        }
+    }
+    if (scheme1) nsCRT::free(scheme1);
+    if (scheme2) nsCRT::free(scheme2);
+    return NS_OK;
 }
 
 nsCodebasePrincipal::nsCodebasePrincipal()
 {
-  NS_INIT_ISUPPORTS();
-  itsURL = nsnull;
+    NS_INIT_ISUPPORTS();
+    itsURI = nsnull;
 }
 
 NS_IMETHODIMP
-nsCodebasePrincipal::Init(PRInt16 type, nsIURI *uri)
+nsCodebasePrincipal::Init(nsIURI *uri)
 {
-  nsresult result;
-  NS_ADDREF(this);
-  this->itsType = type;
-  if (!NS_SUCCEEDED(result = uri->Clone(&itsURL))) return result;
-  if (!NS_SUCCEEDED(result = itsJSPrincipals.Init(this))) {
-    NS_RELEASE(itsURL);
-    return result;
-  }
-  return NS_OK;
+    char *codebase;
+    if (!NS_SUCCEEDED(uri->GetSpec(&codebase))) 
+        return NS_ERROR_FAILURE;
+    if (!NS_SUCCEEDED(itsJSPrincipals.Init(codebase))) 
+        return NS_ERROR_FAILURE;
+    NS_ADDREF(this);
+    itsURI = uri;
+    NS_ADDREF(itsURI);
+    return NS_OK;
 }
 
 nsCodebasePrincipal::~nsCodebasePrincipal(void)
 {
-    if (itsURL)
-        NS_RELEASE(itsURL);
+    if (itsURI)
+        NS_RELEASE(itsURI);
 }
