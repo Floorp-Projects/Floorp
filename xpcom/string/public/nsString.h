@@ -64,6 +64,7 @@
 #define kRadix16        (16)
 #define kAutoDetect     (100)
 #define kRadixUnknown   (kAutoDetect+1)
+#define IGNORE_CASE     (PR_TRUE)
 #endif
 
 class CBufDescriptor;
