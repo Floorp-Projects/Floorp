@@ -1098,7 +1098,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           }
 
           if(theChildAgrees && theChildIsContainer) {
-            if ((theParentTag!=aChildTag) && (nsHTMLElement::IsResidualStyleTag(aChildTag))) { 
+            if ((theParentTag!=aChildTag) && (!nsHTMLElement::IsResidualStyleTag(aChildTag))) { 
               
               PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
               
