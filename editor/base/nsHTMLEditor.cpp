@@ -3377,6 +3377,8 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
         aOutputString = "";
         return NS_OK;
       }
+      else if (mFlags & eEditorPlaintextMask)
+        aFlags |= nsIDocumentEncoder::OutputPreformatted;
     }
 
     nsCOMPtr<nsIDocumentEncoder> encoder;
