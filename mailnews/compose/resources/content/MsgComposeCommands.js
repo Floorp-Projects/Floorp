@@ -1429,7 +1429,7 @@ function ComposeCanClose()
         var promptMsg = gComposeMsgsBundle.getString("quitComposeWindowMessage");
         if (promptService.confirm(window, promptTitle, promptMsg))
           {
-            msgCompose.Abort();
+            msgCompose.abort();
             return true;
           }
         else 
