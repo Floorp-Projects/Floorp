@@ -3247,12 +3247,12 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
     nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
     fileURL->SetFile(currFile);
 
+    nsXPIDLString bookmarkName;
+    currFile->GetUnicodeLeafName(getter_Copies(bookmarkName));
+
     PRBool isDir = PR_FALSE;
     currFile->IsDirectory(&isDir);
     if (isDir) {
-      nsXPIDLString bookmarkName;
-      currFile->GetUnicodeLeafName(getter_Copies(bookmarkName));
-
       nsCOMPtr<nsIRDFResource> folder;
       rv = CreateFolder(bookmarkName.get(), aParentResource, getter_AddRefs(folder));
       if (NS_FAILED(rv)) 
@@ -3269,23 +3269,17 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
       if (!extension.Equals(NS_LITERAL_CSTRING("url"))) 
         continue;
 
+      nsAutoString name(Substring(bookmarkName, 0, 
+                                  bookmarkName.Length() - extension.Length() - 1));
+     
       nsXPIDLCString path;
       currFile->GetPath(getter_Copies(path));
 
       nsXPIDLCString url;
       ResolveShortcut(path.get(), getter_Copies(url));
 
-      nsCAutoString baseName;
-      fileURL->GetFileBaseName(baseName);
-
-      // convert baseName to UCS-2 w/ ASCII chars unescaped; 
-      // non-ASCII escaped chars remain escaped.
-      nsCAutoString buf;
-      NS_ConvertUTF8toUCS2 bookmarkName(
-                           NS_UnescapeURL(baseName, esc_OnlyASCII, buf));
-
       nsCOMPtr<nsIRDFResource> bookmark;
-      rv = CreateBookmark(bookmarkName.get(), url.get(), aParentResource, getter_AddRefs(bookmark));
+      rv = CreateBookmark(name.get(), url.get(), aParentResource, getter_AddRefs(bookmark));
       if (NS_FAILED(rv)) 
         continue;
     }
@@ -3311,7 +3305,13 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
   nsCOMPtr<nsIFile> favoritesDirectory;
   fileLocator->Get("Favs", NS_GET_IID(nsIFile), getter_AddRefs(favoritesDirectory));
 
-  return ParseFavoritesFolder(favoritesDirectory, aParentFolder);
+  // If |favoritesDirectory| is null, it means that we're on a Windows 
+  // platform that does not have a Favorites folder, e.g. Windows 95 
+  // (early SRs, before IE integrated with the shell). Only try to 
+  // read Favorites folder if it exists on the machine. 
+  if (favoritesDirectory) 
+    return ParseFavoritesFolder(favoritesDirectory, aParentFolder);
+
 #elif XP_MAC
   nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
   ieFavoritesFile += "Explorer";
@@ -3324,9 +3324,8 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
   EndUpdateBatch(this);
 
   return NS_OK;
-#else
-  return NS_OK;
 #endif
+  return NS_OK;
 }
 
 #if defined(XP_WIN) || defined(XP_MAC)
@@ -5057,7 +5056,6 @@ nsBookmarksService::WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *
 	}
 	return(rv);
 }
-
 
 
 nsresult
