@@ -27,6 +27,42 @@
 #include "nsCRT.h"
 
 
+  /**
+   * this allocator definition, and the global functions to access it need to move
+   * to their own file
+   */
+
+template <class CharT>
+class XPCOM_StringAllocator
+    : public nsStringAllocator<CharT>
+  {
+    public:
+      virtual void Deallocate( CharT* ) const;
+  };
+
+template <class CharT>
+void
+XPCOM_StringAllocator<CharT>::Deallocate( CharT* aBuffer ) const
+  {
+    nsMemory::Free(aBuffer);
+  }
+
+NS_COM
+nsStringAllocator<char>&
+StringAllocator_char()
+  {
+    static XPCOM_StringAllocator<char> sStringAllocator_char;
+    return sStringAllocator_char;
+  }
+
+NS_COM
+nsStringAllocator<PRUnichar>&
+StringAllocator_wchar_t()
+  {
+    static XPCOM_StringAllocator<PRUnichar> sStringAllocator_wchar_t;
+    return sStringAllocator_wchar_t;
+  }
+
 template <class CharT> class CalculateLength
   {
     public:
