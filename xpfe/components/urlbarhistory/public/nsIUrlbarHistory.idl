@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Radha Kulkarni (radha@netscape.com)
+ *                 Jason Eager    (jce2@po.cwru.edu)
  */
  
 #include "nsISupports.idl"
@@ -58,6 +59,11 @@ interface nsIUrlbarHistory: nsISupports
    * print the History contents
    */
    void printHistory();
-   
+
+  /**
+   * clear the History contents
+   */
+   void clearHistory();
+    
 
 };

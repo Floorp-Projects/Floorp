@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Jason Eager <jce2@po.cwru.edu>
  */
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -90,6 +91,19 @@ function setHomePageToCurrentPage(folderFieldId)
   if( url )
     homePageField.value = url;
 }
+
+function prefClearUrlbarHistory()
+{
+  var button = document.getElementById("ClearUrlBarHistoryButton");
+  var urlBarHist = nsJSComponentManager.getService("component://netscape/browser/urlbarhistory",
+  "nsIUrlbarHistory");
+  if ( urlBarHist )
+  {
+  	urlBarHist.clearHistory();
+  	dump("Now history should be empty. \n");
+    button.setAttribute("disabled","true");
+  }
+}  
 
 var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
 

@@ -55,19 +55,12 @@ nsUrlbarHistory::nsUrlbarHistory():mLength(0)
 
 nsUrlbarHistory::~nsUrlbarHistory()
 {
-	PRInt32 i = mLength;
-	for (i=0; i<mLength; i++) {
-      nsString * entry = nsnull;
-	  entry = (nsString *)mArray.ElementAt(i);
-	  delete entry;
-	  mLength--;
-	}
+    ClearHistory();
 	PRInt32 cnt = sizeof(ignoreArray)/sizeof(char *);
     for(PRInt32 j=0; j< cnt; j++)  {
 		nsString * ignoreEntry = (nsString *) mIgnoreArray.ElementAt(j);
 	    delete ignoreEntry;
 	}
-	mArray.Clear();
 	mIgnoreArray.Clear();
 }
 
@@ -87,6 +80,29 @@ NS_INTERFACE_MAP_END
 //*****************************************************************************
 //    nsUrlbarHistory: nsISHistory
 //*****************************************************************************
+	NS_IMETHODIMP
+nsUrlbarHistory::ClearHistory()
+{
+  // This procedure should clear all of the entries out of the structure, but
+  // not delete the structure itself.
+  // 
+  // This loop takes each existing entry in the list and replaces it with
+  // a blank string, decrementing the size of the list by one each time.
+  // Eventually, we should end up with a zero sized list.
+ 
+
+  for (PRInt32 i=0; i<=mLength; i++) 
+  {
+     nsString * entry = nsnull;
+     entry = (nsString *)mArray.ElementAt(i);
+     delete entry;
+     mLength--;
+  }
+  mLength = 0;   // just to make sure
+  mArray.Clear();
+  return NS_OK;
+}
+
 
 /* Add an entry to the History list at mIndex and 
  * increment the index to point to the new entry
