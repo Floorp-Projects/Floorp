@@ -40,6 +40,7 @@ NS_CLASSINFO_MAP_END
 // QueryInterface implementation for XPathProcessor
 NS_INTERFACE_MAP_BEGIN(XPathProcessor)
   NS_INTERFACE_MAP_ENTRY(nsIXPathNodeSelector)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XPathProcessor)
 NS_INTERFACE_MAP_END
 

@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.47 2001/05/15 20:34:58 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.48 2001/05/16 11:18:18 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -73,7 +73,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.47 $ $Date: 2001/05/15 20:34:58 $
+ * @version $Revision: 1.48 $ $Date: 2001/05/16 11:18:18 $
 **/
 
 /**
@@ -149,6 +149,7 @@ NS_CLASSINFO_MAP_END
 // QueryInterface implementation for XSLTProcessor
 NS_INTERFACE_MAP_BEGIN(XSLTProcessor)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
 
