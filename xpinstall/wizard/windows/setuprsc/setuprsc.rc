@@ -93,7 +93,7 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
     PUSHBUTTON      "Read Me",IDC_README,11,186,53,14
-    LTEXT           "",IDC_EDIT_DESTINATION,107,160,144,9
+    LTEXT           "",IDC_EDIT_DESTINATION,107,160,146,9
 END
 
 DLG_SELECT_COMPONENTS DIALOG DISCARDABLE  51, 56, 316, 205
@@ -103,24 +103,23 @@ BEGIN
     PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
     DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
-    LTEXT           "Netscape Navigator is always installed.  Select or clear the additional components you want to install.",
-                    IDC_STATIC,101,10,204,19,NOT WS_GROUP
+    LTEXT           "",IDC_MESSAGE0,101,10,204,19,NOT WS_GROUP
     LTEXT           "C&omponents",IDC_STATIC,101,32,103,8
-    GROUPBOX        "Description",IDC_STATIC,101,124,204,22
-    LTEXT           "",IDC_STATIC_DESCRIPTION,106,133,195,8
-    GROUPBOX        "&Download information",IDC_STATIC,101,150,204,23
-    LTEXT           "Total download size:",IDC_STATIC,106,160,91,8,NOT 
-                    WS_GROUP
-    RTEXT           "",IDC_STATIC_DRIVE_SPACE_REQUIRED,206,160,94,8,NOT 
-                    WS_GROUP
+    GROUPBOX        "Description",IDC_STATIC,101,115,204,22
+    LTEXT           "",IDC_STATIC_DESCRIPTION,106,124,195,8
+    GROUPBOX        "",IDC_STATIC,101,140,204,33
+    LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
+    LTEXT           "",IDC_SPACE_AVAILABLE,206,160,94,8,NOT WS_GROUP
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    LISTBOX         IDC_LIST_COMPONENTS,101,42,204,78,LBS_OWNERDRAWFIXED | 
+    LISTBOX         IDC_LIST_COMPONENTS,101,42,204,67,LBS_OWNERDRAWFIXED | 
                     LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "",IDC_STATIC,201,32,103,8,0,WS_EX_RIGHT
+    LTEXT           "Total download size:",IDC_STATIC,105,148,92,9
+    LTEXT           "Space Available:",IDC_STATIC,206,148,94,9
 END
 
 DLG_WINDOWS_INTEGRATION DIALOG DISCARDABLE  51, 56, 315, 205
@@ -156,8 +155,7 @@ BEGIN
     PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
     DEFPUSHBUTTON   "&Install",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
-    LTEXT           "Click the type of Setup you prefer, then click Next.",
-                    IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
+    LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
     LTEXT           "&Program Folder:",IDC_STATIC,101,54,105,8
     LTEXT           "E&xisting Folders:",IDC_STATIC,101,84,163,8
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
@@ -332,6 +330,14 @@ BEGIN
     IDS_STR_INSTALLING      "Currently installing %s"
     IDS_STR_COPYINGFILE     "Copying file: %s"
     IDS_MB_WARNING_STR      "Warning"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSG_CREATE_DIRECTORY 
+                            "The following directory does not exist:%sWould you like to create it?"
+    IDS_STR_CREATE_DIRECTORY "Create Directory?"
+    IDS_ERROR_PROGRAM_FOLDER_NAME "Invalid program folder name entered."
 END
 
 #endif    // English (U.S.) resources

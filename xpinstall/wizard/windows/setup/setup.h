@@ -298,6 +298,7 @@ struct sinfoComponent
   LPSTR           szDescriptionLong;
   LPSTR           szParameter;
   siCD            *siCDDependencies;
+  siCD            *siCDDependees;
   siC             *Next;
   siC             *Prev;
 };
