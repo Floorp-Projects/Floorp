@@ -72,8 +72,6 @@
 <!ENTITY netwatchCmd.label					".NetWatch">  
 <!ENTITY aboutPluginsCmd.label				".About Plug-ins">  
 <!ENTITY aboutFontCmd.label					".About Font Displayers">  
-<!-- LOCALIZATION NOTE  (aboutCmd.label): Do NOT translate "Communicator" -->
-<!ENTITY aboutCmd.label						".About Communicator...">  
 
 
 <!ENTITY webBrowsingCmd.label			        "Web Browsing">  
@@ -89,7 +87,7 @@
 <!ENTITY interUsersCmd.label				"International Users">  
 <!-- LOCALIZATION NOTE  (helpAtCmd.label): Do NOT translate "Netscape.com" -->
 <!ENTITY helpAtCmd.label				"Help at Netscape.com">
-<!ENTITY releaseCommCmd.label			"Release Notes">
-<!ENTITY releaseCommCmd.accesskey		"r">
-<!ENTITY aboutCommCmd.label				"About">
-<!ENTITY aboutCommCmd.accesskey			"a">
+<!ENTITY releaseCmd.label				"Release Notes">
+<!ENTITY releaseCmd.accesskey				"r">
+<!ENTITY aboutCmd.label					"About &brandShortName;">
+<!ENTITY aboutCmd.accesskey				"a">
