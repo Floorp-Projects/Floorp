@@ -556,18 +556,16 @@ XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
 {
     int tag = XPT_TDP_TAG(td->prefix);
     
-    if (XPT_TDP_IS_POINTER(td->prefix.flags)) {
+    if (tag == TD_INTERFACE_TYPE) {
+        int index = td->type.interface;
+        if (!index || index > header->num_interfaces)
+            *type_string = "UNKNOWN_INTERFACE";
+        else
+            *type_string = header->interface_directory[index-1].name;
+    } else if (XPT_TDP_IS_POINTER(td->prefix.flags)) {
         *type_string = ptype_array[tag];
     } else {
-        if (tag == TD_INTERFACE_TYPE) {
-            int index = td->type.interface;
-            if (!index || index > header->num_interfaces)
-                *type_string = "UNKNOWN_INTERFACE";
-            else
-                *type_string = header->interface_directory[index-1].name;
-        } else {
-            *type_string = type_array[tag];
-        }
+        *type_string = type_array[tag];
     }
 
     return PR_TRUE;
