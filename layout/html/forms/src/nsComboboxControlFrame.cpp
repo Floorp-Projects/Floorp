@@ -110,8 +110,6 @@ static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
 
-const char * kMozDropdownActive = "-moz-dropdown-active";
-
 const PRInt32 kSizeNotSet = -1;
 
 /**
