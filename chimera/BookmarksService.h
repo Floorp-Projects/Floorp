@@ -95,6 +95,10 @@ class nsIAtom;
 
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
 
+// Delegate methods
+- (void)outlineViewItemWillExpand:(NSNotification *)notification;
+- (void)outlineViewItemWillCollapse:(NSNotification *)notification;
+
 @end
 
 @interface BookmarkItem : NSObject
@@ -167,6 +171,7 @@ public:
   static nsIAtom* gNameAtom;
   static nsIAtom* gHrefAtom;
   static nsIAtom* gBookmarkAtom;
+  static nsIAtom* gOpenAtom;
   static nsIDocument* gBookmarks;
   static nsVoidArray* gInstances;
   static int CHInsertNone;
