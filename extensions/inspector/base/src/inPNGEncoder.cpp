@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS1(inPNGEncoder, inIPNGEncoder);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-PR_STATIC_CALLBACK(void) gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg);
+static void PNGAPI gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// inIPNGEncoder
