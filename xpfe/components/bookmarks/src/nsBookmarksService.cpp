@@ -65,6 +65,8 @@
 #include "nsEscape.h"
 #include "nsITimer.h"
 #include "nsIAtom.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsISound.h"
 //#include "nsICommonDialogs.h"
@@ -82,9 +84,6 @@
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
-
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 
 #include "nsIStringBundle.h"
 
@@ -117,7 +116,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kFileLocatorCID,             NS_FILELOCATOR_CID); 
 static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID,        NS_NETSUPPORTDIALOG_CID);
@@ -4182,22 +4180,24 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 	// want to 1) not break viewer (which has no profiles), and 2)
 	// still deal reasonably (in the short term) when no
 	// bookmarks.html is installed in the profile directory.
-	do {
-		nsCOMPtr <nsIFileSpec> bookmarksFile;
-
-		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv)) break;
-
-		rv = locator->GetFileLocation(nsSpecialFileSpec::App_BookmarksFile50, getter_AddRefs(bookmarksFile));
-		if (NS_FAILED(rv)) break;
-
-		rv = bookmarksFile->GetFileSpec(aResult);
-		if (NS_FAILED(rv)) break;
-	} while (0);
+		        
+    nsCOMPtr<nsIFile> bookmarksFile;
+    rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE, getter_AddRefs(bookmarksFile));
+    if (NS_SUCCEEDED(rv)) {
+  
+        // TODO: When the code which calls this can us nsIFIle
+        // or nsILocalFile, this conversion from nsiFile to
+        // nsFileSpec can go away.
+  
+        nsXPIDLCString pathBuf;
+        rv = bookmarksFile->GetPath(getter_Copies(pathBuf));
+        if (NS_SUCCEEDED(rv))
+            *aResult = (const char *)pathBuf;
+    }
 
 #ifdef DEBUG
 	if (NS_FAILED(rv)) {
-		*aResult = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+		*aResult = nsSpecialSystemDirectory(nsSpecialSystemDirectory::Moz_BinDirectory); // Use Moz_BinDirectory, NOT CurrentProcess
 		*aResult += "chrome";
 		*aResult += "bookmarks";
 		*aResult += "content";

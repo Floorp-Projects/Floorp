@@ -36,17 +36,12 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "rdf.h"
 #include "nsCOMPtr.h"
+#include "nsAppDirectoryServiceDefs.h"
 
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
-
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID); 
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -344,22 +339,24 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
 
     nsresult rv;
-    nsFileSpec spec;
-    nsCOMPtr <nsIFileSpec> localStoreSpec;
 
     // Look for localstore.rdf in the current profile
     // directory. Bomb if we can't find it.
 
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    nsCOMPtr<nsIFile> aFile;
+    nsCOMPtr<nsIFileSpec> tempSpec;
+
+    rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
 
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_LocalStore50, getter_AddRefs(localStoreSpec));
-    if (NS_FAILED(rv)) return rv;  
- 
-    rv = localStoreSpec->GetFileSpec(&spec);
+    // Turn the nsIFile into a nsFileSpec.
+    // This is evil! nsOutputFileStream needs
+    // to take an nsILocalFile (bug #46394)
+    nsXPIDLCString pathBuf;
+    rv = aFile->GetPath(getter_Copies(pathBuf));
     if (NS_FAILED(rv)) return rv;
+    nsFileSpec spec((const char *)pathBuf);
 
-    // XXX TODO:  rewrite this to use the nsIFileSpec we already have.
     if (! spec.Exists()) {
         {
             nsOutputFileStream os(spec);
