@@ -157,6 +157,9 @@
 { 0xe9a7cd70, 0x0303, 0x11d3,                 \
     { 0xa5, 0x0a, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
+#define NS_MSGSEARCHSESSION_PROGID \
+  "component://netscape/messenger/searchSession"
+
 //
 // nsMsgMailSession
 //
