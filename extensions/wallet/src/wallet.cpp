@@ -735,7 +735,9 @@ Wallet_SetKey(PRBool isNewkey) {
 
   /* ask the user for his key */
   char * password;
-  if (isNewkey) {
+  if (wallet_KeySize() < 0) { /* no password has yet been established */
+    password = Wallet_Localize("firstPassword");
+  } else if (isNewkey) {
     password = Wallet_Localize("newPassword");
   } else {
     password = Wallet_Localize("password");
