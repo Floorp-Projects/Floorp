@@ -33,6 +33,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/8683.html
 file:///s:/mozilla/layout/html/tests/block/bugs/8749.html
 file:///s:/mozilla/layout/html/tests/block/bugs/8878.html
 file:///s:/mozilla/layout/html/tests/block/bugs/8905.html
+file:///s:/mozilla/layout/html/tests/block/bugs/9100.html
 file:///s:/mozilla/layout/html/tests/block/bugs/9237-b.html
 file:///s:/mozilla/layout/html/tests/block/bugs/9601.html
 file:///s:/mozilla/layout/html/tests/block/bugs/10458.html
