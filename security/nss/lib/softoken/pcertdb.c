@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.10 2002/01/23 01:44:22 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.11 2002/01/24 00:26:29 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2439,7 +2439,7 @@ UpdateSubjectWithEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 					SECItem *derSubject, char *emailAddr)
 {
     PRBool save = PR_FALSE, delold = PR_FALSE;
-    certDBEntrySubject *entry;
+    certDBEntrySubject *entry = NULL;
     SECStatus rv;
    
     if (emailAddr) { 
@@ -2450,6 +2450,9 @@ UpdateSubjectWithEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
     }
 
     entry = ReadDBSubjectEntry(dbhandle,derSubject);    
+    if (entry == NULL) {
+	goto loser;
+    }
     
     if ( entry->emailAddr ) {
 	if ( (emailAddr == NULL) || 
@@ -2495,10 +2498,12 @@ UpdateSubjectWithEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	}
     }
 
+    DestroyDBEntry((certDBEntry *)entry);
     if (emailAddr) PORT_Free(emailAddr);
     return(SECSuccess);
 
 loser:
+    if (entry) DestroyDBEntry((certDBEntry *)entry);
     if (emailAddr) PORT_Free(emailAddr);
     return(SECFailure);
 }
@@ -2845,6 +2850,7 @@ AddPermSubjectNode(certDBEntrySubject *entry, NSSLOWCERTCertificate *cert,
     }
     DeleteDBSubjectEntry(cert->dbhandle, &cert->derSubject);
     rv = WriteDBSubjectEntry(cert->dbhandle, entry);
+    DestroyDBEntry((certDBEntry *)entry);
     return(rv);
 }
 

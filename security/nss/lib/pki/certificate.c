@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.26 $ $Date: 2002/01/22 21:56:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.27 $ $Date: 2002/01/24 00:26:24 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -306,7 +306,8 @@ NSSCertificate_BuildChain
 	issuerID = dc->getIssuerIdentifier(dc);
 	if (issuerID) {
 	    c = find_issuer_cert_for_identifier(c, issuerID);
-	    nss_ZFreeIf(issuerID);
+	    nssItem_Destroy(issuerID);
+	    issuerID = NULL;
 	    if (!c) {
 		nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
 		if (statusOpt) *statusOpt = PR_FAILURE;
