@@ -49,16 +49,8 @@ SEC_BEGIN_PROTOS
 
 extern const SEC_ASN1Template CERT_GeneralNamesTemplate[];
 
-extern SECItem *
-CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest,
-		       PRArenaPool *arena);
-
 extern SECItem **
 cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names);
-
-extern CERTGeneralName *
-CERT_DecodeGeneralName(PRArenaPool *arena, SECItem *encodedName,
-		       CERTGeneralName  *genName);
 
 extern CERTGeneralName *
 cert_DecodeGeneralNames(PRArenaPool *arena, SECItem **encodedGenName);
