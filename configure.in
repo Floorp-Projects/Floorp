@@ -972,9 +972,6 @@ dom/src/events/Makefile
 dom/src/html/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
-editor/Makefile
-editor/core/Makefile
-editor/public/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
@@ -1140,6 +1137,17 @@ xpfe/xpviewer/Makefile
 xpfe/xpviewer/src/Makefile
 xpfe/xpviewer/public/Makefile"
 
-AC_OUTPUT($NG_MAKEFILES)
+EDITOR_MAKEFILES="
+editor/Makefile
+editor/core/Makefile
+editor/public/Makefile"
+
+MAKEFILES="$NG_MAKEFILES"
+
+if test -n "$MOZ_EDITOR"; then
+    MAKEFILES="$MAKEFILES $EDITOR_MAKEFILES"
+fi
+
+AC_OUTPUT($MAKEFILES)
 
 

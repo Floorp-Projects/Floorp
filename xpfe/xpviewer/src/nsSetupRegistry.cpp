@@ -40,7 +40,9 @@
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
 
+#ifdef NGEDITOR
 #include "nsIEditor.h"
+#endif
 
 #ifdef XP_PC
 
@@ -136,7 +138,9 @@ static NS_DEFINE_IID(kCMenuButtonCID, NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
+#ifdef NGEDITOR
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
+#endif
 
 extern "C" void
 NS_SetupRegistry()
@@ -194,6 +198,8 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
 #ifndef XP_MAC		// temporary
+#ifdef NGEDITOR
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
+#endif
 #endif // XP_MAC
 }
