@@ -198,8 +198,13 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
 
     // if proxies are enabled and this host:port combo is
     // supposed to use a proxy, check for a proxy.
-    if (!mUseProxy) return NS_OK;
-    if (!CanUseProxy(aURI)) return NS_OK;
+    if (!mUseProxy || !CanUseProxy(aURI)) {
+        rv = aProxy->SetProxyHost(nsnull);
+        if (NS_FAILED(rv)) return rv;
+        rv = aProxy->SetProxyPort(-1);
+        if (NS_FAILED(rv)) return rv;
+        return NS_OK;
+    }
 
     nsXPIDLCString scheme;
     rv = aURI->GetScheme(getter_Copies(scheme));
