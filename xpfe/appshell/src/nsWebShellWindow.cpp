@@ -2061,90 +2061,6 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 }
 
 //----------------------------------------
-#if 0
-NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
-{
-#ifdef DEBUG_MENUSDEL
-  printf("OnConnectionsComplete\n");
-#endif
-
-  // register as document listener
-  // this is needed for menus
-  nsCOMPtr<nsIContentViewer> cv;
-  mWebShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-   
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (!docv)
-      return NS_OK;
-
-    nsCOMPtr<nsIDocument> doc;
-    docv->GetDocument(*getter_AddRefs(doc));
-    if (!doc)
-      return NS_OK;
-
-    doc->AddObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
-  }
-
-  ExecuteStartupCode();
-
-  ///////////////////////////////
-  // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
-  ///////////////////////////////
-  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
-  if (menubarDOMDoc) {
-    #ifdef XP_MAC
-    LoadMenus(menubarDOMDoc, mWindow);
-    #else
-    DynamicLoadMenus(menubarDOMDoc, mWindow);
-    #endif
-  }
-
-  SetTitleFromXUL();
-
-#if 0
-  nsCOMPtr<nsIDOMDocument> toolbarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
-  nsCOMPtr<nsIDOMDocument> contentDOMDoc(GetNamedDOMDoc(nsAutoString("browser.webwindow")));
-  nsCOMPtr<nsIDocument> contentDoc(do_QueryInterface(contentDOMDoc));
-  nsCOMPtr<nsIDocument> statusDoc(do_QueryInterface(statusDOMDoc));
-  nsCOMPtr<nsIDocument> toolbarDoc(do_QueryInterface(toolbarDOMDoc));
-
-  nsIWebShell* statusWebShell = nsnull;
-  mWebShell->FindChildWithName(nsAutoString("browser.status"), statusWebShell);
-
-  PRInt32 actualStatusHeight  = GetDocHeight(statusDoc);
-  PRInt32 actualToolbarHeight = GetDocHeight(toolbarDoc);
-
-
-  PRInt32 height = 0;
-  PRInt32 x,y,w,h;
-  PRInt32 contentHeight;
-  PRInt32 toolbarHeight;
-  PRInt32 statusHeight;
-
-  mWebShell->GetBounds(x, y, w, h);
-  toolbarWebShell->GetBounds(x, y, w, toolbarHeight);
-  contentWebShell->GetBounds(x, y, w, contentHeight);
-  statusWebShell->GetBounds(x, y, w, statusHeight); 
-
-  //h = toolbarHeight + contentHeight + statusHeight;
-  contentHeight = h - actualStatusHeight - actualToolbarHeight;
-
-  toolbarWebShell->GetBounds(x, y, w, h);
-  toolbarWebShell->SetBounds(x, y, w, actualToolbarHeight);
-
-  contentWebShell->GetBounds(x, y, w, h);
-  contentWebShell->SetBounds(x, y, w, contentHeight);
-
-  statusWebShell->GetBounds(x, y, w, h);
-  statusWebShell->SetBounds(x, y, w, actualStatusHeight);
-#endif
-
-  return NS_OK;
-} // nsWebShellWindow::OnConnectionsComplete 
-#endif  /* 0 */
-
-
 
 /**
  * Get nsIDOMNode corresponding to a given webshell
@@ -2178,36 +2094,8 @@ nsWebShellWindow::GetDOMNodeFromWebShell(nsIWebShell *aShell)
   return node;
 }
 
-void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript)
-{
-  if (aJavaScript.Length() == 0) {
-    return;
-  }
-  
-  // Get nsIScriptContextOwner
-  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( do_QueryInterface(mWebShell) );
-  if ( scriptContextOwner ) {
-    const char* url = "";
-      // Get nsIScriptContext
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    nsresult status = scriptContextOwner->GetScriptContext(getter_AddRefs(scriptContext));
-    if (NS_OK == status) {
-      // Ask the script context to evalute the javascript string
-      PRBool isUndefined = PR_FALSE;
-      nsString rVal("xxx");
-      scriptContext->EvaluateString(aJavaScript, url, 0, rVal, &isUndefined);
-
-#ifdef DEBUG_MENUSDEL
-      printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
-#endif
-    }
-
-  }
-}
-
-
 /**
- * Execute window onLoad handler
+ * XXX Hack for XUL Window callbacks. MUST GO AWAY!!!!
  */
 void nsWebShellWindow::ExecuteStartupCode()
 {
@@ -2864,23 +2752,6 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
     topic += "browser";
   }
 
-
-
-#if 0
-    printf("Topic to notify is %s %d\n", topic.ToNewCString(), ret);
-
-    NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
-
-
-    nsCOMPtr<nsISupports>  subject(do_QueryInterface(this));
-    nsISupports * subject = nsnull;
-    QueryInterface(kISupportsIID, (void **)&subject);
-    if (!subject)
-      NS_ERROR_FAILURE;
-    rv = observer->Notify((nsISupports*)nsnull, topic.GetUnicode(), aURLSpec);
-#endif  /* 0 */
   return NS_OK;
   
 }

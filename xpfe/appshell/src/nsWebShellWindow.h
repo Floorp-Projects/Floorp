@@ -61,11 +61,11 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
-						 public nsIUrlDispatcher
-					#ifdef NECKO
-					#else
-						, public nsINetSupport
-					#endif
+						             public nsIUrlDispatcher
+#ifdef NECKO
+#else
+						           , public nsINetSupport
+#endif
 {
 public:
   nsWebShellWindow();
@@ -255,8 +255,8 @@ public:
 
   NS_DECL_IURLDISPATCHER
   // nsINetSupport
- #if NECKO
- #else
+#if NECKO
+#else
   NS_IMETHOD_(void) Alert(const nsString &aText);  
   NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
   NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
@@ -267,10 +267,9 @@ public:
                                             nsString &aPassword);
   NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                      nsString &aPassword);
- #endif
+#endif
 protected:
-  void ExecuteJavaScriptString(nsString& aJavaScript);
-
+  
   PRInt32 GetDocHeight(nsIDocument * aDoc);
  
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
