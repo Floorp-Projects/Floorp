@@ -373,7 +373,7 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   
   /* other attributes */
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseTableHAlignValue(aValue, aResult)) {
+    if (mInner.ParseTableCellHAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -407,7 +407,7 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
      choff, colspan, rowspan, height, width, nowrap, background, bgcolor
    */
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
+    if (mInner.TableCellHAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
