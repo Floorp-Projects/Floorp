@@ -13,3 +13,4 @@ nsINetContainerApplication.h
 nsIRefreshUrl.h
 nsIConnectionInfo.h
 nsILoadAttribs.h
+nsIURLGroup.h
