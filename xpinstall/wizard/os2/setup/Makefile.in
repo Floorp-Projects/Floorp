@@ -58,9 +58,6 @@ CPPSRCS		= \
 		xpnetHook.cpp \
 		$(NULL)
 
-#		xpnetHook.cpp \
-#		shortcut.cpp \
-
 LIBS		= $(EXTRA_DSO_LIBS)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../uninstall

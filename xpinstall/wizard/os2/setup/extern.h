@@ -28,9 +28,7 @@
 #include "setup.h"
 
 /* external global variables */
-extern HINSTANCE        hInst;
 extern HINSTANCE        hSetupRscInst;
-extern HINSTANCE        hSDInst;
 extern HINSTANCE        hXPIStubInst;
 
 extern HWND             hDlgCurrent;
@@ -83,7 +81,6 @@ extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
 extern diD              diDownload;
 extern diR              diReboot;
-extern siSD             siSDObject;
 extern siCF             siCFXpcomFile;
 extern siC              *siComponents;
 extern ssi              *ssiSiteSelector;

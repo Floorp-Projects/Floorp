@@ -42,26 +42,19 @@ static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
 static XpiExit          pfnXpiExit;
 
-static long             lFileCounter;
-static long             lBarberCounter;
-static BOOL             bBarberBar;
-static DWORD            dwBarberDirection;
 static DWORD            dwCurrentArchive;
 static DWORD            dwTotalArchives;
 char                    szStrProcessingFile[MAX_BUF];
 char                    szStrCopyingFile[MAX_BUF];
 char                    szStrInstalling[MAX_BUF];
 
-static void UpdateGaugeFileProgressBar(unsigned value);
 static void UpdateGaugeArchiveProgressBar(unsigned value);
-static void UpdateGaugeFileBarber(void);
 
 struct ExtractFilesDlgInfo
 {
 	HWND	hWndDlg;
 	int		nMaxFileBars;	    // maximum number of bars that can be displayed
 	int		nMaxArchiveBars;	// maximum number of bars that can be displayed
-	int		nFileBars;		    // current number of bars to display
 	int		nArchiveBars;		  // current number of bars to display
 } dlgInfo;
 
@@ -182,26 +175,6 @@ char *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize
   return(szErrorString);
 }
 
-#ifdef OLDCODE
-/* function that clears the file progress bar of the xpinstall progress
- * dialog.
- */
-void InvalidateBarberBarArea()
-{
-  HWND	hWndGauge;
-  RECT	rect;
-
-  /* get the file progress bar gauge */
-  hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-  /* get the dimensions of the gauge */
-  GetClientRect(hWndGauge, &rect);
-  /* invalidate the rect area of the gauge */
-  InvalidateRect(hWndGauge, &rect, FALSE);
-  /* update the dialog */
-  UpdateWindow(dlgInfo.hWndDlg);
-}
-#endif
-
 HRESULT SmartUpdateJars()
 {
   DWORD     dwIndex0;
@@ -243,8 +216,6 @@ HRESULT SmartUpdateJars()
 
     dwIndex0          = 0;
     dwCurrentArchive  = 0;
-    dwTotalArchives   = (dwTotalArchives * 2) + 1;
-    bBarberBar        = FALSE;
     siCObject         = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     while(siCObject)
     {
@@ -257,12 +228,6 @@ HRESULT SmartUpdateJars()
         !(siCObject->dwAttributes & SIC_LAUNCHAPP) &&
         !(siCObject->dwAttributes & SIC_DOWNLOAD_ONLY))
       {
-        lFileCounter      = 0;
-        lBarberCounter    = 0;
-        dwBarberDirection = BDIR_RIGHT;
-			  dlgInfo.nFileBars = 0;
-//        UpdateGaugeFileProgressBar(0);
-
         strcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
         AppendBackSlash(szArchive, sizeof(szArchive));
         strcat(szArchive, siCObject->szArchiveName);
@@ -293,7 +258,7 @@ HRESULT SmartUpdateJars()
         if(dwCurrentArchive == 0)
         {
           ++dwCurrentArchive;
-//          UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+          UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
         }
 
         sprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
@@ -322,8 +287,8 @@ HRESULT SmartUpdateJars()
         }
 
         ++dwCurrentArchive;
-//        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-//        ProcessWindowsMessages();
+        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+        ProcessWindowsMessages();
         LogISXPInstallComponentResult(hrResult);
 
         if((hrResult != WIZ_OK) &&
@@ -374,25 +339,15 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
 
     if(max == 0)
     {
+      /* Processing file */
       sprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
       WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
-      bBarberBar = TRUE;
-//      UpdateGaugeFileBarber();
     }
     else
     {
-      if(bBarberBar == TRUE)
-      {
-        dlgInfo.nFileBars = 0;
-        ++dwCurrentArchive;
-//        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-//        InvalidateBarberBarArea();
-        bBarberBar = FALSE;
-      }
-
+      /* Copying file */
       sprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
       WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
-//      UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
     }
   }
 
@@ -429,10 +384,14 @@ CenterWindow(HWND hWndDlg)
 MRESULT APIENTRY
 ProgressDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-#ifdef OLDCODE
-	switch (msg)
+  switch (msg)
   {
-		case WM_INITDLG:
+    case WM_INITDLG:
+    WinSendMsg(WinWindowFromID(hWndDlg, IDC_GAUGE_ARCHIVE), SLM_SETSLIDERINFO,
+                               MPFROM2SHORT(SMA_SHAFTDIMENSIONS, 0),
+                               (MPARAM)30);
+  }
+#ifdef OLDCODE
       DisableSystemMenuItems(hWndDlg, TRUE);
 			CenterWindow(hWndDlg);
       SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
@@ -450,339 +409,16 @@ ProgressDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   return WinDefDlgProc(hWndDlg, msg, mp1, mp2);
 }
 
-#ifdef OLDCODE
-// This routine will update the File Gauge progress bar to the specified percentage
-// (value between 0 and 100)
-static void
-UpdateGaugeFileBarber()
-{
-	int	  nBars;
-	HWND	hWndGauge;
-	RECT	rect;
-
-  if(sgProduct.dwMode != SILENT)
-  {
-	  hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-    if(dwBarberDirection == BDIR_RIGHT)
-    {
-      // 121 is the (number of bars) + (number bars in barber bar).
-      // this number determines how far to the right to draw the barber bat
-      // so as to make it look like it disappears off the progress meter area.
-      if(lBarberCounter < 121)
-        ++lBarberCounter;
-      else
-        dwBarberDirection = BDIR_LEFT;
-    }
-    else if(dwBarberDirection == BDIR_LEFT)
-    {
-      if(lBarberCounter > 0)
-        --lBarberCounter;
-      else
-        dwBarberDirection = BDIR_RIGHT;
-    }
-
-    // Figure out how many bars should be displayed
-    nBars = (dlgInfo.nMaxFileBars * lBarberCounter / 100);
-
-    // Update the gauge state before painting
-    dlgInfo.nFileBars = nBars;
-
-    // Only invalidate the part that needs updating
-    GetClientRect(hWndGauge, &rect);
-    InvalidateRect(hWndGauge, &rect, FALSE);
-
-    // Update the whole extracting dialog. We do this because we don't
-    // have a message loop to process WM_PAINT messages in case the
-    // extracting dialog was exposed
-    UpdateWindow(dlgInfo.hWndDlg);
-  }
-}
-
-// This routine will update the File Gauge progress bar to the specified percentage
-// (value between 0 and 100)
-static void
-UpdateGaugeFileProgressBar(unsigned value)
-{
-	int	nBars;
-
-  if(sgProduct.dwMode != SILENT)
-  {
-    // Figure out how many bars should be displayed
-    nBars = dlgInfo.nMaxFileBars * value / 100;
-
-    // Only paint if we need to display more bars
-    if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
-    {
-      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-      RECT	rect;
-
-      // Update the gauge state before painting
-      dlgInfo.nFileBars = nBars;
-
-      // Only invalidate the part that needs updating
-      GetClientRect(hWndGauge, &rect);
-      InvalidateRect(hWndGauge, &rect, FALSE);
-    
-      // Update the whole extracting dialog. We do this because we don't
-      // have a message loop to process WM_PAINT messages in case the
-      // extracting dialog was exposed
-      UpdateWindow(dlgInfo.hWndDlg);
-    }
-  }
-}
-
 // This routine will update the Archive Gauge progress bar to the specified percentage
 // (value between 0 and 100)
 static void
 UpdateGaugeArchiveProgressBar(unsigned value)
 {
-	int	nBars;
-
-  if(sgProduct.dwMode != SILENT)
-  {
-    // Figure out how many bars should be displayed
-    nBars = dlgInfo.nMaxArchiveBars * value / 100;
-
-    // Only paint if we need to display more bars
-    if (nBars > dlgInfo.nArchiveBars)
-    {
-      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE);
-      RECT	rect;
-
-      // Update the gauge state before painting
-      dlgInfo.nArchiveBars = nBars;
-
-      // Only invalidate the part that needs updating
-      GetClientRect(hWndGauge, &rect);
-      InvalidateRect(hWndGauge, &rect, FALSE);
-    
-      // Update the whole extracting dialog. We do this because we don't
-      // have a message loop to process WM_PAINT messages in case the
-      // extracting dialog was exposed
-      UpdateWindow(dlgInfo.hWndDlg);
-    }
-  }
+  if(sgProduct.ulMode != SILENT)
+    WinSendMsg(WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE), SLM_SETSLIDERINFO,
+                               MPFROM2SHORT(SMA_SLIDERARMPOSITION, SMA_INCREMENTVALUE),
+                               (MPARAM)(value-1));
 }
-
-// Draws a recessed border around the gauge
-static void
-DrawGaugeBorder(HWND hWnd)
-{
-	HDC		hDC = GetWindowDC(hWnd);
-	RECT	rect;
-	int		cx, cy;
-	HPEN	hShadowPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
-	HGDIOBJ	hOldPen;
-
-	GetWindowRect(hWnd, &rect);
-	cx = rect.right - rect.left;
-	cy = rect.bottom - rect.top;
-
-	// Draw a dark gray line segment
-	hOldPen = SelectObject(hDC, (HGDIOBJ)hShadowPen);
-	MoveToEx(hDC, 0, cy - 1, NULL);
-	LineTo(hDC, 0, 0);
-	LineTo(hDC, cx - 1, 0);
-
-	// Draw a white line segment
-	SelectObject(hDC, GetStockObject(WHITE_PEN));
-	MoveToEx(hDC, 0, cy - 1, NULL);
-	LineTo(hDC, cx - 1, cy - 1);
-	LineTo(hDC, cx - 1, 0);
-
-	SelectObject(hDC, hOldPen);
-	DeleteObject(hShadowPen);
-	ReleaseDC(hWnd, hDC);
-}
-
-// Draws the blue progress bar
-static void
-DrawProgressBar(HWND hWnd, int nBars)
-{
-  int         i;
-	PAINTSTRUCT	ps;
-	HDC         hDC;
-	RECT        rect;
-	HBRUSH      hBrush;
-
-  hDC = BeginPaint(hWnd, &ps);
-	GetClientRect(hWnd, &rect);
-  if(nBars <= 0)
-  {
-    /* clear the bars */
-    hBrush = CreateSolidBrush(GetSysColor(COLOR_MENU));
-    FillRect(hDC, &rect, hBrush);
-  }
-  else
-  {
-  	// Draw the bars
-    hBrush = CreateSolidBrush(RGB(0, 0, 128));
-	  rect.left     = rect.top = BAR_MARGIN;
-	  rect.bottom  -= BAR_MARGIN;
-	  rect.right    = rect.left + BAR_WIDTH;
-
-	  for(i = 0; i < nBars; i++)
-    {
-		  RECT	dest;
-
-		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
-			  FillRect(hDC, &rect, hBrush);
-
-      OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
-	  }
-  }
-
-	DeleteObject(hBrush);
-	EndPaint(hWnd, &ps);
-}
-
-// Draws the blue progress bar
-static void
-DrawBarberBar(HWND hWnd, int nBars)
-{
-  int         i;
-	PAINTSTRUCT	ps;
-	HDC         hDC;
-	RECT        rect;
-	HBRUSH      hBrush      = NULL;
-	HBRUSH      hBrushClear = NULL;
-
-  hDC = BeginPaint(hWnd, &ps);
-	GetClientRect(hWnd, &rect);
-  if(nBars <= 0)
-  {
-    /* clear the bars */
-    hBrushClear = CreateSolidBrush(GetSysColor(COLOR_MENU));
-    FillRect(hDC, &rect, hBrushClear);
-  }
-  else
-  {
-  	// Draw the bars
-    hBrushClear   = CreateSolidBrush(GetSysColor(COLOR_MENU));
-    hBrush        = CreateSolidBrush(RGB(0, 0, 128));
-	  rect.left     = rect.top = BAR_MARGIN;
-	  rect.bottom  -= BAR_MARGIN;
-	  rect.right    = rect.left + BAR_WIDTH;
-
-	  for(i = 0; i < (nBars + 1); i++)
-    {
-		  RECT	dest;
-
-		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
-      {
-        if((i >= (nBars - 15)) && (i < nBars))
-			    FillRect(hDC, &rect, hBrush);
-        else
-			    FillRect(hDC, &rect, hBrushClear);
-      }
-
-      OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
-	  }
-  }
-
-  if(hBrushClear)
-    DeleteObject(hBrushClear);
-
-  if(hBrush)
-    DeleteObject(hBrush);
-
-	EndPaint(hWnd, &ps);
-}
-
-// Adjusts the width of the gauge based on the maximum number of bars
-static void
-SizeToFitGauge(HWND hWnd, int nMaxBars)
-{
-	RECT	rect;
-	int		cx;
-
-	// Get the window size in pixels
-	GetWindowRect(hWnd, &rect);
-
-	// Size the width to fit
-	cx = 2 * GetSystemMetrics(SM_CXBORDER) + 2 * BAR_MARGIN +
-		nMaxBars * BAR_WIDTH + (nMaxBars - 1) * BAR_SPACING;
-
-	SetWindowPos(hWnd, NULL, -1, -1, cx, rect.bottom - rect.top,
-		SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
-// Window proc for file gauge
-LRESULT CALLBACK
-GaugeFileWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	DWORD	dwStyle;
-	RECT	rect;
-
-	switch(msg)
-  {
-		case WM_NCCREATE:
-			dwStyle = GetWindowLong(hWnd, GWL_STYLE);
-			SetWindowLong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
-			return(TRUE);
-
-		case WM_CREATE:
-			// Figure out the maximum number of bars that can be displayed
-			GetClientRect(hWnd, &rect);
-			dlgInfo.nFileBars = 0;
-			dlgInfo.nMaxFileBars = (rect.right - rect.left - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
-
-			// Size the gauge to exactly fit the maximum number of bars
-			SizeToFitGauge(hWnd, dlgInfo.nMaxFileBars);
-			return(FALSE);
-
-		case WM_NCPAINT:
-			DrawGaugeBorder(hWnd);
-			return(FALSE);
-
-		case WM_PAINT:
-      if(bBarberBar == TRUE)
-			  DrawBarberBar(hWnd, dlgInfo.nFileBars);
-      else
-			  DrawProgressBar(hWnd, dlgInfo.nFileBars);
-
-			return(FALSE);
-	}
-
-	return(DefWindowProc(hWnd, msg, wParam, lParam));
-}
-
-// Window proc for file gauge
-LRESULT CALLBACK
-GaugeArchiveWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	DWORD	dwStyle;
-	RECT	rect;
-
-	switch(msg)
-  {
-		case WM_NCCREATE:
-			dwStyle = GetWindowLong(hWnd, GWL_STYLE);
-			SetWindowLong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
-			return(TRUE);
-
-		case WM_CREATE:
-			// Figure out the maximum number of bars that can be displayed
-			GetClientRect(hWnd, &rect);
-			dlgInfo.nArchiveBars = 0;
-			dlgInfo.nMaxArchiveBars = (rect.right - rect.left - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
-
-			// Size the gauge to exactly fit the maximum number of bars
-			SizeToFitGauge(hWnd, dlgInfo.nMaxArchiveBars);
-			return(FALSE);
-
-		case WM_NCPAINT:
-			DrawGaugeBorder(hWnd);
-			return(FALSE);
-
-		case WM_PAINT:
-			DrawProgressBar(hWnd, dlgInfo.nArchiveBars);
-			return(FALSE);
-	}
-
-	return(DefWindowProc(hWnd, msg, wParam, lParam));
-}
-#endif
 
 void InitProgressDlg()
 {

@@ -25,9 +25,8 @@
 #ifndef _EXTRA_H_
 #define _EXTRA_H_
 
-BOOL              InitDialogClass(HMODULE hInstance, HMODULE hSetupRscInst);
-BOOL              InitApplication(HMODULE hInstance, HMODULE hSetupRscInst);
-BOOL              InitInstance(HMODULE hInstance);
+BOOL              InitApplication();
+BOOL              InitInstance();
 void              PrintError(PSZ szMsg, ULONG ulErrorCodeSH);
 void              FreeMemory(void **vPointer);
 void              *NS_GlobalReAlloc(void **hgMemory,
