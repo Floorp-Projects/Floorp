@@ -54,7 +54,6 @@ class nsIRDFSearch : public nsIRDFResource
 {
 public:
 	NS_IMETHOD	GetSearchEngineList(nsIRDFResource *source, nsVoidArray **array) const = 0;
-	NS_IMETHOD	GetName(nsVoidArray **array) const = 0;
 	NS_IMETHOD	GetURL(nsVoidArray **array) const = 0;
 };
 
