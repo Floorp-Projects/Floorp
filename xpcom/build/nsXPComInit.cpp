@@ -131,7 +131,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 
@@ -249,7 +248,6 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(XPCOMPROXY, nsProxyObjectManager::Create),
 
     COMPONENT(TIMER, nsTimerImplConstructor),
-    COMPONENT(TIMERMANAGER, nsTimerManagerConstructor),
 
 #define COMPONENT_SUPPORTS(TYPE, Type)                                         \
   COMPONENT(SUPPORTS_##TYPE, nsSupports##Type##ImplConstructor)
