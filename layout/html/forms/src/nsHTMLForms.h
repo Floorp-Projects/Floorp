@@ -24,46 +24,97 @@ class nsIFormManager;
 
 // Form and Form Controls
 
+/** 
+  * Construct an object implementing nsIFormManager 
+  * @param aInstancePtrResult the address at which to place the
+  * address of the new instance.
+  * @param aTag the html tag which corresponds to the nsIFormManager
+  * @return NS_OK if the object was successfully constructed. 
+  */
 extern nsresult
 NS_NewHTMLForm(nsIFormManager** aInstancePtrResult,
                nsIAtom* aTag);
 
+/** 
+  * Construct an object with behavior of an html input button
+  * @param aInstancePtrResult the address at which to place the
+  * address of the new instance.
+  * @param aTag the html tag which corresponds to the nsIFormManager
+  * @param aManager the form manager which will manage the constructed object
+  * @return NS_OK if the object was successfully constructed. 
+  */
 extern nsresult
 NS_NewHTMLInputButton(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html reset button
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputReset(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html submit button
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputSubmit(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html checkbox 
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputCheckbox(nsIHTMLContent** aInstancePtrResult,
                         nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input file
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputFile(nsIHTMLContent** aInstancePtrResult,
                     nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input hidden
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputHidden(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input image
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputImage(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input password
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputPassword(nsIHTMLContent** aInstancePtrResult,
                         nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input radio
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputRadio(nsIHTMLContent** aInstancePtrResult,
                      nsIAtom* aTag, nsIFormManager* aManager);
 
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input text
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
 extern nsresult
 NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
                     nsIAtom* aTag, nsIFormManager* aManager);

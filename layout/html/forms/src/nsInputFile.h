@@ -23,6 +23,8 @@
 class nsIAtom;
 class nsString;
 
+// this class definition will move to nsInputFile.cpp
+
 class nsInputFile : public nsInput {
 public:
   nsInputFile (nsIAtom* aTag, nsIFormManager* aManager);

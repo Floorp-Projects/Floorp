@@ -25,6 +25,8 @@ class nsIAtom;
 class nsString;
 class nsView;
 
+// this class definition will move to nsInputText.cpp
+
 class nsInputText : public nsInput {
 public:
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager);

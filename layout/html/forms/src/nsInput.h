@@ -27,47 +27,114 @@ class nsIView;
 class nsString;
 
 /**
- * nsInput represents an html Input element. This is a base class for
- * the various Input types (button, checkbox, file, hidden, password,
- * reset, radio, submit, text)
- */
+  * nsInput represents an html Input element. This is a base class for
+  * the various Input types (button, checkbox, file, hidden, password,
+  * reset, radio, submit, text)
+  */
 class nsInput : public nsHTMLTagContent {
 public:
+  /** 
+    * main constructor
+    * @param aTag the html tag associated with this object
+    * @param aManager the form manager to manage this input
+    */
   nsInput(nsIAtom* aTag, nsIFormManager* aManager);
 
+  /**
+    * @see nsISupports QueryInterface
+    */
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
+  /**
+    * @see nsISupports Release
+    */
   NS_IMETHOD_(nsrefcnt) Release(void);
 
+  /**
+    * @see nsIContentDelegate CreateFrame
+    */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  // nsIFormControl methods
 
+  /**
+    * @see nsIFormControl GetFormManager
+    */
+  virtual nsIFormManager* GetFormManager() const;
+
+  /**
+    * @see nsIFormControl GetFormManager
+    */
+  virtual PRInt32 GetMaxNumValues();
+
+  /**
+    * @see nsIFormControl GetFormManager
+    */
+  virtual PRBool GetName(nsString& aName);
+
+  /**
+    * @see nsIFormControl GetFormManager
+    */
+  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                           nsString* aValues);
+
+  /**
+    * @see nsIFormControl GetFormManager
+    */
+  virtual void Reset();
+
+  /**
+    * @see nsIFormControl GetFormManager
+    */
+  virtual void SetFormManager(nsIFormManager* aFormMan, PRBool aDecrementRef = PR_TRUE);
+
+  // attribute methods
+
+  /**
+    * Get a named attribute of this input
+    * @param aAttribute the name of the attribute
+    * @param aValue the value of the attribute
+    * @return eContentAttr_HasValue if there is a value, eContentAttr_NoValue
+    * if there is an attribute but no value, or eContentAttr_HasValue
+    * if there is no attribute.
+    */
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aValue) const;
 
-  // nsIFormControl
-  virtual PRBool GetName(nsString& aName);
-  virtual PRInt32 GetMaxNumValues();
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
-  virtual void Reset();
-  virtual void SetFormManager(nsIFormManager* aFormMan, PRBool aDecrementRef = PR_TRUE);
-  virtual nsIFormManager* GetFormManager() const;
+  /**
+    * Set the named attribute of this input
+    * @param aAttribute the name of the attribute
+    * @param aValue the value of the attribute
+    */
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
-  static nsIView* GetAncestorWithWindow(nsIView* aView);
-  
-  void SetWidget(nsIWidget* aWidget);
 
+  // misc methods
+
+  /**
+    * Get the number of references to this input
+    * @return the number of references
+   **/
+  virtual nsrefcnt GetRefCount() const;
+
+  /**
+    * Get the widget associated with this input
+    * @return the widget, not a copy
+   **/
   nsIWidget* GetWidget();
 
+  /**
+    * Set the widget associated with this input
+    * @param aWidget the widget
+   **/
+  void SetWidget(nsIWidget* aWidget);
+
+  // this should not be public
   static PRInt32 GetOuterOffset() {
     return offsetof(nsInput,mControl);
   }
-
-  virtual nsrefcnt GetRefCount() const;
 
 protected:
   virtual         ~nsInput();
