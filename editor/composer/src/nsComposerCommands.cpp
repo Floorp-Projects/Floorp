@@ -451,7 +451,7 @@ nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagNam
     {
       if (!bMixed)
       {
-        rv = htmlEditor->RemoveList(nsLiteralString(tagStr));    
+        rv = htmlEditor->RemoveList(nsDependentString(tagStr));    
       }
       nsCRT::free(tagStr);
     }

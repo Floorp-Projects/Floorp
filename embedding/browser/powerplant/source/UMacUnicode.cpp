@@ -232,5 +232,5 @@ CPlatformUCSConversion::PlatformToUCS(const Str255& aIn, nsAWritableString& aOut
     
     memcpy(charBuf, &aIn[1], aIn[0]);
     charBuf[aIn[0]] = '\0';
-    return PlatformToUCS(nsLiteralCString(charBuf), aOut);
+    return PlatformToUCS(nsDependentCString(charBuf, aIn[0]), aOut);
 }

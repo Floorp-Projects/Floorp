@@ -215,7 +215,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
   while (posInString < length)
   {
 #ifdef DEBUG_wrapping
-    nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString, length-posInString));
+    nsAutoString debug (Substring(tString, posInString, length-posInString));
     printf("Outer loop: '%s'\n", debug.ToNewCString());
 #endif
 
@@ -294,11 +294,11 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     if (citeLevel == 0)
     {
 #ifdef DEBUG_wrapping
-      nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString,
+      nsAutoString debug (Substring(tString, posInString,
                                     nextNewline-posInString));
       printf("Unquoted: appending '%s'\n", debug.ToNewCString());
 #endif
-      aOutString.Append(nsPromiseSubstring(tString, posInString,
+      aOutString.Append(Substring(tString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
       if (nextNewline != (PRInt32)length)
@@ -318,7 +318,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     while ((PRInt32)posInString < nextNewline)
     {
 #ifdef DEBUG_wrapping
-      nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString, nextNewline-posInString));
+      nsAutoString debug (Substring(tString, posInString, nextNewline-posInString));
       printf("Inner loop: '%s'\n", debug.ToNewCString());
 #endif
 
@@ -330,10 +330,10 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
         if (nextNewline+1 == (PRInt32)length && tString[nextNewline-1] == nl)
           ++nextNewline;
 #ifdef DEBUG_wrapping
-        nsAutoString debug (nsPromiseSubstring<PRUnichar>(tString, posInString, nextNewline - posInString));
+        nsAutoString debug (Substring(tString, posInString, nextNewline - posInString));
         printf("Short line: '%s'\n", debug.ToNewCString());
 #endif
-        aOutString += nsPromiseSubstring(tString,
+        aOutString += Substring(tString,
                                 posInString, nextNewline - posInString);
         outStringCol += nextNewline - posInString;
         posInString = nextNewline + 1;
@@ -374,7 +374,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
       printf("breakPt = %d\n", breakPt);
 #endif
 
-      aOutString += nsPromiseSubstring(tString, posInString, breakPt);
+      aOutString += Substring(tString, posInString, breakPt);
       posInString += breakPt;
       outStringCol += breakPt;
 

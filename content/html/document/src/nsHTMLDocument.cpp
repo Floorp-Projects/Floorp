@@ -1633,7 +1633,7 @@ nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
     nsXPIDLCString spec;
     uri->GetSpec(getter_Copies(spec));
     if (spec) {
-      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+      CopyASCIItoUCS2(nsDependentCString(spec), aURI);
     }
   }
   return NS_OK;
@@ -2384,7 +2384,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
       JSString *jsstr = JS_ValueToString(cx, argv[0]);
       NS_ENSURE_TRUE(jsstr, NS_ERROR_OUT_OF_MEMORY);
 
-      nsLiteralString str(NS_REINTERPRET_CAST(const PRUnichar *,
+      nsDependentString str(NS_REINTERPRET_CAST(const PRUnichar *,
                                               ::JS_GetStringChars(jsstr)),
                           ::JS_GetStringLength(jsstr));
 

@@ -196,7 +196,7 @@ void CProfileManager::DoManageProfilesDialog()
     
     for (PRUint32 index = 0; index < listLen; index++)
     {
-          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(profileList[index]), cStr);
+          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(profileList[index]), cStr);
           table->InsertRows(1, LONG_MAX, cStr.get(), cStr.Length(), true);
           
           if (nsCRT::strcmp(profileList[index], currProfileName.get()) == 0)
@@ -237,7 +237,7 @@ void CProfileManager::DoManageProfilesDialog()
    		        dataSize = sizeof(dataBuf) - 1;
    		        table->GetCellData(selectedCell, dataBuf, dataSize);
    		        dataBuf[dataSize] = '\0';
-                CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsLiteralCString(dataBuf), unicodeStr);
+                CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
    		        rv = profileService->SetCurrentProfile(unicodeStr.GetUnicode());
             }
   		    break;
@@ -250,7 +250,7 @@ void CProfileManager::DoManageProfilesDialog()
    		{
    		    if (DoNewProfileDialog(dataBuf, sizeof(dataBuf)))
    		    {
-   		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsLiteralCString(dataBuf), unicodeStr);
+   		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
    		        rv = profileService->CreateNewProfile(unicodeStr.GetUnicode(), nsnull, nsnull, PR_FALSE);
    		        if (NS_FAILED(rv))
    		            break;
@@ -271,7 +271,7 @@ void CProfileManager::DoManageProfilesDialog()
    		        dataSize = sizeof(dataBuf) - 1;
    		        table->GetCellData(selectedCell, dataBuf, dataSize);
    		        dataBuf[dataSize] = '\0';
-   		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsLiteralCString(dataBuf), unicodeStr);
+   		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
    		        
    		        rv = profileService->DeleteProfile(unicodeStr.GetUnicode(), PR_TRUE);
    		        if (NS_FAILED(rv))
@@ -295,11 +295,11 @@ void CProfileManager::DoManageProfilesDialog()
 	        dataSize = sizeof(dataBuf) - 1;
 	        table->GetCellData(selectedCell, dataBuf, dataSize);
 	        dataBuf[dataSize] = '\0';
-	        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsLiteralCString(dataBuf), oldName);
+	        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), oldName);
 
    		    if (DoNewProfileDialog(dataBuf, sizeof(dataBuf)))
    		    {
-   		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsLiteralCString(dataBuf), unicodeStr);
+   		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
                 profileService->RenameProfile(oldName.GetUnicode(), unicodeStr.GetUnicode());
                 table->SetCellData(selectedCell, dataBuf, strlen(dataBuf)); 		        
    		    }
@@ -319,7 +319,7 @@ void CProfileManager::DoLogout()
     nsXPIDLString currentProfile;
     Str255 pStr;
     profileService->GetCurrentProfile(getter_Copies(currentProfile));
-   	CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(currentProfile.get()), pStr);
+   	CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(currentProfile.get()), pStr);
     ::ParamText(pStr, "\p", "\p", "\p");
     
     DialogItemIndex item = UModalAlerts::StopAlert(alrt_ConfirmLogout);

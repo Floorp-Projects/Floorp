@@ -35,12 +35,9 @@ nsDependentString.h
 nsDependentSubstring.h
 nsFragmentedString.h
 nsLiteralString.h
-nsLocalString.h
 nsPrintfCString.h
 nsPrivateSharableString.h
-nsPromiseConcatenation.h
 nsPromiseFlatString.h
-nsPromiseSubstring.h
 nsReadableUtils.h
 nsSharableString.h
 nsSharedBufferList.h

@@ -103,11 +103,11 @@ NS_IMETHODIMP CPromptService::Alert(nsIDOMWindow *parent, const PRUnichar *dialo
     nsCAutoString    cStr;
     Str255           pStr;
 
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
     theDialog->SetDescriptor(pStr);
 
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
 
@@ -136,16 +136,16 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent, const PRUnichar *
     nsCAutoString    cStr;
     Str255           pStr;
 
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
     theDialog->SetDescriptor(pStr);
 
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(checkMsg), pStr);
     checkBox->SetDescriptor(pStr);
     checkBox->SetValue(*checkValue ? 1 : 0);
 
@@ -177,11 +177,11 @@ NS_IMETHODIMP CPromptService::Confirm(nsIDOMWindow *parent, const PRUnichar *dia
     nsCAutoString    cStr;
     Str255           pStr;
     
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
     theDialog->SetDescriptor(pStr);
    			
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
 
@@ -220,16 +220,16 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent, const PRUnichar
     nsCAutoString    cStr;
     Str255           pStr;
 
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
     theDialog->SetDescriptor(pStr);
 
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(checkMsg), pStr);
     checkBox->SetDescriptor(pStr);
     checkBox->SetValue(*checkValue ? 1 : 0);
 
@@ -284,25 +284,25 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent, const PRUnichar *dial
     Str255          pStr;
 
     if (dialogTitle) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
         theDialog->SetDescriptor(pStr);
     }
 
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LEditText *responseText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Rslt'));
     if (value && *value) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*value), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(*value), pStr);
         responseText->SetDescriptor(pStr);
     }
     
     if (checkValue) {
         checkbox->SetValue(*checkValue);
         if (checkMsg) {
-            CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+            CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(checkMsg), pStr);
             checkbox->SetDescriptor(pStr);
         }
     }
@@ -364,30 +364,30 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent, co
     Str255          pStr;
 
     if (dialogTitle) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
         theDialog->SetDescriptor(pStr);
     }
 
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LEditText *userText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Name'));
     if (username && *username) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*username), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(*username), pStr);
         userText->SetDescriptor(pStr);
     }
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
     if (password && *password) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*password), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(*password), pStr);
         pwdText->SetDescriptor(pStr);
     }
 
     if (checkValue) {
         checkbox->SetValue(*checkValue);
         if (checkMsg) {
-            CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+            CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(checkMsg), pStr);
             checkbox->SetDescriptor(pStr);
         }
     }
@@ -459,25 +459,25 @@ NS_IMETHODIMP CPromptService::PromptPassword(nsIDOMWindow *parent, const PRUnich
     Str255           pStr;
 
     if (dialogTitle) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
         theDialog->SetDescriptor(pStr);
     }
 
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
     cStr.ReplaceChar('\n', '\r');
     msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
     if (password && *password) {
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*password), pStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(*password), pStr);
         pwdText->SetDescriptor(pStr);
     }
     
     if (checkValue) {
         checkbox->SetValue(*checkValue);
         if (checkMsg) {
-            CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+            CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(checkMsg), pStr);
             checkbox->SetDescriptor(pStr);
         }
     }

@@ -675,8 +675,8 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 {
-  mFilters.AppendString(nsLiteralString(aFilter));
-  mTitles.AppendString(nsLiteralString(aTitle));
+  mFilters.AppendString(nsDependentString(aFilter));
+  mTitles.AppendString(nsDependentString(aTitle));
   
   return NS_OK;
 }

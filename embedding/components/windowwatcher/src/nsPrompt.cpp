@@ -216,7 +216,7 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
 {
   // Ignore passwordRealm and savePassword
   if (defaultText)
-    *result = ToNewUnicode(nsLiteralString(defaultText));
+    *result = ToNewUnicode(nsDependentString(defaultText));
   return mPromptService->Prompt(mParent, dialogTitle, text,
                                 result, nsnull, nsnull, _retval);
 }

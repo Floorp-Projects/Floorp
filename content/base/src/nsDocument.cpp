@@ -2806,7 +2806,7 @@ nsDocument::GetBaseURI(nsAWritableString &aURI)
     nsXPIDLCString spec;
     mDocumentBaseURL->GetSpec(getter_Copies(spec));
     if (spec) {
-      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+      CopyASCIItoUCS2(nsDependentCString(spec), aURI);
     }
   }
   return NS_OK;

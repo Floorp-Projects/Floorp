@@ -231,7 +231,7 @@ LocationImpl::GetHost(nsAWritableString& aHost)
       if (NS_SUCCEEDED(result)) {
         PRInt32 port;
 
-        CopyASCIItoUCS2(nsLiteralCString(host), aHost);
+        CopyASCIItoUCS2(nsDependentCString(host), aHost);
 
         uri->GetPort(&port);
 
@@ -292,7 +292,7 @@ LocationImpl::GetHostname(nsAWritableString& aHostname)
       result = uri->GetHost(getter_Copies(host));
 
       if (NS_SUCCEEDED(result)) {
-        CopyASCIItoUCS2(nsLiteralCString(host), aHostname);
+        CopyASCIItoUCS2(nsDependentCString(host), aHostname);
       }
     }
   }
@@ -340,7 +340,7 @@ LocationImpl::GetHref(nsAWritableString& aHref)
       result = uri->GetSpec(getter_Copies(uriString));
 
       if (NS_SUCCEEDED(result))
-        CopyASCIItoUCS2(nsLiteralCString(uriString), aHref);
+        CopyASCIItoUCS2(nsDependentCString(uriString), aHref);
     }
   }
 
@@ -480,7 +480,7 @@ LocationImpl::GetPathname(nsAWritableString& aPathname)
         result = url->GetFilePath(getter_Copies(file));
 
         if (NS_SUCCEEDED(result)) {
-          CopyASCIItoUCS2(nsLiteralCString(file), aPathname);
+          CopyASCIItoUCS2(nsDependentCString(file), aPathname);
         }
       }
     }

@@ -640,29 +640,34 @@ static nsresult convertUTF8ToUnicode(const char *utf8String, PRUnichar ** aResul
 
 static nsresult AddAttribute( nsIMIMEInfo* inElement, nsCString& inAttribute, nsCString& inValue )
 {
+    /*
+      Note: maybe the constants |kMIMEType|, |kDescription|, |kExtensions|, etc., would be
+        better defined using |NS_LITERAL_CSTRING| to avoid the complicated constructions
+        below, and constant re-calculation of length.
+     */
 	nsresult rv = NS_OK;
-	if ( inAttribute == nsLiteralCString(kMIMEType) )
+	if ( inAttribute == nsDependentCString(kMIMEType) )
 	{
 		rv = inElement->SetMIMEType( inValue );
 	}
-	else if ( inAttribute == nsLiteralCString(kDescription)  )
+	else if ( inAttribute == nsDependentCString(kDescription)  )
 	{
 		PRUnichar* unicode; 
 		convertUTF8ToUnicode( inValue, &unicode );
 		rv =inElement->SetDescription( unicode );
 		nsTextFormatter::smprintf_free(unicode);
 	}
-	else if ( inAttribute == nsLiteralCString(kExtensions)   )
+	else if ( inAttribute == nsDependentCString(kExtensions)   )
 	{
 		rv = inElement->SetFileExtensions( inValue );
 	}
-	else if ( inAttribute == nsLiteralCString(kMacType) )
+	else if ( inAttribute == nsDependentCString(kMacType) )
 	{
 		PRUint32 value;
 		sscanf ( inValue, "%x", &value);
 		rv = inElement->SetMacType( value );
 	}
-	else if ( inAttribute == nsLiteralCString(kMacCreator) )
+	else if ( inAttribute == nsDependentCString(kMacCreator) )
 	{
 		PRUint32 value;
 		sscanf ( inValue, "%x", &value);

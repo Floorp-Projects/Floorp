@@ -112,7 +112,7 @@ nsresult nsFontPackageHandler::CreateURLString(const char *aPackID, char **aURL)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  *aURL = ToNewUTF8String(nsLocalString(urlString));
+  *aURL = ToNewUTF8String(nsDependentString(urlString));
   nsTextFormatter::smprintf_free(urlString);
   
   return NS_OK;

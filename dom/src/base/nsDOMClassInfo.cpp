@@ -1275,7 +1275,7 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       nsresult rv = window->GetLocation(getter_AddRefs(location));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsLiteralString href(NS_REINTERPRET_CAST(PRUnichar *,
+      nsDependentString href(NS_REINTERPRET_CAST(PRUnichar *,
                                                ::JS_GetStringChars(val)),
                            ::JS_GetStringLength(val));
 
@@ -1414,7 +1414,7 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar*,
+  nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar*,
                                            ::JS_GetStringChars(str)),
                        ::JS_GetStringLength(str));
 
@@ -2141,7 +2141,7 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSString *str = JSVAL_TO_STRING(id);
 
-    nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
+    nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
                                              ::JS_GetStringChars(str)),
                          ::JS_GetStringLength(str));
 
@@ -2311,7 +2311,7 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         JSString *val = ::JS_ValueToString(cx, *vp);
         NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-        nsLiteralString href(NS_REINTERPRET_CAST(const PRUnichar *,
+        nsDependentString href(NS_REINTERPRET_CAST(const PRUnichar *,
                                                  ::JS_GetStringChars(val)),
                              ::JS_GetStringLength(val));
 
@@ -2345,7 +2345,7 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
     JSString *str = JSVAL_TO_STRING(id);
 
-    nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
+    nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
                                              ::JS_GetStringChars(str)),
                          ::JS_GetStringLength(str));
 
@@ -2372,7 +2372,7 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, JSString *str,
 {
   *aResult = nsnull;
 
-  nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
+  nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
                                            ::JS_GetStringChars(str)),
                        ::JS_GetStringLength(str));
 

@@ -499,9 +499,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   //
   result = NS_ERROR_FAILURE;
   if (countLang>0) {
-	  PRUnichar* localeName = ToNewUnicode(nsLiteralCString(acceptLanguageList[0]));
-	  result = NewLocale(localeName,_retval);
-	  delete localeName;
+	  result = NewLocale(NS_ConvertASCIItoUCS2(acceptLanguageList[0]).get(),_retval);
   }
 
   //

@@ -973,8 +973,8 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);
-    nsLiteralString context(isSwitch ? (NS_LITERAL_STRING("switch")).get() : NS_LITERAL_STRING("startup").get());
-            
+    const nsAFlatString& context = isSwitch ? NS_LITERAL_STRING("switch") : NS_LITERAL_STRING("startup");
+
     if (isSwitch)
     {
         // Phase 1: See if anybody objects to the profile being changed.
@@ -1050,7 +1050,7 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);
-    nsLiteralString context(shutDownType == SHUTDOWN_CLEANSE ? NS_LITERAL_STRING("shutdown-cleanse").get() : NS_LITERAL_STRING("shutdown-persist").get());
+    const nsAFlatString& context = (shutDownType == SHUTDOWN_CLEANSE) ? NS_LITERAL_STRING("shutdown-cleanse") : NS_LITERAL_STRING("shutdown-persist");
            
     // Phase 1: See if anybody objects to the profile being changed.
     mProfileChangeVetoed = PR_FALSE;        

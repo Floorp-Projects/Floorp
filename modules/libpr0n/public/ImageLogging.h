@@ -43,7 +43,7 @@ public:
 
   /* const char * constructor */
   LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
-           const nsLiteralCString &paramName, const char *paramValue) :
+           const nsDependentCString &paramName, const char *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\") {ENTER}\n",
@@ -55,7 +55,7 @@ public:
 
   /* void ptr constructor */
   LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
-           const nsLiteralCString &paramName, const void *paramValue) :
+           const nsDependentCString &paramName, const void *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=%p) {ENTER}\n",
@@ -67,7 +67,7 @@ public:
 
   /* PRInt32 constructor */
   LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
-           const nsLiteralCString &paramName, PRInt32 paramValue) :
+           const nsDependentCString &paramName, PRInt32 paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
@@ -79,7 +79,7 @@ public:
 
   /* PRUint32 constructor */
   LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
-           const nsLiteralCString &paramName, PRUint32 paramValue) :
+           const nsDependentCString &paramName, PRUint32 paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
@@ -105,15 +105,15 @@ private:
 
 class LogFunc {
 public:
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s\n",
                                 GIVE_ME_MS_NOW(), from,
                                 fn.get()));
   }
 
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
-          const nsLiteralCString &paramName, const char *paramValue)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
+          const nsDependentCString &paramName, const char *paramValue)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\")\n",
                                 GIVE_ME_MS_NOW(), from,
@@ -121,8 +121,8 @@ public:
                                 paramName.get(), paramValue));
   }
 
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
-          const nsLiteralCString &paramName, const void *paramValue)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
+          const nsDependentCString &paramName, const void *paramValue)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%p\")\n",
                                 GIVE_ME_MS_NOW(), from,
@@ -131,8 +131,8 @@ public:
   }
 
 
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
-          const nsLiteralCString &paramName, PRUint32 paramValue)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
+          const nsDependentCString &paramName, PRUint32 paramValue)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\")\n",
                                 GIVE_ME_MS_NOW(), from,
@@ -145,8 +145,8 @@ public:
 
 class LogMessage {
 public:
-  LogMessage(PRLogModuleInfo *aLog, void *from, const nsLiteralCString &fn,
-             const nsLiteralCString &msg)
+  LogMessage(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
+             const nsDependentCString &msg)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s -- %s\n",
                                 GIVE_ME_MS_NOW(), from,

@@ -806,8 +806,8 @@ nsACString::Left( nsACString& aResult, size_type aLengthToCopy ) const
   }
 
   // Once you've got strings, you shouldn't need to do anything else to have concatenation
-#ifndef nsPromiseConcatenation_h___
-#include "nsPromiseConcatenation.h"
+#ifndef nsDependentConcatenation_h___
+#include "nsDependentConcatenation.h"
 #endif
 
 #endif // !defined(nsAString_h___)

@@ -52,10 +52,10 @@ class nsAFlatCString;
 
 
   /**
-   * @see nsLocalString.h
+   * @see nsDependentString.h
    */
 
-class nsLocalString;
-class nsLocalCString;
+class nsDependentString;
+class nsDependentCString;
 
 #endif /* !defined(nsStringFwd_h___) */

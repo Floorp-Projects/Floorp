@@ -536,7 +536,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   static const PRUnichar theTerminalsChars[] = 
     { PRUnichar('\n'), PRUnichar('\r'), PRUnichar('&'), PRUnichar('<'),
       PRUnichar(0) };
-  const nsLocalString theTerminals(theTerminalsChars,
+  const nsDependentString theTerminals(theTerminalsChars,
     sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
@@ -912,7 +912,7 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
     { PRUnichar('\n'), PRUnichar('\r'), PRUnichar('\''), PRUnichar('"'),
       PRUnichar('>'),
       PRUnichar(0) };
-  const nsLocalString theTerminals(theTerminalsChars,
+  const nsDependentString theTerminals(theTerminalsChars,
     sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
@@ -1551,7 +1551,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
                                    const PRUnichar *aTerminalChars,
                                    PRInt32 aFlag)
 {
-  const nsLocalString theTerminals(aTerminalChars,
+  const nsDependentString theTerminals(aTerminalChars,
     sizeof(aTerminalChars)/sizeof(aTerminalChars[0]) - 1);
 
   nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE);
@@ -1653,7 +1653,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
           { PRUnichar('\b'), PRUnichar('\t'), PRUnichar('\n'), PRUnichar('\r'),
             PRUnichar(' '), PRUnichar('"'), PRUnichar('='), PRUnichar('>'),
             PRUnichar(0) };
-        const nsLocalString theTerminals(theTerminalsChars,
+        const nsDependentString theTerminals(theTerminalsChars,
           sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
         result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
       }

@@ -899,7 +899,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
 
         rv = parentWindow->Open(NS_LITERAL_STRING(""),    // URL to load
                                 name,                     // Window name
-                                nsLiteralString(nsnull),  // Window features
+                                nsDependentString(nsnull),  // Window features
                                 getter_AddRefs(newWindow));
         if (NS_FAILED(rv)) return rv;
 

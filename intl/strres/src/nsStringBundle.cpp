@@ -334,7 +334,7 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
   if (NS_FAILED(rv)) return rv;
   
   nsAutoString formatStr;
-  rv = GetStringFromName(nsLiteralString(aName), formatStr);
+  rv = GetStringFromName(nsDependentString(aName), formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);

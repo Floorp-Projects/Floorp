@@ -846,12 +846,9 @@ nsFtpState::S_user() {
                                               formatStrings, 1,
                                               getter_Copies(formatedString));                   
 
-            nsAutoString realm; // XXX i18n
-            CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, host)), realm);
-            
             rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
                                                           formatedString,
-                                                          realm.GetUnicode(), 
+                                                          NS_ConvertASCIItoUCS2(host).GetUnicode(), // XXX i18n
                                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                           &user, 
                                                           &passwd, 

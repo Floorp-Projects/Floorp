@@ -227,7 +227,7 @@ class nsScanner {
                          PRBool addTerminal)
       {
         return ReadUntil(aString,
-                         nsLocalCString(aTerminalSet),
+                         nsDependentCString(aTerminalSet),
                          addTerminal);
       }
 

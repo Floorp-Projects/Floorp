@@ -1297,7 +1297,7 @@ void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
   } else {
     const PRUnichar* uri;
     url->GetValueConst(&uri);
-    *getter_Copies(dest) = ToNewUTF8String(nsLocalString(uri));
+    *getter_Copies(dest) = ToNewUTF8String(nsDependentString(uri));
   }
 }
 

@@ -912,7 +912,7 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
       nsXPIDLCString url;
       aLoadData->mURL->GetSpec(getter_Copies(url));
       nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::DidLoadStyle: Load of URL '") +
-                                 nsLiteralCString(url) +
+                                 nsDependentCString(url) +
                                  NS_LITERAL_CSTRING("' failed.  Error code: "));
       errorMessage.AppendInt(NS_ERROR_GET_CODE(aStatus));
       NS_WARNING(errorMessage.get());
@@ -1194,7 +1194,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
           nsXPIDLCString url;
           aKey.mURL->GetSpec(getter_Copies(url));
           nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadSheet: Load of URL '") +
-                                     nsLiteralCString(url) +
+                                     nsDependentCString(url) +
                                      NS_LITERAL_CSTRING("' failed.  Error code: "));
           errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
           NS_WARNING(errorMessage.get());
@@ -1533,7 +1533,7 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
         nsXPIDLCString url;
         aURL->GetSpec(getter_Copies(url));
         nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadAgentSheet: Load of URL '") +
-                                   nsLiteralCString(url) +
+                                   nsDependentCString(url) +
                                    NS_LITERAL_CSTRING("' failed.  Error code: "));
         errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
         NS_WARNING(errorMessage.get());

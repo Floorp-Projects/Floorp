@@ -2047,7 +2047,7 @@ nsXULDocument::SetDefaultStylesheets(nsIURI* aUrl)
 NS_IMETHODIMP
 nsXULDocument::SetTitle(const PRUnichar *aTitle)
 {
-    return SetTitle(nsLiteralString(aTitle));
+    return SetTitle(nsDependentString(aTitle));
 }
 
 //----------------------------------------------------------------------
@@ -3656,7 +3656,7 @@ nsXULDocument::GetBaseURI(nsAWritableString &aURI)
     nsXPIDLCString spec;
     mDocumentBaseURL->GetSpec(getter_Copies(spec));
     if (spec) {
-      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+      CopyASCIItoUCS2(nsDependentCString(spec), aURI);
     }
   }
   return NS_OK;

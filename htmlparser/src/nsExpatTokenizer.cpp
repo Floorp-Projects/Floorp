@@ -524,7 +524,9 @@ void nsExpatTokenizer::FrontloadMisplacedContent(nsDeque& aDeque){
 
 void Tokenizer_HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
+
+  typedef const PRUnichar* const_PRUnichar_ptr;
+  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown, nsDependentString(const_PRUnichar_ptr(name)));
   if(theToken) {    
     // If an ID attribute exists for this element, set it on the start token
     PRInt32 index = XML_GetIdAttributeIndex(state->parser);
@@ -541,7 +543,7 @@ void Tokenizer_HandleStartElement(void *userData, const XML_Char *name, const XM
     while(*atts){
       theAttrCount++;
       CAttributeToken* theAttrToken = (CAttributeToken*) 
-      state->tokenAllocator->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown, nsLiteralString((PRUnichar*)atts[1]));
+      state->tokenAllocator->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown, nsDependentString(const_PRUnichar_ptr(atts[1])));
       if(theAttrToken){
         PRUnichar* ptr = (PRUnichar*)atts[0];
         if ((ptr >= state->bufferStart) && (ptr < state->bufferEnd)) {
@@ -554,7 +556,7 @@ void Tokenizer_HandleStartElement(void *userData, const XML_Char *name, const XM
           theAttrToken->BindKey(state->scanner, start, end);
         }
         else {
-          theAttrToken->SetKey(nsLiteralString(ptr));
+          theAttrToken->SetKey(nsDependentString(ptr));
         }
       }
       CToken* theTok=(CToken*)theAttrToken;
@@ -570,7 +572,8 @@ void Tokenizer_HandleStartElement(void *userData, const XML_Char *name, const XM
 
 void Tokenizer_HandleEndElement(void *userData, const XML_Char *name) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown, nsLiteralString((PRUnichar *) name));
+  typedef const PRUnichar* const_PRUnichar_ptr;
+  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown, nsDependentString(const_PRUnichar_ptr(name)));
   if(theToken) {
     nsExpatTokenizer::AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
@@ -596,7 +599,7 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
         break;
       case kSpace:
       case kTab:
-        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown, nsLocalString((PRUnichar*)s, len)); 
+        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown, nsDependentString((PRUnichar*)s, len)); 
         break;
       default:
         {
@@ -611,7 +614,7 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
             textToken->Bind(state->scanner, start, end);
           }
           else {
-            textToken->Bind(nsLocalString(ptr, len));
+            textToken->Bind(nsDependentString(ptr, len));
           }
           newToken = textToken;
         }
@@ -634,7 +637,8 @@ void Tokenizer_HandleComment(void *userData, const XML_Char *name) {
     state->doctypeText.Append((PRUnichar*)name);
     state->doctypeText.Append(NS_LITERAL_STRING("-->"));
   } else {
-    CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
+    typedef const PRUnichar* const_PRUnichar_ptr;
+    CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown, nsDependentString(const_PRUnichar_ptr(name)));
     if(theToken) {
       nsExpatTokenizer::AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
     }

@@ -326,9 +326,9 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const PRUnic
 {
   nsresult rv;
 
-  nsLiteralString aTopicString(aTopic);
+  nsDependentString aTopicString(aTopic);
   if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed"))) {
-    nsLiteralString prefName(someData);
+    nsDependentString prefName(someData);
 
     if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {
       // refresh menus which share this pref

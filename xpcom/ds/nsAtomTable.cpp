@@ -197,7 +197,7 @@ NS_COM nsIAtom* NS_NewAtom( const nsAReadableString& aString )
 
 NS_COM nsIAtom* NS_NewAtom( const PRUnichar* str )
 {
-  return NS_NewAtom(nsLiteralString(str));
+  return NS_NewAtom(nsDependentString(str));
 }
 
 NS_COM nsrefcnt NS_GetNumberOfAtoms(void)

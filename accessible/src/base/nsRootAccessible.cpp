@@ -136,7 +136,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccValue(PRUnichar * *aAccValue)
   nsCOMPtr<nsIURI> pURI(mDocument->GetDocumentURL());
   char *path;
   pURI->GetSpec(&path);
-  *aAccValue = ToNewUnicode(nsLiteralCString(path));
+  *aAccValue = ToNewUnicode(nsDependentCString(path));
   return NS_OK;
 }
 

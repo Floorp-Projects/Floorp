@@ -89,7 +89,7 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
   if (frag) {
     PRInt32 length = ((aEndOffset == -1) ? frag->GetLength() : aEndOffset) - aStartOffset;
     if (frag->Is2b()) {
-      AppendToString(nsLiteralString(frag->Get2b()+aStartOffset, length),
+      AppendToString(nsDependentString(frag->Get2b()+aStartOffset, length),
                      aStr,
                      aTranslateEntities,
                      aIncrColumn);
