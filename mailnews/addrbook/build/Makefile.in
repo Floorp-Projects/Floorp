@@ -25,55 +25,33 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=mailnews
 LIBRARY_NAME=addrbook
 IS_COMPONENT=1
-CPPSRCS= \
-		nsAbFactory.cpp \
-		$(NULL)
 
-EXPORTS = \
-		nsAbBaseCID.h \
-		$(NULL)
+CPPSRCS = \
+	nsAbFactory.cpp \
+	$(NULL)
 
-SHARED_LIBRARY_LIBS = \
-		$(NULL)
+EXPORTS= \
+	nsAbBaseCID.h \
+	$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL)	\
-		$(SHARED_LIBRARY_LIBS)	\
-		$(MKSHLIB_UNFORCE_ALL)	\
-		-lmailnewsaddrbook_s \
-		-lmozjs			\
-		-ljsdom			\
-		-ljsurl			\
-		-lraptorbase	\
-		-lrdfutil_s		\
-		-lmsgbaseutil	\
-		-lgmbasegtk		\
-		$(TK_LIBS)		\
-		-lxpcom			\
-		-lreg			\
-		-lappcores		\
-		-lnetlib		\
-		-lnetwork		\
-		-lhttpurl		\
-		-lftpurl		\
-		-lgophurl		\
-		-labouturl		\
-		-lfileurl		\
-		-lremoturl		\
-		-lnetcnvts		\
-		-lmimetype		\
-		-lsockstuburl	\
-		-lpwcac			\
-		-lnetcache		\
-		-lpref			\
-		-lsecfree		\
-		$(ZLIB_LIBS)	\
-		$(NSPR_LIBS)	\
-		-L$(DIST)/bin	\
-		-L$(DIST)/lib	\
-		$(NULL)
+
+SHARED_LIBRARY_LIBS =	\
+	$(DIST)/lib/libmailnewsaddrbook_s.a	\
+	$(NULL)
+
+EXTRA_DSO_LDOPTS = 	\
+	$(MKSHLIB_FORCE_ALL)	\
+	$(SHARED_LIBRARY_LIBS)	\
+	$(MKSHLIB_UNFORCE_ALL)	\
+	$(NSPR_LIBS)			\
+	-L$(DIST)/bin			\
+	-lxpcom				\
+	-lreg			\
+	-lraptorbase			\
+	-lmsgbaseutil			\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile.in
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
