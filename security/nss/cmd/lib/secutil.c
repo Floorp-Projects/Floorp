@@ -712,8 +712,6 @@ SECU_PrintAsHex(FILE *out, SECItem *data, const char *m, int level)
 
     if (!isString) 
       for (i = 0; i < data->len; i++) {
-	unsigned char val = data->data[i];
-
 	if (i != data->len - 1) {
 	    fprintf(out, "%02x:", data->data[i]);
 	    column += 3;
