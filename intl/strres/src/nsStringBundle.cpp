@@ -712,8 +712,10 @@ nsresult
 nsStringBundleService::Init()
 {
   nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-  if (os)
+  if (os) {
     os->AddObserver(this, "memory-pressure", PR_TRUE);
+    os->AddObserver(this, "profile-do-change", PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -723,7 +725,8 @@ nsStringBundleService::Observe(nsISupports* aSubject,
                                const char* aTopic,
                                const PRUnichar* aSomeData)
 {
-  if (nsCRT::strcmp("memory-pressure", aTopic) == 0)
+  if (nsCRT::strcmp("memory-pressure", aTopic) == 0 ||
+      nsCRT::strcmp("profile-do-change", aTopic) == 0)
     flushBundleCache();
   return NS_OK;
 }
