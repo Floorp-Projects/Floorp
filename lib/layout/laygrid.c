@@ -679,6 +679,223 @@ lo_adjust_percents(int32 count, lo_GridPercent *percents, int32 max)
 	}
 }
 
+static void
+lo_adjust_subpercents(int32 count, lo_GridPercent *percents, int32 percent, int32 max)
+{
+	int32 i;
+	int32 fixed_percent;
+	int32 free_percent;
+	int32 total;
+
+	if (max == 0)
+		max = 1;
+
+	/*
+	 * Total up the three different type of grid cell percentages.
+	 */
+	fixed_percent = 0;
+	free_percent = 0;
+	total = 0;
+	for (i=0; i < count; i++)
+	{
+		if (percents[i].type == LO_PERCENT_FIXED)
+		{
+			/*
+			 * Now that we know the max dimension turn
+			 * fixed pixel dimensions into percents.
+			 */
+			percents[i].value = percent * percents[i].original_value / max;
+			if (percents[i].value < 1)
+			{
+				percents[i].value = 1;
+			}
+			fixed_percent += percents[i].value;
+		}
+		else if (percents[i].type == LO_PERCENT_FREE)
+		{
+			percents[i].value = percents[i].original_value;
+			free_percent += percents[i].original_value;
+		}
+		else
+		{
+			percents[i].value = percent * percents[i].original_value / 100;
+			total += percents[i].original_value;
+		}
+	}
+
+	/*
+	 * If the user didn't explicitly use up all the space.
+	 */
+	if ((total + fixed_percent) < 100)
+	{
+		int32 val;
+
+		/*
+		 * We have some free percentage cells that want to
+		 * soak up the excess space.
+		 */
+		if (free_percent > 0)
+		{
+			int32 used;
+			int32 last_i;
+
+			last_i = -1;
+			used = 0;
+			val = 100 - (total + fixed_percent);
+			for (i=0; i < count; i++)
+			{
+				if (percents[i].type == LO_PERCENT_FREE)
+				{
+					percents[i].value *= val;
+					percents[i].value /= free_percent;
+					if (percents[i].value < 1)
+					{
+						percents[i].value = 1;
+					}
+					used += percents[i].value;
+					last_i = i;
+				}
+			}
+			/*
+			 * Slop the extra into the last qualifying cell.
+			 */
+			if (((used + total + fixed_percent) < 100)&&
+				(last_i >= 0))
+			{
+				percents[last_i].value +=
+					(100 - total - fixed_percent - used);
+			}
+		}
+		/*
+		 * Else we have no free cells, but have some normal
+		 * percentage cells, distribute the extra space among them.
+		 */
+		else if (total > 0)
+		{
+			int32 used;
+			int32 last_i;
+
+			last_i = -1;
+			used = 0;
+			val = (100 - fixed_percent);
+			for (i=0; i < count; i++)
+			{
+				if (percents[i].type == LO_PERCENT_NORMAL)
+				{
+					percents[i].value *= val;
+					percents[i].value /= total;
+					used += percents[i].value;
+					last_i = i;
+				}
+			}
+			/*
+			 * Slop the extra into the last qualifying cell.
+			 */
+			if ((used < val)&&(last_i >= 0))
+			{
+				percents[last_i].value += (val - used);
+			}
+		}
+		/*
+		 * Else all we have are fixed percentage cells, we will
+		 * have to grow them.
+		 */
+		else
+		{
+			int32 used;
+
+			used = 0;
+			for (i=0; i < count; i++)
+			{
+				percents[i].value *= 100;
+				percents[i].value /= (total + fixed_percent);
+				used += percents[i].value;
+			}
+			/*
+			 * Slop the extra into the last cell.
+			 */
+			if ((used < 100)&&(count > 0))
+			{
+				percents[count - 1].value += (100 - used);
+			}
+		}
+	}
+	/*
+	 * Else if the user allocated too much space, we need to shrink
+	 * something.
+	 */
+	else if ((total + fixed_percent) > 100)
+	{
+		int32 val;
+
+		/*
+		 * If there is not too much fixed percentage
+		 * added, we can just shrink the normal percentage
+		 * cells to make things fit.
+		 */
+		if (fixed_percent <= 100)
+		{
+			int32 used;
+			int32 last_i;
+
+			last_i = -1;
+			used = 0;
+			val = (100 - fixed_percent);
+			for (i=0; i < count; i++)
+			{
+				if (percents[i].type == LO_PERCENT_NORMAL)
+				{
+					percents[i].value *= val;
+					percents[i].value /= total;
+					used += percents[i].value;
+				}
+			}
+			/*
+			 * Since integer division always truncates, we either
+			 * made it fit exactly, or overcompensated and made
+			 * it too small.
+			 */
+			if ((used < val)&&(last_i >= 0))
+			{
+				percents[last_i].value += (val - used);
+			}
+		}
+		/*
+		 * Else there is too much fixed percentage as well, we will
+		 * just shrink all the cells.
+		 */
+		else
+		{
+			int32 used;
+
+			used = 0;
+			for (i=0; i < count; i++)
+			{
+				if (percents[i].type == LO_PERCENT_FREE)
+				{
+					percents[i].value = 0;
+				}
+				else
+				{
+					percents[i].value *= 100;
+					percents[i].value /=
+						(total + fixed_percent);
+				}
+				used += percents[i].value;
+			}
+			/*
+			 * Since integer division always truncates, we either
+			 * made it fit exactly, or overcompensated and made
+			 * it too small.
+			 */
+			if (used < 100)
+			{
+				percents[count - 1].value += (100 - used);
+			}
+		}
+	}
+}
+
 
 PRIVATE
 void
@@ -767,8 +984,12 @@ lo_LayoutGridCells(MWContext *context, lo_DocState *state,
 
 		cell_list->width_percent =
 			(intn)grid->col_percents[col_cnt].value;
+        cell_list->has_percent_width =
+          (grid->col_percents[col_cnt].type != LO_PERCENT_FIXED);
 		cell_list->height_percent =
 			(intn)grid->row_percents[row_cnt].value;
+        cell_list->has_percent_height =
+          (grid->row_percents[row_cnt].type != LO_PERCENT_FIXED);
 
 		cell_list->x = x;
 		if (col_cnt != 0)
@@ -781,7 +1002,7 @@ lo_LayoutGridCells(MWContext *context, lo_DocState *state,
 			cell_list->y += grid->grid_cell_border;
 		}
 
-		cell_list->width = width * cell_list->width_percent / 100;
+		cell_list->width = width * (float)cell_list->width_percent / 100.0;
 		if (cell_list->width < grid->grid_cell_min_dim)
 		{
 			cell_list->width = grid->grid_cell_min_dim;
@@ -805,7 +1026,7 @@ lo_LayoutGridCells(MWContext *context, lo_DocState *state,
 			cell_list->width = width - (cell_list->x - orig_x);
 		}
 
-		cell_list->height = height * cell_list->height_percent / 100;
+		cell_list->height = height * (float)cell_list->height_percent / 100.0;
 		if (cell_list->height < grid->grid_cell_min_dim)
 		{
 			cell_list->height = grid->grid_cell_min_dim;
@@ -945,24 +1166,65 @@ lo_LayoutGridCells(MWContext *context, lo_DocState *state,
 			subgrid->grid_cell_border = grid->grid_cell_border;
 			subgrid->grid_cell_min_dim = grid->grid_cell_min_dim;
 
-			/*
-			 * Make sure all the row percentages total up
-			 * to 100%
-			 */
-			lo_adjust_percents(subgrid->rows, subgrid->row_percents,
-				cell_list->height);
-
-			/*
-			 * Make sure all the col percentages total up
-			 * to 100%
-			 */
-			lo_adjust_percents(subgrid->cols, subgrid->col_percents,
-				cell_list->width);
+            /*
+             * Make sure the subgrid percentages add up to our percent
+             * height.
+             */
+            lo_adjust_subpercents(subgrid->rows, subgrid->row_percents,
+                                  cell_list->height_percent,
+                                  cell_list->height);
+            
+            /*
+             * Make sure the subgrid percentages add up to our percent
+             * height.
+             */
+            lo_adjust_subpercents(subgrid->cols, subgrid->col_percents,
+                                  cell_list->width_percent,
+                                  cell_list->width);
 
 			lo_LayoutGridCells(context, state,
 				cell_list->x, cell_list->y,
 				cell_list->width, cell_list->height,
 				subgrid, new_edges);
+
+            /*
+            ** XXXX
+            ** There next two if statements attempt to solve a problem -- that 
+            ** a frameset that defines columns is given a percentage height of 100%.
+            ** and one that defines rows is given a percentage width of 100%.
+            ** Unfortunately, this breaks resizing when the sub frameset was given a fixed
+            ** width.
+            **
+            ** So, we go through all the cells and make sure they
+            ** don't have a percent_width/percent_height if their
+            ** parent grid didn't have one.  
+            */
+            if (!cell_list->has_percent_width)
+              {
+                lo_GridCellRec *sub_cell_list = subgrid->cell_list;
+                
+                /* make sure none of the subgrid cells has percent width set. */
+
+                while (sub_cell_list)
+                  {
+                    sub_cell_list->has_percent_width = FALSE;
+                    sub_cell_list = sub_cell_list->next;
+                  }
+              }
+
+            if (!cell_list->has_percent_height)
+              {
+                /* make sure none of the subgrid cells has percent height set. */
+                lo_GridCellRec *sub_cell_list = subgrid->cell_list;
+                
+                /* make sure none of the subgrid cells has percent width set. */
+                
+                while (sub_cell_list)
+                  {
+                    sub_cell_list->has_percent_height = FALSE;
+                    sub_cell_list = sub_cell_list->next;
+                  }
+              }
 
 			/*
 			 * Merge the edge list of the sub-grid with that of
@@ -4014,160 +4276,132 @@ lo_MoveGridEdgeForRelayout(MWContext *context, LO_EdgeStruct *fe_edge, int32 x, 
 PRIVATE
 void
 lo_ReLayoutGridCells(MWContext *context,
-		     int32 x, int32 y, int32 width, int32 height,
-		     lo_GridRec *grid)
+                     int32 width, int32 height,
+                     lo_GridRec *grid)
 {
-	int32 cols, rows;
-	int32 col_cnt, row_cnt;
-	int32 orig_x, orig_y;
-	lo_GridCellRec *cell_list;
-	int32 new_cell_width, new_cell_height;
+  int32 orig_x, orig_y;
+  lo_GridCellRec *cell_list;
+  int32 new_cell_width, new_cell_height;
 
-	if (grid == NULL)
+  if (grid == NULL)
 	{
-		return;
+      return;
 	}
 
-	/*
-	 * Make sure all the row percentages total up
-	 * to 100%
-	 */
-	lo_adjust_percents(grid->rows, grid->row_percents, height);
-	
-	/*
-	 * Make sure all the col percentages total up
-	 * to 100%
-	 */
-	lo_adjust_percents(grid->cols, grid->col_percents, width);
+  cell_list = grid->cell_list;
 
-	cols = grid->cols;
-	rows = grid->rows;
-	cell_list = grid->cell_list;
-
-	orig_x = x;
-	orig_y = y;
-	col_cnt = 0;
-	row_cnt = 0;
-	while (cell_list != NULL)
+  orig_x = 0;
+  orig_y = 0;
+  while (cell_list != NULL)
 	{
-		cell_list->width_percent =
-			(intn)grid->col_percents[col_cnt].value;
-		cell_list->height_percent =
-			(intn)grid->row_percents[row_cnt].value;
 
-		cell_list->x = x;
-		if (col_cnt != 0)
-		{
-			cell_list->x += grid->grid_cell_border;
-		}
-		cell_list->y = y;
-		if (row_cnt != 0)
-		{
-			cell_list->y += grid->grid_cell_border;
-		}
+      if (cell_list->side_edges[TOP_EDGE])
+        {
+          cell_list->y = (cell_list->side_edges[TOP_EDGE]->y
+                          + grid->grid_cell_border * 2);
+        }
+      else
+        {
+          cell_list->y = 0;
+        }
 
-		new_cell_width = width * cell_list->width_percent / 100;
-		if (new_cell_width < grid->grid_cell_min_dim)
-		{
-			new_cell_width = grid->grid_cell_min_dim;
-		}
-		if (col_cnt > 0)
-		{
-			new_cell_width -= grid->grid_cell_border;
-		}
-		if (col_cnt < (cols - 1))
-		{
-			new_cell_width -= grid->grid_cell_border;
-		}
+      if (cell_list->side_edges[LEFT_EDGE])
+        {
+          cell_list->x = (cell_list->side_edges[LEFT_EDGE]->x
+                          + grid->grid_cell_border * 2);
+        }
+      else
+        {
+          cell_list->x = 0;
+        }
 
-		/*
-		 * Make sure the last column uses all the remaining space.
-		 * We subtract orig_x to get cell_list->x into the same coord
-		 * space as width.
-		 */
-		if (col_cnt == (cols - 1))
-		{
-			new_cell_width = width - (cell_list->x - orig_x);
-		}
+      if (cell_list->has_percent_width)
+        {
+          new_cell_width = width * (float)cell_list->width_percent / 100.0;
+          
+          if (new_cell_width < grid->grid_cell_min_dim)
+            {
+              new_cell_width = grid->grid_cell_min_dim;
+            }
+          
+          if (cell_list->side_edges[LEFT_EDGE])
+            {
+              new_cell_width -= grid->grid_cell_border;
+            }
+          if (cell_list->side_edges[RIGHT_EDGE])
+            {
+              new_cell_width -= grid->grid_cell_border;
+            }
+          else
+            {
+              /*
+               * Make sure the last column uses all the remaining space.
+               * We subtract orig_x to get cell_list->x into the same coord
+               * space as width.
+               */
+              new_cell_width = width - (cell_list->x - orig_x);
+            }
+        }
+      else
+        new_cell_width = cell_list->width;
 
-		new_cell_height = height * cell_list->height_percent / 100;
-		if (new_cell_height < grid->grid_cell_min_dim)
-		{
-			new_cell_height = grid->grid_cell_min_dim;
-		}
-		if (row_cnt > 0)
-		{
-			new_cell_height -= grid->grid_cell_border;
-		}
-		if (row_cnt < (rows - 1))
-		{
-			new_cell_height -= grid->grid_cell_border;
-		}
+      if (cell_list->has_percent_height)
+        {
+          new_cell_height = height * (float)cell_list->height_percent / 100.0;
+          
+          if (new_cell_height < grid->grid_cell_min_dim)
+            {
+              new_cell_height = grid->grid_cell_min_dim;
+            }
+          if (cell_list->side_edges[TOP_EDGE])
+            {
+              new_cell_height -= grid->grid_cell_border;
+            }
+          if (cell_list->side_edges[BOTTOM_EDGE])
+            {
+              new_cell_height -= grid->grid_cell_border;
+            }
+          else
+            {
+              /*
+               * Make sure the last row uses all the remaining space.
+               * We subtract orig_y to get cell_list->y into the same coord
+               * space as height.
+               */
+              new_cell_height = height - (cell_list->y - orig_y);
+            }
+        }
+      else
+        new_cell_height = cell_list->height;
 
-		/*
-		 * Make sure the last row uses all the remaining space.
-		 * We subtract orig_y to get cell_list->y into the same coord
-		 * space as height.
-		 */
-		if (row_cnt == (rows - 1))
-		{
-			new_cell_height = height - (cell_list->y - orig_y);
-		}
+      cell_list->width = new_cell_width;
+      cell_list->height = new_cell_height;
 
-		cell_list->width = new_cell_width;
-		cell_list->height = new_cell_height;
+      if (cell_list->side_edges[RIGHT_EDGE])
+        {
+          if (cell_list->side_edges[RIGHT_EDGE]->dealt_with_in_relayout == FALSE)
+            {
+              lo_MoveGridEdgeForRelayout(context,
+                                         cell_list->side_edges[RIGHT_EDGE]->fe_edge,
+                                         cell_list->x + cell_list->width,
+                                         cell_list->side_edges[RIGHT_EDGE]->y);
+              cell_list->side_edges[RIGHT_EDGE]->dealt_with_in_relayout = TRUE;
+            }
+        }
 
-		if (cell_list->side_edges[RIGHT_EDGE])
-		  {
-		    if (cell_list->side_edges[RIGHT_EDGE]->dealt_with_in_relayout == FALSE)
-		      {
-			lo_MoveGridEdgeForRelayout(context,
-						   cell_list->side_edges[RIGHT_EDGE]->fe_edge,
-						   cell_list->x + cell_list->width,
-						   cell_list->side_edges[RIGHT_EDGE]->y);
-			cell_list->side_edges[RIGHT_EDGE]->dealt_with_in_relayout = TRUE;
-		      }
-		  }
+      if (cell_list->side_edges[BOTTOM_EDGE])
+        {
+          if (cell_list->side_edges[BOTTOM_EDGE]->dealt_with_in_relayout == FALSE)
+            {
+              lo_MoveGridEdgeForRelayout(context,
+                                         cell_list->side_edges[BOTTOM_EDGE]->fe_edge,
+                                         cell_list->side_edges[BOTTOM_EDGE]->x,
+                                         cell_list->y + cell_list->height);
+              cell_list->side_edges[BOTTOM_EDGE]->dealt_with_in_relayout = TRUE;
+            }
+        }
 
-		if (cell_list->side_edges[BOTTOM_EDGE])
-		  {
-		    if (cell_list->side_edges[BOTTOM_EDGE]->dealt_with_in_relayout == FALSE)
-		      {
-			lo_MoveGridEdgeForRelayout(context,
-						   cell_list->side_edges[BOTTOM_EDGE]->fe_edge,
-						   cell_list->side_edges[BOTTOM_EDGE]->x,
-						   cell_list->y + cell_list->height);
-			cell_list->side_edges[BOTTOM_EDGE]->dealt_with_in_relayout = TRUE;
-		      }
-		  }
-
-		x += new_cell_width;
-		if (col_cnt > 0)
-		{
-			x += grid->grid_cell_border;
-		}
-		if (col_cnt < (cols - 1))
-		{
-			x += grid->grid_cell_border;
-		}
-		col_cnt++;
-		if (col_cnt >= cols)
-		{
-			x = orig_x;
-			y += new_cell_height;
-			if (row_cnt > 0)
-			{
-				y += grid->grid_cell_border;
-			}
-			if (row_cnt < (rows - 1))
-			{
-				y += grid->grid_cell_border;
-			}
-			col_cnt = 0;
-			row_cnt++;
-		}
-
-		cell_list = cell_list->next;
+      cell_list = cell_list->next;
 	}
 }
 
@@ -4284,7 +4518,7 @@ lo_RelayoutGridDocumentOnResize(MWContext *context,
 
   lo_PrepareGridForRelayout(context, grid);
 
-  lo_ReLayoutGridCells(context, 0, 0, width, height, grid);
+  lo_ReLayoutGridCells(context, width, height, grid);
 
   lo_RestructureCells(context, grid);
 

@@ -435,6 +435,7 @@ typedef struct lo_GridCellRec_struct {
 	struct lo_GridRec_struct *subgrid;
 
 	Bool needs_restructuring;
+    Bool has_percent_width, has_percent_height;
 } lo_GridCellRec;
 
 typedef struct lo_GridEdge_struct {
