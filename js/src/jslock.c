@@ -491,7 +491,6 @@ js_SuspendThread(JSThinLock *p)
 {
     JSFatLock *fl;
     JSStatus stat;
-    int o;
     
     if (p->fat == NULL)
         fl = p->fat = allocateFatlock(p);
@@ -521,7 +520,6 @@ js_ResumeThread(JSThinLock *p)
 {
     JSFatLock *fl = p->fat;
     JSStatus stat;
-    int o;
 
     JS_ASSERT(fl != NULL);
     JS_ASSERT(fl->susp > 0);
@@ -535,8 +533,7 @@ js_ResumeThread(JSThinLock *p)
 static void
 js_Enqueue(JSThinLock *p, jsword me)
 {
-    jsword o, n, i;
-    JSFatLock *fl;
+    jsword o, n;
 
     js_LockGlobal(p);
     while (1) {

@@ -552,7 +552,8 @@ PRInt32 nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame)
 
     // Search the list of option elements looking for a match
  
-    PRUint32 length = GetNumberOfOptions();
+    PRUint32 length;
+    length = GetNumberOfOptions();
     nsIDOMHTMLCollection* options = GetOptions(mContent);
     if (nsnull != options) {
       PRUint32 numOptions;

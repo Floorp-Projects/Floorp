@@ -311,7 +311,6 @@ PR_STATIC_CALLBACK(JSBool)
 NavigatorJavaEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNavigator *nativeThis = (nsIDOMNavigator*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRBool nativeRet;
 
   *rval = JSVAL_NULL;
