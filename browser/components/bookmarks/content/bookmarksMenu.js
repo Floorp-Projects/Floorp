@@ -99,13 +99,17 @@ var BookmarksMenu = {
   createContextMenu: function (aEvent)
   {
     var target = document.popupNode;
-    target.focus() // buttons in the pt have -moz-user-focus: ignore -->
+    if (!this.isBTBookmark(target.id))
+      return false;
+
+    target.focus(); // buttons in the pt have -moz-user-focus: ignore
     this._selection   = this.getBTSelection(target);
     this._orientation = this.getBTOrientation(aEvent, target);
     this._target      = this.getBTTarget(target, this._orientation);
     BookmarksCommand.createContextMenu(aEvent, this._selection);
     this.onCommandUpdate();
-    aEvent.target.addEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
+    aEvent.target.addEventListener("mousemove", BookmarksMenuController.onMouseMove, false);
+    return true;
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -132,9 +136,9 @@ var BookmarksMenu = {
       break;
     default:
       item = aNode.id;
+      if (!this.isBTBookmark(item))
+        return {length:0};
     }
-    if (!this.isBTBookmark(item))
-      return {length:0};
     var parent           = this.getBTContainer(aNode);
     var isExpanded       = aNode.hasAttribute("open") && aNode.open;
     var selection        = {};
@@ -215,11 +219,12 @@ var BookmarksMenu = {
     if (!aURI)
       return false;
     var type = BookmarksUtils.resolveType(aURI);
-    return (type == "BookmarkSeparator" ||
-            type == "Bookmark"          ||
-            type == "Folder"            ||
-            type == "FolderGroup"       ||
-            type == "PersonalToolbarFolder")
+    return (type == "BookmarkSeparator"     ||
+            type == "Bookmark"              ||
+            type == "Folder"                ||
+            type == "FolderGroup"           ||
+            type == "PersonalToolbarFolder" ||
+            aURI == "bookmarks-ptf")
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -318,14 +323,27 @@ var BookmarksMenu = {
     }
   },
 
-  loadBookmark: function (aTarget, aDS)
+  loadBookmark: function (aEvent, aDS)
   {
     // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
-    if (!this.isBTBookmark(aTarget.id))
+    if (!this.isBTBookmark(aEvent.target.id))
       return;
-    var rSource   = RDF.GetResource(aTarget.id);
+    var rSource   = RDF.GetResource(aEvent.target.id);
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
-    BookmarksCommand.openBookmark(selection, "current", aDS)
+    var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+    BookmarksCommand.openBookmark(selection, browserTarget, aDS);
+  },
+
+  ////////////////////////////////////////////////
+  // loads a bookmark with the mouse middle button
+  loadBookmarkMiddleClick: function (aEvent, aDS)
+  {
+    if (aEvent.button != 1)
+      return;
+    // unlike for command events, we have to close the menus manually
+    BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
+    BookmarksMenuDNDObserver.onDragCloseTarget();
+    this.loadBookmark(aEvent, aDS);
   }
 }
 
@@ -738,18 +756,6 @@ var BookmarksMenuDNDObserver = {
 
 var BookmarksToolbar = 
 {
-  ////////////////////////////////////////////////
-  // loads a bookmark with the mouse middle button
-  loadBookmarkMiddleClick: function (aEvent, aDS)
-  {
-    if (aEvent.button != 1)
-      return;
-    // unlike for command events, we have to close the menus manually
-    BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
-    BookmarksMenuDNDObserver.onDragCloseTarget();
-    BookmarksUtils.loadBookmarkBrowser(aEvent, aEvent.target, aDS);
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // returns the node of the last visible bookmark on the toolbar -->
   getLastVisibleBookmark: function ()
