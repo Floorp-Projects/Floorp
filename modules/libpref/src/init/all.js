@@ -469,7 +469,6 @@ pref("offline.startup_state",            0);
 pref("offline.send.unsent_messages",            0);
 pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
-pref("offline.news.download.use_days",          0);
 
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref 

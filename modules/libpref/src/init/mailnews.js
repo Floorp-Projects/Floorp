@@ -208,7 +208,6 @@ pref("mailnews.language_sensitive_font",    true);
 
 pref("offline.news.download.unread_only",   true);
 pref("offline.news.download.by_date",       true);
-pref("offline.news.download.use_days",      false);
 pref("offline.news.download.days",          30);    // days
 pref("offline.news.download.increments",    3); // 0-yesterday, 1-1 wk ago, 2-2 wk ago,
                                                 // 3-1 month ago, 4-6 month ago, 5-1 year ago
