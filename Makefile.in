@@ -181,9 +181,16 @@ tier_9_dirs	+= \
 		modules/plugin \
 		dom \
 		view \
-		widget \
 		content \
 		layout \
+		$(NULL)
+
+ifdef ACCESSIBILITY
+tier_9_dirs    += accessible
+endif
+
+tier_9_dirs	+= \
+            widget \
 		db \
 		xpfe/components/shistory \
 		docshell \
@@ -194,10 +201,6 @@ tier_9_dirs	+= \
 		sun-java \
 		themes \
 		$(NULL)
-
-ifdef ACCESSIBILITY
-tier_9_dirs    += accessible
-endif
 
 ifdef MOZ_LDAP_XPCOM
 tier_9_dirs	+= directory/xpcom

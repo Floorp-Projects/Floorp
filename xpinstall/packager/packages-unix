@@ -70,7 +70,6 @@ bin/res/cmessage.txt
 bin/libgtkembedmoz.so
 ; this is used by Xprint and Xlib gfx
 bin/libxlibrgb.so
-bin/components/libaccessibility.so
 bin/components/accessibility.xpt
 bin/components/libappcomps.so
 bin/components/bookmarks.xpt

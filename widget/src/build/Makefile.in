@@ -47,9 +47,14 @@ CPPSRCS		= nsWinWidgetFactory.cpp
 
 EXTRA_DSO_LIBS	= gkgfx
 
+ifdef ACCESSIBILITY
+EXTRA_DSO_LIBS += gkconshared_s
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../../../accessible/src/base \
 		-I$(srcdir)/../windows \
 		$(NULL)
 
@@ -60,6 +65,17 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)widget_windows.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifdef ACCESSIBILITY
+SHARED_LIBRARY_LIBS += \
+    $(DIST)/lib/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
+    $(NULL)
+
+ifdef MOZ_XUL
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
+endif
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

@@ -74,6 +74,9 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsDragHelperService.h"
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
 
 #if USE_NATIVE_VERSION
 # include "nsCheckButton.h"
@@ -118,6 +121,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+#ifdef ACCESSIBILITY
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
+#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -217,6 +223,12 @@ static const nsModuleComponentInfo components[] =
 		NS_BIDIKEYBOARD_CID,
 		"@mozilla.org/widget/bidikeyboard;1",
 		nsBidiKeyboardConstructor },
+#ifdef ACCESSIBILITY
+	{ "AccessibilityService", 
+		NS_ACCESSIBILITY_SERVICE_CID,
+		"@mozilla.org/accessibilityService;1", 
+		nsAccessibilityServiceConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)
