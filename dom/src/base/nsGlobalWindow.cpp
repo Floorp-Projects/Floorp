@@ -2636,6 +2636,7 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
       }
 
    PRBool present = PR_FALSE;
+   PRBool positionSpecified = PR_FALSE;
    PRInt32 temp;
 
    if((temp = WinHasOption(aFeatures, "left", &present)) || present)
@@ -2643,12 +2644,18 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
    else if((temp = WinHasOption(aFeatures, "screenX", &present)) || present)
       chromeX = temp;
 
+   if(present)
+      positionSpecified = PR_TRUE;
+
    present = PR_FALSE;
 
    if((temp = WinHasOption(aFeatures, "top", &present)) || present)
       chromeY = temp;
    else if((temp = WinHasOption(aFeatures, "screenY", &present)) || present)
       chromeY = temp;
+
+   if(present)
+      positionSpecified = PR_TRUE;
 
    present = PR_FALSE;
 
@@ -2704,16 +2711,20 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    if(sizeChrome)
       {
-      if(sizeSpecified)
+      if(positionSpecified && sizeSpecified)
          treeOwnerAsWin->SetPositionAndSize(chromeX, chromeY, chromeCX, 
             chromeCY, PR_FALSE);
-      else
+      else if(sizeSpecified)
+         treeOwnerAsWin->SetSize(chromeCX, chromeCY, PR_FALSE);
+      else if(positionSpecified)
          treeOwnerAsWin->SetPosition(chromeX, chromeY);
       }
    else
       {
-      treeOwnerAsWin->SetPosition(chromeX, chromeY);
-      treeOwner->SizeShellTo(aDocShellItem, contentCX, contentCY);
+      if(positionSpecified)
+         treeOwnerAsWin->SetPosition(chromeX, chromeY);
+      else if(sizeSpecified)
+         treeOwner->SizeShellTo(aDocShellItem, contentCX, contentCY);
       }
    treeOwnerAsWin->SetVisibility(PR_TRUE);
 
