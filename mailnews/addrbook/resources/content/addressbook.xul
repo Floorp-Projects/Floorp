@@ -362,7 +362,8 @@ Contributor(s):
                control="searchInput"/>
         <textbox id="searchInput" flex="1" 
                 oninput="onAbSearchInput(false);"
-                onkeypress="onAbSearchKeyPress(event);"/>
+                onkeypress="onAbSearchKeyPress(event);"
+                onfocus="this.select();" onclick="this.select();"/>
         <button id="clear" label="&clearButton.label;" disabled="true"
                 accesskey="&clearButton.accesskey;"
                 oncommand="onAbClearSearch();"
