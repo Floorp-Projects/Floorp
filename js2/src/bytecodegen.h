@@ -258,7 +258,7 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
                 mStackMax(0)
         { }
 
-        ByteCodeGen::~ByteCodeGen()
+        ~ByteCodeGen()
         {
             delete mBuffer;
             delete mPC_Map;

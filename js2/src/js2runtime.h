@@ -1523,7 +1523,7 @@ XXX ...couldn't get this to work...
         uint32 mStackTop;
         uint32 mStackMax;
 
-        void pushValue(JSValue &v)
+        void pushValue(const JSValue &v)
         {
             ASSERT(mStackTop < mStackMax);
             mStack[mStackTop++] = v;
