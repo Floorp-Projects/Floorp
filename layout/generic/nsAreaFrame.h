@@ -22,6 +22,7 @@
 #include "nsISpaceManager.h"
 #include "nsVoidArray.h"
 #include "nsIAreaFrame.h"
+#include "nsAbsolutelyPositionedContainer.h"
 
 class nsSpaceManager;
 
@@ -94,19 +95,9 @@ protected:
   nsAreaFrame();
   virtual ~nsAreaFrame();
 
-  nsresult IncrementalReflow(nsIPresContext&          aPresContext,
-                             const nsHTMLReflowState& aReflowState);
-  nsresult ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
-                               const nsHTMLReflowState& aReflowState,
-                               nsIFrame*                aKidFrame,
-                               PRBool                   aInitialReflow,
-                               nsReflowStatus&          aStatus);
-  void ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
-                            const nsHTMLReflowState& aReflowState);
-
 private:
-  nsSpaceManager* mSpaceManager;
-  nsFrameList     mAbsoluteFrames;  // additional named child list
+  nsSpaceManager*                 mSpaceManager;
+  nsAbsolutelyPositionedContainer mAbsoluteContainer;
 };
 
 #endif /* nsAreaFrame_h___ */
