@@ -84,10 +84,11 @@
           onkeypress="onSelectFolderTreeKeyPress(event);"
           onclick="selectFolderTreeOnClick(event);"> 
       <template>
-        <rule nc:CanSearchMessages="true">
+        <rule>
           <conditions>
             <content uri="?container"/> 
             <member container="?container" child="?member"/>
+            <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#Virtual" object="false"/>
           </conditions>
           
           <bindings>

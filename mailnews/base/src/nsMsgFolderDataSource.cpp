@@ -2169,6 +2169,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
     (kNC_NoSelect == property)  ||
     (kNC_Synchronize == property) ||
     (kNC_SyncDisabled == property) ||
+    (kNC_VirtualFolder == property) ||
     (kNC_CanSearchMessages == property))
   {
     nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));

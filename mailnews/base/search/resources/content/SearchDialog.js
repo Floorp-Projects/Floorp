@@ -347,7 +347,7 @@ function selectFolder(folder)
     var folderURI;
 
     // if we can't search messages on this folder, just select the first one
-    if (!folder || !folder.server.canSearchMessages) {
+    if (!folder || !folder.server.canSearchMessages || (folder.flags & MSG_FOLDER_FLAG_VIRTUAL)) {
         // walk folders to find first item
         var firstItem = getFirstItemByTag(gFolderPicker, "menu");
         folderURI = firstItem.id;
