@@ -49,8 +49,7 @@ nsTLSSocketProvider::~nsTLSSocketProvider()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsTLSSocketProvider, nsISocketProvider,
-                              nsISSLSocketProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTLSSocketProvider, nsISocketProvider)
 
 NS_IMETHODIMP
 nsTLSSocketProvider::NewSocket(PRInt32 family,

@@ -45,8 +45,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsISSLSocketProvider.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsNetCID.h"
+#include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
 #include "nsMemory.h"
 #include "nsLDAPInternal.h"
@@ -131,7 +132,7 @@ nsLDAPSSLConnect(const char *hostlist, int defport, int timeout,
     nsLDAPSSLSessionClosure *sessionClosure;
     int	intfd = -1;
     nsCOMPtr <nsISupports> securityInfo;
-    nsCOMPtr <nsISSLSocketProvider> tlsSocketProvider;
+    nsCOMPtr <nsISocketProvider> tlsSocketProvider;
     nsCOMPtr <nsISSLSocketControl> sslSocketControl;
     nsresult rv;
 

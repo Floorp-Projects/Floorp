@@ -685,6 +685,16 @@
     { 0xa2, 0x8a, 0x5b, 0xa2, 0x44, 0x7f, 0xba, 0xce } \
 }
 
+#define NS_SSLSOCKETPROVIDER_CONTRACTID \
+    NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ssl"
+
+/* This code produces a normal socket which can be used to initiate the
+ * STARTTLS protocol by calling its nsISSLSocketControl->StartTLS()
+ */
+#define NS_STARTTLSSOCKETPROVIDER_CONTRACTID \
+    NS_NETWORK_SOCKET_CONTRACTID_PREFIX "starttls"
+
+
 /******************************************************************************
  * netwerk/cookie classes
  */

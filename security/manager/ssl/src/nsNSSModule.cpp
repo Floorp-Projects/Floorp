@@ -245,9 +245,9 @@ static const nsModuleComponentInfo components[] =
   },
   
   {
-    NS_ISSLSOCKETPROVIDER_CLASSNAME,
+    NS_SSLSOCKETPROVIDER_CLASSNAME,
     NS_SSLSOCKETPROVIDER_CID,
-    NS_ISSLSOCKETPROVIDER_CONTRACTID,
+    NS_SSLSOCKETPROVIDER_CONTRACTID,
     nsSSLSocketProviderConstructor
   },
   
