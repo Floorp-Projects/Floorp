@@ -65,7 +65,7 @@ public:
 
 private:
     // Responsible for finding a converter for the given MIME-type.
-    nsresult FindConverter(const char *aProgID, nsVoidArray **aEdgeList);
+    nsresult FindConverter(const char *aProgID, nsCStringArray **aEdgeList);
     nsresult BuildGraph(void);
     nsresult AddAdjacency(const char *aProgID);
     nsresult ParseFromTo(const char *aProgID, nsCString &aFromRes, nsCString &aToRes);

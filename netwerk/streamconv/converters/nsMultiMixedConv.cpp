@@ -78,18 +78,20 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     NS_ASSERTION(channel, "multimixed converter needs a channel");
 
     if (!mBoundaryCStr) {
-        // ask the channel for the content-type and extract the boundary from it.
-        nsIHTTPChannel *httpChannel = nsnull;
-        rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), (void**)&httpChannel);
+        char *bndry = nsnull, *delimiter = nsnull;
+
+        // ask the HTTP channel for the content-type and extract the boundary from it.
+        nsCOMPtr<nsIHTTPChannel> httpChannel;
+        rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), getter_AddRefs(httpChannel));
         if (NS_SUCCEEDED(rv)) {
             char *bndry = nsnull, *delimiter = nsnull;
             nsIAtom *header = NS_NewAtom("content-type");
             if (!header) return NS_ERROR_OUT_OF_MEMORY;
             rv = httpChannel->GetResponseHeader(header, &delimiter);
             NS_RELEASE(header);
-            NS_RELEASE(httpChannel);
             if (NS_FAILED(rv)) return rv;
 
+            if (!delimiter) return NS_ERROR_FAILURE;
             bndry = PL_strstr(delimiter, "boundary");
             if (!bndry) return NS_ERROR_FAILURE;
 
@@ -104,9 +106,25 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
             mBoundaryStrLen = boundaryString.Length();
         } else {
-            // we couldn't get at the boundary and we need one.
-            NS_ASSERTION(0, "no http channel to get the multipart boundary from");
-            return NS_ERROR_FAILURE;
+            // try asking the channel directly
+            rv = channel->GetContentType(&delimiter);
+            if (NS_FAILED(rv)) return rv;
+
+            if (!delimiter) return NS_ERROR_FAILURE;
+            bndry = PL_strstr(delimiter, "boundary");
+            if (!bndry) return NS_ERROR_FAILURE;
+
+            bndry = PL_strchr(bndry, '=');
+            if (!bndry) return NS_ERROR_FAILURE;
+
+            bndry++; // move past the equals sign
+
+            nsCString boundaryString(bndry);
+            nsAllocator::Free(delimiter);
+            boundaryString.StripWhitespace();
+            mBoundaryCStr = boundaryString.ToNewCString();
+            if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
+            mBoundaryStrLen = boundaryString.Length();
         }
     }
 
@@ -178,12 +196,18 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                             if (headerStr.Equals("content-type")) {
                                 contentTypeStr = headerVal;
-                            }
-                            else if (headerStr.Equals("content-length")) {
+                            } else if (headerStr.Equals("content-length")) {
                                 contentLength = atoi(headerVal);
-                            } else {
-                                // XXX we need a way to set other header's such as cookies :/
-                                // XXX maybe we just handle cookies directly here.
+                            } else if (headerStr.Equals("set-cookie")) {
+                                // setting headers on the HTTP channel
+                                // causes HTTP to notify, again if necessary,
+                                // it's header observers.
+                                nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
+                                if (NS_SUCCEEDED(rv)) {
+                                    rv = httpChannel->SetResponseHeader(header, headerVal);
+                                    // XXX probably don't want to fail so hard.
+                                    if (NS_FAILED(rv)) return rv;
+                                }
                             }
                             NS_RELEASE(header);
                         }
