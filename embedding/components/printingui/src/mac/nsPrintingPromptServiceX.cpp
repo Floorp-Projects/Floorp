@@ -54,10 +54,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsPDECommon.h"
 
-#ifndef XP_MACOSX
-#include "nsILocalFIleMac.h"
-#endif
-
 // Printing Progress Includes
 #include "nsPrintProgress.h"
 #include "nsPrintProgressParams.h"
@@ -71,56 +67,30 @@
 // Constants
 static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";
 
-// Globals
-static CFPlugInRef gPDEPlugIn = nsnull;
-
 //-----------------------------------------------------------------------------
 // Static Helpers
 //-----------------------------------------------------------------------------
 
-static CFPlugInRef LoadPDEPlugIn()
+static nsresult LoadPDEPlugIn()
 {
-#ifndef XP_MACOSX
+    static CFPlugInRef gPDEPlugIn = nsnull;
+
     if (!gPDEPlugIn) {
-        
-        nsresult rv;    
-        nsCOMPtr<nsIProperties> dirService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-        if (!dirService)
-            return nsnull;
-        nsCOMPtr<nsILocalFileMac> pluginDir;
-        rv = dirService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFileMac), getter_AddRefs(pluginDir));
-        if (NS_FAILED(rv))
-            return nsnull;
-        pluginDir->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
-        pluginDir->AppendNative(NS_LITERAL_CSTRING("PrintDialogPDE.plugin"));
-        FSSpec pluginSpec;
-        rv = pluginDir->GetFSSpec(&pluginSpec);
-        if (NS_FAILED(rv))
-            return nsnull;
-            
-        OSErr err;
-        FSRef pluginFSRef;
-        char pathBuf[512];
-        
-        err = ::FSpMakeFSRef(&pluginSpec, &pluginFSRef);
-        if (err)
-            return nsnull;
-        err = ::FSRefMakePath(&pluginFSRef, (UInt8 *)pathBuf, sizeof(pathBuf)-1);
-        if (err)
-            return nsnull;
-            
-        CFStringRef pathRef = ::CFStringCreateWithCString(NULL, pathBuf, kCFStringEncodingUTF8);
-        if (!pathRef)
-            return nsnull;
-        CFURLRef url = ::CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, TRUE);
-        if (url)
-            gPDEPlugIn = ::CFPlugInCreate(NULL, url);
-        
-        ::CFRelease(pathRef);    
-        ::CFRelease(url);   
+
+        CFURLRef pluginsURL = ::CFBundleCopyBuiltInPlugInsURL(CFBundleGetMainBundle());
+        if (pluginsURL) {
+            CFURLRef thePluginURL = ::CFURLCreateCopyAppendingPathComponent(nsnull,
+                                                                          pluginsURL,
+                                                                          CFSTR("PrintPDE.plugin"),
+                                                                          PR_FALSE);
+            if (thePluginURL) {
+                gPDEPlugIn = ::CFPlugInCreate(nsnull, thePluginURL);
+                ::CFRelease(thePluginURL);
+            }
+            ::CFRelease(pluginsURL);
+        }
     }
-#endif
-    return gPDEPlugIn;
+    return gPDEPlugIn ? NS_OK : NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
@@ -186,8 +156,14 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
 
     PRBool  isOn;
     PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
-    nsPrintExtensions printData = {false,false,false,false,false,false,false,false};
+    nsPrintExtensions printData = {false,false,false,false,false,false,false,false,true,true};
 
+    // Fetch the current extended data from the print settings
+    UInt32 bytesNeeded;
+    status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kMozPDECreatorCode, &bytesNeeded, NULL);
+    if (status == noErr && bytesNeeded == sizeof(printData))
+        (void)::PMGetPrintSettingsExtendedData(nativePrintSettings, kMozPDECreatorCode,&bytesNeeded, &printData);
+        
     // set the values for the plugin here
     printSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
     printData.mHaveSelection = isOn;
@@ -201,20 +177,25 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
         printData.mHaveFrameSelected = false;
     }
     printSettings->GetShrinkToFit(&isOn);
-    printData.mShrinkToFit = isOn;    
+    printData.mShrinkToFit = isOn;
+    printSettings->GetPrintBGColors(&isOn);
+    printData.mPrintBGColors = isOn;
+    printSettings->GetPrintBGImages(&isOn);
+    printData.mPrintBGImages = isOn;
 
-    CFPlugInRef pdePlugIn = ::LoadPDEPlugIn();
-    status = ::PMSetPrintSettingsExtendedData(nativePrintSettings, kPDE_Creator, sizeof(printData),&printData);
+    rv = ::LoadPDEPlugIn();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "LoadPDEPlugIn() failed");
+    status = ::PMSetPrintSettingsExtendedData(nativePrintSettings, kMozPDECreatorCode, sizeof(printData),&printData);
+    NS_ASSERTION(status == noErr, "PMSetPrintSettingsExtendedData() failed");
 
     Boolean accepted;
     status = ::PMSessionPrintDialog(printSession, nativePrintSettings, pageFormat, &accepted);
     if (status == noErr && accepted) {
 
-        UInt32 bytesNeeded;
         int pageRange = -1;
-        status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kPDE_Creator, &bytesNeeded, NULL);
+        status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kMozPDECreatorCode, &bytesNeeded, NULL);
         if (status == noErr && bytesNeeded == sizeof(printData)) {
-            status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kPDE_Creator,&bytesNeeded, &printData);        
+            status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kMozPDECreatorCode,&bytesNeeded, &printData);        
 
             // set the correct data fields
             if (printData.mPrintSelection) {
@@ -234,6 +215,8 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
                 printSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
 
             printSettings->SetShrinkToFit(printData.mShrinkToFit);
+            printSettings->SetPrintBGColors(printData.mPrintBGColors);
+            printSettings->SetPrintBGImages(printData.mPrintBGImages);
         }
 
         if (pageRange == -1) {

@@ -40,31 +40,31 @@
 #define nsPDECommon_h___
 
 
-#define kPDE_Creator		'MOZZ'		
+#define  kMozPDESignature		"MOZZ"
+#define  kMozPDECreatorCode	'MOZZ'
 
 
 typedef struct {
+  // State info supplied by printing app
   Boolean mHaveSelection;
   Boolean mHaveFrames;
   Boolean mHaveFrameSelected;
-  Boolean mPrintSelection;
+  // The UI of the PDE allows control of these
   Boolean mPrintFrameAsIs;
   Boolean mPrintSelectedFrame;
   Boolean mPrintFramesSeparately;
+  Boolean mPrintSelection;
   Boolean mShrinkToFit;
+  Boolean mPrintBGColors;
+  Boolean mPrintBGImages;
 } nsPrintExtensions;
 
 
 
-#define kPrintTitlesDefault	false	// the initial default value of our page format custom data
-
 // Our tag for the Print Settings ticket. This should be defined in an application
 // header that is common to this file and the applications' files so that it
 // can get access to the data set in the Print Settings.
-#define kAppPrintDialogPDEOnlyKey 		CFSTR("com.apple.print.PrintSettingsTicket.MOZZ")
-
-#define kPrintSelectionOnlyDefault	false	// the initial default value of custom print settings custom data
-
+#define kAppPrintDialogPDEOnlyKey 		CFSTR("com.apple.print.PrintSettingsTicket." kMozPDESignature)
 
 
 #endif
