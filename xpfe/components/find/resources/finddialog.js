@@ -27,6 +27,7 @@
             dialog.find            = document.getElementById("ok");
             dialog.cancel          = document.getElementById("cancel");
             dialog.enabled         = false;
+            dialog.bundle          = document.getElementById("findBundle");
         }
 
         function loadDialog()
@@ -112,7 +113,9 @@
             loadData();
 
             // Search.
-            finder.findNext( data );
+            var result = finder.findNext( data );
+            if (!result)
+                window.alert(dialog.bundle.getString("notFoundWarning"));
 
             // don't close the window
             return false;

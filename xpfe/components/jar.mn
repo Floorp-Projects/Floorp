@@ -162,6 +162,7 @@ en-US.jar:
     locale/en-US/global/console.dtd                             (console/resources/locale/en-US/console.dtd)
     locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
+    locale/en-US/global/finddialog.properties                          (find/resources/locale/en-US/finddialog.properties)
 
 toolkit.jar:
     content/global/console.js                                   (console/resources/content/console.js)
