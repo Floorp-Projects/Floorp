@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.40 2003/02/19 00:39:39 thayes%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.41 2003/04/01 19:13:50 bishakhabanerjee%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1443,6 +1443,8 @@ main(int argc, char **argv)
 
     if (decodeOptions.contentFile)
 	PR_Close(decodeOptions.contentFile);
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+	exit(1);
+    }
     exit(exitstatus);
 }
