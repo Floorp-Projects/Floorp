@@ -42,8 +42,6 @@ embed_chrome: embed-jar.mn
 	unzip -d $(DIST)\Embed\tmpchrome\en-unix $(DIST)\bin\chrome\en-unix.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\en-win
 	unzip -d $(DIST)\Embed\tmpchrome\en-win $(DIST)\bin\chrome\en-win.jar
-	nsinstall -D $(DIST)\Embed\tmpchrome\messenger
-	unzip -d $(DIST)\Embed\tmpchrome\messenger $(DIST)\bin\chrome\messenger.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\modern
 	unzip -d $(DIST)\Embed\tmpchrome\modern $(DIST)\bin\chrome\modern.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\toolkit
@@ -57,10 +55,12 @@ install:: embed_chrome
  $(MAKE_INSTALL) installed-chrome.txt $(DIST)\Embed\chrome
 !IF  "$(APP)" == "mfcembed"
  $(MAKE_INSTALL) $(DIST)\bin\mfcembed.exe $(DIST)\Embed
+ $(MAKE_INSTALL) $(DIST)\bin\mfcEmbedComponents.dll $(DIST)\Embed
 !ELSEIF  "$(APP)" == "winembed" 
  $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
 !ELSE
  $(MAKE_INSTALL) $(DIST)\bin\mfcembed.exe $(DIST)\Embed
+ $(MAKE_INSTALL) $(DIST)\bin\mfcEmbedComponents.dll $(DIST)\Embed
  $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
 !ENDIF
 
