@@ -153,15 +153,32 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         }
     }
     
+    public String decompile(Context cx, int indent, boolean justbody) {
+        StringBuffer sb = new StringBuffer();
+        if (!justbody) {
+            sb.append("function ");
+            sb.append(getFunctionName());
+            sb.append("() {");
+        }
+        sb.append("/*\n");
+        toString(sb);
+        sb.append(justbody ? "*/\n" : "*/}\n");
+        return sb.toString();
+    }
+    
     public String toString() {
         StringBuffer sb = new StringBuffer();
+        toString(sb);
+        return sb.toString();
+    }
+
+    private void toString(StringBuffer sb) {
         for (int i=0; i < methods.length; i++) {
             sb.append(javaSignature(methods[i].getReturnType()));
             sb.append(' ');
             sb.append(signature(methods[i]));
             sb.append('\n');
         }
-        return sb.toString();
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,

@@ -916,7 +916,7 @@ public class Context {
     {
         NativeScript ns = (NativeScript) script;
         ns.initScript(scope);
-        return ns.decompile(indent, true, false);
+        return ns.decompile(this, indent, false);
     }
 
     /**
@@ -934,7 +934,9 @@ public class Context {
      */
     public String decompileFunction(Function fun, int indent) {
         if (fun instanceof NativeFunction)
-            return ((NativeFunction)fun).decompile(indent, true, false);
+            return ((NativeFunction)fun).decompile(this, indent, false);
+        else if (fun instanceof IdFunction)
+            return ((IdFunction)fun).decompile(this, indent, false);
         else
             return "function " + fun.getClassName() +
                    "() {\n\t[native code]\n}\n";
@@ -955,7 +957,9 @@ public class Context {
      */
     public String decompileFunctionBody(Function fun, int indent) {
         if (fun instanceof NativeFunction)
-            return ((NativeFunction)fun).decompile(indent, true, true);
+            return ((NativeFunction)fun).decompile(this, indent, true);
+        else if (fun instanceof IdFunction)
+            return ((IdFunction)fun).decompile(this, indent, true);
         else
             // not sure what the right response here is.  JSRef currently
             // dumps core.

@@ -273,7 +273,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                   Object[] args, Scriptable scopeObj,
                                   int matchType, Function funObj) {
         if (!(thisObj instanceof NativeRegExp)) {
-            Object[] errArgs = { ((NativeFunction) funObj).jsGet_name() };
+            Object[] errArgs = { ((NativeFunction) funObj).getFunctionName() };
             throw NativeGlobal.constructError(
                                               cx, "TypeError",
                                               ScriptRuntime.getMessage(

@@ -186,20 +186,36 @@ public class NativeFunction extends ScriptableObject implements Function {
      * between function header and function body that rhino
      * decompilation does not.
      *
-     * @param indent How much to indent the decompiled result
+     * @param cx Cuirrent context
      *
-     * @param toplevel Whether this is the first call or a recursive
-     * call of decompile.  (Not whether the function is defined at the
-     * top level of script evaluation.)
+     * @param indent How much to indent the decompiled result
      *
      * @param justbody Whether the decompilation should omit the
      * function header and trailing brace.
      */
 
-    public String decompile(int indent, boolean toplevel, boolean justbody) {
-         if (source == null)
-             return "function " + jsGet_name() +
-                "() {\n\t[native code]\n}\n";
+    public String decompile(Context cx, int indent, boolean justbody) {
+        StringBuffer result = new StringBuffer();
+        decompile(indent, true, justbody, result);
+        return result.toString(); 
+        
+    }
+    
+    private void decompile(int indent, boolean toplevel, boolean justbody,
+                           StringBuffer result) 
+    {
+        if (source == null) {
+            if (!justbody) {
+                result.append("function ");
+                result.append(getFunctionName());
+                result.append("() {\n\t");
+            }
+            result.append("[native code]\n");
+            if (!justbody) {
+                result.append("}\n");
+            }
+            return;
+        }
 
         // Spew tokens in source, for debugging.
         // as TYPE number char
@@ -223,8 +239,6 @@ public class NativeFunction extends ScriptableObject implements Function {
             }
             System.err.println();
         }
-
-        StringBuffer result = new StringBuffer();
 
         int i = 0;
 
@@ -408,9 +422,8 @@ public class NativeFunction extends ScriptableObject implements Function {
                     }
                     throw Context.reportRuntimeError(message);
                 }
-                result.append(nestedFunctions[functionNumber].decompile(indent,
-                                                                        false,
-                                                                        false));
+                nestedFunctions[functionNumber].
+                    decompile(indent, false, false, result);
                 break;
             }
             case TokenStream.COMMA:
@@ -827,29 +840,20 @@ public class NativeFunction extends ScriptableObject implements Function {
         // add that trailing newline if it's an outermost function.
         if (toplevel && !justbody)
             result.append('\n');
-
-        return result.toString();
     }
 
     public static Object jsFunction_toString(Context cx, Scriptable thisObj,
                                              Object[] args, Function funObj)
     {
+        int indent = ScriptRuntime.toInt32(args, 0);
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (val instanceof NativeFunction) {
             NativeFunction funVal = (NativeFunction)val;
-            if (funVal instanceof NativeJavaMethod) {
-                return "\nfunction " + funVal.jsGet_name() +
-                    "() {/*\n" + val.toString() + "*/}\n";
-            }
-            int indent = 0;
-            if (args.length > 0)
-                indent = (int)ScriptRuntime.toNumber(args[0]);
-
-            return funVal.decompile(indent, true, false);
+            return funVal.decompile(cx, indent, false);
         }
         else if (val instanceof IdFunction) {
             IdFunction funVal = (IdFunction)val;
-            return funVal.toStringForScript(cx);
+            return funVal.decompile(cx, indent, false);
         }
         throw NativeGlobal.typeError1
             ("msg.incompat.call", "toString", thisObj);
@@ -970,7 +974,7 @@ public class NativeFunction extends ScriptableObject implements Function {
         return argCount;
     }
 
-    public String jsGet_name() {
+    public String getFunctionName() {
         if (functionName == null)
             return "";
         if (functionName.equals("anonymous")) {
@@ -979,6 +983,10 @@ public class NativeFunction extends ScriptableObject implements Function {
                 return "";
         }
         return functionName;
+    }
+
+    public String jsGet_name() {
+        return getFunctionName();
     }
 
     private NativeCall getActivation(Context cx) {

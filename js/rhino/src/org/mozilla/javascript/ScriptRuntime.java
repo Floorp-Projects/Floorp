@@ -1968,14 +1968,14 @@ public class ScriptRuntime {
         result.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         result.setParentScope(scope);
 
-        String fnName = result.jsGet_name();
+        String fnName = result.getFunctionName();
         if (setName && fnName != null && fnName.length() != 0 && 
             !fnName.equals("anonymous"))
         {
             setProp(scope, fnName, result, scope);
         }
 
-         return result;
+        return result;
     }
 
     static void checkDeprecated(Context cx, String name) {

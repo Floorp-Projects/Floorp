@@ -164,11 +164,14 @@ public class IdFunction extends ScriptableObject implements Function
         return (Scriptable) protoVal;
     }
 
-    protected Object toStringForScript(Context cx) {
+    public String decompile(Context cx, int indent, boolean justbody) {
         StringBuffer sb = new StringBuffer();
-        sb.append("function ");
-        sb.append(methodName);
-        sb.append("() { [native code for ");
+        if (!justbody) {
+            sb.append("function ");
+            sb.append(methodName);
+            sb.append("() { ");
+        }
+        sb.append("[native code for ");
         if (master instanceof Scriptable) {
             Scriptable smaster = (Scriptable)master;
             sb.append(smaster.getClassName());
@@ -177,7 +180,7 @@ public class IdFunction extends ScriptableObject implements Function
         sb.append(methodName);
         sb.append(", arity=");
         sb.append(getArity());
-        sb.append("] }");
+        sb.append(justbody ? "]\n" : "] }\n");
         return sb.toString();
     }
     
