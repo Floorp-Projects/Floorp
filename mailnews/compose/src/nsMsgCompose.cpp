@@ -118,6 +118,7 @@
 #include "plbase64.h"
 #include "nsIUTF8ConverterService.h"
 #include "nsUConvCID.h"
+#include "nsIUnicodeNormalizer.h"                                               
 
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -3609,9 +3610,22 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* scheme, const char* char
     if (NS_SUCCEEDED(rv)) {
       nsCAutoString leafName;  
       rv = url->GetFileName(leafName); // leafName is in UTF-8 (escaped).
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
         NS_UnescapeURL(leafName.get(), leafName.Length(),
                        esc_SkipControl | esc_AlwaysCopy, _retval);
+       // XXX : consider an alternative in bug 227547 later.
+#ifdef XP_MACOSX
+        nsCOMPtr<nsIUnicodeNormalizer>
+          normalizer (do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID));
+        if (normalizer) {
+          nsAutoString decomposedName;
+          nsAutoString composedName;
+          CopyUTF8toUTF16(_retval, decomposedName);
+          normalizer->NormalizeUnicodeNFC(decomposedName, composedName);
+          CopyUTF16toUTF8(composedName, _retval);
+        }
+#endif
+      }
     }
     return rv;
   }
