@@ -5686,6 +5686,16 @@ nsDocShell::SetLoadCookie(nsISupports * aCookie)
         if (webProgress) {
             webProgress->AddProgressListener(this);
         }
+
+        nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
+        NS_ENSURE_TRUE(loadGroup, NS_ERROR_FAILURE);
+        if (loadGroup) {
+            nsIInterfaceRequestor *ifPtr = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
+            nsCOMPtr<InterfaceRequestorProxy> ptr(new InterfaceRequestorProxy(ifPtr)); 
+            if (ptr) {
+                loadGroup->SetNotificationCallbacks(ptr);
+            }
+        }
     }
     return NS_OK;
 }
@@ -6106,3 +6116,34 @@ nsDocShellFocusController::ClosingDown(nsIDocShell* aDocShell)
     mFocusedDocShell = nsnull;
   }
 }
+
+//*****************************************************************************
+// nsDocShell::InterfaceRequestorProxy
+//*****************************************************************************  
+nsDocShell::InterfaceRequestorProxy::InterfaceRequestorProxy(nsIInterfaceRequestor* p)
+{
+    NS_INIT_REFCNT();
+    if (p) {
+        mWeakPtr = getter_AddRefs(NS_GetWeakReference(p));
+    }
+}
+ 
+nsDocShell::InterfaceRequestorProxy::~InterfaceRequestorProxy()
+{
+    mWeakPtr = nsnull;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocShell::InterfaceRequestorProxy, nsIInterfaceRequestor) 
+  
+NS_IMETHODIMP 
+nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID & aIID, void **aSink)
+{
+    NS_ENSURE_ARG_POINTER(aSink);
+    nsCOMPtr<nsIInterfaceRequestor> ifReq = do_QueryReferent(mWeakPtr);
+    if (ifReq) {
+        return ifReq->GetInterface(aIID, aSink);
+    }
+    *aSink = nsnull;
+    return NS_NOINTERFACE;
+}
+

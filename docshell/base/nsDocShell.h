@@ -354,6 +354,19 @@ protected:
     nsIDocShellTreeItem *      mParent;  // Weak Reference
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
+
+private:
+    class InterfaceRequestorProxy : public nsIInterfaceRequestor {
+    public:
+        InterfaceRequestorProxy(nsIInterfaceRequestor* p);
+        virtual ~InterfaceRequestorProxy();
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIINTERFACEREQUESTOR
+ 
+    private:
+        InterfaceRequestorProxy() {}
+        nsWeakPtr mWeakPtr;
+    };
 };
 
 #endif /* nsDocShell_h__ */
