@@ -138,7 +138,6 @@ MKICONS_LIB	=  \
 		  $(JAVA_JMC) \
 		  $(DIST)/lib/libpng.a \
 		  $(DIST)/lib/libzlib.a \
-		  /usr/lib/libm.a  \
 		  $(DIST)/lib/libnspr.a \
 		  $(DIST)/lib/libjpeg.a \
 		  $(DIST)/lib/libutil.a \
@@ -149,7 +148,6 @@ MKICONS_LIB	=  \
 		  $(JAVA_JMC) \
 		  $(DIST)/lib/libpng.a \
 		  $(DIST)/lib/libzlib.a \
-		  /usr/lib/libm.a  \
 		  $(DIST)/lib/libnspr21.a \
 		  $(DIST)/lib/libjpeg.a \
 		  $(DIST)/lib/libutil.a \
@@ -163,7 +161,7 @@ GARBAGE		+= $(MKICONS_EXE) \
 		  $(ICONLIST) \
 		  $(ICONANIMLIST)
 
-MKICONS_EXTRA	= $(OS_LIBS)
+MKICONS_EXTRA	= $(OS_LIBS) -lm
 
 #######################################################################
 # Rules to build mkicons program and then icondata.c
