@@ -1286,6 +1286,39 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   }
 }
 
+void nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null arg");
+  mStyleSheets.RemoveElement(aSheet);
+  NS_RELEASE(aSheet);
+  
+  PRBool enabled = PR_TRUE;
+  aSheet->GetEnabled(enabled);
+
+  if (enabled) {
+    PRInt32 count = mPresShells.Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+      nsCOMPtr<nsIStyleSet> set;
+      if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
+        if (set) {
+          set->RemoveDocStyleSheet(aSheet);
+        }
+      }
+    }
+
+    // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
+    for (index = 0; index < mObservers.Count(); index++) {
+      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+      observer->StyleSheetRemoved(this, aSheet);
+      if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+        index--;
+      }
+    }
+  }
+}
+
 void 
 nsDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 { // subclass hook for sheet ordering
