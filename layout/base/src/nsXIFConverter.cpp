@@ -539,7 +539,7 @@ nsXIFConverter::BeginLeaf(const nsAReadableString& aTag)
 // XXX: Complete hack to prevent the style leaf
 // From being created until the style sheet work
 // is redone. -- gpk 1/27/99
-  if (nsCRT::strcasecmp(nsPromiseFlatString(aTag), NS_LITERAL_STRING("STYLE")) == 0)
+  if (nsCRT::strcasecmp(nsPromiseFlatString(aTag), NS_LITERAL_STRING("STYLE").get()) == 0)
     return NS_OK;
 
 
@@ -556,7 +556,7 @@ nsXIFConverter::EndLeaf(const nsAReadableString& aTag)
 // XXX: Complete hack to prevent the style leaf
 // From being created until the style sheet work
 // is redone. -- gpk 1/27/99
-  if (nsCRT::strcasecmp(nsPromiseFlatString(aTag), NS_LITERAL_STRING("STYLE")) == 0)
+  if (nsCRT::strcasecmp(nsPromiseFlatString(aTag), NS_LITERAL_STRING("STYLE").get()) == 0)
     return NS_OK;
 
 

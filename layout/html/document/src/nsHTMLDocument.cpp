@@ -2847,7 +2847,7 @@ nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
     (do_GetService("mozilla.consoleservice.1"));
 
   if (consoleService) {
-    consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead."));
+    consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
 
   return domSelection->ToString(NS_ConvertASCIItoUCS2("text/plain"), nsIDocumentEncoder::OutputFormatted |nsIDocumentEncoder::OutputSelectionOnly, 0, aReturn);

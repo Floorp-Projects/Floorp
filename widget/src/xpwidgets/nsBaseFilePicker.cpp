@@ -129,33 +129,33 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
   nsXPIDLString filter;
 
   if (aFilterMask & filterAll) {
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("allTitle"), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("allFilter"), getter_Copies(filter));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("allTitle").get(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("allFilter").get(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterHTML) {
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("htmlTitle"), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("htmlFilter"), getter_Copies(filter));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("htmlTitle").get(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("htmlFilter").get(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterText) {
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("textTitle"), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("textFilter"), getter_Copies(filter));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("textTitle").get(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("textFilter").get(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterImages) {
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageTitle"), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter"), getter_Copies(filter));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageTitle").get(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter").get(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXML) {
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlTitle"), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlFilter"), getter_Copies(filter));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlTitle").get(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlFilter").get(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXUL) {
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("xulTitle"), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("xulFilter"), getter_Copies(filter));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xulTitle").get(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xulFilter").get(), getter_Copies(filter));
     AppendFilter(title, filter);
   }
 

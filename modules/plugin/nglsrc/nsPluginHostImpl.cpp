@@ -235,17 +235,17 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   PRUnichar *titleUni = nsnull;
   PRUnichar *messageUni = nsnull;
   PRUnichar *checkboxMessageUni = nsnull;
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginTitle"), 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginTitle").get(), 
                                  &titleUni);
   if (NS_FAILED(rv)) {
     goto EXIT_DNDPD;
   }
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginMessage"), 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginMessage").get(), 
                                  &messageUni);
   if (NS_FAILED(rv)) {
     goto EXIT_DNDPD;
   }
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginCheckboxMessage"), 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginCheckboxMessage").get(), 
                                  &checkboxMessageUni);
   if (NS_FAILED(rv)) {
     goto EXIT_DNDPD;

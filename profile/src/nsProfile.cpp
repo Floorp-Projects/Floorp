@@ -1745,7 +1745,7 @@ nsProfile::ShowProfileWizard(void)
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIURI> profURI;
-        rv = NS_NewURI(getter_AddRefs(profURI), NS_LITERAL_CSTRING(PROFILE_WIZARD_URL));
+        rv = NS_NewURI(getter_AddRefs(profURI), NS_LITERAL_CSTRING(PROFILE_WIZARD_URL).get());
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIXULWindow> newWindow;
