@@ -94,9 +94,6 @@ libgkgfx.dylib
 components/libjar50.dylib
 components/jar.xpt
 
-; javascript
-components/jsurl.xpt
-
 ; layout
 res/dtd/xhtml11.dtd
 components/libgklayout.dylib                   

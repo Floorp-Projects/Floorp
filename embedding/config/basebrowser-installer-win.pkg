@@ -175,9 +175,6 @@ components\dom_views.xpt
 components\dom_xbl.xpt
 components\dom_xul.xpt
 
-; "javascript:" URLs
-components\jsurl.xpt
-
 ; editor
 components\editor.dll                   
 components\editor.xpt
