@@ -121,7 +121,7 @@ class nsWindowEnumerator;
 
 class nsWindowMediator : public nsIWindowMediator
 {
-friend nsWindowEnumerator;
+friend class nsWindowEnumerator;
 
 public:
 	nsWindowMediator();
@@ -265,7 +265,7 @@ public:
 
   NS_DECL_ISUPPORTS
 private:
-	friend nsWindowMediator;
+	friend class nsWindowMediator;
 	
 	PRInt32 FindNext();
 	void WindowRemoved( PRInt32 inIndex);
