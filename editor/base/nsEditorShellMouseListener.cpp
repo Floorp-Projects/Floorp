@@ -273,6 +273,10 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
           continue;//dont bail yet, iterate through them all
 
         res = nsrange->IsPointInRange(parent, offset, &NodeIsInSelection);
+
+        // Done when we find a range that we are in
+        if (NodeIsInSelection)
+          break;
       }
     }
 
