@@ -33,6 +33,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "ilISystemServices.h"
+#include "nsCRT.h"
 
 extern ilISystemServices *il_ss;
 
@@ -166,7 +167,7 @@ NET_BACat (char **destination,
             if (*destination == NULL) 
 	          return(NULL);
 
-            XP_MEMMOVE (*destination + destination_length, source, source_length);
+            nsCRT::memmove(*destination + destination_length, source, source_length);
 
           } 
 		else 
@@ -175,7 +176,7 @@ NET_BACat (char **destination,
             if (*destination == NULL) 
 	          return(NULL);
 
-            XP_MEMCPY(*destination, source, source_length);
+            nsCRT::memcpy(*destination, source, source_length);
           }
     }
 

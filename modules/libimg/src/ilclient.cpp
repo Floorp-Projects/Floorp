@@ -20,49 +20,18 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.13 1999/10/13 00:41:43 beard%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.14 1999/10/21 22:17:16 pnunn%netscape.com Exp $
  */
 
 
 #include "if.h"
-#include "il_strm.h"            /* For OPAQUE_CONTEXT. */
 #include "nsIImgDecoder.h"
 #include "nsImgDCallbk.h"
 #include "ilISystemServices.h"
 #include "nsIFactory.h"
-
-/* for XP_GetString() */
-#include "xpgetstr.h"
-
-PR_BEGIN_EXTERN_C
-extern int MK_OUT_OF_MEMORY;
-extern int XP_MSG_IMAGE_NOT_FOUND;
-extern int XP_MSG_XBIT_COLOR;	
-extern int XP_MSG_1BIT_MONO;
-extern int XP_MSG_XBIT_GREYSCALE;
-extern int XP_MSG_XBIT_RGB;
-extern int XP_MSG_DECODED_SIZE;	
-extern int XP_MSG_WIDTH_HEIGHT;	
-extern int XP_MSG_SCALED_FROM;	
-extern int XP_MSG_IMAGE_DIM;	
-extern int XP_MSG_COLOR;	
-extern int XP_MSG_NB_COLORS;	
-extern int XP_MSG_NONE;	
-extern int XP_MSG_COLORMAP;	
-extern int XP_MSG_BCKDRP_VISIBLE;	
-extern int XP_MSG_SOLID_BKGND;	
-extern int XP_MSG_JUST_NO;	
-extern int XP_MSG_TRANSPARENCY;	
-extern int XP_MSG_COMMENT;	
-extern int XP_MSG_UNKNOWN;	
-extern int XP_MSG_COMPRESS_REMOVE;	
-PR_END_EXTERN_C
+#include "nsCRT.h"
 
 static uint32 image_cache_size;
-
-#ifndef M12N                    /* XXXM12N Cache trace: cleanup/eliminate. */
-static int il_cache_trace = FALSE; /* XXXM12N Clean up/eliminate */
-#endif
 
 PRLogModuleInfo *il_log_module = NULL;
 ilISystemServices *il_ss = NULL;
@@ -328,7 +297,7 @@ il_image_match(il_container *ic,          /* Candidate for match. */
         /* Request dimensions zero, cache entry has natural dimensions. */
         (!req_width && !req_height && ic->natural_size)
         ))
-        return FALSE;
+        return PR_FALSE;
 
 	/* We allow any depth image through as the FE may have asked us to
 	   decode to a colorspace other than the display colorspace. */
@@ -342,16 +311,16 @@ il_image_match(il_container *ic,          /* Candidate for match. */
                 /* Both request and candidate have a background color; check
                    whether they match. */
                 if (background_color->red != ic->background_color->red)
-                    return FALSE;
+                    return PR_FALSE;
                 if (background_color->green != ic->background_color->green)
-                    return FALSE;
+                    return PR_FALSE;
                 if (background_color->blue != ic->background_color->blue)
-                    return FALSE;
+                    return PR_FALSE;
             }
             else {
                 /* A background color was requested, but the candidate does
                    not have one. */
-                return FALSE;
+                return PR_FALSE;
             }
         }
         else {                      /* No background color was requested. */
@@ -359,7 +328,7 @@ il_image_match(il_container *ic,          /* Candidate for match. */
                 /* A background color was not requested, but the candidate
                    has one.  This means that while the current request may
                    need a mask, the candidate definitely does not have one. */
-                return FALSE;
+                return PR_FALSE;
             }
             else {
                 /* Neither the request nor the candidate have a background
@@ -370,27 +339,27 @@ il_image_match(il_container *ic,          /* Candidate for match. */
     
     /* Check the url (we have already checked the hash value which is based
        on the url.) */
-    if (strcmp(image_url, ic->url_address))
-        return FALSE;
+    if (nsCRT::strcmp(image_url, ic->url_address))
+        return PR_FALSE;
 
     /* Printer contexts and window contexts may have different
        native image formats, so don't reuse an image cache entry
        created for an onscreen context in a printer context or
        vice-versa. */
     if (display_type != ic->display_type)
-        return FALSE;
+        return PR_FALSE;
 
 
     if((ic->display_type==IL_Printer) &&
        (ic->dest_width != ic->image->header.width) &&
        (ic->dest_height != ic->image->header.height ))
-          return FALSE;
+          return PR_FALSE;
 
     /* XXX - temporary */
     if (ic->rendered_with_custom_palette)
-        return FALSE;
+        return PR_FALSE;
                 
-    return TRUE;
+    return PR_TRUE;
 }
 
 static int
@@ -541,7 +510,7 @@ il_get_container(IL_GroupContext *img_cx,
                 PR_FREEIF(ic);
                 return NULL;
             }
-            XP_MEMCPY(ic->background_color, background_color, sizeof(IL_IRGB));
+            nsCRT::memcpy(ic->background_color, background_color, sizeof(IL_IRGB));
         }
         else {
             ic->background_color = NULL;
@@ -551,7 +520,7 @@ il_get_container(IL_GroupContext *img_cx,
 
         ic->hash = hash;
         ic->urlhash = urlhash;
-        ic->url_address = PL_strdup(image_url);
+        ic->url_address = nsCRT::strdup(image_url);
 		ic->is_url_loading = PR_FALSE;
         ic->dest_width  = req_width;
         ic->dest_height = req_height;
@@ -573,15 +542,23 @@ il_get_container(IL_GroupContext *img_cx,
         /* callbacks for the  image decoders */
         ImgDCallbk* imgdcb = new ImgDCallbk(ic);
         if (!imgdcb) {
-          // XXX this leaks the ic and various parts
-          // XXX factor out cleanup logic
+
+          PR_FREEIF(ic->image);
+          IL_ReleaseColorSpace(ic->src_header->color_space);
+          IL_ReleaseColorSpace(ic->image->header.color_space);
+          PR_FREEIF(ic->src_header);
+          PR_FREEIF(ic);
           return NULL;
         }
         nsresult res = imgdcb->QueryInterface(kIImgDCallbkIID, (void**)&imgdcb);
         if (NS_FAILED(res)) {
           delete imgdcb; 
-          // XXX this leaks the ic!!!
-          // XXX factor out cleanup logic
+        
+          PR_FREEIF(ic->image);
+          IL_ReleaseColorSpace(ic->src_header->color_space);
+          IL_ReleaseColorSpace(ic->image->header.color_space);
+          PR_FREEIF(ic->src_header);
+          PR_FREEIF(ic);
           return NULL;
         }
         imgdcb->SetContainer(ic);
@@ -589,7 +566,7 @@ il_get_container(IL_GroupContext *img_cx,
     }
     
     il_addtocache(ic);
-    ic->is_in_use = TRUE;
+    ic->is_in_use = PR_TRUE;
     
     return ic;
 }
@@ -608,9 +585,9 @@ il_scour_container(il_container *ic)
         NS_RELEASE(ic->net_cx);
 	ic->net_cx     = NULL;
 
-	ic->forced                  = FALSE;
+	ic->forced                  = PR_FALSE;
 
-	ic->is_alone                = FALSE;
+	ic->is_alone                = PR_FALSE;
 }
 
 /*
@@ -646,7 +623,7 @@ il_delete_container(il_container *ic)
         PR_FREEIF(ic->src_header->transparent_pixel);
         IL_ReleaseColorSpace(ic->src_header->color_space);
         PR_FREEIF(ic->src_header);
-
+    
         /* delete the image */
         if (!(ic->image || ic->mask)) {
 #ifdef DEBUG_kipp
@@ -671,7 +648,7 @@ il_delete_container(il_container *ic)
         }
 
         FREE_IF_NOT_NULL(ic->comment);
-        FREE_IF_NOT_NULL(ic->url_address);
+        nsCRT::free(ic->url_address);
         FREE_IF_NOT_NULL(ic->fetch_url);
 		
         PR_FREEIF(ic);
@@ -696,179 +673,6 @@ il_destroy_pixmap(ilIImageRenderer *img_cb, IL_Pixmap *pixmap)
     PR_FREEIF(pixmap);
 }
 
-
-#if 0
-static char *
-il_visual_info(il_container *ic)
-{
-	char *msg = (char *)PR_Calloc(1, 50);
-    NI_PixmapHeader *img_header = &ic->image->header;
-
-    if (!msg)
-        return NULL;
-    
-    switch (img_header->color_space->type)
-        {
-        case NI_PseudoColor:
-            XP_SPRINTF(msg, XP_GetString(XP_MSG_XBIT_COLOR),
-                       img_header->color_space->pixmap_depth); /* #### i18n */
-            break;
-
-        case NI_GreyScale:
-            if (img_header->color_space->pixmap_depth == 1)
-               XP_SPRINTF(msg, XP_GetString(XP_MSG_1BIT_MONO)); /* #### i18n */
-            else
-               XP_SPRINTF(msg, XP_GetString(XP_MSG_XBIT_GREYSCALE),
-                          img_header->color_space->pixmap_depth);
-                                /* #### i18n */
-             break;
-
-        case NI_TrueColor:
-            XP_SPRINTF(msg, XP_GetString(XP_MSG_XBIT_RGB),
-                       img_header->color_space->pixmap_depth); /* #### i18n */
-            break;
-
-        default:
-            PR_ASSERT(0);
-            *msg=0;
-            break;
-		}
-
-    return msg;
-}
-
-/* Define some macros to help us output HTML */
-#define CELL_TOP 							\
-	StrAllocCat(output, 					\
-				"<TR><TD VALIGN=BASELINE ALIGN=RIGHT><B>");	
-#define CELL_TITLE(title)					\
-	StrAllocCat(output, title);
-#define CELL_MIDDLE							\
-	StrAllocCat(output, 					\
-				"</B></TD>"					\
-				"<TD>");
-#define CELL_BODY(body)						\
-	StrAllocCat(output, body);
-#define CELL_END							\
-	StrAllocCat(output, 					\
-				"</TD></TR>");
-#define ADD_CELL(c_title, c_body)			\
-	CELL_TOP;								\
-	CELL_TITLE(c_title);					\
-	CELL_MIDDLE;							\
-	CELL_BODY(c_body);						\
-	CELL_END;
-
-static char *
-il_HTML_image_info(il_container *ic, int long_form, int show_comment)
-{
-    char tmpbuf[512];           /* Temporary consing area */
-    char *output = NULL;
-    NI_PixmapHeader *src_header = ic->src_header; /* Source image header. */
-    NI_PixmapHeader *img_header = &ic->image->header; /* Destination image
-                                                         header. */
-    NI_IRGB *img_trans_pixel = img_header->transparent_pixel;
-
-    XP_SPRINTF(tmpbuf, "%lu", (long)img_header->widthBytes *
-               img_header->height + sizeof(il_container));
-    ADD_CELL(XP_GetString(XP_MSG_DECODED_SIZE), tmpbuf); /* #### i18n */
-
-    /* #### i18n */
-#ifdef XP_WIN16
-    XP_SPRINTF(tmpbuf, XP_GetString(XP_MSG_WIDTH_HEIGHT), (short)img_header->width,
-               (short)img_header->height);
-#else
-    XP_SPRINTF(tmpbuf, XP_GetString(XP_MSG_WIDTH_HEIGHT), img_header->width,
-               img_header->height);
-#endif
-    if ((img_header->width != src_header->width) ||
-        (img_header->height != src_header->height))
-    {
-        /* #### i18n */
-        XP_SPRINTF(tmpbuf + strlen(tmpbuf),  XP_GetString(XP_MSG_SCALED_FROM),
-                   src_header->width, src_header->height);
-    }
-    /* #### i18n */
-    ADD_CELL(XP_GetString(XP_MSG_IMAGE_DIM), tmpbuf);
-
-    if (long_form) {
-
-        char *visual_info = il_visual_info(ic);
-        if (visual_info) {
-            ADD_CELL(XP_GetString(XP_MSG_COLOR), visual_info);
-                                                             /* #### i18n */
-            PR_FREEIF(visual_info);
-        }
-        
-        if (img_header->color_space->cmap.map)
-            XP_SPRINTF(tmpbuf, XP_GetString(XP_MSG_NB_COLORS),
-                       img_header->color_space->cmap.num_colors);
-                                                             /* #### i18n */
-        else
-            XP_SPRINTF(tmpbuf, XP_GetString(XP_MSG_NONE));   /* #### i18n */
-        ADD_CELL(XP_GetString(XP_MSG_COLORMAP), tmpbuf);
-                
-        if (img_trans_pixel) {
-            if (ic->mask)
-                XP_SPRINTF(tmpbuf,
-                           /* #### i18n */
-                           XP_GetString(XP_MSG_BCKDRP_VISIBLE));
-            else
-                XP_SPRINTF(tmpbuf,
-                           /* #### i18n */
-                           XP_GetString(XP_MSG_SOLID_BKGND),
-                           img_trans_pixel->red,
-                           img_trans_pixel->green,
-                           img_trans_pixel->blue);
-        } else {
-            XP_SPRINTF(tmpbuf, XP_GetString(XP_MSG_JUST_NO));    /* #### i18n */
-        }
-        ADD_CELL(XP_GetString(XP_MSG_TRANSPARENCY), tmpbuf);    /* #### i18n */
-    }
-
-    if (show_comment && ic->comment) {
-        XP_SPRINTF(tmpbuf, "%.500s", ic->comment);
-        ADD_CELL(XP_GetString(XP_MSG_COMMENT), tmpbuf);    /* #### i18n */
-    }
-
-    return output;
-}
-
-IL_IMPLEMENT(char *)
-IL_HTMLImageInfo(char *url_address)
-{
-    il_container *ic;
-    char *output = NULL;
-    char *il_msg;
-    
-	for (ic=il_cache.head; ic; ic=ic->next)
-	{
-		if (!strcmp(ic->url_address, url_address))
-			break;
-	}
-
-    if ((ic == NULL) || (ic->state != IC_COMPLETE))
-        return NULL;
-
-    il_msg = il_HTML_image_info(ic, TRUE, TRUE);
-    if (il_msg == NULL)
-        return NULL;
-
-    StrAllocCat(output,
-                "<TABLE CELLSPACING=0 CELLPADDING=1 "
-                "BORDER=0 ALIGN=LEFT WIDTH=66%>");
-    StrAllocCat(output, il_msg);
-    StrAllocCat(output, "</TABLE> <A HREF=\"");
-    StrAllocCat(output, url_address);
-    StrAllocCat(output, "\"> <IMG WIDTH=90% ALIGN=CENTER SRC=\"");
-    StrAllocCat(output, url_address);
-    StrAllocCat(output, "\"></A>\n");
-
-    PR_FREEIF(il_msg);
-
-    return output;
-}
-#endif
 
 
 il_container *
@@ -1081,16 +885,16 @@ il_add_client(IL_GroupContext *img_cx, il_container *ic,
 
     /* Now add the client context to the container's client context list,
        (if necessary,) and also add the container to the context's list of
-       containers.  Note: a FALSE return value could mean that the context
+       containers.  Note: a PR_FALSE return value could mean that the context
        did not need to be added. */
     added_context = il_add_client_context(img_cx, ic);
     
-    /* Always return TRUE. */
+    /* Always return PR_TRUE. */
     return PR_TRUE;
 }
 
 /* Delete an IL_ImageReq from the list of clients for an image container.
-   Return TRUE if successful, FALSE otherwise. */
+   Return PR_TRUE if successful, PR_FALSE otherwise. */
 PRBool
 il_delete_client(il_container *ic, IL_ImageReq *image_req)
 {
@@ -1108,7 +912,7 @@ il_delete_client(il_container *ic, IL_ImageReq *image_req)
         current_req = current_req->next;
     }
 
-    /* If the image request wasn't found in the client list, return FALSE. */
+    /* If the image request wasn't found in the client list, return PR_FALSE. */
     if (!current_req)
         return PR_FALSE;
 
@@ -1195,7 +999,7 @@ IL_Init(ilISystemServices *ss)
     il_ss = ss;
 
     /* XXXM12N - finish me. */
-    return TRUE;
+    return PR_TRUE;
 }
 #endif
 
@@ -1310,7 +1114,7 @@ IL_DestroyImage(IL_ImageReq *image_req)
         }
     }
 
-    ic->is_in_use = FALSE;
+    ic->is_in_use = PR_FALSE;
 }
 
 
