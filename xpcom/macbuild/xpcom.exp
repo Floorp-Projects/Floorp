@@ -6,7 +6,7 @@ Parse__4nsIDFPc		# nsID::Parse(char*)
 #HashValue__5IDKeyCFv		# IDKey::HashValue() const
 #Equals__5IDKeyCFPC9nsHashKey		# IDKey::Equals(const nsHashKey*) const
 #Clone__5IDKeyCFv		# IDKey::Clone() const
-#FreeLibraries__12nsRepositoryFv		# nsRepository::FreeLibraries()
+FreeLibraries__12nsRepositoryFv		# nsRepository::FreeLibraries()
 UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
 UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
 RegisterFactory__12nsRepositoryFRC4nsIDPCcii		# nsRepository::RegisterFactory(const nsID&,const char*,int,int)
