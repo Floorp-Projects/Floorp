@@ -44,8 +44,9 @@ CPPSRCS =				\
 	nsFileStream.cpp \
 	nsStringStream.cpp \
 	nsEscape.cpp				\
-    nsIFileStream.cpp \
-    nsSpecialSystemDirectory.cpp \
+	nsIFileStream.cpp \
+	nsThread.cpp \
+	nsSpecialSystemDirectory.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -68,9 +69,10 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsFileSpec.obj \
 	.\$(OBJDIR)\nsFileStream.obj \
 	.\$(OBJDIR)\nsEscape.obj			\
-    .\$(OBJDIR)\nsIFileStream.obj       \
-    .\$(OBJDIR)\nsIStringStream.obj       \
-    .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
+	.\$(OBJDIR)\nsIFileStream.obj       \
+	.\$(OBJDIR)\nsThread.obj       \
+	.\$(OBJDIR)\nsIStringStream.obj       \
+	.\$(OBJDIR)\nsSpecialSystemDirectory.obj \
 	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
