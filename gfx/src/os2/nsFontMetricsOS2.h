@@ -179,6 +179,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsFontOS2*          FindFont( HPS aPS );
   nsFontOS2*          FindGlobalFont( HPS aPS );
   nsFontOS2*          FindGenericFont( HPS aPS );
+  nsFontOS2*          FindPrefFont( HPS aPS );
   nsFontOS2*          FindLocalFont( HPS aPS );
   nsFontOS2*          FindUserDefinedFont( HPS aPS );
   nsFontOS2*          LoadFont (HPS aPS, nsString* aName );
