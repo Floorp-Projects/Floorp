@@ -1586,94 +1586,86 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
                                                                 aStyleContext);
 
   if (pseudoStyleContext) {
-    const nsStyleDisplay* display;
-
-    // See whether the generated content should be displayed.
-    display = (const nsStyleDisplay*)pseudoStyleContext->GetStyleData(eStyleStruct_Display);
-
-    if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
-      // See if there was any content specified
-      const nsStyleContent* styleContent =
-        (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
-      PRUint32  contentCount = styleContent->ContentCount();
-
-      // XXXldb What is contentCount for |content: ""|?
-      if (contentCount > 0) {
-        if (aWrapperFrame) {
-          if (!*aWrapperFrame) {
-            const nsStyleDisplay *display;
-            ::GetStyleData(aStyleContext, &display);
-            nsIAtom *wrapperPseudo;
-            if (display->IsBlockLevel()) {
-              NS_NewBlockFrame(aPresShell, aWrapperFrame);
-              wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperBlock;
-            } else {
-              NS_NewInlineFrame(aPresShell, aWrapperFrame);
-              wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperInline;
-            }        
-            nsStyleContext* parentSC = aStyleContext->GetParent();
-            nsRefPtr<nsStyleContext> wrapperSC;
-            wrapperSC = aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                                   wrapperPseudo,
-                                                                   parentSC);
-            // |aFrame| is already the correct parent.
-            InitAndRestoreFrame(aPresContext, aState, aContent, aFrame,
-                                wrapperSC, nsnull, *aWrapperFrame);
-          }
-          // Use the wrapper as the parent.
-          aFrame = *aWrapperFrame;
-        }
-        // Create a block box or an inline box depending on the value of
-        // the 'display' property
-        nsIFrame*     containerFrame;
-        nsFrameItems  childFrames;
-
-        if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
-          NS_NewBlockFrame(aPresShell, &containerFrame);
+    // |ProbePseudoStyleContext| checks the 'display' property and the
+    // |ContentCount()| of the 'content' property for us.
+    if (aWrapperFrame) {
+      if (!*aWrapperFrame) {
+        const nsStyleDisplay *display;
+        ::GetStyleData(aStyleContext, &display);
+        nsIAtom *wrapperPseudo;
+        if (display->IsBlockLevel()) {
+          NS_NewBlockFrame(aPresShell, aWrapperFrame);
+          wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperBlock;
         } else {
-          NS_NewInlineFrame(aPresShell, &containerFrame);
+          NS_NewInlineFrame(aPresShell, aWrapperFrame);
+          wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperInline;
         }        
-        InitAndRestoreFrame(aPresContext, aState, aContent, 
-                            aFrame, pseudoStyleContext, nsnull, containerFrame);
-        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
-                                                 pseudoStyleContext, nsnull, PR_FALSE);
+        nsStyleContext* parentSC = aStyleContext->GetParent(); 
+        nsRefPtr<nsStyleContext> wrapperSC;
+        wrapperSC = aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                                               wrapperPseudo,
+                                                               parentSC);
+        // |aFrame| is already the correct parent.
+        InitAndRestoreFrame(aPresContext, aState, aContent, aFrame,
+                            wrapperSC, nsnull, *aWrapperFrame);
+      }
+      // Use the wrapper as the parent.
+      aFrame = *aWrapperFrame;
+    }
+    // Create a block box or an inline box depending on the value of
+    // the 'display' property
+    nsIFrame*     containerFrame;
+    nsFrameItems  childFrames;
 
-        // Mark the frame as being associated with generated content
-        nsFrameState  frameState;
-        containerFrame->GetFrameState(&frameState);
-        frameState |= NS_FRAME_GENERATED_CONTENT;
-        containerFrame->SetFrameState(frameState);
+    const nsStyleDisplay *display;
+    ::GetStyleData(pseudoStyleContext.get(), &display);
+    if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
+      NS_NewBlockFrame(aPresShell, &containerFrame);
+    } else {
+      NS_NewInlineFrame(aPresShell, &containerFrame);
+    }        
+    InitAndRestoreFrame(aPresContext, aState, aContent, 
+                        aFrame, pseudoStyleContext, nsnull, containerFrame);
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
+                                             pseudoStyleContext, nsnull, PR_FALSE);
 
-        // Create another pseudo style context to use for all the generated child
-        // frames
-        nsRefPtr<nsStyleContext> textStyleContext;
-        textStyleContext = aPresContext->ResolveStyleContextForNonElement(pseudoStyleContext);
+    // Mark the frame as being associated with generated content
+    nsFrameState  frameState;
+    containerFrame->GetFrameState(&frameState);
+    frameState |= NS_FRAME_GENERATED_CONTENT;
+    containerFrame->SetFrameState(frameState);
 
-        // Now create content objects (and child frames) for each value of the
-        // 'content' property
+    // Create another pseudo style context to use for all the generated child
+    // frames
+    nsRefPtr<nsStyleContext> textStyleContext;
+    textStyleContext = aPresContext->ResolveStyleContextForNonElement(pseudoStyleContext);
 
-        for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
-          nsIFrame* frame;
+    // Now create content objects (and child frames) for each value of the
+    // 'content' property
 
-          // Create a frame
-          nsresult result;
-          result = CreateGeneratedFrameFor(aPresContext, mDocument, containerFrame,
-                                           aContent, textStyleContext,
-                                           styleContent, contentIndex, &frame);
-          // Non-elements can't possibly have a view, so don't bother checking
-          if (NS_SUCCEEDED(result) && frame) {
-            // Add it to the list of child frames
-            childFrames.AddChild(frame);
-          }
-        }
-  
-        if (childFrames.childList) {
-          containerFrame->SetInitialChildList(aPresContext, nsnull, childFrames.childList);
-        }
-        *aResult = containerFrame;
-        return PR_TRUE;
+    const nsStyleContent *styleContent;
+    ::GetStyleData(pseudoStyleContext.get(), &styleContent);
+    PRUint32 contentCount = styleContent->ContentCount();
+    for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
+      nsIFrame* frame;
+
+      // Create a frame
+      nsresult result;
+      result = CreateGeneratedFrameFor(aPresContext, mDocument, containerFrame,
+                                       aContent, textStyleContext,
+                                       styleContent, contentIndex, &frame);
+      // Non-elements can't possibly have a view, so don't bother checking
+      if (NS_SUCCEEDED(result) && frame) {
+        // Add it to the list of child frames
+        childFrames.AddChild(frame);
       }
     }
+
+    if (childFrames.childList) {
+      containerFrame->SetInitialChildList(aPresContext, nsnull, childFrames.childList);
+    }
+    *aResult = containerFrame;
+    return PR_TRUE;
   }
 
   return PR_FALSE;

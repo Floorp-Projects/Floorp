@@ -50,6 +50,7 @@
 #include "nsIDocument.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSPseudoElements.h"
 #include "nsTimer.h"
 #include "nsICSSStyleSheet.h"
 #include "nsNetUtil.h"
@@ -1324,6 +1325,24 @@ StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
  
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
+    }
+  }
+
+  // For :before and :after pseudo-elements, having display: none or no
+  // 'content' property is equivalent to not having the pseudo-element
+  // at all.
+  if (result &&
+      (aPseudoTag == nsCSSPseudoElements::before ||
+       aPseudoTag == nsCSSPseudoElements::after)) {
+    const nsStyleDisplay *display;
+    const nsStyleContent *content;
+    ::GetStyleData(result, &display);
+    ::GetStyleData(result, &content);
+    // XXXldb What is contentCount for |content: ""|?
+    if (display->mDisplay == NS_STYLE_DISPLAY_NONE ||
+        content->ContentCount() == 0) {
+      result->Release();
+      result = nsnull;
     }
   }
   
