@@ -50,11 +50,11 @@ void nsDrawingSurfaceOS2::DisposeFonts()
    if( mHTFonts)
    {
       // free font things
-      GpiSetCharSet( mPS, LCID_DEFAULT);
+      GFX (::GpiSetCharSet (mPS, LCID_DEFAULT), FALSE);
+
       for( int i = 2; i <= mTopID; i++)
       {
-         if( !GpiDeleteSetId( mPS, i))
-            PMERROR( "GpiDeleteSetId");
+         GFX (::GpiDeleteSetId (mPS, i), FALSE);
       }
       delete mHTFonts;
       mHTFonts = 0;
@@ -78,7 +78,7 @@ void nsDrawingSurfaceOS2::SelectFont( nsIFontMetrics *metrics)
          // ids used up, need to empty table and start again.
          FlushFontCache();
 
-      GpiCreateLogFont( mPS, 0, mNextID, &pHandle->fattrs);
+      GFX (::GpiCreateLogFont (mPS, 0, mNextID, &pHandle->fattrs), GPI_ERROR);
       mHTFonts->Put( &key, (void *) mNextID);
       mNextID++;
       if( mTopID < 254)
@@ -125,17 +125,16 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
    nsresult rc = NS_ERROR_FAILURE;
 
    // Find the compatible device context and create a memory one
-   HDC hdcCompat = GpiQueryDevice( aCompatiblePS);
+   HDC hdcCompat = GFX (::GpiQueryDevice (aCompatiblePS), HDC_ERROR);
    DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-   mDC = DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5,
-                   (PDEVOPENDATA) &dop, hdcCompat);
+   mDC = ::DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
 
    if( DEV_ERROR != mDC)
    {
       // create the PS
       SIZEL sizel = { 0, 0 };
-      mPS = GpiCreatePS( 0/*hab*/, mDC, &sizel,
-                         PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+      mPS = GFX (::GpiCreatePS (0/*hab*/, mDC, &sizel,
+                 PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
 
       if( GPI_ERROR != mPS)
       {
@@ -149,27 +148,21 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
 
          // find bitdepth
          LONG lBitCount = 0;
-         DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount);
+         ::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount);
          hdr.cBitCount = (USHORT) lBitCount;
       
-         mBitmap = GpiCreateBitmap( mPS, &hdr, 0, 0, 0);
+         mBitmap = GFX (::GpiCreateBitmap (mPS, &hdr, 0, 0, 0), GPI_ERROR);
 
          if( GPI_ERROR != mBitmap)
          {
             // set final stats & select bitmap into ps
             mHeight = aHeight;
             mWidth = aWidth;
-            GpiSetBitmap( mPS, mBitmap);
+            GFX (::GpiSetBitmap (mPS, mBitmap), HBM_ERROR);
             rc = NS_OK;
          }
-         else
-            PMERROR( "GpiCreateBitmap");
       }
-      else
-         PMERROR( "GpiCreatePS");
    }
-   else
-      PMERROR( "DevOpenDC");
 
    return rc;
 }
@@ -179,18 +172,15 @@ nsOffscreenSurface::~nsOffscreenSurface()
    if( mPS)
    {
       DisposeFonts();
-      if( HBM_ERROR == GpiSetBitmap( mPS, 0))
-         PMERROR( "GpiSetBitmap");
-      if( !GpiDeleteBitmap( mBitmap))
-         PMERROR( "GpiDeleteBitmap");
+      GFX (::GpiSetBitmap (mPS, 0), HBM_ERROR);
+      GFX (::GpiDeleteBitmap (mBitmap), FALSE);
 //
 //    Don't need to do this because the PS is a micro-one.
 //
 //    if( !GpiAssociate( mPS, 0))
 //       PMERROR( "GpiAssociate");
 //
-      if( !GpiDestroyPS( mPS))
-         PMERROR( "GpiDestroyPS");
+      GFX (::GpiDestroyPS (mPS), FALSE);
       if( DEV_ERROR == DevCloseDC( mDC))
          PMERROR( "DevCloseDC");
       mPS = 0;
@@ -238,8 +228,7 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
    {
       BITMAPINFOHEADER bih = { sizeof( BITMAPINFOHEADER), 0, 0, 0, 0 };
    
-      rc = GpiQueryBitmapInfoHeader( mBitmap, (PBITMAPINFOHEADER2) &bih);
-      if( !rc) PMERROR( "GpiQueryInfoHeader");
+      rc = GFX (::GpiQueryBitmapInfoHeader (mBitmap, (PBITMAPINFOHEADER2) &bih), FALSE);
    
       // alloc space to query pel data into...
       lStride = RASWIDTH( bih.cx, bih.cBitCount);
@@ -271,8 +260,8 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
    mYPels = mInfoHeader->cy - aY - aHeight;
    mScans = aHeight;
 
-   rc = GpiQueryBitmapBits( mPS, mYPels, mScans, (PBYTE) mBits,
-                            (PBITMAPINFO2) mInfoHeader);
+   rc = GFX (::GpiQueryBitmapBits (mPS, mYPels, mScans, (PBYTE)mBits,
+                                   (PBITMAPINFO2)mInfoHeader), GPI_ALTERROR);
    if( rc != mInfoHeader->cy) PMERROR( "GpiQueryBitmapBits");
 
 #ifdef DEBUG
@@ -290,9 +279,8 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
 
 nsresult nsOffscreenSurface::Unlock()
 {
-   long rc = GpiSetBitmapBits( mPS, mYPels, mScans, (PBYTE) mBits,
-                               (PBITMAPINFO2) mInfoHeader);
-   if( rc == GPI_ALTERROR) PMERROR( "GpiSetBitmapBits");
+   GFX (::GpiSetBitmapBits (mPS, mYPels, mScans, (PBYTE)mBits,
+                            (PBITMAPINFO2)mInfoHeader), GPI_ALTERROR);
 
    return NS_OK;
 }
@@ -340,7 +328,8 @@ nsresult nsOffscreenSurface::GetPixelFormat( nsPixelFormat *aFormat)
    // (prob'ly need to get the FOURCC stuff into the act for 16bpp?)
    //
    BITMAPINFOHEADER bih = { sizeof( BITMAPINFOHEADER), 0, 0, 0, 0 };
-   long rc = GpiQueryBitmapInfoHeader( mBitmap, (PBITMAPINFOHEADER2) &bih);
+   long rc = GFX (::GpiQueryBitmapInfoHeader (mBitmap, 
+                                              (PBITMAPINFOHEADER2)&bih), FALSE);
 
    switch( bih.cBitCount)
    {
@@ -419,9 +408,8 @@ nsresult nsOnscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
    PRUint32 width, height;
    GetDimensions( &width, &height);
    POINTL pts[3] = { { 0, 0 }, { width, height }, { 0, 0 } };
-   long lHits = GpiBitBlt( mProxySurface->mPS, mPS, 3, pts,
-                           ROP_SRCCOPY, BBO_OR);
-   if( GPI_ERROR == lHits) PMERROR( "GpiBitBlt/DSL");
+   long lHits = GFX (::GpiBitBlt (mProxySurface->mPS, mPS, 3, pts,
+                                  ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return mProxySurface->Lock( aX, aY, aWidth, aHeight,
                                aBits, aStride, aWidthBytes, aFlags);
@@ -435,9 +423,8 @@ nsresult nsOnscreenSurface::Unlock()
    PRUint32 width, height;
    GetDimensions( &width, &height);
    POINTL pts[3] = { { 0, 0 }, { width, height }, { 0, 0 } };
-   long lHits = GpiBitBlt( mPS, mProxySurface->mPS, 3, pts,
-                           ROP_SRCCOPY, BBO_OR);
-   if( GPI_ERROR == lHits) PMERROR( "GpiBitBlt/DSUL");
+   long lHits = GFX (::GpiBitBlt (mPS, mProxySurface->mPS, 3, pts,
+                                  ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return rc;
 }

@@ -35,6 +35,8 @@
 
 #include "nsGfxDefs.h"
 
+#define RGB_PRINTING 1 // Makes most things work
+
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
 
@@ -99,15 +101,17 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
 {
   if(mPrintDC)
   {
-     GpiAssociate(mPrintPS, 0);
-     GpiDestroyPS(mPrintPS);
+     GFX (::GpiAssociate (mPrintPS, 0), FALSE);
+     GFX (::GpiDestroyPS (mPrintPS), FALSE);
      PrnCloseDC(mPrintDC);
   }
 
+#ifndef RGB_PRINTING
   if (!mPaletteInfo.isPaletteDevice) {
      free(mPaletteInfo.palette);
      mPaletteInfo.palette = nsnull;
   }
+#endif
 
   NS_IF_RELEASE(mSpec);
 }
@@ -130,6 +134,8 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
   mPrintDC = (HDC)aContext;
 
+  NS_ASSERTION( mPrintDC, "!ERROR! - Received empty DC for printer");
+
 #ifdef XP_OS2
   // Create a print PS now.  This is necessary 'cos we need it from
   // odd places to do font-y things, where the only common reference
@@ -137,8 +143,8 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   // PS can be associated with a given DC, and we can't get that PS from
   // the DC (really?).  And it would be slow :-)
   SIZEL sizel = { 0 , 0 };
-  mPrintPS = GpiCreatePS( 0/*hab*/, mPrintDC, &sizel,
-                          PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+  mPrintPS = GFX (::GpiCreatePS ( 0/*hab*/, mPrintDC, &sizel, 
+                  PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
 #endif
 
   CommonInit( mPrintDC);
@@ -176,11 +182,11 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
 {
   LONG alArray[CAPS_DEVICE_POLYSET_POINTS];
 
-  DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray);
+  ::DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray);
 
 // This change breaks opening and closing of sidebar
 //  mTwipsToPixels = (float)alArray [CAPS_VERTICAL_RESOLUTION] / (float)NS_METERS_TO_TWIPS (1);
-  mTwipsToPixels = ((float)alArray[CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
+  mTwipsToPixels = ((float)alArray [CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
@@ -343,7 +349,7 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetScrollBarDimensions(float &aWidth, float 
 
 nscolor GetSysColorInfo(int iSysColor) 
 {
-  long lColor = WinQuerySysColor( HWND_DESKTOP, iSysColor, 0);
+  long lColor = ::WinQuerySysColor( HWND_DESKTOP, iSysColor, 0);
   RGB2 *pRGB2 = (RGB2*) &lColor;
   return NS_RGB( pRGB2->bRed, pRGB2->bGreen, pRGB2->bBlue);
 }
@@ -613,7 +619,7 @@ nsresult nsDeviceContextOS2::GetDrawingSurface( nsIRenderingContext &aContext, n
 
 NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName)
 {
-  HPS   hps = NULL;
+  HPS     hps = NULL;
   PRBool  isthere = PR_FALSE;
 
   if (NULL != mPrintDC){
@@ -628,8 +634,8 @@ NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName
     fontName, sizeof(fontName));
 
   long lWant = 0;
-  long lFonts = GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE,
-                               fontName, &lWant, 0, 0);
+  long lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
+                     fontName, &lWant, 0, 0), GPI_ALTERROR);
 
   if (NULL == mPrintDC)
     ::WinReleasePS(hps);
@@ -650,7 +656,11 @@ NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   if (nsnull == mColorSpace) {
     // See if we're dealing with an 8-bit palette device
+#ifndef RGB_PRINTING
     if (8 == mDepth) {
+#else
+    if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
+#endif
       // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
       // than DIB_RGB_COLORS, so make sure the indexes match that of the
       // GDI physical palette
@@ -745,9 +755,13 @@ NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 
     if (NI_PseudoColor == colorSpace->type) {
       // Create a logical palette
-      PULONG aulTable;
       ULONG ulCount = COLOR_CUBE_SIZE+NUM_SYS_COLORS;
+#ifndef RGB_PRINTING
+      PULONG aulTable;
       aulTable = (PULONG)malloc(ulCount*sizeof(ULONG));
+#else
+      ULONG aulTable[COLOR_CUBE_SIZE+NUM_SYS_COLORS];
+#endif
 
       PRInt32 i, j;
       // First ten system colors
@@ -773,11 +787,15 @@ NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   
       if (mPaletteInfo.isPaletteDevice) {
         // Create a GPI palette
-        mPaletteInfo.palette = (void*)::GpiCreatePalette( (HAB)0, NULL, LCOLF_CONSECRGB, ulCount, aulTable );
+        mPaletteInfo.palette = (void*)GFX (::GpiCreatePalette ((HAB)0, NULL,
+                                           LCOLF_CONSECRGB, ulCount, aulTable),
+                                           GPI_ERROR);
+#ifndef RGB_PRINTING
         free(aulTable);
       } else {
         mPaletteInfo.palette = (void*)aulTable;
         mPaletteInfo.sizePalette = ulCount;
+#endif
       }
     }
 

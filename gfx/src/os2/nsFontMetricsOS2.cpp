@@ -35,6 +35,10 @@
 #include "plhash.h"
 #include "prprf.h"
 
+#ifdef MOZ_MATHML
+  #include <math.h>
+#endif
+
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
@@ -135,10 +139,8 @@ nsFontHandleOS2::nsFontHandleOS2()
 
 void nsFontHandleOS2::SelectIntoPS( HPS hps, long lcid)
 {
-   if( !GpiSetCharBox( hps, &charbox))
-      PMERROR("GpiSetCharBox");
-   if( !GpiSetCharSet( hps, lcid))
-      PMERROR("GpiSetCharSet");
+   GFX (::GpiSetCharBox (hps, &charbox), FALSE);
+   GFX (::GpiSetCharSet (hps, lcid), FALSE);
 }
 
 static void
@@ -176,7 +178,7 @@ InitGlobals(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  ULONG numCP = WinQueryCpList((HAB)0, 0, NULL);
+  ULONG numCP = ::WinQueryCpList((HAB)0, 0, NULL);
   if (numCP > 0) {
      ULONG * pCPList = (ULONG*)malloc(numCP*sizeof(ULONG));
      if (WinQueryCpList( (HAB)0, numCP, pCPList)) {
@@ -190,6 +192,8 @@ InitGlobals(void)
      free(pCPList);
   }
 
+  ulSystemCodePage = WinQueryCp(HMQ_CURRENT);
+
   gInitialized = 1;
 
   return NS_OK;
@@ -202,9 +206,6 @@ nsFontMetricsOS2::nsFontMetricsOS2()
   ++gFontMetricsOS2Count;
   // members are zeroed by new operator (hmm) - yeah right
   mTriedAllGenerics = 0;
-  if (ulSystemCodePage == 0) {
-     ulSystemCodePage = WinQueryCp(HMQ_CURRENT);
-  } /* endif */
 }
   
 nsFontMetricsOS2::~nsFontMetricsOS2()
@@ -264,8 +265,9 @@ nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName)
   WideCharToMultiByte(0, aName->GetUnicode(), aName->Length() + 1,
     fontName, sizeof(fontName));
   long lWant = 0;
-  long lFonts = GpiQueryFonts( aPS, QF_PUBLIC | QF_PRIVATE,
-                               fontName, &lWant, 0, 0);
+  long lFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC | QF_PRIVATE,
+                                      fontName, &lWant, 0, 0),
+                     GPI_ALTERROR);
   if (lFonts > 0) {
     font = new nsFontOS2();
     strcpy(font->mName, fontName);
@@ -309,6 +311,7 @@ static nsFontFamilyName gFamilyNameTable[] =
   { "arial",           "Arial" },
   { "courier",         "Courier" },
   { "courier new",     "Courier New" },
+  { "warpsans",        "WarpSans" },
 
   { nsnull, nsnull }
 };
@@ -326,6 +329,7 @@ static nsFontFamilyName gFamilyNameTableDBCS[] =
   { "courier",         "Courier" },
   { "courier new",     "Courier New" },
   { "warpsans",        "WarpSans Combined" },
+
   { nsnull, nsnull }
 };
 
@@ -530,8 +534,6 @@ nsFontMetricsOS2::FindFont(HPS aPS, PRUnichar aChar)
   return font;
 }
 
-
-
 static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
@@ -575,12 +577,14 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 static PFONTMETRICS getMetrics( long &lFonts, PCSZ facename, HPS hps)
 {
    LONG lWant = 0;
-   lFonts = GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE,
-                           facename, &lWant, 0, 0);
+   lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
+                                  facename, &lWant, 0, 0),
+                 GPI_ALTERROR);
    PFONTMETRICS pMetrics = new FONTMETRICS [ lFonts];
 
-   GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE, facename, &lFonts,
-                  sizeof( FONTMETRICS), pMetrics);
+   GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE, facename,
+                         &lFonts, sizeof (FONTMETRICS), pMetrics),
+        GPI_ALTERROR);
 
    return pMetrics;
 }
@@ -693,6 +697,7 @@ HDC   ps = NULL;
    
    ULONG rc = GpiQueryFaceString( ps, szFamily, &fnd,
                                   FACESIZE, fh->fattrs.szFacename);
+
    if( rc == GPI_ERROR)
    {  // no real font, fake it
       strcpy( fh->fattrs.szFacename, szFamily);
@@ -754,9 +759,10 @@ HDC   ps = NULL;
    //    required, substituting an outline if necessary.
    if( bImage)
    {
-      HDC    hdc = GpiQueryDevice( ps);
+      HDC    hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
+
       long   res[ 2];
-      DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res);
+      ::DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res);
       pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, ps);
 
       
@@ -791,12 +797,11 @@ HDC   ps = NULL;
 
    // 9) Record font handle & record various font metrics to cache
    mFontHandle = fh;
-   if( GPI_ERROR == GpiCreateLogFont( ps, 0, 1, &fh->fattrs))
-      PMERROR( "GpiCreateLogFont");
+   GFX (::GpiCreateLogFont (ps, 0, 1, &fh->fattrs), GPI_ERROR);
    fh->SelectIntoPS( ps, 1);
 
    FONTMETRICS fm;
-   GpiQueryFontMetrics( ps, sizeof fm, &fm);
+   GFX (::GpiQueryFontMetrics (ps, sizeof (fm), &fm), FALSE);
 
    float dev2app;
    mDeviceContext->GetDevUnitsToAppUnits( dev2app);
@@ -832,27 +837,41 @@ HDC   ps = NULL;
 
    mAveCharWidth       = NSToCoordRound( fm.lAveCharWidth * dev2app);
 
+#ifdef MOZ_MATHML
+   PRInt32 Degrees     = fm.sCharSlope >> 7;    // 9 bits (-180 .. 180)
+   PRInt32 Minutes     = fm.sCharSlope & 0x7F;  // 7 bits (0 .. 59)
+   float   Angle       = (float)Degrees + ((float)Minutes / 60.0f);
+   mItalicSlope        = tanf (Angle * 3.141592 / 180.0);
+#endif
+
    // Cache the width of a single space.
   SIZEL  size;
   ::GetTextExtentPoint32(ps, " ", 1, &size);
   mSpaceWidth = NSToCoordRound(float(size.cx) * dev2app);
 
    // 10) Clean up
-   GpiSetCharSet( ps, LCID_DEFAULT);
-   if( !GpiDeleteSetId( ps, 1))
-      PMERROR( "GpiDeleteSetID (FM)");
+   GFX (::GpiSetCharSet (ps, LCID_DEFAULT), FALSE);
+   GFX (::GpiDeleteSetId (ps, 1), FALSE);
    if (NULL == mDeviceContext->mPrintDC)
-      WinReleasePS(ps);
+      ::WinReleasePS(ps);
 
    return NS_OK;
 }
 
-nsresult nsFontMetricsOS2 :: GetSpaceWidth(nscoord &aSpaceWidth)
+nsresult nsFontMetricsOS2::GetSpaceWidth(nscoord &aSpaceWidth)
 {
   aSpaceWidth = mSpaceWidth;
 }
 
 // Other metrics
+#ifdef MOZ_MATHML
+NS_IMETHODIMP nsFontMetricsOS2::GetItalicSlope(float& aResult)
+{
+  aResult = mItalicSlope;
+  return NS_OK;
+}
+#endif
+
 NS_IMETHODIMP nsFontMetricsOS2::GetXHeight( nscoord &aResult)
 {
    aResult = mXHeight;
@@ -987,9 +1006,12 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
   static int gInitializedGlobalFonts = 0;
   if (!gInitializedGlobalFonts) {
     LONG lRemFonts = 0, lNumFonts;
-    lNumFonts = GpiQueryFonts(aPS, QF_PUBLIC, NULL, &lRemFonts, 0, 0);
+    lNumFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC, NULL, &lRemFonts, 0, 0),
+                     GPI_ALTERROR);
     PFONTMETRICS pFontMetrics = (PFONTMETRICS) nsMemory::Alloc(lNumFonts * sizeof(FONTMETRICS));
-    lRemFonts = GpiQueryFonts(aPS, QF_PUBLIC, NULL, &lNumFonts, sizeof(FONTMETRICS), pFontMetrics);
+    lRemFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC, NULL, &lNumFonts,
+                                      sizeof (FONTMETRICS), pFontMetrics),
+                     GPI_ALTERROR);
     for (int i=0; i < lNumFonts; i++) {
       BOOL fAlreadyFound = FALSE;
       for (int j = 0; j < gGlobalFontsCount && !fAlreadyFound; j++) {
@@ -1050,7 +1072,7 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
       gGlobalFontsCount++;
 
       PRUnichar name[FACESIZE];
-      name[0] = 0;
+      name[0] = L'\0';
       MultiByteToWideChar(0, pFontMetrics[i].szFacename,
          strlen(pFontMetrics[i].szFacename) + 1, name, sizeof(name)/sizeof(name[0]));
       font->name = new nsString(name);
@@ -1058,6 +1080,7 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
         gGlobalFontsCount--;
         continue;
       }
+
       font->map = nsnull;
       font->fontMetrics = pFontMetrics[i];
       font->skip = 0;

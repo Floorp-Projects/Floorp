@@ -58,8 +58,9 @@ nsRegionOS2::nsRegionOS2()
 nsRegionOS2::~nsRegionOS2()
 {
    if( mRegion)
-      if( !GpiDestroyRegion( nsRgnPS, mRegion))
-         PMERROR( "GpiDestroyRegion (nsR)");
+   {
+      GFX (::GpiDestroyRegion (nsRgnPS, mRegion), FALSE);
+   }
 }
 
 NS_IMPL_ISUPPORTS(nsRegionOS2, NS_GET_IID(nsIRegion))
@@ -67,9 +68,7 @@ NS_IMPL_ISUPPORTS(nsRegionOS2, NS_GET_IID(nsIRegion))
 // Create empty region
 nsresult nsRegionOS2::Init()
 {
-   mRegion = GpiCreateRegion( nsRgnPS, 0, 0);
-   if( mRegion == RGN_ERROR)
-      PMERROR("GpiCreateRegion");
+   mRegion = GFX (::GpiCreateRegion (nsRgnPS, 0, 0), RGN_ERROR);
    mRegionType = RGN_NULL;
    return NS_OK;
 }
@@ -79,8 +78,8 @@ void nsRegionOS2::SetTo( const nsIRegion &aRegion)
 {
    nsRegionOS2 *pRegion = (nsRegionOS2 *) &aRegion;
 
-   mRegionType = GpiCombineRegion( nsRgnPS, mRegion, pRegion->mRegion,
-                                   0, CRGN_COPY);
+   mRegionType = GFX (::GpiCombineRegion (nsRgnPS, mRegion, pRegion->mRegion,
+                                          0, CRGN_COPY), RGN_ERROR);
 }
 
 void nsRegionOS2::SetTo( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
@@ -90,7 +89,7 @@ void nsRegionOS2::SetTo( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
 
    RECTL rcl = { aX, aY, aX + aWidth, aY + aHeight }; // in-ex
 
-   GpiSetRegion( nsRgnPS, mRegion, 1, &rcl);
+   GFX (::GpiSetRegion (nsRgnPS, mRegion, 1, &rcl), FALSE);
 
    mRegionType = (aWidth && aHeight) ? RGN_RECT : RGN_NULL;
 }
@@ -99,26 +98,20 @@ void nsRegionOS2::SetTo( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
 void nsRegionOS2::combine( long lOp, PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH)
 {
    RECTL rcl = { aX, aY, aX + aW, aY + aH }; // in-ex
-   HRGN rgn = GpiCreateRegion( nsRgnPS, 1, &rcl);
-   if( rgn == RGN_ERROR)
+   HRGN rgn = GFX (::GpiCreateRegion (nsRgnPS, 1, &rcl), RGN_ERROR);
+   if (rgn == RGN_ERROR)
    {
-      PMERROR( "GpiCreateRegion #2 ");
       printf( "X Y W H is %d %d %d %d\n", aX, aY, aW, aH);
    }
-   mRegionType = GpiCombineRegion( nsRgnPS, mRegion, mRegion, rgn, lOp);
-   if( mRegionType == RGN_ERROR)
-      PMERROR( "GpiCombineRegion #2 ");
-   if( !GpiDestroyRegion( nsRgnPS, rgn))
-      PMERROR( "GpiDestroyRegion (nsR::c)");
+   mRegionType = GFX (::GpiCombineRegion (nsRgnPS, mRegion, mRegion, rgn, lOp), RGN_ERROR);
+   GFX (::GpiDestroyRegion (nsRgnPS, rgn), FALSE);
 }
 
 void nsRegionOS2::combine( long lOp, const nsIRegion &aRegion)
 {
    nsRegionOS2 *pRegion = (nsRegionOS2 *)&aRegion;
-   mRegionType = GpiCombineRegion( nsRgnPS, mRegion, mRegion,
-                                   pRegion->mRegion, lOp);
-   if( mRegionType == RGN_ERROR)
-      PMERROR( "GpiCombineRegion");
+   mRegionType = GFX (::GpiCombineRegion (nsRgnPS, mRegion, mRegion,
+                                          pRegion->mRegion, lOp), RGN_ERROR);
 }
 
 #define DECL_COMBINE(name,token)                         \
@@ -143,7 +136,7 @@ PRBool nsRegionOS2::IsEqual( const nsIRegion &aRegion)
 {
   nsRegionOS2 *pRegion = (nsRegionOS2 *)&aRegion;
 
-  long lrc = GpiEqualRegion( nsRgnPS, mRegion, pRegion->mRegion);
+  long lrc = GFX (::GpiEqualRegion (nsRgnPS, mRegion, pRegion->mRegion), EQRGN_ERROR);
 
   return lrc == EQRGN_EQUAL ? PR_TRUE : PR_FALSE;
 }
@@ -153,8 +146,7 @@ void nsRegionOS2::GetBoundingBox( PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRI
    if( mRegionType != RGN_NULL)
    {
       RECTL rcl;
-      if( RGN_ERROR == GpiQueryRegionBox( nsRgnPS, mRegion, &rcl))
-         PMERROR( "GpiQueryRegionBox");
+      GFX (::GpiQueryRegionBox (nsRgnPS, mRegion, &rcl), RGN_ERROR);
  
       *aX = rcl.xLeft;
       *aY = rcl.yBottom;
@@ -169,14 +161,14 @@ void nsRegionOS2::GetBoundingBox( PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRI
 void nsRegionOS2::Offset( PRInt32 aXOffset, PRInt32 aYOffset)
 {
    POINTL ptl = { aXOffset, aYOffset };
-   GpiOffsetRegion( nsRgnPS, mRegion, &ptl);
+   GFX (::GpiOffsetRegion (nsRgnPS, mRegion, &ptl), FALSE);
 }
 
 // hittest - precise spec, rect must be completely contained.
 PRBool nsRegionOS2::ContainsRect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
    RECTL rcl = { aX, aY, aX + aWidth, aY + aHeight }; // in-ex
-   long lRC = GpiRectInRegion( nsRgnPS, mRegion, &rcl);
+   long lRC = GFX (::GpiRectInRegion (nsRgnPS, mRegion, &rcl), RRGN_ERROR);
    return lRC == RRGN_INSIDE ? PR_TRUE : PR_FALSE;
 }
 
@@ -253,7 +245,7 @@ static void RealQueryRects( HRGN              hrgn,
    for( ;;)
    {
       // get a batch of rectangles
-      GpiQueryRegionRects( hps, hrgn, 0, &rgnRect, rects);
+      GFX (::GpiQueryRegionRects (hps, hrgn, 0, &rgnRect, rects), FALSE);
       // call them out
       for( PRUint32 i = 0; i < rgnRect.crcReturned; i++)
       {
@@ -305,7 +297,7 @@ HRGN nsRegionOS2::GetHRGN( PRUint32 ulHeight, HPS hps)
 
    GetRects_Native( mRegion, nsRgnPS, &getRects);
 
-   return GpiCreateRegion( hps, getRects.ulUsed, getRects.pRects);
+   return GFX (::GpiCreateRegion (hps, getRects.ulUsed, getRects.pRects), RGN_ERROR);
 }
 
 // For copying from an existing region who has height & possibly diff. hdc
@@ -317,8 +309,8 @@ nsresult nsRegionOS2::Init( HRGN copy, PRUint32 ulHeight, HPS hps)
 
    Init();
 
-   mRegionType = GpiSetRegion( nsRgnPS, mRegion,
-                               getRects.ulUsed, getRects.pRects);
+   mRegionType = GFX (::GpiSetRegion (nsRgnPS, mRegion, getRects.ulUsed,
+                                      getRects.pRects), FALSE);
    return NS_OK;
 }
 

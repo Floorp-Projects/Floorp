@@ -132,6 +132,9 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD Destroy();
 
    // Metrics
+#ifdef MOZ_MATHML
+  NS_IMETHOD  GetItalicSlope(float& aResult);
+#endif
    NS_IMETHOD  GetXHeight( nscoord &aResult);
    NS_IMETHOD  GetSuperscriptOffset( nscoord &aResult);
    NS_IMETHOD  GetSubscriptOffset( nscoord &aResult);
