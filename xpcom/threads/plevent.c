@@ -4,19 +4,19 @@
  * Version 1.1 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- * 
+ *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
-#if defined(_WIN32) 
+#if defined(_WIN32)
 #include <windows.h>
 #endif
 
@@ -65,8 +65,8 @@
 
 #if defined(VMS)
 /*
-** On OpenVMS, XtAppAddInput doesn't want a regular fd, instead it 
-** wants an event flag. So, we don't create and use a pipe for 
+** On OpenVMS, XtAppAddInput doesn't want a regular fd, instead it
+** wants an event flag. So, we don't create and use a pipe for
 ** notification of when an event queue has something ready, instead
 ** we use an event flag. Shouldn't be a problem if we only have
 ** a few event queues.
@@ -77,23 +77,23 @@
 #endif /* VMS */
 
 #if defined(_WIN32)
-/* Comment out the following USE_TIMER define to prevent 
- * WIN32 from using a WIN32 native timer for PLEvent notification. 
- * With USE_TIMER defined we will use a timer when pending input 
- * or paint events are starved, otherwise it will use a posted 
- * WM_APP msg for PLEvent notification. 
+/* Comment out the following USE_TIMER define to prevent
+ * WIN32 from using a WIN32 native timer for PLEvent notification.
+ * With USE_TIMER defined we will use a timer when pending input
+ * or paint events are starved, otherwise it will use a posted
+ * WM_APP msg for PLEvent notification.
  */
 #define USE_TIMER
 
-/* Threshold defined in milliseconds for determining when the input 
+/* Threshold defined in milliseconds for determining when the input
  * and paint events have been held in the WIN32 msg queue too long
  */
 #define INPUT_STARVATION_LIMIT    50
-/* The paint starvation limit is set to the smallest value which 
+/* The paint starvation limit is set to the smallest value which
  * does not cause performance degradation while running page load tests
  */
 #define PAINT_STARVATION_LIMIT   750
-/* The WIN9X paint starvation limit is larger because it was 
+/* The WIN9X paint starvation limit is larger because it was
  * determined that the following value was required to prevent performance
  * degradation on page load tests for WIN98/95 only.
  */
@@ -116,42 +116,41 @@ static PRLogModuleInfo *event_lm = NULL;
 ** EventQueueType -- Defines notification type for an event queue
 **
 */
-typedef enum 
-{
+typedef enum {
     EventQueueIsNative = 1,
     EventQueueIsMonitored = 2
 } EventQueueType;
 
 
 struct PLEventQueue {
-    const char*  name;
-    PRCList      queue;
-    PRMonitor*   monitor;
-    PRThread*    handlerThread;
-    EventQueueType type;
-    PRPackedBool   processingEvents;
-    PRPackedBool   notified;
+    const char*         name;
+    PRCList             queue;
+    PRMonitor*          monitor;
+    PRThread*           handlerThread;
+    EventQueueType      type;
+    PRPackedBool        processingEvents;
+    PRPackedBool        notified;
 #if defined(_WIN32) 
-    PRPackedBool   timerSet;
+    PRPackedBool        timerSet;
 #endif
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 #if defined(VMS)
-    int		 efn;
+    int                 efn;
 #else
-    PRInt32      eventPipe[2];
+    PRInt32             eventPipe[2];
 #endif
-    PLGetEventIDFunc idFunc;
-    void            *idFuncClosure;
+    PLGetEventIDFunc    idFunc;
+    void*               idFuncClosure;
 #elif defined(_WIN32) || defined(XP_OS2)
-    HWND         eventReceiverWindow;
-    PRBool       removeMsg;
+    HWND                eventReceiverWindow;
+    PRBool              removeMsg;
 #elif defined(XP_BEOS)
-    port_id      eventport;
+    port_id             eventport;
 #elif defined(XP_MAC) || defined(XP_MACOSX)
 #if defined(MAC_USE_CARBON_EVENT)
-    EventHandlerUPP eventHandlerUPP;
-    EventHandlerRef eventHandlerRef;
+    EventHandlerUPP     eventHandlerUPP;
+    EventHandlerRef     eventHandlerRef;
 #elif defined(MAC_USE_WAKEUPPROCESS)
     ProcessSerialNumber psn;
 #endif
@@ -181,20 +180,20 @@ static char *_pr_eventWindowClass = "XPCOM:EventWindow";
 #if defined(_WIN32)
 
 static LPCTSTR _md_GetEventQueuePropName() {
-  static ATOM atom = 0;
-  if (!atom) {
-    atom = GlobalAddAtom("XPCOM_EventQueue");
-  }
-  return MAKEINTATOM(atom);
+    static ATOM atom = 0;
+    if (!atom) {
+        atom = GlobalAddAtom("XPCOM_EventQueue");
+    }
+    return MAKEINTATOM(atom);
 }
 #endif
 
 #if defined(MAC_USE_CARBON_EVENT)
 enum {
   kEventClassPL         = FOUR_CHAR_CODE('PLEC'),
-  
+
   kEventProcessPLEvents = 1,
-  
+
   kEventParamPLEventQueue = FOUR_CHAR_CODE('OWNQ')
 };
 
@@ -232,7 +231,7 @@ static PLEventQueue * _pl_CreateEventQueue(const char *name,
     self->handlerThread = handlerThread;
     self->processingEvents = PR_FALSE;
     self->type = qtype;
-#if defined(_WIN32) 
+#if defined(_WIN32)
     self->timerSet = PR_FALSE;
 #endif
 #if defined(_WIN32) || defined(XP_OS2)
@@ -257,7 +256,7 @@ static PLEventQueue * _pl_CreateEventQueue(const char *name,
         PR_DestroyMonitor(mon);
     PR_DELETE(self);
     return NULL;
-} 
+}
 
 PR_IMPLEMENT(PLEventQueue*)
 PL_CreateEventQueue(const char* name, PRThread* handlerThread)
@@ -269,13 +268,13 @@ PR_EXTERN(PLEventQueue *)
 PL_CreateNativeEventQueue(const char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
-} 
+}
 
 PR_EXTERN(PLEventQueue *) 
 PL_CreateMonitoredEventQueue(const char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsMonitored ));
-} 
+}
 
 PR_IMPLEMENT(PRMonitor*)
 PL_GetEventQueueMonitor(PLEventQueue* self)
@@ -325,30 +324,28 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     if (self->idFunc && event)
-      event->id = self->idFunc(self->idFuncClosure);
+        event->id = self->idFunc(self->idFuncClosure);
 #endif
 
     /* insert event into thread's event queue: */
     if (event != NULL) {
-      PR_APPEND_LINK(&event->link, &self->queue);
+        PR_APPEND_LINK(&event->link, &self->queue);
     }
 
-    if ( self->type == EventQueueIsNative && !self->notified )
-    {
-      err = _pl_NativeNotify(self);
-           
-      if (err != PR_SUCCESS)
-        goto error;
-      
-      self->notified = PR_TRUE; 
+    if (self->type == EventQueueIsNative && !self->notified) {
+        err = _pl_NativeNotify(self);
+
+        if (err != PR_SUCCESS)
+            goto error;
+
+        self->notified = PR_TRUE;
     }
 
-      /*
-       * This may fall on deaf ears if we're really notifying the native 
-       * thread, and no one has called PL_WaitForEvent (or PL_EventLoop):
-       */
-      err = PR_Notify(mon);
-      
+    /*
+     * This may fall on deaf ears if we're really notifying the native
+     * thread, and no one has called PL_WaitForEvent (or PL_EventLoop):
+     */
+    err = PR_Notify(mon);
 
 error:
     PR_ExitMonitor(mon);
@@ -361,44 +358,46 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
     void* result;
 
     if (self == NULL)
-    return NULL;
+        return NULL;
 
     PR_ASSERT(event != NULL);
     PR_Lock(event->lock);
 
     if (PR_GetCurrentThread() == self->handlerThread) {
-      /* Handle the case where the thread requesting the event handling
-       is also the thread that's supposed to do the handling. */
-      result = event->handler(event);
+        /* Handle the case where the thread requesting the event handling
+           is also the thread that's supposed to do the handling. */
+        result = event->handler(event);
     }
     else {
-      int i, entryCount = PR_GetMonitorEntryCount(self->monitor);
+        int i, entryCount = PR_GetMonitorEntryCount(self->monitor);
 
-      event->synchronousResult = (void*)PR_TRUE;
+        event->synchronousResult = (void*)PR_TRUE;
 
-      PL_PostEvent(self, event);
+        PL_PostEvent(self, event);
 
-      /* We need to temporarily give up our event queue monitor if
-         we're holding it, otherwise, the thread we're going to wait
-         for notification from won't be able to enter it to process
-         the event. */
-      if (entryCount) {
-	    for (i = 0; i < entryCount; i++)
-          PR_ExitMonitor(self->monitor);
-      }
-	
-      event->handled = PR_FALSE;
+        /* We need temporarily to give up our event queue monitor if
+           we're holding it, otherwise, the thread we're going to wait
+           for notification from won't be able to enter it to process
+           the event. */
+        if (entryCount) {
+            for (i = 0; i < entryCount; i++)
+                PR_ExitMonitor(self->monitor);
+        }
 
-      while (!event->handled)
-        PR_WaitCondVar(event->condVar, PR_INTERVAL_NO_TIMEOUT);	/* wait for event to be handled or destroyed */
-	
-      if (entryCount) {
-        for (i = 0; i < entryCount; i++)
-          PR_EnterMonitor(self->monitor);
-      }
-      
-      result = event->synchronousResult;
-      event->synchronousResult = NULL;
+        event->handled = PR_FALSE;
+
+        while (!event->handled) {
+            /* wait for event to be handled or destroyed */
+            PR_WaitCondVar(event->condVar, PR_INTERVAL_NO_TIMEOUT);
+        }
+
+        if (entryCount) {
+            for (i = 0; i < entryCount; i++)
+                PR_EnterMonitor(self->monitor);
+        }
+
+        result = event->synchronousResult;
+        event->synchronousResult = NULL;
     }
 
     PR_Unlock(event->lock);
@@ -417,25 +416,25 @@ PL_GetEvent(PLEventQueue* self)
     PRStatus err = PR_SUCCESS;
 
     if (self == NULL)
-      return NULL;
+        return NULL;
 
     PR_EnterMonitor(self->monitor);
 
-    if (!PR_CLIST_IS_EMPTY(&self->queue)) 
-    {      
-      if ( self->type == EventQueueIsNative && 
-           self->notified                   && 
-           !self->processingEvents          &&
-           0 == _pl_GetEventCount(self)     )
-      {
-        err = _pl_AcknowledgeNativeNotify(self);
-        self->notified = PR_FALSE; 
-      }
-      if (err) goto done;
+    if (!PR_CLIST_IS_EMPTY(&self->queue)) {
+        if ( self->type == EventQueueIsNative &&
+             self->notified                   &&
+             !self->processingEvents          &&
+             0 == _pl_GetEventCount(self)     )
+        {
+            err = _pl_AcknowledgeNativeNotify(self);
+            self->notified = PR_FALSE;
+        }
+        if (err)
+            goto done;
 
-      /* then grab the event and return it: */
-      event = PR_EVENT_PTR(self->queue.next);
-      PR_REMOVE_AND_INIT_LINK(&event->link);
+        /* then grab the event and return it: */
+        event = PR_EVENT_PTR(self->queue.next);
+        PR_REMOVE_AND_INIT_LINK(&event->link);
     }
 
   done:
@@ -449,12 +448,12 @@ PL_EventAvailable(PLEventQueue* self)
     PRBool result = PR_FALSE;
 
     if (self == NULL)
-    return PR_FALSE;
+        return PR_FALSE;
 
     PR_EnterMonitor(self->monitor);
 
-    if (!PR_CLIST_IS_EMPTY(&self->queue)) 
-    result = PR_TRUE;
+    if (!PR_CLIST_IS_EMPTY(&self->queue))
+        result = PR_TRUE;
 
     PR_ExitMonitor(self->monitor);
     return result;
@@ -466,14 +465,14 @@ PL_MapEvents(PLEventQueue* self, PLEventFunProc fun, void* data)
     PRCList* qp;
 
     if (self == NULL)
-    return;
+        return;
 
     PR_EnterMonitor(self->monitor);
     qp = self->queue.next;
     while (qp != &self->queue) {
-    PLEvent* event = PR_EVENT_PTR(qp);
-    qp = qp->next;
-    (*fun)(event, data, self);
+        PLEvent* event = PR_EVENT_PTR(qp);
+        qp = qp->next;
+        (*fun)(event, data, self);
     }
     PR_ExitMonitor(self->monitor);
 }
@@ -483,23 +482,23 @@ _pl_DestroyEventForOwner(PLEvent* event, void* owner, PLEventQueue* queue)
 {
     PR_ASSERT(PR_GetMonitorEntryCount(queue->monitor) > 0);
     if (event->owner == owner) {
-    PR_LOG(event_lm, PR_LOG_DEBUG,
-           ("$$$ \tdestroying event %0x for owner %0x", event, owner));
-    PL_DequeueEvent(event, queue);
-    if (event->synchronousResult == (void*)PR_TRUE) {
-        PR_Lock(event->lock);
-        event->synchronousResult = NULL;
-        event->handled = PR_TRUE;
-        PR_NotifyCondVar(event->condVar);
-        PR_Unlock(event->lock);
+        PR_LOG(event_lm, PR_LOG_DEBUG,
+               ("$$$ \tdestroying event %0x for owner %0x", event, owner));
+        PL_DequeueEvent(event, queue);
+        if (event->synchronousResult == (void*)PR_TRUE) {
+            PR_Lock(event->lock);
+            event->synchronousResult = NULL;
+            event->handled = PR_TRUE;
+            PR_NotifyCondVar(event->condVar);
+            PR_Unlock(event->lock);
+        }
+        else {
+            PL_DestroyEvent(event);
+        }
     }
     else {
-        PL_DestroyEvent(event);
-    }
-    }
-    else {
-    PR_LOG(event_lm, PR_LOG_DEBUG,
-           ("$$$ \tskipping event %0x for owner %0x", event, owner));
+        PR_LOG(event_lm, PR_LOG_DEBUG,
+               ("$$$ \tskipping event %0x for owner %0x", event, owner));
     }
 }
 
@@ -507,7 +506,7 @@ PR_IMPLEMENT(void)
 PL_RevokeEvents(PLEventQueue* self, void* owner)
 {
     if (self == NULL)
-    return;
+        return;
 
     PR_LOG(event_lm, PR_LOG_DEBUG,
          ("$$$ revoking events for owner %0x", owner));
@@ -526,12 +525,12 @@ PL_RevokeEvents(PLEventQueue* self, void* owner)
 
 #ifdef DEBUG
     {
-	PRCList* qp = self->queue.next;
-	while (qp != &self->queue) {
-	    PLEvent* event = PR_EVENT_PTR(qp);
-	    qp = qp->next;
-	    PR_ASSERT(event->owner != owner);
-	}
+        PRCList* qp = self->queue.next;
+        while (qp != &self->queue) {
+            PLEvent* event = PR_EVENT_PTR(qp);
+            qp = qp->next;
+            PR_ASSERT(event->owner != owner);
+        }
     }
 #endif /* DEBUG */
 
@@ -564,16 +563,16 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     PRInt32 count;
 
     if (self == NULL)
-      return;
-    
-    
+        return;
+
+
     PR_EnterMonitor(self->monitor);
-    
+
     if (self->processingEvents) {
-      _pl_AcknowledgeNativeNotify(self);
-      self->notified = PR_FALSE;
-      PR_ExitMonitor(self->monitor);
-      return;
+        _pl_AcknowledgeNativeNotify(self);
+        self->notified = PR_FALSE;
+        PR_ExitMonitor(self->monitor);
+        return;
     }
     self->processingEvents = PR_TRUE;
 
@@ -583,34 +582,31 @@ PL_ProcessPendingEvents(PLEventQueue* self)
      */
     count = _pl_GetEventCount(self);
     PR_ExitMonitor(self->monitor);
-    
-    while (count-- > 0) {
-      PLEvent* event = PL_GetEvent(self);
-      if (event == NULL)
-        break;
 
-      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
-      PL_HandleEvent(event);
-      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+    while (count-- > 0) {
+        PLEvent* event = PL_GetEvent(self);
+        if (event == NULL)
+            break;
+
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
+        PL_HandleEvent(event);
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
 
     PR_EnterMonitor(self->monitor);
 
-    if (self->type == EventQueueIsNative)
-    {
-      count = _pl_GetEventCount(self);
+    if (self->type == EventQueueIsNative) {
+        count = _pl_GetEventCount(self);
 
-      if (count <= 0)
-      {         
-        _pl_AcknowledgeNativeNotify(self);
-        self->notified = PR_FALSE;
-      }
-      else
-      {
-        _pl_NativeNotify(self);
-        self->notified = PR_TRUE;
-      }
-      
+        if (count <= 0) {
+            _pl_AcknowledgeNativeNotify(self);
+            self->notified = PR_FALSE;
+        }
+        else {
+            _pl_NativeNotify(self);
+            self->notified = PR_TRUE;
+        }
+
     }
     self->processingEvents = PR_FALSE;
 
@@ -652,7 +648,7 @@ PL_GetEventOwner(PLEvent* self)
 
 PR_IMPLEMENT(void)
 PL_HandleEvent(PLEvent* self)
-{    
+{
     void* result;
     if (self == NULL)
         return;
@@ -660,18 +656,18 @@ PL_HandleEvent(PLEvent* self)
     /* This event better not be on an event queue anymore. */
     PR_ASSERT(PR_CLIST_IS_EMPTY(&self->link));
 
-    result = (*self->handler)(self);
+    result = self->handler(self);
     if (NULL != self->synchronousResult) {
-      PR_Lock(self->lock);
-      self->synchronousResult = result;
-      self->handled = PR_TRUE;
-      PR_NotifyCondVar(self->condVar);
-      PR_Unlock(self->lock);
+        PR_Lock(self->lock);
+        self->synchronousResult = result;
+        self->handled = PR_TRUE;
+        PR_NotifyCondVar(self->condVar);
+        PR_Unlock(self->lock);
     }
     else {
-      /* For asynchronous events, they're destroyed by the event-handler
-         thread. See PR_PostSynchronousEvent. */
-      PL_DestroyEvent(self);
+        /* For asynchronous events, they're destroyed by the event-handler
+           thread. See PR_PostSynchronousEvent. */
+        PL_DestroyEvent(self);
     }
 }
 #ifdef PL_POST_TIMINGS
@@ -690,14 +686,14 @@ PL_DestroyEvent(PLEvent* self)
 
     PR_DestroyCondVar(self->condVar);
     PR_DestroyLock(self->lock);
-   
+
 #ifdef PL_POST_TIMINGS
     s_totalTime += PR_IntervalNow() - self->postTime;
     s_eventCount++;
     printf("$$$ running avg (%d) \n", PR_IntervalToMilliseconds(s_totalTime/s_eventCount));
 #endif
 
-    (*self->destructor)(self);
+    self->destructor(self);
 }
 
 PR_IMPLEMENT(void)
@@ -707,10 +703,10 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
 #pragma unused (queue)
 #endif
     if (self == NULL)
-    return;
+        return;
 
-    /* Only the owner is allowed to dequeue events because once the 
-       client has put it in the queue, they have no idea whether it's 
+    /* Only the owner is allowed to dequeue events because once the
+       client has put it in the queue, they have no idea whether it's
        been processed and destroyed or not. */
 
     PR_ASSERT(queue->handlerThread == PR_GetCurrentThread());
@@ -735,17 +731,18 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
 }
 
 PR_IMPLEMENT(void)
-PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation, PRUint32 starvationDelay) 
+PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation,
+                        PRUint32 starvationDelay)
 {
 #if defined(_WIN32)
 
-    _md_StarvationDelay = starvationDelay; 
+    _md_StarvationDelay = starvationDelay;
 
     if (favorPerformanceOverEventStarvation) {
-      _md_PerformanceSetting++;
-      return;
+        _md_PerformanceSetting++;
+        return;
     }
-   
+
     _md_PerformanceSetting--;
 
     if (_md_PerformanceSetting == 0) {
@@ -754,7 +751,7 @@ PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation, PRUint32 sta
          instead of posted WM_APP messages. */
       _md_SwitchTime = PR_IntervalToMilliseconds(PR_IntervalNow());
     }
-   
+
 #endif
 }
 
@@ -772,7 +769,7 @@ PL_WaitForEvent(PLEventQueue* self)
     PRMonitor* mon;
 
     if (self == NULL)
-    return NULL;
+        return NULL;
 
     mon = self->monitor;
     PR_EnterMonitor(mon);
@@ -793,7 +790,7 @@ PR_IMPLEMENT(void)
 PL_EventLoop(PLEventQueue* self)
 {
     if (self == NULL)
-    return;
+        return;
 
     while (PR_TRUE) {
         PLEvent* event = PL_WaitForEvent(self);
@@ -830,7 +827,7 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
     if (!$VMS_STATUS_SUCCESS(status))
         return PR_FAILURE;
     PR_LOG(event_lm, PR_LOG_DEBUG,
-       ("$$$ Allocated event flag %d", self->efn));
+           ("$$$ Allocated event flag %d", self->efn));
     return PR_SUCCESS;
 #elif defined(XP_UNIX) && !defined(XP_MACOSX)
     int err;
@@ -838,7 +835,7 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
 
     self->idFunc = 0;
     self->idFuncClosure = 0;
-    
+
     err = pipe(self->eventPipe);
     if (err != 0) {
         return PR_FAILURE;
@@ -868,25 +865,25 @@ failed:
     close(self->eventPipe[1]);
     return PR_FAILURE;
 #elif defined(XP_BEOS)
-	/* hook up to the nsToolkit queue, however the appshell
-	 * isn't necessairly started, so we might have to create
-	 * the queue ourselves
-	 */
-	char		portname[64];
-	char		semname[64];
-	sprintf(portname, "event%lx", self->handlerThread);
-	sprintf(semname, "sync%lx", self->handlerThread);
+    /* hook up to the nsToolkit queue, however the appshell
+     * isn't necessairly started, so we might have to create
+     * the queue ourselves
+     */
+    char portname[64];
+    char semname[64];
+    sprintf(portname, "event%lx", self->handlerThread);
+    sprintf(semname, "sync%lx", self->handlerThread);
 
-	if((self->eventport = find_port(portname)) < 0)
-	{
-		/* create port
-		 */
-		self->eventport = create_port(500, portname);
+    if((self->eventport = find_port(portname)) < 0)
+    {
+        /* create port
+         */
+        self->eventport = create_port(500, portname);
 
-		/* We don't use the sem, but it has to be there
-		 */
-		create_sem(0, semname);
-	}
+        /* We don't use the sem, but it has to be there
+         */
+        create_sem(0, semname);
+    }
 
     return PR_SUCCESS;
 #else
@@ -911,10 +908,10 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #elif defined(XP_UNIX) && !defined(XP_MACOSX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
-#elif defined(_WIN32) 
+#elif defined(_WIN32)
     if (self->timerSet) {
-      KillTimer(self->eventReceiverWindow, TIMER_ID);
-      self->timerSet = PR_FALSE;
+        KillTimer(self->eventReceiverWindow, TIMER_ID);
+        self->timerSet = PR_FALSE;
     }
     RemoveProp(self->eventReceiverWindow, _md_GetEventQueuePropName());
 
@@ -937,7 +934,7 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #endif
 }
 
-#if defined(_WIN32) 
+#if defined(_WIN32)
 
 static PRBool   _md_WasInputPending = PR_FALSE;
 static PRUint32 _md_InputTime = 0;
@@ -969,112 +966,116 @@ static PRBool _md_IsOSSet = PR_FALSE;
 
 static void _md_DetermineOSType()
 {
-  OSVERSIONINFO os;
-  os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx(&os);
-  if (VER_PLATFORM_WIN32_WINDOWS == os.dwPlatformId) {
-    _md_IsWIN9X = PR_TRUE;
-  } 
+    OSVERSIONINFO os;
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&os);
+    if (VER_PLATFORM_WIN32_WINDOWS == os.dwPlatformId) {
+        _md_IsWIN9X = PR_TRUE;
+    }
 }
 
-static PRUint32 _md_GetPaintStarvationLimit() {
+static PRUint32 _md_GetPaintStarvationLimit()
+{
+    if (! _md_IsOSSet) {
+        _md_DetermineOSType();
+        _md_IsOSSet = PR_TRUE;
+    }
 
-  if (! _md_IsOSSet) {
-    _md_DetermineOSType();
-    _md_IsOSSet = PR_TRUE;
-  }
+    if (_md_IsWIN9X) {
+        return WIN9X_PAINT_STARVATION_LIMIT;
+    }
 
-  if (_md_IsWIN9X) {
-    return WIN9X_PAINT_STARVATION_LIMIT;
-  }
-
-  return PAINT_STARVATION_LIMIT;
+    return PAINT_STARVATION_LIMIT;
 }
 
 
-/* Determine if an event is being starved (i.e the starvation limit has
- * been exceeded.  
- * Note: this function uses the current setting and updates 
- * the contents of the wasPending and lastTime arguments
+/*
+ * Determine if an event is being starved (i.e the starvation limit has
+ * been exceeded.
+ * Note: this function uses the current setting and updates the contents
+ * of the wasPending and lastTime arguments
  *
- * ispending:       PR_TRUE if the event is currently pending 
- * starvationLimit: Threshold defined in milliseconds for determining when the event
- *                  has been held in the queue too long
- * wasPending:      PR_TRUE if the last time _md_EventIsStarved was called the event was pending.
- *                  This value is updated within this function. 
- * lastTime:        Holds the last time the event was in the queue. 
+ * ispending:       PR_TRUE if the event is currently pending
+ * starvationLimit: Threshold defined in milliseconds for determining when
+ *                  the event has been held in the queue too long
+ * wasPending:      PR_TRUE if the last time _md_EventIsStarved was called
+ *                  the event was pending.  This value is updated within
+ *                  this function.
+ * lastTime:        Holds the last time the event was in the queue.
  *                  This value is updated within this function
  * returns:         PR_TRUE if the event is starved, PR_FALSE otherwise
  */
-   
-static PRBool _md_EventIsStarved(PRBool isPending, PRUint32 starvationLimit, 
+
+static PRBool _md_EventIsStarved(PRBool isPending, PRUint32 starvationLimit,
                                  PRBool *wasPending, PRUint32 *lastTime,
-                                 PRUint32 currentTime) 
+                                 PRUint32 currentTime)
 {
-  if ((*wasPending) && (isPending)) {
-      /* It was pending previously and the event is still
-       * pending so check to see if the elapsed time is
-       * over the limit which indicates the event was starved
-       */
-    
-      if ((currentTime - *lastTime) > starvationLimit) {
-        return PR_TRUE; /* pending and over the limit */
-      }
+    if (*wasPending && isPending) {
+        /*
+         * It was pending previously and the event is still
+         * pending so check to see if the elapsed time is
+         * over the limit which indicates the event was starved
+         */
+        if ((currentTime - *lastTime) > starvationLimit) {
+            return PR_TRUE; /* pending and over the limit */
+        }
 
-      return PR_FALSE; /* pending but within the limit */
-  }
-  
-  if (isPending) {
-    /* was_pending must be false so record the current time
-     * so the elapsed time can be computed the next time this
-     * function is called 
-     */
-    *lastTime = currentTime;
-    *wasPending = PR_TRUE; 
-    return PR_FALSE; 
-  }
+        return PR_FALSE; /* pending but within the limit */
+    }
 
-  /* Event is no longer pending */
-  *wasPending = PR_FALSE;
-  return PR_FALSE;
+    if (isPending) {
+        /*
+         * was_pending must be false so record the current time
+         * so the elapsed time can be computed the next time this
+         * function is called
+         */
+        *lastTime = currentTime;
+        *wasPending = PR_TRUE;
+        return PR_FALSE;
+    }
+
+    /* Event is no longer pending */
+    *wasPending = PR_FALSE;
+    return PR_FALSE;
 }
 
 /* Determines if the there is a pending Mouse or input event */
 
 static PRBool _md_IsInputPending(WORD qstatus)
 {
-  if (qstatus == 0) {
-    /* return immediately there isn't any pending input or paints */
-    return PR_FALSE;  
-  }
+    /* Return immediately there aren't any pending input or paints. */
+    if (qstatus == 0) {
+        return PR_FALSE;
+    }
 
-  /* Is there anything other than a QS_MOUSEMOVE pending? */
-  if ((qstatus & QS_MOUSEBUTTON) ||
-      (qstatus & QS_KEY) ||
-      (qstatus & QS_HOTKEY)) {
-    return PR_TRUE;
-  }
+    /* Is there anything other than a QS_MOUSEMOVE pending? */
+    if ((qstatus & QS_MOUSEBUTTON) ||
+        (qstatus & QS_KEY) ||
+        (qstatus & QS_HOTKEY)) {
+        return PR_TRUE;
+    }
 
-  /* Mouse moves need extra processing to determine if the mouse
-   * pointer actually changed location because Windows automatically 
-   * generates WM_MOVEMOVE events when a new window is created which 
-   * we need to filter out.
-   */
-  if (qstatus & QS_MOUSEMOVE) {
-    POINT cursorPos;
-    GetCursorPos(&cursorPos);
-    if ((_md_LastMousePos.x == cursorPos.x) && 
-        (_md_LastMousePos.y == cursorPos.y)) {
-      return PR_FALSE; /* This is a fake mouse move */
-    } 
-      
-    /* Real mouse move */
-    _md_LastMousePos.x = cursorPos.x; 
-    _md_LastMousePos.y = cursorPos.y;  
-    return PR_TRUE;
-  }
+    /*
+     * Mouse moves need extra processing to determine if the mouse
+     * pointer actually changed location because Windows automatically
+     * generates WM_MOVEMOVE events when a new window is created which
+     * we need to filter out.
+     */
+    if (qstatus & QS_MOUSEMOVE) {
+        POINT cursorPos;
+        GetCursorPos(&cursorPos);
+        if ((_md_LastMousePos.x == cursorPos.x) &&
+            (_md_LastMousePos.y == cursorPos.y)) {
+            return PR_FALSE; /* This is a fake mouse move */
+        }
 
-  return PR_FALSE;
+        /* Real mouse move */
+        _md_LastMousePos.x = cursorPos.x;
+        _md_LastMousePos.y = cursorPos.y;
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
 }
 
 static PRStatus
@@ -1083,57 +1084,75 @@ _pl_NativeNotify(PLEventQueue* self)
 #ifdef USE_TIMER
     WORD qstatus;
 
-    PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow()); 
+    PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow());
 
     /* Since calls to set the _md_PerformanceSetting can be nested
      * only performance setting values <= 0 will potentially trigger
      * the use of a timer.
      */
-    if ((_md_PerformanceSetting <= 0) && 
+    if ((_md_PerformanceSetting <= 0) &&
         ((now - _md_SwitchTime) > _md_StarvationDelay)) {
-      SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
-      self->timerSet = PR_TRUE;
-      _md_WasInputPending = PR_FALSE; 
-      _md_WasPaintPending = PR_FALSE; 
-      return PR_SUCCESS;
+        SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
+        self->timerSet = PR_TRUE;
+        _md_WasInputPending = PR_FALSE;
+        _md_WasPaintPending = PR_FALSE;
+        return PR_SUCCESS;
     }
 
     qstatus = HIWORD(GetQueueStatus(QS_INPUT | QS_PAINT));
 
     /* Check for starved input */
-    if (_md_EventIsStarved( _md_IsInputPending(qstatus), INPUT_STARVATION_LIMIT, 
-        &_md_WasInputPending, &_md_InputTime, now )) {
-      /* Use timer for notification. Timers have the lowest priority. They are not processed 
-       * until all other events have been processed. This allows the starved paints and input to
-       * be processed 
-       */
-      SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
-      self->timerSet = PR_TRUE;
-      /* Clear out any pending paint, _md_WasInputPending was cleared in _md_EventIsStarved */
-      _md_WasPaintPending = PR_FALSE; 
-      return PR_SUCCESS;
+    if (_md_EventIsStarved( _md_IsInputPending(qstatus),
+                            INPUT_STARVATION_LIMIT,
+                            &_md_WasInputPending,
+                            &_md_InputTime,
+                            now )) {
+        /*
+         * Use a timer for notification. Timers have the lowest priority.
+         * They are not processed until all other events have been processed.
+         * This allows any starved paints and input to be processed.
+         */
+        SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
+        self->timerSet = PR_TRUE;
+
+        /*
+         * Clear any pending paint.  _md_WasInputPending was cleared in
+         * _md_EventIsStarved.
+         */
+        _md_WasPaintPending = PR_FALSE;
+        return PR_SUCCESS;
     }
-    
-    if (_md_EventIsStarved( (qstatus & QS_PAINT), _md_GetPaintStarvationLimit(), 
-        &_md_WasPaintPending, &_md_PaintTime, now) ) {
-      /* Use timer for notification. Timers have the lowest priority. They are not processed 
-       * until all other events have been processed. This allows the starved paints and input to
-       * be processed 
-       */
-      SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
-      self->timerSet = PR_TRUE;
-      /* Clear out any pending input, _md_WasPaintPending was cleared in _md_EventIsStarved */
-      _md_WasInputPending = PR_FALSE; 
-      return PR_SUCCESS;
+
+    if (_md_EventIsStarved( (qstatus & QS_PAINT),
+                            _md_GetPaintStarvationLimit(),
+                            &_md_WasPaintPending,
+                            &_md_PaintTime,
+                            now) ) {
+        /*
+         * Use a timer for notification. Timers have the lowest priority.
+         * They are not processed until all other events have been processed.
+         * This allows any starved paints and input to be processed
+         */
+        SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
+        self->timerSet = PR_TRUE;
+
+        /*
+         * Clear any pending input.  _md_WasPaintPending was cleared in
+         * _md_EventIsStarved.
+         */
+        _md_WasInputPending = PR_FALSE;
+        return PR_SUCCESS;
     }
-    
-    /* Nothing is being starved so post a message instead of using a timer
-     * Posted messages are processed before other messages so they have the highest priority.
+
+    /*
+     * Nothing is being starved so post a message instead of using a timer.
+     * Posted messages are processed before other messages so they have the
+     * highest priority.
      */
 #endif
     PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
                 (WPARAM)0, (LPARAM)self );
-    
+
     return PR_SUCCESS;
 }/* --- end _pl_NativeNotify() --- */
 #endif
@@ -1154,15 +1173,12 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-        unsigned int status;
-        PR_LOG(event_lm, PR_LOG_DEBUG,
+    unsigned int status;
+    PR_LOG(event_lm, PR_LOG_DEBUG,
            ("_pl_NativeNotify: self=%p efn=%d",
             self, self->efn));
-        status = SYS$SETEF(self->efn);
-        if ($VMS_STATUS_SUCCESS(status))
-            return PR_SUCCESS;
-        else
-            return PR_FAILURE;
+    status = SYS$SETEF(self->efn);
+    return ($VMS_STATUS_SUCCESS(status)) ? PR_SUCCESS : PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
 #elif defined(XP_UNIX) && !defined(XP_MACOSX)
 
@@ -1177,29 +1193,28 @@ _pl_NativeNotify(PLEventQueue* self)
            ("_pl_NativeNotify: self=%p",
             self));
     count = write(self->eventPipe[1], buf, 1);
-    if (count == 1) {
-		return PR_SUCCESS;
-	} else if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
-		return PR_SUCCESS;
-	} else
-		return PR_FAILURE;
+    if (count == 1)
+        return PR_SUCCESS;
+    if (count == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        return PR_SUCCESS;
+    return PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
 #endif /* defined(XP_UNIX) && !defined(XP_MACOSX) */
 
 #if defined(XP_BEOS)
 struct ThreadInterfaceData
 {
-	void	*data;
-	int32	sync;
+    void  *data;
+    int32 sync;
 };
 
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-	struct ThreadInterfaceData	 id;
-	id.data = self;
-	id.sync = false;
-	write_port(self->eventport, 'natv', &id, sizeof(id));
+    struct ThreadInterfaceData id;
+    id.data = self;
+    id.sync = false;
+    write_port(self->eventport, 'natv', &id, sizeof(id));
 
     return PR_SUCCESS;    /* Is this correct? */
 }
@@ -1247,16 +1262,16 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
      */
     if (self->removeMsg) {
         PR_LOG(event_lm, PR_LOG_DEBUG,
-                ("_pl_AcknowledgeNativeNotify: self=%p", self));
+               ("_pl_AcknowledgeNativeNotify: self=%p", self));
 #ifdef XP_OS2
         WinPeekMsg((HAB)0, &aMsg, self->eventReceiverWindow,
                    _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
 #else
         PeekMessage(&aMsg, self->eventReceiverWindow,
-                _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
+                    _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
         if (self->timerSet) {
-          KillTimer(self->eventReceiverWindow, TIMER_ID);
-          self->timerSet = PR_FALSE;
+            KillTimer(self->eventReceiverWindow, TIMER_ID);
+            self->timerSet = PR_FALSE;
         }
 #endif
     }
@@ -1278,14 +1293,13 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
     PR_LOG(event_lm, PR_LOG_DEBUG,
             ("_pl_AcknowledgeNativeNotify: self=%p",
              self));
-	/* consume the byte NativeNotify put in our pipe: */
+    /* consume the byte NativeNotify put in our pipe: */
     count = read(self->eventPipe[0], &c, 1);
-	if ((count == 1) && (c == NOTIFY_TOKEN)) {
-		return PR_SUCCESS;
-	} else if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
-		return PR_SUCCESS;
-	} else
-		return PR_FAILURE;
+    if ((count == 1) && (c == NOTIFY_TOKEN))
+        return PR_SUCCESS;
+    if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
+        return PR_SUCCESS;
+    return PR_FAILURE;
 #else
 
 #if defined(XP_MAC)
@@ -1316,11 +1330,8 @@ PR_IMPLEMENT(PRBool)
 PL_IsQueueOnCurrentThread( PLEventQueue *queue )
 {
     PRThread *me = PR_GetCurrentThread();
-    if ( me == queue->handlerThread )
-        return PR_TRUE;
-    else
-        return PR_FALSE;
-} /* end PL_IsQueueOnCurrentThread() */
+    return me == queue->handlerThread;
+}
 
 PR_EXTERN(PRBool)
 PL_IsQueueNative(PLEventQueue *queue)
@@ -1346,22 +1357,22 @@ static HINSTANCE _pr_hInstance;
 
 BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 {
-  switch (dwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-      _pr_hInstance = hDLL;
-      break;
+    switch (dwReason)
+    {
+      case DLL_PROCESS_ATTACH:
+        _pr_hInstance = hDLL;
+        break;
 
-    case DLL_THREAD_ATTACH:
-      break;
+      case DLL_THREAD_ATTACH:
+        break;
 
-    case DLL_THREAD_DETACH:
-      break;
+      case DLL_THREAD_DETACH:
+        break;
 
-    case DLL_PROCESS_DETACH:
-      _pr_hInstance = NULL;
-      break;
-  }
+      case DLL_PROCESS_DETACH:
+        _pr_hInstance = NULL;
+        break;
+    }
 
     return TRUE;
 }
@@ -1373,7 +1384,7 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 MRESULT EXPENTRY
 _md_EventReceiverProc(HWND hwnd, ULONG uMsg, MPARAM wParam, MPARAM lParam)
 #else
-LRESULT CALLBACK 
+LRESULT CALLBACK
 _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 {
@@ -1403,17 +1414,14 @@ static PRLock   *initLock;
 static PRStatus InitEventLib( void )
 {
     PR_ASSERT( initLock == NULL );
-    
+
     initLock = PR_NewLock();
-    if ( NULL == initLock )
-        return PR_FAILURE;
-    else
-        return PR_SUCCESS;
-} /* end InitWinEventLib() */
+    return initLock ? PR_SUCCESS : PR_FAILURE;
+}
 
 #endif /* Win32, OS2 */
 
-#if defined(_WIN32) 
+#if defined(_WIN32)
 
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
@@ -1421,7 +1429,7 @@ static PRStatus InitEventLib( void )
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
     WNDCLASS wc;
-    
+
     /*
     ** If this is the first call to PL_InitializeEventsLib(),
     ** make the call to InitWinEventLib() to create the initLock.
@@ -1448,8 +1456,8 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
         wc.lpszMenuName  = (LPCSTR) NULL;
         wc.lpszClassName = _pr_eventWindowClass;
         RegisterClass(&wc);
-        }
-        
+    }
+
     /* Create the event receiver window */
     eventQueue->eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
                                         "XPCOM:EventReceiver",
@@ -1457,13 +1465,13 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
                                             NULL, NULL, _pr_hInstance,
                                             NULL);
     PR_ASSERT(eventQueue->eventReceiverWindow);
-    /* Set a property which can be used to retrieve the event queue 
-     * within the _md_TimerProc callback 
+    /* Set a property which can be used to retrieve the event queue
+     * within the _md_TimerProc callback
      */
     SetProp(eventQueue->eventReceiverWindow,
             _md_GetEventQueuePropName(), (HANDLE)eventQueue);
 
-    return;    
+    return;
 } /* end _md_CreateEventQueue() */
 #endif /* Winxx */
 
@@ -1506,12 +1514,12 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 
     if( !_pr_PostEventMsgId)
     {
-       WinRegisterClass( 0 /* hab_current */,
+        WinRegisterClass( 0 /* hab_current */,
                          _pr_eventWindowClass,
                          _md_EventReceiverProc,
                          0, 0);
 
-       _pr_PostEventMsgId = WinAddAtom( WinQuerySystemAtomTable(),
+        _pr_PostEventMsgId = WinAddAtom( WinQuerySystemAtomTable(),
                                         "XPCOM_PostEvent");
     }
 
@@ -1526,11 +1534,11 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
                                                        NULL);
     PR_ASSERT(eventQueue->eventReceiverWindow);
 
-    return;    
+    return;
 } /* end _md_CreateEventQueue() */
 #endif /* XP_OS2 */
 
-#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) 
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
@@ -1540,7 +1548,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     ** the guts of the unix stuff is in the setupnativenotify
     ** and related functions.
     */
-    return;    
+    return;
 } /* end _md_CreateEventQueue() */
 #endif /* (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) */
 
@@ -1550,7 +1558,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 */
 
 static pascal OSStatus _md_EventReceiverProc(EventHandlerCallRef nextHandler,
-                                             EventRef inEvent, 
+                                             EventRef inEvent,
                                              void* userData)
 {
     if (GetEventClass(inEvent) == kEventClassPL &&
@@ -1572,7 +1580,7 @@ static pascal Boolean _md_CarbonEventComparator(EventRef inEvent,
                                                 void *inCompareData)
 {
     Boolean match = false;
-    
+
     if (GetEventClass(inEvent) == kEventClassPL &&
         GetEventKind(inEvent) == kEventProcessPLEvents)
     {
@@ -1597,8 +1605,8 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
       EventTypeSpec     eventType;
 
       eventType.eventClass = kEventClassPL;
-      eventType.eventKind  = kEventProcessPLEvents;    
-                              
+      eventType.eventKind  = kEventProcessPLEvents;
+
       InstallApplicationEventHandler(eventQueue->eventHandlerUPP, 1, &eventType,
                                      eventQueue, &eventQueue->eventHandlerRef);
       PR_ASSERT(eventQueue->eventHandlerRef);
@@ -1617,93 +1625,90 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 PR_IMPLEMENT(PRInt32)
 PL_ProcessEventsBeforeID(PLEventQueue *aSelf, unsigned long aID)
 {
-  PRInt32 count = 0;
-  PRInt32 fullCount;
+    PRInt32 count = 0;
+    PRInt32 fullCount;
 
-  if (aSelf == NULL)
-    return -1;
-  
-  PR_EnterMonitor(aSelf->monitor);
+    if (aSelf == NULL)
+        return -1;
 
-  if (aSelf->processingEvents) {
-    PR_ExitMonitor(aSelf->monitor);
-    return 0;
-  }
+    PR_EnterMonitor(aSelf->monitor);
 
-  aSelf->processingEvents = PR_TRUE;
-
-  /* Only process the events that are already in the queue, and
-   * not any new events that get added. Do this by counting the
-   * number of events currently in the queue
-   */
-  fullCount = _pl_GetEventCount(aSelf);
-  PR_LOG(event_lm, PR_LOG_DEBUG, 
-         ("$$$ fullCount is %d id is %ld\n", fullCount, aID));
-
-  if (fullCount == 0) {
-    aSelf->processingEvents = PR_FALSE;
-    PR_ExitMonitor(aSelf->monitor);
-    return 0;
-  }
-
-  PR_ExitMonitor(aSelf->monitor);
-
-  while(fullCount-- > 0) {
-    /* peek at the next event */
-    PLEvent *event;
-    event = PR_EVENT_PTR(aSelf->queue.next);
-    if (event == NULL)
-      break;
-    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event %ld\n",
-                                    event->id));
-    if (event->id < aID) {
-      event = PL_GetEvent(aSelf);
-      PL_HandleEvent(event);
-      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
-      count++;
+    if (aSelf->processingEvents) {
+        PR_ExitMonitor(aSelf->monitor);
+        return 0;
     }
-    else {
-      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ skipping event and breaking"));
-      break;
-    }
-  }
 
-  PR_EnterMonitor(aSelf->monitor);
+    aSelf->processingEvents = PR_TRUE;
 
-  /* if full count still had items left then there's still items left
-     in the queue.  Let the native notify token stay. */
-
-  if (aSelf->type == EventQueueIsNative)
-  {
+    /* Only process the events that are already in the queue, and
+     * not any new events that get added. Do this by counting the
+     * number of events currently in the queue
+     */
     fullCount = _pl_GetEventCount(aSelf);
+    PR_LOG(event_lm, PR_LOG_DEBUG,
+           ("$$$ fullCount is %d id is %ld\n", fullCount, aID));
 
-    if (fullCount <= 0)
-    {
-      _pl_AcknowledgeNativeNotify(aSelf);
-      aSelf->notified = PR_FALSE;
+    if (fullCount == 0) {
+        aSelf->processingEvents = PR_FALSE;
+        PR_ExitMonitor(aSelf->monitor);
+        return 0;
     }
-  }
 
-  aSelf->processingEvents = PR_FALSE;
-  
-  PR_ExitMonitor(aSelf->monitor);
+    PR_ExitMonitor(aSelf->monitor);
 
-  return count;
+    while (fullCount-- > 0) {
+        /* peek at the next event */
+        PLEvent *event;
+        event = PR_EVENT_PTR(aSelf->queue.next);
+        if (event == NULL)
+            break;
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event %ld\n",
+                                        event->id));
+        if (event->id >= aID) {
+            PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ skipping event and breaking"));
+            break;
+        }
+
+        event = PL_GetEvent(aSelf);
+        PL_HandleEvent(event);
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+        count++;
+    }
+
+    PR_EnterMonitor(aSelf->monitor);
+
+    /* if full count still had items left then there's still items left
+       in the queue.  Let the native notify token stay. */
+
+    if (aSelf->type == EventQueueIsNative) {
+        fullCount = _pl_GetEventCount(aSelf);
+
+        if (fullCount <= 0) {
+            _pl_AcknowledgeNativeNotify(aSelf);
+            aSelf->notified = PR_FALSE;
+        }
+    }
+
+    aSelf->processingEvents = PR_FALSE;
+
+    PR_ExitMonitor(aSelf->monitor);
+
+    return count;
 }
 
 PR_IMPLEMENT(void)
 PL_RegisterEventIDFunc(PLEventQueue *aSelf, PLGetEventIDFunc aFunc,
                        void *aClosure)
 {
-  aSelf->idFunc = aFunc;
-  aSelf->idFuncClosure = aClosure;
+    aSelf->idFunc = aFunc;
+    aSelf->idFuncClosure = aClosure;
 }
 
 PR_IMPLEMENT(void)
 PL_UnregisterEventIDFunc(PLEventQueue *aSelf)
 {
-  aSelf->idFunc = 0;
-  aSelf->idFuncClosure = 0;
+    aSelf->idFunc = 0;
+    aSelf->idFuncClosure = 0;
 }
 
 #endif /* defined(XP_UNIX) && !defined(XP_MACOSX) */
