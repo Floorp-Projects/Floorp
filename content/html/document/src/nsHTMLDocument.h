@@ -30,6 +30,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsIParserService.h"
 #include "plhash.h"
 #include "jsapi.h"
 
