@@ -46,7 +46,7 @@ public:
   virtual nsColorMap* GetColorMap() {return nsnull;}
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized()       { return PR_FALSE; }
+  virtual PRBool      IsOptimized()       { return (mImage!=nsnull); }
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
   virtual PRUint8*    GetAlphaBits()      { return nsnull; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
@@ -81,7 +81,7 @@ public:
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY) {}
 
 private:
-  void CreateImage(nsIDeviceContext * aDeviceContext);
+  void CreateImage(nsDrawingSurface aSurface);
 
   /** 
    * Calculate the amount of memory needed for the initialization of the image
