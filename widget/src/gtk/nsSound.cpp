@@ -141,7 +141,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   int format, channels = 1, block_align, bits_per_sample;
 
 
-  if (strncmp(string, "RIFF", 4)) {
+  if (PL_strncmp(string, "RIFF", 4)) {
     printf("We only support WAV files currently.\n");
     return NS_ERROR_FAILURE;
   }
