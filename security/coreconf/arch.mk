@@ -67,11 +67,11 @@ ifeq ($(OS_ARCH),IRIX64)
 endif
 
 #
-# Force the newer BSDI versions to use the old arch name.
+# Force the older BSD/OS versions to use the new arch name.
 #
 
-ifeq ($(OS_ARCH),BSD_OS)
-	OS_ARCH = BSD_386
+ifeq ($(OS_ARCH),BSD_386)
+	OS_ARCH = BSD_OS
 endif
 
 #

@@ -35,7 +35,7 @@
 ** Pathname subroutines.
 */
 #include <assert.h>
-#ifdef FREEBSD
+#if defined(FREEBSD) || defined(BSDI)
 #include <sys/types.h>
 #endif /* FREEBSD */
 #include <dirent.h>
