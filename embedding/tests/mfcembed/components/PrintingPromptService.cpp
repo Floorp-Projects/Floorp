@@ -121,7 +121,7 @@ static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 NS_IMPL_ISUPPORTS2(CPrintingPromptService, nsIPrintingPromptService, nsIWebProgressListener)
 
 CPrintingPromptService::CPrintingPromptService() :
-  mWWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1")),
+  mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID)),
   m_PPDlg(NULL)
 {
   NS_INIT_REFCNT();
