@@ -790,7 +790,7 @@ PRBool nsOEScanBoxes::ReadString( nsIFileSpec * stream, nsString& str, PRUint32 
 	if (NS_FAILED( rv) || (cntRead != kOutlookExpressStringLength))
 		return( PR_FALSE);
 	buffer[kOutlookExpressStringLength - 1] = 0;
-	str = buffer;
+	str.AssignWithConversion(buffer);
 	return( PR_TRUE);
 }
 
