@@ -353,19 +353,19 @@ nsresult
 nsCacheService::BindEntry(nsCacheEntry * entry)
 {
     nsresult  rv = NS_OK;
+    nsCacheDevice * device;
 
     if (entry->IsStreamData() && entry->IsAllowedOnDisk()) {
-        //** disk (default)
-        rv = mDiskDevice->BindEntry(entry);
+        // this is the default
+        device = mDiskDevice;
     } else {
-        //** memory cache
-        //** assert entry->IsAllowedInMemory()
-        rv = mMemoryDevice->BindEntry(entry);
+        NS_ASSERTION(entry->IsAllowedInMemory(), "oops.. bad flags");
+        device = mMemoryDevice;
     }
-    
-    if (NS_FAILED(rv)) {
-        //** what to do?
-    }
+
+    rv = device->BindEntry(entry);
+    if (NS_SUCCEEDED(rv))
+        entry->SetCacheDevice(device);
 
     return rv;
 }
