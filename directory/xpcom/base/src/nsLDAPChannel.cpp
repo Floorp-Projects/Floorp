@@ -64,7 +64,7 @@ static NS_DEFINE_IID(kIProgressEventSink, NS_IPROGRESSEVENTSINK_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, 
                               nsIChannel, 
                               nsIRequest,   
-                              nsILDAPMessageListener);
+                              nsILDAPMessageListener)
 
 nsLDAPChannel::nsLDAPChannel()
 {
