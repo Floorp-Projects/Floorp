@@ -1689,7 +1689,7 @@ mips-sony-newsos*)
         fi
     else
         CFLAGS="$CFLAGS -xstrconst"
-        CXXFLAGS="$CXXFLAGS -Qoption cg -xstrconst"
+        CXXFLAGS="$CXXFLAGS -Qoption cg -xstrconst -features=tmplife"
         if test -z "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -xs"
             CXXFLAGS="$CXXFLAGS -xs"
