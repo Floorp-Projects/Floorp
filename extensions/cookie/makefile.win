@@ -37,7 +37,10 @@ REQUIRES	= xpcom \
 		  content \
 		  $(NULL)
 
-EXPORTS = nsCookieHTTPNotify.h
+EXPORTS =       nsCookieHTTPNotify.h    \
+                nsCCookie.h             \
+                nsCookieManager.h       \
+                $(NULL)
 
 XPIDLSRCS=      .\nsICookieManager.idl           \
                 .\nsICookieConsent.idl              \
