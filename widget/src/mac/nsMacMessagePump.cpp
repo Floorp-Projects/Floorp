@@ -22,7 +22,7 @@
 #include "nsWidgetsCID.h"
 #include <LPeriodical.h>
 
-//#define DRAW_ON_RESIZE
+#define DRAW_ON_RESIZE
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
 
@@ -202,8 +202,6 @@ nsPaintEvent 		pevent;
 		if(thewindow != nsnull)
 			{
 			updateregion = whichwindow->visRgn;
-			thewindow->DoPaintWidgets(updateregion);
-
 			Rect bounds = (**updateregion).rgnBBox;
 			rect.x = bounds.left;
 			rect.y = bounds.top;
@@ -219,7 +217,10 @@ nsPaintEvent 		pevent;
 			pevent.rect = &rect;
 			pevent.time = 0; 
 			thewindow->OnPaint(pevent);
-	    	}
+
+			// take care of the childern
+			thewindow->DoPaintWidgets(updateregion);
+	    }
 		EndUpdate(whichwindow);
 		}
 	
@@ -325,12 +326,13 @@ Point					newPt;
 				therect.top += 20;    /* Allow space for menu bar */
 				DragWindow(whichwindow, aTheEvent->where, &therect);
 				therect = whichwindow->portRect;
+				thewindow = (nsWindow *) GetWRefCon (whichwindow);
 				if (thewindow != nsnull)
-				{
+					{
 					LocalToGlobal(&topLeft(therect));
 					LocalToGlobal(&botRight(therect));
 					thewindow->SetBounds(therect);
-				}
+					}
 				break;
 				
 			case inGrow:
@@ -387,8 +389,8 @@ Point					newPt;
 			        event.widget = thewindow;
 			       	thewindow->DispatchEvent(&event);
 
-							//thewindow->DoResizeWidgets(sizeevent);
-							//result = thewindow->OnResize(sizeevent);
+							//thewindow->DoResizeWidgets(event);
+							//result = thewindow->OnResize(event);
 							//::InvalRect(&therect);
 						}
 #ifdef DRAW_ON_RESIZE
