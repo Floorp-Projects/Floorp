@@ -5908,14 +5908,10 @@ nsBlockFrame::GetFrameForPoint(nsPresContext* aPresContext,
       }
       if (mFloats.NotEmpty()) {
 
-        rv = GetFrameForPointUsing(aPresContext, aPoint,
-                                   nsLayoutAtoms::floatList,
-                                   NS_FRAME_PAINT_LAYER_ALL,
-                                   PR_FALSE, aFrame);
-        if (NS_OK == rv) {
-          return NS_OK;
-        }
-
+        return GetFrameForPointUsing(aPresContext, aPoint,
+                                     nsLayoutAtoms::floatList,
+                                     NS_FRAME_PAINT_LAYER_ALL,
+                                     PR_FALSE, aFrame);
       } else {
         return NS_ERROR_FAILURE;
       }
