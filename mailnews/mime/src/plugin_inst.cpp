@@ -242,7 +242,7 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
   mEmitter->Initialize(stream);
   mBridgeStream = mime_bridge_create_stream(this, mEmitter, stream_name, format_out);
   if (!mBridgeStream)
-  {
+  {  
     mEmitter->Release();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -314,10 +314,11 @@ nsresult MimePluginInstance::InternalCleanup(void)
   // Now complete the emitter and do necessary cleanup!
   //
   printf("TOTAL READ    = %d\n", mTotalRead);
-  mEmitter->Complete();
-
   if (mEmitter)
+  {
+    mEmitter->Complete();
     mEmitter->Release();
+  }
 
   PR_FREEIF(mOutputFormat);
   PR_FREEIF(mURL);
@@ -373,7 +374,8 @@ char *output = "\
 </HTML>";
 
     sprintf(outBuf, output, mURL, mURL);
-    mEmitter->Write(outBuf, PL_strlen(outBuf), &written);
+    if (mEmitter)
+      mEmitter->Write(outBuf, PL_strlen(outBuf), &written);
     mTotalRead += written;
     return -1;
   }
