@@ -155,9 +155,9 @@ nsIFrame * nsSplittableFrame::GetNextInFlow()
 } 
 
 void
-nsSplittableFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
+nsSplittableFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  nsFrame::DumpBaseRegressionData(out, aIndent);
+  nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent);
   if (nsnull != mNextInFlow) {
     IndentBy(out, aIndent);
     fprintf(out, "<next-in-flow va=\"%ld\"/>\n", PRUptrdiff(mNextInFlow));
