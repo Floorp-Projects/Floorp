@@ -40,7 +40,7 @@ NS_IMETHODIMP nsImapFlagAndUidState::GetUidOfMessage(PRInt32 zeroBasedIndex, PRU
 	if (zeroBasedIndex < fNumberOfMessagesAdded)
 		*result = fUids[zeroBasedIndex];
 	else
-		*result = -1;	// so that value is non-zero and we don't ask for bad msgs
+		*result = 0xFFFFFFFF;	// so that value is non-zero and we don't ask for bad msgs
     PR_CExitMonitor(this);
 	return NS_OK;
 }
