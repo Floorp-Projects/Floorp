@@ -208,8 +208,9 @@ nsJSContext::EvaluateString(const nsString& aScript,
     // SecurityManager said "ok", but don't execute if aVersion is specified
     // and unknown.  Do execute with the default version (and avoid thrashing
     // the context's version) if aVersion is not specified.
-    if (!aVersion ||
-        (newVersion = JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN) {
+    ok = (!aVersion ||
+          (newVersion = JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN);
+    if (ok) {
       JSVersion oldVersion;
 
       if (aVersion)
