@@ -44,8 +44,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  webshell \
 		  windowwatcher \
-                  history \
-		  appcomps \
+		  history \
 		  webbrowserpersist \
 		  unicharutil \
 		  imglib2 \

@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  pref \
 		  history \
-		  appcomps \
 		  $(NULL)
 
 CPPSRCS         = \

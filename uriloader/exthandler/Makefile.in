@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  windowwatcher \
-		  appcomps \
 		  history \
 		  $(NULL)
 
