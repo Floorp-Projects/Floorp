@@ -25,7 +25,7 @@
 //NOTE: This script expects gBrandBundle and gProfileManagerBundle to be
 //      instanciated elsewhere (currently from StartUp in profileSelection.js)
 
-var promptService = nsJSComponentManager("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 var profileManagerMode = "selection";
 var set = null;
 
@@ -62,7 +62,7 @@ function RenameProfile()
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     lString = lString.replace(/%brandShortName%/, gBrandBundle.getString("brandShortName"));
     var title = gProfileManagerBundle.getString("migratetitle");
-    if (promptService.Confirm(window, title, lString))
+    if (promptService.confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
       return false;
@@ -74,7 +74,7 @@ function RenameProfile()
     var msg = gProfileManagerBundle.getString("renameProfilePrompt");
     msg = msg.replace(/%oldProfileName%/gi, oldName);
     while (1) {
-      var rv = promptService.Prompt(window, dialogTitle, msg, "", 0, oldName, result);
+      var rv = promptService.prompt(window, dialogTitle, msg, "", 0, oldName, result);
       if (rv) {
         var newName = result.value;
         if (!newName) return false;
@@ -101,7 +101,7 @@ function RenameProfile()
         catch(e) {
           var lString = gProfileManagerBundle.getString("profileExists");
           var profileExistsTitle = gProfileManagerBundle.getString("profileExistsTitle");
-          promptService.Alert(window, profileExistsTitle, lString);
+          promptService.alert(window, profileExistsTitle, lString);
           continue;
         }
       }
@@ -129,7 +129,7 @@ function ConfirmDelete()
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     lString = lString.replace(/%brandShortName%/, gBrandBundle.getString("brandShortName"));
     var title = gProfileManagerBundle.getString("deletetitle");
-    if (promptService.Confirm(window, title, lString)) {
+    if (promptService.confirm(window, title, lString)) {
       profile.deleteProfile( name, false );
       var profileKids = document.getElementById( "profilekids" )
       profileKids.removeChild( selected );
@@ -169,7 +169,7 @@ function ConfirmMigrateAll()
 {
   var string = gProfileManagerBundle.getString("migrateallprofiles");
   var title = gProfileManagerBundle.getString("migrateallprofilestitle");
-  if (promptService.Confirm(window, title, string))
+  if (promptService.confirm(window, title, string))
     return true;
   else 
     return false;
