@@ -27,10 +27,9 @@ function onInit()
 {
     // init values here
     initServerSettings();
-    if(gServerType == "nntp") {
-        initRetentionSettings();
-        initDownloadSettings();
-    }
+    initRetentionSettings();
+    initDownloadSettings();
+
     onCheckItem("bc_notDownload", "offline.notDownload");
     onCheckItem("bc_downloadMsg", "nntp.downloadMsg");
     onCheckItem("bc_removeBody", "nntp.removeBody");
