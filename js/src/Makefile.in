@@ -285,8 +285,9 @@ endif
 
 ifeq ($(OS_ARCH),IRIX)
 ifndef GNU_CC
+_COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
 jsapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.c Makefile.in
-	$(CC) -o $@ -c $(shell echo $(COMPILE_CFLAGS) | sed 's/-O\([23]\|fast\)/-O1/g') $<
+	$(CC) -o $@ -c $(_COMPILE_CFLAGS) $<
 endif
 endif
 
