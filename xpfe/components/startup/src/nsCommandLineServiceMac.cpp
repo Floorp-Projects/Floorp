@@ -372,7 +372,7 @@ OSErr nsAppleEventHandler::HandleAppleEvent(
 			NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv);
 			if (NS_FAILED(rv))
 				return errAEEventNotHandled;
-			appShellService->Shutdown();
+			appShellService->Quit();
 			break;
 		}	
 		case ae_OpenDoc:
