@@ -67,7 +67,6 @@
 
 static nsresult GetDOMWindow( nsIXULWindow* inWindow,
                   nsCOMPtr< nsIDOMWindowInternal>& outDOMWindow);
-static inline PRUint32 GetWindowZ( nsIXULWindow *inWindow);
 
 static PRBool notifyOpenWindow(nsISupports *aElement, void* aData);
 static PRBool notifyCloseWindow(nsISupports *aElement, void* aData);
@@ -90,24 +89,11 @@ GetDOMWindow( nsIXULWindow* inWindow, nsCOMPtr< nsIDOMWindowInternal>& outDOMWin
    return outDOMWindow ? NS_OK : NS_ERROR_FAILURE;
 }
 
-
-/* return an integer corresponding to the relative z order of the window.
-   should probably be an explicit read-only method on nsIXULWindow */
-PRUint32
-GetWindowZ(nsIXULWindow *inWindow)
-{
-  PRUint32 order;
-  inWindow->GetZlevel(&order);
-  return order;
-}
-
-
-
 PRInt32   nsWindowMediator::gRefCnt = 0;
 
 nsWindowMediator::nsWindowMediator() :
   mEnumeratorList(), mOldestWindow(0), mTopmostWindow(0),
-  mTimeStamp(0), mUpdateBatchNest(0), mListLock(0)
+  mTimeStamp(0), mSortingZOrder(PR_FALSE), mListLock(0)
 {
    // This should really be done in the static constructor fn.
    nsresult rv;
@@ -158,20 +144,10 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
 NS_IMETHODIMP
 nsWindowMediator::UnregisterWindow(nsIXULWindow* inWindow)
 {
-  // Find Window info
-  nsWindowInfo *info,
-               *listEnd;
-
   nsAutoLock lock(mListLock);
-  info = mOldestWindow;
-  listEnd = 0;
-  while (info != listEnd) {
-    if (info->mWindow.get() == inWindow)
-      return UnregisterWindow(info);
-    info = info->mYounger;
-    listEnd = mOldestWindow;
-  }
-
+  nsWindowInfo *info = GetInfoFor(inWindow);
+  if (info)
+    return UnregisterWindow(info);
   return NS_ERROR_INVALID_ARG;
 }
 
@@ -205,7 +181,50 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
   return NS_OK;
 }
 
+nsWindowInfo *
+nsWindowMediator::GetInfoFor(nsIXULWindow *aWindow)
+{
+  nsWindowInfo *info,
+               *listEnd;
 
+  if (!aWindow)
+    return 0;
+
+  info = mOldestWindow;
+  listEnd = 0;
+  while (info != listEnd) {
+    if (info->mWindow.get() == aWindow)
+      return info;
+    info = info->mYounger;
+    listEnd = mOldestWindow;
+  }
+  return 0;
+}
+
+nsWindowInfo *
+nsWindowMediator::GetInfoFor(nsIWidget *aWindow)
+{
+  nsWindowInfo *info,
+               *listEnd;
+
+  if (!aWindow)
+    return 0;
+
+  info = mOldestWindow;
+  listEnd = 0;
+
+  nsCOMPtr<nsIWidget> scanWidget;
+  while (info != listEnd) {
+    nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(info->mWindow));
+    if (base)
+      base->GetMainWidget(getter_AddRefs(scanWidget));
+    if (aWindow == scanWidget.get())
+      return info;
+    info = info->mYounger;
+    listEnd = mOldestWindow;
+  }
+  return 0;
+}
 
 NS_METHOD
 nsWindowMediator::GetEnumerator( const PRUnichar* inType, nsISimpleEnumerator** outEnumerator)
@@ -363,20 +382,12 @@ nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
 NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTimeStamp( nsIXULWindow* inWindow)
 {
-  nsWindowInfo *info,
-               *listEnd;
-
   nsAutoLock lock(mListLock);
-  info = mOldestWindow;
-  listEnd = 0;
-  while (info != listEnd) {
-    if (info->mWindow.get() == inWindow) {
-      // increment the window's time stamp
-      info->mTimeStamp = ++mTimeStamp;
-      return NS_OK;
-    }
-    info = info->mYounger;
-    listEnd = mOldestWindow;
+  nsWindowInfo *info = GetInfoFor(inWindow);
+  if (info) {
+    // increment the window's time stamp
+    info->mTimeStamp = ++mTimeStamp;
+    return NS_OK;
   }
   return NS_ERROR_FAILURE; 
 }
@@ -387,24 +398,13 @@ NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTitle( nsIXULWindow* inWindow,
                                      const PRUnichar* inTitle )
 {
-  nsWindowInfo *info,
-               *listEnd;
-
   nsAutoLock lock(mListLock);
-  for (info = mOldestWindow, listEnd = 0;
-       info != listEnd;
-       info = info->mYounger, listEnd = mOldestWindow) {
-
-    if (info->mWindow.get() != inWindow)
-      continue;
-
-	if (mListeners) {
-      windowData winData = { inWindow, inTitle };
-	  mListeners->EnumerateForwards(notifyWindowTitleChange, (void *)&winData);
-	}
-
+  if (mListeners && GetInfoFor(inWindow)) {
+    windowData winData = { inWindow, inTitle };
+    mListeners->EnumerateForwards(notifyWindowTitleChange, (void *)&winData);
   }
-  return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 
@@ -435,7 +435,6 @@ nsWindowMediator::CalculateZPosition(
   if (inPosition != nsIWindowMediator::zLevelTop &&
       inPosition != nsIWindowMediator::zLevelBottom &&
       inPosition != nsIWindowMediator::zLevelBelow)
-// || inPosition == nsIWindowMediator::zLevelBelow && !inBelow
 
     return NS_ERROR_INVALID_ARG;
 
@@ -444,30 +443,29 @@ nsWindowMediator::CalculateZPosition(
   PRBool        found = PR_FALSE;
   nsresult      result = NS_OK;
   
-  PRUint32      inZ;
-  inWindow->GetZlevel(&inZ);
-
   *outPosition = inPosition;
   *outAltered = PR_FALSE;
+
+  if (mSortingZOrder) { // don't fight SortZOrder()
+    *outBelow = inBelow;
+    NS_IF_ADDREF(*outBelow);
+    return NS_OK;
+  }
+
+  PRUint32 inZ;
+  GetZLevel(inWindow, &inZ);
 
   nsAutoLock lock(mListLock);
 
   if (inPosition == nsIWindowMediator::zLevelBelow) {
 
-    // locate inBelow. it had better be in the z-list if it's a valid window.
-    if (inBelow && info)
-      do {
-        nsCOMPtr<nsIWidget> scanWidget;
-        nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(info->mWindow));
-        if (base)
-          base->GetMainWidget(getter_AddRefs(scanWidget));
-      
-        if (inBelow == scanWidget.get()) {
-          found = PR_TRUE;
-          break;
-        }
-        info = info->mLower;
-      } while (info != mTopmostWindow);
+    // locate inBelow. use topmost if it can't be found or isn't in the
+    // z-order list
+    info = GetInfoFor(inBelow);
+    if (!info || info->mYounger != info && info->mLower == info)
+      info = mTopmostWindow;
+    else
+      found = PR_TRUE;
 
     if (!found) {
       /* Treat unknown windows as a request to be on top.
@@ -480,11 +478,11 @@ nsWindowMediator::CalculateZPosition(
   }
 
   if (inPosition == nsIWindowMediator::zLevelTop) {
-    if (mTopmostWindow && GetWindowZ(mTopmostWindow->mWindow) > inZ) {
+    if (mTopmostWindow && mTopmostWindow->mZLevel > inZ) {
 
       // asked for topmost, can't have it. locate highest allowed position.
       do {
-        if (GetWindowZ(info->mWindow) <= inZ)
+        if (info->mZLevel <= inZ)
           break;
         info = info->mLower;
       } while (info != mTopmostWindow);
@@ -495,12 +493,12 @@ nsWindowMediator::CalculateZPosition(
 
     }
   } else if (inPosition == nsIWindowMediator::zLevelBottom) {
-    if (mTopmostWindow && GetWindowZ(mTopmostWindow->mHigher->mWindow) < inZ) {
+    if (mTopmostWindow && mTopmostWindow->mHigher->mZLevel < inZ) {
 
       // asked for bottommost, can't have it. locate lowest allowed position.
       do {
         info = info->mHigher;
-        if (GetWindowZ(info->mWindow) >= inZ)
+        if (info->mZLevel >= inZ)
           break;
       } while (info != mTopmostWindow);
 
@@ -515,14 +513,14 @@ nsWindowMediator::CalculateZPosition(
     // check that we're in the right z-plane
     if (found) {
       belowWindow = info->mWindow;
-      relativeZ = GetWindowZ(belowWindow);
+      relativeZ = info->mZLevel;
       if (relativeZ > inZ) {
 
         // might be OK. is lower window, if any, lower?
-        if (info->mLower != info && GetWindowZ(info->mLower->mWindow) > inZ) {
+        if (info->mLower != info && info->mLower->mZLevel > inZ) {
 
           do {
-            if (GetWindowZ(info->mWindow) <= inZ)
+            if (info->mZLevel <= inZ)
               break;
             info = info->mLower;
           } while (info != mTopmostWindow);
@@ -535,11 +533,11 @@ nsWindowMediator::CalculateZPosition(
         // nope. look for a higher window to be behind.
         do {
           info = info->mHigher;
-          if (GetWindowZ(info->mWindow) >= inZ)
+          if (info->mZLevel >= inZ)
             break;
         } while (info != mTopmostWindow);
 
-        if (GetWindowZ(info->mWindow) >= inZ)
+        if (info->mZLevel >= inZ)
           belowWindow = info->mWindow;
         else
           *outPosition = nsIWindowMediator::zLevelTop;
@@ -569,8 +567,7 @@ nsWindowMediator::SetZPosition(
                 nsIXULWindow *inBelow) {
 
   nsWindowInfo *inInfo,
-               *belowInfo,
-               *listEnd;
+               *belowInfo;
 
   if (inPosition != nsIWindowMediator::zLevelTop &&
       inPosition != nsIWindowMediator::zLevelBottom &&
@@ -582,35 +579,27 @@ nsWindowMediator::SetZPosition(
 
     return NS_ERROR_INVALID_ARG;
 
+  if (mSortingZOrder) // don't fight SortZOrder()
+    return NS_OK;
+
   nsAutoLock lock(mListLock);
 
-  /* locate inWindow and unlink it from the z-order list
-     notice we look for it in the age list, not the z-order list.
-     this is because the former is guaranteed complete, while
+  /* Locate inWindow and unlink it from the z-order list.
+     It's important we look for it in the age list, not the z-order list.
+     This is because the former is guaranteed complete, while
      now may be this window's first exposure to the latter. */
-  inInfo = mOldestWindow;
-  listEnd = 0;
-  while (inInfo != listEnd) {
-    if (inWindow == inInfo->mWindow.get())
-      break;
-    inInfo = inInfo->mYounger;
-    listEnd = mOldestWindow;
-  }
-  if (inInfo == listEnd)
+  inInfo = GetInfoFor(inWindow);
+  if (!inInfo)
     return NS_ERROR_INVALID_ARG;
 
-  /* locate inBelow, place inWindow behind it. inBelow, if given,
-     had better be in the z-order list. */
+  // locate inBelow, place inWindow behind it
   if (inPosition == nsIWindowMediator::zLevelBelow) {
-    belowInfo = mTopmostWindow;
-    listEnd = 0;
-    while (belowInfo != listEnd) {
-      if (inBelow == belowInfo->mWindow.get())
-        break;
-      belowInfo = belowInfo->mLower;
-      listEnd = mTopmostWindow;
-    }
-    if (belowInfo == listEnd)
+    belowInfo = GetInfoFor(inBelow);
+    // it had better also be in the z-order list
+    if (belowInfo &&
+        belowInfo->mYounger != belowInfo && belowInfo->mLower == belowInfo)
+      belowInfo = 0;
+    if (!belowInfo)
       if (inBelow)
         return NS_ERROR_INVALID_ARG;
       else
@@ -621,13 +610,180 @@ nsWindowMediator::SetZPosition(
     belowInfo = mTopmostWindow ? mTopmostWindow->mHigher : 0;
 
   if (inInfo != belowInfo) {
-    inInfo->Unlink( PR_FALSE, PR_TRUE );
-    inInfo->InsertAfter( 0, belowInfo );
+    inInfo->Unlink(PR_FALSE, PR_TRUE);
+    inInfo->InsertAfter(0, belowInfo);
   }
   if (inPosition == nsIWindowMediator::zLevelTop)
     mTopmostWindow = inInfo;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, PRUint32 *_retval) {
+
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsIXULWindow::normalZ;
+  nsWindowInfo *info = GetInfoFor(aWindow);
+  if (info)
+    *_retval = info->mZLevel;
+  else {
+    NS_WARNING("getting z level of unregistered window");
+    // this goes off during window destruction
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowMediator::SetZLevel(nsIXULWindow *aWindow, PRUint32 aZLevel) {
+
+  nsAutoLock lock(mListLock);
+
+  nsWindowInfo *info = GetInfoFor(aWindow);
+  NS_ASSERTION(info, "setting z level of unregistered window");
+  if (!info)
+    return NS_ERROR_FAILURE;
+
+  if (info->mZLevel != aZLevel) {
+    PRBool lowered = info->mZLevel > aZLevel;
+    info->mZLevel = aZLevel;
+    if (lowered)
+      SortZOrderFrontToBack();
+    else
+      SortZOrderBackToFront();
+  }
+  return NS_OK;
+}
+
+/*   Fix potentially out-of-order windows by performing an insertion sort
+   on the z-order list. The method will work no matter how broken the
+   list, but its assumed usage is immediately after one window's z level
+   has been changed, so one window is potentially out of place. Such a sort
+   is most efficiently done in a particular direction. Use this one
+   if a window's z level has just been reduced, so the sort is most efficiently
+   done front to back. Assumes caller has locked mListLock.
+     Note it's hardly worth going to all the trouble to write two versions
+   of this method except that if we choose the inefficient sorting direction,
+   on slow systems windows could visibly bubble around the window that
+   was moved.
+*/
+void
+nsWindowMediator::SortZOrderFrontToBack() {
+
+  nsWindowInfo *scan,   // scans list looking for problems
+               *search, // searches for correct placement for scan window
+               *prev,   // previous search element
+               *lowest; // bottom-most window in list
+  PRBool       finished;
+
+  if (!mTopmostWindow) // early during program execution there's no z list yet
+    return;            // there's also only one window, so this is not dangerous
+
+  mSortingZOrder = PR_TRUE;
+
+  /* Step through the list from top to bottom. If we find a window which
+     should be moved down in the list, move it to its highest legal position. */
+  do {
+    finished = PR_TRUE;
+    lowest = mTopmostWindow->mHigher;
+    scan = mTopmostWindow;
+    while (scan != lowest) {
+      PRUint32 scanZ = scan->mZLevel;
+      if (scanZ < scan->mLower->mZLevel) { // out of order
+        search = scan->mLower;
+        do {
+          prev = search;
+          search = search->mLower;
+        } while (prev != lowest && scanZ < search->mZLevel);
+
+        // reposition |scan| within the list
+        if (scan == mTopmostWindow)
+          mTopmostWindow = scan->mLower;
+        scan->Unlink(PR_FALSE, PR_TRUE);
+        scan->InsertAfter(0, prev);
+
+        // fix actual window order
+        nsCOMPtr<nsIBaseWindow> base;
+        nsCOMPtr<nsIWidget> scanWidget;
+        nsCOMPtr<nsIWidget> prevWidget;
+        base = do_QueryInterface(scan->mWindow);
+        if (base)
+          base->GetMainWidget(getter_AddRefs(scanWidget));
+        base = do_QueryInterface(prev->mWindow);
+        if (base)
+          base->GetMainWidget(getter_AddRefs(prevWidget));
+        if (scanWidget)
+          scanWidget->PlaceBehind(eZPlacementBelow, prevWidget, PR_FALSE);
+
+        finished = PR_FALSE;
+        break;
+      }
+      scan = scan->mLower;
+    }
+  } while (!finished);
+
+  mSortingZOrder = PR_FALSE;
+}
+
+// see comment for SortZOrderFrontToBack
+void
+nsWindowMediator::SortZOrderBackToFront() {
+
+  nsWindowInfo *scan,   // scans list looking for problems
+               *search, // searches for correct placement for scan window
+               *lowest; // bottom-most window in list
+  PRBool       finished;
+
+  if (!mTopmostWindow) // early during program execution there's no z list yet
+    return;            // there's also only one window, so this is not dangerous
+
+  mSortingZOrder = PR_TRUE;
+
+  /* Step through the list from bottom to top. If we find a window which
+     should be moved up in the list, move it to its lowest legal position. */
+  do {
+    finished = PR_TRUE;
+    lowest = mTopmostWindow->mHigher;
+    scan = lowest;
+    while (scan != mTopmostWindow) {
+      PRUint32 scanZ = scan->mZLevel;
+      if (scanZ > scan->mHigher->mZLevel) { // out of order
+        search = scan;
+        do
+          search = search->mHigher;
+        while (search != lowest && scanZ > search->mZLevel);
+
+        // reposition |scan| within the list
+        if (scan != search && scan != search->mLower) {
+          scan->Unlink(PR_FALSE, PR_TRUE);
+          scan->InsertAfter(0, search);
+        }
+        if (search == lowest)
+          mTopmostWindow = scan;
+
+        // fix actual window order
+        nsCOMPtr<nsIBaseWindow> base;
+        nsCOMPtr<nsIWidget> scanWidget;
+        nsCOMPtr<nsIWidget> searchWidget;
+        base = do_QueryInterface(scan->mWindow);
+        if (base)
+          base->GetMainWidget(getter_AddRefs(scanWidget));
+        if (mTopmostWindow != scan) {
+          base = do_QueryInterface(search->mWindow);
+          if (base)
+            base->GetMainWidget(getter_AddRefs(searchWidget));
+        }
+        if (scanWidget)
+          scanWidget->PlaceBehind(eZPlacementBelow, searchWidget, PR_FALSE);
+
+        finished = PR_FALSE;
+        break;
+      }
+      scan = scan->mHigher;
+    }
+  } while (!finished);
+
+  mSortingZOrder = PR_FALSE;
 }
 
 // COM
@@ -638,8 +794,6 @@ NS_IMPL_RELEASE(nsWindowMediator)
 nsresult
 nsWindowMediator::Init()
 {
-  nsresult rv;
-  
   if (gRefCnt++ == 0)
   {
     mListLock = PR_NewLock();
