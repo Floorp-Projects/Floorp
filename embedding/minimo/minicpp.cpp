@@ -34,6 +34,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * minicpp
+ * ======================
+ * 
+ * Mozilla requires only a few libstdc++ functions.  Minicpp
+ * is a simple stub that provides these functions allowing 
+ * some application using Mozilla not to include libstdc++
+ * with their distribution.
+ * 
+ * To build minicpp, on linux:
+ * 
+ * gcc -shared -o libminicpp.so -fPIC minicpp.cpp
+ * 
+ * Results may vary.  
+ */
+
 #include <stdlib.h>
 
 //global new and delete replacements to avoid need for libstdc++
