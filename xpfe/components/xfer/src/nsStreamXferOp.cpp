@@ -46,6 +46,8 @@
 #define DEBUG_PRINTF (void)
 #endif
 
+NS_IMPL_ISUPPORTS4(nsStreamXferOp, nsIStreamObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
+
 // ctor - save arguments in data members.
 nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsIFileSpec *target ) 
     : mInputChannel( source ),
@@ -163,10 +165,27 @@ nsStreamXferOp::Start( void ) {
                                           getter_AddRefs( mOutputChannel ) );
     
                 if ( NS_SUCCEEDED( rv ) ) {
-                    // Read the input channel (with ourself as the listener).
-                    rv = mInputChannel->AsyncRead( 0, -1, 0, this );
+                    // reset the channel's interface requestor so we receive status
+                    // notifications.
+                    rv = mInputChannel->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor*,this));
+                    if (NS_FAILED(rv)) {
+                        this->OnError(0, rv);
+                        return rv;
+                    }
+
+                    // get the input stream from the channel.
+                    nsCOMPtr<nsIInputStream> inStream;
+                    rv = mInputChannel->OpenInputStream(0, -1, getter_AddRefs(inStream));
+                    if (NS_FAILED(rv)) {
+                        this->OnError(0, rv);
+                        return rv;
+                    }
+
+                    // hand the output channel our input stream. it will take care
+                    // of reading data from the stream and writing it to disk.
+                    rv = mOutputChannel->AsyncWrite(inStream, 0, -1, nsnull, NS_STATIC_CAST(nsIStreamObserver*,this));
                     if ( NS_FAILED( rv ) ) {
-                        this->OnError( kOpAsyncRead, rv );
+                        this->OnError( kOpAsyncWrite, rv );
                     }
                 } else {
                     this->OnError( kOpCreateTransport, rv );
@@ -228,72 +247,6 @@ nsStreamXferOp::Stop( void ) {
     return rv;
 }
 
-// Process the data by writing it to the output channel.
-NS_IMETHODIMP
-nsStreamXferOp::OnDataAvailable( nsIChannel     *channel,
-                                 nsISupports    *aContext,
-                                 nsIInputStream *aIStream,
-                                 PRUint32        offset,
-                                 PRUint32        aLength ) {
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG_law
-    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnDataAvailable, offset=%d length=%d\n",
-                  (int)offset, (int)aLength );
-#endif
-
-    if ( mOutputStream ) {
-        // Write the data to the output stream.
-        // Read a buffer full till aLength bytes have been processed.
-        char buffer[ 8192 ];
-        unsigned long bytesRemaining = aLength;
-        while ( bytesRemaining ) {
-            unsigned int bytesRead;
-            // Read a buffer full or the number remaining (whichever is smaller).
-            rv = aIStream->Read( buffer,
-                                 PR_MIN( sizeof( buffer ),
-                                 bytesRemaining ),
-                                 &bytesRead );
-            if ( NS_SUCCEEDED( rv ) ) {
-                // Write the bytes just read to the output stream.
-                unsigned int bytesWritten;
-                rv = mOutputStream->Write( buffer, bytesRead, &bytesWritten );
-                if ( NS_SUCCEEDED( rv ) && bytesWritten == bytesRead ) {
-                    // All bytes written OK.
-                    bytesRemaining -= bytesWritten;
-                } else {
-                    // Something is wrong.
-                    if ( NS_SUCCEEDED( rv ) ) {
-                        // Not all bytes were written for some strange reason.
-                        rv = NS_ERROR_FAILURE;
-                    }
-                    this->OnError( kOpWrite, rv );
-                }
-            } else {
-                this->OnError( kOpRead, rv );
-            }
-        }
-    } else {
-        rv = NS_ERROR_NOT_INITIALIZED;
-        this->OnError( 0, rv );
-    }
-
-    if ( NS_FAILED( rv ) ) {
-        // Oh dear.  close up shop.
-        this->Stop();
-    } else {
-        // Fake OnProgress.
-        mBytesProcessed += aLength;
-        if ( mContentLength == 0 && channel ) {
-            // Get content length from input channel.
-            channel->GetContentLength( &mContentLength );
-        }
-        this->OnProgress( mOutputChannel, 0, mBytesProcessed, mContentLength );
-    }
-
-    return rv;
-}
-
 // This is called when the input channel is successfully opened.
 //
 // We also open the output stream at this point.
@@ -305,15 +258,6 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
     DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStartRequest; channel=0x%08X, context=0x%08X\n",
                   (int)(void*)channel, (int)(void*)aContext );
 #endif
-
-    // Open output stream.
-    rv = mOutputChannel->OpenOutputStream( 0, getter_AddRefs( mOutputStream ) );
-
-    if ( NS_FAILED( rv ) ) {
-        // Give up all hope.
-        this->OnError( kOpOpenOutputStream, rv );
-        this->Stop();
-    }
 
     return rv;
 }
@@ -331,16 +275,20 @@ nsStreamXferOp::GetInterface(const nsIID &anIID, void **aResult ) {
 // value is the number of bytes processed, the second the total number
 // expected.
 //
-//XXX This function is not called at the moment because this object is not
-//    provided as the event sink by any event sink getter!
 NS_IMETHODIMP
 nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
                                      PRUint32 aProgress, PRUint32 aProgressMax) {
     nsresult rv = NS_OK;
 
+    if (mContentLength < 1) {
+        NS_ASSERTION(channel, "should have a channel");
+        rv = mInputChannel->GetContentLength(&mContentLength);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     if ( mObserver ) {
         char buf[32];
-        PR_snprintf( buf, sizeof buf, "%lu %ld", (unsigned long)aProgress, (long)aProgressMax );
+        PR_snprintf( buf, sizeof buf, "%lu %ld", (unsigned long)aProgress, (long)mContentLength );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   nsString( NS_ISTREAMTRANSFER_PROGID ";onProgress" ).GetUnicode(),
                                   nsString( buf ).GetUnicode() );
@@ -469,52 +417,4 @@ nsStreamXferOp::SetObserver( nsIObserver*aObserver ) {
     NS_IF_ADDREF( mObserver );
 
     return rv;
-}
-
-// Generate standard implementation of AddRef/Release for nsStreamXferOp
-NS_IMPL_ADDREF( nsStreamXferOp )
-NS_IMPL_RELEASE( nsStreamXferOp )
-
-// QueryInterface, supports all the interfaces we implement.
-NS_IMETHODIMP 
-nsStreamXferOp::QueryInterface( REFNSIID aIID, void** aInstancePtr ) {
-    if (aInstancePtr == NULL) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-    
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIStreamObserver*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIStreamObserver*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIStreamListener*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamTransferOperation>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIStreamTransferOperation*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIProgressEventSink>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIProgressEventSink*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIInterfaceRequestor>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIInterfaceRequestor*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    
-    return NS_ERROR_NO_INTERFACE;
 }

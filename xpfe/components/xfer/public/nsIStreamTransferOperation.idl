@@ -45,7 +45,7 @@ interface nsIStreamTransferOperation : nsISupports {
     void Stop();
 
     // Operation codes (for error notifications):
-    const unsigned long kOpAsyncRead        = 1;
+    const unsigned long kOpAsyncWrite       = 1;
     const unsigned long kOpWrite            = 2;
     const unsigned long kOpOpenOutputStream = 3;
     const unsigned long kOpCreateTransport  = 4;
