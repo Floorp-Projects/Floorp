@@ -27,7 +27,7 @@
 #include "nsIWebShellWindow.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
@@ -60,7 +60,7 @@ class nsVoidArray;
 class nsWebShellWindow : public nsXULWindow,
                          public nsIWebShellWindow,
                          public nsIWebShellContainer,
-                         public nsIDocumentLoaderObserver,
+                         public nsIWebProgressListener,
                          public nsIDocumentObserver
 
 {
@@ -105,8 +105,8 @@ public:
     const nsString& aPopupAlignment,
     const nsString& aAnchorAlignment);
   
-  // nsIDocumentLoaderObserver
-   NS_DECL_NSIDOCUMENTLOADEROBSERVER
+  // nsIWebProgressListener
+  NS_DECL_NSIWEBPROGRESSLISTENER
   
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument);

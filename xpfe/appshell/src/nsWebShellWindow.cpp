@@ -82,6 +82,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIFocusController.h"
 
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
+
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -229,7 +232,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
-   NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIXULWindow)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
@@ -303,7 +306,12 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
    r.x, r.y, r.width, r.height), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(docShellAsWin->Create(), NS_ERROR_FAILURE);
   mWebShell->SetContainer(this);
-  mDocShell->SetDocLoaderObserver(this);
+
+  // Attach a WebProgress listener.during initialization...
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell, &rv));
+  if (webProgress) {
+    webProgress->AddProgressListener(this);
+  }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
@@ -1215,19 +1223,33 @@ nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
 
 
 //----------------------------------------
-// nsIDocumentLoaderObserver implementation
+// nsIWebProgessListener implementation
 //----------------------------------------
 NS_IMETHODIMP
-nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                      nsIURI* aURL, const char* aCommand)
+nsWebShellWindow::OnProgressChange(nsIWebProgress *aProgress,
+                                   nsIRequest *aRequest,
+                                   PRInt32 aCurSelfProgress,
+                                   PRInt32 aMaxSelfProgress,
+                                   PRInt32 aCurTotalProgress,
+                                   PRInt32 aMaxTotalProgress)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                                    nsIChannel* channel, nsresult aStatus)
+nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
+                                nsIRequest *aRequest,
+                                PRInt32 aStateFlags,
+                                nsresult aStatus)
 {
+  // If the notification is not about a document finishing, then just
+  // ignore it...
+  if (!(aStateFlags & nsIWebProgressListener::STATE_STOP) || 
+      !(aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)) {
+    return NS_OK;
+  }
+
+
 #ifdef DEBUG_MENUSDEL
   printf("OnEndDocumentLoad\n");
 #endif
@@ -1235,23 +1257,21 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (mChromeLoaded)
     return NS_OK;
 
-  // We get notified every time a subframe is loaded. We
-  // need to properly ignore the load of subframes and only really
-  // execute our onload handler when we get a notification for ourselves
-  nsCOMPtr<nsISupports> container;
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem, parent;
+  //
+  // If this document notification is for a frame then ignore it...
+  //
+  nsCOMPtr<nsIDOMWindow> domWindow, topDOMWindow;
 
-  loader->GetContainer(getter_AddRefs(container));
-  // Is this a frame ?
-  docShellAsItem = do_QueryInterface(container);
-  if (docShellAsItem) {
-    docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
+  (void) aProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  if (domWindow) {
+    domWindow->GetTop(getter_AddRefs(topDOMWindow));
+
+    if (domWindow != topDOMWindow) {
+      return NS_OK;
+    }
   }
-  if (parent)
-    return NS_OK; // We're a subframe. Get out of dodge.
 
   mChromeLoaded = PR_TRUE;
-
   mLockedUntilChromeLoad = PR_FALSE;
 
 #ifdef USE_NATIVE_MENUS
@@ -1305,35 +1325,31 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShellWindow::OnLocationChange(nsIWebProgress *aProgress,
+                                   nsIRequest *aRequest,
+                                   nsIURI *aURI)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
-nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIChannel* channel)
+nsWebShellWindow::OnStatusChange(nsIWebProgress* aWebProgress,
+                                 nsIRequest* aRequest,
+                                 nsresult aStatus,
+                                 const PRUnichar* aMessage)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIChannel* channel, 
-                                    PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
+nsWebShellWindow::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                   nsIRequest *aRequest,
+                                   PRInt32 state)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIChannel* channel, nsString& aMsg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, nsresult aStatus)
-{
-  return NS_OK;
-}
 
 //----------------------------------------
 nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
@@ -1738,6 +1754,12 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
 // nsIBaseWindow
 NS_IMETHODIMP nsWebShellWindow::Destroy()
 {
+  nsresult rv;
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell, &rv));
+  if (webProgress) {
+    webProgress->RemoveProgressListener(this);
+  }
+
 #ifdef USE_NATIVE_MENUS
   {
   // unregister as document listener
@@ -1755,7 +1777,8 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
       }
    }
 #endif
-   
+
+
    return nsXULWindow::Destroy();
 }
 
