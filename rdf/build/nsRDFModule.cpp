@@ -62,7 +62,6 @@ static NS_DEFINE_CID(kRDFDefaultResourceCID,              NS_RDFDEFAULTRESOURCE_
 static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,         NS_RDFFILESYSTEMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFSearchDataSourceCID,             NS_RDFSEARCHDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFFindDataSourceCID,               NS_RDFFINDDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,                NS_RDFXMLDATASOURCE_CID);
@@ -123,7 +122,6 @@ MAKE_CTOR(XULControllers,XULControllers,Controllers)
 
 MAKE_CTOR(RDFXMLDataSource,RDFXMLDataSource,RDFDataSource)
 MAKE_CTOR(RDFFileSystemDataSource,RDFFileSystemDataSource,RDFDataSource)
-MAKE_CTOR(RDFFTPDataSource,RDFFTPDataSource,RDFDataSource)
 MAKE_CTOR(RDFCompositeDataSource,RDFCompositeDataSource,RDFCompositeDataSource)
 MAKE_CTOR(RDFContainer,RDFContainer,RDFContainer)
 
@@ -201,9 +199,6 @@ nsRDFModule::GetClassObject(nsIComponentManager *aCompMgr,
     }
     else if (aClass.Equals(kRDFFileSystemDataSourceCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewRDFFileSystemDataSource);
-    }
-    else if (aClass.Equals(kRDFFTPDataSourceCID)) {
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewRDFFTPDataSource);
     }
     else if (aClass.Equals(kRDFInMemoryDataSourceCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewRDFInMemoryDataSource);
@@ -290,8 +285,6 @@ static Components gComponents[] = {
       NS_RDF_DATASOURCE_PROGID_PREFIX "composite-datasource", },
     { "RDF File System Data Source", &kRDFFileSystemDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "files", },
-    { "RDF FTP Data Source", &kRDFFTPDataSourceCID,
-      NS_RDF_DATASOURCE_PROGID_PREFIX "ftp", },
     { "RDF In-Memory Data Source", &kRDFInMemoryDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource", },
     { "Local Store", &kLocalStoreCID,

@@ -27,7 +27,6 @@ LCFLAGS=-DMOZ_BRPROF
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \
-        .\$(OBJDIR)\nsFTPDataSource.obj         \
         .\$(OBJDIR)\nsLocalStore.obj            \
 	$(NULL)
 

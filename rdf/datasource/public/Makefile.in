@@ -31,7 +31,6 @@ MODULE		= rdf
 EXPORTS		= \
 		nsILocalStore.h \
 		nsIRDFFileSystem.h \
-		nsIRDFFTP.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -27,7 +27,6 @@ DEPTH=..\..\..
 EXPORTS	= \
         nsILocalStore.h         \
         nsIRDFFileSystem.h      \
-        nsIRDFFTP.h		\
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
