@@ -28,7 +28,7 @@ RANLIB			= ranlib
 ifeq ($(OS_TEST),alpha)
 CPU_ARCH		= alpha
 else
-OS_REL_CFLAGS		= -mno-486 -Di386
+OS_REL_CFLAGS		= -Di386
 CPU_ARCH		= x86
 endif
 CPU_ARCH_TAG		= _$(CPU_ARCH)
