@@ -31,8 +31,9 @@ LIBRARY_NAME	= shistory
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsSHEntry.cpp        \
-                  nsSHTransaction.cpp   \
-		  nsSHistoryModule.cpp \
+            nsSHTransaction.cpp   \
+            nsSHistoryModule.cpp \
+            nsSHistory.cpp \
             $(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -60,19 +60,18 @@ nsSHTransaction::~nsSHTransaction()
 NS_IMETHODIMP
 nsSHTransaction::Create(nsISHEntry * aSHEntry, nsISHTransaction * aParent)
 {
-     SetCurrentSHistoryEntry(aSHEntry);
+     SetSHEntry(aSHEntry);
 	 if (aParent) {
-		 // This will correctly set the parent child pointers 
-		
+		 // This will correctly set the parent child pointers 		
         ((nsSHTransaction *)aParent)->SetChild(this);
 	 }
 	 else
-		 SetParent(aParent);
+		 SetParent(nsnull);
 	 return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHTransaction::GetCurrentSHistoryEntry(nsISHEntry ** aResult)
+nsSHTransaction::GetSHEntry(nsISHEntry ** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = mSHEntry;
@@ -82,7 +81,7 @@ nsSHTransaction::GetCurrentSHistoryEntry(nsISHEntry ** aResult)
 
 
 nsresult
-nsSHTransaction::SetCurrentSHistoryEntry(nsISHEntry * aSHEntry)
+nsSHTransaction::SetSHEntry(nsISHEntry * aSHEntry)
 {
 	NS_IF_RELEASE(mSHEntry);
 	mSHEntry = aSHEntry;
@@ -106,18 +105,19 @@ nsSHTransaction::SetChild(nsISHTransaction * aChild)
 {
 	if (mChild) {
 		// There is already a child. Move the child to the LRV list
-		if (mLRVList) {
-           //Delete any old LRV item that was there. 
-
-		}
-		// Make the child the LRV item
-
+		NS_IF_RELEASE(mLRVList);
+		mLRVList = mChild;
+		NS_ADDREF(mLRVList);		
+		//SetLRVList(mChild);
 	}
+
    NS_ENSURE_SUCCESS(((nsSHTransaction *)aChild)->SetParent(this), NS_ERROR_FAILURE);
+   NS_IF_RELEASE(mChild);
    mChild = aChild;
    NS_IF_ADDREF(aChild);
    return NS_OK;
 }
+
 
 
 nsresult
@@ -128,6 +128,17 @@ nsSHTransaction::SetParent(nsISHTransaction * aParent)
 	 return NS_OK;
 }
 
+#if 0
+NS_IMETHODIMP
+nsSHTransaction::SetLRVList(nsISHTransaction * aLRVList) {
+	
+   NS_IF_RELEASE(mLRVList);
+   mLRVList = aLRVList;
+   NS_IF_ADDREF(mLRVList);
+   return NS_OK;
+   
+}
+#endif  /* 0 */
 
 nsresult
 nsSHTransaction::GetParent(nsISHTransaction ** aResult)
@@ -137,7 +148,6 @@ nsSHTransaction::GetParent(nsISHTransaction ** aResult)
    NS_IF_ADDREF(*aResult);
    return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsSHTransaction::GetLrvList(nsISHTransaction ** aResult)
