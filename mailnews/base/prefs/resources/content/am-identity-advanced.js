@@ -73,5 +73,5 @@ function onOk()
 function onSelected(event)
 {
     serverList.setAttribute("selectedKey", event.target.getAttribute("key"));
-    dump("Something selected on " + event.target.tagName + "\n");
+    dump("Something selected on " + event.target.localName + "\n");
 }

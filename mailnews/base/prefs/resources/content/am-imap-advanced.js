@@ -42,7 +42,7 @@ function onLoad()
         var slot = controls[i].id;
         var val = server[slot];
 
-        if (controls[i].tagName.toLowerCase() == "checkbox")
+        if (controls[i].localName.toLowerCase() == "checkbox")
             controls[i].checked = val;
         else
             controls[i].value = val;
@@ -59,7 +59,7 @@ function onOk()
     for (var i=0; i<controls.length; i++) {
         var slot = controls[i].id;
         if (slot) {
-            if (controls[i].tagName.toLowerCase() == "checkbox") {
+            if (controls[i].localName.toLowerCase() == "checkbox") {
                  server[slot] = controls[i].checked;
             }
             else

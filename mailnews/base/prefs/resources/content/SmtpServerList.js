@@ -116,9 +116,9 @@ function refreshServerList()
     // recreate <treechildren>
     // note - I tried creating the <treechildren> node pre-populated,
     // but the tree wouldn't notice the update
-    dump("Removing " + serverList.firstChild.tagName + "\n");
+    dump("Removing " + serverList.firstChild.localName + "\n");
     if (serverList.firstChild &&
-        serverList.firstChild.tagName.toLowerCase() == "treechildren")
+        serverList.firstChild.localName.toLowerCase() == "treechildren")
         serverList.removeChild(serverList.firstChild);
 
     var treeChildren = document.createElement("treechildren");

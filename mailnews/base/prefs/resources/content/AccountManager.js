@@ -80,7 +80,7 @@ function onLoad() {
   duplicateButton = document.getElementById("duplicateButton");
   deleteButton = document.getElementById("deleteButton");
   setDefaultButton = document.getElementById("setDefaultButton");
-  
+
   selectFirstAccount()
 }
 
@@ -101,7 +101,7 @@ function findFirstTreeItem(tree) {
   
   var treechildren;
   for (var i=0;i<children.length; i++) {
-    if (children[i].tagName == "treechildren") {
+    if (children[i].localName == "treechildren") {
       treechildren = children[i];
       break;
     }
@@ -109,7 +109,7 @@ function findFirstTreeItem(tree) {
 
   var children = treechildren.childNodes;
   for (var i=0; i<children.length; i++) {
-    if (children[i].tagName == "treeitem")
+    if (children[i].localName == "treeitem")
       return children[i];
   }
 }
@@ -530,7 +530,7 @@ function restorePage(pageId, serverId) {
 //
 function getFormElementValue(formElement) {
  try {
-  var type = formElement.tagName;
+  var type = formElement.localName;
   if (type=="checkbox") {
     if (formElement.getAttribute("reversed"))
       return !formElement.checked;
@@ -576,7 +576,7 @@ function setFormElementValue(formElement, value) {
   
   //formElement.value = formElement.defaultValue;
   //  formElement.checked = formElement.defaultChecked;
-  var type = formElement.tagName;
+  var type = formElement.localName;
   if (type == "checkbox") {
     if (value == undefined) {
       if (formElement.defaultChecked)
@@ -712,7 +712,7 @@ function getServerIdAndPageIdFromTree(tree)
 
   // for toplevel treeitems, we just use the current treeitem
   //  dump("servernode is " + servernode + "\n");
-  if (servernode.tagName != "treeitem") {
+  if (servernode.localName != "treeitem") {
     servernode = node;
   }
   serverId = servernode.getAttribute('id');  

@@ -106,7 +106,7 @@ function initializeDialog(filter)
 
         if (targets && targets.length > 0) {
             var target = targets[0];
-            if (target.tagName == "menuitem")
+            if (target.localName == "menuitem")
                 gActionTargetElement.selectedItem = target;
         }
     } else if (filter.action == nsMsgFilterAction.ChangePriority) {

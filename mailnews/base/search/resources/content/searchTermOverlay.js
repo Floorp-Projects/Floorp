@@ -187,7 +187,7 @@ function removeSearchRow(index)
     // searchattribute to find the first <treeitem>
     var treeItemRow = searchTermElement.searchattribute;
     while (treeItemRow) {
-        if (treeItemRow.tagName == "treeitem") break;
+        if (treeItemRow.localName == "treeitem") break;
         treeItemRow = treeItemRow.parentNode;
     }
 
