@@ -82,7 +82,7 @@ O_CRON=OFF          # turned on by -cron cron use only
 O_CRONFILE=OFF      # turned on by -cron cron and -fcron
 O_LOCAL=OFF         # turned on by -l run on a local build in $MOZROOT
 O_MAIL=OFF          # turned on by -m - sends email
-O_TINDERBOX=OFF     # turned on by -t run on a tinderbox build
+O_TBX=OFF           # turned on by -t run on a tinderbox build
                     # that means: local, from the startlocation
 
 if  [ -z "$DOMSUF" ]
@@ -177,7 +177,7 @@ glob_init()
         eval_opts $*    # parse parameters and options - set flags
     fi
                         # if running from cron HOST needs to be known early, 
-    set_host            # so the output file name can be constructed. 
+    init_host            # so the output file name can be constructed. 
     . $QASCRIPT_DIR/set_environment #finds out if we are running on Windows
     Debug "OPerating system: $os_name $os_full"
     if [ $O_WIN = "ON" ] ; then
@@ -185,15 +185,15 @@ glob_init()
         MASTERBUILD=$NT_MASTERBUILD
     fi
     umask 0    
-    set_dirs
-    set_files
-    set_vars
+    init_dirs
+    init_files
+    init_vars
 }
 
-################################### set_vars ###########################
+################################### init_vars ###########################
 # global shell function, sets the environment variables, part of init 
 ########################################################################
-set_vars()
+init_vars()
 {
     if [ -z "$LOGNAME" ]
     then
@@ -236,22 +236,48 @@ find_nt_masterbuild()
 
 set_d2()
 {
-    if [ "$O_TINDERBOX" = "ON" ] ; then
-        D2="$TINDERBOX_D2"
+    if [ "$O_TBX" = "ON" ] ; then
+        D2="$TBX_D2"
+        LOCALDIST=${UXDIST}
     else
         D2=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
+        LOCALDIST=${D2}/${MASTERBUILD}/mozilla/dist
     fi
 }
 
-################################### set_dirs ###########################
+tbx_dirs()
+{
+    TBX_D2=`cd ../../../../..;pwd`
+    D1="${TBX_D2}/../.." 
+    BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+    set_d2
+    UX_MASTERDIR=`cd ../../../..;pwd`
+    NT_MASTERDIR=$UX_MASTERDIR
+    MOZILLA_ROOT=$UX_MASTERDIR/mozilla
+
+    UXDIST=${MOZILLA_ROOT}/dist
+    NTDIST=${UXDIST}
+
+    if [ -z "${RESULTDIR}" ] ; then #FIXME, needs to be different for tinderbox
+        RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
+    fi
+
+    TESTSCRIPTDIR=`pwd`
+    COMMON=${TESTSCRIPTDIR}/common
+
+    set_objdir
+    debug_dirs
+    export_dirs
+}
+
+################################### init_dirs ###########################
 # global shell function, sets the directories, part of init 
 ########################################################################
-set_dirs()
+init_dirs()
 {
-    if [ "$O_TINDERBOX" = "ON" ] ; then
-        TINDERBOX_D2=`cd ../../../..;pwd`
-        D1="${TINDERBOX_D2}/../.." 
-        BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+    if [ "$O_TBX" = "ON" ] ; then
+        tbx_dirs
+        return
     elif [ "$O_WIN" = "ON" ] ; then
         win_set_d1
     else
@@ -263,7 +289,8 @@ set_dirs()
     if [ -z "${BCDIST}" ] ; then
         BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
     fi
-    UX_MASTERDIR=${D2}/${MASTERBUILD}
+
+    UX_MASTERDIR=${D2}/${UX_MASTERBUILD}
     find_nt_masterbuild
 
     if [ "$O_WIN" = "ON" ]
@@ -276,8 +303,9 @@ set_dirs()
     UXDIST=${UX_MASTERDIR}/mozilla/dist
     NTDIST=${NT_MASTERDIR}/mozilla/dist
 
-    RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
-
+    if [ -z "${RESULTDIR}" ] ; then 
+        RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
+    fi
 
     TESTSCRIPTDIR=${MOZILLA_ROOT}/security/nss/tests
 
@@ -294,8 +322,12 @@ set_dirs()
     COMMON=${TESTSCRIPTDIR}/common
 
     set_objdir
-    
+    debug_dirs
+    export_dirs
+}
 
+debug_dirs()
+{
     Debug "NTDIST $NTDIST"
     Debug "UXDIST $UXDIST"
     Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
@@ -304,15 +336,18 @@ set_dirs()
     Debug "LOCALDIST_BIN $LOCALDIST_BIN"
     Debug "COMMON $COMMON"
     Debug "MOZILLA_ROOT $MOZILLA_ROOT"
-        
+}
+
+export_dirs()
+{
     export D1 D2 NTDIST UXDIST RESULTDIR TESTSCRIPTDIR BCDIST
     export UX_MASTERDIR NT_MASTERDIR COMMON MOZILLA_ROOT
 }
 
-################################### set_files ###########################
+################################### init_files ###########################
 # global shell function, sets filenames, initializes files, part of init 
 ########################################################################
-set_files()
+init_files()
 {
     if [ $O_CRONFILE = "ON" ]
     then
@@ -376,7 +411,7 @@ eval_opts()
             turn_on_cronoptions
             ;;
         -T*|-t*)
-            O_TINDERBOX=ON
+            O_TBX=ON
             turn_on_cronoptions
             O_SILENT=OFF	#FIXME debug only
             ;;
@@ -456,7 +491,7 @@ eval_opts()
   
   Debug "Builddate $BUILDDATE NssVersion $NSSVER"
   export BUILDDATE NSSVER
-  export O_CRON O_SILENT O_DEBUG O_ALWAYS_YES O_TINDERBOX
+  export O_CRON O_SILENT O_DEBUG O_ALWAYS_YES O_TBX
 }
 
 ######################### win_set_d1 ################################
@@ -505,13 +540,17 @@ win_set_d1()
     Debug "D1 set to $D1"
 }
 
-########################### set_host ##################################
+########################### init_host ##################################
 # global shell function, sets required variables HOST and DOMSUF, and asks
 # the user if it has been set right
 ########################################################################
 set_host()
 {
-    set_host_done=0
+    init_host
+}
+init_host()
+{
+    init_host_done=0
 
     if [ $DS_WAS_SET = FALSE ] #give chance to overwrite, espec. for NT
     then
@@ -552,12 +591,12 @@ set_host()
     fi
     if [ $O_DEBUG = "ON" ]
     then
-        while [ $set_host_done -eq 0 ]
+        while [ $init_host_done -eq 0 ]
         do
             Echo
             ask "DOMSUF=$DOMSUF, HOST=$HOST - OK", "y" "n" &&
-                set_host_done=1
-            if [ $set_host_done -eq 0 ]
+                init_host_done=1
+            if [ $init_host_done -eq 0 ]
             then
                 Echo "input DOMSUF: "
                 read D
@@ -580,6 +619,52 @@ set_host()
 
 #-----------------------------# UTILS #----------------------------------
 
+########################### qa_stat_get_sysinfo ########################
+# local shell function, tries to determine the QA operating system
+########################################################################
+qa_stat_get_sysinfo()
+{
+    case $1 in
+        ?*) REM_SYS=$1
+            GET_SYSINFO="rsh $1"
+            ;;
+        *)  REM_SYS=""
+            GET_SYSINFO=""
+            ;;
+    esac
+    QA_SYS=`$GET_SYSINFO uname -sr`
+    echo $QA_SYS | grep Linux >/dev/null &&
+              QA_RHVER=`$GET_SYSINFO cat /etc/redhat-release`
+    if [ -n "$QA_RHVER" ]
+    then
+        QA_OS=`echo $REM_SYS $QA_RHVER | sed -e "s/Red Hat /RH /" \
+                    -e "s/ release//"`
+    else
+        case $QA_SYS in
+            *SunOS*5.8*)
+                IS_64=`$GET_SYSINFO isainfo -v | grep 64 >/dev/null && \
+                    echo 64 bit`
+                if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+                ;;
+            *HP*)
+                IS_64=`$GET_SYSINFO getconf KERNEL_BITS |
+                    grep 64 >/dev/null && echo 64 bit`
+                if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+                ;;
+            *AIX*)
+                IS_64=`$GET_SYSINFO lslpp -l |
+                    grep "bos.64bit"> /dev/null && echo 64 bit`
+                if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+                ;;
+        esac
+        QA_OS=`echo "$REM_SYS $QA_SYS $IS_64"`
+    fi
+    if [ "$O_SILENT" != ON ] ; then
+        echo $QA_OS
+    fi
+    QA_OS_STRING=`echo $QA_OS | sed -e "s/^[_ ]//" -e "s/ /_/g"`
+}
+
 ################################### set_objdir #########################
 # global shell function, sets the object directories and DIST
 ########################################################################
@@ -591,7 +676,6 @@ set_objdir()
     #at this point $MASTERBUILD needs to be either NT or unix
 
     set_d2
-    LOCALDIST=${D2}/${MASTERBUILD}/mozilla/dist
     LOCALDIST_BIN=${LOCALDIST}/${OBJDIR}/bin
     DIST=$LOCALDIST
 
@@ -793,7 +877,11 @@ Exit()
         rm $FILENAME 2>/dev/null
     fi
     #chmod a+rw ${RESULTDIR} ${RESULTDIR}/* ${RESULTDIR}/*/* &
-    exit
+    if [ -n "$O_TBX" -a "$O_TBX" = "ON" ] ; then
+        exit $TBX_EXIT
+    else
+        exit
+    fi
 }
 
 trap "rm -f ${TMPFILES} 2>/dev/null; Exit 'killed... cleaning up...'" 2 3 15
