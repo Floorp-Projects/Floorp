@@ -474,8 +474,6 @@ nsAuthURLParser::ParseAuthority(const char *auth, PRInt32 authLen,
                                 PRUint32 *hostnamePos, PRInt32 *hostnameLen,
                                 PRInt32 *port)
 {
-    nsresult rv;
-
     NS_PRECONDITION(auth, "null pointer");
 
     if (authLen < 0)
@@ -484,24 +482,21 @@ nsAuthURLParser::ParseAuthority(const char *auth, PRInt32 authLen,
     const char *p = (const char *) memchr(auth, '@', authLen);
     if (p) {
         // auth = <user-info@server-info>
-        rv = ParseUserInfo(auth, p - auth,
-                           usernamePos, usernameLen,
-                           passwordPos, passwordLen);
-        if (NS_FAILED(rv)) return rv;
-        rv = ParseServerInfo(p + 1, authLen - (p - auth + 1),
-                             hostnamePos, hostnameLen,
-                             port);
-        if (NS_FAILED(rv)) return rv;
+        ParseUserInfo(auth, p - auth,
+                      usernamePos, usernameLen,
+                      passwordPos, passwordLen);
+        ParseServerInfo(p + 1, authLen - (p - auth + 1),
+                        hostnamePos, hostnameLen,
+                        port);
         OFFSET_RESULT(hostname, p + 1 - auth);
     }
     else {
         // auth = <server-info>
         SET_RESULT(username, 0, -1);
         SET_RESULT(password, 0, -1);
-        rv = ParseServerInfo(auth, authLen,
-                             hostnamePos, hostnameLen,
-                             port);
-        if (NS_FAILED(rv)) return rv;
+        ParseServerInfo(auth, authLen,
+                        hostnamePos, hostnameLen,
+                        port);
     }
     return NS_OK;
 }
@@ -564,16 +559,6 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
         if (port)
            *port = -1;
     }
-
-    // hostname's must not contain '%' chars, as these could lead to security
-    // problems if the hostname is ever unescaped.
-    if (hostnameLen && memchr(serverinfo, '%', *hostnameLen)) {
-        SET_RESULT(hostname, 0, -1);
-        if (port)
-           *port = -1;
-        return NS_ERROR_MALFORMED_URI;
-    }
-
     return NS_OK;
 }
 
