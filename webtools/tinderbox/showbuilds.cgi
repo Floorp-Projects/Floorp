@@ -409,17 +409,14 @@ BEGIN {
 
       # Scrape data
       if (defined $td->{scrape}{$logfile}) {
-        my ($scrape_data)
+        my (@scrape_data)
             = @{ $td->{scrape}{$logfile} };
         # ex: Tp:5.45s
-        print sprintf "<br>$scrape_data";
+        my $i;
+        foreach $i (@scrape_data) {
+          print "<br>$i";
+        }
       }
-
-      # Scrape data
-      #if (defined $td->{scrape}{$logfile}) {
-      #  my @scrape_data = @{$td->{scrape}{$logfile}};
-      #  print "<br>@scrape_data[0],@scrape_data[1]";
-      #}
 
       # Warnings
       if (defined $td->{warnings}{$logfile}) {

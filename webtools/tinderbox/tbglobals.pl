@@ -482,9 +482,11 @@ sub load_scrape {
   open(BLOATLOG, "<$treedata->{name}/scrape.dat");
   while (<BLOATLOG>) {
     chomp;
-    my ($logfile, $scrape_data) = split /\|/;
+    my @list =  split /\|/;
+    my $logfile = @list[0];
+    shift(@list);
 
-    $scrape->{$logfile} = [ $scrape_data ];
+    $scrape->{$logfile} = [ @list ];
   }
   return $scrape;
 }
