@@ -460,7 +460,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
             aptr[x>>3] |= 1<<(7-x&0x7);
             line++;
           } else {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
             *cptr++ = 0;
             *cptr++ = 0;
             *cptr++ = 0;
