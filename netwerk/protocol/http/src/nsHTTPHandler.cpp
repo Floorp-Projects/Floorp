@@ -94,9 +94,24 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // remove now TODO
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 #ifdef MOZ_NEW_CACHE
+
 #include "nsICacheService.h"
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
-#endif
+
+// XXX move these time routines to a shared library
+static PRUint32
+PRTimeToSeconds(PRTime t_usec)
+{
+    PRTime usec_per_sec;
+    PRUint32 t_sec;
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+    LL_DIV(t_usec, t_usec, usec_per_sec);
+    LL_L2I(t_sec, t_usec);
+    return t_sec;
+}
+#define NowInSeconds() PRTimeToSeconds(PR_Now())
+
+#endif // MOZ_NEW_CACHE
 
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
@@ -731,6 +746,9 @@ nsHTTPHandler::SetMisc(const PRUnichar *misc)
 }
 
 nsHTTPHandler::nsHTTPHandler():
+#ifdef MOZ_NEW_CACHE
+    mLastPostID(NowInSeconds()),
+#endif
     mAcceptLanguages(nsnull),
     mAcceptEncodings(nsnull),
     mAcceptCharset(nsnull),

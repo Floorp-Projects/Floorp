@@ -139,6 +139,7 @@ protected:
 
 #ifdef MOZ_NEW_CACHE
     nsresult            OpenCacheEntry();
+    nsresult            GenerateCacheKey(nsAWritableCString &);
 
     nsresult            GetRequestTime(PRUint32 *);
     nsresult            SetRequestTime(PRUint32);
@@ -219,6 +220,7 @@ protected:
     nsCOMPtr<nsITransport>              mCacheTransport;
     nsCOMPtr<nsIRequest>                mCacheReadRequest;
     nsCacheAccessMode                   mCacheAccess;
+    PRUint32                            mPostID;
 #else
     nsCOMPtr<nsICachedNetData>          mCacheEntry;
     nsCOMPtr<nsIChannel>                mCacheChannel;
@@ -249,7 +251,9 @@ protected:
     PRPackedBool                        mOpenHasEventQueue;
      
     // Cache-related flags
-#ifndef MOZ_NEW_CACHE 
+#ifdef MOZ_NEW_CACHE 
+    PRPackedBool                        mFromCacheOnly;
+#else
     PRPackedBool                        mCachedContentIsAvailable;
 #endif
     PRPackedBool                        mCachedContentIsValid;

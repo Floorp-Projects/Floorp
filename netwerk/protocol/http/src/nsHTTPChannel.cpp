@@ -64,7 +64,11 @@
 
 #ifdef MOZ_NEW_CACHE
 
+#include "nsISupportsPrimitives.h" // for GetCacheKey
+
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+
+// XXX move these time routines to a shared library
 
 static PRTime
 SecondsToPRTime(PRUint32 t_sec)
@@ -106,7 +110,7 @@ TimeStringToSeconds(const char *str, PRUint32 *t_sec)
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
-#else
+#else // MOZ_NEW_CACHE
 
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
@@ -141,6 +145,10 @@ nsHTTPChannel::nsHTTPChannel(nsIURI *aURL, nsHTTPHandler *aHandler)
     , mURI(dont_QueryInterface(aURL))
     , mLoadAttributes(LOAD_NORMAL)
     , mLoadGroup(nsnull)
+#ifdef MOZ_NEW_CACHE
+    , mCacheAccess(nsICache::ACCESS_NONE)
+    , mPostID(0)
+#endif
     , mAuthRealm(nsnull)
     , mProxyType(nsnull)
     , mProxy(nsnull)
@@ -150,7 +158,9 @@ nsHTTPChannel::nsHTTPChannel(nsIURI *aURL, nsHTTPHandler *aHandler)
     , mConnected(PR_FALSE)
     , mApplyConversion(PR_TRUE)
     , mOpenHasEventQueue(PR_TRUE)
-#ifndef MOZ_NEW_CACHE
+#ifdef MOZ_NEW_CACHE
+    , mFromCacheOnly(PR_FALSE)
+#else
     , mCachedContentIsAvailable(PR_FALSE)
 #endif
     , mCachedContentIsValid(PR_FALSE)
@@ -841,40 +851,69 @@ nsHTTPChannel::OpenCacheEntry()
     NS_ENSURE_TRUE(mHandler, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(!mCacheEntry, NS_ERROR_FAILURE);
 
-    // for now we only cache GET and HEAD transactions.
-    if ((mRequest->Method() != nsHTTPAtoms::Get) &&
-        (mRequest->Method() != nsHTTPAtoms::Head))
+    nsCAutoString cacheKey;
+
+    if (mRequest->Method() == nsHTTPAtoms::Post) {
+        // If the post id is already set then this is an attempt to replay
+        // a post transaction via the cache.  Otherwise, we need a unique
+        // post id for this transaction.
+        if (mPostID == 0)
+            mPostID = mHandler->CreatePostID();
+    }
+    else if ((mRequest->Method() != nsHTTPAtoms::Get) &&
+             (mRequest->Method() != nsHTTPAtoms::Head))
         return NS_ERROR_NOT_AVAILABLE;
 
+    GenerateCacheKey(cacheKey);
+
+    // Get a cache session with appropriate storage policy
     nsCacheStoragePolicy storagePolicy;
     if (mLoadAttributes & INHIBIT_PERSISTENT_CACHING)
         storagePolicy = nsICache::STORE_IN_MEMORY;
     else
         storagePolicy = nsICache::STORE_ANYWHERE; // allow on disk
-
     nsCOMPtr<nsICacheSession> session;
     rv = mHandler->GetCacheSession(storagePolicy, getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
-    // Find out if we're offline
+    // Are we offline?
     PRBool offline = PR_FALSE;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService();
     if (ioService)
         ioService->GetOffline(&offline);
 
-    // Set the requested cache access...
+    // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline)
-        accessRequested = nsICache::ACCESS_READ; // read from cache
+    if (offline) {
+        // Since we are offline, we can only read from the cache.
+        accessRequested = nsICache::ACCESS_READ;
+        mFromCacheOnly = PR_TRUE;
+    }
     else if (mLoadAttributes & FORCE_RELOAD)
         accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
+    else if (mFromCacheOnly)
+        accessRequested = nsICache::ACCESS_READ; // read from cache
     else
         accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
 
-    // Open a cache entry with key = url
-    return session->AsyncOpenCacheEntry(mRequest->Spec(),
+    return session->AsyncOpenCacheEntry(cacheKey,
                                         accessRequested,
                                         this);
+}
+
+nsresult
+nsHTTPChannel::GenerateCacheKey(nsAWritableCString &cacheKey)
+{
+    cacheKey.SetLength(0);
+    if (mPostID) {
+        char buf[32];
+        PR_snprintf(buf, sizeof(buf), "%x", mPostID);
+        cacheKey.Append("post-id=");
+        cacheKey.Append(buf);
+        cacheKey.Append("&url=");
+    }
+    cacheKey.Append(mRequest->Spec());
+    return NS_OK;
 }
 
 // The request-time is the time at which we sent the request.
@@ -1105,7 +1144,10 @@ nsHTTPChannel::CheckCache()
 
     // Get the cached HTTP response headers
     rv = mCacheEntry->GetMetaDataElement("http-headers", getter_Copies(str));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_WARNING("cache entry does not contain http headers!");
+        return rv;
+    }
 
     // Parse the cached HTTP response headers
     NS_IF_RELEASE(mCachedResponse); // XXX this should already be cleared !!
@@ -1399,7 +1441,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     *aResult = nsnull;
 
     // Don't cache the response again if already cached... FinishResponseHeaders
-    // calls ProcessStatusCode for handling cached redirects.
+    // calls ProcessStatusCode for handling cached redirects, which can call us!
     if (mCachedContentIsValid)
         return NS_OK;
 
@@ -1410,8 +1452,10 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     LOG(("nsHTTPChannel::CacheReceivedResponse [this=%x entry=%x]\n",
         this, mCacheEntry.get()));
 
-    if (!ResponseIsCacheable()) {
-        // XXX we should cache these as well, but doom them immediately.
+    // Every POST transaction has a unique ID associated with it.  If this
+    // is not a POST transaction (or if the POST transaction should not be
+    // cached) then the ID will be zero. 
+    if (!mPostID && !ResponseIsCacheable()) {
         CacheAbort(0);
         return NS_OK;
     }
@@ -2051,6 +2095,14 @@ nsHTTPChannel::Connect()
             // and the cache data is usable, so start pumping the data from
             // the cache...
             return ReadFromCache();
+        }
+        else if (mFromCacheOnly) {
+            // The cache no longer contains the requested resource, and we 
+            // are not allowed to refetch it, so there's nothing more to do.
+            // If this was a refetch of a POST transaction's resposne, then
+            // this failure indicates that the response is no longer cached.
+            rv = mPostID ? NS_ERROR_DOCUMENT_NOT_CACHED : NS_BINDING_FAILED;
+            return ResponseCompleted(mResponseDataListener, rv, nsnull);
         }
     }
 #else
@@ -3442,14 +3494,33 @@ nsHTTPChannel::SetCacheToken(nsISupports *token)
 NS_IMETHODIMP
 nsHTTPChannel::GetCacheKey(nsISupports **key)
 {
+    nsresult rv;
     NS_ENSURE_ARG_POINTER(key);
-    return CallQueryInterface(mURI, key);
+
+    nsCOMPtr<nsISupportsPRUint32> container =
+        do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = container->SetData(mPostID);
+    if (NS_FAILED(rv)) return rv;
+
+    return CallQueryInterface(container, key);
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetCacheKey(nsISupports *key)
+nsHTTPChannel::SetCacheKey(nsISupports *key, PRBool fromCacheOnly)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(key);
+
+    nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(key, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = container->GetData(&mPostID);
+    if (NS_FAILED(rv)) return rv;
+
+    mFromCacheOnly = fromCacheOnly;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3492,8 +3563,6 @@ nsHTTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 {
     LOG(("nsHTTPChannel::OnCacheEntryAvailable [this=%x entry=%x "
          "access=%x status=%x]\n", this, entry, access, status));
-
-    LOG(("Got cache entry descriptor: access=%x\n", access));
 
     if (NS_SUCCEEDED(status)) {
         mCacheEntry = entry;
