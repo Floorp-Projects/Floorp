@@ -157,7 +157,7 @@ print TEST "element: $element\n";
   </td>
 </tr>
 </table>
-<br><b><font size="+2">Addition Builds</font></b><br>
+<br><b><font size="+2">Additional Builds</font></b><br>
 (Comment will be added to the most recent cycle.)<br>
 __END_FORM
 
