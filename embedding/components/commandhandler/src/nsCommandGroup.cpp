@@ -58,7 +58,7 @@ public:
 
 protected:
 
-	static PRBool	HashEnum(nsHashKey *aKey, void *aData, void* aClosure);
+	static PRBool PR_CALLBACK HashEnum(nsHashKey *aKey, void *aData, void* aClosure);
 
 	nsresult			Initialize();
 
