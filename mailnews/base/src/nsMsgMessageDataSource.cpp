@@ -629,32 +629,37 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
                                          nsIRDFNode **target)
 {
-	if (kNC_SubjectCollation == property)
-		return createMessageNameNode(message, PR_TRUE, target);
-	else if (kNC_Subject == property)
-		return createMessageNameNode(message, PR_FALSE, target);
-	else if (kNC_SenderCollation == property)
-		return createMessageSenderNode(message, PR_TRUE, target);
-	else if (kNC_Sender == property)
-		return createMessageSenderNode(message, PR_FALSE, target);
-	else if ((kNC_Date == property))
-		return createMessageDateNode(message, target);
-	else if ((kNC_Status == property))
-		return createMessageStatusNode(message, target);
-	else if ((kNC_Flagged == property))
-		return createMessageFlaggedNode(message, target);
-	else if ((kNC_Priority == property))
-		return createMessagePriorityNode(message, target);
-	else if ((kNC_Size == property))
-		return createMessageSizeNode(message, target);
-	else if (( kNC_Total == property))
-		return createMessageTotalNode(message, target);
-	else if ((kNC_Unread == property))
-		return createMessageUnreadNode(message, target);
-  else if ((kNC_MessageChild == property))
-    return createMessageMessageChildNode(message, target);
+  nsresult rv = NS_RDF_NO_VALUE;
   
-	return NS_RDF_NO_VALUE;
+	if (kNC_SubjectCollation == property)
+		rv = createMessageNameNode(message, PR_TRUE, target);
+	else if (kNC_Subject == property)
+		rv = createMessageNameNode(message, PR_FALSE, target);
+	else if (kNC_SenderCollation == property)
+		rv = createMessageSenderNode(message, PR_TRUE, target);
+	else if (kNC_Sender == property)
+		rv = createMessageSenderNode(message, PR_FALSE, target);
+	else if ((kNC_Date == property))
+		rv = createMessageDateNode(message, target);
+	else if ((kNC_Status == property))
+		rv = createMessageStatusNode(message, target);
+	else if ((kNC_Flagged == property))
+		rv = createMessageFlaggedNode(message, target);
+	else if ((kNC_Priority == property))
+		rv = createMessagePriorityNode(message, target);
+	else if ((kNC_Size == property))
+		rv = createMessageSizeNode(message, target);
+	else if (( kNC_Total == property))
+		rv = createMessageTotalNode(message, target);
+	else if ((kNC_Unread == property))
+		rv = createMessageUnreadNode(message, target);
+  else if ((kNC_MessageChild == property))
+    rv = createMessageMessageChildNode(message, target);
+
+  if (NS_FAILED(rv))
+    return NS_RDF_NO_VALUE;
+
+  return NS_OK;
 }
 
 
