@@ -301,7 +301,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
                     nsnull,             					// nsMsgSendPart                     *relatedPart,
                     tArray);                   			// listener array
       
-      delete tArray;
+      PR_Free(tArray);
     }
     else
 	    	rv = NS_ERROR_FAILURE;
@@ -465,8 +465,9 @@ nsresult nsMsgCompose::CloseWindow()
 	{
     m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
 							                /* be sure we wont use it anymore. */
-		m_webShellWin->Close();
+		nsIWebShellWindow *saveWin = m_webShellWin;
 		m_webShellWin = nsnull;
+		saveWin->Close();
 	}
 
 	return NS_OK;

@@ -3293,6 +3293,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     return NS_ERROR_INVALID_ARG;
   }
 
+  delete tFileSpec;
+
   nsOutputFileStream tempOutfile(mCopyFileSpec);
   if (! tempOutfile.is_open()) 
   {	  
@@ -3313,7 +3315,6 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
       status = NS_MSG_COULDNT_OPEN_FCC_FOLDER;
       break;
     }
-    delete tFileSpec;
     NS_RELEASE(mCopyFileSpec);
     return status;
   }
