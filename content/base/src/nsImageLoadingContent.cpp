@@ -267,7 +267,7 @@ nsImageLoadingContent::RemoveObserver(imgIDecoderObserver* aObserver)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::GetRequest(const PRInt32 aRequestType,
+nsImageLoadingContent::GetRequest(PRInt32 aRequestType,
                                   imgIRequest** aRequest)
 {
   switch(aRequestType) {
