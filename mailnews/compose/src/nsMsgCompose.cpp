@@ -2361,13 +2361,13 @@ nsresult nsMsgCompose::BuildMailListArray(nsIAddrDatabase* database, nsIAbDirect
             if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
             {
               nsXPIDLString listName;
-              nsXPIDLString description;
+              nsXPIDLString listDescription;
 
               directory->GetListName(getter_Copies(listName));
-              directory->GetDescription(getter_Copies(description));
+              directory->GetDescription(getter_Copies(listDescription));
 
               nsMsgMailList* mailList = new nsMsgMailList(nsAutoString((const PRUnichar*)listName),
-                    nsAutoString((const PRUnichar*)description), directory);
+                    nsAutoString((const PRUnichar*)listDescription), directory);
               if (!mailList)
                 return NS_ERROR_OUT_OF_MEMORY;
               NS_ADDREF(mailList);
@@ -2939,8 +2939,8 @@ nsMsgRecipient::nsMsgRecipient() :
     NS_INIT_ISUPPORTS();
 }
  
-nsMsgRecipient::nsMsgRecipient(nsString& address, nsString& email, PRBool acceptHtml, PRBool processed) :
-  mAddress(address),
+nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRBool acceptHtml, PRBool processed) :
+  mAddress(fullAddress),
   mEmail(email),
   mAcceptHtml(acceptHtml),
   mProcessed(processed)
@@ -2966,7 +2966,7 @@ nsMsgMailList::nsMsgMailList()
     NS_INIT_ISUPPORTS();
 }
  
-nsMsgMailList::nsMsgMailList(nsString& name, nsString& description, nsIAbDirectory* directory) :
+nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbDirectory* directory) :
   mDirectory(directory)
 {
   NS_INIT_ISUPPORTS();
@@ -2976,12 +2976,12 @@ nsMsgMailList::nsMsgMailList(nsString& name, nsString& description, nsIAbDirecto
   if (parser)
   {
     char * fullAddress = nsnull;
-    char * utf8Name = name.ToNewUTF8String();
+    char * utf8Name = listName.ToNewUTF8String();
     char * utf8Email;
-    if (description.IsEmpty())
-      utf8Email = name.ToNewUTF8String();   
+    if (listDescription.IsEmpty())
+      utf8Email = listName.ToNewUTF8String();   
     else
-      utf8Email = description.ToNewUTF8String();   
+      utf8Email = listDescription.ToNewUTF8String();   
 
     parser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
     if (fullAddress && *fullAddress)
@@ -2997,12 +2997,12 @@ nsMsgMailList::nsMsgMailList(nsString& name, nsString& description, nsIAbDirecto
   if (mFullName.IsEmpty())
   {
       //oops, parser problem! I will try to do my best...
-      mFullName = name;
+      mFullName = listName;
       mFullName.AppendWithConversion(" <");
-      if (description.IsEmpty())
-        mFullName += name;
+      if (listDescription.IsEmpty())
+        mFullName += listName;
       else
-        mFullName += description;
+        mFullName += listDescription;
       mFullName.AppendWithConversion(">");
   }
 

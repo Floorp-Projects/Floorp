@@ -239,7 +239,7 @@ class nsMsgRecipient : public nsISupports
 {
 public:
   nsMsgRecipient();
-  nsMsgRecipient(nsString& address, nsString& email, PRBool acceptHtml = PR_FALSE, PRBool processed = PR_FALSE);
+  nsMsgRecipient(nsString fullAddress, nsString email, PRBool acceptHtml = PR_FALSE, PRBool processed = PR_FALSE);
 	virtual ~nsMsgRecipient();
 
   NS_DECL_ISUPPORTS
@@ -258,7 +258,7 @@ class nsMsgMailList : public nsISupports
 {
 public:
   nsMsgMailList();
-  nsMsgMailList(nsString& name, nsString& description, nsIAbDirectory* directory);
+  nsMsgMailList(nsString listName, nsString listDescription, nsIAbDirectory* directory);
 	virtual ~nsMsgMailList();
 
   NS_DECL_ISUPPORTS
