@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -25,24 +26,17 @@ MODULE		= unicharutil
 LIBRARY_NAME	= unicharutil
 IS_COMPONENT	= 1
 
-CSRCS		= \
-		  $(NULL)
+REQUIRES	= libxpcom
 
-CPPSRCS		= nsCaseConversionImp2.cpp \
-		  nsUnicharUtilFactory.cpp \
-		  nsCategoryImp.cpp \
-		  nsHankakuToZenkaku.cpp \
-		  nsEntityConverter.cpp  \
-		  $(NULL)
+CPPSRCS		= \
+		nsCaseConversionImp2.cpp \
+		nsUnicharUtilFactory.cpp \
+		nsCategoryImp.cpp \
+		nsHankakuToZenkaku.cpp \
+		nsEntityConverter.cpp \
+		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
-CFLAGS		+= -DUSE_NSREG -D__STDC__
-
-REQUIRES	= $(MODULE) libxpcom
-
-EXTRA_DSO_LDOPTS =\
-				-L$(DIST)/lib -lneckoutil_s \
-				$(NULL)
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lneckoutil_s
 
 include $(topsrcdir)/config/rules.mk
+

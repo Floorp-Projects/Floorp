@@ -1,3 +1,4 @@
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -13,37 +14,37 @@
 # The Initial Developer of the Original Code is John Fairhurst,
 # <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
 # Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+#
 
-DEPTH	= ../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = nglocale
+MODULE		= locale
+LIBRARY_NAME	= nglocale
+IS_COMPONENT	= 1
+OS2_IMPLIB	= 1
+OS2_LIBRARYNAME	= nglocale
+OS2_LIBS	= libuni xpcom ngbase libnslocale_s
 
-MODULE = locale
+REQUIRES	= xpcom unicharutil
 
-REQUIRES = xpcom unicharutil
+CPPSRCS		= \
+		nsLocaleOS2.cpp \
+		nsLocaleFactoryOS2.cpp \
+		nsCollationOS2.cpp \
+		nsDateTimeFormatOS2.cpp \
+		nsLocaleDllOS2.cpp \
+		$(NULL)
 
-EXPORTS = nsILocaleOS2.h
-
-CPPSRCS =                  \
-	nsLocaleOS2.cpp         \
-	nsLocaleFactoryOS2.cpp  \
-	nsCollationOS2.cpp      \
-	nsDateTimeFormatOS2.cpp \
-	nsLocaleDllOS2.cpp      \
-	$(NULL)
-
-IS_COMPONENT=1
-
-OS2_IMPLIB = 1
-OS2_LIBRARYNAME = nglocale
-OS2_LIBS = libuni xpcom ngbase libnslocale_s
-OS_LIBS += $(NSPR_LIBS)
-
-INCLUDES += $(srcdir) $(srcdir)/..
+EXPORTS		= nsILocaleOS2.h
 
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES	+= $(srcdir) $(srcdir)/..
+
+OS_LIBS		+= $(NSPR_LIBS)
+
