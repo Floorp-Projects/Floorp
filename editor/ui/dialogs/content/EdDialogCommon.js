@@ -1301,8 +1301,8 @@ function MakeRelativeUrl(url)
     return inputUrl;
 
   // Get just the file path part of the urls
-  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Directory, {start:0}, {end:0}); 
-  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Directory, {start:0}, {end:0});
+  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Path, {start:0}, {end:0}); 
+  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Path, {start:0}, {end:0});
 
   // We only return "urlPath", so we can convert
   //  the entire docPath for case-insensitive comparisons
