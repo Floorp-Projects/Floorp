@@ -97,7 +97,9 @@ endif # x86
 ifeq ($(OS_RELEASE),1.2)
 PORT_FLAGS		+= -DNEED_SYS_WAIT_H
 endif
-ifneq (,$(filter 2.0 2.1,$(OS_RELEASE)))
+
+# Linux 2.x
+ifneq (,$(filter 2.0 2.1 2.2,$(OS_RELEASE)))
 PORT_FLAGS		+= -DNO_INT64_T
 PLATFORM_FLAGS		+= -DLINUX2_0
 BUILD_UNIX_PLUGINS	= 1
@@ -106,9 +108,11 @@ ifdef BUILD_OPT
 OPTIMIZER		= -O2
 endif
 endif
-# I think just -DLINUX1 for 1.x, -DLINUX2 for 2.x, ... would be a better strategy (?) --briano.
-ifeq ($(OS_RELEASE),2.1)
-PLATFORM_FLAGS		+= -DLINUX2_1
+
+# Linux 2.2 should not be any differnt than 2.0 as far as mozilla is
+# concerned.  Defined the LINUX2_2 macro just in case.
+ifneq (,$(filter 2.1 2.2,$(OS_RELEASE)))
+PLATFORM_FLAGS		+= -DLINUX2_2
 endif
 
 ######################################################################
