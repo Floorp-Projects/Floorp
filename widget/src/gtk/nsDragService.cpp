@@ -148,12 +148,21 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     // before we start our drag, give the widget code a chance to
     // clean up any state.
     nsWidget::DragStarted();
+
+    // save our action type
+    GdkDragAction action = GDK_ACTION_DEFAULT;
+
+    if (aActionType & DRAGDROP_ACTION_COPY)
+      (int)action |= GDK_ACTION_COPY;
+    if (aActionType & DRAGDROP_ACTION_MOVE)
+      (int)action |= GDK_ACTION_MOVE;
+    if (aActionType & DRAGDROP_ACTION_LINK)
+      (int)action |= GDK_ACTION_LINK;
+
     // start our drag.
     GdkDragContext *context = gtk_drag_begin(mHiddenWidget,
                                              sourceList,
-                                             (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE |
-                                             GDK_ACTION_LINK),
-                                             // GDK_ACTION_DEFAULT,
+                                             action,
                                              1,
                                              &gdk_event);
     // make sure to set our default icon
@@ -175,6 +184,8 @@ NS_IMETHODIMP
 nsDragService::EndDragSession()
 {
   PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::EndDragSession"));
+  // unset our drag action
+  SetDragAction(DRAGDROP_ACTION_NONE);
   return nsBaseDragService::EndDragSession();
 }
 
@@ -508,11 +519,28 @@ nsDragService::TargetEndDragMotion   (GtkWidget      *aWidget,
                                       GdkDragContext *aContext,
                                       guint           aTime)
 {
-  PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::TargetEndDragMotion"));
-  if (mCanDrop)
-    gdk_drag_status(aContext, GDK_ACTION_COPY, aTime);
-  else
+  PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::TargetEndDragMotion %d", mCanDrop));
+
+  if (mCanDrop) {
+    GdkDragAction action;
+    // notify the dragger if we can drop
+    switch (mDragAction) {
+    case DRAGDROP_ACTION_COPY:
+      action = GDK_ACTION_COPY;
+      break;
+    case DRAGDROP_ACTION_LINK:
+      action = GDK_ACTION_LINK;
+      break;
+    default:
+      action = GDK_ACTION_MOVE;
+      break;
+    }
+    gdk_drag_status(aContext, action, aTime);
+  }
+  else {
     gdk_drag_status(aContext, (GdkDragAction)0, aTime);
+  }
+
   return NS_OK;
 }
 
