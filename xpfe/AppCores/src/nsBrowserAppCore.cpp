@@ -60,11 +60,16 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 
+
+#include "nsICmdLineService.h"
+
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
-
+static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 /* Define Interface IDs */
+static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIBrowserAppCoreIID,        NS_IDOMBROWSERAPPCORE_IID);
@@ -96,6 +101,7 @@ nsBrowserAppCore::nsBrowserAppCore()
 
   IncInstanceCount();
   NS_INIT_REFCNT();
+
 }
 
 nsBrowserAppCore::~nsBrowserAppCore()
@@ -439,6 +445,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
 {
   mContentWindow = aWin;
+
   NS_ADDREF(aWin);
   mContentScriptContext = GetScriptContext(aWin);
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
@@ -467,7 +474,9 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   }
 
   return NS_OK;
+
 }
+
 
 
 NS_IMETHODIMP    
@@ -592,11 +601,8 @@ nsBrowserAppCore::NewWindow()
 {  
   nsresult rv;
   nsString controllerCID;
-
-  char *  urlstr=nsnull;
-  char *   progname = nsnull;
-  char *   width=nsnull, *height=nsnull;
-  char *  iconic_state=nsnull;
+ 
+  char * urlstr = nsnull;
 
   nsIAppShellService* appShell = nsnull;
 
@@ -753,10 +759,7 @@ nsBrowserAppCore::DoDialog()
   nsresult rv;
   nsString controllerCID;
 
-  char *  urlstr=nsnull;
-  char *   progname = nsnull;
-  char *   width=nsnull, *height=nsnull;
-  char *  iconic_state=nsnull;
+  char * urlstr = nsnull;
 
   nsIAppShellService* appShell = nsnull;
 
