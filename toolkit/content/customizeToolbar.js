@@ -501,10 +501,11 @@ function setWrapperType(aItem, aWrapper)
 function setDragActive(aItem, aValue)
 {
   var node = aItem;
-  var value = "left";
+  var direction = window.getComputedStyle(aItem, null).direction;
+  var value = direction == "ltr"? "left" : "right";
   if (aItem.localName == "toolbar") {
     node = aItem.lastChild;
-    value = "right";
+    value = direction == "ltr"? "right" : "left";
   }
   
   if (!node)
@@ -780,11 +781,16 @@ var toolbarDNDObserver =
     if (dropTarget.localName == "toolbar") {
       gCurrentDragOverItem = dropTarget;
     } else {
-      var dropTargetWidth = dropTarget.boxObject.width;
-      var dropTargetX = dropTarget.boxObject.x;
-
       gCurrentDragOverItem = null;
-      if (aEvent.clientX > (dropTargetX + (dropTargetWidth / 2))) {
+
+      var direction = window.getComputedStyle(dropTarget.parentNode, null).direction;
+      var dropTargetCenter = dropTarget.boxObject.x + (dropTarget.boxObject.width / 2);
+      if (direction == "ltr")
+        dragAfter = aEvent.clientX > dropTargetCenter;
+      else
+        dragAfter = aEvent.clientX < dropTargetCenter;
+        
+      if (dragAfter) {
         gCurrentDragOverItem = dropTarget.nextSibling;
         if (!gCurrentDragOverItem)
           gCurrentDragOverItem = toolbar;
