@@ -74,12 +74,15 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
   OnDestroy();
-  if (GTK_IS_WIDGET(mWidget))
-    gtk_widget_destroy(mWidget);
-  if (nsnull != mGC) {
+  if (mWidget)
+  {
+    if (GTK_IS_WIDGET(mWidget))
+      gtk_widget_destroy(mWidget);
+    mWidget = nsnull;
+  }
+  if (mGC) {
     gdk_gc_destroy(mGC);
     mGC = nsnull;
-//    ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
   }
 }
 
