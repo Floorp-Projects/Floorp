@@ -55,7 +55,6 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
-static NS_DEFINE_IID(kITreeViewIID, NS_ITREEVIEW_IID);
 
 NS_WIDGET nsresult 
 NS_CreateDialog(nsISupports* aParent, 

@@ -28,9 +28,9 @@ EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
     nsIEventListener.h nsIMenuListener.h nsIToolkit.h nsWidgetsCID.h nsITabWidget.h \
     nsITooltipWidget.h nsIAppShell.h nsStringUtil.h nsILookAndFeel.h \
     nsIDialog.h nsILabel.h nsWidgetSupport.h \
-    nsIMenuBar.h nsIMenu.h nsIMenuItem.h nsIToolbar.h nsIImageButton.h nsIToolbar.h \
-    nsIToolbarManager.h nsIToolbarManagerListener.h nsIToolbarItem.h nsIToolbarItemHolder.h \
-    nsIPopUpMenu.h nsIMenuButton.h nsIImageButtonListener.h nsIContentConnector.h 
+    nsIMenuBar.h nsIMenu.h nsIMenuItem.h nsIImageButton.h \
+    nsIToolbarItem.h \
+    nsIPopUpMenu.h nsIMenuButton.h nsIImageButtonListener.h nsIContentConnector.h
 
 
 include <$(DEPTH)\config\rules.mak>
