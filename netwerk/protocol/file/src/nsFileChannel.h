@@ -29,6 +29,7 @@
 #define STREAM_CONVERTER_HACK 
 
 #include "nsIFileChannel.h"
+#include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsFileSpec.h"
 #include "prlock.h"
