@@ -1,0 +1,8 @@
+browser.jar:
+*  content/browser/cookieviewer/CookieViewer.xul     (content/CookieViewer.xul)
+*  content/browser/cookieviewer/CookieViewer.js      (content/CookieViewer.js)
+*  content/browser/cookieviewer/nsWalletTreeUtils.js (content/nsWalletTreeUtils.js)
+
+en-US.jar:
+*  locale/en-US/browser/cookieviewer/CookieViewer.dtd (locale/CookieViewer.dtd)
+*  locale/en-US/browser/cookieviewer/CookieViewer.properties (locale/CookieViewer.properties)
