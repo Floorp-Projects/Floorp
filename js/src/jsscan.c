@@ -1790,6 +1790,7 @@ skipline:
             while ((c = GetChar(ts)) != EOF && c != '\n')
                 continue;
             UngetChar(ts, c);
+            ts->cursor = (ts->cursor - 1) & NTOKENS_MASK;
             goto retry;
         }
 
@@ -1804,6 +1805,7 @@ skipline:
                                             JSMSG_UNTERMINATED_COMMENT);
                 goto error;
             }
+            ts->cursor = (ts->cursor - 1) & NTOKENS_MASK;
             goto retry;
         }
 
