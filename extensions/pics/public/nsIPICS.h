@@ -20,7 +20,7 @@
 #define nsIPICS_h__
 
 #include "nsISupports.h"
-#include "nsIPref.h"
+#include "nsIWebShellServices.h"
 
 
 // {DFB4E4D2-AFC3-11d2-8286-00805F2AB103}
@@ -36,9 +36,12 @@
 class nsIPICS : public nsISupports {
 public:
     
-    NS_IMETHOD ProcessPICSLabel(char *label) = 0;
-	NS_IMETHOD Init() = 0;
+  NS_IMETHOD ProcessPICSLabel(char *label) = 0;
+  NS_IMETHOD GetWebShell(PRUint32 key, nsIWebShellServices*& aResult) = 0;
+  NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURL* aURL, PRBool notified) = 0;
 };
+
+extern NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS);
 
 /* ProgID prefixes for PICS DLL registration. */
 #define NS_PICS_PROGID                           "component:||netscape|extensions|pics"
