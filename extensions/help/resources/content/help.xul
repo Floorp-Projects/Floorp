@@ -19,7 +19,7 @@
 ]>
 
 
-<window id="moz__help"
+<window id="help"
         windowtype="mozilla:help"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
