@@ -97,18 +97,18 @@ PutHeader("Bugzilla Sanity Check");
 
 if (defined $cgi->param('rebuildvotecache')) {
     Status("OK, now rebuilding vote cache.");
-    SendSQL("lock tables bugs write, votes read");
-    SendSQL("update bugs set votes = 0, delta_ts=delta_ts");
-    SendSQL("select bug_id, sum(vote_count) from votes group by bug_id");
+    SendSQL("LOCK TABLES bugs WRITE, votes READ");
+    SendSQL("UPDATE bugs SET votes = 0, delta_ts = delta_ts");
+    SendSQL("SELECT bug_id, SUM(vote_count) FROM votes GROUP BY bug_id");
     my %votes;
     while (@row = FetchSQLData()) {
         my ($id, $v) = (@row);
         $votes{$id} = $v;
     }
     foreach my $id (keys %votes) {
-        SendSQL("update bugs set votes = $votes{$id}, delta_ts=delta_ts where bug_id = $id");
+        SendSQL("UPDATE bugs SET votes = $votes{$id}, delta_ts = delta_ts WHERE bug_id = $id");
     }
-    SendSQL("unlock tables");
+    SendSQL("UNLOCK TABLES");
     Status("Vote cache has been rebuilt.");
 }
 
@@ -436,7 +436,7 @@ sub AlertBadVoteCache {
     $offervotecacherebuild = 1;
 }
 
-SendSQL("SELECT bug_id,votes,keywords FROM bugs " .
+SendSQL("SELECT bug_id, votes, keywords FROM bugs " .
         "WHERE votes != 0 OR keywords != ''");
 
 my %votes;
@@ -454,7 +454,7 @@ while (@row = FetchSQLData()) {
 }
 
 Status("Checking cached vote counts");
-SendSQL("select bug_id, sum(vote_count) from votes group by bug_id");
+SendSQL("SELECT bug_id, SUM(vote_count) FROM votes GROUP BY bug_id");
 
 while (@row = FetchSQLData()) {
     my ($id, $v) = (@row);
