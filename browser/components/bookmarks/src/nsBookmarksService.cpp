@@ -2357,12 +2357,10 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
         // The profile has aleady changed.
         rv = LoadBookmarks();
     }
-#ifdef MOZ_PHOENIX
     else if (!nsCRT::strcmp(aTopic, "quit-application"))
     {
         rv = Flush();
     }
-#endif
 
     return rv;
 }
