@@ -645,17 +645,17 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&ver13Cmd.label;"  onaction="window.content.location.href='http://www.hotwired.com'"/>
         <menuitem value="&ver14Cmd.label;"    onaction="window.content.location.href='http://www.hotbot.com'"/>
         <menuseparator />
-        <menuitem value="&ver15Cmd.label;"  onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_frame_index.html'"/>
+        <menuitem value="&ver15Cmd.label;"  onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
         <menuitem value="&ver16Cmd.label;"  onaction="window.content.location.href='resource:/res/samples/test6.html'"/>
-        <menuitem value="&ver17Cmd.label;" onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_applet.htm'"/>
+        <menuitem value="&ver17Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
         <menuitem value="&ver18Cmd.label;" onaction="window.content.location.href='http://www.abcnews.com'"/>
-        <menuitem value="&ver19Cmd.label;" onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html'"/>
+        <menuitem value="&ver19Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
         <menuitem value="&ver20Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
         <menuitem value="&ver21Cmd.label;" onaction="window.content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
         <menuitem value="&ver22Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test13.html'"/>
         <menuitem value="&ver23Cmd.label;" onaction="window.content.location.href='resource:/res/samples/test2.html'"/>
-        <menuitem value="&ver24Cmd.label;" onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
-        <menuitem value="&ver25Cmd.label;" onaction="window.content.location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
+        <menuitem value="&ver24Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
+        <menuitem value="&ver25Cmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
        </menupopup>
 	  </menu>
 
