@@ -76,15 +76,17 @@ public:
 
   /** Public constructor.
     * @paran aFrame           the table frame for which this delegate will do layout
-    * @param aNumCols         the total number of columns in the table    
     */
-  BasicTableLayoutStrategy(nsTableFrame *aFrame, PRInt32 aNumCols);
+  BasicTableLayoutStrategy(nsTableFrame *aFrame);
 
   /** destructor */
   virtual ~BasicTableLayoutStrategy();
 
-  /** call once every time any table thing changes (content, structure, or style) */
-  virtual PRBool Initialize(nsSize* aMaxElementSize);
+  /** call once every time any table thing changes (content, structure, or style) 
+    * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
+    * @param aNumCols         the total number of columns in the table
+    */
+  virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols);
 
   virtual void SetMaxElementSize(nsSize* aMaxElementSize);
 

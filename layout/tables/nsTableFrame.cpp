@@ -928,7 +928,8 @@ void nsTableFrame::SetMinColSpanForTable()
 { // XXX: must be called ONLY on first-in-flow
   // set the minColSpan for each column
   PRInt32 rowCount = mCellMap->GetRowCount();
-  for (PRInt32 colIndex=0; colIndex<mColCount; colIndex++)
+  PRInt32 colCount = mCellMap->GetColCount();
+  for (PRInt32 colIndex=0; colIndex<colCount; colIndex++)
   {
     PRInt32 minColSpan;
     for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
@@ -999,6 +1000,7 @@ void nsTableFrame::AddCellToTable (nsTableRowFrame *aRowFrame,
 
 NS_METHOD nsTableFrame::ReBuildCellMap()
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF: ReBuildCellMap.\n");
   nsresult rv=NS_OK;
   nsIFrame *rowGroupFrame=mFirstChild;
   for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(rowGroupFrame))
@@ -1022,6 +1024,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
       }
     }
   }
+  mCellMapValid=PR_TRUE;
   return rv;
 }
 
@@ -1562,10 +1565,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   if (PR_TRUE==NeedsReflow(aReflowState, aReflowState.maxSize))
   {
     PRBool needsRecalc=PR_FALSE;
-    if (PR_TRUE==gsDebug) printf("TIF Reflow: needs reflow\n");
+    if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: needs reflow\n");
     if (eReflowReason_Initial!=aReflowState.reason && PR_FALSE==IsCellMapValid())
     {
-      if (PR_TRUE==gsDebug) printf("TIF Reflow: cell map invalid, rebuilding...\n");
+      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: cell map invalid, rebuilding...\n");
       if (nsnull!=mCellMap)
         delete mCellMap;
       mCellMap = new nsCellMap(0,0);
@@ -1575,7 +1578,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     if (PR_FALSE==IsFirstPassValid())
     {
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: first pass is invalid, rebuilding...\n");
-      rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus, nsnull, aReflowState.reason);
+      rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus, nsnull, aReflowState.reason, PR_TRUE);
       if (NS_FAILED(rv))
         return rv;
       needsRecalc=PR_TRUE;
@@ -1587,23 +1590,23 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     }
     if (PR_TRUE==needsRecalc)
     {
-      if (PR_TRUE==gsDebugIR) printf("TIF Reflow: needs recalc.\n");
-      // if we need to recalc, the data stored in the layout strategy is invalid
-      if (nsnull!=mTableLayoutStrategy)
-      {
-        if (PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);
-        mColumnWidthsValid=PR_TRUE;
-      }
+      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: needs recalc. Calling BuildColumnCache...\n");
       BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
       RecalcLayoutData();  // Recalculate Layout Dependencies
+      // if we needed to rebuild the column cache, the data stored in the layout strategy is invalid
+      if (nsnull!=mTableLayoutStrategy)
+      {
+        if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, mCellMap->GetColCount());
+        mColumnWidthsValid=PR_TRUE; //so we don't do this a second time below
+      }
     }
     if (PR_FALSE==IsColumnWidthsValid())
     {
-      if (PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
+      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
       if (nsnull!=mTableLayoutStrategy)
       {
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, mCellMap->GetColCount());
         mColumnWidthsValid=PR_TRUE;
       }
     }
@@ -1658,7 +1661,8 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
                                           const nsHTMLReflowState& aReflowState,
                                           nsReflowStatus&          aStatus,
                                           nsTableRowGroupFrame *   aStartingFrame,
-                                          nsReflowReason           aReason)
+                                          nsReflowReason           aReason,
+                                          PRBool                   aDoSiblingFrames)
 {
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
   NS_PRECONDITION(aReflowState.parentReflowState->frame == mGeometricParent,
@@ -1719,7 +1723,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
       PRInt32 yCoord = y;
       if (NS_UNCONSTRAINEDSIZE!=yCoord)
         yCoord+= topInset;
-      if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of frame %p\n", kidFrame);
+      if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of frame %p with reason=%d\n", kidFrame, aReason);
       ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
 
       // Place the child since some of its content fit in us.
@@ -1744,6 +1748,8 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
         // up all of our available space (or needs us to split).
         break;
       }
+      if (PR_FALSE==aDoSiblingFrames)
+        break;
     }
   }
 
@@ -2185,14 +2191,18 @@ NS_METHOD nsTableFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
 {
   nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
                                         aStatus, (nsIFrame*)aInsertedFrame, aReplace);
-  // inserting the rowgroup only effects reflow if the rowgroup includes at least one row
-  PRInt32 rowCount;
-  aInsertedFrame->GetRowCount(rowCount);
-  if (0>rowCount)
-  { // for now we will assume that if there are rows, then there are cells and we need to recalc table info
-    InvalidateCellMap();
-    InvalidateColumnCache();
-  }
+  if (NS_FAILED(rv))
+    return rv;
+  
+  // do a pass-1 layout of all the cells in all the rows of the rowgroup
+  rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState.reflowState, aStatus, 
+                         aInsertedFrame, eReflowReason_Initial, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
+
+  InvalidateCellMap();
+  InvalidateColumnCache();
+
   return rv;
 }
 
@@ -2212,10 +2222,12 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
   // account for the cells in the rows that are children of aAppendedFrame
   // this will add the content of the rowgroup to the cell map
   rv = DidAppendRowGroup((nsTableRowGroupFrame*)aAppendedFrame);
+  if (NS_FAILED(rv))
+    return rv;
 
   // do a pass-1 layout of all the cells in all the rows of the rowgroup
   rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState.reflowState, aStatus, 
-                         aAppendedFrame, eReflowReason_Initial);
+                         aAppendedFrame, eReflowReason_Initial, PR_TRUE);
   if (NS_FAILED(rv))
     return rv;
 
@@ -2232,17 +2244,11 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsReflowStatus&        aStatus,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
-  nsresult rv;
+  nsresult rv = IR_UnknownFrameRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                                       aDeletedFrame);
+  InvalidateCellMap();
+  InvalidateColumnCache();
 
-  rv = IR_UnknownFrameRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              aDeletedFrame);
-  PRInt32 rowCount=0;
-  aDeletedFrame->GetRowCount(rowCount);
-  if (0>rowCount)
-  { // for now we will assume that if there are rows, then there are cells and we need to recalc table info
-    InvalidateCellMap();
-    InvalidateColumnCache();
-  }
   // if any column widths have to change due to this, rebalance column widths
   //XXX need to calculate this, but for now just do it
   InvalidateColumnWidths();
@@ -2292,9 +2298,7 @@ NS_METHOD nsTableFrame::IR_UnknownFrameInserted(nsIPresContext&        aPresCont
     }
     else
     {
-      nsIFrame *nextSibling=nsnull;
-      if (nsnull!=mFirstChild)
-        mFirstChild->GetNextSibling(nextSibling);
+      nsIFrame *nextSibling = mFirstChild;
       mFirstChild = aInsertedFrame;
       aInsertedFrame->SetNextSibling(nextSibling);
     }
@@ -2555,7 +2559,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext&        aPresContext,
 
       nscoord x = aState.leftInset + kidMargin.left;
       nscoord y = aState.topInset + aState.y + topMargin;
-      if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p\n", kidFrame);
+      if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p with reason=%d\n", kidFrame, reason);
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, status);
       // Did the child fit?
       if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
@@ -2834,10 +2838,10 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
     nsStyleTable* tableStyle;
     GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
     if (NS_STYLE_TABLE_LAYOUT_FIXED==tableStyle->mLayoutStrategy)
-      mTableLayoutStrategy = new FixedTableLayoutStrategy(this, numCols);
+      mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
-      mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
-    mTableLayoutStrategy->Initialize(aMaxElementSize);
+      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
+    mTableLayoutStrategy->Initialize(aMaxElementSize, mCellMap->GetColCount());
     mColumnWidthsValid=PR_TRUE;
   }
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
@@ -3070,13 +3074,12 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
-  NS_ASSERTION(PR_FALSE==mColumnCacheValid, "column cache valid state should be PR_FALSE");
   nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
   EnsureColumns(aPresContext);
   if (nsnull!=mColCache)
   {
-    if (PR_TRUE==gsDebugIR) printf("TIF BCB: clearing column cache and cell map column frame cache.\n");
+    if (PR_TRUE==gsDebugIR) printf("TIF BCC: clearing column cache and cell map column frame cache.\n");
     mCellMap->ClearColumnCache();
     delete mColCache;
   }
@@ -3159,6 +3162,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     }
     childFrame->GetNextSibling(childFrame);
   }
+  if (PR_TRUE==gsDebugIR) printf("TIF BCC: mColumnCacheValid=PR_TRUE.\n");
   mColumnCacheValid=PR_TRUE;
 }
 
@@ -3167,6 +3171,7 @@ void nsTableFrame::InvalidateColumnWidths()
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
   firstInFlow->mColumnWidthsValid=PR_FALSE;
+  if (PR_TRUE==gsDebugIR) printf("TIF: ColWidths invalidated.\n");
 }
 
 PRBool nsTableFrame::IsColumnWidthsValid() const
@@ -3188,6 +3193,7 @@ void nsTableFrame::InvalidateFirstPassCache()
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
   firstInFlow->mFirstPassValid=PR_FALSE;
+  if (PR_TRUE==gsDebugIR) printf("TIF: FirstPass invalidated.\n");
 }
 
 PRBool nsTableFrame::IsColumnCacheValid() const
@@ -3202,6 +3208,7 @@ void nsTableFrame::InvalidateColumnCache()
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
   firstInFlow->mColumnCacheValid=PR_FALSE;
+  if (PR_TRUE==gsDebugIR) printf("TIF: ColCache invalidated.\n");
 }
 
 PRBool nsTableFrame::IsCellMapValid() const
@@ -3237,6 +3244,7 @@ void nsTableFrame::InvalidateCellMap()
       }
     }
   }
+  if (PR_TRUE==gsDebugIR) printf("TIF: CellMap invalidated.\n");
 }
 
 NS_METHOD

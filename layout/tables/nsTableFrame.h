@@ -281,7 +281,8 @@ protected:
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus,
                                nsTableRowGroupFrame *   aStartingFrame,
-                               nsReflowReason           aReason);
+                               nsReflowReason           aReason,
+                               PRBool                   aDoSiblings);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
