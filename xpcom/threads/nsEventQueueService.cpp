@@ -106,6 +106,10 @@ nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
 nsresult
 nsEventQueueServiceImpl::Init()
 {
+  NS_ENSURE_TRUE(mEventQMonitor, NS_ERROR_OUT_OF_MEMORY);
+
+  // This will only be called once on the main thread, so it's safe to
+  // not enter the monitor here.
   if (!mEventQTable.Init()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -178,17 +182,15 @@ NS_IMETHODIMP
 nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread, PRBool aNative)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIEventQueue> queue;
-
   /* Enter the lock that protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
   /* create only one event queue chain per thread... */
-  mEventQTable.Get(aThread, getter_AddRefs(queue));
+  if (!mEventQTable.GetWeak(aThread)) {
+    nsCOMPtr<nsIEventQueue> queue;
 
-  if (!queue) {
     // we don't have one in the table
-    rv = MakeNewQueue(PR_GetCurrentThread(), aNative, getter_AddRefs(queue)); // create new queue
+    rv = MakeNewQueue(aThread, aNative, getter_AddRefs(queue)); // create new queue
     mEventQTable.Put(aThread, queue); // add to the table (initial addref)
   }
 
@@ -271,15 +273,15 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
   /* Enter the lock that protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
-  nsCOMPtr<nsIEventQueue> queue;
-  mEventQTable.Get(currentThread, getter_AddRefs(queue));
+  nsIEventQueue* queue = mEventQTable.GetWeak(currentThread);
+  
   NS_ASSERTION(queue, "pushed event queue on top of nothing");
 
   if (queue) { // find out what kind of queue our relatives are
     nsCOMPtr<nsIEventQueue> youngQueue;
     GetYoungestEventQueue(queue, getter_AddRefs(youngQueue));
     if (youngQueue) {
-      queue->IsQueueNative(&native);
+      youngQueue->IsQueueNative(&native);
     }
   }
 
