@@ -2286,7 +2286,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
     }
   }
 
-  nsAutoPopupStatePusher popupStatePusher(openAllowed);
+  PRInt32 blockPopups =
+    nsContentUtils::GetIntPref("privacy.popups.disable_from_plugins");
+  nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
   rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
                        uri, unitarget.get(), 
