@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../..
+DEPTH=../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -24,36 +24,21 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = rdf
+LIBRARY_NAME = brprof
 IS_COMPONENT = 1
 
 CPPSRCS =				\
-	dlldeps.cpp			\
-        nsRDFFactory.cpp                \
-	$(NULL)
-
-EXPORTS = \
-        nsRDFCID.h			\
+	nsBrowsingProfileFactory.cpp	\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = rdf
+MODULE = brprof
 
-REQUIRES = dom js netlib rdf raptor xpcom
-
-# XXX Note dependencies on implementation headers for factory functions
-
-INCLUDES += -I$(srcdir)/../base/src       \
-	    -I$(srcdir)/../content/src    \
-	    -I$(srcdir)/../datasource/src \
-	    $(NULL)
+REQUIRES = xpcom
 
 SHARED_LIBRARY_LIBS =			 \
-	$(DIST)/lib/librdfbase_s.a	 \
-	$(DIST)/lib/librdfcontent_s.a	 \
-	$(DIST)/lib/librdfdatasource_s.a \
-	$(DIST)/lib/librdfutil_s.a	 \
+	$(DIST)/lib/libbrprof_s.a	 \
 	$(NULL)
 
 ifeq ($(OS_ARCH),HP-UX)
@@ -82,19 +67,4 @@ $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/../resources/sidebar.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/sidebar.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmarks.html $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmark-item.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmark-folder-closed.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/bookmark-folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/personal-folder-closed.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/personal-folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/folder-open.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/folder-closed.gif $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History
-	$(INSTALL) $(srcdir)/../resources/dom-test-1.xul $(DIST)/bin/res/rdf
-	$(INSTALL) $(srcdir)/../resources/dom-test-1.css $(DIST)/bin/res/rdf
-
+	$(INSTALL) $(srcdir)/directory.rdf $(DIST)/bin/res/samples
