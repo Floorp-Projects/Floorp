@@ -115,6 +115,11 @@ public:
     return !mIsDocumentLoaded || mRunningTimeout;
   }
 
+  PRBool IsHandlingResizeEvent() const
+  {
+    return mIsHandlingResizeEvent;
+  }
+
   virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState) const = 0;
@@ -122,6 +127,12 @@ public:
   virtual PopupControlState GetPopupControlState() const = 0;
 
 protected:
+  nsPIDOMWindow()
+    : mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
+      mIsHandlingResizeEvent(PR_FALSE)
+  {
+  }
+
   nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
   nsIDOMElement *mFrameElement; // weak
@@ -130,7 +141,8 @@ protected:
 
   PRUint32               mMutationBits;
 
-  PRBool                 mIsDocumentLoaded;
+  PRPackedBool           mIsDocumentLoaded;
+  PRPackedBool           mIsHandlingResizeEvent;
 };
 
 

@@ -61,6 +61,8 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 #include "nsIJSContextStack.h"
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
@@ -850,6 +852,28 @@ LocationImpl::Reload()
 
   if (!ncc)
     return NS_ERROR_NOT_AVAILABLE;
+
+  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
+
+  if (window && window->IsHandlingResizeEvent()) {
+    // location.reload() was called on a window that is handling a
+    // resize event. Sites do this since Netscape 4.x needed it, but
+    // we don't, and it's a horrible experience for nothing. In stead
+    // of reloading the page, just clear style data and reflow the
+    // page since some sites may use this trick to work around gecko
+    // reflow bugs, and this should have the same effect.
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+
+    nsIPresShell *shell;
+    nsPresContext *pcx;
+    if (doc && (shell = doc->GetShellAt(0)) &&
+        (pcx = shell->GetPresContext())) {
+      pcx->ClearStyleDataAndReflow();
+    }
+
+    return NS_OK;
+  }
 
   PRBool force_get = PR_FALSE;
 
