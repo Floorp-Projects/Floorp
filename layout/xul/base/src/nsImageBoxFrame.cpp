@@ -433,11 +433,19 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
   nsCOMPtr<nsIURI> srcURI;
-  NS_NewURI(getter_AddRefs(srcURI), mSrc, nsnull, baseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(srcURI), mSrc, nsnull, baseURI);
+
+  if (NS_FAILED(rv)) {
+    if (mImageRequest) {
+      mImageRequest->Cancel(NS_ERROR_FAILURE);
+      mImageRequest = nsnull;
+    }
+    return;
+  }
 
   if (mImageRequest) {
     nsCOMPtr<nsIURI> requestURI;
-    nsresult rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
+    rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
     NS_ASSERTION(NS_SUCCEEDED(rv) && requestURI,"no request URI");
     if (NS_FAILED(rv) || !requestURI) return;
 
@@ -457,7 +465,6 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
     mImageRequest = nsnull;
   }
 
-  nsresult rv;
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
   if (NS_FAILED(rv)) return;
 
