@@ -493,10 +493,12 @@ if [ test $res != 0 ]; then
 
     if [ test "$sysstaticmotif" != "yes" ]; then
 	_SAVE_LDFLAGS="$LDFLAGS"
+    	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
     	AC_CHECK_LIB(Xm, XmStringCreate, 
 	    FE_X_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $FE_X_LIBS",
 	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
 	    $MOTIF_DYNAMIC_PATHS $FE_X_LIBS $XLIBS)
+	LDFLAGS="$_SAVE_LDFLAGS"
     else
     	AC_CHECK_LIB(Xm, XmStringCreate, 
 	    FE_X_LIBS="$MOTIF_STATIC_FLAGS $FE_X_LIBS",
@@ -580,6 +582,7 @@ if [ test "$SYSTEM_JPEG" = 1 ]; then
 	    #endif
 	}
 	, SYSTEM_JPEG=1, [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=], SYSTEM_JPEG= ) 
+    rm -f core
 fi 
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -651,6 +654,7 @@ if [ test "$SYSTEM_PNG" = 1 ]; then
 	    #endif
 	}
 	, SYSTEM_PNG=1, [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=], SYSTEM_PNG= ) 
+    rm -f core
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -697,6 +701,7 @@ AC_TRY_RUN(
 	, [NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"],
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+rm -f core
 AC_MSG_RESULT("$result")
 
 dnl XXX - Is this really the best way to do this check? - cls
@@ -724,6 +729,7 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21 with thread lib")
 	, [NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"],
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+    rm -f core
 AC_MSG_RESULT("$result")
 fi
 
