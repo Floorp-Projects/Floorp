@@ -62,6 +62,8 @@ class nsINameSpace;
  */
 class nsINameSpaceManager : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_INAMESPACEMANAGER_IID; return iid; }
+
   NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace) = 0;
 
   NS_IMETHOD RegisterNameSpace(const nsString& aURI, 
