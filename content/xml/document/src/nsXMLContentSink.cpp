@@ -275,7 +275,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
   mDocument->SetRootContent(mDocElement);
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (mXSLTransformMediator) {
     rv = SetupTransformMediator();
   }

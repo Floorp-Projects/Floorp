@@ -1515,8 +1515,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (gNoisy) {
     gNoiseIndent++;
   }
-  PRTime start;
-  PRInt32 ctc;
+  PRTime start = LL_ZERO; // Initialize these variablies to silence the compiler.
+  PRInt32 ctc = 0;        // We only use these if they are set (gLameReflowMetrics).
   if (gLameReflowMetrics) {
     start = PR_Now();
     ctc = nsLineBox::GetCtorCount();
@@ -6371,8 +6371,8 @@ nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
       depth = GetDepth();
     }
   }
-  PRTime start;
-  PRInt32 drawnLines;
+  PRTime start = LL_ZERO; // Initialize these variables to silence the compiler.
+  PRInt32 drawnLines = 0; // They will only be used if set (gLamePaintMetrics).
   if (gLamePaintMetrics) {
     start = PR_Now();
     drawnLines = 0;
