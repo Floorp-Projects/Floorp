@@ -36,3 +36,8 @@ gFastMemSmallSizeAllocators
 #{code}
 __dl__FPv
 __nw__FUl
+__dla__FPv
+__nwa__FUl
+__nwa__FUlRCQ23std9nothrow_t
+__nw__FUlRCQ23std9nothrow_t
+
