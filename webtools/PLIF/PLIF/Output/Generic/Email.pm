@@ -96,6 +96,7 @@ sub checkAddress {
 
 sub DESTROY {
     my $self = shift;
+    $self->close();
     $self->SUPER::DESTROY(@_);
 }
 
