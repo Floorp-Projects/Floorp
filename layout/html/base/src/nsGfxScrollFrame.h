@@ -103,6 +103,9 @@ public:
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+                            nsIContent *      aContent,
+                            nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
   // nsIBox methods
   NS_DECL_ISUPPORTS

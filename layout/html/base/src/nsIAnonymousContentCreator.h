@@ -31,6 +31,8 @@
 class nsIPresContext;
 class nsISupportsArray;
 class nsIAtom;
+class nsIStyleContext;
+class nsIFrame;
 
 
 // {41a69e00-2d6d-11d3-b033-a1357139787c}
@@ -47,6 +49,12 @@ public:
      static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_CREATOR_IID; return iid; }
      NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)=0;
+
+     // If the creator doesn't want to create special fframe ro frame hierarchy
+     // then it should null out the style content arg and return NS_ERROR_FAILURE
+     NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+                               nsIContent *      aContent,
+                               nsIFrame**        aFrame)=0;
 };
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);

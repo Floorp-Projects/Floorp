@@ -265,6 +265,9 @@ protected:
 
   PRBool       mOverrideReflowOpt;
 
+  PRInt32      mDelayedIndexSetting;
+  PRBool       mDelayedValueSetting;
+
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
   nsCOMPtr<nsIPresState> mPresState;        // Need cache state when list is null
