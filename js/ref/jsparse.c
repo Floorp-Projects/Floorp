@@ -985,58 +985,40 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn1 = NULL;
 	} else {
 	    /* Set pn1 to a var list or an initializing expression. */
+#ifdef JS_HAS_IN_OPERATOR
+            /* 
+             * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
+             * of the for statement.  This flag will will be used by the
+             * RelExpr production; if it flag is set, then the 'in' keyword
+             * will not be recognized as an operator, leaving it available to
+             * be parsed as part of a for/in loop.  A side effect of this
+             * restriction is that (unparenthesized) expressions involving an
+             * 'in' operator are illegal in the init clause of an ordinary for
+             * loop.
+             */
+            tc->flags |= TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	    if (tt == TOK_VAR) {
 		(void) js_GetToken(cx, ts);
 		pn1 = Variables(cx, ts, tc);
 	    } else {
 		pn1 = Expr(cx, ts, tc);
 	    }
+#ifdef JS_HAS_IN_OPERATOR
+            tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	    if (!pn1)
 		return NULL;
 	}
 
 	/*
-	 * There are three kinds of for/in syntax (see ECMA 12.6.3):
-	 *  1. for (i in o) ...
-	 *  2. for (var i in o) ...
-	 *  3. for (var i = e in o) ...
-	 * The 'var i = e in o' in 3 will be parsed as a variable declaration
-	 * with an 'in' expression as its initializer, leaving ts->pushback at
-	 * the right parenthesis.  This condition tests 1, then 3, then 2:
-	 */
-	if (pn1 &&
-	    (pn1->pn_type == TOK_IN ||
-	     (pn1->pn_type == TOK_VAR && ts->pushback.type == TOK_RP) ||
-	     js_MatchToken(cx, ts, TOK_IN))) {
+         * We can be sure that if it's a for/in loop, there's still an 'in'
+         * keyword here, even if Javascript recognizes it as an operator,
+         * because we've excluded it from parsing by setting the
+         * TCF_IN_FOR_INIT flag on the JSTreeContext argument.
+         */
+	if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
 	    stmtInfo.type = STMT_FOR_IN_LOOP;
-
-	    switch (pn1->pn_type) {
-	      case TOK_IN:
-		pn2 = pn1;
-		pn1 = pn1->pn_left;
-		break;
-	      case TOK_VAR:
-		if (pn1->pn_count != 1) {
-		    js_ReportCompileError(cx, ts, "invalid for/in variables");
-		    return NULL;
-		}
-		pn2 = pn1->pn_head->pn_expr;
-		if (pn2) {
-		    /* pn1 is 'var i = e' -- must pop e before loop. */
-		    pn1->pn_op = JSOP_POP;
-		    if (pn2->pn_type == TOK_IN) {
-			/* Found 'var i = e in o' -- make 'in' be the root. */
-			PR_ASSERT(ts->pushback.type == TOK_RP);
-			pn1->pn_head->pn_expr = pn2->pn_left;
-			pn2->pn_left = pn1;
-			break;
-		    }
-		}
-		/* FALL THROUGH */
-	      default:
-		pn2 = NULL;
-		break;
-	    }
 
 	    /* Check that the left side of the 'in' is valid. */
 	    if (pn1->pn_type != TOK_VAR &&
@@ -1048,11 +1030,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
 
 	    /* Parse the object expression as the right operand of 'in'. */
-	    if (!pn2) {
-		pn2 = NewBinary(cx, TOK_IN, JSOP_NOP, pn1, Expr(cx, ts, tc));
-		if (!pn2)
-	    	    return NULL;
-	    }
+            pn2 = NewBinary(cx, TOK_IN, JSOP_NOP, pn1, Expr(cx, ts, tc));
+            if (!pn2)
+                return NULL;
 	    pn->pn_left = pn2;
 	} else {
 	    /* Parse the loop condition or null into pn2. */
@@ -1747,6 +1727,9 @@ static JSParseNode *
 CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn1, *pn2, *pn3;
+#ifdef JS_HAS_IN_OPERATOR
+    uintN oldflags;
+#endif /* JS_HAS_IN_OPERATOR */
 
     pn = OrExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_HOOK)) {
@@ -1754,7 +1737,20 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn = NewParseNode(cx, &ts->token, PN_TERNARY);
 	if (!pn)
 	    return NULL;
+#ifdef JS_HAS_IN_OPERATOR
+        /*
+         * Always accept the 'in' operator in the middle clause of a ternary,
+         * where it's unambiguous, even if we might be parsing the init of a
+         * for statement.
+         */
+        oldflags = tc->flags;
+        tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	pn2 = AssignExpr(cx, ts, tc);
+#ifdef JS_HAS_IN_OPERATOR
+        tc->flags = oldflags;
+#endif /* JS_HAS_IN_OPERATOR */
+
 	if (!pn2)
 	    return NULL;
 	MUST_MATCH_TOKEN(TOK_COLON, "missing : in conditional expression");
@@ -1845,21 +1841,40 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
     JSTokenType tt;
     JSOp op;
+#if JS_HAS_IN_OPERATOR
+    uintN inForInitFlag;
+
+    inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
+    /*
+     * Uses of the in operator in ShiftExprs are always unambiguous, 
+     * so unset the flag that prohibits recognizing it.
+     */
+    tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 
     pn = ShiftExpr(cx, ts, tc);
     while (pn &&
 	   (js_MatchToken(cx, ts, TOK_RELOP)
 #if JS_HAS_IN_OPERATOR
-	    || js_MatchToken(cx, ts, TOK_IN)
-#endif
+            /*
+             * Only recognize the 'in' token as an operator if we're not
+             * currently in the init expr of a for loop.
+             */
+	    || (inForInitFlag == 0 && js_MatchToken(cx, ts, TOK_IN))
+#endif /* JS_HAS_IN_OPERATOR */
 #if JS_HAS_INSTANCEOF
 	    || js_MatchToken(cx, ts, TOK_INSTANCEOF)
-#endif
+#endif /* JS_HAS_INSTANCEOF */
 	    )) {
 	tt = ts->token.type;
 	op = ts->token.t_op;
 	pn = NewBinary(cx, tt, op, pn, ShiftExpr(cx, ts, tc));
     }
+#if JS_HAS_IN_OPERATOR
+    /* Restore previous state of inForInit flag. */
+    tc->flags |= inForInitFlag;
+#endif /* JS_HAS_IN_OPERATOR */
+     
     return pn;
 }
 
@@ -2344,10 +2359,26 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_INITIALIZERS */
 
       case TOK_LP:
+      {
+#ifdef JS_HAS_IN_OPERATOR
+        uintN oldflags;
+#endif
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
 	    return NULL;
+#ifdef JS_HAS_IN_OPERATOR
+        /*
+         * Always accept the 'in' operator in a parenthesized expression,
+         * where it's unambiguous, even if we might be parsing the init of a
+         * for statement.
+         */
+        oldflags = tc->flags;
+        tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	pn2 = Expr(cx, ts, tc);
+#ifdef JS_HAS_IN_OPERATOR
+        tc->flags = oldflags;
+#endif /* JS_HAS_IN_OPERATOR */
 	if (!pn2)
 	    return NULL;
 
@@ -2357,6 +2388,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_pos.end = ts->token.pos.end;
 	pn->pn_kid = pn2;
 	break;
+      }
 
       case TOK_STRING:
 	notsharp = JS_TRUE;

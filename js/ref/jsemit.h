@@ -73,6 +73,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_IN_FUNCTION 0x01        /* parsing inside function body */
 #define TCF_RETURN_EXPR 0x02        /* function has 'return expr;' */
 #define TCF_RETURN_VOID 0x04        /* function has 'return;' */
+#define TCF_IN_FOR_INIT 0x08        /* parsing init expr of for; exclude 'in' */
 
 #define INIT_TREE_CONTEXT(tc) \
     ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL)
