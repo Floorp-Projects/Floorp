@@ -44,6 +44,7 @@ nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
   mLockOffset = mLockHeight = 0;
   mLockFlags = 0;
 	mIsOffscreen = PR_FALSE;
+	mIsLocked = PR_FALSE;
 
 }
 
@@ -120,6 +121,22 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
+GWorldPtr 		offscreenGWorld;
+PixMapHandle	thePixMap;
+
+
+	if((mIsLocked == PR_FALSE) && mIsOffscreen && mPort){
+		// lock down the pixels while we use this
+		::LockPixels(::GetGWorldPixMap(offscreenGWorld));
+
+		// get the offscreen gworld for our use
+  	offscreenGWorld = (GWorldPtr)mPort;
+		// calculate the pixel data size
+		thePixMap = ::GetGWorldPixMap(offscreenGWorld);
+  	*aWidthBytes = *aStride = (**thePixMap).rowBytes & 0x3FFF;
+  	*aBits = GetPixBaseAddr(thePixMap);
+		mIsLocked = PR_TRUE;
+		}
 
   return NS_OK;
 }
@@ -131,7 +148,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Lock(PRInt32 aX, PRInt32 aY,
  */
 NS_IMETHODIMP nsDrawingSurfaceMac :: Unlock(void)
 {
-
+	mIsLocked = PR_FALSE;
   return NS_OK;
 }
 

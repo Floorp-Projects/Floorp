@@ -66,6 +66,7 @@ private:
   PRInt32       	mLockHeight;
   PRUint32      	mLockFlags;
 	PRBool					mIsOffscreen;	
+	PRBool					mIsLocked;
 
 	nsGraphicState*	mGS;						// a graphics state for the surface
 };
