@@ -1126,6 +1126,11 @@ js_Interpret(JSContext *cx, jsval *result)
             fp->rval = POP();
             goto out;
 
+#if JS_HAS_SWITCH_STATEMENT
+          case JSOP_DEFAULT:
+            POP();
+            /* fall through */
+#endif
           case JSOP_GOTO:
             len = GET_JUMP_OFFSET(pc);
             CHECK_BRANCH(len);
@@ -1662,6 +1667,20 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_NEW_NE:
             NEW_EQUALITY_OP(!=, JS_TRUE);
             break;
+
+#if JS_HAS_SWITCH_STATEMENT
+          case JSOP_CASE:
+            NEW_EQUALITY_OP(==, JS_FALSE);
+            POP();
+            if (cond) {
+                len = GET_JUMP_OFFSET(pc);
+                CHECK_BRANCH(len);
+            } else {
+                PUSH(lval);
+            }
+            break;
+#endif
+
 #endif /* !JS_BUG_FALLIBLE_EQOPS */
 
           case JSOP_LT:
@@ -2306,6 +2325,11 @@ js_Interpret(JSContext *cx, jsval *result)
             }
 #undef SEARCH_PAIRS
             break;
+
+          case JSOP_CONDSWITCH:
+	    len = GET_JUMP_OFFSET(pc);
+            goto advance_pc;
+
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
 #if JS_HAS_LEXICAL_CLOSURE

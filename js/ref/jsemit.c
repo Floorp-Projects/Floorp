@@ -668,6 +668,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSParseNode **table;
         jsbytecode *pc;
         JSBool hasDefault = JS_FALSE;
+        JSBool isEcmaSwitch = cx->version == JSVERSION_DEFAULT ||
+                              cx->version >= JSVERSION_1_4;
+        ptrdiff_t defaultOpPc = -1;
+
+        switchop = isEcmaSwitch ? JSOP_CONDSWITCH : JSOP_TABLESWITCH;
 
         /* Emit code for the discriminant first. */
         if (!js_EmitTree(cx, cg, pn->pn_kid1))
@@ -677,7 +682,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         top = CG_OFFSET(cg);
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_SWITCH, top);
 
-        switchop = JSOP_TABLESWITCH;
         pn2 = pn->pn_kid2;
         ncases = pn2->pn_count;
 
@@ -696,6 +700,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     continue;
                 }
                 PR_ASSERT(pn3->pn_type == TOK_CASE);
+                if (switchop == JSOP_CONDSWITCH)
+                    continue;
                 if (!cg2.base) {
                     if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
                                               pn3->pn_pos.begin.lineno,
@@ -716,18 +722,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
 
                 /*
-                 * The GC must not run during this case expression evaluation.
-                 * It won't if it runs only from the branch callback (because
-                 * the only branches possible in a case expression come from ?:
-                 * expressions, and those generate downward branches, while the
+                 * The GC must not run during this case expression 
+                 * evaluation. It won't if it runs only from the 
+                 * branch callback (because the only branches possible 
+                 * in a case expression come from ?: expressions, 
+                 * and those generate downward branches, while the
                  * branch callback runs only for upward branches).
+                 * XXX - but function calls are possible!
                  */
-                ok = js_Execute(cx, cx->fp->scopeChain, script, NULL, cx->fp,
-                                JS_FALSE, &pn3->pn_val);
+                ok = js_Execute(cx, cx->fp->scopeChain, script, NULL, 
+                                cx->fp, JS_FALSE, &pn3->pn_val);
                 js_DestroyScript(cx, script);
                 if (!ok)
                     return JS_FALSE;
-
                 if (!JSVAL_IS_NUMBER(pn3->pn_val) &&
                     !JSVAL_IS_STRING(pn3->pn_val) &&
                     !JSVAL_IS_BOOLEAN(pn3->pn_val)) {
@@ -741,7 +748,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 }
 
-                if (switchop == JSOP_LOOKUPSWITCH)
+                if (switchop != JSOP_TABLESWITCH)
                     continue;
                 if (!JSVAL_IS_INT(pn3->pn_val)) {
                     switchop = JSOP_LOOKUPSWITCH;
@@ -757,7 +764,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (high < i)
                     high = i;
             }
-            if (cg2.base)
+            if (switchop != JSOP_CONDSWITCH && cg2.base)
                 js_ResetCodeGenerator(cx, &cg2);
             if (switchop == JSOP_TABLESWITCH) {
                 tablen = (uint32)(high - low + 1);
@@ -788,8 +795,34 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (js_EmitN(cx, cg, switchop, switchsize) < 0)
             return JS_FALSE;
 
+        if (switchop == JSOP_CONDSWITCH) {
+            /* Emit code for evaluating cases and jumping to case statements. */
+            if (!js_SetJumpOffset(cx, cg, CG_CODE(cg, top), 
+                                  CG_OFFSET(cg) - top))
+                return JS_FALSE;
+            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+                if (pn3->pn_type == TOK_DEFAULT) 
+                    continue;
+                pn4 = pn3->pn_left;
+                if (!js_EmitTree(cx, cg, pn4))
+                    return JS_FALSE;
+                pn3->pn_offset = js_Emit3(cx, cg, JSOP_CASE, 0, 0);
+                if (pn3->pn_offset < 0)
+                    return JS_FALSE;
+                pn3->pn_offset;
+            }
+            /* Emit default even if no explicit default statement. */
+            defaultOpPc = js_Emit3(cx, cg, JSOP_DEFAULT, 0, 0);
+            if (defaultOpPc < 0)
+                return JS_FALSE;
+        }
+
         /* Emit code for each case's statements, copying pn_offset up to pn3. */
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+            if (switchop == JSOP_CONDSWITCH && pn3->pn_type != TOK_DEFAULT) {
+                pn3->pn_val = INT_TO_JSVAL(pn3->pn_offset - top);
+                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, pn3->pn_offset);
+            }
             pn4 = pn3->pn_right;
             if (!js_EmitTree(cx, cg, pn4))
                 return JS_FALSE;
@@ -805,8 +838,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Set the default offset (to end of switch if no default). */
         pc = CG_CODE(cg, top);
-        if (!js_SetJumpOffset(cx, cg, pc, off))
-            return JS_FALSE;
+        if (switchop != JSOP_CONDSWITCH) {
+            if (!js_SetJumpOffset(cx, cg, pc, off))
+                return JS_FALSE;
+        }
+        if (defaultOpPc != -1) {
+            if (!js_SetJumpOffset(cx, cg, CG_CODE(cg, defaultOpPc), 
+                                  off - (defaultOpPc - top)))
+                return JS_FALSE;
+        }
         pc += 2;
 
         /* Set the SRC_SWITCH note's offset operand to tell end of switch. */

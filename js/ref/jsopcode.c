@@ -192,7 +192,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 	pc2 += JUMP_OFFSET_LEN;
 	npairs = (uintN) GET_ATOM_INDEX(pc2);
 	pc2 += ATOM_INDEX_LEN;
-	fprintf(fp, " defaultOffset %d npairs %u", off, npairs);
+	fprintf(fp, " offset %d npairs %u", off, npairs);
 	while (npairs) {
 	    atom = GET_ATOM(cx, script, pc2);
 	    pc2 += ATOM_INDEX_LEN;
@@ -567,13 +567,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb);
 
 static JSBool
 DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
-		jsbytecode *pc, ptrdiff_t switchLength, ptrdiff_t defaultOffset)
+		jsbytecode *pc, ptrdiff_t switchLength, 
+                ptrdiff_t defaultOffset, JSBool isCondSwitch)
 {
     JSContext *cx;
     JSPrinter *jp;
     char *lval, *rval;
     uintN i;
-    ptrdiff_t diff, off, off2;
+    ptrdiff_t diff, off, off2, caseExprOff;
     jsval key;
     JSString *str;
 
@@ -593,6 +594,8 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 		return JS_FALSE;
 	    jp->indent -= 4;
 	}
+        caseExprOff = 1 + JUMP_OFFSET_LEN + ATOM_INDEX_LEN + 
+                      tableLength *  (ATOM_INDEX_LEN + JUMP_OFFSET_LEN);
 	for (i = 0; i < tableLength; i++) {
 	    off = table[i].offset;
 	    if (i + 1 < tableLength)
@@ -600,18 +603,28 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 	    else
 		off2 = switchLength;
 	    key = table[i].key;
-	    str = js_ValueToString(cx, key);
-	    if (!str)
-		return JS_FALSE;
-	    jp->indent += 2;
-	    if (JSVAL_IS_STRING(key)) {
-		rval = QuoteString(&ss->sprinter, str, '"');
-		if (!rval)
+            if (isCondSwitch) {
+                uint32 caseLen = js_CodeSpec[JSOP_CASE].length;
+                ptrdiff_t caseOff = JSVAL_TO_INT(key);
+	        jp->indent += 2;
+		if (!Decompile(ss, pc + caseExprOff, 
+                               caseOff - caseExprOff + caseLen))
 		    return JS_FALSE;
-	    } else {
-		rval = JS_GetStringBytes(str);
-	    }
-	    js_printf(jp, "\tcase %s:\n", rval);
+                caseExprOff = caseOff + caseLen;
+           } else {
+                str = js_ValueToString(cx, key);
+	        if (!str)
+		    return JS_FALSE;
+	        jp->indent += 2;
+	        if (JSVAL_IS_STRING(key)) {
+		    rval = QuoteString(&ss->sprinter, str, '"');
+		    if (!rval)
+		        return JS_FALSE;
+	        } else {
+		    rval = JS_GetStringBytes(str);
+	        }
+	        js_printf(jp, "\tcase %s:\n", rval);
+            }
 	    jp->indent += 2;
 	    if (off <= defaultOffset && defaultOffset < off2) {
 		diff = defaultOffset - off;
@@ -1580,7 +1593,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		}
 		js_qsort(table, (size_t)j, sizeof *table, CompareOffsets, NULL);
 
-		ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off);
+		ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off, 
+                                     JS_FALSE);
 		JS_free(cx, table);
 		if (!ok)
 		    return ok;
@@ -1589,6 +1603,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      }
 
 	      case JSOP_LOOKUPSWITCH:
+	      case JSOP_CONDSWITCH:
 	      {
 		jsbytecode *pc2 = pc;
 		ptrdiff_t off, off2;
@@ -1614,14 +1629,38 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    table[i].key = ATOM_KEY(atom);
 		    table[i].offset = off2;
 		}
+                if (op == JSOP_CONDSWITCH) {
+                    /* 
+                     * Find offset of default code by finding the default
+                     * instruction and adding its offset.
+                     */
+                    jsbytecode *pc3;
 
-		ok = DecompileSwitch(ss, table, (uintN)npairs, pc, len, off);
+                    off = JSVAL_TO_INT(table[npairs-1].key) + 
+                          js_CodeSpec[JSOP_CASE].length;
+                    pc3 = pc + off;
+		    off += GET_JUMP_OFFSET(pc3);
+                } 
+
+		ok = DecompileSwitch(ss, table, (uintN)npairs, pc, len, off,
+                                     op == JSOP_CONDSWITCH);
 		JS_free(cx, table);
 		if (!ok)
 		    return ok;
 		todo = -2;
 		break;
 	      }
+
+              case JSOP_CASE:
+              {
+                lval = POP_STR();
+                if (!lval)
+                    return JS_FALSE;
+                js_printf(jp, "\tcase %s:\n", lval);
+                todo = -2;
+                break;
+              }
+
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
 #if !JS_BUG_FALLIBLE_EQOPS
