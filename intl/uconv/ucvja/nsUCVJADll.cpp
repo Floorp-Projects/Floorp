@@ -31,10 +31,11 @@
 
 #include "nsUCVJADll.h"
 
-#include "nsSJIS2Unicode.h"
+#include "nsJapaneseToUnicode.h"
+#include "nsSJIS2Unicode.h"			// To Be Obsoleted
 #include "nsUnicodeToSJIS.h"
-#include "nsEUCJPToUnicode.h"
-#include "nsISO2022JPToUnicode.h"
+#include "nsEUCJPToUnicode.h"		// To Be Obsoleted
+#include "nsISO2022JPToUnicode.h"	// To Be Obsoleted
 #include "nsUnicodeToEUCJP.h"
 #include "nsUnicodeToISO2022JP.h"
 #include "nsUnicodeToJISx0201.h"
@@ -59,7 +60,9 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
-PRUint16 g_ut0201Mapping[] = {
+
+// To Be Obsoleted
+PRUint16 g_ut0201Mapping[] = { 
 #include "jis0201.ut"
 };
 
@@ -70,6 +73,7 @@ PRUint16 g_ut0208Mapping[] = {
 PRUint16 g_ut0212Mapping[] = {
 #include "jis0212.ut"
 };
+// End of To Be Obsoleted
 
 PRUint16 g_uf0201Mapping[] = {
 #include "jis0201.uf"
@@ -98,10 +102,16 @@ FactoryData g_FactoryData[] =
 {
   {
     &kSJIS2UnicodeCID,
-    nsSJIS2Unicode::CreateInstance,
+    NEW_ShiftJISToUnicode,
     "Shift_JIS",
     "Unicode"
   },
+  {	// To Be Obsoleted
+    &kObsoletedShiftJISToUnicodeCID,
+    nsSJIS2Unicode::CreateInstance,
+    "x-obsoleted-Shift_JIS",
+    "Unicode"
+  },// To Be Obsoleted
   {
     &kUnicodeToSJISCID,
     nsUnicodeToSJIS::CreateInstance,
@@ -110,17 +120,29 @@ FactoryData g_FactoryData[] =
   },
   {
     &kISO2022JPToUnicodeCID,
-    nsISO2022JPToUnicode::CreateInstance,
+    NEW_ISO2022JPToUnicode,
     "ISO-2022-JP",
     "Unicode"
   },
   {
     &kEUCJPToUnicodeCID,
-    nsEUCJPToUnicode::CreateInstance,
+    NEW_EUCJPToUnicode,
     "EUC-JP",
     "Unicode"
   },
-  {
+  {// To Be Obsoleted
+    &kISO2022JPToUnicodeCID,
+    nsISO2022JPToUnicode::CreateInstance,
+    "x-obsoleted-ISO-2022-JP",
+    "Unicode"
+  },// To Be Obsoleted
+  {	// To Be Obsoleted
+    &kEUCJPToUnicodeCID,
+    nsEUCJPToUnicode::CreateInstance,
+    "x-obsoleted-EUC-JP",
+    "Unicode"
+  },// To Be Obsoleted
+  {	
     &kUnicodeToEUCJPCID,
     nsUnicodeToEUCJP::CreateInstance,
     "Unicode",
