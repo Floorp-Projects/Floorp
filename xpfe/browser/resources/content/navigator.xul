@@ -243,6 +243,7 @@ Contributor(s): ______________________________________. -->
 <!ENTITY xptk5Cmd.label "Dialog w/ animation">
 <!ENTITY xptk6Cmd.label "Tab">
 <!ENTITY xptk7Cmd.label "Beep">
+<!ENTITY xptk8Cmd.label "Sound">
 
 <!ENTITY QA.label "QA">
 <!ENTITY QABugCmd.label "Bug Writing">
@@ -670,6 +671,7 @@ Contributor(s): ______________________________________. -->
         <menuitem name="&xptk5Cmd.label;" onclick="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
         <menuitem name="&xptk6Cmd.label;" onclick="window.content.location.href='resource:/res/samples/tab.xul'"/>
         <menuitem name="&xptk7Cmd.label;" onclick="window.content.location.href='resource:/res/samples/beeptest.html'"/>
+        <menuitem name="&xptk8Cmd.label;" onclick="window.content.location.href='resource:/res/samples/soundtest.html'"/>
       </menu>
 
     </menu>
