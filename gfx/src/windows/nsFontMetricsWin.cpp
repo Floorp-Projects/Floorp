@@ -1998,7 +1998,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
     // italic correction
     if (aItalicSlope) {
       ABC abc;
-      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
       if (GetCharABCWidths(aDC, aString[aLength-1], aString[aLength-1], &abc)) {
         if (abc.abcC < 0) {
           aBoundingMetrics.supItalicCorrection = -abc.abcC; 
@@ -2157,7 +2157,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 
     // italic correction
     if (aItalicSlope) {
-      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
       ABC abc;
       if (GetCharABCWidths(aDC, mConverter[aString[aLength-1]], mConverter[aString[aLength-1]], &abc)) {
         if (abc.abcC < 0) {
@@ -2813,7 +2813,7 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
 
     // italic correction
     if (aItalicSlope) {
-      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
       ABC abc;
       if (GetCharABCWidths(aDC, pstr[nb-1], pstr[nb-1], &abc)) {
         if (abc.abcC < 0) {
