@@ -1,4 +1,6 @@
 nsPIBoxObject.h
 nsIMenuFrame.h
 nsIPopupSetFrame.h
+nsIScrollbarMediator.h
+
 
