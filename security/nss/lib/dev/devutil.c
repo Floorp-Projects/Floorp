@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.7 $ $Date: 2002/04/19 17:32:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.8 $ $Date: 2002/04/19 19:30:09 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -677,6 +677,7 @@ get_object_and_attributes
 	 */
 	*doObjects = PR_FALSE;
 	*status = PR_FAILURE;
+	return (nssCryptokiObjectAndAttributes **)NULL;
     } else {
 	if (numObjects == 0) {
 	    /* The fact that there are no objects is cached, done */
@@ -851,7 +852,7 @@ get_token_certs_for_cache
 	return status;
     }
     cache->searchedObjectType[cachedCerts] = PR_TRUE;
-    return PR_SUCCESS;
+    return status;
 }
 
 static PRStatus
@@ -905,7 +906,7 @@ get_token_trust_for_cache
 	return status;
     }
     cache->searchedObjectType[cachedTrust] = PR_TRUE;
-    return PR_SUCCESS;
+    return status;
 }
 
 static PRStatus
@@ -955,7 +956,7 @@ get_token_crls_for_cache
 	return status;
     }
     cache->searchedObjectType[cachedCRLs] = PR_TRUE;
-    return PR_SUCCESS;
+    return status;
 }
 
 static nssCryptokiObject **
