@@ -126,7 +126,7 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     PRUint8 listStyleType = myList->mListStyleType;
 
     if (myList->mListStyleImage.Length() > 0) {
-      nsIImage* image = mImageLoader.GetImage();
+      nsCOMPtr<nsIImage> image = dont_AddRef(mImageLoader.GetImage());
       if (image) {
         if (!mImageLoader.GetLoadImageFailed()) {
           nsRect innerArea(mPadding.left, mPadding.top,
@@ -135,7 +135,6 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
           aRenderingContext.DrawImage(image, innerArea);
           return NS_OK;
         }
-        NS_RELEASE(image);
       }
     }
 
