@@ -45,6 +45,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
+
+	NS_IMETHOD Initialize(const char * aUserName);
+
 	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
 
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
@@ -173,6 +176,8 @@ protected:
 	PRBool					m_mimePartSelectorDetected;
 	PRBool					m_allowContentChange;	// if FALSE, we can't use Mime parts on demand
 	PRInt32					m_discoveryDepth;
+
+	char *		m_userName;
 
 	// event sinks
 	imapMessageFlagsType	m_flags;

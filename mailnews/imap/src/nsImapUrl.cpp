@@ -78,9 +78,20 @@ nsImapUrl::nsImapUrl()
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
+	m_userName = nsnull;
 	m_onlineSubDirSeparator = '\0'; 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
 									   (void **) getter_AddRefs(m_urlListeners));
+}
+
+nsresult nsImapUrl::Initialize(const char * aUserName)
+{
+	nsresult rv = NS_OK;
+	if (aUserName)
+		m_userName = PL_strdup(aUserName);
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv;
 }
  
 nsImapUrl::~nsImapUrl()
@@ -93,6 +104,7 @@ nsImapUrl::~nsImapUrl()
     PR_FREEIF(m_search);
 	PR_FREEIF(m_file);
 	PR_FREEIF(m_listOfMessageIds);
+	PR_FREEIF(m_userName);
 
 }
   
@@ -387,6 +399,14 @@ NS_IMETHODIMP nsImapUrl::GetURLInfo(URL_Struct_** aResult) const
 
 nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 {
+#ifdef DEBUG_mscott
+	// mscott - i just added a new method for intialization, I'm adding a quick
+	// check here to verify that initialize was called on this class...this is
+	// really for debugging purposes so I can find out if I missed a spot where
+	// I needed to initialize the url before using it.
+	NS_ASSERTION(m_userName, "oops...looks like we didn't initialize the url.");
+#endif
+
     // XXX hack!
     char* cSpec = aSpec.ToNewCString();
 
