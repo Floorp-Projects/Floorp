@@ -165,7 +165,7 @@ nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
     if (mFileSpec != nsnull)
     {
         // We want the a NATIVE path.
-       aDirectoryPath.SetString(mFileSpec->GetCString());
+       aDirectoryPath.Assign(mFileSpec->GetCString());
 
        if (mFileSpec->IsDirectory())
        {

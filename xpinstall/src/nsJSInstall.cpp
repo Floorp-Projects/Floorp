@@ -218,15 +218,15 @@ void ConvertJSValToStr(nsString&  aString,
 
   if((jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
-    aString.SetString(JS_GetStringChars(jsstring));
+    aString.Assign(JS_GetStringChars(jsstring));
     if (aString.EqualsIgnoreCase("null"))
     {
-        aString.SetString("");
+        aString.Truncate();
     }
   }
   else
   {
-    aString.SetString("");
+    aString.Truncate();
   }
 }
 

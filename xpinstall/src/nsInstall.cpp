@@ -513,7 +513,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
       tempTargetName = aJarSource;
     
     if (qualifiedVersion == "")
-        qualifiedVersion.SetString("0.0.0.0");   	
+        qualifiedVersion.Assign("0.0.0.0");   	
 
 
     if ( aRegName.Equals("") ) 
