@@ -44,7 +44,6 @@ function initServerType() {
 
   if (index != undefined) {
       var deck = document.getElementById("serverdeck");
-      dump("deck index was " + deck.getAttribute("index") + "\n");
       deck.setAttribute("index", index);
   }
 
