@@ -181,6 +181,24 @@ treechildren:-moz-tree-image(flaggedCol, flagged) {
   list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
 }
 
+/* ..... junkStatus column ..... */
+
+treecol.junkStatusHeader {
+  list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
+}
+
+treechildren:-moz-tree-image(junkStatusCol) {
+  list-style-image: url("chrome://messenger/skin/icons/message-junk-unknown.gif");
+}
+
+treechildren:-moz-tree-image(junkStatusCol, junk) {
+  list-style-image: url("chrome://messenger/skin/icons/message-junk-junk.gif");
+}
+
+treechildren:-moz-tree-image(junkStatusCol, notjunk) {
+  list-style-image: url("chrome://messenger/skin/icons/message-junk-notjunk.gif");
+}
+
 /* ..... subject column ..... */
 
 treechildren:-moz-tree-image(subjectCol) {

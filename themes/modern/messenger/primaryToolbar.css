@@ -232,18 +232,19 @@
   -moz-image-region: rect(68px 199px 101px 150px) !important;
 }
 
-#button-junk {
-  -moz-image-region: rect(136px 49px 169px 0);
+#button-junk{
+  list-style-image: url("chrome://messenger/skin/icons/junk.gif");
 }
 
-#button-junk[buttonover] {
-  -moz-image-region: rect(136px 99px 169px 50px);
+#button-junk:hover {
+  list-style-image: url("chrome://messenger/skin/icons/junk-hov.gif");
 } 
 
-#button-junk[buttondown] {
-  -moz-image-region: rect(136px 149px 169px 100px);
-} 
+#button-junk:hover:active {
+  list-style-image: url("chrome://messenger/skin/icons/junk-act.gif");
+}
 
-#button-junk[disabled] {
-  -moz-image-region: rect(136px 199px 169px 150px) !important;
-} 
+#button-junk[disabled="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/junk-dis.gif");
+}
+
