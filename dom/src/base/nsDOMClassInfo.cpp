@@ -796,6 +796,7 @@ PRBool nsDOMClassInfo::sIsInitialized = PR_FALSE;
 
 
 JSString *nsDOMClassInfo::sTop_id             = nsnull;
+JSString *nsDOMClassInfo::sParent_id          = nsnull;
 JSString *nsDOMClassInfo::sScrollbars_id      = nsnull;
 JSString *nsDOMClassInfo::sLocation_id        = nsnull;
 JSString *nsDOMClassInfo::sComponents_id      = nsnull;
@@ -873,6 +874,7 @@ nsresult
 nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
 {
   sTop_id            = ::JS_InternString(cx, "top");
+  sParent_id         = ::JS_InternString(cx, "parent");
   sScrollbars_id     = ::JS_InternString(cx, "scrollbars");
   sLocation_id       = ::JS_InternString(cx, "location");
   sComponents_id     = ::JS_InternString(cx, "Components");
@@ -2637,6 +2639,7 @@ nsDOMClassInfo::ShutDown()
 #endif
 
   sTop_id             = jsnullstring;
+  sParent_id          = jsnullstring;
   sScrollbars_id      = jsnullstring;
   sLocation_id        = jsnullstring;
   sComponents_id      = jsnullstring;
