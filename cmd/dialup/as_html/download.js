@@ -21,7 +21,7 @@
 
 function go( msg )
 {
-	parent.parent.globals.debug( "download go" );
+//	parent.parent.globals.debug( "download go" );
 	
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
