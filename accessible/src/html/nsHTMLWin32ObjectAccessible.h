@@ -40,8 +40,8 @@
 #ifndef _nsHTMLWin32ObjectAccessible_H_
 #define _nsHTMLWin32ObjectAccessible_H_
 
-#include "nsAccessible.h"
 #include "nsIAccessibleWin32Object.h"
+#include "nsAccessible.h"
 
 struct IAccessible;
 
