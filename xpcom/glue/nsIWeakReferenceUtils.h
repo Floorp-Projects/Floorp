@@ -89,23 +89,12 @@ do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
   }
 
 
-
-class NS_COM_GLUE nsGetWeakReference : public nsCOMPtr_helper
-  {
-    public:
-      nsGetWeakReference( nsISupports* aRawPtr, nsresult* error )
-          : mRawPtr(aRawPtr),
-            mErrorPtr(error)
-        {
-          // nothing else to do here
-        }
-
-      virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
-
-    private:
-      nsISupports*  mRawPtr;
-      nsresult*     mErrorPtr;
-  };
+  /**
+   * Deprecated, use |do_GetWeakReference| instead.
+   */
+extern NS_COM_GLUE
+nsIWeakReference*
+NS_GetWeakReference( nsISupports* , nsresult* aResult=0 );
 
   /**
    * |do_GetWeakReference| is a convenience function that bundles up all the work needed
@@ -115,10 +104,10 @@ class NS_COM_GLUE nsGetWeakReference : public nsCOMPtr_helper
    * |nsWeakPtr myWeakPtr = do_GetWeakReference(aPtr);|.
    */
 inline
-const nsGetWeakReference
+already_AddRefed<nsIWeakReference>
 do_GetWeakReference( nsISupports* aRawPtr, nsresult* error = 0 )
   {
-    return nsGetWeakReference(aRawPtr, error);
+    return NS_GetWeakReference(aRawPtr, error);
   }
 
 inline
@@ -149,14 +138,5 @@ do_GetWeakReference( already_AddRefed<T>&, nsresult* )
     //  Saying |do_GetWeakReference()| on a pointer that is not otherwise owned by
     //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
   }
-
-
-
-  /**
-   * Deprecated, use |do_GetWeakReference| instead.
-   */
-extern NS_COM_GLUE
-nsIWeakReference*
-NS_GetWeakReference( nsISupports* , nsresult* aResult=0 );
 
 #endif
