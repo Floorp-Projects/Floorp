@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.26 2000/11/16 22:08:58 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.27 2001/01/10 11:48:48 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.26 $ $Date: 2000/11/16 22:08:58 $
+ * @version $Revision: 1.27 $ $Date: 2001/01/10 11:48:48 $
 **/
 
 /**
@@ -142,7 +142,7 @@ void XSLTProcessor::print
     MBool indent = MB_FALSE;
     if (format->isMethodExplicit()) {
         if (format->isHTMLOutput()) xmlPrinter = new HTMLPrinter(*target);
-	else if (format->isTextOutput()) xmlPrinter = new TEXTPrinter(*target);
+        else if (format->isTextOutput()) xmlPrinter = new TEXTPrinter(*target);
         else xmlPrinter = new XMLPrinter(*target);
         indent = format->getIndent();
     }
@@ -836,15 +836,23 @@ void XSLTProcessor::processAction
             const String curValue = ((Text*)xslAction)->getData();
 
             //-- set leading + trailing whitespace stripping flags
-            MBool stripLWS = (MBool) (xslAction->getPreviousSibling());
-            MBool stripTWS = (MBool) (xslAction->getNextSibling());
-            XMLUtils::stripSpace(curValue,textValue, stripLWS, stripTWS);
-            //-- create new text node and add it to the result tree
-            //-- if necessary
+            #ifdef DEBUG_ah
+            Node* priorNode = xslAction->getPreviousSibling();
+            Node* nextNode = xslAction->getNextSibling();
+            if (priorNode && (priorNode->getNodeType()==Node::TEXT_NODE))
+                printf("Textnode found in prior in whitespace strip\n");
+            if (nextNode && (nextNode->getNodeType()==Node::TEXT_NODE))
+                printf("Textnode found in next in whitespace strip\n");
+            #endif
+            if (XMLUtils::shouldStripTextnode(curValue))
+                textValue="";
+            else textValue=curValue;
         }
         else {
             textValue = ((Text*)xslAction)->getData();
         }
+        //-- create new text node and add it to the result tree
+        //-- if necessary
         if ( textValue.length() > 0)
             ps->addToResultTree(resultDoc->createTextNode(textValue));
         return;
@@ -1270,14 +1278,13 @@ void XSLTProcessor::processAction
                     NodeSet* nodes = (NodeSet*)exprResult;
                     if ( nodes->size() > 0) {
                         Node* node = nodes->get(0);
-                        if ( ps->isStripSpaceAllowed(node) ) {
-                            const String temp = value;
+                        if ( ps->isStripSpaceAllowed(node) && 
+                             XMLUtils::shouldStripTextnode(value))
                             value.clear();
-                            XMLUtils::stripSpace(temp, value);
-                        }
                     }
                 }
-                ps->addToResultTree(resultDoc->createTextNode(value));
+                if (value.length()>0)
+                    ps->addToResultTree(resultDoc->createTextNode(value));
                 delete exprResult;
                 break;
             }
@@ -1465,7 +1472,7 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
                         VariableBinding* binding = new VariableBinding(name, exprResult);
                         params->put((const String&)name, binding);
                     }
-				}
+                }
             }
         }
     }
@@ -1753,16 +1760,16 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     process(sourceNode, sourceNode, ps);
 
     if (aObserver) {
-	    nsresult res = NS_OK;
-	    nsAutoString topic; topic.Assign(NS_LITERAL_STRING("xslt-done"));
+        nsresult res = NS_OK;
+        nsAutoString topic; topic.Assign(NS_LITERAL_STRING("xslt-done"));
 
-	    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
-	    if (NS_SUCCEEDED(res)) {
-          nsIDOMNode* docElement = (resultDocument->getDocumentElement())->getNSObj();
+        nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
+        if (NS_SUCCEEDED(res)) {
+            nsIDOMNode* docElement = (resultDocument->getDocumentElement())->getNSObj();
 
-	        anObserverService->AddObserver(aObserver, topic.GetUnicode());
-	        anObserverService->Notify(docElement, topic.GetUnicode(), nsnull);
-	    }
+            anObserverService->AddObserver(aObserver, topic.GetUnicode());
+            anObserverService->Notify(docElement, topic.GetUnicode(), nsnull);
+        }
     }
 
     delete ps;
