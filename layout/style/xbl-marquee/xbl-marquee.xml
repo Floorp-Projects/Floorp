@@ -240,20 +240,19 @@
                 this.stopAt  = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
               break;
 
-              case "left":
-                this.dirsign = 1;
-                this.startAt = (this.behaviorField != 'alternate') ? (this.innerDiv.offsetLeft - this.outerDiv.offsetWidth) : this.innerDiv.offsetWidth;
-                this.stopAt  = this.outerDiv.offsetWidth
-                               + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.startAt) : 0);
-              break;
-
               case "right":
-              default:
                 this.dirsign = -1;
                 this.stopAt  = (this.behaviorField != 'alternate') ? this.innerDiv.offsetLeft - this.outerDiv.offsetWidth : this.innerDiv.offsetWidth;
                 this.startAt = this.outerDiv.offsetWidth 
                                + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.stopAt) : 0);   
               break;
+
+              case "left":
+              default:
+                this.dirsign = 1;
+                this.startAt = (this.behaviorField != 'alternate') ? (this.innerDiv.offsetLeft - this.outerDiv.offsetWidth) : this.innerDiv.offsetWidth;
+                this.stopAt  = this.outerDiv.offsetWidth
+                               + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.startAt) : 0);
             }
 
             // if the direction attribute is changed, don't reset the starting position
