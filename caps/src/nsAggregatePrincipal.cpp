@@ -206,11 +206,8 @@ nsAggregatePrincipal::SetCodebase(nsIPrincipal* aCodebase)
     mCodebase = newCodebase;
 
     //-- If this is the first codebase set, remember it.
-    //   If not, remember that the codebase was explicitly set
     if (!mOriginalCodebase)
         mOriginalCodebase = newCodebase;
-    else
-        mCodebaseWasChanged = PR_TRUE;
 
     return NS_OK;
 }
@@ -262,9 +259,16 @@ nsAggregatePrincipal::Intersect(nsIPrincipal* other)
 }
 
 NS_IMETHODIMP 
-nsAggregatePrincipal::WasCodebaseChanged(PRBool* changed)
+nsAggregatePrincipal::SetDomainChanged(PRBool aDomainChanged)
 {
-    *changed = mCodebaseWasChanged;
+    mDomainChanged = aDomainChanged;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetDomainChanged(PRBool* aDomainChanged)
+{
+    *aDomainChanged = mDomainChanged;
     return NS_OK;
 }
 
@@ -442,7 +446,7 @@ nsAggregatePrincipal::Write(nsIObjectOutputStream* aStream)
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
 
-nsAggregatePrincipal::nsAggregatePrincipal() : mCodebaseWasChanged(PR_FALSE)
+nsAggregatePrincipal::nsAggregatePrincipal() : mDomainChanged(PR_FALSE)
 {
 }
 

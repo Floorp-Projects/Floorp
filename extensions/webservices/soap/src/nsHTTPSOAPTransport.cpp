@@ -56,6 +56,8 @@
 #include "nsIDOMSerializer.h"
 #include "nsIWebScriptsAccessService.h"
 #include "nsMemory.h"
+#include "nsIDocument.h"
+#include "nsIAggregatePrincipal.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
@@ -88,6 +90,59 @@ nsresult DebugPrintDOM(nsIDOMNode * node)
 #endif
 
 static NS_NAMED_LITERAL_STRING(kAnyURISchemaType, "anyURI");
+
+/**
+  * This method will replace the target document's 
+  * codebase pricipal with the subject codebase to
+  * override cross domain checks. So use caution 
+  * because this might lead to serious security breech
+  * if misused.
+  * @param aDocument - The target/response document.
+  */
+static 
+nsresult ChangePrincipal(nsIDOMDocument* aDocument)
+{
+  if (!aDocument)
+    return NS_OK;
+
+  nsresult rv;
+  nsCOMPtr<nsIScriptSecurityManager> secMgr = 
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDocument> targetDoc(do_QueryInterface(aDocument, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIURI> targetURI;
+  targetDoc->GetDocumentURL(getter_AddRefs(targetURI));
+  rv = secMgr->CheckSameOrigin(nsnull, targetURI);
+  // change the principal only if the script security 
+  // manager has denied access.
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIPrincipal> subjectPrincipal;
+    rv = secMgr->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAggregatePrincipal> subjectAgg = 
+      do_QueryInterface(subjectPrincipal, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+       
+    nsCOMPtr<nsIPrincipal> subjectCodebase;
+    rv = subjectAgg->GetOriginalCodebase(getter_AddRefs(subjectCodebase));
+    NS_ENSURE_SUCCESS(rv, rv);
+       
+    nsCOMPtr<nsIPrincipal> targetPrincipal;
+    rv = targetDoc->GetPrincipal(getter_AddRefs(targetPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAggregatePrincipal> targetAgg = 
+      do_QueryInterface(targetPrincipal, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = targetAgg->SetCodebase(subjectCodebase);
+  }
+  return rv;
+}
 
 /**
  * Get and check the transport URI for accessibility.  In the future,
@@ -456,6 +511,7 @@ NS_IMETHODIMP
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {
         rv = mResponse->SetMessage(document);
+        ChangePrincipal(document);
         DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)
       } 
       else {
