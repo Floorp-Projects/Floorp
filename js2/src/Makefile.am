@@ -5,8 +5,10 @@ INCLUDES = -I$(BOEHM_DIR)
 
 noinst_LIBRARIES = libjs2.a
 
-libjs2_a_LIBADD = $(LIBBOEHM)
-libjs2_a_DEPENDENCIES = $(BOEHM_DIR)/gc.a
+# can't add this to the library, clients will need to link to gc.a
+# libjs2_a_LIBADD = $(LIBBOEHM)
+
+libjs2_a_DEPENDENCIES = $(LIBBOEHM)
 libjs2_a_SOURCES = \
 	algo.h \
 	cpucfg.h \
