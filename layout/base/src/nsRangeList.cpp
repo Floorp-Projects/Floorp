@@ -869,7 +869,7 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
          frame->SetSelected(aRange,aFlags,PR_TRUE);//spread from here to hit all frames in flow
       result = iter->Next();
       if (NS_FAILED(result))
-      	break;
+      	return result;
     }
   }
   return result;
