@@ -95,6 +95,11 @@
         <box id="taskbarMenuBox" align="horizontal">
           <!-- taskbarOverlay.xul inserts here. -->
         </box>
+
+	 	<box id="taskbarGotoMenuBox" align="right">
+		  <!-- taskbarOverlay.xul inserts here. -->
+    	</box>
+
       </toolbar>
 
 </overlay>
