@@ -202,7 +202,6 @@ public:
   NS_IMETHOD  GetWindow(nsIWidget**) const;
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
-  NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const;
   NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
@@ -221,43 +220,28 @@ public:
                            nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
-  // nsIHTMLReflow
-  //@{
-  /**
-   * Sets the NS_FRAME_IN_REFLOW bit.
-   */
-  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
 
-  /**
-   * Returns a desired size of (0, 0) and a reflow status of NS_FRAME_COMPLETE
-   */
+  // nsIHTMLReflow
+  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
   NS_IMETHOD  Reflow(nsIPresContext&          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus);
-
-  /**
-   * Clears the NS_FRAME_IN_REFLOW and NS_FRAME_FIRST_REFLOW bits, and
-   * and if NS_FRAME_SYNCHRONIZE_FRAME_AND_VIEW is set positions and
-   * sizes the view
-   */
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
-
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
-
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
-
   NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
-  //@}
+  NS_IMETHOD VerticalAlignFrames(nscoord aLineHeight,
+                                 nscoord aDistanceFromTopEdge);
 
   // Selection Methods
-  // XXX Doc me...
+  // XXX Doc me... (in nsIFrame.h puhleeze)
   // XXX If these are selection specific, then the name should imply selection
   // rather than generic event processing, e.g., SelectionHandlePress...
   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
@@ -322,7 +306,6 @@ protected:
   // Protected constructor and destructor
   nsFrame();
   virtual ~nsFrame();
-
 
   virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
                                 nsIRenderingContext * aRendContext,
