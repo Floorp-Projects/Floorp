@@ -119,9 +119,6 @@ extern nsresult
   NS_NewSharedHTMLText(nsIHTMLContent** aInstancePtrResult,
                        nsIArena* aArena, PRUnichar* us, PRInt32 uslen = 0);
 
-/** Create a new horizontal rule content object (e.g <HR>.) */
-nsresult
-NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
 /** Create a new table content object <TABLE> */
 extern nsresult
@@ -200,5 +197,9 @@ NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
 extern nsresult
 NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
                    nsIAtom* aTag, nsIWebShell* aWebShell);
+
+// New content objects
+nsresult NS_NewHTMLAnchor(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
+nsresult NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
 #endif /* nsHTMLParts_h___ */
