@@ -154,6 +154,7 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   nsSize availSize(aMaxSize);
   nsSize maxSize(0, 0);
   nsSize kidMaxSize(0,0);
+  nsSize kidMaxElementSize(0,0);
   nsReflowMetrics kidSize;
   nscoord cellXOffset = 0;
   nscoord maxAscent = 0;
@@ -234,9 +235,21 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
     if (kidSize.width > maxSize.width) {
       maxSize.width = kidSize.width;
     }
-    if ((1==rowSpan) && (kidSize.height > maxSize.height)) {
-      maxSize.height = kidSize.height;
+    if (NS_UNCONSTRAINEDSIZE==aMaxSize.height)
+    {
+      if ((1==rowSpan) && (kidSize.height > maxSize.height))
+        maxSize.height = kidSize.height;
+      if (kidMaxSize.height > kidMaxElementSize.height)
+        kidMaxElementSize.height = kidMaxSize.height;
     }
+    else
+    { // in the constrained height case, our maxElementSize is the height of our tallest cell
+      if ((1==rowSpan) && (kidSize.height > maxSize.height))
+        maxSize.height = kidSize.height;
+      if (maxSize.height > kidMaxElementSize.height)
+        kidMaxElementSize.height = maxSize.height;
+    }
+    kidMaxElementSize.width += kidMaxSize.width;
     if (NS_UNCONSTRAINEDSIZE!=cellXOffset)
       cellXOffset+=kidSize.width;
     if (cellXOffset<=0)
@@ -265,6 +278,11 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   }
 
   if (nsnull != prevKidFrame) {
+    if (LastChild()!=prevKidFrame)
+    {
+      nsIFrame * frame = LastChild();
+      GetGeometricParent()->List();
+    }
     NS_ASSERTION(LastChild() == prevKidFrame, "unexpected last child");
     SetLastContentOffset(prevKidFrame);
   }
@@ -275,7 +293,7 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   aDesiredSize.ascent = maxAscent;
   aDesiredSize.descent = maxDescent;
   if (nsnull != aMaxElementSize) {
-    *aMaxElementSize = kidMaxSize;
+    *aMaxElementSize = kidMaxElementSize;
   }
   SetMaxChildHeight(maxCellHeight);  // remember height of tallest child who doesn't have a row span
 
@@ -295,6 +313,10 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
              result==frComplete?"Complete":"Not Complete",
              aDesiredSize.width, aDesiredSize.height);
   }
+  
+  // testing...
+  result = frComplete;
+
   return result;
 
 }
