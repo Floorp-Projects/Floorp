@@ -22,6 +22,16 @@ class UnaryNode extends ExpressionNode {
         return result.toString();
     }
     
+    String getOperator()
+    {
+        return op;
+    }
+    
+    ExpressionNode getChild()
+    {
+        return child;
+    }
+    
     protected ExpressionNode child;
     protected String op;
     

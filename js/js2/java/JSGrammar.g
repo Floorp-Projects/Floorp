@@ -125,7 +125,7 @@ postfix_expression[boolean initial] returns [ExpressionNode e]
 	|	e = new_expression
 	)
 	(
-		r = member_operator { e = new BinaryNode(".", e, r); }
+		r = member_operator { e = new BinaryNode(((UnaryNode)r).getOperator(), e, ((UnaryNode)r).getChild()); }
 	|	r = arguments { e = new BinaryNode("()", e, r); }
 	|	"++" { e = new UnaryNode("++", e); }
 	|	"--" { e = new UnaryNode("--", e); }
@@ -224,17 +224,18 @@ shift_expression[boolean initial] returns [ExpressionNode e]
 	;
 
 // ********* Relational Operators **********
-relational_operator[boolean allowIn]
-	:	{allowIn}? "in"
-	|	"<"
-	|	">"
-	| 	"<="
-	| 	">="
-	| 	"instanceof"
+relational_operator[boolean allowIn] returns [String s]
+    { s = null; }
+	:	{allowIn}? "in" { s = "in"; }
+	|	"<"             { s = "<"; }
+	|	">"             { s = ">"; }
+	| 	"<="            { s = "<="; }
+	| 	">="            { s = ">="; }
+	| 	"instanceof"    { s = "instanceof"; }
 	;
 
 relational_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode r = null; String op = null; }
 	:	e = shift_expression[initial]
 		(
 			// ANTLR reports an ambiguity here because the FOLLOW set of a relational_expression
@@ -242,45 +243,52 @@ relational_expression[boolean initial, boolean allowIn] returns [ExpressionNode 
 			// here because the 'allowIn' semantic predicate is used to prevent the two from being
 			// confused.
 			options { warnWhenFollowAmbig=false; }:
-			relational_operator[allowIn] shift_expression[false]
+			op = relational_operator[allowIn] r = shift_expression[false] { e = new RelationalNode(op, e, r); }
 		)*
 	;
 
 // ********* Equality Operators **********
 equality_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode r = null; }
 	:	e = relational_expression[initial, allowIn]
-		(("==" | "!=" | "===" | "!==") relational_expression[false, allowIn])*
+	    (
+		    ("==" r = relational_expression[false, allowIn]) { e = new RelationalNode("==", e, r); }
+		|   ("!=" r = relational_expression[false, allowIn]) { e = new RelationalNode("!=", e, r); }
+		|   ("===" r = relational_expression[false, allowIn]) { e = new RelationalNode("===", e, r); }
+		|   ("!==" r = relational_expression[false, allowIn]) { e = new RelationalNode("!===", e, r); }
+		)*
 	;
 
 // ********* Binary Bitwise Operators **********
 bitwise_and_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode r = null; }
 	:	e = equality_expression[initial, allowIn]
-		("&" equality_expression[false, allowIn])*
+		("&" r = equality_expression[false, allowIn] { e = new ArithmeticNode("&", e, r); } )*
 	;
 
 bitwise_xor_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode r = null; }
 	:	e = bitwise_and_expression[initial, allowIn]
-		("^" (bitwise_and_expression[false, allowIn] | "*" | "?"))*
+		("^" (r = bitwise_and_expression[false, allowIn] { e = new BinaryNode("^", e, r); } | "*" | "?"))*
 	;
 
 bitwise_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
+    { e = null; ExpressionNode r = null; }
 	:	e = bitwise_xor_expression[initial, allowIn]
-		("|" (bitwise_xor_expression[false, allowIn] | "*" | "?"))*
+		("|" (r = bitwise_xor_expression[false, allowIn] { e = new BinaryNode("|", e, r); } | "*" | "?"))*
 	;
 
 // ********* Binary Logical Operators **********
 logical_and_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
-	:	e = bitwise_or_expression[initial, allowIn] ("&&" bitwise_or_expression[false, allowIn])*
+    { e = null; ExpressionNode r = null; }
+	:	e = bitwise_or_expression[initial, allowIn]
+	    ("&&" r = bitwise_or_expression[false, allowIn] { e = new BinaryNode("&&", e, r); } )*
 	;
 
 logical_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
-	:	e = logical_and_expression[initial, allowIn] ("||" logical_and_expression[false, allowIn])*
+    { e = null; ExpressionNode r = null; }
+	:	e = logical_and_expression[initial, allowIn]
+	    ("||" r = logical_and_expression[false, allowIn] { e = new BinaryNode("||", e, r); } )*
 	;
 
 // ********* Conditional Operators **********
