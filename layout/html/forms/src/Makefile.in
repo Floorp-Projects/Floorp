@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsGfxCheckboxControlFrame.cpp \
 		nsGfxListControlFrame.cpp \
 		nsGfxRadioControlFrame.cpp \
-		nsGfxTextControlFrame.cpp \
 		nsHTMLButtonControlFrame.cpp \
 		nsImageControlFrame.cpp \
 		nsLabelFrame.cpp \
@@ -51,6 +50,12 @@ CPPSRCS		= \
 		nsListControlFrame.cpp \
 		nsRadioControlGroup.cpp \
 		$(NULL)
+
+ifdef MOZ_ENDER_LITE
+CPPSRCS	+= nsGfxTextControlFrame2.cpp
+else
+CPPSRCS	+= nsGfxTextControlFrame.cpp
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
@@ -64,9 +69,14 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
+ifdef MOZ_ENDER_LITE
+DEFINES		+= -DENDER_LITE
+endif
+
 INCLUDES	+= \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../style/src \
 		-I$(srcdir)/../../content/src \
 		$(NULL)
+
