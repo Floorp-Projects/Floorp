@@ -382,14 +382,10 @@ final class NativeDate extends IdScriptable
         return result;
     }
 
-    private static int DaysInYear(int y)
+    private static boolean IsLeapYear(int year)
     {
-        if (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
-            return 366;
-        else
-            return 365;
+        return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
     }
-
 
     /* math here has to be f.p, because we need
      *  floor((1968 - 1969) / 4) == -1
@@ -440,7 +436,7 @@ final class NativeDate extends IdScriptable
 
     private static boolean InLeapYear(double t)
     {
-        return DaysInYear(YearFromTime(t)) == 366;
+        return IsLeapYear(YearFromTime(t));
     }
 
     private static int DayWithinYear(double t)
@@ -449,7 +445,7 @@ final class NativeDate extends IdScriptable
         return (int) (Day(t) - DayFromYear(year));
     }
 
-    private static double DayFromMonth(int m, boolean leap)
+    private static double DayFromMonth(int m, int year)
     {
         int day = m * 30;
 
@@ -457,7 +453,7 @@ final class NativeDate extends IdScriptable
         else if (m >= 2) { day += (m - 1) / 2 - 1; }
         else { day += m; }
 
-        if (leap && m >= 2) { ++day; }
+        if (m >= 2 && IsLeapYear(year)) { ++day; }
 
         return day;
     }
@@ -665,26 +661,16 @@ final class NativeDate extends IdScriptable
 
     private static double MakeDay(double year, double month, double date)
     {
-        double result;
-        boolean leap;
-        double yearday;
-        double monthday;
-
         year += Math.floor(month / 12);
 
         month = month % 12;
         if (month < 0)
             month += 12;
 
-        leap = (DaysInYear((int) year) == 366);
+        double yearday = Math.floor(TimeFromYear(year) / msPerDay);
+        double monthday = DayFromMonth((int)month, (int)year);
 
-        yearday = Math.floor(TimeFromYear(year) / msPerDay);
-        monthday = DayFromMonth((int) month, leap);
-
-        result = yearday
-            + monthday
-            + date - 1;
-        return result;
+        return yearday + monthday + date - 1;
     }
 
     private static double MakeDate(double day, double time)
