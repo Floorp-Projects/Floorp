@@ -53,8 +53,6 @@
 #define KBD_CTRL KBD_CONTROL
 #endif
 
-static void GetKeyboardName( char *buff);
-
 nsWidgetModuleData::nsWidgetModuleData()
 {}
 
@@ -109,24 +107,6 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    converter = 0;
    supplantConverter = FALSE;
 
-   // create unicode keyboard object
-   char    kbdname[8];
-   UniChar unikbdname[8];
-   GetKeyboardName( kbdname);
-   for( int i = 0; i < 8; i++)
-      unikbdname[i] = kbdname[i];
-
-   if( UniCreateKeyboard( &hKeyboard, unikbdname, 0) != ULS_SUCCESS)
-   {
-      unikbdname[2] = L'\0';
-      if( UniCreateKeyboard( &hKeyboard, unikbdname, 0) != ULS_SUCCESS)
-         hKeyboard = 0;
-   }
-#ifdef DEBUG
-   else
-      printf( "Widget library loaded keyboard table for %s\n", kbdname);
-#endif
-
 #if 0
    mWindows = nsnull;
 #endif
@@ -134,9 +114,6 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
 
 nsWidgetModuleData::~nsWidgetModuleData()
 {
-   if( hKeyboard)
-      UniDestroyKeyboard( hKeyboard);
-
    if( converter)
       UniFreeUconvObject( converter);
 
@@ -224,6 +201,94 @@ HPOINTER nsWidgetModuleData::GetFrameIcon()
    return hptrFrameIcon;
 }
 
+int nsWidgetModuleData::CreateUcsConverter()
+{
+   // Create a converter from unicode to a codepage which PM can display.
+   UniChar codepage[20];
+   int unirc = UniMapCpToUcsCp( 0, codepage, 20);
+   if( unirc == ULS_SUCCESS)
+   {
+      unirc = UniCreateUconvObject( codepage, &converter);
+      // XXX do we need to set substitution options here?
+#ifdef DEBUG
+      if( unirc == ULS_SUCCESS)
+      {
+         printf( "Widget library created unicode converter for cp %s\n",
+                 ConvertFromUcs( (PRUnichar *) codepage));
+      }
+#endif
+   }
+   if( unirc != ULS_SUCCESS)
+   {
+      printf( "Couldn't create widget unicode converter.\n");
+   }
+
+   return unirc;
+}
+
+// Conversion from appropriate codepage to unicode
+PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText, 
+                                             PRUnichar *pBuffer, 
+                                             ULONG ulSize)
+{
+   if( supplantConverter)
+   {
+      // We couldn't create a converter for some reason, so do this 'by hand'.
+      // Note this algorithm is fine for most of most western charsets, but
+      // fails dismally for various glyphs, baltic, points east...
+      ULONG ulCount = 0;
+      PRUnichar *pSave = pBuffer;
+      while( *szText && ulCount < ulSize - 1) // (one for terminator)
+      {
+         *pBuffer = (PRUnichar)((SHORT)*szText & 0x00FF);
+         pBuffer++;
+         szText++;
+         ulCount++;
+      }
+
+      // terminate string
+      *pBuffer = (PRUnichar)0;
+
+      return pSave;
+   }
+
+   if( !converter)
+   {
+      if( CreateUcsConverter() != ULS_SUCCESS)
+      {
+         supplantConverter = TRUE;
+         return ConvertToUcs( szText, pBuffer, ulSize);
+      }
+   }
+
+   // Have converter, now get it to work...
+
+   char    *szString = (char *)szText;
+   size_t   szLen = strlen( szText) + 1;
+   size_t   ucsLen = ulSize;
+   size_t   cSubs = 0;
+
+   UniChar *tmp = pBuffer; // function alters the out pointer
+
+   int unirc = UniUconvToUcs( converter, (void **)&szText, &szLen,
+                              &tmp, &ucsLen, &cSubs);
+
+   if( unirc == UCONV_E2BIG) // k3w1
+   {
+      // terminate output string (truncating)
+      *(pBuffer + ulSize - 1) = (PRUnichar)0;
+   }
+   else if( unirc != ULS_SUCCESS)
+   {
+      printf( "UniUconvToUcs failed, rc %X\n", unirc);
+      supplantConverter = TRUE;
+      pBuffer = ConvertToUcs( szText, pBuffer, ulSize);
+      supplantConverter = FALSE;
+   }
+
+   return pBuffer;
+}
+
 // Conversion from unicode to appropriate codepage
 char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText,
                                           char *szBuffer, ULONG ulSize)
@@ -251,25 +316,9 @@ char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText,
 
    if( !converter)
    {
-      // Create a converter from unicode to a codepage which PM can display.
-      UniChar codepage[20];
-      int unirc = UniMapCpToUcsCp( 0, codepage, 20);
-      if( unirc == ULS_SUCCESS)
-      {
-         unirc = UniCreateUconvObject( codepage, &converter);
-         // XXX do we need to set substitution options here?
-#ifdef DEBUG
-         if( unirc == ULS_SUCCESS)
-         {
-            printf( "Widget library created unicode converter for cp %s\n",
-                    ConvertFromUcs( (PRUnichar *) codepage));
-         }
-#endif
-      }
-      if( unirc != ULS_SUCCESS)
+      if( CreateUcsConverter() != ULS_SUCCESS)
       {
          supplantConverter = TRUE;
-         printf( "Couldn't create widget unicode converter.\n");
          return ConvertFromUcs( pText, szBuffer, ulSize);
       }
    }
@@ -338,93 +387,6 @@ const char *nsWidgetModuleData::ConvertFromUcs( const nsString &aString)
       szRet = aString.GetBuffer(); // hrm.
 
    return szRet;
-}
-
-// Wrapper around UniTranslateKey to deal with shift-state etc.
-int nsWidgetModuleData::TranslateKey( VSCAN scan, UniChar *pChar, VDKEY *vdkey)
-{
-   int unirc = 1;
-
-   // bail if we've not got a keyboard
-   if( !hKeyboard) return unirc;
-
-   // XXX Right, this seems madly wrong, but I'm not sure what else to do.
-   //     We need to work out the 'effective shift state' before calling
-   //     UniTranslateKey().  This is derived from the state of the keyboard
-   //     and the current scancode.  Unfortunately, the only way I can find
-   //     the current state of the various keys is by doing this on each
-   //     keypress!
-   //
-   // XXX Anything else to test?  Layers?  Or are they just deadkey applications?
-   //     Are deadkeys meant to go in here?
-
-   ULONG sstate = 0;
-
-   if( WinIsKeyDown(VK_SHIFT))   sstate |= KBD_SHIFT;
-   // We should not be passing these to UniTranslateKey because they affect the char code.
-   // We want the actual key that is being pressed. Passing Ctrl+A to UniTranslateKey
-   // returns the ASCII code for Ctrl+A
-//   if( WinIsKeyDown(VK_CTRL))    sstate |= KBD_CTRL;
-//   if( WinIsKeyDown(VK_ALT))     sstate |= KBD_ALT;
-   if( WinIsKeyDown(VK_ALTGRAF)) sstate |= KBD_ALTGR;
-
-   #define TOGGLED(vk) (WinGetKeyState(HWND_DESKTOP,vk) & 1)
-
-   if( TOGGLED(VK_CAPSLOCK)) sstate |= KBD_CAPSLOCK;
-   if( TOGGLED(VK_NUMLOCK))  sstate |= KBD_NUMLOCK;
-   if( TOGGLED(VK_SCRLLOCK)) sstate |= KBD_SCROLLLOCK;
-
-   USHIFTSTATE uss = { sstate, 0, 0 };
-
-   unirc = UniUpdateShiftState( hKeyboard, &uss, scan, 0);
-   if( unirc == ULS_SUCCESS)
-   {
-      BYTE bBiosScancode;
-      unirc = UniTranslateKey( hKeyboard,
-                               uss.Effective,
-                               scan,
-                               pChar,
-                               vdkey,
-                               &bBiosScancode);
-   }
-
-   return unirc;
-}
-
-static void GetKeyboardName( char *buff)
-{
-   HFILE hKeyboard = 0;
-   ULONG ulAction;
-
-   strcpy( buff, "UK");
-
-   if( !DosOpen( "KBD$", &hKeyboard, &ulAction, 0, FILE_NORMAL, FILE_OPEN,
-                 OPEN_ACCESS_READONLY | OPEN_SHARE_DENYWRITE, NULL))
-   {
-      ULONG ulDataLen;
-#pragma pack(2)
-      struct { USHORT usLength; USHORT usCp; CHAR ach[8];} kcp;
-#pragma pack()
-
-      kcp.usLength = ulDataLen = sizeof kcp;
-
-      if( !DosDevIOCtl( hKeyboard, IOCTL_KEYBOARD, KBD_QUERYKBDCODEPAGESUPPORT,
-                        0, 0, 0,
-                        &kcp, ulDataLen, &ulDataLen))
-      {
-         int length;
-         strcpy( buff, kcp.ach);
-         strcat( buff, kcp.ach+strlen(kcp.ach)+1);
-         // Strip off white space at the end of the keyboard name
-         length = strlen(buff);
-         while( length && buff[--length] == ' ')
-         {
-            buff[length] = '\0';
-         }
-      }
-
-      DosClose( hKeyboard);
-   }
 }
 
 ATOM nsWidgetModuleData::GetAtom( const char *atomname)

@@ -73,7 +73,6 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-#include <unikbd.h>
 
 #ifdef DEBUG_sobotka
 static int WINDOWCOUNT = 0;
@@ -1700,6 +1699,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    nsKeyEvent event;
    USHORT     fsFlags = SHORT1FROMMP(mp1);
    USHORT     usVKey = SHORT2FROMMP(mp2);
+   USHORT     usChar = SHORT1FROMMP(mp2);
    UCHAR      uchScan = CHAR4FROMMP(mp1);
    int        unirc = ULS_SUCCESS;
 
@@ -1714,13 +1714,6 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    // Now check if it's a dead-key
    if( fsFlags & KC_DEADKEY)
    {
-      UniChar tmp;
-      unirc = gModuleData.TranslateKey( uchScan, &tmp, &mDeadKey);
-      if( unirc == ULS_SUCCESS)
-         mHaveDeadKey = TRUE;
-      else
-         printf( "Couldn't translate dead key\n");
-
       // XXX CUA says we're supposed to give some kind of feedback `display the
       //     dead key glyph'.  I'm not sure if we can use the COMPOSE messages
       //     to do this -- it should really be done by someone who can test it
@@ -1763,36 +1756,29 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 
    event.message = NS_KEY_PRESS;
 
-   VDKEY vdkeyTmp;
-   unirc = gModuleData.TranslateKey( uchScan, (UniChar*) &event.charCode,
-                                     &vdkeyTmp);
-
-   if( mHaveDeadKey && (fsFlags & KC_COMPOSITE) && unirc == ULS_SUCCESS)
+   if( usChar)
    {
-      unirc = UniTranslateDeadkey( gModuleData.hKeyboard,
-#ifdef XP_OS2_VACPP
-                                   mDeadKey,
-#else
-                                   &mDeadKey,
-#endif
-                                   (UniChar) event.charCode,
-                                   (UniChar*) &event.charCode,
-                                   &mDeadKey);
-      mHaveDeadKey = FALSE;
-   }
+      USHORT inbuf[2];
+      UniChar outbuf[4];
+      inbuf[0] = usChar;
+      inbuf[1] = '\0';
+      outbuf[0] = (UniChar)0;
 
-   if( unirc != ULS_SUCCESS)
-   {
-      printf( "UniTranslate[Dead]Key returned %u\n", unirc);
-      event.charCode = CHAR2FROMMP(mp2);
-   }
+      gModuleData.ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
 
-   if( !event.isControl && !event.isAlt && event.charCode != 0)
-   {
-      if (!(fsFlags & KC_VIRTUALKEY))
+      event.charCode = outbuf[0];
+   
+      if( event.isControl && !event.isShift && event.charCode >= 'A' && event.charCode <= 'Z' )
       {
-         event.isShift = PR_FALSE;
-         event.keyCode = 0;
+         event.charCode = tolower(event.charCode);
+      }
+      else if( !event.isControl && !event.isAlt && event.charCode != 0)
+      {
+         if (!(fsFlags & KC_VIRTUALKEY))
+         {
+            event.isShift = PR_FALSE;  // OS2TODO - Why do we need this?
+            event.keyCode = 0;
+         }
       }
    }
 

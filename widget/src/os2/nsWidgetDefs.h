@@ -63,16 +63,15 @@ class nsWidgetModuleData
    HPOINTER GetPointer( nsCursor aCursor);
    HPOINTER GetFrameIcon();
 
+   // local->Unicode cp. conversion
+   PRUnichar *ConvertToUcs( const char *szText, PRUnichar *pBuffer, ULONG ulSize);
+
    // Unicode->local cp. conversions
    char *ConvertFromUcs( const PRUnichar *pText, char *szBuffer, ULONG ulSize);
    char *ConvertFromUcs( const nsString &aStr, char *szBuffer, ULONG ulSize);
    // these methods use a single static buffer
    const char *ConvertFromUcs( const PRUnichar *pText);
    const char *ConvertFromUcs( const nsString &aStr);
-
-   // Unicode keyboard utility stuff
-   KHAND hKeyboard;
-   int TranslateKey( VSCAN scan, UniChar *aChar, VDKEY *vdkey);
 
    // Atom service; clients don't need to bother about freeing them.
    ATOM GetAtom( const char *atomname);
@@ -94,6 +93,9 @@ class nsWidgetModuleData
 #if 0
    nsHashtable *mWindows;
 #endif
+
+   // Utility function for creating the Unicode conversion object
+   int CreateUcsConverter();
 
    UconvObject  converter;
    BOOL         supplantConverter;
