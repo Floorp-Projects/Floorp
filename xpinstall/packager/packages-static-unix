@@ -53,6 +53,7 @@ bin/xpicleanup
 bin/res/cmessage.txt
 
 
+bin/components/accessibility.xpt
 bin/components/bookmarks.xpt
 bin/components/directory.xpt
 bin/components/downloadmanager.xpt
