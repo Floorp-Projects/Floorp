@@ -243,31 +243,27 @@ write_address_file(void * pc, FILE* aStream)
     } else {
         char buffer[4096], dembuff[4096];
         Dl_info info;
-        char *func, *lib;
+        const char *func = "??", *lib = "??";
 
         ptr->next = newbucket(pc);
         mutex_unlock(&lock);
  
-        if (dladdr(pc, & info) == 0) {
-            func = "??";
-            lib  = "??";
-        } else {
-            lib =   (char *) info.dli_fname;
-            func =  (char *) info.dli_sname;
+        if (dladdr(pc, & info)) {
+            if (info.dli_fname)
+                lib =  info.dli_fname;
+            if (info.dli_sname)
+                func = info.dli_sname;
         }
  
 #ifdef __GNUC__
         DemangleSymbol(func, dembuff, sizeof(dembuff));
+#else
+        if (!demf || demf(func, dembuff, sizeof (dembuff)))
+            dembuff[0] = 0;
+#endif /*__GNUC__*/
         if (strlen(dembuff)) {
             func = dembuff;
         }
-#else
-        if (demf) {
-            if (demf(func, dembuff, sizeof (dembuff)) == 0)
-                func = dembuff;
-		}
-#endif /*__GNUC__*/
- 
         fprintf(aStream, "%u %s:%s+0x%x\n",
                 ptr->next->index,
                 lib,
