@@ -3418,6 +3418,8 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsCString &subject)
 
 NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result)
 {
+  NS_ENSURE_ARG_POINTER(msgHdr);
+
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
 
