@@ -95,11 +95,11 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   PRInt32 specifiedCols = 0;  // the number of columns whose width is given
   nscoord totalColWidth = 0;  // the sum of the widths of the columns 
 
-  nscoord* colWidths = new PRBool[numCols];
+  nscoord* colWidths = new nscoord[numCols];
   if (!colWidths) return PR_FALSE;
   memset(colWidths, WIDTH_NOT_SET, numCols*sizeof(nscoord));
 
-  nscoord* propInfo = new PRBool[numCols];
+  nscoord* propInfo = new nscoord[numCols];
   if (!propInfo) {
     delete [] colWidths;
     return PR_FALSE;
