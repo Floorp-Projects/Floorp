@@ -923,7 +923,20 @@ nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader,
                                      nsIChannel* channel,
                                      const char *aContentType,
                                      const char *aCommand ) {
-    // If we have a doc loader observer, let it respond to this.
+    // If we have a doc loader observer, let it respond to this. 
+    // if we don't have a doc loader observer...we still need to reach the unknown content handler
+    // somehow...we must be a frame so try asking our parent for a doc loader observer...
+    if (!mDocLoaderObserver && mParent) {
+      nsCOMPtr<nsIWebShell> root;
+      nsCOMPtr<nsIDocumentLoaderObserver> observer;
+      nsresult res = GetRootWebShell(*getter_AddRefs(root));
+
+      if (NS_SUCCEEDED(res) && root)
+        root->GetDocLoaderObserver(getter_AddRefs(observer));
+      if (observer)
+        return observer->HandleUnknownContentType(mDocLoader, channel, aContentType, aCommand);
+    }
+    
     return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, channel, aContentType, aCommand )
                               : NS_ERROR_FAILURE;
 }
