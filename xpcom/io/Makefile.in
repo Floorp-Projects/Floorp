@@ -46,7 +46,7 @@ CPPSRCS		= \
 		nsPipe2.cpp \
 		nsSpecialSystemDirectory.cpp \
 		nsUnicharInputStream.cpp \
-	        nsBinaryStream.cpp \
+		nsBinaryStream.cpp \
 		nsStorageStream.cpp \
 		nsScriptableInputStream.cpp \
 		nsByteArrayInputStream.cpp \
@@ -61,6 +61,7 @@ endif
 EXPORTS		= \
 		nsEscape.h \
 		nsDirectoryService.h \
+		nsDirectoryServiceDefs.h \
 		nsLocalFile.h \
 		nsLinebreakConverter.h \
 		nsFileSpec.h \
@@ -70,7 +71,7 @@ EXPORTS		= \
 		nsIStringStream.h \
 		nsIUnicharInputStream.h \
 		nsSpecialSystemDirectory.h \
-	        nsScriptableInputStream.h \
+		nsScriptableInputStream.h \
 		nsStorageStream.h \
 		nsStringIO.h \
 		$(NULL)			
