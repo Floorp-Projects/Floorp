@@ -24,6 +24,8 @@
 #include "nsUnicodeEncodeHelper.h"
 #include "nsIPlatformCharset.h"
 #include "nsPlatformCharsetFactory.h"
+#include "nsICharsetAlias.h"
+#include "nsCharsetAliasFactory.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -86,6 +88,17 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
     return res;
   }
 
+  if (aClass.Equals(kCharsetAliasCID)) {
+    nsIFactory *factory = NEW_CHARSETALIASFACTORY();
+	nsresult res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
+  }
+
   return NS_NOINTERFACE;
 }
 
@@ -94,6 +107,10 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
   nsresult res;
 
   res = nsRepository::RegisterFactory(kUnicodeEncodeHelperCID, path, 
+      PR_TRUE, PR_TRUE);
+  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
+  res = nsRepository::RegisterFactory(kCharsetAliasCID, path, 
       PR_TRUE, PR_TRUE);
   if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
@@ -111,6 +128,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const ch
   nsresult res;
 
   res = nsRepository::UnregisterFactory(kUnicodeEncodeHelperCID, path);
+  if(NS_FAILED(res)) return res;
+
+  res = nsRepository::UnregisterFactory(kCharsetAliasCID, path);
   if(NS_FAILED(res)) return res;
 
   res = nsRepository::UnregisterFactory(kCharsetConverterManagerCID, path);
