@@ -701,10 +701,10 @@ CreateContentObject(const nsIParserNode& aNode,
       if (bArt)
         rv = NS_NewHTMLEmbedElement(aResult, atom);
       else
-        rv = NS_NewHTMLImage(aResult, atom);
+        rv = NS_NewHTMLImageElement(aResult, atom);
     }
 #else
-    rv = NS_NewHTMLImage(aResult, atom);
+    rv = NS_NewHTMLImageElement(aResult, atom);
 #endif /* XXX */
     break;
   case eHTMLTag_input:
