@@ -899,6 +899,9 @@ AddFDef("cc", "CC", 0);
 AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
+AddFDef("delta_ts", "Last changed date", 0);
+AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
+        0);
 AddFDef("longdesc", "Comment", 0);
     
     
