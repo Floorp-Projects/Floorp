@@ -1,22 +1,22 @@
 Index: nsWebShell.cpp
 ===================================================================
 RCS file: /cvsroot/mozilla/webshell/src/nsWebShell.cpp,v
-retrieving revision 1.308
-diff -r1.308 nsWebShell.cpp
-70a71,74
+retrieving revision 1.377
+diff -r1.377 nsWebShell.cpp
+70a71
+> 
+97a99,106
 > #ifdef JAVA_DOM
 > #include "nsIJavaDOM.h"
-> #endif // JAVA_DOM
-> 
-554a559,563
-> #ifdef JAVA_DOM
 > static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 > static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
 > #endif // JAVA_DOM
 > 
+> 
+> 
 566a576
 > 
-958a969,977
+984a995,1003
 > #ifdef JAVA_DOM
 >      nsresult jrv = NS_OK;
 >      NS_WITH_SERVICE(nsISupports, javaDOM, kJavaDOMCID, &jrv);
