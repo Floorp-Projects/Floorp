@@ -30,7 +30,7 @@
 #include "jsutil.h" /* Added by JSIFY */
 
 #ifdef JS_THREADSAFE
-extern js_CompareAndSwap(jsword *, jsword, jsword);
+extern int js_CompareAndSwap(jsword *, jsword, jsword);
 #endif
 
 static JSArena *arena_freelist;
