@@ -21,7 +21,6 @@ IGNORE_MANIFEST=1
 
 IDLSRCS =                                         \
 			nsIMsgHost.idl            \
-			nsIMsgGroupRecord.idl     \
 			nsIMsgFolder.idl          \
 			nsIFolder.idl		  \
 			nsIFolderListener.idl	  \
@@ -36,7 +35,6 @@ EXPORTS =                                       \
 			nsMsgHeaderMasks.h      \
 			nsMsgMessageFlags.h     \
 			nsIMsgHost.h            \
-			nsIMsgGroupRecord.h     \
 			nsIFolder.h             \
 			nsIMsg.h				\
 			nsIMsgFolder.h          \
