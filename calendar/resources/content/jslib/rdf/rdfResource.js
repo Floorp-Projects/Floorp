@@ -210,7 +210,7 @@ if(typeof(JS_LIB_LOADED)=='boolean')
       if(this.isValid()) {
          // FIXME:  if we get this node from RDF, it has no parent...
          //   try just removing all arcs and targets...
-         //		var parentres = this.RDF.GetResource(this.parent);
+         //    var parentres = this.RDF.GetResource(this.parent);
          //		this.RDFC.Init(this.dsource, parentres);
 
          var arcs = this.dsource.ArcLabelsOut(this.resource);
@@ -222,8 +222,7 @@ if(typeof(JS_LIB_LOADED)=='boolean')
                this.dsource.Unassert(this.resource, arc, target, true);
             }
          }
-
-         //		this.RDFC.RemoveElement(this.resource, false);
+         this.RDFC.RemoveElement(this.resource, false); //removes the parent element
          this.setValid(false);
       } else {
          jslibError(null, "RDFResource is no longer valid!\n", "NS_ERROR_UNEXPECTED",

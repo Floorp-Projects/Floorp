@@ -96,7 +96,7 @@
 
    <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
    <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
-   <command id="delete_server_command" oncommand="deleteCalendar()" disabled="true" collapsed="true"/>
+   <command id="delete_server_command" oncommand="deleteCalendar()"/>
    <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
 
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>

@@ -284,9 +284,6 @@ calendarManager.prototype.removeCalendar = function calMan_removeCalendar( ThisC
 */
 calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisCalendarObject )
 {
-   //DISABLE DELETE FOR NOW
-   return;
-
    if( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) == 0 )
       return;
 
