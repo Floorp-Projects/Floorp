@@ -76,14 +76,14 @@ class nsITimer;
 class nsIMemory;
 
 class NS_COM nsRecyclingAllocator {
-#ifdef XP_OS2
- public:
-#else
  protected:
-#endif
     struct Block {
       PRUint32 bytes;
     };
+
+    // Make |BlockStoreNode| a |friend| so it can access |Block|.
+    struct BlockStoreNode;
+    friend struct BlockStoreNode;
 
     struct BlockStoreNode {
       BlockStoreNode() : bytes(0), block(nsnull), next(nsnull) {};
