@@ -54,6 +54,8 @@ public:
 };
 
 
+#define USE_CACHE 1
+
 ImageCache::ImageCache()
 {
   /* member initializers and constructor code */
@@ -69,12 +71,17 @@ ImageCache::~ImageCache()
 
 PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request)
 {
+#ifdef USE_CACHE
   nsIURIKey key(aKey);
   return mCache.Put(&key, NS_STATIC_CAST(imgIRequest*, request));
+#else
+  return PR_FALSE;
+#endif
 }
 
 PRBool ImageCache::Get(nsIURI *aKey, imgRequest **request)
 {
+#ifdef USE_CACHE
   nsIURIKey key(aKey);
   imgRequest *sup = NS_REINTERPRET_CAST(imgRequest*, NS_STATIC_CAST(imgIRequest*, mCache.Get(&key))); // this addrefs
   
@@ -84,10 +91,17 @@ PRBool ImageCache::Get(nsIURI *aKey, imgRequest **request)
   } else {
     return PR_FALSE;
   }
+#else
+  return PR_FALSE;
+#endif
 }
 
 PRBool ImageCache::Remove(nsIURI *aKey)
 {
+#ifdef USE_CACHE
   nsIURIKey key(aKey);
   return mCache.Remove(&key);
+#else
+  return PR_FALSE;
+#endif
 }

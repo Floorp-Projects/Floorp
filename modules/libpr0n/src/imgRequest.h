@@ -29,6 +29,7 @@
 #include "nsIRunnable.h"
 
 #include "nsIChannel.h"
+#include "nsIURI.h"
 #include "gfxIImageContainer.h"
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
@@ -75,6 +76,7 @@ public:
 
 private:
   nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<gfxIImageContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;
 

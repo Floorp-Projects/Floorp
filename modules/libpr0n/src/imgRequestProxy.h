@@ -57,4 +57,6 @@ private:
   nsCOMPtr<nsISupports> mContext;
 
   nsCOMPtr<imgIRequest> mOwner;
+
+  PRBool mCanceled;
 };

@@ -42,7 +42,8 @@
 
 NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, imgIDecoderObserver, gfxIImageContainerObserver)
 
-imgRequestProxy::imgRequestProxy()
+imgRequestProxy::imgRequestProxy() :
+  mCanceled(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -51,7 +52,7 @@ imgRequestProxy::imgRequestProxy()
 imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
-  NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, NS_ERROR_FAILURE); // XXX bogus result value
+  Cancel(NS_ERROR_FAILURE);
 }
 
 
@@ -76,6 +77,10 @@ nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserv
 /* void cancel (in nsresult status); */
 NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 {
+  if (mCanceled)
+    return NS_ERROR_FAILURE;
+
+  mCanceled = PR_TRUE;
   return NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);
 }
 
@@ -91,7 +96,11 @@ NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)
   return mOwner->GetImageStatus(aStatus);
 }
 
-
+/* readonly attribute nsIURI URI; */
+NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
+{
+  return mOwner->GetURI(aURI);
+}
 
 /** gfxIImageContainerObserver methods **/
 
