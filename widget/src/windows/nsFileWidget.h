@@ -56,6 +56,22 @@ class nsFileWidget : public nsIFileWidget
     NS_IMETHOD            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
     NS_IMETHOD            GetDisplayDirectory(nsString& aDirectory);
     NS_IMETHOD            SetDisplayDirectory(nsString& aDirectory);
+
+    virtual nsFileDlgResults GetFile(
+     nsIWidget        * aParent,
+     nsString         & promptString,    // Window title for the dialog
+     nsFileSpec       & theFileSpec);    // Populate with initial path for file dialog
+     
+    virtual nsFileDlgResults GetFolder(
+     nsIWidget        * aParent,
+     nsString         & promptString,    // Window title for the dialog
+     nsFileSpec       & theFileSpec);    // Populate with initial path for file dialog 
+     
+    virtual nsFileDlgResults PutFile(
+     nsIWidget        * aParent,
+     nsString         & promptString,    // Window title for the dialog
+     nsFileSpec       & theFileSpec);    // Populate with initial path for file dialog
+
   protected:
 
      HWND                   mWnd;
