@@ -1036,8 +1036,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     m_channel->AsyncRead(this /* stream observer */, nsnull);
     SetFlag(IMAP_CONNECTION_IS_OPEN);
   }
-   
+#ifdef DEBUG_bienvenu   
   NS_ASSERTION(m_imapMiscellaneousSink, "null sink");
+#endif
   if (!m_imapMiscellaneousSink)
     SetupSinkProxy(); // try this again. Evil, but I'm desperate.
 
