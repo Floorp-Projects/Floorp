@@ -29,9 +29,9 @@
 #include "nsIPref.h"
 
 typedef enum nsLookAndFeelType {
-  typeInt,
-  typeFloat,
-  typeColor
+  nsLookAndFeelTypeInt,
+  nsLookAndFeelTypeFloat,
+  nsLookAndFeelTypeColor
 };
 
 struct nsLookAndFeelIntPref
