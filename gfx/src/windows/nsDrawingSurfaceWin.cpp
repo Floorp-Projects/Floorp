@@ -223,6 +223,13 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
           if ( mLockedBitmap != nsnull ) 
           {
             ::GetObject(mLockedBitmap, sizeof(BITMAP), &mBitmap);
+            // Always use at least 24-bit bitmaps regardless of the device context.
+            // See bug 228399 for more information.
+            if (mBitmap.bmBitsPixel < 24)
+              mBitmap.bmBitsPixel = 24;
+            // Note the width of the DIB-bits rows. DIB rows are DWORD-aligned,
+            // the original bitmap's rows may not have been DWORD-aligned.
+            mBitmap.bmWidthBytes = RASWIDTH(mBitmap.bmWidth, mBitmap.bmBitsPixel);
 
             if (aY < 0 || aY + aHeight > mBitmap.bmHeight) {
               ::DeleteObject(tbits);
@@ -240,9 +247,6 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
                 ::GetDIBits(mDC, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
 
               mBitmap.bmBits = mDIBits;
-              // Note the width of the DIB-bits rows. DIB rows are DWORD-aligned,
-              // the original bitmap's rows may not have been DWORD-aligned.
-              mBitmap.bmWidthBytes = RASWIDTH(mBitmap.bmWidth, mBitmap.bmBitsPixel);
             } else {
               ::DeleteObject(tbits);
               return NS_ERROR_FAILURE;
@@ -427,33 +431,36 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Init(HDC aDC, PRUint32 aWidth,
   {
     HBITMAP tbits;
 
-    if ((aWidth > 0) && (aHeight > 0))
+    if (aWidth > 0 && aHeight > 0)
     {
-      if (aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS)
-      {
-        void        *bits;
-        BITMAPINFO  *binfo;
-        int         depth;
+      // We'll create the DIB for pixel access even if not explicitly requested
+      // as it's much faster than creating it from the DC on demand.
+      // See bug 228399 for more information.
 
-        depth = ::GetDeviceCaps(aDC, BITSPIXEL);
+      void        *bits;
+      BITMAPINFO  *binfo;
+      int         depth;
 
-        binfo = CreateBitmapInfo(aWidth, aHeight, depth);
+      depth = ::GetDeviceCaps(aDC, BITSPIXEL);
+      // Always use at least 24-bit bitmaps regardless of the device context.
+      // See bug 228399 for more information.
+      if (depth < 24)
+        depth = 24;
 
-        if (nsnull != binfo)
-          mSelectedBitmap = tbits = ::CreateDIBSection(aDC, binfo, DIB_RGB_COLORS, &bits, NULL, 0);
+      binfo = CreateBitmapInfo(aWidth, aHeight, depth);
 
-        if (NULL == mSelectedBitmap)
-          tbits = ::CreateCompatibleBitmap(aDC, aWidth, aHeight);
-        else
-        {
-          mBitmapInfo = binfo;
-          mDIBits = (PRUint8 *)bits;
-          mBitmap.bmWidthBytes = RASWIDTH(aWidth, depth);
-          mBitmap.bmBitsPixel = depth;
-        }
-      }
-      else
+      if (nsnull != binfo)
+        mSelectedBitmap = tbits = ::CreateDIBSection(aDC, binfo, DIB_RGB_COLORS, &bits, NULL, 0);
+
+      if (NULL == mSelectedBitmap)
         tbits = ::CreateCompatibleBitmap(aDC, aWidth, aHeight);
+      else
+      {
+        mBitmapInfo = binfo;
+        mDIBits = (PRUint8 *)bits;
+        mBitmap.bmWidthBytes = RASWIDTH(aWidth, depth);
+        mBitmap.bmBitsPixel = depth;
+      }
     }
     else
     {
@@ -535,52 +542,20 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: IsReleaseDCDestructive(PRBool *aDestructive
 BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
                                                      void **aBits)
 {
+  NS_ASSERTION(aDepth == 24 || aDepth == 32, "Unsupported bitmap depth");
+
   PRInt32 palsize, imagesize, spanbytes, allocsize;
   PRUint8 *colortable;
   DWORD   bicomp, masks[3];
   BITMAPINFO  *rv = nsnull;
 
-	switch (aDepth)
+  switch (aDepth)
   {
-		case 8:
-			palsize = 256;
-			allocsize = 256;
-      bicomp = BI_RGB;
-      break;
-
-    case 16:
+    case 24:
       palsize = 0;
-			allocsize = 3;
-      bicomp = BI_BITFIELDS;
-      masks[0] = 0xf800;
-      masks[1] = 0x07e0;
-      masks[2] = 0x001f;
-     
-      mPixFormat.mRedZeroMask = 0x1f;
-      mPixFormat.mGreenZeroMask = 0x3f;
-      mPixFormat.mBlueZeroMask = 0x1f;
-      mPixFormat.mAlphaZeroMask = 0;
-      mPixFormat.mRedMask = masks[0];
-      mPixFormat.mGreenMask = masks[1];
-      mPixFormat.mBlueMask = masks[2];
-      mPixFormat.mAlphaMask = 0;
-      mPixFormat.mRedCount = 5;
-      mPixFormat.mGreenCount = 6;
-      mPixFormat.mBlueCount = 5;
-      mPixFormat.mAlphaCount = 0;
-      mPixFormat.mRedShift = 11;
-      mPixFormat.mGreenShift = 5;
-      mPixFormat.mBlueShift = 0;
-      mPixFormat.mAlphaShift = 0;
-  
-      break;
-
-		case 24:
-      palsize = 0;
-			allocsize = 0;
+      allocsize = 0;
       bicomp = BI_RGB;
 
-     
       mPixFormat.mRedZeroMask = 0xff;
       mPixFormat.mGreenZeroMask = 0xff;
       mPixFormat.mBlueZeroMask = 0xff;
@@ -597,13 +572,12 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       mPixFormat.mGreenShift = 8;
       mPixFormat.mBlueShift = 16;
       mPixFormat.mAlphaShift = 0;
-     
-
+      
       break;
 
-		case 32:
+    case 32:
       palsize = 0;
-			allocsize = 3;
+      allocsize = 3;
       bicomp = BI_BITFIELDS;
       masks[0] = 0xff0000;
       masks[1] = 0x00ff00;
@@ -625,12 +599,11 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       mPixFormat.mGreenShift = 8;
       mPixFormat.mBlueShift = 0;
       mPixFormat.mAlphaShift = 24;
-   
 
       break;
 
-		default:
-			palsize = -1;
+    default:
+      palsize = -1;
       break;
   }
 
@@ -644,19 +617,19 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
     if (nsnull != rv)
     {
       rv->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	    rv->bmiHeader.biWidth = aWidth;
-	    rv->bmiHeader.biHeight = -aHeight;
-	    rv->bmiHeader.biPlanes = 1;
-	    rv->bmiHeader.biBitCount = (unsigned short)aDepth;
-	    rv->bmiHeader.biCompression = bicomp;
-	    rv->bmiHeader.biSizeImage = imagesize;
-	    rv->bmiHeader.biXPelsPerMeter = 0;
-	    rv->bmiHeader.biYPelsPerMeter = 0;
-	    rv->bmiHeader.biClrUsed = palsize;
-	    rv->bmiHeader.biClrImportant = palsize;
+      rv->bmiHeader.biWidth = aWidth;
+      rv->bmiHeader.biHeight = -aHeight;
+      rv->bmiHeader.biPlanes = 1;
+      rv->bmiHeader.biBitCount = (unsigned short)aDepth;
+      rv->bmiHeader.biCompression = bicomp;
+      rv->bmiHeader.biSizeImage = imagesize;
+      rv->bmiHeader.biXPelsPerMeter = 0;
+      rv->bmiHeader.biYPelsPerMeter = 0;
+      rv->bmiHeader.biClrUsed = palsize;
+      rv->bmiHeader.biClrImportant = palsize;
 
       // set the color table in the info header
-	    colortable = (PRUint8 *)rv + sizeof(BITMAPINFOHEADER);
+      colortable = (PRUint8 *)rv + sizeof(BITMAPINFOHEADER);
 
       if ((aDepth == 16) || (aDepth == 32))
         memcpy(colortable, masks, sizeof(DWORD) * allocsize);
