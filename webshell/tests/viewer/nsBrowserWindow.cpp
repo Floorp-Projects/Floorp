@@ -50,13 +50,14 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
-
-#include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsLayoutCID.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContentViewer.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIDocument.h"
+#include "nsILayoutDebugger.h"
+
 #include "nsXIFDTD.h"
 #include "nsIParser.h"
 #include "nsHTMLContentSinkStream.h"
@@ -176,6 +177,9 @@ static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+static NS_DEFINE_IID(kILayoutDebuggerIID, NS_ILAYOUT_DEBUGGER_IID);
+static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 #define FILE_PROTOCOL "file://"
 
@@ -2055,13 +2059,20 @@ nsBrowserWindow::DoPaste()
 void
 nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
 {
+  static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
+  static NS_DEFINE_CID(kIPresContextIID, NS_IPRESCONTEXT_IID);
   nsIContentViewer* cv = nsnull;
   if (nsnull != mWebShell) {
     if ((NS_OK == mWebShell->GetContentViewer(&cv)) && (nsnull != cv)) {
       nsIDocumentViewer* docv = nsnull;
       if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
 	      nsIPresContext* printContext;
-	      if (NS_OK == NS_NewPrintPreviewContext(&printContext)) {
+        nsresult rv =
+          nsComponentManager::CreateInstance(kPrintPreviewContextCID,
+                                             nsnull,
+                                             kIPresContextIID,
+                                             (void **)&printContext);
+        if (NS_SUCCEEDED(rv)) {
       	  // Prepare new printContext for print-preview
       	  nsCOMPtr<nsIDeviceContext> dc;
       	  nsIPresContext* presContext;
@@ -2570,66 +2581,37 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 void
 nsBrowserWindow::ToggleFrameBorders()
 {
-  PRBool showing = nsIFrame::GetShowFrameBorders();
-  nsIFrame::ShowFrameBorders(!showing);
-  ForceRefresh();
+  nsILayoutDebugger* ld;
+  nsresult rv = nsComponentManager::CreateInstance(kLayoutDebuggerCID,
+                                                   nsnull,
+                                                   kILayoutDebuggerIID,
+                                                   (void **)&ld);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool showing;
+    ld->GetShowFrameBorders(&showing);
+    ld->SetShowFrameBorders(!showing);
+    ForceRefresh();
+    NS_RELEASE(ld);
+  }
 }
 
 void
 nsBrowserWindow::ShowContentSize()
 {
+  // XXX not yet implemented
 }
 
 void
 nsBrowserWindow::ShowFrameSize()
 {
+  // XXX not yet implemented
 }
 
 void
 nsBrowserWindow::ShowStyleSize()
 {
+  // XXX not yet implemented
 }
-
-
-
-
-static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
-					      nsString&  aFileName)
-{
-  PRInt32 offset = aFileName.RFind('/');
-  if (offset != -1)
-    aFileName.Cut(0,offset+1);
-
-  PRBool selectedFileName = PR_FALSE;
-  nsIFileWidget *fileWidget;
-  nsString title("Save HTML");
-  nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
-					     nsnull,
-					     kIFileWidgetIID,
-					     (void**)&fileWidget);
-  if (NS_OK == rv) {
-    nsString titles[] = {"html","txt"};
-    nsString filters[] = {"*.html", "*.txt"};
-    fileWidget->SetFilterList(2, titles, filters);
-    fileWidget->Create(aParentWindow,
-		       title,
-		       eMode_save,
-		       nsnull,
-		       nsnull);
-    fileWidget->SetDefaultString(aFileName);
-
-    PRUint32 result = fileWidget->Show();
-    if (result) {
-      fileWidget->GetFile(aFileName);
-      selectedFileName = PR_TRUE;
-    }
- 
-    NS_RELEASE(fileWidget);
-  }
-
-  return selectedFileName;
-}
-
 
 void
 nsBrowserWindow::DoDebugSave()
