@@ -726,8 +726,11 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 retry:
     do {
 	c = GetChar(ts);
-	if (c == '\n' && (ts->flags & TSF_NEWLINES))
-	    break;
+        if (c == '\n') {
+            ts->flags &= ~TSF_DIRTYLINE;
+            if (ts->flags & TSF_NEWLINES)
+	        break;
+        }
     } while (JS_ISSPACE(c));
 
     ts->cursor = (ts->cursor + 1) & NTOKENS_MASK;
@@ -957,7 +960,6 @@ retry:
 
     switch (c) {
       case '\n': 
-        ts->flags &= ~TSF_DIRTYLINE; 
         c = TOK_EOL; 
         break;
 
