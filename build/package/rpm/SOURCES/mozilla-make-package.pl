@@ -160,7 +160,7 @@ sub expand_file_list {
 	$this_file =~ s/^bin\///;
 
 	# is it a wild card?
-	if ($this_file =~ /\*$/) {
+	if ($this_file =~ /\*/) {
 	    print "Wild card $this_file\n";
 	    # expand that wild card, removing anything in the exclude
 	    # list
