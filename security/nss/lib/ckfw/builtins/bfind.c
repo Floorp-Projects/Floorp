@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: bfind.c,v $ $Revision: 1.3 $ $Date: 2002/10/30 17:18:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: bfind.c,v $ $Revision: 1.4 $ $Date: 2002/10/30 19:01:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -109,7 +109,7 @@ builtins_mdFindObjects_Next
 }
 
 static int
-builtins_derUnwrapInt(char *src, int size, char **dest) {
+builtins_derUnwrapInt(unsigned char *src, int size, unsigned char **dest) {
     unsigned char *start = src;
     int len = 0;
 
