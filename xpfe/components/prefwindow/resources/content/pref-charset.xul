@@ -43,12 +43,13 @@
 <!DOCTYPE dialog SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="customizeCharacterEncoding"
         title="&charset.customize.title.label;"
         onload="Init();"
         ondialogaccept="return Save();"
-        persist="width height"
+        persist="width height screenX screenY"
         headertitle="&charset.customize.left.header;"
-        width="500" height="394">
+        style="width: 44em; height: 33em;">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-charset.js"/>
   <script type="application/x-javascript">
