@@ -8,3 +8,4 @@ nsIUnicodeDecoder.h
 nsIUnicodeEncodeHelper.h
 nsIUnicodeEncoder.h
 uconvutil.h
+nsIMappingCache.h
