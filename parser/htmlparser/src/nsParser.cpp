@@ -643,7 +643,7 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
 	nsParser::gHackMetaCharset = "";
     // XXX end of meta tag charset hack
 
-    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aURL,aListener);
+    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aKey,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
       pc->mContextType=CParserContext::eCTURL;
@@ -683,7 +683,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   // XXX end of meta tag charset hack
 
 	nsInputStream input(&aStream);
-  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource,PR_FALSE),&aStream,0);
+  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource,PR_FALSE),aKey,0);
   if(pc) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;
