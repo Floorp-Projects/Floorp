@@ -534,7 +534,7 @@ sub GetComments {
             "SELECT  profiles.realname AS name, profiles.login_name AS email,
                      date_format(longdescs.bug_when,'%Y.%m.%d %H:%i') AS time,
                      longdescs.thetext AS body, longdescs.work_time,
-                     isprivate,
+                     isprivate, already_wrapped,
                      date_format(longdescs.bug_when,'%Y%m%d%H%i%s')
             FROM     longdescs, profiles
             WHERE    profiles.userid = longdescs.who
