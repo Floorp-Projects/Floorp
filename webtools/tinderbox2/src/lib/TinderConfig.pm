@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/01 18:38:23 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/09/10 17:32:00 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -182,5 +182,10 @@ $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 # the default number of hours shown on the status page
 
 $DEFAULT_DISPLAY_HOURS = 6;
+
+
+$BRIEF_LOG_TRIM_DAYS = 1;
+
+$FULL_LOG_TRIM_DAYS = 7;
 
 1;
