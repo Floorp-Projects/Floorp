@@ -599,7 +599,8 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 {    
     if (!IsDirectory())
     {
-	    nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;
+        nsSimpleCharString fileNameWithArgs = "\"";
+        fileNameWithArgs += mPath + "\" " + inArgs;
         int execResult = WinExec( fileNameWithArgs, SW_NORMAL );     
         if (execResult > 31)
             return NS_OK;
