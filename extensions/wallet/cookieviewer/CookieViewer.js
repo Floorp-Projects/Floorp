@@ -39,6 +39,7 @@ var cookie_permissions_count         = 0;
 var image_permissions_count          = 0;
 var cookieType                       = 0;
 var imageType                        = 1;
+var gDateService = null;
 
 // for dealing with the interface:
 var gone_c                = "";
@@ -48,6 +49,8 @@ var gone_i                = "";
 var bundle                = null;
 // CHANGE THIS WHEN MOVING FILES - strings localization file!
 var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/CookieViewer.properties";
+const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
+const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
     
 // function : <CookieViewer.js>::Startup();
 // purpose  : initialises the cookie viewer dialog
@@ -60,6 +63,10 @@ function Startup()
   permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
   // intialise string bundle
+  if (!gDateService) {
+    gDateService = Components.classes[nsScriptableDateFormat_CONTRACTID]
+      .getService(nsIScriptableDateFormat);
+  }
   bundle = srGetStrBundle(JS_STRINGS_FILE);
 
   // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
@@ -259,8 +266,15 @@ function ViewCookieSelected( e )
     } else if (rows[i] == "ifl_expires") {
       field = document.getElementById("ifl_expires");
       var date = new Date(1000*cookies[idx].expires);
+      var localetimestr =  gDateService.FormatDateTime(
+                              "", gDateService.dateFormatLong,
+                              gDateService.timeFormatSeconds,
+                              date.getFullYear(), date.getMonth()+1,
+                              date.getDate(), date.getHours(),
+                              date.getMinutes(), date.getSeconds());
       value = cookies[idx].expires
-              ? date.toLocaleString()
+              ? localetimestr
+              //? date.toLocaleString()
               : bundle.GetStringFromName("AtEndOfSession");
     } else {
       field = document.getElementById(rows[i]);
