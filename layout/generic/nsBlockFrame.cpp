@@ -6869,16 +6869,15 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
         return rv;
       }
     }
-  }
-  
-  // Mark the line containing the child frame dirty.
-  if (aChild) {    
+
+    // Mark the line containing the child frame dirty.
     PRBool isFloater;
     nsLineBox* prevLine;
     nsLineBox* line = FindLineFor(aChild, &prevLine, &isFloater);
     
     if (!isFloater) {
-      if (line) MarkLineDirty(line, prevLine);
+      if (line)
+        MarkLineDirty(line, prevLine);
     }
     else {
       line = mLines;
