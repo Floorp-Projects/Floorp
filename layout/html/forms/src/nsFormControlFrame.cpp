@@ -227,25 +227,15 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 {
   nsresult result = NS_OK;
 
- //XXX:PRINTING Temporary to force GFX rendered widgets to appear on the display. This
- //Will be used to debug GFX rendered widgets for printing. This should be removed when
- //Printing is completely working.
-  PRBool renderToScreen = PR_FALSE;
 
   nsIDeviceContext* dx = nsnull;
   dx = aPresContext.GetDeviceContext();
-  PRBool supportsWidgets = PR_FALSE;
+  PRBool supportsWidgets = PR_TRUE;
   if (nsnull != dx) { 
 	PRBool native = PR_FALSE;
     dx->SupportsNativeWidgets(supportsWidgets);
-	 
     NS_RELEASE(dx);
   }
-
-  if ((PR_TRUE == renderToScreen) || (PR_FALSE == supportsWidgets)) {
-	return(ReflowWithNoWidget(aPresContext, aDesiredSize, aReflowState, aStatus));
-  }
-
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
@@ -284,14 +274,16 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
       SetView(view);
     }
 
- 	  const nsIID& id = GetCID();
-    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
-    view->CreateWidget(id, initData);
+ 	const nsIID& id = GetCID();
+    if (PR_TRUE == supportsWidgets) {
+	    // Do the following only if a widget is created
+      nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
+      view->CreateWidget(id, initData);
 
-    if (nsnull != initData) {
-      delete(initData);
-    }
-
+      if (nsnull != initData) {
+        delete(initData);
+	  }
+	
  	  // set our widget
 	  result = GetWidget(view, &mWidget);
 	  if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
@@ -302,11 +294,15 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
         formControl->SetWidget(mWidget);
         NS_RELEASE(formControl);
       }
-      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-      mDidInit = PR_TRUE;
+  //    PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+  //    mDidInit = PR_TRUE;
 	  } else {
 	    NS_ASSERTION(0, "could not get widget");
 	  }
+	}
+	
+	PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+    mDidInit = PR_TRUE;
 
     if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
       viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
@@ -963,98 +959,6 @@ nsFormControlFrame::Reset()
 {
 }
 
-
-//XXX:PRINTING Temporary to force GFX rendered widgets to appear on the display. This
-//Will be used to debug GFX rendered widgets for printing. This should be removed when
-//Printing is completely working.
-
-NS_IMETHODIMP
-nsFormControlFrame::ReflowWithNoWidget(nsIPresContext&      aPresContext,
-                                       nsHTMLReflowMetrics& aDesiredSize,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nsReflowStatus&      aStatus)
-{
-  nsresult result = NS_OK;
-
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
-
-  if (!mDidInit) {
-	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
-  	nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
-	  NS_RELEASE(presShell); 
-    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
-
-    // absolutely positioned controls already have a view but not a widget
-    nsIView* view = nsnull;
-    GetView(view);
-    if (nsnull == view) {
-      result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	    if (!NS_SUCCEEDED(result)) {
-	      NS_ASSERTION(0, "Could not create view for form control"); 
-        aStatus = NS_FRAME_NOT_COMPLETE;
-        return result;
-	    }
-
-      nsIFrame* parWithView;
-	    nsIView *parView;
-
-      GetParentWithView(parWithView);
-	    parWithView->GetView(parView);
-
-	    // initialize the view as hidden since we don't know the (x,y) until Paint
-      result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
-      if (NS_OK != result) {
-	      NS_ASSERTION(0, "view initialization failed"); 
-        aStatus = NS_FRAME_NOT_COMPLETE;
-        return NS_OK;
-	    }
-
-      viewMan->InsertChild(parView, view, 0);
-      SetView(view);
-    }
-
- 	  const nsIID& id = GetCID();
-    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
-    //view->CreateWidget(id, initData);
-
-    if (nsnull != initData) {
-      delete(initData);
-    }
-
- 	  // set our widget
-	  //result = GetWidget(view, &mWidget);
-	  //if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
-      //nsIFormControl* formControl = nsnull;
-      //result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
-      //if ((NS_OK == result) && formControl) {
-        // set the content's widget, so it can get content modified by the widget
-        //formControl->SetWidget(mWidget);
-        //NS_RELEASE(formControl);
-      //}
-      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-      mDidInit = PR_TRUE;
-	  //} else {
-	  //  NS_ASSERTION(0, "could not get widget");
-	  //}
-
-    if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
-      viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
-    }
-
-	  NS_IF_RELEASE(viewMan);    
-  } 
-  
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
-
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
-  }
-    
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
 
 void 
 nsFormControlFrame::DrawLine(nsIRenderingContext& aRenderingContext, 

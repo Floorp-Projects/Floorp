@@ -128,14 +128,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  /**
-    * Respond to the request to print the control
-    *
-    */
-  NS_IMETHOD ReflowWithNoWidget(nsIPresContext&      aPresContext,
-                                       nsHTMLReflowMetrics& aDesiredSize,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nsReflowStatus&      aStatus);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
