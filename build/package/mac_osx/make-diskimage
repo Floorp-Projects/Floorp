@@ -85,9 +85,19 @@ echo "mounting disk image"
 DEV_NAME=`hdid $DMG_TEMP_NAME | sed 1q | awk '{print $1}'`
 MOUNT_DIR=`hdid $DMG_TEMP_NAME | grep Apple_HFS | awk '{print $3}'`
 
-# copy content
+# copy content via ditto
+#
+# ditto fails when target has no space left or is read-only.  Let's capture
+# that condition and cause the build to fail instead of silently moving ahead.
+# - cmp
 echo "copying content to disk image"
 ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR
+rc=$?
+if [ $rc ne 0 ]; then
+	echo "ERROR: 'ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR' failed ($rc)"
+	exit 1
+fi
+
 # add optional Finder window layout and background image
 if [ ! -z ${DMG_DSSTORE} ]; then
 	echo "adding .DS_Store"
@@ -126,3 +136,4 @@ if [ ! -z "${EULA_RSRC}" -a "${EULA_RSRC}" != "-null-" ]; then
 fi
 
 echo "disk image done"
+exit 0
