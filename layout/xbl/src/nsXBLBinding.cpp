@@ -334,6 +334,8 @@ nsXBLBinding::nsXBLBinding(void)
 
 nsXBLBinding::~nsXBLBinding(void)
 {
+  NS_ASSERTION(!mScriptObject, "XBL binding hasn't properly cleared its script object out.");
+
   delete mAttributeTable;
 
   gRefCnt--;
@@ -957,6 +959,7 @@ nsXBLBinding::RemoveScriptReferences(nsIScriptContext* aContext)
 
   if (mScriptObject) {
     aContext->RemoveReference((void*) &mScriptObject, mScriptObject);
+    mScriptObject = nsnull;
   }
 
   return NS_OK;
