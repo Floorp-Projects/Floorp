@@ -22,9 +22,10 @@
 #define LM_DOM_H
 
 #include "libmocha.h"
-#include "dom.h"
+#include "domstyle.h"
 #include "lo_ele.h"
 #include "pa_parse.h"
+#include "layout.h"
 
 typedef struct DOM_HTMLElementPrivate {
     TagType             tagtype;
@@ -35,26 +36,29 @@ typedef struct DOM_HTMLElementPrivate {
 } DOM_HTMLElementPrivate;
 
 
-#define STYLE_NODE_NEED_TO_POP_TABLE         0x01
-#define STYLE_NODE_NEED_TO_POP_LIST          0x02
-#define STYLE_NODE_NEED_TO_POP_MARGINS       0x04
-#define STYLE_NODE_NEED_TO_POP_FONT          0x08
-#define STYLE_NODE_NEED_TO_POP_PRE           0x10
-#define STYLE_NODE_NEED_TO_POP_ALIGNMENT     0x20
-#define STYLE_NODE_NEED_TO_POP_LINE_HEIGHT   0x40
-#define STYLE_NODE_NEED_TO_POP_LAYER         0x80
+#define STYLE_NODE_NEED_TO_POP_TABLE         0x0001
+#define STYLE_NODE_NEED_TO_POP_LIST          0x0002
+#define STYLE_NODE_NEED_TO_POP_MARGINS       0x0004
+#define STYLE_NODE_NEED_TO_POP_FONT          0x0008
+#define STYLE_NODE_NEED_TO_POP_PRE           0x0010
+#define STYLE_NODE_NEED_TO_POP_ALIGNMENT     0x0020
+#define STYLE_NODE_NEED_TO_POP_LINE_HEIGHT   0x0040
+#define STYLE_NODE_NEED_TO_POP_LAYER         0x0080
+#define NODE_CLOSED                          0x0100
 
-#define LM_NODE_FLAGS_ALL		0xff
+#define LM_NODE_FLAGS_ALL                    0x01ff
+#define LM_NODE_FLAGS_STYLE                  0x00ff
 
 #define ELEMENT_PRIV(e) ((DOM_HTMLElementPrivate *)(((DOM_Node *)(e))->data))
-#define CURRENT_NODE(d) ((DOM_Node *)(d->top_state->current_node))
-#define TOP_NODE(d) ((DOM_Node *)(d->top_state->top_node))
+#define CURRENT_NODE(d) ((DOM_Node *)((d)->top_state->current_node))
+#define TOP_NODE(d) ((DOM_Node *)((d)->top_state->top_node))
+#define ACTIVE_NODE(d) ((DOM_Node *)((d)->top_state->active_node))
 
 DOM_Element *
-DOM_HTMLPopElementByType(TagType type, DOM_Element *node);
+DOM_HTMLPopElementByType(TagType type, DOM_Element *element);
 
-JSBool
-DOM_HTMLPushElement(DOM_Element *element, DOM_Node *parent);
+DOM_StyleDatabase *
+DOMMOZ_NewStyleDatabase(JSContext *cx, lo_DocState *state);
 
 JSBool
 lm_DOMInitNode(MochaDecoder *decoder);

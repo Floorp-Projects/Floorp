@@ -30,7 +30,13 @@
 #include "intl_csi.h"
 
 #ifdef DEBUG_shaver
-/* #define DEBUG_shaver_verbose */
+#define LOCAL_ASSERT PR_ASSERT
+#else
+#define LOCAL_ASSERT XP_ASSERT
+#endif
+
+#ifdef DEBUG_shaver
+#define DEBUG_shaver_verbose
 #endif
 
 #define LAYLOCKED(code)                                                       \
@@ -126,7 +132,7 @@ lm_DOMSetAttributes(JSContext *cx, DOM_Element *element, const char *name,
     MochaDecoder *decoder;
     MWContext *context;
     DOM_HTMLElementPrivate *priv;
-    void *ele;
+    void *ele = NULL;
     lo_DocState *doc; 
 
     decoder = (MochaDecoder *)JS_GetPrivate(cx, JS_GetGlobalObject(cx));
@@ -281,7 +287,6 @@ lm_NodeForTag(JSContext *cx, PA_Tag *tag, DOM_Node *current,
               MWContext *context, int16 csid)
 {
     DOM_Node *node;
-    DOM_Element *element;
     DOM_HTMLElementPrivate *elepriv;
     char **names, **values;
     uintN nattrs;
@@ -332,7 +337,7 @@ lm_NodeForTag(JSContext *cx, PA_Tag *tag, DOM_Node *current,
 
     elepriv = XP_NEW_ZAP(DOM_HTMLElementPrivate);
     if (!elepriv) {
-        XP_FREE(element);
+        XP_FREE(node);
         return NULL;
     }
     elepriv->tagtype = tag->type;
@@ -345,119 +350,95 @@ lm_NodeForTag(JSContext *cx, PA_Tag *tag, DOM_Node *current,
 static int LM_Node_indent;
 #endif
 
-JSBool
+DOM_Node *
 DOM_HTMLPushNode(DOM_Node *node, DOM_Node *parent)
 {
-    /*
-     * DOM_PushNode would do this for us, but we do it here so that
-     * we can use the enclosing element for implicit pop checks and other
-     * such fun.
-     */
-
-    if (parent->type == NODE_TYPE_TEXT)
-        parent = parent->parent;
+    LOCAL_ASSERT(parent->type == NODE_TYPE_ELEMENT);
 
     /* XXX factor this information out, and share with parser */
-    if (parent->type == NODE_TYPE_ELEMENT) {
-        TagType parentType = ELEMENT_PRIV(parent)->tagtype;
-        if (((DOM_Element *)parent)->ops == &lm_ElementOps &&
-            lo_IsEmptyTag(parentType)) {
-            /* these don't have contents */
-            parent = parent->parent;
+     if (node->type == NODE_TYPE_ELEMENT) {
+        /*
+         * Because HTML is such a cool markup language, we have to
+         * worry about tags that are implicitly closed by new tags.
+         * There are a couple of cases:
+         *
+         * <P> et alii: they close the ``enclosing'' one of the same type,
+         * so that you get:
+         * <SOME>
+         *   <P>
+         *   <P>
+         * and not
+         * <SOME>
+         *   <P>
+         *     <P>
+         *
+         * <DL>/<DT>/<DD>: these close up to an enclosing DL element, so
+         * that you get:
+         * <DL>
+         *   <DT>
+         *   <DD>
+         * and not
+         * <DL>
+         *   <DT>
+         *     <DD>
+         * We could enforce further stricture here, I guess, by only
+         * allowing <DT> and <DD> elements as children of <DL>, etc.
+         * Maybe later.
+         */
+        TagType type = ELEMENT_PRIV(node)->tagtype;
+        DOM_Node *iter;
+        TagType breakType = P_UNKNOWN;
+        JSBool breakIsNewParent = JS_FALSE;
+        
+        switch(type) {
+          case P_DESC_TITLE:
+          case P_DESC_TEXT:
+            breakType = P_DESC_LIST;
+            breakIsNewParent = JS_TRUE;
+            /* fallthrough */
+          case P_PARAGRAPH:
+          case P_LIST_ITEM:
+          case P_HEADER_1:
+          case P_HEADER_2:
+          case P_HEADER_3:
+          case P_HEADER_4:
+          case P_HEADER_5:
+          case P_HEADER_6:
+          case P_ANCHOR:
+          case P_OPTION:
+            /* these don't nest with themselves */
+            iter = parent;
+            if (breakType == P_UNKNOWN)
+                breakType = type;
+            while (iter &&
+                   iter->parent->type == NODE_TYPE_ELEMENT) {
+                /* find the enclosing tag for this type */
+                if (ELEMENT_PRIV(iter)->tagtype == breakType) {
+                    if (breakIsNewParent)
+                        parent = iter;
+                    else
+                        parent = iter->parent;
+                    break;
+                }
+                /* XXX CLOSE_NODE(iter); */
+                iter = iter->parent;
+            }
 #ifdef DEBUG_shaver
             LM_Node_indent -= 2;
 #endif
-        } else if (node->type == NODE_TYPE_ELEMENT) { /* non-empty element */
-            /*
-             * Because HTML is such a cool markup language, we have to
-             * worry about tags that are implicitly closed by new tags.
-             * There are a couple of cases:
-             *
-             * <P> et alii: they close the ``enclosing'' one of the same type,
-             * so that you get:
-             * <SOME>
-             *   <P>
-             *   <P>
-             * and not
-             * <SOME>
-             *   <P>
-             *     <P>
-             *
-             * <DL>/<DT>/<DD>: these close up to an enclosing DL element, so
-             * that you get:
-             * <DL>
-             *   <DT>
-             *   <DD>
-             * and not
-             * <DL>
-             *   <DT>
-             *     <DD>
-             * We could enforce further stricture here, I guess, by only
-             * allowing <DT> and <DD> elements as children of <DL>, etc.
-             * Maybe later.
-             */
-            TagType type = ELEMENT_PRIV(node)->tagtype;
-            DOM_Node *iter;
-            TagType breakType = P_UNKNOWN;
-            JSBool breakIsNewParent = JS_FALSE;
-
-            switch(type) {
-              case P_DESC_TITLE:
-              case P_DESC_TEXT:
-                breakType = P_DESC_LIST;
-                breakIsNewParent = JS_TRUE;
-                /* fallthrough */
-              case P_PARAGRAPH:
-              case P_LIST_ITEM:
-              case P_HEADER_1:
-              case P_HEADER_2:
-              case P_HEADER_3:
-              case P_HEADER_4:
-              case P_HEADER_5:
-              case P_HEADER_6:
-              case P_ANCHOR:
-              case P_OPTION:
-                /* these don't nest with themselves */
-                iter = parent;
-                if (breakType == P_UNKNOWN)
-                    breakType = type;
-                while (iter &&
-                       iter->parent->type == NODE_TYPE_ELEMENT) {
-                    /* find the enclosing tag for this type */
-                    if (ELEMENT_PRIV(iter)->tagtype == breakType) {
-                        if (breakIsNewParent)
-                            parent = iter;
-                        else
-                            parent = iter->parent;
-                        break;
-                    }
-                    iter = iter->parent;
-                }
-#ifdef DEBUG_shaver
-                LM_Node_indent -= 2;
-#endif
-                break;
-              default:;
-            }
+            break;
+          default:;
         }
-    } else if (parent->type != NODE_TYPE_DOCUMENT) {
-        /* if it's not an element, it doesn't get kids XXX oversimplified */
-#ifdef DEBUG_shaver_verbose
-        fprintf(stderr, "can't put kids on type %d\n", parent->type);
-#endif
-        parent = parent->parent;
     }
-#if 0
-    if (node->type == NODE_TYPE_TEXT &&
-        parent->type != NODE_TYPE_ELEMENT)
-        /* only elements can have text XXX oversimplified*/
-        return JS_FALSE;
-#endif 
+
+#ifdef DEBUG_shaver
+        LM_Node_indent -= 2;
+#endif
 #ifdef DEBUG_shaver_verbose
     {
         TagType dbgtype = 0, partype = 0;       /* text */
         if (node->type == NODE_TYPE_ELEMENT)
-            dbgtype = ELEMENT_PRIV(element)->tagtype;
+            dbgtype = ELEMENT_PRIV(node)->tagtype;
         if (parent->type == NODE_TYPE_ELEMENT)
             partype = ELEMENT_PRIV(parent)->tagtype;
         fprintf(stderr, "%*s<%s %s> on <%s %s>\n", LM_Node_indent, "",
@@ -469,9 +450,16 @@ DOM_HTMLPushNode(DOM_Node *node, DOM_Node *parent)
 #endif
     
     if (!DOM_PushNode(node, parent))
-        return JS_FALSE;
-    
-    return JS_TRUE;
+        return NULL;
+    LOCAL_ASSERT(node->parent == parent);
+    if (node->type == NODE_TYPE_TEXT ||
+        (node->type == NODE_TYPE_ELEMENT &&
+         lo_IsEmptyTag(ELEMENT_PRIV(node)->tagtype))) {
+        return parent;
+    } else {
+        return node;
+    }
+
 }
 
 void /* DOM_Node */ *
@@ -515,36 +503,38 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         TOP_NODE(doc)->child = node;
         node->parent = TOP_NODE(doc);
         CURRENT_NODE(doc) = node;
+        ACTIVE_NODE(doc) = node;
     }
 
     if (!tag) {
-        CURRENT_NODE(doc) = TOP_NODE(doc);
+        CURRENT_NODE(doc) = TOP_NODE(doc)->child;
+        ACTIVE_NODE(doc) = CURRENT_NODE(doc);
         return CURRENT_NODE(doc);
     }
     
-    if (tag->type == -1)
+    if (tag->type == P_UNKNOWN ||
+        tag->type == P_HTML)
         return CURRENT_NODE(doc);
 
     if (tag->is_end) {
         DOM_Node *last_node;
-        if (CURRENT_NODE(doc)->parent == TOP_NODE(doc)) {
-            /* don't remove the top-most <HTML> child */
-            XP_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_ELEMENT &&
-                      !XP_STRCMP(((DOM_Element *)CURRENT_NODE(doc))->tagName,
-                                 "HTML"));
-            return CURRENT_NODE(doc);
-        }
+        LOCAL_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_ELEMENT ||
+                     CURRENT_NODE(doc)->type == NODE_TYPE_TEXT);
         last_node = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
-                                           (DOM_Element *)CURRENT_NODE(doc));
+                                            (DOM_Element *)CURRENT_NODE(doc));
         if (!last_node)
             return NULL;
-        CURRENT_NODE(doc) = last_node->parent;
+        LOCAL_ASSERT(last_node->parent &&
+                     last_node->type == NODE_TYPE_ELEMENT);
+        CURRENT_NODE(doc) = last_node;
+        ACTIVE_NODE(doc) = CURRENT_NODE(doc);
         return last_node;
     }
 
     node = lm_NodeForTag(cx, tag, CURRENT_NODE(doc), context, csid);
     if (node) {
-        if (!DOM_HTMLPushNode(node, CURRENT_NODE(doc))) {
+        DOM_Node *newCurrent = DOM_HTMLPushNode(node, CURRENT_NODE(doc));
+        if (!newCurrent) {
 #ifdef DEBUG_shaver
             fprintf(stderr, "bad push of node %d for tag %d\n",
                     node->type, tag->type);
@@ -554,16 +544,11 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
                                        node);
             return NULL;
         }
-        /*
-         * we always have to have CURRENT_NODE(doc) pointing at the
-         * node for which we are parsing a tag.  Even in the case of
-         * Text and other child-less nodes (Comments?), we need layout
-         * to be able to find the node for which it's generating
-         * LO_Elements.  This means that the `Text has no children'
-         * logic has to be in the DOM_HTMLPushNode or DOM_PushNode
-         * code, and has to be driven by pre-check of parent.  Sorry.
-         */
-        CURRENT_NODE(doc) = node;
+        ACTIVE_NODE(doc) = node;
+        LOCAL_ASSERT(node->parent &&
+                     node->parent->type != NODE_TYPE_DOCUMENT);
+        CURRENT_NODE(doc) = newCurrent;
+
     } else {
     }
     XP_ASSERT(!CURRENT_NODE(doc)->parent || 
@@ -610,65 +595,90 @@ lm_DOMGetDocumentElement(MochaDecoder *decoder, JSObject *docobj)
     return obj;
 }
 
+/*
+ * Close the element, popping it (and enclosing elements that are marked
+ * closed) if it's the current element, otherwise marking it closed and
+ * returning.
+ */
+
 DOM_Element *
 DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
 {
-    DOM_Element *closing;
-#ifdef DEBUG_shaver_verbose
+    DOM_Node *closing;
+#ifdef DEBUG_shaver
     int new_indent = LM_Node_indent;
 #endif
 
-    if (element->node.type == NODE_TYPE_DOCUMENT) {
-#ifdef DEBUG_shaver_verbose
-            fprintf(stderr, "popping tag </%s> from empty stack\n",
-                    PA_TagString(type));
+    LOCAL_ASSERT(element->node.type != NODE_TYPE_DOCUMENT);
+    if (element->node.type == NODE_TYPE_DOCUMENT)
+        return element;
+
+    LOCAL_ASSERT(type != P_HTML && type != NODE_TYPE_TEXT);
+
+    closing = (DOM_Node *)element;
+
+    if (closing->type == NODE_TYPE_TEXT)
+        /* really, we're closing the enclosing parent */
+        closing = closing->parent;
+
+    /* if we don't match, just mark it closed */
+    if (ELEMENT_PRIV(closing)->tagtype != type) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "</%s> doesn't close <%s> ", PA_TagString(type),
+                PA_TagString(ELEMENT_PRIV(closing)->tagtype));
 #endif
+        /* find it, mark it closed, and return. */
+        do {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "skipping <%s>",
+                    PA_TagString(ELEMENT_PRIV(closing)->tagtype));
+#endif
+            closing = closing->parent;
+        } while (closing->type == NODE_TYPE_ELEMENT &&
+                 ELEMENT_PRIV(closing)->tagtype != type &&
+                 ELEMENT_PRIV(closing)->tagtype != P_HTML);
+        if (closing->type == NODE_TYPE_ELEMENT &&
+            ELEMENT_PRIV(closing)->tagtype == type) {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "found <%s>, marking closed\n",
+                    PA_TagString(ELEMENT_PRIV(closing)->tagtype));
+#endif
+            LM_SetNodeFlags(closing, NODE_CLOSED);
+        } else {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "didn't find <%s>\n", PA_TagString(type));
+#endif
+        }
         return element;
     }
 
-    if (element->node.type == NODE_TYPE_TEXT)
-        /* really, we're closing the enclosing parent */
-        element = (DOM_Element *)element->node.parent;
-
-    XP_ASSERT(element->node.type == NODE_TYPE_ELEMENT);
-    if (element->node.type != NODE_TYPE_ELEMENT) {
+    /*
+     * This matches, so close it off.
+     * We should call LO_CloseNode so that it can close layers and the like
+     * as appropriate.
+     */
 #ifdef DEBUG_shaver
-        fprintf(stderr, "node has type %d\n", element->node.type);
+    fprintf(stderr, "closing <%s> ", PA_TagString(type));
 #endif
-        return NULL;
+    if (ELEMENT_PRIV(element->node.parent)->flags & NODE_CLOSED) {
+        closing = element->node.parent;
+        do {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "<%s> already closed ",
+                    PA_TagString(ELEMENT_PRIV(closing)->tagtype));
+#endif
+            LM_ClearNodeFlags(closing, NODE_CLOSED);
+            /* XXX CLOSE_NODE(closing) */
+            closing = closing->parent;
+            LOCAL_ASSERT(closing);
+        } while (closing->type == NODE_TYPE_ELEMENT &&
+                 ELEMENT_PRIV(closing)->tagtype != P_HTML &&
+                 (ELEMENT_PRIV(closing)->flags & NODE_CLOSED));
     }
 
-    closing = element;
-    while (closing && 
-           closing->node.type == NODE_TYPE_ELEMENT && 
-           ELEMENT_PRIV(closing)->tagtype != type) {
-#ifdef DEBUG_shaver_verbose
-        fprintf(stderr, "skipping <%s> in search of <%s>\n",
-                closing->tagName, PA_TagString(type));
-        new_indent -= 2;
-#endif
-        closing = (DOM_Element *)closing->node.parent;
-    }
+    fputs("\n", stderr);
 
-    if (!closing || closing->node.type == NODE_TYPE_DOCUMENT) {
-#ifdef DEBUG_shaver_verbose
-        fprintf(stderr, "ignoring </%s> with no matching <%s>\n",
-                PA_TagString(type), PA_TagString(type));
-#endif
-    return element;
-    }
-
-#ifdef DEBUG_shaver_verbose
-    LM_Node_indent = new_indent - 2;
-    fprintf(stderr, "%*s</%s %s>\n", LM_Node_indent, "",
-            closing->tagName,
-            closing->node.name ? closing->node.name : "");
-    if (!closing->node.parent)
-        fprintf(stderr, "empty node stack\n");
-#endif
-
-    /* return the popped node */
-    return closing;
+    return (DOM_Element *)closing;
 }
 
 JSBool
@@ -699,3 +709,144 @@ LM_ClearNodeFlags(DOM_Node *node, uint32 flags)
     priv->flags &= ~flags;
     return JS_TRUE;
 }
+
+#include "laystyle.h"
+#define IMAGE_DEF_ANCHOR_BORDER         2
+#define IMAGE_DEF_VERTICAL_SPACE	0
+
+DOM_StyleDatabase *
+DOMMOZ_NewStyleDatabase(JSContext *cx, lo_DocState *state)
+{
+    DOM_StyleDatabase *db;
+    LO_Color visitCol, linkCol;
+    DOM_StyleSelector *sel, *imgsel;
+    DOM_AttributeEntry *entry;
+    lo_TopState *top = state->top_state;
+
+    /*
+     * Install default rules.
+     * In an ideal world (perhaps 5.0?), we would parse .netscape/ua.css
+     * at startup and keep the JSSS style buffer around for execution
+     * right here.  That would be very cool in many ways, including the
+     * fact that people could have ua.css at all.  We might want to
+     * make the weighting stuff work correctly at the same time, too,
+     * but I don't think it's vital.
+     */
+    db = DOM_NewStyleDatabase(cx);
+    if (!db)
+        return NULL;
+
+    linkCol.red = STATE_UNVISITED_ANCHOR_RED(state);
+    linkCol.green = STATE_UNVISITED_ANCHOR_GREEN(state);
+    linkCol.blue = STATE_UNVISITED_ANCHOR_BLUE(state);
+    visitCol.red = STATE_VISITED_ANCHOR_RED(state);
+    visitCol.green = STATE_VISITED_ANCHOR_GREEN(state);
+    visitCol.blue = STATE_VISITED_ANCHOR_BLUE(state);
+
+    top->style_db = db;
+
+    sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
+                                    "A", NULL, "link");
+    if (!sel)
+        goto error;
+
+#define SET_DEFAULT_VALUE(name, value)                                        \
+        entry = DOM_StyleAddRule(cx, db, sel, name, "default");               \
+        if (!entry)                                                           \
+            goto error;                                                       \
+        entry->dirty = JS_FALSE;                                              \
+        entry->data = value;
+        
+    /* A:link { color:prefLinkColor } */
+    SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&linkCol);
+
+    /* A:link { text-decoration:underline } */
+    if (lo_underline_anchors() &&
+        !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
+        goto error;
+
+    sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
+                                    "A", NULL, "visited");
+    if (!sel)
+        goto error;
+
+    /* A:visited { color:prefVisitedLinkColor } */
+    SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&visitCol);
+
+    /* A:visited { text-decoration:underline } */
+    if (lo_underline_anchors() &&
+        !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
+        goto error;
+
+    /* set styles for IMG within A:link and A:visited */
+    /* XXX should set (and teach layout about) borderTop/Bottom, etc. */
+    imgsel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
+                                       "IMG", NULL, NULL);
+    if (!imgsel)
+        goto error;
+
+    /* set border styles for ``A:link IMG'' */
+    sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
+                                    "A", NULL, "link");
+    if (!sel)
+        goto error;
+    SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
+    SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
+
+    /* set border styles for ``A:visited IMG'' */
+    sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
+                                    "A", NULL, "visited");
+    if (!sel)
+        goto error;
+    SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
+    SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "successfully added all default rules to db %p\n",
+            db);
+#endif
+    return db;
+
+ error:
+    if (db)
+        DOM_DestroyStyleDatabase(cx, db);
+    return NULL;
+}
+
+DOM_StyleDatabase *
+DOM_StyleDatabaseFromContext(JSContext *cx)
+{
+    MochaDecoder *decoder;
+    lo_TopState *top;
+    lo_DocState *state;
+    DOM_StyleDatabase *db = NULL;
+
+    if (!cx)
+        return NULL;
+
+    decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
+    if (!decoder)
+        return NULL;
+    
+    LO_LockLayout();
+    top = lo_FetchTopState(decoder->window_context->doc_id);
+    if (!top)
+        goto out;
+
+    if (top->style_db) {
+        LO_UnlockLayout();
+        return (DOM_StyleDatabase *)top->style_db;
+    }
+
+    state = top->doc_state;
+    if (!state)
+        goto out;
+
+    db = DOMMOZ_NewStyleDatabase(cx, state);
+    top->style_db = db;
+
+out:
+    LO_UnlockLayout();
+    return db;
+}
+
