@@ -961,7 +961,7 @@ void XSLTProcessor::process(Node* node,
     if (xslTemplate)
         processTemplate(node, xslTemplate, ps);
     else
-        processDefaultTemplate(node, ps, NULL);
+        processDefaultTemplate(node, ps, NULL_STRING);
 } //-- process
 
 void XSLTProcessor::processAction
