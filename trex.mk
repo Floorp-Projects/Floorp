@@ -45,6 +45,8 @@ JULIAN_DIR              = ns/julian
 
 default:  pull_all build_all
 
+pull_and_build_all: pull_all build_all
+
 pull_all: pull_platform pull_julian pull_trex 
 
 pull_platform:
@@ -52,6 +54,8 @@ pull_platform:
 	$(CVS) mozilla/config mozilla/nglayout.mk; \
 	cd mozilla ;\
 	gmake -f nglayout.mk pull_all;\
+	cd $(MOZ_SRC)/mozilla/widget/src;\
+	cvs update -r TREX_WIDGET_BRANCH motif; \
 	cd $(MOZ_SRC)
 
 pull_julian:
