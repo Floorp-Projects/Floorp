@@ -264,7 +264,7 @@ nsRenderingContextUnix::GetHints(PRUint32& aResult)
 
 NS_IMETHODIMP nsRenderingContextUnix :: Reset(void)
 {
-  return ND_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextUnix :: GetDeviceContext(nsIDeviceContext *&aContext)
