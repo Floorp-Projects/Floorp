@@ -742,7 +742,7 @@ pref("browser.popups.showPopupBlocker", true);
 
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.
-pref("network.autodial-helper.enabled", false);
+pref("network.autodial-helper.enabled", true);
 
 // Pref to control whether we set ddeexec subkeys for the http
 // Internet shortcut protocol if we are handling it.  These
