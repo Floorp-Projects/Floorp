@@ -545,11 +545,6 @@ function delayedStartup()
     shell.shouldCheckDefaultBrowser = checkEveryTime.value;
   }
 #endif
-
-  // Start update checker
-  // var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-  //                         .getService(Components.interfaces.nsIUpdateService);
-  // updates.watchForUpdates();
 }
 
 function Shutdown()
