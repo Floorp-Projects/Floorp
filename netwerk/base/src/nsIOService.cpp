@@ -541,7 +541,7 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     if (NS_FAILED(rv)) return rv;
     
     PRInt32 port;
-    nsXPIDLCString dummyScheme, username, password, host, path;
+    nsXPIDLCString dummyScheme, username, password, host, path, o_path;
 
     rv = parser->ParseAtScheme(urlString, 
                                getter_Copies(dummyScheme), 
@@ -585,7 +585,7 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     nsXPIDLCString fileBaseName, fileExtension, param, query, ref;
 
     rv = parser->ParseAtDirectory(path, 
-                                  getter_Copies(path), 
+                                  getter_Copies(o_path), 
                                   getter_Copies(fileBaseName),
                                   getter_Copies(fileExtension),
                                   getter_Copies(param), 
