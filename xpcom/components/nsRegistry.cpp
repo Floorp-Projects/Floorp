@@ -447,7 +447,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
             directoryService->Get("xpcom.currentProcess.componentRegistry", NS_GET_IID(nsIFile), 
                                           getter_AddRefs(registryLocation));
 
-            if (registryLocation != nsnull)
+            if (registryLocation)
             {
                 foundReg = PR_TRUE;
                 registryLocation->GetPath(&regFile);  // dougt fix...

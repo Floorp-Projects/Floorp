@@ -128,8 +128,8 @@ nsFSStringConversion::PrepareFSCharset()
    { 
      // lazy eval of the file system charset
      NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_PROGID, &res);
-     NS_ASSERTION((NS_SUCCEEDED(res) && (nsnull != pcharset)), "cannot get platform charset");
-     if(NS_SUCCEEDED(res) && (nsnull != pcharset)) {
+     NS_ASSERTION((NS_SUCCEEDED(res) && pcharset), "cannot get platform charset");
+     if(NS_SUCCEEDED(res) && pcharset) {
         res = pcharset->GetCharset(kPlatformCharsetSel_FileName, mFSCharset);
      } 
    }
@@ -139,17 +139,17 @@ NS_IMETHODIMP
 nsFSStringConversion::PrepareEncoder()
 {
    nsresult res = NS_OK;
-   if(nsnull == mEncoder)
+   if(! mEncoder)
    {
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
            NS_WITH_SERVICE(nsICharsetConverterManager,
                 ucmgr, NS_CHARSETCONVERTERMANAGER_PROGID, &res);
-           NS_ASSERTION((NS_SUCCEEDED(res) && (nsnull != ucmgr)), 
+           NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
-           if(NS_SUCCEEDED(res) && (nsnull != ucmgr)) 
+           if(NS_SUCCEEDED(res) && ucmgr) 
                res = ucmgr->GetUnicodeEncoder( &mFSCharset, getter_AddRefs(mEncoder));
-           NS_ASSERTION((NS_SUCCEEDED(res) && (nsnull != mEncoder)), 
+           NS_ASSERTION((NS_SUCCEEDED(res) && mEncoder), 
                    "cannot find the unicode encoder");
        }
    }
@@ -159,17 +159,17 @@ NS_IMETHODIMP
 nsFSStringConversion::PrepareDecoder()
 {
    nsresult res = NS_OK;
-   if(nsnull == mDecoder)
+   if(! mDecoder)
    {
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
            NS_WITH_SERVICE(nsICharsetConverterManager,
                 ucmgr, NS_CHARSETCONVERTERMANAGER_PROGID, &res);
-           NS_ASSERTION((NS_SUCCEEDED(res) && (nsnull != ucmgr)), 
+           NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
-           if(NS_SUCCEEDED(res) && (nsnull != ucmgr)) 
+           if(NS_SUCCEEDED(res) && ucmgr) 
                res = ucmgr->GetUnicodeDecoder( &mFSCharset, getter_AddRefs(mDecoder));
-           NS_ASSERTION((NS_SUCCEEDED(res) && (nsnull != mDecoder)), 
+           NS_ASSERTION((NS_SUCCEEDED(res) && mDecoder), 
                    "cannot find the unicode decoder");
        }
    }
