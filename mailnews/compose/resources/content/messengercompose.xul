@@ -507,35 +507,43 @@ Rights Reserved.
 	</toolbar>
 
     <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar id="FormatToolbar" persist="collapsed">
+    <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="always">
       <!-- We need this else menulists get stretched -->
       <box autostretch="never">
         <menulist id="ParagraphSelect"/>
         <menulist id="FontFaceSelect"/>
 
         <stack id="ColorButtons"/>
-
-        <button id="DecreaseFontSizeButton"/>
-        <button id="IncreaseFontSizeButton"/>
-        <button id="boldButton"/>
-        <button id="italicButton"/>
-        <button id="underlineButton"/>
-        <button id="ulButton"/>
-        <button id="olButton"/>
-        <button id="outdentButton"/>
-        <button id="indentButton"/>
-
-        <menu>
-          <button id="AlignPopupButton"/>
-          <menupopup id="AlignmentPopup"/>
-        </menu>
-
-        <menu>
-          <button id="InsertPopupButton"/>
-	      <menupopup id="InsertPopup"/>
-        </menu>
       </box>
-      <spring flex="100%"/>
+
+      <button id="DecreaseFontSizeButton"/>
+      <button id="IncreaseFontSizeButton"/>
+
+      <toolbarseparator class="toolbarseparator-standard"/>
+
+      <button id="boldButton"/>
+      <button id="italicButton"/>
+      <button id="underlineButton"/>
+
+      <toolbarseparator class="toolbarseparator-standard"/>
+
+      <button id="ulButton"/>
+      <button id="olButton"/>
+      <button id="outdentButton"/>
+      <button id="indentButton"/>
+
+      <toolbarseparator class="toolbarseparator-standard"/>
+
+      <menu>
+        <button id="AlignPopupButton"/>
+        <menupopup id="AlignmentPopup"/>
+      </menu>
+
+      <menu>
+        <button id="InsertPopupButton"/>
+	    <menupopup id="InsertPopup"/>
+      </menu>
+      <spring flex="1"/>
     </toolbar>
 </toolbox>
 
