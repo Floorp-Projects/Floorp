@@ -1017,11 +1017,11 @@ nsGenericHTMLElement::GetBaseTarget(nsString& aBaseTarget) const
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::_baseTarget, value)) {
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(aBaseTarget);
-        hasLocal = PR_TRUE;
+        return NS_OK;
       }
     }
   }
-  if ((PR_FALSE == hasLocal) && (nsnull != mDocument)) {
+  if (nsnull != mDocument) {
     nsIHTMLDocument* htmlDoc;
     result = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
     if (NS_SUCCEEDED(result)) {
@@ -1032,6 +1032,7 @@ nsGenericHTMLElement::GetBaseTarget(nsString& aBaseTarget) const
   else {
     aBaseTarget.Truncate();
   }
+
   return result;
 }
 
