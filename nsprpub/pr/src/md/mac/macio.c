@@ -197,52 +197,29 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
  	ExtendedParamBlock 	pbAsync;
 	PRThread			*me = _PR_MD_CURRENT_THREAD();
     _PRCPU *cpu = _PR_MD_CURRENT_CPU();
-#if 0
+
 	/* quick hack to allow PR_fprintf, etc to work with stderr, stdin, stdout */
 	/* note, if a user chooses "seek" or the like as an operation in another function */
 	/* this will not work */
-	FILE*	systemFP = NULL;
-	extern int errno;
-			
-	switch (refNum)
-	{
-			case 0:
-				systemFP = stdin;
-				break;
-			case 1:
-				systemFP = stdout;
-				break;
-			case 2:
-				systemFP = stderr;
-			break;
-	}	
-	
-	if (systemFP)
-	{
-		size_t bytesDone;
-		
-		if (op == READ_ASYNC)
-			bytesDone = fread(buf, 1, bytes, systemFP);
-		else
-			bytesDone = fwrite(buf, 1, bytes, systemFP);
-		
-		if (errno)
-		{
-			err = errno;
-			goto ErrorExit;
-		}
-		else
-			return (bytesDone);
-	}
-	else
-#else
 	if (refNum >= 0 && refNum < 3)
 	{
-		PR_ASSERT(FALSE);	/* writing to these is hazardous to a Mac's health (refNum 2 is the system file) */
-		err = paramErr;
-		goto ErrorExit;
+		switch (refNum)
+		{
+				case 0:
+					/* stdin - not on a Mac for now */
+					err = paramErr;
+					goto ErrorExit;
+					break;
+				case 1: /* stdout */
+				case 2: /* stderr */
+					puts(buf);
+					break;
+		}
+		
+		return (bytes);
+
 	}
-#endif
+	else
 	{
 		static IOCompletionUPP	sCompletionUPP = NULL;
 		
