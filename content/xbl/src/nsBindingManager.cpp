@@ -46,6 +46,7 @@
 #include "nsITextContent.h"
 
 #include "nsIXBLBinding.h"
+#include "nsIXBLStreamListener.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -79,10 +80,16 @@ public:
   NS_IMETHOD PutXBLDocument(nsIDocument* aDocument);
   NS_IMETHOD GetXBLDocument(const nsCString& aURL, nsIDocument** aResult);
 
+  NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener* aListener);
+  NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener** aResult);
+  NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL);
+
 // MEMBER VARIABLES
 protected: 
   nsSupportsHashtable* mBindingTable;
   nsSupportsHashtable* mDocumentTable;
+  nsSupportsHashtable* mLoadingDocTable;
+
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
 
@@ -99,7 +106,10 @@ nsBindingManager::nsBindingManager(void)
   NS_INIT_REFCNT();
 
   mBindingTable = nsnull;
+  
   mDocumentTable = nsnull;
+  mLoadingDocTable = nsnull;
+
   mAttachedQueue = nsnull;
 }
 
@@ -107,6 +117,7 @@ nsBindingManager::~nsBindingManager(void)
 {
   delete mBindingTable;
   delete mDocumentTable;
+  delete mLoadingDocTable;
 }
 
 NS_IMETHODIMP
@@ -310,6 +321,41 @@ nsBindingManager::GetXBLDocument(const nsCString& aURL, nsIDocument** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener* aListener)
+{
+  if (!mLoadingDocTable)
+    mLoadingDocTable = new nsSupportsHashtable();
+
+  nsStringKey key(aURL);
+  mLoadingDocTable->Put(&key, aListener);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener** aResult)
+{
+  *aResult = nsnull;
+  if (!mLoadingDocTable)
+    return NS_OK;
+
+  nsStringKey key(aURL);
+  *aResult = NS_STATIC_CAST(nsIXBLStreamListener*, mLoadingDocTable->Get(&key)); // Addref happens here.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
+{
+  if (!mLoadingDocTable)
+    return NS_OK;
+
+  nsStringKey key(aURL);
+  mLoadingDocTable->Remove(&key);
+
+  return NS_OK;
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
