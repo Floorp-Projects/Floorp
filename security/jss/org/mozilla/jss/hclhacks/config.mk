@@ -30,4 +30,6 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 # 
+TARGETS = $(LIBRARY)
 SHARED_LIBRARY=
+IMPORT_LIBRARY=
