@@ -82,11 +82,11 @@ for f in `streamedit "{sourceList}" -e '/¥#Å/ Delete; /¥/ Replace /(Å)¨1/ "¶""¨1
 		if `evaluate "{sourceFile}" =~ /Å:([Â:]+)¨1/`
 			set filename "{¨1}"
 		else
-			set filename {sourceFile}
+			set filename "{sourceFile}"
 		end if
 		
 		# now copy the file if newer
-		if `Newer "{sourceDir}{sourceFile}" "{targetDir}:{filename}"` #|| !`Exists "{targetDir}:{filename}"`
+		if "`Newer "{sourceDir}{sourceFile}" "{targetDir}:{filename}"`" 		#|| !`Exists "{targetDir}:{filename}"`
 			if {verbose} ; echo "{sourceDir}{sourceFile} is newer than {targetDir}:{filename}" ; end if
 			#{debugEcho} duplicate -y "{sourceDir}{sourceFile}" "{targetDir}"
 			{debugEcho} newalias "{sourceDir}{sourceFile}" "{targetDir}:{filename}"
