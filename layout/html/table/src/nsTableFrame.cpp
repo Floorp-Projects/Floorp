@@ -1843,61 +1843,188 @@ ProcessRowInserted(nsIPresContext* aPresContext,
   }
 }
 
-void
-nsTableFrame::NotifyAncestorsOfSpecialReflow(nsIFrame& aFrame)
+// Return true if aStylePosition has a pct height
+static PRBool 
+IsPctStyleHeight(const nsStylePosition* aStylePosition)
 {
-  nsIFrame* parent;
-  for (aFrame.GetParent(&parent); parent; parent->GetParent(&parent)) {
+  return (aStylePosition && 
+          (eStyleUnit_Percent == aStylePosition->mHeight.GetUnit()));
+}
+
+// Return true if aStylePosition has a coord height
+static PRBool 
+IsFixedStyleHeight(const nsStylePosition* aStylePosition)
+{
+  return (aStylePosition && 
+          (eStyleUnit_Coord == aStylePosition->mHeight.GetUnit()));
+}
+
+// Return true if any of aReflowState.frame's ancestors within the containing table
+// have a pct or fixed height
+static PRBool
+AncestorsHaveStyleHeight(const nsHTMLReflowState& aReflowState)
+{
+  for (const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
+       parentRS && parentRS->frame; 
+       parentRS = parentRS->parentReflowState) {
     nsCOMPtr<nsIAtom> frameType;
-    parent->GetFrameType(getter_AddRefs(frameType));
-    if (IS_TABLE_CELL(frameType.get())) {
-      ((nsTableCellFrame*)parent)->SetNeedSpecialReflow(PR_TRUE);
-    }
-    else if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
-      ((nsTableRowFrame*)parent)->SetNeedSpecialReflow(PR_TRUE);
-    }
-    else if (nsLayoutAtoms::tableRowGroupFrame == frameType.get()) {
-      ((nsTableRowGroupFrame*)parent)->SetNeedSpecialReflow(PR_TRUE);
+    parentRS->frame->GetFrameType(getter_AddRefs(frameType));
+    if (IS_TABLE_CELL(frameType.get())                         ||
+        (nsLayoutAtoms::tableRowFrame      == frameType.get()) ||
+        (nsLayoutAtoms::tableRowGroupFrame == frameType.get())) {
+      if (::IsPctStyleHeight(parentRS->mStylePosition) || ::IsFixedStyleHeight(parentRS->mStylePosition)) {
+        return PR_TRUE;
+      }
     }
     else if (nsLayoutAtoms::tableFrame == frameType.get()) {
-      ((nsTableFrame*)parent)->SetNeedToInitiateSpecialReflow(PR_TRUE);
-      break;
+      // we reached the containing table, so always return
+      if (::IsPctStyleHeight(parentRS->mStylePosition) || ::IsFixedStyleHeight(parentRS->mStylePosition)) {
+        return PR_TRUE;
+      }
+      else return PR_FALSE;
+    }
+  }
+  return PR_FALSE;
+}
+
+// See if a special height reflow needs to occur and if so, call RequestSpecialHeightReflow
+void
+nsTableFrame::CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
+{
+  if (!aReflowState.frame) ABORT0();
+  nsIFrame* prevInFlow;
+  aReflowState.frame->GetPrevInFlow(&prevInFlow);
+
+  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)     && // not first pass reflow
+      !prevInFlow                                               && // 1st in flow                                            && // 1st in flow
+      ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ||   // no computed height
+       (0                    == aReflowState.mComputedHeight))  && 
+       ::IsPctStyleHeight(aReflowState.mStylePosition)) {          // pct height
+
+    if (::AncestorsHaveStyleHeight(aReflowState)) {
+      nsTableFrame::RequestSpecialHeightReflow(aReflowState);
     }
   }
 }
 
-static PRBool
-IsSpecialNested(const nsHTMLReflowState& aReflowState)
+// Notify the frame and its ancestors (up to the containing table) that a special
+// height reflow will occur. During a special height reflow, a table, row group,
+// row, or cell returns the last size it was reflowed at. However, the table may 
+// change the height of row groups, rows, cells in DistributeHeightToRows after. 
+// And the row group can change the height of rows, cells in CalculateRowHeights.
+void
+nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
 {
-  // Walk up the reflow state tree until we find anything with a style height.
-  // stop when we reach a table
-  const nsHTMLReflowState* rs = aReflowState.parentReflowState;
-  while (rs && rs->frame) {
-    const nsStylePosition* position;
-    rs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
-    if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
-      nscoord coordValue = position->mHeight.GetCoordValue();
-      if (coordValue > 0) return PR_TRUE;
-    }
-    else if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
-      float percent = position->mHeight.GetPercentValue();
-      if (percent > 0.0f) return PR_TRUE;
-    }      
+  // notify the frame and its ancestors of the special reflow, stopping at the containing table
+  for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->parentReflowState) {
     nsCOMPtr<nsIAtom> frameType;
     rs->frame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableFrame == frameType.get()) break;
-    rs = rs->parentReflowState;
+    if (IS_TABLE_CELL(frameType.get())) {
+      ((nsTableCellFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+    }
+    else if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+      ((nsTableRowFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+    }
+    else if (nsLayoutAtoms::tableRowGroupFrame == frameType.get()) {
+      ((nsTableRowGroupFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+    }
+    else if (nsLayoutAtoms::tableFrame == frameType.get()) {
+      if (rs == &aReflowState) {
+        // don't stop because we started with this table 
+        ((nsTableFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+      }
+      else {
+        ((nsTableFrame*)rs->frame)->SetNeedToInitiateSpecialReflow(PR_TRUE);
+        // always stop when we reach a table that we didn't start with
+        break;
+      }
+    }
   }
-  return PR_FALSE;
 }
-/* overview:
-  if mFirstPassValid is false, this is our first time through since content was last changed
-    do pass 1
-      get min/max info for all cells in an infinite space
-  do column balancing
-  do pass 2
-  use column widths to size table and ResizeReflow rowgroups (and therefore rows and cells)
-*/
+
+// Return true (and set aMetrics's desiredSize to aRect) if the special height reflow
+// was initiated by an ancestor of aReflowState.frame's containing table. In that case, 
+// aFrame's containing table will eventually initiate a special height reflow which 
+// will cause this method to return false. 
+PRBool
+nsTableFrame::IsPrematureSpecialHeightReflow(const nsHTMLReflowState& aReflowState,
+                                             const nsRect&            aRect,
+                                             PRBool                   aNeedSpecialHeightReflow,
+                                             nsHTMLReflowMetrics&     aMetrics)
+{
+  PRBool premature = PR_FALSE; 
+  if (aReflowState.mFlags.mSpecialHeightReflow) { 
+    if (aNeedSpecialHeightReflow) { 
+      nsTableFrame* tableFrame; 
+      nsTableFrame::GetTableFrame(aReflowState.frame, tableFrame); 
+      if (tableFrame && (tableFrame != aReflowState.mPercentHeightReflowInitiator)) { 
+        premature = PR_TRUE; 
+      } 
+    } 
+    else { 
+      premature = PR_TRUE; 
+    } 
+    if (premature) { 
+      aMetrics.width  = aRect.width; 
+      aMetrics.height = aRect.height; 
+    } 
+  }
+  return premature;
+}
+
+/******************************************************************************************
+ * During the initial reflow the table reflows each child with an unconstrained avail width
+ * to get its max element width and maximum width. This is referred to as the pass 1 reflow.
+ *
+ * After the 1st pass reflow, the table determines the column widths using BalanceColumnWidths()
+ * then reflows each child again with a constrained avail width. This reflow is referred to
+ * as the pass 2 reflow. 
+ *
+ * A special height reflow (pass 3 reflow) can occur during an intitial or resize reflow
+ * if (a) a row group, row, cell, or a frame inside a cell has a percent height but no computed 
+ * height or (b) in paginated mode, a table has a height. (a) supports percent nested tables 
+ * contained inside cells whose heights aren't known until after the pass 2 reflow. (b) is 
+ * necessary because the table cannot split until after the pass 2 reflow. The mechanics of 
+ * the special height reflow (variety a) are as follows: 
+ * 
+ * 1) Each table related frame (table, row group, row, cell) implements NeedsSpecialReflow()
+ *    to indicate that it should get the reflow. It does this when it has a percent height but 
+ *    no computed height by calling CheckRequestSpecialHeightReflow(). This method calls
+ *    RequestSpecialHeightReflow() which calls SetNeedSpecialReflow() on its ancestors until 
+ *    it reaches the containing table and calls SetNeedToInitiateSpecialReflow() on it. For 
+ *    percent height frames inside cells, during DidReflow(), the cell's NotifyPercentHeight()
+ *    is called (the cell is the reflow state's mPercentHeightObserver in this case). 
+ *    NotifyPercentHeight() calls RequestSpecialHeightReflow().
+ *
+ * 2) After the pass 2 reflow, if the table's NeedToInitiateSpecialReflow(true) was called, it
+ *    will do the special height reflow, setting the reflow state's mFlages.mSpecialHeightReflow
+ *    to true and mSpecialHeightInitiator to itself. It won't do this if IsPrematureSpecialHeightReflow()
+ *    returns true because in that case another special height reflow will be comming along with the
+ *    containing table as the mSpecialHeightInitiator. It is only relevant to do the reflow when
+ *    the mSpecialHeightInitiator is the containing table, because if it is a remote ancestor, then
+ *    appropriate heights will not be known.
+ *
+ * 3) Since the heights of the table, row groups, rows, and cells was determined during the pass 2
+ *    reflow, they return their last desired sizes during the special height reflow. The reflow only
+ *    permits percent height frames inside the cells to resize based on the cells height and that height
+ *    was determined during the pass 2 reflow.
+ *
+ * So, in the case of deeply nested tables, all of the tables that were told to initiate a special
+ * reflow will do so, but if a table is already in a special reflow, it won't inititate the reflow
+ * until the current initiator is its containing table. Since these reflows are only received by
+ * frames that need them and they don't cause any rebalancing of tables, the extra overhead is minimal.
+ *
+ * The type of special reflow that occurs during printing (variety b) follows the same mechanism except
+ * that all frames will receive the reflow even if they don't really need them.
+ *
+ * Open issues with the special height reflow:
+ *
+ * 1) At some point there should be 2 kinds of special height reflows because (a) and (b) above are 
+ *    really quite different. This would avoid unnecessary reflows during printing. 
+ * 2) When a cell contains frames whose percent heights > 100%, there is data loss (see bug 115245). 
+ *    However, this can also occur if a cell has a fixed height and there is no special height reflow. 
+ *
+ ******************************************************************************************/
 
 /* Layout the entire inner table. */
 NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
@@ -1910,6 +2037,14 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+
+  // If this is a special height reflow, set our desired size to what is was previously and return
+  // if we will be getting another special height reflow. In paginated mode, SetNeedSpecialReflow(PR_TRUE) 
+  // may not have been called if reflow was a result of having a height on the containing table
+  if (IsPrematureSpecialHeightReflow(aReflowState, mRect, NeedSpecialReflow() || isPaginated, aDesiredSize)) 
+    return NS_OK;
 
   aStatus = NS_FRAME_COMPLETE; 
   if (!mPrevInFlow && !mTableLayoutStrategy) {
@@ -1917,9 +2052,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     return NS_ERROR_NULL_POINTER;
   }
   nsresult rv = NS_OK;
-
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
 
   // see if collapsing borders need to be calculated
   if (!mPrevInFlow && IsBorderCollapse() && NeedToCalcBCBorders()) {
@@ -2002,9 +2134,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       // no computed height, but a height on the containing table       
       if ( ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)  || 
             (0                    == aReflowState.mComputedHeight)) && 
-            IsPctHeight(mStyleContext) && IsSpecialNested(aReflowState)) {
-        NotifyAncestorsOfSpecialReflow(*this);
-        SetNeedSpecialReflow(PR_TRUE);
+            IsPctHeight(mStyleContext)) {
+        nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
       }
       // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
       else if (isPaginated && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
@@ -2024,11 +2155,20 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, 
                 lastChildReflowed, doCollapse, balanced, aStatus);
 
-    if (!aReflowState.mFlags.mSpecialHeightReflow && NeedToInitiateSpecialReflow() && !NeedSpecialReflow()) {
+    if (NeedToInitiateSpecialReflow() && 
+        (aReflowState.mFlags.mSpecialHeightReflow || !NeedSpecialReflow())) {
       aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); // distributes extra vertical space to rows
+      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
+      // save the previous special height reflow initiator, install us as the new one
+      nsIFrame* specialReflowInitiator = aReflowState.mPercentHeightReflowInitiator;
+      ((nsHTMLReflowState&)aReflowState).mPercentHeightReflowInitiator = this;
+
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
       ReflowTable(aPresContext, aDesiredSize, aReflowState, aReflowState.availableHeight, 
                   nextReason, lastChildReflowed, doCollapse, balanced, aStatus);
+      // restore the previous special height reflow initiator
+      ((nsHTMLReflowState&)aReflowState).mPercentHeightReflowInitiator = specialReflowInitiator;
+      
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // if there is an incomplete child, then set the desired height to include it but not the next one
         nsRect childRect;
@@ -4160,15 +4300,15 @@ nsTableFrame::GetTableFrame(nsIFrame*      aSourceFrame,
 {
   nsresult rv = NS_ERROR_UNEXPECTED;  // the value returned
   aTableFrame = nsnull;               // initialize out-param
-  nsIFrame* parentFrame=nsnull;
+  nsIFrame* parentFrame = nsnull;
   if (aSourceFrame) {
     // "result" is the result of intermediate calls, not the result we return from this method
     nsresult result = aSourceFrame->GetParent((nsIFrame **)&parentFrame); 
-    while ((NS_OK==result) && (nsnull!=parentFrame)) {
-      const nsStyleDisplay *display;
-      parentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-      if (NS_STYLE_DISPLAY_TABLE == display->mDisplay) {
-        aTableFrame = (nsTableFrame *)parentFrame;
+    while ((NS_OK == result) && parentFrame) {
+      nsCOMPtr<nsIAtom> frameType;
+      parentFrame->GetFrameType(getter_AddRefs(frameType));
+      if (nsLayoutAtoms::tableFrame == frameType.get()) {
+        aTableFrame = (nsTableFrame*)parentFrame;
         rv = NS_OK; // only set if we found the table frame
         break;
       }

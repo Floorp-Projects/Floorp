@@ -101,6 +101,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   mLineLayout = nsnull;
   mFlags.mIsTopOfPage = PR_FALSE;
   mPercentHeightObserver = nsnull;
+  mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
   mRightEdge = NS_UNCONSTRAINEDSIZE;
@@ -130,6 +131,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   mLineLayout = nsnull;
   mFlags.mIsTopOfPage = PR_FALSE;
   mPercentHeightObserver = nsnull;
+  mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
   mRightEdge = NS_UNCONSTRAINEDSIZE;
@@ -162,6 +164,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
+  mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   if (aInit) {
     Init(aPresContext);
@@ -193,6 +196,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
+  mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   Init(aPresContext);
 
@@ -223,6 +227,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
+  mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
 
