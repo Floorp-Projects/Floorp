@@ -35,7 +35,7 @@
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
  *
- * $Id: pp.c,v 1.3 2001/09/20 22:00:05 relyea%netscape.com Exp $
+ * $Id: pp.c,v 1.4 2003/11/04 01:51:54 nelsonb%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 	    break;
 	}
     }
-
+    PL_DestroyOptState(optstate);
     if (!typeTag) Usage(progName);
 
     if (!inFile) inFile = PR_STDIN;
@@ -167,10 +167,18 @@ int main(int argc, char **argv)
 	return -1;
     }
 
+    if (inFile != PR_STDIN)
+	PR_Close(inFile);
+    PORT_Free(der.data);
     if (rv) {
 	fprintf(stderr, "%s: problem converting data (%s)\n",
 		progName, SECU_Strerror(PORT_GetError()));
-	return -1;
     }
-    return 0;
+    if (NSS_Shutdown() != SECSuccess) {
+	fprintf(stderr, "%s: NSS_Shutdown failed (%s)\n",
+		progName, SECU_Strerror(PORT_GetError()));
+	rv = SECFailure;
+    }
+    PR_Cleanup();
+    return rv;
 }
