@@ -727,6 +727,7 @@ nsresult InitXPCOM() {
 
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
+#if 0
     // XXX Remove when allocator autoregisters
     cerr << "Registering Allocator" << endl;
 
@@ -741,6 +742,7 @@ nsresult InitXPCOM() {
         cerr << "Failed to register allocator, res = " << res << endl;
         return res;
     }
+#endif
 
     // Get InterfaceInfoManager
 

@@ -36,6 +36,32 @@
 extern "C" {
 #endif
 
+/* Because not all platforms convert jlong to "long long" 
+ *
+ * NOTE: this code was cut&pasted from xpj_XPCMethod.cpp, with tweaks.
+ *   Normally I wouldn't do this, but my reasons are:
+ *
+ *   1. My alternatives were to put it in xpjava.h or xpjava.cpp
+ *      I'd like to take stuff *out* of xpjava.h, and putting it 
+ *      in xpjava.cpp would preclude inlining.
+ *
+ *   2. How we map proxies to XPCOM objects is an implementation 
+ *      detail, which may change in the future (e.g. an index 
+ *      into a proxy table).  Thus ToPtr/ToJLong is only of 
+ *      interest to those objects that stuff pointers into jlongs.
+ *
+ *   3. This allows adaptations to each implementation, for 
+ *      type safety (e.g. ToPtr returning nsISupports*).
+ *
+ *   -- frankm, 99.09.09
+ */
+static inline nsISupports* ToPtr(jlong l) {
+    int result;
+    jlong_L2I(result, l);
+    return (nsISupports *)result;
+}
+
+
 JNIEXPORT jboolean JNICALL 
     Java_org_mozilla_xpcom_XPComUtilities_initialize(JNIEnv *env, jclass cls)
 {
@@ -145,7 +171,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_RegisterComponent
 JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_AddRef
     (JNIEnv *env, jclass cls, jlong ref)
 {
-    ((nsISupports *)ref)->AddRef();
+    (ToPtr(ref))->AddRef();
 }
 
 /*
@@ -156,7 +182,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_AddRef
 JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_Release
     (JNIEnv *env, jclass cls, jlong ref)
 {
-    ((nsISupports *)ref)->Release();
+    (ToPtr(ref))->Release();
 }
 
 /*
@@ -193,7 +219,7 @@ JNIEXPORT void JNICALL
 	    return;
 	}
 
-	nsISupports* true_this = (nsISupports *)ref;
+	nsISupports* true_this = ToPtr(ref);
 
 	//true_this->AddRef();
 	res = XPTC_InvokeByIndex(true_this, 

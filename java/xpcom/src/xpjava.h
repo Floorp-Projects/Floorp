@@ -15,6 +15,10 @@
 #include "nsISupports.h"
 #include "xptcall.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern nsresult InitXPCOM();
 
 extern jboolean InitJavaCaches(JNIEnv *env);
@@ -66,4 +70,8 @@ extern jobject  ID_NewJavaID(JNIEnv *env, const nsID* id);
 extern nsID*    ID_GetNative(JNIEnv *env, jobject self);
 extern void     ID_SetNative(JNIEnv *env, jobject self, nsID* id);
 extern jboolean ID_IsEqual(JNIEnv *env, jobject self, jobject other);
+
+#ifdef __cplusplus
+}
+#endif
 

@@ -45,6 +45,36 @@ jclass classXPCMethod = NULL;
 extern "C" {
 #endif
 
+/* Because not all platforms convert jlong to "long long" 
+ *
+ * NOTE: this code was cut&pasted to other places, with tweaks.
+ *   Normally I wouldn't do this, but my reasons are:
+ *
+ *   1. My alternatives were to put it in xpjava.h or xpjava.cpp
+ *      I'd like to take stuff *out* of xpjava.h, and putting it 
+ *      in xpjava.cpp would preclude inlining.
+ *
+ *   2. How we represent methods in Java is an implementation 
+ *      detail, which may change in the future; this entire class
+ *      may disappear in favor of normal Java reflection, or change
+ *      drastically.  Thus ToPtr/ToJLong is only of interest to those 
+ *      objects that encode pointers as jlongs, which is kind of a 
+ *      kludge to begin with.
+ *
+ *   -- frankm, 99.09.09
+ */
+static inline jlong ToJLong(const void *p) {
+    jlong result;
+    jlong_I2L(result, (int)p);
+    return result;
+}
+
+static inline void* ToPtr(jlong l) {
+    int result;
+    jlong_L2I(result, l);
+    return (void *)result;
+}
+
 /*
  * Class:     XPCMethod
  * Method:    init
@@ -117,7 +147,7 @@ JNIEXPORT jint JNICALL
 
     env->SetLongField(self, 
 		      XPCMethod_infoptr_ID, 
-		      (jlong)mi);
+		      ToJLong(mi));
 
     env->SetIntField(self, 
 		     XPCMethod_count_ID, 
@@ -130,11 +160,11 @@ JNIEXPORT jint JNICALL
 
     env->SetLongField(self, 
 		      XPCMethod_frameptr_ID, 
-		      (jlong)variantPtr);
+		      ToJLong(variantPtr));
 #else
     env->SetLongField(self, 
 		      XPCMethod_frameptr_ID, 
-		      (jlong)0);
+		      ToJLong(NULL));
 #endif
 
     // Return offset
@@ -150,7 +180,7 @@ JNIEXPORT void JNICALL
     Java_org_mozilla_xpcom_XPCMethod_destroyPeer(JNIEnv *env, 
 						 jobject self, jlong peer) {
 
-    nsXPTCVariant *variantPtr = (nsXPTCVariant *)peer;
+    nsXPTCVariant *variantPtr = (nsXPTCVariant *)ToPtr(peer);
     delete [] variantPtr;
 }
 
@@ -169,9 +199,9 @@ JNIEXPORT jint JNICALL Java_org_mozilla_xpcom_XPCMethod_getParameterType
 	return -1;
     }
     else {
+	jlong ptrval = env->GetLongField(self, XPCMethod_infoptr_ID);
 	const nsXPTMethodInfo *mi =
-	    (const nsXPTMethodInfo *)env->GetLongField(self, 
-						       XPCMethod_infoptr_ID);
+	    (const nsXPTMethodInfo *)ToPtr(ptrval);
 	return mi->GetParam(index).GetType().TagPart();
     }
 }
@@ -207,8 +237,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPCMethod_invoke
     nsXPTCVariant variantArray[paramcount];
 
 #ifdef USE_PARAM_TEMPLATE
+    jlong ptrval = env->GetLongField(self, XPCMethod_frameptr_ID);
     nsXPTCVariant *paramTemplate = 
-	(nsXPTCVariant *)env->GetLongField(self, XPCMethod_frameptr_ID);
+	(nsXPTCVariant *)ToPtr(ptrval);
 
     memcpy(variantArray, paramTemplate, paramcount * sizeof(nsXPTCVariant));
     // Fix pointers
@@ -219,11 +250,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPCMethod_invoke
 	}
     }
 #else
+    jlong ptrval = env->GetLongField(self, XPCMethod_infoptr_ID);
     const nsXPTMethodInfo *mi =
-	(const nsXPTMethodInfo *)env->GetLongField(self, 
-						   XPCMethod_infoptr_ID);
+	(const nsXPTMethodInfo *)ToPtr(ptrval);
     BuildParamsForMethodInfo(mi, variantArray);
-#endif;
+#endif
 
     res = JArrayToVariant(env, paramcount, variantArray, params);
 

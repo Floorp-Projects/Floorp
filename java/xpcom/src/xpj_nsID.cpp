@@ -30,6 +30,35 @@
 #define ID_FIELD_NAME "nsidptr"
 #define ID_FIELD_TYPE "J"
 
+/* Because not all platforms convert jlong to "long long" 
+ *
+ * NOTE: this code was cut&pasted from xpj_XPCMethod.cpp, with tweaks.
+ *   Normally I wouldn't do this, but my reasons are:
+ *
+ *   1. My alternatives were to put it in xpjava.h or xpjava.cpp
+ *      I'd like to take stuff *out* of xpjava.h, and putting it 
+ *      in xpjava.cpp would preclude inlining.
+ *
+ *   2. How we represent nsIDs in Java is an implementation 
+ *      detail, which may change in the future (e.g. placing the 
+ *      whole value in the Java obj, not just a pointer to heap 
+ *      memory).  Thus ToPtr/ToJLong is only of interest to those 
+ *      objects that stuff pointers into jlongs.
+ *
+ *   -- frankm, 99.09.09
+ */
+static inline jlong ToJLong(const void *p) {
+    jlong result;
+    jlong_I2L(result, (int)p);
+    return result;
+}
+
+static inline void* ToPtr(jlong l) {
+    int result;
+    jlong_L2I(result, l);
+    return (void *)result;
+}
+
 /********************** ID **************************/
 
 jobject ID_NewJavaID(JNIEnv *env, const nsIID* iid) {
@@ -53,7 +82,7 @@ nsID *ID_GetNative(JNIEnv *env, jobject self) {
 
     jlong nsidptr = env->GetLongField(self, nsidptrID);
 
-    return (nsID *)nsidptr;
+    return (nsID *)ToPtr(nsidptr);
 }
 
 void ID_SetNative(JNIEnv *env, jobject self, nsID *id) {
@@ -62,7 +91,7 @@ void ID_SetNative(JNIEnv *env, jobject self, nsID *id) {
 
     assert(env->IsInstanceOf(self, clazz));
 
-    jlong nsidptr = (jlong)id;
+    jlong nsidptr = ToJLong(id);
 
     env->SetLongField(self, nsidptrID, nsidptr);
 }
@@ -75,8 +104,8 @@ jboolean ID_IsEqual(JNIEnv *env, jobject self, jobject other) {
     assert(env->IsInstanceOf(self, clazz));
 
     if (other != NULL && env->IsInstanceOf(other, clazz)) {
-	nsID *selfid = (nsID *)env->GetLongField(self, nsidptrID);
-	nsID *otherid = (nsID *)env->GetLongField(other, nsidptrID);
+	nsID *selfid = (nsID *)ToPtr(env->GetLongField(self, nsidptrID));
+	nsID *otherid = (nsID *)ToPtr(env->GetLongField(other, nsidptrID));
 
 	if (selfid != NULL && otherid != NULL) {
 	    result = selfid->Equals(*otherid);
