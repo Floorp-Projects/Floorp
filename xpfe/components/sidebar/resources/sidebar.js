@@ -65,14 +65,15 @@ function Init(sidebar_db, sidebar_resource)
     var service = enumerator.GetNext();
     service = service.QueryInterface(Components.interfaces.nsIRDFResource);
 
-    var new_panel = createPanel(registry, service);
+    var is_last = !enumerator.HasMoreElements();
+    var new_panel = createPanel(registry, service, is_last);
     if (new_panel) {
       sidebox.appendChild(new_panel);
     }
   }
 }
 
-function createPanel(registry, service) {
+function createPanel(registry, service, is_last) {
   var panel_title     = getAttr(registry, service, 'title');
   var panel_content   = getAttr(registry, service, 'content');
   var panel_height    = getAttr(registry, service, 'height');
@@ -81,31 +82,38 @@ function createPanel(registry, service) {
   var iframe   = document.createElement('html:iframe');
 
   var iframeId = iframe.getAttribute('id');
-  var panelbar = createPanelTitle(panel_title, iframeId);
+  var panelbar = createPanelTitle(panel_title, iframeId, is_last);
 
   box.setAttribute('align', 'vertical');
   iframe.setAttribute('src', panel_content);
-  if (panel_height) {
+  if (panel_height && !is_last) {
     var height_style = 'height:' + panel_height + ';';
 	  iframe.setAttribute('style',       height_style);
 		iframe.setAttribute('save_height', height_style);
 	}
+  if (is_last) {
+    iframe.setAttribute('flex=100%', panel_content);
+	} else {
+    iframe.setAttribute('class','notlast');
+  }
   box.appendChild(panelbar);
   box.appendChild(iframe);
 
   return box;
 }
 
-function createPanelTitle(titletext, id)
+function createPanelTitle(titletext, id, is_last)
 {
-  var panelbar  = document.createElement('box');
+  var panelbar  = document.createElement('splitter');
   var title     = document.createElement('titledbutton');
   var spring    = document.createElement('spring');
-  var corner   = document.createElement('html:img');
+  var corner    = document.createElement('html:img');
 
   title.setAttribute('value', titletext);
-  title.setAttribute('class', 'borderless paneltitle');
-  title.setAttribute('onclick', 'resize("'+id+'")');
+  title.setAttribute('class', 'plain paneltitle');
+  if (!is_last) {
+		title.setAttribute('onclick', 'resize("'+id+'")');
+	}
   spring.setAttribute('flex', '100%');
   panelbar.setAttribute('class', 'panelbar');
   corner.setAttribute('src', 'chrome://sidebar/skin/corner.gif');
