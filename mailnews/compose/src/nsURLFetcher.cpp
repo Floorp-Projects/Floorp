@@ -57,7 +57,7 @@ nsresult NS_NewURLFetcher(nsURLFetcher ** aInstancePtrResult)
 
 // The following macros actually implement addref, release and 
 // query interface for our component. 
-NS_IMPL_ISUPPORTS(nsURLFetcher, nsCOMTypeInfo<nsIStreamListener>::GetIID());
+NS_IMPL_ISUPPORTS2(nsURLFetcher, nsIStreamListener, nsIStreamObserver);
 
 /* 
  * Inherited methods for nsMimeConverter

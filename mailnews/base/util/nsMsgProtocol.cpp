@@ -28,7 +28,7 @@
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS2(nsMsgProtocol, nsIStreamListener, nsIChannel)
+NS_IMPL_ISUPPORTS3(nsMsgProtocol, nsIStreamListener, nsIStreamObserver, nsIChannel)
 
 nsMsgProtocol::nsMsgProtocol()
 {
