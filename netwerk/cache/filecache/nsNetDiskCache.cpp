@@ -73,6 +73,10 @@ static const char * const DISK_CACHE_SIZE_PREF  = "browser.cache.disk_cache_size
 static const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 static const char * const CACHE_ENABLE_PREF   = "browser.cache.disk.enable";
 
+// This number should be the same as MAX_DISK_CACHE_ENTRIES
+// defined in nsCacheManager.cpp
+#define MAX_DISK_CACHE_RECORDS   512
+
 
 static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 {
@@ -114,8 +118,7 @@ nsNetDiskCache::nsNetDiskCache() :
   mDB(0) ,
   mDBCorrupted(PR_FALSE) 
 {
-  // set it to INF for now 
-  mMaxEntries = (PRUint32)-1 ;
+  mMaxEntries = MAX_DISK_CACHE_RECORDS ;
 
   NS_INIT_REFCNT();
 

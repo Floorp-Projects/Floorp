@@ -71,7 +71,7 @@ private:
     nsresult RankRecords();
     void MaybeRerankRecords();
     void CompactRankedEntriesArray();
-    nsresult DeleteOneEntry(nsINetDataCache* aCache);
+    nsresult DeleteAtleastOneEntry(nsINetDataCache* aCache, PRUint32 targetNumEntries, PRUint32* numEntriesDeleted);
     nsresult Evict(PRUint32 aTargetOccupancy);
 
     nsCachedNetData* FindCacheEntryByRecordID(PRInt32 aRecordID, nsINetDataCache *aCache);

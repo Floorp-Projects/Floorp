@@ -36,6 +36,8 @@
 // Constant used to estimate frequency of access to a document based on size
 #define CACHE_CONST_B   1.35
 
+#define CACHE_LOW_NUM_ENTRIES(entries)  ((PRUint32)(0.75 * (entries)))
+
 nsReplacementPolicy::nsReplacementPolicy()
     : mRankedEntries(0), mCaches(0), mRecordsRemovedSinceLastRanking(0),
       mNumEntries(0), mCapacityRankedEntriesArray(0), mLastRankTime(0), mLoadedAllDatabaseRecords( PR_FALSE ) {}
@@ -411,30 +413,43 @@ nsresult
 nsReplacementPolicy::CheckForTooManyCacheEntries()
 {
     PRUint32 undeletedEntries;
+    PRUint32 maxEntries = 0;
+    PRUint32 numEntriesDeleted = 0;
+	PRBool deleteEntries = PR_FALSE;
+    nsresult rv;
+    CacheInfo *cacheInfo;
+
+    cacheInfo = mCaches;
+
     undeletedEntries = mNumEntries - mRecordsRemovedSinceLastRanking;
 
-    if (undeletedEntries >= mMaxEntries) {
-        return DeleteOneEntry(0);
-    } else {
-        nsresult rv;
-        CacheInfo *cacheInfo;
+    while (cacheInfo) {
 
-        cacheInfo = mCaches;
-        while (cacheInfo) {
-            PRUint32 numEntries, maxEntries;
+        rv = cacheInfo->mCache->GetMaxEntries(&maxEntries);
+        if (NS_FAILED(rv)) return rv;
+
+        if (undeletedEntries >= mMaxEntries) {
+			deleteEntries = PR_TRUE;    
+        } else {
+        
+            PRUint32 numEntries = 0;
 
             rv = cacheInfo->mCache->GetNumEntries(&numEntries);
             if (NS_FAILED(rv)) return rv;
-
-            rv = cacheInfo->mCache->GetMaxEntries(&maxEntries);
-            if (NS_FAILED(rv)) return rv;
-
-            if (numEntries == maxEntries)
-                return DeleteOneEntry(cacheInfo->mCache);
-
-            cacheInfo = cacheInfo->mNext;
+            if (numEntries == maxEntries) {
+                deleteEntries = PR_TRUE;
+            }
+      
         }
+
+		if (deleteEntries) {
+			return DeleteAtleastOneEntry(cacheInfo->mCache,
+						CACHE_LOW_NUM_ENTRIES(maxEntries), &numEntriesDeleted);
+		}
+		deleteEntries = PR_FALSE;
+        cacheInfo = cacheInfo->mNext;
     }
+
     return NS_OK;
 }
 
@@ -467,10 +482,7 @@ nsReplacementPolicy::AssociateCacheEntryWithRecord(nsINetDataCacheRecord *aRecor
         return NS_OK;
     }
 
-    // If number of tracked cache entries exceeds limits, delete one
-    rv = CheckForTooManyCacheEntries();
-    if (NS_FAILED(rv)) return rv;
-
+ 
     // Compact the array of cache entry statistics, so that free entries appear
     // at the end, for possible reuse.
     if (mNumEntries && (mNumEntries == mCapacityRankedEntriesArray))
@@ -542,20 +554,45 @@ nsReplacementPolicy::GetCachedNetData(const char* cacheKey, PRUint32 cacheKeyLen
     rv = aCache->GetCachedNetData(cacheKey, cacheKeyLength,
                                   getter_AddRefs(record));
     if (NS_FAILED(rv)) return rv;
+
+    // If number of tracked cache entries exceeds limits, delete one
+    rv = CheckForTooManyCacheEntries();
+    if (NS_FAILED(rv)) return rv;
+
     return AssociateCacheEntryWithRecord(record, aCache, aResult);
 }
 
 /**
- * Delete the least desirable record from the cache database.  This is used
+ * Delete the atleast one desirable record from the cache database.  This is used
  * when the addition of another record would exceed either the cache manager or
- * the cache's maximum permitted number of records.
+ * the cache's maximum permitted number of records. This method tries to reduce the
+ * number of records in the cache database to targetNumEntries. targetNumEntriesReached
+ * is set to PR_TRUE, if the nember of records has been reduced to targetNumEntries.
+ * It returns NS_OK, if atleast one record has been succesfully deleted.
  */
 nsresult
-nsReplacementPolicy::DeleteOneEntry(nsINetDataCache *aCache)
+nsReplacementPolicy::DeleteAtleastOneEntry(nsINetDataCache *aCache, 
+                                    PRUint32 targetNumEntries,
+                                    PRUint32* numEntriesDeleted)
 {
     PRUint32 i;
     nsresult rv;
     nsCachedNetData *entry;
+    PRBool atleastOneEntryDeleted = PR_FALSE;
+    PRUint32 numRecordEntries = 0;
+
+	*numEntriesDeleted = 0;
+
+	if (!aCache)
+		return NS_ERROR_FAILURE;
+
+	rv = aCache->GetNumEntries(&numRecordEntries);
+    if (NS_FAILED(rv)) 
+		return rv;
+
+	if (targetNumEntries >= numRecordEntries)
+		return NS_ERROR_FAILURE;
+
 
     // It's not possible to rank cache entries by their profitability
     // until all of them are known to the replacement policy.
@@ -566,26 +603,35 @@ nsReplacementPolicy::DeleteOneEntry(nsINetDataCache *aCache)
 
     i = 0;
     MaybeRerankRecords();
-    while (1) {
-        for (; i < mNumEntries; i++) {
-            entry = mRankedEntries[i];
-            if (!entry || entry->GetFlag(nsCachedNetData::RECYCLED) || (entry->mRefCnt > 1))
-                continue;
-            if (!aCache || (entry->mCache == aCache))
-                break;
-        }
-
-        // Report error if no record found to delete
-        if (i == mNumEntries)
-            return NS_ERROR_FAILURE;
-        rv = entry->Delete();
-        if (NS_SUCCEEDED(rv)) {
-            rv = DeleteCacheEntry(entry);
-            mRecordsRemovedSinceLastRanking++;            
-            return rv;
-        }
-        i++;
+  
+    for (i = 0; i < mNumEntries; i++) {
+        entry = mRankedEntries[i];
+        if (!entry || entry->GetFlag(nsCachedNetData::RECYCLED) || (entry->mRefCnt > 1))
+            continue;
+        if (entry->mCache == aCache) {
+			rv = entry->Delete();
+			if (NS_SUCCEEDED(rv)) {
+				rv = DeleteCacheEntry(entry);
+				mRecordsRemovedSinceLastRanking++; 
+				atleastOneEntryDeleted = PR_TRUE;
+				numRecordEntries--;
+				*numEntriesDeleted = mRecordsRemovedSinceLastRanking;
+				if (numRecordEntries <= targetNumEntries) {
+				   return rv;
+				}
+			}
+		}
     }
+
+    // Report error if no record found to delete
+    if (i == mNumEntries) {
+        if (atleastOneEntryDeleted)
+            return NS_OK;
+        else
+            return NS_ERROR_FAILURE;
+    }
+
+	return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -697,5 +743,8 @@ nsReplacementPolicy::Evict(PRUint32 aTargetOccupancy)
         }
         rv = entry->Evict(truncatedLength);
     }
-    return NS_ERROR_FAILURE;
+    if (occupancy <= aTargetOccupancy)
+        return NS_OK;
+    else
+        return NS_ERROR_FAILURE;
 }
