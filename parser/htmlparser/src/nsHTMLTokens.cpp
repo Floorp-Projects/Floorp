@@ -519,6 +519,7 @@ PRInt32 CTextToken::GetTokenType(void) {
  */
 nsresult CTextToken::Consume(PRUnichar, CScanner& aScanner) {
   static nsAutoString terminals("&<\r\n");
+  mStringInit=PR_TRUE;
   nsresult result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
   return result;
 };
@@ -581,6 +582,7 @@ nsresult CCommentToken::Consume(PRUnichar, CScanner& aScanner) {
      //if you're here, we're consuming a "short-form" comment
   mTextValue+=ch;
   result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
+  mStringInit=PR_TRUE;
   return result;
 };
 
@@ -694,6 +696,7 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
         break;
     }
   }  
+  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -883,6 +886,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
       mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
     }
   }
+  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -966,6 +970,7 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   if(NS_OK==result) {
     mTextValue.StripChars("\r");
   }
+  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -1007,6 +1012,7 @@ nsresult CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   if(aChar)
     mTextValue=aChar;
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
+  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -1341,10 +1347,8 @@ const char*  CSkippedContentToken::GetClassName(void) {
 }
 
 /*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
+ *  Retrieve the token type as an int.
+ *  @update  gess 3/25/98 
  *  @return  
  */
 PRInt32 CSkippedContentToken::GetTokenType(void) {
@@ -1352,11 +1356,14 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
 }
 
 /*
- *  Consume content until you find a sequence that matches
- *  this objects mTextValue.
+ *  Consume content until you find an end sequence that matches
+ *  this objects current mTextValue. Note that this is complicated 
+ *  by the fact that you can be parsing content that itself 
+ *  contains quoted content of the same type (like <SCRIPT>). 
+ *  That means we have to look for quote-pairs, and ignore the 
+ *  content inside them.
  *  
- *  @update  gess 3/25/98
- *  @param   aChar -- last char consumed from stream
+ *  @update  gess 7/25/98
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
@@ -1364,14 +1371,27 @@ nsresult CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
   PRBool      done=PR_FALSE;
   nsresult    result=NS_OK;
   nsString    temp;
+  int         parens=0;
+  char        lastChar;
 
-//  while((!done) && (!aScanner.Eof())) {
+  static nsAutoString terminals(">()");
   while((!done) && (NS_OK==result)) {
-    static nsAutoString terminals(">");
     result=aScanner.ReadUntil(temp,terminals,PR_TRUE);
-    done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
+    int len=temp.Length();
+    lastChar=char(temp[len-1]);
+    switch(lastChar){
+      case kLeftParen:
+        parens++; break;
+      case kRightParen:
+        parens--; break;
+      default:
+        break;
+    }
+    if((0==parens) && (kGreaterThan==lastChar))
+      done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
   }
   mTextValue=temp;
+  mStringInit=PR_TRUE;
   return result;
 }
 

@@ -1001,6 +1001,88 @@ PRBool CNavDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const 
   return result;
 }
 
+ /***********************************************************************************
+   The following tables determine the set of elements each tag can contain...
+  ***********************************************************************************/
+
+static char  gTagSet1[]={ 
+  eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
+  eHTMLTag_blink,     eHTMLTag_b,         eHTMLTag_basefont,  eHTMLTag_bdo,
+  eHTMLTag_big,
+  eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
+  eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
+  eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
+  eHTMLTag_embed,
+  eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
+  eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
+  eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
+  eHTMLTag_input,     eHTMLTag_isindex,   
+  
+  eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_li,
+  eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
+  eHTMLTag_noframes,  eHTMLTag_noscript,
+  eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p,         eHTMLTag_pre,
+  eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
+  eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
+  eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,
+  eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
+  
+  eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
+  eHTMLTag_userdefined,   eHTMLTag_var,   eHTMLTag_wbr,
+  eHTMLTag_whitespace,
+  0};
+
+static char  gTagSet2[]={ 
+  eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
+  eHTMLTag_b,
+  eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
+  eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
+  eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
+  eHTMLTag_embed,
+  eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
+  eHTMLTag_kbd,       
+
+  eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
+  eHTMLTag_object,    eHTMLTag_p, 
+  eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
+  eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
+  eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,    
+  eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
+
+  eHTMLTag_table,// XXX kipp was here
+
+  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
+  eHTMLTag_wbr,       eHTMLTag_whitespace,
+  0};
+
+static char  gTagSet3[]={ 
+  eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
+  eHTMLTag_b,
+  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
+  eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
+  eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
+  eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
+  eHTMLTag_embed,
+  eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
+  eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
+  eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
+
+  eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_li,        eHTMLTag_newline,
+      
+  eHTMLTag_noframes,
+  eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p,         eHTMLTag_pre,
+  eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
+  eHTMLTag_samp,      eHTMLTag_small,     eHTMLTag_spacer,
+  eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
+  eHTMLTag_td,        eHTMLTag_text,
+  
+  eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
+  eHTMLTag_var,       eHTMLTag_wbr,       eHTMLTag_whitespace,
+  0};
+
+ /***********************************************************************************
+   The preceeding tables determine the set of elements each tag can contain...
+  ***********************************************************************************/
 
 /**
  *  This method is called to determine whether or not a tag
@@ -1014,81 +1096,6 @@ PRBool CNavDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const 
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
   PRBool result=PR_FALSE;
-
-  static char  gTagSet1[]={ 
-    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
-    eHTMLTag_blink,     eHTMLTag_b,         eHTMLTag_basefont,  eHTMLTag_bdo,
-    eHTMLTag_big,
-    eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
-    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
-    eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
-    eHTMLTag_embed,
-    eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
-    eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-    eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
-    eHTMLTag_input,     eHTMLTag_isindex,   
-    
-    eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_li,
-    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
-    eHTMLTag_noframes,  eHTMLTag_noscript,
-    eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p,         eHTMLTag_pre,
-    eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-    eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
-    eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,
-    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
-    
-    eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
-    eHTMLTag_userdefined,   eHTMLTag_var,   
-    eHTMLTag_whitespace,
-    0};
-
-  static char  gTagSet2[]={ 
-    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
-    eHTMLTag_b,
-    eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
-    eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
-    eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
-    eHTMLTag_embed,
-    eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
-    eHTMLTag_kbd,       
-
-    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
-    eHTMLTag_object,    eHTMLTag_p, 
-    eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-    eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
-    eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,    
-    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
-
-    eHTMLTag_table,// XXX kipp was here
-
-    eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
-    eHTMLTag_whitespace,
-    0};
-
-  static char  gTagSet3[]={ 
-    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
-    eHTMLTag_b,
-    eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
-    eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
-    eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
-    eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
-    eHTMLTag_embed,
-    eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
-    eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-    eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
-
-    eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_li,        eHTMLTag_newline,
-        
-    eHTMLTag_noframes,
-    eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p,         eHTMLTag_pre,
-    eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-    eHTMLTag_samp,      eHTMLTag_small,     eHTMLTag_spacer,
-    eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
-    eHTMLTag_td,        eHTMLTag_text,
-    
-    eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
-    eHTMLTag_var,       eHTMLTag_whitespace,
-    0};
 
     //This hack code is here because we don't yet know what to do
     //with userdefined tags...  XXX Hack
@@ -1150,7 +1157,16 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_tt:
     case eHTMLTag_u:
     case eHTMLTag_var:
-      result=PRBool(0!=strchr(gTagSet1,aChild));
+      {
+        static char  listtags[]={eHTMLTag_li,0};
+
+        if(0!=strchr(listtags,aChild)) {
+          //This code was added to enforce the rule that listitems autoclose prior listitems. 
+          //Stylistic tags (including <A>) that get in the way are simply out of luck.
+          result=false;
+        }
+        else result=PRBool(0!=strchr(gTagSet1,aChild));
+      }
       break;
 
     case eHTMLTag_blockquote:
@@ -1173,14 +1189,24 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_colgroup:
       break;    //singletons can't contain anything...
 
-    case eHTMLTag_dd:
     case eHTMLTag_dt:
+      {
+        static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
+
+        if(0!=strchr(datalistTags,aChild)) {
+          result=PR_TRUE;
+        }
+        else result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      }
+      break;
+
+    case eHTMLTag_dd:
     case eHTMLTag_div:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_dl:
       {
-        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,eHTMLTag_newline,0};
+        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,eHTMLTag_newline,eHTMLTag_p,0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -1232,6 +1258,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break;
 
     case eHTMLTag_iframe:/* XXX wrong */
+      if(eHTMLTag_frame==aChild)
+        result=PR_FALSE;
+      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
     case eHTMLTag_label:
     case eHTMLTag_legend:/* XXX not sure */
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
@@ -1284,9 +1315,18 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result=PRBool(eHTMLTag_option!=aChild); break;
 
     case eHTMLTag_p:
-      if(eHTMLTag_p==aChild)
-        result=PR_FALSE;
-      else result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      {
+        static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
+
+        if(eHTMLTag_p==aChild)
+          result=PR_FALSE;
+        else if(0!=strchr(datalistTags,aChild)) {
+          //we now allow DT/DD inside a paragraph, so long as a DL is open...
+          if(PR_TRUE==HasOpenContainer(eHTMLTag_dl))
+            result=PR_TRUE;
+        }
+        else result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      }
       break;
 
     case eHTMLTag_object:
@@ -1456,7 +1496,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
       break;
 
     case eHTMLTag_entity:
-      switch((eHTMLTags)aParent) {
+      switch(aParent) {
         case eHTMLTag_tr:       case eHTMLTag_table:  
         case eHTMLTag_thead:    case eHTMLTag_tfoot:  
         case eHTMLTag_tbody:    
@@ -1464,6 +1504,11 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         default:
           break;
       } //switch
+      break;
+
+    case eHTMLTag_frame:
+      if(eHTMLTag_iframe==aParent)
+        result=PR_TRUE;
       break;
 
     default:
@@ -2719,7 +2764,7 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
  *  @return new token or null 
  */
 
-static char gSpecialTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea, 0};
+static char gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea, 0};
 
 nsresult
 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
@@ -2741,7 +2786,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
         eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
 
-        if(0!=strchr(gSpecialTags,theTag)){
+        if(0!=strchr(gSkippedContentTags,theTag)){
 
             //Do special case handling for <script>, <style>, <title> or <textarea>...
           CToken*   skippedToken=0;
