@@ -413,6 +413,7 @@ bin/libfreebl_hybrid_3.chk
 bin/libfreebl_hybrid_3.so
 
 [inspector]
+bin/components/inspector-cmdline.js
 bin/components/libinspector.so
 bin/components/inspector.xpt
 bin/chrome/inspector.jar

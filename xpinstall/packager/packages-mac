@@ -367,6 +367,7 @@ viewer:Components:QFA.xpt
 viewer:TalkBack:*
 
 [inspector]
+viewer:Components:inspector-cmdline.js
 viewer:Components:inspector.shlb
 viewer:Components:inspector.xpt
 viewer:chrome:inspector.jar

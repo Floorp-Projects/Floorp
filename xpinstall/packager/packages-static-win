@@ -328,6 +328,7 @@ bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
 
 [inspector]
+bin\components\inspector-cmdline.js
 bin\components\inspector.dll
 bin\components\inspector.xpt
 bin\chrome\inspector.jar

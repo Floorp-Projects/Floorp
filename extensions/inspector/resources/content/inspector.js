@@ -62,7 +62,20 @@ window.addEventListener("unload", InspectorApp_destroy, false);
 function InspectorApp_initialize()
 {
   inspector = new InspectorApp();
-  inspector.initialize(window.arguments && window.arguments.length > 0 ? window.arguments[0] : null);
+
+  // window.arguments may be either a string or a node.
+  // If passed via a command line handler, it will be a uri string.
+  // If passed via navigator hooks, it will be a dom node to inspect.
+  var initNode, initURI;
+  if (window.arguments.length) {
+    if (typeof window.arguments[0] == "string") {
+      initURI = window.arguments[0];
+    }
+    else if (window.arguments[0] instanceof Components.interfaces.nsIDOMNode) {
+      initNode = window.arguments[0];
+    }
+  }
+  inspector.initialize(initNode, initURI);
 }
 
 function InspectorApp_destroy()
@@ -91,7 +104,7 @@ InspectorApp.prototype =
   get searchRegistry() { return this.mSearchService },
   get panelset() { return this.mPanelSet; },
   
-  initialize: function(aTarget)
+  initialize: function(aTarget, aURI)
   {
     this.mInitTarget = aTarget;
     
@@ -109,6 +122,10 @@ InspectorApp.prototype =
     this.mPanelSet = document.getElementById("bxPanelSet");
     this.mPanelSet.addObserver("panelsetready", this, false);
     this.mPanelSet.initialize();
+
+    if (aURI) {
+      this.gotoURL(aURI);
+    }
   },
 
   destroy: function()
@@ -326,7 +343,13 @@ InspectorApp.prototype =
 
   browseToURL: function(aURL)
   {
-    this.webNavigation.loadURI(aURL, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    try {
+      this.webNavigation.loadURI(aURL, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    }
+    catch(ex) {
+      // nsIWebNavigation.loadURI will spit out an appropriate user prompt, so
+      // we don't need to do anything here.  See nsDocShell::DisplayLoadError()
+    }
   },
 
   goToWindow: function(aMenuitem)

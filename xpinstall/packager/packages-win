@@ -326,6 +326,7 @@ bin\chrome\venkman.jar
 bin\chrome\icons\default\venkman-window.ico
 
 [inspector]
+bin\components\inspector-cmdline.js
 bin\components\inspector.dll
 bin\components\inspector.xpt
 bin\chrome\inspector.jar
