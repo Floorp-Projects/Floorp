@@ -437,7 +437,7 @@ nsSocketTransportService::Run(void)
             NS_ASSERTION(0 == i, "Null transport in active list...");
             if (0 == i) {
               //
-              // Clear the pollable event...  This call should *never* block since 
+              // Clear the pollable event... This call should *never* block since 
               // PR_Poll(...) said that it had been fired...
               //
               NS_ASSERTION(!(mSelectFDSet[0].out_flags & PR_POLL_EXCEPT), 
@@ -483,9 +483,11 @@ NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
                                           nsIEventSinkGetter* eventSinkGetter, 
+                                          const char* aPrintHost, 
                                           nsIChannel** aResult)
 {
-  return CreateTransportOfType(nsnull, aHost, aPort, eventSinkGetter, aResult);
+  return CreateTransportOfType(nsnull, aHost, aPort, 
+          eventSinkGetter, aPrintHost, aResult);
 }
 
 NS_IMETHODIMP
@@ -493,6 +495,7 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                         const char* aHost, 
                                         PRInt32 aPort,
                                         nsIEventSinkGetter* eventSinkGetter,
+                                        const char* aPrintHost,
                                         nsIChannel** aResult)
 {
   nsresult rv = NS_OK;
@@ -507,7 +510,8 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
   // Create and initialize a new connection object...
   NS_NEWXPCOM(transport, nsSocketTransport);
   if (transport) {
-    rv = transport->Init(this, aHost, aPort, aSocketType, eventSinkGetter);
+    rv = transport->Init(this, aHost, aPort, 
+            aSocketType, eventSinkGetter, aPrintHost);
     if (NS_FAILED(rv)) {
       delete transport;
       transport = nsnull;
@@ -524,6 +528,20 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
   *aResult = transport;
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::ReuseTransport(nsIChannel* i_Transport, 
+        PRBool * o_Reuse)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    if (!i_Transport)
+        return NS_ERROR_NULL_POINTER;
+    nsSocketTransport* trans = NS_STATIC_CAST(nsSocketTransport*, 
+        i_Transport);
+    if (!trans) return rv;
+    *o_Reuse = trans->CanBeReused();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
