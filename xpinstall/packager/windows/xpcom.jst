@@ -122,6 +122,7 @@ if(verifyDiskSpace(fProgram, srDest))
 
   $Ren8dot3Call$
 
+  upgradeCleanup();
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
@@ -183,7 +184,6 @@ if(verifyDiskSpace(fProgram, srDest))
   if( err == SUCCESS )
   {
     updateWinReg();
-    upgradeCleanup();
 
     err = performInstall(); 
     logComment("performInstall() returned: " + err);

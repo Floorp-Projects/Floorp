@@ -26,6 +26,7 @@ if(verifyDiskSpace(fProgram, srDest))
 
   $Ren8dot3Call$
 
+  upgradeCleanup();
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
@@ -37,7 +38,6 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if(err == SUCCESS)
   {
-    upgradeCleanup();
 
     var pki = getFolder("Chrome", "pippki.jar");
     var nss = getFolder("Chrome", "pipnss.jar");

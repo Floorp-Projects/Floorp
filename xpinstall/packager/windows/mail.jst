@@ -314,6 +314,7 @@ if(verifyDiskSpace(fProgram, srDest))
 
   $Ren8dot3Call$
 
+  upgradeCleanup();
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
@@ -326,7 +327,6 @@ if(verifyDiskSpace(fProgram, srDest))
   if( err == SUCCESS )
   {
     createShortcuts();
-    upgradeCleanup();
     updateWinIni();
 
     // Disabling this call for now because Trunk does not have mozMapi32.dll yet.
