@@ -21,6 +21,8 @@
 #include "nsIHTTPChannel.h"
 #include "nsCookie.h"
 #include "nsIURL.h"
+#include "nsCOMPtr.h"
+#include "nsIAtom.h"
 #include "nsCRT.h"
 
 ///////////////////////////////////
@@ -93,7 +95,15 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext) {
     nsCRT::free(url);
     return rv;
   }
-  rv = pHTTPConnection->SetRequestHeader("Cookie", cookie);
+  nsCOMPtr<nsIAtom> cookieHeader;
+
+  // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
+  cookieHeader = NS_NewAtom("cookie");
+  if (!cookieHeader) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    rv = pHTTPConnection->SetRequestHeader(cookieHeader, cookie);
+  }
   if (NS_FAILED(rv)) {
     NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
@@ -119,7 +129,15 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
     return rv;
   }
   char* cookie;
-  rv = pHTTPConnection->GetResponseHeader("Set-Cookie", &cookie);
+  nsCOMPtr<nsIAtom> header;
+
+  // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
+  header = NS_NewAtom("cookie");
+  if (!header) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    rv = pHTTPConnection->GetResponseHeader(header, &cookie);
+  }
   if (NS_FAILED(rv)) {
     NS_RELEASE(pHTTPConnection);
     return rv;
@@ -153,7 +171,13 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
       return rv;
     }
     char *pDate = nsnull;
-    rv = pHTTPConnection->GetResponseHeader("Date", &pDate);
+    // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
+    header = NS_NewAtom("date");
+    if (!header) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      rv = pHTTPConnection->GetResponseHeader(header, &pDate);
+    }
     if (NS_SUCCEEDED(rv)) {
       if(pDate) {
         COOKIE_SetCookieStringFromHttp(url, cookie, pDate);
