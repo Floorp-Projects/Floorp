@@ -73,6 +73,7 @@
 #include "nsMsgFilterDelegateFactory.h"
 #include "nsMessageView.h"
 #include "nsMsgWindow.h"
+#include "nsMessage.h"
 #include "nsMsgViewNavigationService.h"
 
 #include "nsMsgServiceProvider.h"
@@ -113,6 +114,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFolderCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgStatusFeedback)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessageView,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgViewNavigationService,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
@@ -249,6 +251,18 @@ static nsModuleComponentInfo gComponents[] = {
     { "Mail/News MsgWindow", NS_MSGWINDOW_CID,
       NS_MSGWINDOW_PROGID,
       nsMsgWindowConstructor,
+    },
+    { "Message Resource", NS_MESSAGE_CID,
+      NS_MESSAGE_MAILBOX_PROGID,
+      nsMessageConstructor,
+    },
+    { "Message Resource", NS_MESSAGE_CID,
+      NS_MESSAGE_IMAP_PROGID,
+      nsMessageConstructor,
+    },
+    { "Message Resource", NS_MESSAGE_CID,
+      NS_MESSAGE_NEWS_PROGID,
+      nsMessageConstructor,
     },
     { "Mail/News Message Navigation Service", NS_MSGVIEWNAVIGATIONSERVICE_CID,
       NS_MSGVIEWNAVIGATIONSERVICE_PROGID,

@@ -42,7 +42,6 @@
 #include "nsImapUtils.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgMailSession.h"
-#include "nsImapMessage.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsImapUndoTxn.h"
@@ -1159,7 +1158,7 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
   rv = nsMsgFolder::MarkMessagesRead(messages, markRead);
   if (NS_SUCCEEDED(rv))
   {
-    nsCString messageIds;
+    nsCAutoString messageIds;
         nsMsgKeyArray keysToMarkRead;
     rv = BuildIdsAndKeyArray(messages, messageIds, keysToMarkRead);
     if (NS_FAILED(rv)) return rv;
@@ -1248,7 +1247,7 @@ nsImapMailFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFla
   rv = nsMsgFolder::MarkMessagesFlagged(messages, markFlagged);
   if (NS_SUCCEEDED(rv))
   {
-    nsCString messageIds;
+    nsCAutoString messageIds;
         nsMsgKeyArray keysToMarkFlagged;
     rv = BuildIdsAndKeyArray(messages, messageIds, keysToMarkFlagged);
     if (NS_FAILED(rv)) return rv;
@@ -1454,9 +1453,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     // *** jt - assuming delete is move to the trash folder for now
     nsCOMPtr<nsIEnumerator> aEnumerator;
     nsCOMPtr<nsIRDFResource> res;
-    nsCString uri;
+    nsCAutoString uri;
     PRBool deleteImmediatelyNoTrash = PR_FALSE;
-    nsCString messageIds;
+    nsCAutoString messageIds;
     nsMsgKeyArray srcKeyArray;
 
     nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
@@ -1523,21 +1522,23 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     if (NS_SUCCEEDED(rv))
     {
-      if (mDatabase)
-      {
-        if (deleteModel == nsMsgImapDeleteModels::IMAPDelete) 
+        if (mDatabase)
         {
-          MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, mDatabase);
+            if (deleteModel == nsMsgImapDeleteModels::IMAPDelete)
+            {
+                MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, mDatabase);
+            }
+            else
+            {
+                mDatabase->DeleteMessages(&srcKeyArray,NULL);
+                NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+            }
         }
-        else
-        {
-          mDatabase->DeleteMessages(&srcKeyArray,NULL);
-          NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
-        }
-      }
-     }
-     return rv;
-  }
+    }
+        return rv;
+    }
+
+    // have to move the messages to the trash
   else
   {
     if(trashFolder)
@@ -2069,6 +2070,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
     if(messageResource)
     {
       messageResource->SetMsgDBHdr(msgDBHdr);
+      messageResource->SetMessageType(nsIMessage::MailMessage);
       *message = messageResource;
       NS_IF_ADDREF(*message);
     }
@@ -2394,19 +2396,16 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
       NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
         {
+            nsCAutoString msgIds;
+            AllocateUidStringFromKeyArray(keysToFlag, msgIds);
+            
             if (addFlags)
             {
-                nsCString msgIds;
-                
-                AllocateUidStringFromKeyArray(keysToFlag, msgIds);
                 imapService->AddMessageFlags(m_eventQueue, this, this,
                                              nsnull, msgIds, flags, PR_TRUE);
             }
             else
             {
-                nsCString msgIds;
-                
-                AllocateUidStringFromKeyArray(keysToFlag, msgIds);
                 imapService->SubtractMessageFlags(m_eventQueue, this, this,
                                                   nsnull, msgIds, flags,
                                                   PR_TRUE);
@@ -2743,7 +2742,7 @@ nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDumm
   m_tempMessageStream = do_QueryInterface(supports);
     if (m_tempMessageStream && addDummyEnvelope)
     {
-        nsCString result;
+        nsCAutoString result;
         char *ct;
         PRUint32 writeCount;
         time_t now = time ((time_t*) 0);
@@ -3887,7 +3886,7 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
     m_copyState->m_isCrossServerOp = isCrossServerOp;
 
     // ** jt - needs to create server to server move/copy undo msg txn
-    nsCString messageIds;
+    nsCAutoString messageIds;
     nsMsgKeyArray srcKeyArray;
     nsCOMPtr<nsIUrlListener> urlListener;
 
@@ -3941,7 +3940,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_OK;
-    nsCString messageIds;
+    nsCAutoString messageIds;
     nsMsgKeyArray srcKeyArray;
     nsCOMPtr<nsIUrlListener> urlListener;
     nsCOMPtr<nsISupports> srcSupport;
@@ -4032,7 +4031,7 @@ nsImapMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
 {
     nsresult rv = NS_OK;
     if (txnMgr && !m_transactionManager)
-        m_transactionManager = do_QueryInterface(txnMgr, &rv);
+        m_transactionManager = txnMgr;
     return rv;
 }
 
@@ -4045,7 +4044,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsMsgKey key = 0xffffffff;
-    nsCString messageId;
+    nsCAutoString messageId;
     nsCOMPtr<nsIUrlListener> urlListener;
     nsCOMPtr<nsISupports> srcSupport;
     nsCOMPtr<nsISupportsArray> messages;

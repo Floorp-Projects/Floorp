@@ -39,17 +39,6 @@
 }
 
 //
-// nsNewsMessage
-//
-#define NS_NEWSMESSAGERESOURCE_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message"
-#define NS_NEWSMESSAGERESOURCE_CID               	\
-{ /* 2dae7f80-f104-11d2-973b-00805f916fd3 */		\
- 0x2dae7f80, 0xf104, 0x11d2, 				\
- {0x97, 0x3b, 0x00, 0x80, 0x5f, 0x91, 0x6f, 0xd3}	\
-} 
-
-//
 // nsNntpIncomingServer
 //
 #define NS_NNTPINCOMINGSERVER_PROGID \

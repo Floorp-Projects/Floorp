@@ -33,7 +33,7 @@ interface nsIMessage : nsIMsgHdr {
 	//copying around so I'm using these constants and making them part of the base interface.
 	const unsigned long MailMessage    = 0;
 	const unsigned long NewsMessage     = 1;
-	readonly attribute unsigned long messageType;
+	attribute unsigned long messageType;
 
 };
 

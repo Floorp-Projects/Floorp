@@ -29,7 +29,6 @@ nsMailboxProtocol.h
 nsMailboxService.h
 nsPop3Service.h
 nsPop3IncomingServer.h
-nsLocalMessage.h
 nsLocalStringBundle.h
 nsNoneService.h
 nsNoIncomingServer.h

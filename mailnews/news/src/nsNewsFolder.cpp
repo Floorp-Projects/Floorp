@@ -44,7 +44,6 @@
 #include "nsFileStream.h"
 #include "nsMsgDBCID.h"
 #include "nsMsgNewsCID.h"
-#include "nsNewsMessage.h"
 #include "nsMsgUtils.h"
 #include "nsNewsUtils.h"
 
@@ -986,6 +985,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
   nsCOMPtr<nsIDBMessage> messageResource = do_QueryInterface(res);
   if(messageResource) {
     messageResource->SetMsgDBHdr(msgDBHdr);
+    messageResource->SetMessageType(nsIMessage::NewsMessage);
     *message = messageResource;
     NS_IF_ADDREF(*message);
   }

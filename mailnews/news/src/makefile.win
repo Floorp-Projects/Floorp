@@ -37,7 +37,6 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNntpService.h					\
 			nsNewsFolder.h					\
 			nsNntpIncomingServer.h 			\
-			nsNewsMessage.h					\
 			nsNewsUtils.h					\
 			nsNNTPHost.h					\
 			nsNNTPCategoryContainer.h		\
@@ -59,7 +58,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNntpService.obj				\
 			.\$(OBJDIR)\nsNewsFolder.obj				\
 			.\$(OBJDIR)\nsNntpIncomingServer.obj			\
-			.\$(OBJDIR)\nsNewsMessage.obj				\
 			.\$(OBJDIR)\nsNewsUtils.obj					\
 			$(NULL)
 

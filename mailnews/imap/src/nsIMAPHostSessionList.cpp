@@ -700,7 +700,8 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineInboxPathForHost(const char *serve
 		ns = host->fNamespaceList->GetDefaultNamespaceOfType(kPersonalNamespace);
 		if (ns)
 		{
-			result.AssignWithConversion(PR_smprintf("%sINBOX",ns->GetPrefix()));
+			result.AssignWithConversion(ns->GetPrefix());
+            result.AppendWithConversion("INBOX");
 		}
 	}
 	else

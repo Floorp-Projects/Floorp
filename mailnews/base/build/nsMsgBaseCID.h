@@ -27,16 +27,6 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_MSGFOLDEREVENT_CID				              \
-{ /* FBFEBE7A-C1DD-11d2-8A40-0060B0FC04D2 */      \
- 0xfbfebe7a, 0xc1dd, 0x11d2,                      \
- {0x8a, 0x40, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
-
-#define NS_MSGGROUPRECORD_CID                     \
-{ /* a8f54ee0-d292-11d2-b7f6-00805f05ffa5 */      \
- 0xa8f54ee0, 0xd292, 0x11d2,                      \
- {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
-
 //
 // nsMsgFolderDataSource
 //
@@ -309,6 +299,27 @@
 #define NS_MSGWINDOW_CID \
 { 0xbb460dff, 0x8bf0, 0x11d3, \
   { 0x8a, 0xfe, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
+
+//
+// nsMessage
+//
+
+/* {44C0D336-796D-42ee-B8B7-6FA3DE372E7E} */
+#define NS_MESSAGE_CID \
+  { 0x44c0d336, 0x796d, 0x42ee, \
+   { 0xb8, 0xb7, 0x6f, 0xa3, 0xde, 0x37, 0x2e, 0x7e } }
+
+
+#define NS_MESSAGE_MAILBOX_PROGID \
+  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message"
+
+#define NS_MESSAGE_NEWS_PROGID \
+  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message"
+
+#define NS_MESSAGE_IMAP_PROGID \
+  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message"
+
+
 
 //
 //nsMsgViewNavigationService

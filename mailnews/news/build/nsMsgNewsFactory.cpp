@@ -39,7 +39,6 @@
 #include "nsNntpUrl.h"
 #include "nsNntpService.h"
 #include "nsNntpIncomingServer.h"
-#include "nsNewsMessage.h"
 #include "nsNNTPNewsgroup.h"
 #include "nsNNTPNewsgroupPost.h"
 #include "nsNNTPNewsgroupList.h"
@@ -56,7 +55,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPHost)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupPost)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgNewsFolder)
 
 static nsModuleComponentInfo components[] =
@@ -103,10 +101,6 @@ static nsModuleComponentInfo components[] =
     NS_NEWSFOLDERRESOURCE_CID,
     NS_NEWSFOLDERRESOURCE_PROGID,
     nsMsgNewsFolderConstructor },
-  { "News Message Resource",
-    NS_NEWSMESSAGERESOURCE_CID,
-    NS_NEWSMESSAGERESOURCE_PROGID,
-    nsNewsMessageConstructor },
   { "NNTP Incoming Servier",
     NS_NNTPINCOMINGSERVER_CID,
     NS_NNTPINCOMINGSERVER_PROGID,

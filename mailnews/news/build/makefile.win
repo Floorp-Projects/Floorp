@@ -42,9 +42,9 @@ LLIBS=											\
 			$(DIST)\lib\xpcom.lib				\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib   \
 			$(DIST)\lib\msgbsutl.lib			\
+			$(DIST)\lib\rdfutil_s.lib			\
 			$(DIST)\lib\msgnews_s.lib			\
 			$(LIBNSPR)							\
-			$(DIST)\lib\rdfutil_s.lib			\
 			$(DIST)\lib\timer_s.lib				\
 			$(NULL)
 

@@ -65,16 +65,6 @@
   0xca5ffe7e, 0x5f47, 0x11d3, 			\
   {0x9a, 0x51, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78}}
 
-//
-// nsMailboxMessageResource
-//
-#define NS_MAILBOXMESSAGERESOURCE_PROGID \
-  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message"
-#define NS_MAILBOXMESSAGERESOURCE_CID               \
-{ /* b0908e06-dc06-11d2-8a46-0060b0fc04d2*/		\
-0xb0908e06,0xdc06, 0x11d2, \
-{0x8a, 0x46, 0x00, 0x60, 0xb0, 0xfc, 0x4, 0xd2} }
-
 
 //
 // nsMsgMailboxService

@@ -592,7 +592,13 @@ NS_IMETHODIMP nsMessage::GetMsgKey(nsMsgKey *aMsgKey)
 
 NS_IMETHODIMP nsMessage::GetMessageType(PRUint32 *aMessageType)
 {
-  // base classes need to define this
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aMessageType);
+  *aMessageType = mMessageType;
+  return NS_OK;
 }
 
+NS_IMETHODIMP nsMessage::SetMessageType(PRUint32 aMessageType)
+{
+  mMessageType = aMessageType;
+  return NS_OK;
+}

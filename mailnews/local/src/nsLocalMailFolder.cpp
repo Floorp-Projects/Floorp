@@ -792,7 +792,8 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 				mDatabase->AddListener(this);
 
 			// if we have to regenerate the folder, run the parser url.
-			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING ||
+         folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 			{
 				if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
 					return rv;
@@ -2054,6 +2055,7 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 			//We know from our factory that mailbox message resources are going to be
 			//nsLocalMessages.
 			dbMessage->SetMsgDBHdr(msgDBHdr);
+      dbMessage->SetMessageType(nsIMessage::MailMessage);
 			*message = dbMessage;
 			NS_IF_ADDREF(*message);
 		}

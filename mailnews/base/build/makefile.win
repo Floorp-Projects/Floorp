@@ -44,6 +44,7 @@ LLIBS=										\
 			$(DIST)\lib\msgbase_s.lib		\
 			$(DIST)\lib\msgsearch_s.lib		\
 			$(DIST)\lib\timer_s.lib 		\
+			$(DIST)\lib\rdfutil_s.lib		\
 			$(LIBNSPR)						\
 			$(NULL)
 

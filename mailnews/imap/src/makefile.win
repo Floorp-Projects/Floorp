@@ -40,7 +40,6 @@ EXPORTS=	nsImapUrl.h									\
 			nsImapIncomingServer.h						\
 			nsIMAPNamespace.h							\
 			nsImapMailFolder.h							\
-			nsImapMessage.h								\
             $(NULL)
 
 ################################################################################
@@ -61,7 +60,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapService.obj				\
 			.\$(OBJDIR)\nsImapIncomingServer.obj		\
 			.\$(OBJDIR)\nsImapMailFolder.obj			\
-			.\$(OBJDIR)\nsImapMessage.obj				\
 			.\$(OBJDIR)\nsImapMoveCoalescer.obj			\
 			.\$(OBJDIR)\nsImapUtils.obj					\
 			.\$(OBJDIR)\nsImapUndoTxn.obj					\

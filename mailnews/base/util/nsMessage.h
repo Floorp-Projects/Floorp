@@ -55,7 +55,10 @@ protected:
 private:
   nsWeakPtr mFolder;
   nsMsgKey mMsgKey;
+
+  // could be combined into bitfield
   PRBool mMsgKeyValid;
+  PRUint32 mMessageType;
 };
 
 #endif //nsMessage_h__

@@ -36,7 +36,6 @@
 #include "nsNoneService.h"
 #include "nsPop3IncomingServer.h"
 #include "nsNoIncomingServer.h"
-#include "nsLocalMessage.h"
 #include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 
@@ -44,7 +43,6 @@ static NS_DEFINE_CID(kMailboxUrlCID, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kMailboxParserCID, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kLocalMailFolderResourceCID, NS_LOCALMAILFOLDERRESOURCE_CID);
-static NS_DEFINE_CID(kMailboxMessageResourceCID, NS_MAILBOXMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kNoneServiceCID, NS_NONESERVICE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
@@ -63,7 +61,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailboxService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPop3Service)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoneService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgLocalMailFolder)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParseMailMessageState)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPop3IncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoIncomingServer)
@@ -93,7 +90,6 @@ protected:
     nsCOMPtr<nsIGenericFactory> mPop3ServiceFactory;
     nsCOMPtr<nsIGenericFactory> mNoneServiceFactory;
     nsCOMPtr<nsIGenericFactory> mLocalMailFolderFactory;
-    nsCOMPtr<nsIGenericFactory> mLocalMessageFactory;
     nsCOMPtr<nsIGenericFactory> mParseMailMsgStateFactory;
     nsCOMPtr<nsIGenericFactory> mPop3IncomingServerFactory;
     nsCOMPtr<nsIGenericFactory> mNoIncomingServerFactory;
@@ -135,7 +131,6 @@ void nsMsgLocalModule::Shutdown()
     mPop3ServiceFactory = null_nsCOMPtr();
     mNoneServiceFactory = null_nsCOMPtr();
     mLocalMailFolderFactory = null_nsCOMPtr();
-    mLocalMessageFactory = null_nsCOMPtr();
     mParseMailMsgStateFactory = null_nsCOMPtr();
     mPop3IncomingServerFactory = null_nsCOMPtr();
     mNoIncomingServerFactory = null_nsCOMPtr();
@@ -210,12 +205,6 @@ NS_IMETHODIMP nsMsgLocalModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mLocalMailFolderFactory), &nsMsgLocalMailFolderConstructor);
         fact = mLocalMailFolderFactory;
     }
-    else if (aClass.Equals(kMailboxMessageResourceCID)) 
-    {
-        if (!mLocalMessageFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mLocalMessageFactory), &nsLocalMessageConstructor);
-        fact = mLocalMessageFactory;
-    }
     else if (aClass.Equals(kParseMailMsgStateCID)) 
     {
         if (!mParseMailMsgStateFactory)
@@ -281,8 +270,6 @@ static Components gComponents[] = {
       NS_NONEPROTOCOLINFO_PROGID },
     { "Local Mail Folder Resource Factory", &kLocalMailFolderResourceCID,
       NS_LOCALMAILFOLDERRESOURCE_PROGID },
-    { "Local Message Resource Factory", &kMailboxMessageResourceCID,
-      NS_MAILBOXMESSAGERESOURCE_PROGID },
     { "Pop3 Incoming Server", &kPop3IncomingServerCID,
       NS_POP3INCOMINGSERVER_PROGID },
     { "No Incoming Server", &kNoIncomingServerCID,
