@@ -30,6 +30,7 @@ SAMPLES_DIR = $(DIST)/bin/chrome/messengercompose/locale/en-US
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/messengercompose.dtd \
+	$(srcdir)/addressingWidgetOverlay.dtd \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

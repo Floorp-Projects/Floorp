@@ -38,6 +38,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/composebe_en.properties \
 	$(srcdir)/MsgAttachPage.xul	\
 	$(srcdir)/MsgAttachPage.js	\
+	$(srcdir)/addressingWidgetOverlay.js	\
+	$(srcdir)/addressingWidgetOverlay.xul	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

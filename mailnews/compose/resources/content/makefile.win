@@ -29,6 +29,8 @@ install::
 	$(MAKE_INSTALL) addressAutoComplete.js $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) MsgAttachPage.js $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) MsgAttachPage.xul $(DIST)\bin\chrome\messengercompose\content\default
+	$(MAKE_INSTALL) addressingWidgetOverlay.js $(DIST)\bin\chrome\messengercompose\content\default
+	$(MAKE_INSTALL) addressingWidgetOverlay.xul $(DIST)\bin\chrome\messengercompose\content\default
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\messengercompose.xul
@@ -40,3 +42,5 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\addressAutoComplete.js
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\MsgAttachPage.js
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\MsgAttachPage.xul
+	rm -f $(DIST)\bin\chrome\messengercompose\content\default\addressingWidgetOverlay.js
+	rm -f $(DIST)\bin\chrome\messengercompose\content\default\addressingWidgetOverlay.xul
