@@ -828,6 +828,8 @@ public:
 
     NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
     NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult);
+    NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
+                                         nsIContentViewerContainer** aResult);
 
     // nsIURLGroup interface...
     NS_IMETHOD CreateURL(nsIURL** aInstancePtrResult, 
@@ -1246,6 +1248,14 @@ nsDocLoaderImpl::GetContainer(nsIContentViewerContainer** aResult)
     NS_IF_ADDREF(*aResult);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::GetContentViewerContainer(PRUint32 aDocumentID,
+                                           nsIContentViewerContainer** aResult)
+{
+  *aResult = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
