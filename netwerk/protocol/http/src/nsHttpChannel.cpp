@@ -1239,19 +1239,32 @@ nsHttpChannel::CheckCache()
 
     mCachedContentIsValid = !doValidation;
 
-    // add validation headers unless the cached response is marked no-store...
-    // this'll force no-store content to be refetched each time from the server.
-    if (doValidation && !mCachedResponseHead->NoStore()) {
-        const char *val;
-        // Add If-Modified-Since header if a Last-Modified was given
-        val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
-        if (val)
-            mRequestHead.SetHeader(nsHttp::If_Modified_Since, nsDependentCString(val));
-
-        // Add If-None-Match header if an ETag was given in the response
-        val = mCachedResponseHead->PeekHeader(nsHttp::ETag);
-        if (val)
-            mRequestHead.SetHeader(nsHttp::If_None_Match, nsDependentCString(val));
+    if (doValidation) {
+        //
+        // now, we are definitely going to issue a HTTP request to the server.
+        // make it conditional if possible.
+        //
+        // do not attempt to validate no-store content, since servers will not
+        // expect it to be cached.  (we only keep it in our cache for the
+        // purposes of back/forward, etc.)
+        //
+        // the request method MUST be either GET or HEAD (see bug 175641).
+        //
+        if (!mCachedResponseHead->NoStore() &&
+            (mRequestHead.Method() == nsHttp::Get ||
+             mRequestHead.Method() == nsHttp::Head)) {
+            const char *val;
+            // Add If-Modified-Since header if a Last-Modified was given
+            val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
+            if (val)
+                mRequestHead.SetHeader(nsHttp::If_Modified_Since,
+                                       nsDependentCString(val));
+            // Add If-None-Match header if an ETag was given in the response
+            val = mCachedResponseHead->PeekHeader(nsHttp::ETag);
+            if (val)
+                mRequestHead.SetHeader(nsHttp::If_None_Match,
+                                       nsDependentCString(val));
+        }
     }
 
     LOG(("CheckCache [this=%x doValidation=%d]\n", this, doValidation));
