@@ -93,6 +93,12 @@ public:
   // Notification that we were unable to render a replaced element.
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
+
+  // Request to create a continuing frame
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aFrame,
+                                   nsIFrame*       aParentFrame,
+                                   nsIFrame**      aContinuingFrame) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */

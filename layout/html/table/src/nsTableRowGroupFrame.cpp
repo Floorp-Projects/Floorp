@@ -31,6 +31,8 @@
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
+#include "nsIStyleSet.h"
+#include "nsIPresShell.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -773,11 +775,14 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           // Create a continuing frame, add it to the child list, and then push it
           // and the frames that follow
           nsIFrame*        contRowFrame;
-          nsIStyleContext* rowStyle;
-  
-          rowFrame->GetStyleContext(&rowStyle);
-          rowFrame->CreateContinuingFrame(aPresContext, this, rowStyle, contRowFrame);
-          NS_RELEASE(rowStyle);
+          nsIPresShell*    presShell;
+          nsIStyleSet*     styleSet;
+          
+          aPresContext.GetShell(&presShell);
+          presShell->GetStyleSet(&styleSet);
+          NS_RELEASE(presShell);
+          styleSet->CreateContinuingFrame(&aPresContext, rowFrame, this, &contRowFrame);
+          NS_RELEASE(styleSet);
   
           // Add it to the child list
           nsIFrame* nextRow;
@@ -830,13 +835,15 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
               aReflowState, cellFrame, lastRowOrigin.y - firstRowOrigin.y, status);
             
             // Create the continuing cell frame
-            nsIStyleContext*  cellStyle;
             nsIFrame*         contCellFrame;
+            nsIPresShell*     presShell;
+            nsIStyleSet*      styleSet;
 
-            cellFrame->GetStyleContext(&cellStyle);
-            cellFrame->CreateContinuingFrame(aPresContext, rowFrame, cellStyle,
-                                             contCellFrame);
-            NS_RELEASE(cellStyle);
+            aPresContext.GetShell(&presShell);
+            presShell->GetStyleSet(&styleSet);
+            NS_RELEASE(presShell);
+            styleSet->CreateContinuingFrame(&aPresContext, cellFrame, rowFrame, &contCellFrame);
+            NS_RELEASE(styleSet);
 
             // Add it to the row's child list
             ((nsTableRowFrame*)rowFrame)->InsertCellFrame((nsTableCellFrame*)contCellFrame,

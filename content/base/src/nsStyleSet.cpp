@@ -136,6 +136,12 @@ public:
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
   
+  // Request to create a continuing frame
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aFrame,
+                                   nsIFrame*       aParentFrame,
+                                   nsIFrame**      aContinuingFrame);
+  
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
 private:
@@ -816,6 +822,16 @@ StyleSetImpl::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                         nsIFrame*       aFrame)
 {
   return mFrameConstructor->CantRenderReplacedElement(aPresContext, aFrame);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                    nsIFrame*       aFrame,
+                                    nsIFrame*       aParentFrame,
+                                    nsIFrame**      aContinuingFrame)
+{
+  return mFrameConstructor->CreateContinuingFrame(aPresContext, aFrame, aParentFrame,
+                                                  aContinuingFrame);
 }
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)

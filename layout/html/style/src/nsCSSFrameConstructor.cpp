@@ -3551,6 +3551,24 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFrame,
+                                             nsIFrame*       aParentFrame,
+                                             nsIFrame**      aContinuingFrame)
+{
+  nsresult  rv;
+  nsIFrame* continuingFrame;
+
+  nsIStyleContext* styleContext;
+  aFrame->GetStyleContext(&styleContext);
+  rv = aFrame->CreateContinuingFrame(*aPresContext, aParentFrame, styleContext,
+                                     continuingFrame);
+  NS_RELEASE(styleContext);
+  *aContinuingFrame = continuingFrame;
+  return rv;
+}
+
 nsresult
 nsCSSFrameConstructor::RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
                                                        nsIContent* aContent,

@@ -145,6 +145,12 @@ public:
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
 
+  // Request to create a continuing frame
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aFrame,
+                                   nsIFrame*       aParentFrame,
+                                   nsIFrame**      aContinuingFrame) = 0;
+
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
 };

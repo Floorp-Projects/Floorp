@@ -26,6 +26,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
+#include "nsIStyleSet.h"
 
 nsresult
 nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -151,11 +152,18 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
       } else if (nsnull == kidNextInFlow) {
         // The page isn't complete and it doesn't have a next-in-flow so
         // create a continuing page
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(&kidSC);
-        nsIFrame*  continuingPage;
-        nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
-                                                      kidSC, continuingPage);
+        nsIPresShell* presShell;
+        nsIStyleSet*  styleSet;
+        nsIFrame*     continuingPage;
+        
+        aPresContext.GetShell(&presShell);
+        presShell->GetStyleSet(&styleSet);
+        NS_RELEASE(presShell);
+        styleSet->CreateContinuingFrame(&aPresContext, kidFrame, this, &continuingPage);
+        NS_RELEASE(styleSet);
+        // XXX TROY Should be handled by frame construction code
+        nsIStyleContext*  kidSC;
+        continuingPage->GetStyleContext(&kidSC);
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, continuingPage,
                                                  kidSC, PR_TRUE);
         NS_RELEASE(kidSC);
