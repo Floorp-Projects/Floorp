@@ -3994,6 +3994,8 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
   // Keep a ref to presShell since dispatching the DOM event may cause
   // the document to be destroyed.
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
+  if (!presShell)
+    return NS_OK;
 
   nsCOMPtr<nsIContent> previousFocus = mCurrentFocus;
 
