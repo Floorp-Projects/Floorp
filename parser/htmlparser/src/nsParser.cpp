@@ -424,7 +424,7 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   if(theScanner){
     nsString theBufCopy;
     nsString& theBuffer=theScanner->GetBuffer();
-    theBuffer.Left(theBufCopy,300);
+    theBuffer.Left(theBufCopy,125);
     theBufCopy.ToUpperCase();
     PRInt32 theIndex=theBufCopy.Find("<!DOCTYPE");
     if(kNotFound==theIndex){

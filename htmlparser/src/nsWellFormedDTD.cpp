@@ -184,7 +184,9 @@ eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCo
       result=eValidDetect;
     }
     else {
-      if(-1<aBuffer.Find("<?xml ")) {
+      nsAutoString temp;
+      aBuffer.Left(temp,150);  //let's only scan the first 150 or so bytes...
+      if(-1<temp.Find("<?xml ")) {
         if(0==aContentType.Length()) {
           aContentType = kXMLTextContentType; //only reset it if it's empty
         }
