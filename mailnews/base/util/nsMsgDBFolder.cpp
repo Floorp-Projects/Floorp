@@ -110,7 +110,7 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 	{
 		mDatabase->RemoveListener(this);
 		mDatabase->Close(PR_TRUE);
-		mDatabase = null_nsCOMPtr();
+		mDatabase = nsnull;
 
   }
 
@@ -158,7 +158,7 @@ NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed ()
     if (mDatabase)
     {
         mDatabase->ForceClosed();
-        mDatabase = null_nsCOMPtr();
+        mDatabase = nsnull;
     }
     return NS_OK;
 }
@@ -461,7 +461,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
             }
 
         }
-		folderInfo = null_nsCOMPtr();
+		folderInfo = nsnull;
         if (db)
 	        db->Close(PR_FALSE);
     }
@@ -789,7 +789,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
     if (mDatabase)
     {
         mDatabase->RemoveListener(this);
-        mDatabase = null_nsCOMPtr();
+        mDatabase = nsnull;
     }
     return NS_OK;
 }

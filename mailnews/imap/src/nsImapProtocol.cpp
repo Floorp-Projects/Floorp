@@ -682,7 +682,7 @@ void nsImapProtocol::ReleaseUrlState()
       m_imapMailFolderSink->CloseMockChannel(m_mockChannel);
     else
       m_mockChannel->Close();
-     m_mockChannel = null_nsCOMPtr();
+     m_mockChannel = nsnull;
   }
   if (m_runningUrl)
   {
@@ -707,15 +707,15 @@ void nsImapProtocol::ReleaseUrlState()
     }
   }
 
-  m_imapMailFolderSink = null_nsCOMPtr();
-  m_imapMessageSink = null_nsCOMPtr();
-  m_imapExtensionSink = null_nsCOMPtr();
-  m_imapMiscellaneousSink = null_nsCOMPtr();
-  m_channelListener = null_nsCOMPtr();
-  m_channelContext = null_nsCOMPtr();
+  m_imapMailFolderSink = nsnull;
+  m_imapMessageSink = nsnull;
+  m_imapExtensionSink = nsnull;
+  m_imapMiscellaneousSink = nsnull;
+  m_channelListener = nsnull;
+  m_channelContext = nsnull;
   
-  m_channelInputStream = null_nsCOMPtr();
-  m_channelOutputStream = null_nsCOMPtr();
+  m_channelInputStream = nsnull;
+  m_channelOutputStream = nsnull;
 }
 
 
@@ -759,7 +759,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
 
     me->m_eventQueue->StopAcceptingEvents();
     me->m_eventQueue->ProcessPendingEvents();
-    me->m_eventQueue = null_nsCOMPtr();
+    me->m_eventQueue = nsnull;
 
     nsCOMPtr<nsIMsgIncomingServer> me_server = do_QueryReferent(m_server);
     if (me_server)
@@ -771,26 +771,26 @@ NS_IMETHODIMP nsImapProtocol::Run()
         me_server = nsnull;
     }
         
-    me->m_runningUrl = null_nsCOMPtr();
-    me->m_channel = null_nsCOMPtr();
-    me->m_outputStream = null_nsCOMPtr();
-    me->m_channelListener = null_nsCOMPtr();
-    me->m_channelContext = null_nsCOMPtr();
+    me->m_runningUrl = nsnull;
+    me->m_channel = nsnull;
+    me->m_outputStream = nsnull;
+    me->m_channelListener = nsnull;
+    me->m_channelContext = nsnull;
     if (me->m_mockChannel)
     {
         me->m_mockChannel->Close();
-        me->m_mockChannel = null_nsCOMPtr();
+        me->m_mockChannel = nsnull;
     }
-    me->m_channelInputStream = null_nsCOMPtr();
-    me->m_channelOutputStream = null_nsCOMPtr();
-    me->m_sinkEventQueue = null_nsCOMPtr();
-    me->m_eventQueue = null_nsCOMPtr();
-    me->m_server = null_nsCOMPtr();
-    me->m_imapMailFolderSink = null_nsCOMPtr();
-    me->m_imapExtensionSink = null_nsCOMPtr();
-    me->m_imapMessageSink = null_nsCOMPtr();
-    me->m_imapMiscellaneousSink = null_nsCOMPtr();
-    m_iThread = null_nsCOMPtr();
+    me->m_channelInputStream = nsnull;
+    me->m_channelOutputStream = nsnull;
+    me->m_sinkEventQueue = nsnull;
+    me->m_eventQueue = nsnull;
+    me->m_server = nsnull;
+    me->m_imapMailFolderSink = nsnull;
+    me->m_imapExtensionSink = nsnull;
+    me->m_imapMessageSink = nsnull;
+    me->m_imapMiscellaneousSink = nsnull;
+    m_iThread = nsnull;
 
     result = pEventQService->DestroyThreadEventQueue(); 
     return NS_OK;
@@ -1208,7 +1208,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // if we didn't run another url, release the server sink to
   // cut circular refs.
   if (!anotherUrlRun)
-      m_imapServerSink = null_nsCOMPtr();
+      m_imapServerSink = nsnull;
   
   if (GetConnectionStatus() < 0 || !GetServerStateParser().Connected())
   {
@@ -1313,9 +1313,9 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
     TellThreadToDie(PR_FALSE);
   }
-  m_channel = null_nsCOMPtr();
-  m_outputStream = null_nsCOMPtr();
-  m_inputStream = null_nsCOMPtr();
+  m_channel = nsnull;
+  m_outputStream = nsnull;
+  m_inputStream = nsnull;
   PR_CExitMonitor(this);
   return NS_OK;
 }
@@ -6901,9 +6901,9 @@ NS_IMETHODIMP nsImapMockChannel::Close()
   if (mReadingFromCache)
     NotifyStartEndReadFromCache(PR_FALSE);
 
-  m_channelListener = null_nsCOMPtr();
-  mCacheRequest = null_nsCOMPtr();
-  m_url = null_nsCOMPtr();
+  m_channelListener = nsnull;
+  mCacheRequest = nsnull;
+  m_url = nsnull;
 
   mChannelClosed = PR_TRUE;
   return NS_OK;

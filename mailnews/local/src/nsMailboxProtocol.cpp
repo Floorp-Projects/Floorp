@@ -692,8 +692,8 @@ nsresult nsMailboxProtocol::CloseSocket()
 {
 	// how do you force a release when closing the connection??
 	nsMsgProtocol::CloseSocket(); 
-	m_runningUrl = null_nsCOMPtr();
-	m_mailboxParser = null_nsCOMPtr();
+	m_runningUrl = nsnull;
+	m_mailboxParser = nsnull;
 	return 0;
 }
 

@@ -139,7 +139,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsMsgAccountManager,
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
-  m_defaultAccount(null_nsCOMPtr()),
+  m_defaultAccount(nsnull),
   m_emptyTrashInProgress(PR_FALSE),
   m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),

@@ -511,7 +511,7 @@ AddressBookParser::~AddressBookParser(void)
 	if (mDatabase && mDeleteDB)
 	{
 		mDatabase->Close(PR_TRUE);
-		mDatabase = null_nsCOMPtr();
+		mDatabase = nsnull;
 	}
 }
 

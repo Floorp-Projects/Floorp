@@ -297,7 +297,7 @@ NS_IMETHODIMP nsAbMDBDirectory::ClearDatabase()
 	if (mDatabase)
 	{
 		mDatabase->RemoveListener(this);
-		mDatabase = null_nsCOMPtr(); 
+		mDatabase = nsnull; 
 	}
 	return NS_OK; 
 }
@@ -316,7 +316,7 @@ NS_IMETHODIMP nsAbMDBDirectory::RemoveElementsFromAddressList()
 		for (i = count - 1; i >= 0; i--)
 			m_AddressList->RemoveElementAt(i);
 	}
-	m_AddressList = null_nsCOMPtr();
+	m_AddressList = nsnull;
 	return NS_OK;
 }
 
@@ -916,7 +916,7 @@ NS_IMETHODIMP nsAbMDBDirectory::EditMailListToDatabase(const char *uri)
 	{
 		listDatabase->EditMailList(this, PR_TRUE);
 		listDatabase->Commit(kLargeCommit);
-		listDatabase = null_nsCOMPtr();
+		listDatabase = nsnull;
 
 		return NS_OK;
 

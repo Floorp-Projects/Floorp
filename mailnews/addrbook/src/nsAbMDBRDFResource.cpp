@@ -54,7 +54,7 @@ nsAbMDBRDFResource::nsAbMDBRDFResource(void)
 {
 	NS_INIT_REFCNT();
 
-	mDatabase = null_nsCOMPtr();
+	mDatabase = nsnull;
 }
 
 nsAbMDBRDFResource::~nsAbMDBRDFResource(void)
@@ -63,7 +63,7 @@ nsAbMDBRDFResource::~nsAbMDBRDFResource(void)
 	{
 		mDatabase->RemoveListener(this);
 		mDatabase->Close(PR_TRUE);
-		mDatabase = null_nsCOMPtr();
+		mDatabase = nsnull;
 	}
 }
 

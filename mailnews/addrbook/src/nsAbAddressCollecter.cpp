@@ -81,7 +81,7 @@ nsAbAddressCollecter::~nsAbAddressCollecter()
 	{
 		m_historyAB->Commit(kSessionCommit);
 		m_historyAB->Close(PR_FALSE);
-		m_historyAB = null_nsCOMPtr();
+		m_historyAB = nsnull;
 	}
 }
 

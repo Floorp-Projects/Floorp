@@ -397,7 +397,7 @@ nsresult
 nsMessengerMigrator::Shutdown()
 {
   if (m_prefs) {
-	m_prefs = null_nsCOMPtr();
+	m_prefs = nsnull;
   }
 
   m_haveShutdown = PR_TRUE;

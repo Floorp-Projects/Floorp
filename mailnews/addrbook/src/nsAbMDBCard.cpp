@@ -66,7 +66,7 @@ nsAbMDBCard::~nsAbMDBCard(void)
 	{
 		nsIAddrDBListener* listener = this;
 		mCardDatabase->RemoveListener(listener);
-		mCardDatabase = null_nsCOMPtr();
+		mCardDatabase = nsnull;
 	}
 
 	if (mListeners) 

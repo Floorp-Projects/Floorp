@@ -662,7 +662,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     {
       if (ConnectionTimeOut(connection))
       {
-        connection = null_nsCOMPtr();
+        connection = nsnull;
         i--; cnt--; // if the connection times out, we'll remove it from the array,
             // so we need to adjust the array index.
       }
@@ -671,7 +671,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     }
     if (NS_FAILED(rv)) 
     {
-        connection = null_nsCOMPtr();
+        connection = nsnull;
         continue;
     }
     // if we haven't found a free connection, and this connection
@@ -686,13 +686,13 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     }
     // don't leave this loop with connection set if we can't use it!
     if (!canRunButBusy && !canRunUrlImmediately)
-      connection = null_nsCOMPtr();
+      connection = nsnull;
   }
   
   if (ConnectionTimeOut(connection))
-      connection = null_nsCOMPtr();
+      connection = nsnull;
   if (ConnectionTimeOut(freeConnection))
-    freeConnection = null_nsCOMPtr();
+    freeConnection = nsnull;
   
   if (!canRunButBusy && redirectLogon && (!connection || !canRunUrlImmediately))
   {

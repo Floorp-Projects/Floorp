@@ -694,7 +694,7 @@ nsMsgFolder::parseURI(PRBool needServer)
       rv = serverPath->AppendRelativeUnixPath(newPath.get());
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to append to the serverPath");
       if (NS_FAILED(rv)) {
-      	mPath = null_nsCOMPtr();
+      	mPath = nsnull;
       	return rv;
       }
       mPath = serverPath;

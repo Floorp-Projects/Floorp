@@ -1174,7 +1174,7 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
     if (mDatabase)
     {
         mDatabase->ForceClosed();
-        mDatabase = null_nsCOMPtr();
+        mDatabase = nsnull;
     }
 
     nsCOMPtr<nsIFileSpec> pathSpec;
@@ -1295,7 +1295,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
     PRInt32 leafpos = leafname.RFindChar('/');
     if (leafpos >0) 
         leafname.Cut(0, leafpos+1);
-    m_msgParser = null_nsCOMPtr();
+    m_msgParser = nsnull;
     PrepareToRename();
     NotifyStoreClosedAllHeaders();
     ForceDBClosed();
@@ -1671,7 +1671,7 @@ NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
     // We could check if the online name has changed.
     db->Commit(nsMsgDBCommitType::kLargeCommit);
   }
-  folderInfo = null_nsCOMPtr();
+  folderInfo = nsnull;
   return rv;
 }
 
@@ -2136,7 +2136,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
 
 NS_IMETHODIMP nsImapMailFolder::Shutdown(PRBool shutdownChildren)
 {
-  m_filterList = null_nsCOMPtr();
+  m_filterList = nsnull;
   return nsMsgDBFolder::Shutdown(shutdownChildren);
 }
 
@@ -2243,11 +2243,11 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
       if (mDatabase)
       {
-        dbFolderInfo = null_nsCOMPtr();
+        dbFolderInfo = nsnull;
         NotifyStoreClosedAllHeaders();
         mDatabase->ForceClosed();
       }
-      mDatabase = null_nsCOMPtr();
+      mDatabase = nsnull;
       
       nsLocalFolderSummarySpec  summarySpec(dbName);
       // Remove summary file.
@@ -2265,7 +2265,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       if (NS_FAILED(rv) && mDatabase)
       {
         mDatabase->ForceClosed();
-        mDatabase = null_nsCOMPtr();
+        mDatabase = nsnull;
       }
       else if (NS_SUCCEEDED(rv) && mDatabase)
       {
@@ -2551,7 +2551,7 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMsgDBHdr *message)
         m_copyState->m_tmpFileSpec->GetFileSpec(&fileSpec);
         if (fileSpec.Valid())
             fileSpec.Delete(PR_FALSE);
-        m_copyState->m_tmpFileSpec = null_nsCOMPtr();
+        m_copyState->m_tmpFileSpec = nsnull;
     }
     if (message)
         m_copyState->m_message = do_QueryInterface(message, &rv);
@@ -5507,7 +5507,7 @@ nsImapMailFolder::ClearCopyState(nsresult rv)
     if (m_copyState)
     {
         nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(m_copyState->m_srcSupport);
-        m_copyState = null_nsCOMPtr();
+        m_copyState = nsnull;
         nsresult result;
         nsCOMPtr<nsIMsgCopyService> copyService = 
                  do_GetService(kMsgCopyServiceCID, &result);

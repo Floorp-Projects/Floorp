@@ -77,7 +77,7 @@ nsAbMDBCardProperty::~nsAbMDBCardProperty(void)
 {
 	
 	if (mCardDatabase)
-		mCardDatabase = null_nsCOMPtr();
+		mCardDatabase = nsnull;
 
 	if (m_pAnonymousStrAttributes)
 		RemoveAnonymousList(m_pAnonymousStrAttributes);
@@ -414,7 +414,7 @@ NS_IMETHODIMP nsAbMDBCardProperty::AddAnonymousAttributesToDB()
 {
 	nsresult rv = NS_OK;
 	if (mCardDatabase)
-		mCardDatabase = null_nsCOMPtr();
+		mCardDatabase = nsnull;
 	rv = GetCardDatabase(kPersonalAddressbookUri);
 	if (NS_SUCCEEDED(rv) && mCardDatabase)
 		rv = mCardDatabase->AddAnonymousAttributesFromCard(this);
@@ -425,7 +425,7 @@ NS_IMETHODIMP nsAbMDBCardProperty::EditAnonymousAttributesInDB()
 {
 	nsresult rv = NS_OK;
 	if (mCardDatabase)
-		mCardDatabase = null_nsCOMPtr();
+		mCardDatabase = nsnull;
 	rv = GetCardDatabase(kPersonalAddressbookUri);
 	if (NS_SUCCEEDED(rv) && mCardDatabase)
 		rv = mCardDatabase->EditAnonymousAttributesFromCard(this);

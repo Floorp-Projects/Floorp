@@ -785,10 +785,10 @@ nsBrowserInstance::Close()
     mIsClosed = PR_TRUE;
 
   // Release search context.
-  mSearchContext = null_nsCOMPtr();;
+  mSearchContext = nsnull;;
 
   //Release Urlbar History
-  mUrlbarHistory = null_nsCOMPtr();
+  mUrlbarHistory = nsnull;
 
   return NS_OK;
 }

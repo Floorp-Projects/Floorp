@@ -273,7 +273,7 @@ nsMessenger::~nsMessenger()
     NS_IF_RELEASE(mWindow);
 
     // Release search context.
-    mSearchContext = null_nsCOMPtr();
+    mSearchContext = nsnull;
 }
 
 
@@ -912,7 +912,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             nsCRT::free(urlCString);
             if (NS_FAILED(rv)) goto done;
 
-            aListener->m_channel = null_nsCOMPtr();
+            aListener->m_channel = nsnull;
             rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
                                           aURL, 
                                           nsnull,      // inputStream
@@ -1678,7 +1678,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
-    m_outputStream = null_nsCOMPtr();
+    m_outputStream = nsnull;
   }
   
   if (m_saveAllAttachmentsState)

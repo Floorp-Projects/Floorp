@@ -86,7 +86,7 @@ nsMsgSendLater::nsMsgSendLater()
   mOutFile = nsnull;
   mTotalSentSuccessfully = 0;
   mTotalSendCount = 0;
-  mMessageFolder = null_nsCOMPtr();
+  mMessageFolder = nsnull;
   mMessage = nsnull;
   mLeftoverBuffer = nsnull;
 

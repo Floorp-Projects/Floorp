@@ -216,7 +216,7 @@ nsresult nsMsgProtocol::CloseSocket()
 	nsresult rv = NS_OK;
 	// release all of our socket state
 	m_socketIsOpen = PR_FALSE;
-	m_outputStream = null_nsCOMPtr();
+	m_outputStream = nsnull;
     if (m_transport)
       m_transport->SetNotificationCallbacks(nsnull, PR_FALSE);
 	// we need to call Cancel so that we remove the socket transport from the mActiveTransportList.  see bug #30648

@@ -1064,9 +1064,9 @@ nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresul
 
 nsresult nsStreamConverter::Close()
 {
-	mOutgoingChannel = null_nsCOMPtr();
-	mEmitter = null_nsCOMPtr();
-	mOutListener = null_nsCOMPtr();
+	mOutgoingChannel = nsnull;
+	mEmitter = nsnull;
+	mOutListener = nsnull;
 	return NS_OK;
 }
 

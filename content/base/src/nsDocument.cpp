@@ -496,7 +496,7 @@ nsDocument::~nsDocument()
 
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mPrincipal);
-  mDocumentLoadGroup = null_nsCOMPtr();
+  mDocumentLoadGroup = nsnull;
 
   mParentDocument = nsnull;
 
@@ -616,7 +616,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mPrincipal);
-  mDocumentLoadGroup = null_nsCOMPtr();
+  mDocumentLoadGroup = nsnull;
 
   // Delete references to sub-documents
   PRInt32 indx = mSubDocuments.Count();

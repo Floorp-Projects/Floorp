@@ -268,7 +268,7 @@ nsresult
 nsEventStateManager::Shutdown()
 {
   if (mPrefService) {
-    mPrefService = null_nsCOMPtr();
+    mPrefService = nsnull;
   }
 
   m_haveShutdown = PR_TRUE;

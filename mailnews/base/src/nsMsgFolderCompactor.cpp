@@ -343,7 +343,7 @@ nsFolderCompactState::FinishCompact()
   m_db->SetSummaryValid(PR_TRUE);
   m_db->Commit(nsMsgDBCommitType::kLargeCommit);
   m_db->ForceClosed();
-  m_db = null_nsCOMPtr();
+  m_db = nsnull;
 
   nsLocalFolderSummarySpec newSummarySpec(m_fileSpec);
 

@@ -2425,7 +2425,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 #endif
 	}
 
-	busyResource = null_nsCOMPtr();
+	busyResource = nsnull;
 	busySchedule = PR_FALSE;
 
 	return(NS_OK);

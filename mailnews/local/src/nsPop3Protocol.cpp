@@ -3060,6 +3060,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 nsresult nsPop3Protocol::CloseSocket()
 {
 	nsresult rv = nsMsgProtocol::CloseSocket();
-	m_url = null_nsCOMPtr();
+	m_url = nsnull;
 	return rv;
 }

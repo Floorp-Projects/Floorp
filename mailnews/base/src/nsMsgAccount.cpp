@@ -62,8 +62,8 @@ NS_IMPL_ISUPPORTS1(nsMsgAccount, nsIMsgAccount)
 
 nsMsgAccount::nsMsgAccount():
   m_prefs(0),
-  m_incomingServer(null_nsCOMPtr()),
-  m_defaultIdentity(null_nsCOMPtr())
+  m_incomingServer(nsnull),
+  m_defaultIdentity(nsnull)
 {
 
   NS_INIT_REFCNT();

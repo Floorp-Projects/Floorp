@@ -1073,7 +1073,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 	{
     NotifyStoreClosedAllHeaders();
 		mDatabase->ForceClosed();
-		mDatabase = null_nsCOMPtr();
+		mDatabase = nsnull;
 	}
 
 	nsCOMPtr<nsIFileSpec> pathSpec;

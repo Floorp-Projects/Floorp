@@ -88,7 +88,7 @@ nsMimeXULEmitter::nsMimeXULEmitter()
                                           NULL, NS_GET_IID(nsIMsgHeaderParser), 
                                           (void **) getter_AddRefs(mHeaderParser));
   if (NS_FAILED(rv))
-    mHeaderParser = null_nsCOMPtr();
+    mHeaderParser = nsnull;
 }
 
 nsMimeXULEmitter::~nsMimeXULEmitter(void)

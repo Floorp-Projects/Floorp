@@ -404,12 +404,12 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader(nsIMsgWindow *msgWindow)
             PRUint32 size;
             (void)m_newMsgHdr->GetMessageSize(&size);
             folderInfo->ChangeExpungedBytes(size);
-			m_newMsgHdr = null_nsCOMPtr();
+			m_newMsgHdr = nsnull;
 		}
 		else if (m_mailDB)
 		{
 			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
-			m_newMsgHdr = null_nsCOMPtr();
+			m_newMsgHdr = nsnull;
 		}
 		else
 			NS_ASSERTION(PR_FALSE, "no database while parsing local folder");	// should have a DB, no?
@@ -427,7 +427,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader(nsIMsgWindow *msgWindow)
 void nsMsgMailboxParser::AbortNewHeader()
 {
 	if (m_newMsgHdr && m_mailDB)
-		m_newMsgHdr = null_nsCOMPtr();
+		m_newMsgHdr = nsnull;
 }
 
 PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
@@ -513,7 +513,7 @@ void nsParseMailMessageState::Init(PRUint32 fileposition)
 {
 	m_state = nsIMsgParseMailMsgState::ParseBodyState;
 	m_position = fileposition;
-	m_newMsgHdr = null_nsCOMPtr();
+	m_newMsgHdr = nsnull;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::Clear()
@@ -537,7 +537,7 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
 	m_content_type.length = 0;
 	m_mdn_original_recipient.length = 0;
 	m_body_lines = 0;
-	m_newMsgHdr = null_nsCOMPtr();
+	m_newMsgHdr = nsnull;
 	m_envelope_pos = 0;
 	ClearAggregateHeader (m_toList);
 	ClearAggregateHeader (m_ccList);
@@ -1567,7 +1567,7 @@ PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 #endif
 
 		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
-		m_newMsgHdr = null_nsCOMPtr();
+		m_newMsgHdr = nsnull;
 	}
 	return 0;
 }

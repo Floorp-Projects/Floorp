@@ -235,7 +235,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   NS_IF_RELEASE(supports);
 
   // now we want to create a necko channel for this url and we want to open it
-  mQuoteChannel = null_nsCOMPtr();
+  mQuoteChannel = nsnull;
   nsCOMPtr<nsIIOService> netService(do_GetService(kIOServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
   rv = netService->NewChannelFromURI(aURL, getter_AddRefs(mQuoteChannel));

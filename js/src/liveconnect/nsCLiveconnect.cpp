@@ -92,7 +92,7 @@ public:
             {
                 // Is the current context already on the stack?
                 if(cx == currentCX)
-                    mContextStack = null_nsCOMPtr();
+                    mContextStack = nsnull;
                 else
                 {
                     mContextStack->Push(cx);
@@ -108,7 +108,7 @@ public:
         if(mContextStack)
         {
             mContextStack->Pop(nsnull);
-            mContextStack = null_nsCOMPtr();
+            mContextStack = nsnull;
         }
     }
 

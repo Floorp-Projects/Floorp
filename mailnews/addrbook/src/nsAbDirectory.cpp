@@ -420,7 +420,7 @@ NS_IMETHODIMP nsAbDirectory::RemoveElementsFromAddressList()
 		for (i = count - 1; i >= 0; i--)
 			m_AddressList->RemoveElementAt(i);
 	}
-	m_AddressList = null_nsCOMPtr();
+	m_AddressList = nsnull;
 	return NS_OK;
 }
 
@@ -812,7 +812,7 @@ NS_IMETHODIMP nsAbDirectory::ClearDatabase()
 	if (mDatabase)
 	{
 		mDatabase->RemoveListener(this);
-		mDatabase = null_nsCOMPtr(); 
+		mDatabase = nsnull; 
 	}
 	return NS_OK; 
 }
