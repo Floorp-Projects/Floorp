@@ -59,7 +59,6 @@ sub expand {
     my $template = Template->new({
         'CONTEXT' => PLIF::Service::TemplateToolkit::Context->new($app, $output, $session, $protocol),
     });
-    local $Template::Stash::Context::SCALAR_OPS->{'sprintf'} = sub { sprintf($_[1], $_[0]) };
     my $document;
     if ($type eq 'TemplateToolkitCompiled') {
         # what we have here is a potential Template::Document
