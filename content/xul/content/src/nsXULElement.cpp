@@ -79,6 +79,7 @@
 #include "nsIStyledContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
+#include "nsXULTreeElement.h"
 #include "rdfutil.h"
 #include "prlog.h"
 #include "rdf.h"
@@ -319,6 +320,10 @@ private:
     nsIDOMXULElement*      mBroadcaster;        // [OWNER]
     nsIController*         mController;         // [OWNER]
     nsCOMPtr<nsIRDFCompositeDataSource> mDatabase; // [OWNER]
+
+    // An unreferenced bare pointer to an aggregate that can implement
+    // element-specific APIs.
+    nsXULElement*          mInnerXULElement;
 };
 
 
@@ -398,7 +403,8 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mContentsMustBeGenerated(PR_FALSE),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
-      mController(nsnull)
+      mController(nsnull),
+      mInnerXULElement(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -491,6 +497,9 @@ RDFElementImpl::~RDFElementImpl()
 
     NS_IF_RELEASE(mController);
 
+    // Delete the aggregated interface, if one exists.
+    delete mInnerXULElement;
+
     if (--gRefCnt == 0) {
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -573,6 +582,17 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
+    }
+    else if (iid.Equals(nsIDOMXULTreeElement::GetIID()) &&
+             (mNameSpaceID == kNameSpaceID_XUL) &&
+             (mTag == kTreeAtom)) {
+        // We delegate XULTreeElement APIs to an aggregate object
+        if (! mInnerXULElement) {
+            if ((mInnerXULElement = new nsXULTreeElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return mInnerXULElement->QueryInterface(iid, result);
     }
     else {
         *result = nsnull;
@@ -1264,7 +1284,16 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
     if (! mScriptObject) {
         nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
-        rv = NS_NewScriptXULElement(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
+        nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
+
+        if (mTag == kTreeAtom) {
+            fn = NS_NewScriptXULTreeElement;
+        }
+        else {
+            fn = NS_NewScriptXULElement;
+        }
+
+        rv = fn(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
 
         NS_RELEASE(global);
 
