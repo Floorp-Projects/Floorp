@@ -31,7 +31,7 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
-static const PRBool gsDebug = PR_FALSE;
+//#define GS_DEBUG
 
 #define UPDATE_QUANTUM  1000 / 40
 
@@ -120,9 +120,8 @@ nsViewManager :: ~nsViewManager()
 
   mRootScrollable = nsnull;
 
+  NS_ASSERTION((mVMCount > 0), "underflow of viewmanagers");
   --mVMCount;
-
-  NS_ASSERTION(!(mVMCount < 0), "underflow of viewmanagers");
 
   if ((0 == mVMCount) &&
       ((nsnull != mDrawingSurface) || (nsnull != gOffScreen) ||
@@ -1391,12 +1390,11 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
   if (visibility == nsViewVisibility_kHide)
   	return NS_OK; 
 
-  if (gsDebug)
-  {
-    printf("ViewManager::UpdateView: %p, rect ", aView);
-    stdout << aRect;
-    printf("\n");
-  }
+#ifdef GS_DEBUG
+  printf("ViewManager::UpdateView: %p, rect ", aView);
+  stdout << aRect;
+  printf("\n");
+#endif
 
   // Find the nearest view (including this view) that has a widget
   nsRect  trect = aRect;
@@ -1962,6 +1960,11 @@ NS_IMETHODIMP nsViewManager :: SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
     rv = NS_OK;
 
   return rv;
+}
+
+NS_IMETHODIMP nsViewManager::SetViewAutoZIndex(nsIView *aView, PRBool aAutoZIndex)
+{
+	return aView->SetAutoZIndex(aAutoZIndex);
 }
 
 NS_IMETHODIMP nsViewManager :: MoveViewAbove(nsIView *aView, nsIView *aOther)
