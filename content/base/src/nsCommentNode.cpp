@@ -451,9 +451,9 @@ StripCommentDelimiters(nsString& aCommentString)
   static char kMinus = '-';
 
   offset = aCommentString.Find(kCommentStart);
-  offset += strlen(kCommentStart);
   if (-1 != offset) {
     // Take up to 2 '-' characters
+    offset += strlen(kCommentStart);
     if (kMinus == aCommentString.CharAt(offset)) {
       offset++;
       if (kMinus == aCommentString.CharAt(offset)) {
