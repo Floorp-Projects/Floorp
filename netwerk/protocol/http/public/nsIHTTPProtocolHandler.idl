@@ -95,6 +95,20 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
     attribute wstring vendorVersion;
 
     /**
+     * A product name.
+     *
+     * @return The product name (if any).
+     */
+    attribute wstring productName;
+
+    /**
+     * A product version string.
+     *
+     * @return A vendor version (major and minor) string (if any).
+     */
+    attribute wstring productVersion;
+
+    /**
      * Get the current platform.
      *
      * @return The platform this application is running on
