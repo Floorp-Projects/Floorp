@@ -287,7 +287,7 @@ sub connect {
              Server => $server,
              Port => $port,
              Nick => $nicks[$nick],
-             Ircname => "mozbot; $helpline",
+             Ircname => "[mozbot] $helpline",
              Username => $USERNAME,
              LocalAddr => $localAddr,
            )) {
@@ -297,7 +297,7 @@ sub connect {
         } else {
             &debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
         }
-        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "mozbot; $helpline", $nicks[0]) unless $mailed;
+        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "[mozbot] $helpline", $nicks[0]) unless $mailed;
         sleep($sleepdelay);
         &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \@nicks, \$nick, \$owner, \$sleepdelay));
         &debug("connecting to $server:$port...");

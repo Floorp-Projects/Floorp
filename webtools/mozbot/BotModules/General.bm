@@ -8,7 +8,7 @@ use vars qw(@ISA);
 @ISA = qw(BotModules);
 1;
 
-my $VERSION = '2.1';
+my $VERSION = '2.2';
 
 # RegisterConfig - Called when initialised, should call registerVariables
 sub RegisterConfig {
@@ -57,6 +57,8 @@ sub Told {
                 $self->say($event, "No help for topic '$1'.");
             }
         } else {
+            # XXX amusingly, $helpline is defined here, because this
+            # entire module is evaluated in the scope of mozbot.pl.
             $self->directSay($event, "Help topics for mozbot $VERSION ($helpline):");
             $self->say($event, "$event->{'from'}: help info /msg'ed") if ($event->{'channel'});
             local @" = ', '; # to reset font-lock: "
