@@ -1160,9 +1160,9 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
           // This has to be done before the call to CreateView().
           windowID.gCurrentMessageUri = messageUri;
           windowID.gCurrentFolderUri = msgHdr.folder.URI;
+          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
           windowID.CreateView(gDBView);
           windowID.LoadMessageByMsgKey(msgHdr.messageKey);
-          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
         }
         else
           return false;
@@ -1913,7 +1913,9 @@ function HandleJunkStatusChanged(folder)
 {
   // this might be the stand alone window, open to a message that was
   // and attachment (or on disk), in which case, we want to ignore it.
-  if (IsCurrentLoadedFolder(folder) && (gDBView.keyForFirstSelectedMessage != nsMsgKey_None)) {
+  var loadedMessage = GetLoadedMessage();
+  if (loadedMessage && (!(/type=x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
+  {
     var messageURI = GetLoadedMessage();
     // if multiple message are selected
     // and we change the junk status
@@ -2059,4 +2061,5 @@ function OpenOrFocusWindow(args, windowType, chromeURL)
   else
     window.openDialog(chromeURL, "", "chrome,resizable,status,centerscreen,dialog=no", args);
 }
+
 

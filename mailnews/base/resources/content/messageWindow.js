@@ -1075,8 +1075,12 @@ function GetDBView()
 
 function LoadMessageByMsgKey(messageKey)
 {
-  gDBView.loadMessageByMsgKey(messageKey);
-
-  if (gDBView.keyForFirstSelectedMessage == nsMsgKey_None)
+  // we only want to update the toolbar if there was no previous selected message.
+  if (nsMsgKey_None == gDBView.keyForFirstSelectedMessage)
+  {
+    gDBView.loadMessageByMsgKey(messageKey);
     UpdateMailToolbar("update toolbar for message Window");
+  }
+  else
+    gDBView.loadMessageByMsgKey(messageKey);
 }
