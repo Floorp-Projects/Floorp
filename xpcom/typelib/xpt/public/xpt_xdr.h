@@ -23,8 +23,9 @@
 #ifndef __xpt_xdr_h__
 #define __xpt_xdr_h__
 
-#include "prosdep.h"
-#include "plhash.h"
+#include <nspr.h>
+#include <plhash.h>
+#include "xpt_struct.h"
 
 typedef struct XPTState         XPTState;
 typedef struct XPTDatapool      XPTDatapool;
@@ -35,24 +36,6 @@ XPT_DoString(XPTCursor *cursor, XPTString **strp);
 
 PRBool
 XPT_DoIdentifier(XPTCursor *cursor, char **identp);
-
-/*
- * We can't include nsID.h, because it's full of C++ goop and we're not doing
- * C++ here, so we define our own minimal struct.  We protect against multiple
- * definitions of this struct, though, and use the same field naming.
- */
-
-#ifndef nsID_h__
-struct nsID {
-    PRUint32 m0;
-    PRUint16 m1;
-    PRUint16 m2;
-    PRUint8  m3[8];
-};
-
-typedef struct nsID nsID;
-
-#endif
 
 PRBool
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
@@ -77,7 +60,7 @@ XPT_Do8(XPTCursor *cursor, uint8 *u8p);
  */
 
 PRBool
-XPT_DoBits(XPTCursor *cursor, uint8 *u8p, uintN nbits);
+XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits);
 
 /* returns the number of bits skipped, which should be 0-7 */
 int
@@ -95,15 +78,15 @@ typedef enum {
 
 struct XPTState {
     XPTMode          mode;
-    XPTDatapool      pools[2];
+    XPTDatapool      *pools[2];
 };
 
 struct XPTDatapool {
-    PLHash      *offset_map;
-    char        *data;
-    uint32      count;
-    uint8       bit;
-    uint32      allocated;
+    PLHashTable      *offset_map;
+    char             *data;
+    uint32           count;
+    uint8            bit;
+    uint32           allocated;
 };
 
 struct XPTCursor {
@@ -111,7 +94,7 @@ struct XPTCursor {
     XPTPool     pool;
     uint32      offset;
     uint32      len;
-}
+};
 
 XPTState *
 XPT_NewXDRState(XPTMode mode);
@@ -144,7 +127,7 @@ XPT_CreateCursor(XPTCursor *base, XPTPool pool, uint32 len, XPTCursor *cursor);
 /* increase the data allocation for the pool by XPT_GROW_CHUNK */
 #define XPT_GROW_CHUNK 8192
 PRBool
-XPT_GrowPool(XPTXDRDatapool *pool);
+XPT_GrowPool(XPTDatapool *pool);
 
 /* all data structures are big-endian */
 
