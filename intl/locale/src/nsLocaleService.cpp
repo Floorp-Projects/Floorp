@@ -99,7 +99,7 @@ const char* LocaleList[LocaleListLength] =
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
 #define NSILOCALE_MAX_ACCEPT_LENGTH		18
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 static int posix_locale_category[LocaleListLength] =
 {
   LC_COLLATE,
@@ -112,18 +112,6 @@ static int posix_locale_category[LocaleListLength] =
 #else
   LC_CTYPE
 #endif
-};
-#endif
-
-#if defined(XP_OS2) 
-static int os2_locale_category[LocaleListLength] =
-{
-  LC_TIME,
-  LC_COLLATE,
-  LC_CTYPE,
-  LC_MONETARY,
-  LC_MESSAGES,
-  LC_NUMERIC
 };
 #endif
 
@@ -209,9 +197,7 @@ nsLocaleService::nsLocaleService(void)
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-        PRUnichar* loc = xpLocale.ToNewUnicode();
-		result = NewLocale(loc, &mSystemLocale);
-        nsCRT::free(loc);
+		result = NewLocale(xpLocale.GetUnicode(), &mSystemLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 
 		//
@@ -221,9 +207,7 @@ nsLocaleService::nsLocaleService(void)
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-        loc = xpLocale.ToNewUnicode();
-		result = NewLocale(loc, &mApplicationLocale);
-        nsCRT::free(loc);
+		result = NewLocale(xpLocale.GetUnicode(), &mApplicationLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 	
 		win32Converter->Release();
@@ -275,59 +259,58 @@ nsLocaleService::nsLocaleService(void)
        
 #endif // XP_UNIX || XP_BEOS
 #if defined(XP_OS2)
-    nsIOS2Locale* os2Converter;
-    nsString xpLocale;
+    nsCOMPtr<nsIOS2Locale> os2Converter;
+    nsAutoString xpLocale;
     nsresult result = nsComponentManager::CreateInstance(kOS2LocaleFactoryCID,
-                           NULL,kIOS2LocaleIID,(void**)&os2Converter);
+                           NULL,kIOS2LocaleIID,(void**)getter_AddRefs(os2Converter));
     if (NS_SUCCEEDED(result) && os2Converter!=nsnull) {
-        char* lc_all = nsnull;
-        char* lang = nsnull;
+        nsAutoString category;
+        nsLocale* resultLocale;
+        int i;
 
-        if (lc_all!=nsnull) {
-            result = os2Converter->GetXPLocale(lc_all,&xpLocale);
-            if (NS_FAILED(result)) { os2Converter->Release(); return; }
-            PRUnichar* loc = xpLocale.ToNewUnicode();
-            result = NewLocale(loc, &mSystemLocale);
-            nsCRT::free(loc);
-            if (NS_FAILED(result)) { os2Converter->Release(); return; }
-            mApplicationLocale=mSystemLocale;
-            mApplicationLocale->AddRef();
-            os2Converter->Release();
-        } else {
-            if (lang==nsnull) {
-                xpLocale.AssignWithConversion("en-US");
-                PRUnichar* loc = xpLocale.ToNewUnicode();
-                result = NewLocale(loc, &mSystemLocale);
-                nsCRT::free(loc);
-                if (NS_FAILED(result)) { os2Converter->Release(); return; }
-                mApplicationLocale = mSystemLocale;
-                mApplicationLocale->AddRef();
-                os2Converter->Release();
-            } else {
-                int i;
-                nsString category;
-                nsLocale* resultLocale = new nsLocale();
-				        if (resultLocale==NULL) { os2Converter->Release(); return; }
-                for(i=0;i<LocaleListLength;i++) {
-                // setlocale requires the C runtime
-                // later down the path the system will be queried for the correct locale
-                    char* lc_temp = nsnull; // setlocale(os2_locale_category[i],"");
-                    category.AssignWithConversion(LocaleList[i]);
-                    if (lc_temp==nsnull) xpLocale.AssignWithConversion("en-US");
-                    else xpLocale.AssignWithConversion(lc_temp);
-                    PRUnichar* loc = xpLocale.ToNewUnicode();
-                    PRUnichar* cat = category.ToNewUnicode();
-                    resultLocale->AddCategory(cat, loc);
-                    nsCRT::free(cat);
-                    nsCRT::free(loc);                    
-                }
-                (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
-                (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
-                os2Converter->Release();
-            }
+        resultLocale = new nsLocale();
+        if ( resultLocale == NULL ) { 
+            return; 
         }
-    }
-#endif // XP_OS2
+
+        LocaleObject locale_object = NULL;
+        UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
+                              (UniChar *)L"", &locale_object);
+
+        char* lc_temp;
+        for( i = 0; i < LocaleListLength; i++ ) {
+            lc_temp = nsnull;
+            UniQueryLocaleObject(locale_object,
+                                 posix_locale_category[i],
+                                 UNI_MBS_STRING_POINTER,
+                                 (void **)&lc_temp);
+            category.AssignWithConversion(LocaleList[i]);
+            if (lc_temp != nsnull)
+                result = os2Converter->GetXPLocale(lc_temp,&xpLocale);
+            else {
+                char* lang = getenv("LANG");
+                if ( lang == nsnull ) {
+                    nsCAutoString langcstr("en-US");
+	            lang = nsCRT::strdup( langcstr.GetBuffer() );
+                    result = os2Converter->GetXPLocale(lang,&xpLocale);
+                    nsCRT::free(lang); 
+	        }
+                else
+                    result = os2Converter->GetXPLocale(lang,&xpLocale); 
+            }
+            if (NS_FAILED(result)) {
+                nsCRT::free(lc_temp);
+                return;
+            }
+            resultLocale->AddCategory(category.GetUnicode(),xpLocale.GetUnicode());
+            UniFreeMem(lc_temp);
+        }
+        UniFreeLocaleObject(locale_object);
+        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
+        (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
+    }  // if ( NS_SUCCEEDED )...
+
+#endif
 
 #ifdef XP_MAC
 	long script = GetScriptManagerVariable(smSysScript);
