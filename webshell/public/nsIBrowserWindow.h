@@ -75,6 +75,8 @@ public:
 
   NS_IMETHOD IsIntrinsicallySized(PRBool& aResult) = 0;
 
+  NS_IMETHOD ShowAfterCreation() = 0;
+
   NS_IMETHOD Show() = 0;
 
   NS_IMETHOD Hide() = 0;

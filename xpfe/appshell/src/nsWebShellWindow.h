@@ -233,6 +233,7 @@ public:
   NS_IMETHOD GetContentBounds(nsRect& aResult);
   NS_IMETHOD GetWindowBounds(nsRect& aResult);
   NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
+  NS_IMETHOD ShowAfterCreation() { mCreatedVisible = PR_TRUE; return NS_OK; }
   NS_IMETHOD Show() { Show(PR_TRUE); return NS_OK; }
   NS_IMETHOD Hide() { Show(PR_FALSE); return NS_OK; }
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
