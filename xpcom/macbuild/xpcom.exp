@@ -143,3 +143,10 @@ __dt__12nsCStringKeyFv
 Clone__12nsCStringKeyCFv
 Equals__12nsCStringKeyCFPC9nsHashKey
 HashValue__12nsCStringKeyCFv
+
+# nsAllocator
+Clone__11nsAllocatorFPCvUi
+HeapMinimize__11nsAllocatorFv
+Free__11nsAllocatorFPv
+Realloc__11nsAllocatorFPvUi
+Alloc__11nsAllocatorFUi
