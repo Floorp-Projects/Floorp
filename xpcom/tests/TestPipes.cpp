@@ -274,6 +274,11 @@ public:
         return NS_OK;
     }
 
+    NS_IMETHOD OnClose(nsIPipe *pipe) {
+        printf("OnClose pipe=%p\n", pipe);
+        return NS_OK;
+    }
+
     nsPipeObserver() { NS_INIT_REFCNT(); }
     virtual ~nsPipeObserver() {}
 };
@@ -348,6 +353,13 @@ public:
 
     NS_IMETHOD OnEmpty(nsIPipe *pipe) {
         printf("OnEmpty pipe=%p\n", pipe);
+        nsAutoCMonitor mon(this);
+        mon.Notify();
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnClose(nsIPipe *pipe) {
+        printf("OnClose pipe=%p\n", pipe);
         nsAutoCMonitor mon(this);
         mon.Notify();
         return NS_OK;

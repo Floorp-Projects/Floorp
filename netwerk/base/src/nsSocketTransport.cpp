@@ -1415,6 +1415,11 @@ nsSocketTransport::OnEmpty(nsIPipe* aPipe)
   return rv;
 }
 
+NS_IMETHODIMP 
+nsSocketTransport::OnClose(nsIPipe* aPipe) 
+{ 
+  return NS_OK;
+}
 
 //
 // --------------------------------------------------------------------------

@@ -31,6 +31,7 @@
 #include "nsIPageManager.h"
 #endif
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +108,6 @@ public:
         rv = mBuffer.Init(segmentSize, maxSize, segmentAllocator);
         if (NS_FAILED(rv)) return rv;
         mObserver = observer;
-        NS_IF_ADDREF(mObserver);
         return NS_OK;
     }
 
@@ -130,9 +130,7 @@ public:
     }
 
     NS_IMETHOD SetObserver(nsIPipeObserver* obs) {
-        NS_IF_RELEASE(mObserver);
         mObserver = obs;
-        NS_IF_ADDREF(mObserver);
         return NS_OK;
     }
 
@@ -154,7 +152,7 @@ protected:
     nsPipeOutputStream  mOutput;
 
     nsSegmentedBuffer   mBuffer;
-    nsIPipeObserver*    mObserver;
+    nsCOMPtr<nsIPipeObserver> mObserver;
 
     char*               mReadCursor;
     char*               mReadLimit;
@@ -175,8 +173,7 @@ protected:
 // nsPipe methods:
 
 nsPipe::nsPipe()
-    : mObserver(nsnull),
-      mReadCursor(nsnull),
+    : mReadCursor(nsnull),
       mReadLimit(nsnull),
       mWriteCursor(nsnull),
       mWriteLimit(nsnull),
@@ -187,7 +184,6 @@ nsPipe::nsPipe()
 
 nsPipe::~nsPipe()
 {
-    NS_IF_RELEASE(mObserver);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsPipe);
@@ -320,6 +316,15 @@ nsPipe::nsPipeInputStream::Close(void)
     pipe->mBuffer.Empty();
     pipe->mWriteCursor = nsnull;
     pipe->mWriteLimit = nsnull;
+    if (pipe->mObserver) {
+        nsCOMPtr<nsIPipeObserver> obs = pipe->mObserver;
+        mon.Exit();     // XXXbe avoid deadlock better
+        nsresult rv = obs->OnClose(pipe);
+        mon.Enter();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "OnClose failed");
+        // don't return error from OnClose -- its not our problem
+        pipe->mObserver = nsnull;       // so we don't call OnClose again
+    }
     return NS_OK;
 }
 
@@ -418,8 +423,18 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
         mon.Notify();   // wake up writer
     }
 
-    if (rv == NS_BASE_STREAM_CLOSED)    // EOF
+    if (rv == NS_BASE_STREAM_CLOSED) {    // EOF
+        if (pipe->mObserver) {
+            nsCOMPtr<nsIPipeObserver> obs = pipe->mObserver;
+            mon.Exit();     // XXXbe avoid deadlock better
+            nsresult rv = obs->OnClose(pipe);
+            mon.Enter();
+            NS_ASSERTION(NS_SUCCEEDED(rv), "OnClose failed");
+            // don't return error from OnClose -- its not our problem
+            pipe->mObserver = nsnull;       // so we don't call OnClose again
+        }
         rv = NS_OK;
+    }
     NS_ASSERTION(*readCount <= count, "read more than expected");
     return *readCount == 0 ? rv : NS_OK;
 }
