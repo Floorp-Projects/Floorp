@@ -51,13 +51,21 @@ mk_add_options() {
 
 # find-mozconfig.sh 
 #   In params:   $MOZCONFIG $HOME ($MOZ_MYCONFIG)
-MOZCONFIG=`\`dirname $0\`/find-mozconfig.sh`
+scriptdir=`dirname $0`
+find_mozconfig="$scriptdir/find-mozconfig.sh"
+if [ ! -f $find_mozconfig ]
+then
+  (cd $scriptdir/../../..; cvs co mozilla/build/autoconf/find-mozconfig.sh)
+fi
+
+MOZCONFIG=`$find_mozconfig`
 
 if [ "$MOZCONFIG" ]
 then
   query_string="?"
   . $MOZCONFIG
-  echo `expr "$query_string" : "\(.*\)."`
 
+  # Drop the last character of $query_string
+  echo `expr "$query_string" : "\(.*\)."`
 fi
 

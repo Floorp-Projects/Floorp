@@ -63,7 +63,15 @@ trap "rm -f $tmp_file; exit 1" 1 2 15
 
 # find-mozconfig.sh 
 #   In params:   $MOZCONFIG $HOME ($MOZ_MYCONFIG)
-MOZCONFIG=`\`dirname $0\`/find-mozconfig.sh`
+scriptdir=`dirname $0`
+find_mozconfig="$scriptdir/find-mozconfig.sh"
+if [ ! -f $find_mozconfig ]
+then
+  (cd $scriptdir/../../..; cvs co mozilla/build/autoconf/find-mozconfig.sh)
+fi
+
+MOZCONFIG=`$find_mozconfig`
+
 
 if [ "$MOZCONFIG" ]
 then
