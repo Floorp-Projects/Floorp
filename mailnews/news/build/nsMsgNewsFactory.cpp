@@ -136,7 +136,7 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports * /* aOuter */,
   
 	if (mClassID.Equals(kNntpUrlCID)) 
 	{		
-    nsNntpUrl *url = new nsNntpUrl(nsnull, nsnull);
+    nsNntpUrl *url = new nsNntpUrl();
     if (url)
       rv = url->QueryInterface(aIID, aResult);
     else
