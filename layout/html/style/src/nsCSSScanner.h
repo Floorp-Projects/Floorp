@@ -66,10 +66,13 @@ struct nsCSSToken {
 
   nsCSSToken();
 
-  PRBool isDimension() {
-    return (PRBool)
-      ((eCSSToken_Dimension == mType) ||
-       ((eCSSToken_Number == mType) && (mNumber == 0.0f)));
+  PRBool IsDimension() {
+    return PRBool((eCSSToken_Dimension == mType) ||
+                  ((eCSSToken_Number == mType) && (mNumber == 0.0f)));
+  }
+
+  PRBool IsSymbol(PRUnichar aSymbol) {
+    return PRBool((eCSSToken_Symbol == mType) && (mSymbol == aSymbol));
   }
 
   void AppendToString(nsString& aBuffer);
