@@ -684,7 +684,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     GetRows(&rows);
     PRUint32 rowCount;
     rows->GetLength(&rowCount);
-    if (rowCount>refIndex)
+    if (rowCount>PRUint32(refIndex))
       refIndex=rowCount-1;  // index >= the total number of rows means to append the row
     nsIDOMNode *refRow;
     rows->Item(refIndex, &refRow);
