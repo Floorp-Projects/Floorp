@@ -80,6 +80,8 @@
 	#include "CStringListToolTipPane.h"	
 	#include "CSaveProgress.h"	
 	#include "CPatternProgressBar.h"
+	#include "CScrollerWithArrows.h"
+	
 #ifdef MOZ_MAIL_NEWS
 	#include "CBiffButtonAttachment.h"
 	#include "CSingleLineEditField.h"
@@ -234,6 +236,9 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CMenuTable);
 	RegisterClass_(CPaneEnabler);
 	RegisterClass_(CSlaveEnabler);
+	RegisterClass_(CScrollerWithArrows);
+	RegisterClass_(CScrollArrowControl);
+	
 #ifdef MOZ_MAIL_NEWS
 	RegisterClass_(CSingleLineEditField);
 	RegisterClass_(CSelectFolderMenu);
