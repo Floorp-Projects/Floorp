@@ -46,8 +46,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
- 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
