@@ -38,15 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
-#include "nsHTMLContainerFrame.h"
 #include "nsIHTMLContent.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -74,7 +71,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsLayoutAtoms.h"
-#include "nsIChromeEventHandler.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
@@ -82,12 +78,8 @@
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsIWidget.h"
-#include "nsIWebProgress.h"
-#include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsWeakReference.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMEventListener.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
@@ -101,40 +93,17 @@
 #endif
 #include "nsIServiceManager.h"
 
-class nsHTMLFrame;
-
 static NS_DEFINE_CID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 /******************************************************************************
- * FrameLoadingInfo 
+ * nsSubDocumentFrame
  *****************************************************************************/
-class FrameLoadingInfo : public nsISupports
+class nsSubDocumentFrame : public nsLeafFrame,
+                           public nsIFrameFrame
 {
 public:
-  FrameLoadingInfo(const nsSize& aSize);
-
-  // nsISupports interface...
-  NS_DECL_ISUPPORTS
-
-protected:
-  virtual ~FrameLoadingInfo() {}
-
-public:
-  nsSize mFrameSize;
-};
-
-
-/******************************************************************************
- * nsHTMLFrameOuterFrame
- *****************************************************************************/
-#define nsHTMLFrameOuterFrameSuper nsHTMLContainerFrame
-
-class nsHTMLFrameOuterFrame : public nsHTMLFrameOuterFrameSuper,
-                              public nsIFrameFrame
-{
-public:
-  nsHTMLFrameOuterFrame();
+  nsSubDocumentFrame();
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -147,17 +116,13 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
-
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -184,115 +149,33 @@ public:
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
 
   NS_IMETHOD  VerifyTree() const;
-  PRBool IsInline();
 
 protected:
-  virtual ~nsHTMLFrameOuterFrame();
+  nsSize GetMargin();
+  PRBool IsInline() { return mIsInline; }
+  nsresult ReloadURL();
+  nsresult ShowDocShell();
+  nsresult CreateViewAndWidget();
+
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
-  PRBool mIsInline;
-  nsCOMPtr<nsIPresContext> mPresContext;
-};
-
-/******************************************************************************
- * nsHTMLFrameInnerFrame
- *****************************************************************************/
-class nsHTMLFrameInnerFrame : public nsLeafFrame,
-                              public nsSupportsWeakReference
-{
-public:
-  nsHTMLFrameInnerFrame();
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void) { return 2; }
-  NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
-#endif
-
-  virtual nsIAtom* GetType() const;
-
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-
-  /**
-    * @see nsIFrame::Paint
-    */
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
-
-  // Make sure we never think this frame is opaque because it has
-  // a background set; we won't be painting it in most cases
-  virtual PRBool CanPaintBackground() { return PR_FALSE; }
-
-  /**
-    * @see nsIFrame::Reflow
-    */
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
-                       const nsHTMLReflowState*  aReflowState,
-                       nsDidReflowStatus         aStatus);
-
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
-
-  void GetParentContent(nsIContent** aContent);
-  nsresult GetDocShell(nsIDocShell **aDocShell);
-
-  PRBool GetURL(nsIContent* aContent, nsString& aResult);
-  PRBool GetName(nsIContent* aContent, nsString& aResult);
-  nsFrameborder GetFrameBorder();
-  PRInt32 GetMarginWidth(nsIContent* aContent);
-  PRInt32 GetMarginHeight(nsIContent* aContent);
-
-friend class nsHTMLFrameOuterFrame;
-
-protected:
-  nsresult ShowDocShell(nsIPresContext* aPresContext);
-  nsresult CreateViewAndWidget(nsIPresContext* aPresContext,
-                               nsIWidget**     aWidget);
-
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
-
-  nsresult ReloadURL();
 
   nsCOMPtr<nsIFrameLoader> mFrameLoader;
   PRPackedBool mOwnsFrameLoader;
-
-  PRPackedBool mCreatingViewer;
+  PRPackedBool mIsInline;
+  nsIView* mInnerView;
 };
 
-
-/******************************************************************************
- * nsHTMLFrameOuterFrame
- *****************************************************************************/
-nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame()
-  : nsHTMLContainerFrame()
+nsSubDocumentFrame::nsSubDocumentFrame()
+  : nsLeafFrame(), mOwnsFrameLoader(PR_FALSE)
 {
   mIsInline = PR_FALSE;
 }
 
-nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
-{
-  //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
-}
-
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
+NS_IMETHODIMP nsSubDocumentFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
@@ -305,24 +188,10 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-NS_IMETHODIMP
-nsHTMLFrameOuterFrame::GetDocShell(nsIDocShell **aDocShell)
-{
-  *aDocShell = nsnull;
-
-  nsHTMLFrameInnerFrame* firstChild = NS_STATIC_CAST(nsHTMLFrameInnerFrame*,
-                                                     mFrames.FirstChild());
-  if (!firstChild) 
-    return NS_OK;
-
-  return firstChild->GetDocShell(aDocShell);
-}
-
-
 //--------------------------------------------------------------
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
@@ -335,36 +204,35 @@ nsHTMLFrameOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  return nsHTMLFrameOuterFrameSuper::QueryInterface(aIID, aInstancePtr);
+  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
-                            nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsStyleContext*  aContext,
-                            nsIFrame*        aPrevInFlow)
+nsSubDocumentFrame::Init(nsIPresContext* aPresContext,
+                         nsIContent*     aContent,
+                         nsIFrame*       aParent,
+                         nsStyleContext* aContext,
+                         nsIFrame*       aPrevInFlow)
 {
-  mPresContext = aPresContext;
   // determine if we are a <frame> or <iframe>
   if (aContent) {
     nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
     mIsInline = frameElem ? PR_FALSE : PR_TRUE;
   }
 
-  nsresult rv =  nsHTMLFrameOuterFrameSuper::Init(aPresContext, aContent, aParent,
-                                                  aContext, aPrevInFlow);
+  nsresult rv =  nsLeafFrame::Init(aPresContext, aContent, aParent,
+                                   aContext, aPrevInFlow);
   if (NS_FAILED(rv))
     return rv;
 
-  // nsHTMLFrameInnerFrame is going to create a view for its frame
-  // right away, in the call to Init().  If we need a view for the
+  // We are going to create an inner view.  If we need a view for the
   // OuterFrame but we wait for the normal view creation path in
-  // nsCSSFrameConstructor, then we will lose because the InnerFrame's
-  // view's parent will already have been set to some outer view
-  // (e.g., the canvas) when it really needs to have the OuterFrame's
-  // view as its parent. So, create the OuterFrame's view right away
-  // if we need it, and the InnerFrame's view will get it as the parent.
+  // nsCSSFrameConstructor, then we will lose because the inner view's
+  // parent will already have been set to some outer view (e.g., the
+  // canvas) when it really needs to have this frame's view as its
+  // parent. So, create this frame's view right away, whether we
+  // really need it or not, and the inner view will get it as the
+  // parent.
   if (!HasView()) {
     // To properly initialize the view we need to know the frame for the content
     // that is the parent of content for this frame. This might not be our actual
@@ -374,8 +242,8 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     // will have been set by nsCSSFrameConstructor if necessary.
     nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
     nsIFrame* contentParent = nsnull;
-    nsIPresShell *presShell = aPresContext->GetPresShell();
 
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIFrameManager> frameManager;
       presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -395,43 +263,53 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     nsHTMLContainerFrame::CreateViewForFrame(this, contentParent, PR_TRUE);
   }
   nsIView* view = GetView();
+  NS_ASSERTION(view, "We should always have a view now");
 
   if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK
       && !view->HasWidget()) {
     view->CreateWidget(kCChildCID);
   }
 
-  nsIFrame* firstChild = new (aPresContext->PresShell()) nsHTMLFrameInnerFrame;
-  if (firstChild) {
-    mFrames.SetFrames(firstChild);
-    // Resolve the style context for the inner frame
-    nsresult rv = NS_OK;
-    nsRefPtr<nsStyleContext> innerStyleContext;
-    innerStyleContext = aPresContext->ResolveStyleContextFor(mContent,
-                                                             mStyleContext);
-    rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
-    if (NS_FAILED(rv)){
-      NS_WARNING( "Error initializing InnerFrame in nsHTMLFrameOuterFrame");
-      return rv;
-    }
-  } else {
-    NS_WARNING("no memory allocating inner frame in nsHTMLFrameOuterFrame");
-    return NS_ERROR_OUT_OF_MEMORY;
+  // determine if we are a printcontext
+  PRBool shouldCreateDoc = PR_TRUE;
+  nsCOMPtr<nsIPrintContext> thePrinterContext(do_QueryInterface(aPresContext));
+
+  if (thePrinterContext) {
+    // we are printing
+    shouldCreateDoc = PR_FALSE;
+  }
+
+  // for print preview we want to create the view and widget but
+  // we do not want to load the document, it is alerady loaded.
+  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext =
+    do_QueryInterface(aPresContext);
+
+  if (thePrintPreviewContext) {
+    rv = CreateViewAndWidget();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // we are in PrintPreview
+    shouldCreateDoc = PR_FALSE;
+  }
+
+  if (shouldCreateDoc) {
+    rv = ShowDocShell();
+    NS_ENSURE_SUCCESS(rv,rv);
   }
 
   return NS_OK;
 }
 
 PRIntn
-nsHTMLFrameOuterFrame::GetSkipSides() const
+nsSubDocumentFrame::GetSkipSides() const
 {
   return 0;
 }
 
 void
-nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                      const nsHTMLReflowState& aReflowState,
-                                      nsHTMLReflowMetrics& aDesiredSize)
+nsSubDocumentFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsHTMLReflowMetrics& aDesiredSize)
 {
   // <frame> processing does not use this routine, only <iframe>
   float p2t;
@@ -457,71 +335,41 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
-
-  // For unknown reasons, the max-element-width for the InnerFrame is
-  // used, but the max-element-width for the OuterFrame is ignored, the
-  // following is not used!
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-  }
-}
-
-PRBool nsHTMLFrameOuterFrame::IsInline()
-{
-  return mIsInline;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Paint(nsIPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags)
-{
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-
-  //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                     aDirtyRect, aWhichLayer);
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsAString& aResult) const
+NS_IMETHODIMP nsSubDocumentFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("FrameOuter"), aResult);
 }
 #endif
 
 nsIAtom*
-nsHTMLFrameOuterFrame::GetType() const
+nsSubDocumentFrame::GetType() const
 {
-  return nsLayoutAtoms::htmlFrameOuterFrame;
+  return nsLayoutAtoms::subDocumentFrame;
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
-                              nsReflowStatus&          aStatus)
+nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsHTMLFrameOuterFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsSubDocumentFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight);
+  // printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsHTMLFrameOuterFrame::Reflow: maxSize=%d,%d reason=%d",
+     ("enter nsSubDocumentFrame::Reflow: maxSize=%d,%d reason=%d",
       aReflowState.availableWidth, aReflowState.availableHeight, aReflowState.reason));
+
+  aStatus = NS_FRAME_COMPLETE;
 
   if (IsInline()) {
     GetDesiredSize(aPresContext, aReflowState, aDesiredSize); // IFRAME
   } else {
     aDesiredSize.width  = aReflowState.availableWidth; // FRAME
     aDesiredSize.height = aReflowState.availableHeight;
-    if (aDesiredSize.mComputeMEW) { // Probably not used...
-      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-    }
   }
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
@@ -539,32 +387,16 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.width += border.left + border.right;
     aDesiredSize.height += border.top + border.bottom;
   }
-
-  // Reflow the child and get its desired size. We'll need to convert
-  // an incremental reflow to a dirty reflow unless our child is along
-  // the path.
-  nsIFrame* firstChild = mFrames.FirstChild();
-  nsHTMLReflowMetrics kidMetrics(aDesiredSize.mComputeMEW);
-  nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, firstChild,
-                                     innerSize);
-  ReflowChild(firstChild, aPresContext, kidMetrics, kidReflowState,
-              offset.x, offset.y, 0, aStatus);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-
-  // For unknown reasons, the maxElementSize for the InnerFrame is used, but the
-  // maxElementSize for the OuterFrame is ignored, add in border here to prevent
-  // a table from shrinking inside the iframe's border when resized.
-  if (IsInline()) {
-    if (kidMetrics.mComputeMEW) {
-      kidMetrics.mMaxElementWidth += border.left + border.right;
-    }
+  
+  // might not have an inner view yet during printing
+  if (mInnerView) {
+    nsIViewManager* vm = mInnerView->GetViewManager();
+    vm->MoveViewTo(mInnerView, offset.x, offset.y);
+    vm->ResizeView(mInnerView, nsRect(0, 0, innerSize.width, innerSize.height), PR_TRUE);
   }
 
-  // Place and size the child
-  FinishReflowChild(firstChild, aPresContext, nsnull,
-                    kidMetrics, offset.x, offset.y, 0);
   if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = kidMetrics.mMaxElementWidth;
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 
   // Determine if we need to repaint our border, background or outline
@@ -579,8 +411,34 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  if (!isPaginated) {
+    nsCOMPtr<nsIDocShell> docShell;
+    GetDocShell(getter_AddRefs(docShell));
+
+    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
+
+    // resize the sub document
+    if (baseWindow) {
+      float t2p;
+      aPresContext->GetTwipsToPixels(&t2p);
+      PRInt32 x = 0;
+      PRInt32 y = 0;
+      
+      baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
+      PRInt32 cx = NSToCoordRound(innerSize.width * t2p);
+      PRInt32 cy = NSToCoordRound(innerSize.height * t2p);
+      baseWindow->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
+    }
+  }
+
+  // printf("OuterFrame::Reflow DONE %X (%d,%d), MEW=%d(%d)\n", this,
+  //        aDesiredSize.width, aDesiredSize.height, aDesiredSize.mMaxElementWidth,
+  //        aDesiredSize.mComputeMEW);
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
+     ("exit nsSubDocumentFrame::Reflow: size=%d,%d status=%x",
       aDesiredSize.width, aDesiredSize.height, aStatus));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -588,7 +446,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::VerifyTree() const
+nsSubDocumentFrame::VerifyTree() const
 {
   // XXX Completely disabled for now; once pseud-frames are reworked
   // then we can turn it back on.
@@ -596,22 +454,17 @@ nsHTMLFrameOuterFrame::VerifyTree() const
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                        nsIContent* aChild,
-                                        PRInt32 aNameSpaceID,
-                                        nsIAtom* aAttribute,
-                                        PRInt32 aModType)
+nsSubDocumentFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent* aChild,
+                                     PRInt32 aNameSpaceID,
+                                     nsIAtom* aAttribute,
+                                     PRInt32 aModType)
 {
   nsIAtom *type = aChild->Tag();
 
   if ((type != nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::src) ||
       (type == nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::data)) {
-    nsHTMLFrameInnerFrame* firstChild =
-      NS_STATIC_CAST(nsHTMLFrameInnerFrame*, mFrames.FirstChild());
-
-    if (firstChild && firstChild->mOwnsFrameLoader) {
-      firstChild->ReloadURL();
-    }
+    ReloadURL();
   }
   // If the noResize attribute changes, dis/allow frame to be resized
   else if (aAttribute == nsHTMLAtoms::noresize) {
@@ -632,9 +485,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
   else if (aAttribute == nsHTMLAtoms::type) {
-    nsHTMLFrameInnerFrame* firstChild = NS_STATIC_CAST(nsHTMLFrameInnerFrame*,
-                                                       mFrames.FirstChild());
-    if (!firstChild || !firstChild->mFrameLoader) 
+    if (!mFrameLoader) 
       return NS_OK;
 
     nsAutoString value;
@@ -644,7 +495,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
     // has changed.
 
     nsCOMPtr<nsIDocShell> docShell;
-    firstChild->mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+    mFrameLoader->GetDocShell(getter_AddRefs(docShell));
 
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
 
@@ -679,13 +530,13 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 nsresult
-NS_NewHTMLFrameOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLFrameOuterFrame* it = new (aPresShell) nsHTMLFrameOuterFrame;
+  nsSubDocumentFrame* it = new (aPresShell) nsSubDocumentFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -693,18 +544,9 @@ NS_NewHTMLFrameOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-/******************************************************************************
- * nsHTMLFrameInnerFrame
- *****************************************************************************/
-nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
-  : nsLeafFrame(), mOwnsFrameLoader(PR_FALSE), mCreatingViewer(PR_FALSE)
-{
-}
-
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Destroy(nsIPresContext* aPresContext)
+nsSubDocumentFrame::Destroy(nsIPresContext* aPresContext)
 {
-  
   if (mFrameLoader) {
     // Get the content viewer through the docshell, but don't call
     // GetDocShell() since we don't want to create one if we don't
@@ -740,177 +582,32 @@ nsHTMLFrameInnerFrame::Destroy(nsIPresContext* aPresContext)
   return nsLeafFrame::Destroy(aPresContext);
 }
 
-PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
+nsSize nsSubDocumentFrame::GetMargin()
 {
-  aResult.SetLength(0);
-
-  if (aContent->Tag() == nsHTMLAtoms::object) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aResult)))
-      if (!aResult.IsEmpty())
-        return PR_TRUE;
-  }else
-    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult)))
-      if (!aResult.IsEmpty())
-        return PR_TRUE;
-
-  return PR_FALSE;
-}
-
-PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
-{
-  aResult.SetLength(0);
-
-  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aResult))) {
-    if (!aResult.IsEmpty()) {
-      return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
-
-nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder()
-{
-  nsFrameborder rv = eFrameborder_Notset;
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &res);
-  if (NS_SUCCEEDED(res) && content) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
-      if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        switch (value.GetIntValue())
-        {
-          case NS_STYLE_FRAME_1:
-          case NS_STYLE_FRAME_YES:
-            rv = eFrameborder_Yes;
-            break;
-          
-          case NS_STYLE_FRAME_0:
-          case NS_STYLE_FRAME_NO:
-            rv = eFrameborder_No;
-            break;
-        }
-      }
-    }
-  }
-  // XXX if we get here, check for nsIDOMFRAMESETElement interface
-  return rv;
-}
-
-
-PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIContent* aContent)
-{
-  PRInt32 marginWidth = -1;
+  nsSize result(-1, -1);
   nsresult rv = NS_OK;
   nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
   if (NS_SUCCEEDED(rv) && content) {
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Pixel == value.GetUnit())
-      return value.GetPixelValue();
-  }
-  return marginWidth;
-}
-
-PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIContent* aContent)
-{
-  PRInt32 marginHeight = -1;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
-  if (NS_SUCCEEDED(rv) && content) {
-    nsHTMLValue value;
+      result.width = value.GetPixelValue();
     content->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
     if (eHTMLUnit_Pixel == value.GetUnit())
-      return value.GetPixelValue();
+      result.height = value.GetPixelValue();
   }
-  return marginHeight;
+  return result;
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-
-  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-    nsISupports *tmp = NS_STATIC_CAST(nsISupportsWeakReference *, this);
-    *aInstancePtr = tmp;
-    return NS_OK;
-  }
-
-  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
-}
-
-#ifdef DEBUG
-NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsAString& aResult) const
-{
-  return MakeFrameName(NS_LITERAL_STRING("FrameInner"), aResult);
-}
-#endif
-
-nsIAtom*
-nsHTMLFrameInnerFrame::GetType() const
-{
-  return nsLayoutAtoms::htmlFrameInnerFrame;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags)
-{
-  //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x,
-  //aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  // if there is not web shell paint based on our background color, otherwise
-  // let the web shell paint the sub document
-
-  // isPaginated is a temporary fix for Bug 75737 and this should all
-  // be fixed correctly by Bug 75739
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
-
-  if (!isPaginated) {
-    nsCOMPtr<nsIDocShell> docShell;
-    GetDocShell(getter_AddRefs(docShell));
-
-    if (!docShell) {
-      const nsStyleBackground* color = GetStyleBackground();
-
-      aRenderingContext.SetColor(color->mBackgroundColor);
-      aRenderingContext.FillRect(mRect);
-    }
-  }
-
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsHTMLFrameInnerFrame", &aRenderingContext);
-
-  return NS_OK;
-}
-
-void
-nsHTMLFrameInnerFrame::GetParentContent(nsIContent** aContent)
-{
-  *aContent = nsnull;
-
-  nsIFrame* parent = GetParent();
-  if (parent) {
-    *aContent = parent->GetContent();
-    NS_IF_ADDREF(*aContent);
-  }
-}
-
-nsresult
-nsHTMLFrameInnerFrame::GetDocShell(nsIDocShell **aDocShell)
+nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;
 
-  nsCOMPtr<nsIContent> content;
-  GetParentContent(getter_AddRefs(content));
-
+  nsIContent* content = GetContent();
   if (!content) {
-    // Hmm, no content in this frame (or in the parent, really),
+    // Hmm, no content in this frame
     // that's odd, not much to be done here then.
-
     return NS_OK;
   }
 
@@ -944,37 +641,8 @@ nsHTMLFrameInnerFrame::GetDocShell(nsIDocShell **aDocShell)
   return mFrameLoader->GetDocShell(aDocShell);
 }
 
-NS_IMETHODIMP
-nsHTMLFrameInnerFrame::DidReflow(nsIPresContext*           aPresContext,
-                                 const nsHTMLReflowState*  aReflowState,
-                                 nsDidReflowStatus         aStatus)
-{
-  nsresult rv = nsLeafFrame::DidReflow(aPresContext, nsnull, aStatus);
-
-
-  // The view is created hidden; once we have reflowed it and it has been
-  // positioned then we show it.
-  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIView* view = GetView();
-    if (view) {
-      nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
-                                  ? nsViewVisibility_kShow
-                                  : nsViewVisibility_kHide;
-      // only change if different.
-      if (newVis != view->GetVisibility()) {
-        nsIViewManager* vm = view->GetViewManager();
-        if (vm) {
-          vm->SetViewVisibility(view, newVis);
-        }
-      }
-    }
-  }
-
-  return rv;
-}
-
 nsresult
-nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
+nsSubDocumentFrame::ShowDocShell()
 {
   nsCOMPtr<nsIDocShell> docShell;
   nsresult rv = GetDocShell(getter_AddRefs(docShell));
@@ -989,13 +657,11 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> content;
-  GetParentContent(getter_AddRefs(content));
-
   // pass along marginwidth, marginheight, scrolling so sub document
   // can use it
-  docShell->SetMarginWidth(GetMarginWidth(content));
-  docShell->SetMarginHeight(GetMarginHeight(content));
+  nsSize margin = GetMargin();
+  docShell->SetMarginWidth(margin.width);
+  docShell->SetMarginHeight(margin.height);
 
   // Current and initial scrolling is set so that all succeeding docs
   // will use the scrolling value set here, regardless if scrolling is
@@ -1032,9 +698,7 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
                                        scrollY);
   }
 
-  nsCOMPtr<nsIWidget> widget;
-
-  rv = CreateViewAndWidget(aPresContext, getter_AddRefs(widget));
+  rv = CreateViewAndWidget();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1042,7 +706,7 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
   nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
 
   if (baseWindow) {
-    baseWindow->InitWindow(nsnull, widget, 0, 0, 10, 10);
+    baseWindow->InitWindow(nsnull, mInnerView->GetWidget(), 0, 0, 10, 10);
 
     // This is kinda whacky, this "Create()" call doesn't really
     // create anything, one starts to wonder why this was named
@@ -1057,212 +721,47 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
 }
 
 nsresult
-nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
-                                           nsIWidget**     aWidget)
+nsSubDocumentFrame::CreateViewAndWidget()
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aWidget);
-
-  float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
-
   // create, init, set the parent of the view
-  nsIView* view;
+  nsIView* innerView;
   nsresult rv = nsComponentManager::CreateInstance(kCViewCID, nsnull,
                                                    NS_GET_IID(nsIView),
-                                                   (void **)&view);
+                                                   (void **)&innerView);
   if (NS_FAILED(rv)) {
-    NS_ERROR("Could not create view for nsHTMLFrame");
-
+    NS_ERROR("Could not create inner view");
     return rv;
   }
+  mInnerView = innerView;
 
-  nsIView* parView;
-  nsPoint origin;
-  GetOffsetFromView(aPresContext, origin, &parView);
-  nsRect viewBounds(origin.x, origin.y, 10, 10);
+  nsIView* outerView = GetView();
+  NS_ASSERTION(outerView, "Must have an outer view already");
+  nsRect viewBounds(0, 0, 0, 0); // size will be fixed during reflow
 
-  nsIViewManager* viewMan = aPresContext->GetViewManager();
-  rv = view->Init(viewMan, viewBounds, parView);
-  // XXX put it at the end of the document order until we can do better
-  viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
+  nsIViewManager* viewMan = outerView->GetViewManager();
+  rv = innerView->Init(viewMan, viewBounds, outerView);
+  viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
   nsWidgetInitData initData;
   initData.clipChildren = PR_TRUE;
   initData.clipSiblings = PR_TRUE;
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mContent));
 
-  rv = view->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
-                          xulElement? eContentTypeUI: eContentTypeContent);
-  SetView(view);
-
-  nsContainerFrame::SyncFrameViewProperties(aPresContext, this, nsnull, view);
-
-  // XXX the following should be unnecessary, given the above Sync call
-  // if the visibility is hidden, reflect that in the view
-  if (!GetStyleVisibility()->IsVisible()) {
-    viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
-  }
-  *aWidget = view->GetWidget();
-  NS_IF_ADDREF(*aWidget);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
-                            nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsStyleContext*  aContext,
-                            nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,
-                                  aPrevInFlow);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // determine if we are a printcontext
-  PRBool shouldCreateDoc = PR_TRUE;
-  nsCOMPtr<nsIPrintContext> thePrinterContext(do_QueryInterface(aPresContext));
-
-  if (thePrinterContext) {
-    // we are printing
-    shouldCreateDoc = PR_FALSE;
-  }
-
-  // for print preview we want to create the view and widget but
-  // we do not want to load the document, it is alerady loaded.
-  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext =
-    do_QueryInterface(aPresContext);
-
-  if (thePrintPreviewContext) {
-    nsCOMPtr<nsIWidget> widget;
-    rv = CreateViewAndWidget(aPresContext, getter_AddRefs(widget));
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // we are in PrintPreview
-    shouldCreateDoc = PR_FALSE;
-  }
-
-  if (shouldCreateDoc) {
-    rv = ShowDocShell(aPresContext);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
-                              nsReflowStatus&          aStatus)
-{
-  DO_GLOBAL_REFLOW_COUNT("nsHTMLFrameInnerFrame", aReflowState.reason);
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsHTMLFrameInnerFrame::Reflow: maxSize=%d,%d reason=%d",
-      aReflowState.availableWidth,
-      aReflowState.availableHeight,
-      aReflowState.reason));
-
-  nsresult rv = NS_OK;
-
-  // use the max size set in aReflowState by the nsHTMLFrameOuterFrame
-  // as our size
-
-  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-
-  aStatus = NS_FRAME_COMPLETE;
-
-  // If doing Printing or Print Preview return here
-  // the printing/print preview mechanism will resize the subshell
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShell(getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
-
-  // resize the sub document
-  if (baseWindow) {
-    float t2p;
-    aPresContext->GetTwipsToPixels(&t2p);
-
-    PRInt32 x = 0;
-    PRInt32 y = 0;
-
-    baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
-    PRInt32 cx = NSToCoordRound(aDesiredSize.width * t2p);
-    PRInt32 cy = NSToCoordRound(aDesiredSize.height * t2p);
-    baseWindow->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
-
-    NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                   ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
-                    aDesiredSize.width, aDesiredSize.height, aStatus));
-  }
-
-  return rv;
+  return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
+                                 GetContent()->IsContentOfType(nsIContent::eXUL)
+                                   ? eContentTypeUI : eContentTypeContent);
 }
 
 // load a new url
 nsresult
-nsHTMLFrameInnerFrame::ReloadURL()
+nsSubDocumentFrame::ReloadURL()
 {
   if (!mOwnsFrameLoader || !mFrameLoader) {
     // If we don't own the frame loader, we're not in charge of what's
     // loaded into it.
-
     return NS_OK;
   }
 
   return mFrameLoader->LoadFrame();
 }
 
-
-void
-nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                      const nsHTMLReflowState& aReflowState,
-                                      nsHTMLReflowMetrics& aDesiredSize)
-{
-  aDesiredSize.width  = aReflowState.availableWidth;
-  aDesiredSize.height = aReflowState.availableHeight;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
-
-  // For unknown reasons, the maxElementWidth for the InnerFrame is
-  // used, but the maxElementWidth for the OuterFrame is ignored, make
-  // sure to get it right here!
-
-  if (aDesiredSize.mComputeMEW) {
-    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) ||
-        (eStyleUnit_Percent ==
-         aReflowState.mStylePosition->mWidth.GetUnit())) {
-      // percent width springy down to 0 px
-
-      aDesiredSize.mMaxElementWidth = 0;
-    }
-    else {
-      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-    }
-  }
-}
-
-/******************************************************************************
- * FrameLoadingInfo
- *****************************************************************************/
-FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
-{
-  mFrameSize = aSize;
-}
-
-/*
- * Implementation of ISupports methods...
- */
-NS_IMPL_ISUPPORTS0(FrameLoadingInfo)
 

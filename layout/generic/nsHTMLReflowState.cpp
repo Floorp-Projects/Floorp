@@ -1883,11 +1883,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
 
     } else if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
       // XXX not sure if this belongs here or somewhere else - cwk
-      // an nsHTMLFrameInnerFrame doesn't get a placeholder frame, the nsHTMLFrameOuterFrame does
-      if (nsLayoutAtoms::htmlFrameInnerFrame != frame->GetType()) {
-        InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
-                                aContainingBlockHeight);
-      }
+      InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
+                              aContainingBlockHeight);
     } else if (NS_CSS_FRAME_TYPE_INLINE == mFrameType) {
       // Inline non-replaced elements do not have computed widths or heights
       // XXX add this check to HaveFixedContentHeight/Width too

@@ -293,6 +293,8 @@ public:
 
   void ConvertToParentCoords(nscoord* aX, nscoord* aY) const { *aX += mPosX; *aY += mPosY; }
   void ConvertFromParentCoords(nscoord* aX, nscoord* aY) const { *aX -= mPosX; *aY -= mPosY; }
+  void ResetWidgetPosition(PRBool aRecurse);
+  void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
 
 protected:
   virtual ~nsView();

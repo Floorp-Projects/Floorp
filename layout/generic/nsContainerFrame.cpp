@@ -982,10 +982,13 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
     // Recursively walk aFrame's child frames
     nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
     while (childFrame) {
-      // Position the frame's view (if it has one) and recursively
+      // Position the frame's view (if it has one) otherwise recursively
       // process its children
-      PositionFrameView(aPresContext, childFrame);
-      PositionChildViews(aPresContext, childFrame);
+      if (childFrame->HasView()) {
+        PositionFrameView(aPresContext, childFrame);
+      } else {
+        PositionChildViews(aPresContext, childFrame);
+      }
 
       // Get the next sibling child frame
       childFrame = childFrame->GetNextSibling();

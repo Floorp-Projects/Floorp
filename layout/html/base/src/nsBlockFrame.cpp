@@ -2613,8 +2613,8 @@ PlaceFrameView(nsIPresContext* aPresContext,
 {
   if (aFrame->HasView())
     nsContainerFrame::PositionFrameView(aPresContext, aFrame);
-
-  nsContainerFrame::PositionChildViews(aPresContext, aFrame);
+  else
+    nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
 
 void

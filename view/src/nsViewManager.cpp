@@ -1262,7 +1262,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   OptimizeDisplayList(&displayList, aRegion, finalTransparentRect, opaqueRgn, PR_FALSE);
 
 #ifdef DEBUG_roc
-  ShowDisplayList(&displayList);
+  if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&displayList);
 #endif
 
   if (!finalTransparentRect.IsEmpty()) {
@@ -2212,7 +2212,7 @@ void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aVie
   BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, &displayList);
 
 #ifdef DEBUG_roc
-  // ShowDisplayList(aDisplayList);
+  // ShowDisplayList(&displayList);
 #endif
 
   // The display list is in order from back to front. We return the target list in order from
