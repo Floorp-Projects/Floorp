@@ -36,7 +36,7 @@ import org.mozilla.util.ParameterCheck;
 
  * There is one instance of the WebShellCanvas per top level awt Frame.
 
- * @version $Id: MotifBrowserControlCanvas.java,v 1.3 2001/05/25 23:09:44 ashuk%eng.sun.com Exp $
+ * @version $Id: MotifBrowserControlCanvas.java,v 1.4 2001/06/01 17:11:30 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -66,7 +66,8 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
     private int gtkTopWindow;
     private int canvasWinID;
     private int gtkWinPtr;
-    private MDrawingSurfaceInfo drawingSurfaceInfo;
+    // We dont need this, now that we use the JAWT Native Interface
+    //    private MDrawingSurfaceInfo drawingSurfaceInfo;
 
     static private native void loadMainDll();
     private native int createTopLevelWindow();
@@ -84,7 +85,8 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
         this.gtkWinID = 0;
         this.canvasWinID = 0;
         this.gtkWinPtr = 0;
-        this.drawingSurfaceInfo = null;
+        // We dont need this, now that we use the JAWT Native Interface
+        //        this.drawingSurfaceInfo = null;
 
     }
 
