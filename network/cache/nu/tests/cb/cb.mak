@@ -180,10 +180,10 @@ BSC32_SBRS= \
 
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386
-# ADD LINK32 ..\..\..\..\..\dist\win32_d.obj\lib\libnspr21.lib ..\..\..\..\..\dist\win32_d.obj\lib\libplc21.lib ..\..\..\..\..\dist\win32_d.obj\lib\dbm32.lib ..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib /nologo /subsystem:windows /debug /machine:I386
+# ADD LINK32 ..\..\..\..\..\dist\win32_d.obj\lib\nspr3.lib ..\..\..\..\..\dist\win32_d.obj\lib\plc3.lib ..\..\..\..\..\dist\win32_d.obj\lib\dbm32.lib ..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib /nologo /subsystem:windows /debug /machine:I386
 # SUBTRACT LINK32 /nodefaultlib
-LINK32_FLAGS=..\..\..\..\..\dist\win32_d.obj\lib\libnspr21.lib\
- ..\..\..\..\..\dist\win32_d.obj\lib\libplc21.lib\
+LINK32_FLAGS=..\..\..\..\..\dist\win32_d.obj\lib\nspr3.lib\
+ ..\..\..\..\..\dist\win32_d.obj\lib\plc3.lib\
  ..\..\..\..\..\dist\win32_d.obj\lib\dbm32.lib\
  ..\..\..\..\..\dist\win32_d.obj\lib\cachelib.lib /nologo /subsystem:windows\
  /incremental:yes /pdb:"$(OUTDIR)/cb.pdb" /debug /machine:I386\

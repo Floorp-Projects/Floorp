@@ -72,7 +72,7 @@ LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 #//------------------------------------------------------------------------
 
 LCFLAGS = $(LCFLAGS)
-LLIBS = $(LLIBS) $(LIBNSPR) $(DIST)\lib\libplc21.lib
+LLIBS = $(LLIBS) $(LIBNSPR) $(DIST)\lib\plc3.lib
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

@@ -332,8 +332,8 @@ LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
 LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
 
 NSPRDIR		= nsprpub
-LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) $(DIST)/lib/libnspr21.$(LIB_SUFFIX)
-PURELIBNSPR	= $(DIST)/lib/purelibplds21.$(LIB_SUFFIX) $(DIST)/lib/purelibnspr21.$(LIB_SUFFIX)
+LIBNSPR		= $(DIST)/lib/libplds3.$(LIB_SUFFIX) $(DIST)/lib/libnspr3.$(LIB_SUFFIX)
+PURELIBNSPR	= $(DIST)/lib/purelibplds3.$(LIB_SUFFIX) $(DIST)/lib/purelibnspr3.$(LIB_SUFFIX)
 
 ifdef DBMALLOC
 LIBNSPR		+= $(DIST)/lib/libdbmalloc.$(LIB_SUFFIX)

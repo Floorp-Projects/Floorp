@@ -63,7 +63,7 @@ LLIBS =				            \
     $(DIST)\lib\raptorbase.lib  \
     $(DIST)\lib\raptorgfxwin.lib\
     $(LIBNSPR)		            \
-    $(DIST)\lib\libplc21.lib    \
+    $(DIST)\lib\plc3.lib    \
 	$(DIST)\lib\nntp.lib		\
 	$(DIST)\lib\nntpTest.lib	\
 	$(DIST)\lib\msgCore.lib		\

@@ -62,9 +62,9 @@ ifdef JS_LIVECONNECT
 endif
 ifdef JS_THREADSAFE
   ifeq ($(OS_ARCH), HP-UX)
-    SHIP_LIBS += libnspr21.sl
+    SHIP_LIBS += libnspr3.sl
   else
-    SHIP_LIBS += libnspr21.so
+    SHIP_LIBS += libnspr3.so
   endif
 endif
 ifeq ($(OS_ARCH), WINNT)
@@ -73,7 +73,7 @@ ifeq ($(OS_ARCH), WINNT)
     SHIP_LIBS += jsj.dll
   endif
   ifdef JS_THREADSAFE
-    SHIP_LIBS += libnspr21.dll
+    SHIP_LIBS += nspr3.dll
   endif
 endif
 SHIP_LIBS     := $(addprefix $(SHIP_DIST)/lib/, $(SHIP_LIBS))

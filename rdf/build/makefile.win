@@ -43,7 +43,7 @@ LLIBS=\
  $(DIST)\lib\raptorbase.lib      \
  $(DIST)\lib\raptorgfxwin.lib    \
  $(DIST)\lib\netlib.lib          \
- $(DIST)\lib\libplc21.lib        \
+ $(DIST)\lib\plc3.lib        \
  $(DIST)\lib\raptorhtml.lib      \
  $(DIST)\lib\jsdom.lib           \
  $(DIST)\lib\js3250.lib          \

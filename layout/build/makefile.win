@@ -52,7 +52,7 @@ MISCDEP =				\
  $(DIST)\lib\raptorgfxwin.lib		\
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\jsdom.lib		        \
- $(DIST)\lib\libplc21.lib		\
+ $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\js3250.lib			\
  $(DIST)\lib\oji.lib                  \
  $(DIST)\lib\jsj3250.lib                \
@@ -85,7 +85,7 @@ LLIBS=					\
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\netlib.lib		        \
- $(DIST)\lib\libplc21.lib		\
+ $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_DEBUG) && defined(GLOWCODE) && "$(MOZ_BITS)"=="32"
  $(GLOWDIR)\glowcode.lib                \

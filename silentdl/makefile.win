@@ -53,7 +53,7 @@ LLIBS =				            \
     $(DIST)\lib\raptorbase.lib  \
 	$(DIST)\lib\raptorgfxwin.lib	\
 	$(LIBNSPR)		            \
-    $(DIST)\lib\libplc21.lib    \
+    $(DIST)\lib\plc3.lib    \
     $(NULL)
 
 OBJS = \

@@ -14,11 +14,11 @@ HEAPSIZE    8192
 EXPORTS
 
 IMPORTS
-    _malloc		= nspr21.2
-    _realloc	= nspr21.3
-    _calloc		= nspr21.4
-    _free		= nspr21.5
-    _getenv		= nspr21.9
-    _printf		= nspr21.11
-    _sscanf		= nspr21.33
+    _malloc		= nspr3.2
+    _realloc	= nspr3.3
+    _calloc		= nspr3.4
+    _free		= nspr3.5
+    _getenv		= nspr3.9
+    _printf		= nspr3.11
+    _sscanf		= nspr3.33
 

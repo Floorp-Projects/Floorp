@@ -29,7 +29,7 @@ DATA    PRELOAD MOVEABLE SINGLE
 HEAPSIZE    8192
 
 IMPORTS
-	_sscanf = nspr21.33
+	_sscanf = nspr3.33
 
 EXPORTS
 	_PREF_Init                                              = _PREF_Init

@@ -7883,9 +7883,9 @@ else
    LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
 fi
 
-echo $ac_n "checking "for PR_GetCurrentThread in -lnspr21"""... $ac_c" 1>&6
-echo "configure:7888: checking "for PR_GetCurrentThread in -lnspr21"" >&5
-LIBS="-lnspr21 $NSPR_LIBS $LIBS"
+echo $ac_n "checking "for PR_GetCurrentThread in -lnspr3"""... $ac_c" 1>&6
+echo "configure:7888: checking "for PR_GetCurrentThread in -lnspr3"" >&5
+LIBS="-lnspr3 $NSPR_LIBS $LIBS"
 if test "$cross_compiling" = yes; then
   _NSPR_NEEDS_THREAD_LIB=1 result="no" 
 else
@@ -7902,7 +7902,7 @@ else
 EOF
 if { (eval echo configure:7904: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
 then
-  NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"
+  NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
@@ -8003,11 +8003,11 @@ fi
  ;;
 esac
 
-echo $ac_n "checking "for PR_GetCurrentThread in -lnspr21 with thread lib"""... $ac_c" 1>&6
-echo "configure:8008: checking "for PR_GetCurrentThread in -lnspr21 with thread lib"" >&5
-    LIBS="-lnspr21 $NSPR_LIBS $LIBS"
+echo $ac_n "checking "for PR_GetCurrentThread in -lnspr3 with thread lib"""... $ac_c" 1>&6
+echo "configure:8008: checking "for PR_GetCurrentThread in -lnspr3 with thread lib"" >&5
+    LIBS="-lnspr3 $NSPR_LIBS $LIBS"
     if test "$cross_compiling" = yes; then
-  MISSING_NSPR="$MISSING_NSPR -lnspr21" result="no" 
+  MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no" 
 else
   cat > conftest.$ac_ext <<EOF
 #line 8014 "configure"
@@ -8022,12 +8022,12 @@ else
 EOF
 if { (eval echo configure:8024: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
 then
-  NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"
+  NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -fr conftest*
-  MISSING_NSPR="$MISSING_NSPR -lnspr21" result="no"
+  MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"
 fi
 rm -fr conftest*
 fi
@@ -8037,14 +8037,14 @@ echo "$ac_t"""$result"" 1>&6
 fi
 
 
-echo $ac_n "checking for PL_CreateOptState in -lplc21""... $ac_c" 1>&6
-echo "configure:8042: checking for PL_CreateOptState in -lplc21" >&5
-ac_lib_var=`echo plc21'_'PL_CreateOptState | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for PL_CreateOptState in -lplc3""... $ac_c" 1>&6
+echo "configure:8042: checking for PL_CreateOptState in -lplc3" >&5
+ac_lib_var=`echo plc3'_'PL_CreateOptState | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lplc21 $NSPR_LIBS $LIBS"
+LIBS="-lplc3 $NSPR_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 8050 "configure"
 #include "confdefs.h"
@@ -8072,20 +8072,20 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  NSPR_LIBS="-lplc21 $NSPR_LIBS"
+  NSPR_LIBS="-lplc3 $NSPR_LIBS"
 else
   echo "$ac_t""no" 1>&6
-MISSING_NSPR="$MISSING_NSPR -lplc21"
+MISSING_NSPR="$MISSING_NSPR -lplc3"
 fi
 
-echo $ac_n "checking for PL_GetEvent in -lplds21""... $ac_c" 1>&6
-echo "configure:8083: checking for PL_GetEvent in -lplds21" >&5
-ac_lib_var=`echo plds21'_'PL_GetEvent | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for PL_GetEvent in -lplds3""... $ac_c" 1>&6
+echo "configure:8083: checking for PL_GetEvent in -lplds3" >&5
+ac_lib_var=`echo plds3'_'PL_GetEvent | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lplds21 $NSPR_LIBS $LIBS"
+LIBS="-lplds3 $NSPR_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 8091 "configure"
 #include "confdefs.h"
@@ -8113,10 +8113,10 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  NSPR_LIBS="-lplds21 $NSPR_LIBS"
+  NSPR_LIBS="-lplds3 $NSPR_LIBS"
 else
   echo "$ac_t""no" 1>&6
-MISSING_NSPR="$MISSING_NSPR -lplds21"
+MISSING_NSPR="$MISSING_NSPR -lplds3"
 fi
 
 

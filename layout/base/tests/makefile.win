@@ -29,7 +29,7 @@ LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\jsdom.lib	        \
  $(LIBNSPR)			\
- $(DIST)\lib\libplc21.lib
+ $(DIST)\lib\plc3.lib
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -26,11 +26,11 @@ DLLNAME = cache
 LIBRARY_NAME=cache
 
 #
-# Remember to change libplc21 to $whatever it is...
+# Remember to change libplc3 to $whatever it is...
 #
 LLIBS =				 \
 	$(LIBNSPR)		 \
-	$(DIST)\lib\libplc21.lib \
+	$(DIST)\lib\plc3.lib \
 	$(DIST)\lib\dbm32.lib    \
  	$(DIST)\lib\xpcom32.lib  \
     $(DIST)\lib\libpref.lib  \

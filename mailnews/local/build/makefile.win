@@ -44,7 +44,7 @@ LLIBS=\
 	$(DIST)\lib\msgdb.lib    \
 	$(DIST)\lib\msglocal.lib    \
     $(LIBNSPR)		            \
-    $(DIST)\lib\libplc21.lib    \
+    $(DIST)\lib\plc3.lib    \
     $(DIST)\lib\raptorbase.lib  \
     $(DIST)\lib\rdfutil_s.lib	\
 	$(DIST)\lib\xplib.lib       	\

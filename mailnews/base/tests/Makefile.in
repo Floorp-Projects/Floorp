@@ -33,9 +33,9 @@ LIBS =	\
 		-L$(DIST)/bin			\
 		-lxpcom					\
 		-lreg					\
-		-lnspr21				\
-		-lplc21					\
-		-lplds21				\
+		-lnspr3				\
+		-lplc3					\
+		-lplds3				\
 		$(NULL)
 
 

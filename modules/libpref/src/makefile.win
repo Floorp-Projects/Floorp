@@ -76,7 +76,7 @@ HASHLIBS=$(BINREL_DIST)\lib\hash.lib $(BINREL_DIST)\lib\secutil.lib
 
 # DEFFILE	= $(DLLNAME).def
 LLIBS	= \
-	$(DIST)\lib\libplc21.lib \
+	$(DIST)\lib\plc3.lib \
 	$(LIBNSPR) \
 	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom32.lib \

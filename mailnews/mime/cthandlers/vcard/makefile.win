@@ -96,7 +96,7 @@ MSGLIBS=				\
 LLIBS=							\
 			$(LLIBS)			\
 			$(LIBNSPR)			\
-			$(DIST)\lib\libplc21.lib	\
+			$(DIST)\lib\plc3.lib	\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\netlib.lib	    	\
 			$(DIST)\lib\xppref32.lib	\

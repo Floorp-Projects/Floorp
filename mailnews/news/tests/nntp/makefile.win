@@ -35,7 +35,7 @@ MYLIBS=							\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\libplc21.lib		\
+ $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\nntp.lib    		\
  $(DIST)\lib\nntpTest.lib		\
  $(DIST)\lib\msgcore.lib		\
