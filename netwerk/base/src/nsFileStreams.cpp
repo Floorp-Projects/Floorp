@@ -212,7 +212,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
             // Directories turn into an HTTP-index stream, with
             // unbounded (i.e., read 'til the stream says it's done)
             // length.
-            *contentType = strdup(APPLICATION_HTTP_INDEX_FORMAT);
+            *contentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
             *contentLength = -1;
         }
         else {
@@ -228,7 +228,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
             
             if (!mimeServ || (NS_FAILED(rv))) {
                 // if all else fails treat it as text/html?
-                *contentType = strdup(UNKNOWN_CONTENT_TYPE);
+                *contentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
                 if (*contentType == nsnull)
                     rv = NS_ERROR_OUT_OF_MEMORY;
                 else
