@@ -36,7 +36,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+#if !TARGET_CARBON
 #include "nsCollationMac.h"
 #include <Resources.h>
 #include <TextUtils.h>
@@ -269,4 +269,5 @@ nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength,
 
   return NS_OK;
 }
+#endif
 
