@@ -22,6 +22,7 @@ nsLayoutAtomList.h
 nsLayoutAtoms.h
 nsRuleNode.h
 nsRuleWalker.h
+nsStyleContext.h
 nsStyleCoord.h
 nsStyleStruct.h
 nsStyleStructList.h
