@@ -33,6 +33,9 @@ function onLoad()
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
+  if (!caName.length)
+    caName = bundle.GetStringFromName("unnamedCA");
+
   var message2 = bundle.formatStringFromName("newCAMessage1",
                                              [ caName ],
                                               1);
