@@ -649,9 +649,9 @@ nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text
                              const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
   nsresult rv;
-  nsCAutoString realm;
-  realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
-  rv = SINGSIGN_Prompt(dialogTitle, text, defaultText, result, realm.get(), mPrompt, _retval, savePassword);
+  rv = SINGSIGN_Prompt(
+    dialogTitle, text, defaultText, result,
+    NS_ConvertUCS2toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
   return rv;
 }
 
@@ -661,10 +661,9 @@ nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, co
                                                 PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
   nsresult rv;
-  nsCAutoString realm;
-  realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
-  rv = SINGSIGN_PromptUsernameAndPassword(dialogTitle, text, user, pwd,
-                                          realm.get(), mPrompt, _retval, savePassword);
+  rv = SINGSIGN_PromptUsernameAndPassword(
+    dialogTitle, text, user, pwd,
+    NS_ConvertUCS2toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
   return rv;
 }
 
@@ -674,10 +673,9 @@ nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnich
                                      PRUnichar **pwd, PRBool *_retval)
 {
   nsresult rv;
-  nsCAutoString realm;
-  realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
-  rv = SINGSIGN_PromptPassword(dialogTitle, text, pwd,
-                               realm.get(), mPrompt, _retval, savePassword);
+  rv = SINGSIGN_PromptPassword(
+    dialogTitle, text, pwd,
+    NS_ConvertUCS2toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
   return rv;
 }
   
