@@ -35,20 +35,24 @@ class nsIDOMToolkitCore : public nsIDOMBaseAppCore {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMTOOLKITCORE_IID; return iid; }
 
+  NS_IMETHOD    ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent)=0;
+
   NS_IMETHOD    ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent)=0;
 };
 
 
 #define NS_DECL_IDOMTOOLKITCORE   \
+  NS_IMETHOD    ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent);  \
   NS_IMETHOD    ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent);  \
 
 
 
 #define NS_FORWARD_IDOMTOOLKITCORE(_to)  \
+  NS_IMETHOD    ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) { return _to##ShowDialog(aUrl, aParent); }  \
   NS_IMETHOD    ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) { return _to##ShowWindow(aUrl, aParent); }  \
 
 
-extern nsresult NS_InitToolkitCoreClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitToolkitCoreClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptToolkitCore(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
