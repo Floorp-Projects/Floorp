@@ -19,11 +19,11 @@
 
 #include "nsIDTD.h"
 #include "nsIParser.h"
-#include "nsIRDFContentSink.h"
 #include "nsIStreamListener.h"
 #include "nsIWebShell.h"
 #include "nsIURL.h"
 #include "nsParserCIID.h"
+#include "nsRDFContentSink.h"
 #include "nsRDFDocument.h"
 #include "nsWellFormedDTD.h"
 
@@ -40,8 +40,11 @@ static NS_DEFINE_IID(kIRDFDocumentIID,   NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIWebShellIID,      NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,   NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFDataBaseIID,   NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
 
+static NS_DEFINE_IID(kParserCID,              NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,   NS_RDFSIMPLEDATABASE_CID);
+static NS_DEFINE_CID(kRDFMemoryDataSourceCID, NS_RDFMEMORYDATASOURCE_CID);
 
 struct NameSpaceStruct {
     nsIAtom* mPrefix;
@@ -110,54 +113,68 @@ nsRDFDocument::StartDocumentLoad(nsIURL *aUrl,
                                  nsIStreamListener **aDocListener,
                                  const char* aCommand)
 {
-    nsresult rv = nsDocument::StartDocumentLoad(aUrl, aContainer,
-                                                aDocListener);
-
-    if (NS_FAILED(rv)) {
+    nsresult rv = nsDocument::StartDocumentLoad(aUrl, aContainer, aDocListener);
+    if (NS_FAILED(rv))
         return rv;
-    }
+
+    rv = nsRepository::CreateInstance(kParserCID, 
+                                      NULL,
+                                      kIParserIID, 
+                                      (void**) &mParser);
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
+                                      NULL,
+                                      kIRDFDataBaseIID,
+                                      (void**) &mDB);
+
+    if (NS_FAILED(rv))
+        return rv;
 
     nsIWebShell* webShell;
+    aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
 
-    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+    nsIRDFContentSink* sink;
+    rv = NS_NewRDFDocumentContentSink(&sink, this, aUrl, webShell);
 
-    rv = nsRepository::CreateInstance(kCParserCID, 
-                                      nsnull, 
-                                      kCParserIID, 
-                                      (void **)&mParser);
-    if (NS_OK == rv) {
-        nsIRDFContentSink* sink;
-    
-        aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
-        rv = NS_NewRDFContentSink(&sink, this, aUrl, webShell);
-        NS_IF_RELEASE(webShell);
+    NS_IF_RELEASE(webShell);
 
-        if (NS_OK == rv) {
-            // For the HTML content within a document
-            nsIHTMLStyleSheet* mAttrStyleSheet;
-            if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this)) {
-                AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-            }
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsIRDFDataSource* ds;
+    rv = nsRepository::CreateInstance(kRDFMemoryDataSourceCID,
+                                      NULL,
+                                      kIRDFDataSourceIID,
+                                      (void**) &ds);
+    if (NS_SUCCEEDED(rv)) {
+        sink->SetDataSource(ds);
+        mDB->AddDataSource(ds);
+
+        // For the HTML content within a document
+        nsIHTMLStyleSheet* mAttrStyleSheet;
+        if (NS_SUCCEEDED(rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this))) {
+            AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+        }
       
-            // Set the parser as the stream listener for the document loader...
-            static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-            rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+        // Set the parser as the stream listener for the document loader...
+        static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+        rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+        if (NS_SUCCEEDED(rv)) {
+            nsIDTD* theDTD=0;
 
-            if (NS_OK == rv) {
-
-                nsIDTD* theDTD=0;
-                // XXX For now, we'll use the "well formed" DTD
-                NS_NewWellFormed_DTD(&theDTD);
-                mParser->RegisterDTD(theDTD);
-                mParser->SetCommand(aCommand);
-                mParser->SetContentSink(sink);
-                mParser->Parse(aUrl);
-            }
-            NS_RELEASE(sink);
+            // XXX For now, we'll use the "well formed" DTD
+            NS_NewWellFormed_DTD(&theDTD);
+            mParser->RegisterDTD(theDTD);
+            mParser->SetCommand(aCommand);
+            mParser->SetContentSink(sink);
+            mParser->Parse(aUrl);
         }
     }
 
+    NS_RELEASE(sink);
     return rv;
 }
 
@@ -289,23 +306,4 @@ nsRDFDocument::GetDataBase(nsIRDFDataBase*& result)
     result = mDB;
     result->AddRef();
     return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsRDFDocument::SetDataSource(nsIRDFDataSource* ds)
-{
-    NS_IF_RELEASE(mDB);
-
-    nsresult rv;
-    rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
-                                      NULL,
-                                      kIRDFDataBaseIID,
-                                      (void**) &mDB);
-
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = mDB->AddDataSource(ds);
-    return rv;
 }

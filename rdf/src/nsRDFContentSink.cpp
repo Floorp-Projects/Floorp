@@ -49,44 +49,19 @@
 
 #include "nsCRT.h"
 #include "nsHTMLEntities.h" // XXX for NS_EntityToUnicode()
-#include "nsICSSParser.h"
-#include "nsIContent.h"
-#include "nsIDOMComment.h"
-#include "nsIDocument.h"
-#include "nsIPresContext.h"
-#include "nsIPresShell.h"
-#include "nsIRDFContent.h"
-#include "nsIRDFContent.h"
 #include "nsIRDFDataSource.h"
-#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIServiceManager.h"
-#include "nsICSSStyleSheet.h"
-#include "nsITextContent.h"
-#include "nsIURL.h"
-#include "nsIUnicharInputStream.h"
-#include "nsIViewManager.h"
-#include "nsIWebShell.h"
-#include "nsIXMLContent.h"
-#include "nsIXMLDocument.h"
-#include "nsLayoutCID.h"
 #include "nsRDFCID.h"
+#include "nsIServiceManager.h"
+#include "nsIURL.h"
 #include "nsRDFContentSink.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
 #include "prmem.h"
-#include "prtime.h"
 
 static const char kNameSpaceSeparator[] = ":";
 static const char kNameSpaceDef[] = "xmlns";
-static const char kStyleSheetPI[] = "<?xml-stylesheet";
-static const char kCSSType[] = "text/css";
-static const char kQuote = '\"';
-static const char kApostrophe = '\'';
 
 ////////////////////////////////////////////////////////////////////////
 // RDF core vocabulary
@@ -111,61 +86,28 @@ static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 ////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
 
-static NS_DEFINE_IID(kICSSParserIID,           NS_ICSS_PARSER_IID); // XXX grr..
 static NS_DEFINE_IID(kIContentSinkIID,         NS_ICONTENT_SINK_IID); // XXX grr...
-static NS_DEFINE_IID(kIDOMCommentIID,          NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,       NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFDocumentIID,         NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceManagerIID,  NS_IRDFRESOURCEMANAGER_IID);
-static NS_DEFINE_IID(kIScrollableViewIID,      NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID,         NS_IXMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 
-static NS_DEFINE_CID(kCSSParserCID,            NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,   NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID,  NS_RDFMEMORYDATASOURCE_CID);
+
+////////////////////////////////////////////////////////////////////////
+
+struct NameSpaceStruct {
+    nsIAtom* mPrefix;
+    nsIAtom* mURI;
+    PRInt32  mNestLevel;
+};
+
 
 
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
-
-static nsresult
-rdf_GetQuotedAttributeValue(nsString& aSource, 
-                            const nsString& aAttribute,
-                            nsString& aValue)
-{
-    PRInt32 offset;
-    PRInt32 endOffset = -1;
-    nsresult result = NS_OK;
-
-    offset = aSource.Find(aAttribute);
-    if (-1 != offset) {
-        offset = aSource.Find('=', offset);
-
-        PRUnichar next = aSource.CharAt(++offset);
-        if (kQuote == next) {
-            endOffset = aSource.Find(kQuote, ++offset);
-        }
-        else if (kApostrophe == next) {
-            endOffset = aSource.Find(kApostrophe, ++offset);	  
-        }
-  
-        if (-1 != endOffset) {
-            aSource.Mid(aValue, offset, endOffset-offset);
-        }
-        else {
-            // Mismatched quotes - return an error
-            result = NS_ERROR_FAILURE;
-        }
-    }
-    else {
-        aValue.Truncate();
-    }
-
-    return result;
-}
 
 // XXX Code copied from nsHTMLContentSink. It should be shared.
 static void
@@ -300,75 +242,44 @@ rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// Factory method
-
-nsresult
-NS_NewRDFContentSink(nsIRDFContentSink** aResult,
-                     nsIDocument* aDoc,
-                     nsIURL* aURL,
-                     nsIWebShell* aWebShell)
-{
-    NS_PRECONDITION(nsnull != aResult, "null ptr");
-    if (nsnull == aResult) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    nsRDFContentSink* it;
-    NS_NEWXPCOM(it, nsRDFContentSink);
-    if (nsnull == it) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsresult rv = it->Init(aDoc, aURL, aWebShell);
-    if (NS_OK != rv) {
-        delete it;
-        return rv;
-    }
-    return it->QueryInterface(kIRDFContentSinkIID, (void **)aResult);
-}
-
-
-////////////////////////////////////////////////////////////////////////
-
 
 nsRDFContentSink::nsRDFContentSink()
+    : mDocumentURL(NULL),
+      mRDFResourceManager(NULL),
+      mDataSource(NULL),
+      mGenSym(0),
+      mNameSpaces(NULL),
+      mNestLevel(0),
+      mContextStack(NULL),
+      mText(NULL),
+      mTextLength(0),
+      mTextSize(0),
+      mConstrainSize(PR_TRUE)
 {
     NS_INIT_REFCNT();
-    mDocument = nsnull;
-    mDocumentURL = nsnull;
-    mWebShell = nsnull;
-    mRootElement = nsnull;
-    mRDFResourceManager = nsnull;
-    mDataSource = nsnull;
-    mGenSym = 0;
-    mNameSpaces = nsnull;
-    mNestLevel = 0;
-    mContextStack = nsnull;
-    mText = nsnull;
-    mTextLength = 0;
-    mTextSize = 0;
-    mConstrainSize = PR_TRUE;
 }
+
 
 nsRDFContentSink::~nsRDFContentSink()
 {
-    NS_IF_RELEASE(mDocument);
     NS_IF_RELEASE(mDocumentURL);
-    NS_IF_RELEASE(mWebShell);
-    NS_IF_RELEASE(mRootElement);
-    if (mRDFResourceManager) {
+
+    if (mRDFResourceManager)
         nsServiceManager::ReleaseService(kRDFResourceManagerCID, mRDFResourceManager);
-    }
+
     NS_IF_RELEASE(mDataSource);
     if (mNameSpaces) {
         // There shouldn't be any here except in an error condition
         PRInt32 i, count = mNameSpaces->Count();
     
         for (i=0; i < count; i++) {
-            NameSpaceStruct *ns = (NameSpaceStruct *)mNameSpaces->ElementAt(i);
-      
-            if (nsnull != ns) {
-                NS_IF_RELEASE(ns->mPrefix);
-                delete ns;
-            }
+            NameSpaceStruct *ns = (NameSpaceStruct*)mNameSpaces->ElementAt(i);
+            if (! ns)
+                continue;
+
+            NS_IF_RELEASE(ns->mPrefix);
+            NS_IF_RELEASE(ns->mURI);
+            delete ns;
         }
         delete mNameSpaces;
     }
@@ -393,24 +304,14 @@ nsRDFContentSink::~nsRDFContentSink()
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsRDFContentSink::Init(nsIDocument* aDoc,
-                       nsIURL* aURL,
-                       nsIWebShell* aContainer)
+nsRDFContentSink::Init(nsIURL* aURL)
 {
-    NS_PRECONDITION(nsnull != aDoc, "null ptr");
-    NS_PRECONDITION(nsnull != aURL, "null ptr");
-    NS_PRECONDITION(nsnull != aContainer, "null ptr");
-    if ((nsnull == aDoc) || (nsnull == aURL) || (nsnull == aContainer)) {
+    NS_PRECONDITION(aURL, "null ptr");
+    if (! aURL)
         return NS_ERROR_NULL_POINTER;
-    }
-
-    mDocument = aDoc;
-    NS_ADDREF(aDoc);
 
     mDocumentURL = aURL;
     NS_ADDREF(aURL);
-    mWebShell = aContainer;
-    NS_ADDREF(aContainer);
 
     nsresult rv;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
@@ -418,21 +319,8 @@ nsRDFContentSink::Init(nsIDocument* aDoc,
                                                     (nsISupports**) &mRDFResourceManager)))
         return rv;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFMemoryDataSourceCID,
-                                                    NULL,
-                                                    kIRDFDataSourceIID,
-                                                    (void**) &mDataSource)))
-        return rv;
-
-    nsIRDFDocument* rdfDoc;
-    if (NS_FAILED(rv = mDocument->QueryInterface(kIRDFDocumentIID, (void**) &rdfDoc)))
-        return rv;
-
-    rv = rdfDoc->SetDataSource(mDataSource);
-    NS_RELEASE(rdfDoc);
-
     mState = eRDFContentSinkState_InProlog;
-    return rv;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -449,11 +337,10 @@ nsRDFContentSink::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = NULL;
-    if (iid.Equals(kIRDFContentSinkIID) ||
-        iid.Equals(kIXMLContentSinkIID) ||
+    if (iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = static_cast<nsIRDFContentSink*>(this);
+        *result = static_cast<nsIXMLContentSink*>(this);
         AddRef();
         return NS_OK;
     }
@@ -467,36 +354,12 @@ nsRDFContentSink::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP 
 nsRDFContentSink::WillBuildModel(void)
 {
-    // Notify document that the load is beginning
-    mDocument->BeginLoad();
-    nsresult result = NS_OK;
-
-    return result;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsRDFContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
-    // XXX this is silly; who cares?
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
-    for (i = 0; i < ns; i++) {
-        nsIPresShell* shell = mDocument->GetShellAt(i);
-        if (nsnull != shell) {
-            nsIViewManager* vm = shell->GetViewManager();
-            if(vm) {
-                vm->SetQuality(nsContentQuality(aQualityLevel));
-            }
-            NS_RELEASE(vm);
-            NS_RELEASE(shell);
-        }
-    }
-
-    StartLayout();
-
-    // XXX Should scroll to ref when that makes sense
-    // ScrollToRef();
-
-    mDocument->EndLoad();
     return NS_OK;
 }
 
@@ -511,8 +374,6 @@ nsRDFContentSink::WillResume(void)
 {
     return NS_OK;
 }
-
-
 
 NS_IMETHODIMP 
 nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
@@ -529,42 +390,41 @@ nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
     // the attribute list.
     FindNameSpaceAttributes(aNode);
 
-    nsIContent* content = NULL;
-    nsresult result;
+    nsresult rv;
 
     RDFContentSinkState lastState = mState;
     switch (mState) {
     case eRDFContentSinkState_InProlog:
-        result = OpenRDF(aNode);
+        rv = OpenRDF(aNode);
         break;
 
     case eRDFContentSinkState_InDocumentElement:
-        result = OpenObject(aNode);
+        rv = OpenObject(aNode);
         break;
 
     case eRDFContentSinkState_InDescriptionElement:
-        result = OpenProperty(aNode);
+        rv = OpenProperty(aNode);
         break;
 
     case eRDFContentSinkState_InContainerElement:
-        result = OpenMember(aNode);
+        rv = OpenMember(aNode);
         break;
 
     case eRDFContentSinkState_InPropertyElement:
-        result = OpenValue(aNode);
+        rv = OpenValue(aNode);
         break;
 
     case eRDFContentSinkState_InMemberElement:
-        result = OpenValue(aNode);
+        rv = OpenValue(aNode);
         break;
 
     case eRDFContentSinkState_InEpilog:
         PR_ASSERT(0);
-        result = NS_ERROR_UNEXPECTED; // XXX
+        rv = NS_ERROR_UNEXPECTED; // XXX
         break;
     }
 
-    return result;
+    return rv;
 }
 
 NS_IMETHODIMP 
@@ -620,7 +480,6 @@ nsRDFContentSink::AddComment(const nsIParserNode& aNode)
 {
     FlushText();
     nsAutoString text;
-    //nsIDOMComment *domComment;
     nsresult result = NS_OK;
 
     text = aNode.GetText();
@@ -635,66 +494,7 @@ NS_IMETHODIMP
 nsRDFContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
     FlushText();
-
-    // XXX For now, we don't add the PI to the content model.
-    // We just check for a style sheet PI
-    nsAutoString text, type, href;
-    PRInt32 offset;
-    nsresult result = NS_OK;
-
-    text = aNode.GetText();
-
-    offset = text.Find(kStyleSheetPI);
-    // If it's a stylesheet PI...
-    if (0 == offset) {
-        result = rdf_GetQuotedAttributeValue(text, "href", href);
-        // If there was an error or there's no href, we can't do
-        // anything with this PI
-        if ((NS_OK != result) || (0 == href.Length())) {
-            return result;
-        }
-    
-        result = rdf_GetQuotedAttributeValue(text, "type", type);
-        if (NS_OK != result) {
-            return result;
-        }
-    
-        if (type.Equals(kCSSType)) {
-            nsIURL* url = nsnull;
-            nsIUnicharInputStream* uin = nsnull;
-            nsAutoString absURL;
-            nsIURL* docURL = mDocument->GetDocumentURL();
-            nsAutoString emptyURL;
-            emptyURL.Truncate();
-            result = NS_MakeAbsoluteURL(docURL, emptyURL, href, absURL);
-            if (NS_OK != result) {
-                return result;
-            }
-            NS_RELEASE(docURL);
-            result = NS_NewURL(&url, nsnull, absURL);
-            if (NS_OK != result) {
-                return result;
-            }
-            PRInt32 ec;
-            nsIInputStream* iin = url->Open(&ec);
-            if (nsnull == iin) {
-                NS_RELEASE(url);
-                return (nsresult) ec;/* XXX fix url->Open */
-            }
-            result = NS_NewConverterStream(&uin, nsnull, iin);
-            NS_RELEASE(iin);
-            if (NS_OK != result) {
-                NS_RELEASE(url);
-                return result;
-            }
-      
-            result = LoadStyleSheet(url, uin);
-            NS_RELEASE(uin);
-            NS_RELEASE(url);
-        }
-    }
-
-    return result;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -778,110 +578,24 @@ nsRDFContentSink::AddEntityReference(const nsIParserNode& aNode)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation methods
+// nsIRDFContentSink interface
 
-void
-nsRDFContentSink::StartLayout()
+NS_IMETHODIMP
+nsRDFContentSink::SetDataSource(nsIRDFDataSource* ds)
 {
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
-    for (i = 0; i < ns; i++) {
-        nsIPresShell* shell = mDocument->GetShellAt(i);
-        if (nsnull != shell) {
-            // Make shell an observer for next time
-            shell->BeginObservingDocument();
-
-            // Resize-reflow this time
-            nsIPresContext* cx = shell->GetPresContext();
-            nsRect r;
-            cx->GetVisibleArea(r);
-            shell->InitialReflow(r.width, r.height);
-            NS_RELEASE(cx);
-
-            // Now trigger a refresh
-            nsIViewManager* vm = shell->GetViewManager();
-            if (nsnull != vm) {
-                vm->EnableRefresh();
-                NS_RELEASE(vm);
-            }
-
-            NS_RELEASE(shell);
-        }
-    }
-
-    // If the document we are loading has a reference or it is a top level
-    // frameset document, disable the scroll bars on the views.
-    const char* ref = mDocumentURL->GetRef();
-    PRBool topLevelFrameset = PR_FALSE;
-    if (mWebShell) {
-        nsIWebShell* rootWebShell;
-        mWebShell->GetRootWebShell(rootWebShell);
-        if (mWebShell == rootWebShell) {
-            topLevelFrameset = PR_TRUE;
-        }
-        NS_IF_RELEASE(rootWebShell);
-    }
-
-    if ((nsnull != ref) || topLevelFrameset) {
-        // XXX support more than one presentation-shell here
-
-        // Get initial scroll preference and save it away; disable the
-        // scroll bars.
-        PRInt32 i, ns = mDocument->GetNumberOfShells();
-        for (i = 0; i < ns; i++) {
-            nsIPresShell* shell = mDocument->GetShellAt(i);
-            if (nsnull != shell) {
-                nsIViewManager* vm = shell->GetViewManager();
-                if (nsnull != vm) {
-                    nsIView* rootView = nsnull;
-                    vm->GetRootView(rootView);
-                    if (nsnull != rootView) {
-                        nsIScrollableView* sview = nsnull;
-                        rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
-                        if (nsnull != sview) {
-                            if (topLevelFrameset)
-                                mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
-                            else
-                                sview->GetScrollPreference(mOriginalScrollPreference);
-                            sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-                        }
-                    }
-                    NS_RELEASE(vm);
-                }
-                NS_RELEASE(shell);
-            }
-        }
-    }
+    NS_IF_RELEASE(mDataSource);
+    mDataSource = ds;
+    NS_IF_ADDREF(mDataSource);
+    return NS_OK;
 }
 
 
-// XXX Borrowed from HTMLContentSink. Should be shared.
-nsresult
-nsRDFContentSink::LoadStyleSheet(nsIURL* aURL,
-                                 nsIUnicharInputStream* aUIN)
+NS_IMETHODIMP
+nsRDFContentSink::GetDataSource(nsIRDFDataSource*& ds)
 {
-    /* XXX use repository */
-    nsresult rv;
-    nsICSSParser* parser;
-    rv = nsRepository::CreateInstance(kCSSParserCID,
-                                      NULL,
-                                      kICSSParserIID,
-                                      (void**) &parser);
-
-    if (NS_SUCCEEDED(rv)) {
-        nsICSSStyleSheet* sheet = nsnull;
-        // XXX note: we are ignoring rv until the error code stuff in the
-        // input routines is converted to use nsresult's
-        parser->Parse(aUIN, aURL, sheet);
-        if (nsnull != sheet) {
-            mDocument->AddStyleSheet(sheet);
-            NS_RELEASE(sheet);
-            rv = NS_OK;
-        } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
-        }
-        NS_RELEASE(parser);
-    }
-    return rv;
+    ds = mDataSource;
+    NS_IF_ADDREF(mDataSource);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -944,7 +658,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 ////////////////////////////////////////////////////////////////////////
 // Qualified name resolution
 
-nsresult
+void
 nsRDFContentSink::SplitQualifiedName(const nsString& aQualifiedName,
                                      nsString& rNameSpaceURI,
                                      nsString& rProperty)
@@ -957,20 +671,8 @@ nsRDFContentSink::SplitQualifiedName(const nsString& aQualifiedName,
         rProperty.Left(nameSpace, nsoffset);
         rProperty.Cut(0, nsoffset+1);
     }
-    else {
-        nameSpace.Truncate(); // XXX isn't it empty already?
-    }
 
-    nsresult rv;
-    nsIXMLDocument* xmlDoc;
-    if (NS_FAILED(rv = mDocument->QueryInterface(kIXMLDocumentIID, (void**) &xmlDoc)))
-        return rv;
-
-    PRInt32 nameSpaceId = GetNameSpaceId(nameSpace);
-    rv = xmlDoc->GetNameSpaceURI(nameSpaceId, rNameSpaceURI);
-    NS_RELEASE(xmlDoc);
-
-    return rv;
+    rNameSpaceURI = GetNameSpaceURI(nameSpace);
 }
 
 
@@ -986,8 +688,7 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        if (NS_FAILED(SplitQualifiedName(key, ns, attr)))
-            continue;
+        SplitQualifiedName(key, ns, attr);
 
         if (! ns.Equals(kRDFNameSpaceURI))
             continue;
@@ -1036,8 +737,7 @@ nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        if (NS_FAILED(SplitQualifiedName(key, ns, attr)))
-            continue;
+        SplitQualifiedName(key, ns, attr);
 
         if (! ns.Equals(kRDFNameSpaceURI))
             continue;
@@ -1067,8 +767,7 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        if (NS_FAILED(SplitQualifiedName(key, ns, attr)))
-            continue;
+        SplitQualifiedName(key, ns, attr);
 
         // skip rdf:about, rdf:ID, and rdf:resource attributes; these
         // are all "special" and should've been dealt with by the
@@ -1104,8 +803,7 @@ nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
     // they've declared the standard RDF namespace to be.
     nsAutoString ns, tag;
     
-    if (NS_FAILED(SplitQualifiedName(aNode.GetText(), ns, tag)))
-        return NS_ERROR_UNEXPECTED;
+    SplitQualifiedName(aNode.GetText(), ns, tag);
 
     if (! ns.Equals(kRDFNameSpaceURI))
         return NS_ERROR_UNEXPECTED;
@@ -1130,11 +828,11 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsAutoString ns, tag;
-    nsresult rv;
-    if (NS_FAILED(rv = SplitQualifiedName(aNode.GetText(), ns, tag)))
-        return rv;
+
+    SplitQualifiedName(aNode.GetText(), ns, tag);
 
     // Figure out the URI of this object, and create an RDF node for it.
+    nsresult rv;
     nsAutoString uri;
     if (NS_FAILED(rv = GetIdAboutAttribute(aNode, uri)))
         return rv;
@@ -1143,6 +841,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     if (NS_FAILED(rv = mRDFResourceManager->GetNode(uri, rdfResource)))
         return rv;
 
+#if 0
     // Arbitrarily make the document root be the first container
     // element in the RDF.
     if (! mRootElement) {
@@ -1166,6 +865,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
         // don't release the rdfElement since we're keeping
         // a reference to it in mRootElement
     }
+#endif
 
     // If we're in a member or property element, then this is the cue
     // that we need to hook the object up into the graph via the
@@ -1247,8 +947,7 @@ nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
     // state appropriately.
     nsAutoString ns, tag;
 
-    if (NS_FAILED(rv = SplitQualifiedName(aNode.GetText(), ns, tag)))
-        return rv;
+    SplitQualifiedName(aNode.GetText(), ns, tag);
 
     // destructively alter "ns" to contain the fully qualified tag
     // name. We can do this 'cause we don't need it anymore...
@@ -1296,8 +995,7 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
     // to whatever they've declared the standard RDF namespace to be.
     nsAutoString ns, tag;
 
-    if (NS_FAILED(SplitQualifiedName(aNode.GetText(), ns, tag)))
-        return NS_ERROR_UNEXPECTED;
+    SplitQualifiedName(aNode.GetText(), ns, tag);
 
     if (! ns.Equals(kRDFNameSpaceURI))
         return NS_ERROR_UNEXPECTED;
@@ -1524,71 +1222,59 @@ nsRDFContentSink::FindNameSpaceAttributes(const nsIParserNode& aNode)
     }
 }
 
-PRInt32 
+void
 nsRDFContentSink::OpenNameSpace(const nsString& aPrefix, const nsString& aURI)
 {
-    nsIAtom *nameSpaceAtom = nsnull;
-    PRInt32 id = gNameSpaceId_Unknown;
-
-    nsIXMLDocument *xmlDoc;
-    nsresult result = mDocument->QueryInterface(kIXMLDocumentIID, 
-                                                (void **)&xmlDoc);
-    if (NS_OK != result)
-        return id;
-
+    nsIAtom *nameSpaceAtom = NULL;
     if (0 < aPrefix.Length())
         nameSpaceAtom = NS_NewAtom(aPrefix);
   
-    result = xmlDoc->RegisterNameSpace(nameSpaceAtom, aURI, id);
-    if (NS_OK == result) {
-        NameSpaceStruct *ns;
-    
-        ns = new NameSpaceStruct;
-        if (nsnull != ns) {
-            ns->mPrefix = nameSpaceAtom;
-            NS_IF_ADDREF(nameSpaceAtom);
-            ns->mId = id;
-            ns->mNestLevel = GetCurrentNestLevel();
-      
-            if (nsnull == mNameSpaces)
-                mNameSpaces = new nsVoidArray();
+    NameSpaceStruct *ns = new NameSpaceStruct;
+    if (ns) {
+        ns->mPrefix = nameSpaceAtom;
+        NS_IF_ADDREF(nameSpaceAtom);
 
-            // XXX Should check for duplication
-            mNameSpaces->AppendElement((void *)ns);
-        }
+        ns->mURI = NS_NewAtom(aURI);
+
+        //ns->mId = id;
+        ns->mNestLevel = GetCurrentNestLevel();
+      
+        if (nsnull == mNameSpaces)
+            mNameSpaces = new nsVoidArray();
+
+        // XXX Should check for duplication
+        mNameSpaces->AppendElement((void *)ns);
     }
 
     NS_IF_RELEASE(nameSpaceAtom);
-    NS_RELEASE(xmlDoc);
-
-    return id;
 }
 
-PRInt32 
-nsRDFContentSink::GetNameSpaceId(const nsString& aPrefix)
+const nsString&
+nsRDFContentSink::GetNameSpaceURI(const nsString& aPrefix)
 {
-    nsIAtom *nameSpaceAtom = nsnull;
-    PRInt32 id = gNameSpaceId_Unknown;
-    PRInt32 i, count;
-  
-    if (nsnull == mNameSpaces)
-        return id;
+    nsAutoString uri;
 
+    if (!mNameSpaces)
+        return uri; // empty
+
+    nsIAtom* nameSpaceAtom = NULL;
     if (0 < aPrefix.Length())
         nameSpaceAtom = NS_NewAtom(aPrefix);
 
-    count = mNameSpaces->Count();
-    for (i = 0; i < count; i++) {
-        NameSpaceStruct *ns = (NameSpaceStruct *)mNameSpaces->ElementAt(i);
+    PRInt32 count = mNameSpaces->Count();
+    for (PRInt32 i = 0; i < count; i++) {
+        NameSpaceStruct *ns = (NameSpaceStruct*)mNameSpaces->ElementAt(i);
     
-        if ((nsnull != ns) && (ns->mPrefix == nameSpaceAtom)) {
-            id = ns->mId;
+        if ((ns) && (ns->mPrefix == nameSpaceAtom)) {
+            if (ns->mURI)
+                ns->mURI->ToString(uri);
+
             break;
         }
     }
 
     NS_IF_RELEASE(nameSpaceAtom);
-    return id;
+    return uri;
 }
 
 void    
@@ -1608,6 +1294,7 @@ nsRDFContentSink::CloseNameSpacesAtNestLevel(PRInt32 mNestLevel)
     
         if ((nsnull != ns) && (ns->mNestLevel == nestLevel)) {
             NS_IF_RELEASE(ns->mPrefix);
+            NS_IF_RELEASE(ns->mURI);
             mNameSpaces->RemoveElementAt(i);
             delete ns;
         }
