@@ -2151,7 +2151,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   nsCOMPtr<nsISupports> supports;
   rv = aEnumerator->First();
   nsresult copyStatus = NS_OK;
-  while (NS_SUCCEEDED(rv))
+  while (NS_SUCCEEDED(rv) && NS_SUCCEEDED(copyStatus))
   {
     rv = aEnumerator->CurrentItem(getter_AddRefs(supports));
     folder = do_QueryInterface(supports);
