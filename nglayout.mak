@@ -111,8 +111,8 @@ DIST_DIRS =			\
   modules\libimg		\
   modules\plugin		\
   modules\oji		\
-  intl                          \
   base                          \
+  intl                          \
   caps                          \
   lib\xp			\
   lib\libpwcac			\
