@@ -46,7 +46,6 @@
 #include "ns4xPluginStreamListener.h"
 #include "nsPluginHostImpl.h"
 #include "nsPluginSafety.h"
-#include "nsIPref.h" // needed for NS_TRY_SAFE_CALL_*
 #include "nsPluginLogging.h"
 
 #ifdef XP_OS2

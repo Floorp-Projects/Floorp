@@ -43,7 +43,6 @@
 #include "nsWatchTask.h"
 #include "nsPrintOptionsX.h"
 #include "nsPrintSettingsX.h"
-#include "nsIPref.h"
 
 #include "nsGfxUtils.h"
 #include "nsCRT.h"

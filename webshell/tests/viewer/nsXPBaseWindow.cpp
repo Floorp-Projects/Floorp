@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
 #include "prmem.h"
 
 #include "nsXPBaseWindow.h"

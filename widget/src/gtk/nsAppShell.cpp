@@ -49,7 +49,6 @@
 #include <gdk/gdkx.h>
 
 #include "nsIWidget.h"
-#include "nsIPref.h"
 
 #include "glib.h"
 #include "nsVoidArray.h"

@@ -55,7 +55,6 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
-#include "nsIPref.h"
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
