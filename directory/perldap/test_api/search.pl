@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #############################################################################
-# $Id: search.pl,v 1.3 1998/07/31 21:16:31 clayton Exp $
+# $Id: search.pl,v 1.4 1998/08/13 04:40:01 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -29,9 +29,15 @@ use Mozilla::LDAP::API qw(:api :constant);
 use strict;
 
 
-my $ldap_host = "localhost";
+my $ldap_host = "";
 my $BASEDN = "o=Org,c=US";
 my $filter = $ARGV[0];
+
+if (!$ldap_host)
+{
+   print "Edit the top portion of this file before continuing.\n";
+   exit -1;
+}
 
 my $attrs = [];
 

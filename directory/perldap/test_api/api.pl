@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #############################################################################
-# $Id: api.pl,v 1.5 1998/08/03 02:35:26 clayton Exp $
+# $Id: api.pl,v 1.6 1998/08/13 04:40:00 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -35,8 +35,14 @@ use strict;
 my $BASE = "ou=Test,o=Test,c=US";
 my $DN = "cn=Directory Manager";
 my $PASS = "abcd1234";
-my $HOST = "localhost";
+my $HOST = "";
 my $PORT = 389;
+
+if (!$HOST)
+{
+   print "Please edit the variables at the top of this file.\n";
+   exit -1;
+}
 
 my $howmany = 10;
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #############################################################################
-# $Id: write.pl,v 1.3 1998/07/31 21:16:32 clayton Exp $
+# $Id: write.pl,v 1.4 1998/08/13 04:40:02 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -40,7 +40,13 @@ my $ENTRYDN = "cn=Test Guy, o=Org, c=US";
 my $ROOTDN = "cn=DSManager,o=Org,c=US";
 my $ROOTPW = "";
 
-my $ldap_server = "localhost";
+my $ldap_server = "";
+
+if (!$ldap_server)
+{
+   print "Edit the top portion of this file before continuing.\n";
+   exit -1;
+}
 
 my $ld = ldap_init($ldap_server,LDAP_PORT);
 

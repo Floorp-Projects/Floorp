@@ -1,10 +1,8 @@
-Changes
 ChangeLog
 API.pm
 API.xs
 MANIFEST
 Makefile.PL
-TODO
 constant.h
 test.pl
 typemap
