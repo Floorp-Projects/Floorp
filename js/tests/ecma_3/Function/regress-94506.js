@@ -98,6 +98,20 @@ expect = TYPE_OBJECT;
 addThis();
 
 
+// Let's try calling F1 without providing a parameter -
+status = 'Section 5 of test';
+actual = F1();
+expect = undefined;
+addThis();
+
+
+// Let's try calling F1 with too many parameters -
+status = 'Section 6 of test';
+actual = F1(3,33,333);
+expect = 3;
+addThis();
+
+
 
 //-----------------------------------------------------------------------------
 test();
