@@ -323,6 +323,7 @@ typedef struct sinfoComponentDep siCD;
 struct sinfoComponentDep
 {
   LPSTR szDescriptionShort;
+  LPSTR szReferenceName;
   siCD  *Next;
   siCD  *Prev;
 };
@@ -342,6 +343,7 @@ struct sinfoComponent
   LPSTR           szDescriptionShort;
   LPSTR           szDescriptionLong;
   LPSTR           szParameter;
+  LPSTR           szReferenceName;
   siCD            *siCDDependencies;
   siCD            *siCDDependees;
   siC             *Next;
