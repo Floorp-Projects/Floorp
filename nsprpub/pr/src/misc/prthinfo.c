@@ -140,6 +140,19 @@ PR_ThreadScanStackPointers(PRThread* t,
         if (status != PR_SUCCESS)
             return status;
     }
+
+#ifdef GC_LEAK_DETECTOR
+    /*
+    ** if the thread was allocated on its own stack, conservatively
+    ** scan the thread object itself to keep all data structures
+    ** referenced by the thread visible to the garbage collector.
+    */
+    if (t->threadAllocatedOnStack) {
+        status = scanFun(t, (void**)t, (sizeof(PRThread) + 3) / sizeof(void*), scanClosure);
+        if (status != PR_SUCCESS)
+            return status;
+    }
+#endif
     
     return PR_SUCCESS;
 }

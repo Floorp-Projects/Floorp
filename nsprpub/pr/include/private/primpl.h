@@ -1606,6 +1606,9 @@ extern void _PR_CleanupTPD(void);
 extern void _PR_Cleanup(void);
 extern void _PR_LogCleanup(void);
 extern void _PR_InitLayerCache(void);
+#ifdef GC_LEAK_DETECTOR
+extern void _PR_InitGarbageCollector(void);
+#endif
 
 extern PRBool _pr_initialized;
 extern void _PR_ImplicitInitialization(void);
