@@ -212,8 +212,13 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_signal_connect(GTK_OBJECT(mainWindow),
                        "realize",
-		       GTK_SIGNAL_FUNC(window_realize_callback),
-		       NULL);
+                       GTK_SIGNAL_FUNC(window_realize_callback),
+                       NULL);
+
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+                       "size_allocate",
+                       GTK_SIGNAL_FUNC(nsGtkWidget_Resize_EventHandler),
+                       this);
 
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
@@ -276,12 +281,6 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
 		     this);
-/*
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "size_allocate",
-         GTK_SIGNAL_FUNC(nsGtkWidget_Resize_EventHandler),
-         this);
-*/
 }
 
 //-------------------------------------------------------------------------
@@ -639,13 +638,12 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-/*
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
     return DispatchWindowEvent(&aEvent);
   }
-*/
+
   return PR_FALSE;
 }
 
