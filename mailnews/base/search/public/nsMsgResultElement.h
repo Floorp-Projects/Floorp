@@ -32,8 +32,6 @@
 // represent a search hit without requiring a message header or server connection
 //---------------------------------------------------------------------------
 
-
-
 class nsMsgResultElement
 {
 public:

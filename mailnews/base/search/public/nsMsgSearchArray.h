@@ -25,6 +25,7 @@
 
 #include "nsVoidArray.h"
 
+class nsMsgResultElement;
 class nsMsgSearchTerm;
 class nsMsgSearchScopeTerm;
 struct nsMsgSearchValue;
@@ -45,6 +46,12 @@ class nsMsgSearchScopeTermArray : public nsVoidArray
 {
 public:
 	nsMsgSearchScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchScopeTerm*) nsVoidArray::ElementAt(i); }
+};
+
+class nsMsgResultArray : public nsVoidArray
+{
+public:
+	nsMsgResultElement *ElementAt(PRUint32 i) const { return (nsMsgResultElement *) nsVoidArray::ElementAt(i); }
 };
 
 #endif

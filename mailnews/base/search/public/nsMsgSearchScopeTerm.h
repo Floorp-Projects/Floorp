@@ -29,12 +29,13 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgSearchAdapter.h"
 #include "nsFileStream.h"
+#include "nsIMsgSearchSession.h"
 #include "nsCOMPtr.h"
 
 class nsMsgSearchScopeTerm 
 {
 public:
-	nsMsgSearchScopeTerm (nsMsgSearchScopeAttribute, nsIMsgFolder *);
+	nsMsgSearchScopeTerm (nsIMsgSearchSession *, nsMsgSearchScopeAttribute, nsIMsgFolder *);
 	nsMsgSearchScopeTerm ();
 	virtual ~nsMsgSearchScopeTerm ();
 
@@ -42,7 +43,7 @@ public:
 	PRBool IsOfflineMail ();
 	PRBool IsOfflineIMAPMail();  // added by mscott 
 	nsresult GetMailPath(nsIFileSpec **aFileSpec);
-	nsresult TimeSlice ();
+	nsresult TimeSlice (PRBool *aDone);
 
 	nsresult InitializeAdapter (nsMsgSearchTermArray &termList);
 
@@ -53,6 +54,7 @@ public:
 	nsCOMPtr <nsIMsgFolder> m_folder;
 	nsInputFileStream		*m_fileStream;
 	nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
+  nsCOMPtr <nsIMsgSearchSession> m_searchSession;
 	PRBool m_searchServer;
 
 };

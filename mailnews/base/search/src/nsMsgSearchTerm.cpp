@@ -254,7 +254,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchOperator op, 
 	nsMsgSearchValue *val,
 	nsMsgSearchBooleanOperator boolOp,
-	char * arbitraryHeader) 
+	const char * arbitraryHeader) 
 {
 	m_operator = op;
 	m_attribute = attrib;
@@ -1126,12 +1126,13 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 //-----------------------------------------------------------------------------
 // nsMsgSearchScopeTerm implementation
 //-----------------------------------------------------------------------------
-nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsMsgSearchScopeAttribute attribute, nsIMsgFolder *folder)
+nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session, nsMsgSearchScopeAttribute attribute, nsIMsgFolder *folder)
 {
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
 	m_fileStream = nsnull;
+  m_searchSession = session;
 }
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
@@ -1190,7 +1191,7 @@ nsresult nsMsgSearchScopeTerm::GetMailPath(nsIFileSpec **aFileSpec)
 	return (m_folder) ? m_folder->GetPath(aFileSpec) : NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgSearchScopeTerm::TimeSlice ()
+nsresult nsMsgSearchScopeTerm::TimeSlice (PRBool *aDone)
 {
 	return NS_OK;
 }

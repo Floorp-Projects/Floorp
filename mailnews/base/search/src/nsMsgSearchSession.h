@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -26,47 +26,61 @@
 #include "nscore.h"
 #include "nsMsgSearchCore.h"
 #include "nsIMsgSearchSession.h"
+#include "nsIUrlListener.h"
+#include "nsIMsgWindow.h"
+#include "nsITimer.h"
 
-/* Use the code below as a template for the implementation class for this interface. */
+class nsMsgSearchAdapter;
 
-/* Header file */
-class nsMsgSearchSession : public nsIMsgSearchSession
+class nsMsgSearchSession : public nsIMsgSearchSession, public nsIUrlListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSEARCHSESSION
+  NS_DECL_NSIURLLISTENER
 
   nsMsgSearchSession();
   virtual ~nsMsgSearchSession();
-  /* additional members */
 
+protected:
 
-	NS_IMETHOD AddSearchTerm (nsMsgSearchAttribute attrib,    /* attribute for this term                */
-			nsMsgSearchOperator op,         /* operator e.g. opContains               */
-			nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
-			PRBool BooleanAND, 		   /*  set to true if associated boolean operator is AND */
-			char * arbitraryHeader);      /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
+  nsCOMPtr <nsIMsgWindow> m_window;
 
-	/* add a scope (e.g. a mail folder) to the search */
-	NS_IMETHOD AddScopeTerm (
-		nsMsgSearchScope attrib,     /* what kind of scope term is this        */
-		nsIMsgFolder *folder);       /* which folder to search                 */
+	nsresult Initialize();
+	nsresult TimeSlice (PRBool *aDone);
+	nsMsgSearchAdapter *GetRunningAdapter ();
+	nsMsgSearchScopeTerm *GetRunningScope();
+	void			StopRunning();
+	nsresult BeginSearching();
+	nsresult BuildUrlQueue ();
+	nsresult AddUrl(const char *url);
+	nsresult SearchWOUrls ();
+	nsresult GetNextUrl();
 
-/* Call this function everytime the scope changes! It informs the FE if 
-   the current scope support custom header use. FEs should not display the
-   custom header dialog if custom headers are not supported */
+	nsMsgSearchScopeTermArray m_scopeList;
+	nsMsgSearchTermArray m_termList;
+	nsMsgResultArray m_resultList;
 
-NS_IMETHOD ScopeUsesCustomHeaders(nsMsgSearchScope scope,
-	void * selection,              /* could be a folder or server based on scope */
-	PRBool forFilters, PRBool *result) ;	 
+	void DestroyTermList ();
+	void DestroyScopeList ();
+	void DestroyResultList ();
 
-/* add all scopes of a given type to the search */
-NS_IMETHOD AddAllScopes (nsMsgSearchScope attrib) ;    /* what kind of scopes to add             */
+  static void TimerCallback(nsITimer *aTimer, void *aClosure);
+	// support for searching multiple scopes in serial
+	nsresult TimeSliceSerial (PRBool *aDone);
+	nsresult TimeSliceParallel ();
 
-NS_IMETHOD GetSearchType (nsMsgSearchType *aResult) ;
-NS_IMETHOD SetSearchParam (nsMsgSearchType type,          /* type of specialized search to perform   */
-			void *param) ;                 /* extended search parameter               */
-NS_IMETHOD GetNumResults (PRUint32 *numResults) ;
+	nsMsgSearchAttribute m_sortAttribute;
+	PRBool m_descending;
+	// support for searching multiple scopes in parallel
+	PRBool m_parallel;
+	PRInt32 m_idxRunningScope;
+	nsMsgSearchScopeTermArray m_parallelScopes;
+	nsMsgSearchType m_searchType;
+	void *m_pSearchParam;
+	PRBool m_handlingError;
+  nsCStringArray m_urlQueue;
+  nsCOMPtr <nsITimer> m_backgroundTimer;
 
 
 };

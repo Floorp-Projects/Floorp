@@ -276,7 +276,7 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
 									const char *headers, PRUint32 headersSize, PRBool *pResult)
 {
 
-	nsMsgSearchScopeTerm scope (nsMsgSearchScope::MailFolder, folder);
+	nsMsgSearchScopeTerm scope (nsnull, nsMsgSearchScope::MailFolder, folder);
 	return nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
                                                            &scope,
                                                            db, 
