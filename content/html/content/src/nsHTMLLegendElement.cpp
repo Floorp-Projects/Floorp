@@ -32,6 +32,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIForm.h"
+#include "nsIFormControl.h"
 #include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
@@ -41,7 +42,8 @@ static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
-                            public nsIHTMLContent
+                            public nsIHTMLContent,
+                            public nsIFormControl
 {
 public:
   nsHTMLLegendElement(nsIAtom* aTag);
@@ -73,10 +75,16 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+
+  // nsIFormControl
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Init() { return NS_OK; }
+
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -120,9 +128,14 @@ nsresult
 nsHTMLLegendElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLLegendElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLLegendElement))) {
     nsIDOMHTMLLegendElement* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
+    *aInstancePtr = (void*)(nsIFormControl*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -140,6 +153,20 @@ nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
+// nsIContent
+
+NS_IMETHODIMP
+nsHTMLLegendElement::SetParent(nsIContent* aParent)
+{
+  return mInner.SetParentForFormControls(aParent, this, mForm);
+}
+
+NS_IMETHODIMP
+nsHTMLLegendElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+{
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+}
+
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
@@ -154,6 +181,44 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
   }
   return result;
 }
+
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
+NS_IMETHODIMP
+nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  nsresult result = NS_OK;
+  if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+// nsIFormControl
+
+NS_IMETHODIMP
+nsHTMLLegendElement::GetType(PRInt32* aType)
+{
+  if (aType) {
+    *aType = NS_FORM_LEGEND;
+    return NS_OK;
+  } else {
+    return NS_FORM_NOTOK;
+  }
+}
+
 
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align)
