@@ -124,6 +124,11 @@ public:
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer);
 
+  NS_IMETHOD CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+                                       nsIDocument* aDocument,
+                                       const char *aCommand,
+                                       nsIContentViewer** aDocViewerResult);
+
   // for nsIDocStreamLoaderFactory
   NS_METHOD CreateInstance(nsIInputStream& aInputStream,
                            const char* aContentType,
@@ -274,6 +279,37 @@ nsLayoutDLF::CreateInstance(nsIURL* aURL,
       return NS_NewPluginContentViewer(aCommand, aDocListener, aDocViewer);
     }
   }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsLayoutDLF::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+                                       nsIDocument* aDocument,
+                                       const char *aCommand,
+                                       nsIContentViewer** aDocViewerResult)
+{
+  nsresult rv = NS_ERROR_FAILURE;  
+
+  // Load the UA style sheet if we haven't already done that
+  if (nsnull == gUAStyleSheet) {
+    InitUAStyleSheet();
+  }
+
+  do {
+    nsCOMPtr<nsIDocumentViewer> docv;
+    // Create the document viewer
+    rv = NS_NewDocumentViewer(getter_AddRefs(docv));
+    if (NS_FAILED(rv))
+      break;
+    docv->SetUAStyleSheet(gUAStyleSheet);
+
+    // Bind the document to the Content Viewer
+    rv = docv->BindToDocument(aDocument, aCommand);
+    *aDocViewerResult = docv;
+    NS_IF_ADDREF(*aDocViewerResult);
+  } while (PR_FALSE);
 
   return rv;
 }
