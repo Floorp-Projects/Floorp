@@ -374,18 +374,22 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 
     /* Open the file for exclusive random read/write */
     *fh = XP_FileOpen(path, XP_FILE_UPDATE_BIN);
+    if ( !VALID_FILEHANDLE(*fh) )
+    {
+        XP_StatStruct st;
+        if ( XP_Stat( path, &st ) != 0 )
+        {
+            /* file doesn't exist, so create */
+            *fh = XP_FileOpen(path, XP_FILE_TRUNCATE_BIN);
+        }
+    }
 
     if ( !VALID_FILEHANDLE(*fh) )
     {
         switch (PR_GetError())
         {
-        case PR_FILE_NOT_FOUND_ERROR:   
-            /* file not found, try to create it */
-            *fh = XP_FileOpen(path, XP_FILE_TRUNCATE_BIN);
-            if ( VALID_FILEHANDLE(*fh) )
-                return REGERR_OK;
-            else
-                return REGERR_NOFILE;
+        case PR_FILE_NOT_FOUND_ERROR:   /* file not found */
+            return REGERR_NOFILE;
 
         case PR_FILE_IS_BUSY_ERROR: /* file in use */
         case PR_FILE_IS_LOCKED_ERROR:
