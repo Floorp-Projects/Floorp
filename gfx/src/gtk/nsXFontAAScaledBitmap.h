@@ -60,8 +60,14 @@ class nsHashtable;
 
 class nsXFontAAScaledBitmap : public nsXFont {
 public:
+  // we use PRUint16 instead of PRUint32 for the final two arguments in this
+  // constructor to work around a GCC 2.95[.3] bug which would otherwise cause
+  // these parameters to be corrupted in the callee.  n.b. at the time of
+  // writing the only caller is passing PRUint16 values anyway (and within
+  // the constructor we go on toassign a parameter to a PRUint16-sized member
+  // variable) so semantically nothing is lost.
   nsXFontAAScaledBitmap(Display *aDisplay, int aScreen, GdkFont *,
-                        PRUint32, PRUint32);
+                        PRUint16, PRUint16);
   ~nsXFontAAScaledBitmap();
 
   void         DrawText8(GdkDrawable *Drawable, GdkGC *GC, PRInt32, PRInt32,
