@@ -274,8 +274,10 @@ sub show_bug {
                        || $::userid == $bug{'reporter'}
                        || $::userid == $bug{'qa_contact'}
                        || $::userid == $bug{'assigned_to'}
-                       || UserInGroup("editbugs");                   
-    $user{'canconfirm'} = ($::userid == 0) || UserInGroup("canconfirm");
+                       || UserInGroup("editbugs");
+    $user{'canconfirm'} = ($::userid == 0)
+                          || UserInGroup("canconfirm")
+                          || UserInGroup("editbugs");
 
     # Bug states
     $bug{'isunconfirmed'} = ($bug{'bug_status'} eq $::unconfirmedstate);

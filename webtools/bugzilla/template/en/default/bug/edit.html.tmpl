@@ -371,7 +371,7 @@
   [% knum = 1 %]
 
   [% IF bug.bug_status == "UNCONFIRMED" && 
-        (user.canedit || user.canconfirm) %]
+        user.canconfirm %]
     <input type="radio" name="knob" value="confirm">
     Confirm bug (change status to <b>NEW</b>)
     <br>
@@ -380,7 +380,7 @@
 
   [% IF user.canedit %]
     [% IF bug.isopened %]
-      [% IF bug.bug_status != "ASSIGNED" %]
+      [% IF bug.bug_status != "ASSIGNED" && user.canconfirm %]
         <input type="radio" name="knob" value="accept">
         Accept bug (
         [% "confirm bug, " IF bug.isunconfirmed %]change
@@ -424,7 +424,7 @@
                        }"  
              value="[% bug.assigned_to_email FILTER html %]">
       <br>
-      [% IF bug.isunconfirmed %]
+      [% IF bug.isunconfirmed && user.canconfirm %]
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="andconfirm">
         and confirm bug (change status to <b>NEW</b>)
         <br>
@@ -436,7 +436,7 @@
       [% "and QA contact" IF useqacontact %]
       of selected component
       <br>
-      [% IF bug.isunconfirmed %]
+      [% IF bug.isunconfirmed && user.canconfirm %]
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="compconfirm">
         and confirm bug (change status to <b>NEW</b>)
         <br>
