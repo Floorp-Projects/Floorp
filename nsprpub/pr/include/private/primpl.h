@@ -1694,6 +1694,9 @@ struct PRFilePrivate {
     PRInt32 peekBufSize;
     PRInt32 peekBytes;
 #endif
+#if !defined(XP_UNIX)   /* BugZilla: 4090 */
+    PRBool  appendMode;                             
+#endif
     _MDFileDesc md;
 };
 
