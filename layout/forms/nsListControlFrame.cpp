@@ -2804,7 +2804,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
+  NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
   //REFLOW_DEBUG_MSG("MouseMove\n");
 
   if (IsInDropDownMode() == PR_TRUE) { 
@@ -2827,14 +2827,26 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 nsresult
 nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
 {
-  NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
+  NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
   //REFLOW_DEBUG_MSG("DragMove\n");
 
   if (IsInDropDownMode() == PR_FALSE) { 
     PRInt32 selectedIndex;
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
-      // DragMove is the same as hitting shift+click
-      PerformSelection(selectedIndex, PR_TRUE, PR_FALSE);
+      // Don't waste cycles if we already dragged over this item
+      if (selectedIndex == mEndSelectionIndex) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+      NS_ASSERTION(mouseEvent, "aMouseEvent is not an nsIDOMMouseEvent!");
+      PRBool isControl;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      mouseEvent->GetMetaKey(&isControl);
+#else
+      mouseEvent->GetCtrlKey(&isControl);
+#endif
+      // Turn SHIFT on when you are dragging, unless control is on.
+      PerformSelection(selectedIndex, !isControl, isControl);
     }
   }
   return NS_OK;
@@ -3050,6 +3062,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   nsresult rv         = NS_ERROR_FAILURE; 
   PRUint32 code       = 0;
   PRUint32 numOptions = 0;
+  PRBool isControl    = PR_FALSE;
   PRBool isShift      = PR_FALSE;
   nsCOMPtr<nsIDOMHTMLCollection> options;
 
@@ -3067,14 +3080,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
     }
 #endif
-    PRBool isControl = PR_FALSE;
     PRBool isAlt     = PR_FALSE;
-    PRBool isMeta    = PR_FALSE;
-    keyEvent->GetCtrlKey(&isControl);
-    keyEvent->GetMetaKey(&isMeta);
-    if (isControl || isMeta) {
-      return NS_OK;
-    }
 
     keyEvent->GetAltKey(&isAlt);
     // Fix for Bug 62425
@@ -3099,6 +3105,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
     }
 
+    keyEvent->GetCtrlKey(&isControl);
+    if (!isControl) {
+      keyEvent->GetMetaKey(&isControl);
+    }
     keyEvent->GetShiftKey(&isShift);
 
     // now make sure there are options or we are wasting our time
@@ -3201,8 +3211,16 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } break;
 
 
+    case nsIDOMKeyEvent::DOM_VK_SPACE: {
+      newIndex = mEndSelectionIndex;
+      } break;
+  
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
+      if (isControl) {
+        return NS_OK;
+      }
+
       code = (PRUint32)nsCRT::ToLower((char)code);
       PRInt32 selectedIndex;
       GetSelectedIndex(&selectedIndex);
@@ -3222,7 +3240,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
             ToLowerCase(text);
             PRUnichar firstChar = text.CharAt(0);
             if (firstChar == (PRUnichar)code) {
-              PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);
+              PerformSelection(selectedIndex, isShift, isControl);
               if (mComboboxFrame && mIsAllFramesHere) {
                 // dispatch event
                 mComboboxFrame->UpdateSelection(PR_TRUE,
@@ -3244,16 +3262,23 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } // while
     } break;//case
   } // switch
-
+  
   // Actually process the new index and let the selection code
   // do the scrolling for us
   if (newIndex != kNothingSelected) {
-    PerformSelection(newIndex, isShift, PR_FALSE);
-    // Dispatch event
-    if (mComboboxFrame && mIsAllFramesHere) {
-      mComboboxFrame->UpdateSelection(PR_TRUE, PR_FALSE, newIndex);
+    // If you hold control, no key will actually do anything except space.
+    if (isControl && code != nsIDOMKeyEvent::DOM_VK_SPACE) {
+      mStartSelectionIndex = newIndex;
+      mEndSelectionIndex = newIndex;
+      ScrollToIndex(newIndex);
     } else {
-      UpdateSelection();
+      PerformSelection(newIndex, isShift, isControl);
+      // Dispatch event
+      if (mComboboxFrame && mIsAllFramesHere) {
+        mComboboxFrame->UpdateSelection(PR_TRUE, PR_FALSE, newIndex);
+      } else {
+        UpdateSelection();
+      }
     }
 
     // XXX - Are we cover up a problem here???
