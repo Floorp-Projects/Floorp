@@ -25,11 +25,7 @@
 #include "nsInstallExecute.h"
 
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
-
-#include "nsInstallErrorMessages.h"
-
 
 nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
                                       const nsString& inJarLocation,
@@ -53,7 +49,8 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
 
 nsInstallExecute::~nsInstallExecute()
 {
-    delete mExecutableFile;
+    if (mExecutableFile)
+        delete mExecutableFile;
 }
 
 
@@ -63,66 +60,42 @@ PRInt32 nsInstallExecute::Prepare()
     if (mInstall == NULL || mJarLocation == "null") 
         return nsInstall::INVALID_ARGUMENTS;
 
-    return mInstall->ExtractFileFromJar(mJarLocation, "", &mExecutableFile);
+    return mInstall->ExtractFileFromJar(mJarLocation, nsnull, &mExecutableFile);
 }
 
 PRInt32 nsInstallExecute::Complete()
 {
     if (mExecutableFile == nsnull)
         return nsInstall::INVALID_ARGUMENTS;
-    
-    char* tempCString = mExecutableFile->ToNewCString();
 
-    nsFileSpec appPath(tempCString , false);
+    nsFileSpec appPath( *mExecutableFile, false);
     
-    delete [] tempCString;
-
     if (!appPath.Exists())
 	{
 		return nsInstall::INVALID_ARGUMENTS;
 	}
 
-    tempCString = mArgs.ToNewCString();
-	
-    PRInt32 result = appPath.Execute(tempCString);
-        
-    delete [] tempCString;
+    PRInt32 result = appPath.Execute( mArgs );
     
     return result;
 }
 
 void nsInstallExecute::Abort()
 {
-    char* currentName;
-    int result;
-
     /* Get the names */
     if (mExecutableFile == nsnull) 
         return;
 
-    currentName = mExecutableFile->ToNewCString();
-
-    result = PR_Delete(currentName);
-    PR_ASSERT(result == 0); /* FIX: need to fe_deletefilelater() or something */
+    mExecutableFile->Delete(PR_FALSE);
     
-    delete currentName;
+    if ( mExecutableFile->Exists() )
+    {
+        /* FIX: need to fe_deletefilelater() or something */
+    }
 }
 
 char* nsInstallExecute::toString()
 {
-    nsString fullPathString(mJarLocation);
-    fullPathString.Append(*mExecutableFile);
-
-    if (mExecutableFile == nsnull) 
-    {
-        // FIX!
-       // return nsInstallErrorMessages::GetString(nsInstall::DETAILS_EXECUTE_PROGRESS, fullPathString);
-    } 
-    else 
-    {
-        // return nsInstallErrorMessages::GetString(nsInstall::DETAILS_EXECUTE_PROGRESS2, fullPathString);
-    }
-
     return nsnull;
 }
 

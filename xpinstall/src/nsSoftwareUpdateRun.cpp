@@ -14,6 +14,7 @@
 #include "nsInstall.h"
 #include "zipfile.h"
 
+#include "nsSpecialSystemDirectory.h"
 
 extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, char* jarfile, char* args);
 
@@ -29,7 +30,7 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
  * returns an error code
  */
 
-static short ReadFileIntoBuffer(char * fileName, char** buffer, unsigned long *bufferSize)
+static short ReadFileIntoBuffer(const char* fileName, char** buffer, unsigned long *bufferSize)
 {
     PRFileDesc* file;
     struct stat st;
@@ -84,7 +85,7 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
     // Open the jarfile.
     void* hZip;
 
-    PRInt32 result = ZIPR_OpenArchive(jarFile ,  &hZip);
+    PRInt32 result = ZIP_OpenArchive(jarFile ,  &hZip);
     
     if (result != ZIP_OK)
     {
@@ -95,13 +96,15 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
     // Read manifest file for Install Script filename.
     //FIX:  need to do.
     
-    char* installJSFile = "c:\\temp\\install.js";
 
+    nsSpecialSystemDirectory installJSFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    installJSFileSpec += "install.js";
+    installJSFileSpec.MakeUnique();
 
-    remove(installJSFile);
+    const char* installJSFile = installJSFileSpec.operator const char* ();
 
     // Extract the install.js file.
-    result  = ZIPR_ExtractFile( hZip, "install.js", installJSFile );
+    result  = ZIP_ExtractFile( hZip, "install.js", installJSFile );
     if (result != ZIP_OK)
     {
         return result;
@@ -127,7 +130,7 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
         nsIScriptContextOwner*  scriptContextOwner;
         nsIScriptContext*       scriptContext;
 
-        rv = aWindow->Init(nsnull, nsnull, rect, PRUint32(0), PR_FALSE);
+        rv = aWindow->Init(nsnull, nsnull, rect, PRUint32(0), PR_TRUE);
 
         if (rv == NS_OK)
         {
@@ -170,7 +173,8 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
         return -1;
     }
 
-    ZIPR_CloseArchive(&hZip);
+    ZIP_CloseArchive(&hZip);
+    installJSFileSpec.Delete(PR_FALSE);
 
     return 0;
 }

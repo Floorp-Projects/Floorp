@@ -25,7 +25,6 @@
 #include "nsInstallObject.h"
 
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
 
 
@@ -55,7 +54,7 @@ class nsInstallExecute : public nsInstallObject
         nsString mJarLocation; // Location in the JAR
         nsString mArgs;        // command line arguments
         
-        nsString *mExecutableFile;    // temporary file location
+        nsFileSpec *mExecutableFile;    // temporary file location
         
 
         PRInt32 NativeComplete(void);

@@ -26,9 +26,6 @@
 
 #include "nsInstall.h"
 #include "nsInstallVersion.h"
-#include "nsIDOMInstallFolder.h"
-
-
 
 class nsInstallFile : public nsInstallObject 
 {
@@ -48,7 +45,7 @@ class nsInstallFile : public nsInstallObject
                         const nsString& inVRName,
                         nsIDOMInstallVersion* inVInfo,
                         const nsString& inJarLocation,
-                        nsIDOMInstallFolder* folderSpec,
+                        const nsString& folderSpec,
                         const nsString& inPartialPath,
                         PRBool forceInstall,
                         PRInt32 *error);
@@ -67,21 +64,23 @@ class nsInstallFile : public nsInstallObject
     private:
 
         /* Private Fields */
-        nsInstallVersion* mVersionInfo;	        /* Version info for this file*/
+        nsInstallVersion* mVersionInfo;	  /* Version info for this file*/
         
-        nsString*   mJarLocation;	      /* Location in the JAR */
-        nsString*   mTempFile;	          /* temporary file location */
-        nsString*   mFinalFile;	          /* final file destination */
+        nsString*     mJarLocation;	      /* Location in the JAR */
+        nsFileSpec*   mExtracedFile;	  /* temporary file location */
+        nsFileSpec*   mFinalFile;	      /* final file destination */
+
         nsString*   mVersionRegistryName; /* full version path */
         
         PRBool      mForceInstall;   /* whether install is forced */
         PRBool      mJavaInstall;    /* whether file is installed to a Java directory */
         PRBool      mReplaceFile;    /* whether file exists */
         PRBool      mChildFile;      /* whether file is a child */
-        PRBool      mUpgradeFile;     /* whether file is an upgrade */
+        PRBool      mUpgradeFile;    /* whether file is an upgrade */
 
-        int         NativeComplete();
-        PRBool      DoesFileExist();
+
+        PRInt32     CompleteFileMove();
+        PRInt32     RegisterInVersionRegistry();
 };
 
 #endif /* nsInstallFile_h__ */

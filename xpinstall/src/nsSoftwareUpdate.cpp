@@ -28,7 +28,6 @@
 
 #include "VerReg.h"
 
-
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -56,8 +55,6 @@
 #include "nsIDOMInstallVersion.h"
 #include "nsInstallVersion.h"
 
-#include "nsIDOMInstallFolder.h"
-#include "nsInstallFolder.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -78,9 +75,6 @@ static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
-
-static NS_DEFINE_IID(kIInstallFolder_IID, NS_IDOMINSTALLFOLDER_IID);
-static NS_DEFINE_IID(kInstallFolder_CID, NS_SoftwareUpdateInstallFolder_CID);
 
 static PRInt32 gInstanceCnt = 0;
 static PRInt32 gLockCnt     = 0;
@@ -328,13 +322,7 @@ nsSoftwareUpdateNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
 {
     nsresult result = NS_OK;
 
- //   result = NS_InitInstallClass(aScriptContext, nsnull);
-    if (result != NS_OK) return result;
-    
     result = NS_InitInstallVersionClass(aScriptContext, nsnull);
-    if (result != NS_OK) return result;
-
-    result = NS_InitInstallFolderClass(aScriptContext, nsnull);
     if (result != NS_OK) return result;
 
     result = NS_InitInstallTriggerGlobalClass(aScriptContext, nsnull);
@@ -358,20 +346,10 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
         
         if (result != NS_OK) return result;
         
-        result = manager->RegisterGlobalName("InstallFolder", 
-                                             kInstallFolder_CID, 
-                                             PR_TRUE);
-        
-        if (result != NS_OK) return result;
-        
-
         result = manager->RegisterGlobalName("InstallTrigger", 
                                              kInstallTrigger_CID, 
                                              PR_FALSE);
 
-        
-
-        
     }
     
     if (manager != nsnull)
@@ -394,10 +372,10 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** XPInstall is being registered\n");
+    
     nsRepository::RegisterComponent(kSoftwareUpdate_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterComponent(kInstallTrigger_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterComponent(kInstallVersion_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kInstallFolder_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
     return NS_OK;
 }
@@ -410,7 +388,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsRepository::UnregisterFactory(kSoftwareUpdate_CID, path);
     nsRepository::UnregisterFactory(kInstallTrigger_CID, path);
     nsRepository::UnregisterFactory(kInstallVersion_CID, path);
-    nsRepository::UnregisterFactory(kInstallFolder_CID, path);
 
     return NS_OK;
 }
@@ -437,10 +414,6 @@ NSGetFactory(nsISupports* serviceMgr,
     if (aClass.Equals(kInstallTrigger_CID) )
     {
         inst = new nsInstallTriggerFactory();
-    }
-    else if (aClass.Equals(kInstallFolder_CID) )
-    {
-        inst = new nsInstallFolderFactory();
     }
     else if (aClass.Equals(kInstallVersion_CID) )
     {

@@ -25,30 +25,29 @@
 #include "nsInstallDelete.h"
 
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
 
-#include "nsInstallErrorMessages.h"
-
-
 nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
-                                  nsIDOMInstallFolder*  folderSpec,
+                                  const nsString& folderSpec,
                                   const nsString& inPartialPath,
                                   PRInt32 *error)
 
 : nsInstallObject(inInstall)
 {
-    if ((folderSpec == NULL) || (inInstall == NULL)) 
+    if ((folderSpec == "null") || (inInstall == NULL)) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
     
     mDeleteStatus = DELETE_FILE;
-    mFinalFile      = "";
+    mFinalFile      = nsnull;
     mRegistryName   = "";
-    folderSpec->MakeFullPath(inPartialPath, mFinalFile);
- 
+    
+
+    mFinalFile = new nsFileSpec(folderSpec);
+    *mFinalFile += inPartialPath;
+
     *error = ProcessInstallDelete();
 }
 
@@ -65,7 +64,7 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
     }
     
     mDeleteStatus = DELETE_COMPONENT;
-    mFinalFile    = "";
+    mFinalFile    = nsnull;
     mRegistryName = inComponentName;
 
     *error = ProcessInstallDelete();
@@ -74,6 +73,8 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
 
 nsInstallDelete::~nsInstallDelete()
 {
+    if (mFinalFile == nsnull)
+        delete mFinalFile;
 }
 
 
@@ -92,9 +93,9 @@ PRInt32 nsInstallDelete::Complete()
 
     if (mDeleteStatus == DELETE_COMPONENT) 
     {
-        char* tempString = mRegistryName.ToNewCString();
-        err = VR_Remove( tempString );
-        delete tempString;
+        char* temp = mRegistryName.ToNewCString();
+        err = VR_Remove(temp);
+        delete [] temp;
     }
 
     if ((mDeleteStatus == DELETE_FILE) || (err == REGERR_OK)) 
@@ -116,16 +117,6 @@ void nsInstallDelete::Abort()
 
 char* nsInstallDelete::toString()
 {
-    if (mDeleteStatus == DELETE_FILE) 
-    {
-        // FIX!
-       // return nsInstallErrorMessages::GetString(nsInstall::DETAILS_DELETE_FILE, mFinalFile);
-    } 
-    else 
-    {
-        // return nsInstallErrorMessages::GetString(nsInstall::DETAILS_DELETE_COMPONENT, mRegistryName);
-    }
-
     return nsnull;
 }
 
@@ -146,45 +137,46 @@ nsInstallDelete::RegisterPackageNode()
 PRInt32 nsInstallDelete::ProcessInstallDelete()
 {
     PRInt32 err;
-    char* tempString;
+    
+    char* tempCString = nsnull;
 
     if (mDeleteStatus == DELETE_COMPONENT) 
     {
         /* Check if the component is in the registry */
-        tempString = mRegistryName.ToNewCString();
-        err = VR_InRegistry(tempString);
-        delete tempString;
-        
+        tempCString = mRegistryName.ToNewCString();
+
+        err = VR_InRegistry( tempCString );
+                
         if (err != REGERR_OK) 
         {
             return err;
         } 
         else 
         {
-            tempString = (char*)PR_Calloc(MAXREGPATHLEN, sizeof(char));
-            char* regTempString = mRegistryName.ToNewCString();
+            char* tempRegistryString;
 
-            err = VR_GetPath( regTempString , MAXREGPATHLEN, tempString);
+            tempRegistryString = (char*)PR_Calloc(MAXREGPATHLEN, sizeof(char));
             
-            delete regTempString;
-
+            err = VR_GetPath( tempCString , MAXREGPATHLEN, tempRegistryString);
+            
             if (err == REGERR_OK)
             {
-                mFinalFile.SetString(tempString);
+                if (mFinalFile)
+                    delete mFinalFile;
+
+                mFinalFile = new nsFileSpec(tempRegistryString);
             }
 
-            PR_FREEIF(tempString);
+            PR_FREEIF(tempRegistryString);
         }
     }
-
-    tempString = mFinalFile.ToNewCString();
     
-    nsFileSpec file(tempString);
-    delete tempString;
+    if(tempCString)
+        delete [] tempCString;
 
-    if (file.Exists())
+    if (mFinalFile->Exists())
     {
-        if (file.IsFile())
+        if (mFinalFile->IsFile())
         {
             err = nsInstall::SUCCESS;
         }
@@ -205,17 +197,13 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
 
 PRInt32 nsInstallDelete::NativeComplete()
 {
-    char * tempFile = mFinalFile.ToNewCString();
-    nsFileSpec file(tempFile);
-    delete tempFile;
-
-    if (file.Exists())
+    if (mFinalFile->Exists())
     {
-        if (file.IsFile())
+        if (mFinalFile->IsFile())
         {
-           file.Delete(false);
+           mFinalFile->Delete(false);
 
-           if (file.Exists())
+           if (mFinalFile->Exists())
            {
                 // If file still exists, we need to delete it later!
                 // FIX DeleteOldFileLater( (char*)finalFile );
@@ -227,9 +215,7 @@ PRInt32 nsInstallDelete::NativeComplete()
             return nsInstall::FILE_IS_DIRECTORY;
         }
     }
-    else
-    {
-        return nsInstall::FILE_DOES_NOT_EXIST;
-    }
+    
+    return nsInstall::FILE_DOES_NOT_EXIST;
 }
 
