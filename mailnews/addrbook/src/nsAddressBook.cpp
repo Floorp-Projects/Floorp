@@ -37,6 +37,8 @@
 #include "nsFileLocations.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
+#include "nsIDOMWindow.h"
+#include "nsIContentViewer.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -264,3 +266,61 @@ nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 
 }
 
+nsresult nsAddressBook::PrintCard()
+{
+#ifdef DEBUG_seth
+  printf("nsAddressBook::PrintCard()\n");
+#endif
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContentViewer> viewer;
+
+  if (!mWebShell) {
+#ifdef DEBUG_seth
+        printf("can't print, there is no webshell\n");
+#endif
+        return rv;
+  }
+
+  mWebShell->GetContentViewer(getter_AddRefs(viewer));
+
+  if (viewer) {
+    rv = viewer->Print();
+  }
+#ifdef DEBUG_seth
+  else {
+        printf("failed to get the viewer for printing\n");
+  }
+#endif
+
+  return rv;  
+}
+
+nsresult nsAddressBook::PrintAddressbook()
+{
+#ifdef DEBUG_seth
+	printf("nsAddressBook::PrintAddressbook()\n");
+#endif
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsAddressBook::SetWebShellWindow(nsIDOMWindow *aWin)
+{
+   NS_PRECONDITION(aWin != nsnull, "null ptr");
+   if (!aWin)
+       return NS_ERROR_NULL_POINTER;
+ 
+   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
+   if (!globalObj) {
+     return NS_ERROR_FAILURE;
+   }
+ 
+   nsCOMPtr<nsIWebShell> webShell;
+   globalObj->GetWebShell(getter_AddRefs(webShell));
+   if (!webShell)
+     return NS_ERROR_NOT_INITIALIZED;
+ 
+   mWebShell = webShell;
+
+   return NS_OK;
+}

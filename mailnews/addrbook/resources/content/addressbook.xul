@@ -65,7 +65,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem id="pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" onaction="AbPrintPreview()"/>
-			<menuitem value="&printCardViewCmd.label;" onaction="AbCardView()"/>
+			<menuitem value="&printCardViewCmd.label;" onaction="AbPrintCard()"/>
 			<menuitem value="&printAddressBook.label;" onaction="AbPrintAddressBook()"/>
 			<menuseparator/>
 			<menuitem value="&closeCmd.label;" onaction="AbClose()"/>

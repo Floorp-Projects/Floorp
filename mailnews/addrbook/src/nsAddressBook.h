@@ -23,7 +23,8 @@
 #include "nsIAbCard.h"
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
-
+#include "nsIWebShell.h"
+#include "nsIScriptGlobalObject.h"
 
 #define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -42,12 +43,15 @@ public:
 	NS_IMETHOD DeleteCards(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
 	NS_IMETHOD NewAddressBook(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const char *name);
 	NS_IMETHOD DeleteAddressBook(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
+	NS_IMETHOD PrintCard();
+        NS_IMETHOD PrintAddressbook();
+	NS_IMETHOD SetWebShellWindow(nsIDOMWindow *win);
 
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
 private:
-  
+	 nsIWebShell        *mWebShell;            // weak reference
 };
 
 #endif

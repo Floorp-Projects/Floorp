@@ -9,6 +9,13 @@ function OnLoadAddressBook()
 	
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
+
+	try {
+		top.addressbook.SetWebShellWindow(window)
+	}
+	catch (ex) {
+		dump("failed to set webshell window\n");
+	}
 }
 
 
@@ -56,4 +63,24 @@ function AbCreateNewAddressBook(name)
 	top.addressbook.NewAddressBook(document.getElementById('dirTree').database, document.getElementById('resultsTree'), name);
 }
 
+function AbPrintCard()
+{
+        dump("print card\n");
+        try {
+                addressbook.PrintCard();
+        }
+        catch (ex) {
+                dump("failed to print card\n");
+        }
+}
 
+function AbPrintAddressBook()
+{
+        dump("print address book \n");
+        try {
+                addressbook.PrintAddressbook();
+        }
+        catch (ex) {
+                dump("failed to print address book\n");
+        }
+}
