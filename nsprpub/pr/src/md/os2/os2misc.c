@@ -564,38 +564,3 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
     return PR_FAILURE;
 }
 
-/*
- *  Automatically set apptype switch for interactive and other
- *  tests that create an invisible plevent window.
- */
-unsigned long _System _DLL_InitTerm( unsigned long mod_handle, unsigned long flag)
-{
-   unsigned long rc = 0; /* failure */
-
-   if( !flag)
-   {
-      /* init */
-      if( _CRT_init() == 0)
-      {
-         PPIB pPib;
-         PTIB pTib;
-
-         /* probably superfluous, but can't hurt */
-         __ctordtorInit(0);
-
-         DosGetInfoBlocks( &pTib, &pPib);
-         pPib->pib_ultype = 3; /* PM */
-
-         rc = 1;
-      }
-   }
-   else
-   {
-      __ctordtorTerm(0);
-      _CRT_term();
-      rc = 1;
-   }
-
-   return rc;
-}
-
