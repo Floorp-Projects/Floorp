@@ -8,3 +8,4 @@ Changes made to pristine png source by mozilla.org developers.
 
 2003/06/11  -- add mozpngconf.h (bug 208607)
 
+2003/07/03  -- enable PNG_NO_WRITE_SUPPORTED in mozpngconf.h (bug 208607)
