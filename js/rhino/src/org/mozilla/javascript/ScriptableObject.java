@@ -1468,6 +1468,7 @@ public abstract class ScriptableObject implements Scriptable {
             for (int i=0; i < ids.length; i++) {
                 h.put(ids[i], ids[i]);
             }
+            obj = (Scriptable)obj.getPrototype();
         }
         Object[] result = new Object[h.size()];
         java.util.Enumeration e = h.elements();
