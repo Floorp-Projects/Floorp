@@ -176,6 +176,19 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
 
 endif
 
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ICON_FILES	= \
+		$(srcdir)/mozicon50.xpm \
+		$(srcdir)/mozicon16.xpm \
+		$(NULL)
+
+libs::
+	$(INSTALL) $(ICON_FILES) $(DIST)/bin/icons
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 APP_NAME = Mozilla\ Firebird
