@@ -42,7 +42,7 @@
 
 #include <gtk/gtk.h>
 
-#undef USE_NATIVE_TILING
+//#define USE_NATIVE_TILING 1
 
 class nsRenderingContextGTK : public nsRenderingContextImpl
 {

@@ -1499,15 +1499,11 @@ nsRenderingContextGTK::DrawTile(nsIImage *aImage,
                                 nscoord aX1, nscoord aY1,
                                 nscoord aWidth, nscoord aHeight)
 {
-
-  printf("nsRenderingContextGTK::DrawTile()\n");
+  mTMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+  mTMatrix->TransformCoord(&aX1,&aY1);
 
   nsRect srcRect (0, 0, aWidth,  aHeight);
   nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
-
-  // convert to pixels
-  mTMatrix->TransformCoord(&srcRect.width, &srcRect.height);
-  mTMatrix->TransformCoord(&tileRect.x, &tileRect.y, &tileRect.width, &tileRect.height);
 
   ((nsImageGTK*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
 
