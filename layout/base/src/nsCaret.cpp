@@ -521,31 +521,6 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
   if (NS_FAILED(rv) || !theFrame)
     return PR_FALSE;
 
-  // now we have a frame, check whether it's appropriate to show the caret here
-  const nsStyleUserInterface* userinterface;
-  theFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-  if (userinterface)
-  {
-    if (
-#ifdef SUPPORT_USER_MODIFY
-          // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
-          (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
-#endif          
-          (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
-          (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
-    {
-      return PR_FALSE;
-    }  
-  }
-  
-  // mark the frame, so we get notified on deletion.
-  // frames are never unmarked, which means that we'll touch every frame we visit.
-  // this is not ideal.
-  nsFrameState frameState;
-  theFrame->GetFrameState(&frameState);
-  frameState |= NS_FRAME_EXTERNAL_REFERENCE;
-  theFrame->SetFrameState(frameState);
-  
 #ifdef IBMBIDI
   PRUint8 bidiLevel=0;
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
@@ -718,6 +693,32 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
     }
   }
 #endif // IBMBIDI
+
+  // now we have a frame, check whether it's appropriate to show the caret here
+  const nsStyleUserInterface* userinterface;
+  theFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+  if (userinterface)
+  {
+    if (
+#ifdef SUPPORT_USER_MODIFY
+          // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
+        (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+#endif          
+        (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
+        (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
+    {
+      return PR_FALSE;
+    }  
+  }
+
+  // mark the frame, so we get notified on deletion.
+  // frames are never unmarked, which means that we'll touch every frame we visit.
+  // this is not ideal.
+  nsFrameState frameState;
+  theFrame->GetFrameState(&frameState);
+  frameState |= NS_FRAME_EXTERNAL_REFERENCE;
+  theFrame->SetFrameState(frameState);
+
   mLastCaretFrame = theFrame;
   mLastContentOffset = theFrameOffset;
   return PR_TRUE;
