@@ -417,7 +417,7 @@ function initHost(obj)
     obj.munger.addRule ("bugzilla-link", /(?:\s|\W|^)(bug\s+#?\d{3,6})/i,
                         insertBugzillaLink);
     obj.munger.addRule ("channel-link",
-                    /(?:\s|\W|^)[@+]?(#[^<>\[\]()\'\"\s]+[^:,.<>\[\]()\'\"\s])/i,
+                    /(?:\s|\W|^)[@+]?(#[^<>\[\]()\"\s]*[^:,.<>\[\]()\'\"\s])/i,
                         insertChannelLink);
     
     obj.munger.addRule ("face",
@@ -1853,7 +1853,7 @@ function getTabForObject (source, create)
                          "nsDragAndDrop.startDrag(event, tabDNDObserver);");
         tb.setAttribute ("href", source.getURL());
         tb.setAttribute ("name", source.name);
-        tb.setAttribute ("onclick", "onTabClick('" + id + "');");
+        tb.setAttribute ("onclick", "onTabClick(" + id.quote() + ");");
         tb.setAttribute ("crop", "right");
         
         tb.setAttribute ("class", "tab-bottom view-button");
