@@ -1036,7 +1036,10 @@ nsCookieService::Write()
 
   nsresult rv;
   nsCOMPtr<nsIOutputStream> fileOutputStream;
-  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream), mCookieFile);
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
+                                       mCookieFile,
+                                       -1,
+                                       0600);
   if (NS_FAILED(rv)) {
     NS_ERROR("failed to open cookies.txt for writing");
     return rv;

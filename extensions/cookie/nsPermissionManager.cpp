@@ -861,7 +861,10 @@ nsPermissionManager::Write()
   }
 
   nsCOMPtr<nsIOutputStream> fileOutputStream;
-  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream), mPermissionsFile);
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
+                                       mPermissionsFile,
+                                       -1,
+                                       0600);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get a buffered output stream 4096 bytes big, to optimize writes
