@@ -1124,6 +1124,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
     mdd->obj = 0;
     if (mdd->options) 
     {
+      // mscott: aren't we leaking a bunch of trings here like the charset strings and such?
       PR_FREEIF (mdd->options->part_to_load);
       PR_Free(mdd->options);
       mdd->options = 0;
@@ -1312,8 +1313,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
           mime_insert_forwarded_message_headers(&body, mdd->headers, composeFormat,
                                                 mdd->mailcharset);
         }
-        // setting the charset while we were creating the composition fields
-        // fields->SetCharacterSet(nsString("UTF-8").GetUnicode());
+        // setting the charset while we are creating the composition fields
+        fields->SetCharacterSet(NS_LITERAL_STRING(mdd->mailcharset));
 
       // convert from UTF-8 to UCS2
       nsAutoString ucs2;
@@ -1551,14 +1552,19 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 
   if (!nAttachments && !mdd->messageBody) 
   {
-    char *charset = NULL, *contentType = NULL;
-    contentType = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
-    if (contentType) 
+    // if we've been told to use an override charset then do so....otherwise use the charset
+    // inside the message header...
+    if (mdd->options && mdd->options->override_charset)
+        mdd->mailcharset = nsCRT::strdup(mdd->options->override_charset);
+    else
     {
-      charset = MimeHeaders_get_parameter(contentType, "charset", NULL, NULL);
-      mdd->mailcharset = nsCRT::strdup(charset);
-      PR_FREEIF(charset);
-      PR_FREEIF(contentType);
+      char *contentType = NULL;
+      contentType = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+      if (contentType) 
+      {
+        mdd->mailcharset = MimeHeaders_get_parameter(contentType, "charset", NULL, NULL);
+        PR_FREEIF(contentType);
+      }
     }
     
     mdd->messageBody = PR_NEWZAP (nsMsgAttachedFile);
