@@ -600,47 +600,12 @@ var nsSpellingCommand =
 
   doCommand: function(aCommand)
   {
-    var spellChecker = window.editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
-    if (spellChecker)
-    {
-      var firstMisspelledWord;
-      // Start the spell checker module. Return is first misspelled word
-      try {
-        spellChecker.InitSpellChecker();
-
-        // XXX: We need to read in a pref here so we can set the
-        //      default language for the spellchecker!
-        // spellChecker.SetCurrentDictionary();
-
-        firstMisspelledWord = spellChecker.GetNextMisspelledWord();
-      }
-      catch(ex) {
-        dump("*** Exception error: InitSpellChecker\n");
-        return;
-      }
-      if( firstMisspelledWord == "")
-      {
-        try {
-          spellChecker.UninitSpellChecker();
-        }
-        catch(ex) {
-          dump("*** Exception error: UnInitSpellChecker\n");
-          return;
-        }
-        // No misspelled word - tell user
-        window.editorShell.AlertWithTitle(window.editorShell.GetString("CheckSpelling"),
-                                          window.editorShell.GetString("NoMisspelledWord")); 
-      } else {
-        // Set spellChecker variable on window
-        window.spellChecker = spellChecker;
-        try {
-          window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
-                  "chrome,close,titlebar,modal", "", firstMisspelledWord);
-        }
-        catch(ex) {
-          dump("*** Exception error: SpellChecker Dialog Closing\n");
-        }
-      }
+    try {
+      window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
+              "chrome,close,titlebar,modal", "");
+    }
+    catch(ex) {
+      dump("*** Exception error: SpellChecker Dialog Closing\n");
     }
     window._content.focus();
   }
