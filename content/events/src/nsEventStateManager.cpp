@@ -3473,8 +3473,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
               nsCOMPtr<nsIDocument> doc = child->GetDocument();
               if (doc) {
                 nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
-                nsCOMPtr<nsIDOMHTMLMapElement> imageMap;
-                if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(imageMap))) && imageMap) {
+                nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc,usemap);
+                if (imageMap) {
                   nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
                   if (map) {
                     nsIContent *childArea;

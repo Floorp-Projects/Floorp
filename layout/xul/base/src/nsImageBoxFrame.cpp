@@ -260,16 +260,11 @@ nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   nsresult rv = nsLeafBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
 
-  PRBool aResize;
-  PRBool aRedraw;
-  UpdateAttributes(aPresContext, aAttribute, aResize, aRedraw);
-
-  nsBoxLayoutState state(aPresContext);
+  PRBool aResize = UpdateAttributes(aAttribute);
 
   if (aResize) {
+    nsBoxLayoutState state(aPresContext);
     MarkDirty(state);
-  } else if (aRedraw) {
-    Redraw(state);
   }
 
   return rv;
@@ -282,15 +277,13 @@ nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell) :
   mHasImage(PR_FALSE),
   mSuppressStyleCheck(PR_FALSE),
   mIntrinsicSize(0,0),
-  mLoadFlags(nsIRequest::LOAD_NORMAL),
-  mPresContext(nsnull)
+  mLoadFlags(nsIRequest::LOAD_NORMAL)
 {
   NeedsRecalc();
 }
 
 nsImageBoxFrame::~nsImageBoxFrame()
 {
-  NS_PRECONDITION(!mPresContext, "Never got destroyed properly!");
 }
 
 
@@ -311,9 +304,6 @@ nsImageBoxFrame::Destroy(nsIPresContext* aPresContext)
   if (mListener)
     NS_REINTERPRET_CAST(nsImageBoxListener*, mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
 
-  // Clear out weak ptr to prescontext
-  mPresContext = nsnull;
-  
   return nsLeafBoxFrame::Destroy(aPresContext);
 }
 
@@ -334,8 +324,6 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
     NS_RELEASE(listener);
   }
 
-  mPresContext = aPresContext;
-
   mSuppressStyleCheck = PR_TRUE;
   nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mSuppressStyleCheck = PR_FALSE;
@@ -343,8 +331,7 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
   GetImageSource();
   UpdateLoadFlags();
 
-  PRBool aResize;
-  UpdateImage(aPresContext, aResize);
+  UpdateImage();
 
   return rv;
 }
@@ -376,18 +363,17 @@ nsImageBoxFrame::GetImageSource()
   }
 }
 
-void
-nsImageBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw)
+PRBool
+nsImageBoxFrame::UpdateAttributes(nsIAtom* aAttribute)
 {
-  aResize = PR_FALSE;
-  aRedraw = PR_FALSE;
-
   if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src) {
     GetImageSource();
-    UpdateImage(aPresContext, aResize);
+    return UpdateImage();
   }
   else if (aAttribute == nsXULAtoms::validate)
     UpdateLoadFlags();
+
+  return PR_FALSE;
 }
 
 void
@@ -403,23 +389,20 @@ nsImageBoxFrame::UpdateLoadFlags()
     mLoadFlags = nsIRequest::LOAD_NORMAL;
 }
 
-void
-nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
+PRBool
+nsImageBoxFrame::UpdateImage()
 {
-  aResize = PR_FALSE;
-
   // get the new image src
   if (!mURI) {
     mSizeFrozen = PR_TRUE;
     mHasImage = PR_FALSE;
-    aResize = PR_TRUE;
 
     if (mImageRequest) {
       mImageRequest->Cancel(NS_ERROR_FAILURE);
       mImageRequest = nsnull;
     }
 
-    return;
+    return PR_TRUE;
   }
 
   nsresult rv;
@@ -427,12 +410,12 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
     nsCOMPtr<nsIURI> requestURI;
     rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
     NS_ASSERTION(NS_SUCCEEDED(rv) && requestURI,"no request URI");
-    if (NS_FAILED(rv) || !requestURI) return;
+    if (NS_FAILED(rv) || !requestURI) return PR_FALSE;
 
     PRBool eq;
     // if the source uri and the current one are the same, return
     if (NS_SUCCEEDED(requestURI->Equals(mURI, &eq)) && eq)
-      return;
+      return PR_FALSE;
   }
 
   mSizeFrozen = PR_FALSE;
@@ -445,10 +428,9 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   }
 
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-  if (NS_FAILED(rv)) return;
+  if (NS_FAILED(rv)) return PR_FALSE;
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
+  nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
 
   // Get the document URI for the referrer...
   nsIURI *documentURI = nsnull;
@@ -464,7 +446,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   il->LoadImage(mURI, nsnull, documentURI, loadGroup, mListener, doc,
                 mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
 
-  aResize = PR_TRUE;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -479,36 +461,36 @@ nsImageBoxFrame::Paint(nsIPresContext*      aPresContext,
 
   nsresult rv = nsLeafBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-  PaintImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintImage(aRenderingContext, aDirtyRect, aWhichLayer);
 
   return rv;
 }
 
 
-NS_IMETHODIMP
-nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect,
-                                nsFramePaintLayer aWhichLayer)
+void
+nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect,
+                            nsFramePaintLayer aWhichLayer)
 {
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
     // scaling work while we wait for our image dimensions to arrive
     // asynchronously.
-    return NS_OK;
+    return;
   }
 
   nsRect rect;
   GetClientRect(rect);
 
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer)
+    return;
+
+  if (!mImageRequest)
+    return;
+
   // don't draw if the image is not dirty
   if (!mHasImage || !aDirtyRect.Intersects(rect))
-    return NS_OK;
-
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer)
-    return NS_OK;
-
-  if (!mImageRequest) return NS_ERROR_UNEXPECTED;
+    return;
 
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
@@ -540,8 +522,6 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
       aRenderingContext.DrawScaledImage(imgCon, &src, &rect);
     }
   }
-
-  return NS_OK;
 }
 
 
@@ -575,18 +555,18 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
 
   mURI = newURI;
 
-  PRBool aResize;
-  UpdateImage(aPresContext, aResize);
+  UpdateImage();
   return NS_OK;
 } // DidSetStyleContext
 
 void
-nsImageBoxFrame::GetImageSize(nsIPresContext* aPresContext)
+nsImageBoxFrame::GetImageSize()
 {
   nsHTMLReflowMetrics desiredSize(PR_TRUE);
   const PRInt32 kDefaultSize = 0;
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  GetPresContext()->GetScaledPixelsToTwips(&p2t);
+  // XXX constant zero?
   const PRInt32 kDefaultSizeInTwips = NSIntPixelsToTwips(kDefaultSize, p2t);
 
 // not calculated? Get the intrinsic size
@@ -610,6 +590,7 @@ nsImageBoxFrame::GetImageSize(nsIPresContext* aPresContext)
 	  }
 	}
 
+  // XXX constant zero?
   mImageSize.width = desiredSize.width;
   mImageSize.height = desiredSize.height;
 }
@@ -619,19 +600,10 @@ nsImageBoxFrame::GetImageSize(nsIPresContext* aPresContext)
  * Ok return our dimensions
  */
 NS_IMETHODIMP
-nsImageBoxFrame::DoLayout(nsBoxLayoutState& aState)
-{
-  return nsLeafBoxFrame::DoLayout(aState);
-}
-
-/**
- * Ok return our dimensions
- */
-NS_IMETHODIMP
 nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (DoesNeedRecalc(mImageSize)) {
-     CacheImageSize(aState);
+     GetImageSize();
   }
 
   if (!mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0))
@@ -672,16 +644,6 @@ nsImageBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aCoord)
   return NS_OK;
 }
 
-/**
- * Ok return our dimensions
- */
-void
-nsImageBoxFrame::CacheImageSize(nsBoxLayoutState& aState)
-{
-  nsIPresContext* presContext = aState.GetPresContext();
-  GetImageSize(presContext);
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsImageBoxFrame::GetFrameName(nsAString& aResult) const
@@ -691,35 +653,26 @@ nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 
-void
-nsImageBoxFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup)
+already_AddRefed<nsILoadGroup>
+nsImageBoxFrame::GetLoadGroup()
 {
-  nsIPresShell *shell = aPresContext->GetPresShell();
-
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (!shell)
-    return;
+    return nsnull;
 
   nsCOMPtr<nsIDocument> doc;
   shell->GetDocument(getter_AddRefs(doc));
   if (!doc)
-    return;
+    return nsnull;
 
-  *aLoadGroup = doc->GetDocumentLoadGroup().get(); // already_AddRefed
+  return doc->GetDocumentLoadGroup(); // already_AddRefed
 }
 
-
-NS_IMETHODIMP nsImageBoxFrame::OnStartDecode(imgIRequest *request)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
                                                 imgIContainer *image)
 {
   NS_ENSURE_ARG_POINTER(image);
-
-  // If we have no prescontext, what's going on?
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);
 
   // Ensure the animation (if any) is started
   image->StartAnimation();
@@ -731,44 +684,21 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   image->GetWidth(&w);
   image->GetHeight(&h);
 
-  float p2t;
-  p2t = mPresContext->PixelsToTwips();
+  nsIPresContext* presContext = GetPresContext();
+  float p2t = presContext->PixelsToTwips();
 
   mIntrinsicSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
-  nsBoxLayoutState state(mPresContext);
-
+  nsBoxLayoutState state(presContext);
   this->MarkDirty(state);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::OnStartFrame(imgIRequest *request,
-                                            gfxIImageFrame *frame)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsImageBoxFrame::OnDataAvailable(imgIRequest *request,
-                                               gfxIImageFrame *frame,
-                                               const nsRect * rect)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageBoxFrame::OnStopFrame(imgIRequest *request,
-                                           gfxIImageFrame *frame)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request,
                                                imgIContainer *image)
 {
-  // If we have no prescontext, what's going on?
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);
-
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
   this->Redraw(state);
 
   return NS_OK;
@@ -791,10 +721,7 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container,
                                             gfxIImageFrame *newframe,
                                             nsRect * dirtyRect)
 {
-  // If we have no prescontext, what's going on?
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);
-
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
   this->Redraw(state);
 
   return NS_OK;
@@ -812,10 +739,7 @@ nsImageBoxListener::~nsImageBoxListener()
 
 NS_IMETHODIMP nsImageBoxListener::OnStartDecode(imgIRequest *request)
 {
-  if (!mFrame)
-    return NS_ERROR_FAILURE;
-
-  return mFrame->OnStartDecode(request);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageBoxListener::OnStartContainer(imgIRequest *request,
@@ -830,29 +754,20 @@ NS_IMETHODIMP nsImageBoxListener::OnStartContainer(imgIRequest *request,
 NS_IMETHODIMP nsImageBoxListener::OnStartFrame(imgIRequest *request,
                                                gfxIImageFrame *frame)
 {
-  if (!mFrame)
-    return NS_ERROR_FAILURE;
-
-  return mFrame->OnStartFrame(request, frame);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageBoxListener::OnDataAvailable(imgIRequest *request,
                                                   gfxIImageFrame *frame,
                                                   const nsRect * rect)
 {
-  if (!mFrame)
-    return NS_ERROR_FAILURE;
-
-  return mFrame->OnDataAvailable(request, frame, rect);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageBoxListener::OnStopFrame(imgIRequest *request,
                                               gfxIImageFrame *frame)
 {
-  if (!mFrame)
-    return NS_ERROR_FAILURE;
-
-  return mFrame->OnStopFrame(request, frame);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageBoxListener::OnStopContainer(imgIRequest *request,

@@ -782,8 +782,7 @@ PR_STATIC_CALLBACK(PRBool) set_animation_mode(nsHashKey *aKey, void *aData, void
 {
   nsISupports *sup = NS_REINTERPRET_CAST(nsISupports*, aData);
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, sup);
-  nsCOMPtr<imgIRequest> imgReq;
-  loader->GetRequest(getter_AddRefs(imgReq));
+  imgIRequest* imgReq = loader->GetRequest();
   SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
   return PR_TRUE;
 }
@@ -1012,25 +1011,19 @@ nsPresContext::LoadImage(nsIURI* aURL,
       }
     }
 
-    nsImageLoader *newLoader = new nsImageLoader();
-    if (!newLoader)
+    loader = new nsImageLoader();
+    if (!loader)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(newLoader); // new
-
-    nsCOMPtr<nsISupports> sup;
-    newLoader->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(sup));
-
-    loader = NS_REINTERPRET_CAST(nsImageLoader*, sup.get());
+    NS_ADDREF(loader); // new
 
     loader->Init(aTargetFrame, this);
-
-    mImageLoaders.Put(&key, sup);
+    mImageLoaders.Put(&key, loader);
   }
 
   loader->Load(aURL);
 
-  loader->GetRequest(aRequest);
+  NS_IF_ADDREF(*aRequest = loader->GetRequest());
 
   NS_RELEASE(loader);
 
