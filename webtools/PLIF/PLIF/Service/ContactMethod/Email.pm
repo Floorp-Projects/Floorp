@@ -33,7 +33,7 @@ use PLIF::Output::Generic::Email;
 @ISA = qw(PLIF::Output::Generic::Email);
 1;
 
-# XXX This inherits from PLIFF::Output::Generic::Email, which is silly
+# XXX This inherits from PLIF::Output::Generic::Email, which is silly
 # (or is it?). Should it instead be a pure service, but install the
 # Email output service? Should this just be a part of the output
 # service? (No, output services cannot be allowed to know about users
