@@ -101,3 +101,9 @@ INCLUDES += \
         -I$(srcdir)/../../../mathml/content/src \
         -I$(srcdir)/../../../mathml/base/src
 endif
+
+ifdef MOZ_SVG
+INCLUDES += \
+        -I$(srcdir)/../../../svg/content/src \
+        -I$(srcdir)/../../../svg/base/src
+endif

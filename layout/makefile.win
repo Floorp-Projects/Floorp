@@ -33,6 +33,9 @@ DIRS=                \
 !ifdef MOZ_MATHML
         mathml       \
 !endif
+!ifdef MOZ_SVG
+        svg          \
+!endif
         events       \
         build        \
 !if !defined(DISABLE_TESTS)

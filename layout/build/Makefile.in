@@ -74,6 +74,13 @@ SHARED_LIBRARY_LIBS += \
                 $(NSNULL)
 endif
 
+ifdef MOZ_SVG
+SHARED_LIBRARY_LIBS += \
+                $(DIST)/lib/libraptorsvgcontent_s.a \
+                $(DIST)/lib/libraptorsvgbase_s.a \
+                $(NSNULL)
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \

@@ -55,6 +55,9 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 !ifdef MOZ_MATHML
 	-I..\mathml\content\src \
 !endif
+!ifdef MOZ_SVG
+	-I..\svg\content\src \
+!endif
         -I$(PUBLIC)\rdf
 
 # These are the libraries we need to link with to create the dll
@@ -77,6 +80,10 @@ LLIBS=					\
 !ifdef MOZ_MATHML
  $(DIST)\lib\raptormathmlbase_s.lib \
  $(DIST)\lib\raptormathmlcontent_s.lib	\
+!endif
+!ifdef MOZ_SVG
+ $(DIST)\lib\raptorsvgbase_s.lib \
+ $(DIST)\lib\raptorsvgcontent_s.lib	\
 !endif
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom.lib		\
