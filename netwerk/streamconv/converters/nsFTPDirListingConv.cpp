@@ -289,7 +289,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         case NCSA:
         case TCPC:
         {
-            thisEntry->mName = line;
+            thisEntry->mName = nsEscape(line, url_Path);
             if (thisEntry->mName.Last() == '/')
                 thisEntry->mType = Dir;
 
@@ -298,7 +298,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
         case CMS:
         {
-            thisEntry->mName = line;
+            thisEntry->mName = nsEscape(line, url_Path);
             break; // END CMS
         }
         case VMS:
@@ -350,17 +350,17 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                 ConvertDOSDate(date, thisEntry->mMDTM);
 
-                thisEntry->mName = name;
+                thisEntry->mName = nsEscape(name, url_Path);
 			  }
 			else
 			  {
-                thisEntry->mName = line;
+                thisEntry->mName = nsEscape(line, url_Path);
 			  }
             break; // END NT
         }
         default:
         {
-            thisEntry->mName = line;
+            thisEntry->mName = nsEscape(line, url_Path);
             break; // END default (catches GENERIC, DCTS)
         }
 
@@ -548,13 +548,14 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
             rv = 7;
         break;
     case 'j': case 'J':
-        if (c1 == 'u' || c1 == 'U')
+        if (c1 == 'u' || c1 == 'U') {
             if (c2 == 'n' || c2 == 'N')
                 rv = 5;
             else if (c2 == 'l' || c2 == 'L')
                 rv = 6;
-        else if (c1 == 'a' || c1 == 'A')
+        } else if (c1 == 'a' || c1 == 'A') {
             rv = 0;
+        }
         break;
     case 's': case 'S':
         rv = 8; break;
@@ -809,13 +810,12 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 				*ptr = '\0';
 				break;
             }
-        aEntry->mName = aLine;
+        aEntry->mName = nsEscape(aLine, url_Path);
 	
 		return NS_OK;
     }
 
-    // escape and copy
-    aEntry->mName = ptr+1;
+    aEntry->mName = nsEscape(ptr+1, url_Path);
 
 	// parse size
 	if(ptr > aLine+15) {
@@ -849,7 +849,7 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
 
         // Cut out file or directory name at VMS version number. 
     	*cp++ ='\0';
-        aEntry->mName = aLine;
+        aEntry->mName = nsEscape(aLine, url_Path);
 
         // Cast VMS file and directory names to lowercase. 
         aEntry->mName.ToLowerCase();
