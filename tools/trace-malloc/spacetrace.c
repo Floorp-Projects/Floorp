@@ -371,6 +371,16 @@ int initOptions(int aArgCount, char** aArgArray)
     globals.mOptions.mOverhead = ST_DEFAULT_OVERHEAD_SIZE;
 
     /*
+    ** category file
+    **/
+    globals.mOptions.mCategoryFile = "rules.txt";
+
+    /*
+    ** Default category name - name of root category
+    */
+    globals.mOptions.mCategoryName = ST_ROOT_CATEGORY_NAME;
+
+    /*
     ** Go through all arguments.
     ** If argument does not being with a dash it is a file name.
     ** If argument does begin with a dash but is only a dash
@@ -874,6 +884,11 @@ int initOptions(int aArgCount, char** aArgArray)
         }
     }
 
+    /*
+    ** initalize the categories
+    */
+    initCategories(&globals);
+
     return retval;
 }
 
@@ -1212,6 +1227,104 @@ PRUint32 byteSize(STAllocation* aAlloc)
 
 
 /*
+** recalculateAllocationCost
+**
+** Given an allocation, does a recalculation of Cost - weight, heapcount etc.
+** and does the right thing to propogate the cost upwards.
+*/
+int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation)
+{
+    /*
+    ** Now, see if they desire a callsite update.
+    ** As mentioned previously, we decide if the run desires us to
+    **  manipulate the callsite data only if it's stamp is set.
+    ** We change all callsites and parent callsites to have that
+    **  stamp as well, so as to mark them as being relevant to
+    **  the current run in question.
+    */
+    if(0 != aRun->mStats.mStamp)
+    {
+        PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
+        PRUint32 size = byteSize(aAllocation);
+        PRUint64 weight64 = LL_INIT(0, 0);
+        PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
+        PRUint64 timeval64 = LL_INIT(0, 0);
+        PRUint64 size64 = LL_INIT(0, 0);
+
+        LL_UI2L(timeval64, timeval);
+        LL_UI2L(size64, size);
+        LL_MUL(weight64, timeval64, size64);
+
+        /*
+        ** First, update this run.
+        */
+        aRun->mStats.mCompositeCount++;
+        aRun->mStats.mHeapRuntimeCost += heapCost;
+        aRun->mStats.mSize += size;
+        LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, timeval64);
+        LL_ADD(aRun->mStats.mWeight64, aRun->mStats.mWeight64, weight64);
+
+        /*
+        ** Use the first event of the allocation to update the parent
+        **  callsites.
+        ** This has positive effect of not updating realloc callsites
+        **  with the same data over and over again.
+        */
+        if(0 < aAllocation->mEventCount)
+        {
+            tmcallsite* callsite = aAllocation->mEvents[0].mCallsite;
+            STRun* callsiteRun = NULL;
+
+            /*
+            ** Go up parents till we drop.
+            */
+            while(NULL != callsite && NULL != callsite->method)
+            {
+                callsiteRun = CALLSITE_RUN(callsite);
+                if(NULL != callsiteRun)
+                {
+                    /*
+                    ** Do we init it?
+                    */
+                    if(callsiteRun->mStats.mStamp != aRun->mStats.mStamp)
+                    {
+                        memset(&callsiteRun->mStats, 0, sizeof(STCallsiteStats));
+                        callsiteRun->mStats.mStamp = aRun->mStats.mStamp;
+                    }
+                            
+                    /*
+                    ** Add the values.
+                    ** Note that if the allocation was ever realloced,
+                    **  we are actually recording the final size.
+                    ** Also, the composite count does not include
+                    **  calls to realloc (or free for that matter),
+                    **  but rather is simply a count of actual heap
+                    **  allocation objects, from which someone will
+                    **  draw conclusions regarding number of malloc
+                    **  and free calls.
+                    ** It is possible to generate the exact number
+                    **  of calls to free/malloc/realloc should the
+                    **  absolute need arise to count them individually,
+                    **  but I fear it will take mucho memory and this
+                    **  is perhaps good enough for now.
+                    */
+                    callsiteRun->mStats.mCompositeCount++;
+                    callsiteRun->mStats.mHeapRuntimeCost += heapCost;
+                    callsiteRun->mStats.mSize += size;
+                    LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, timeval64);
+                    LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
+                }
+                        
+                callsite = callsite->parent;
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+/*
 ** appendAllocation
 **
 ** Given a run, append the allocation to it.
@@ -1266,90 +1379,9 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
             retval = __LINE__;
 
             /*
-            ** Now, see if they desire a callsite update.
-            ** As mentioned previously, we decide if the run desires us to
-            **  manipulate the callsite data only if it's stamp is set.
-            ** We change all callsites and parent callsites to have that
-            **  stamp as well, so as to mark them as being relevant to
-            **  the current run in question.
+            ** update allocation cost
             */
-            if(0 != aRun->mStats.mStamp)
-            {
-                PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
-                PRUint32 size = byteSize(aAllocation);
-                PRUint64 weight64 = LL_INIT(0, 0);
-                PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
-                PRUint64 timeval64 = LL_INIT(0, 0);
-                PRUint64 size64 = LL_INIT(0, 0);
-
-                LL_UI2L(timeval64, timeval);
-                LL_UI2L(size64, size);
-                LL_MUL(weight64, timeval64, size64);
-
-                /*
-                ** First, update this run.
-                */
-                aRun->mStats.mCompositeCount++;
-                aRun->mStats.mHeapRuntimeCost += heapCost;
-                aRun->mStats.mSize += size;
-                LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, timeval64);
-                LL_ADD(aRun->mStats.mWeight64, aRun->mStats.mWeight64, weight64);
-
-                /*
-                ** Use the first event of the allocation to update the parent
-                **  callsites.
-                ** This has positive effect of not updating realloc callsites
-                **  with the same data over and over again.
-                */
-                if(0 < aAllocation->mEventCount)
-                {
-                    tmcallsite* callsite = aAllocation->mEvents[0].mCallsite;
-                    STRun* callsiteRun = NULL;
-
-                    /*
-                    ** Go up parents till we drop.
-                    */
-                    while(NULL != callsite && NULL != callsite->method)
-                    {
-                        callsiteRun = CALLSITE_RUN(callsite);
-                        if(NULL != callsiteRun)
-                        {
-                            /*
-                            ** Do we init it?
-                            */
-                            if(callsiteRun->mStats.mStamp != aRun->mStats.mStamp)
-                            {
-                                memset(&callsiteRun->mStats, 0, sizeof(STCallsiteStats));
-                                callsiteRun->mStats.mStamp = aRun->mStats.mStamp;
-                            }
-                            
-                            /*
-                            ** Add the values.
-                            ** Note that if the allocation was ever realloced,
-                            **  we are actually recording the final size.
-                            ** Also, the composite count does not include
-                            **  calls to realloc (or free for that matter),
-                            **  but rather is simply a count of actual heap
-                            **  allocation objects, from which someone will
-                            **  draw conclusions regarding number of malloc
-                            **  and free calls.
-                            ** It is possible to generate the exact number
-                            **  of calls to free/malloc/realloc should the
-                            **  absolute need arise to count them individually,
-                            **  but I fear it will take mucho memory and this
-                            **  is perhaps good enough for now.
-                            */
-                            callsiteRun->mStats.mCompositeCount++;
-                            callsiteRun->mStats.mHeapRuntimeCost += heapCost;
-                            callsiteRun->mStats.mSize += size;
-                            LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, timeval64);
-                            LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
-                        }
-                        
-                        callsite = callsite->parent;
-                    }
-                }
-            }
+            recalculateAllocationCost(aRun, aAllocation);
         }
         else
         {
@@ -1437,6 +1469,11 @@ int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
 int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
 {
     int retval = 0;
+
+#if defined(DEBUG_dp)
+    PRIntervalTime start = PR_IntervalNow();
+    fprintf(stderr, "DEBUG: harvesting run...\n");
+#endif
 
     if(NULL != aInRun && NULL != aOutRun && aInRun != aOutRun)
     {
@@ -1588,8 +1625,55 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
         }
     }
 
+#if defined(DEBUG_dp)
+    fprintf(stderr, "DEBUG: harvesting ends: %dms [%d allocations]\n",
+            PR_IntervalToMilliseconds(PR_IntervalNow() - start), aInRun->mAllocationCount);
+#endif
     return retval;
 }
+
+/*
+** recalculateRunCost
+**
+** Goes over all allocations of a run and recalculates and propogates
+** the allocation costs - weight, heapcount, size
+*/
+int recalculateRunCost(STRun* aRun)
+{
+    PRUint32 traverse = 0;
+    STAllocation* current = NULL;
+
+#if defined(DEBUG_dp)
+    PRIntervalTime start = PR_IntervalNow();
+    fprintf(stderr, "DEBUG: recalculateRunCost...\n");
+#endif
+
+    if (NULL == aRun)
+        return -1;
+
+    /* reset stats of this run to 0 to begin recalculation */
+    memset(&aRun->mStats, 0, sizeof(STCallsiteStats));
+
+    /* reset timestamp to force propogation of cost */
+    aRun->mStats.mStamp = PR_IntervalNow();
+
+    for(traverse = 0; traverse < aRun->mAllocationCount; traverse++)
+    {
+        current = aRun->mAllocations[traverse];
+        if(NULL != current)
+        {
+            recalculateAllocationCost(aRun, current);
+        }
+    }
+
+#if defined(DEBUG_dp)
+    fprintf(stderr, "DEBUG: recalculateRunCost ends: %dms [%d allocations]\n",
+            PR_IntervalToMilliseconds(PR_IntervalNow() - start), aRun->mAllocationCount);
+#endif
+
+    return 0;
+}
+
 
 /*
 ** compareAllocations
@@ -1817,6 +1901,7 @@ STRun* createRunFromGlobal(void)
             failure = __LINE__;
         }
 
+
         if(0 != failure)
         {
             freeRun(retval);
@@ -1824,6 +1909,32 @@ STRun* createRunFromGlobal(void)
 
             REPORT_ERROR(failure, createRunFromGlobal);
         }
+
+        /*
+        ** Categorize the run
+        */
+        failure = categorizeRun(retval, &globals);
+        if (0 != failure)
+        {
+            REPORT_ERROR(__LINE__, appendAllocation);
+        }
+
+        /*
+        ** if we are focussing on a category, return that run instead of
+        ** the harvested run. Make sure to recalculate cost.
+        */
+        if (globals.mOptions.mCategoryName)
+        {
+            STCategoryNode* node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
+            if (node && node->run)
+            {
+                /* Recalculate cost of run */
+                recalculateRunCost(node->run);
+
+                retval = node->run;
+            }
+        }
+
     }
 
     return retval;
@@ -2748,10 +2859,19 @@ void htmlHeader(const char* aTitle)
 "</head>\n"
 "<body>\n"
 "<div align=right>\n"
-               , aTitle);
+"<table border=0><tr><td bgcolor=lightgrey>Category: <b>%s</b></td>\n"
+               , aTitle,
+               globals.mOptions.mCategoryName);
 
+    PR_fprintf(globals.mRequest.mFD,"<td>");
     htmlAnchor("index.html", "[Index]", NULL);
+    PR_fprintf(globals.mRequest.mFD,"</td>\n");
+
+    PR_fprintf(globals.mRequest.mFD,"<td>");
     htmlAnchor("options.html", "[Options]", NULL);
+    PR_fprintf(globals.mRequest.mFD,"</td>\n");
+
+    PR_fprintf(globals.mRequest.mFD,"</tr></table>\n");
 
     /*
     ** This is a dubious feature at best.
@@ -4914,6 +5034,112 @@ int graphWeight(STRun* aRun)
 #endif /* WANT_GRAPHS */
 
 /*
+** applySettings
+**
+** Apply settings and update global options.
+** Returns 0 on success. Nonzero on failure.
+*/
+int applySettings(void)
+{
+    int getRes = 0;
+    int changedSet = 0;
+    int changedOrder = 0;
+    int changedGraph = 0;
+    int changedDontCare = 0;
+    char looper_buf[32];
+    PRIntn looper = 0;
+
+    /*
+    ** If we've got get data, we need to attempt to enact the changes.
+    ** That way, when we show the page, it will have the new changes.
+    */
+    if(NULL == globals.mRequest.mGetData || '\0' == *globals.mRequest.mGetData)
+        return 0;
+
+
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMax", &globals.mOptions.mTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMin", &globals.mOptions.mAllocationTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+    
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMax", &globals.mOptions.mAllocationTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+
+#if WANT_GRAPHS
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMin", &globals.mOptions.mGraphTimevalMin, &changedGraph, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMax", &globals.mOptions.mGraphTimevalMax, &changedGraph, ST_TIMEVAL_RESOLUTION);
+#endif /* WANT_GRAPHS */
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mOverhead", &globals.mOptions.mOverhead, &changedSet, 1);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
+    getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
+    for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
+    {
+        PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
+        getRes += getDataString(globals.mRequest.mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
+    }
+    getRes += getDataString(globals.mRequest.mGetData, "mCategoryName", &globals.mOptions.mCategoryName, &changedSet);
+    
+    /*
+    ** Sanity check options
+    */
+    if (!globals.mOptions.mCategoryName || !*globals.mOptions.mCategoryName)
+    {
+        globals.mOptions.mCategoryName = ST_ROOT_CATEGORY_NAME;
+    }
+    else if (!findCategoryNode(globals.mOptions.mCategoryName, &globals))
+    {
+        /* Category node is invalid. Reset to root. */
+        globals.mOptions.mCategoryName = ST_ROOT_CATEGORY_NAME;
+    }
+
+    /*
+    ** Resort the global based on new prefs if needed.
+    */
+    if(0 != changedSet || 0 != changedOrder)
+    {
+        /*
+        ** Dont free globals.mCache.mSortedRun anymore. It is held in the root category node.
+        ** It will get freed automatically when categorization happens.
+        */
+        globals.mCache.mSortedRun = createRunFromGlobal();
+        if(NULL == globals.mCache.mSortedRun)
+        {
+            getRes = __LINE__;
+            REPORT_ERROR(__LINE__, createRunFromGlobal);
+        }
+    }
+
+#if WANT_GRAPHS
+    /*
+    ** If any of the set was changed, we need to throw away all our
+    **  cached graphs.
+    */
+    if(0 != changedSet || 0 != changedGraph)
+    {
+        /*
+        ** Automove the graph timeval if required.
+        */
+        if((globals.mMaxTimeval - globals.mMinTimeval) < globals.mOptions.mGraphTimevalMax)
+        {
+            globals.mOptions.mGraphTimevalMax = (globals.mMaxTimeval - globals.mMinTimeval);
+        }
+        
+        globals.mCache.mFootprintCached = 0;
+        globals.mCache.mTimevalCached = 0;
+        globals.mCache.mLifespanCached = 0;
+        globals.mCache.mWeightCached = 0;
+    }
+#endif /* WANT_GRAPHS */
+
+    return getRes;
+}
+
+/*
 ** displaySettings
 **
 ** Present the settings for change during execution.
@@ -4926,100 +5152,30 @@ int displaySettings(void)
     int retval = 0;
     PRUint32 cached = 0;
     PRIntn looper = 0;
+    int getRes;
+
+    getRes = applySettings();
 
     /*
-    ** If we've got get data, we need to attempt to enact the changes.
-    ** That way, when we show the page, it will have the new changes.
+    ** Display header for settings page. Do this after applying settings.
+    ** 
     */
-    if(NULL != globals.mRequest.mGetData && '\0' != *globals.mRequest.mGetData)
+    htmlHeader("SpaceTrace Settings");
+
+    /*
+    ** Report on the operation.
+    */
+    if(0 != getRes)
     {
-        int getRes = 0;
-        int changedSet = 0;
-        int changedOrder = 0;
-        int changedGraph = 0;
-        int changedDontCare = 0;
-        char looper_buf[32];
-
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMax", &globals.mOptions.mTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMin", &globals.mOptions.mAllocationTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMax", &globals.mOptions.mAllocationTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-
-#if WANT_GRAPHS
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMin", &globals.mOptions.mGraphTimevalMin, &changedGraph, ST_TIMEVAL_RESOLUTION);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMax", &globals.mOptions.mGraphTimevalMax, &changedGraph, ST_TIMEVAL_RESOLUTION);
-#endif /* WANT_GRAPHS */
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mOverhead", &globals.mOptions.mOverhead, &changedSet, 1);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-        getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
-        getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
-        for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
-        {
-            PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
-            getRes += getDataString(globals.mRequest.mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
-        }
-
-        /*
-        ** Resort the global based on new prefs if needed.
-        */
-        if(0 != changedSet || 0 != changedOrder)
-        {
-            if(NULL != globals.mCache.mSortedRun)
-            {
-                freeRun(globals.mCache.mSortedRun);
-            }
-            globals.mCache.mSortedRun = createRunFromGlobal();
-            if(NULL == globals.mCache.mSortedRun)
-            {
-                retval = __LINE__;
-                REPORT_ERROR(__LINE__, createRunFromGlobal);
-            }
-        }
-
-#if WANT_GRAPHS
-        /*
-        ** If any of the set was changed, we need to throw away all our
-        **  cached graphs.
-        */
-        if(0 != changedSet || 0 != changedGraph)
-        {
-            /*
-            ** Automove the graph timeval if required.
-            */
-            if((globals.mMaxTimeval - globals.mMinTimeval) < globals.mOptions.mGraphTimevalMax)
-            {
-                globals.mOptions.mGraphTimevalMax = (globals.mMaxTimeval - globals.mMinTimeval);
-            }
-
-            globals.mCache.mFootprintCached = 0;
-            globals.mCache.mTimevalCached = 0;
-            globals.mCache.mLifespanCached = 0;
-            globals.mCache.mWeightCached = 0;
-        }
-#endif /* WANT_GRAPHS */
-
-        /*
-        ** Report on the operation.
-        */
-        if(0 != getRes)
-        {
-            retval = __LINE__;
-            REPORT_ERROR(__LINE__, getDataPRUint32);
-
-            PR_fprintf(globals.mRequest.mFD, "<blink><b>%u: There was a problem.  Some changes may have been applied.</b></blink><br><hr>\n", PR_IntervalNow());
-        }
-        else
-        {
-            PR_fprintf(globals.mRequest.mFD, "<b>%u: Your changes have been applied.</b><br><hr>\n", PR_IntervalNow());
-        }
+        REPORT_ERROR(getRes, applySettings);
+        
+        PR_fprintf(globals.mRequest.mFD, "<blink><b>%u: There was a problem.  Some changes may have been applied.</b></blink><br><hr>\n", PR_IntervalNow());
     }
+    else
+    {
+        PR_fprintf(globals.mRequest.mFD, "<b>%u: Your changes have been applied.</b><br><hr>\n", PR_IntervalNow());
+    }
+
 
     /*
     ** A small blurb regarding the options.
@@ -5114,6 +5270,14 @@ int displaySettings(void)
     {
         PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, NULL == globals.mOptions.mRestrictText[looper] ? "" : globals.mOptions.mRestrictText[looper]);
     }
+    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+
+    /*
+    ** category selection
+    */
+    PR_fprintf(globals.mRequest.mFD, "By giving a category name, you can focus on allocations belonging to that particular category only like css, js, xpcom. Until we have a flashy new ui to browse categories, use a category name in <a href=http://lxr.mozilla.org/mozilla/source/tools/trace-malloc/rules.txt>rules.txt</a><p>\n");
+    PR_fprintf(globals.mRequest.mFD, "Category to Focus on?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mCategoryName\" value=\"%s\"><br>\n", globals.mOptions.mCategoryName);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     /*
@@ -5221,8 +5385,6 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         else if(0 == strcmp("settings.html", aFileName) || 0 == strcmp("options.html", aFileName))
         {
             int settingsRes = 0;
-
-            htmlHeader("SpaceTrace Settings");
 
             settingsRes = displaySettings();
             if(0 != settingsRes)
@@ -5915,7 +6077,15 @@ int doRun(void)
         int tmResult = 0;
         int outputResult = 0;
 
+#if defined(DEBUG_dp)
+        PRIntervalTime start = PR_IntervalNow();
+        fprintf(stderr, "DEBUG: reading tracemalloc data...\n");
+#endif
         tmResult = tmreader_eventloop(tmr, globals.mOptions.mFileName, tmEventHandler);
+#if defined(DEBUG_dp)
+        fprintf(stderr, "DEBUG: reading tracemalloc data ends: %dms [%d allocations]\n",
+                PR_IntervalToMilliseconds(PR_IntervalNow() - start), globals.mRun.mAllocationCount);
+#endif
         if(0 == tmResult)
         {
             REPORT_ERROR(__LINE__, tmreader_eventloop);
@@ -5937,10 +6107,7 @@ int doRun(void)
             /*
             ** Create the default sorted run.
             */
-            if(NULL != globals.mCache.mSortedRun)
-            {
-                freeRun(globals.mCache.mSortedRun);
-            }
+            /* NS_ASSERTION(globals.mCache.mSortedRun == NULL, "mSortedRun not null"); */
             globals.mCache.mSortedRun = createRunFromGlobal();
             if(NULL != globals.mCache.mSortedRun)
             {
@@ -5979,11 +6146,12 @@ int doRun(void)
                 ** Check for NULL again, may have been realloced at some
                 **  point with failure.
                 */
-                if(NULL != globals.mCache.mSortedRun)
-                {
-                    freeRun(globals.mCache.mSortedRun);
-                    globals.mCache.mSortedRun = NULL;
-                }
+                globals.mCache.mSortedRun = NULL;
+
+                /*
+                ** Clear our categorization tree
+                */
+                freeCategories(&globals);
             }
             else
             {

@@ -1,0 +1,30 @@
+# Categorization rules for spacetrace
+#
+# This file defines the stack frame rules that will categorize
+# allocations that spacetrace processes. The format of this file is
+#
+#       <categoryname>
+#       substring for stack frame n
+#       substring for stack frame n+1
+#       substring for stack frame n+2
+#
+# The key in the matching rule is that for every rule, we provide a
+# snippet of the stack frame - contiguous substring matches.
+# categorynames and rules substring matches are case sensitive
+#
+# Predefined Categories
+# "All"           - All allocations [default]
+# "uncategorized" - All allocations that dont match any category
+#
+#
+# Suresh Duddi <dp@netscape.com>
+
+# NOTE: This is still under definition
+
+# css category
+<css>
+New_CSS
+
+# xpcom category
+<xpcom>
+PrePopulateRegistry

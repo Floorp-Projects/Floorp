@@ -28,13 +28,19 @@ include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= string xpcom
 
-CSRCS		+= \
+SIMPLECSRCS	+= \
 		bloatblame.c \
 		leakstats.c \
-		spacetrace.c \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS	= $(SIMPLECSRCS:.c=$(BIN_SUFFIX))
+
+CSRCS            = \
+		spacetrace.c \
+		spacecategory.c \
+		$(NULL)
+
+PROGRAM		= spacetrace
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
