@@ -2122,11 +2122,13 @@ SSMControlConnection_ProcessSigningRequest(SSMControlConnection *ctrl,
             goto create_signed_loser;
         rv = SSMControlConnection_GetResource(ctrl, request.ecertRID,
                                               (SSMResource **)&ecert);
-        if (rv != PR_SUCCESS)
+        if (rv == PR_SUCCESS && 
+	    !SSM_IsAKindOf(&ecert->super, SSM_RESTYPE_CERTIFICATE))
             goto create_signed_loser;
-        if (!SSM_IsAKindOf(&ecert->super, SSM_RESTYPE_CERTIFICATE))
-            goto create_signed_loser;
-        cinfo = SECMIME_CreateSigned(scert->cert, ecert->cert, ctrl->m_certdb,
+
+        cinfo = SECMIME_CreateSigned(scert->cert,
+				     (ecert) ? ecert->cert : NULL, 
+				     ctrl->m_certdb,
                                      (SECOidTag) request.dig_alg, 
                                      (SECItem*)&request.digest, 
                                      (SECKEYGetPasswordKey) NULL, NULL);
