@@ -620,63 +620,78 @@ protected:
                                       nsIFrame*       aFrame);
 
 
-nsresult
-BuildScrollFrame       (nsIPresShell* aPresShell, 
-                                               nsIPresContext*        aPresContext,
-                                               nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsIStyleContext*         aContentStyle,
-                                               nsIFrame*                aScrolledFrame,
-                                               nsIFrame*                aParentFrame,
-                                               nsIFrame*&               aNewFrame,
-                                               nsIStyleContext*&        aScrolledChildStyle);
-                                    
-nsresult
-BeginBuildingScrollFrame  (nsIPresShell* aPresShell, nsIPresContext*        aPresContext,
-                                               nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsIStyleContext*         aContentStyle,
-                                               nsIFrame*                aParentFrame,
-                                               nsIAtom*                 aScrolledPseudo,
-                                               nsIDocument*             aDocument,
-                                               nsIFrame*&               aNewFrame, 
-                                               nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
-                                               nsIFrame*&               aScrollableFrame);
+  // Build a scroll frame: 
+  //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame
+  //
+  //  NOTE: this method does NOT set the primary frame for the content element
+  //
+  nsresult
+  BuildScrollFrame(nsIPresShell*            aPresShell, 
+                   nsIPresContext*          aPresContext,
+                   nsFrameConstructorState& aState,
+                   nsIContent*              aContent,
+                   nsIStyleContext*         aContentStyle,
+                   nsIFrame*                aScrolledFrame,
+                   nsIFrame*                aParentFrame,
+                   nsIFrame*&               aNewFrame,
+                   nsIStyleContext*&        aScrolledChildStyle);
+
+  // Builds the initial ScrollFrame: 
+  //  if Gfx scrollbasrs in ares, it creates a GfxScrollFrame, otherwise it creates a ScrollFrame
+  //
+  nsresult
+  BeginBuildingScrollFrame(nsIPresShell*            aPresShell, 
+                           nsIPresContext*          aPresContext,
+                           nsFrameConstructorState& aState,
+                           nsIContent*              aContent,
+                           nsIStyleContext*         aContentStyle,
+                           nsIFrame*                aParentFrame,
+                           nsIAtom*                 aScrolledPseudo,
+                           nsIDocument*             aDocument,
+                           nsIFrame*&               aNewFrame, 
+                           nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
+                           nsIFrame*&               aScrollableFrame);
+
+  // Completes the building of the scrollframe:
+  //  Creates and necessary views for the scrollframe and sets up the initial child list
+  //
+  nsresult 
+  FinishBuildingScrollFrame(nsIPresContext*          aPresContext,
+                            nsFrameConstructorState& aState,
+                            nsIContent*              aContent,
+                            nsIFrame*                aScrollFrame,
+                            nsIFrame*                aScrolledFrame,
+                            nsIStyleContext*         scrolledPseudoStyle);
+
+  // Creates a new GfxScrollFrame, Initializes it, and creates a scroll port for it
+  //
+  nsresult
+  BuildGfxScrollFrame(nsIPresShell*            aPresShell, 
+                      nsIPresContext*          aPresContext,
+                      nsFrameConstructorState& aState,
+                      nsIContent*              aContent,
+                      nsIDocument*             aDocument,
+                      nsIFrame*                aParentFrame,
+                      nsIStyleContext*         aStyleContext,
+                      nsIFrame*&               aNewFrame,
+                      nsFrameItems&            aAnonymousFrames);
 
 
-nsresult 
-FinishBuildingScrollFrame(nsIPresContext*          aPresContext,
-                               nsFrameConstructorState& aState,
-                               nsIContent*              aContent,
-                               nsIFrame*                aScrollFrame,
-                               nsIFrame*                aScrolledFrame,
-                               nsIStyleContext*         scrolledPseudoStyle);
+  nsresult
+  InitializeSelectFrame(nsIPresShell*            aPresShell, 
+                        nsIPresContext*          aPresContext,
+                        nsFrameConstructorState& aState,
+                        nsIFrame*                scrollFrame,
+                        nsIFrame*                scrolledFrame,
+                        nsIContent*              aContent,
+                        nsIFrame*                aParentFrame,
+                        nsIStyleContext*         aStyleContext,
+                        PRBool                   aIsAbsolutelyPositioned,
+                        PRBool                   aIsFixedPositioned,
+                        PRBool                   aCreateBlock);
 
-nsresult
-BuildGfxScrollFrame (nsIPresShell* aPresShell, 
-                                             nsIPresContext*         PresContext,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aContent,
-                                             nsIDocument*             aDocument,
-                                             nsIFrame*                aParentFrame,
-                                             nsIStyleContext*         aStyleContext,
-                                             nsIFrame*&               aNewFrame,
-                                             nsFrameItems&            aAnonymousFrames);
-
-
-nsresult
-InitializeSelectFrame(nsIPresShell*        aPresShell, 
-                                             nsIPresContext*          aPresContext,
-                                             nsFrameConstructorState& aState,
-                                             nsIFrame*                scrollFrame,
-                                             nsIFrame*                scrolledFrame,
-                                             nsIContent*              aContent,
-                                             nsIFrame*                aParentFrame,
-                                             nsIStyleContext*         aStyleContext,
-                                             PRBool                   aIsAbsolutelyPositioned,
-                                             PRBool                   aIsFixedPositioned,
-                                             PRBool                   aCreateBlock);
-
+  // Probes the PresContext for the boolean value "nglayout.widget.gfxscrollbars"
+  //
   PRBool HasGfxScrollbars(nsIPresContext* aPresContext);
 
 
