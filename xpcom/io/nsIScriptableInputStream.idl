@@ -23,6 +23,11 @@
 
 interface nsIInputStream;
 
+/**
+ * nsIScriptableInputStream provides scriptable access to the nsIInputStream.  
+ *
+ * @status FROZEN
+ */
 [scriptable, uuid(a2a32f90-9b90-11d3-a189-0050041caf44)] 
 interface nsIScriptableInputStream : nsISupports
 { 
