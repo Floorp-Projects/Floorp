@@ -4,24 +4,6 @@ enumerator = enumerator.QueryInterface(Components.interfaces.nsIFontEnumerator);
 fontCount = {value: 0 }
 fonts = enumerator.EnumerateAllFonts(fontCount);
 
-
-langs = [
-  "x-western",
-  "x-central-euro",
-  "ja",
-  "zh-TW",
-  "zh-CN",
-  "ko",
-  "x-cyrillic",
-  "x-baltic",
-  "el",
-  "tr",
-  "x-unicode",
-  "x-user-def",
-  "th",
-  "he",
-  "ar"
-];
 generics = [
   "serif",
  // "sans-serif",
@@ -32,15 +14,7 @@ generics = [
 
 function startUp()
 {
-    
-	selectLangs = document.getElementById("selectLangs");
-	for (i = 0; i < langs.length; i++) {
-		option = document.createElement("html:option");
-		text = document.createTextNode(langs[i]);
-		option.appendChild(text);
-		selectLangs.appendChild(option);
-		option.setAttribute('value' , langs[i]);
-  } 
+    selectLangs = document.getElementById("selectLangs");
     selectLangs.value = "x-western";
 	selectLang();
 }
@@ -112,6 +86,7 @@ function selectLang()
 
     //Getting variables needed
 	lang = document.getElementById("selectLangs").value;
+    dump("LangGroup selected: " +lang +" \n");
 	//set prefstring of size
 	var fontVarPref = 'font.size.variable.' + lang;
 	var fontfixPref = 'font.size.fixed.' + lang;

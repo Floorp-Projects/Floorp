@@ -48,7 +48,22 @@
 			    <html:td>&fontsFor.select;</html:td>
 				  <html:td>
 		  			<html:select class="Font" id="selectLangs" onchange = "selectLang();" width = "10">
-  					</html:select>						
+					    <html:option value="x-western">&font.langGroup.latin1;</html:option>
+					    <html:option value="x-central-euro">&font.langGroup.latin2;</html:option>
+					    <html:option value="ja">&font.langGroup.japanese;</html:option>
+					    <html:option value="zh-TW">&font.langGroup.trad-chinese;</html:option>
+					    <html:option value="zh-CN">&font.langGroup.simpl-chinese;</html:option>
+					    <html:option value="ko">&font.langGroup.korean;</html:option>
+					    <html:option value="x-cyrillic">&font.langGroup.cyrillic;</html:option>
+					    <html:option value="x-baltic">&font.langGroup.baltic;</html:option>
+					    <html:option value="el">&font.langGroup.el;</html:option>
+					    <html:option value="tr">&font.langGroup.turkish;</html:option>
+					    <html:option value="x-unicode">&font.langGroup.unicode;</html:option>
+					    <html:option value="x-user-def">&font.langGroup.user-def;</html:option>
+					    <html:option value="th">&font.langGroup.thai;</html:option>
+					    <html:option value="he">&font.langGroup.hebrew;</html:option>
+					    <html:option value="ar">&font.langGroup.arabic;</html:option>
+					</html:select>						
 				  </html:td>
 				   <html:td>&varFont.select;</html:td>
 				  <html:td>
