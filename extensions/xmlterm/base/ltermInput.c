@@ -460,6 +460,12 @@ static int ltermLineInput(struct lterms *lts,
             uch = U_LINEFEED;   /* essentially newline behaviour otherwise */
           }
 
+          if (uch == lts->control[TTYINTERRUPT]) {
+            /* Interrupt output operations, if necessary */
+            if (ltermInterruptOutput(lts) != 0)
+              return -1;
+          }
+
           if (metaInput) {
             /* meta input; do not send line */
             *opcodes |= LTERM_META_CODE;
@@ -535,6 +541,15 @@ static int ltermLineInput(struct lterms *lts,
           case U_CTL_P:              /* uP history */
           case U_CTL_Y:              /* yank */
           case U_TAB:                /* command completion */
+
+            if ( (lti->inputChars == 0) && (uch == U_CTL_D) &&
+                !((lts->processType == LTERM_TCSH_PROCESS) &&
+                  (lti->inputMode >= LTERM3_COMPLETION_MODE)) ) {
+              /* If lone ^D and not TCSH completion, simply transmit it */
+              if (ltermSendData(lts, &uch, 1) != 0)
+                return -1;
+              return 0;
+            }
 
             /* Assert that completion character occurs at end of buffer;
              * enforced by lterm_write.
@@ -632,14 +647,6 @@ static int ltermRequestCompletion(struct lterms *lts, UNICHAR uch)
 {
   LTERM_LOG(ltermRequestCompletion,40,
             ("++++++++++++ COMPLETION REQUEST uch=0x%X\n\n", uch));
-
-  if ((uch == U_CTL_D) &&
-      !(lts->processType == LTERM_TCSH_PROCESS)){
-    /* If ^D and not TCSH, simply transmit character */
-    if (ltermSendData(lts, &uch, 1) != 0)
-      return -1;
-    return 0;
-  }
 
   switch (uch) {
   case U_TAB:

@@ -741,6 +741,11 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      * Ps = 37 / 47 fg/bg White 
                      * Ps = 39 / 49 fg/bg Default
                      */
+
+    /* Enforce default value for parameter (hack!) */
+    if (paramCount == 0)
+      param1 = 0;
+
     LTERM_LOG(ltermProcessCSISequence,52,("Character Attr %d\n", param1));
     switch (param1) {
     case 0:
@@ -868,6 +873,7 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
             const int *paramValues, int paramCount, UNICHAR uch, int *opcodes)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
+  int param1, param2;
 
   LTERM_LOG(ltermProcessDECPrivateMode,50,("ch='%c', cursorChar=%d, Chars=%d\n",
                 (char) uch, lto->outputCursorChar, lto->outputChars));
@@ -875,13 +881,31 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
   /* Set returned opcodes to zero */
   *opcodes = 0;
 
+  /* Default parameter values: 1, 1 */
+  param1 = (paramCount > 0) ? paramValues[0] : 1;
+  param2 = (paramCount > 1) ? paramValues[1] : 1;
+
   switch (uch) {
   case U_h_CHAR:    /* DEC Private Mode Set (DECSET) */
     LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    if ((param1 % 100) == 47) {
+      /* Switch to screen mode */
+      if (lto->outputMode == LTERM2_LINE_MODE) {
+        ltermSwitchToScreenMode(lts);
+        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+      }
+    }
     return 0;
 
   case U_l_CHAR:    /* DEC Private Mode Reset (DECRST) */
     LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    if ((param1 % 100) == 47) {
+      /* Switch to line mode */
+      if (lto->outputMode == LTERM1_SCREEN_MODE) {
+        ltermSwitchToLineMode(lts);
+        *opcodes = LTERM_LINEDATA_CODE;
+      }
+    }
     return 0;
 
   case U_r_CHAR:    /* Restore previously saved DEC Private Mode Values */

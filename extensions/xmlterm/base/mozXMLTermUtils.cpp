@@ -38,6 +38,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 
 #include "mozXMLT.h"
@@ -272,6 +273,32 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
                                              result, isUndefined));
 
   return result;
+}
+
+
+/** Returns the specified attribute value associated with a DOM node,
+ * or a null string if the attribute is not defined, or if the DOM node
+ * is not an element.
+ * @param aDOMNode node whose attribute is to be determined
+ * @param aAttName attribute to be determined
+ * @param aAttValue output attribute value
+ * @return NS_OK if no errors occurred
+ */
+NS_EXPORT nsresult
+mozXMLTermUtils::GetNodeAttribute(nsIDOMNode* aDOMNode,
+                                  const char* aAttName,
+                                  nsString& aAttValue)
+{
+  XMLT_LOG(mozXMLTermUtils::GetNodeAttribute,20,("aAttName=%s\n", aAttName));
+
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aDOMNode);
+  if (!domElement) {
+    aAttValue = "";
+    return NS_OK;
+  }
+
+  nsAutoString attName = aAttName;
+  return domElement->GetAttribute(attName, aAttValue);
 }
 
 

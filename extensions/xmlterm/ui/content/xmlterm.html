@@ -8,6 +8,11 @@
 
     <SCRIPT language="JavaScript">
 
+      // CONVENTION: All pre-defined XMLTerm Javascript functions
+      //             begin with an upper letter. This allows
+      //             an easy distinction with user defined functions,
+      //             which should begin with a lower case letter.
+
       // Show all output
       function ShowAll() {
         return DisplayAllOutput(true);
@@ -146,70 +151,100 @@
         return (false);
       }
 
-      // Click handler
-      function clickXMLTerm(name, number, arg1, arg2) {
-        dump("clickXMLTerm("+name+","+number+","+arg1+","+arg2+")\n");
+      // Centralized event handler
+      // eventType values:
+      //   click
+      //
+      // targetType: 
+      //   textlink  - hyperlink
+      //   prompt    - command prompt
+      //   command   - command line
+      //   exec      - execute command with sendln/createln
+      //               (depending upon window.commandMode)
+      //   send      - transmit arg to LineTerm
+      //   sendln    - transmit arg+newline to LineTerm
+      //   createln  - transmit arg+newline as first command to new XMLTerm
+      //
+      // entryNumber: >=0 means process only if current entry
+      //              <0  means process anytime
+      //
+      // arg1:    command/pathname string (without newline)
+      // arg2:    alternate command line (for use in current entry only;
+      //            uses relative pathnames assuming current working directory)
+      //
+      function HandleEvent(eventObj, eventType, targetType, entryNumber,
+                           arg1, arg2) {
+        dump("HandleEvent("+eventObj+","+eventType+","+targetType+","+
+                         entryNumber+","+arg1+","+arg2+")\n");
 
-        if (name === "prompt") {
-          var outputElement = document.getElementById("output"+number);
-          var promptElement = document.getElementById("prompt"+number);
-          //dump(promptElement.style.getPropertyValue("text-decoration"));
-
-          if (outputElement.style.display == "none") {
-            outputElement.style.display = "block";
-            promptElement.style.setProperty("text-decoration","none","");
-          } else {
-            outputElement.style.display = "none";
-            promptElement.style.setProperty("text-decoration","underline","");
-          }
-
-        } else if (name === "command") {
-          var commandElement = document.getElementById(name+number);
-          var command = commandElement.firstChild.data;
-          dump("command = "+command+"\n\n");
-          window.xmlterm.SendText("\025"+command+"\n", document.cookie);
-
-        } else {
-
-          if ((number >= 0) &&
-            (window.xmlterm.currentEntryNumber != number)) {
-            dump("NOT CURRENT COMMAND\n");
-            return (false);
-          }
-
-          if (name == "send") {
-            dump("send = "+arg1+"\n");
-            window.xmlterm.SendText(arg1, document.cookie);
+        // Entry independent targets
+        if (action === "textlink") {
+          dump("textlink = "+arg1+"\n");
+          Load(arg1);
   
-          } else if (name == "textlink") {
-            dump("textlink = "+arg1+"\n");
-            Load(arg1);
-  
-          } else if (name == "sendln") {
+        } else if (eventType === "click") {
+           if (targetType === "prompt") {
+             var outputElement = document.getElementById("output"+entryNumber);
+             var promptElement = document.getElementById("prompt"+entryNumber);
+             //dump(promptElement.style.getPropertyValue("text-decoration"));
 
-            if ((Math.abs(number)+1 == window.xmlterm.currentEntryNumber) &&
+             if (outputElement.style.display == "none") {
+               outputElement.style.display = "block";
+               promptElement.style.setProperty("text-decoration","none","");
+             } else {
+               outputElement.style.display = "none";
+               promptElement.style.setProperty("text-decoration","underline","");
+             }
+
+           } else if (targetType === "command") {
+             var commandElement = document.getElementById(targetType+entryNumber);
+             var command = commandElement.firstChild.data;
+             dump("command = "+command+"\n\n");
+             window.xmlterm.SendText("\025"+command+"\n", document.cookie);
+
+           } else {
+             // Targets which may be qualified only for current entry
+
+             if ((entryNumber >= 0) &&
+               (window.xmlterm.currentEntryNumber != entryNumber)) {
+               dump("NOT CURRENT COMMAND\n");
+               return (false);
+             }
+
+             var action = targetType;
+
+             if (action === "exec") {
+                if (window.commandMode === "window") {
+                   action = "createln";
+                } else {
+                   action = "sendln";
+               }
+             }
+
+             if (action === "send") {
+               dump("send = "+arg1+"\n");
+               window.xmlterm.SendText(arg1, document.cookie);
+  
+             } else if (action === "sendln") {
+
+               if ((Math.abs(entryNumber)+1 == window.xmlterm.currentEntryNumber) &&
                 (arg2 != null)) {
-               // Current command
-               dump("sendln = "+arg2+"\n\n");
-               window.xmlterm.SendText("\025"+arg2+"\n", document.cookie);
-            } else {
-               // Not current command
-               dump("sendln = "+arg1+"\n\n");
-               window.xmlterm.SendText("\025"+arg1+"\n", document.cookie);
-            }
+                  // Current command
+                  dump("sendln = "+arg2+"\n\n");
+                  window.xmlterm.SendText("\025"+arg2+"\n", document.cookie);
+               } else {
+                  // Not current command
+                  dump("sendln = "+arg1+"\n\n");
+                  window.xmlterm.SendText("\025"+arg1+"\n", document.cookie);
+               }
   
-          } else if (name == "createln") {
-            dump("createln = "+arg1+"\n\n");
-            newwin = NewXMLTerm(arg1+"\n");
+             } else if (action === "createln") {
+               dump("createln = "+arg1+"\n\n");
+               newwin = NewXMLTerm(arg1+"\n");
+             }
           }
         }
 
-        return (false);
-      }
-
-      // Double Click handler
-      function dblclickXMLTerm(name, number, arg1) {
-        dump("dblclickXMLTerm("+name+","+number+","+arg1+")\n");
         return (false);
       }
 
@@ -223,6 +258,35 @@
       function SetPromptValue() {
         var field = document.getElementById('InputValue');
         return SetPrompt(field.value);
+      }
+
+      // Usage tips
+      var tips = new Array();
+      tips[0] = 'Click the SetPrompt button to use a cool Mozilla prompt from dmoz.org!';
+      tips[1] = '"js:SetPrompt(HTMLstring);" sets prompt to HTML string.';
+      tips[2] = 'Type "js:func(arg);" to execute inline Javascript function func.';
+      tips[3] = 'Inline Javascript ("js:...") can be used to produce HTML output.';
+      tips[4] = 'XMLterm supports full screen commands like "vi", "emacs -nw", and "less".';
+      tips[5] = 'Use "xls -i" for iconic display of directory contents.';
+      tips[6] = 'Use "xcat file" to display file.';
+
+      // Display random usage tip
+      // (should cease to operate after a few cycles;
+      // need to use Prefs to keep track of that)
+      function UsageTip() {
+        var tipCount = tips.length;
+        var ranval = Math.random();
+        var tipIndex = Math.floor(ranval * tipCount);
+        if (tipIndex >= tipCount) tipIndex = 0;
+
+        dump("xmlterm: UsageTip "+tipIndex+","+ranval+"\n");
+
+        var tiphead = document.getElementById('tiphead');
+        var tipdata = document.getElementById('tipdata');
+        tiphead.firstChild.data = "Tip:";
+        tipdata.firstChild.data = tips[tipIndex];
+
+        return false;
       }
 
       // Display more tips
@@ -257,6 +321,8 @@
       // onLoad event handler
       function LoadHandler() {
         dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
+
+        UsageTip();
 
         if (window.xmlterm) {
            // XMLTerm already initialized
@@ -358,13 +424,14 @@
       <TBODY>
       <TR><TD ALIGN=center>
         <FORM NAME="XMLTERM form">
-          <INPUT TYPE="button" VALUE="Show all output"
-               onClick="return ShowAll();">
           <INPUT TYPE="button" VALUE="Hide all output"
                onClick="return HideAll();">
+          <INPUT TYPE="button" VALUE="Show all output"
+               onClick="return ShowAll();">
           <INPUT TYPE="button" VALUE="SetHistory"
                  onClick="return SetHistoryValue();">
           <INPUT TYPE="button" VALUE="SetPrompt"  onClick="return SetPromptValue();">
+          <INPUT TYPE="button" VALUE="NewXMLTerm"  onClick="return NewXMLTerm('');">
           <BR>
           Input Value:
           <INPUT SIZE=50 TYPE="text" ID="InputValue"
@@ -373,9 +440,9 @@
         </FORM>
     </TABLE>
 
-<SPAN CLASS="tips" ID="tips">
-<B>Tip:</B> Click the SetPrompt button to use a cool Mozilla prompt from dmoz.org!
-</SPAN>
+<SPAN CLASS="tiphead" ID="tiphead" STYLE="font-weight:bold"> &nbsp; </SPAN>
+<SPAN CLASS="tipdata" ID="tipdata"> &nbsp; </SPAN>
+
 <SPAN CLASS="moretips" ID="moretips" onClick="return MoreTips();">
 More tips/news
 </SPAN>

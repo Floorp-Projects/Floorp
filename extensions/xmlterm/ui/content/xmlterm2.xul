@@ -36,6 +36,6 @@
                html:src="about:blank" flex="100%"/>
 
   <html:iframe id="content-frame" type="content" html:name="content"
-               html:src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
+               html:src="chrome://xmlterm/content/xmlterm2.html" flex="100%"/>
 
 </window>

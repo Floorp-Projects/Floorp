@@ -14,11 +14,16 @@ SPAN.prompt      { color: blue }
 SPAN.command     { color: blue }
 
 /* Screen display */
-PRE.row   { margin: 0; padding-top: 0; padding-bottom: 0 }
-SPAN.row  { margin: 0; padding-top: 0; padding-bottom: 0 }
+PRE.row         { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.row        { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.boldstyle  { font-weight: bold; margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.underlinestyle  { text-decoration: underline; margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.blinkstyle  { font-weight: bold; margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.inversestyle  { font-weight: bold; margin: 0; padding-top: 0; padding-bottom: 0 }
 
 /* Tips */
-SPAN.tips        { font-family: sans-serif }
+SPAN.tiphead     { font-family: sans-serif; font-weight: bold }
+SPAN.tipdata     { font-family: sans-serif }
 SPAN.moretips    { font-family: sans-serif; color: blue; cursor: hand;
                    font-weight: bold; text-decoration: underline };
 

@@ -103,6 +103,19 @@ class mozXMLTermUtils
                   const nsString& aScript,
                   nsString& aOutput);
 
+  /** Returns the specified attribute value associated with a DOM node,
+   * or a null string if the attribute is not defined, or if the DOM node
+   * is not an element.
+   * @param aDOMNode node whose attribute is to be determined
+   * @param aAttName attribute to be determined
+   * @param aAttValue output attribute value
+   * @return NS_OK if no errors occurred
+   */
+  static NS_EXPORT nsresult
+    GetNodeAttribute(nsIDOMNode* aDOMNode,
+                     const char* aAttName,
+                     nsString& aAttValue);
+
   /** Returns a timestamp string containing the local time, if at least
    * deltaSec seconds have elapsed since the last timestamp. Otherwise,
    * a null string is returned.

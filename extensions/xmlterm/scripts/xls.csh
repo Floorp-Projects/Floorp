@@ -55,7 +55,7 @@ foreach file ($files)
    else
       set cmd="sendln"
    endif
-   set clickcmd="onclick="'"'"return clickXMLTerm('$cmd',-1,'$sendtxt')"'"'
+   set clickcmd="onClick="'"'"return ClickXMLTerm('$cmd',-1,'$sendtxt')"'"'
 
    set rowimg="${rowimg}<TD><IMG SRC='$sendimg' $clickcmd>"
    set rowtxt="${rowtxt}<TD><SPAN CLASS='$filetype' $clickcmd>"

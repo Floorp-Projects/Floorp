@@ -330,6 +330,12 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
         JSCommand = "ScrollPageDown";
         break;
+      case nsIDOMKeyEvent::DOM_VK_F1:
+        JSCommand = "HideAll";
+        break;
+      case nsIDOMKeyEvent::DOM_VK_F2:
+        JSCommand = "ShowAll";
+        break;
       default: // ignore event without consuming
         return NS_OK;
       }

@@ -20,11 +20,11 @@ int main(void)
 <IMG align=center src='chrome://navigator/skin/animthrob_single.gif'> \
    <B>Please click a button</B> <BR> \
 <INPUT ID='button-b#' TYPE=button VALUE='Bold' \
-  onClick=\"return clickXMLTerm('sendln','#','b')\"> \
+  onClick=\"return HandleEvent(event, 'click', 'sendln','#','b')\"> \
 <INPUT ID='button-e#' TYPE=button VALUE='Emphasis' \
-  onClick=\"return clickXMLTerm('sendln','#','e')\"> \
+  onClick=\"return HandleEvent(event, 'click', 'sendln','#','e')\"> \
 <INPUT ID='button-q#' TYPE=button VALUE='Quit' \
-  onClick=\"return clickXMLTerm('sendln','#','q')\"> \
+  onClick=\"return HandleEvent(event, 'click', 'sendln','#','q')\"> \
 <BR></FORM> \
 </BODY></HTML>");
 

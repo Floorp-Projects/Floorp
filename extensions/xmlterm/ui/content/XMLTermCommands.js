@@ -4,10 +4,10 @@ function StartupXMLTerm() {
    dump("StartupXMLTerm:"+window.frames[0].name+"\n");
 
    if (window.frames.length == 2) {
-      window.frames[1].xmltbrowser = window.frames[0];
-      xmltwin = frames[1];
+      xmltwin = window.frames[1];
+      xmltwin.xmltbrowser = window.frames[0];
    } else {
-      xmltwin = frames[0];
+      xmltwin = window.frames[0];
    }
 
    dump("StartupXMLterm: WINDOW.ARGUMENTS="+window.arguments+"\n");
@@ -27,11 +27,10 @@ function StartupXMLTerm() {
      return;
    }
   
-   // Store the XMLTerm shell in the window
+   // Store the XMLTerm shell in current window and in the XMLTerm frame
    window.xmlterm = xmltshell;
    xmltwin.xmlterm = xmltshell;
 
    // Initialize XMLTerm shell in content window with argvals
-   window.xmlterm.Init(xmltwin, "",
-                       window.arguments);
+   window.xmlterm.Init(xmltwin, "", window.arguments);
 }

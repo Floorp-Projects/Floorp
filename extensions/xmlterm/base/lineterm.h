@@ -273,10 +273,11 @@ int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
  * OPCODES contains a bit mask describing the type of output (see below).
  * Using Extended Backus-Naur Form notation:
  *
- * OPCODES ::= STREAMDATA NEWLINE?
+ * OPCODES ::= STREAMDATA NEWLINE? ERROR?
  *               COOKIESTR? DOCSTREAM? XMLSTREAM? JSSTREAM? WINSTREAM?
  * if StreamMode data is being returned.
- * (NEWLINE, if set, denotes that the stream has terminated)
+ * (NEWLINE, if set, denotes that the stream has terminated;
+ *  if ERROR is also set, it means that the stream has terminated abnormally.)
  *
  * OPCODES ::= SCREENDATA BELL? ( OUTPUT | CLEAR | INSERT | DELETE | SCROLL )?
  * if ScreenMode data is being returned.
@@ -337,12 +338,13 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
 #define LTERM_COMPLETION_CODE  0x1000U  /* Completion requested */
 #define LTERM_NEWLINE_CODE     0x2000U  /* Complete (new) line */
 #define LTERM_HIDE_CODE        0x4000U  /* Hide output */
+#define LTERM_ERROR_CODE       0x8000U  /* Error in output */
 
-#define LTERM_COOKIESTR_CODE   0x8000U  /* Stream prefixed with cookie */
-#define LTERM_DOCSTREAM_CODE  0x10000U  /* Stream contains complete document */
-#define LTERM_XMLSTREAM_CODE  0x20000U  /* Stream contains XML, not HTML */
-#define LTERM_JSSTREAM_CODE   0x40000U  /* Stream contains Javascript */
-#define LTERM_WINSTREAM_CODE  0x80000U  /* Display stream in entire window */
+#define LTERM_COOKIESTR_CODE  0x10000U  /* Stream prefixed with cookie */
+#define LTERM_DOCSTREAM_CODE  0x20000U  /* Stream contains complete document */
+#define LTERM_XMLSTREAM_CODE  0x40000U  /* Stream contains XML, not HTML */
+#define LTERM_JSSTREAM_CODE   0x80000U  /* Stream contains Javascript */
+#define LTERM_WINSTREAM_CODE 0x100000U  /* Display stream in entire window */
 
 
 /* LTERM/XTERM 16-bit style mask:
