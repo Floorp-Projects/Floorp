@@ -1814,10 +1814,6 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener, ns
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_OpenURI(getter_AddRefs(channel), aURL, loadGroup, eventSinkGetter);
-  // groady hack! NS_OpenURI fails the first time around, but works
-  // the second. so we are TEMPORARILY calling it twice to unblock
-  // clients who trip on the subsequent breakage this causes.
-  if (NS_FAILED(rv)) rv = NS_OpenURI(getter_AddRefs(channel), aURL, loadGroup, eventSinkGetter);
   if (NS_FAILED(rv)) return rv;
 
   if (postDataStream)
