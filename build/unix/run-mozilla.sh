@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-
+#
 ## 
 ## Usage:
 ##
@@ -29,14 +29,14 @@
 ##
 ## The script will setup all the environment voodoo needed to make
 ## mozilla work.
-
+#
 ##
 ## Standard shell script disclaimer blurb thing:
 ##
-## This script is a hcak.  Its brute force.  Its horrible.  
-## It doesnt use Artificial Intelligence.  It doesnt use Virtual Reality.
-## Its not perl.  Its not python.  It probably wont work unchanged on
-## the "other" thousands of unices.  But it worksforme.
+## This script is a hack.  It's brute force.  It's horrible.  
+## It doesn't use Artificial Intelligence.  It doesn't use Virtual Reality.
+## It's not perl.  It's not python.  It probably won't work unchanged on
+## the "other" thousands of unices.  But it worksforme.  --ramiro
 ##
 ## If you have an improvement, patch, idea, whatever, on how to make this
 ## script better, post it here:
@@ -44,30 +44,22 @@
 ## news://news.mozilla.org/netscape.public.mozilla.patches
 ## news://news.mozilla.org/netscape.public.mozilla.unix
 ## 
-
+#
 ##
 ## Potential improvements:
 ##
 ## + Run from anywhere in the tree.
 ## + Run ldd on the program and report missing dlls
 ## + Deal with NSPR in the tree
-## + All the "other" unices
+## + All the other unices
 ##
-
+#
 cmdname=`basename $0`
-
-##
-## Constants
-##
 MOZ_APPRUNNER_NAME="apprunner"
 MOZ_VIEWER_NAME="viewer"
-
-##
-## Variables
-##
 MOZ_DIST_BIN=""
 MOZ_PROGRAM=""
-
+#
 ##
 ## Functions
 ##
@@ -105,25 +97,21 @@ Usage:  ${cmdname} [options] [program]
     ${cmdname} -g viewer -d gdb
 
 EOF
-
 	return 0
 }
 ##########################################################################
 moz_bail()
 {
 	message=$1
-
 	echo
 	echo "$cmdname: $message"
 	echo
-
 	exit 1
 }
 ##########################################################################
 moz_test_binary()
 {
 	binary=$1
-
 	if [ -f "$binary" ]
 	then
 		if [ -x "$binary" ]
@@ -131,38 +119,30 @@ moz_test_binary()
 			return 1
 		fi
 	fi
-
 	return 0
 }
 ##########################################################################
 moz_get_debugger()
 {
 	debuggers="ddd gdb dbx"
-
 	debugger="notfound"
-
 	done="no"
-
 	for d in $debuggers
 	do
 		dpath=`which ${d}`
-	
 		if [ -x "$dpath" ]
 		then
 			debugger=$dpath
 			break
 		fi
 	done
-
 	echo $debugger
-
 	return 0
 }
 ##########################################################################
 moz_run_program()
 {
 	prog=$MOZ_PROGRAM
-
 	##
 	## Make sure the program is executable
 	##
@@ -170,33 +150,27 @@ moz_run_program()
 	then
 		moz_bail "Cannot execute $prog."
 	fi
-
 	##
 	## Use md5sum to crc a core file.  If md5sum is not found on the system,
 	## then dont debug core files.
 	##
 	crc_prog=`which md5sum`
-
 	if [ -x "$crc_prog" ]
 	then
 		DEBUG_CORE_FILES=1
 	fi
-
 	if [ "$DEBUG_CORE_FILES" ]
 	then
 		crc_old=
-
 		if [ -f core ]
 		then
 			crc_old=`$crc_prog core | awk '{print $1;}' `
 		fi
 	fi
-
 	##
 	## Run the program
 	##
 	$prog ${1+"$@"}
-
 	if [ "$DEBUG_CORE_FILES" ]
 	then
 		if [ -f core ]
@@ -204,18 +178,14 @@ moz_run_program()
 			crc_new=`$crc_prog core | awk '{print $1;}' `
 		fi
 	fi
-
 	if [ "$crc_old" != "$crc_new" ]
 	then
 		printf "\n\nOh no!  %s just dumped a core file.\n\n" $prog
 		printf "Do you want to debug this ? [y/n] "
-
 		read ans
-
 		if [ "$ans" = "y" ]
 		then
 			debugger=`moz_get_debugger`
-
 			if [ -x "$debugger" ]
 			then
 				echo "$debugger $prog core"
@@ -230,7 +200,6 @@ moz_run_program()
 moz_debug_program()
 {
 	prog=$MOZ_PROGRAM
-
 	##
 	## Make sure the program is executable
 	##
@@ -238,14 +207,12 @@ moz_debug_program()
 	then
 		moz_bail "Cannot execute $prog."
 	fi
-
 	if [ -n "$moz_debugger" ]
 	then
 		debugger=`which $moz_debugger`
 	else
 		debugger=`moz_get_debugger`
 	fi
-
 	if [ -x "$debugger" ]
 	then
 		echo "$debugger $prog ${1+"$@"}"
@@ -255,14 +222,12 @@ moz_debug_program()
 	fi
 }
 ##########################################################################
-
-
 ##
 ## Command line arg defaults
 ##
 moz_debug=0
 moz_debugger=""
-
+#
 ##
 ## Parse the command line
 ##
@@ -286,17 +251,15 @@ do
       ;;
   esac
 done
-
+#
 ##
 ## Program name given in $1
 ##
 if [ $# -gt 0 ]
 then
 	MOZ_PROGRAM=$1
-
 	shift
 fi
-
 ##
 ## Program not given, try to guess a default
 ##
@@ -306,7 +269,6 @@ then
 	## Try viewer
 	## 
 	moz_test_binary $MOZ_VIEWER_NAME
-
 	if [ $? -eq 1 ]
 	then
 		MOZ_PROGRAM=$MOZ_VIEWER_NAME
@@ -315,14 +277,13 @@ then
 	## 
 	else
 		moz_test_binary $MOZ_APPRUNNER_NAME
-
 		if [ $? -eq 1 ]
 		then
 			MOZ_PROGRAM=$MOZ_APPRUNNER_NAME
 		fi
 	fi
 fi
-
+#
 ##
 ## Running the program from its source dir
 ##
@@ -330,22 +291,17 @@ if [ -f Makefile.in ]
 then
 	# Use DEPTH in the Makefile.in to determine the depth
 	depth=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
-
 	##
-	## Make sure dist/bin exits
+	## Make sure dist/bin exists
 	##
 	if [ ! -d $depth/dist/bin ]
 	then
 		moz_bail "$depth/dist/bin does not exist."
 	fi
-
 	# push
 	here=`pwd`
-
 	cd $depth/dist/bin
-
 	MOZ_DIST_BIN=`pwd`
-
 	# pop
 	cd $here
 else
@@ -357,7 +313,7 @@ else
 		MOZ_DIST_BIN=`pwd`
 	fi
 fi
-
+#
 ##
 ## Make sure dist/bin is ok
 ##
@@ -365,12 +321,12 @@ if [ -z "$MOZ_DIST_BIN" ]
 then
 	moz_bail "Cannot access dir dist/bin directory."
 fi
-
+#
 if [ ! -d $MOZ_DIST_BIN ]
 then
 	moz_bail "Cannot access dir dist/bin directory."
 fi
-
+#
 ##
 ## Make sure the program is executable
 ##
@@ -378,12 +334,12 @@ if [ ! -x "$MOZ_PROGRAM" ]
 then
 	moz_bail "Cannot execute $MOZ_PROGRAM."
 fi
-
+#
 ##
 ## Set MOZILLA_FIVE_HOME
 ##
 MOZILLA_FIVE_HOME=$MOZ_DIST_BIN
-
+#
 ##
 ## Set LD_LIBRARY_PATH
 ##
@@ -393,15 +349,15 @@ then
 else
 	LD_LIBRARY_PATH=${MOZ_DIST_BIN}
 fi
-
+#
 echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
 echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 echo "      MOZ_PROGRAM=$MOZ_PROGRAM"
 echo "        moz_debug=$moz_debug"
 echo "     moz_debugger=$moz_debugger"
-
+#
 export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
-
+#
 if [ "$moz_debug" = "1" ]
 then
 	moz_debug_program ${1+"$@"}
