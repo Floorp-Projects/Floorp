@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -268,7 +268,7 @@ JSBool
 js_InCatchBlock(JSTreeContext *tc, JSAtom *atom)
 {
     JSStmtInfo *stmt;
-    
+
     for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
         if (stmt->type == STMT_CATCH && stmt->label == atom)
             return JS_TRUE;

@@ -70,7 +70,7 @@
 /*
 * Forward declarations for URI encode/decode and helper routines
 */
-static JSBool 
+static JSBool
 str_decodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool
 str_decodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
@@ -259,7 +259,7 @@ static JSBool
 str_uneval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
-    
+
     str = js_ValueToSource(cx, argv[0]);
     if (!str)
         return JS_FALSE;
@@ -583,7 +583,7 @@ static JSBool
 str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
-    jsdouble d = 0.0;
+    jsdouble d;
     size_t index;
     jschar buf[2];
 
@@ -592,11 +592,14 @@ str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    if (argc) {
-        if (!js_ValueToNumber(cx, argv[0], &d))                                     
+    if (argc == 0) {
+        d = 0.0;
+    } else {
+        if (!js_ValueToNumber(cx, argv[0], &d))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
     }
+
     if (d < 0 || str->length <= d) {
 	*rval = JS_GetEmptyStringValue(cx);
     } else {
@@ -616,7 +619,7 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	       jsval *rval)
 {
     JSString *str;
-    jsdouble d = 0.0;
+    jsdouble d;
     size_t index;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -624,11 +627,14 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    if (argc) {
-        if (!js_ValueToNumber(cx, argv[0], &d))                                     
+    if (argc == 0) {
+        d = 0.0;
+    } else {
+        if (!js_ValueToNumber(cx, argv[0], &d))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
     }
+
     if (d < 0 || str->length <= d) {
 	*rval = JS_GetNaNValue(cx);
     } else {
@@ -884,7 +890,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	ok = JS_TRUE;
 	re->lastIndex = 0;
 	for (count = 0; index <= str->length; count++) {
-	    ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);            
+	    ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);
 	    if (!ok || *rval != JSVAL_TRUE)
 		break;
 	    ok = glob(cx, count, data);
@@ -999,8 +1005,8 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     JSString *str;
 
     JS_ASSERT(*dp == '$');
-    
-    /* 
+
+    /*
      * Allow a real backslash (literal "\\") to escape "$1" etc.
      *   Do this for versions less than 1.5 (ECMA 3) only
      */
@@ -1297,8 +1303,9 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     rdata.length = 0;
     rdata.index = 0;
     rdata.leftIndex = 0;
-    /* 
-     * For ECMA 3, the first argument is to be treated as a string 
+
+    /*
+     * For ECMA 3, the first argument is to be treated as a string
      * (i.e. converted to one if necessary) UNLESS it's a reg.exp object.
      */
     if (!match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval,
@@ -3831,13 +3838,13 @@ add_bytes(JSContext *cx, JSString *str, char *bytes, size_t length)
     return JS_TRUE;
 }
 
-/* 
-*   ECMA 3, 15.1.3 URI Handling Function Properties
-*
-*   The following are implementations of the algorithms
-*   given in the ECMA specification for the hidden functions
-*   'Encode' and 'Decode'.
-*/
+/*
+ * ECMA 3, 15.1.3 URI Handling Function Properties
+ *
+ * The following are implementations of the algorithms
+ * given in the ECMA specification for the hidden functions
+ * 'Encode' and 'Decode'.
+ */
 static JSBool encode(JSContext *cx, JSString *str, JSString *unescapedSet, jsval *rval)
 {
     size_t j, k = 0, L;
@@ -3911,7 +3918,7 @@ static JSBool decode(JSContext *cx, JSString *str, JSString *reservedSet, jsval 
         if (C == '%') {
             start = k;
             if ((k + 2) >= str->length) goto errOut;
-            if (!JS7_ISHEX(str->chars[k + 1]) || !JS7_ISHEX(str->chars[k + 2])) 
+            if (!JS7_ISHEX(str->chars[k + 1]) || !JS7_ISHEX(str->chars[k + 2]))
                 goto errOut;
             B = JS7_UNHEX(str->chars[k + 1]) * 16 + JS7_UNHEX(str->chars[k + 2]);
             k += 2;
@@ -3926,7 +3933,7 @@ static JSBool decode(JSContext *cx, JSString *str, JSString *reservedSet, jsval 
                 for (j = 1; j < n; j++) {
                     k++;
                     if (str->chars[k] != '%') goto errOut;
-                    if (!JS7_ISHEX(str->chars[k + 1]) || !JS7_ISHEX(str->chars[k + 2])) 
+                    if (!JS7_ISHEX(str->chars[k + 1]) || !JS7_ISHEX(str->chars[k + 2]))
                         goto errOut;
                     B = JS7_UNHEX(str->chars[k + 1]) * 16 + JS7_UNHEX(str->chars[k + 2]);
                     if ((B & 0xC0) != 0x80) goto errOut;
@@ -3988,7 +3995,8 @@ str_decodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 static JSBool
 str_encodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSString *str, *unescapedURISet;    
+    JSString *str, *unescapedURISet;
+
     str = js_ValueToString(cx, argv[0]);
     if (!str)
 	return JS_FALSE;

@@ -217,7 +217,7 @@ js_hash_scope_slot_invalidator(JSHashEntry *he, intN i, void *arg)
             sprop->slot = SPROP_INVALID_SLOT;
     }
     return HT_ENUMERATE_NEXT;
-} 
+}
 
 /* Forward declaration for use by js_hash_scope_clear(). */
 extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;

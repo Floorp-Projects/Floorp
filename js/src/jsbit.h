@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -53,12 +53,12 @@ typedef unsigned long jsbitmap_t;
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
 */
-extern JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 i); 
+extern JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 i);
 
 /*
 ** Compute the log of the greatest power of 2 less than or equal to n
 */
-extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i); 
+extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 
 /*
 ** Macro version of JS_CeilingLog2: Compute the log of the least power of

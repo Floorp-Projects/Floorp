@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -196,9 +196,9 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 /* Fix for GC bug - previous allocation of a new atom has
 not yet found a home, so a subsequent call to GC here will
 flush that atom. This 'hack' prevents that from happening
-by requiring that the heap grow rather than running a GC. 
+by requiring that the heap grow rather than running a GC.
 The concern is that enough GC's will not occur then, since
-we're counting on back-branches and force_GC's from the 
+we're counting on back-branches and force_GC's from the
 server.
 */
 	tried_gc = JS_TRUE;
