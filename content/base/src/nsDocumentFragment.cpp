@@ -346,27 +346,39 @@ nsDocumentFragment::SetPrefix(const nsAReadableString& aPrefix)
 NS_IMETHODIMP    
 nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsDocumentFragment* it;
-  it = new nsDocumentFragment(mOwnerDocument);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
 
-  nsCOMPtr<nsIContent> kungFuDeathGrip(it);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMDocumentFragment> newFragment;
 
-//XXX  CopyInnerTo(this, &it->mInner); ??? Why is this commented out?
+  rv = NS_NewDocumentFragment(getter_AddRefs(newFragment), mOwnerDocument);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = it->Init(mNodeInfo);
+  if (aDeep) {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
 
-  if (NS_FAILED(rv)) {
-    delete it;
+    GetChildNodes(getter_AddRefs(childNodes));
+    if (childNodes) {
+      PRUint32 index, count;
+      childNodes->GetLength(&count);
 
-    return rv;
-  }    
+      for (index = 0; index < count; ++index) {
+        nsCOMPtr<nsIDOMNode> child;
+        childNodes->Item(index, getter_AddRefs(child));
+        if (child) {
+          nsCOMPtr<nsIDOMNode> newChild;
+          rv = child->CloneNode(PR_TRUE, getter_AddRefs(newChild));
+          NS_ENSURE_SUCCESS(rv, rv);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+          nsCOMPtr<nsIDOMNode> dummyNode;
+          rv = newFragment->AppendChild(newChild,
+                                        getter_AddRefs(dummyNode));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      } // End of for loop
+    } // if (childNodes)
+  } // if (aDeep)
 
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
+  return CallQueryInterface(newFragment, aReturn);
 }
