@@ -155,7 +155,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
   // We're in a final state.
   // Look up our style context for this state.
-  nsStyleContext* result;
+  nsStyleContext* result = nsnull;
   if (mCache)
     result = NS_STATIC_CAST(nsStyleContext*, mCache->Get(currState));
   if (!result) {
