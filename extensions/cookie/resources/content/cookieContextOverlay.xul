@@ -80,7 +80,7 @@
         var cookieViewer =
           contextMenu.createInstance("@mozilla.org/cookieviewer/cookieviewer-world;1",
                                      "nsICookieViewer" );
-        cookieViewer.BlockImage(this.imageURL);
+        cookieViewer.BlockImage(contextMenu.imageURL);
       },
 
       initImageBlocking : function () {
@@ -113,7 +113,7 @@
     <menuitem id="context-blockimage"
               value="&blockImageCmd.label;"
               accesskey=""
-              oncommand="contextMenu.blockImage();"
+              oncommand="cookieContextMenu.blockImage();"
               style="display:none;"
               insertafter="context-viewimage"/>
   </popup>
