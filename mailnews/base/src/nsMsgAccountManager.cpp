@@ -146,6 +146,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
   m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
   m_shutdownInProgress(PR_FALSE),
+  m_userAuthenticated(PR_FALSE),
   m_prefs(0)
 {
 }
@@ -235,6 +236,23 @@ nsMsgAccountManager::GetShutdownInProgress(PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     *_retval = m_shutdownInProgress;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetUserNeedsToAuthenticate(PRBool *aRetval)
+{
+  NS_ENSURE_ARG_POINTER(aRetval);
+  if (!m_userAuthenticated)
+    return m_prefs->GetBoolPref("mail.password_protect_local_cache", aRetval);
+  *aRetval = !m_userAuthenticated;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::SetUserNeedsToAuthenticate(PRBool aUserNeedsToAuthenticate)
+{
+    m_userAuthenticated = !aUserNeedsToAuthenticate;
     return NS_OK;
 }
 
@@ -1410,9 +1428,8 @@ nsMsgAccountManager::LoadAccounts()
   m_accountsLoaded = PR_TRUE;  //It is ok to return null accounts like when we create new profile
   m_haveShutdown = PR_FALSE;
   
-  if (!accountList || !accountList[0]) {
+  if (!accountList || !accountList[0])
     return NS_OK;
-  }
   
     /* parse accountList and run loadAccount on each string, comma-separated */   
     nsCOMPtr<nsIMsgAccount> account;
@@ -1425,9 +1442,8 @@ nsMsgAccountManager::LoadAccounts()
       str = token;
       str.StripWhitespace();
       
-      if (!str.IsEmpty()) {
+      if (!str.IsEmpty()) 
           rv = GetAccount(str.get(), getter_AddRefs(account));
-      }
 
       // force load of accounts (need to find a better way to do this
       nsCOMPtr<nsISupportsArray> identities;

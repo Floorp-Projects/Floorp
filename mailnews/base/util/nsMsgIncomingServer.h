@@ -80,6 +80,7 @@ protected:
   // field. Callers should be using Get/Set Password
   NS_IMETHOD GetPrefPassword(char * *aPassword);
   NS_IMETHOD SetPrefPassword(const char * aPassword);
+  PRBool      PasswordProtectLocalCache();
   
   nsCOMPtr <nsIFolder> m_rootFolder;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
@@ -90,7 +91,6 @@ protected:
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   
   nsresult CreateRootFolder();
-  nsresult StorePassword();  // stuff the password in the single signon database
 
   nsresult InternalSetHostName(const char *aHostname, const char *prefName);
 

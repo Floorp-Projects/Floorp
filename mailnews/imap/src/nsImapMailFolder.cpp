@@ -682,11 +682,35 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   PRBool hasOfflineEvents = PR_FALSE;
   GetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS, &hasOfflineEvents);
   
-  if (hasOfflineEvents && !WeAreOffline())
+  if (!WeAreOffline())
   {
-    nsImapOfflineSync *goOnline = new nsImapOfflineSync(msgWindow, this, this);
-    if (goOnline)
-      return goOnline->ProcessNextOperation();
+    if (hasOfflineEvents)
+    {
+      nsImapOfflineSync *goOnline = new nsImapOfflineSync(msgWindow, this, this);
+      if (goOnline)
+        return goOnline->ProcessNextOperation();
+    }
+  }
+  else // we're offline - check if we're password protecting the offline store
+  {
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool userNeedsToAuthenticate = PR_FALSE;
+    // if we're PasswordProtectLocalCache, then we need to find out if the server is authenticated.
+    (void) accountManager->GetUserNeedsToAuthenticate(&userNeedsToAuthenticate);
+    if (userNeedsToAuthenticate)
+    {
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = GetServer(getter_AddRefs(server));
+      if (NS_SUCCEEDED(rv))
+      {
+        PRBool passwordMatches = PR_FALSE;
+        rv = PromptForCachePassword(server, msgWindow, passwordMatches);
+        if (!passwordMatches)
+          return NS_ERROR_FAILURE;
+      }
+    }
   }
   if (!canOpenThisFolder) 
     selectFolder = PR_FALSE;
@@ -1553,27 +1577,6 @@ nsresult nsImapMailFolder::GetImapIncomingServer(nsIImapIncomingServer **aImapIn
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsImapMailFolder::UserNeedsToAuthenticateForFolder(PRBool
-                                                                 displayOnly,
-                                                                 PRBool
-                                                                 *authenticate)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::RememberPassword(const char *password)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::GetRememberedPassword(char ** password)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
 }
 
 NS_IMETHODIMP

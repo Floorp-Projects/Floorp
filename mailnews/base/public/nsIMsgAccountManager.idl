@@ -112,6 +112,10 @@ interface nsIMsgAccountManager : nsISupports {
   /* are we shutting down */
   readonly attribute boolean shutdownInProgress;
 
+  /**
+   * for preventing unauthenticated users from seeing header information 
+   */
+  attribute boolean userNeedsToAuthenticate;
   /*
    * search for the server with the given username, hostname, and type
    * the type is the same as is specified in the preferences,

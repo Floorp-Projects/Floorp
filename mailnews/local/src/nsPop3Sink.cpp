@@ -87,6 +87,13 @@ nsresult
 nsPop3Sink::SetUserAuthenticated(PRBool authed)
 {
   m_authed = authed;
+  if (authed)
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
+    if (!server) 
+      return NS_ERROR_UNEXPECTED;
+    return server->StorePassword();
+  }
   return NS_OK;
 }
 
@@ -139,7 +146,8 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     nsresult rv;
     
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
-    if (!server) return NS_ERROR_UNEXPECTED;
+    if (!server) 
+      return NS_ERROR_UNEXPECTED;
 
     nsFileSpec fileSpec;
     // ### if we're doing a UIDL, then the fileSpec needs to be for the current folder
@@ -409,16 +417,16 @@ nsresult nsPop3Sink::SetFolder(nsIMsgFolder * folder)
 nsresult
 nsPop3Sink::GetServerFolder(nsIFolder **aFolder)
 {
-    if (!aFolder) 
-		return NS_ERROR_NULL_POINTER;
-	if (m_popServer)
-	{
-		nsCOMPtr <nsIMsgIncomingServer> incomingServer = do_QueryInterface(m_popServer);
-		if (incomingServer)
-			return incomingServer->GetRootFolder(aFolder);
-	}
-	*aFolder = nsnull;
-	return NS_ERROR_NULL_POINTER;
+  if (!aFolder) 
+    return NS_ERROR_NULL_POINTER;
+  if (m_popServer)
+  {
+    nsCOMPtr <nsIMsgIncomingServer> incomingServer = do_QueryInterface(m_popServer);
+    if (incomingServer)
+      return incomingServer->GetRootFolder(aFolder);
+  }
+  *aFolder = nsnull;
+  return NS_ERROR_NULL_POINTER;
 }
 
 char*
@@ -446,59 +454,59 @@ nsresult
 nsPop3Sink::IncorporateWrite(const char* block,
                              PRInt32 length)
 {
-	PRInt32 blockOffset = 0;
-	if (!strncmp(block, "From ", 5))
-	{
-		length++;
-		blockOffset = 1;
-	}
-    if (!m_outputBuffer || length > m_outputBufferSize)
-    {
-        if (!m_outputBuffer)
-            m_outputBuffer = (char*) PR_MALLOC(length+1);
-        else
-            m_outputBuffer = (char*) PR_REALLOC(m_outputBuffer, length+1);
-
-        m_outputBufferSize = length;
-    }
-    if (m_outputBuffer)
-    {
-		if (blockOffset == 1)
-			*m_outputBuffer = '>';
+  PRInt32 blockOffset = 0;
+  if (!strncmp(block, "From ", 5))
+  {
+    length++;
+    blockOffset = 1;
+  }
+  if (!m_outputBuffer || length > m_outputBufferSize)
+  {
+    if (!m_outputBuffer)
+      m_outputBuffer = (char*) PR_MALLOC(length+1);
+    else
+      m_outputBuffer = (char*) PR_REALLOC(m_outputBuffer, length+1);
+    
+    m_outputBufferSize = length;
+  }
+  if (m_outputBuffer)
+  {
+    if (blockOffset == 1)
+      *m_outputBuffer = '>';
     memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
     *(m_outputBuffer + length) = 0;
-		nsresult rv = WriteLineToMailbox (m_outputBuffer);
-        if (NS_FAILED(rv)) return rv;
-		// Is this where we should hook up the new mail parser? Is this block a line, or a real block?
-		// I think it's a real line. We're also not escaping lines that start with "From ", which is
-		// a potentially horrible bug...Should this be done here, or in the mailbox parser? I vote for
-		// here. Also, we're writing out the mozilla-status line in IncorporateBegin, but we need to 
-		// pass that along to the mailbox parser so that the mozilla-status offset is handled correctly.
-		// And what about uidl? Don't we need to be able to write out an X-UIDL header?
-    }
-    return NS_OK;
+    nsresult rv = WriteLineToMailbox (m_outputBuffer);
+    if (NS_FAILED(rv)) return rv;
+    // Is this where we should hook up the new mail parser? Is this block a line, or a real block?
+    // I think it's a real line. We're also not escaping lines that start with "From ", which is
+    // a potentially horrible bug...Should this be done here, or in the mailbox parser? I vote for
+    // here. Also, we're writing out the mozilla-status line in IncorporateBegin, but we need to 
+    // pass that along to the mailbox parser so that the mozilla-status offset is handled correctly.
+    // And what about uidl? Don't we need to be able to write out an X-UIDL header?
+  }
+  return NS_OK;
 }
 
 nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 {
-    
-	if (buffer)
-    {
-        PRInt32 bufferLen = PL_strlen(buffer);
-		if (m_newMailParser)
-			m_newMailParser->HandleLine(buffer, bufferLen);
+  
+  if (buffer)
+  {
+    PRInt32 bufferLen = PL_strlen(buffer);
+    if (m_newMailParser)
+      m_newMailParser->HandleLine(buffer, bufferLen);
     // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
     // where for some reason or another we can't write too and lose the messages
     // See bug 62480
-        if (!m_outFileStream)
-            return NS_ERROR_OUT_OF_MEMORY;
-        
-        NS_ASSERTION(m_outFileStream->eof(), "we are not writing to end-of-file");
-
-        PRInt32 bytes = m_outFileStream->write(buffer,bufferLen);
-        if (bytes != bufferLen) return NS_ERROR_FAILURE;
-	}
-	return NS_OK;
+    if (!m_outFileStream)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    NS_ASSERTION(m_outFileStream->eof(), "we are not writing to end-of-file");
+    
+    PRInt32 bytes = m_outFileStream->write(buffer,bufferLen);
+    if (bytes != bufferLen) return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -568,11 +576,11 @@ nsresult
 nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 {
   m_biffState = aBiffState;
-	if(m_folder)
-	{
-		m_folder->SetNumNewMessages(numNewMessages);
-		m_folder->SetBiffState(aBiffState);
-	}
+  if(m_folder)
+  {
+    m_folder->SetNumNewMessages(numNewMessages);
+    m_folder->SetBiffState(aBiffState);
+  }
   return NS_OK;
 }
 

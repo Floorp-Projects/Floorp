@@ -127,6 +127,11 @@ interface nsIMsgIncomingServer : nsISupports {
   /* forget the password in memory and in single signon database */
   void forgetPassword();
 
+  /**
+   * logon succeeded - persist password, if user chooses.
+   */
+  void storePassword(); 
+
   /* forget the password in memory which is cached for the session */
   void forgetSessionPassword();
 

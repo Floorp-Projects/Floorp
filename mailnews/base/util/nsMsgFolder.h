@@ -140,9 +140,6 @@ public:
   NS_IMETHOD GetRelativePathName(char * *aRelativePathName);
   NS_IMETHOD GetSizeOnDisk(PRUint32 *aSizeOnDisk);
   NS_IMETHOD SetSizeOnDisk(PRUint32 aSizeOnDisk);
-  NS_IMETHOD RememberPassword(const char *password);
-  NS_IMETHOD GetRememberedPassword(char * *aRememberedPassword);
-  NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *_retval);
   NS_IMETHOD GetUsername(char * *aUsername);
   NS_IMETHOD GetHostname(char * *aHostname);
   NS_IMETHOD SetFlag(PRUint32 flag);

@@ -98,6 +98,7 @@
 #include "nsLocalStringBundle.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsISpamSettings.h"
+#include "nsINoIncomingServer.h"
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -661,6 +662,43 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
   (void) RefreshSizeOnDisk();
   nsresult rv;
+
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool userNeedsToAuthenticate = PR_FALSE;
+  // if we're PasswordProtectLocalCache, then we need to find out if the server is authenticated.
+  (void) accountManager->GetUserNeedsToAuthenticate(&userNeedsToAuthenticate);
+  if (userNeedsToAuthenticate)
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server)); 
+    if (NS_FAILED(rv)) return rv;
+    if (!server) 
+      return NS_MSG_INVALID_OR_MISSING_SERVER;
+    // need to check if this is a pop3 or no mail server to determine which password
+    // we should challenge the user with.
+    nsCOMPtr<nsIMsgIncomingServer> serverToAuthenticateAgainst;
+    nsCOMPtr<nsINoIncomingServer> noIncomingServer = do_QueryInterface(server, &rv);
+    if (noIncomingServer)
+    {
+      nsCOMPtr<nsIMsgAccount> defaultAccount;
+      accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
+      if (defaultAccount)
+        defaultAccount->GetIncomingServer(getter_AddRefs(serverToAuthenticateAgainst));
+    }
+    else
+    {
+      GetServer(getter_AddRefs(serverToAuthenticateAgainst));
+    }
+    if (serverToAuthenticateAgainst)
+    {
+      PRBool passwordMatches = PR_FALSE;
+      rv = PromptForCachePassword(serverToAuthenticateAgainst, aWindow, passwordMatches);
+      if (!passwordMatches)
+        return NS_ERROR_FAILURE;
+    }
+  }
   //If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
   //changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
   if(!mDatabase)
@@ -1509,99 +1547,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* aSize)
     return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
-{
-#ifdef HAVE_PORT
-    PRBool ret = PR_FALSE;
-  if (m_master->IsCachePasswordProtected() && !m_master->IsUserAuthenticated() && !m_master->AreLocalFoldersAuthenticated())
-  {
-    char *savedPassword = GetRememberedPassword();
-    if (savedPassword && strlen(savedPassword))
-      ret = PR_TRUE;
-    FREEIF(savedPassword);
-  }
-  return ret;
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::RememberPassword(const char *password)
-{
-#ifdef HAVE_DB
-    MailDB *mailDb = NULL;
-  MailDB::Open(m_pathName, PR_TRUE, &mailDb);
-  if (mailDb)
-  {
-    mailDb->SetCachedPassword(password);
-    mailDb->Close();
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
-{
-#ifdef HAVE_PORT
-  PRBool serverIsIMAP = m_master->GetPrefs()->GetMailServerIsIMAP4();
-  char *savedPassword = NULL; 
-  if (serverIsIMAP)
-  {
-    MSG_IMAPHost *defaultIMAPHost = m_master->GetIMAPHostTable()->GetDefaultHost();
-    if (defaultIMAPHost)
-    {
-      MSG_FolderInfo *hostFolderInfo = defaultIMAPHost->GetHostFolderInfo();
-      MSG_FolderInfo *defaultHostIMAPInbox = NULL;
-      if (hostFolderInfo->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &defaultHostIMAPInbox, 1) == 1 
-        && defaultHostIMAPInbox != NULL)
-      {
-        savedPassword = defaultHostIMAPInbox->GetRememberedPassword();
-      }
-    }
-  }
-  else
-  {
-    MSG_FolderInfo *offlineInbox = NULL;
-    if (m_flags & MSG_FOLDER_FLAG_INBOX)
-    {
-      char *retPassword = NULL;
-      MailDB *mailDb = NULL;
-      MailDB::Open(m_pathName, PR_FALSE, &mailDb, PR_FALSE);
-      if (mailDb)
-      {
-        mailDb->GetCachedPassword(cachedPassword);
-        retPassword = nsCRT::strdup(cachedPassword);
-        mailDb->Close();
-
-      }
-      return retPassword;
-    }
-    if (m_master->GetLocalMailFolderTree()->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &offlineInbox, 1) && offlineInbox)
-      savedPassword = offlineInbox->GetRememberedPassword();
-  }
-  return savedPassword;
-#endif
-  return NS_OK;
-}
-
 nsresult
 nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-
-    if (!result) return rv;
-
-		nsCOMPtr<nsIMsgFolder> rootFolder;
-		rv = GetRootFolder(getter_AddRefs(rootFolder));
-		if(NS_SUCCEEDED(rv))
-		{
-			PRUint32 numFolders;
-			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
-                                          1, &numFolders, result);
-      if (NS_SUCCEEDED(rv) && numFolders != 1)
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  
+  if (!result) return rv;
+  
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv))
+  {
+    PRUint32 numFolders;
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
+      1, &numFolders, result);
+    if (NS_SUCCEEDED(rv) && numFolders != 1)
+      rv = NS_ERROR_FAILURE;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

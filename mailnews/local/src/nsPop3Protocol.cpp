@@ -1297,69 +1297,69 @@ PRInt32 nsPop3Protocol::SendPassword()
 
 PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
 {
-    /* check password response */
-    if(!m_pop3ConData->command_succeeded)
-    {
-        // response code received, login failed
-        // not because of wrong password
-        if(TestFlag(POP3_STOPLOGIN))
-            return(Error(POP3_PASSWORD_FAILURE));
-
-        if(!TestCapFlag(POP3_HAS_AUTH_CRAM_MD5) &&
-           TestCapFlag(POP3_HAS_AUTH_APOP))
-            // unsure because APOP failed and we can't determine why
-            Error(CANNOT_PROCESS_APOP_AUTH);
-        else
-          Error(POP3_PASSWORD_FAILURE);
-        /* The password failed.
-           
-           Sever the connection and go back to the `read password' state,
-           which, upon success, will re-open the connection.  Set a flag
-           which causes the prompt to be different that time (to indicate
-           that the old password was bogus.)
-           
-           But if we're just checking for new mail (biff) then don't bother
-           prompting the user for a password: just fail silently. */
-
-        SetFlag(POP3_PASSWORD_FAILED);
-
-        // libmsg event sink
-        if (m_nsIPop3Sink) 
-        {
-            m_nsIPop3Sink->SetUserAuthenticated(PR_FALSE);
-            m_nsIPop3Sink->SetMailAccountURL(NULL);
-        }
-
-        /* clear the bogus password in case 
-         * we need to sync with auth smtp password 
-         */
-        return 0;
-    }
-    else 
-    {
-        m_nsIPop3Sink->SetUserAuthenticated(PR_TRUE);
-    }
-
+  /* check password response */
+  if(!m_pop3ConData->command_succeeded)
+  {
+    // response code received, login failed
+    // not because of wrong password
+    if(TestFlag(POP3_STOPLOGIN))
+      return(Error(POP3_PASSWORD_FAILURE));
     
-	nsCAutoString cmd;
-    if (sendStat) 
-	{
-		cmd  = "STAT" CRLF;
-        m_pop3ConData->next_state_after_response = POP3_GET_STAT;
+    if(!TestCapFlag(POP3_HAS_AUTH_CRAM_MD5) &&
+      TestCapFlag(POP3_HAS_AUTH_APOP))
+      // unsure because APOP failed and we can't determine why
+      Error(CANNOT_PROCESS_APOP_AUTH);
+    else
+      Error(POP3_PASSWORD_FAILURE);
+      /* The password failed.
+      
+        Sever the connection and go back to the `read password' state,
+        which, upon success, will re-open the connection.  Set a flag
+        which causes the prompt to be different that time (to indicate
+        that the old password was bogus.)
+        
+          But if we're just checking for new mail (biff) then don't bother
+    prompting the user for a password: just fail silently. */
+    
+    SetFlag(POP3_PASSWORD_FAILED);
+    
+    // libmsg event sink
+    if (m_nsIPop3Sink) 
+    {
+      m_nsIPop3Sink->SetUserAuthenticated(PR_FALSE);
+      m_nsIPop3Sink->SetMailAccountURL(NULL);
     }
-    else 
-	{
-		cmd = "GURL" CRLF;
-        m_pop3ConData->next_state_after_response = POP3_GURL_RESPONSE;
-    }
-    return SendData(m_url, cmd.get());
+    
+    /* clear the bogus password in case 
+    * we need to sync with auth smtp password 
+    */
+    return 0;
+  }
+  else 
+  {
+    m_nsIPop3Sink->SetUserAuthenticated(PR_TRUE);
+  }
+  
+  
+  nsCAutoString cmd;
+  if (sendStat) 
+  {
+    cmd  = "STAT" CRLF;
+    m_pop3ConData->next_state_after_response = POP3_GET_STAT;
+  }
+  else 
+  {
+    cmd = "GURL" CRLF;
+    m_pop3ConData->next_state_after_response = POP3_GURL_RESPONSE;
+  }
+  return SendData(m_url, cmd.get());
 }
 
 
 PRInt32
 nsPop3Protocol::SendStat()
 {
-	return SendStatOrGurl(PR_TRUE);
+  return SendStatOrGurl(PR_TRUE);
 }
 
 

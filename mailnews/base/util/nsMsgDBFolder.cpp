@@ -65,6 +65,8 @@
 #include "nsIMsgFilterPlugin.h"
 #include "nsIMsgMailSession.h"
 #include "nsIRDFService.h"
+#include "nsTextFormatter.h"
+#include "nsCPasswordManager.h"
 
 #include <time.h>
 
@@ -673,52 +675,52 @@ nsMsgDBFolder::OnJunkScoreChanged(nsIDBChangeListener * aInstigator)
 
 // 1.  When the status of a message changes.
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
-                         nsIDBChangeListener * aInstigator)
+                                         nsIDBChangeListener * aInstigator)
 {
-	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
-	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
-	{
-		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(pMsgDBHdr, &rv));
-		if(NS_SUCCEEDED(rv))
-			SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
-		UpdateSummaryTotals(PR_TRUE);
-	}
-
-	// The old state was new message state
-	// We check and see if this state has changed
-	if(aOldFlags & MSG_FLAG_NEW) 
-	{
-		// state changing from new to something else
-		if (!(aNewFlags  & MSG_FLAG_NEW)) 
-		{
-			CheckWithNewMessagesStatus(PR_FALSE);
-		}
-	}
-
-	return NS_OK;
+  nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
+  nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
+  if(NS_SUCCEEDED(rv) && pMsgDBHdr)
+  {
+    nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(pMsgDBHdr, &rv));
+    if(NS_SUCCEEDED(rv))
+      SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
+    UpdateSummaryTotals(PR_TRUE);
+  }
+  
+  // The old state was new message state
+  // We check and see if this state has changed
+  if(aOldFlags & MSG_FLAG_NEW) 
+  {
+    // state changing from new to something else
+    if (!(aNewFlags  & MSG_FLAG_NEW)) 
+    {
+      CheckWithNewMessagesStatus(PR_FALSE);
+    }
+  }
+  
+  return NS_OK;
 }
 
 nsresult nsMsgDBFolder::CheckWithNewMessagesStatus(PRBool messageAdded)
 {
-	nsresult rv;
-
-	PRBool hasNewMessages;
-
-	if (messageAdded)
-	{
-		SetHasNewMessages(PR_TRUE);
-	}
-	else // message modified or deleted
-	{
-		if(mDatabase)
-		{
-			rv = mDatabase->HasNew(&hasNewMessages);
-			SetHasNewMessages(hasNewMessages);
-		}
-	}
-
-	return NS_OK;
+  nsresult rv;
+  
+  PRBool hasNewMessages;
+  
+  if (messageAdded)
+  {
+    SetHasNewMessages(PR_TRUE);
+  }
+  else // message modified or deleted
+  {
+    if(mDatabase)
+    {
+      rv = mDatabase->HasNew(&hasNewMessages);
+      SetHasNewMessages(hasNewMessages);
+    }
+  }
+  
+  return NS_OK;
 }
 
 // 3.  When a message gets deleted, we need to see if it was new
@@ -1849,4 +1851,73 @@ nsMsgDBFolder::SetLastMessageLoaded(nsMsgKey aMsgKey)
 {
   mLastMessageLoaded = aMsgKey;
   return NS_OK;
+}
+
+nsresult nsMsgDBFolder::PromptForCachePassword(nsIMsgIncomingServer *server, nsIMsgWindow *aWindow, PRBool &passwordCorrect)
+{
+  PRBool userDidntCancel;
+  passwordCorrect = PR_FALSE;
+  nsCOMPtr <nsIStringBundle> bundle;
+  nsresult rv = GetBaseStringBundle(getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsXPIDLCString hostName;
+  nsXPIDLCString userName;
+  nsXPIDLString passwordTemplate;
+  nsXPIDLCString password;
+  nsXPIDLString passwordTitle;
+  nsXPIDLString passwordPromptString;
+
+  server->GetRealHostName(getter_Copies(hostName));
+  server->GetRealUsername(getter_Copies(userName));
+  bundle->GetStringFromName(NS_LITERAL_STRING("passwordTitle").get(), getter_Copies(passwordTitle));
+  bundle->GetStringFromName(NS_LITERAL_STRING("passwordPrompt").get(), getter_Copies(passwordTemplate));
+
+  NS_ConvertASCIItoUCS2 userNameStr(userName);
+  NS_ConvertASCIItoUCS2 hostNameStr(hostName);
+
+  const PRUnichar *stringParams[2] = { userNameStr.get(), hostNameStr.get() };
+
+  rv = bundle->FormatStringFromName(
+        NS_LITERAL_STRING("passwordPrompt").get(), stringParams, 2, 
+        getter_Copies(passwordPromptString ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  do
+  {
+    rv = server->GetPasswordWithUI(passwordPromptString,
+                                   passwordTitle, 
+                                   aWindow,
+                                   &userDidntCancel,
+                                   getter_Copies(password));
+    if (rv != NS_MSG_PASSWORD_PROMPT_CANCELLED && !password.IsEmpty()) 
+    {
+      nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+      if(passwordMgrInt) 
+      {
+
+        // Get the current server URI
+        nsXPIDLCString currServerUri;
+        rv = server->GetServerURI(getter_Copies(currServerUri));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        currServerUri.Insert('x', 0);
+        nsCAutoString hostFound;
+        nsAutoString userNameFound;
+        nsAutoString passwordFound;
+
+        // Get password entry corresponding to the host URI we are passing in.
+        rv = passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
+                                               hostFound, userNameFound, passwordFound);
+        if (NS_FAILED(rv)) 
+          break;
+        // compare the user-entered password with the saved password with
+        // the munged uri.
+        passwordCorrect = password.Equals(NS_ConvertUCS2toUTF8(passwordFound).get());
+        if (!passwordCorrect)
+          server->SetPassword("");
+      }
+    }
+  }
+  while (NS_SUCCEEDED(rv) && rv != NS_MSG_PASSWORD_PROMPT_CANCELLED && userDidntCancel && !passwordCorrect);
+  return (!passwordCorrect) ? NS_ERROR_FAILURE : rv;
 }

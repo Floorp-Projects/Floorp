@@ -139,6 +139,7 @@ protected:
   nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
   nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
 
+  nsresult PromptForCachePassword(nsIMsgIncomingServer *server, nsIMsgWindow *aWindow, PRBool &passwordCorrect);
   // offline support methods.
   nsresult StartNewOfflineMessage();
   nsresult WriteStartOfNewLocalMessage();

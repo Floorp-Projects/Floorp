@@ -81,6 +81,7 @@ private:
   
   PRBool m_haveShutdown;
   PRBool m_shutdownInProgress;
+  PRBool m_userAuthenticated;
 
   /* we call FindServer() a lot.  so cache the last server found */
   nsCOMPtr <nsIMsgIncomingServer> m_lastFindServerResult;

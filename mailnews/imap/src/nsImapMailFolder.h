@@ -239,10 +239,6 @@ public:
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
   NS_IMETHOD GetCanSubscribe(PRBool *aResult);	
   
-  NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
-  NS_IMETHOD RememberPassword(const char *password);
-  NS_IMETHOD GetRememberedPassword(char ** password);
-  
   NS_IMETHOD AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag);
   NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
   NS_IMETHOD MarkAllMessagesRead(void);

@@ -1795,30 +1795,6 @@ NS_IMETHODIMP nsMsgFolder::SetSizeOnDisk(PRUint32 aSizeOnDisk)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsMsgFolder::RememberPassword(const char *password)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::GetRememberedPassword(char ** password)
-{
-  if (!password)
-    return NS_ERROR_NULL_POINTER;
-
-  *password = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *needsAuthenticate)
-{
-  if (!needsAuthenticate)
-    return NS_ERROR_NULL_POINTER;
-
-  *needsAuthenticate = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgFolder::GetUsername(char **userName)
 {
   NS_ENSURE_ARG_POINTER(userName);
@@ -2203,7 +2179,8 @@ nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 i;
-  for (i=0; i<mListeners->Count(); i++) {
+  for (i=0; i<mListeners->Count(); i++) 
+  {
     // folderlisteners aren't refcounted in the array
     nsIFolderListener* listener=(nsIFolderListener*)mListeners->ElementAt(i);
     listener->OnItemUnicharPropertyChanged(supports, property, oldValue, newValue);
@@ -2377,9 +2354,8 @@ nsGetMailFolderSeparator(nsString& result)
 NS_IMETHODIMP
 nsMsgFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
-  nsresult rv;
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = GetServer(getter_AddRefs(server));
+  nsresult rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
 
@@ -2389,9 +2365,8 @@ nsMsgFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 NS_IMETHODIMP
 nsMsgFolder::SetFilterList(nsIMsgFilterList *aFilterList)
 {
-  nsresult rv;
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = GetServer(getter_AddRefs(server));
+  nsresult rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
   
@@ -2707,10 +2682,9 @@ NS_IMETHODIMP nsMsgFolder::GetSortOrder(PRInt32 *order)
 
 NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUint8 **aKey, PRUint32 *aLength)
 {
-  nsresult rv;
   NS_ENSURE_ARG(aKey);
   PRInt32 order;
-  rv = GetSortOrder(&order);
+  nsresult rv = GetSortOrder(&order);
   NS_ENSURE_SUCCESS(rv,rv);
   nsAutoString orderString;
   orderString.AppendInt(order);
@@ -2719,8 +2693,7 @@ NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUint8 **aKey, PRUint32 *aLength)
   rv = GetName(getter_Copies(folderName));
   NS_ENSURE_SUCCESS(rv,rv);
   orderString.Append(folderName);
-  rv = CreateCollationKey(orderString, aKey, aLength);
-  return rv;
+  return CreateCollationKey(orderString, aKey, aLength);
 }
 
 NS_IMETHODIMP nsMsgFolder::GetPersistElided(PRBool *aPersistElided)
@@ -2733,8 +2706,6 @@ NS_IMETHODIMP nsMsgFolder::GetPersistElided(PRBool *aPersistElided)
 nsresult
 nsMsgFolder::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength)
 {
-  nsresult rv;
-
   NS_ASSERTION(kCollationKeyGenerator, "kCollationKeyGenerator is null");
   if (!kCollationKeyGenerator)
     return NS_ERROR_NULL_POINTER;
@@ -2744,12 +2715,11 @@ nsMsgFolder::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint
 
 NS_IMETHODIMP nsMsgFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder)
 {
-  nsresult rv;
   PRUint8 *sortKey1=nsnull;
   PRUint8 *sortKey2=nsnull;
   PRUint32 sortKey1Length;
   PRUint32 sortKey2Length;
-  rv = GetSortKey(&sortKey1, &sortKey1Length);
+  nsresult rv = GetSortKey(&sortKey1, &sortKey1Length);
   NS_ENSURE_SUCCESS(rv,rv);
   aFolder->GetSortKey(&sortKey2, &sortKey2Length);
   NS_ENSURE_SUCCESS(rv,rv);

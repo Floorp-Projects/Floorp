@@ -141,26 +141,22 @@ public:
 	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
   NS_IMETHOD SetPrettyName(const PRUnichar *aName);
 
-	NS_IMETHOD GetFolderURL(char **url);
+  NS_IMETHOD GetFolderURL(char **url);
 
-	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
+  NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 
   NS_IMETHOD  GetManyHeadersToDownload(PRBool *retval);
 
-	NS_IMETHOD GetDeletable (PRBool *deletable); 
+  NS_IMETHOD GetDeletable (PRBool *deletable); 
   NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
-	NS_IMETHOD GetSizeOnDisk(PRUint32* size);
+  NS_IMETHOD GetSizeOnDisk(PRUint32* size);
 
-	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
-	NS_IMETHOD RememberPassword(const char *password);
-	NS_IMETHOD GetRememberedPassword(char ** password);
+  NS_IMETHOD  GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
-	NS_IMETHOD  GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
-
- 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsIMsgWindow *msgWindow, PRBool
-                            deleteStorage, PRBool isMove,
-                            nsIMsgCopyServiceListener* listener, PRBool allowUndo);
+  NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
+                      nsIMsgWindow *msgWindow, PRBool
+                      deleteStorage, PRBool isMove,
+                      nsIMsgCopyServiceListener* listener, PRBool allowUndo);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
                           PRBool isMove, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener, PRBool isFolder, PRBool allowUndo);
@@ -170,8 +166,8 @@ public:
                              PRBool isDraftOrTemplate, 
                              nsIMsgWindow *msgWindow,
                              nsIMsgCopyServiceListener* listener);
-	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
-    NS_IMETHOD NotifyCompactCompleted();
+  NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
+  NS_IMETHOD NotifyCompactCompleted();
   NS_IMETHOD Shutdown(PRBool shutdownChildren);
 
   NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);

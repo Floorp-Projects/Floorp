@@ -260,12 +260,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
 	attribute unsigned long sizeOnDisk;
 
-  /**
-   * set the password for this folder (what is this used for?)
-   */
-	void rememberPassword(in string password);
-	readonly attribute string rememberedPassword;
-	boolean userNeedsToAuthenticateForFolder(in boolean displayOnly);
   	readonly attribute string username;
   	readonly attribute string hostname;
 
