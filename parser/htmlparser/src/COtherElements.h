@@ -206,7 +206,7 @@ public:
     PRInt32 result=-1;
 
     if(mTag!=aTag) {
-      if(HasOptionalEndTag(this)) {
+      if(HasOptionalEndTag(this) && (0<anIndex)) {
         eHTMLTags theGrandParentTag=aContext->TagAt(--anIndex);
         CElement *theGrandParent=GetElement(theGrandParentTag);
         if(theGrandParent) {
