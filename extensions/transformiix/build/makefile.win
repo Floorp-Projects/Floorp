@@ -29,6 +29,7 @@ REQUIRES	= xpcom \
 		  content \
 		  xpconnect \
 		  js \
+		  unicharutil \
 		  htmlparser \
 		  webshell \
 		  docshell \
