@@ -457,8 +457,6 @@ var nsCloseCommand =
 
 function CloseWindow()
 {
-  FinishHTMLSource();
-
   // Check to make sure document is saved. "true" means allow "Don't Save" button,
   //   so user can choose to close without saving
   if (CheckAndSaveDocument(window.editorShell.GetString("BeforeClosing"), true)) 
@@ -513,8 +511,6 @@ var nsPreviewCommand =
 
   doCommand: function(aCommand)
   {
-    FinishHTMLSource();
-
 	  // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
     if (!CheckAndSaveDocument(window.editorShell.GetString("BeforePreview"), DocumentHasBeenSaved()))
@@ -536,8 +532,6 @@ var nsSendPageCommand =
 
   doCommand: function(aCommand)
   {
-    FinishHTMLSource();
-
 	  // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
     if (!CheckAndSaveDocument(window.editorShell.GetString("SendPageReason"), DocumentHasBeenSaved()))
