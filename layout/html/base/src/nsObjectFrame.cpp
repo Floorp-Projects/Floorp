@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Jacek Piskozub <piskozub@iopan.gda.pl>
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
