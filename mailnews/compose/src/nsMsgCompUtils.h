@@ -128,11 +128,11 @@ char        *GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
                                        nsIMsgIdentity *identity);
                                        
 // File calls...
-nsresult    ConvertBufToPlainText(nsString &aConBuf);
+nsresult ConvertBufToPlainText(nsString &aConBuf);
 
 // Conversion...
 void        DoLineEndingConJob(char *aBuf, PRUint32 aLen);
-void        DoLineEndingConJobUnicode(PRUnichar *aBuf, PRUint32 aLen);
+void        DoLineEndingConJobUnicode(nsString& aInString);
 
 NS_END_EXTERN_C
 

@@ -201,6 +201,8 @@ nsMsgStripLine (char * string)
 //
 // Generate the message headers for the new RFC822 message
 //
+#define UA_PREF_PREFIX "general.useragent."
+
 char * 
 mime_generate_headers (nsMsgCompFields *fields,
 									     const char *charset,
@@ -440,7 +442,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 			PUSH_NEWLINE ();
 		}
 	}
-
 
 	/* for Netscape Server, Accept-Language data sent in Mail header */
 	char *acceptlang = nsMsgI18NGetAcceptLanguage();
@@ -1939,7 +1940,7 @@ ConvertBufToPlainText(nsString &aConBuf)
     return NS_OK;
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID); 
 
   rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
                                           kCParserIID, (void **)&parser);
@@ -2033,31 +2034,12 @@ DoLineEndingConJob(char *aBuf, PRUint32 aLen)
 //  Second pass: Turn CR   into LF
 //
 void
-DoLineEndingConJobUnicode(PRUnichar *aBuf, PRUint32 aLen)
-{
-  PRUint32    i;
-
-  if (aLen <= 0)
-    return;
-
+DoLineEndingConJobUnicode(nsString& aInString)
+{ 
   //  First pass:  Turn CRLF into LF 
-  PRUint32    len = aLen;
-  for (i=0; i < (len-1); i++)
-  {
-    if ( (aBuf[i] == CR) && (aBuf[i+1] == LF) )
-    {
-      nsCRT::memmove((void *)&(aBuf[i]), (void *)&(aBuf[i+1]), 
-                     (sizeof(PRUnichar) * (len-i-1)));
-      len -= 1;
-      aBuf[len] = '\0';
-    }
-  }
-
+  aInString.ReplaceSubstring(CRLF, nsAutoString(LF));
   //  Second pass: Turn CR into LF
-  len = nsCRT::strlen(aBuf);
-  for (i=0; i<len; i++)
-    if (aBuf[i] == CR) 
-      aBuf[i] = LF;
+  aInString.ReplaceChar(CR, LF);
 }
 
 // Simple parser to parse Subject. 
