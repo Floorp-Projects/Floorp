@@ -61,6 +61,7 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
+  // unimplemented
   NS_IMETHOD GetRect(nsRect&);
 
   Display * GetDisplay() { return mDisplay; }

@@ -28,7 +28,7 @@ NS_IMPL_RELEASE(nsTextWidget)
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
   NS_INIT_REFCNT();
-  mName = "nsTextWidget";
+  mName.AssignWithConversion("nsTextWidget");
 }
 
 nsTextWidget::~nsTextWidget()

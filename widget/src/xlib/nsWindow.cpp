@@ -29,7 +29,7 @@
 nsWindow::nsWindow() : nsWidget()
 {
   NS_INIT_REFCNT();
-  mName = "nsWindow";
+  mName.AssignWithConversion("nsWindow");
   mBackground = NS_RGB(255, 255, 255);
   mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   mBorderRGB = NS_RGB(255,255,255);
@@ -237,5 +237,5 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
 ChildWindow::ChildWindow(): nsWindow()
 {
-  mName = "nsChildWindow";
+  mName.AssignWithConversion("nsChildWindow");
 }
