@@ -248,7 +248,7 @@ static PRIOMethods _pr_fileMethods = {
     (PRGetsockoptFN)_PR_InvalidStatus,	
     (PRSetsockoptFN)_PR_InvalidStatus,	
     (PRGetsocketoptionFN)_PR_InvalidStatus,	
-    (PRSetsocketoptionFN)_PR_InvalidStatus,	
+    (PRSetsocketoptionFN)_PR_InvalidStatus
 };
 
 PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods(void)
