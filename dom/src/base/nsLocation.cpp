@@ -333,9 +333,10 @@ LocationImpl::GetHref(nsAWritableString& aHref)
 {
   nsresult result = NS_OK;
 
-  if (mDocShell) {
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+  if (webNav) {
     nsCOMPtr<nsIURI> uri;
-    result = mDocShell->GetCurrentURI(getter_AddRefs(uri));
+    result = webNav->GetCurrentURI(getter_AddRefs(uri));
     if (NS_SUCCEEDED(result) && uri) {
       nsXPIDLCString uriString;
       result = uri->GetSpec(getter_Copies(uriString));

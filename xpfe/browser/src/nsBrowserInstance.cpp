@@ -40,7 +40,6 @@
 
 ///  Unsorted Includes
 
-#include "nsIWebShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "pratom.h"
 #include "prprf.h"
@@ -59,6 +58,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIWebShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebBrowserChrome.h"
@@ -650,7 +650,8 @@ nsBrowserInstance::LoadInitialPage(void)
       // Examine content URL.
       if ( GetContentAreaDocShell() ) {
         nsCOMPtr<nsIURI> uri;
-        rv = GetContentAreaDocShell()->GetCurrentURI(getter_AddRefs(uri));
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(GetContentAreaDocShell());
+        rv = webNav->GetCurrentURI(getter_AddRefs(uri));
         nsXPIDLCString spec;
         if (uri)
           rv = uri->GetSpec(getter_Copies(spec));

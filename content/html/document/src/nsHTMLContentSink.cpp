@@ -75,6 +75,7 @@
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIHTMLDocument.h"
@@ -4179,7 +4180,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
  
                 // first get our baseURI
                 nsCOMPtr<nsIURI> baseURI;
-                rv = docShell->GetCurrentURI(getter_AddRefs(baseURI));
+                nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+                rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
                 if (NS_FAILED(rv)) return rv;
 
                 PRInt32 millis = -1;
@@ -4275,7 +4277,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 if (NS_FAILED(rv)) return rv;
 
                 nsCOMPtr<nsIURI> baseURI;
-                rv = docShell->GetCurrentURI(getter_AddRefs(baseURI));
+                nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+                rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
                 if (NS_FAILED(rv)) return rv;
 
                 rv = cookieServ->SetCookieString(baseURI, result);
