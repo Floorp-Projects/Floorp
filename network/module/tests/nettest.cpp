@@ -71,8 +71,8 @@ TestConsumer::TestConsumer()
 }
 
 
-NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMNOTIFICATION_IID);
-NS_IMPL_ISUPPORTS(TestConsumer,kIStreamNotificationIID);
+NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+NS_IMPL_ISUPPORTS(TestConsumer,kIStreamListenerIID);
 
 
 TestConsumer::~TestConsumer()
