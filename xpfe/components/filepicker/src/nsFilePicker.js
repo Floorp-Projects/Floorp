@@ -178,7 +178,7 @@ nsFilePicker.prototype = {
     var parent;
     if (this.mParentWindow) {
       parent = this.mParentWindow;
-    } else if (window && typeof(window) == "object") {
+    } else if (typeof(window) == "object" && window != null) {
       parent = window;
     } else {
       try {
