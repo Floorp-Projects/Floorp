@@ -85,7 +85,9 @@ protected:
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
-
+  
+  static PRBool InBody(nsIDOMNode *aNode);
+  
   nsresult IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock);
   nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode);
   PRBool IsFirstNode(nsIDOMNode *aNode);
