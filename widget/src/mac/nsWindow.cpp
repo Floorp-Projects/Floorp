@@ -526,8 +526,7 @@ nsSizeEvent 	event;
   event.windowSize = &mBounds;
   event.eventStructType = NS_SIZE_EVENT;
   event.widget = this;
- 	this->DispatchEvent(&event);
-	return NS_OK;
+ 	return ( this->DispatchEvent(&event) );
 }
 
     
@@ -561,8 +560,7 @@ nsSizeEvent 	event;
   event.windowSize = &mBounds;
   event.widget = this;
   event.eventStructType = NS_SIZE_EVENT;
- 	this->DispatchEvent(&event);
-	return NS_OK;
+ 	return (this->DispatchEvent(&event) );
 }
 
     
@@ -941,7 +939,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
+NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
   event->widgetSupports = this;
@@ -974,7 +972,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
   // call the event callback 
   if (nsnull != mEventCallback) 
   	{
-    result = DispatchEvent(&aEvent);
+    result = (DispatchEvent(&aEvent)==NS_OK);
     return result;
   	}
 
@@ -1092,7 +1090,7 @@ nsRect 					rr;
         SetPort(theport);
 
         event.renderingContext->Init(mContext, this);
-        result = DispatchEvent(&event);
+        result = (DispatchEvent(&event)==NS_OK);
         NS_RELEASE(event.renderingContext);
       }
     else 
