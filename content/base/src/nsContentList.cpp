@@ -603,6 +603,8 @@ NS_IMETHODIMP
 nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
+  NS_PRECONDITION(aContainer, "Can't get at the new content if no container!");
+  
   /*
    * If the state is LIST_DIRTY then we have no useful information in
    * our list and we want to put off doing work as much as possible.
@@ -631,24 +633,22 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
       nsIContent* ourLastContent =
         NS_STATIC_CAST(nsIContent*, mElements.ElementAt(ourCount - 1));
       /*
-       * We want to append instead of invalidating in two cases:
-       * 1) aContainer is an ancestor of ourLastContent (this case
-             covers aContainer == ourLastContent)
-       * 2) aContainer comes after ourLastContent in document order
+       * We want to append instead of invalidating if the first thing
+       * that got appended comes after ourLastContent.
        */
-      if (nsContentUtils::ContentIsDescendantOf(ourLastContent, aContainer)) {
-        appendToList = PR_TRUE;
-      } else {
-        nsCOMPtr<nsIDOM3Node> ourLastDOM3Node(do_QueryInterface(ourLastContent));
-        nsCOMPtr<nsIDOMNode> newNodeContainer(do_QueryInterface(aContainer));
-        if (ourLastDOM3Node && newNodeContainer) {
-          PRUint16 comparisonFlags;
-          nsresult rv = ourLastDOM3Node->CompareTreePosition(newNodeContainer,
-                                                             &comparisonFlags);
-          if (NS_SUCCEEDED(rv) && 
-              (comparisonFlags & nsIDOMNode::TREE_POSITION_FOLLOWING)) {
-            appendToList = PR_TRUE;
-          }
+      nsCOMPtr<nsIDOM3Node> ourLastDOM3Node(do_QueryInterface(ourLastContent));
+      if (ourLastDOM3Node) {
+        nsCOMPtr<nsIContent> firstAppendedContent;
+        aContainer->ChildAt(aNewIndexInContainer,
+                            *getter_AddRefs(firstAppendedContent));
+        nsCOMPtr<nsIDOMNode> newNode(do_QueryInterface(firstAppendedContent));
+        NS_ASSERTION(newNode, "Content being inserted is not a node.... why?");
+        PRUint16 comparisonFlags;
+        nsresult rv = ourLastDOM3Node->CompareTreePosition(newNode,
+                                                           &comparisonFlags);
+        if (NS_SUCCEEDED(rv) && 
+            (comparisonFlags & nsIDOMNode::TREE_POSITION_FOLLOWING)) {
+          appendToList = PR_TRUE;
         }
       }
     }
@@ -822,7 +822,8 @@ nsContentList::CheckDocumentExistence()
 PRBool 
 nsContentList::MatchSelf(nsIContent *aContent)
 {
-
+  NS_PRECONDITION(aContent, "Can't match null stuff, you know");
+  
   if (Match(aContent))
     return PR_TRUE;
   
