@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -523,11 +523,7 @@ net_dns_lookup(MWContext *windowID,
 	PR_ASSERT(hpbuf);
 
 	/* Not asyncronus, completes a full lookup before returing. */
-    TIMING_MSG(("netlib: net_dns_lookup: begin PR_GetHostByName: host=\"%s\"", host));
 	status = PR_GetHostByName(host, dbbuf, PR_NETDB_BUF_SIZE, hpbuf);
-    TIMING_MSG(("netlib: net_dns_lookup: end PR_GetHostByName: host=\"%s\" result=%s",
-                 host, (status == PR_SUCCESS) ? "success" : "failure"));
-
 
 	if(status == PR_SUCCESS) {
 		/* Success, hpbuf points to a valid hostent. */
@@ -544,7 +540,6 @@ net_dns_lookup(MWContext *windowID,
 	 * if it's not done yet.
 	 *
 	 * dbbuf and hpbuf are not needed in ASYNC_DNS case. */
-    TIMING_MSG(("netlib: net_dns_lookup: begin AsyncDNSLookup host=\"%s\"", host));
 #ifdef MODULAR_NETLIB
 	status = NET_AsyncDNSLookup(windowID, host, hostEnt, socket);
 #else
@@ -560,11 +555,9 @@ net_dns_lookup(MWContext *windowID,
 	}
 	else if(status == 0) {
 		/* Success, hostEnt points to a valid hostent. */
-        TIMING_MSG(("netlib: net_dns_lookup: end AsyncDNSLookup host=\"%s\" (cached)", host));
 		NET_InGetHostByName--;
 		return status;
 	}
-    TIMING_MSG(("netlib: net_dns_lookup: end AsyncDNSLookup host=\"%s\" (failed)", host));
 #endif /* ASYNC_DNS */
 	/* FAIL */
 	NET_InGetHostByName--;
@@ -794,8 +787,7 @@ net_FindAddress (const char *host_ptr,
 				PR_Free(msg);
 			  }
 
-            TIMING_MSG(("netlib: net_FindAddress: doing DNS lookup host_ptr=\"%s\"",
-                        (remapped_host_port ? remapped_host_port : host_port)));
+            TIMING_STARTCLOCK_NAME("dnslookup", (remapped_host_port ? remapped_host_port : host_port));
 
 #ifndef ASYNC_DNS
 			status = net_dns_lookup( 
@@ -819,6 +811,9 @@ net_FindAddress (const char *host_ptr,
 				return status;
 			}
 		}
+
+        TIMING_STOPCLOCK_NAME("dnslookup", (remapped_host_port ? remapped_host_port : host_port),
+                              (hoststruct_pointer ? "ok" : "error"));
 
         if (!hoststruct_pointer) {
 			if(first_dns_failure) {
@@ -925,8 +920,6 @@ net_start_first_connect(const char   *host,
 	 * later
 	 */
 	tcp_con_data->begin_time = time(NULL);
-    TIMING_MSG(("netlib: net_start_first_connect: creating TCP "
-                "connection to host=\"%s\"", host));
 
 #define CONNECT_TIMEOUT  0
 
@@ -982,7 +975,7 @@ net_start_first_connect(const char   *host,
               }
           }
       }
- 
+
     /* else  good connect */
 
     return(MK_CONNECTED);
@@ -1077,7 +1070,6 @@ NET_BeginConnect (CONST char   *url,
 		return MK_OFFLINE;	
 #endif /* MOZ_OFFLINE */
 	TRACEMSG(("NET_BeginConnect called for url: %s", url));
-    TIMING_MSG(("netlib: NET_BeginConnect: url=\"%s\"", url));
 
 	/* One time startup flag. If this is the first time in BeginConnect,
 	 * make sure the socks is setup if it needs to be.
@@ -1271,11 +1263,14 @@ HG71089
         return MK_UNABLE_TO_LOCATE_HOST;
       }
 
+    TIMING_STARTCLOCK_NAME("tcpconnect", url);
+
     status = net_start_first_connect(host, *sock, window_id, 
 									 *tcp_con_data, error_msg);
 
 	if(status != MK_WAITING_FOR_CONNECTION)
 	  {
+        TIMING_STOPCLOCK_NAME("tcpconnect", url, "error");
 		NET_FreeTCPConData(*tcp_con_data);
 		*tcp_con_data = 0;
 	  }
@@ -1322,7 +1317,6 @@ NET_FinishConnect (CONST char   *url,
 	char *host=NULL;
 
 	TRACEMSG(("NET_FinishConnect called for url: %s", url));
-    TIMING_MSG(("netlib: NET_FinishConnect: url=\"%s\"", url));
 
 	if(!*tcp_con_data)  /* safty valve */
 	  {
@@ -1387,14 +1381,14 @@ NET_FinishConnect (CONST char   *url,
             return MK_UNABLE_TO_LOCATE_HOST;
           }
 
-        TIMING_MSG(("netlib: NET_FinishConnect: DNS lookup complete: url=\"%s\"",
-                    url));
+        TIMING_STARTCLOCK_NAME("tcpconnect", url);
 
         status = net_start_first_connect(host, *sock, window_id, 
 										 *tcp_con_data, error_msg);
 
         if(status != MK_WAITING_FOR_CONNECTION)
           {
+            TIMING_STOPCLOCK_NAME("tcpconnect", url, "error");
             NET_FreeTCPConData(*tcp_con_data);
             *tcp_con_data = 0;
           }
@@ -1502,8 +1496,6 @@ error_out:
 							return -1;
 					  }
 
-                    TIMING_MSG(("netlib: NET_FinishConnect: trying new address, url=\"%s\"", url));
-
 					/* Go get another of the ip addresses */
     				status = net_FindAddress(host, 
 				 				&((*tcp_con_data)->net_addr), 
@@ -1528,7 +1520,7 @@ error_out:
 				else
 					FREE(host);
 
-                TIMING_MSG(("netlib: NET_FinishConnect: error, url=\"%s\"", url));
+                TIMING_STOPCLOCK_NAME("tcpconnect", url, "error");
 
 				HG92362
                 if (error == PR_CONNECT_REFUSED_ERROR)
@@ -1559,7 +1551,7 @@ error_out:
 		      }
         }
 
-        TIMING_MSG(("netlib: NET_FinishConnect: connection made url=\"%s\"", url));
+        TIMING_STOPCLOCK_NAME("tcpconnect", url, "ok");
 		TRACEMSG(("mktcp.c: Successful connection (message 1)"));
 		NET_FreeTCPConData(*tcp_con_data);
 		*tcp_con_data = 0;

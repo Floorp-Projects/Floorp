@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -51,6 +51,8 @@
 #ifdef HTML_CERTIFICATE_SUPPORT
 #include "cert.h"
 #endif
+
+#include "timing.h"
 
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -4334,6 +4336,7 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
 #endif /* OLD_MSGS */
 
 				    lo_FinishLayout(context, state, EVENT_LOAD);
+                    TIMING_STOPCLOCK_OBJECT("layout:whole-document", doc_id, "done");
 				}
 				orig_state->top_state->layout_status = status;
 			}
@@ -4438,6 +4441,9 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
 #else
 		lo_GetRecycleList(context, doc_id, doc_data, &recycle_list);	/* whh */
 #endif /* MEMORY_ARENAS */
+
+        TIMING_STARTCLOCK_OBJECT("layout:blank-screen", context);
+        TIMING_STARTCLOCK_OBJECT("layout:whole-document", doc_id);
 
 #ifdef LOCAL_DEBUG
 XP_TRACE(("Initializing new doc %d\n", doc_id));
@@ -5486,6 +5492,8 @@ lo_set_image_info(MWContext *context, int32 ele_id, int32 width, int32 height)
 		image->width = width;
 		image->height = height;
 		lo_FinishImage(context, state, image);
+
+        TIMING_STOPCLOCK_OBJECT("layout:block-on-image", image, "done");
 		lo_FlushBlockage(context, state, main_doc_state);
 	}
 	else if (top_state->tags != NULL)

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -25,6 +25,7 @@
 
 #define IL_CLIENT               /* XXXM12N Defined by Image Library clients */
 #include "libimg.h"             /* Image Library public API. */
+#include "timing.h"
 
 #ifdef PROFILE
 #pragma profile on
@@ -219,6 +220,8 @@ lo_DisplayText(MWContext *context,
 	int32 p1, p2;
 	LO_TextAttr tmp_attr;
 	LO_TextAttr *hold_attr;
+
+    TIMING_STOPCLOCK_OBJECT("layout:blank-screen", context, "displaying text");
 
 	/* Blinking text elements are placed in a separate layer */
     if (context->compositor && text->text_attr->attrmask & LO_ATTR_BLINK)

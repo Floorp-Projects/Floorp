@@ -1639,9 +1639,9 @@ net_send_http_request (ActiveEntry *ce)
                   &command);
 
     TRACEMSG(("Sending HTTP Request:\n---------------------------------"));
-    TIMING_MSG(("netlib: net_send_http_request: sending HTTP request: url=\"%s\"",
-                ce->URL_s->address));
 
+    TIMING_STARTCLOCK_NAME("http:complete", ce->URL_s->address);
+    TIMING_STARTCLOCK_NAME("http:request", ce->URL_s->address);
     ce->status = (int) NET_BlockingWrite(cd->connection->sock, command, command_size);
 
 #if defined(JAVA)
@@ -1751,6 +1751,8 @@ net_http_send_post_data (ActiveEntry *ce)
       add_crlf = ce->URL_s->add_crlf[n];
     }
 
+    TIMING_STARTCLOCK_NAME("http:post", ce->URL_s->address);
+
     /* returns 0 on done and negative on error
      * positive if it needs to continue.
      */
@@ -1766,6 +1768,7 @@ net_http_send_post_data (ActiveEntry *ce)
         /* normal done
          */
         TRACEMSG(("End of post data data"));
+        TIMING_STOPCLOCK_NAME("http:post", ce->URL_s->address, "ok");
 
     /* make sure these are empty
      */
@@ -2060,8 +2063,7 @@ net_parse_first_http_line (ActiveEntry *ce)
   
   /* ce->status greater than 0 
    */
-    TIMING_MSG(("netlib: http_parse_frist_http_line: reading header url=\"%s\"",
-                ce->URL_s->address));
+    TIMING_STOPCLOCK_NAME("http:request", ce->URL_s->address, "response received");
     BlockAllocCat(cd->line_buffer, cd->line_buffer_size, small_buf, ce->status);
     cd->line_buffer_size += ce->status;
 
@@ -2167,10 +2169,6 @@ net_parse_first_http_line (ActiveEntry *ce)
           StrAllocCopy(ce->URL_s->content_encoding, 
              (NET_cinfo_find_enc(ce->URL_s->address))->encoding);
       }
-
-    TIMING_MSG(("netlib: net_parse_first_http_line: partial header "
-                "received, setting up stream for rest, url=\"%s\"",
-                ce->URL_s->address));
 
     cd->next_state = HTTP_SETUP_STREAM;
 
@@ -2438,9 +2436,6 @@ net_parse_first_http_line (ActiveEntry *ce)
                 break;
             } /* Switch on server_status/100 */
 
-
-        TIMING_MSG(("netlib: net_parse_first_http_line: full header "
-                    "received, url=\"%s\"", ce->URL_s->address));
 
         cd->next_state = HTTP_PARSE_MIME_HEADERS;
 
@@ -3119,8 +3114,6 @@ net_pull_http_data(ActiveEntry * ce)
     write_ready = (*cd->stream->is_write_ready)(cd->stream);
 
 	TRACEMSG(("NET_ProcessHTTP: write ready returned %d", write_ready));
-    TIMING_MSG(("netlib: net_pull_http_data: url=\"%s\" write_ready=%d",
-                ce->URL_s->address, write_ready));
 
   if(!write_ready)
     {
@@ -3143,9 +3136,6 @@ net_pull_http_data(ActiveEntry * ce)
 
     if(ce->status > 0)
       {
-        TIMING_MSG(("netlib: net_pull_http_data: url=\"%s\" read %d bytes",
-                    ce->URL_s->address, ce->status));
-
         ce->bytes_received += ce->status;
         FE_GraphProgress(ce->window_id, 
              ce->URL_s, 
@@ -3168,9 +3158,6 @@ net_pull_http_data(ActiveEntry * ce)
       }
     else if(ce->status == 0)
       {
-        TIMING_MSG(("netlib: net_pull_http_data: url=\"%s\" done.",
-                    ce->URL_s->address));
-
     /* transfer finished
          */
       TRACEMSG(("MKHTTP.c: Caught TCP EOF ending stream"));
@@ -3197,9 +3184,6 @@ net_pull_http_data(ActiveEntry * ce)
 
     if (err == PR_WOULD_BLOCK_ERROR)
       {
-        TIMING_MSG(("netlib: net_pull_http_data: url=\"%s\" waiting for data...",
-                    ce->URL_s->address));
-
       cd->pause_for_read = TRUE;
       return (0);
       }
@@ -3549,6 +3533,8 @@ HG51096
             break;
         
         case HTTP_DONE:
+            TIMING_STOPCLOCK_NAME("http:complete", ce->URL_s->address, "ok");
+
             NET_ClearReadSelect(ce->window_id, cd->connection->sock);
             NET_TotalNumberOfOpenConnections--;
 
@@ -3580,6 +3566,9 @@ HG51096
             break;
         
         case HTTP_ERROR_DONE:
+            TIMING_STOPCLOCK_NAME("http:post", ce->URL_s->address, "error");
+            TIMING_STOPCLOCK_NAME("http:request", ce->URL_s->address, "error");
+            TIMING_STOPCLOCK_NAME("http:complete", ce->URL_s->address, "error");
             if(cd->connection->sock != NULL) {
                 NET_ClearDNSSelect(ce->window_id, cd->connection->sock);
                 NET_ClearReadSelect(ce->window_id, cd->connection->sock);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -35,6 +35,7 @@
 #include "mcom_db.h"
 #include "laylayer.h"
 #include "prefapi.h"
+#include "timing.h"
 
 static char lo_jsAllowFileSrcFromNonFile[]
     = "javascript.allow.file_src_from_non_file";
@@ -226,6 +227,7 @@ lo_create_script_blockage(MWContext *context, lo_DocState *state, int type)
     if (type == LO_SCRIPT)
 	top_state->current_script = block_ele;
 
+    TIMING_STARTCLOCK_OBJECT("layout:block-on-script", block_ele);
     return TRUE;
 }
 
@@ -391,6 +393,7 @@ lo_unblock_script_tag(MWContext * context, Bool messWithParser)
      * style attribute scripts
      */
     if (block_ele->type == LO_SCRIPT || block_ele->type == LO_UNKNOWN) {
+        TIMING_STOPCLOCK_OBJECT("layout:block-on-script", block_ele, "done");
         lo_UnblockLayout(context, top_state);
     }
     else {

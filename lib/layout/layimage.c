@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -41,6 +41,8 @@ extern int MK_OUT_OF_MEMORY;
 #ifdef MOCHA
 #include "libevent.h"
 #endif /* MOCHA */
+
+#include "timing.h"
 
 #ifdef PROFILE
 #pragma profile on
@@ -2082,6 +2084,9 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
     image_obs_list = lo_NewImageObserverList(context, image);
     if (!image_obs_list)
         return;
+
+    /* If a lowres image has been specified, we'll actually be loading
+       that, not the real (hires) url */
 	lo_GetImage(context, context->img_cx, image, image_obs_list,
                     state->top_state->force_reload);
 
@@ -2099,6 +2104,10 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	 */
 	if ((image->width == 0)||(image->height == 0))
 	{
+        /* If a lowres image has been specified, we'll actually be
+           blocking on that, not the real (hires) url */
+        TIMING_STARTCLOCK_OBJECT("layout:block-on-image", image);
+
 		state->top_state->layout_blocking_element = (LO_Element *)image;
 	}
 	else
