@@ -605,6 +605,25 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsI
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLRadioButtonAccessibleXBL(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  // reusing the HTML accessible widget and enhancing for XUL
+  *_retval = new nsHTMLRadioButtonAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIAccessible *aAccParent, nsISupports* aPresContext, nsIAccessible **_retval)
 {
