@@ -461,8 +461,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
     do_QueryInterface((nsISupports*)m_incomingServers.Get(&hashKey), &rv);
 
   if (NS_SUCCEEDED(rv)) {
-    *_retval = server;
-    NS_ADDREF(*_retval);
+    NS_ADDREF(*_retval = server);
     return NS_OK;
   }
 
@@ -546,11 +545,10 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   // waiting on root folders
   nsCOMPtr<nsIMsgFolder> rootFolder;
   rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
   mFolderListeners->EnumerateForwards(addListenerToFolder,
                                       (void *)(nsIMsgFolder*)rootFolder);
-
-  *aServer = server;
-  NS_ADDREF(*aServer);
+  NS_ADDREF(*aServer = server);
   
   return NS_OK;
 }
