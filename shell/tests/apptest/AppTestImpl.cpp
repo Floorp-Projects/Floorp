@@ -203,7 +203,7 @@ MyLoadImage(char *aFileName)
             gImageGroup->Init(drawCtx) != NS_OK) {
                 nsString aMessage("Couldn't create image group");
 
-                NSApplicationManager::ModalMessage(aMessage, 
+                nsApplicationManager::ModalMessage(aMessage, 
                                                    class1Name, 
                                                    eModalMessage_ok);
                 NS_RELEASE(drawCtx);
@@ -230,7 +230,7 @@ MyLoadImage(char *aFileName)
       
       nsString aMessage("Couldn't create image request");
 
-      NSApplicationManager::ModalMessage(aMessage, 
+      nsApplicationManager::ModalMessage(aMessage, 
                                          class1Name, 
                                          eModalMessage_ok);
     }
@@ -285,7 +285,7 @@ HandleEventApplication(nsGUIEvent *aEvent)
           if (NS_NewImageManager(&gImageManager) != NS_OK ||
               gImageManager->Init() != NS_OK) {
                 nsString aMessage("Can't initialize the image library");
-                NSApplicationManager::ModalMessage(aMessage, 
+                nsApplicationManager::ModalMessage(aMessage, 
                                                    class1Name, 
                                                    eModalMessage_ok);
           }	  
@@ -417,7 +417,7 @@ void InitAppTest(nsAppTest * aAppTest)
   
     nsresult res = NS_OK;
     
-    res = NSApplicationManager::GetShellInstance(aAppTest, &shellInstance) ;
+    res = nsApplicationManager::GetShellInstance(aAppTest, &shellInstance) ;
 
     if (res == NS_OK)
         gInstance = (HINSTANCE) shellInstance->GetNativeInstance();

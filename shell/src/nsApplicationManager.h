@@ -44,7 +44,7 @@ enum nsModalMessageType {
               }; 
 
 
-class NS_SHELL NSApplicationManager {
+class NS_SHELL nsApplicationManager {
 private:
   static PRMonitor *monitor;
   static nsHashtable * applications;

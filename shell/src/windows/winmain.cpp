@@ -68,7 +68,7 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
 
     // Tell the application manager to store away the association so the
     // Application can look up its State
-    NSApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
+    nsApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
 
     // Initialize the system
     pShellInstance->Init();
@@ -78,7 +78,7 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
 	result = pApplicationShell->Run();
 
     // We're done, clean up
-    NSApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
+    nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
 
     // book out of here
 	return result;
