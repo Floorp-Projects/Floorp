@@ -37,7 +37,7 @@ LLIBS=						      \
     $(DIST)\lib\rdfutil_s.lib            \
     $(DIST)\lib\inspector_s.lib               \
     $(DIST)\lib\gkgfxwin.lib \
-    $(DIST)\lib\raptorhtmlstyle_s.lib \
+    $(DIST)\lib\contenthtmlstyle_s.lib \
 		$(LIBNSPR)	 	              \
 		$(NULL)
 
