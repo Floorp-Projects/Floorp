@@ -38,11 +38,13 @@ REQUIRES        = xpcom \
                   appshell \
                   gfx \
                   widget \
-		  	webBrowser_core \
+                  unicharutil \
+                  webBrowser_core \
                   $(NULL)
 
 CPP_OBJS =                                      \
            .\$(OBJDIR)\ChangeAttributeTxn.obj   \
+           .\$(OBJDIR)\ChangeCSSInlineStyleTxn.obj \
            .\$(OBJDIR)\CreateElementTxn.obj     \
            .\$(OBJDIR)\DeleteElementTxn.obj     \
            .\$(OBJDIR)\DeleteRangeTxn.obj       \

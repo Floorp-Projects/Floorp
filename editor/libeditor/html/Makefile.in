@@ -34,7 +34,7 @@ REQUIRES        = xpcom \
                   dom \
                   layout \
                   locale \
-				  unicharutil \
+                  unicharutil \
                   content \
                   txmgr \
                   htmlparser \
@@ -50,11 +50,12 @@ REQUIRES        = xpcom \
 CPPSRCS  = \
            nsEditProperty.cpp             \
            nsHTMLDataTransfer.cpp         \
+           nsHTMLCSSUtils.cpp             \
            nsHTMLEditor.cpp               \
            nsHTMLEditorStyle.cpp          \
            nsHTMLEditRules.cpp            \
            nsHTMLEditUtils.cpp            \
-	   nsHTMLURIRefObject.cpp         \
+	     nsHTMLURIRefObject.cpp         \
            nsTableEditor.cpp              \
            nsWSRunObject.cpp              \
            TypeInState.cpp                \

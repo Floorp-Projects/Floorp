@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -253,6 +254,15 @@ nsPlaintextEditor::EndEditorInit()
   }
   return res;
 }
+
+nsresult
+nsPlaintextEditor::IsCSSEnabled(PRBool *aIsSet)
+{
+  // STUB
+  *aIsSet = PR_FALSE;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSet) 
@@ -2104,3 +2114,11 @@ void nsPlaintextEditor::HandleEventListenerError()
 #pragma mark -
 #endif
 
+nsresult
+nsPlaintextEditor::SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
+                                               const nsAReadableString & aAttribute,
+                                               const nsAReadableString & aValue)
+{
+  // STUB
+  return NS_OK;
+}

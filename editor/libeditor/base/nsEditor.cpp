@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -71,6 +72,8 @@
 #include "nsIPlaintextEditor.h"
 #include "nsGUIEvent.h"
 
+#include "nsIDOMCSSStyleDeclaration.h"
+
 #include "nsIFrame.h"  // Needed by IME code
 
 #include "nsICSSStyleSheet.h"
@@ -87,6 +90,7 @@
 #include "EditAggregateTxn.h"
 #include "PlaceholderTxn.h"
 #include "ChangeAttributeTxn.h"
+#include "ChangeCSSInlineStyleTxn.h"
 #include "CreateElementTxn.h"
 #include "InsertElementTxn.h"
 #include "DeleteElementTxn.h"
@@ -97,6 +101,7 @@
 #include "JoinElementTxn.h"
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
+#include "nsIEditProperty.h"
 
 // included for nsEditor::CreateHTMLContent
 #include "nsIElementFactory.h"
@@ -1077,7 +1082,6 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAReadableString & aAttri
   NS_IF_RELEASE(txn);
   return result;
 }
-
 
 NS_IMETHODIMP 
 nsEditor::GetAttributeValue(nsIDOMElement *aElement, 
@@ -2173,6 +2177,8 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 
   if (!aDestNode || !aSourceNode)
     return NS_ERROR_NULL_POINTER;
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
 
   nsCOMPtr<nsIDOMElement> destElement = do_QueryInterface(aDestNode);
   nsCOMPtr<nsIDOMElement> sourceElement = do_QueryInterface(aSourceNode);
@@ -2255,10 +2261,19 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
           */
           if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)))
           {
-            if (destInBody)
-              SetAttribute(destElement, sourceAttrName, sourceAttrValue);
-            else
+            if (destInBody) {
+              if (useCSS) {
+                res = SetCSSEquivalentToHTMLStyle(destElement, sourceAttrName, sourceAttrValue);
+              }
+              else {
+                SetAttribute(destElement, sourceAttrName, sourceAttrValue);
+              }
+            }
+            else {
+              // only elements in BODY can carry a STYLE attribute
+              // so there is no need to test the value of useCSS here
               destElement->SetAttribute(sourceAttrName, sourceAttrValue);
+            }
           } else {
             // Do we ever get here?
 #if DEBUG_cmanske
@@ -5229,3 +5244,18 @@ nsEditor::CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent
   return NS_OK;
 }
 
+
+nsresult
+nsEditor::IsCSSEnabled(PRBool *aIsSet)
+{
+  *aIsSet = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsEditor::SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
+                                      const nsAReadableString & aAttribute,
+                                      const nsAReadableString & aValue)
+{
+  return SetAttribute(aElement, aAttribute, aValue);
+}

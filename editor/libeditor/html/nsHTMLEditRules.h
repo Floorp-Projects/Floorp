@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -138,6 +139,8 @@ protected:
   nsresult WillMakeList(nsISelection *aSelection, const nsAReadableString *aListType, PRBool aEntireList, const nsAReadableString *aBulletType, PRBool *aCancel, PRBool *aHandled, const nsAReadableString *aItemType=nsnull);
   nsresult WillRemoveList(nsISelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillAlign(nsISelection *aSelection, const nsAReadableString *alignType, PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeDefListItem(nsISelection *aSelection, const nsAReadableString *aBlockType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled);
@@ -235,9 +238,11 @@ protected:
   PRBool   IsVisBreak(nsIDOMNode *aNode);
   PRBool   IsEmptyInline(nsIDOMNode *aNode);
   PRBool   ListIsEmptyLine(nsISupportsArray *arrayOfNodes);
-  nsresult RemoveAlignmentInside(nsIDOMNode * aNode);
+  nsresult RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignType, PRBool aChildrenOnly);
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts);
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode);
+  nsresult AlignBlock(nsIDOMElement * aElement, const nsAReadableString * aAlignType, PRBool aContentsOnly);
+  nsresult RelativeChangeIndentation(nsIDOMNode *aNode, PRInt8 aRelativeChange);
 
 // data members
 protected:

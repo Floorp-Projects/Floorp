@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -54,6 +55,7 @@
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "SetDocTitleTxn.h"
+#include "ChangeCSSInlineStyleTxn.h"
 #endif // MOZILLA_PLAINTEXT_EDITOR_ONLY
 
 TransactionFactory::TransactionFactory()
@@ -83,6 +85,10 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new DeleteRangeTxn();
   else if (aTxnType.Equals(ChangeAttributeTxn::GetCID()))
     *aResult = new ChangeAttributeTxn();
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  else if (aTxnType.Equals(ChangeCSSInlineStyleTxn::GetCID()))
+    *aResult = new ChangeCSSInlineStyleTxn();
+#endif // MOZILLA_PLAINTEXT_EDITOR_ONLY
   else if (aTxnType.Equals(SplitElementTxn::GetCID()))
     *aResult = new SplitElementTxn();
   else if (aTxnType.Equals(JoinElementTxn::GetCID()))

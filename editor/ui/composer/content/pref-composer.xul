@@ -34,7 +34,7 @@
   <script type="application/x-javascript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
   <![CDATA[
-    var _elementIDs = ["maintainTableStructure", "preserveFormatting", "recentFiles"];
+    var _elementIDs = ["maintainTableStructure", "preserveFormatting", "recentFiles", "useCSS"];
   ]]>
   </script>        
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -155,4 +155,16 @@
 
   </groupbox>
   -->
+  <groupbox>
+    <caption label="&cssEditing.label;"/>
+    <checkbox
+      label     = "&useCSS.label;"
+      id        = "useCSS"
+      accesskey = ""
+      pref      = "true"
+      preftype  = "bool"
+      prefstring= "editor.use_css"
+      prefattribute="checked"
+    />
+  </groupbox>
 </page>

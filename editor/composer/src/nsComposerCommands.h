@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Ryan Cassin (rcassin@supernova.org)
+ *   Ryan Cassin <rcassin@supernova.org>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -213,6 +214,19 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+};
+
+class nsHighlightColorStateCommand : public nsMultiStateCommand
+{
+public:
+                   nsHighlightColorStateCommand();
+
+protected:
+
+  virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
+  virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+  NS_IMETHOD IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
+
 };
 
 class nsFontColorStateCommand : public nsMultiStateCommand

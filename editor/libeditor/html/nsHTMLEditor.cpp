@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -65,6 +66,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsISelectionController.h"
+#include "nsIDOMHTMLHtmlElement.h"
 
 #include "TransactionFactory.h"
 
@@ -164,6 +166,7 @@ nsHTMLEditor::nsHTMLEditor()
 , mIgnoreSpuriousDragEvent(PR_FALSE)
 , mTypeInState(nsnull)
 , mSelectedCellIndex(0)
+, mHTMLCSSUtils(nsnull)
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
@@ -271,6 +274,14 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     // Init the plaintext editor
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
     if (NS_FAILED(result)) { return result; }
+
+    // the HTML Editor is CSS-aware only in the case of Composer
+    mCSSAware = PRBool(0 == aFlags);
+
+    // Init the HTML-CSS utils
+    result = NS_NewHTMLCSSUtils(&mHTMLCSSUtils);
+    if (NS_FAILED(result)) { return result; }
+    mHTMLCSSUtils->Init(this);
 
     // disable links
     nsCOMPtr<nsIPresContext> context;
@@ -586,19 +597,19 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
           tagAtom==nsIEditProperty::noscript   ||
           tagAtom==nsIEditProperty::form       ||
           tagAtom==nsIEditProperty::hr         ||
-          tagAtom==nsIEditProperty::table      ||
           tagAtom==nsIEditProperty::fieldset   ||
           tagAtom==nsIEditProperty::address    ||
           tagAtom==nsIEditProperty::body       ||
-          tagAtom==nsIEditProperty::tr         ||
-          tagAtom==nsIEditProperty::td         ||
-          tagAtom==nsIEditProperty::th         ||
           tagAtom==nsIEditProperty::caption    ||
-          tagAtom==nsIEditProperty::col        ||
-          tagAtom==nsIEditProperty::colgroup   ||
+          tagAtom==nsIEditProperty::table      ||
           tagAtom==nsIEditProperty::tbody      ||
           tagAtom==nsIEditProperty::thead      ||
           tagAtom==nsIEditProperty::tfoot      ||
+          tagAtom==nsIEditProperty::tr         ||
+          tagAtom==nsIEditProperty::td         ||
+          tagAtom==nsIEditProperty::th         ||
+          tagAtom==nsIEditProperty::col        ||
+          tagAtom==nsIEditProperty::colgroup   ||
           tagAtom==nsIEditProperty::li         ||
           tagAtom==nsIEditProperty::dt         ||
           tagAtom==nsIEditProperty::dd         ||
@@ -1166,9 +1177,14 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
     {
-      // pass escape keypresses through as empty strings: needed forime support
-      nsString empty;
-      return TypedText(empty, eTypedText);
+      if (isShift) {
+        return SelectParentOfSelection();
+      }
+      else {
+        // pass escape keypresses through as empty strings: needed forime support
+        nsString empty;
+        return TypedText(empty, eTypedText);
+      }
     }
     
     // if we got here we either fell out of the tab case or have a normal character.
@@ -2103,8 +2119,163 @@ nsHTMLEditor::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
   return htmlRules->GetParagraphState(aMixed, outFormat);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor)
+{
+  nsresult res;
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+  if (useCSS) {
+    // if we are in CSS mode, we have to check if the containing block defines
+    // a background color
+    res = GetCSSBackgroundColorState(aMixed, aOutColor, PR_TRUE);
+  }
+  else {
+    // in HTML mode, we look only at page's background
+    res = GetHTMLBackgroundColorState(aMixed, aOutColor);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetHighlightColorState(PRBool *aMixed, nsAWritableString &aOutColor)
+{
+  nsresult res = NS_OK;
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+  *aMixed = PR_FALSE;
+  aOutColor.Assign(NS_LITERAL_STRING("transparent"));
+  if (useCSS) {
+    // in CSS mode, text background can be added by the Text Highlight button
+    // we need to query the background of the selection without looking for
+    // the block container of the ranges in the selection
+    res = GetCSSBackgroundColorState(aMixed, aOutColor, PR_FALSE);
+  }
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetHighlightColor(PRBool *aMixed, PRUnichar **_retval)
+{
+  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
+  nsAutoString outColorString(NS_LITERAL_STRING("transparent"));
+  *aMixed = PR_FALSE;
+
+  nsresult  err = NS_NOINTERFACE;
+  err = GetHighlightColorState(aMixed, outColorString);
+  *_retval = ToNewUnicode(outColorString);
+  return err;
+}
+
+
+nsresult
+nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor, PRBool aBlockLevel)
+{
+  if (!aMixed) return NS_ERROR_NULL_POINTER;
+  *aMixed = PR_FALSE;
+  // the default background color is transparent
+  aOutColor.Assign(NS_LITERAL_STRING("transparent"));
+  
+  // get selection
+  nsCOMPtr<nsISelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+
+  // get selection location
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = GetStartNodeAndOffset(selection, address_of(parent), &offset);
+  if (NS_FAILED(res)) return res;
+  
+  // is the selection collapsed?
+  PRBool bCollapsed;
+  res = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> nodeToExamine;
+  if (bCollapsed || IsTextNode(parent))
+  {
+    // we want to look at the parent and ancestors
+    nodeToExamine = parent;
+  }
+  else
+  {
+    // otherwise we want to look at the first editable node after
+    // {parent,offset} and it's ancestors for divs with alignment on them
+    nodeToExamine = GetChildAt(parent, offset);
+    //GetNextNode(parent, offset, PR_TRUE, address_of(nodeToExamine));
+  }
+  
+  if (!nodeToExamine) return NS_ERROR_NULL_POINTER;
+
+  // is the node to examine a block ?
+  PRBool isBlock;
+  res = NodeIsBlockStatic(nodeToExamine, &isBlock);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMHTMLHtmlElement> htmlElement;
+  nsCOMPtr<nsIDOMNode> tmp;
+
+  if (aBlockLevel) {
+    // we are querying the block background (and not the text background), let's
+    // climb to the block container
+    nsCOMPtr<nsIDOMNode> blockParent = nodeToExamine;
+    if (!isBlock) {
+      blockParent = GetBlockNodeParent(nodeToExamine);
+    }
+    do {
+      // retrieve the computed style of background-color for blockParent
+      mHTMLCSSUtils->GetComputedProperty(blockParent, nsIEditProperty::cssBackgroundColor,
+                                         aOutColor);
+      tmp = blockParent;
+      res = tmp->GetParentNode(getter_AddRefs(blockParent));
+      htmlElement = do_QueryInterface(tmp);
+      // look at parent if the queried color is transparent and if the node to
+      // examine is not the root of the document
+    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && !htmlElement );
+    if (htmlElement && aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
+      // we have hit the root of the document and the color is still transparent !
+      // Grumble... Let's look at the default background color because that's the
+      // color we are looking for
+      mHTMLCSSUtils->GetDefaultBackgroundColor(aOutColor);
+    }
+  }
+  else {
+    // no, we are querying the text background for the Text Highlight button
+    if (IsTextNode(nodeToExamine)) {
+      // if the node of interest is a text node, let's climb a level
+      res = nodeToExamine->GetParentNode(getter_AddRefs(parent));
+      if (NS_FAILED(res)) return res;
+      nodeToExamine = parent;
+    }
+    do {
+      // is the node to examine a block ?
+      res = NodeIsBlockStatic(nodeToExamine, &isBlock);
+      if (NS_FAILED(res)) return res;
+      if (isBlock) {
+        // yes it is a block; in that case, the text background color is transparent
+        aOutColor.Assign(NS_LITERAL_STRING("transparent"));
+        break;
+      }
+      else {
+        // no, it's not; let's retrieve the computed style of background-color for the
+        // node to examine
+        mHTMLCSSUtils->GetComputedProperty(nodeToExamine, nsIEditProperty::cssBackgroundColor,
+                            aOutColor);
+        if (!aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
+          break;
+        }
+      }
+      res = nodeToExamine->GetParentNode(getter_AddRefs(tmp));
+      if (NS_FAILED(res)) return res;
+      nodeToExamine = tmp;
+      htmlElement = do_QueryInterface(tmp);
+    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && !htmlElement );
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor)
 {
   //TODO: We don't handle "mixed" correctly!
   if (!aMixed) return NS_ERROR_NULL_POINTER;
@@ -3032,8 +3203,8 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   return res;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::SetBackgroundColor(const nsAReadableString& aColor)
+NS_IMETHODIMP
+nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
 {
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
@@ -4829,5 +5000,417 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   }
   
   return NS_OK;
+}
+
+// add to aElement the CSS inline styles corresponding to the HTML attribute
+// aAttribute with its value aValue
+nsresult
+nsHTMLEditor::SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
+                                          const nsAReadableString & aAttribute,
+                                          const nsAReadableString & aValue)
+{
+  PRBool useCSS;
+  nsresult res = NS_OK;
+  IsCSSEnabled(&useCSS);
+  if (useCSS && mHTMLCSSUtils) {
+    PRInt32 count;
+    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, &aValue, &count);
+    if (NS_FAILED(res)) return res;
+    if (!count) {
+      // count is an integer that represents the number of CSS declarations applied to the
+      // element. If it is zero, we found no equivalence in this implementation for the
+      // attribute
+      if (aAttribute.Equals(NS_LITERAL_STRING("style"))) {
+        // if it is the style attribute, just add the new value to the existing style
+        // attribute's value
+        nsAutoString existingValue;
+        PRBool wasSet = PR_FALSE;
+        res = GetAttributeValue(aElement, NS_LITERAL_STRING("style"), existingValue, &wasSet);
+        if (NS_FAILED(res)) return res;
+        existingValue.Append(NS_LITERAL_STRING(" "));
+        existingValue.Append(aValue);
+        res = SetAttribute(aElement, aAttribute, existingValue);
+      }
+      else {
+        // we have no CSS equivalence for this attribute and it is not the style
+        // attribute; let's set it the good'n'old HTML way
+        res = SetAttribute(aElement, aAttribute, aValue);
+      }
+    }
+  }
+  else {
+    // we are not in an HTML+CSS editor; let's set the attribute the HTML way
+    res = SetAttribute(aElement, aAttribute, aValue);
+  }  
+  return res;
+}
+
+nsresult
+nsHTMLEditor::SetCSSEnabled(PRBool aIsCSSPrefChecked)
+{
+  nsresult  err = NS_ERROR_NOT_INITIALIZED;
+  if (mHTMLCSSUtils)
+  {
+    err = mHTMLCSSUtils->SetCSSEnabled(aIsCSSPrefChecked);
+  }
+  return err;
+}
+
+// Set the block background color
+NS_IMETHODIMP
+nsHTMLEditor::SetCSSBackgroundColor(const nsAReadableString& aColor)
+{
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+  ForceCompositionEnd();
+
+  nsresult res;
+  nsCOMPtr<nsISelection>selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+
+  PRBool isCollapsed;
+  selection->GetIsCollapsed(&isCollapsed);
+
+  nsAutoEditBatch batchIt(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
+  nsAutoSelectionReset selectionResetter(selection, this);
+  nsAutoTxnsConserveSelection dontSpazMySelection(this);
+  
+  PRBool cancel, handled;
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kSetTextProperty);
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(res)) return res;
+  if (!cancel && !handled)
+  {
+    // get selection range enumerator
+    nsCOMPtr<nsIEnumerator> enumerator;
+    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+    if (NS_FAILED(res)) return res;
+    if (!enumerator)    return NS_ERROR_FAILURE;
+
+    // loop thru the ranges in the selection
+    enumerator->First(); 
+    nsCOMPtr<nsISupports> currentItem;
+    nsAutoString bgcolor; bgcolor.AssignWithConversion("bgcolor");
+    nsCOMPtr<nsIDOMNode> cachedBlockParent = nsnull;
+    while ((NS_ENUMERATOR_FALSE == enumerator->IsDone()))
+    {
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if (NS_FAILED(res)) return res;
+      if (!currentItem)   return NS_ERROR_FAILURE;
+      
+      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+      
+      // check for easy case: both range endpoints in same text node
+      nsCOMPtr<nsIDOMNode> startNode, endNode;
+      PRInt32 startOffset, endOffset;
+      res = range->GetStartContainer(getter_AddRefs(startNode));
+      if (NS_FAILED(res)) return res;
+      res = range->GetEndContainer(getter_AddRefs(endNode));
+      if (NS_FAILED(res)) return res;
+      res = range->GetStartOffset(&startOffset);
+      if (NS_FAILED(res)) return res;
+      res = range->GetEndOffset(&endOffset);
+      if (NS_FAILED(res)) return res;
+      if ((startNode == endNode) && IsTextNode(startNode))
+      {
+        // let's find the block container of the text node
+        nsCOMPtr<nsIDOMNode> blockParent;
+        blockParent = GetBlockNodeParent(startNode);
+        // and apply the background color to that block container
+        if (cachedBlockParent != blockParent)
+        {
+          cachedBlockParent = blockParent;
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
+          PRInt32 count;
+          res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+      else if ((startNode == endNode) && nsTextEditUtils::IsBody(startNode) && !startOffset && !endOffset )
+      {
+        // we have no block in the document, let's apply the background to the body 
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(startNode);
+        PRInt32 count;
+        res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+        if (NS_FAILED(res)) return res;
+      }
+      else if ((startNode == endNode) && (((endOffset-startOffset) == 1) || (!startOffset && !endOffset)))
+      {
+        // a unique node is selected, let's also apply the background color
+        // to the containing block, possibly the node itself
+        nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startNode, startOffset);
+        PRBool isBlock =PR_FALSE;
+        res = NodeIsBlockStatic(selectedNode, &isBlock);
+        if (NS_FAILED(res)) return res;
+        nsCOMPtr<nsIDOMNode> blockParent = selectedNode;
+        if (!isBlock) {
+          blockParent = GetBlockNodeParent(selectedNode);
+        }
+        if (cachedBlockParent != blockParent)
+        {
+          cachedBlockParent = blockParent;
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
+          PRInt32 count;
+          res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+      else
+      {
+        // not the easy case.  range not contained in single text node. 
+        // there are up to three phases here.  There are all the nodes
+        // reported by the subtree iterator to be processed.  And there
+        // are potentially a starting textnode and an ending textnode
+        // which are only partially contained by the range.
+        
+        // lets handle the nodes reported by the iterator.  These nodes
+        // are entirely contained in the selection range.  We build up
+        // a list of them (since doing operations on the document during
+        // iteration would perturb the iterator).
+
+        nsCOMPtr<nsIContentIterator> iter;
+        res = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
+                                                  NS_GET_IID(nsIContentIterator), 
+                                                  getter_AddRefs(iter));
+        if (NS_FAILED(res)) return res;
+        if (!iter)          return NS_ERROR_FAILURE;
+
+        nsCOMPtr<nsISupportsArray> arrayOfNodes;
+        nsCOMPtr<nsIContent> content;
+        nsCOMPtr<nsIDOMNode> node;
+        nsCOMPtr<nsISupports> isupports;
+        
+        // make a array
+        res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
+        if (NS_FAILED(res)) return res;
+        
+        // iterate range and build up array
+        res = iter->Init(range);
+        // init returns an error if no nodes in range.
+        // this can easily happen with the subtree 
+        // iterator if the selection doesn't contain
+        // any *whole* nodes.
+        if (NS_SUCCEEDED(res))
+        {
+          while (NS_ENUMERATOR_FALSE == iter->IsDone())
+          {
+            res = iter->CurrentNode(getter_AddRefs(content));
+            if (NS_FAILED(res)) return res;
+            node = do_QueryInterface(content);
+            if (!node) return NS_ERROR_FAILURE;
+            if (IsEditable(node))
+            { 
+              isupports = do_QueryInterface(node);
+              arrayOfNodes->AppendElement(isupports);
+            }
+            res = iter->Next();
+            if (NS_FAILED(res)) return res;
+          }
+        }
+        // first check the start parent of the range to see if it needs to 
+        // be seperately handled (it does if it's a text node, due to how the
+        // subtree iterator works - it will not have reported it).
+        if (IsTextNode(startNode) && IsEditable(startNode))
+        {
+          nsCOMPtr<nsIDOMNode> blockParent;
+          blockParent = GetBlockNodeParent(startNode);
+          if (cachedBlockParent != blockParent)
+          {
+            cachedBlockParent = blockParent;
+            nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
+            PRInt32 count;
+            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+            if (NS_FAILED(res)) return res;
+          }
+        }
+        
+        // then loop through the list, set the property on each node
+        PRUint32 listCount;
+        PRUint32 j;
+        arrayOfNodes->Count(&listCount);
+        for (j = 0; j < listCount; j++)
+        {
+          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+          node = do_QueryInterface(isupports);
+          // do we have a block here ?
+          PRBool isBlock =PR_FALSE;
+          res = NodeIsBlockStatic(node, &isBlock);
+          if (NS_FAILED(res)) return res;
+          nsCOMPtr<nsIDOMNode> blockParent = node;
+          if (!isBlock) {
+            // no we don't, let's find the block ancestor
+            blockParent = GetBlockNodeParent(node);
+          }
+          if (cachedBlockParent != blockParent)
+          {
+            cachedBlockParent = blockParent;
+            nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
+            PRInt32 count;
+            // and set the property on it
+            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+            if (NS_FAILED(res)) return res;
+          }
+          arrayOfNodes->RemoveElementAt(0);
+        }
+        
+        // last check the end parent of the range to see if it needs to 
+        // be seperately handled (it does if it's a text node, due to how the
+        // subtree iterator works - it will not have reported it).
+        if (IsTextNode(endNode) && IsEditable(endNode))
+        {
+          nsCOMPtr<nsIDOMNode> blockParent;
+          blockParent = GetBlockNodeParent(endNode);
+          if (cachedBlockParent != blockParent)
+          {
+            cachedBlockParent = blockParent;
+            nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
+            PRInt32 count;
+            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+            if (NS_FAILED(res)) return res;
+          }
+        }
+      }
+      enumerator->Next();
+    }
+  }
+  if (!cancel)
+  {
+    // post-process
+    res = mRules->DidDoAction(selection, &ruleInfo, res);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::SetBackgroundColor(const nsAReadableString& aColor)
+{
+  nsresult res;
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+  if (useCSS) {
+    // if we are in CSS mode, we have to apply the background color to the
+    // containing block (or the body if we have no block-level element in
+    // the document)
+    res = SetCSSBackgroundColor(aColor);
+  }
+  else {
+    // but in HTML mode, we can only set the document's background color
+    res = SetHTMLBackgroundColor(aColor);
+  }
+  return res;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// NodesSameType: do these nodes have the same tag?
+//                    
+PRBool 
+nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
+{
+  if (!aNode1 || !aNode2) 
+  {
+    NS_NOTREACHED("null node passed to nsEditor::NodesSameType()");
+    return PR_FALSE;
+  }
+
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+
+  nsCOMPtr<nsIAtom> atom1 = GetTag(aNode1);
+  nsCOMPtr<nsIAtom> atom2 = GetTag(aNode2);
+  
+  if (atom1.get() == atom2.get()) {
+    if (useCSS && NodeIsType(aNode1, NS_LITERAL_STRING("span"))) {
+      if (mHTMLCSSUtils->ElementsSameStyle(aNode1, aNode2)) {
+        return PR_TRUE;
+      }
+    }
+    else {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+nsresult
+nsHTMLEditor::SelectParentOfSelection()
+{
+  // get selection
+  nsCOMPtr<nsISelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  if (!selPriv)
+    return NS_ERROR_FAILURE;
+
+  PRBool bCollapsed;
+  res = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  
+  if (bCollapsed) {
+    // get selection location
+    nsCOMPtr<nsIDOMNode> node, parent;
+    PRInt32 offset;
+    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+    if (NS_FAILED(res)) return res;
+
+    res = node->GetParentNode(getter_AddRefs(parent));
+    if (NS_FAILED(res) || !parent) return res;
+    nsCOMPtr<nsIDOMElement> resultElement = do_QueryInterface(parent);
+    if (!resultElement) return NS_OK;
+    res = SelectElement(resultElement);
+    return res;
+  }
+
+  nsCOMPtr<nsIEnumerator> enumerator;
+  res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+  if (NS_FAILED(res)) return res;
+  if (!enumerator) return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  // make a array
+  res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsISupports> isupports;
+
+  for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
+  {
+    nsCOMPtr<nsISupports> currentItem;
+    res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+    if (NS_FAILED(res)) return res;
+    if (!currentItem) return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+    nsCOMPtr<nsIDOMNode> commonParent;
+    range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
+
+    isupports = do_QueryInterface(commonParent);
+    res = arrayOfNodes->AppendElement(isupports);
+    if (NS_FAILED(res)) return res;
+  }
+  PRUint32 listCount;
+  arrayOfNodes->Count(&listCount);
+  // res = ClearSelection();
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMElement> element;
+  PRUint32 j;
+
+  for (j = 0; j < listCount; j++)
+  {
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(j));
+    node = do_QueryInterface(isupports);
+    element = do_QueryInterface(node);
+    if (IsElementInBody(element))
+    {
+      res = AppendNodeToSelectionAsRange(node);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  return res;
 }
 

@@ -24,6 +24,7 @@
  *    Dan Haddix (dan6992@hotmail.com)
  *    John Ratke (jratke@owc.net)
  *    Ryan Cassin (rcassin@supernova.org)
+ *    Daniel Glazman (glazman@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,12 +72,66 @@ var gIsHTMLEditor = false;
 var gColorObj = new Object();
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
+var gCSSPrefListener;
 var gPrefs;
 
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+function nsButtonPrefListener()
+{
+  try {
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.addObserver(this.domain, this, false);
+  } catch(ex) {
+    dump("Failed to observe prefs: " + ex + "\n");
+  }
+}
+
+// implements nsIObserver
+nsButtonPrefListener.prototype =
+{
+  domain: "editor.use_css",
+  observe: function(subject, topic, prefName)
+  {
+    dump("FOOOOO\n");
+    // verify that we're changing a button pref
+    if (topic != "nsPref:changed") return;
+    if (prefName.substr(0, this.domain.length) != this.domain) return;
+
+    var button = document.getElementById("cmd_highlight");
+    var mixedObj = new Object();
+    if (button) {
+      var prefs = GetPrefs();
+      var useCSS = prefs.getBoolPref(prefName);
+      if (useCSS) {
+        button.removeAttribute("disabled");
+        var state = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor).GetHighlightColor(mixedObj);
+        button.setAttribute("state", state);
+      }      
+      else {
+        button.setAttribute("disabled", "true");
+        button.setAttribute("state", "transparent");
+      }
+      editorShell.CSSPrefChangedCallback(useCSS);
+    }
+  }
+}
+
+function AfterHighlightColorChange()
+{
+  var button = document.getElementById("cmd_highlight");
+  var mixedObj = new Object();
+  if (button) {
+    var state = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor).GetHighlightColor(mixedObj);
+    button.setAttribute("state", state);
+    onHighlightColorChange();
+  }      
+}
+
+
 
 function EditorOnLoad()
 {
@@ -241,6 +296,8 @@ function EditorStartup(editorType, editorElement)
   //  such as file-related commands, HTML Source editing, Edit Modes...
   SetupComposerWindowCommands();
 
+  gCSSPrefListener = new nsButtonPrefListener();
+
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
@@ -309,6 +366,7 @@ function EditorSharedStartup()
   // For new window, no default last-picked colors
   gColorObj.LastTextColor = "";
   gColorObj.LastBackgroundColor = "";
+  gColorObj.LastHighlightColor = "";
 }
 
 function _EditorNotImplemented()
@@ -777,6 +835,23 @@ function initFontSizeMenu(menuPopup)
   }
  }
 
+function onHighlightColorChange()
+{
+  var commandNode = document.getElementById("cmd_highlight");
+  if (commandNode)
+  {
+    var color = commandNode.getAttribute("state");
+    var button = document.getElementById("HighlightColorButton");
+    if (button)
+    {
+      // No color set - get color set on page or other defaults
+      if (!color)
+        color = "transparent" ;
+
+      button.setAttribute("style", "background-color:"+color+" !important");
+    }
+  }
+}
 function onFontColorChange()
 {
   var commandNode = document.getElementById("cmd_fontColor");
@@ -861,7 +936,8 @@ function GetBackgroundElementWithColor()
   var element = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
   if (element && tagNameObj && tagNameObj.value)
   {
-    gColorObj.BackgroundColor = element.getAttribute("bgcolor");
+    gColorObj.BackgroundColor = GetHTMLOrCSSStyleValue(element, "bgcolor", "background-color");
+    gColorObj.BackgroundColor = ConvertRGBColorIntoHEXColor(gColorObj.BackgroundColor);
     if (tagNameObj.value.toLowerCase() == "td")
     {
       gColorObj.Type = "Cell";
@@ -869,7 +945,8 @@ function GetBackgroundElementWithColor()
 
       // Get any color that might be on parent table
       var table = GetParentTable(element);
-      gColorObj.TableColor = table.getAttribute("bgcolor");
+      gColorObj.TableColor = GetHTMLOrCSSStyleValue(table, "bgcolor", "background-color");
+      gColorObj.TableColor = ConvertRGBColorIntoHEXColor(gColorObj.TableColor);
     }
     else
     {
@@ -879,11 +956,39 @@ function GetBackgroundElementWithColor()
   }
   else
   {
-    element = GetBodyElement();
+    var prefs = GetPrefs();
+    var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
+    var element;
+    if (IsCSSPrefChecked && editorShell.editorType == "html")
+    {
+      var selection = window.editorShell.editorSelection;
+      if (selection)
+      {
+        element = selection.focusNode;
+        while (!window.editorShell.NodeIsBlock(element))
+          element = element.parentNode;
+      }
+      else
+      {
+        element = GetBodyElement();
+      }
+    }
+    else
+    {
+      element = GetBodyElement();
+    }
     if (element)
     {
       gColorObj.Type = "Page";
-      gColorObj.BackgroundColor = element.getAttribute("bgcolor");
+      gColorObj.BackgroundColor = GetHTMLOrCSSStyleValue(element, "bgcolor", "background-color");
+      if (gColorObj.BackgroundColor == "")
+      {
+        gColorObj.BackgroundColor = "transparent";
+      }
+      else
+      {
+        gColorObj.BackgroundColor = ConvertRGBColorIntoHEXColor(gColorObj.BackgroundColor);
+      }
       gColorObj.PageColor = gColorObj.BackgroundColor;
     }
   }
@@ -923,6 +1028,20 @@ function EditorSelectColor(colorType, mouseEvent)
 
     if (useLastColor && gColorObj.LastTextColor )
       gColorObj.TextColor = gColorObj.LastTextColor;
+    else
+      useLastColor = false;
+  }
+  else if (colorType == "Highlight")
+  {
+    gColorObj.Type = colorType;
+
+    // Get color from command node state
+    commandNode = document.getElementById("cmd_highlight");
+    currentColor = commandNode.getAttribute("state");
+    gColorObj.HighlightColor = currentColor;
+
+    if (useLastColor && gColorObj.LastHighlightColor )
+      gColorObj.HighlightColor = gColorObj.LastHighlightColor;
     else
       useLastColor = false;
   }
@@ -980,7 +1099,7 @@ function EditorSelectColor(colorType, mouseEvent)
       return;
   }
 
-  if (colorType == "Text")
+  if (gColorObj.Type == "Text")
   {
     if (currentColor != gColorObj.TextColor)
     {
@@ -992,9 +1111,21 @@ function EditorSelectColor(colorType, mouseEvent)
     // Update the command state (this will trigger color button update)
     goUpdateCommand("cmd_fontColor");
   }
+  else if (gColorObj.Type == "Highlight")
+  {
+    if (currentColor != gColorObj.HighlightColor)
+    {
+      if (gColorObj.HighlightColor)
+        window.editorShell.SetTextProperty("font", "bgcolor", gColorObj.HighlightColor);
+      else
+        window.editorShell.RemoveTextProperty("font", "bgcolor");
+    }
+    // Update the command state (this will trigger color button update)
+    goUpdateCommand("cmd_highlight");
+  }
   else if (element)
   {
-    if (gColorObj.Type == "Table")
+    if (false /*gColorObj.Type == "Table"*/)
     {
       // Set background on a table
       // Note that we shouldn't trust "currentColor" because of "TableOrCell" behavior
@@ -1024,7 +1155,7 @@ function EditorSelectColor(colorType, mouseEvent)
         {
           var defColors = GetDefaultBrowserColors();
           if (defColors)
-          {
+          { // GLAZOU : this has to be changed
             if (!bodyelement.getAttribute("text"))
               window.editorShell.SetAttribute(bodyelement, "text", defColors.TextColor);
 
@@ -2426,5 +2557,24 @@ function SwitchInsertCharToAnotherEditorOrClose()
     // Didn't find another editor - close the dialog
     window.InsertCharWindow.close();
   }
+}
+
+function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
+{
+  var prefs = GetPrefs();
+  var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
+  var value;
+  if (IsCSSPrefChecked && editorShell.editorType == "html")
+  {
+    value = element.style.getPropertyValue(cssPropertyName);
+    if (value == "") {
+      value = element.getAttribute(attrName);
+    }
+  }
+  else
+  {
+    value = element.getAttribute(attrName);
+  }
+  return value;
 }
 

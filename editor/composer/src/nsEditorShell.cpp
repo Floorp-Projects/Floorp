@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -4982,3 +4983,14 @@ nsEditorShell::DoControllerCommand(const nsAReadableString& aCommand)
   return rv;
 }
 
+nsresult
+nsEditorShell::CSSPrefChangedCallback(PRBool aIsCSSPrefChecked)
+{
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    err = htmlEditor->SetCSSEnabled(aIsCSSPrefChecked);
+  }
+  return err;
+}

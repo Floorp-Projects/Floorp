@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -136,6 +137,7 @@ public:
   /* ------------ utility methods   -------------- */
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
   void NotifyEditorObservers(void);
+
   /* ------------ nsIEditor methods -------------- */
   NS_DECL_NSIEDITOR
   /* ------------ nsIEditorIMESupport methods -------------- */
@@ -501,7 +503,7 @@ public:
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsAWritableString& outString);
   static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
-  static PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  virtual PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
   static PRBool IsTextNode(nsIDOMNode *aNode);
   

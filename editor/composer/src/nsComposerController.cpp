@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Ryan Cassin <rcassin@supernova.org>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -200,6 +201,7 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   NS_REGISTER_ONE_COMMAND(nsFontFaceStateCommand,        "cmd_fontFace");
   NS_REGISTER_ONE_COMMAND(nsFontColorStateCommand,       "cmd_fontColor");
   NS_REGISTER_ONE_COMMAND(nsBackgroundColorStateCommand, "cmd_backgroundColor");
+  NS_REGISTER_ONE_COMMAND(nsHighlightColorStateCommand,  "cmd_highlight");
 
   NS_REGISTER_ONE_COMMAND(nsAlignCommand, "cmd_align");
   NS_REGISTER_ONE_COMMAND(nsRemoveStylesCommand, "cmd_removeStyles");

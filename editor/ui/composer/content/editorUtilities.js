@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Pete Collins
  *   Brian King
+ *   Daniel Glazman <glazman@netscape.com>
  */
 /*
   if we ever need to use a different string bundle, use srGetStrBundle
@@ -664,3 +665,43 @@ function GetOS()
   return gOS;
 }
 
+function ConvertRGBColorIntoHEXColor(color)
+{
+  if (color.search( /rgb.*/ ) != -1)
+  {
+    res = color.match( /rgb\((\d*),(\d*),(\d*)\)/ );
+    r = Number(RegExp.$1).toString(16);
+    if (r.length == 1) r = "0"+r;
+    v = Number(RegExp.$2).toString(16);
+    if (v.length == 1) v = "0"+v;
+    b = Number(RegExp.$3).toString(16);
+    if (b.length == 1) b = "0"+b;
+    return "#"+r+v+b;
+  }
+  else
+  {
+    return color;
+  }
+}
+
+function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
+{
+  var prefs = GetPrefs();
+  var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
+  var value;
+  if (IsCSSPrefChecked && editorShell.editorType == "html")
+  {
+    value = element.style.getPropertyValue(cssPropertyName);
+    if (value == "") {
+      value = element.getAttribute(attrName);
+    }
+  }
+  else
+  {
+    value = element.getAttribute(attrName);
+  }
+  if (value == null) {
+    value = "";
+  }
+  return value;
+}

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -121,6 +122,37 @@ nsIAtom * nsIEditProperty::legend;
 nsIAtom * nsIEditProperty::color;      
 nsIAtom * nsIEditProperty::face;       
 nsIAtom * nsIEditProperty::size;       
+
+nsIAtom * nsIEditProperty::cssBackgroundColor;
+nsIAtom * nsIEditProperty::cssBackgroundImage;
+nsIAtom * nsIEditProperty::cssBorder;
+nsIAtom * nsIEditProperty::cssCaptionSide;
+nsIAtom * nsIEditProperty::cssColor;
+nsIAtom * nsIEditProperty::cssFloat;
+nsIAtom * nsIEditProperty::cssFontFamily;
+nsIAtom * nsIEditProperty::cssFontSize;
+nsIAtom * nsIEditProperty::cssFontStyle;
+nsIAtom * nsIEditProperty::cssFontWeight;
+nsIAtom * nsIEditProperty::cssHeight;
+nsIAtom * nsIEditProperty::cssListStyleType;
+nsIAtom * nsIEditProperty::cssMarginLeft;
+nsIAtom * nsIEditProperty::cssMarginRight;
+nsIAtom * nsIEditProperty::cssTextAlign;
+nsIAtom * nsIEditProperty::cssTextDecoration;
+nsIAtom * nsIEditProperty::cssVerticalAlign;
+nsIAtom * nsIEditProperty::cssWhitespace;
+nsIAtom * nsIEditProperty::cssWidth;
+
+
+nsIAtom * nsIEditProperty::cssPxUnit;
+nsIAtom * nsIEditProperty::cssEmUnit;
+nsIAtom * nsIEditProperty::cssCmUnit;
+nsIAtom * nsIEditProperty::cssPercentUnit;
+nsIAtom * nsIEditProperty::cssInUnit;
+nsIAtom * nsIEditProperty::cssMmUnit;
+nsIAtom * nsIEditProperty::cssPtUnit;
+nsIAtom * nsIEditProperty::cssPcUnit;
+nsIAtom * nsIEditProperty::cssExUnit;
 
 // special
 nsString * nsIEditProperty::allProperties;
@@ -227,6 +259,36 @@ nsEditProperty::nsEditProperty()
   nsIEditProperty::face       = NS_NewAtom("face");
   nsIEditProperty::size       = NS_NewAtom("size");
   
+  nsIEditProperty::cssBackgroundColor = NS_NewAtom("background-color");
+  nsIEditProperty::cssBackgroundImage = NS_NewAtom("background-image");
+  nsIEditProperty::cssBorder          = NS_NewAtom("border");
+  nsIEditProperty::cssCaptionSide     = NS_NewAtom("caption-side");
+  nsIEditProperty::cssColor           = NS_NewAtom("color");
+  nsIEditProperty::cssFloat           = NS_NewAtom("float");
+  nsIEditProperty::cssFontFamily      = NS_NewAtom("font-family");
+  nsIEditProperty::cssFontSize        = NS_NewAtom("font-size");
+  nsIEditProperty::cssFontStyle       = NS_NewAtom("font-style");
+  nsIEditProperty::cssFontWeight      = NS_NewAtom("font-weight");
+  nsIEditProperty::cssHeight          = NS_NewAtom("height");
+  nsIEditProperty::cssListStyleType   = NS_NewAtom("list-style-type");
+  nsIEditProperty::cssMarginRight     = NS_NewAtom("margin-right");
+  nsIEditProperty::cssMarginLeft      = NS_NewAtom("margin-left");
+  nsIEditProperty::cssTextAlign       = NS_NewAtom("text-align");
+  nsIEditProperty::cssTextDecoration  = NS_NewAtom("text-decoration");
+  nsIEditProperty::cssVerticalAlign   = NS_NewAtom("vertical-align");
+  nsIEditProperty::cssWhitespace      = NS_NewAtom("white-space");
+  nsIEditProperty::cssWidth           = NS_NewAtom("width");
+
+
+  nsIEditProperty::cssPxUnit          = NS_NewAtom("px");
+  nsIEditProperty::cssEmUnit          = NS_NewAtom("em");
+  nsIEditProperty::cssCmUnit          = NS_NewAtom("cm");
+  nsIEditProperty::cssPercentUnit     = NS_NewAtom("%");
+  nsIEditProperty::cssInUnit          = NS_NewAtom("in");
+  nsIEditProperty::cssMmUnit          = NS_NewAtom("mm");
+  nsIEditProperty::cssPtUnit          = NS_NewAtom("pt");
+  nsIEditProperty::cssPcUnit          = NS_NewAtom("pc");
+  nsIEditProperty::cssExUnit          = NS_NewAtom("ex");
 
   // special
   if ( (nsIEditProperty::allProperties = new nsString) != nsnull )
@@ -306,6 +368,36 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::color);      
   NS_IF_RELEASE(nsIEditProperty::face);       
   NS_IF_RELEASE(nsIEditProperty::size);      
+
+  NS_IF_RELEASE(nsIEditProperty::cssBackgroundColor);
+  NS_IF_RELEASE(nsIEditProperty::cssBackgroundImage);
+  NS_IF_RELEASE(nsIEditProperty::cssBorder);
+  NS_IF_RELEASE(nsIEditProperty::cssCaptionSide);
+  NS_IF_RELEASE(nsIEditProperty::cssColor);
+  NS_IF_RELEASE(nsIEditProperty::cssFloat);
+  NS_IF_RELEASE(nsIEditProperty::cssFontFamily);
+  NS_IF_RELEASE(nsIEditProperty::cssFontSize);
+  NS_IF_RELEASE(nsIEditProperty::cssFontStyle);
+  NS_IF_RELEASE(nsIEditProperty::cssFontWeight);
+  NS_IF_RELEASE(nsIEditProperty::cssHeight);
+  NS_IF_RELEASE(nsIEditProperty::cssListStyleType);
+  NS_IF_RELEASE(nsIEditProperty::cssMarginRight);
+  NS_IF_RELEASE(nsIEditProperty::cssMarginLeft);
+  NS_IF_RELEASE(nsIEditProperty::cssTextAlign);
+  NS_IF_RELEASE(nsIEditProperty::cssTextDecoration);
+  NS_IF_RELEASE(nsIEditProperty::cssVerticalAlign);
+  NS_IF_RELEASE(nsIEditProperty::cssWhitespace);
+  NS_IF_RELEASE(nsIEditProperty::cssWidth);
+
+  NS_IF_RELEASE(nsIEditProperty::cssPxUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssEmUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssCmUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssPercentUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssInUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssMmUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssPtUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssPcUnit);
+  NS_IF_RELEASE(nsIEditProperty::cssExUnit);
 
   // special
   if (nsIEditProperty::allProperties) {
