@@ -453,7 +453,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSObject *pobj;
     JSScopeProperty *sprop;
     JSTreeContext funtc;
-    jsval junk;
 
     /* Make a TOK_FUNCTION node. */
     pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_FUNC);
@@ -509,8 +508,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     } else
 #endif
     {
-	/* Override any previously defined property using js_DefineFunction. */
-	fun = js_DefineFunction(cx, parent, funAtom, NULL, 0, JSPROP_ENUMERATE);
+	/* Don't add the function to it's parent until the parse succeeds. */
+        fun = js_NewFunction(cx, NULL, NULL, 0, 0, parent, funAtom);
 	named = (fun != NULL);
     }
     if (!fun) {
@@ -610,10 +609,13 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	pn->pn_op = JSOP_NOP;
 
     ok = JS_TRUE;
+    if (named)
+        if (!OBJ_DEFINE_PROPERTY(cx, parent, (jsid)funAtom, OBJECT_TO_JSVAL(fun->object),
+                                 NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+            return NULL;
+        }
 out:
     if (!ok) {
-	if (named)
-	    (void) OBJ_DELETE_PROPERTY(cx, parent, (jsid)funAtom, &junk);
 	return NULL;
     }
     return pn;
