@@ -276,28 +276,26 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 	    if (pn && pn->pn_pos.end.lineno == ts->lineno) {
                 ok = WellTerminated(cx, ts, TOK_FUNCTION);
                 if (!ok)
-                    goto out;
+                    break;
 	    }
         } else {
 	    js_UngetToken(ts);
 	    pn = Statement(cx, ts, &cg->treeContext);
-	    if (pn) {
-		ok = js_FoldConstants(cx, pn);
-		if (!ok)
-		    goto out;
-	    }
 	}
 
-	if (pn) {
-	    ok = js_AllocTryNotes(cx, cg);
-	    if (ok)
-		ok = js_EmitTree(cx, cg, pn);
-	} else {
+	if (!pn) {
 	    ok = JS_FALSE;
+            break;
 	}
+        ok = js_FoldConstants(cx, pn);
+        if (!ok)
+            break;
+        ok = js_AllocTryNotes(cx, cg);
+        if (!ok)
+            break;
+        ok = js_EmitTree(cx, cg, pn);
     } while (ok);
 
-out:
     JS_ENABLE_GC(cx->runtime);
     ts->flags &= ~TSF_ERROR;
     cx->fp = fp;
@@ -409,9 +407,8 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     if (!pn) {
 	ok = JS_FALSE;
     } else {
-	ok = js_FoldConstants(cx, pn);
-	if (ok)
-	    ok = js_EmitFunctionBody(cx, &funcg, pn, fun);
+	ok = js_FoldConstants(cx, pn) &&
+	     js_EmitFunctionBody(cx, &funcg, pn, fun);
     }
 
     JS_ENABLE_GC(cx->runtime);
@@ -547,7 +544,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * where s contains a function definition, or if in a with statement being
      * compiled from the same source that contains this function.  Otherwise,
      * if in a lambda expression, generate a function object reference.  Else,
-     * generate an annotated NOP if a top-level function.
+     * generate an annotated NOP for a top-level function.
      */
     if (outerFun || cx->fp->scopeChain != parent || InWithStatement(tc))
         pn->pn_op = JSOP_CLOSURE;
@@ -1449,11 +1446,18 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    return pn2;
 	}
 
-	/* Check explicity against (multi-line) function statement */
+	/* Check termination of (possibly multi-line) function expression. */
 	if (pn2->pn_pos.end.lineno == ts->lineno &&
 	    !WellTerminated(cx, ts, lastExprType)) {
 	    return NULL;
 	}
+
+#if JS_HAS_FUN_EXPR_STMT
+        /* ECMA ed. 3 extension: function expression statement is a closure. */
+        if (pn2->pn_type == TOK_FUNCTION)
+            pn2->pn_op = JSOP_CLOSURE;
+#endif
+
 	pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
 	if (!pn)
 	    return NULL;
@@ -2579,7 +2583,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn)
 {
-    JSParseNode *pn1=NULL, *pn2=NULL, *pn3=NULL;
+    JSParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 
     switch (pn->pn_arity) {
       case PN_FUNC:
@@ -2635,6 +2639,42 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
     }
 
     switch (pn->pn_type) {
+      case TOK_IF:
+      case TOK_HOOK:
+        /* Reduce 'if (C) T; else E' into T for true C, E for false. */
+        switch (pn1->pn_type) {
+          case TOK_NUMBER:
+            if (pn1->pn_dval == 0)
+                pn2 = pn3;
+            break;
+          case TOK_STRING:
+	    if (ATOM_TO_STRING(pn1->pn_atom)->length == 0)
+                pn2 = pn3;
+            break;
+          case TOK_PRIMARY:
+            if (pn1->pn_op == JSOP_TRUE)
+                break;
+            if (pn1->pn_op == JSOP_FALSE || pn1->pn_op == JSOP_NULL) {
+                pn2 = pn3;
+                break;
+            }
+            /* FALL THROUGH */
+          default:
+            /* Early return to dodge common code that copies pn2 to pn. */
+            return JS_TRUE;
+        }
+
+        if (pn2) {
+            /* pn2 is the then- or else-statement subtree to compile. */
+            PN_COPY_OVER(pn, pn2);
+        } else {
+            /* False condition and no else: make pn an empty statement. */
+            pn->pn_type = TOK_SEMI;
+            pn->pn_arity = PN_UNARY;
+            pn->pn_kid = NULL;
+        }
+        break;
+
       case TOK_PLUS:
 	if (pn1->pn_type == TOK_STRING && pn2->pn_type == TOK_STRING) {
 	    JSString *str1, *str2;
@@ -2659,9 +2699,9 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
 	    js_strncpy(chars + length1, str2->chars, length2);
 	    chars[length] = 0;
 	    pn->pn_atom = js_AtomizeChars(cx, chars, length, 0);
+	    JS_ARENA_RELEASE(&cx->tempPool, mark);
 	    if (!pn->pn_atom)
 		return JS_FALSE;
-	    JS_ARENA_RELEASE(&cx->tempPool, mark);
 	    pn->pn_type = TOK_STRING;
 	    pn->pn_op = JSOP_STRING;
 	    pn->pn_arity = PN_NULLARY;

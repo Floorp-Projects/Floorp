@@ -585,10 +585,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       {
 	JSFunction *fun;
 
-	/* Fold constants and generate code for the function's body. */
+	/* Generate code for the function's body. */
 	pn2 = pn->pn_body;
-	if (!js_FoldConstants(cx, pn2))
-	    return JS_FALSE;
 	if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
 				  pn->pn_pos.begin.lineno,
 				  cg->principals)) {
