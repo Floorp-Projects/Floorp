@@ -99,27 +99,14 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   // Do we have any children?
   if (nsnull == mFirstChild) {
     // No, create a pseudo block frame
-//XXX remove this code and uncomment the assertion when the table code plays nice
-#ifdef NS_DEBUG
-    if (eReflowReason_Initial != aReflowState.reason) {
-      printf("XXX: table code isn't setting the reflow reason properly! [nsBodyFrame.cpp]\n");
-    }
-#endif
-//XXX    NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "bad reason");
+    NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "bad reason");
     CreateColumnFrame(&aPresContext);
   }
   else {
-//XXX remove this code and uncomment the assertion when the table code plays nice
-#ifdef NS_DEBUG
-    if (eReflowReason_Initial == aReflowState.reason) {
-      printf("XXX: table code isn't setting the reflow reason properly! [nsBodyFrame.cpp]\n");
-    }
-#endif
-//XXX    NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
+    NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
   }
 
   if (eReflowReason_Incremental == aReflowState.reason) {
-  
     // The reflow command should never be target for us
 #ifdef NS_DEBUG
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
@@ -137,6 +124,10 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
     if (mFirstChild != next) {
+      NS_ASSERTION(this != next, "huh?");
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                     ("nsBodyFrame::Reflow: reflowing frame=%p",
+                      next));
       // It's an absolutely positioned frame that's the target.
       // XXX FIX ME. For an absolutely positioned item we need to properly
       // compute the available space and then resize the frame if necessary...
