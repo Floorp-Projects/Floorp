@@ -134,6 +134,8 @@ nsJSEditorLog::SetTextProperty(nsIAtom *aProperty, const nsString *aAttribute, c
     PrintUnicode(*aValue);
   Write("\");\n");
 
+  Flush();
+
   return NS_OK;
 }
 
@@ -160,6 +162,8 @@ nsJSEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
   PrintUnicode(aParagraphFormat);
   Write("\");\n");
 
+  Flush();
+
   return NS_OK;
 }
 
@@ -181,6 +185,8 @@ nsJSEditorLog::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute
     PrintUnicode(*aAttribute);
   Write("\");\n");
 
+  Flush();
+
   return NS_OK;
 }
 
@@ -194,6 +200,8 @@ nsJSEditorLog::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
   Write("window.editorShell.DeleteSelection(");
   WriteInt("%d", aAction);
   Write(");\n");
+
+  Flush();
 
   return NS_OK;
 }
@@ -210,6 +218,8 @@ nsJSEditorLog::InsertText(const nsString& aStringToInsert)
   PrintUnicode(aStringToInsert);
   Write("\");\n");
 
+  Flush();
+
   return NS_OK;
 }
 
@@ -221,6 +231,7 @@ nsJSEditorLog::InsertBreak()
 
   PrintSelection();
   Write("window.editorShell.InsertBreak();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -238,6 +249,7 @@ nsJSEditorLog::Undo(PRUint32 aCount)
     return NS_OK;
 
   Write("window.editorShell.Undo();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -255,6 +267,7 @@ nsJSEditorLog::Redo(PRUint32 aCount)
     return NS_OK;
 
   Write("window.editorShell.Redo();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -272,6 +285,7 @@ nsJSEditorLog::BeginTransaction()
     return NS_OK;
 
   Write("window.editorShell.BeginBatchChanges();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -283,6 +297,7 @@ nsJSEditorLog::EndTransaction()
     return NS_OK;
 
   Write("window.editorShell.EndBatchChanges();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -330,6 +345,7 @@ nsJSEditorLog::SelectAll()
     return NS_OK;
 
   Write("window.editorShell.SelectAll();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -341,6 +357,7 @@ nsJSEditorLog::BeginningOfDocument()
     return NS_OK;
 
   Write("window.editorShell.BeginningOfDocument();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -352,6 +369,7 @@ nsJSEditorLog::EndOfDocument()
     return NS_OK;
 
   Write("window.editorShell.EndOfDocument();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -396,6 +414,7 @@ nsJSEditorLog::Cut()
 
   PrintSelection();
   Write("window.editorShell.Cut();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -408,6 +427,7 @@ nsJSEditorLog::Copy()
 
   PrintSelection();
   Write("window.editorShell.Copy();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -420,6 +440,7 @@ nsJSEditorLog::Paste()
 
   PrintSelection();
   Write("window.editorShell.Paste();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -432,6 +453,7 @@ nsJSEditorLog::PasteAsQuotation()
 
   PrintSelection();
   Write("window.editorShell.PasteAsQuotation();\n");
+  Flush();
 
   return NS_OK;
 }
@@ -446,6 +468,7 @@ nsJSEditorLog::PasteAsCitedQuotation(const nsString& aCitation)
   Write("window.editorShell.PasteAsCitedQuotation(\"");
   PrintUnicode(aCitation);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -460,6 +483,7 @@ nsJSEditorLog::InsertAsQuotation(const nsString& aQuotedText)
   Write("window.editorShell.InsertAsQuotation(\"");
   PrintUnicode(aQuotedText);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -476,6 +500,7 @@ nsJSEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText, const nsStrin
   Write("\", \"");
   PrintUnicode(aCitation);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -525,6 +550,7 @@ nsJSEditorLog::SetBackgroundColor(const nsString& aColor)
   Write("window.editorShell.SetBackgroundColor(\"");
   PrintUnicode(aColor);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -540,6 +566,7 @@ nsJSEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
   Write("\", \"");
   PrintUnicode(aValue);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -585,6 +612,7 @@ nsJSEditorLog::InsertLink(nsString& aURL)
   Write("window.editorShell.InsertLink(\"");
   PrintUnicode(aURL);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -616,6 +644,7 @@ nsJSEditorLog::InsertImage(nsString& aURL, nsString& aWidth, nsString& aHeight,
   Write("\", \"");
   PrintUnicode(aAlignment);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -631,6 +660,7 @@ nsJSEditorLog::InsertList(const nsString& aListType)
   Write("window.editorShell.InsertList(\"");
   PrintUnicode(aListType);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -646,6 +676,7 @@ nsJSEditorLog::Indent(const nsString& aIndent)
   Write("window.editorShell.Indent(\"");
   PrintUnicode(aIndent);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -661,6 +692,7 @@ nsJSEditorLog::Align(const nsString& aAlign)
   Write("window.editorShell.Align(\"");
   PrintUnicode(aAlign);
   Write("\");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -693,6 +725,7 @@ nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   Write("window.editorShell.InsertElement(n0, ");
   Write(aDeleteSelection ? "true" : "false");
   Write(");\n");
+  Flush();
 
   return NS_OK;
 }
@@ -717,6 +750,7 @@ nsJSEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   PrintSelection();
   PrintNode(node, 0);
   Write("window.editorShell.InsertLinkAroundSelection(n0);\n");
+  Flush();
 
   return NS_OK;
 }
@@ -846,10 +880,8 @@ nsJSEditorLog::Write(const char *aBuffer)
 #endif // VERY_SLOW
   }
   else
-  {
     fwrite(aBuffer, 1, len, stdout);
-    fflush(stdout);
-  }
+
   return NS_OK;
 }
 
@@ -864,6 +896,19 @@ nsJSEditorLog::WriteInt(const char *aFormat, PRInt32 aInt)
   sprintf(buf, aFormat, aInt);
 
   return Write(buf);
+}
+
+nsresult
+nsJSEditorLog::Flush()
+{
+  nsresult result = NS_OK;
+
+  if (mFileSpec)
+    result = mFileSpec->flush();
+  else
+    fflush(stdout);
+
+  return result;
 }
 
 nsresult
@@ -1006,6 +1051,9 @@ nsJSEditorLog::PrintSelection()
   }
 
   Write(" ];\nEditorSetSelectionFromOffsets(selRanges);\n");
+
+  Flush();
+
   return NS_OK;
 }
 
@@ -1222,6 +1270,8 @@ nsJSEditorLog::PrintNode(nsIDOMNode *aNode, PRInt32 aDepth)
     default:
       break;
   }
+
+  Flush();
 
   return result;
 }
