@@ -559,7 +559,6 @@ static nsresult main1(int argc, char* argv[])
   // this can happen, if the user hits Cancel or Exit in the profile manager dialogs
   char *currentProfileStr = nsnull;
   rv = profileMgr->GetCurrentProfile(&currentProfileStr);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get current profile");
   if (NS_FAILED(rv) || !currentProfileStr || (PL_strlen(currentProfileStr) == 0)) {
   	return NS_ERROR_FAILURE;
   }
