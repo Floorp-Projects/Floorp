@@ -1423,7 +1423,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDeletable(PRBool *deletable)
   else if (mFlags & MSG_FOLDER_FLAG_INBOX || 
     mFlags & MSG_FOLDER_FLAG_DRAFTS || 
     mFlags & MSG_FOLDER_FLAG_TRASH ||
-    mFlags & MSG_FOLDER_FLAG_TEMPLATES)
+    mFlags & MSG_FOLDER_FLAG_TEMPLATES ||
+    mFlags & MSG_FOLDER_FLAG_JUNK)
     *deletable = PR_FALSE;
   else *deletable =  PR_TRUE;
 
@@ -3305,6 +3306,7 @@ nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
   if (flags & MSG_FOLDER_FLAG_QUEUE)
     setSubfolderFlag("Unsent Messages", MSG_FOLDER_FLAG_QUEUE);
 	
+  // what about the Junk folder?
 	return NS_OK;
 }
 

@@ -832,7 +832,7 @@ nsMsgFolder::GetCanRename(PRBool *aResult)
   }
   //
   // check if the folder is a special folder
-  // (Trash, Drafts, Unsent Messages, Inbox, Sent, Templates)
+  // (Trash, Drafts, Unsent Messages, Inbox, Sent, Templates, Junk)
   // if it is, don't allow the user to rename it
   // (which includes dnd moving it with in the same server)
   //
@@ -848,7 +848,8 @@ nsMsgFolder::GetCanRename(PRBool *aResult)
            mFlags & MSG_FOLDER_FLAG_QUEUE ||
            mFlags & MSG_FOLDER_FLAG_INBOX ||
            mFlags & MSG_FOLDER_FLAG_SENTMAIL ||
-           mFlags & MSG_FOLDER_FLAG_TEMPLATES) {
+           mFlags & MSG_FOLDER_FLAG_TEMPLATES ||
+           mFlags & MSG_FOLDER_FLAG_JUNK) {
     *aResult = PR_FALSE;
   }
   else {
@@ -1498,7 +1499,7 @@ NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
   // tree hierarchy but in the rdf cache in case of the non-existing default
   // Sent, Drafts, and Templates folders. The resouce will be eventually
   // released when the rdf service shuts down. When we create the default
-  // folders later on in the imap server, the subsequent GetResouce() of the
+  // folders later on in the imap server, the subsequent GetResource() of the
   // same uri will get us the cached rdf resource which should have the folder
   // flag set appropriately.
   nsresult rv;
@@ -1541,6 +1542,10 @@ NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
         rv = folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
     }
   }
+
+  // XXX TODO
+  // JUNK RELATED
+  // should we be using the spam settings to set the JUNK flag?
   return rv;
 }
 
@@ -2824,10 +2829,12 @@ NS_IMETHODIMP nsMsgFolder::GetSortOrder(PRInt32 *order)
     *order = 3;
   else if (flags & MSG_FOLDER_FLAG_SENTMAIL)
     *order = 4;
-  else if (flags & MSG_FOLDER_FLAG_TRASH)
+  else if (flags & MSG_FOLDER_FLAG_JUNK)
     *order = 5;
-  else
+  else if (flags & MSG_FOLDER_FLAG_TRASH)
     *order = 6;
+  else
+    *order = 7;
 
   return NS_OK;
 }

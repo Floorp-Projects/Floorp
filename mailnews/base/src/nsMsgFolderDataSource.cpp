@@ -1157,6 +1157,8 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
     specialFolderString = NS_LITERAL_STRING("Drafts");
   else if (flags & MSG_FOLDER_FLAG_TEMPLATES)
     specialFolderString = NS_LITERAL_STRING("Templates");
+  else if (flags & MSG_FOLDER_FLAG_JUNK)
+    specialFolderString = NS_LITERAL_STRING("Junk");
   else {
     // XXX why do this at all? or just ""
     specialFolderString = NS_LITERAL_STRING("none");

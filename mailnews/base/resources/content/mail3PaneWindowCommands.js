@@ -93,7 +93,7 @@ var FolderPaneController =
 				catch (ex) {
 					//dump("specialFolder failure: " + ex + "\n");
 				} 
-        if (specialFolder == "Inbox" || specialFolder == "Trash" || specialFolder == "Drafts" || specialFolder == "Sent" || specialFolder == "Templates" || specialFolder == "Unsent Messages" || isServer == "true")
+        if (specialFolder == "Inbox" || specialFolder == "Trash" || specialFolder == "Drafts" || specialFolder == "Sent" || specialFolder == "Templates" || specialFolder == "Unsent Messages" || specialFolder == "Junk" || isServer == "true")
           canDeleteThisFolder = false;
         else
           canDeleteThisFolder = true;
@@ -944,7 +944,8 @@ function MsgDeleteFolder()
             // do not allow deletion of special folders on imap accounts
             if ((specialFolder == "Sent" || 
                 specialFolder == "Drafts" || 
-                specialFolder == "Templates") &&
+                specialFolder == "Templates" ||
+                specialFolder == "Junk") &&
                 !protocolInfo.specialFoldersDeletionAllowed)
             {
                 var errorMessage = gMessengerBundle.getFormattedString("specialFolderDeletionErr",
