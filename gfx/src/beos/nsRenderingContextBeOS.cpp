@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Daniel Switkin and Mathias Agopian
+ *        Sergei Dolgov           <sergei_d@fi.tartu.ee>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -867,6 +868,12 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const nsString &aString,
 	return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
+// From BeNewsLetter #82:
+// Get the number of character bytes for a given utf8 byte character
+inline uint32 utf8_char_len(uchar byte) {
+	return (((0xE5000000 >> ((byte >> 3) & 0x1E)) & 3) + 1);
+}
+
 // TO DO: A better solution is needed for both antialiasing as noted below and
 // character spacing - these are both suboptimal.
 NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 aLength,
@@ -892,19 +899,20 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 			// but it's the easiest way to render antialiased text correctly
 			mView->SetDrawingMode(B_OP_OVER);
 			if (nsnull != aSpacing) {
-				// Render the string, one character at a time...
-				const char *end = aString + aLength;
-				while (aString < end) {
-					char ch = *aString++;
+				char *utf8ptr = (char *)aString;
+				while (*utf8ptr != '\0') {
+					uint32 ch_len = utf8_char_len((uchar)*utf8ptr);  // counting character byte-length
+					
 					nscoord xx = x;
 					nscoord yy = y;
 					mTranMatrix->TransformCoord(&xx, &yy);
 					
 					// yy++; DrawString quirk!
-					mView->DrawString(&ch, 1L, BPoint(xx, yy));
+					mView->DrawString((char *)utf8ptr, ch_len, BPoint(xx, yy)); // draw the character
 					if (doEmulateBold) {
-						mView->DrawString(&ch, 1L, BPoint(xx + 1.0, yy));
+						mView->DrawString((char *)utf8ptr, ch_len, BPoint(xx + 1.0, yy));
 					}
+					utf8ptr += ch_len;  // assigning substring pointer to next character
 					x += *aSpacing++;
 				}
 			} else {
