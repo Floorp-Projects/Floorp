@@ -36,7 +36,7 @@
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParser.h"
-#include "nsHTMLContentSink.h" 
+#include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
 #include "nsParserTypes.h"
 
@@ -178,7 +178,7 @@ eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-PRInt32 COtherDTD::WillBuildModel(nsString& aFilename) {
+NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename) {
   return CNavDTD::WillBuildModel(aFilename);
 }
 
@@ -188,7 +188,7 @@ PRInt32 COtherDTD::WillBuildModel(nsString& aFilename) {
  * @param 
  * @return
  */
-PRInt32 COtherDTD::DidBuildModel(PRInt32 anErrorCode){
+NS_IMETHODIMP COtherDTD::DidBuildModel(PRInt32 anErrorCode){
   return CNavDTD::DidBuildModel(anErrorCode);
 }
 
@@ -203,7 +203,7 @@ PRInt32 COtherDTD::DidBuildModel(PRInt32 anErrorCode){
  *  @param   aParser
  *  @return  
  */
-PRInt32 COtherDTD::HandleToken(CToken* aToken){
+NS_IMETHODIMP COtherDTD::HandleToken(CToken* aToken){
   return CNavDTD::HandleToken(aToken);
 }
 
@@ -223,7 +223,7 @@ PRInt32 COtherDTD::HandleToken(CToken* aToken){
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
+nsresult COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   return CNavDTD::HandleDefaultStartToken(aToken,aChildTag,aNode);
 }
 
@@ -241,7 +241,7 @@ PRInt32 COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,ns
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
+nsresult COtherDTD::HandleStartToken(CToken* aToken) {
   return CNavDTD::HandleStartToken(aToken);
 }
 
@@ -259,7 +259,7 @@ PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleEndToken(CToken* aToken) {
+nsresult COtherDTD::HandleEndToken(CToken* aToken) {
   return CNavDTD::HandleEndToken(aToken);
 }
 
@@ -271,7 +271,7 @@ PRInt32 COtherDTD::HandleEndToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleEntityToken(CToken* aToken) {
+nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
   return CNavDTD::HandleEntityToken(aToken);
 }
 
@@ -285,7 +285,7 @@ PRInt32 COtherDTD::HandleEntityToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleCommentToken(CToken* aToken) {
+nsresult COtherDTD::HandleCommentToken(CToken* aToken) {
   return CNavDTD::HandleCommentToken(aToken);
 }
 
@@ -299,7 +299,7 @@ PRInt32 COtherDTD::HandleCommentToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleSkippedContentToken(CToken* aToken) {
+nsresult COtherDTD::HandleSkippedContentToken(CToken* aToken) {
   return CNavDTD::HandleSkippedContentToken(aToken);
 }
 
@@ -313,7 +313,7 @@ PRInt32 COtherDTD::HandleSkippedContentToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleAttributeToken(CToken* aToken) {
+nsresult COtherDTD::HandleAttributeToken(CToken* aToken) {
   return CNavDTD::HandleAttributeToken(aToken);
 }
 
@@ -325,7 +325,7 @@ PRInt32 COtherDTD::HandleAttributeToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleScriptToken(CToken* aToken) {
+nsresult COtherDTD::HandleScriptToken(CToken* aToken) {
   return CNavDTD::HandleScriptToken(aToken);
 }
 
@@ -337,7 +337,7 @@ PRInt32 COtherDTD::HandleScriptToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 COtherDTD::HandleStyleToken(CToken* aToken){
+nsresult COtherDTD::HandleStyleToken(CToken* aToken){
   return CNavDTD::HandleStyleToken(aToken);
 }
 
@@ -482,7 +482,7 @@ PRBool COtherDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTML
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
-PRInt32 COtherDTD::OpenTransientStyles(eHTMLTags aTag){
+nsresult COtherDTD::OpenTransientStyles(eHTMLTags aTag){
   return CNavDTD::OpenTransientStyles(aTag);
 }
 
@@ -498,7 +498,7 @@ PRInt32 COtherDTD::OpenTransientStyles(eHTMLTags aTag){
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
-PRInt32 COtherDTD::CloseTransientStyles(eHTMLTags aTag){
+nsresult COtherDTD::CloseTransientStyles(eHTMLTags aTag){
   return CNavDTD::CloseTransientStyles(aTag);
 }
 
@@ -511,7 +511,7 @@ PRInt32 COtherDTD::CloseTransientStyles(eHTMLTags aTag){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenHTML(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenHTML(const nsIParserNode& aNode){
   return CNavDTD::OpenHTML(aNode);
 }
 
@@ -524,7 +524,7 @@ PRInt32 COtherDTD::OpenHTML(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseHTML(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseHTML(const nsIParserNode& aNode){
   return CNavDTD::CloseHTML(aNode);
 }
 
@@ -537,7 +537,7 @@ PRInt32 COtherDTD::CloseHTML(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenHead(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenHead(const nsIParserNode& aNode){
   return CNavDTD::OpenHead(aNode);
 }
 
@@ -549,7 +549,7 @@ PRInt32 COtherDTD::OpenHead(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseHead(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseHead(const nsIParserNode& aNode){
   return CNavDTD::CloseHead(aNode);
 }
 
@@ -561,7 +561,7 @@ PRInt32 COtherDTD::CloseHead(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenBody(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenBody(const nsIParserNode& aNode){
   return CNavDTD::OpenBody(aNode);
 }
 
@@ -573,7 +573,7 @@ PRInt32 COtherDTD::OpenBody(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseBody(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseBody(const nsIParserNode& aNode){
   return CNavDTD::CloseBody(aNode);
 }
 
@@ -585,7 +585,7 @@ PRInt32 COtherDTD::CloseBody(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenForm(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenForm(const nsIParserNode& aNode){
   return CNavDTD::OpenForm(aNode);
 }
 
@@ -597,7 +597,7 @@ PRInt32 COtherDTD::OpenForm(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseForm(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseForm(const nsIParserNode& aNode){
   return CNavDTD::CloseForm(aNode);
 }
 
@@ -609,7 +609,7 @@ PRInt32 COtherDTD::CloseForm(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenMap(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenMap(const nsIParserNode& aNode){
   return CNavDTD::OpenMap(aNode);
 }
 
@@ -621,7 +621,7 @@ PRInt32 COtherDTD::OpenMap(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseMap(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseMap(const nsIParserNode& aNode){
   return CNavDTD::CloseMap(aNode);
 }
 
@@ -633,7 +633,7 @@ PRInt32 COtherDTD::CloseMap(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenFrameset(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenFrameset(const nsIParserNode& aNode){
   return CNavDTD::OpenFrameset(aNode);
 }
 
@@ -645,7 +645,7 @@ PRInt32 COtherDTD::OpenFrameset(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseFrameset(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseFrameset(const nsIParserNode& aNode){
   return CNavDTD::CloseFrameset(aNode);
 }
 
@@ -657,7 +657,7 @@ PRInt32 COtherDTD::CloseFrameset(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
+nsresult COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
   return CNavDTD::OpenContainer(aNode,aUpdateStyleStack);
 }
 
@@ -669,7 +669,7 @@ PRInt32 COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleS
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aUpdateStyles){
+nsresult COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aUpdateStyles){
   return CNavDTD::CloseContainer(aNode,aTag,aUpdateStyles);
 }
 
@@ -681,7 +681,7 @@ PRInt32 COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBo
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles){
+nsresult COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles){
   return CNavDTD::CloseContainersTo(anIndex,aTag,aUpdateStyles);
 }
 
@@ -693,7 +693,7 @@ PRInt32 COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpda
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
+nsresult COtherDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
   return CNavDTD::CloseContainersTo(aTag,aUpdateStyles);
 }
 
@@ -705,7 +705,7 @@ PRInt32 COtherDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::CloseTopmostContainer(){
+nsresult COtherDTD::CloseTopmostContainer(){
   return CNavDTD::CloseTopmostContainer();
 }
 
@@ -717,7 +717,7 @@ PRInt32 COtherDTD::CloseTopmostContainer(){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::AddLeaf(const nsIParserNode& aNode){
+nsresult COtherDTD::AddLeaf(const nsIParserNode& aNode){
   return CNavDTD::AddLeaf(aNode);
 }
 
@@ -732,7 +732,7 @@ PRInt32 COtherDTD::AddLeaf(const nsIParserNode& aNode){
  *           create a new context vector
  *  @return  true if we succeeded, otherwise false
  */
-PRInt32 COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
+nsresult COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
   return CNavDTD::CreateContextStackFor(aChildTag);
 }
 
@@ -748,7 +748,7 @@ PRInt32 COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
  *  @param   
  *  @return  
  */
-PRInt32 COtherDTD::ReduceContextStackFor(eHTMLTags aChildTag){
+nsresult COtherDTD::ReduceContextStackFor(eHTMLTags aChildTag){
   return CNavDTD::ReduceContextStackFor(aChildTag);
 }
 
@@ -761,7 +761,7 @@ PRInt32 COtherDTD::ReduceContextStackFor(eHTMLTags aChildTag){
  * @param   aTag is the id of the html container being opened
  * @return  0 if all is well.
  */
-PRInt32 COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
+nsresult COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
   return CNavDTD::UpdateStyleStackForOpenTag(aTag,anActualTag);
 } //update...
 
@@ -773,7 +773,7 @@ PRInt32 COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualT
  * @param 
  * @return  0 if all went well (which it always does)
  */
-PRInt32 COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
+nsresult COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   return CNavDTD::UpdateStyleStackForCloseTag(aTag,anActualTag);
 } //update...
 
@@ -794,7 +794,7 @@ PRInt32 COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActual
  *  @param   aToken is the out arg holding our new token
  *  @return  error code (may return kInterrupted).
  */
-PRInt32 COtherDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult COtherDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   return CNavDTD::ConsumeTag(aChar,aScanner,aToken);
 }
 
@@ -807,7 +807,7 @@ PRInt32 COtherDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-PRInt32 COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
+nsresult COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
   return CNavDTD::ConsumeAttributes(aChar,aScanner,aToken);
 }
 
@@ -820,7 +820,7 @@ PRInt32 COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null
  */
-PRInt32 COtherDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult COtherDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   return CNavDTD::ConsumeContentToEndTag(aString,aChar,aScanner,aToken);
 }
 
@@ -834,7 +834,7 @@ PRInt32 COtherDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aCha
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult COtherDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   return CNavDTD::ConsumeStartTag(aChar,aScanner,aToken);
 }
 
@@ -848,7 +848,7 @@ PRInt32 COtherDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& a
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult COtherDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   return CNavDTD::ConsumeEntity(aChar,aScanner,aToken);
 }
 
@@ -862,7 +862,7 @@ PRInt32 COtherDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult COtherDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   return CNavDTD::ConsumeWhitespace(aChar,aScanner,aToken);
 }
 
@@ -876,7 +876,7 @@ PRInt32 COtherDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*&
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult COtherDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   return CNavDTD::ConsumeComment(aChar,aScanner,aToken);
 }
 
@@ -890,7 +890,7 @@ PRInt32 COtherDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aT
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
+nsresult COtherDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   return CNavDTD::ConsumeText(aString,aScanner,aToken);
 }
 
@@ -903,7 +903,7 @@ PRInt32 COtherDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult COtherDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   return CNavDTD::ConsumeNewline(aChar,aScanner,aToken);
 }
 
@@ -919,7 +919,7 @@ PRInt32 COtherDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aT
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 COtherDTD::ConsumeToken(CToken*& aToken){
+nsresult COtherDTD::ConsumeToken(CToken*& aToken){
   return CNavDTD::ConsumeToken(aToken);
 }
 
@@ -940,8 +940,8 @@ CToken* COtherDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
  * @param 
  * @return
  */
-void COtherDTD::WillResumeParse(void){
-  CNavDTD::WillResumeParse();
+nsresult COtherDTD::WillResumeParse(void){
+  return CNavDTD::WillResumeParse();
 }
 
 /**
@@ -950,7 +950,7 @@ void COtherDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-void COtherDTD::WillInterruptParse(void){
-  CNavDTD::WillInterruptParse();
+nsresult COtherDTD::WillInterruptParse(void){
+  return CNavDTD::WillInterruptParse();
 }
 

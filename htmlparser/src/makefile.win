@@ -24,34 +24,32 @@ MODULE=raptor
 REQUIRES=xpcom raptor netlib
 
 CPPSRCS=					\
-	CNavDTD.obj				\
-	COtherDTD.obj				\
-	CRTFDTD.obj				\
-	nsWellFormedDTD.obj	 \
-	nsValidDTD.obj	 \
-	nsDTDDebug.obj				\
-	nsHTMLContentSink.obj			\
-	nsHTMLTags.obj				\
-	nsHTMLTokens.obj			\
-	nsParser.obj				\
-	CParserContext.obj				\
-	nsParserNode.obj			\
-	nsScanner.obj				\
-	nsToken.obj				\
-	nsTokenHandler.obj			\
-	nsHTMLContentSinkStream.obj			\
-  nsXIFDTD.obj      \
-	prstrm.obj				\
+	CNavDTD.cpp				\
+	COtherDTD.cpp				\
+	CRtfDTD.cpp				\
+	nsDTDDebug.cpp				\
+	nsHTMLNullSink.cpp			\
+	nsHTMLTags.cpp				\
+	nsHTMLTokens.cpp			\
+	nsParser.cpp				\
+	CParserContext.cpp			\
+	nsParserNode.cpp			\
+	nsScanner.cpp				\
+	nsToken.cpp				\
+	nsTokenHandler.cpp			\
+	nsHTMLContentSinkStream.cpp		\
+	nsValid.cpp				\
+	nsWellFormed.cpp			\
+	nsXIFDTD.cpp				\
+	prstrm.cpp				\
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\CNavDTD.obj			\
-	.\$(OBJDIR)\CRTFDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
-	.\$(OBJDIR)\nsWellFormedDTD.obj		\
-	.\$(OBJDIR)\nsValidDTD.obj		\
+	.\$(OBJDIR)\CRtfDTD.obj			\
 	.\$(OBJDIR)\nsDTDDebug.obj		\
-	.\$(OBJDIR)\nsHTMLContentSink.obj	\
+	.\$(OBJDIR)\nsHTMLNullSink.obj		\
 	.\$(OBJDIR)\nsHTMLTags.obj		\
 	.\$(OBJDIR)\nsHTMLTokens.obj		\
 	.\$(OBJDIR)\nsParser.obj		\
@@ -60,7 +58,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsScanner.obj		\
 	.\$(OBJDIR)\nsToken.obj			\
 	.\$(OBJDIR)\nsTokenHandler.obj		\
-	.\$(OBJDIR)\nsHTMLContentSinkStream.obj		\
+	.\$(OBJDIR)\nsHTMLContentSinkStream.obj	\
+	.\$(OBJDIR)\nsValidDTD.obj		\
+	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	$(NULL)
@@ -69,7 +69,7 @@ EXPORTS=					\
 	nshtmlpars.h				\
 	nsIContentSink.h			\
 	nsIHTMLContentSink.h			\
-	nsHTMLContentSinkStream.h			\
+	nsHTMLContentSinkStream.h		\
 	nsHTMLTokens.h				\
 	nsIParserNode.h				\
 	nsIParser.h				\
@@ -77,12 +77,12 @@ EXPORTS=					\
 	nsIDTDDebug.h				\
 	nsIParserFilter.h			\
 	CNavDTD.h				\
-	nsWellFormedDTD.h	\
-	nsValidDTD.h	\
+	nsWellFormedDTD.h			\
+	nsValidDTD.h				\
 	CRTFDTD.h				\
 	COtherDTD.h				\
 	nsIDTD.h				\
-  nsXIFDTD.h \
+	nsXIFDTD.h				\
 	$(NULL)
 
 EXTRA_EXPORTS=					\

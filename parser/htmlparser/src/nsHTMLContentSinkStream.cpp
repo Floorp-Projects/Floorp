@@ -1,19 +1,20 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
 
 /**
@@ -33,10 +34,9 @@
 #include "nsString.h"
 #include "nsParserTypes.h"
 
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kIContentSinkIID,NS_IHTMLCONTENTSINK_IID);
-static NS_DEFINE_IID(kClassIID,       NS_HTMLCONTENTSINK_STREAM_IID); 
-
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 
 static char*    gHeaderComment = "<!-- This page was created by the NGLayout output system. -->";
 static char*    gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
@@ -53,21 +53,21 @@ static char     gBuffer[500];
  *  @param    aInstancePtr ptr to newly discovered interface
  *  @return   NS_xxx result code
  */
-nsresult nsHTMLContentSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
+nsresult
+nsHTMLContentSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {                                                                        
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
-
-  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
-    *aInstancePtr = (nsIContentSink*)(this);                                        
+  if(aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIContentSinkIID)) {  //do IParser base class...
-    *aInstancePtr = (nsIContentSink*)(this);                                        
+  else if(aIID.Equals(kIContentSinkIID)) {
+    *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kClassIID)) {  //do this class...
-    *aInstancePtr = (nsHTMLContentSinkStream*)(this);                                        
-  }                 
+  else if(aIID.Equals(kIHTMLContentSinkIID)) {
+    *aInstancePtr = (nsIHTMLContentSink*)(this);
+  }
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -89,14 +89,14 @@ NS_IMPL_RELEASE(nsHTMLContentSinkStream)
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult) {
+NS_HTMLPARS nsresult
+NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult) {
   nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream();
-
-  if (it == 0) {
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
 }
 
 /**
@@ -248,6 +248,12 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
   CloseTag(titleStr,0,aStream);
 }
 
+NS_IMETHODIMP
+nsHTMLContentSinkStream::PushMark()
+{
+  // XXX We need to defer our output when this occurs
+  return NS_OK;
+}
 
 /**
   * This method gets called by the parser when it encounters
@@ -257,12 +263,12 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
   * @param  nsString reference to new title value
   * @return PR_TRUE if successful. 
   */     
-PRBool nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
-  PRBool result=PR_FALSE;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
   if(mOutput) {
     WritePair(eHTMLTag_title,aValue,1+mTabLevel,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -273,14 +279,14 @@ PRBool nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_html)
      AddStartTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -291,15 +297,15 @@ PRInt32 nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_html)
       AddEndTag(aNode,*mOutput);
       mOutput->flush();
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -310,14 +316,14 @@ PRInt32 nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_head)
      AddStartTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -328,14 +334,14 @@ PRInt32 nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::CloseHead(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseHead(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_head)
       AddEndTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -346,14 +352,14 @@ PRInt32 nsHTMLContentSinkStream::CloseHead(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_body)
       AddStartTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -364,14 +370,14 @@ PRInt32 nsHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::CloseBody(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseBody(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_body)
       AddEndTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -382,14 +388,14 @@ PRInt32 nsHTMLContentSinkStream::CloseBody(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_form)
       AddStartTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -400,14 +406,49 @@ PRInt32 nsHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::CloseForm(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseForm(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_form)
       AddEndTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
+}
+
+/**
+  * This method is used to open a new FORM container.
+  *
+  * @update 07/12/98 gpk
+  * @param  nsIParserNode reference to parser node interface
+  * @return PR_TRUE if successful. 
+  */     
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenMap(const nsIParserNode& aNode){
+  if(mOutput) {
+    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+    if (tag == eHTMLTag_map)
+      AddStartTag(aNode,*mOutput);
+  }
+  return NS_OK;
+}
+
+
+/**
+  * This method is used to close the outer FORM container.
+  *
+  * @update 07/12/98 gpk
+  * @param  nsIParserNode reference to parser node interface
+  * @return PR_TRUE if successful. 
+  */     
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseMap(const nsIParserNode& aNode){
+  if(mOutput) {
+    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+    if (tag == eHTMLTag_map)
+      AddEndTag(aNode,*mOutput);
+  }
+  return NS_OK;
 }
 
     
@@ -418,14 +459,14 @@ PRInt32 nsHTMLContentSinkStream::CloseForm(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_frameset)
       AddStartTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -436,14 +477,14 @@ PRInt32 nsHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::CloseFrameset(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseFrameset(const nsIParserNode& aNode){
   if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_frameset)
       AddEndTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -572,8 +613,8 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode, ostream& aSt
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
-  PRInt32   result=kNoError;
+nsresult
+nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   eHTMLTags tag = mHTMLTagStack[mHTMLStackPos-1];
   
@@ -685,7 +726,7 @@ PRInt32 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aS
     }
   }
 
-  return result;
+  return NS_OK;
 }
 
 
@@ -698,13 +739,13 @@ PRInt32 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aS
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
   if(mOutput) {
     AddStartTag(aNode,*mOutput);
     eHTMLTags  tag = (eHTMLTags)aNode.GetNodeType();
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -715,12 +756,12 @@ PRInt32 nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
   if(mOutput) {
     AddEndTag(aNode,*mOutput);
   }
-  return result;
+  return NS_OK;
 }
 
 
@@ -732,10 +773,11 @@ PRInt32 nsHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
-PRInt32 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
-  PRInt32 result=0;
+NS_IMETHODIMP
+nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
+  nsresult result = NS_OK;
   if(mOutput) {  
-    AddLeaf(aNode,*mOutput);
+    result = AddLeaf(aNode,*mOutput);
   }
   return result;
 }
@@ -747,12 +789,14 @@ PRInt32 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   *
   * @update 5/7/98 gess
   */     
-void nsHTMLContentSinkStream::WillBuildModel(void){
+NS_IMETHODIMP
+nsHTMLContentSinkStream::WillBuildModel(void){
   mTabLevel=-1;
   if(mOutput) {
     (*mOutput) << gHeaderComment << endl;
     (*mOutput) << gDocTypeHeader << endl;
   }
+  return NS_OK;
 }
 
 
@@ -764,7 +808,9 @@ void nsHTMLContentSinkStream::WillBuildModel(void){
   *         0=GOOD; 1=FAIR; 2=POOR;
   * @update 5/7/98 gess
   */     
-void nsHTMLContentSinkStream::DidBuildModel(PRInt32 aQualityLevel) {
+NS_IMETHODIMP
+nsHTMLContentSinkStream::DidBuildModel(PRInt32 aQualityLevel) {
+  return NS_OK;
 }
 
 
@@ -775,7 +821,9 @@ void nsHTMLContentSinkStream::DidBuildModel(PRInt32 aQualityLevel) {
   *
   * @update 5/7/98 gess
   */     
-void nsHTMLContentSinkStream::WillInterrupt(void) {
+NS_IMETHODIMP
+nsHTMLContentSinkStream::WillInterrupt(void) {
+  return NS_OK;
 }
 
 
@@ -785,7 +833,9 @@ void nsHTMLContentSinkStream::WillInterrupt(void) {
   *
   * @update 5/7/98 gess
   */     
-void nsHTMLContentSinkStream::WillResume(void) {
+NS_IMETHODIMP
+nsHTMLContentSinkStream::WillResume(void) {
+  return NS_OK;
 }
 
 

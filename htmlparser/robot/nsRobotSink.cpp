@@ -34,7 +34,7 @@ class nsIDocument;
 //      - LAYER SRC
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTMLCONTENTSINK_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIRobotSinkIID, NS_IROBOTSINK_IID);
 
 class RobotSink : public nsIRobotSink {
@@ -52,25 +52,28 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIHTMLContentSink
-  virtual PRInt32 SetTitle(const nsString& aValue);
-  virtual PRInt32 OpenHTML(const nsIParserNode& aNode);
-  virtual PRInt32 CloseHTML(const nsIParserNode& aNode);
-  virtual PRInt32 OpenHead(const nsIParserNode& aNode);
-  virtual PRInt32 CloseHead(const nsIParserNode& aNode);
-  virtual PRInt32 OpenBody(const nsIParserNode& aNode);
-  virtual PRInt32 CloseBody(const nsIParserNode& aNode);
-  virtual PRInt32 OpenForm(const nsIParserNode& aNode);
-  virtual PRInt32 CloseForm(const nsIParserNode& aNode);
-  virtual PRInt32 OpenFrameset(const nsIParserNode& aNode);
-  virtual PRInt32 CloseFrameset(const nsIParserNode& aNode);
-  virtual PRInt32 OpenContainer(const nsIParserNode& aNode);
-  virtual PRInt32 CloseContainer(const nsIParserNode& aNode);
-  virtual PRInt32 CloseTopmostContainer();
-  virtual PRInt32 AddLeaf(const nsIParserNode& aNode);
-  virtual void WillBuildModel(void) { }
-  virtual void DidBuildModel(PRInt32 aQualityLevel) { }
-  virtual void WillInterrupt(void) { }
-  virtual void WillResume(void) { }
+  NS_IMETHOD PushMark();
+  NS_IMETHOD SetTitle(const nsString& aValue);
+  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseTopmostContainer();
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD WillBuildModel(void) { return NS_OK; }
+  NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel) { return NS_OK; }
+  NS_IMETHOD WillInterrupt(void) { return NS_OK; }
+  NS_IMETHOD WillResume(void) { return NS_OK; }
 
   // nsIRobotSink
   NS_IMETHOD Init(nsIURL* aDocumentURL);
@@ -131,62 +134,77 @@ NS_IMETHODIMP RobotSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-PRInt32 RobotSink::SetTitle(const nsString& aValue)
+NS_IMETHODIMP RobotSink::PushMark()
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::OpenHTML(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::SetTitle(const nsString& aValue)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseHTML(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::OpenHTML(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::OpenHead(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseHTML(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseHead(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::OpenHead(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::OpenBody(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseHead(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseBody(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::OpenBody(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::OpenForm(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseBody(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseForm(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::OpenForm(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::OpenFrameset(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseForm(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseFrameset(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::OpenMap(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::OpenContainer(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseMap(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP RobotSink::OpenFrameset(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP RobotSink::CloseFrameset(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsAutoString tmp(aNode.GetText());
   tmp.ToUpperCase();
@@ -219,22 +237,22 @@ PRInt32 RobotSink::OpenContainer(const nsIParserNode& aNode)
       }
     }
   }
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseContainer(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseContainer(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::CloseTopmostContainer()
+NS_IMETHODIMP RobotSink::CloseTopmostContainer()
 {
-  return kNoError;
+  return NS_OK;
 }
 
-PRInt32 RobotSink::AddLeaf(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::AddLeaf(const nsIParserNode& aNode)
 {
-  return kNoError;
+  return NS_OK;
 }
 
 NS_IMETHODIMP RobotSink::Init(nsIURL* aDocumentURL)

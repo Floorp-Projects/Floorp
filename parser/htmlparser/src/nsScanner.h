@@ -70,7 +70,7 @@ class CScanner {
        *  @param   ch is the char to accept new value
        *  @return  error code reflecting read status
        */
-      PRInt32 GetChar(PRUnichar& ch);
+      nsresult GetChar(PRUnichar& ch);
 
       /**
        *  peek ahead to consume next char from scanner's internal
@@ -80,7 +80,7 @@ class CScanner {
        *  @param   ch is the char to accept new value
        *  @return  error code reflecting read status
        */
-      PRInt32 Peek(PRUnichar& ch);
+      nsresult Peek(PRUnichar& ch);
 
       /**
        *  Push the given char back onto the scanner
@@ -89,7 +89,7 @@ class CScanner {
        *  @param   character to be pushed
        *  @return  error code
        */
-      PRInt32 PutBack(PRUnichar ch);
+      nsresult PutBack(PRUnichar ch);
 
       /**
        *  Skip over chars as long as they're in aSkipSet
@@ -98,7 +98,7 @@ class CScanner {
        *  @param   set of chars to be skipped
        *  @return  error code
        */
-      PRInt32 SkipOver(nsString& SkipChars);
+      nsresult SkipOver(nsString& SkipChars);
 
       /**
        *  Skip over chars as long as they equal given char
@@ -107,7 +107,7 @@ class CScanner {
        *  @param   char to be skipped
        *  @return  error code
        */
-      PRInt32 SkipOver(PRUnichar aSkipChar);
+      nsresult SkipOver(PRUnichar aSkipChar);
 
       /**
        *  Skip over chars as long as they're in aSequence
@@ -116,7 +116,7 @@ class CScanner {
        *  @param   contains sequence to be skipped
        *  @return  error code
        */
-      PRInt32 SkipPast(nsString& aSequence);
+      nsresult SkipPast(nsString& aSequence);
 
       /**
        *  Skip whitespace on scanner input stream
@@ -124,7 +124,7 @@ class CScanner {
        *  @update  gess 3/25/98
        *  @return  error status
        */
-      PRInt32 SkipWhitespace(void);
+      nsresult SkipWhitespace(void);
 
       /**
        *  Determine if the scanner has reached EOF.
@@ -134,7 +134,7 @@ class CScanner {
        *  @update  gess 3/25/98
        *  @return  PR_TRUE upon eof condition
        */
-      PRInt32 Eof(void);
+      nsresult Eof(void);
 
       /**
        *  Consume characters until you find the terminal char
@@ -145,7 +145,7 @@ class CScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      PRInt32 ReadUntil(nsString& aString,PRUnichar aTerminal,PRBool addTerminal);
+      nsresult ReadUntil(nsString& aString,PRUnichar aTerminal,PRBool addTerminal);
 
       /**
        *  Consume characters until you find one contained in given
@@ -157,7 +157,7 @@ class CScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      PRInt32 ReadUntil(nsString& aString,nsString& aTermSet,PRBool addTerminal);
+      nsresult ReadUntil(nsString& aString,nsString& aTermSet,PRBool addTerminal);
 
       /**
        *  Consume characters while they're members of anInputSet
@@ -168,7 +168,7 @@ class CScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      PRInt32 ReadWhile(nsString& aString,nsString& anInputSet,PRBool addTerminal);
+      nsresult ReadWhile(nsString& aString,nsString& anInputSet,PRBool addTerminal);
 
       /**
        *  Records current offset position in input stream. This allows us
@@ -240,10 +240,8 @@ class CScanner {
        * be filled with data. 
        *
        * @update  gess4/3/98
-       * @param   anError is the resulting error code (hopefully 0)
-       * @return  number of new bytes read
        */
-      PRInt32 FillBuffer(void);
+      nsresult FillBuffer(void);
 
 
       fstream*        mFileStream;

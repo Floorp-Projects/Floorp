@@ -53,8 +53,6 @@ class ostream;
 class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
 
-  NS_DECL_ISUPPORTS
-
   /**
    * 
    * @update	gess7/7/98
@@ -79,6 +77,33 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    */
   virtual ~nsHTMLContentSinkStream();
 
+  // nsISupports
+  NS_DECL_ISUPPORTS
+ 
+  // nsIContentSink
+  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+  NS_IMETHOD WillInterrupt(void);
+  NS_IMETHOD WillResume(void);
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+
+  // nsIHTMLContentSink
+  NS_IMETHOD PushMark();
+  NS_IMETHOD SetTitle(const nsString& aValue);
+  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
 
   /**
    * 
@@ -88,183 +113,13 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    */
   void SetOutputStream(ostream& aStream);
 
-   /**
-    * This method gets called by the parser when it encounters
-    * a title tag and wants to set the document title in the sink.
-    *
-    * @update 4/1/98 gess
-    * @param  nsString reference to new title value
-    * @return PR_TRUE if successful. 
-    */     
-  virtual PRBool SetTitle(const nsString& aValue);
-
-   /**
-    * This method is used to open the outer HTML container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 OpenHTML(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to close the outer HTML container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseHTML(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to open the only HEAD container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 OpenHead(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to close the only HEAD container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseHead(const nsIParserNode& aNode);
-  
-   /**
-    * This method is used to open the main BODY container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 OpenBody(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to close the main BODY container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseBody(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to open a new FORM container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 OpenForm(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to close the outer FORM container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseForm(const nsIParserNode& aNode);
-        
-   /**
-    * This method is used to open the FRAMESET container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 OpenFrameset(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to close the FRAMESET container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseFrameset(const nsIParserNode& aNode);
-        
-   /**
-    * This method is used to a general container. 
-    * This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 OpenContainer(const nsIParserNode& aNode);
-    
-   /**
-    * This method is used to close a generic container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 CloseContainer(const nsIParserNode& aNode);
-
-   /**
-    * This method is used to add a leaf to the currently 
-    * open container.
-    *
-    * @update 4/1/98 gess
-    * @param  nsIParserNode reference to parser node interface
-    * @return PR_TRUE if successful. 
-    */     
-    virtual PRInt32 AddLeaf(const nsIParserNode& aNode);
-
-   /**
-    * This method gets called when the parser begins the process
-    * of building the content model via the content sink.
-    *
-    * @update 5/7/98 gess
-    */     
-    virtual void WillBuildModel(void);
-
-   /**
-    * This method gets called when the parser concludes the process
-    * of building the content model via the content sink.
-    *
-    * @param  aQualityLevel describes how well formed the doc was.
-    *         0=GOOD; 1=FAIR; 2=POOR;
-    * @update 5/7/98 gess
-    */     
-    virtual void DidBuildModel(PRInt32 aQualityLevel);
-
-   /**
-    * This method gets called when the parser gets i/o blocked,
-    * and wants to notify the sink that it may be a while before
-    * more data is available.
-    *
-    * @update 5/7/98 gess
-    */     
-    virtual void WillInterrupt(void);
-
-   /**
-    * This method gets called when the parser i/o gets unblocked,
-    * and we're about to start dumping content again to the sink.
-    *
-    * @update 5/7/98 gess
-    */     
-    virtual void WillResume(void);
-
-
-    /*
-     * PrettyPrinting Methods
-     *
-    */
-
 public:
   void SetLowerCaseTags(PRBool aDoLowerCase) { mLowerCaseTags = aDoLowerCase; }
     
 
 protected:
 
-    PRInt32 AddLeaf(const nsIParserNode& aNode, ostream& aStream);
+    nsresult AddLeaf(const nsIParserNode& aNode, ostream& aStream);
     void WriteAttributes(const nsIParserNode& aNode,ostream& aStream);
     void AddStartTag(const nsIParserNode& aNode, ostream& aStream);
     void AddEndTag(const nsIParserNode& aNode, ostream& aStream);
@@ -355,7 +210,8 @@ protected:
 
 };
 
-extern NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult);
+extern NS_HTMLPARS nsresult
+NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult);
 
 
 #endif

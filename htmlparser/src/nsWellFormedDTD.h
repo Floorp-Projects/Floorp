@@ -97,7 +97,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(nsString& aFilename);
+    NS_IMETHOD WillBuildModel(nsString& aFilename);
 
     /**
      * 
@@ -105,7 +105,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 DidBuildModel(PRInt32 anErrorCode);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode);
 
     /**
      *  
@@ -113,7 +113,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleToken(CToken* aToken);
+    NS_IMETHOD HandleToken(CToken* aToken);
 
     /**
      * 
@@ -132,7 +132,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    virtual PRInt32 ConsumeToken(CToken*& aToken);
+    NS_IMETHOD ConsumeToken(CToken*& aToken);
 
 
     /**
@@ -141,7 +141,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual void WillResumeParse(void);
+    NS_IMETHOD WillResumeParse(void);
 
     /**
      * 
@@ -149,7 +149,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual void WillInterruptParse(void);
+    NS_IMETHOD WillInterruptParse(void);
 
    /**
      * Select given content sink into parser for parser output

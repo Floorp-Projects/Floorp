@@ -192,8 +192,8 @@ PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
  * @update  gess4/3/98
  * @return  error code
  */
-PRInt32 CScanner::FillBuffer(void) {
-  PRInt32 anError=0;
+nsresult CScanner::FillBuffer(void) {
+  nsresult anError=NS_OK;
 
   _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
 
@@ -233,15 +233,18 @@ PRInt32 CScanner::FillBuffer(void) {
  *  @param   
  *  @return  0=!eof 1=eof kInterrupted=interrupted
  */
-PRInt32 CScanner::Eof() {
-  PRInt32 theError=0;
+nsresult CScanner::Eof() {
+  nsresult theError=NS_OK;
 
   if(mOffset>=mBuffer.Length()) {
     theError=FillBuffer();  
   }
   
-  if(0==theError) 
-    return (0==mBuffer.Length());
+  if(NS_OK==theError) {
+    if (0==mBuffer.Length()) {
+      return kEOF;
+    }
+  }
 
   return theError;
 }
@@ -253,11 +256,10 @@ PRInt32 CScanner::Eof() {
  *  @param   
  *  @return  error code reflecting read status
  */
-PRInt32 CScanner::GetChar(PRUnichar& aChar) {
-  PRInt32 result=Eof();
-  if(!result) {
+nsresult CScanner::GetChar(PRUnichar& aChar) {
+  nsresult result=Eof();
+  if(NS_OK == result) {
     aChar=mBuffer[mOffset++];
-    result=kNoError;
   }
   return result;
 }
@@ -271,11 +273,10 @@ PRInt32 CScanner::GetChar(PRUnichar& aChar) {
  *  @param   
  *  @return  
  */
-PRInt32 CScanner::Peek(PRUnichar& aChar) {
-  PRInt32 result=Eof();
-  if(!result) {
+nsresult CScanner::Peek(PRUnichar& aChar) {
+  nsresult result=Eof();
+  if(NS_OK == result) {
     aChar=mBuffer[mOffset];        
-    result=kNoError;
   }
   return result;
 }
@@ -288,11 +289,11 @@ PRInt32 CScanner::Peek(PRUnichar& aChar) {
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::PutBack(PRUnichar aChar) {
+nsresult CScanner::PutBack(PRUnichar aChar) {
   if(mOffset>0)
     mOffset--;
   else mBuffer.Insert(aChar,0);
-  return kNoError;
+  return NS_OK;
 }
 
 
@@ -303,7 +304,7 @@ PRInt32 CScanner::PutBack(PRUnichar aChar) {
  *  @param   
  *  @return  error status
  */
-PRInt32 CScanner::SkipWhitespace(void) {
+nsresult CScanner::SkipWhitespace(void) {
   static nsAutoString chars(" \n\r\t");
   return SkipOver(chars);
 }
@@ -315,13 +316,13 @@ PRInt32 CScanner::SkipWhitespace(void) {
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::SkipOver(PRUnichar aSkipChar){
+nsresult CScanner::SkipOver(PRUnichar aSkipChar){
   PRUnichar ch=0;
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
 
-  while(kNoError==result) {
+  while(NS_OK==result) {
     result=GetChar(ch);
-    if(!result) {
+    if(NS_OK == result) {
       if(ch!=aSkipChar) {
         PutBack(ch);
         break;
@@ -339,13 +340,13 @@ PRInt32 CScanner::SkipOver(PRUnichar aSkipChar){
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::SkipOver(nsString& aSkipSet){
+nsresult CScanner::SkipOver(nsString& aSkipSet){
   PRUnichar ch=0;
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
 
-  while(kNoError==result) {
+  while(NS_OK==result) {
     result=GetChar(ch);
-    if(!result) {
+    if(NS_OK == result) {
       PRInt32 pos=aSkipSet.Find(ch);
       if(kNotFound==pos) {
         PutBack(ch);
@@ -364,9 +365,9 @@ PRInt32 CScanner::SkipOver(nsString& aSkipSet){
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::SkipPast(nsString& aValidSet){
+nsresult CScanner::SkipPast(nsString& aValidSet){
   NS_NOTYETIMPLEMENTED("Error: SkipPast not yet implemented.");
-  return kNoError;
+  return NS_OK;
 }
 
 /**
@@ -377,14 +378,16 @@ PRInt32 CScanner::SkipPast(nsString& aValidSet){
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::ReadWhile(nsString& aString,nsString& aValidSet,PRBool addTerminal){
+nsresult CScanner::ReadWhile(nsString& aString,
+                             nsString& aValidSet,
+                             PRBool addTerminal){
   PRUnichar theChar=0;
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
   PRInt32   wrPos=0;
 
-  while(kNoError==result) {
+  while(NS_OK==result) {
     result=GetChar(theChar);
-    if(kNoError==result) {
+    if(NS_OK==result) {
       PRInt32 pos=aValidSet.Find(theChar);
       if(kNotFound==pos) {
         if(addTerminal)
@@ -407,13 +410,15 @@ PRInt32 CScanner::ReadWhile(nsString& aString,nsString& aValidSet,PRBool addTerm
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addTerminal){
+nsresult CScanner::ReadUntil(nsString& aString,
+                             nsString& aTerminalSet,
+                             PRBool addTerminal){
   PRUnichar ch=0;
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
 
-  while(!result) {
+  while(NS_OK == result) {
     result=GetChar(ch);
-    if(kNoError==result) {
+    if(NS_OK==result) {
       PRInt32 pos=aTerminalSet.Find(ch);
       if(kNotFound!=pos) {
         if(addTerminal)
@@ -435,11 +440,13 @@ PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addT
  *  @param   
  *  @return  error code
  */
-PRInt32 CScanner::ReadUntil(nsString& aString,PRUnichar aTerminalChar,PRBool addTerminal){
+nsresult CScanner::ReadUntil(nsString& aString,
+                             PRUnichar aTerminalChar,
+                             PRBool addTerminal){
   PRUnichar ch=0;
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
 
-  while(kNoError==result) {
+  while(NS_OK==result) {
     result=GetChar(ch);
     if(ch==aTerminalChar) {
       if(addTerminal)

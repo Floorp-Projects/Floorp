@@ -1,22 +1,22 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
-
-#include "nsHTMLContentSink.h"
+#include "nsIHTMLContentSink.h"
 #include "nsHTMLTokens.h"
 #include "nsParserTypes.h"
 #include "prtypes.h" 
@@ -25,10 +25,49 @@
 #define VERBOSE_DEBUG
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENTSINK_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTMLCONTENTSINK_IID);
-static NS_DEFINE_IID(kClassIID, NS_HTMLCONTENTSINK_IID); 
+static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 
+class nsHTMLNullSink : public nsIHTMLContentSink {
+public:
+  nsHTMLNullSink();
+  ~nsHTMLNullSink();
+
+  enum eSection {eNone=0,eHTML,eHead,eBody,eContainer};
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+ 
+  // nsIContentSink
+  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+  NS_IMETHOD WillInterrupt(void);
+  NS_IMETHOD WillResume(void);
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+
+  // nsIHTMLContentSink
+  NS_IMETHOD PushMark();
+  NS_IMETHOD SetTitle(const nsString& aValue);
+  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+
+protected:
+  PRInt32     mNodeStack[100];
+  PRInt32     mNodeStackPos;
+  nsString    mTitle;
+};
 
 
 /**
@@ -39,15 +78,14 @@ static NS_DEFINE_IID(kClassIID, NS_HTMLCONTENTSINK_IID);
  *  @param   
  *  @return  
  */
-nsresult NS_NewHTMLContentSink(nsIContentSink** aInstancePtrResult)
+nsresult
+NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult)
 {
-  nsHTMLContentSink *it = new nsHTMLContentSink();
-
-  if (it == 0) {
+  nsHTMLNullSink *it = new nsHTMLNullSink();
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(kIContentSinkIID, (void **) aInstancePtrResult);
 }
 
 
@@ -58,7 +96,7 @@ nsresult NS_NewHTMLContentSink(nsIContentSink** aInstancePtrResult)
  *  @param   
  *  @return  
  */
-nsHTMLContentSink::nsHTMLContentSink() : nsIHTMLContentSink(), mTitle("") {
+nsHTMLNullSink::nsHTMLNullSink() : nsIHTMLContentSink(), mTitle("") {
   mNodeStackPos=0;
   memset(mNodeStack,0,sizeof(mNodeStack));
 }
@@ -72,7 +110,7 @@ nsHTMLContentSink::nsHTMLContentSink() : nsIHTMLContentSink(), mTitle("") {
  *  @param   
  *  @return  
  */
-nsHTMLContentSink::~nsHTMLContentSink() {
+nsHTMLNullSink::~nsHTMLNullSink() {
 }
 
 #ifdef VERBOSE_DEBUG
@@ -94,8 +132,8 @@ static void DebugDump(const char* str1,const nsString& str2,PRInt32 tabs) {
  *  @param  
  *  @return 
  */
-NS_IMPL_ADDREF(nsHTMLContentSink)
-NS_IMPL_RELEASE(nsHTMLContentSink)
+NS_IMPL_ADDREF(nsHTMLNullSink)
+NS_IMPL_RELEASE(nsHTMLNullSink)
 
 
 
@@ -109,24 +147,21 @@ NS_IMPL_RELEASE(nsHTMLContentSink)
  *  @param   
  *  @return  
  */
-nsresult nsHTMLContentSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
+nsresult
+nsHTMLNullSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {                                                                        
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
-
-  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
-    *aInstancePtr = (nsIContentSink*)(this);                                        
+  if(aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIContentSinkIID)) {  //do nsIContentSink base class...
-    *aInstancePtr = (nsIContentSink*)(this);                                        
+  else if(aIID.Equals(kIContentSinkIID)) {
+    *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIHTMLContentSinkIID)) {  //do nsIHTMLContentSink base class...
-    *aInstancePtr = (nsIHTMLContentSink*)(this);                                        
+  else if(aIID.Equals(kIHTMLContentSinkIID)) {
+    *aInstancePtr = (nsIHTMLContentSink*)(this);
   }
-  else if(aIID.Equals(kClassIID)) {  //do this class...
-    *aInstancePtr = (nsHTMLContentSink*)(this);                                        
-  }                 
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -135,6 +170,12 @@ nsresult nsHTMLContentSink::QueryInterface(const nsIID& aIID, void** aInstancePt
   return NS_OK;                                                        
 }
 
+NS_IMETHODIMP
+nsHTMLNullSink::PushMark()
+{
+  // XXX We need to defer our output when this occurs
+  return NS_OK;
+}
 
 /**
  *  This method gets called by the parser when a <HTML> 
@@ -144,16 +185,14 @@ nsresult nsHTMLContentSink::QueryInterface(const nsIID& aIID, void** aInstancePt
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
-
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::OpenHTML(const nsIParserNode& aNode){
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
 #endif
-
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -163,18 +202,18 @@ PRInt32 nsHTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::CloseHTML(const nsIParserNode& aNode){
+NS_IMETHODIMP
+nsHTMLNullSink::CloseHTML(const nsIParserNode& aNode){
 
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("</",aNode.GetText(),(mNodeStackPos-1)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -187,15 +226,15 @@ PRInt32 nsHTMLContentSink::CloseHTML(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::OpenHead(const nsIParserNode& aNode) {
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::OpenHead(const nsIParserNode& aNode) {
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -206,17 +245,17 @@ PRInt32 nsHTMLContentSink::OpenHead(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::CloseHead(const nsIParserNode& aNode) {
+NS_IMETHODIMP
+nsHTMLNullSink::CloseHead(const nsIParserNode& aNode) {
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("</",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -227,10 +266,10 @@ PRInt32 nsHTMLContentSink::CloseHead(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::SetTitle(const nsString& aValue){
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::SetTitle(const nsString& aValue){
   mTitle=aValue;
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -241,15 +280,15 @@ PRInt32 nsHTMLContentSink::SetTitle(const nsString& aValue){
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::OpenBody(const nsIParserNode& aNode) {
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::OpenBody(const nsIParserNode& aNode) {
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
-  #ifdef VERBOSE_DEBUG
+#ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
-  #endif
+#endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -260,16 +299,16 @@ PRInt32 nsHTMLContentSink::OpenBody(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::CloseBody(const nsIParserNode& aNode){
+NS_IMETHODIMP
+nsHTMLNullSink::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
-  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("</",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -280,15 +319,15 @@ PRInt32 nsHTMLContentSink::CloseBody(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::OpenForm(const nsIParserNode& aNode) {
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::OpenForm(const nsIParserNode& aNode) {
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -299,17 +338,57 @@ PRInt32 nsHTMLContentSink::OpenForm(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::CloseForm(const nsIParserNode& aNode){
+NS_IMETHODIMP
+nsHTMLNullSink::CloseForm(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("</",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return result;
+  return NS_OK;
+}
+
+/**
+ *  This method gets called by the parser when a <FORM> 
+ *  tag has been consumed.
+ *  
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+NS_IMETHODIMP
+nsHTMLNullSink::OpenMap(const nsIParserNode& aNode) {
+  mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
+#endif
+
+  return NS_OK;
+}
+
+/**
+ *  This method gets called by the parser when a </FORM> 
+ *  tag has been consumed.
+ *   
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+NS_IMETHODIMP
+nsHTMLNullSink::CloseMap(const nsIParserNode& aNode){
+  NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
+
+  mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("</",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
 }
 
 /**
@@ -320,15 +399,15 @@ PRInt32 nsHTMLContentSink::CloseForm(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::OpenFrameset(const nsIParserNode& aNode) {
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::OpenFrameset(const nsIParserNode& aNode) {
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
-  #ifdef VERBOSE_DEBUG
+#ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
-  #endif
+#endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -339,17 +418,17 @@ PRInt32 nsHTMLContentSink::OpenFrameset(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::CloseFrameset(const nsIParserNode& aNode){
+NS_IMETHODIMP
+nsHTMLNullSink::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("</",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -361,15 +440,15 @@ PRInt32 nsHTMLContentSink::CloseFrameset(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::OpenContainer(const nsIParserNode& aNode){  
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::OpenContainer(const nsIParserNode& aNode){  
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos-1)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -380,32 +459,17 @@ PRInt32 nsHTMLContentSink::OpenContainer(const nsIParserNode& aNode){
  *  @param  
  *  @return 
  */
-PRInt32 nsHTMLContentSink::CloseContainer(const nsIParserNode& aNode){
+NS_IMETHODIMP
+nsHTMLNullSink::CloseContainer(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("</",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return result;
-}
-
-/**
- *  This causes the topmost container to be closed, 
- *  regardless of its type.
- *  
- *  @updated gess 3/25/98
- *  @param   
- *  @return  
- */
-PRInt32 nsHTMLContentSink::CloseTopmostContainer(){
-  NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
-  PRInt32 result=kNoError;
-  mNodeStack[mNodeStackPos--]=eHTMLTag_unknown;
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -417,14 +481,14 @@ PRInt32 nsHTMLContentSink::CloseTopmostContainer(){
  *  @param   
  *  @return  
  */
-PRInt32 nsHTMLContentSink::AddLeaf(const nsIParserNode& aNode){
-  PRInt32 result=kNoError;
+NS_IMETHODIMP
+nsHTMLNullSink::AddLeaf(const nsIParserNode& aNode){
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
  /**
@@ -433,7 +497,9 @@ PRInt32 nsHTMLContentSink::AddLeaf(const nsIParserNode& aNode){
   *
   * @update 5/7/98 gess
  */     
-void nsHTMLContentSink::WillBuildModel(void){
+NS_IMETHODIMP
+nsHTMLNullSink::WillBuildModel(void){
+  return NS_OK;
 }
 
  /**
@@ -442,7 +508,9 @@ void nsHTMLContentSink::WillBuildModel(void){
   *
   * @update 5/7/98 gess
   */     
-void nsHTMLContentSink::DidBuildModel(PRInt32 aQualityLevel){
+NS_IMETHODIMP
+nsHTMLNullSink::DidBuildModel(PRInt32 aQualityLevel){
+  return NS_OK;
 }
 
 /**
@@ -452,7 +520,9 @@ void nsHTMLContentSink::DidBuildModel(PRInt32 aQualityLevel){
  *
  * @update 5/7/98 gess
  */     
-void nsHTMLContentSink::WillInterrupt(void) {
+NS_IMETHODIMP
+nsHTMLNullSink::WillInterrupt(void) {
+  return NS_OK;
 }
 
 /**
@@ -461,7 +531,9 @@ void nsHTMLContentSink::WillInterrupt(void) {
  *
  * @update 5/7/98 gess
  */     
-void nsHTMLContentSink::WillResume(void) {
+NS_IMETHODIMP
+nsHTMLNullSink::WillResume(void) {
+  return NS_OK;
 }
 
 
