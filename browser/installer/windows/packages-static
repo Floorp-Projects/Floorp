@@ -156,7 +156,7 @@ bin\components\websrvcs.xpt
 bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
-bin\components\winhooks.xpt
+bin\components\shellservice.xpt
 bin\components\xml-rpc.xpt
 bin\components\xmlextras.xpt
 bin\components\xpcom_base.xpt
@@ -171,6 +171,7 @@ bin\components\xpinstall.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 ; JavaScript components
+bin\components\nsSetDefaultBrowser.js
 bin\components\nsCloseAllWindows.js
 bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
