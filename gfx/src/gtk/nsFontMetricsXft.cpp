@@ -567,6 +567,9 @@ nsFontMetricsXft::GetWidth(const char* aString, PRUint32 aLength,
     NS_TIMELINE_MARK_FUNCTION("GetWidth");
 
     XftFont *font = mWesternFont->GetXftFont();
+    if (!font)
+        return NS_ERROR_NOT_AVAILABLE;
+
     XGlyphInfo glyphInfo;
 
     // casting away const for aString but it  should be safe
@@ -917,6 +920,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
     FT_Face face;
     TT_OS2 *os2;
     XftFont *xftFont = mWesternFont->GetXftFont();
+    if (!xftFont)
+        return NS_ERROR_NOT_AVAILABLE;
 
     face = XftLockFace(xftFont);
     os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
@@ -1299,6 +1304,9 @@ nsFontMetricsXft::SetupMiniFont(void)
     FcPattern *pattern = nsnull;
     XftFont *font = nsnull;
     XftFont *xftFont = mWesternFont->GetXftFont();
+    if (!xftFont)
+        return NS_ERROR_NOT_AVAILABLE;
+
     FcPattern *pat = nsnull;
 
     mMiniFontAscent = xftFont->ascent;
@@ -1977,8 +1985,8 @@ nsresult
 nsFontXft::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen, 
                             XGlyphInfo &aGlyphInfo)
 {
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return NS_ERROR_NOT_AVAILABLE;
 
     XftTextExtents32(GDK_DISPLAY(), mXftFont, aString, aLen, &aGlyphInfo);
 
@@ -2018,8 +2026,8 @@ nsFontXft::GetBoundingMetrics32(const FcChar32*    aString,
 PRInt16
 nsFontXft::GetMaxAscent(void)
 {
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return 0;
 
     return mXftFont->ascent;
 }
@@ -2027,8 +2035,8 @@ nsFontXft::GetMaxAscent(void)
 PRInt16
 nsFontXft::GetMaxDescent(void)
 {
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return 0;
 
     return mXftFont->descent;
 }
@@ -2045,8 +2053,8 @@ nsFontXft::FillDrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
 {
     DrawStringData *data = (DrawStringData *)aData;
 
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return NS_ERROR_NOT_AVAILABLE;
 
     XftGlyphFontSpec *const specBuffer = data->specBuffer;
     PRUint32& specBufferLen = data->specBufferLen;
@@ -2151,8 +2159,8 @@ nsFontXftCustom::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen,
     if (!str)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return NS_ERROR_NOT_AVAILABLE;
 
     // short cut for the common case
     if (isWide) { 
@@ -2208,8 +2216,8 @@ nsFontXftCustom::FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
                              isWide, buffer);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return NS_ERROR_NOT_AVAILABLE;
 
     // The string after the conversion can be longer than the original.
     // Realloc if necessary.
@@ -2246,8 +2254,8 @@ nsFontXftCustom::FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
 nsresult
 nsFontXftCustom::SetFT_FaceCharmap(void)
 {
-    if (!mXftFont)
-        GetXftFont();
+    if (!mXftFont && !GetXftFont())
+            return NS_ERROR_NOT_AVAILABLE;
 
     if (mFT_Face)
         return NS_OK;
