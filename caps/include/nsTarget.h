@@ -65,6 +65,8 @@ public:
 
 	nsTarget * registerTarget(void);
 
+	nsTarget * registerTarget(void* context);
+
 	static nsTarget * findTarget(nsTarget *target);
 
 	static nsTarget * findTarget(char *name);

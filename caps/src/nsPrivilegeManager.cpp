@@ -215,8 +215,13 @@ PRBool nsPrivilegeManager::unregisterPrincipal(nsPrincipal *prin)
   return PR_TRUE;
 }
 
-
 PRBool nsPrivilegeManager::isPrivilegeEnabled(nsTarget *target, PRInt32 callerDepth)
+{
+  return isPrivilegeEnabled(NULL, target, callerDepth);
+}
+
+
+PRBool nsPrivilegeManager::isPrivilegeEnabled(void *context, nsTarget *target, PRInt32 callerDepth)
 {
   nsTargetArray * targetArray = new nsTargetArray();
   nsTarget *targ = nsTarget::findTarget(target);
@@ -224,22 +229,40 @@ PRBool nsPrivilegeManager::isPrivilegeEnabled(nsTarget *target, PRInt32 callerDe
     return PR_FALSE;
   }
   targetArray->Add(targ);
-  return (checkPrivilegeEnabled(targetArray, callerDepth, NULL) != NULL) ? PR_FALSE : PR_TRUE;
+  return (checkPrivilegeEnabled(context, targetArray, callerDepth, NULL) != NULL) ? PR_FALSE : PR_TRUE;
 }
 
 PRBool nsPrivilegeManager::enablePrivilege(nsTarget *target, PRInt32 callerDepth)
 {
-  return enablePrivilegePrivate(target, NULL, callerDepth);
+  return enablePrivilegePrivate(NULL, target, NULL, callerDepth);
+}
+
+PRBool nsPrivilegeManager::enablePrivilege(void* context, nsTarget *target, PRInt32 callerDepth)
+{
+  return enablePrivilegePrivate(context, target, NULL, callerDepth);
 }
 
 PRBool nsPrivilegeManager::enablePrivilege(nsTarget *target, 
                                            nsPrincipal *preferredPrincipal, 
                                            PRInt32 callerDepth)
 {
-  return enablePrivilegePrivate(target, preferredPrincipal, callerDepth);
+  return enablePrivilegePrivate(NULL, target, preferredPrincipal, callerDepth);
+}
+
+PRBool nsPrivilegeManager::enablePrivilege(void* context, nsTarget *target, 
+                                           nsPrincipal *preferredPrincipal, 
+                                           PRInt32 callerDepth)
+{
+  return enablePrivilegePrivate(context, target, preferredPrincipal, callerDepth);
 }
 
 PRBool nsPrivilegeManager::revertPrivilege(nsTarget *target, 
+                                           PRInt32 callerDepth)
+{
+  return revertPrivilege(NULL, target, callerDepth);
+}
+
+PRBool nsPrivilegeManager::revertPrivilege(void* context, nsTarget *target, 
                                            PRInt32 callerDepth)
 {
   nsTarget *targ = nsTarget::findTarget(target);
@@ -248,7 +271,7 @@ PRBool nsPrivilegeManager::revertPrivilege(nsTarget *target,
     return PR_FALSE;
   }
 
-  nsPrivilegeTable *privTable = getPrivilegeTableFromStack(callerDepth, 
+  nsPrivilegeTable *privTable = getPrivilegeTableFromStack(context, callerDepth, 
                                                            PR_TRUE);
   nsCaps_lock();
   privTable->put(target, nsPrivilege::findPrivilege(nsPermissionState_Blank,
@@ -258,7 +281,12 @@ PRBool nsPrivilegeManager::revertPrivilege(nsTarget *target,
 }
 
 
-PRBool nsPrivilegeManager::disablePrivilege(nsTarget *target,
+PRBool nsPrivilegeManager::disablePrivilege(nsTarget *target, PRInt32 callerDepth)
+{
+  return disablePrivilege(NULL, target, callerDepth);
+}
+
+PRBool nsPrivilegeManager::disablePrivilege(void* context, nsTarget *target,
                                             PRInt32 callerDepth)
 {
   nsTarget *targ = nsTarget::findTarget(target);
@@ -266,7 +294,7 @@ PRBool nsPrivilegeManager::disablePrivilege(nsTarget *target,
     //throw new ForbiddenTargetException(target + " is not a registered target");
     return PR_FALSE;
   }
-  nsPrivilegeTable *privTable = getPrivilegeTableFromStack(callerDepth, 
+  nsPrivilegeTable *privTable = getPrivilegeTableFromStack(context, callerDepth, 
                                                            PR_TRUE);
   nsCaps_lock();
   privTable->put(target, nsPrivilege::findPrivilege(nsPermissionState_Forbidden,
@@ -276,6 +304,17 @@ PRBool nsPrivilegeManager::disablePrivilege(nsTarget *target,
 }
 
 PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(nsTarget *target, 
+                                                          PRInt32 callerDepth, 
+                                                          nsPrincipal *preferredPrin, 
+                                                          void * data,
+                                                          nsTarget *impersonator)
+{
+  return enablePrincipalPrivilegeHelper(NULL, target, callerDepth, preferredPrin, 
+                                        data, impersonator);
+}
+
+PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(void *context,
+                                                          nsTarget *target, 
                                                           PRInt32 callerDepth, 
                                                           nsPrincipal *preferredPrin, 
                                                           void * data,
@@ -291,7 +330,7 @@ PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(nsTarget *target,
     return PR_FALSE;
     /* throw new ForbiddenTargetException(target + " is not a registered target"); */
   }
-  callerPrinArray = getClassPrincipalsFromStack(callerDepth);
+  callerPrinArray = getClassPrincipalsFromStack(context, callerDepth);
 
   if (preferredPrin != NULL) {
     nsPrincipal *callerPrin;
@@ -308,7 +347,7 @@ PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(nsTarget *target,
     if ((useThisPrin == NULL) && (impersonator)){
       nsTarget *t1;
       t1 = impersonator;
-      if (PR_FALSE == isPrivilegeEnabled(t1, 0))
+      if (PR_FALSE == isPrivilegeEnabled(context, t1, 0))
         return PR_FALSE;
       useThisPrin = preferredPrin;
       callerPrinArray = new nsPrincipalArray();
@@ -401,9 +440,20 @@ done:
 
 }
 
-
 nsPrivilegeTable *
 nsPrivilegeManager::enableScopePrivilegeHelper(nsTarget *target, 
+                                               PRInt32 callerDepth, 
+                                               void *data, 
+                                               PRBool helpingSetScopePrivilege, 
+                                               nsPrincipal *prefPrin)
+{
+  return enableScopePrivilegeHelper(NULL, target, callerDepth, data, 
+                                    helpingSetScopePrivilege, prefPrin);
+  }
+
+
+nsPrivilegeTable *
+nsPrivilegeManager::enableScopePrivilegeHelper(void* context, nsTarget *target, 
                                                PRInt32 callerDepth, 
                                                void *data, 
                                                PRBool helpingSetScopePrivilege, 
@@ -421,12 +471,12 @@ nsPrivilegeManager::enableScopePrivilegeHelper(nsTarget *target,
   if (prefPrin != NULL) {
     res = checkPrivilegeGranted(target, prefPrin, data);
   } else {
-    res = checkPrivilegeGranted(target, callerDepth, data);
+    res = checkPrivilegeGranted(context, target, callerDepth, data);
   }
   if (res == PR_FALSE)
     return NULL;
 
-  privTable = getPrivilegeTableFromStack(callerDepth, 
+  privTable = getPrivilegeTableFromStack(context, callerDepth, 
                                          (helpingSetScopePrivilege ? PR_FALSE : PR_TRUE));
   if (helpingSetScopePrivilege) {
     if (privTable == NULL)  {
@@ -488,7 +538,13 @@ void nsPrivilegeManager::updatePrivilegeTable(nsTarget *target,
 PRBool nsPrivilegeManager::checkPrivilegeGranted(nsTarget *target, 
                                                  PRInt32 callerDepth)
 {
-  return checkPrivilegeGranted(target, callerDepth, NULL);
+  return checkPrivilegeGranted(NULL, target, callerDepth, NULL);
+}
+
+PRBool nsPrivilegeManager::checkPrivilegeGranted(void* context, nsTarget *target, 
+                                                 PRInt32 callerDepth)
+{
+  return checkPrivilegeGranted(context, target, callerDepth, NULL);
 }
 
 PRBool nsPrivilegeManager::checkPrivilegeGranted(nsTarget *target, 
@@ -507,8 +563,15 @@ PRBool nsPrivilegeManager::checkPrivilegeGranted(nsTarget *target,
                                                  PRInt32 callerDepth,
                                                  void *data)
 {
+  return checkPrivilegeGranted(NULL, target, callerDepth, data);
+}
+
+PRBool nsPrivilegeManager::checkPrivilegeGranted(void* context, nsTarget *target, 
+                                                 PRInt32 callerDepth,
+                                                 void *data)
+{
   nsPrincipalArray* callerPrinArray = 
-    getClassPrincipalsFromStack(callerDepth);
+    getClassPrincipalsFromStack(context, callerDepth);
 
   nsPermissionState privilege = 
     getPrincipalPrivilege(target, callerPrinArray, data);
@@ -526,9 +589,15 @@ nsPrivilegeManager * nsPrivilegeManager::getPrivilegeManager(void)
 
 nsPrincipalArray* nsPrivilegeManager::getMyPrincipals(PRInt32 callerDepth)
 {
+  return getMyPrincipals(NULL, callerDepth);
+}
+
+nsPrincipalArray* nsPrivilegeManager::getMyPrincipals(void* context, 
+                                                      PRInt32 callerDepth)
+{
   if (thePrivilegeManager == NULL)
     return NULL;
-  return thePrivilegeManager->getClassPrincipalsFromStack(callerDepth);
+  return thePrivilegeManager->getClassPrincipalsFromStack(context, callerDepth);
 }
 
 nsPrincipal* nsPrivilegeManager::getSystemPrincipal(void)
@@ -679,12 +748,20 @@ PRBool nsPrivilegeManager::canExtendTrust(nsPrincipalArray* from,
   return (codebaseCount == 1) ? PR_TRUE : PR_FALSE;
 }
 
+
 PRBool nsPrivilegeManager::checkMatchPrincipal(nsPrincipal *prin, 
+                                               PRInt32 callerDepth)
+{
+  return checkMatchPrincipal(NULL, prin, callerDepth);
+}
+
+
+PRBool nsPrivilegeManager::checkMatchPrincipal(void* context, nsPrincipal *prin, 
                                                PRInt32 callerDepth)
 {
   nsPrincipalArray *prinArray = new nsPrincipalArray();
   prinArray->Add(prin);
-  nsPrincipalArray *classPrinArray = getClassPrincipalsFromStack(callerDepth);
+  nsPrincipalArray *classPrinArray = getClassPrincipalsFromStack(context, callerDepth);
   return (comparePrincipalArray(prinArray, classPrinArray) != nsSetComparisonType_NoSubset) ? PR_TRUE : PR_FALSE;
 }
 
@@ -872,18 +949,18 @@ void nsPrivilegeManager::remove(nsPrincipal *prin, nsTarget *target)
 #define UNKNOWN_PRIN_KEY "52:4f:53:4b:49:4e:44:4a"
 
 
-PRBool nsPrivilegeManager::enablePrivilegePrivate(nsTarget *target, 
+PRBool nsPrivilegeManager::enablePrivilegePrivate(void* context, nsTarget *target, 
                                                   nsPrincipal *prefPrin,
                                                   PRInt32 callerDepth)
 {
   // default "data" as null
-  if (PR_FALSE == enablePrincipalPrivilegeHelper(target, callerDepth, 
+  if (PR_FALSE == enablePrincipalPrivilegeHelper(context, target, callerDepth, 
                                                  prefPrin, NULL, NULL)) {
     return PR_FALSE;
   }
 
   // default "data" as null
-  if (NULL == enableScopePrivilegeHelper(target, callerDepth, NULL, PR_FALSE, 
+  if (NULL == enableScopePrivilegeHelper(context, target, callerDepth, NULL, PR_FALSE, 
                                          prefPrin))
     return PR_FALSE;
   return PR_TRUE;
@@ -981,6 +1058,15 @@ nsPrivilegeManager::checkPrivilegeEnabled(nsTargetArray * targetArray,
                                           PRInt32 callerDepth,
                                           void *data)
 {
+  return checkPrivilegeEnabled(NULL, targetArray, callerDepth, data);
+}
+
+char *
+nsPrivilegeManager::checkPrivilegeEnabled(void *context,
+                                          nsTargetArray * targetArray, 
+                                          PRInt32 callerDepth,
+                                          void *data)
+{
   struct NSJSJavaFrameWrapper *wrapper = NULL;
   nsTarget *target;
   nsPrivilegeTable *annotation;
@@ -1003,7 +1089,7 @@ nsPrivilegeManager::checkPrivilegeEnabled(nsTargetArray * targetArray,
   if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
-  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)();
+  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
   if (wrapper == NULL) {
     return NULL;
   }
@@ -1110,6 +1196,12 @@ done:
 nsPrincipalArray *
 nsPrivilegeManager::getClassPrincipalsFromStack(PRInt32 callerDepth)
 {
+  return getClassPrincipalsFromStack(NULL, callerDepth);
+}
+
+nsPrincipalArray *
+nsPrivilegeManager::getClassPrincipalsFromStack(void* context, PRInt32 callerDepth)
+{
   nsPrincipalArray * principalArray = theUnknownPrincipalArray;
   int depth = 0;
   struct NSJSJavaFrameWrapper *wrapper = NULL;
@@ -1117,7 +1209,7 @@ nsPrivilegeManager::getClassPrincipalsFromStack(PRInt32 callerDepth)
   if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
-  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)();
+  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
   if (wrapper == NULL)
     return NULL;
 
@@ -1142,6 +1234,13 @@ nsPrivilegeTable *
 nsPrivilegeManager::getPrivilegeTableFromStack(PRInt32 callerDepth, 
                                                PRBool createIfNull)
 {
+  return getPrivilegeTableFromStack(NULL, callerDepth, createIfNull);
+}
+
+nsPrivilegeTable * 
+nsPrivilegeManager::getPrivilegeTableFromStack(void *context, PRInt32 callerDepth, 
+                                               PRBool createIfNull)
+{
   nsPrivilegeTable *privTable = NULL;
   int depth = 0;
   struct NSJSJavaFrameWrapper *wrapper = NULL;
@@ -1150,7 +1249,7 @@ nsPrivilegeManager::getPrivilegeTableFromStack(PRInt32 callerDepth,
   if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
-  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)();
+  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
   if (wrapper == NULL)
     return NULL;
 
