@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.32 2001/01/24 14:44:03 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.33 2001/01/27 15:05:39 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.32 $ $Date: 2001/01/24 14:44:03 $
+ * @version $Revision: 1.33 $ $Date: 2001/01/27 15:05:39 $
 **/
 
 /**
@@ -866,6 +866,7 @@ void XSLTProcessor::processAction
 
         Element* actionElement = (Element*)xslAction;
         ps->pushAction(actionElement);
+        ps->pushCurrentNode(node);
 
         switch ( getElementType(nodeName, ps) ) {
 
@@ -1378,6 +1379,7 @@ void XSLTProcessor::processAction
                 break;
         } //-- switch
         ps->popAction();
+        ps->popCurrentNode();
     } //-- end if (element)
 
     //cout << "XSLTProcessor#processAction [exit]\n";
