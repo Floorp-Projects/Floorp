@@ -1201,7 +1201,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       rv = NS_OpenURI(getter_AddRefs(pChannel), aUri, pNetService, loadGroup, requestor, aType);
       if (NS_SUCCEEDED(rv)) {
         // XXX wrong, but needed for now:
-        rv = pChannel->SetOriginalURI(referrer ? referrer : nsCOMPtr<nsIURI>(aUri));  
+        rv = pChannel->SetOriginalURI(referrer ? referrer.get() : aUri);  
       }
       if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
