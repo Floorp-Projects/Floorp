@@ -35,6 +35,7 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIObserver.h"
 #include "nsISessionHistory.h"
+#include "nsIURIContentListener.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -44,6 +45,7 @@ class nsIDOMNode;
 class nsIURI;
 class nsIWebShellWindow;
 class nsIFindComponent;
+
 
 #define SHISTORY_POPUP_LIST 10
 
@@ -57,7 +59,8 @@ class nsIFindComponent;
 class nsBrowserInstance : public nsIBrowserInstance,
                           public nsIDocumentLoaderObserver,
                           public nsIObserver,
-					      public nsISessionHistory {
+					                public nsISessionHistory,
+                          public nsIURIContentListener {
   public:
 
     nsBrowserInstance();
@@ -82,6 +85,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
     NS_DECL_NSIOBSERVER
     // nsISessionHistory
     NS_DECL_NSISESSIONHISTORY
+    // URI Content listener
+    NS_DECL_NSIURICONTENTLISTENER
 
   protected:
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
@@ -89,8 +94,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
     void BeginObserving();
     void EndObserving();
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
-	NS_IMETHOD UpdateGoMenu();
-	NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
+	  NS_IMETHOD UpdateGoMenu();
+	  NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
 
     PRBool              mIsViewSource;
 
