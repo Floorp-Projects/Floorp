@@ -414,6 +414,8 @@ NS_IMETHODIMP nsDragService::SetDataReceived (GtkWidget          *aWidget,
 #ifdef DEBUG_DD
     g_print("failed to get data. selection_data->length was %d\n", selection_data->length);
 #endif
+    // if our selection failed, we aren't dragging anymore.
+    mDoingDrag = PR_FALSE;
   }
   return NS_OK;
 }
