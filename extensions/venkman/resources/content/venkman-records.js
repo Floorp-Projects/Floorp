@@ -35,6 +35,18 @@
 
 function initRecords()
 {
+    var cmdary =
+        [/* "real" commands */
+         ["show-functions",  cmdShowFunctions,                      CMD_CONSOLE],
+         ["show-ecmas",      cmdShowECMAs,                          CMD_CONSOLE],
+
+         /* aliases */
+         ["toggle-functions",     "show-functions toggle",                    0],
+         ["toggle-ecmas",         "show-ecma toggle",                         0]
+        ];
+
+    console.commandManager.defineCommands (cmdary);
+
     var atomsvc = console.atomService;
 
     WindowRecord.prototype.property         = atomsvc.getAtom("item-window");
@@ -46,6 +58,9 @@ function initRecords()
     FrameRecord.prototype.property    = atomsvc.getAtom("item-frame");
     FrameRecord.prototype.atomCurrent = atomsvc.getAtom("current-frame-flag");
 
+
+    console.addPref ("valueRecord.showFunctions", false);
+    console.addPref ("valueRecord.showECMAProps", false);    
     console.addPref ("valueRecord.brokenObjects", "^JavaPackage$");
     try
     {
@@ -232,7 +247,7 @@ function fcr_getkids ()
     var doc = this.windowRecord.window.document;
     var loc = this.windowRecord.window.location;
     var nodeList = doc.getElementsByTagName("script");
-    dd (nodeList.length + "nodes");
+
     for (var i = 0; i < nodeList.length; ++i)
     {
         var url = nodeList.item(i).getAttribute("src");
@@ -247,7 +262,7 @@ function fcr_getkids ()
             }
             else
             {
-                this.baseURL = getPathFromURL(this.url);
+                this.baseURL = getPathFromURL(url);
             }
 
             this.appendChild(new FileRecord(url));
@@ -461,6 +476,32 @@ function sr_dragstart (e, transferData, dragAction)
  * Use this to show a jsdIValue in any tree.
  *******************************************************************************/
 
+function cmdShowFunctions (e)
+{
+    if (e.toggle != null)
+    {
+        e.toggle = getToggle(e.toggle, ValueRecord.prototype.showFunctions);
+        ValueRecord.prototype.showFunctions = e.toggle;
+        console.prefs["valueRecord.showFunctions"] = e.toggle;
+    }
+
+    if ("isInteractive" in e && e.isInteractive)
+        dispatch("pref valueRecord.showFunctions", { isInteractive: true });
+}
+
+function cmdShowECMAs (e)
+{
+    if (e.toggle != null)
+    {
+        e.toggle = getToggle(e.toggle, ValueRecord.prototype.showECMAProps);
+        ValueRecord.prototype.showECMAProps = e.toggle;
+        console.prefs["valueRecord.showECMAProps"] = e.toggle;
+    }
+
+    if ("isInteractive" in e && e.isInteractive)
+        dispatch("pref valueRecord.showECMAProps", { isInteractive: true });
+}
+
 function ValueRecord (value, name, flags)
 {
     if (!(value instanceof jsdIValue))
@@ -496,8 +537,8 @@ function vr_getshare()
     return null;
 }
 
-ValueRecord.prototype.showFunctions = true;
-ValueRecord.prototype.showECMAProps = true;
+ValueRecord.prototype.showFunctions = false;
+ValueRecord.prototype.showECMAProps = false;
 
 ValueRecord.prototype.getProperties =
 function vr_getprops (properties)
@@ -648,20 +689,27 @@ function vr_refresh ()
 
             if (ctor != "String")
             {
-                var propCount;
-                if (this.brokenObjects.test(ctor))
-                {
-                    /* XXX these objects do Bad Things when you enumerate
-                     * over them. */
-                    propCount = 0;
+                if (0) {
+                    /* too slow... */
+                    var propCount;
+                    if (this.brokenObjects.test(ctor))
+                    {
+                        /* XXX these objects do Bad Things when you enumerate
+                         * over them. */
+                        propCount = 0;
+                    }
+                    else
+                    {
+                        propCount = this.countProperties();
+                    }
+                
+                    this.displayValue = getMsg (MSN_FMT_OBJECT_VALUE,
+                                                [ctor, propCount]);
                 }
                 else
                 {
-                    propCount = this.countProperties();
+                    this.displayValue = "{" + ctor + "}";
                 }
-                
-                this.displayValue = getMsg (MSN_FMT_OBJECT_VALUE,
-                                            [ctor, propCount]);
             }
             else
             {
@@ -863,6 +911,14 @@ function vr_preopen()
                 rec.isECMAParent = true;
                 this.appendChild (rec);
             }
+        }
+        
+        if (!this.childData.length && !this.propertyList.length)
+        {
+            rec = new XTLabelRecord ("col-0", MSG_VAL_NONE,
+                                     ["col-1", "col-2", "col-3"]);
+            this.appendChild(rec);
+            return;
         }
         
         for (var i = 0; i < this.propertyList.length; ++i)

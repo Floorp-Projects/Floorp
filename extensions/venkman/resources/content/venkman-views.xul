@@ -137,8 +137,8 @@
     <floatingview id="source2" title="&Source.label;" flex="1">
       <stack flex="1">
         <vbox flex="1" pack="center" align="center">
-          <label id="source2-version-label" value="Venkman!"/>
-          <label id="source2-help-label" value="I feel so funky"/>
+          <label id="source2-version-label" value="Venkman!" crop="center"/>
+          <label id="source2-help-label" value="I feel so funky" crop="center"/>
         </vbox>
         <tabbox id="source2-tabbox" flex="1">
           <tabs id="source2-tabs">
@@ -159,7 +159,7 @@
       <vbox id="source-view-content" flex="1">
         <toolbox>
           <toolbar id="source-header" grippytooltiptext="&SourceHeader.tip;">
-            <label id="source-url" flex="1" crop="left"/>
+            <label id="source-url" flex="1" crop="end"/>
           </toolbar>
         </toolbox>
         <tree id="source-tree" flex="1" persist="width"

@@ -464,7 +464,14 @@ function lv_init ()
          ["find-ctor",
                  {enabledif: "cx.target instanceof ValueRecord && " +
                   "cx.target.jsType == jsdIValue.TYPE_OBJECT  && " +
-                  "cx.target.value.objectValue.constructorURL"}]
+                  "cx.target.value.objectValue.constructorURL"}],
+         ["-"],
+         ["toggle-functions",
+                 {type: "checkbox",
+                  checkedif: "ValueRecord.prototype.showFunctions"}],
+         ["toggle-ecmas",
+                 {type: "checkbox",
+                  checkedif: "ValueRecord.prototype.showECMAProps"}]
         ]
     };
 
@@ -682,7 +689,6 @@ function lv_getcx(cx)
         if (i == 0)
         {
             cx.jsdValue = rec.value;
-            cx.jsdValueList = [rec.value];
         }
         else
         {
@@ -1286,7 +1292,10 @@ function ss_setThisObj (e)
     }
     else
     {
-        var parent = console.currentEvalObject.__parent__;
+        var parent;
+        var jsdValue = console.jsds.wrapValue (console.currentEvalObject);
+        if (jsdValue.jsParent)
+            parent = jsdValue.jsParent.getWrappedValue();
         if (!parent)
             parent = console.currentEvalObject;
         if ("location" in parent)
@@ -1886,8 +1895,7 @@ function ss_init ()
          ["-"],
          ["toggle-source-coloring",
                  {type: "checkbox",
-                  checkedif: "console.prefs['services.source.sourceColoring'] " +
-                             "== 'true'"} ],
+                  checkedif: "console.prefs['services.source.colorize']"} ],
          ["toggle-pprint",
                  {type: "checkbox",
                   checkedif: "console.prefs['prettyprint']"}],
@@ -2028,21 +2036,13 @@ function cmdToggleColoring (e)
     if (e.toggle != null)
     {
         if (e.toggle == "toggle")
-        {
-            var currentState = console.prefs["services.source.sourceColoring"];
-            if (currentState == "true")
-                e.toggle = false;
-            else
-                e.toggle = true;
-            
-            if (e.toggle)
-                console.prefs["services.source.sourceColoring"] = "true";
-            else
-                console.prefs["services.source.sourceColoring"] = "false";
-        }
-    }
+            e.toggle = !console.prefs["services.source.colorize"];
+
+        console.prefs["services.source.colorize"] = e.toggle;
+    }    
     
-    feedback (e, "pref services.source.sourceColoring");
+    if ("isInteractive" in e && e.isInteractive)
+        dispatch("pref services.source.colorize", { isInteractive: true });
 }
 
 console.views.source2.canSave =
@@ -2093,7 +2093,7 @@ function s2v_getcontext (cx)
                     var scriptInstance = sourceText.scriptInstance;
                     var scriptWrapper = 
                         scriptInstance.getScriptWrapperAtLine(cx.lineNumber);
-                    if (scriptWrapper)
+                    if (scriptWrapper && scriptWrapper.jsdScript.isValid)
                     {
                         cx.scriptWrapper = scriptWrapper;
                         cx.pc =
@@ -2101,7 +2101,8 @@ function s2v_getcontext (cx)
                                                              PCMAP_SOURCETEXT);
                     }
                 }
-                else if ("scriptWrapper" in sourceText)
+                else if ("scriptWrapper" in sourceText &&
+                         sourceText.scriptWrapper.jsdScript.isValid)
                 {
                     cx.scriptWrapper = sourceText.scriptWrapper;
                     cx.pc = 
@@ -2422,7 +2423,7 @@ console.views.source2.onSourceTabLoaded =
 function s2v_tabloaded (sourceTab, status)
 {
     var collection = 
-        sourceTab.iframe.contentDocument.getElementsByTagName ("source-listing");
+        sourceTab.iframe.contentDocument.getElementsByTagName("source-listing");
     sourceTab.content = collection[0];
 
     if (!sourceTab.content)
@@ -2555,12 +2556,10 @@ function s2v_createframe (sourceTab, index, raiseFlag)
     var tab = document.createElement ("tab");
     tab.setAttribute ("class", "source2-tab");
     tab.setAttribute ("context", "context:source2");
-    var shortName;
-    if (sourceTab.sourceText.shortName.length <= 30)
-        shortName = sourceTab.sourceText.shortName;
-    else
-        shortName = abbreviateWord(sourceTab.sourceText.shortName, 30);
-    tab.setAttribute ("label", shortName);
+    tab.setAttribute ("crop", "center");
+    tab.setAttribute ("flex", "1");
+    tab.setAttribute ("label", sourceTab.sourceText.shortName);
+
     if (index < this.tabs.childNodes.length)
         this.tabs.insertBefore (tab, this.tabs.childNodes[index]);
     else
@@ -2594,33 +2593,43 @@ function s2v_createframe (sourceTab, index, raiseFlag)
 console.views.source2.loadSourceTextAtIndex =
 function s2v_loadsource (sourceText, index)
 {
-    var sourceTab = {
-        sourceText: sourceText,
-        tab: null,
-        iframe: null,
-        content: null
-    };
-
-    this.sourceTabList[index] = sourceTab;
+    var sourceTab;
     
-    if ("currentContent" in this)
+    if (index in this.sourceTabList)
     {
-        /* XXX ???
-        if (index < this.deck.childNodes.length &&
-            this.deck.childNodes[index].firstChild &&
-            this.deck.childNodes[index].firstChild.contentURI == 
-            sourceText.jsdURL)
+        sourceTab = this.sourceTabList[index];
+        sourceTab.content = null;
+        sourceTab.sourceText = sourceText;
+        
+        if ("currentContent" in this)
         {
-            this.tabs.childNodes[index].setAttribute ("label",
-                                                      sourceText.shortName);
-            this.deck.childNodes[index].firstChild.loadURI(sourceText.jsdURL);
-            this.showTab(index);
+            if (!ASSERT(sourceTab.tab, 
+                        "existing sourcetab not fully initialized"))
+            {
+                return null;
+            }
+            sourceTab.tab.setAttribute("label", sourceText.shortName);
+            sourceTab.iframe.setAttribute("targetSrc", sourceText.jsdURL);
+            sourceTab.iframe.setAttribute("raiseOnSync", "true");
+            this.syncOutputFrame(sourceTab.iframe);
         }
-        else
+        
+    }
+    else
+    {
+        sourceTab = {
+            sourceText: sourceText,
+            tab: null,
+            iframe: null,
+            content: null
+        };
+
+        this.sourceTabList[index] = sourceTab;
+    
+        if ("currentContent" in this)
         {
-        */
-        this.createFrameFor(sourceTab, index, true);
-        /*}*/
+            this.createFrameFor(sourceTab, index, true);
+        }
     }
 
     return sourceTab;
@@ -2809,12 +2818,18 @@ function s2v_statechange (webProgress, request, stateFlags, status)
         dd ("stop load " + stateFlags + " " + 
             webProgress.DOMWindow.location.href);
         */
+
         sourceTab = source2View.getSourceTabForDOMWindow(webProgress.DOMWindow);
-        if (!ASSERT(sourceTab, "can't find tab for window"))
+
+        if (webProgress.DOMWindow.location.href !=
+            sourceTab.iframe.getAttribute("targetSrc"))
         {
-            webProgress.removeProgressListener (this);
             return;
         }
+        
+        webProgress.removeProgressListener (this);
+        if (!ASSERT(sourceTab, "can't find tab for window"))
+            return;
         
         sourceTab.tab.removeAttribute ("loading");
         source2View.onSourceTabLoaded (sourceTab, status);
@@ -2920,7 +2935,7 @@ function s2v_hookBreakSet (e)
         var sourceTab = source2View.sourceTabList[i];
         var sourceText = sourceTab.sourceText;
 
-        if (sourceText.url.search(e.fbreak.url) != -1)
+        if (sourceText.url.indexOf(e.fbreak.url) != -1)
             source2View.updateLineMargin (sourceTab, e.fbreak.lineNumber);
     }
 }
@@ -3590,7 +3605,15 @@ function wv_init()
          ["find-ctor",
                  {enabledif: "cx.target instanceof ValueRecord && " +
                   "cx.target.jsType == jsdIValue.TYPE_OBJECT  && " +
-                  "cx.target.value.objectValue.constructorURL"}]
+                  "cx.target.value.objectValue.constructorURL"}],
+         ["-"],
+         ["toggle-functions",
+                 {type: "checkbox",
+                  checkedif: "ValueRecord.prototype.showFunctions"}],
+         ["toggle-ecmas",
+                 {type: "checkbox",
+                  checkedif: "ValueRecord.prototype.showECMAProps"}]
+          
         ]
     };
 }
@@ -3598,6 +3621,10 @@ function wv_init()
 console.views.watches.destroy =
 function lv_destroy ()
 {
+    var childRecords = this.childData.childData;
+    for (var i = 0; i < childRecords.length; ++i)
+        delete childRecords[i].onPreRefresh;
+    
     delete this.childData;
 }
 
@@ -3745,7 +3772,7 @@ function cmdWatchExpr (e)
         if (!("currentEvalObject" in console))
         {
             display (MSG_ERR_NO_EVAL_OBJECT, MT_ERROR);
-            return;
+            return null;
         }
 
         if (console.currentEvalObject instanceof jsdIStackFrame)

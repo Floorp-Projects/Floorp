@@ -37,13 +37,18 @@ console.doEval =
 function con_eval(__s, __o)
 {
     var __ex;
-
+    var rv;
+    
     try
     {
-        if (__o && "eval" in __o)
-            rv = __o.eval(__s);
+        if (__o)
+        {
+            rv = eval(__s, __o);
+        }
         else
+        {
             rv = eval(__s);
+        }
     }
     catch (__ex)
     {

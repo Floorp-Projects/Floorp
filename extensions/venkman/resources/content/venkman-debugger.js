@@ -148,6 +148,9 @@ function detachDebugger()
     console.jsds.scriptHook = null;
     console.jsds.interruptHook = null;
     console.jsds.clearAllBreakpoints();
+
+    console.jsds.GC();
+
     if (!console.jsds.initAtStartup)
         console.jsds.off();
 }
@@ -222,7 +225,11 @@ function jsdExecutionHook (frame, type, rv)
     if (!ASSERT(!("frames" in console), "Execution hook called while stopped") ||
         frame.isNative ||
         !ASSERT(frame.script, "Execution hook called with no script") ||
-        frame.script.fileName == MSG_VAL_CONSOLE)
+        frame.script.fileName == MSG_VAL_CONSOLE ||
+        !ASSERT(!(frame.script.flags & SCRIPT_NODEBUG),
+                "Stopped in a script marked as don't debug") ||
+        !ASSERT(!isURLFiltered(frame.script.fileName),
+                "stopped in a filtered URL"))
     {
         return hookReturn;
     }
@@ -310,6 +317,9 @@ function jsdCallHook (frame, type)
 
 function jsdErrorHook (message, fileName, line, pos, flags, exception)
 {
+    if (isURLFiltered (fileName))
+        return true;
+    
     try
     {
         var flagstr;
@@ -608,6 +618,9 @@ function si_seal ()
     if (isURLFiltered(this.url))
     {
         var nada = SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
+        if (this.topLevel)
+            this.topLevel.jsdScript.flags |= nada;
+
         for (var f in this.functions)
             this.functions[f].jsdScript.flags |= nada;
     }
@@ -1095,6 +1108,19 @@ function BreakInstance (parentBP, scriptWrapper, pc)
     scriptWrapper.jsdScript.setBreakpoint (pc);
 }
 
+BreakInstance.prototype.__defineGetter__ ("jsdURL", bi_getURL);
+function bi_getURL ()
+{
+    return ("x-jsd:break?url=" + escape(this.url) +
+            "&lineNumber=" + this.lineNumber +
+            "&conditionEnabled=" + this.conditionEnabled +
+            "&condition=" + escape(this.condition) +
+            "&passExceptions=" + this.passExceptions +
+            "&logResult=" + this.logResult +
+            "&resultAction=" + this.resultAction +
+            "&enabled=" + this.enabled);
+}
+
 BreakInstance.prototype.clearBreakpoint =
 function bi_clear()
 {
@@ -1228,6 +1254,19 @@ function FutureBreakpoint (url, lineNumber)
     this.resultAction = BREAKPOINT_STOPALWAYS;
 }
 
+FutureBreakpoint.prototype.__defineGetter__ ("jsdURL", fb_getURL);
+function fb_getURL ()
+{
+    return ("x-jsd:fbreak?url=" + escape(this.url) +
+            "&lineNumber=" + this.lineNumber +
+            "&conditionEnabled=" + this.conditionEnabled +
+            "&condition=" + escape(this.condition) +
+            "&passExceptions=" + this.passExceptions +
+            "&logResult=" + this.logResult +
+            "&resultAction=" + this.resultAction +
+            "&enabled=" + this.enabled);
+}
+
 FutureBreakpoint.prototype.clearFutureBreakpoint =
 function fb_clear ()
 {
@@ -1330,7 +1369,7 @@ const TMODE_TRACE  = 1;
 const TMODE_BREAK  = 2;
 
 function debugTrap (frame, type, rv)
-{    
+{
     var tn = "";
     var retcode = jsdIExecutionHook.RETURN_CONTINUE;
 
@@ -1696,18 +1735,18 @@ function displaySourceContext (sourceText, line, contextLines)
         {
             if (i > 0 && i < sourceText.lines.length)
             {
-                var line;
+                var sourceLine;
                 if ("charset" in sourceText)
                 {
-                    line = toUnicode(sourceText.lines[i - 1],
+                    sourceLine = toUnicode(sourceText.lines[i - 1],
                                      sourceText.charset);
                 }
                 else
                 {
-                    line = sourceText.lines[i - 1];
+                    sourceLine = sourceText.lines[i - 1];
                 }
                 
-                display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3), line]),
+                display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3), sourceLine]),
                          i == line ? MT_STEP : MT_SOURCE);
             }
         }

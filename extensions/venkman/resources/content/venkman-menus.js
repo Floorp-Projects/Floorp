@@ -102,8 +102,7 @@ function initMenus()
          ["reload-source-tab"],
          ["toggle-source-coloring",
                  {type: "checkbox",
-                  checkedif: "console.prefs['services.source.sourceColoring'] " +
-                             "== 'true'"} ],
+                  checkedif: "console.prefs['services.source.colorize']"} ],
          ["toggle-pprint",
                  {type: "checkbox",
                   checkedif: "console.prefs['prettyprint']"}],

@@ -85,6 +85,7 @@ function initCommands()
          ["finish",         cmdFinish,             CMD_CONSOLE | CMD_NEED_STACK],
          ["focus-input",    cmdHook,                                          0],
          ["frame",          cmdFrame,              CMD_CONSOLE | CMD_NEED_STACK],
+         ["gc",             cmdGC,                                  CMD_CONSOLE],
          ["help",           cmdHelp,                                CMD_CONSOLE],
          ["loadd",          cmdLoadd,                               CMD_CONSOLE],
          ["move-view",      cmdMoveView,                            CMD_CONSOLE],
@@ -332,8 +333,12 @@ function cmdChromeFilter (e)
         {
             for (var url in console.scriptManagers)
             {
-                if (url.search (/^chrome:/) == -1)
+                if (url.search (/^chrome:/) == -1 &&
+                    (!("componentPath" in console) ||
+                     url.indexOf(console.componentPath) == -1))
+                {
                     continue;
+                }
 
                 //dd ("setting chrome filter " + e.toggle + " for " + url);
                 
@@ -543,7 +548,8 @@ function cmdClose(e)
 
 function cmdCommands (e)
 {
-    display (MSG_TIP1_HELP);
+    display (getMsg(MSN_TIP1_HELP, 
+                    console.prefs["sessionView.requireSlash"] ? "/" : ""));
     display (MSG_TIP2_HELP);
     var names = console.commandManager.listNames(e.pattern, CMD_CONSOLE);
     names = names.join(MSG_COMMASP);
@@ -628,7 +634,7 @@ function cmdEval (e)
     if (!("currentEvalObject" in console))
     {
         display (MSG_ERR_NO_EVAL_OBJECT, MT_ERROR);
-        return;
+        return false;
     }
 
     display(getMsg(MSN_EVAL_IN, [leftPadString(console.evalCount, 3, "0"),
@@ -654,7 +660,10 @@ function cmdEval (e)
     }
     else
     {
-        var parent = console.currentEvalObject.__parent__;
+        var parent;
+        var jsdValue = console.jsds.wrapValue (console.currentEvalObject);
+        if (jsdValue.jsParent)
+            parent = jsdValue.jsParent.getWrappedValue();
         if (!parent)
             parent = console.currentEvalObject;
         if ("location" in parent)
@@ -810,9 +819,9 @@ function cmdFindScript (e)
     var targetLine = 1;
     var rv, params;
 
-    if (console.prefs["prettyprint"] && e.scriptWrapper.sourceText)
+    if (console.prefs["prettyprint"] && jsdScript.isValid)
     {
-        if (e.targetPc != null && jsdScript.isValid)
+        if (e.targetPc != null)
             targetLine = jsdScript.pcToLine(e.targetPc, PCMAP_PRETTYPRINT);
         
         console.currentDetails = e.scriptWrapper;
@@ -989,7 +998,7 @@ function cmdFrame (e)
         {
             display (getMsg(MSN_ERR_INVALID_PARAM, ["frameIndex", e.frameIndex]),
                      MT_ERROR);
-            return;
+            return false;
         }
         setCurrentFrameByIndex(e.frameIndex);
     }
@@ -1000,6 +1009,11 @@ function cmdFrame (e)
 
     dispatch ("find-frame", { frameIndex: e.frameIndex });
     return true;
+}
+
+function cmdGC()
+{
+    console.jsds.GC();    
 }
 
 function cmdHelp (e)
@@ -1158,13 +1172,6 @@ function cmdPref (e)
             return true;
         }
         
-        if (!(e.prefName in console.prefs))
-        {
-            display (getMsg(MSN_ERR_INVALID_PARAM, ["prefName", e.prefName]),
-                     MT_ERROR);
-            return false;
-        }
-
         var type = typeof console.prefs[e.prefName];
         switch (type)
         {
@@ -1182,13 +1189,23 @@ function cmdPref (e)
         }
 
         console.prefs[e.prefName] = e.prefValue;
-        display (getMsg(MSN_FMT_PREFVALUE, [e.prefName, e.prefValue]));
+        feedback (e, getMsg(MSN_FMT_PREFVALUE, [e.prefName, e.prefValue]));
     }
     else
     {
         var ary = console.listPrefs(e.prefName);
+        if (ary.length == 0)
+        {
+            display (getMsg(MSN_ERR_UNKNOWN_PREF, [e.prefName]),
+                     MT_ERROR);
+            return false;
+        }
+
         for (var i = 0; i < ary.length; ++i)
-            display (getMsg(MSN_FMT_PREFVALUE, [ary[i], console.prefs[ary[i]]]));
+        {
+            feedback (e, getMsg(MSN_FMT_PREFVALUE,
+                                [ary[i], console.prefs[ary[i]]]));
+        }
     }
 
     return true;
@@ -1226,7 +1243,7 @@ function cmdProps (e)
         if (!("currentEvalObject" in console))
         {
             display (MSG_ERR_NO_EVAL_OBJECT, MT_ERROR);
-            return;
+            return false;
         }
 
         if (console.currentEvalObject instanceof jsdIStackFrame)
@@ -1463,7 +1480,7 @@ function cmdThisExpr(e)
     if (rv.jsType != TYPE_OBJECT)
     {
         display (MSG_ERR_THIS_NOT_OBJECT, MT_ERROR);
-        return;
+        return false;
     }
     
     dispatch ("set-eval-obj", { jsdValue: rv });
@@ -1676,13 +1693,13 @@ function cmdTMode (e)
     
     switch (console.throwMode)
     {
-        case EMODE_IGNORE:
+        case TMODE_IGNORE:
             feedback (e, MSG_TMODE_IGNORE);
             break;
-        case EMODE_TRACE:
+        case TMODE_TRACE:
             feedback (e, MSG_TMODE_TRACE);
             break;
-        case EMODE_BREAK:
+        case TMODE_BREAK:
             feedback (e, MSG_TMODE_BREAK);
             break;
     }

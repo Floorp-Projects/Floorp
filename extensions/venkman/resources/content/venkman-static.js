@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.34+";
+const __vnk_version        = "0.9.36+";
 const __vnk_requiredLocale = "0.9.x";
 var   __vnk_versionSuffix  = "";
 
@@ -269,11 +269,21 @@ function dispatchCommand (command, e, flags)
             }
             catch (ex)
             {
-                display (getMsg(MSN_ERR_INTERNAL_HOOK, h), MT_ERROR);
-                display (formatException(ex), MT_ERROR);
-                dd (formatException(ex), MT_ERROR);
+                if (e.command.name != "hook-session-display")
+                {
+                    display (getMsg(MSN_ERR_INTERNAL_HOOK, h), MT_ERROR);
+                    display (formatException(ex), MT_ERROR);
+                }
+                else
+                {
+                    dd (getMsg(MSN_ERR_INTERNAL_HOOK, h));
+                }
+
+                dd (formatException(ex));
                 if (typeof ex == "object" && "stack" in ex)
                     dd (ex.stack);
+                else
+                    dd (getStackTrace());
             }
         }
     };
@@ -542,7 +552,10 @@ function init()
                     console.prefs["sessionView.requireSlash"] ? "/" : ""));
     display (MSG_TIP2_HELP);
     if (console.prefs["sessionView.requireSlash"])
-        display (MSG_SLASH_REQUIRED, MT_ATTENTION);
+        display (MSG_TIP3_HELP);
+
+    //if (console.prefs["sessionView.requireSlash"])
+    //    display (MSG_SLASH_REQUIRED, MT_ATTENTION);
     //dispatch ("commands");
     //dispatch ("help");
 
@@ -645,7 +658,14 @@ function hookScriptSealed (e)
     {
         var ary = e.scriptInstance.url.match (/(.*)venkman-service\.js$/);
         if (ary)
+        {
+            if (!console.prefs["enableChromeFilter"])
+            {
+                dispatch ("debug-instance-on",
+                          { scriptInstance: e.scriptInstance });
+            }
             console.componentPath = ary[1];
+        }
     }
 
     for (var fbp in console.fbreaks)
@@ -911,7 +931,7 @@ function SourceText (scriptInstance)
         this.jsdURL = JSD_URL_SCHEME + "source?location=" + escape(this.url);
     }
 
-    this.shortName = getFileFromPath (this.url);
+    this.shortName = abbreviateWord(getFileFromPath (this.url), 30);
 }
 
 SourceText.prototype.onMarginClick =
@@ -1002,7 +1022,7 @@ function st_oncomplete (data, url, status)
          * so we can expand them to a per-file width before actually
          * displaying them.
          */
-        ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
+        ary[i] = ary[i].replace(/[\x00-\x08]|[\x0A-\x1F]/g, "?");
         if (!("charset" in this))
         {
             var matchResult =

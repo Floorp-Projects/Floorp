@@ -51,7 +51,7 @@
         ondragdrop="console.dnd.drop(event, console.viewProxy);">
         <xul:vbox class="view-outer"
           ondraggesture="console.dnd.startDrag(event, console.viewProxyTitle);">
-          <xul:hbox id="view-title">
+          <xul:hbox id="view-title" flex="1">
             <xul:image class="view-title-pop"
               tooltiptext="&ViewFloat.tooltip;"
               xbl:inherits="parentid=id"
@@ -61,7 +61,7 @@
               <xul:hbox flex="1" class="view-title-margin-left"/>
               <xul:label id="view-title-text" xbl:inherits="value=title"
                 tooltiptext="&ViewGrippy.tooltip;"
-                xul:crop="end" xul:flex="1"/>
+                crop="center" flex="1"/>
               <xul:hbox flex="1" class="view-title-margin-right"/>
             </xul:hbox>
             <xul:image class="view-title-close"

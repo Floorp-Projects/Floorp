@@ -50,7 +50,8 @@ function initJSDURL()
                      "chrome://venkman/locale/venkman-help.tpl");
     console.addPref ("services.source.css",
                      "chrome://venkman/skin/venkman-source.css");
-    console.addPref ("services.source.sourceColoring", "false");
+    console.addPref ("services.source.colorize", true);
+    console.addPref ("services.source.colorizeLimit", 1500);
 }
 
 /*
@@ -425,7 +426,7 @@ function svc_help (response, parsedURL)
         "\\$css": console.prefs["services.help.css"],
         "\\$match-count": commandList.length,
         "\\$has-searched": hasSearched,
-        "\\$report-charset": MSG_REPORT_CHARSET,
+        "\\$report-charset": MSG_REPORT_CHARSET
     };
             
     response.append(replaceStrings(tpl["header"], vars));
@@ -728,8 +729,7 @@ function con_respondsourcetext (response, sourceText)
 {
     const CHUNK_DELAY = 50;
     const CHUNK_SIZE  = 250;
-    var tpl = console.serviceTemplates["source"];
-    var sourceLines;
+    var sourceLines = sourceText.lines;
     var resultSource;
     var tenSpaces = "          ";
     var maxDigits;
@@ -737,12 +737,17 @@ function con_respondsourcetext (response, sourceText)
     var previousState = 0;
 
     var mungeLine;
-    
-    if (console.prefs["services.source.sourceColoring"] == "true")
+
+    if (console.prefs["services.source.colorize"] && 
+        sourceLines.length <= console.prefs["services.source.colorizeLimit"])
+    {
         mungeLine = colorizeSourceLine;
+    }
     else
+    {
         mungeLine = escapeSourceLine;
-    
+    }
+
     function processSourceChunk (start)
     {
         dd ("processSourceChunk " + start + " {");
@@ -825,7 +830,6 @@ function con_respondsourcetext (response, sourceText)
     }
     else
     {
-        sourceLines = sourceText.lines;
         maxDigits = Math.floor(Math.log(sourceLines.length) / Math.LN10) + 1;
         dd ("building response {");
         response.channel.contentType = "text/xml";
