@@ -1299,7 +1299,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
               promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
               nsCOMPtr<nsIDocShell> docShell;
 	      (void) aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
-   	      parentWindow = do_GetInterface(docShell);
+   	      parentWindow = do_QueryInterface(docShell);
               rv = IMAPGetStringBundle(getter_AddRefs(bundle));
               NS_ENSURE_SUCCESS(rv, rv);
             }
