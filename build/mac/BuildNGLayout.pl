@@ -70,12 +70,6 @@ if ($build{all})
 chdir("::::");
 $MOZ_SRC = cwd();
 
-if ($MOZ_FULLCIRCLE)
-{
-	#// Get the Build Number for the Master.ini(Full Circle) n'stuff
-	$buildnum = Moz::SetBuildNumber();
-}
-
 OpenErrorLog("NGLayoutBuildLog");
 #OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
 
@@ -86,6 +80,8 @@ if ($pull{all}) {
    Checkout();
 }
 
+SetBuildNumber();
+
 chdir($MOZ_SRC);
 BuildDist();
 
@@ -93,3 +89,4 @@ chdir($MOZ_SRC);
 BuildProjects();
 
 print "Build layout complete\n";
+
