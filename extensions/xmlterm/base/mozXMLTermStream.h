@@ -92,7 +92,7 @@ class mozXMLTermStream : public mozIXMLTermStream
   nsCString mUTF8Buffer;
 
   /** offset at which to start reading the UTF8 data buffer */
-  PRUInt32 mUTF8Offset;
+  PRUint32 mUTF8Offset;
 
   /** maximum frame height for resizing */
   PRInt32 mMaxResizeHeight;
