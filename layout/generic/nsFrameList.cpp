@@ -186,13 +186,13 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
     }
     else {
       nsIFrame* prevSibling = GetPrevSiblingFor(aFrame);
-      NS_ASSERTION(prevSibling, "removing frame not in list");
       if (nsnull != prevSibling) {
         prevSibling->SetNextSibling(nextFrame);
         return PR_TRUE;
       }
     }
   }
+  // aFrame was not in the list. 
   return PR_FALSE;
 }
 
