@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-
 #include "nsBlenderWin.h"
 
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
@@ -55,3 +54,4 @@ nsBlenderWin::Blend(nsDrawingSurface aSrc,PRInt32 aSX, PRInt32 aSY, PRInt32 aWid
 {
 
 }
+

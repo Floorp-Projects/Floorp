@@ -30,7 +30,9 @@ class nsBlenderWin : public nsIBlender
 public:
 
     NS_DECL_ISUPPORTS
-
+  
+      nsBlenderWin();
+      ~nsBlenderWin();
 
   /**
    * Initialize the Blender
