@@ -149,6 +149,9 @@ public:
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
 
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) = 0;
+
+  // Gets the dead space (the gray area) around the Print Preview Page
+  NS_IMETHOD GetDeadSpaceValue(nscoord* aValue) = 0;
   
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

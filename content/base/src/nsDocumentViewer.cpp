@@ -4714,9 +4714,47 @@ DocumentViewerImpl::TurnScriptingOn(PRBool aDoTurnOn)
 }
 
 //----------------------------------------------------------------------
+static nsresult GetSeqFrameAndCountPages(PrintObject*  aPO,
+                                         nsIFrame*&    aSeqFrame, 
+                                         PRInt32&      aCount)
+{
+  NS_ENSURE_ARG_POINTER(aPO);
+
+  // Finds the SimplePageSequencer frame
+  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
+  nsIFrame* curFrame;
+  aSeqFrame  = nsnull;
+  aPO->mPresShell->GetRootFrame(&curFrame);
+  while (curFrame != nsnull) {
+    nsIPageSequenceFrame * sqf = nsnull;
+    if (NS_SUCCEEDED(CallQueryInterface(curFrame, &sqf)) && sqf) {
+      aSeqFrame = curFrame;
+      break;
+    }
+    curFrame->FirstChild(aPO->mPresContext, nsnull, &curFrame);
+  }
+  if (aSeqFrame == nsnull) return NS_ERROR_FAILURE;
+
+  // first count the total number of pages
+  aCount = 0;
+  nsIFrame * pageFrame;
+  aSeqFrame->FirstChild(aPO->mPresContext, nsnull, &pageFrame);
+  while (pageFrame != nsnull) {
+    aCount++;
+    pageFrame->GetNextSibling(&pageFrame);
+  }
+
+  return NS_OK;
+
+}
+
+//----------------------------------------------------------------------
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 {
+#ifdef NS_PRINT_PREVIEW
+  if (!mPrtPreview) return NS_ERROR_FAILURE;
+
   nsIScrollableView* scrollableView;
   mViewManager->GetRootScrollableView(&scrollableView);
   if (scrollableView == nsnull) return NS_OK;
@@ -4730,18 +4768,11 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 
   // Finds the SimplePageSequencer frame
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
-  nsIFrame* rootFrame;
   nsIFrame* seqFrame  = nsnull;
-  mPrtPreview->mPrintObject->mPresShell->GetRootFrame(&rootFrame);
-  while (rootFrame != nsnull) {
-    nsIPageSequenceFrame * sqf = nsnull;
-    if (NS_SUCCEEDED(CallQueryInterface(rootFrame, &sqf)) && sqf) {
-      seqFrame = rootFrame;
-      break;
-    }
-    rootFrame->FirstChild(mPrtPreview->mPrintObject->mPresContext, nsnull, &rootFrame);
+  PRInt32   pageCount = 0;
+  if (NS_FAILED(GetSeqFrameAndCountPages(mPrtPreview->mPrintObject, seqFrame, pageCount))) {
+    return NS_ERROR_FAILURE;
   }
-  if (seqFrame == nsnull) return NS_OK;
 
   // Figure where we are currently scrolled to
   const nsIView * clippedView;
@@ -4751,17 +4782,8 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   scrollableView->GetScrollPosition(x, y);
 
   PRInt32    pageNum = 1;
-  nsIFrame * pageFrame;
   nsIFrame * fndPageFrame  = nsnull;
   nsIFrame * currentPage   = nsnull;
-
-  // first count the total number of pages
-  PRInt32 pageCount = 0;
-  seqFrame->FirstChild(mPresContext, nsnull, &pageFrame);
-  while (pageFrame != nsnull) {
-    pageCount++;
-    pageFrame->GetNextSibling(&pageFrame);
-  }
 
   // If it is "End" then just do a "goto" to the last page
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_END) {
@@ -4772,6 +4794,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   // Now, locate the current page we are on and
   // and the page of the page number
   nscoord gap = 0;
+  nsIFrame * pageFrame;
   seqFrame->FirstChild(mPresContext, nsnull, &pageFrame);
   while (pageFrame != nsnull) {
     nsRect pageRect;
@@ -4824,9 +4847,17 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     nsIView * view;
     fndPageFrame->GetOffsetFromView(mPresContext, pnt, &view);
 
-    // scroll so that top of page is at the top of the scroll area
-    scrollableView->ScrollTo(pnt.x, fRect.y, PR_TRUE);
+    nscoord deadSpaceGap = 0;
+    nsIPageSequenceFrame * sqf;
+    if (NS_SUCCEEDED(CallQueryInterface(seqFrame, &sqf))) {
+      sqf->GetDeadSpaceValue(&deadSpaceGap);
+    }
+
+    // scroll so that top of page (plus the gray area) is at the top of the scroll area
+    scrollableView->ScrollTo(0, fRect.y-deadSpaceGap, PR_TRUE);
   }
+#endif // NS_PRINT_PREVIEW
+
   return NS_OK;
 }
 
@@ -4836,6 +4867,22 @@ DocumentViewerImpl::GetIsFramesetDocument(PRBool *aIsFramesetDocument)
 {
   nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
   *aIsFramesetDocument = IsParentAFrameSet(webContainer);
+  return NS_OK;
+}
+
+/* readonly attribute long printPreviewNumPages; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages)
+{
+  NS_ENSURE_ARG_POINTER(aPrintPreviewNumPages);
+
+  // Finds the SimplePageSequencer frame
+  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
+  nsIFrame* seqFrame  = nsnull;
+  *aPrintPreviewNumPages = 0;
+  if (NS_FAILED(GetSeqFrameAndCountPages(mPrtPreview->mPrintObject, seqFrame, *aPrintPreviewNumPages))) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 

@@ -317,13 +317,15 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  nscoord  quarterInch = NS_INCHES_TO_TWIPS(0.25);
+  nscoord  deadSpaceGap;
+  GetDeadSpaceValue(&deadSpaceGap);
+
   nsMargin deadSpaceMargin(0,0,0,0);
   nsMargin extraMargin(0,0,0,0);
   nsSize   shadowSize(0,0);
   if (ppContext) {
     if (adjSize.width == width && adjSize.height == height) {
-      deadSpaceMargin.SizeTo(quarterInch, quarterInch, quarterInch, quarterInch);
+      deadSpaceMargin.SizeTo(deadSpaceGap, deadSpaceGap, deadSpaceGap, deadSpaceGap);
       extraMargin.SizeTo(extraGap, extraGap, extraGap, extraGap);
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -433,7 +435,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
       y += kidSize.height;
 
       // Leave a slight gap between the pages
-      y += quarterInch;
+      y += deadSpaceGap;
 
       // Is the page complete?
       nsIFrame* kidNextInFlow;
