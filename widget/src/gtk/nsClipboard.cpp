@@ -269,7 +269,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
     printf("  GetNativeClipboardData: Transferable is null!\n");
     return NS_ERROR_FAILURE;
   }
-  
+
+  // Dunno why we need to do this, copying the win32 code ...
   nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
   if (!genericTrans)
     return rv;
@@ -328,15 +329,11 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   // for the callback saying that the data have been transferred.
   //
 
+  // Set a flag saying that we're blocking waiting for the callback:
+  mBlocking = PR_TRUE;
 #ifdef DEBUG_CLIPBOARD
   printf("Waiting for the callback\n");
 #endif /* DEBUG_CLIPBOARD */
-
-  if (mSelectionData.data != nsnull)
-    g_free(mSelectionData.data);
-  mSelectionData.data = nsnull;
-  mSelectionData.length = 0;
-  mBlocking = PR_TRUE;
 
   // Now we need to wait until the callback comes in ...
   // i is in case we get a runaway (yuck).
@@ -345,15 +342,13 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
     gtk_main_iteration_do(TRUE);
   }
 
-  mBlocking = PR_FALSE;
-
-  if (!mSelectionData.data)
-    return NS_ERROR_NOT_AVAILABLE;
-
 #ifdef DEBUG_CLIPBOARD
   printf("Got the callback: '%s', %d\n",
          mSelectionData.data, mSelectionData.length);
 #endif /* DEBUG_CLIPBOARD */
+
+  // We're back from the callback, no longer blocking:
+  mBlocking = PR_FALSE;
 
   // 
   // Now we have data in mSelectionData.data.
@@ -364,10 +359,12 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   genericTrans->SetTransferData(dataFlavor,
                                 mSelectionData.data, mSelectionData.length);
 
-  // Can't free the selection data -- the transferable doesn't make a copy.
+  // Can't free the selection data -- the transferable just saves a pointer.
+  // But the transferable is responsible for freeing it, so we have to
+  // consider it freed now:
   //g_free(mSelectionData.data);
-  //mSelectionData.data = nsnull;
-  //mSelectionData.length = 0;
+  mSelectionData.data = nsnull;
+  mSelectionData.length = 0;
 
   return NS_OK;
 }
@@ -423,6 +420,8 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
       mSelectionData.data = g_new(guchar, aSelectionData->length + 1);
       memcpy(mSelectionData.data,
              aSelectionData->data, aSelectionData->length);
+      // Null terminate in case anyone cares,
+      // and so we can print the string for debugging:
       mSelectionData.data[aSelectionData->length] = '\0';
       mSelectionData.length = aSelectionData->length;
       return;
