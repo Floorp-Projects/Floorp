@@ -1195,6 +1195,7 @@ nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
   // get the css size and let the frame use or override it
   nsSize minSize;
   
+  PRBool usingDefaultSize = PR_FALSE;
   PRInt32 ignore;
   PRInt32 type;
   GetType(&type);
@@ -1202,18 +1203,19 @@ nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
     PRInt32 width = 0;
     if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
       width = GetDefaultColumnWidth();
+      usingDefaultSize = PR_TRUE;
     }
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, 
                                   PR_FALSE, nsnull, 1);
     CalculateSizeStandard(aPresContext, aReflowState.rendContext, this,
-                          textSpec, aDesiredSize, minSize, ignore, aBorder, aPadding);
+                          textSpec, aDesiredSize, minSize, ignore, aBorder, aPadding, usingDefaultSize);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
                                   nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     CalculateSizeStandard(aPresContext, aReflowState.rendContext, this, 
-                          areaSpec, aDesiredSize, minSize, ignore, aBorder, aPadding);
+                          areaSpec, aDesiredSize, minSize, ignore, aBorder, aPadding, usingDefaultSize);
   }
 
   // CalculateSize makes calls in the nsFormControlHelper that figures
@@ -1264,7 +1266,8 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
                                               nsSize&               aMinSize, 
                                               nscoord&              aRowHeight,
                                               nsMargin&             aBorder,
-                                              nsMargin&             aPadding) 
+                                              nsMargin&             aPadding,
+                                              PRBool                aIsUsingDefSize) 
 {
   nscoord charWidth   = 0; 
   aDesiredSize.width  = CSS_NOTSET;
@@ -1333,6 +1336,13 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
     }
   }
 
+  // if we are not using the default size 
+  // then make the minimum size the size we want to be
+  if (!aIsUsingDefSize) {
+    aMinSize.width  = aDesiredSize.width;
+    aMinSize.height = aDesiredSize.height;
+  }
+
   return numRows;
 }
 
@@ -1348,7 +1358,8 @@ nsGfxTextControlFrame2::CalculateSizeNavQuirks (nsIPresContext*       aPresConte
                                               nsSize&               aMinSize, 
                                               nscoord&              aRowHeight,
                                               nsMargin&             aBorder,
-                                              nsMargin&             aPadding)
+                                              nsMargin&             aPadding,
+                                              PRBool                aIsUsingDefSize)
 {
   nscoord charWidth   = 0; 
   aDesiredSize.width  = CSS_NOTSET;
@@ -1404,6 +1415,13 @@ nsGfxTextControlFrame2::CalculateSizeNavQuirks (nsIPresContext*       aPresConte
   aRowHeight      = aDesiredSize.height;
   aMinSize.height = aDesiredSize.height;
 
+  // if we are not using the default size 
+  // then make the minimum size the size we want to be
+  if (!aIsUsingDefSize) {
+    aMinSize.width  = aDesiredSize.width;
+    aMinSize.height = aDesiredSize.height;
+  }
+
   PRInt32 numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
 
   return numRows;
@@ -1418,6 +1436,7 @@ nsGfxTextControlFrame2::ReflowNavQuirks(nsIPresContext*          aPresContext,
                                         nsMargin&                aBorder,
                                         nsMargin&                aPadding)
 {
+  PRBool usingDefaultSize = PR_FALSE;
   PRInt32 ignore;
   PRInt32 type;
   GetType(&type);
@@ -1425,18 +1444,19 @@ nsGfxTextControlFrame2::ReflowNavQuirks(nsIPresContext*          aPresContext,
     PRInt32 width = 0;
     if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
       width = GetDefaultColumnWidth();
+      usingDefaultSize = PR_TRUE;
     }
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, 
                                   PR_FALSE, nsnull, 1);
     CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this,  
-                           textSpec, aDesiredSize, mMinSize, ignore, aBorder, aPadding);
+                           textSpec, aDesiredSize, mMinSize, ignore, aBorder, aPadding, usingDefaultSize);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
                                   nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this,  
-                           areaSpec, aDesiredSize, mMinSize, ignore, aBorder, aPadding);
+                           areaSpec, aDesiredSize, mMinSize, ignore, aBorder, aPadding, usingDefaultSize);
   }
 
   return NS_OK;
