@@ -913,6 +913,7 @@ private:
 	PRUint32 mModified;
     nsIPluginInstance * mPluginInstance;
     nsPluginStreamListenerPeer * mPluginStreamListenerPeer;
+  PRBool mDidAddRef;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1000,6 +1001,7 @@ nsPluginStreamInfo::nsPluginStreamInfo()
     mSeekable = PR_FALSE;
 	mLength = 0;
 	mModified = 0;
+  mDidAddRef = PR_FALSE;
 }
 
 nsPluginStreamInfo::~nsPluginStreamInfo()
@@ -1180,6 +1182,13 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
    rv = container->SetData(MAGIC_REQUEST_CONTEXT);
    if (NS_FAILED(rv)) return rv;
 
+   // this is a hack to keep Byte Range streams open (see bug 83183)
+   // XXX need to figure out where to release, I suggest in Stop() but the ownership is the other way
+   if (!mDidAddRef)
+   {
+     mDidAddRef=PR_TRUE;
+     NS_ADDREF(mPluginStreamListenerPeer);
+   }
    return channel->AsyncOpen(converter, container);
 }
 
@@ -1741,7 +1750,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
                                                         nsISupports* aContext,
                                                         nsresult aStatus)
 {
-  
   nsresult rv = NS_OK;
   nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
   nsCOMPtr<nsIFile> localFile;
@@ -1899,11 +1907,6 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     {
       if (0 == PL_strcmp(range.get(), "bytes"))
         bSeekable = PR_TRUE;
-      /* XXX FIX-ME (see Bug 83183)
-         This is a hack to keep byte range request streams open but it casues a leak.
-         A good place to release would probablybe when the instance is stopped.
-      */
-      NS_ADDREF(this);
     }
   }
 
