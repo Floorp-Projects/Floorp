@@ -79,6 +79,7 @@ public:
     NS_IMETHOD Deselect() ;
 
 protected:
+    GtkWidget *mWidget;
     PRBool  mMultiSelect;
 
 };
