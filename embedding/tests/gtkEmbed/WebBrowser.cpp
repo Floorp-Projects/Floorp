@@ -165,6 +165,6 @@ WebBrowser::Print(void)
 nsresult 
 WebBrowser::SetPositionAndSize(int x, int y, int cx, int cy)
 {
-    return mBaseWindow->SetPositionAndSize(x, y, cx, cy, true);
+    return mBaseWindow->SetPositionAndSize(x, y, cx, cy, PR_TRUE);
 }
 
