@@ -1,7 +1,6 @@
 browser.jar:
 *   content/browser/pref/pref-advanced.xul                 (content/pref-advanced.xul)
     content/browser/pref/overrideHandler.js                (content/overrideHandler.js)
-    content/browser/pref/pref-help.js                      (content/pref-help.js)
 *   content/browser/pref/pref-themes.xul                   (content/pref-themes.xul)
 *   content/browser/pref/pref-themes.js                    (content/pref-themes.js)
 *   content/browser/pref/pref-charset.js                   (content/pref-charset.js)
