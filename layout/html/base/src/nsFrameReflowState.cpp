@@ -29,19 +29,10 @@ nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
 {
   while (nsnull != aParentRS) {
     if (nsnull != aParentRS->frame) {
-      const nsStyleDisplay* display;
-      nsresult rv;
-      rv = aParentRS->frame->GetStyleData(eStyleStruct_Display,
-                                          (const nsStyleStruct*&) display);
-      if (NS_SUCCEEDED(rv) && (nsnull != display)) {
-        switch (display->mDisplay) {
-        case NS_STYLE_DISPLAY_BLOCK:
-        case NS_STYLE_DISPLAY_COMPACT:
-        case NS_STYLE_DISPLAY_RUN_IN:
-        case NS_STYLE_DISPLAY_LIST_ITEM:
-          // XXX This cast is Not Good
-          return (const nsHTMLReflowState*)aParentRS;
-        }
+      PRBool isContainingBlock;
+      nsresult rv = aParentRS->frame->IsPercentageBase(isContainingBlock);
+      if (NS_SUCCEEDED(rv) && isContainingBlock) {
+        return (const nsHTMLReflowState*) aParentRS;
       }
     }
     aParentRS = aParentRS->parentReflowState;
@@ -97,6 +88,18 @@ nsHTMLReflowState::GetContentWidth() const
   return width;
 }
 
+static inline PRBool
+IsReplaced(nsIAtom* aTag)
+{
+  return (nsHTMLAtoms::img == aTag) ||
+    (nsHTMLAtoms::applet == aTag) ||
+    (nsHTMLAtoms::object == aTag) ||
+    (nsHTMLAtoms::input == aTag) ||
+    (nsHTMLAtoms::select == aTag) ||
+    (nsHTMLAtoms::textarea == aTag) ||
+    (nsHTMLAtoms::iframe == aTag);
+}
+
 // XXX there is no CLEAN way to detect the "replaced" attribute (yet)
 void
 nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
@@ -135,16 +138,7 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
     case NS_STYLE_DISPLAY_INLINE:
     case NS_STYLE_DISPLAY_MARKER:
     case NS_STYLE_DISPLAY_INLINE_TABLE:
-      if ((nsHTMLAtoms::img == tag) ||
-          (nsHTMLAtoms::applet == tag) ||
-          (nsHTMLAtoms::object == tag) ||
-          (nsHTMLAtoms::input == tag) ||
-          (nsHTMLAtoms::select == tag) ||
-          (nsHTMLAtoms::textarea == tag) ||
-          (nsHTMLAtoms::button == tag) ||
-          (nsHTMLAtoms::legend == tag) ||
-          (nsHTMLAtoms::fieldset == tag) ||
-          (nsHTMLAtoms::iframe == tag)) {
+      if (IsReplaced(tag)) {
         frameType = eCSSFrameType_InlineReplaced;
       }
       else {
