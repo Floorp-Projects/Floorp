@@ -150,8 +150,13 @@ function ClearCardViewPane()
 	cvSetVisible(data.cvhHome, false);
 	cvSetVisible(data.cvHomeAddress, false);
 	cvSetVisible(data.cvHomeCityStZip, false);
+	cvSetVisible(data.cvHomeCountry, false);
 	// Other section
 	cvSetVisible(data.cvhOther, false);
+	cvSetVisible(data.cvCustom1, false);
+	cvSetVisible(data.cvCustom2, false);
+	cvSetVisible(data.cvCustom3, false);
+	cvSetVisible(data.cvCustom4, false);
 	cvSetVisible(data.cvNotes, false);
 	// Phone section
 	cvSetVisible(data.cvhPhone, false);
@@ -167,6 +172,7 @@ function ClearCardViewPane()
 	cvSetVisible(data.cvCompany, false);
 	cvSetVisible(data.cvWorkAddress, false);
 	cvSetVisible(data.cvWorkCityStZip, false);
+	cvSetVisible(data.cvWorkCountry, false);
 }
 
 function cvSetNodeWithLabel(node, label, text)

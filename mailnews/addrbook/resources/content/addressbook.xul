@@ -48,6 +48,15 @@ Rights Reserved.
 	//<broadcaster id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
 	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
 	<broadcaster id="cmd_Close" oncommand="AbClose()"/>
+	
+	<!-- Edit Menu -->
+	<broadcaster id="cmd_undo" oncommand="AbEditUndo()"/>
+	<broadcaster id="cmd_redo" oncommand="AbEditRedo()"/>
+	<broadcaster id="cmd_cut" oncommand="AbEditCut()"/>
+	<broadcaster id="cmd_copy" oncommand="AbEditCopy()"/>
+	<broadcaster id="cmd_paste" oncommand="AbEditPaste()"/>
+	<broadcaster id="cmd_delete" oncommand="AbDelete()"/>
+	<broadcaster id="cmd_selectAll" oncommand="AbSelectAll()"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -56,6 +65,15 @@ Rights Reserved.
 	<!-- temporary -->
 	<key id="key_Close" command="true" key="w" observes="cmd_Close" />
 	<!--key id="key_Quit" command="true" key="Q" observes="cmd_Quit" /-->
+
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
 </keyset>
 
 
@@ -90,15 +108,15 @@ Rights Reserved.
 		
 		<menu value="&editMenu.label;">
 		  <menupopup>
-			<menuitem value="&undoCmd.label;" oncommand="AbEditUndo()"/>
-			<menuitem value="&redoCmd.label;" oncommand="AbEditRedo()"/>
+			<menuitem id="menu_undo"/>
+			<menuitem id="menu_redo"/>
 			<menuseparator/>
-			<menuitem value="&cutCmd.label;" onaction="AbEditCut();"/>
-			<menuitem value="&copyCmd.label;" onaction="AbEditCopy();"/>
-			<menuitem value="&pasteCmd.label;" onaction="AbEditPaste();"/>
-			<menuitem value="&deleteCmd.label;" oncommand="AbDelete();"/>
+			<menuitem id="menu_cut"/>
+			<menuitem id="menu_copy"/>
+			<menuitem id="menu_paste"/>
+			<menuitem id="menu_delete"/>
 			<menuitem value="&deleteAbCmd.label;" oncommand="AbDeleteDirectory();"/>
-			<menuitem value="&selectAllCmd.label;" onaction="AbSelectAll();"/>
+			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
 			<menuitem value="&searchCmd.label;" oncommand="AbSearch();"/>
 			<menuseparator/>
@@ -178,7 +196,7 @@ Rights Reserved.
 			<tree id="dirTree"/>
 		</box>
 		
-		<splitter/>
+		<splitter collapse="before"/>
 		
 		<box align="vertical" flex="100%" style="border-left:solid black 1px">
 			<!-- results tree -->

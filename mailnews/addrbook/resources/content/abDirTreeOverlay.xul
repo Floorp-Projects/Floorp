@@ -31,9 +31,10 @@ Rights Reserved.
 		<tree id="dirTree" 
 			  class="abDirectory" 
 			  flex="100%"
-			  ref="abdirectory://" open="true"
+			  ref="abdirectory://"
+			  open="true"
 			  datasources="rdf:addressdirectory"
-			  onclick="return ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
+			  onclick="ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
 			
 			<template>
 				<rule>

@@ -70,7 +70,7 @@ Rights Reserved.
 				<tree id="dirTree"/>
 			</box>
 				
-			<splitter/>
+			<splitter collapse="before"/>
 
 			<!-- Box that holds results pane, (to,cc,bcc buttons), and address bucket -->
 			<box align="vertical" flex="100%" style="border-left:solid black 1px; border-right:solid black 1px">

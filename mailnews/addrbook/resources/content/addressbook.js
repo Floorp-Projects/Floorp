@@ -19,6 +19,8 @@ function OnLoadAddressBook()
 	}
 
 	document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
+	
+	SelectFirstAddressBook();
 }
 
 

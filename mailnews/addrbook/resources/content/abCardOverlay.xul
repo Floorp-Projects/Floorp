@@ -90,7 +90,8 @@ Rights Reserved.
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<checkbox id="SendPlainText"/><html:div>&SendPlainText.label;</html:div>
+							<html:input id="SendPlainText" type="checkbox"/>
+							<html:label for="SendPlainText">&SendPlainText.label;</html:label>
 						</box>
 					</box>
 				</html:fieldset>
@@ -101,10 +102,10 @@ Rights Reserved.
 					</html:legend>
 		
 					<box align="vertical" style="width:100%">
-						<box align="horizontal">
+						<box align="horizontal" style="vertical-align:baseline">
 							<spring flex="100%"/>
-							<html:label for="WorkPhone">&WorkPhone.label;</html:label>
-							<html:input id="WorkPhone" type="text" class="CardEdit"/>
+							<html:label for="WorkPhone" style="vertical-align:baseline">&WorkPhone.label;</html:label>
+							<html:input id="WorkPhone" type="text" class="CardEdit" style="vertical-align:baseline"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
@@ -161,7 +162,7 @@ Rights Reserved.
 							<html:input id="HomeState" type="text" class="CardEdit" style="min-width:1em; width:4em"/>
 							<spring style="width:1.5em"/>
 							<html:label for="HomeZipCode">&HomeZipCode.label;</html:label>
-							<html:input id="HomeZipCode" type="text" class="CardEdit" style="min-width:1em; width:3em"/>
+							<html:input id="HomeZipCode" type="text" class="CardEdit" style="min-width:1em; width:5em"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
@@ -214,7 +215,7 @@ Rights Reserved.
 							<html:input id="WorkState" type="text" class="CardEdit" style="min-width:1em; width:4em"/>
 							<spring style="width:1.5em"/>
 							<html:label for="WorkZipCode">&WorkZipCode.label;</html:label>
-							<html:input id="WorkZipCode" type="text" class="CardEdit" style="min-width:1em; width:3em"/>
+							<html:input id="WorkZipCode" type="text" class="CardEdit" style="min-width:1em; width:5em"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
@@ -224,20 +225,20 @@ Rights Reserved.
 					</box>
 				</html:fieldset>
 
-				<html:fieldset style="width:100%">
+				<!--html:fieldset style="width:100%">
 					<html:legend align="left">
 						<html:div style="font-weight: bold">&Web.box;</html:div>
-					</html:legend>
+					</html:legend-->
 		
 					<box align="vertical" style="width:100%">
 		
 						<box align="horizontal">
-							<spring flex="100%"/>
+							<!--spring flex="100%"/-->
 							<html:label for="WebPage1">&WebPage1.label;</html:label>
-							<html:input type="text" id="WebPage1" class="CardEdit"/>
+							<html:input type="text" id="WebPage1" class="CardEdit" flex="100%"/>
 						</box>
 					</box>
-				</html:fieldset>
+				<!--/html:fieldset-->
 			</box>
 
 			<!-- ** Other Tab ** -->

@@ -4,11 +4,14 @@ var AddressAutoCompleteListener = {
 
 		var field = document.getElementById(doc_id);
 
-		dump("value = " + field.value + "\n");
-		dump("aOriginalString = " + aOriginalString + "\n");
-		dump("aMatch = " + aMatch + "\n");
+		if ( field )
+		{
+			dump("value = " + field.value + "\n");
+			dump("aOriginalString = " + aOriginalString + "\n");
+			dump("aMatch = " + aMatch + "\n");
 
-		field.value = aMatch;
+			field.value = aMatch;
+		}
 	}
 };
 

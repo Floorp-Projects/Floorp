@@ -28,8 +28,6 @@ Rights Reserved.
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		onload="OnLoadEditCard()"
 		class="dialog"
-		width="400" height="600"
-		style="padding:0px"
 		align="vertical">
 
 

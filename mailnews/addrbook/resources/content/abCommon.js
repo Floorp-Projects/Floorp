@@ -66,15 +66,26 @@ function GetSelectedAddresses()
 }
 
 
+function SelectFirstAddressBook()
+{
+	var tree = document.getElementById('dirTree');
+	var body = document.getElementById('dirTreeBody');
+	if ( tree && body )
+	{
+		var treeitems = body.getElementsByTagName('treeitem');
+		if ( treeitems && treeitems.length > 0 )
+		{
+			tree.selectItem(treeitems[0]);
+			ChangeDirectoryByDOMNode(treeitems[0]);
+		}
+	}
+}
+
 function ChangeDirectoryByDOMNode(dirNode)
 {
 	var uri = dirNode.getAttribute('id');
 	dump("uri = " + uri + "\n");
-	ChangeDirectoryByURI(uri);
-}
-
-function ChangeDirectoryByURI(uri)
-{
+	
 	var tree = document.getElementById('resultsTree');
 	if ( tree )
 		tree.setAttribute('ref', uri);

@@ -35,6 +35,8 @@ function OnLoadSelectAddress()
 		AddAddressFromComposeWindow(ccAddress, prefixCc);
 		AddAddressFromComposeWindow(bccAddress, prefixBcc);
 	}
+	
+	SelectFirstAddressBook();
 }
 
 function AddAddressFromComposeWindow(addresses, prefix)

@@ -32,10 +32,9 @@ Rights Reserved.
 		title="&editcardWindow.title;"
 		onload="OnLoadNewCard()"
 		class="dialog"
-		style="padding:0px"
 		align="vertical">
 
-<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
+<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
 	<box align="horizontal">
 		<html:label for="abPopup">&chooseAddressBook.label;</html:label>

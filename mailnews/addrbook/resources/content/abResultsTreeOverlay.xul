@@ -31,10 +31,10 @@ Rights Reserved.
 	<tree id="resultsTree"
 		  class="abResults" 
 		  flex="100%"
-		  rdf:datasources="rdf:addressdirectory rdf:addresscard"
+		  datasources="rdf:addressdirectory rdf:addresscard"
 		  onselect="top.ResultsPaneSelectionChange()"
 		  ondblclick="top.AbEditCard()"
-		  rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
+		  containment="http://home.netscape.com/NC-rdf#CardChild">
 
 		<template>
 			<rule>

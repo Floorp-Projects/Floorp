@@ -27,16 +27,12 @@ box[class="CardEdit"] {
 }
 
 input[class="CardEdit"] {
-	height       : 12px;
+	/*height       : 12px;*/
 	width        : 25em;
 	margin-left  : 0px;
 	margin-right : 0px;
-	margin-top   : 0px;
-	margin-bottom: 0px;
-}
-
-div[class="CardEdit"] {
-	vertical-align: middle;
+	/*margin-top   : 0px;
+	margin-bottom: 0px;*/
 }
 
 
@@ -58,12 +54,6 @@ div[class="CardViewText"] {
 	color:inherit;
 }
 
-/* FIX ME - remove this style if it does not add something */
-box[class="CardView"] {
-	padding: 0px;
-	border: none;
-}
-
 
 /* Custom Trees */
 
@@ -78,11 +68,7 @@ tree[class="abResults"] treeitem > treerow > treecell > .tree-icon {
 
 /* Address Book specific style */
 
-div[hide] {
-	display: none;
-}
-
-box[hide] {
+[hide] {
 	display: none;
 }
 

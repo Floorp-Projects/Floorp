@@ -40,14 +40,14 @@ Rights Reserved.
 		<box align="horizontal" flex="100%">
 			
 			<box align="vertical" flex="100%" style="width:100px">
-				<box id="cvbName" align="vertical" class="CardView">
+				<box id="cvbName" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhName">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvNickname">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvEmail1">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvEmail2">*</html:div>
 				</box>
 				
-				<box id="cvbHome" align="vertical" class="CardView">
+				<box id="cvbHome" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html:div>
 					<html:div class="CardViewText" hide="true" id="cvHomeAddress">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvHomeAddress2">*</html:div>
@@ -55,7 +55,7 @@ Rights Reserved.
 					<html:div class="CardViewText" hide="true" id="cvHomeCountry">*</html:div>
 				</box>
 
-				<box id="cvbOther" align="vertical" class="CardView">
+				<box id="cvbOther" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html:div>
 					<html:div class="CardViewText" hide="true" id="cvCustom1">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvCustom2">*</html:div>
@@ -68,7 +68,7 @@ Rights Reserved.
 			<spring style="width:20px"/>
 
 			<box align="vertical" flex="100%" style="width:100px">
-				<box id="cvbPhone" align="vertical" class="CardView">
+				<box id="cvbPhone" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html:div>
 					<html:div class="CardViewText" hide="true" id="cvPhWork">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvPhHome">*</html:div>
@@ -77,7 +77,7 @@ Rights Reserved.
 					<html:div class="CardViewText" hide="true" id="cvPhPager">*</html:div>
 				</box>
 				
-				<box id="cvbWork" align="vertical" class="CardView">
+				<box id="cvbWork" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html:div>
 					<html:div class="CardViewText" hide="true" id="cvJobTitle">*</html:div>
 					<html:div class="CardViewText" hide="true" id="cvDepartment">*</html:div>

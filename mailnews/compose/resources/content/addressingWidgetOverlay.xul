@@ -35,48 +35,48 @@ Rights Reserved.
 		 align="vertical"
 		 style="border:solid black 1px">
 
-            <html:div style="width: 100px; height: 5em;">
+		<html:div style="width:100px; height:5em">
 
-		<!-- for fixed height:  height:5em;  -->
-		<tree id="addressingWidgetTree"		
-			  class="addressingWidget"
-			  onclick="awClickRow()">
-			  
-			<treecol style="width:15%"/>
-			<treecol style="width:3%"/>
-			<treecol style="width:82%"/>
+			<!-- for fixed height:  style="height:5em"  -->
+			<tree id="addressingWidgetTree"		
+				  class="addressingWidget"
+				  onclick="awClickRow()">
+				  
+				<treecol style="width:15%"/>
+				<treecol style="width:3%"/>
+				<treecol style="width:82%"/>
 
-			<treechildren id="addressWidgetBody">
-				<treeitem>
-					<treerow style="border-bottom:solid black 1px">
-						<treecell treeallowevents="true">
-							<html:select id="msgRecipientType#1">
-								<html:option value="addr_to">&toAddr.label;</html:option>
-								<html:option value="addr_cc">&ccAddr.label;</html:option>
-								<html:option value="addr_bcc">&bccAddr.label;</html:option>
-								<html:option value="addr_reply">&replyAddr.label;</html:option>
-								<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
-								<html:option value="addr_followup">&followupAddr.label;</html:option>
-							</html:select>
-						</treecell>
-						
-						<treecell>
-							<titledbutton/>
-						</treecell>
-						
-						<treecell treeallowevents="true">
-							<html:input id="msgRecipient#1"
-										class="addressingWidget"
-										type="text"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress(this); awReturnHit(this); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-			</treechildren>
-		</tree>
-            </html:div>
+				<treechildren id="addressWidgetBody">
+					<treeitem>
+						<treerow style="border-bottom:solid black 1px">
+							<treecell treeallowevents="true">
+								<html:select id="msgRecipientType#1">
+									<html:option value="addr_to">&toAddr.label;</html:option>
+									<html:option value="addr_cc">&ccAddr.label;</html:option>
+									<html:option value="addr_bcc">&bccAddr.label;</html:option>
+									<html:option value="addr_reply">&replyAddr.label;</html:option>
+									<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
+									<html:option value="addr_followup">&followupAddr.label;</html:option>
+								</html:select>
+							</treecell>
+							
+							<treecell>
+								<titledbutton/>
+							</treecell>
+							
+							<treecell treeallowevents="true">
+								<html:input id="msgRecipient#1"
+											class="addressingWidget"
+											type="text"
+											onkeyup="if (event.which == 13)
+											{ AutoCompleteAddress(this); awReturnHit(this); }"/>
+							</treecell>
+						</treerow>
+					</treeitem>
+					
+				</treechildren>
+			</tree>
+		</html:div>
 	</box>
 
 </overlay>
