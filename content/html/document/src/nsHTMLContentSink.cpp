@@ -297,8 +297,11 @@ public:
   PRBool IsTimeToNotify();
 
   nsresult SetDocumentTitle(const nsAString& aTitle);
+  // If aCheckIfPresent is true, will only set an attribute in cases
+  // when it's not already set.
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
-                         PRBool aNotify = PR_FALSE);
+                         PRBool aNotify = PR_FALSE,
+                         PRBool aCheckIfPresent = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
                                nsIDOMHTMLFormElement* aForm,
                                nsIDocShell* aDocShell,
@@ -835,7 +838,8 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 
 nsresult
 HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
-                               nsIHTMLContent* aContent, PRBool aNotify)
+                               nsIHTMLContent* aContent, PRBool aNotify,
+                               PRBool aCheckIfPresent)
 {
   // Add tag attributes to the content attributes
 
@@ -867,6 +871,10 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
     ToLowerCase(k);
 
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
+
+    if (aCheckIfPresent && aContent->HasAttr(kNameSpaceID_None, keyAtom)) {
+      continue;
+    }
 
     // Get value and remove mandatory quotes
     static const char* kWhitespace = "\n\r\t\b";
@@ -3059,7 +3067,7 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
     PRInt32 ac = aNode.GetAttributeCount();
 
     if (ac > 0) {
-      AddAttributes(aNode, mRoot, PR_TRUE);
+      AddAttributes(aNode, mRoot, PR_TRUE, PR_TRUE);
     }
   }
 
@@ -3115,7 +3123,7 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   }
 
   if (mHead && aNode.GetNodeType() == eHTMLTag_head) {
-    rv = AddAttributes(aNode, mHead);
+    rv = AddAttributes(aNode, mHead, PR_FALSE, PR_TRUE);
   }
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
@@ -3156,7 +3164,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   // Add attributes, if any, to the current BODY node
   if (mBody) {
-    AddAttributes(aNode, mBody, PR_TRUE);
+    AddAttributes(aNode, mBody, PR_TRUE, PR_TRUE);
 
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
     MOZ_TIMER_STOP(mWatch);
