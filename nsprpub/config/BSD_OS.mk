@@ -21,7 +21,7 @@
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
-ifeq (,$(filter-out 1.1 4.0 4.0.1,$(OS_RELEASE)))
+ifeq (,$(filter-out 1.1 4.%,$(OS_RELEASE)))
 CC		= gcc -Wall -Wno-format
 CCC		= g++
 else
@@ -64,7 +64,7 @@ OS_CFLAGS	+= -D_PR_STAT_HAS_ONLY_ST_ATIME -D_PR_NEED_H_ERRNO
 else
 OS_CFLAGS	+= -DHAVE_DLL -DUSE_DLFCN -D_PR_STAT_HAS_ST_ATIMESPEC
 OS_LIBS		= -ldl
-ifeq (,$(filter-out 4.0 4.0.1,$(OS_RELEASE)))
+ifeq (,$(filter-out 4.%,$(OS_RELEASE)))
 MKSHLIB		= $(CC) $(DSO_LDOPTS)
 DSO_CFLAGS	= -fPIC
 DSO_LDOPTS	= -shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)
