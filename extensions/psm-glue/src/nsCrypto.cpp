@@ -61,8 +61,8 @@ typedef struct CRYPTO_KeyPairInfoStr {
  * and the handler function which waits on termination.
  */
 typedef struct CRYPTO_KeyGenContextHandlerStr {
-  uint32              numRequests;
-  uint32              keyGenContext;
+  CMUint32              numRequests;
+  CMUint32              keyGenContext;
   void               *context; //This is for UI info.
   char               *jsCallback;
   CRYPTO_KeyPairInfo *keyids;
@@ -275,7 +275,7 @@ cryptojs_convert_to_mechanism(SSMKeyGenType keyGenType)
 }
 
 CMTStatus
-cryptojs_generateOneKeyPair(PCMT_CONTROL control, uint32 keyGenContext,
+cryptojs_generateOneKeyPair(PCMT_CONTROL control, CMUint32 keyGenContext,
                             SSMKeyGenType keyGenType, int keySize,
                             char *params, CMUint32 *keyId)
 {
@@ -345,8 +345,8 @@ cryptojs_generateOneKeyPair(PCMT_CONTROL control, uint32 keyGenContext,
 
 CMTStatus
 cryptojs_ReadArgsAndGenerateKey(PCMT_CONTROL control, JSContext *cx,
-                                uint32 keyGenContext, jsval *argv,
-                                uint32 *keyid, SSMKeyGenType *keyGenType)
+                                CMUint32 keyGenContext, jsval *argv,
+                                CMUint32 *keyid, SSMKeyGenType *keyGenType)
 {
     JSString  *jsString;
     char      *params, *keyGenAlg;
@@ -683,8 +683,8 @@ cryptojs_DestroyKeys(PCMT_CONTROL control, CRYPTO_KeyPairInfo *keyids,
  */
 
 void
-cryptojs_KeyGenContextEventHandler(uint32 rsrcid, uint32 numProcessed,
-                                   uint32 result, void *data)
+cryptojs_KeyGenContextEventHandler(CMUint32 rsrcid, CMUint32 numProcessed,
+                                   CMUint32 result, void *data)
 {
     CRYPTO_KeyGenContextHandler *handlerInfo;
 
