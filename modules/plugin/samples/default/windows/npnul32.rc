@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#include ""winresrc.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
@@ -135,7 +135,7 @@ IDI_PLUGICON            ICON    DISCARDABLE     "plugicon.ico"
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO DISCARDABLE
 BEGIN
     IDD_PLUGIN_DOWNLOAD, DIALOG
     BEGIN
@@ -153,19 +153,19 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_INFO                "Information on this page requires a plug-in for:"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LOCATION            "Navigator can retrieve the plug-in for you from:"
+    IDS_LOCATION            "You can retrieve the plug-in from:"
     IDS_TITLE               "Plug-in Not Loaded"
     IDS_QUESTION            "What would you like to do?"
-    IDS_WARNING_JS          "To retrieve the plug-in now, click the Get the Plug-in button and then select the plug-in you need from the page that appears. If you have trouble installing the plug-in, make sure that Java and JavaScript are enabled in Advanced preferences, and that software installation is enabled (in the Software Installation category under Advanced)."
-    IDS_WARNING_OFFLINE     "However, you are currently offline. If you would like to get the plug-in, click Cancel, select ""Go Online"" from the File menu, then click the plug-in icon on the page."
-    IDS_FINDER_PAGE         "Plug-in Finder page at Netscape.com"
+    IDS_WARNING_JS          "To retrieve the plug-in now, click the Get the Plug-in button and then select the plug-in you need from the page that appears."
+    IDS_WARNING_OFFLINE     "However, you are currently offline. If you would like to get the plug-in, click Cancel, select ""Work Online"" from the File menu, then click the plug-in icon on the page."
+    IDS_FINDER_PAGE         "Plug-in Finder page"
     IDS_CLICK_TO_GET        "Click here to get the plugin"
     IDS_CLICK_WHEN_DONE     "After installing the plugin, click here."
 END
