@@ -65,6 +65,8 @@ protected:
 	DECLARE_DYNAMIC(CBrowserFrame)
 
 public:
+	inline CBrowserImpl *GetBrowserImpl() { return m_wndBrowserView.mpBrowserImpl; }
+
 	CToolBar    m_wndToolBar;
 	CStatusBar  m_wndStatusBar;
 	CProgressCtrl m_wndProgressBar;

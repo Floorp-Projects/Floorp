@@ -45,6 +45,8 @@
 #include "BrowserFrm.h"
 #include "winEmbedFileLocProvider.h"
 #include "ProfileMgr.h"
+#include "BrowserImpl.h"
+#include "nsIWindowWatcher.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -95,6 +97,13 @@ BOOL CMfcEmbedApp::InitInstance()
     nsresult rv;
 	rv = NS_InitEmbedding(nsnull, provider);
     if(NS_FAILED(rv))
+    {
+        ASSERT(FALSE);
+        return FALSE;
+    }
+
+    rv = InitializeWindowCreator();
+    if (NS_FAILED(rv))
     {
         ASSERT(FALSE);
         return FALSE;
@@ -343,11 +352,31 @@ nsresult CMfcEmbedApp::InitializeCachePrefs()
     return prefs->SetFileXPref(CACHE_DIR_PREF, cacheDir);
 }
 
+/* InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This will be used by Gecko C++ code
+   (never JS) to create new windows when no previous window is handy
+   to begin with. This is done in a few exceptional cases, like PSM code.
+   Failure to set this callback will only disable the ability to create
+   new windows under these circumstances. */
+nsresult CMfcEmbedApp::InitializeWindowCreator()
+{
+  // give an nsIWindowCreator to the WindowWatcher service
+  nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, this));
+  if (windowCreator) {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      wwatch->SetWindowCreator(windowCreator);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 // ---------------------------------------------------------------------------
 //  CMfcEmbedApp : nsISupports
 // ---------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(CMfcEmbedApp, nsIObserver, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS3(CMfcEmbedApp, nsIObserver, nsIWindowCreator, nsISupportsWeakReference);
 
 // ---------------------------------------------------------------------------
 //  CMfcEmbedApp : nsIObserver
@@ -402,6 +431,25 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
         OnNewBrowser();
     }
     return rv;
+}
+
+// ---------------------------------------------------------------------------
+//  CMfcEmbedApp : nsIWindowCreator
+// ---------------------------------------------------------------------------
+NS_IMETHODIMP CMfcEmbedApp::CreateChromeWindow(nsIWebBrowserChrome *parent,
+                                               PRUint32 chromeFlags,
+                                               nsIWebBrowserChrome **_retval)
+{
+  // XXX we're ignoring the "parent" parameter
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = 0;
+
+  CBrowserFrame *pBrowserFrame = CreateNewBrowserFrame(chromeFlags);
+  if(pBrowserFrame) {
+    *_retval = NS_STATIC_CAST(nsIWebBrowserChrome *, pBrowserFrame->GetBrowserImpl());
+    NS_ADDREF(*_retval);
+  }
+  return NS_OK;
 }
 
 // AboutDlg Stuff
