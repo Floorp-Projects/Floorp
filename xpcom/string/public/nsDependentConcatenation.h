@@ -21,11 +21,11 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
-/* nsPromiseConcatenation.h --- string concatenation machinery lives here, but don't include this file
+/* nsDependentConcatenation.h --- string concatenation machinery lives here, but don't include this file
     directly, always get it by including either "nsAString.h" or one of the compatibility headers */
 
-#ifndef nsPromiseConcatenation_h___
-#define nsPromiseConcatenation_h___
+#ifndef nsDependentConcatenation_h___
+#define nsDependentConcatenation_h___
 
   /**
     NOT FOR USE BY HUMANS
@@ -35,7 +35,7 @@
     character copies are required unless and until a final assignment is made.  It works
     its magic by overriding and forwarding calls to |GetReadableFragment()|.
 
-    Note: |nsPromiseConcatenation| imposes some limits on string concatenation with |operator+()|.
+    Note: |nsDependentConcatenation| imposes some limits on string concatenation with |operator+()|.
       - no more than 33 strings, e.g., |s1 + s2 + s3 + ... s32 + s33|
       - left to right evaluation is required ... do not use parentheses to override this
 
@@ -47,11 +47,11 @@
     |GetReadableFragment()|.
    */
 
-class NS_COM nsPromiseConcatenation
+class NS_COM nsDependentConcatenation
     : public nsAPromiseString
   {
     public:
-      typedef nsPromiseConcatenation        self_type;
+      typedef nsDependentConcatenation      self_type;
       typedef PRUnichar                     char_type;
       typedef nsAString                     string_type;
       typedef string_type::const_iterator   const_iterator;
@@ -83,22 +83,22 @@ class NS_COM nsPromiseConcatenation
         }
 
     public:
-      nsPromiseConcatenation( const string_type& aLeftString, const string_type& aRightString, PRUint32 aMask = 1 )
+      nsDependentConcatenation( const string_type& aLeftString, const string_type& aRightString, PRUint32 aMask = 1 )
           : mFragmentIdentifierMask(aMask)
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
         }
 
-      nsPromiseConcatenation( const self_type& aLeftString, const string_type& aRightString )
+      nsDependentConcatenation( const self_type& aLeftString, const string_type& aRightString )
           : mFragmentIdentifierMask(aLeftString.mFragmentIdentifierMask<<1)
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
         }
 
-      // nsPromiseConcatenation( const self_type& ); // auto-generated copy-constructor should be OK
-      // ~nsPromiseConcatenation();                  // auto-generated destructor OK
+      // nsDependentConcatenation( const self_type& ); // auto-generated copy-constructor should be OK
+      // ~nsDependentConcatenation();                  // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
@@ -124,11 +124,11 @@ class NS_COM nsPromiseConcatenation
       PRUint32            mFragmentIdentifierMask;
   };
 
-class NS_COM nsPromiseCConcatenation
+class NS_COM nsDependentCConcatenation
     : public nsAPromiseCString
   {
     public:
-      typedef nsPromiseCConcatenation       self_type;
+      typedef nsDependentCConcatenation     self_type;
       typedef char                          char_type;
       typedef nsACString                    string_type;
       typedef string_type::const_iterator   const_iterator;
@@ -160,22 +160,22 @@ class NS_COM nsPromiseCConcatenation
         }
 
     public:
-      nsPromiseCConcatenation( const string_type& aLeftString, const string_type& aRightString, PRUint32 aMask = 1 )
+      nsDependentCConcatenation( const string_type& aLeftString, const string_type& aRightString, PRUint32 aMask = 1 )
           : mFragmentIdentifierMask(aMask)
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
         }
 
-      nsPromiseCConcatenation( const self_type& aLeftString, const string_type& aRightString )
+      nsDependentCConcatenation( const self_type& aLeftString, const string_type& aRightString )
           : mFragmentIdentifierMask(aLeftString.mFragmentIdentifierMask<<1)
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
         }
 
-      // nsPromiseCConcatenation( const self_type& ); // auto-generated copy-constructor should be OK
-      // ~nsPromiseCConcatenation();                  // auto-generated destructor OK
+      // nsDependentCConcatenation( const self_type& ); // auto-generated copy-constructor should be OK
+      // ~nsDependentCConcatenation();                  // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
@@ -214,7 +214,7 @@ class NS_COM nsPromiseCConcatenation
     will really want to do with the result.  What might be better, though,
     is to return a `promise' to concatenate some strings...
 
-    By making |nsPromiseConcatenation| inherit from readable strings, we automatically handle
+    By making |nsDependentConcatenation| inherit from readable strings, we automatically handle
     assignment and other interesting uses within writable strings, plus we drastically reduce
     the number of cases we have to write |operator+()| for.  The cost is extra temporary concat strings
     in the evaluation of strings of '+'s, e.g., |A + B + C + D|, and that we have to do some work
@@ -222,48 +222,52 @@ class NS_COM nsPromiseCConcatenation
   */
 
 inline
-const nsPromiseConcatenation
-operator+( const nsPromiseConcatenation& lhs, const nsAString& rhs )
+const nsDependentConcatenation
+operator+( const nsDependentConcatenation& lhs, const nsAString& rhs )
   {
-    return nsPromiseConcatenation(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
+    return nsDependentConcatenation(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
   }
 
 inline
-const nsPromiseCConcatenation
-operator+( const nsPromiseCConcatenation& lhs, const nsACString& rhs )
+const nsDependentCConcatenation
+operator+( const nsDependentCConcatenation& lhs, const nsACString& rhs )
   {
-    return nsPromiseCConcatenation(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
-  }
-
-inline
-const nsPromiseConcatenation
-operator+( const nsAString& lhs, const nsAString& rhs )
-  {
-    return nsPromiseConcatenation(lhs, rhs);
-  }
-
-inline
-const nsPromiseCConcatenation
-operator+( const nsACString& lhs, const nsACString& rhs )
-  {
-    return nsPromiseCConcatenation(lhs, rhs);
+    return nsDependentCConcatenation(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
   }
 
 #if 0
+  // temporarily comment these two global operators out, until |nsPromiseConcatenation| is removed
+
 inline
-const nsPromiseConcatenation
-nsPromiseConcatenation::operator+( const string_type& rhs ) const
+const nsDependentConcatenation
+operator+( const nsAString& lhs, const nsAString& rhs )
   {
-    return nsPromiseConcatenation(*this, rhs, mFragmentIdentifierMask<<1);
+    return nsDependentConcatenation(lhs, rhs);
   }
 
 inline
-const nsPromiseCConcatenation
-nsPromiseCConcatenation::operator+( const string_type& rhs ) const
+const nsDependentCConcatenation
+operator+( const nsACString& lhs, const nsACString& rhs )
   {
-    return nsPromiseCConcatenation(*this, rhs, mFragmentIdentifierMask<<1);
+    return nsDependentCConcatenation(lhs, rhs);
+  }
+#endif
+
+#if 0
+inline
+const nsDependentConcatenation
+nsDependentConcatenation::operator+( const string_type& rhs ) const
+  {
+    return nsDependentConcatenation(*this, rhs, mFragmentIdentifierMask<<1);
+  }
+
+inline
+const nsDependentCConcatenation
+nsDependentCConcatenation::operator+( const string_type& rhs ) const
+  {
+    return nsDependentCConcatenation(*this, rhs, mFragmentIdentifierMask<<1);
   }
 #endif
 
 
-#endif /* !defined(nsPromiseConcatenation_h___) */
+#endif /* !defined(nsDependentConcatenation_h___) */
