@@ -171,7 +171,7 @@ TDBCursor* tdbQueryNolock(TDB* db, TDBNodeRange range[3],
                           TDBSortSpecification* sortspec)
 {
     PRInt32 rangescore[3];
-    PRInt32 tree = -1;
+    PRInt32 tree;
     PRInt32 curscore;
     PRInt32 bestscore = -1;
     PRInt32 i;
@@ -191,31 +191,46 @@ TDBCursor* tdbQueryNolock(TDB* db, TDBNodeRange range[3],
             result->range[i].max = tdbNodeDup(range[i].max);
             if (result->range[i].max == NULL) goto FAIL;
         }
+    }
 
-        rangescore[i] = 0;
-        if (range[i].min != NULL || range[i].max != NULL) {
-            /* Hey, some limitations were specified, we like this key some. */
-            rangescore[i]++;
-            if (range[i].min != NULL && range[i].max != NULL) {
-                /* Ooh, we were given both minimum and maximum, that's better
-                   than only getting one.*/
+    for (tree = 0 ; tree < NUMTREES ; tree++) {
+        if (key[tree][0] == sortspec->keyorder[0] &&
+            key[tree][1] == sortspec->keyorder[1] &&
+            key[tree][2] == sortspec->keyorder[2]) {
+            break;
+        }
+    }
+    
+    if (tree >= NUMTREES) {
+        /* The passed in keyorder was not valid (which, in fact, is the usual
+           case).  Go find the best tree to use. */
+        for (i=0 ; i<3 ; i++) {
+            rangescore[i] = 0;
+            if (range[i].min != NULL || range[i].max != NULL) {
+                /* Hey, some limitations were specified, we like this key
+                   some. */
                 rangescore[i]++;
-                if (tdbCompareNodes(range[i].min, range[i].max) == 0) {
-                    /* Say!  This key was exactly specified.  We like it
-                       best. */
+                if (range[i].min != NULL && range[i].max != NULL) {
+                    /* Ooh, we were given both minimum and maximum, that's
+                       better than only getting one.*/
                     rangescore[i]++;
+                    if (tdbCompareNodes(range[i].min, range[i].max) == 0) {
+                        /* Say!  This key was exactly specified.  We like it
+                           best. */
+                        rangescore[i]++;
+                    }
                 }
             }
         }
-    }
 
-    for (i=0 ; i<NUMTREES ; i++) {
-        curscore = rangescore[key[i][0]] * 100 +
-            rangescore[key[i][1]]  * 10 +
-            rangescore[key[i][2]];
-        if (bestscore < curscore) {
-            bestscore = curscore;
-            tree = i;
+        for (i=0 ; i<NUMTREES ; i++) {
+            curscore = rangescore[key[i][0]] * 100 +
+                rangescore[key[i][1]]  * 10 +
+                rangescore[key[i][2]];
+            if (bestscore < curscore) {
+                bestscore = curscore;
+                tree = i;
+            }
         }
     }
 
