@@ -35,7 +35,7 @@
 [% PROCESS global/header.html.tmpl %]
 
 
-<script type="text/javascript" language="JavaScript">
+<script type="text/javascript">
 <!--
 function addSidebar() {
   if ((typeof window.sidebar == "object") && (typeof window.sidebar.addPanel == "function"))
@@ -49,7 +49,7 @@ function addSidebar() {
   {
     var rv = window.confirm ("Your browser does not support the sidebar extension.  " + "Would you like to upgrade now?");
     if (rv)
-      document.location.href = "http://www.mozilla.org/binaries.html";
+      document.location.href = "http://www.mozilla.org/";
   }
 }
 //-->
@@ -77,7 +77,7 @@ function addSidebar() {
     <li id="account"><a href="createaccount.cgi">Open a new [% terms.Bugzilla %] account</a></li>
   [% END %]
 [% END %]
-    <li id="sidebar"><a href="javascript:addSidebar()">Add to Sidebar</a> (Requires Mozilla or Netscape 6)</li>
+    <li id="sidebar"><a href="javascript:addSidebar()">Add to Sidebar</a> (requires a Mozilla browser like Mozilla Firefox)</li>
   </ul>
 
   <form id="show-bug" name="f" action="show_bug.cgi" method="get"
@@ -93,8 +93,8 @@ function addSidebar() {
   <div class="outro"></div>
 </div>
 
-<script type="text/javascript" language="JavaScript" src="localconfig.js"></script>
-<script type="text/javascript" language="JavaScript" src="quicksearch.js"></script>
+<script type="text/javascript" src="localconfig.js"></script>
+<script type="text/javascript" src="quicksearch.js"></script>
 <script type="text/javascript">
 <!--
 document.forms['f'].id.focus();
