@@ -4439,6 +4439,9 @@ nsGenericHTMLElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr
   }
 
   NS_ConvertUTF16toUTF8 utf8name(aStr);
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    ToLowerCase(utf8name);
+  }
 
   PRInt32 i, count = 0;
   mAttributes->GetAttributeCount(count);
