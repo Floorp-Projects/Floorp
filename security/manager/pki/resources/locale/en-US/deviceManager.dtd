@@ -29,8 +29,8 @@
 <!ENTITY devmgr.version.label "Version">
 
 <!ENTITY devmgr.button.changeslotname.label "Change Slot Name">
-<!ENTITY devmgr.button.login.label "Login">
-<!ENTITY devmgr.button.logout.label "Logout">
+<!ENTITY devmgr.button.login.label "Log In">
+<!ENTITY devmgr.button.logout.label "Log Out">
 <!ENTITY devmgr.button.changepw.label "Change Password">
 <!ENTITY devmgr.button.load.label "Load">
 <!ENTITY devmgr.button.unload.label "Unload">
