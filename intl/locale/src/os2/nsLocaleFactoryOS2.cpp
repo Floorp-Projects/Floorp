@@ -207,7 +207,7 @@ nsLocaleFactoryOS2::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
   return ret;
 }
 
-nsresult nsLocaleFactoryOS2::QueryInterface(const nsIID &aIID,   
+/* nsresult nsLocaleFactoryOS2::QueryInterface(const nsIID &aIID,   
 					    void **aResult)   
 {   
   if (aResult == NULL) {   
@@ -230,7 +230,7 @@ nsresult nsLocaleFactoryOS2::QueryInterface(const nsIID &aIID,
 
   NS_ADDREF_THIS(); // Increase reference count for caller   
   return NS_OK;   
-}   
+}   */
 
 
 NS_IMETHODIMP
@@ -239,5 +239,4 @@ nsLocaleFactoryOS2::LockFactory(PRBool	aBool)
 	return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsLocaleFactoryOS2);
-NS_IMPL_RELEASE(nsLocaleFactoryOS2);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleFactoryOS2, nsIFactory);
