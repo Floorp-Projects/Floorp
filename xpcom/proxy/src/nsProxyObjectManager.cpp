@@ -168,6 +168,19 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
             return NS_ERROR_UNEXPECTED;
     }
 
+    // check to see if the eventQ is on our thread.  If so, just return the real object.
+    
+    if (postQ != nsnull && proxyType != PROXY_ASYNC)
+    {
+        PRBool aResult;
+        postQ->IsQueueOnCurrentThread(&aResult);
+     
+        if (aResult)
+        {
+            return aObj->QueryInterface(aIID, aProxyObject);
+        }
+    }
+
     // check to see if proxy is there or not.
     *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, aObj, aIID);
     if (*aProxyObject != nsnull)
@@ -217,8 +230,9 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue,
     
     // 3.  Delete the create instance proxy and its real object.
     
-    delete ciObject;
     NS_RELEASE(ciProxy);
+    delete ciObject;
+    ciObject = nsnull;
 
 
     // 4.  Check to see if creating the requested instance failed.

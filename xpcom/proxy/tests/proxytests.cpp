@@ -354,6 +354,34 @@ static void PR_CALLBACK EventLoop( void *arg )
     rv = eventQ->QueryInterface(nsIEventQueue::GetIID(), (void**)&gEventQueue);
     if (NS_FAILED(rv)) return;
      
+
+    printf("Verifing calling Proxy on eventQ thread.\n");
+
+    nsIProxyObjectManager*  manager;
+    
+    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                  kProxyObjectManagerIID,
+                                  (nsISupports **)&manager);
+    
+    PR_ASSERT(manager);
+
+    nsITestProxy         *proxyObject;
+    nsTestXPCFoo*         foo   = new nsTestXPCFoo();
+    
+    PR_ASSERT(foo);
+
+    manager->GetProxyObject(gEventQueue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+
+    PRInt32 a;
+    proxyObject->Test(1, 2, &a);
+    proxyObject->Test2();
+
+    delete foo;
+    NS_RELEASE(proxyObject);
+
+    printf("End of Verification calling Proxy on eventQ thread.\n");
+
+
     printf("Looping for events.\n");
 
     PLEvent* event = nsnull;

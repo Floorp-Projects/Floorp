@@ -26,4 +26,9 @@ EXPORTS =                        \
     nsProxyObjectManager.h        \
     $(NULL)
 
+XPIDL_MODULE = proxyObjInst
+XPIDLSRCS =                        \
+        .\nsIProxyCreateInstance.idl \
+        $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
