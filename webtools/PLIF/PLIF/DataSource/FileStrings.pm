@@ -47,43 +47,55 @@ sub provides {
     return ($service eq 'dataSource.strings.default' or $class->SUPER::provides($service));
 }
 
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    $self->SUPER::init(@_);
+    require File::Basename; import File::Basename; # DEPENDENCY
+}
+
 sub getDefaultString {
     my $self = shift;
     my($app, $protocol, $string) = @_;
-    my $filename;
+    my @filenames = ();
     # XXX THIS IS PLATFORM SPECIFIC CODE XXX
     if ($^O eq 'linux') {
         foreach my $piece ($protocol, $string) {
             $piece =~ s/[^a-zA-Z\/0-9.]/_/gos;
         }
-        $filename = "output/$protocol/$string";
+        # create a path relative to the application
+        push(@filenames, "output/$protocol/$string");
+        # and a patch relative to the PLIF library
+        push(@filenames, dirname(__FILE__)."/../../output/$protocol/$string");
     } else {
         $self->error(0, "Platform '$^O' not supported yet.");
     }
     # XXX END OF PLATFORM SPECIFIC CODE XXX
-    if (-f $filename) {
-        local *FILE; # ugh
-        $self->assert(open(FILE, "<$filename"), 1, "Could not open output template file '$filename' for reading: $!");
-        # get the data type (platform's line delimiter)
-        local $/ = "\n";
-        my @data;
-        my $line;
-        while (defined($line = <FILE>)) {
-            chomp($line);
-            if ($line eq '') {
-                # stop this when we reach the first blank line
-                last;
+    foreach my $filename (@filenames) {
+        if (-f $filename) {
+            local *FILE; # ugh
+            $self->assert(open(FILE, "<$filename"), 1, "Could not open output template file '$filename' for reading: $!");
+            # get the data type (platform's line delimiter)
+            local $/ = "\n";
+            my @data;
+            my $line;
+            while (defined($line = <FILE>)) {
+                chomp($line);
+                if ($line eq '') {
+                    # stop this when we reach the first blank line
+                    last;
+                }
+                push(@data, $line);
             }
-            push(@data, $line);
+            # and then slurp entire file (no record delimiter)
+            local $/ = undef;
+            push(@data, <FILE>);
+            $self->assert(close(FILE), 3, "Could not close output template file '$filename': $!");
+            return @data;
         }
-        # and then slurp entire file (no record delimiter)
-        local $/ = undef;
-        push(@data, <FILE>);
-        $self->assert(close(FILE), 3, "Could not close output template file '$filename': $!");
-        return @data;
-    } else {
-        # file does not exist
-        $self->dump(9, "No file for string '$string' in protocol '$protocol' (looking for '$filename')");
-        return; # no can do, sir
     }
+    # no file exists
+    local $" = '\', \'';
+    $self->dump(9, "No file found for string '$string' in protocol '$protocol' (looking for '@filenames')");
+    return; # no can do, sir
 }
