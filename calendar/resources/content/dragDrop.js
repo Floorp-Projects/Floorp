@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
+ *                 James Maidment <james@mouseboks.org.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -76,6 +77,14 @@ var calendarViewDNDObserver = {
 
 
    onDragStart: function (aEvent, aXferData, aDragAction){
+
+      //Clear any dragged over events left from last drag selection.
+      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
+      for( var i = 0; i < allDraggedElements.length; i++ )
+      {
+         allDraggedElements[i].removeAttribute( "draggedover" );
+      }
+
       // select clicked object, Mozilla doens't do this.
       calendarViewClick( aEvent );
 
@@ -118,8 +127,26 @@ var calendarViewDNDObserver = {
          // Dragging on the calendar canvas to select an event period
          // var newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
 
-         var gStartDate = new Date( gCalendarWindow.getSelectedDate() );
+         //var gStartDate = new Date( gCalendarWindow.getSelectedDate() );
+         
+         //The date the drap action initiated on.
+         var gStartDate;
+         
          this.startDateIndex = aEvent.target.getAttribute( "day" );
+
+         //In the week view, the drag can start on a date different from the currently 
+         //selected one. However, in the day view, the event target does not have a 'day'
+         //attribute.
+         if( gCalendarWindow.currentView == gCalendarWindow.weekView )
+         {
+            //Week view.
+            gStartDate = new Date ( gHeaderDateItemArray[this.startDateIndex].getAttribute( "date" ));
+         }
+         else
+         {
+            //Day view.
+            gStartDate = new Date ( gCalendarWindow.getSelectedDate() );
+         }
 
          gStartDate.setHours( aEvent.target.getAttribute( "hour" ) );
          gStartDate.setMinutes( 0 );
