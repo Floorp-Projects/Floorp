@@ -229,7 +229,8 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
     nsAutoString dataString(NS_LITERAL_STRING("offline"));
     if (someData)
     {
-      if (dataString == someData)
+      nsAutoString someDataString(someData);
+      if (dataString == someDataString)
         CloseCachedConnections();
     }
   }
