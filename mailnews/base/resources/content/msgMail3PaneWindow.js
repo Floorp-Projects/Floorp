@@ -757,16 +757,15 @@ function loadStartFolder(initialUri)
         }
 
         var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        SelectFolder(startFolder.URI);
 
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder)
         {
-            // Perform biff on the server to check for new mail, except for imap
-            if (defaultServer.type != "imap")
+            // Perform biff on the server to check for new mail
               defaultServer.PerformBiff(msgWindow);        
         }
 
+        SelectFolder(startFolder.URI);
 
         // because the "open" state persists, we'll call
         // PerformExpand() for all servers that are open at startup.

@@ -879,9 +879,8 @@ function loadStartFolder(initialUri)
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder)
         {
-            // Perform biff on the server to check for new mail, except for imap
-            if (defaultServer.type != "imap")
-              defaultServer.PerformBiff(msgWindow);        
+            // Perform biff on the server to check for new mail
+            defaultServer.PerformBiff(msgWindow);        
         }
 
 
