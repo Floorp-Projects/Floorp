@@ -64,7 +64,7 @@ sub build_who {
     close(BUILDLOG);
 
     #($j,$query_date_min) = split(/\|/, $line);
-    $query_date_min = time - (60 * 60 * 40);
+    $query_date_min = time - (60 * 60 * 24 * 7); # One week.
 
     if( $F_DEBUG ){
         print "Minimum date: $query_date_min\n";

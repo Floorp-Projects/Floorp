@@ -390,7 +390,7 @@ sub display_build_table_header {
 
 sub display_build_table_footer {
     print "</table>\n";
-    print "<a href=showbuilds.cgi?tree=$tree&showall=1.cgi>Show more checkin history</a><br><br>\n";
+    print "<a href=showbuilds.cgi?tree=$tree&showall=1>Show more checkin history</a><br><br>\n";
 
     if (open(FOOTER, "<$data_dir/footer.html")) {
         while (<FOOTER>) {
