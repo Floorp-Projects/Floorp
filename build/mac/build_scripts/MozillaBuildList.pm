@@ -1253,7 +1253,7 @@ sub makeprops
 
 sub BuildSecurityProjects()
 {
-    unless( $main::build{security} ) { return; }
+    unless( $main::build{security} && $main::options{psm}) { return; }
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
@@ -1264,7 +1264,7 @@ sub BuildSecurityProjects()
     BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
-    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSMStubs$D.shlb", 0, 0, 0);
+    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSM$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
 	 # make properties files for PSM User Interface
@@ -1292,7 +1292,15 @@ sub BuildSecurityProjects()
     closedir(DOC_DIR);
     foreach $file (@doc_files) {
     	copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
-    } 
+    }
+     
+    #Build the loadable module that contains the root certs.
+
+	BuildOneProject(":mozilla:security:nss:macbuild:NSSckfw.mcp", "NSSckfw$D.o", 0, 0, 0);
+	BuildOneProject(":mozilla:security:nss:macbuild:LoadableRoots.mcp", "NSSckbi$D.shlb", 0, $main::ALIAS_SYM_FILES, 0);
+	# NSS doesn't properly load the shared library created above if it's an alias, so we'll just copy it so that
+	# all builds will just work.  It's 140K optimized and 164K debug so it's not too much disk space.
+	copy(":mozilla:security:nss:macbuild:NSSckbi$D.shlb",$dist_dir."Essential Files:NSSckbi$D.shlb");
 	
     EndBuildModule("security");
 } # Security

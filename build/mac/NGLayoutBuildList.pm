@@ -449,8 +449,7 @@ EOS
     ActivateApplication('Mcvs');
 
     my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
-    my($nss_tab) = "NSS_30_BRANCH";
-    my($psm_tag) = "SECURITY_MAC_BRANCH";
+    my($nss_tag) = "NSS_CLIENT_TAG";
     my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH";
     
     #//
@@ -459,8 +458,8 @@ EOS
     if ($main::pull{moz})
     {
         $session->checkout("mozilla/nsprpub", $nsprpub_tag)            || print "checkout of nsprpub failed\n";        
-        $session->checkout("mozilla/security/nss", $nss_tab)           || print "checkout of security/nss failed\n";
-        $session->checkout("mozilla/security/psm", $psm_tag)           || print "checkout of security/psm failed\n";
+        $session->checkout("mozilla/security/nss",$nss_tag)            || print "checkout of security/nss failed\n";
+        $session->checkout("mozilla/security/psm")                     || print "checkout of security/psm failed\n";
         $session->checkout("DirectorySDKSourceC", $ldapsdk_tag)        || print "checkout of LDAP C SDK failed\n";
 
         # we need this jar.mn file on the jar branch
@@ -2361,18 +2360,17 @@ sub makeprops
 
 sub BuildSecurityProjects()
 {
-    unless( $main::build{security} ) { return; }
+    unless( $main::build{security} && $main::options{psm}) { return; }
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
     my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
 
     print("--- Starting Security projects ----\n");
-
     BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
-    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSMStubs$D.shlb", 0, 0, 0);
+    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSM$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
 	 # make properties files for PSM User Interface
@@ -2400,8 +2398,15 @@ sub BuildSecurityProjects()
     closedir(DOC_DIR);
     foreach $file (@doc_files) {
     	_copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
-    } 
-	
+    }
+     
+	#Build the loadable module that contains the root certs.
+
+	BuildOneProject(":mozilla:security:nss:macbuild:NSSckfw.mcp", "NSSckfw$D.o", 0, 0, 0);
+	BuildOneProject(":mozilla:security:nss:macbuild:LoadableRoots.mcp", "NSSckbi$D.shlb", 0, $main::ALIAS_SYM_FILES, 0);
+	# NSS doesn't properly load the shared library created above if it's an alias, so we'll just copy it so that
+	# all builds will just work.  It's 140K optimized and 164K debug so it's not too much disk space.
+	_copy(":mozilla:security:nss:macbuild:NSSckbi$D.shlb",$dist_dir."Essential Files:NSSckbi$D.shlb");
     print("--- Security projects complete ----\n");
 } # Security
 
