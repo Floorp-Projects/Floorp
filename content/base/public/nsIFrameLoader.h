@@ -105,6 +105,11 @@ public:
    * Get the frame loader from the frame loader owner.
    */
   NS_IMETHOD GetFrameLoader(nsIFrameLoader **aFrameLoader) = 0;
+
+  /**
+   * Sets (or clears) the frame loader for this content.
+   */
+  NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader) = 0;
 };
 
 

@@ -94,6 +94,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIRenderingContext.h"
 #include "nsIFrameFrame.h"
+#include "nsIPluginViewer.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -724,6 +725,9 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Destroy(nsIPresContext* aPresContext)
 {
+  
+  PRBool containsPluginViewer = PR_FALSE;
+
   if (mFrameLoader) {
     // Get the content viewer through the docshell, but don't call
     // GetDocShell() since we don't want to create one if we don't
@@ -745,15 +749,37 @@ nsHTMLFrameInnerFrame::Destroy(nsIPresContext* aPresContext)
         // Hide the content viewer now that the frame is going away...
 
         content_viewer->Hide();
+
+        // Full-page plugins don't have a DOM so they always need to be destroyed
+        // here, before this frame and window are destroyed. See bug 173938.
+        // When bug 90256 is fixed this code can probably go away.
+        nsCOMPtr<nsIPluginViewer> pluginViewer (do_QueryInterface(content_viewer));
+        if (pluginViewer)
+          containsPluginViewer = PR_TRUE;
       }
     }
   }
 
-  if (mFrameLoader && mOwnsFrameLoader) {
-    // We own this frame loader, and we're going away, so destroy our
-    // frame loader.
+  if (mFrameLoader) {
+    if (mOwnsFrameLoader) {
+      // We own this frame loader, and we're going away, so destroy our
+      // frame loader.
 
-    mFrameLoader->Destroy();
+      mFrameLoader->Destroy();
+
+    } else if (containsPluginViewer) {
+      // If this is a full-page plugin, we need to notify content to let go
+      // of the frame loader so that it will be re-recreated if this frame
+      // is shown later.
+      nsCOMPtr<nsIContent> content;
+      GetParentContent(getter_AddRefs(content));
+      nsCOMPtr<nsIFrameLoaderOwner> frame_loader_owner (do_QueryInterface(content));
+      if (frame_loader_owner)
+        frame_loader_owner->SetFrameLoader(nsnull);
+
+      mFrameLoader->Destroy();
+      mFrameLoader = nsnull;
+    }
   }
 
   return nsLeafFrame::Destroy(aPresContext);
