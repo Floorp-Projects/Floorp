@@ -227,18 +227,23 @@ calStorageCalendar.prototype = {
             }
         }
 
-        this.flushItem (aItem, null);
+        newItem = aItem.clone();
+        newItem.parent = this;
+        newItem.generation = 1;
+        newItem.makeImmutable();
+
+        this.flushItem (newItem, null);
 
         // notify the listener
         if (aListener)
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.ADD,
-                                           aItem.id,
-                                           aItem);
+                                           newItem.id,
+                                           newItem);
 
         // notify observers
-        this.observeAddItem(aItem);
+        this.observeAddItem(newItem);
     },
 
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
@@ -277,17 +282,21 @@ calStorageCalendar.prototype = {
             return;
         }
 
-        this.flushItem (aItem, olditem);
+        var newItem = aItem.clone();
+        newItem.generation += 1;
+        newItem.makeImmutable();
+
+        this.flushItem (newItem, olditem);
 
         if (aListener)
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.MODIFY,
-                                           aItem.id,
-                                           aItem);
+                                           newItem.id,
+                                           newItem);
 
         // notify observers
-        this.observeModifyItem(modifiedItem, aItem);
+        this.observeModifyItem(modifiedItem, newItem);
     },
 
     // void deleteItem( in string id, in calIOperationListener aListener );
