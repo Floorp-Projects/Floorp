@@ -166,7 +166,7 @@ function PromptDownloadMessages()
         else 
           gMailOfflinePrefs.setIntPref("offline.download.download_messages", 1);
         // download news, download mail, send unsent messages, go offline when done, msg window
-        gOfflineManager.synchronizeForOffline(false, true, false, true, msgWindow);
+        gOfflineManager.synchronizeForOffline(true, true, false, true, msgWindow);
         return true;
       }
       else if(buttonPressed.value == 1) {
