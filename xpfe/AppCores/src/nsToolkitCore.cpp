@@ -33,6 +33,7 @@
 #include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
+#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
@@ -167,8 +168,9 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   window = nsnull;
-  appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
-                               nsnull, nsnull, 615, 480);
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                               nsnull, 615, 480, &window);
 
   if (window != nsnull)
     window->Show(PR_TRUE);
@@ -201,8 +203,9 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsIWebShellWindow> window;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
-                               nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, NS_CHROME_ALL_CHROME,
+                               nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+                               getter_AddRefs(window));
 
   return rv;
 }
@@ -317,8 +320,9 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
 
   nsCOMPtr<nsIWebShellWindow>  window;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
-                               nsnull, cb, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, NS_CHROME_ALL_CHROME,
+                               cb, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+                               getter_AddRefs(window));
 
   return rv;
 }
@@ -327,9 +331,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsIWebShellWindow  *window;
-
-  window = nsnull;
 
   nsCOMPtr<nsIURI> urlObj;
 #ifndef NECKO
@@ -349,9 +350,9 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  rv = appShell->RunModalDialog(&window, urlObj, parent, nsnull, nsnull, 615, 480);
-  if (NS_SUCCEEDED(rv))
-    NS_RELEASE(window);
+  rv = appShell->RunModalDialog(nsnull, parent, urlObj,
+                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                                nsnull, 615, 480);
   return rv;
 }
 

@@ -1403,19 +1403,15 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
 
-  PRBool openAsDialog = ((aChromeMask & NS_CHROME_OPEN_AS_DIALOG) != 0);
-
   // XXX Check modal chrome flag to run a modal dialog!
 
   if ((aChromeMask & NS_CHROME_OPEN_AS_CHROME) != 0) {
     // Just do a nice normal create of a web shell and
     // return it immediately. 
     
-    if (openAsDialog)
-      rv = appShell->CreateDialogWindow(nsnull, nsnull, PR_FALSE, getter_AddRefs(newWindow),
-                                   nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
-    else rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, getter_AddRefs(newWindow),
-                                   nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+    rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, aChromeMask,
+                                 nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+                                 getter_AddRefs(newWindow));
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
       if (browser)
@@ -1457,11 +1453,9 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 #endif // NECKO
 
   if (NS_SUCCEEDED(rv)) {
-    if (openAsDialog)
-      rv = appShell->CreateDialogWindow(nsnull, urlObj, PR_FALSE, getter_AddRefs(newWindow),
-                                   nsnull, nsnull, 615, 480);
-    else rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, getter_AddRefs(newWindow),
-                                   nsnull, nsnull, 615, 480);
+    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, aChromeMask,
+                                 nsnull, 615, 480,
+                                 getter_AddRefs(newWindow));
   }
 
   nsIAppShell *subshell;

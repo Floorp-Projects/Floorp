@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<!DOCTYPE window>
+<!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
+<!-- Sample interface for bringing up and passing parameters to a dialog -->
+<xul:window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title = "Chrome Features Test">
+
+  <html:script>
+    <![CDATA[
+    var featureList = new Array("close", "titlebar", "resizable", "scrollbars",
+                        "chrome", "dialog", "modal",
+                        "menubar", "toolbar", "status", "location");
+
+    function OpenWindow(extension) {
+      var ctr;
+      var features;
+      var element;
+
+      features = "";
+
+      // read checkboxes
+      for (ctr = 0; ctr < featureList.length; ctr++) {
+        element = document.getElementById(featureList[ctr]);
+        if (element.checked) {
+          if (features.length > 0)
+            features = features + ",";
+          features = features + featureList[ctr];
+        } else {
+          if (featureList[ctr] == "titlebar" || featureList[ctr] == "close" ||
+              featureList[ctr] == "resizable") {
+            if (features.length > 0)
+              features = features + ",";
+            features = features + featureList[ctr] + "=no";
+          }
+        }
+      }
+      dump("******* " + features + "\n");
+      window.openDialog("resource://res/samples/dexparamdialog."+extension,
+        "New", features, {remind:true});
+    }
+    ]]>
+  </html:script>
+
+  <html:div>
+  <html:input type="checkbox" id="close"/>close<html:br/>
+  <html:input type="checkbox" id="titlebar"/>titlebar<html:br/>
+  <html:input type="checkbox" id="resizable"/>resizable<html:br/>
+  <html:input type="checkbox" id="scrollbars"/>scrollbars<html:br/>
+  <html:input type="checkbox" id="chrome"/>chrome<html:br/>
+  <html:input type="checkbox" id="dialog"/>dialog<html:br/>
+  <html:input type="checkbox" id="modal"/>modal<html:br/>
+  <html:input type="checkbox" id="menubar"/>menubar<html:br/>
+  <html:input type="checkbox" id="toolbar"/>toolbar<html:br/>
+  <html:input type="checkbox" id="status"/>status<html:br/>
+  <html:input type="checkbox" id="location"/>location<html:br/>
+  <xul:titledbutton value="Open HTML" onclick="OpenWindow('html')"
+                    style="background-color:rgb(192,192,192);"/>
+  <xul:titledbutton value="Open XUL" onclick="OpenWindow('xul')"
+                    style="background-color:rgb(192,192,192);"/>
+  </html:div>
+</xul:window>

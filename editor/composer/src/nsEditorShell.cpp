@@ -834,8 +834,8 @@ nsEditorShell::CreateWindowWithURL(const char* urlStr)
   if (NS_FAILED(rv) || !url)
     goto done;
 
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
-              nsnull, nsnull, 615, 480);
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
+              nsnull, 615, 480, getter_AddRefs(newWindow));
   
 done:
   /* Release the shell... */

@@ -19,6 +19,7 @@
 
 #include "nsIAppShellComponentImpl.h"
 
+#include "nsIBrowserWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
@@ -141,11 +142,11 @@ nsDownloadProgressDialog::Show() {
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 getter_AddRefs(newWindow),
-                                                 nsnull,
+                                                 NS_CHROME_ALL_CHROME,
                                                  this,
                                                  0,
-                                                 0 );
+                                                 0,
+                                                 getter_AddRefs(newWindow));
             if ( NS_SUCCEEDED( rv ) ) {
                 mWindow = newWindow;
             } else {
