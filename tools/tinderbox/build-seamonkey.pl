@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.69 $ ';
+$::Version = '$Revision: 1.70 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -114,7 +114,7 @@ sub ParseArgs {
 }
 
 sub ApplyArgs {
-    my ($args) = $_[0];
+    my ($args) = @_;
 
     my ($variable_name, $value);
     while (($variable_name, $value) = each %{$args}) {
@@ -129,13 +129,13 @@ sub ConditionalArgs {
 }
 
 sub print_log {
-    my ($text) = $_[0];
+    my ($text) = @_;
     print LOG $text;
     print $text;
 }
 
 sub run_shell_command {
-    my ($shell_command) = $_[0];
+    my ($shell_command) = @_;
     local $_;
 
     chomp($shell_command);
@@ -147,7 +147,7 @@ sub run_shell_command {
 
 sub adjust_start_time {
     # Allows the start time to match up with the update times of a mirror.
-    my ($start_time) = $_[0];
+    my ($start_time) = @_;
 
     # Since we are not pulling for cvs-mirror anymore, just round times
     # to 1 minute intervals to make them nice and even.
@@ -363,7 +363,7 @@ sub run_tests {
 }
 
 sub BinaryExists {
-    my ($binary) = $_[0];
+    my ($binary) = @_;
     my ($binary_basename) = basename($binary);
 
     if (not -e $binary) {
@@ -382,7 +382,7 @@ sub BinaryExists {
 }
 
 sub DeleteBinary {
-    my ($binary) = $_[0];
+    my ($binary) = @_;
     my ($binary_basename) = basename($binary);
 
     if (BinaryExists($binary)) {
@@ -651,7 +651,7 @@ sub RunFileBasedTest {
 
 
 sub RunBloatTest {
-    my ($binary, $build_dir) = $_[0];
+    my ($binary, $build_dir) = @_;
     my $binary_basename = basename($binary);
     my $binary_dir = dirname($binary);
     my $binary_log = "$build_dir/bloat-cur.log";
