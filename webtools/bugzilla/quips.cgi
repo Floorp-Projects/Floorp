@@ -37,7 +37,7 @@ use lib qw(.);
 require "CGI.pl";
 
 ConnectToDatabase();
-quietly_check_login();
+confirm_login();
 
 my $action = $::FORM{'action'} || "";
 
