@@ -19,8 +19,8 @@ Product Name=$ProductName$
 Main App=[Product OS2INIKey]
 Decrypt Main App=TRUE
 
-Key=[Product CurrentVersion]\Uninstall
-Decrypt Key=TRUE
+App=[Product CurrentVersion]
+Decrypt App=TRUE
 
 Uninstall Filename=$UninstallFile$
 Defaults Info Filename=defaults_info.ini
@@ -35,6 +35,9 @@ Message=$ProductName$ is detected to be currently running.  Please quit $Product
 ; set here because Mozilla requires a way to shut down it's turbo mode.
 Extra Cmd Parameter=-kill
 
+[Check Instance1]
+Process Name=mozturbo.exe
+Extra Cmd Parameter=-u
 
 [Dialog Uninstall]
 FONTNAME=WarpSans
