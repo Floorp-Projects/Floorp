@@ -180,27 +180,16 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     // for measuring the height, width of the text
     // if there is no value attr or its length is 0
     // then go to the generated content to get it
-    PRBool getContent = PR_FALSE;
     nsAutoString value;
     GetValue(&value);
-    PRInt32 type;
-    GetType(&type);
-    if ((NS_FORM_INPUT_SUBMIT == type) ||
-        (NS_FORM_INPUT_RESET == type)) {
-      getContent = value.Length() == 0;
-    } else {
-      if (value.Length() == 0) {
-        value = "  ";
-      }
-    }
 
-    // if there was not value specified for a reset & submit element
+    // if there was no value specified 
     // then go get the content of the generated content
     // we can't make any assumption as to what the default would be
     // because of the value is specified in the html.css and for
     // for non-english platforms it might not be the string 
     // "Reset" or "Submit Query"
-    if (getContent) {
+    if (value.Length() == 0) {
       value = "  ";
       // The child frame will br the generated content
       nsIFrame* fKid;
@@ -295,7 +284,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
       aReflowState.reflowCommand->GetNext(nextFrame);  
     }
   }
-  printf("             is: %d %d\n", aDesiredSize.width, aDesiredSize.height);
+
   nsHTMLReflowMetrics childReflowMetrics(aDesiredSize);
   nsRect kidRect;
   firstKid->GetRect(kidRect);
@@ -354,7 +343,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXXX
   COMPARE_QUIRK_SIZE("nsGfxButtonControlFrame", 84, 24) // with the text "Press Me" in it
 #endif
   aStatus = NS_FRAME_COMPLETE;
