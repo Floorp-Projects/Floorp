@@ -145,9 +145,6 @@ PREF_Cleanup();
 void
 PREF_CleanupPrefs();
 
-void
-PREF_CleanupJSState();
-
 /*
 // <font color=blue>
 // Given a path to a local Lock file, unobscures the file (not implemented yet)

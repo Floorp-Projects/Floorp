@@ -237,7 +237,6 @@ nsPref::nsPref()
         ++mRefCnt;
         rv = observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
         rv = observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
-        rv = observerService->AddObserver(this, NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
         --mRefCnt;
     }
 }
@@ -639,7 +638,7 @@ NotifyObserver(const char *newpref, void *data)
 {
     nsCOMPtr<nsIObserver> observer = NS_STATIC_CAST(nsIObserver *, data);
     observer->Observe(observer, NS_LITERAL_STRING("nsPref:changed"),
-                      NS_ConvertASCIItoUCS2(newpref).get());
+                      NS_ConvertASCIItoUCS2(newpref));
     return 0;
 }
 
@@ -845,7 +844,7 @@ NS_IMETHODIMP nsPref::SetCharPref(const char *pref,const char* value)
 NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
 {
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
-    return SetCharPref(pref, NS_ConvertUCS2toUTF8(value).get());
+    return SetCharPref(pref, NS_ConvertUCS2toUTF8(value));
 }
 
 NS_IMETHODIMP nsPref::SetIntPref(const char *pref,PRInt32 value)
@@ -908,7 +907,7 @@ NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref,
                                             const PRUnichar *value)
 {
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
-    return SetDefaultCharPref(pref, NS_ConvertUCS2toUTF8(value).get());
+    return SetDefaultCharPref(pref, NS_ConvertUCS2toUTF8(value));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,PRInt32 value)
@@ -1495,11 +1494,6 @@ NS_IMETHODIMP nsPref::Observe(nsISupports *aSubject, const PRUnichar *aTopic, co
     else if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC)) {
         PREF_ClearAllUserPrefs();
         rv = ReadUserPrefs();
-    }
-    else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        // we're shutting down now, so we need to clean up and
-        // eliminate our reference to the JS runtime
-        PREF_CleanupJSState();
     }
     return rv;
 }
