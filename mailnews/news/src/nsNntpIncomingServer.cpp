@@ -94,13 +94,20 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
 NS_IMETHODIMP
 nsNntpIncomingServer::SetNewsrcFilePath(nsIFileSpec *spec)
 {
-    if (spec) {
-        spec->CreateDir();
-        return SetFileValue("newsrc.file", spec);
-    }
-    else {
-	return NS_ERROR_FAILURE;
-    }
+	nsresult rv;
+    if (!spec) {
+		return NS_ERROR_FAILURE;
+	}
+		
+	PRBool exists;
+		
+	rv = spec->Exists(&exists);
+	if (!exists) {
+		rv = spec->Touch();
+		if (NS_FAILED(rv)) return rv;
+	}
+			
+    return SetFileValue("newsrc.file", spec);
 }          
 
 NS_IMETHODIMP
