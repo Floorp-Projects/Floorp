@@ -448,11 +448,6 @@ static PRBool InitStringBundle()
   return PR_TRUE;
 }
 
-NS_HIDDEN_(void) NS_ShutdownCSSParser()
-{
-  NS_IF_RELEASE(gStringBundle);
-}
-
 #define ENSURE_STRINGBUNDLE \
   PR_BEGIN_MACRO if (!InitStringBundle()) return; PR_END_MACRO
 
@@ -546,6 +541,14 @@ static void ReportUnexpectedTokenParams(nsCSSScanner *sc, nsCSSToken& tok,
 #define CLEAR_ERROR()
 
 #endif
+
+NS_HIDDEN_(void) NS_ShutdownCSSParser()
+{
+#ifdef CSS_REPORT_PARSE_ERRORS
+  NS_IF_RELEASE(gStringBundle);
+#endif
+}
+
 
 CSSParserImpl::CSSParserImpl()
   : mToken(),
