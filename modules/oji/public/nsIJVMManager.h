@@ -40,11 +40,31 @@
 // This interface defines additional entry points that are available
 // to JVM plugins for browsers that support JVM plugins.
 
+
+#define NS_IJVMMANAGER_IID                           \
+{ /* a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe */         \
+    0xa1e5ed50,                                      \
+    0xaa4a,                                          \
+    0x11d1,                                          \
+    {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
+}
+
+#define NS_JVMMANAGER_CID                            \
+{ /* 38e7ef10-58df-11d2-8164-006008119d7a */         \
+    0x38e7ef10,                                      \
+    0x58df,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 class nsIJVMPlugin;
 class nsISecureEnv;
 
 class nsIJVMManager : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMMANAGER_IID)
+	NS_DEFINE_STATIC_CID_ACCESSOR(NS_JVMMANAGER_CID)
+
     /**
      * Creates a proxy JNI with an optional secure environment (which can be NULL).
      * There is a one-to-one correspondence between proxy JNIs and threads, so
@@ -62,22 +82,6 @@ public:
 	   GetProxyJNI(JNIEnv** outProxyEnv) = 0;
 
 };
-
-#define NS_IJVMMANAGER_IID                           \
-{ /* a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe */         \
-    0xa1e5ed50,                                      \
-    0xaa4a,                                          \
-    0x11d1,                                          \
-    {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
-}
-
-#define NS_JVMMANAGER_CID                            \
-{ /* 38e7ef10-58df-11d2-8164-006008119d7a */         \
-    0x38e7ef10,                                      \
-    0x58df,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
