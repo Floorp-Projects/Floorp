@@ -146,7 +146,38 @@ Contributor(s): ______________________________________. -->
                        oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
       </hbox>
- 
+      <spacer flex="1"/>
+      <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
+                     label="&printButton.label;" persist="hidden"
+                     oncommand="if (event.target==this) BrowserPrint();"
+                     tooltiptext="&printButton.tooltip;">  
+        <menupopup id="printMenu">
+          <menuitem id="printMenuItemToolbar" label="&printCmd.label;" accesskey="&printCmd.accesskey;"
+                    default="true" oncommand="BrowserPrint()"/>
+          <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"
+                    oncommand="setTimeout(BrowserPrintPreview, 0);"/>
+        </menupopup>
+      </toolbarbutton>
+
+      <hbox id="throbber-box" align="center">
+        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+                tooltiptext="&throbber.tooltip;"/>
+      </hbox>
+      
+      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+                       oncommand="window.minimize();"/>
+
+        <toolbarbutton id="restore-button" class="toolbarbutton-1"
+                       oncommand="BrowserFullScreen();"/>
+
+        <toolbarbutton id="close-button" class="toolbarbutton-1"
+                       oncommand="window.close();"/>
+      </hbox>
+    </toolbar>
+  
+    <toolbar id="LocationToolbar" class="chromeclass-toolbar" persist="collapsed"
+             tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-inner" flex="1">
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
@@ -196,36 +227,8 @@ Contributor(s): ______________________________________. -->
                 ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
                 tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
-
-      <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
-                     label="&printButton.label;" persist="hidden"
-                     oncommand="if (event.target==this) BrowserPrint();"
-                     tooltiptext="&printButton.tooltip;">  
-        <menupopup id="printMenu">
-          <menuitem id="printMenuItemToolbar" label="&printCmd.label;" accesskey="&printCmd.accesskey;"
-                    default="true" oncommand="BrowserPrint()"/>
-          <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"
-                    oncommand="setTimeout(BrowserPrintPreview, 0);"/>
-        </menupopup>
-      </toolbarbutton>
-
-      <hbox id="throbber-box" align="center">
-        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
-                tooltiptext="&throbber.tooltip;"/>
-      </hbox>
-      
-      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
-        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
-                       oncommand="window.minimize();"/>
-
-        <toolbarbutton id="restore-button" class="toolbarbutton-1"
-                       oncommand="BrowserFullScreen();"/>
-
-        <toolbarbutton id="close-button" class="toolbarbutton-1"
-                       oncommand="window.close();"/>
-      </hbox>
     </toolbar>
-  
+
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
              ondragover="nsDragAndDrop.dragOver(event, personalToolbarObserver);"
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
