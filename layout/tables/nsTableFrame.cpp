@@ -3674,7 +3674,7 @@ nsTableFrame::DistributeHeightToRows(nsIPresContext*          aPresContext,
     }
   }
   if (divisor <= 0) {
-    NS_ASSERTION(PR_FALSE, "invlaid divisor");
+    NS_ERROR("invalid divisor");
     return;
   }
 
