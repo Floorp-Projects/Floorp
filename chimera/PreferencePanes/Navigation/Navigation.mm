@@ -58,12 +58,13 @@ const int kDefaultExpireDays = 9;
 
   BOOL gotPref;
   
-  if (([self getIntPref:"browser.startup.page" withSuccess:&gotPref] == 0) && gotPref)
+  // 0: blank page. 1: home page. 2: last page visited. Our behaviour here should
+  // match what the browser does when the prefs don't exist.
+  if (([self getIntPref:"browser.startup.page" withSuccess:&gotPref] == 1) || !gotPref)
     [checkboxNewWindowBlank setState:YES];
   
-  if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 0) && gotPref)
+  if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 1))
     [checkboxNewTabBlank setState:YES];
-  
   
   int expireDays = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
   if (!gotPref)
@@ -88,11 +89,14 @@ const int kDefaultExpireDays = 9;
 {
   if (!mPrefService)
     return;
-
+  
   // only save the home page pref if it's not the system one
   if (![checkboxUseSystemHomePage state])
     [self setPref: "browser.startup.homepage" toString: [textFieldHomePage stringValue]];
-
+  
+  // ensure that the prefs exist
+  [self setPref:"browser.startup.page"   toInt: [checkboxNewWindowBlank state] ? 1 : 0];
+  [self setPref:"browser.tabs.startPage" toInt: [checkboxNewTabBlank    state] ? 1 : 0];
 }
 
 - (IBAction)openSystemInternetPanel:(id)sender
@@ -142,12 +146,12 @@ const int kDefaultExpireDays = 9;
 
   char *prefName = NULL;
   if (sender == checkboxNewTabBlank)
-    prefName = "browser.tabs.page";
+    prefName = "browser.tabs.startPage";
   else if (sender == checkboxNewWindowBlank)
     prefName = "browser.startup.page";
 
   if (prefName)
-    [self setPref:prefName toInt: [sender state] ? 0 : 1];
+    [self setPref:prefName toInt: [sender state] ? 1 : 0];
 }
 
 - (IBAction)historyDaysModified:(id)sender
@@ -259,7 +263,7 @@ const int kDefaultExpireDays = 9;
 - (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
 {
   PRInt32 intPref = 0;
-  nsresult rv = mPrefService->GetBoolPref(prefName, &intPref);
+  nsresult rv = mPrefService->GetIntPref(prefName, &intPref);
   if (outSuccess)
     *outSuccess = NS_SUCCEEDED(rv);
   return intPref;
