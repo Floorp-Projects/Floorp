@@ -140,6 +140,22 @@ void* nsDeque::Pop() {
 }
 
 /**
+ * This method gets called you want to peek at the topmost
+ * member without removing it.
+ *
+ * @update	gess4/18/98
+ * @param   nada
+ * @return  last item in container
+ */
+void* nsDeque::Peek() {
+  void* result=0;
+  if(mSize>0) {
+    result=mData[mOrigin];
+  }
+  return result;
+}
+
+/**
  * Remove and return the last item in the container.
  * 
  * @update	gess4/18/98
@@ -219,7 +235,25 @@ nsDequeIterator nsDeque::End(void) const{
  * @param   aFunctor object to call for each member
  * @return  *this
  */
-const void* nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
+const void nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
+  int i=0;
+  for(i=0;i<mSize;i++){
+    void* obj=ObjectAt(i);
+    obj=aFunctor(obj);
+  }
+}
+
+/**
+ * Call this method when you wanto to iterate all the
+ * members of the container, passing a functor along
+ * to call your code. Iteration continues until your
+ * functor returns a non-null.
+ *
+ * @update	gess4/20/98
+ * @param   aFunctor object to call for each member
+ * @return  *this
+ */
+const void* nsDeque::FirstThat(nsDequeFunctor& aFunctor) const{
   int i=0;
   for(i=0;i<mSize;i++){
     void* obj=ObjectAt(i);
@@ -229,6 +263,7 @@ const void* nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
   }
   return 0;
 }
+
 
 /******************************************************
  * Here comes the nsDequeIterator class...
@@ -378,10 +413,22 @@ void* nsDequeIterator::GetCurrent(void) {
  * @param   aFunctor object to call for each member
  * @return  *this
  */
-const void* nsDequeIterator::ForEach(nsDequeFunctor& aFunctor) const{
-  return mDeque.ForEach(aFunctor);
+const void nsDequeIterator::ForEach(nsDequeFunctor& aFunctor) const{
+  mDeque.ForEach(aFunctor);
 }
 
+/**
+ * Call this method when you wanto to iterate all the
+ * members of the container, passing a functor along
+ * to call your code.
+ *
+ * @update	gess4/20/98
+ * @param   aFunctor object to call for each member
+ * @return  *this
+ */
+const void* nsDequeIterator::FirstThat(nsDequeFunctor& aFunctor) const{
+  return mDeque.FirstThat(aFunctor);
+}
 
 /**
  * conduct automated self test for this class

@@ -102,6 +102,15 @@ friend class nsDequeIterator;
    * @return  ptr to first item in container
    */
   void* Pop(void);
+
+  /**
+   * Return topmost item without removing it.
+   * 
+   * @update	gess4/18/98
+   * @param   none
+   * @return  ptr to first item in container
+   */
+  void* Peek(void);
   
   /**
    * Remove and return the last item in the container.
@@ -157,7 +166,19 @@ friend class nsDequeIterator;
    * @param   aFunctor object to call for each member
    * @return  *this
    */
-  const void* ForEach(nsDequeFunctor& aFunctor) const;
+  const void ForEach(nsDequeFunctor& aFunctor) const;
+
+  /**
+   * Call this method when you wanto to iterate all the
+   * members of the container, passing a functor along
+   * to call your code. This process will interupt if
+   * your function returns a null to this iterator.
+   *
+   * @update	gess4/20/98
+   * @param   aFunctor object to call for each member
+   * @return  *this
+   */
+  const void* FirstThat(nsDequeFunctor& aFunctor) const;
 
   /**
    * Perform automated selftest on the deque
@@ -346,8 +367,19 @@ public:
    * @param   aFunctor object to call for each member
    * @return  *this
    */
-  const void* ForEach(nsDequeFunctor& aFunctor) const;
+  const void ForEach(nsDequeFunctor& aFunctor) const;
   
+  /**
+   * Call this method when you wanto to iterate all the
+   * members of the container, passing a functor along
+   * to call your code.
+   *
+   * @update	gess4/20/98
+   * @param   aFunctor object to call for each member
+   * @return  *this
+   */
+  const void* FirstThat(nsDequeFunctor& aFunctor) const;
+
   protected:
         PRInt32         mIndex;
         const nsDeque&  mDeque;
