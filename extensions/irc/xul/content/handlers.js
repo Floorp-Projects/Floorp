@@ -1305,8 +1305,11 @@ function my_whoisreply (e)
 CIRCNetwork.prototype.on330 = /* ircu's 330 numeric ("X is logged in as Y") */
 function my_330 (e)
 {
-    this.display (getMsg(MSG_FMT_LOGGED_ON, [e.decodeParam(2), e.params[3]]),
-                  "330");
+    var msg = getMsg(MSG_FMT_LOGGED_ON, [e.decodeParam(2), e.params[3]]);
+    if (e.user)
+        e.user.display(msg, "330");
+    else
+        this.display(msg, "330");
 }
 
 CIRCNetwork.prototype.on341 = /* invite reply */
