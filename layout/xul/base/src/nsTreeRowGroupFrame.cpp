@@ -1531,6 +1531,14 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
   MarkTreeAsDirty(aPresContext, treeFrame);
 }
 
+void
+nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
+{
+
+
+
+}
+
 void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)
 {
   NS_IF_RELEASE(mContentChain);
