@@ -2315,13 +2315,13 @@ nsXULDocument::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
     }
 #endif
 
-    nsCOMPtr<nsIAtom> name;
-    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> name, prefix;
 
     *aReturn = nsnull;
 
     // parse the user-provided string into a tag name and a namespace ID
-    rv = ParseTagString(aTagName, *getter_AddRefs(name), nameSpaceID);
+    rv = ParseTagString(aTagName, *getter_AddRefs(name),
+                        *getter_AddRefs(prefix));
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
         char* tagNameStr = aTagName.ToNewCString();
@@ -2332,8 +2332,14 @@ nsXULDocument::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
         return rv;
     }
 
+    nsCOMPtr<nsINodeInfo> ni;
+
+    // CreateElement in the XUL document defaults to the XUL namespace.
+    mNodeInfoManager->GetNodeInfo(name, prefix, kNameSpaceID_XUL,
+                                  *getter_AddRefs(ni));
+
     nsCOMPtr<nsIContent> result;
-    rv = CreateElement(nameSpaceID, name, getter_AddRefs(result));
+    rv = CreateElement(ni, getter_AddRefs(result));
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
@@ -2619,7 +2625,7 @@ nsXULDocument::GetCharacterSet(nsString& aCharacterSet)
   return GetDocumentCharacterSet(aCharacterSet);
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP    
 nsXULDocument::CreateElementWithNameSpace(const nsString& aTagName,
                                             const nsString& aNameSpace,
                                             nsIDOMElement** aResult)
@@ -2652,8 +2658,13 @@ nsXULDocument::CreateElementWithNameSpace(const nsString& aTagName,
     rv = mNameSpaceManager->GetNameSpaceID(aNameSpace, nameSpaceID);
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsINodeInfo> ni;
+    // XXX This whole method is depricated!
+    mNodeInfoManager->GetNodeInfo(name, nsnull, nameSpaceID,
+                                  *getter_AddRefs(ni));
+
     nsCOMPtr<nsIContent> result;
-    rv = CreateElement(nameSpaceID, name, getter_AddRefs(result));
+    rv = CreateElement(ni, getter_AddRefs(result));
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
@@ -2771,8 +2782,58 @@ nsXULDocument::CreateElementNS(const nsString& aNamespaceURI,
                                const nsString& aQualifiedName,
                                nsIDOMElement** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    nsresult rv;
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+      char* namespaceCStr = aNameSpace.ToNewCString();
+      char* tagCStr = aTagName.ToNewCString();
+
+      PR_LOG(gXULLog, PR_LOG_DEBUG,
+             ("xul[CreateElementWithNameSpace] [%s]:%s", namespaceCStr, tagCStr));
+
+      nsCRT::free(tagCStr);
+      nsCRT::free(namespaceCStr);
+    }
+#endif
+
+    nsCOMPtr<nsIAtom> name, prefix;
+
+    // parse the user-provided string into a tag name and prefix
+    rv = ParseTagString(aQualifiedName, *getter_AddRefs(name),
+                        *getter_AddRefs(prefix));
+    if (NS_FAILED(rv)) {
+#ifdef PR_LOGGING
+        char* tagNameStr = aTagName.ToNewCString();
+        PR_LOG(gXULLog, PR_LOG_ERROR,
+               ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
+        nsCRT::free(tagNameStr);
+#endif
+        return rv;
+    }
+
+    // Get The real namespace ID
+    PRInt32 nameSpaceID;
+    rv = mNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsINodeInfo> ni;
+    // XXX This whole method is depricated!
+    mNodeInfoManager->GetNodeInfo(name, prefix, nameSpaceID,
+                                  *getter_AddRefs(ni));
+
+    nsCOMPtr<nsIContent> result;
+    rv = CreateElement(ni, getter_AddRefs(result));
+    if (NS_FAILED(rv)) return rv;
+
+    // get the DOM interface
+    rv = result->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aReturn);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3863,34 +3924,12 @@ nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
 
 
 nsresult
-nsXULDocument::ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID)
+nsXULDocument::ParseTagString(const nsString& aTagName, nsIAtom*& aName,
+                              nsIAtom*& aPrefix)
 {
-    // Parse the tag into a name and a namespace ID. This is slightly
-    // different than nsIContent::ParseAttributeString() because we
-    // take the default namespace into account (rather than just
-    // assigning "no namespace") in the case that there is no
-    // namespace prefix present.
+    // Parse the tag into a name and prefix
 
-static char kNameSpaceSeparator = ':';
-
-    // XXX this is a gross hack, but it'll carry us for now. We parse
-    // the tag name using the root content, which presumably has all
-    // the namespace info we need.
-    NS_PRECONDITION(mRootContent != nsnull, "not initialized");
-    if (! mRootContent)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(mRootContent) );
-    if (! xml) return NS_ERROR_UNEXPECTED;
-
-    nsresult rv;
-    nsCOMPtr<nsINameSpace> ns;
-    rv = xml->GetContainingNameSpace(*getter_AddRefs(ns));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(ns != nsnull, "expected xml namespace info to be available");
-    if (! ns)
-        return NS_ERROR_UNEXPECTED;
+    static char kNameSpaceSeparator = ':';
 
     nsAutoString prefix;
     nsAutoString name(aTagName);
@@ -3900,15 +3939,11 @@ static char kNameSpaceSeparator = ':';
         name.Cut(0, nsoffset+1);
     }
 
-    // Figure out the namespace ID
-    nsCOMPtr<nsIAtom> nameSpaceAtom;
     if (0 < prefix.Length())
-        nameSpaceAtom = getter_AddRefs(NS_NewAtom(prefix));
-
-    rv = ns->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
-    if (NS_FAILED(rv)) return rv;
+        aPrefix = NS_NewAtom(prefix);
 
     aName = NS_NewAtom(name);
+
     return NS_OK;
 }
 
@@ -4177,23 +4212,20 @@ nsXULDocument::RebuildWidgetItem(nsIContent* aElement)
 
 
 nsresult
-nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
-                             nsIAtom* aTag,
-                             nsIContent** aResult)
+nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 {
+    NS_ENSURE_ARG_POINTER(aNodeInfo);
+    NS_ENSURE_ARG_POINTER(aResult);
+
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceID,
-                               *getter_AddRefs(nodeInfo));
-
-    if (aNameSpaceID == kNameSpaceID_XUL) {
-        rv = nsXULElement::Create(nodeInfo, getter_AddRefs(result));
+    if (aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
+        rv = nsXULElement::Create(aNodeInfo, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
-    else if (aNameSpaceID == kNameSpaceID_HTML) {
-        rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
+    else if (aNodeInfo->NamespaceEquals(kNameSpaceID_HTML)) {
+        rv = gHTMLElementFactory->CreateInstanceByTag(aNodeInfo,
                                                       getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
@@ -4201,10 +4233,13 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
+        PRInt32 namespaceID;
+        aNodeInfo->GetNamespaceID(namespaceID);
 
-        rv = elementFactory->CreateInstanceByTag(nodeInfo,
+        nsCOMPtr<nsIElementFactory> elementFactory;
+        GetElementFactory(namespaceID, getter_AddRefs(elementFactory));
+
+        rv = elementFactory->CreateInstanceByTag(aNodeInfo,
                                                  getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
