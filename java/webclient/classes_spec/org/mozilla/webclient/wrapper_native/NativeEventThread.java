@@ -136,7 +136,7 @@ public NativeEventThread(String threadName, BrowserControl yourBrowserControl)
 public void delete()
 {
     // setting this to null causes the run thread to exit
-    synchronized(this.browserControlCanvas.getTreeLock()) {
+    synchronized(this) {
         // this has to be inside the synchronized block!
         browserControlCanvas = null;
     }
@@ -191,12 +191,14 @@ public void run()
     }
 
     while (true) {
-        synchronized (this.browserControlCanvas.getTreeLock()) {
+        synchronized (this) {
             // this has to be inside the synchronized block!
             if (null == this.browserControlCanvas) {
                 return;
             }
-            nativeProcessEvents(nativeWebShell);
+            synchronized (this.browserControlCanvas.getTreeLock()) {
+                nativeProcessEvents(nativeWebShell);
+            }
             
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();
@@ -230,7 +232,7 @@ void addListener(WebclientEventListener newListener)
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
 
-    synchronized (this.browserControlCanvas.getTreeLock()) {
+    synchronized (this) {
         if (null == listenersToAdd) {
             listenersToAdd = new Vector();
         }
@@ -258,7 +260,6 @@ void nativeEventOccurred(WebclientEventListener target, long eventType)
         WebclientEvent event = null;
         
         if (target instanceof DocumentLoadListener) {
-            System.out.println("debug: edburns: creating DocumentLoadEvent");
             event = new DocumentLoadEvent(this, eventType);
         }
         // else...
@@ -266,7 +267,6 @@ void nativeEventOccurred(WebclientEventListener target, long eventType)
         // PENDING(edburns): maybe we need to put this in some sort of
         // event queue?
 
-        System.out.println("About to call eventDispatched on listener");
         target.eventDispatched(event);
     }
 }

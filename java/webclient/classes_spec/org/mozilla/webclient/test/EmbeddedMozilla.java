@@ -29,9 +29,6 @@ package org.mozilla.webclient.test;
  * EmbeddedMozilla.java
  */
 
-import java.awt.*;
-import java.awt.event.*;
-
 import org.mozilla.webclient.*;
 import org.mozilla.util.Assert;
 
@@ -41,100 +38,48 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.2 2000/03/13 18:42:02 edburns%acm.org Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.3 2000/04/06 17:33:33 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
-public class EmbeddedMozilla extends Frame implements ActionListener
+public class EmbeddedMozilla 
 {
 
 public static String binDir;
 public static String url;
-public static int winCount = 0;
-public static String NEW_BUTTON_LABEL = "New Window";
-
-public static int width = 200;
-public static int height = 100;
-
-private Panel buttonPanel; 
+public static int count = 0;
+public EMWindow[] EMWindow_Arr;
 
 public static void printUsage()
 {
-    System.out.println("usage: java org.mozilla.webclient.test.EMWindow <path> [url]");
+    System.out.println("usage: java org.mozilla.webclient.test.EmbeddedMozilla <path> [url]");
     System.out.println("       <path> is the absolute path to the native browser bin directory, ");
     System.out.println("       including the bin.");
 }
 	
 public EmbeddedMozilla() 
 {
-    super("EmbeddedMozilla Launcher");
-    setSize(200, 100);
-    buttonPanel = new Panel();
-    buttonPanel.setLayout(new GridBagLayout());
-    
-    // Add the buttons
-    makeItem(buttonPanel, NEW_BUTTON_LABEL,    0, 0, 1, 1, 0.0, 0.0);
-    add(buttonPanel, BorderLayout.CENTER);
-
-    addWindowListener(new WindowAdapter() {
-public void windowClosing(WindowEvent e) {
-    System.out.println("Got windowClosing");
-    System.out.println("bye");
-    System.exit(0);
-    // should close the BrowserControlCanvas
+  CreateEMWindow();
 }
  
-public void windowClosed(WindowEvent e) { 
-    System.out.println("Got windowClosed");
+public void CreateEMWindow()
+{
+  System.out.println("Creating new EmbeddedMozilla window");
+  EMWindow aEMWindow ;
+  aEMWindow = new EMWindow("EmbeddedMozila#" + count+1,
+                                 binDir, url, count, this);
+  count++;
+}
+
+public void DestroyEMWindow(int winNumber) {
+  count--;
+  if (count == 0) {
+    System.out.println("closing application");
     System.exit(0);
+  }
 }
-    });
-        
-    pack();
-    show();
-    toFront();
-}
-
-public void actionPerformed (ActionEvent evt) 
-{
-    String command = evt.getActionCommand();
-    EMWindow newWindow;
-    
-    if (command.equals(NEW_BUTTON_LABEL)) {
-        System.out.println("Creating new EmbeddedMozilla window");
-        newWindow = new EMWindow("EmbeddedMozila#" + winCount++,
-                                 binDir, url);
-    }
-} // actionPerformed()
-
-	
-private void makeItem (Panel p, Object arg, int x, int y, int w, 
-                       int h, double weightx, double weighty) 
-{
-    GridBagLayout gbl = (GridBagLayout) p.getLayout();
-    GridBagConstraints c = new GridBagConstraints();
-    Component comp;
-    
-    c.fill = GridBagConstraints.BOTH;
-    c.gridx = x;
-    c.gridy = y;
-    c.gridwidth = w;
-    c.gridheight = h;
-    c.weightx = weightx;
-    c.weighty = weighty;
-    if (arg instanceof String) {
-        Button b;
-        
-        comp = b = new Button((String) arg);
-        b.addActionListener(this);
-        
-        p.add(comp);
-        gbl.setConstraints(comp, c);
-    }
-} // makeItem()
-
 
 public static void main(String [] arg)
 {
@@ -147,6 +92,7 @@ public static void main(String [] arg)
     // set class vars used in EmbeddedMozilla ctor 
     binDir = arg[0];
     url = urlArg;
+
     EmbeddedMozilla em = new EmbeddedMozilla();
 }
 

@@ -34,12 +34,15 @@ import java.awt.event.*;
 
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
+import javax.swing.*;
 
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.*;
 
 import org.mozilla.webclient.*;
 import org.mozilla.util.Assert;
+
 
 /**
  *
@@ -47,15 +50,17 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.1 2000/03/13 18:41:51 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.2 2000/04/06 17:33:29 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
-public class EMWindow extends Frame implements ActionListener, DocumentLoadListener {
+public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener {
     static final int defaultWidth = 640;
     static final int defaultHeight = 480;
+
+  private int winNum;
 
     private TextField		urlField;
 	private BrowserControl	browserControl;
@@ -67,18 +72,48 @@ public class EMWindow extends Frame implements ActionListener, DocumentLoadListe
 	private TreeModel	    bookmarksTree;
 	private Panel			controlPanel;
 	private Panel			buttonsPanel;
+        private FindDialog           findDialog = null;
+        private MenuBar             menuBar;
 
-    public static void main (String[] arg) {
-    } // main()
-    
-    public EMWindow (String title, String binDir, String url) 
+  private EmbeddedMozilla creator;
+
+
+  public static void main(String [] arg)
     {
-		super(title);
+    }
+
+
+    public EMWindow (String title, String binDir, String url, int winnum, EmbeddedMozilla Creator) 
+    {
+	super(title);
+	creator = Creator;
+	winNum = winnum;
         System.out.println("constructed with binDir: " + binDir + " url: " + 
                            url);
-	setLocation(0, EmbeddedMozilla.height);
 		setSize(defaultWidth, defaultHeight);
 	
+		// Create the Menu Bar
+		menuBar = new MenuBar();
+		this.setMenuBar(menuBar);
+		Menu fileMenu = new Menu("File");
+		Menu viewMenu = new Menu("View");
+		Menu searchMenu = new Menu("Search");
+		MenuItem newItem = new MenuItem("New Window");
+		MenuItem closeItem = new MenuItem("Close");
+		MenuItem findItem = new MenuItem("Find");
+		MenuItem findNextItem = new MenuItem("Find Next");
+		menuBar.add(fileMenu);
+		menuBar.add(viewMenu);
+		menuBar.add(searchMenu);
+		fileMenu.add(newItem);
+		newItem.addActionListener(this);
+		fileMenu.add(closeItem);
+		closeItem.addActionListener(this);
+		searchMenu.add(findItem);
+		findItem.addActionListener(this);
+		searchMenu.add(findNextItem);
+		findNextItem.addActionListener(this);
+
 		// Create the URL field
 		urlField = new TextField("", 30);
         urlField.addActionListener(this);        	
@@ -128,6 +163,7 @@ public class EMWindow extends Frame implements ActionListener, DocumentLoadListe
 		System.out.println("destroying the BrowserControl");
 		EMWindow.this.delete();
 				// should close the BrowserControlCanvas
+		creator.DestroyEMWindow(winNum);
 		    }
 		    
 		    public void windowClosed(WindowEvent e) { 
@@ -239,9 +275,9 @@ public void delete()
 }
 
 
-    public void actionPerformed (ActionEvent evt) {
+ public void actionPerformed (ActionEvent evt) {
     	String command = evt.getActionCommand();
-
+	
 
         try {
             Navigation navigation = (Navigation)
@@ -250,7 +286,35 @@ public void delete()
                browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
             History history = (History)
                 browserControl.queryInterface(BrowserControl.HISTORY_NAME);
-            if (command.equals("Stop")) {
+            if (evt.getSource() instanceof MenuItem) {
+	      if (command.equals("New Window")) {
+		creator.CreateEMWindow();
+	      }
+	      else if (command.equals("Close")) {
+		System.out.println("Got windowClosing");
+		System.out.println("destroying the BrowserControl");
+		EMWindow.this.delete();
+				// should close the BrowserControlCanvas
+		creator.DestroyEMWindow(winNum);
+	      }
+	      else if (command.equals("Find")) {
+				if (null == findDialog) {
+				  Frame f = new Frame();
+			       	  f.setSize(350,150);
+				  findDialog = new FindDialog(f, this, 
+							      "Find in Page", "Find  ", 
+							      "", 20, false);
+				  findDialog.setModal(false);
+	       		}
+				findDialog.setVisible(true);
+		//		currentPage.findInPage("Sun", true, true);
+	      }
+	      else if (command.equals("Find Next")) {
+		currentPage.findNextInPage(false);
+	      }
+	    }
+	
+	    else if(command.equals("Stop")) {
 	    		navigation.stop();
 	    	}
             else if (command.equals("Refresh")) {
@@ -284,6 +348,57 @@ public void delete()
             System.out.println(e.getMessage());
         }
     } // actionPerformed()
+
+
+public void dialogDismissed(Dialog d) {
+  if(findDialog.wasClosed()) {
+    System.out.println("Find Dialog Closed");
+	try {
+	CurrentPage currentPage = (CurrentPage)
+	  browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	currentPage.resetFind();
+	}
+	catch (Exception e) {
+	System.out.println(e.getMessage());
+      }
+	}
+  else {
+    String searchString = findDialog.getTextField().getText();
+    if(searchString == null) {
+      System.out.println("Java ERROR - SearchString not received from Dialog Box" + 
+			 searchString);
+    }
+    else if(searchString.equals("")) {
+      System.out.println("Clear button selected");
+    }
+    else {
+      System.out.println("Tring to Find String   -  " + searchString);
+      System.out.println("Parameters are    - Backwrads = " + findDialog.backwards + " and Matchcase = " + findDialog.matchcase);
+      try {
+	CurrentPage currentPage = (CurrentPage)
+	  browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	currentPage.findInPage(searchString, !findDialog.backwards, findDialog.matchcase);
+      }
+      catch (Exception e) {
+	System.out.println(e.getMessage());
+      }
+    }
+  }
+}
+
+public void dialogCancelled(Dialog d) {
+  System.out.println("Find Dialog Closed");
+	try {
+	CurrentPage currentPage = (CurrentPage)
+	  browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	currentPage.resetFind();
+	}
+	catch (Exception e) {
+	System.out.println(e.getMessage());
+    }
+}
+      
+
 
 
     private void makeItem (Panel p, Object arg, int x, int y, int w, int h, double weightx, double weighty) {

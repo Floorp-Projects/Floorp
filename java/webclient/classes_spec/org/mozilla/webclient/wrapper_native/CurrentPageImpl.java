@@ -86,7 +86,7 @@ public void findInPage(String stringToFind, boolean forward, boolean matchCase)
     myFactory.throwExceptionIfNotInitialized();
 
     synchronized(myBrowserControl) {
-        nativeFindInPage(stringToFind, forward, matchCase);
+        nativeFindInPage(nativeWebShell, stringToFind, forward, matchCase);
     }
 }
             
@@ -95,7 +95,7 @@ public void findNextInPage(boolean forward)
     myFactory.throwExceptionIfNotInitialized();
     
     synchronized(myBrowserControl) {
-        nativeFindNextInPage(forward);
+        nativeFindNextInPage(nativeWebShell, forward);
     }
 }
             
@@ -141,7 +141,7 @@ public void resetFind()
     myFactory.throwExceptionIfNotInitialized();
     
     synchronized(myBrowserControl) {
-        nativeResetFind();
+        nativeResetFind(nativeWebShell);
     }
 }
             
@@ -160,9 +160,9 @@ public void selectAll()
 
 native public void nativeCopyCurrentSelectionToSystemClipboard(int webShellPtr);
             
-native public void nativeFindInPage(String stringToFind, boolean forward, boolean matchCase);
+native public void nativeFindInPage(int webShellPtr, String stringToFind, boolean forward, boolean matchCase);
             
-native public void nativeFindNextInPage(boolean forward);
+native public void nativeFindNextInPage(int webShellPtr, boolean forward);
             
 native public String nativeGetCurrentURL(int webShellPtr);
             
@@ -174,7 +174,7 @@ native public String nativeGetSource();
  
 native public byte [] nativeGetSourceBytes();
             
-native public void nativeResetFind();
+native public void nativeResetFind(int webShellPtr);
             
 native public void nativeSelectAll();
 
@@ -190,7 +190,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.2 2000/03/09 23:22:50 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.3 2000/04/06 17:33:47 ashuk%eng.sun.com Exp $");
     
 }
 
