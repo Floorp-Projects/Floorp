@@ -141,9 +141,11 @@ struct nsXBLBindingRequest
         
     nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
     if (shell) {
+      nsIFrame* childFrame;
+      shell->GetPrimaryFrameFor(mBoundElement, &childFrame);
       nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
-      obs->ContentRemoved(doc, parent, mBoundElement, index);
-      obs->ContentInserted(doc, parent, mBoundElement, index);
+      if (!childFrame)
+        obs->ContentInserted(doc, parent, mBoundElement, index);
     }
   }
 
