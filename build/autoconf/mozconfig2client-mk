@@ -87,7 +87,7 @@ if [ "$opts" ]; then
   mk_echo_options
 fi
 
-if cmp -s $tmp_file $out_file; then
+if test -f $out_file && cmp -s $tmp_file $out_file; then
   rm $tmp_file
 else
   mv -f $tmp_file $out_file
