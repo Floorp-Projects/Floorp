@@ -343,7 +343,7 @@ SECStatus
 JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {
-    char *          hostname;
+    char *          hostname = NULL;
     SECStatus         rv    = SECFailure;
     SECCertUsage      certUsage;
     CERTCertificate   *peerCert=NULL;
@@ -376,9 +376,10 @@ JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
      * NB: This is our only defense against Man-In-The-Middle (MITM) attacks!
      */
     hostname = SSL_RevealURL(fd);    /* really is a hostname, not a URL */
-    if (hostname && hostname[0])
+    if (hostname && hostname[0]) {
         rv = CERT_VerifyCertName(peerCert, hostname);
-    else
+        PORT_Free(hostname); 
+    } else
         rv = SECFailure;
 
     if (peerCert) CERT_DestroyCertificate(peerCert);
@@ -511,6 +512,7 @@ JSSL_JavaCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
     hostname = SSL_RevealURL(fd);    /* really is a hostname, not a URL */
     if (hostname && hostname[0]) {
         checkcn_rv = CERT_VerifyCertName(peerCert, hostname);
+        PORT_Free(hostname);
     } else {
         checkcn_rv = SECFailure;
     }
@@ -613,9 +615,6 @@ finish:
     if( peerCert != NULL ) {
         CERT_DestroyCertificate(peerCert);
     }
-    if( hostname != NULL) {
-        PR_Free(hostname);
-    }
     PORT_FreeArena(log.arena, PR_FALSE);
     return retval;
 }
@@ -655,7 +654,6 @@ SECStatus
 JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {
-    char* hostname;
     SECStatus rv=SECFailure;
     SECCertUsage certUsage;
     CERTCertificate* peerCert=NULL;
@@ -689,9 +687,11 @@ JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
         if( peerCert == NULL ) {
             rv = SECFailure;
         } else {
+            char* hostname = NULL;
             hostname = SSL_RevealURL(fd); /* really is a hostname, not a URL */
             if (hostname && hostname[0]) {
                 rv = CERT_VerifyCertName(peerCert, hostname);
+                PORT_Free(hostname);
             } else {
                 rv = SECFailure;
             }
