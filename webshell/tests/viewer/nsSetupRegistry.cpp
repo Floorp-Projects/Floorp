@@ -214,14 +214,11 @@ static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
 
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-static NS_DEFINE_IID(kClipboardCID,          NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kTransferableCID,       NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kDataFlavorCID,         NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kXIFFormatConverterCID, NS_XIFFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kCDragServiceCID,       NS_DRAGSERVICE_CID);
-static NS_DEFINE_IID(kCDragSourceCID,        NS_DRAGSOURCE_CID);
-static NS_DEFINE_IID(kCDragTargetCID,        NS_DRAGTARGET_CID);
-static NS_DEFINE_IID(kCDraggedObjectCID,     NS_DRAGGEDOBJECT_CID);
+static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
+static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
 #endif
 
 #if 0    // autoregistration now works on all platforms, and RDF self-registers, so commenting out
@@ -381,15 +378,12 @@ NS_SetupRegistry()
 #endif
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-  nsComponentManager::RegisterComponent(kClipboardCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kTransferableCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kDataFlavorCID,         NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kXIFFormatConverterCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kClipboardCID,            NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCGenericTransferableCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kDataFlavorCID,           NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCXIFFormatConverterCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
-  nsComponentManager::RegisterComponent(kCDragServiceCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCDragSourceCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCDragTargetCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCDraggedObjectCID,     NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDragServiceCID,         NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   nsComponentManager::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
