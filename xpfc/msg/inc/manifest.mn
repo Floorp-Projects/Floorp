@@ -19,6 +19,7 @@ PRIVATE_EXPORTS = \
 	nsMIMEMessage.h \
 	nsSMTPServerCallback.h \
 	nsMIMEBodyPart.h \
+	nsMIMEBasicBodyPart.h \
 	$(NULL)
 
 MODULE = xpfc
