@@ -705,3 +705,12 @@ PRBool nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSu
 
   return PR_TRUE;
 }
+
+#ifdef USE_IMG2
+NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
+                                      nscoord aDX, nscoord aDY,
+                                      nscoord aDWidth, nscoord aDHeight)
+{
+  return NS_ERROR_FAILURE;
+}
+#endif

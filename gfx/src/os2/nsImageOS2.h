@@ -88,6 +88,11 @@ public:
 // OS2TODO
   PRBool  DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
 
+#ifdef USE_IMG2
+  NS_IMETHOD DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
+                         nscoord aDWidth, nscoord aDHeight);
+#endif
+
   /** 
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
