@@ -764,6 +764,9 @@ embedding/browser/webBrowser/Makefile
 embedding/browser/gtk/Makefile
 embedding/browser/gtk/src/Makefile
 embedding/browser/gtk/tests/Makefile
+embedding/browser/qt/Makefile
+embedding/browser/qt/src/Makefile
+embedding/browser/qt/tests/Makefile
 embedding/browser/photon/Makefile
 embedding/browser/photon/src/Makefile
 embedding/browser/photon/tests/Makefile
