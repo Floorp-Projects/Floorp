@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secdig.c,v 1.1 2000/03/31 19:39:35 relyea%netscape.com Exp $
+ * $Id: secdig.c,v 1.2 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
  */
 #include "secdig.h"
 
@@ -65,6 +65,8 @@ const SEC_ASN1Template sgn_DigestInfoTemplate[] = {
 	  offsetof(SGNDigestInfo,digest) },
     { 0 }
 };
+
+SEC_ASN1_CHOOSER_IMPLEMENT(sgn_DigestInfoTemplate)
 
 /*
  * XXX Want to have a SGN_DecodeDigestInfo, like:

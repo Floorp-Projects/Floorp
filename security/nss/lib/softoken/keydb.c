@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.3 2000/10/01 17:13:34 wtc%netscape.com Exp $
+ * $Id: keydb.c,v 1.4 2001/01/07 08:13:09 nelsonb%netscape.com Exp $
  */
 
 #include "keylow.h"
@@ -2308,3 +2308,14 @@ done:
 
     return (errors == 0 ? SECSuccess : SECFailure);
 }
+
+/* These functions simply return the address of the above-declared templates.
+** This is necessary for Windows DLLs.  Sigh.
+*/
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PointerToPrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_EncryptedPrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PointerToEncryptedPrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_DSAPublicKeyTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_RSAPublicKeyTemplate)
+

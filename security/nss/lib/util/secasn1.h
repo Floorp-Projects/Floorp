@@ -36,7 +36,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.2 2000/05/22 15:24:19 chrisk%netscape.com Exp $
+ * $Id: secasn1.h,v 1.3 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -260,5 +260,22 @@ extern const SEC_ASN1Template SEC_SetOfVisibleStringTemplate[];
  */
 extern const SEC_ASN1Template SEC_SkipTemplate[];
 
+/* These functions simply return the address of the above-declared templates.
+** This is necessary for Windows DLLs.  Sigh.
+*/
+SEC_ASN1_CHOOSER_DECLARE(SEC_AnyTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_BMPStringTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_BitStringTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_GeneralizedTimeTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_IA5StringTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_IntegerTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_ObjectIDTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_OctetStringTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_UTCTimeTemplate)
+
+SEC_ASN1_CHOOSER_DECLARE(SEC_PointerToAnyTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_PointerToOctetStringTemplate)
+
+SEC_ASN1_CHOOSER_DECLARE(SEC_SetOfAnyTemplate)
 
 #endif /* _SECASN1_H_ */

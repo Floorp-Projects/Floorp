@@ -39,6 +39,8 @@
 #include "secasn1.h"
 #include "secoid.h"
 
+SEC_ASN1_MKSUB(SEC_AnyTemplate);
+
 SECStatus
 SEC_ReadPKCS7Certs(SECItem *pkcs7Item, CERTImportCertificateFunc f, void *arg)
 {
@@ -83,8 +85,7 @@ done:
 }
 
 const SEC_ASN1Template SEC_CertSequenceTemplate[] = {
-    { SEC_ASN1_SEQUENCE_OF,
-	  0, SECAnyTemplate }
+    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_XTRN, 0, SEC_ASN1_SUB(SEC_AnyTemplate) }
 };
 
 SECStatus

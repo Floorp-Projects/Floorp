@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.4 2000/06/20 13:24:01 chrisk%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.5 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -2932,3 +2932,21 @@ const SEC_ASN1Template SEC_SetOfVisibleStringTemplate[] = {
 const SEC_ASN1Template SEC_SkipTemplate[] = {
     { SEC_ASN1_SKIP }
 };
+
+
+/* These functions simply return the address of the above-declared templates.
+** This is necessary for Windows DLLs.  Sigh.
+*/
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_AnyTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_BMPStringTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_BitStringTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_IA5StringTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_GeneralizedTimeTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_IntegerTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_ObjectIDTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_OctetStringTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTCTimeTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_PointerToAnyTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_PointerToOctetStringTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_SetOfAnyTemplate)
+

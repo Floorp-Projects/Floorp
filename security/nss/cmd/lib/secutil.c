@@ -1047,14 +1047,16 @@ secu_PrintSubjectPublicKeyInfo(FILE *out, PRArenaPool *arena,
     DER_ConvertBitString(&i->subjectPublicKey);
     switch(SECOID_FindOIDTag(&i->algorithm.algorithm)) {
       case SEC_OID_PKCS1_RSA_ENCRYPTION:
-	rv = SEC_ASN1DecodeItem(arena, pk, SECKEY_RSAPublicKeyTemplate,
+	rv = SEC_ASN1DecodeItem(arena, pk, 
+	                        SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate),
 				&i->subjectPublicKey);
 	if (rv)
 	    return rv;
 	secu_PrintRSAPublicKey(out, pk, "RSA Public Key", level +1);
 	break;
       case SEC_OID_ANSIX9_DSA_SIGNATURE:
-	rv = SEC_ASN1DecodeItem(arena, pk, SECKEY_DSAPublicKeyTemplate,
+	rv = SEC_ASN1DecodeItem(arena, pk, 
+	                        SEC_ASN1_GET(SECKEY_DSAPublicKeyTemplate),
 				&i->subjectPublicKey);
 	if (rv)
 	    return rv;
@@ -1077,7 +1079,8 @@ secu_PrintX509InvalidDate(FILE *out, SECItem *value, char *msg, int level)
     char *formattedTime = NULL;
 
     decodedValue.data = NULL;
-    rv = SEC_ASN1DecodeItem (NULL, &decodedValue, SEC_GeneralizedTimeTemplate,
+    rv = SEC_ASN1DecodeItem (NULL, &decodedValue, 
+			    SEC_ASN1_GET(SEC_GeneralizedTimeTemplate),
 			    value);
     if (rv == SECSuccess) {
 	rv = DER_GeneralizedTimeToTime(&invalidTime, &decodedValue);
@@ -1103,10 +1106,6 @@ PrintExtKeyUsageExten  (FILE *out, SECItem *value, char *msg, int level)
 
   os = CERT_DecodeOidSequence(value);
   if( (CERTOidSequence *)NULL == os ) {
-    return SECFailure;
-  }
-
-  if( (SECItem **)NULL == op ) {
     return SECFailure;
   }
 
@@ -1511,7 +1510,8 @@ SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
     if (!arena)
 	return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, cr, CERT_CertificateRequestTemplate, der);
+    rv = SEC_ASN1DecodeItem(arena, cr, 
+                            SEC_ASN1_GET(CERT_CertificateRequestTemplate), der);
     if (rv) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return rv;
@@ -1550,7 +1550,8 @@ SECU_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
     if (!arena)
 	return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, c, CERT_CertificateTemplate, der);
+    rv = SEC_ASN1DecodeItem(arena, c, 
+                            SEC_ASN1_GET(CERT_CertificateTemplate), der);
     if (rv) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return rv;
@@ -1592,7 +1593,8 @@ SECU_PrintPublicKey(FILE *out, SECItem *der, char *m, int level)
     if (!arena)
 	return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, &key, SECKEY_RSAPublicKeyTemplate, der);
+    rv = SEC_ASN1DecodeItem(arena, &key, 
+                            SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate), der);
     if (rv) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return rv;
@@ -1617,8 +1619,8 @@ SECU_PrintPrivateKey(FILE *out, SECItem *der, char *m, int level)
     if (!arena)
 	return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, &key, SECKEY_EncryptedPrivateKeyInfoTemplate,
-			    der);
+    rv = SEC_ASN1DecodeItem(arena, &key, 
+		SEC_ASN1_GET(SECKEY_EncryptedPrivateKeyInfoTemplate), der);
     if (rv) {
 	PORT_FreeArena(arena, PR_TRUE);
 	return rv;
@@ -2013,7 +2015,7 @@ SECU_PrintCrl (FILE *out, SECItem *der, char *m, int level)
 	    break;
 	}
 
-	rv = SEC_ASN1DecodeItem(arena, c, CERT_CrlTemplate, der);
+	rv = SEC_ASN1DecodeItem(arena, c, SEC_ASN1_GET(CERT_CrlTemplate), der);
 	if (rv != SECSuccess)
 	    break;
 	SECU_PrintCRLInfo (out, c, m, level);
@@ -2211,7 +2213,8 @@ int SECU_PrintSignedData(FILE *out, SECItem *der, char *m,
     if (!arena)
 	return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, sd, CERT_SignedDataTemplate, der);
+    rv = SEC_ASN1DecodeItem(arena, sd, SEC_ASN1_GET(CERT_SignedDataTemplate), 
+                            der);
     if (rv) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return rv;

@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.2 2001/01/05 01:38:16 nelsonb%netscape.com Exp $
+ * $Id: p7decode.c,v 1.3 2001/01/07 08:13:04 nelsonb%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -55,6 +55,7 @@
 #include "prtime.h"
 #include "secerr.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
+#include "secder.h"
 
 struct sec_pkcs7_decoder_worker {
     int depth;
@@ -582,8 +583,8 @@ sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
 		  if (keaParams.bulkKeySize.len > 0)
 		  {
 		      p7dcx->error = SEC_ASN1DecodeItem(NULL, &bulkLength,
-							SEC_IntegerTemplate,
-							&keaParams.bulkKeySize);
+					SEC_ASN1_GET(SEC_IntegerTemplate),
+					&keaParams.bulkKeySize);
 		  }
 		  
 		  if (p7dcx->error != SECSuccess)

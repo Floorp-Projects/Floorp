@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.4 2001/01/03 19:48:57 larryh%netscape.com Exp $
+ * $Id: certdb.c,v 1.5 2001/01/07 08:12:48 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -207,7 +207,7 @@ const SEC_ASN1Template CERT_CertKeyTemplate[] = {
     { 0 }
 };
 
-
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_CertificateTemplate)
 
 SECStatus
 CERT_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,

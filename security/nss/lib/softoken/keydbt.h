@@ -32,7 +32,7 @@
  *
  * keydbt.h - private data structures for the private key library
  *
- * $Id: keydbt.h,v 1.1 2000/03/31 19:26:00 relyea%netscape.com Exp $
+ * $Id: keydbt.h,v 1.2 2001/01/07 08:13:10 nelsonb%netscape.com Exp $
  */
 
 #ifndef _KEYDBT_H_
@@ -85,5 +85,15 @@ extern const SEC_ASN1Template SECKEY_PointerToEncryptedPrivateKeyInfoTemplate[];
 extern const SEC_ASN1Template SECKEY_PointerToPrivateKeyInfoTemplate[];
 extern const SEC_ASN1Template SECKEY_PQGParamsTemplate[];
 extern const SEC_ASN1Template SECKEY_AttributeTemplate[];
+
+/* These functions simply return the address of the above-declared templates.
+** This is necessary for Windows DLLs.  Sigh.
+*/
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PrivateKeyInfoTemplate;
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToPrivateKeyInfoTemplate;
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_EncryptedPrivateKeyInfoTemplate;
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_DSAPublicKeyTemplate;
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_RSAPublicKeyTemplate;
 
 #endif /* _KEYDBT_H_ */

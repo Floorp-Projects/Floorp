@@ -67,6 +67,8 @@ const SEC_ASN1Template CERT_CertificateRequestTemplate[] = {
     { 0 }
 };
 
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_CertificateRequestTemplate)
+
 CERTCertificate *
 CERT_CreateCertificate(unsigned long serialNumber,
 		      CERTName *issuer,

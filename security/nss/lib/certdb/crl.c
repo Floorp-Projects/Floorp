@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.1 2000/03/31 19:42:37 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.2 2001/01/07 08:12:49 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -385,3 +385,11 @@ loser:
     
     return(0);
 }
+
+/* These functions simply return the address of the above-declared templates.
+** This is necessary for Windows DLLs.  Sigh.
+*/
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_IssuerAndSNTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_CrlTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SetOfSignedCrlTemplate)
+
