@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsImapCore.h"
 #include "nsIImapProtocol.h"
+#include "nsMsgKeyArray.h"
 
 /* 44ede08e-e77f-11d2-af83-001083002da8 */
 
@@ -54,6 +55,9 @@ public:
 									   nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
 							   FolderQueryInfo* aInfo) = 0;
+  NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
+                                nsMsgKeyArray* keyArray, 
+                                const char *msgIdString) = 0;
 };
 
 #endif
