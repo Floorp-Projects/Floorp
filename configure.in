@@ -808,10 +808,11 @@ case "$target" in
     if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
 	dnl Hack...
 	_OPENVMS_CROSS_COMPILE=1
-	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
+    fi
+    NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
     AC_DEFINE(NO_PW_GECOS)
     AC_DEFINE(NO_UDSOCK)
-    fi
+    USE_PTHREADS=1
     ;;
 
 
