@@ -143,7 +143,6 @@ private:
   PRInt32 mMaxBytes;
   PRInt64 mStartTime;
   PRTime mLastUpdate;
-  nsCOMPtr<nsITimer> mTimer;
 
   friend class nsDownloadManager;
 };
