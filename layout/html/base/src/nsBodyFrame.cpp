@@ -131,11 +131,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     // Is the next frame in the reflow chain the pseudo block-frame or a
     // floating frame?
     //
-    // XXX Do we want the floating frame to be a reflow target or should its
-    // placeholder frame be the target? The reason this is currently happening
-    // is that the placeholder frame was changed to return the floating frame
-    // as a child frame. That's wrong, because the floating frame now appears
-    // to be both a geometric child of the body and of the placeholder. Yuck...
+    // XXX FIX ME
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
     if (mFirstChild != next) {
