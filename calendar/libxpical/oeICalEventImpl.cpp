@@ -912,16 +912,19 @@ NS_IMETHODIMP oeICalEventImpl::GetIcalString(char **aRetVal)
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::ParseIcalString(const char *aNewVal)
+NS_IMETHODIMP oeICalEventImpl::ParseIcalString(const char *aNewVal, PRBool *aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "ParseIcalString( %s )\n", aNewVal );
 #endif
     
-    icalcomponent *vevent = icalparser_parse_string( aNewVal );
-    ParseIcalComponent( vevent );
-    icalcomponent_free( vevent );
-
+    *aRetVal = false;
+    icalcomponent *comp = icalparser_parse_string( aNewVal );
+    if( comp ) {
+        if( ParseIcalComponent( comp ) )
+            *aRetVal = true;
+        icalcomponent_free( comp );
+    }
     return NS_OK;
 }
 
@@ -1025,11 +1028,19 @@ NS_IMETHODIMP oeICalEventImpl::Clone( oeIICalEvent **ev )
     return NS_OK;
 }
 
-bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
+bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "ParseIcalComponent()\n" );
 #endif
+
+    icalcomponent *vevent=nsnull;
+    icalcomponent_kind kind = icalcomponent_isa( comp );
+
+    if( kind == ICAL_VCALENDAR_COMPONENT )
+	    vevent = icalcomponent_get_first_component( comp , ICAL_VEVENT_COMPONENT );
+    else if( kind == ICAL_VEVENT_COMPONENT )
+        vevent = comp;
 
     if ( !vevent ) {
         #ifdef ICAL_DEBUG
@@ -1040,8 +1051,6 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
 
     const char *tmpstr;
 //id    
-    if( m_id )
-        nsMemory::Free( m_id );
     icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
     if ( prop ) {
         tmpstr = icalproperty_get_uid( prop );
@@ -1054,44 +1063,44 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
     }
 
 //title
-    if( m_title )
-        nsMemory::Free( m_title );
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_summary( prop );
         SetTitle( tmpstr );
-    } else
+    } else if( m_title ) {
+        nsMemory::Free( m_title );
         m_title = nsnull;
+    }
 
 //description
-    if( m_description )
-        nsMemory::Free( m_description );
     prop = icalcomponent_get_first_property( vevent, ICAL_DESCRIPTION_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_description( prop );
         SetDescription( tmpstr );
-    } else
+    } else if( m_description ) {
+        nsMemory::Free( m_description );
         m_description = nsnull;
+    }
 
 //location
-    if( m_location )
-        nsMemory::Free( m_location );
     prop = icalcomponent_get_first_property( vevent, ICAL_LOCATION_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_location( prop );
         SetLocation( tmpstr );
-    } else
+    } else if( m_location ) {
+        nsMemory::Free( m_location );
         m_location = nsnull;
+    }
 
 //category
-    if( m_category )
-        nsMemory::Free( m_category );
     prop = icalcomponent_get_first_property( vevent, ICAL_CATEGORIES_PROPERTY );
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_categories( prop );
         SetCategory( tmpstr );
-    } else
+    } else if( m_category ) {
+        nsMemory::Free( m_category );
         m_category= nsnull;
+    }
 
 //isprivate
     prop = icalcomponent_get_first_property( vevent, ICAL_CLASS_PROPERTY );
@@ -1201,13 +1210,17 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
     if ( prop != 0) {
         tmpstr = icalproperty_get_value_as_string( prop );
         SetAlarmEmailAddress( tmpstr );
-    } else
+    } else if( m_alarmemail ) {
+        nsMemory::Free( m_alarmemail );
         m_alarmemail= nsnull;
+    }
 
     //lastalarmack
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
     if ( prop != 0) {
         m_lastalarmack = icalproperty_get_dtstart( prop );
+    } else {
+        m_lastalarmack = icaltime_null_time();
     }
 
 //inviteemail
@@ -1225,8 +1238,10 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_value_as_string( prop );
         SetInviteEmailAddress( tmpstr );
-    } else
-        m_inviteemail = nsnull;
+    } else if( m_inviteemail ) {
+        nsMemory::Free( m_inviteemail );
+        m_inviteemail= nsnull;
+    }
 
 //recurinterval
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
@@ -1250,6 +1265,8 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
         m_start->m_datetime = icalproperty_get_dtstart( prop );
+    } else {
+        m_start->m_datetime = icaltime_null_time();
     }
 //enddate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
@@ -1257,12 +1274,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
         icaltimetype end;
         end = icalproperty_get_dtstart( prop );
         m_end->m_datetime = end;
-    } else {
+    } else if( !icaltime_is_null_time( m_start->m_datetime ) ) {
         m_end->m_datetime = m_start->m_datetime;
+    } else {
+        m_end->m_datetime = icaltime_null_time();
     }
-//recurenddate & recurforever & recur & recurweekday & recurweeknumber
+//recurend & recurforever & recur & recurweekday & recurweeknumber
     m_recur = false;
     m_recurforever = true;
+    m_recurweekdays = 0;
+    m_recurweeknumber = 0;
     prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
     if ( prop != 0) {
         m_recur = true;
@@ -1305,6 +1326,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
         SetRecurUnits( "weeks" );
 
     //recur exceptions
+    m_exceptiondates.clear();
     for( prop = icalcomponent_get_first_property( vevent, ICAL_EXDATE_PROPERTY );
             prop != 0 ;
             prop = icalcomponent_get_next_property( vevent, ICAL_EXDATE_PROPERTY ) ) {
@@ -1313,6 +1335,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
         m_exceptiondates.push_back( exdateinms );
     }
 
+    m_snoozetimes.clear();
     //snoozetimes
     icalcomponent *tmpcomp = icalcomponent_get_first_component( vevent, ICAL_X_COMPONENT );
     if ( tmpcomp != 0) {

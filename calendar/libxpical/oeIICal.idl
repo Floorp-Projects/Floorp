@@ -91,7 +91,7 @@ interface oeIICalEvent : nsISupports
     attribute PRTime lastAlarmAck;
     boolean getNextRecurrence( in PRTime begin, out PRTime result);
     string getIcalString();
-    void parseIcalString(in string icalstr);
+    boolean parseIcalString(in string icalstr);
     void addException( in PRTime exdate );
 	nsISimpleEnumerator getExceptions();
     void setSnoozeTime( in PRTime exdate );
