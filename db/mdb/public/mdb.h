@@ -23,15 +23,17 @@
 #ifndef _MDB_
 #define _MDB_ 1
 
+#include "nsCore.h"
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // { %%%%% begin scalar typedefs %%%%%
 typedef unsigned char  mdb_u1;  // make sure this is one byte
 typedef unsigned short mdb_u2;  // make sure this is two bytes
 typedef short          mdb_i2;  // make sure this is two bytes
-typedef unsigned long  mdb_u4;  // make sure this is four bytes
-typedef long           mdb_i4;  // make sure this is four bytes
-typedef long           mdb_ip;  // make sure sizeof(mdb_ip) == sizeof(void*)
+typedef PRUint32       mdb_u4;  // make sure this is four bytes
+typedef PRInt32        mdb_i4;  // make sure this is four bytes
+typedef long          mdb_ip;  // make sure sizeof(mdb_ip) == sizeof(void*)
 
 typedef mdb_u1 mdb_bool;  // unsigned byte with zero=false, nonzero=true
 
