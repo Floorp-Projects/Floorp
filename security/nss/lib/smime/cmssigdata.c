@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.16 2003/02/15 00:23:04 relyea%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.17 2003/02/18 23:26:39 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -466,6 +466,7 @@ NSS_CMSSignedData_ImportCerts(NSSCMSSignedData *sigd, CERTCertDBHandle *certdb,
     SECStatus rv;
     SECItem **rawArray;
     int i;
+    PRTime now;
 
     certcount = NSS_CMSArray_Count((void **)sigd->rawCerts);
 
@@ -500,12 +501,13 @@ NSS_CMSSignedData_ImportCerts(NSSCMSSignedData *sigd, CERTCertDBHandle *certdb,
     /* go down the remaining list of certs and verify that they have
      * valid chains, then import them.
      */
+    now = PR_Now();
     for (node = CERT_LIST_HEAD(certList) ; !CERT_LIST_END(node,certList);
 						node= CERT_LIST_NEXT(node)) {
 	CERTCertificateList *certChain;
 
 	if (CERT_VerifyCert(certdb, node->cert, 
-		PR_TRUE, certusage, PR_Now(), NULL, NULL) != SECSuccess) {
+		PR_TRUE, certusage, now, NULL, NULL) != SECSuccess) {
 	    continue;
 	}
 
@@ -609,6 +611,7 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
     SECStatus rv = SECSuccess;
     int i;
     int count;
+    PRTime now;
 
     if (!sigd || !certdb || !sigd->rawCerts) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -616,6 +619,7 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
     }
 
     count = NSS_CMSArray_Count((void**)sigd->rawCerts);
+    now = PR_Now();
     for (i=0; i < count; i++) {
 	if (sigd->certs && sigd->certs[i]) {
 	    cert = CERT_DupCertificate(sigd->certs[i]);
@@ -626,7 +630,7 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
 		break;
 	    }
 	}
-	rv |= CERT_VerifyCert(certdb, cert, PR_TRUE, usage, PR_Now(), 
+	rv |= CERT_VerifyCert(certdb, cert, PR_TRUE, usage, now, 
                               NULL, NULL);
 	CERT_DestroyCertificate(cert);
     }
