@@ -157,7 +157,7 @@ NS_IMETHODIMP
 nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **_retval)
 {
   
-#ifdef DEBUG_alecf
+#ifdef DEBUG_alecf_
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
   nsXPIDLCString propval;
@@ -167,7 +167,7 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
 #endif
 
   nsresult rv;
-  nsString str;
+  nsAutoString str;
   if (aSource == kNC_DOMRoot) {
     if (aProperty == kNC_Name)
       str="DOMRoot";
@@ -191,9 +191,7 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
       else if (aProperty == kNC_Type) {
         PRUint16 type;
         node->GetNodeType(&type);
-        char buf[10];
-        PR_snprintf(buf, 10, "%d", type);
-        str=buf;
+        str.Append(type);
       }        
     }
   }
@@ -219,7 +217,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
-#ifdef DEBUG_alecf
+#ifdef DEBUG_alecf_
   nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
   printf("GetTargets(%s, %s,..)\n", (const char*)sourceval,
@@ -272,7 +270,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
       nsCOMPtr<nsIDOMNode> attrNode;
       attrmap->Item(i,getter_AddRefs(attrNode));
       
-      nsString attrName;
+      nsAutoString attrName;
       attrNode->GetNodeName(attrName);
       char *attr_name = attrName.ToNewCString();
       char *uri = PR_smprintf("%s#%s",
@@ -302,7 +300,6 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
     rv = childNodes->GetLength(&length);
     if (NS_FAILED(rv)) return rv;
 
-    printf("Adding %d child nodes..\n", length);
     
     nsCOMPtr<nsIDOMNode> childNode;
     for (i=0; i<length; i++) {
@@ -310,11 +307,6 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
       rv = childNodes->Item(i, getter_AddRefs(childNode));
       if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
-      PRUint16 nodeType;
-      childNode->GetNodeType(&nodeType);
-      printf("child node %d has type %d\n", i, (PRUint32)nodeType);
-#endif
 
       char *uri =
         PR_smprintf("dom://%8.8X", gCurrentId++);
@@ -411,7 +403,7 @@ nsRDFDOMDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
   
-#ifdef DEBUG_alecf
+#ifdef DEBUG_alecf_
   printf("ArcLabelsOut(%s)\n", (const char*)sourceval);
 #endif
   
@@ -548,7 +540,6 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
 
   nsCOMPtr<nsIDOMDocument> document;
   rv = window->GetDocument(getter_AddRefs(mDocument));
-  printf("Got the document\n");
   if (NS_FAILED(rv)) return rv;
 
   return rv;
