@@ -63,22 +63,6 @@ typedef enum __enum_MSMap_SymbolScope
 MSMap_SymbolScope;
 
 
-typedef struct __struct_MSMap_Symbol
-/*
-**  Information about a symbol.
-*/
-{
-    address mPrefix;
-    address mOffset;
-    char* mSymbol;
-    address mRVABase;
-    char* mObject;
-    MSMap_SymbolScope mScope;
-    unsigned mSymDBSize;
-}
-MSMap_Symbol;
-
-
 typedef enum __enum_MSMap_SegmentClass
 /*
 **  Segment class.
@@ -98,10 +82,28 @@ typedef struct __struct_MSMap_Segment
     address mPrefix;
     address mOffset;
     address mLength;
+    address mUsed;
     char* mSegment;
     MSMap_SegmentClass mClass;
 }
 MSMap_Segment;
+
+
+typedef struct __struct_MSMap_Symbol
+/*
+**  Information about a symbol.
+*/
+{
+    address mPrefix;
+    address mOffset;
+    char* mSymbol;
+    address mRVABase;
+    char* mObject;
+    MSMap_SymbolScope mScope;
+    unsigned mSymDBSize;
+    MSMap_Segment* mSection;
+}
+MSMap_Symbol;
 
 
 typedef struct __struct_MSMap_Module

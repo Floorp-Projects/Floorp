@@ -468,7 +468,15 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                             {
                                 char* typeDup = NULL;
 
+                                /*
+                                **  Skip the leading period before duping.
+                                */
+                                if('.' == *typeArg)
+                                {
+                                    typeArg++;
+                                }
                                 typeDup = strdup(typeArg);
+
                                 if(NULL != typeDup)
                                 {
                                     void* moved = NULL;

@@ -95,10 +95,17 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 
 
 #
+#   Find the types of files we are interested in.
+#
+ONEFINDPASS="$MYTMPDIR/onefind.list"
+find ./mozilla -type f -name "*.obj" -or -name "*.map" > $ONEFINDPASS
+
+
+#
 #   Find all object files.
 #
 ALLOBJSFILE="$MYTMPDIR/allobjs.list"
-find ./mozilla -type f -name "*.obj" > $ALLOBJSFILE
+grep -i "\.obj$" < $ONEFINDPASS > $ALLOBJSFILE
 
 
 #
@@ -119,14 +126,14 @@ SYMDBFILE="$MYTMPDIR/symdb.tsv"
 #   Find all map files.
 #
 ALLMAPSFILE="$MYTMPDIR/allmaps.list"
-find ./mozilla -type f -name "*.map" > $ALLMAPSFILE
+grep -i "\.map$" < $ONEFINDPASS > $ALLMAPSFILE
 
 
 #
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-xargs -n 1 ./mozilla/dist/bin/msmap2tsv --symdb $SYMDBFILE --input < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
+./mozilla/dist/bin/msmap2tsv --symdb $SYMDBFILE --batch < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
 
 
 #
