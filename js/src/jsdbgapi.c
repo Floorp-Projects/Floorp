@@ -251,9 +251,9 @@ DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
 {
     if (--wp->nrefs != 0)
 	return;
-    wp->sprop->setter = wp->setter;
+    SPROP_SETTER(wp->sprop, wp->object) = wp->setter;
     JS_LOCK_OBJ_VOID(cx, wp->object,
-		     js_DropScopeProperty(cx, (JSScope *)wp->object->map,
+		     js_DropScopeProperty(cx, OBJ_SCOPE(wp->object),
 					  wp->sprop));
     JS_REMOVE_LINK(&wp->links);
     js_RemoveRoot(cx->runtime, &wp->closure);
@@ -319,7 +319,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 		    }
 		    symid = (jsid)atom;
 		}
-		scope = (JSScope *) obj->map;
+		scope = OBJ_SCOPE(obj);
 		JS_ASSERT(scope->props);
 		ok = LOCKED_OBJ_GET_CLASS(obj)->addProperty(cx, obj, sprop->id,
 							    &value);
@@ -409,8 +409,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		return JS_FALSE;
 	    }
 	}
-	getter = sprop->getter;
-	setter = sprop->setter;
+	getter = SPROP_GETTER(sprop, pobj);
+	setter = SPROP_SETTER(sprop, pobj);
 	attrs = sprop->attrs;
 	OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 
@@ -434,9 +434,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 	JS_APPEND_LINK(&wp->links, &rt->watchPointList);
 	wp->object = obj;
 	wp->userid = id;
-	wp->sprop = js_HoldScopeProperty(cx, (JSScope *)obj->map, sprop);
-	wp->setter = sprop->setter;
-	sprop->setter = js_watch_set;
+	wp->sprop = js_HoldScopeProperty(cx, OBJ_SCOPE(obj), sprop);
+	wp->setter = SPROP_SETTER(sprop, obj);
+	SPROP_SETTER(sprop, obj) = js_watch_set;
 	wp->nrefs = 1;
     }
     wp->handler = handler;
@@ -732,7 +732,7 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
     JSScope *scope;
 
     sprop = *iteratorp;
-    scope = (JSScope *) obj->map;
+    scope = OBJ_SCOPE(obj);
     sprop = (sprop == NULL) ? scope->props : sprop->next;
     *iteratorp = sprop;
     return sprop;
@@ -743,23 +743,25 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 		   JSPropertyDesc *pd)
 {
     JSSymbol *sym;
+    JSPropertyOp getter;
 
     sym = sprop->symbols;
     pd->id = sym ? js_IdToValue(sym_id(sym)) : JSVAL_VOID;
     if (!sym || !js_GetProperty(cx, obj, sym_id(sym), &pd->value))
 	pd->value = OBJ_GET_SLOT(cx, obj, sprop->slot);
+    getter = SPROP_GETTER(sprop, obj);
     pd->flags = ((sprop->attrs & JSPROP_ENUMERATE)      ? JSPD_ENUMERATE : 0)
 	      | ((sprop->attrs & JSPROP_READONLY)       ? JSPD_READONLY  : 0)
 	      | ((sprop->attrs & JSPROP_PERMANENT)      ? JSPD_PERMANENT : 0)
 #if JS_HAS_CALL_OBJECT
-	      | ((sprop->getter == js_GetCallVariable)  ? JSPD_VARIABLE  : 0)
+	      | ((getter == js_GetCallVariable)  ? JSPD_VARIABLE  : 0)
 #endif /* JS_HAS_CALL_OBJECT */
-	      | ((sprop->getter == js_GetArgument)      ? JSPD_ARGUMENT  : 0)
-	      | ((sprop->getter == js_GetLocalVariable) ? JSPD_VARIABLE  : 0);
+	      | ((getter == js_GetArgument)      ? JSPD_ARGUMENT  : 0)
+	      | ((getter == js_GetLocalVariable) ? JSPD_VARIABLE  : 0);
 #if JS_HAS_CALL_OBJECT
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
-	sprop->getter == js_CallClass.getProperty) {
+	getter == js_CallClass.getProperty) {
 	pd->flags |= JSPD_ARGUMENT;
     }
 #endif /* JS_HAS_CALL_OBJECT */
@@ -795,10 +797,9 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 	return JS_FALSE;
 
     /* have no props, or object's scope has not mutated from that of proto */
-    scope = (JSScope *)obj->map;
+    scope = OBJ_SCOPE(obj);
     if (!scope->props ||
-	(OBJ_GET_PROTO(cx,obj) &&
-	 scope == (JSScope *)(OBJ_GET_PROTO(cx,obj)->map))) {
+	(OBJ_GET_PROTO(cx,obj) && scope == OBJ_SCOPE(OBJ_GET_PROTO(cx,obj)))) {
 	pda->length = 0;
 	pda->array = NULL;
 	return JS_TRUE;

@@ -1661,7 +1661,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     if (!atom) {
 	ok = JS_FALSE;
     } else {
-	scope = (JSScope *) obj->map;
+	scope = OBJ_SCOPE(obj);
 	ok = (scope->ops->add(cx, scope, (jsid)atom, (JSScopeProperty *)prop)
 	      != NULL);
     }
@@ -2006,7 +2006,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 			     numBuf, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
-    scope = (JSScope *) obj->map;
+    scope = OBJ_SCOPE(obj);
     ok = (scope->ops->add(cx, scope, INT_TO_JSVAL(alias),
 			  (JSScopeProperty *)prop)
 	  != NULL);
@@ -2506,11 +2506,16 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 	funAtom = NULL;
 	goto out;
     }
-    funAtom = js_Atomize(cx, name, strlen(name), 0);
-    if (!funAtom) {
-	fun = NULL;
-	goto out;
+    if (!name) {
+    	funAtom = NULL;
+    } else {
+	funAtom = js_Atomize(cx, name, strlen(name), 0);
+	if (!funAtom) {
+	    fun = NULL;
+	    goto out;
+	}
     }
+/* XXXbe new-function, bind name only on success */
     fun = js_DefineFunction(cx, obj, funAtom, NULL, nargs, 0);
     if (!fun)
 	goto out;

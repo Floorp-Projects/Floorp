@@ -451,7 +451,7 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     if (fp && fp->scopeChain) {
 	obj = fp->scopeChain;
 	map = obj->map;
-	if (map->ops == &js_ObjectOps) {
+	if (MAP_IS_NATIVE(map)) {
 	    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
 		obj = fp->fun ? fp->fun->object : NULL;
 		if (obj)
@@ -747,7 +747,7 @@ GetSlotAtom(JSScope *scope, JSPropertyOp getter, uintN slot)
     if (!scope)
 	return NULL;
     for (sprop = scope->props; sprop; sprop = sprop->next) {
-	if (sprop->getter != getter)
+	if (SPROP_GETTER_SCOPE(sprop, scope) != getter)
 	    continue;
 	if ((uintN)JSVAL_TO_INT(sprop->id) == slot)
 	    return sym_atom(sprop->symbols);
@@ -2128,7 +2128,7 @@ js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
 	js_printf(jp, native_code_str);
         return JS_TRUE;
     }
-    scope = fun->object ? (JSScope *)fun->object->map : NULL;
+    scope = fun->object ? OBJ_SCOPE(fun->object) : NULL;
     save = jp->scope;
     jp->scope = scope;
     ok = js_DecompileCode(jp, script, script->code, (uintN)script->length);
@@ -2171,10 +2171,10 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
 	for (i = 0; ; i++) {
 	    jsid id;
 	    atom = NULL;
-	    scope = (JSScope *)fun->object->map;
+	    scope = OBJ_SCOPE(fun->object);
 	    for (sprop = scope->props; sprop; sprop = snext) {
 		snext = sprop->next;
-		if (sprop->getter != js_GetArgument)
+		if (SPROP_GETTER_SCOPE(sprop, scope) != js_GetArgument)
 		    continue;
 		if (JSVAL_IS_INT(sprop->id) && JSVAL_TO_INT(sprop->id) == i) {
 		    atom = sym_atom(sprop->symbols);

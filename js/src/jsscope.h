@@ -43,6 +43,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+#ifndef JS_DOUBLE_HASHING
 struct JSScopeOps {
     JSSymbol *      (*lookup)(JSContext *cx, JSScope *scope, jsid id,
 			      JSHashNumber hash);
@@ -51,16 +52,24 @@ struct JSScopeOps {
     JSBool          (*remove)(JSContext *cx, JSScope *scope, jsid id);
     void            (*clear)(JSContext *cx, JSScope *scope);
 };
+#endif
 
 struct JSScope {
     JSObjectMap     map;                /* base class state */
     JSObject        *object;            /* object that owns this scope */
     JSScopeProperty *props;             /* property list in definition order */
     JSScopeProperty **proptail;         /* pointer to pointer to last prop */
+#ifdef JS_DOUBLE_HASHING
+    uint32          tableLength;
+    JSScopeProperty *table;
+    uint32          gsTableLength;      /* number of entries in gsTable */
+    JSPropertyOp    gsTable[1];         /* actually, gsTableLength ops */
+#else
     JSScopeOps      *ops;               /* virtual operations */
     void            *data;              /* private data specific to ops */
+#endif
 #ifdef JS_THREADSAFE
-    JSThinLock      lock;              /* binary semaphore protecting scope */
+    JSThinLock      lock;               /* binary semaphore protecting scope */
     int32           count;              /* entry count for reentrancy */
 #ifdef DEBUG
     const char      *file[4];           /* file where lock was (re-)taken */
@@ -68,6 +77,27 @@ struct JSScope {
 #endif
 #endif
 };
+
+#define OBJ_SCOPE(obj)          ((JSScope *)(obj)->map)
+#define SPROP_GETTER(sprop,obj) SPROP_GETTER_SCOPE(sprop, OBJ_SCOPE(obj))
+#define SPROP_SETTER(sprop,obj) SPROP_SETTER_SCOPE(sprop, OBJ_SCOPE(obj))
+
+#ifdef JS_DOUBLE_HASHING
+
+struct JSScopeProperty {
+    jsid            id;
+    uint32          slot;               /* index in obj->slots vector */
+    uint8           attrs;              /* attributes, see jsapi.h JSPROP_ */
+    uint8           getterIndex;        /* getter and setter method indexes */
+    uint8           setterIndex;        /* in JSScope.gsTable[] */
+    uint8           reserved;
+    JSScopeProperty *next;              /* singly-linked list linkage */
+};
+
+#define SPROP_GETTER_SCOPE(sprop,scope) ((scope)->gsTable[(sprop)->getterIndex])
+#define SPROP_SETTER_SCOPE(sprop,scope) ((scope)->gsTable[(sprop)->setterIndex])
+
+#else  /* !JS_DOUBLE_HASHING */
 
 struct JSSymbol {
     JSHashEntry     entry;              /* base class state */
@@ -92,21 +122,28 @@ struct JSScopeProperty {
     JSScopeProperty **prevp;
 };
 
+#define SPROP_GETTER_SCOPE(sprop,scope) ((sprop)->getter)
+#define SPROP_SETTER_SCOPE(sprop,scope) ((sprop)->setter)
+
+#endif /* !JS_DOUBLE_HASHING */
+
 /*
  * These macros are designed to decouple getter and setter from sprop, by
  * passing obj2 (in whose scope sprop lives, and in whose scope getter and
- * setter might be stored apart from sprop -- say in scope->opTable[i] for
+ * setter might be stored apart from sprop -- say in scope->gsTable[i] for
  * a compressed getter or setter index i that is stored in sprop).
  */
 #define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_GETTER)                                         \
-     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(sprop->getter), 0, 0, vp)     \
-     : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
+     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_GETTER(sprop,obj2)),    \
+                       0, 0, vp)                                              \
+     : SPROP_GETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
 
 #define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_SETTER)                                         \
-     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(sprop->setter), 1, vp, vp)    \
-     : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
+     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_SETTER(sprop,obj2)),    \
+                       1, vp, vp)                                             \
+     : SPROP_SETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);

@@ -70,11 +70,11 @@ js_UnlockGlobal(void *id)
 }
 
 #define ReadWord(W) (W)
-#define AtomicAddBody(P,I)\
-    jsword n;\
-    do {\
-	n = ReadWord(*(P));\
-    } while (!js_CompareAndSwap(P, n, n + I));
+#define AtomicAddBody(P,I)                                                    \
+    jsword n;                                                                 \
+    do {                                                                      \
+	n = ReadWord(*(P));                                                   \
+    } while (!js_CompareAndSwap(P, n, n + I))
 
 /* Exclude Alpha NT. */
 #if defined(_WIN32) && defined(_M_IX86) && !defined(NSPR_LOCK)
@@ -112,10 +112,10 @@ static PRLock *_counter_lock;
 #define UsingCounterLock 1
 
 #undef AtomicAddBody
-#define AtomicAddBody(P,I) \
-    PR_Lock(_counter_lock);\
-    *(P) += I;\
-    PR_Unlock(_counter_lock);
+#define AtomicAddBody(P,I)                                                    \
+    PR_Lock(_counter_lock);                                                   \
+    *(P) += I;                                                                \
+    PR_Unlock(_counter_lock)
 
 #endif /* !ULTRA_SPARC */
 
@@ -182,10 +182,10 @@ static PRLock *_counter_lock;
 #define UsingCounterLock 1
 
 #undef AtomicAddBody
-#define AtomicAddBody(P,I) \
-    PR_Lock(_counter_lock);\
-    *(P) += I;\
-    PR_Unlock(_counter_lock);
+#define AtomicAddBody(P,I)                                                    \
+    PR_Lock(_counter_lock);                                                   \
+    *(P) += I;                                                                \
+    PR_Unlock(_counter_lock)
 
 static PRLock *_compare_and_swap_lock;
 #define UsingCompareAndSwapLock 1
@@ -219,25 +219,25 @@ js_CurrentThreadId()
 }
 
 void
-js_NewLock(JSThinLock *p)
+js_NewLock(JSThinLock *tl)
 {
 #ifdef NSPR_LOCK
-    p->owner = 0;
-    p->fat = (JSFatLock*)JS_NEW_LOCK();
+    tl->owner = 0;
+    tl->fat = (JSFatLock*)JS_NEW_LOCK();
 #else
-    memset(p, 0, sizeof(JSThinLock));
+    memset(tl, 0, sizeof(JSThinLock));
 #endif
 }
 
 void
-js_DestroyLock(JSThinLock *p)
+js_DestroyLock(JSThinLock *tl)
 {
 #ifdef NSPR_LOCK
-    p->owner = 0xdeadbeef;
-    JS_DESTROY_LOCK(((JSLock*)p->fat));
+    tl->owner = 0xdeadbeef;
+    JS_DESTROY_LOCK(((JSLock*)tl->fat));
 #else
-    JS_ASSERT(p->owner == 0);
-    JS_ASSERT(p->fat == NULL);
+    JS_ASSERT(tl->owner == 0);
+    JS_ASSERT(tl->fat == NULL);
 #endif
 }
 
@@ -248,27 +248,27 @@ js_GetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot)
 {
     jsval v;
 #ifndef NSPR_LOCK
-    JSScope *scp = (JSScope *)obj->map;
-    JSThinLock *p = &scp->lock;
+    JSScope *scope = OBJ_SCOPE(obj);
+    JSThinLock *tl = &scope->lock;
     jsword me = cx->thread;
 #endif
 
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
 #ifndef NSPR_LOCK
     JS_ASSERT(me == CurrentThreadId());
-    if (js_CompareAndSwap(&p->owner, 0, me)) {
-	if (scp == (JSScope *)obj->map) {
+    if (js_CompareAndSwap(&tl->owner, 0, me)) {
+	if (scope == OBJ_SCOPE(obj)) {
 	    v = obj->slots[slot];
-	    if (!js_CompareAndSwap(&p->owner, me, 0)) {
-		scp->count = 1;
+	    if (!js_CompareAndSwap(&tl->owner, me, 0)) {
+		scope->count = 1;
 		js_UnlockObj(cx,obj);
 	    }
 	    return v;
 	}
-	if (!js_CompareAndSwap(&p->owner, me, 0))
-	    js_Dequeue(p);
+	if (!js_CompareAndSwap(&tl->owner, me, 0))
+	    js_Dequeue(tl);
     }
-    else if (Thin_RemoveWait(ReadWord(p->owner)) == me) {
+    else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
 	return obj->slots[slot];
     }
 #endif
@@ -282,27 +282,27 @@ JS_INLINE void
 js_SetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
 #ifndef NSPR_LOCK
-    JSScope *scp = (JSScope *)obj->map;
-    JSThinLock *p = &scp->lock;
+    JSScope *scope = OBJ_SCOPE(obj);
+    JSThinLock *tl = &scope->lock;
     jsword me = cx->thread;
 #endif
 
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
 #ifndef NSPR_LOCK
     JS_ASSERT(me == CurrentThreadId());
-    if (js_CompareAndSwap(&p->owner, 0, me)) {
-	if (scp == (JSScope *)obj->map) {
+    if (js_CompareAndSwap(&tl->owner, 0, me)) {
+	if (scope == OBJ_SCOPE(obj)) {
 	    obj->slots[slot] = v;
-	    if (!js_CompareAndSwap(&p->owner, me, 0)) {
-		scp->count = 1;
+	    if (!js_CompareAndSwap(&tl->owner, me, 0)) {
+		scope->count = 1;
 		js_UnlockObj(cx,obj);
 	    }
 	    return;
 	}
-	if (!js_CompareAndSwap(&p->owner, me, 0))
-	    js_Dequeue(p);
+	if (!js_CompareAndSwap(&tl->owner, me, 0))
+	    js_Dequeue(tl);
     }
-    else if (Thin_RemoveWait(ReadWord(p->owner)) == me) {
+    else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
 	obj->slots[slot] = v;
 	return;
     }
@@ -316,7 +316,7 @@ static JSFatLock *
 mallocFatlock()
 {
     JSFatLock *fl = (JSFatLock *)malloc(sizeof(JSFatLock)); /* for now */
-    JS_ASSERT(fl);
+    if (!fl) return NULL;
     fl->susp = 0;
     fl->next = NULL;
     fl->prev = NULL;
@@ -338,13 +338,13 @@ listOfFatlocks(int l)
 {
     JSFatLock *m;
     JSFatLock *m0;
-	int i;
+    int i;
 
     JS_ASSERT(l>0);
     m0 = m = mallocFatlock();
     for (i=1; i<l; i++) {
-		m->next = mallocFatlock();
-		m = m->next;
+        m->next = mallocFatlock();
+        m = m->next;
     }
     return m0;
 }
@@ -364,25 +364,25 @@ static JSFatLockTable* _fl_tables;
 static JSFatLock *
 allocateFatlock(void *id)
 {
-  JSFatLock *m;
+    JSFatLock *m;
 
-  int i = ((int)id/4)%_nr_of_globals;
-  if (_fl_tables[i].free == NULL) {
-#ifdef DEBUG
-      printf("Ran out of fat locks!\n");
-#endif
-      _fl_tables[i].free = listOfFatlocks(10);
-  }
-  m = _fl_tables[i].free;
-  _fl_tables[i].free = m->next;
-  _fl_tables[i].free->prev = NULL;
-  m->susp = 0;
-  m->next = _fl_tables[i].taken;
-  m->prev = NULL;
-  if (_fl_tables[i].taken != NULL)
-	_fl_tables[i].taken->prev = m;
-  _fl_tables[i].taken = m;
-  return m;
+    int i = ((int)id/4)%_nr_of_globals;
+    if (_fl_tables[i].free == NULL) {
+  #ifdef DEBUG
+        printf("Ran out of fat locks!\n");
+  #endif
+        _fl_tables[i].free = listOfFatlocks(10);
+    }
+    m = _fl_tables[i].free;
+    _fl_tables[i].free = m->next;
+    _fl_tables[i].free->prev = NULL;
+    m->susp = 0;
+    m->next = _fl_tables[i].taken;
+    m->prev = NULL;
+    if (_fl_tables[i].taken != NULL)
+        _fl_tables[i].taken->prev = m;
+    _fl_tables[i].taken = m;
+    return m;
 }
 
 static void
@@ -508,93 +508,93 @@ js_InitContextForLocking(JSContext *cx)
    (ii) fl->susp >= 0
 */
 static int
-js_SuspendThread(JSThinLock *p)
+js_SuspendThread(JSThinLock *tl)
 {
     JSFatLock *fl;
     JSStatus stat;
-    
-    if (p->fat == NULL)
-        fl = p->fat = allocateFatlock(p);
+
+    if (tl->fat == NULL)
+        fl = tl->fat = allocateFatlock(tl);
     else
-        fl = p->fat;
+        fl = tl->fat;
     JS_ASSERT(fl->susp >= 0);
     fl->susp++;
     PR_Lock(fl->slock);
-    js_UnlockGlobal(p);
+    js_UnlockGlobal(tl);
     stat = (JSStatus)PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT);
     JS_ASSERT(stat != JS_FAILURE);
     PR_Unlock(fl->slock);
-    js_LockGlobal(p);
+    js_LockGlobal(tl);
     fl->susp--;
     if (fl->susp == 0) {
-        deallocateFatlock(fl,p);
-        p->fat = NULL;
+        deallocateFatlock(fl,tl);
+        tl->fat = NULL;
     }
-    return p->fat == NULL;
+    return tl->fat == NULL;
 }
 
-/* (i) global lock is held 
+/* (i) global lock is held
    (ii) fl->susp > 0
 */
 static void
-js_ResumeThread(JSThinLock *p)
+js_ResumeThread(JSThinLock *tl)
 {
-    JSFatLock *fl = p->fat;
+    JSFatLock *fl = tl->fat;
     JSStatus stat;
 
     JS_ASSERT(fl != NULL);
     JS_ASSERT(fl->susp > 0);
     PR_Lock(fl->slock);
-    js_UnlockGlobal(p);
+    js_UnlockGlobal(tl);
     stat = (JSStatus)PR_NotifyCondVar(fl->svar);
     JS_ASSERT(stat != JS_FAILURE);
     PR_Unlock(fl->slock);
 }
 
 static void
-js_Enqueue(JSThinLock *p, jsword me)
+js_Enqueue(JSThinLock *tl, jsword me)
 {
     jsword o, n;
 
-    js_LockGlobal(p);
+    js_LockGlobal(tl);
     while (1) {
-	o = ReadWord(p->owner);
+	o = ReadWord(tl->owner);
 	n = Thin_SetWait(o);
-	if (o != 0 && js_CompareAndSwap(&p->owner,o,n)) {
-	    if (js_SuspendThread(p))
+	if (o != 0 && js_CompareAndSwap(&tl->owner,o,n)) {
+	    if (js_SuspendThread(tl))
                 me = Thin_RemoveWait(me);
 	    else
 		me = Thin_SetWait(me);
 	}
-	else if (js_CompareAndSwap(&p->owner,0,me)) {
-            js_UnlockGlobal(p);
+	else if (js_CompareAndSwap(&tl->owner,0,me)) {
+            js_UnlockGlobal(tl);
 	    return;
 	}
     }
 }
 
 static void
-js_Dequeue(JSThinLock *p)
+js_Dequeue(JSThinLock *tl)
 {
     int o;
 
-    js_LockGlobal(p);
-    o = ReadWord(p->owner);
+    js_LockGlobal(tl);
+    o = ReadWord(tl->owner);
     JS_ASSERT(Thin_GetWait(o) != 0);
-    JS_ASSERT(p->fat != NULL);
-    if (!js_CompareAndSwap(&p->owner,o,0)) /* release it */
+    JS_ASSERT(tl->fat != NULL);
+    if (!js_CompareAndSwap(&tl->owner,o,0)) /* release it */
 	JS_ASSERT(0);
-    js_ResumeThread(p);
+    js_ResumeThread(tl);
 }
 
 JS_INLINE void
-js_Lock(JSThinLock *p, jsword me)
+js_Lock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
-    if (js_CompareAndSwap(&p->owner, 0, me))
+    if (js_CompareAndSwap(&tl->owner, 0, me))
 	return;
-    if (Thin_RemoveWait(ReadWord(p->owner)) != me)
-	js_Enqueue(p, me);
+    if (Thin_RemoveWait(ReadWord(tl->owner)) != me)
+	js_Enqueue(tl, me);
 #ifdef DEBUG
     else
 	JS_ASSERT(0);
@@ -602,13 +602,13 @@ js_Lock(JSThinLock *p, jsword me)
 }
 
 JS_INLINE void
-js_Unlock(JSThinLock *p, jsword me)
+js_Unlock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
-    if (js_CompareAndSwap(&p->owner, me, 0))
+    if (js_CompareAndSwap(&tl->owner, me, 0))
 	return;
-    if (Thin_RemoveWait(ReadWord(p->owner)) == me)
-	js_Dequeue(p);
+    if (Thin_RemoveWait(ReadWord(tl->owner)) == me)
+	js_Dequeue(tl);
 #ifdef DEBUG
     else
 	JS_ASSERT(0);
@@ -619,35 +619,35 @@ void
 js_LockRuntime(JSRuntime *rt)
 {
     jsword me = CurrentThreadId();
-    JSThinLock *p;
+    JSThinLock *tl;
 
     JS_ASSERT(Thin_RemoveWait(ReadWord(rt->rtLock.owner)) != me);
-    p = &rt->rtLock;
-    JS_LOCK0(p,me);
+    tl = &rt->rtLock;
+    JS_LOCK0(tl,me);
 }
 
 void
 js_UnlockRuntime(JSRuntime *rt)
 {
     jsword me = CurrentThreadId();
-    JSThinLock *p;
+    JSThinLock *tl;
 
     JS_ASSERT(Thin_RemoveWait(ReadWord(rt->rtLock.owner)) == me);
-    p = &rt->rtLock;
-    JS_UNLOCK0(p,me);
+    tl = &rt->rtLock;
+    JS_UNLOCK0(tl,me);
 }
 
 static JS_INLINE void
 js_LockScope1(JSContext *cx, JSScope *scope, jsword me)
 {
-    JSThinLock *p;
+    JSThinLock *tl;
 
     if (Thin_RemoveWait(ReadWord(scope->lock.owner)) == me) {
 	JS_ASSERT(scope->count > 0);
 	scope->count++;
     } else {
-	p = &scope->lock;
-	JS_LOCK0(p,me);
+	tl = &scope->lock;
+	JS_LOCK0(tl,me);
 	JS_ASSERT(scope->count == 0);
 	scope->count = 1;
     }
@@ -664,7 +664,7 @@ void
 js_UnlockScope(JSContext *cx, JSScope *scope)
 {
     jsword me = cx->thread;
-    JSThinLock *p;
+    JSThinLock *tl;
 
     JS_ASSERT(scope->count > 0);
     if (Thin_RemoveWait(ReadWord(scope->lock.owner)) != me) {
@@ -672,8 +672,8 @@ js_UnlockScope(JSContext *cx, JSScope *scope)
 	return;
     }
     if (--scope->count == 0) {
-	p = &scope->lock;
-	JS_UNLOCK0(p,me);
+	tl = &scope->lock;
+	JS_UNLOCK0(tl,me);
     }
 }
 
@@ -681,30 +681,32 @@ void
 js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
 {
     jsword me;
-    JSThinLock *p;
+    JSThinLock *tl;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(newscope));
+
     /*
      * If the last reference to oldscope went away, newscope needs no lock
      * state update.
      */
-    if (!oldscope) {
+    if (!oldscope)
 	return;
-    }
     JS_ASSERT(JS_IS_SCOPE_LOCKED(oldscope));
+
     /*
      * Transfer oldscope's entry count to newscope, as it will be unlocked
      * now via JS_UNLOCK_OBJ(cx,obj) calls made while we unwind the C stack
      * from the current point (under js_GetMutableScope).
      */
     newscope->count = oldscope->count;
+
     /*
      * Reset oldscope's lock state so that it is completely unlocked.
      */
     oldscope->count = 0;
-    p = &oldscope->lock;
+    tl = &oldscope->lock;
     me = cx->thread;
-    JS_UNLOCK0(p,me);
+    JS_UNLOCK0(tl,me);
 }
 
 void
@@ -714,22 +716,22 @@ js_LockObj(JSContext *cx, JSObject *obj)
     jsword me = cx->thread;
     JS_ASSERT(me == CurrentThreadId());
     for (;;) {
-		scope = (JSScope *) obj->map;
-		js_LockScope1(cx, scope, me);
+        scope = OBJ_SCOPE(obj);
+        js_LockScope1(cx, scope, me);
 
-		/* If obj still has this scope, we're done. */
-		if (scope == (JSScope *) obj->map)
-			return;
+        /* If obj still has this scope, we're done. */
+        if (scope == OBJ_SCOPE(obj))
+            return;
 
-		/* Lost a race with a mutator; retry with obj's new scope. */
-		js_UnlockScope(cx, scope);
+        /* Lost a race with a mutator; retry with obj's new scope. */
+        js_UnlockScope(cx, scope);
     }
 }
 
 void
 js_UnlockObj(JSContext *cx, JSObject *obj)
 {
-    js_UnlockScope(cx, (JSScope *) obj->map);
+    js_UnlockScope(cx, OBJ_SCOPE(obj));
 }
 
 #ifdef DEBUG
@@ -742,9 +744,10 @@ js_IsRuntimeLocked(JSRuntime *rt)
 JSBool
 js_IsObjLocked(JSObject *obj)
 {
-    JSObjectMap *map = obj->map;
+    JSScope *scope = OBJ_SCOPE(obj);
 
-    return MAP_IS_NATIVE(map) && CurrentThreadId() == Thin_RemoveWait(ReadWord(((JSScope *)map)->lock.owner));
+    return MAP_IS_NATIVE(&scope->map) &&
+           CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
 }
 
 JSBool

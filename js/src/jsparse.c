@@ -110,20 +110,17 @@ static JSMemberParser MemberExpr;
 static JSParser PrimaryExpr;
 
 /*
- * Insist that the next token be of type tt, or report err and throw or fail.
+ * Insist that the next token be of type tt, or report errno and return null.
  * NB: this macro uses cx and ts from its lexical environment.
  */
 
-#define MUST_MATCH_TOKEN_THROW(tt, errno, throw)                              \
+#define MUST_MATCH_TOKEN(tt, errno)                                           \
     JS_BEGIN_MACRO                                                            \
 	if (js_GetToken(cx, ts) != tt) {                                      \
 	    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, errno);       \
-	    throw;                                                            \
+	    return NULL;                                                      \
 	}                                                                     \
     JS_END_MACRO
-
-#define MUST_MATCH_TOKEN(tt, errno)                                           \
-    MUST_MATCH_TOKEN_THROW(tt, errno, return NULL)
 
 
 /*
@@ -447,9 +444,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSParseNode *pn, *pn2;
     JSOp op;
     JSAtom *funAtom, *argAtom;
-    JSObject *parent;
     JSFunction *fun, *outerFun;
-    JSBool ok, named;
+    JSObject *parent;
+    JSPropertyOp getter, setter;
+    uintN attrs;
+    JSBool named;
+    jsval fval;
     JSObject *pobj;
     JSScopeProperty *sprop;
     JSTreeContext funtc;
@@ -471,74 +471,55 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!parent)
 	return NULL;
 
+    /* Set up for ultimate OBJ_DEFINE_PROPERTY call, if not anonymous. */
+    named = !lambda && funAtom && !InWithStatement(tc);
+    getter = setter = NULL;
+    attrs = JSPROP_ENUMERATE;
+
+    fun = js_NewFunction(cx, NULL, NULL, 0, 0, parent, funAtom);
+    if (!fun)
+        return NULL;
+
 #if JS_HAS_GETTER_SETTER
     if (op != JSOP_NOP) {
-        JSPropertyOp getter, setter;
-        uintN attr;
+        uintN gsattr;
 
-        fun = js_NewFunction(cx, NULL, NULL, 0, 0, parent, funAtom);
-        if (!fun)
-            return NULL;
         if (op == JSOP_GETTER) {
             getter = (JSPropertyOp) fun->object;
-            setter = NULL;
-            attr = JSPROP_GETTER;
+            gsattr = JSPROP_GETTER;
         } else {
-            getter = NULL;
             setter = (JSPropertyOp) fun->object;
-            attr = JSPROP_SETTER;
+            gsattr = JSPROP_SETTER;
         }
-        fun->flags |= attr;
+        fun->flags |= gsattr;
+        attrs |= gsattr;
 
-        if (!lambda && funAtom && !InWithStatement(tc)) {
-            if (!OBJ_DEFINE_PROPERTY(cx, parent, (jsid)funAtom, JSVAL_VOID,
-                                     getter, setter, attr | JSPROP_ENUMERATE,
-                                     NULL)) {
-                return NULL;
-            }
-        }
-    } else
-#endif
-#if JS_HAS_LEXICAL_CLOSURE
-    if (lambda || !funAtom || InWithStatement(tc)) {
-	/* Don't name the function if enclosed by a with statement or equiv. */
-	fun = js_NewFunction(cx, NULL, NULL, 0, 0, cx->fp->scopeChain,
-			     funAtom);
-	named = JS_FALSE;
+        fval = JSVAL_VOID;
     } else
 #endif
     {
-	/* Don't add the function to it's parent until the parse succeeds. */
-        fun = js_NewFunction(cx, NULL, NULL, 0, 0, parent, funAtom);
-	named = (fun != NULL);
-    }
-    if (!fun) {
-	ok = JS_FALSE;
-	goto out;
+        fval = OBJECT_TO_JSVAL(fun->object);
     }
 
     /* Now parse formal argument list and compute fun->nargs. */
-    MUST_MATCH_TOKEN_THROW(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL,
-			   ok = JS_FALSE; goto out);
+    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
     if (!js_MatchToken(cx, ts, TOK_RP)) {
 	do {
-	    MUST_MATCH_TOKEN_THROW(TOK_NAME, JSMSG_MISSING_FORMAL,
-				   ok = JS_FALSE; goto out);
+	    MUST_MATCH_TOKEN(TOK_NAME, JSMSG_MISSING_FORMAL);
 	    argAtom = CURRENT_TOKEN(ts).t_atom;
 	    pobj = NULL;
-	    ok = js_LookupProperty(cx, fun->object, (jsid)argAtom, &pobj,
-				   (JSProperty **)&sprop);
-	    if (!ok)
-		goto out;
+	    if (!js_LookupProperty(cx, fun->object, (jsid)argAtom, &pobj,
+				   (JSProperty **)&sprop)) {
+		return NULL;
+            }
 	    if (sprop && pobj == fun->object) {
-		if (sprop->getter == js_GetArgument) {
+		if (SPROP_GETTER(sprop, pobj) == js_GetArgument) {
 #ifdef CHECK_ARGUMENT_HIDING
 		    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
 						JSMSG_DUPLICATE_FORMAL,
 						ATOM_BYTES(argAtom));
-		    ok = JS_FALSE;
-		    goto out;
+		    return NULL;
 #else
 		    /*
 		     * A duplicate parameter name. We create a dummy symbol
@@ -549,13 +530,13 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 		    jsid oldArgId = (jsid) sprop->id;
 		    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 		    sprop = NULL;
-		    ok = js_DefineProperty(cx, fun->object,
+		    if (!js_DefineProperty(cx, fun->object,
 					   oldArgId, JSVAL_VOID,
 					   js_GetArgument, js_SetArgument,
 					   JSPROP_ENUMERATE | JSPROP_PERMANENT,
-					   (JSProperty **)&sprop);
-		    if (!ok)
-			goto out;
+					   (JSProperty **)&sprop)) {
+			return NULL;
+                    }
 		    sprop->id = (jsid) argAtom;
 #endif
 		}
@@ -564,35 +545,30 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 		OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 		sprop = NULL;
 	    }
-	    ok = js_DefineProperty(cx, fun->object,
+	    if (!js_DefineProperty(cx, fun->object,
 				   (jsid)argAtom, JSVAL_VOID,
 				   js_GetArgument, js_SetArgument,
 				   JSPROP_ENUMERATE | JSPROP_PERMANENT,
-				   (JSProperty **)&sprop);
-	    if (!ok)
-		goto out;
+				   (JSProperty **)&sprop)) {
+		return NULL;
+            }
 	    JS_ASSERT(sprop);
 	    sprop->id = INT_TO_JSVAL(fun->nargs++);
 	    OBJ_DROP_PROPERTY(cx, fun->object, (JSProperty *)sprop);
 	} while (js_MatchToken(cx, ts, TOK_COMMA));
 
-	MUST_MATCH_TOKEN_THROW(TOK_RP, JSMSG_PAREN_AFTER_FORMAL,
-			       ok = JS_FALSE; goto out);
+	MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FORMAL);
     }
 
-    MUST_MATCH_TOKEN_THROW(TOK_LC, JSMSG_CURLY_BEFORE_BODY,
-			   ok = JS_FALSE; goto out);
+    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_BODY);
     pn->pn_pos.begin = CURRENT_TOKEN(ts).pos.begin;
 
     TREE_CONTEXT_INIT(&funtc);
     pn2 = FunctionBody(cx, ts, fun, &funtc);
-    if (!pn2) {
-	ok = JS_FALSE;
-	goto out;
-    }
+    if (!pn2)
+	return NULL;
 
-    MUST_MATCH_TOKEN_THROW(TOK_RC, JSMSG_CURLY_AFTER_BODY,
-			   ok = JS_FALSE; goto out);
+    MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
     pn->pn_fun = fun;
@@ -608,15 +584,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
 	pn->pn_op = JSOP_NOP;
 
-    ok = JS_TRUE;
-    if (named)
-        if (!OBJ_DEFINE_PROPERTY(cx, parent, (jsid)funAtom, OBJECT_TO_JSVAL(fun->object),
-                                 NULL, NULL, JSPROP_ENUMERATE, NULL)) {
-            return NULL;
-        }
-out:
-    if (!ok) {
-	return NULL;
+    if (named &&
+        !OBJ_DEFINE_PROPERTY(cx, parent, (jsid)funAtom, fval, getter, setter,
+                             attrs, NULL)) {
+        return NULL;
     }
     return pn;
 }
@@ -1085,8 +1056,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	/*
 	 * We can be sure that if it's a for/in loop, there's still an 'in'
 	 * keyword here, even if Javascript recognizes it as an operator,
-	 * because we've excluded it from parsing by setting the
-	 * TCF_IN_FOR_INIT flag on the JSTreeContext argument.
+	 * because we've excluded it from being parsed in RelExpr by setting
+	 * the TCF_IN_FOR_INIT flag in our JSTreeContext.
 	 */
 	if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
 	    stmtInfo.type = STMT_FOR_IN_LOOP;
@@ -1589,8 +1560,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (pobj == obj &&
 	    OBJ_IS_NATIVE(pobj) &&
 	    (sprop = (JSScopeProperty *)prop) != NULL) {
-	    if (sprop->getter == js_GetArgument) {
-		currentGetter = sprop->getter;
+	    if (SPROP_GETTER(sprop, pobj) == js_GetArgument) {
+		currentGetter = js_GetArgument;
+		currentSetter = js_SetArgument;
 #ifdef CHECK_ARGUMENT_HIDING
 		js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
 					    JSMSG_VAR_HIDES_ARG,
@@ -1604,11 +1576,11 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		if (fun) {
 		    /* Not an argument, must be a redeclared local var. */
 		    if (clasp == &js_FunctionClass) {
-			JS_ASSERT(sprop->getter == js_GetLocalVariable);
+			JS_ASSERT(SPROP_GETTER(sprop,pobj) == js_GetLocalVariable);
 			JS_ASSERT(JSVAL_IS_INT(sprop->id) &&
 				  JSVAL_TO_INT(sprop->id) < fun->nvars);
 		    } else if (clasp == &js_CallClass) {
-			if (sprop->getter == js_GetCallVariable) {
+			if (SPROP_GETTER(sprop, pobj) == js_GetCallVariable) {
 			    /*
 			     * Referencing a variable introduced by a var
 			     * statement in the enclosing function. Check
@@ -1622,16 +1594,16 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 			     * don't use the special getters and setters
 			     * since we can't allocate a slot in the frame.
 			     */
-			    currentGetter = sprop->getter;
-			    currentSetter = sprop->setter;
+			    currentGetter = SPROP_GETTER(sprop, pobj);
+			    currentSetter = SPROP_SETTER(sprop, pobj);
 			}
 		    }
 		} else {
 		    /* Global var: (re-)set id a la js_DefineProperty. */
 		    sprop->id = ATOM_KEY(atom);
 		}
-		sprop->getter = currentGetter;
-		sprop->setter = currentSetter;
+		SPROP_GETTER(sprop, pobj) = currentGetter;
+		SPROP_SETTER(sprop, pobj) = currentSetter;
 		sprop->attrs |= JSPROP_ENUMERATE | JSPROP_PERMANENT;
 		sprop->attrs &= ~JSPROP_READONLY;
 	    }
@@ -1684,8 +1656,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
 	}
 
-	if (ok && fun && (clasp == &js_FunctionClass ||
-			  clasp == &js_CallClass) &&
+	if (ok &&
+            fun &&
+            (clasp == &js_FunctionClass || clasp == &js_CallClass) &&
 	    !InWithStatement(tc))
 	{
 	    /* Depending on the value of the getter, change the
@@ -1764,11 +1737,13 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	return JS_FALSE;
     *slotp = -1;
     if (sprop) {
-	if (sprop->getter == js_GetArgument) {
+        JSPropertyOp getter = SPROP_GETTER(sprop, pobj);
+
+	if (getter == js_GetArgument) {
 	    *opp = JSOP_GETARG;
 	    *slotp = JSVAL_TO_INT(sprop->id);
-	} else if (sprop->getter == js_GetLocalVariable ||
-		   sprop->getter == js_GetCallVariable)
+	} else if (getter == js_GetLocalVariable ||
+		   getter == js_GetCallVariable)
 	{
 	    *opp = JSOP_GETVAR;
 	    *slotp = JSVAL_TO_INT(sprop->id);
@@ -1966,7 +1941,7 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	   (js_MatchToken(cx, ts, TOK_RELOP)
 #if JS_HAS_IN_OPERATOR
 	    /*
-	     * Only recognize the 'in' token as an operator if we're not
+	     * Recognize the 'in' token as an operator only if we're not
 	     * currently in the init expr of a for loop.
 	     */
 	    || (inForInitFlag == 0 && js_MatchToken(cx, ts, TOK_IN))

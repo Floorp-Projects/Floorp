@@ -87,7 +87,7 @@ typedef struct JSFatLockTable {
 #include "jsscope.h"
 
 #define _SET_OBJ_INFO(obj,f,l)                                                \
-    _SET_SCOPE_INFO(((JSScope*)obj->map),f,l)
+    _SET_SCOPE_INFO(OBJ_SCOPE(obj),f,l)
 
 #define _SET_SCOPE_INFO(scope,f,l)                                            \
     (JS_ASSERT(scope->count > 0 && scope->count <= 4),                        \
