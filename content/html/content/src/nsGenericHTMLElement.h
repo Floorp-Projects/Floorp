@@ -617,8 +617,8 @@ public:
    *
    * @param aContent an nsIHTMLContent* pointing to the form control
    * @param aControl an nsIFormControl* pointing to the form control
-   * @return whether or not the RestoreState() was called and exited
-   *         successfully.
+   * @return PR_FALSE if RestoreState() was not called, the return
+   *         value of RestoreState() otherwise.
    */
   static PRBool RestoreFormControlState(nsIHTMLContent* aContent,
                                         nsIFormControl* aControl);
@@ -872,9 +872,9 @@ public:
   {
     return NS_OK;
   }
-  NS_IMETHOD RestoreState(nsIPresState* aState)
+  virtual PRBool RestoreState(nsIPresState* aState)
   {
-    return NS_OK;
+    return PR_FALSE;
   }
   virtual PRBool AllowDrop()
   {

@@ -135,8 +135,10 @@ public:
    * control will grab its state from there.
    *
    * @param aState the pres state to use to restore the control
+   * @return PR_TRUE if the form control was a checkbox and its
+   *         checked state was restored, PR_FALSE otherwise.
    */
-  NS_IMETHOD RestoreState(nsIPresState* aState) = 0;
+  virtual PRBool RestoreState(nsIPresState* aState) = 0;
 
   virtual PRBool AllowDrop() = 0;
 };

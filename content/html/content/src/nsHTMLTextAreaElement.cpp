@@ -105,7 +105,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  NS_IMETHOD RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsIPresState* aState);
 
   // nsITextControlElemet
   NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
@@ -837,15 +837,16 @@ nsHTMLTextAreaElement::SaveState()
   return rv;
 }
 
-NS_IMETHODIMP
+PRBool
 nsHTMLTextAreaElement::RestoreState(nsIPresState* aState)
 {
-  nsresult rv = NS_OK;
-
   nsAutoString value;
-  rv = aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
   NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
   SetValue(value);
 
-  return rv;
+  return PR_FALSE;
 }

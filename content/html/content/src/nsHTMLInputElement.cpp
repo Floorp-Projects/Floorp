@@ -170,7 +170,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  NS_IMETHOD RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsIPresState* aState);
   virtual PRBool AllowDrop();
 
   // nsIContent
@@ -2433,14 +2433,14 @@ nsHTMLInputElement::DoneCreatingElement()
   //
   // Restore state for checkbox, radio, text and file
   //
-  PRBool restored = PR_FALSE;
+  PRBool restoredCheckedState = PR_FALSE;
   switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
     case NS_FORM_INPUT_HIDDEN:
-      restored = RestoreFormControlState(this, this);
+      restoredCheckedState = RestoreFormControlState(this, this);
       break;
   }
 
@@ -2448,7 +2448,8 @@ nsHTMLInputElement::DoneCreatingElement()
   // If restore does not occur, we initialize .checked using the CHECKED
   // property.
   //
-  if (!restored && GET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED)) {
+  if (!restoredCheckedState &&
+      GET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED)) {
     PRBool resetVal;
     GetDefaultChecked(&resetVal);
     DoSetChecked(resetVal, PR_FALSE);
@@ -2465,18 +2466,22 @@ nsHTMLInputElement::DoneCreatingElement()
     AddedToRadioGroup(PR_FALSE);
 }
 
-NS_IMETHODIMP
+PRBool
 nsHTMLInputElement::RestoreState(nsIPresState* aState)
 {
-  nsresult rv = NS_OK;
+  PRBool restoredCheckedState = PR_FALSE;
 
+  nsresult rv;
+  
   switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {
         nsAutoString checked;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "checked restore failed!");
         if (rv == NS_STATE_PROPERTY_EXISTS) {
+          restoredCheckedState = PR_TRUE;
           DoSetChecked(checked.EqualsLiteral("t"), PR_FALSE);
         }
         break;
@@ -2497,17 +2502,13 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
   }
   
   nsAutoString disabled;
-  nsresult rv2 = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
-  NS_ASSERTION(NS_SUCCEEDED(rv2), "disabled restore failed!");
-  if (rv2 == NS_STATE_PROPERTY_EXISTS) {
+  rv = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
     SetDisabled(disabled.EqualsLiteral("t"));
   }
 
-  if (NS_FAILED(rv|rv2)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return restoredCheckedState;
 }
 
 PRBool

@@ -79,7 +79,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  NS_IMETHOD RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsIPresState* aState);
 
   virtual void DoneAddingChildren();
   virtual PRBool IsDoneAddingChildren();
@@ -181,10 +181,10 @@ nsHTMLObjectElement::SaveState()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+PRBool
 nsHTMLObjectElement::RestoreState(nsIPresState* aState)
 {
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Code, code)
