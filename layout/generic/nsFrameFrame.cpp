@@ -729,7 +729,10 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   nsRect viewBounds(0, 0, 0, 0); // size will be fixed during reflow
 
   nsIViewManager* viewMan = outerView->GetViewManager();
-  rv = innerView->Init(viewMan, viewBounds, outerView);
+  // Create the inner view hidden if the outer view is already hidden
+  // (it won't get hidden properly otherwise)
+  rv = innerView->Init(viewMan, viewBounds, outerView,
+                       outerView->GetVisibility());
   viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
   nsWidgetInitData initData;
