@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
                   appstartup \
+                  embedcomponents \
 		  $(NULL)
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
