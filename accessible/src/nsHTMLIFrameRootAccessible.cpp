@@ -166,7 +166,7 @@ nsHTMLIFrameRootAccessible::~nsHTMLIFrameRootAccessible()
 {
 }
 
-nsHTMLIFrameRootAccessible::Init()
+void nsHTMLIFrameRootAccessible::Init()
 {
   if (!mOuterAccessible) {
     nsCOMPtr<nsIDOMDocument> domDoc;
