@@ -478,8 +478,6 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
 
   mTransCnt = 0;
 
-  mLastRefresh = PR_IntervalNow();
-
   mRefreshEnabled = PR_TRUE;
 
   mMouseGrabber = nsnull;
@@ -779,8 +777,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
            viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 #endif
   }
-
-  mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
 
