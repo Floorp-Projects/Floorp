@@ -49,6 +49,7 @@
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIURL.h"
 #endif
 #ifndef NO_SUBSCRIPT_LOADER
 #include "mozJSSubScriptLoader.h"
@@ -84,7 +85,64 @@ const char kScriptErrorContractID[] =      "@mozilla.org/scripterror;1";
 const char kObserverServiceContractID[] = NS_OBSERVERSERVICE_CONTRACTID;
 #ifndef XPCONNECT_STANDALONE
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
+const char kStandardURLContractID[] = "@mozilla.org/network/standard-url;1";
 #endif
+
+JS_STATIC_DLL_CALLBACK(void)
+Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
+{
+    nsresult rv;
+
+    /* Use the console service to register the error. */
+    nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(kConsoleServiceContractID);
+
+    /*
+     * Make an nsIScriptError, populate it with information from this
+     * error, then log it with the console service.  The UI can then
+     * poll the service to update the JavaScript console.
+     */
+    nsCOMPtr<nsIScriptError> errorObject = 
+        do_CreateInstance(kScriptErrorContractID);
+    
+    if (consoleService && errorObject) {
+        /*
+         * Got an error object; prepare appropriate-width versions of
+         * various arguments to it.
+         */
+        nsAutoString fileUni;
+        fileUni.AssignWithConversion(rep->filename);
+
+        PRUint32 column = rep->uctokenptr - rep->uclinebuf;
+
+        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*,
+                                                   rep->ucmessage),
+                               fileUni.get(),
+                               NS_REINTERPRET_CAST(const PRUnichar*,
+                                                   rep->uclinebuf),
+                               rep->lineno, column, rep->flags,
+                               "component javascript");
+        if (NS_SUCCEEDED(rv)) {
+            rv = consoleService->LogMessage(errorObject);
+            if (NS_SUCCEEDED(rv)) {
+                // We're done!  Skip return to fall thru to stderr
+                // printout, for the benefit of those invoking the
+                // browser with -console
+                // return;
+            }
+        }
+    }
+
+    /*
+     * If any of the above fails for some reason, fall back to
+     * printing to stderr.
+     */
+    fprintf(stderr, "JS Component Loader: %s %s:%d\n"
+            "                     %s\n",
+            JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
+            rep->filename, rep->lineno,
+            message ? message : "<no message>");
+}
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -114,15 +172,147 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 #ifdef DEBUG
-  return Dump(cx, obj, argc, argv, rval);
+    return Dump(cx, obj, argc, argv, rval);
 #else
-  return JS_TRUE;
+    return JS_TRUE;
 #endif
 }
+
+#ifndef XPCONNECT_STANDALONE
+
+static JSFunctionSpec gSandboxFun[] = {
+    {"dump", Dump, 1 },
+    {"debug", Debug, 1 },
+    {0}
+};
+
+static JSBool
+sandbox_enumerate(JSContext *cx, JSObject *obj)
+{
+    return JS_EnumerateStandardClasses(cx, obj);
+}
+
+static JSBool
+sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
+{
+    JSBool resolved;
+    return JS_ResolveStandardClass(cx, obj, id, &resolved);
+}
+
+static JSClass js_SandboxClass = {
+    "Sandbox", 0,
+    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    sandbox_enumerate, sandbox_resolve, JS_ConvertStub,  JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+NewSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID,
+                                               &rv);
+    if (!xpc) {
+        JS_ReportError(cx, "Unable to get XPConnect service: %08lx", rv);
+        return JS_FALSE;
+    }
+    
+    /*
+     * We're not likely to see much action on this context, so keep stack-arena
+     * chunk size small to reduce bloat.
+     */
+    JSContext *sandcx = JS_NewContext(JS_GetRuntime(cx), 1024);
+    if (!sandcx) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
+    JSBool ok = JS_FALSE;
+    JSObject *sandbox = JS_NewObject(sandcx, &js_SandboxClass, nsnull, nsnull);
+    if (!sandbox)
+        goto out;
+
+    JS_SetGlobalObject(sandcx, sandbox);
+
+    ok = JS_DefineFunctions(sandcx, sandbox, gSandboxFun) &&
+        NS_SUCCEEDED(xpc->InitClasses(sandcx, sandbox));
+    
+    *rval = OBJECT_TO_JSVAL(sandbox);
+ out:
+    JS_DestroyContext(sandcx);
+    return ok;
+}        
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+EvalInSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
+              jsval *rval)
+{
+    JSPrincipals* jsPrincipals;
+    JSString* source;
+    const jschar * URL;
+    JSObject* sandbox;
+    
+    if (!JS_ConvertArguments(cx, argc, argv, "SoW", &source, &sandbox, &URL))
+        return JS_FALSE;
+
+    if (!JS_InstanceOf(cx, sandbox, &js_SandboxClass, NULL)) {
+        JSClass *clasp = JS_GetClass(cx, sandbox);
+        const char *className = clasp ? clasp->name : "<unknown!>";
+        JS_ReportError(cx,
+      "evalInSandbox passed object of class %s instead of Sandbox", className);
+        return JS_FALSE;
+    }
+
+    NS_ConvertUCS2toUTF8 URL8((const PRUnichar *)URL);
+    nsCOMPtr<nsIURL> iURL;
+    nsCOMPtr<nsIStandardURL> stdUrl =
+        do_CreateInstance(kStandardURLContractID);
+    if (!stdUrl ||
+        NS_FAILED(stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80,
+                               URL8.get(), nsnull)) ||
+        !(iURL = do_QueryInterface(stdUrl))) {
+        JS_ReportError(cx, "Can't create URL for evalInSandbox");
+        return JS_FALSE;
+    }
+    
+    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIScriptSecurityManager> secman = 
+        do_GetService(kScriptSecurityManagerContractID);
+    if (!secman ||
+        NS_FAILED(secman->GetCodebasePrincipal(iURL,
+                                               getter_AddRefs(principal))) ||
+        !principal ||
+        NS_FAILED(principal->GetJSPrincipals(&jsPrincipals)) ||
+        !jsPrincipals) {
+        JS_ReportError(cx, "Can't get principals for evalInSandbox");
+        return JS_FALSE;
+    }
+    
+    JSContext *sandcx = JS_NewContext(JS_GetRuntime(cx), 8192);
+    if (!sandcx) {
+        JS_ReportError(cx, "Can't prepare context for evalInSandbox");
+        return JS_FALSE;
+    }
+    JS_SetGlobalObject(sandcx, sandbox);
+    JS_SetErrorReporter(sandcx, Reporter);
+
+    JSBool ok = JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
+                                                 JS_GetStringChars(source),
+                                                 JS_GetStringLength(source),
+                                                 URL8.get(), 1, rval);
+    JS_DestroyContext(sandcx);
+    return ok;
+}        
+
+#endif /* XPCONNECT_STANDALONE */
 
 static JSFunctionSpec gGlobalFun[] = {
     {"dump", Dump, 1 },
     {"debug", Debug, 1 },
+#ifndef XPCONNECT_STANDALONE
+    {"Sandbox", NewSandbox, 0 },
+    {"evalInSandbox", EvalInSandbox, 3 },
+#endif
     {0}
 };
 
@@ -273,61 +463,6 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
     fprintf(stderr, "GetClassObject %s\n", NS_FAILED(rv) ? "FAILED" : "ok");
 #endif
     return rv;
-}
-
-JS_STATIC_DLL_CALLBACK(void)
-Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
-{
-    nsresult rv;
-
-    /* Use the console service to register the error. */
-    nsCOMPtr<nsIConsoleService> consoleService =
-        do_GetService(kConsoleServiceContractID);
-
-    /*
-     * Make an nsIScriptError, populate it with information from this
-     * error, then log it with the console service.  The UI can then
-     * poll the service to update the JavaScript console.
-     */
-    nsCOMPtr<nsIScriptError> errorObject = 
-        do_CreateInstance(kScriptErrorContractID);
-    
-    if (consoleService != nsnull && errorObject != nsnull) {
-        /*
-         * Got an error object; prepare appropriate-width versions of
-         * various arguments to it.
-         */
-        nsAutoString fileUni;
-        fileUni.AssignWithConversion(rep->filename);
-
-        const PRUnichar *newFileUni = fileUni.ToNewUnicode();
-        
-        PRUint32 column = rep->uctokenptr - rep->uclinebuf;
-
-        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, rep->ucmessage), newFileUni, NS_REINTERPRET_CAST(const PRUnichar*, rep->uclinebuf),
-                               rep->lineno, column, rep->flags,
-                               "component javascript");
-        nsMemory::Free((void *)newFileUni);
-        if (NS_SUCCEEDED(rv)) {
-            rv = consoleService->LogMessage(errorObject);
-            if (NS_SUCCEEDED(rv)) {
-                // We're done!  Skip return to fall thru to stderr
-                // printout, for the benefit of those invoking the
-                // browser with -console.
-                // return;
-            }
-        }
-    }
-
-    /*
-     * If any of the above fails for some reason, fall back to
-     * printing to stderr.
-     */
-    fprintf(stderr, "JS Component Loader: %s %s:%d\n"
-            "                     %s\n",
-            JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
-            rep->filename, rep->lineno,
-            message ? message : "<no message>");
 }
 
 NS_IMETHODIMP
@@ -612,7 +747,7 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
 #endif
       
     rv = AttemptRegistration(component, PR_FALSE);
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     if (NS_SUCCEEDED(rv))
         fprintf(stderr, "registered module %s\n", (const char *)leafName);
     else if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN) 
@@ -788,7 +923,7 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
 
     PRUint32 count;
     rv = mDeferredComponents.Count(&count);
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: registering deferred (%d)\n", count);
 #endif
     if (NS_FAILED(rv) || !count)
@@ -808,7 +943,7 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
         }
     }
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     rv = mDeferredComponents.Count(&count);
     if (NS_SUCCEEDED(rv)) {
         if (*aRegistered)
@@ -866,7 +1001,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
-                (JSContext*)cx, mCompMgr, rv);
+                (void *)(JSContext*)cx, (void *)mCompMgr, rv);
 #endif
         return nsnull;
     }
@@ -1078,7 +1213,7 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
             JS_MaybeGC(cx);
     }
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
 
