@@ -48,14 +48,14 @@
 
 //----------------------------------------------------------------------------------------
 PR_IMPLEMENT(PrefResult)
-PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
+PREF_CopyPathPref(const char *pref_name, char ** return_buffer, PRBool isDefault)
 // Convert between cross-platform file/folder pathname strings
 // and Mac aliases flattened into binary strings
 //----------------------------------------------------------------------------------------
 {
 	int dirSize;
 	char *dirAliasBuf = NULL;
-	PrefResult result = PREF_CopyBinaryPref(pref_name, &dirAliasBuf, &dirSize, PR_FALSE);
+	PrefResult result = PREF_CopyBinaryPref(pref_name, &dirAliasBuf, &dirSize, isDefault);
 	if (result != PREF_NOERROR)
 		return result;
 
