@@ -6378,6 +6378,8 @@ nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
     PRBool isMailbox = PR_FALSE;
     PRBool isViewSource = PR_FALSE;
     PRBool isChrome = PR_FALSE;
+    PRBool isJavascript = PR_FALSE;
+    PRBool isData = PR_FALSE;
 
     NS_ENSURE_SUCCESS(aURI->SchemeIs("about", &isAbout), NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aURI->SchemeIs("imap", &isImap), NS_ERROR_FAILURE);
@@ -6386,8 +6388,11 @@ nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
     NS_ENSURE_SUCCESS(aURI->SchemeIs("view-source", &isViewSource),
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aURI->SchemeIs("chrome", &isChrome), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(aURI->SchemeIs("javascript", &isJavascript), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(aURI->SchemeIs("data", &isData), NS_ERROR_FAILURE);
 
-    if (isAbout || isImap || isNews || isMailbox || isViewSource || isChrome)
+    if (isAbout || isImap || isNews || isMailbox || isViewSource || isChrome
+        || isJavascript || isData)
         return NS_OK;
 
     *aShouldAdd = PR_TRUE;
