@@ -48,4 +48,5 @@ endif
 libs:: embed_chrome
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/basebrowser-unix -o unix -v
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
+	$(NSINSTALL) -t $(srcdir)/readme.html $(DIST)/Embed
 
