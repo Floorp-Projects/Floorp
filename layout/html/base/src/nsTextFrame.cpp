@@ -126,8 +126,16 @@ public:
                          nsIRenderingContext * aRendContext,
                          nsGUIEvent*     aEvent,
                          nsIFrame *      aNewFrame,
-                         PRUint32&       aAcutalContentOffset,
+                         PRUint32&       aActualContentOffset,
                          PRInt32&        aOffset);
+
+  NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
+                         nsIRenderingContext * aRendContext,
+                         nsGUIEvent*     aEvent,
+                         nsIFrame *      aNewFrame,
+                         PRUint32&       aActualContentOffset,
+                         PRInt32&        aOffset);
+
 
   NS_IMETHOD SetSelected(nsSelectionStruct *aSS);
   NS_IMETHOD SetSelectedContentOffsets(nsSelectionStruct *aSS, 
@@ -680,7 +688,7 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 }
 
 
-#define SHOW_SELECTION_CURSOR			// should be turned off when the caret code is activated
+//#define SHOW_SELECTION_CURSOR			// should be turned off when the caret code is activated
 
 #ifdef SHOW_SELECTION_CURSOR
 
@@ -918,6 +926,129 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   }
 }
 
+//measure Spaced Textvoid
+NS_IMETHODIMP
+TextFrame::GetPositionSlowly(nsIPresContext& aCX,
+                             nsIRenderingContext * aRendContext,
+                             nsGUIEvent*     aEvent,
+                             nsIFrame*       aNewFrame,
+                             PRUint32&       aAcutalContentOffset,
+                             PRInt32&        aOffset)
+
+{
+  if ((!aRendContext) ||(!aEvent)||(!aNewFrame))
+    return NS_ERROR_NULL_POINTER;
+  TextStyle ts(aCX, *aRendContext, mStyleContext);
+  if (!ts.mSmallCaps && (!ts.mWordSpacing) && (!ts.mLetterSpacing))
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aCX.GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
+
+  // Make enough space to transform
+  PRUnichar paintBufMem[TEXT_BUF_SIZE];
+  PRInt32 indicies[TEXT_BUF_SIZE];
+  PRUnichar wordBufMem[WORD_BUF_SIZE];
+  PRInt32* ip = indicies;
+  PRUnichar* paintBuf = paintBufMem;
+  if (mContentLength > TEXT_BUF_SIZE) {
+    ip = new PRInt32[mContentLength+1];
+    paintBuf = new PRUnichar[mContentLength];
+  }
+  nscoord width = mRect.width;
+  PRInt32 textLength;
+
+  // Transform text from content into renderable form
+  nsCOMPtr<nsILineBreaker> lb;
+  doc->GetLineBreaker(getter_AddRefs(lb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb);
+  PrepareUnicodeText(tx,
+                     ip,
+                     paintBuf, textLength, width);
+
+
+  nsPoint origin;
+  nsIView * view;
+  GetView(&view);
+  GetOffsetFromView(origin, &view);
+
+  nscoord charWidth,widthsofar = 0;
+  PRInt32 index(0);
+  PRBool found = PR_FALSE;
+  PRUnichar* startBuf = paintBuf;
+  nsIFontMetrics* lastFont = ts.mLastFont;
+
+  for (; --textLength >= 0; paintBuf++,index++) {
+    nsIFontMetrics* nextFont;
+    nscoord glyphWidth;
+    PRUnichar ch = *paintBuf;
+    if (ts.mSmallCaps && nsCRT::IsLower(ch)) {
+      nextFont = ts.mSmallFont;
+      ch = nsCRT::ToUpper(ch);
+      if (lastFont != ts.mSmallFont) {
+        aRendContext->SetFont(ts.mSmallFont);
+        aRendContext->GetWidth(ch, charWidth);
+        aRendContext->SetFont(ts.mNormalFont);
+      }
+      else {
+        aRendContext->GetWidth(ch, charWidth);
+      }
+      glyphWidth = charWidth + ts.mLetterSpacing;
+    }
+    else if (ch == ' ') {
+      glyphWidth = ts.mSpaceWidth + ts.mWordSpacing;
+      nscoord extra = ts.mExtraSpacePerSpace;
+      if (--ts.mNumSpaces == 0) {
+        extra += ts.mRemainingExtraSpace;
+      }
+      glyphWidth += extra;
+    }
+    else {
+      aRendContext->GetWidth(ch, charWidth);
+      glyphWidth = charWidth + ts.mLetterSpacing;
+    }
+    if ((aEvent->point.x - origin.x) >= widthsofar && (aEvent->point.x - origin.x) <= (widthsofar + glyphWidth)){
+      if ( ((aEvent->point.x - origin.x) - widthsofar) <= (glyphWidth /2)){
+        aOffset = index;
+        found = PR_TRUE;
+        break;
+      }
+      else{
+        aOffset = index+1;
+        found = PR_TRUE;
+        break;
+      }
+
+    }
+    if (nextFont != lastFont)
+      lastFont = nextFont;
+
+    widthsofar += glyphWidth;
+  }
+  paintBuf = startBuf;
+  if (!found){
+    aOffset = textLength;
+  }
+  aAcutalContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  PRInt32 i;
+  for (i = 0;i <= mContentLength; i ++){
+    if (ip[i] == aOffset + mContentOffset){ //reverse mapping
+        aOffset = i;
+        break;
+    }
+  }
+  // Cleanup
+  if (paintBuf != paintBufMem) {
+    delete [] paintBuf;
+  }
+  if (ip != indicies) {
+    delete [] ip;
+  }
+  return NS_OK;
+}
+
 void
 TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                         nsIStyleContext* aStyleContext,
@@ -1079,37 +1210,52 @@ TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
   PRUnichar* bp = bp0;
 
   nsIFontMetrics* lastFont = aTextStyle.mLastFont;
-  nscoord w, sum = 0;
+  nscoord sum = 0;
   PRInt32 pendingCount;
   PRUnichar* runStart = bp;
+  nscoord charWidth;
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
+    nscoord nextY, glyphWidth;
     PRUnichar ch = *aBuffer;
     if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
       nextFont = aTextStyle.mSmallFont;
       ch = nsCRT::ToUpper(ch);
+      if (lastFont != aTextStyle.mSmallFont) {
+        aRenderingContext.SetFont(aTextStyle.mSmallFont);
+        aRenderingContext.GetWidth(ch, charWidth);
+        aRenderingContext.SetFont(aTextStyle.mNormalFont);
+      }
+      else {
+        aRenderingContext.GetWidth(ch, charWidth);
+      }
+      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
+    }
+    else if (ch == ' ') {
+      nextFont = aTextStyle.mNormalFont;
+      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing;
+      nscoord extra = aTextStyle.mExtraSpacePerSpace;
+      if (--aTextStyle.mNumSpaces == 0) {
+        extra += aTextStyle.mRemainingExtraSpace;
+      }
+      glyphWidth += extra;
     }
     else {
-      nextFont = aTextStyle.mNormalFont;
-    }
-    if (nextFont != lastFont) {
-      pendingCount = bp - runStart;
-      if (0 != pendingCount) {
-        // Measure previous run of characters using the previous font
-        aRenderingContext.GetWidth(runStart, pendingCount, w);
-        sum += w;
-        runStart = bp;
+      if (lastFont != aTextStyle.mNormalFont) {
+        aRenderingContext.SetFont(aTextStyle.mNormalFont);
+        aRenderingContext.GetWidth(ch, charWidth);
+        aRenderingContext.SetFont(aTextStyle.mSmallFont);
       }
-      aRenderingContext.SetFont(nextFont);
-      lastFont = nextFont;
+      else {
+        aRenderingContext.GetWidth(ch, charWidth);
+      }
+      nextFont = aTextStyle.mNormalFont;
+      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
     }
+    if (nextFont != lastFont)
+      lastFont = nextFont;
+    sum += glyphWidth;
     *bp++ = ch;
-  }
-  pendingCount = bp - runStart;
-  if (0 != pendingCount) {
-    // Measure previous run of characters using the previous font
-    aRenderingContext.GetWidth(runStart, pendingCount, w);
-    sum += w;
   }
   if (bp0 != buf) {
     delete [] bp0;
@@ -1493,9 +1639,13 @@ TextFrame::GetPosition(nsIPresContext& aCX,
                        nsIRenderingContext * aRendContext,
                        nsGUIEvent*     aEvent,
                        nsIFrame*       aNewFrame,
-                       PRUint32&       aAcutalContentOffset,
+                       PRUint32&       aActualContentOffset,
                        PRInt32&        aOffset)
 {
+  TextStyle ts(aCX, *aRendContext, mStyleContext);
+  if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing)
+    return GetPositionSlowly(aCX,aRendContext,aEvent,aNewFrame,aActualContentOffset,aOffset);
+
   PRUnichar wordBufMem[WORD_BUF_SIZE];
   PRUnichar paintBufMem[TEXT_BUF_SIZE];
   PRInt32 indicies[TEXT_BUF_SIZE];
@@ -1571,7 +1721,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     delete [] paintBuf;
   }
 
-  aAcutalContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  aActualContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
   aOffset = index;
   //reusing wordBufMem
   PRInt32 i;
@@ -1704,57 +1854,55 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
 NS_IMETHODIMP
 TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
 {
-  NS_PRECONDITION(inPresContext && inRendContext && outPoint, "Null ptr");
-  
-  // Make enough space to transform
-  PRUnichar     wordBufMem[WORD_BUF_SIZE];
-  PRUnichar     paintBufMem[TEXT_BUF_SIZE];
-  PRUnichar*    paintBuf = paintBufMem;
+  if (!inPresContext || !inRendContext)
+    return NS_ERROR_NULL_POINTER;
+  inOffset-=mContentOffset;
+  if (inOffset < 0){
+    NS_ASSERTION(0,"offset less than this frame has in GetPointFromOffset");
+    inOffset = 0;
+  }
+  TextStyle ts(*inPresContext, *inRendContext, mStyleContext);
 
-  PRInt32       indicies[TEXT_BUF_SIZE];
-  PRInt32*      ip = indicies;
   
-  if (mContentLength > TEXT_BUF_SIZE)
-  {
+  PRUnichar wordBufMem[WORD_BUF_SIZE];
+  PRUnichar paintBufMem[TEXT_BUF_SIZE];
+  PRInt32 indicies[TEXT_BUF_SIZE];
+  PRUnichar* paintBuf = paintBufMem;
+  PRInt32* ip = indicies;
+  if (mContentLength > TEXT_BUF_SIZE) {
     ip = new PRInt32[mContentLength+1];
     paintBuf = new PRUnichar[mContentLength];
   }
-   
   nscoord width = mRect.width;
   PRInt32 textLength;
 
-  TextStyle ts(*inPresContext, *inRendContext, mStyleContext);
-
+  // Transform text from content into renderable form
   nsCOMPtr<nsIPresShell> shell;
   inPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIDocument> doc;
   shell->GetDocument(getter_AddRefs(doc));
-  // Transform text from content into renderable form
+
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb);
-  PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb);
+  PrepareUnicodeText(tx,
+                                             ip,
+                                             paintBuf, textLength, width);
+  if (inOffset > mContentLength){
+    NS_ASSERTION(0, "invalid offset passed to GetPointFromOffset");
+    inOffset = mContentLength;
+  }
+  GetWidth(*inRendContext, ts,
+           paintBuf, ip[inOffset]-mContentOffset,
+           width);
+  (*outPoint).x = width;
+  (*outPoint).y = 0;
 
-  PRUnichar* text = paintBuf;
-
-	nsPoint		bottomLeft(0, 0);
-	nscoord	 textWidth;
-	
-	PRUint32  measureLen = ip[inOffset - mContentOffset] - mContentOffset;
-	
-	// do I need to do special stuff with small caps etc here?
-	inRendContext->GetWidth(text, measureLen, textWidth);
-
-	bottomLeft.x = textWidth;
-  *outPoint = bottomLeft;
-
-  // Cleanup
   if (paintBuf != paintBufMem)
     delete [] paintBuf;
-
-  if (ip != indicies)
+  if (ip != indicies) {
     delete [] ip;
-
+  }
   return NS_OK;
 }
 
