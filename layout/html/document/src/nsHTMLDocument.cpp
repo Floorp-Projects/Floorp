@@ -2645,9 +2645,6 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
         contentStr.Cut(offset, mSearchStr->Length());
         contentStr.Insert(replacementStr, offset, replacementStr.Length());
 
-        char * s = contentStr.ToNewCString();
-        delete[]s;
-
         nsIDOMNode * parent;
         node->GetParentNode(&parent);
 
