@@ -894,28 +894,67 @@ nsresult nsRange::DeleteContents()
   return NS_OK;
 }
 
-nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret)
+nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
+                                   PRInt32* ret)
 {
+  nsresult res;
   if (ret == 0)
     return NS_ERROR_NULL_POINTER;
   if (srcRange == 0)
     return NS_ERROR_INVALID_ARG;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
-
-#if 0
+  nsIDOMNode* node1 = 0;
+  nsIDOMNode* node2 = 0;
+  PRInt32 offset1, offset2;
   switch (how)
   {
   case nsIDOMRange::START_TO_START:
+    node1 = mStartParent;
+    offset1 = mStartOffset;
+    res = srcRange->GetStartParent(&node2);
+    if (NS_SUCCEEDED(res))
+      res = srcRange->GetStartOffset(&offset2);
+    break;
   case nsIDOMRange::START_TO_END:
+    node1 = mStartParent;
+    offset1 = mStartOffset;
+    res = srcRange->GetEndParent(&node2);
+    if (NS_SUCCEEDED(res))
+      res = srcRange->GetEndOffset(&offset2);
+    break;
   case nsIDOMRange::END_TO_START:
+    node1 = mEndParent;
+    offset1 = mEndOffset;
+    res = srcRange->GetStartParent(&node2);
+    if (NS_SUCCEEDED(res))
+      res = srcRange->GetStartOffset(&offset2);
+    break;
   case nsIDOMRange::END_TO_END:
-    return NS_ERROR_NOT_IMPLEMENTED;
+    node1 = mEndParent;
+    offset1 = mEndOffset;
+    res = srcRange->GetEndParent(&node2);
+    if (NS_SUCCEEDED(res))
+      res = srcRange->GetEndOffset(&offset2);
+    break;
+
   default:  // shouldn't get here
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  return NS_ERROR_UNEXPECTED;
-#endif
+
+  if (!NS_SUCCEEDED(res))
+  {
+    NS_IF_RELEASE(node2);
+    return res;
+  }
+
+  if ((node1 == node2) && (offset1 == offset2))
+    *ret = 0;
+  else if (IsIncreasing(node1, offset2, node2, offset2))
+    *ret = 1;
+  else
+    *ret = -1;
+  NS_IF_RELEASE(node2);
+  return NS_OK;
 }
 
 nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
