@@ -72,6 +72,15 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 
 #include "nsIModule.h"
 
+typedef NS_CALLBACK(NSRegisterSelfProcPtr) (nsIComponentManager *aCompMgr,
+                                            nsIFileSpec *aPath,
+                                            const char *registryLocation,
+                                            const char *componentType);
+
+typedef NS_CALLBACK(NSUnregisterSelfProcPtr) (nsIComponentManager *aCompMgr,
+                                              nsIFileSpec *aPath,
+                                              const char *registryLocation);
+
 /**
  * Use this type to define a list of module component info to pass to 
  * NS_NewGenericModule. E.g.:
@@ -83,6 +92,8 @@ struct nsModuleComponentInfo {
     nsCID                                       mCID;
     const char*                                 mProgID;
     nsIGenericFactory::ConstructorProcPtr       mConstructor;
+    NSRegisterSelfProcPtr                       mRegisterSelfProc;
+    NSUnregisterSelfProcPtr                     mUnregisterSelfProc;
 };
 
 typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);

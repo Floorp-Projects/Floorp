@@ -218,6 +218,18 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
 #endif
             break;
         }
+        // Call the registration hook of the component, if any
+        if (cp->mRegisterSelfProc)
+        {
+            rv = cp->mRegisterSelfProc(aCompMgr, aPath, registryLocation, componentType);
+            if (NS_FAILED(rv)) {
+#ifdef DEBUG
+                printf("nsGenericModule %s: Register hook for %s component returned error => %x\n",
+                       mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
+#endif
+                break;
+            }
+        }
         cp++;
     }
 
@@ -234,6 +246,12 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
 #endif
     nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
+        // Call the unregistration hook of the component, if any
+        if (cp->mUnregisterSelfProc)
+        {
+            cp->mUnregisterSelfProc(aCompMgr, aPath, registryLocation);
+        }
+        // Unregister the component
         nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
