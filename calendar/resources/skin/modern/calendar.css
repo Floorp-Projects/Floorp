@@ -1243,6 +1243,7 @@ then observed (ERic 20/06/03)
    margin-bottom     : 1px;
    margin-top        : 1px;
    border            : 1px solid #1D7AB5;
+   overflow          : hidden;
    background-color  : #F9F4FF;
    min-width         : 20px;
    -moz-user-focus   : normal;
@@ -1264,13 +1265,19 @@ then observed (ERic 20/06/03)
  * Class for text of events
  *-------------------------------------------------------------------*/
 
-.week-view-event-text-class
+.week-view-event-title-label-class
 {
+   cursor               : pointer;
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
-   color                : #000000;
 }
 
+.week-view-event-description-class
+{
+  cursor               : pointer;
+  font-size            : 8pt;
+  font-family          : Arial, Helvetica;
+}
 
 .week-time-class-text
 {
