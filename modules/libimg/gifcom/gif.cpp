@@ -1158,10 +1158,11 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
         break;
 
         case gif_consume_comment:
-        {
-            BlockAllocCat(ic->comment, ic->comment_length, (char*)q, gs->count + 1);
+        {           
+            BlockAllocCat(ic->comment, ic->comment_length, (char*)q, gs->count);          
             ic->comment_length += gs->count;
-            ic->comment[ic->comment_length] = 0;
+            BlockAllocCat(ic->comment, ic->comment_length, "", 1);
+            ic->comment_length++;
             GETN(1, gif_comment_extension);
         }
         break;
