@@ -42,36 +42,10 @@
 
 extern "C" {
 
-// Remember that these 'words' are 32bit DWORDS
-
-static PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
-{
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
-    {
-        if(s->IsPtrData())
-        {
-            result++;
-            continue;
-        }
-        result++;
-        switch(s->type)
-        {
-        case nsXPTType::T_I64    :
-        case nsXPTType::T_U64    :
-        case nsXPTType::T_DOUBLE :
-            result++;
-            break;
-        }
-    }
-    return result;
-}
-
 static void
 invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for(PRUint32 i = paramCount; i >0; i--, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -104,7 +78,10 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 {
 #ifdef __GNUC__            /* Gnu compiler. */
   PRUint32 result;
-  PRUint32 n = invoke_count_words (paramCount, params) * 4;
+  // Each param takes at most 2, 4-byte words
+  // It doesn't matter if we push too many words, and calculating the exact
+  // ammount takes time.
+  PRUint32 n = paramCount << 3;
   void (*fn_copy) (unsigned int, nsXPTCVariant *, PRUint32 *) = invoke_copy_to_stack;
   int temp1, temp2, temp3;
  

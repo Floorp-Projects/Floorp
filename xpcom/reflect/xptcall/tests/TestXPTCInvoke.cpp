@@ -43,10 +43,13 @@
 #include <stdio.h>
 #include "xptcall.h"
 #include "prlong.h"
+#include "prinrval.h"
+
 
 // forward declration
 static void DoMultipleInheritenceTest();
 static void DoMultipleInheritenceTest2();
+static void DoSpeedTest();
 
 // {AAC1FB90-E099-11d2-984E-006008962422}
 #define INVOKETESTTARGET_IID \
@@ -663,6 +666,8 @@ int main()
 
     DoMultipleInheritenceTest();
     DoMultipleInheritenceTest2();
+    // Disabled by default - takes too much time on slow machines
+    //DoSpeedTest();
 
     return 0;
 }
@@ -1074,4 +1079,54 @@ static void DoMultipleInheritenceTest2()
     NS_RELEASE(impl);
 }
 
+static void DoSpeedTest()
+{
+    InvokeTestTarget *test = new InvokeTestTarget();
 
+    nsXPTCVariant var[3];
+
+    var[0].val.i32 = 1;
+    var[0].type = nsXPTType::T_I32;
+    var[0].flags = 0;
+
+    var[1].val.i32 = 1;
+    var[1].type = nsXPTType::T_I32;
+    var[1].flags = 0;
+
+    var[2].val.i32 = 0;
+    var[2].type = nsXPTType::T_I32;
+    var[2].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[2].ptr = &var[2].val.i32;
+
+    PRInt32 in1 = 1;
+    PRInt32 in2 = 1;
+    PRInt32 out;
+
+    // Crank this number down if your platform is slow :)
+    static const int count = 100000000;
+    int i;
+    PRIntervalTime start;
+    PRIntervalTime interval_direct;
+    PRIntervalTime interval_invoke;
+
+    printf("Speed test...\n\n");
+    printf("Doing %d direct call iterations...\n", count); 
+    start = PR_IntervalNow();
+    for(i = count; i; i--)
+        (void)test->AddTwoInts(in1, in2, &out);
+    interval_direct = PR_IntervalNow() - start;
+
+    printf("Doing %d invoked call iterations...\n", count); 
+    start = PR_IntervalNow();
+    for(i = count; i; i--)
+        (void)XPTC_InvokeByIndex(test, 3, 3, var);
+    interval_invoke = PR_IntervalNow() - start;
+
+    printf(" direct took %0.2f seconds\n", 
+            (double)interval_direct/(double)PR_TicksPerSecond());
+    printf(" invoke took %0.2f seconds\n", 
+            (double)interval_invoke/(double)PR_TicksPerSecond());
+    printf(" So, invoke overhead was ~ %0.2f seconds (~ %0.0f%%)\n", 
+            (double)(interval_invoke-interval_direct)/(double)PR_TicksPerSecond(),
+            (double)(interval_invoke-interval_direct)/(double)interval_invoke*100);
+}        
