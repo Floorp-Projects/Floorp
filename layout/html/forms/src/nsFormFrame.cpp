@@ -812,12 +812,15 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 #endif
 #ifdef ClientWallet
                               if (OKToCapture && (NS_FORM_INPUT_TEXT == type)) {
+                                      nsString vcard("");
+/* following line is awaiting karneze to implement GetAttrib */
+//                                      child->GetAttrib(NS_NewAtom("VCARD_NAME"), &vcard);
                                       nsIWalletService *service;
                                       nsresult res = nsServiceManager::GetService(kWalletServiceCID,
                                               kIWalletServiceIID,
                                               (nsISupports **)&service);
                                       if ((NS_OK == res) && (nsnull != service)) {
-                                              res = service->WALLET_Capture(doc, *names, *values);
+                                              res = service->WALLET_Capture(doc, *names, *values, vcard);
                                               NS_RELEASE(service);
                                       }
                               }
