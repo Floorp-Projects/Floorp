@@ -217,10 +217,10 @@ ET_PostCheckConfirmBox(MWContext* context,
     if (event == NULL) 
         return JS_FALSE;
     event->ce.context = context;
-    event->mainMessage = strdup(szMainMessage);
+    event->mainMessage = szMainMessage ? strdup(szMainMessage) : 0;
     event->checkMessage = szCheckMessage ? strdup(szCheckMessage) : 0;
     event->okMessage = szOKMessage ? strdup(szOKMessage) : 0;
-    event->cancelMessage = strdup(szCancelMessage);
+    event->cancelMessage = szCancelMessage ? strdup(szCancelMessage) : 0;
     event->checked = *bChecked;
     PR_InitEvent(&event->ce.event, context,
 		 (PRHandleEventProc)et_HandleEvent_CheckConfirmBox,
