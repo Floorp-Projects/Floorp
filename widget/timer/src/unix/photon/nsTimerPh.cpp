@@ -214,23 +214,23 @@ nsTimerPh::Cancel()
 int nsTimerPh::TimerEventHandler( void *aData, pid_t aRcvId, void *aMsg, size_t aMsgLen )
 {
   int localTimerId;
-
   nsTimerPh* timer = (nsTimerPh *)aData;
-  if( timer )
-  {
-    localTimerId = timer->mTimerId;
-	
-    if( timer->mFunc != NULL )
-    {
-      (*timer->mFunc)( timer, timer->mClosure );
-    }
-    else if ( timer->mCallback != NULL )
-    {
-      timer->mCallback->Notify( timer );
-    }
 
-/* These stupid people destroy this object inside the callback */
-/* so don't do anything with it from here on */
+  PR_LOG(PhTimLog, PR_LOG_DEBUG, ("nsTimerPh::TimerEventHandler this=<%p>\n", aData));
+  NS_ASSERTION(timer, "nsTimerPh::TimerEventHandler is NULL!");
+
+  // because Notify can cause 'timer' to get destroyed, we need to hold a ref
+  nsCOMPtr<nsITimer> kungFuDeathGrip = timer;
+
+  localTimerId = timer->mTimerId;
+	
+  if( timer->mFunc != NULL )
+  {
+    (*timer->mFunc)( timer, timer->mClosure );
+  }
+  else if ( timer->mCallback != NULL )
+  {
+    timer->mCallback->Notify( timer );
   }
 
   return Pt_CONTINUE;
