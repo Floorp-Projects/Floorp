@@ -101,6 +101,7 @@ scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 &Bugzilla::User::match_field({
     'qa_contact'                => { 'type' => 'single' },
     'newcc'                     => { 'type' => 'multi'  },
+    'masscc'                    => { 'type' => 'multi'  },
     'assigned_to'               => { 'type' => 'single' },
     '^requestee(_type)?-(\d+)$' => { 'type' => 'single' },
 });
