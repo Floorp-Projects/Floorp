@@ -263,7 +263,7 @@
 #ifdef XP_WIN
 <!ENTITY quitApplicationCmd.label       "Exit"> 
 <!ENTITY quitApplicationCmd.accesskey   "x">
-#elifdef XP_UNIX
+#else
 <!ENTITY goBackCmd.commandKey "[">
 <!ENTITY goForwardCmd.commandKey "]">
 <!ENTITY quitApplicationCmd.label       "Quit"> 

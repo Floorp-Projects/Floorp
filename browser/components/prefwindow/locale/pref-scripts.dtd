@@ -1,6 +1,6 @@
 <!-- extracted from content/pref-scripts.xul -->
 
-<!ENTITY lHeader "Scripts &amp; Windows">
+<!ENTITY lHeader "JavaScript">
 
 <!--LOCALIZATION NOTE (enableJsCheck.label): 'JavaScript' should never be translated -->
 <!ENTITY enableJavaScript.label          "Enable JavaScript">

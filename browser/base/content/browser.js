@@ -51,12 +51,9 @@ const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 const MAX_HISTORY_MENU_ITEMS = 15;
-const MAX_HISTORY_ITEMS = 100;
 var gRDF = null;
-var gRDFC = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
-var gLocalStore = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
@@ -102,8 +99,11 @@ const dlObserver = {
   observe: function(subject, topic, state) {  
     if (topic != "dl-start") return;
     var open = gPrefService.getBoolPref("browser.download.openSidebar");
-    if (open && document.getElementById("sidebar-box").hidden)
-      toggleSidebar("viewDownloadsSidebar");
+    if (open) {
+      var sidebar = document.getElementById("sidebar-box");
+      if (sidebar.hidden || (sidebar.getAttribute("sidebarcommand") != "viewDownloadsSidebar"))
+        toggleSidebar("viewDownloadsSidebar");
+    }
   }
 };
   
@@ -158,13 +158,6 @@ function HandleBookmarkIcon(iconURL, addFlag)
   }
 }
 
-function getBrowser()
-{
-  if (!gBrowser)
-    gBrowser = document.getElementById("content");
-  return gBrowser;
-}
-
 function getHomePage()
 {
   var url;
@@ -188,7 +181,7 @@ function UpdateBackForwardButtons()
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
   
-  var webNavigation = getWebNavigation();
+  var webNavigation = gBrowser.webNavigation;
 
   // Avoid setting attributes on broadcasters if the value hasn't changed!
   // Remember, guys, setting attributes on elements is expensive!  They
@@ -250,6 +243,8 @@ function RegisterTabOpenObserver()
 #endif
 function Startup()
 {
+  gBrowser = document.getElementById("content");
+
   var uriToLoad = null;
   // Check for window.arguments[0]. If present, use that for uriToLoad.
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
@@ -266,13 +261,10 @@ function Startup()
   // only load url passed in when we're not page cycling
  
   if (uriToLoad && !gIsLoadingBlank) {
-    if (gURLBar)
-      gURLBar.value = uriToLoad;
-    if ("arguments" in window && window.arguments.length >= 3) {
+    if ("arguments" in window && window.arguments.length >= 3)
       loadURI(uriToLoad, window.arguments[2]);
-    } else {
-      loadURI(uriToLoad);
-    }
+    else
+      loadOneOrMoreURIs(uriToLoad);
   }
 
 #ifdef MOZ_ENABLE_XREMOTE
@@ -322,7 +314,6 @@ function Startup()
 function prepareForStartup()
 {
   gURLBar = document.getElementById("urlbar");  
-  gBrowser = document.getElementById("content");
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
@@ -400,8 +391,15 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
  
+#ifdef XP_WIN
   // Perform default browser checking (after window opens).
-  checkForDefaultBrowser();
+  try {
+    var dialogShown = Components.classes["@mozilla.org/winhooks;1"]
+                    .getService(Components.interfaces.nsIWindowsHooks)
+                    .checkSettings(window);
+  } catch(e) {
+  }
+#endif
 
   // now load bookmarks after a delay
   BMSVC.ReadBookmarks();
@@ -413,37 +411,13 @@ function delayedStartup()
   // initiated by a web page script
   window.addEventListener("fullscreen", onFullScreen, false);
 
-  WindowFocusTimerCallback();
-
-  SetPageProxyState("invalid", null);
-
-  var toolbox = document.getElementById("navigator-toolbox");
-  toolbox.customizeDone = BrowserToolboxCustomizeDone;
-
-  // Get the preferences service
-  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefService);
-  gPrefService = gPrefService.getBranch(null);
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                  .getService(Components.interfaces.nsIObserverService);
-  observerService.addObserver(dlObserver, "dl-start", false);
-  updateHomeTooltip();
-}
-
-function WindowFocusTimerCallback()
-{
   var element;
-  if (gIsLoadingBlank) {  
-    var navBar = document.getElementById("nav-bar");
-    if (navBar && !navBar.hidden && !navBar.collapsed)
-      element = gURLBar;
-  }
-  else {
+  if (gIsLoadingBlank && gURLBar && !gURLBar.hidden && !gURLBar.parentNode.parentNode.collapsed)
+    element = gURLBar;
+  else
     element = _content;
-  }
 
-  // This fuction is a redo of the fix for jag bug 91884
+  // This is a redo of the fix for jag bug 91884
   var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                      .getService(Components.interfaces.nsIWindowWatcher);
   if (window == ww.activeWindow) {
@@ -456,6 +430,21 @@ function WindowFocusTimerCallback()
     else if (element instanceof Components.interfaces.nsIDOMWindow)
       document.commandDispatcher.focusedWindow = element;
   }
+
+  SetPageProxyState("invalid", null);
+
+  var toolbox = document.getElementById("navigator-toolbox");
+  toolbox.customizeDone = BrowserToolboxCustomizeDone;
+
+  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  gPrefService = gPrefService.getBranch(null);
+
+  var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                  .getService(Components.interfaces.nsIObserverService);
+  observerService.addObserver(dlObserver, "dl-start", false);
+
+  updateHomeTooltip();
 }
 
 function Shutdown()
@@ -599,7 +588,19 @@ function BrowserReloadSkipCache()
 function BrowserHome()
 {
   var homePage = getHomePage();
-  loadURI(homePage);
+  loadOneOrMoreURIs(homePage);
+}
+
+function loadOneOrMoreURIs(aURIString)
+{
+  if (aURIString.indexOf(" ") != -1) {
+    var urls = aURIString.split(" ");
+    loadURI(urls[0]);
+    for (var i = 1; i < urls.length; ++i)
+      gBrowser.addTab(urls[i]);
+  }
+  else
+    loadURI(aURIString);
 }
 
 function constructGoMenuItem(goMenu, beforeItem, url, title)
@@ -744,7 +745,7 @@ function delayedOpenWindow(chrome,flags,url)
    the URI kicked off before becoming the active content area. */
 function delayedOpenTab(url)
 {
-  setTimeout(function(aTabElt) { getBrowser().selectedTab = aTabElt; }, 0, getBrowser().addTab(url));
+  setTimeout(function(aTabElt) { gBrowser.selectedTab = aTabElt; }, 0, gBrowser.addTab(url));
 }
 
 function BrowserOpenFileWindow()
@@ -763,42 +764,11 @@ function BrowserOpenFileWindow()
   }
 }
 
-// Set up a lame hack to avoid opening two bookmarks.
-// Could otherwise happen with two Ctrl-B's in a row.
-var gDisableBookmarks = false;
-function enableBookmarks()
-{
-  gDisableBookmarks = false;
-}
-
-function BrowserEditBookmarks()
-{
-  // Use a single sidebar bookmarks dialog
-  var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                .getService(Components.interfaces.nsIWindowMediator);
-
-  var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
-
-  if (bookmarksWindow) {
-    bookmarksWindow.focus();
-  } else {
-    // while disabled, don't open new bookmarks window
-    if (!gDisableBookmarks) {
-      gDisableBookmarks = true;
-
-      open("chrome://browser/content/bookmarks/bookmarksManager.xul", "_blank",
-        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
-      setTimeout(enableBookmarks, 2000);
-    }
-  }
-}
-
 function BrowserCloseTabOrWindow()
 {
-  var browser = getBrowser();
-  if (browser && browser.localName == 'tabbrowser' && browser.mTabContainer.childNodes.length > 1) {
+  if (gBrowser.localName == 'tabbrowser' && gBrowser.mTabContainer.childNodes.length > 1) {
     // Just close up a tab.
-    browser.removeCurrentTab();
+    gBrowser.removeCurrentTab();
     return;
   }
 
@@ -843,12 +813,12 @@ function BrowserLoadURL(aTriggeringEvent)
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
-    if (getBrowser().localName == "tabbrowser" &&
+    if (gBrowser.localName == "tabbrowser" &&
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
         aTriggeringEvent.altKey) {
       _content.focus();
-      var t = getBrowser().addTab(url); // open link in new tab
-      getBrowser().selectedTab = t;
+      var t = gBrowser.addTab(url); // open link in new tab
+      gBrowser.selectedTab = t;
       gURLBar.value = url;
       event.preventDefault();
       event.preventBubble();
@@ -946,7 +916,7 @@ function BrowserViewSourceOfDocument(aDocument)
       }
       ifRequestor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
 
-      webNav = ifRequestor.getInterface(Components.interfaces.nsIWebNavigation);
+      webNav = ifRequestor.getInterface(nsIWebNavigation);
   } catch(err) {
       // If nsIWebNavigation cannot be found, just get the one for the whole
       // window...
@@ -1164,22 +1134,6 @@ function URLBarClickHandler(aEvent, aElt)
     aElt.select();
 }
 
-// This function gets the "windows hooks" service and has it check its setting
-// This will do nothing on platforms other than Windows.
-function checkForDefaultBrowser()
-{
-  const NS_WINHOOKS_CONTRACTID = "@mozilla.org/winhooks;1";
-  var dialogShown = false;
-  if (NS_WINHOOKS_CONTRACTID in Components.classes) {
-    try {
-      dialogShown = Components.classes[NS_WINHOOKS_CONTRACTID]
-                      .getService(Components.interfaces.nsIWindowsHooks)
-                      .checkSettings(window);
-    } catch(e) {
-    }
-  }
-}
-
 // If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
 // and highlight it, unless it is about:blank, where we reset it to "".
 function handleURLBarRevert()
@@ -1354,7 +1308,7 @@ function quickFindInPage(aValue)
   if (!focusedWindow || focusedWindow == window)
     focusedWindow = window._content;
       
-  var findInst = getBrowser().webBrowserFind;
+  var findInst = gBrowser.webBrowserFind;
   var findInFrames = findInst.QueryInterface(Components.interfaces.nsIWebBrowserFindInFrames);
   findInFrames.rootSearchFrame = _content;
   findInFrames.currentSearchFrame = focusedWindow;
@@ -1439,11 +1393,10 @@ function onFullScreen()
   
 }
 
-// Set up a lame hack to avoid opening two bookmarks.
 function getWebNavigation()
 {
   try {
-    return getBrowser().webNavigation;
+    return gBrowser.webNavigation;
   } catch (e) {
     return null;
   }
@@ -1461,7 +1414,7 @@ function BrowserReloadWithFlags(reloadFlags)
   try {
     var sh = webNav.sessionHistory;
     if (sh)
-      webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);
+      webNav = sh.QueryInterface(nsIWebNavigation);
   } catch (e) {
   }
 
@@ -1526,8 +1479,7 @@ function BrowserExitPrintPreview()
 {
   gInPrintPreviewMode = false;
 
-  var browser = getBrowser();
-  browser.setAttribute("handleCtrlPageUpDown", "true");
+  gBrowser.setAttribute("handleCtrlPageUpDown", "true");
 
   // exit print preview galley mode in content area
   var ifreq = _content.QueryInterface(
@@ -1646,7 +1598,6 @@ function BrowserPrintPreview()
 
 function FinishPrintPreview()
 {
-  var browser = getBrowser();
   try {
     var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
@@ -1655,7 +1606,7 @@ function FinishPrintPreview()
       webBrowserPrint.printPreview(gPrintSettings, null, gWebProgress.value);
     }
 
-    browser.setAttribute("handleCtrlPageUpDown", "false");
+    gBrowser.setAttribute("handleCtrlPageUpDown", "false");
 
     var mainWin = document.getElementById("main-window");
 
@@ -1679,7 +1630,6 @@ function FinishPrintPreview()
   }
   gInPrintPreviewMode = true;
 }
-
 
 function BrowserPrintSetup()
 {
@@ -1732,7 +1682,7 @@ function BrowserSetDefaultCharacterSet(aCharset)
 
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = getBrowser().docShell.QueryInterface(
+  var docCharset = gBrowser.docShell.QueryInterface(
                             Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
   BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
@@ -1740,7 +1690,7 @@ function BrowserSetForcedCharacterSet(aCharset)
 
 function BrowserSetForcedDetector()
 {
-  getBrowser().documentCharsetInfo.forcedDetector = true;
+  gBrowser.documentCharsetInfo.forcedDetector = true;
 }
 
 function BrowserFind()
@@ -1749,7 +1699,7 @@ function BrowserFind()
   if (!focusedWindow || focusedWindow == window)
     focusedWindow = window._content;
 
-  findInPage(getBrowser(), window._content, focusedWindow)
+  findInPage(gBrowser, window._content, focusedWindow)
 }
 
 function BrowserFindAgain()
@@ -1758,7 +1708,7 @@ function BrowserFindAgain()
     if (!focusedWindow || focusedWindow == window)
       focusedWindow = window._content;
 
-  findAgainInPage(getBrowser(), window._content, focusedWindow)
+  findAgainInPage(gBrowser, window._content, focusedWindow)
 }
 
 function BrowserCanFindAgain()
@@ -1768,7 +1718,7 @@ function BrowserCanFindAgain()
 
 function getMarkupDocumentViewer()
 {
-  return getBrowser().markupDocumentViewer;
+  return gBrowser.markupDocumentViewer;
 }
 
 /**
@@ -1884,8 +1834,9 @@ function openHomeDialog(aURL)
                           .createInstance(Components.interfaces.nsISupportsString);
       str.data = aURL;
       gPrefService.setComplexValue("browser.startup.homepage",
-                           Components.interfaces.nsISupportsString, str);
-      setTooltipText("home-button", aURL);
+                                   Components.interfaces.nsISupportsString, str);
+      var homeButton = document.getElementById("home-button");
+      homeButton.setAttribute("tooltiptext", aURL);
     } catch (ex) {
       dump("Failed to set the home page.\n"+ex+"\n");
     }
@@ -1957,7 +1908,7 @@ function ensureSearchPref()
   }
 }
 
-function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
+function OpenSearch(tabName, searchStr, newWindowFlag)
 {
   //This function needs to be split up someday.
 
@@ -1991,55 +1942,32 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
     if (forceAsURL) {
        BrowserLoadURL()
     } else {
-      var searchMode = 0;
-      try {
-        searchMode = gPrefService.getIntPref("browser.search.powermode");
-      } catch(ex) {
-      }
+      if (searchStr) {
+        var escapedSearchStr = escape(searchStr);
+        defaultSearchURL += escapedSearchStr;
+        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                 .getService(Components.interfaces.nsIInternetSearchService);
 
-      if (forceDialogFlag || searchMode == 1) {
-        // Use a single search dialog
-        var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                      .getService(Components.interfaces.nsIWindowMediator);
-
-        var searchWindow = windowManager.getMostRecentWindow("search:window");
-        if (!searchWindow) {
-          openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
-        } else {
-          // Already had one, focus it and load the page
-          searchWindow.focus();
-
-          if ("loadPage" in searchWindow)
-            searchWindow.loadPage(tabName, searchStr);
-        }
-      } else {
-        if (searchStr) {
-          var escapedSearchStr = escape(searchStr);
-          defaultSearchURL += escapedSearchStr;
-          var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                   .getService(Components.interfaces.nsIInternetSearchService);
-
-          searchDS.RememberLastSearchText(escapedSearchStr);
-          try {
-            var searchEngineURI = gPrefService.getCharPref("browser.search.defaultengine");
-            if (searchEngineURI) {          
-              var searchURL = getSearchUrl("actionButton");
-              if (searchURL) {
-                defaultSearchURL = searchURL + escapedSearchStr; 
-              } else {
-                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
-                if (searchURL)
-                  defaultSearchURL = searchURL;
-              }
+        searchDS.RememberLastSearchText(escapedSearchStr);
+        try {
+          var searchEngineURI = gPrefService.getCharPref("browser.search.defaultengine");
+          if (searchEngineURI) {          
+            var searchURL = getSearchUrl("actionButton");
+            if (searchURL) {
+              defaultSearchURL = searchURL + escapedSearchStr; 
+            } else {
+              searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
+              if (searchURL)
+                defaultSearchURL = searchURL;
             }
-          } catch (ex) {
           }
-
-          if (!newWindowFlag)
-            loadURI(defaultSearchURL);
-          else
-            window.open(defaultSearchURL, "_blank");
+        } catch (ex) {
         }
+
+        if (!newWindowFlag)
+          loadURI(defaultSearchURL);
+        else
+          window.open(defaultSearchURL, "_blank");
       }
     }
   }
@@ -2483,10 +2411,6 @@ function addToUrlbarHistory()
   if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
      return;
 
-  if (!gRDF)
-     gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                      .getService(Components.interfaces.nsIRDFService);
-
   if (!gGlobalHistory)
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
                                .getService(Components.interfaces.nsIBrowserHistory);
@@ -2494,109 +2418,14 @@ function addToUrlbarHistory()
   if (!gURIFixup)
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                           .getService(Components.interfaces.nsIURIFixup);
-  if (!gLocalStore)
-     gLocalStore = gRDF.GetDataSource("rdf:local-store");
-
-  if (gLocalStore) {
-     if (!gRDFC)
-        gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                          .getService(Components.interfaces.nsIRDFContainerUtils);
-
-       var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history"));
-       if (!entries)
-          return;
-       var elements = entries.GetElements();
-       if (!elements)
-          return;
-       var index = 0;
-       // create the nsIURI objects for comparing the 2 urls
-       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                     .getService(Components.interfaces.nsIIOService);
-       
-       var entryToAdd = gRDF.GetLiteral(urlToAdd);
-
-       try {
-         ioService.extractScheme(urlToAdd, {}, {});
-       } catch(e) {
-         urlToAdd = "http://" + urlToAdd;
-       }
-       
-       try {
-         var uriToAdd  = ioService.newURI(urlToAdd, null, null);
-       }
-       catch(e) {
-         // it isn't a valid url
-         // we'll leave uriToAdd as "undefined" and handle that later
-       }
-
-       while(elements.hasMoreElements()) {
-          var entry = elements.getNext();
-          if (!entry) continue;
-
-          index ++;
-          try {
-            entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-          } catch(ex) {
-            // XXXbar not an nsIRDFLiteral for some reason. see 90337.
-            continue;
-          }
-          var rdfValue = entry.Value;
-
-          try {
-            ioService.extractScheme(rdfValue, {}, {});
-          } catch(e) {
-            rdfValue = "http://" + rdfValue;
-          }
-
-          if (uriToAdd) {
-            try {
-              var rdfUri = ioService.newURI(rdfValue, null, null);
-                 
-              if (rdfUri.equals(uriToAdd)) {
-                // URI already present in the database
-                // Remove it from its current position.
-                // It is inserted to the top after the while loop.
-                entries.RemoveElementAt(index, true);
-                break;
-              }
-            }
-               
-            // the uri is still not recognized by the ioservice
-            catch(ex) {
-              // no problem, we'll handle this below
-            }
-          }
-
-          // if we got this far, then something is funky with the URIs,
-          // so we need to do a straight string compare of the raw strings
-          if (urlToAdd == rdfValue) {
-            entries.RemoveElementAt(index, true);
-            break;
-          }
-       }   // while
-
-       // Otherwise, we've got a new URL in town. Add it!
-
-       try {
-         var url = entryToAdd.Value;
-         if (url.indexOf(" ") == -1) {
-           var fixedUpURI = gURIFixup.createFixupURI(url, 0);
-           gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
-         }
-       }
-       catch(ex) {
-       }
-
-       // Put the value as it was typed by the user in to RDF
-       // Insert it to the beginning of the list.
-       entries.InsertElementAt(entryToAdd, 1, true);
-
-       // Remove any expired history items so that we don't let
-       // this grow without bound.
-       for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
-           entries.RemoveElementAt(index, true);
-       }  // for
-   }  // localstore
+   try {
+     if (urlToAdd.indexOf(" ") == -1) {
+       var fixedUpURI = gURIFixup.createFixupURI(urlToAdd, 0);
+       gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
+     }
+   }
+   catch(ex) {
+   }
 }
 
 function createMenuItem( aParent, aIndex, aLabel)
@@ -2619,28 +2448,26 @@ function createRadioMenuItem( aParent, aIndex, aLabel, aChecked)
   }
 
 function deleteHistoryItems(aParent)
-  {
-    var children = aParent.childNodes;
-    for (var i = 0; i < children.length; i++ )
-      {
-        var index = children[i].getAttribute( "index" );
-        if (index)
-          aParent.removeChild( children[i] );
-      }
-  }
+{
+  var children = aParent.childNodes;
+  for (var i = 0; i < children.length; i++)
+    {
+      var index = children[i].getAttribute("index");
+      if (index)
+        aParent.removeChild(children[i]);
+    }
+}
 
 function toJavaScriptConsole()
 {
-    toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
+  toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
 }
 
-function toOpenWindowByType( inType, uri )
+function toOpenWindowByType(inType, uri)
 {
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-
-  var topWindow = windowManagerInterface.getMostRecentWindow( inType );
+  var topWindow = windowManagerInterface.getMostRecentWindow(inType);
   
   if ( topWindow )
     topWindow.focus();
@@ -2786,7 +2613,7 @@ nsBrowserStatusHandler.prototype =
     browser : null,
 
     get value() {
-      if (this.browser != getBrowser().mCurrentBrowser)
+      if (this.browser != gBrowser.mCurrentBrowser)
         this._value = false;
       
       return this._value;
@@ -2795,7 +2622,7 @@ nsBrowserStatusHandler.prototype =
     set value(aValue) {
       if (this._value != aValue) {
         this._value = aValue;
-        this.browser = aValue ? getBrowser().mCurrentBrowser : null;
+        this.browser = aValue ? gBrowser.mCurrentBrowser : null;
       }
 
       return aValue;
@@ -3052,7 +2879,7 @@ nsBrowserStatusHandler.prototype =
         break;
     }
 
-    var securityUI = getBrowser().securityUI;
+    var securityUI = gBrowser.securityUI;
     if (securityUI)
       this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
     else
@@ -3137,7 +2964,7 @@ function onViewToolbarCommand(aEvent)
 
 function displayPageInfo()
 {
-    window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
+    window.openDialog("chrome://browser/content/pageInfo.xul", "_blank",
                       "dialog=no", null, "securityTab");
 }
 
@@ -3334,7 +3161,7 @@ function goPreferences(containerID, paneURL, itemID)
   if (lastPrefWindow)
     lastPrefWindow.focus();
   else {
-    var features = "chrome,titlebar,resizable";
+    var features = "chrome,titlebar,resizable,modal";
     openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
                features, paneURL, containerID, itemID);
   }
@@ -4293,7 +4120,7 @@ function handleLinkClick(event, href, linkNode)
   return false;
 }
 
-function middleMousePaste( event )
+function middleMousePaste(event)
 {
   var url = readFromClipboard();
   if (!url)

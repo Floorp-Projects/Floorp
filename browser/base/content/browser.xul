@@ -212,7 +212,7 @@
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
 
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
-#elifdef XP_UNIX
+#else
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="alt"/>
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
@@ -381,7 +381,7 @@
       <menuseparator id="context-sep-selectall"/>
       <menuitem id="context-searchselect"
                 accesskey="&search.accesskey;"
-                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
+                oncommand="OpenSearch('internet', gContextMenu.searchSelected(), true);"/>
       <menuseparator id="frame-sep"/>
       <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
         <menupopup>
@@ -732,7 +732,7 @@
                 <menuitem key="manBookmarkKb" 
                           label="&manBookmarksCmd.label;"
                           accesskey="&manBookmarksCmd.accesskey;"    
-                          oncommand="BrowserEditBookmarks();"/>
+                          oncommand="toOpenWindowByType('bookmarks:manager', 'chrome://browser/content/bookmarks/bookmarksManager.xul');"/>
                 <menuseparator/>
               </menupopup>
             </menu>
