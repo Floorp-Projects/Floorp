@@ -146,7 +146,7 @@ public:
     virtual                           ~nsBasicFileStream();
 
 
-    inline bool                       is_open() const { return mFileDesc != 0; }
+    inline PRBool                     is_open() const { return mFileDesc != 0; }
     void                              open(
                                            const nsFilePath& inFile,
                                            int nsprMode,
@@ -155,21 +155,94 @@ public:
     PRIntn                            tell() const;
     void                              seek(PRInt32 offset) { seek(PR_SEEK_SET, offset); }
     void                              seek(PRSeekWhence whence, PRInt32 offset);
-    bool                              eof() const { return mEOF; }
-    bool                              failed() const { return mFailed; }
+    PRBool                              eof() const { return mEOF; }
+    PRBool                            failed() const { return mFailed; }
                                           // call PR_GetError() for details
+protected:
+
+	PRFileDesc*                       GetFileDescriptor() const { return mFileDesc; }
     
 protected:
+    
+    friend class nsBasicInStream;
+    friend class nsBasicOutStream;
+    
     PRFileDesc*                       mFileDesc;
     int                               mNSPRMode;
-    bool                              mFailed;
-    bool                              mEOF;
+    PRBool                            mFailed;
+    PRBool                            mEOF;
 }; // class nsBasicFileStream
+
+//========================================================================================
+class NS_BASE nsBasicInStream
+//========================================================================================
+{
+protected:
+                                      nsBasicInStream(nsBasicFileStream& inStream, istream* stream);
+    
+public:
+
+    nsBasicInStream&                  operator >> (nsBasicInStream& (*pf)(nsBasicInStream&))
+                                      {
+                                           return pf(*this);
+                                       }
+    void                              get(char& c);
+    PRInt32                           read(void* s, PRInt32 n);
+    PRBool                            readline(char* s,  PRInt32 n);
+                                          // Result always null-terminated
+                                          // false result indicates line was truncated
+                                          // to fit buffer, or an error occurred.
+
+    // Input streamers.  Add more as needed
+    nsBasicInStream&                  operator >> (char& ch);
+    
+    istream*                          GetStandardStream() const { return mStdStream; }
+
+protected:
+
+    nsBasicFileStream&                mBase;    
+	istream*                          mStdStream;
+}; // class nsBasicInStream
+
+//========================================================================================
+class NS_BASE nsBasicOutStream
+//========================================================================================
+{
+protected:
+
+                                      nsBasicOutStream(nsBasicFileStream& inStream, ostream* stream);
+
+public:
+
+    nsBasicOutStream&                 operator << (nsBasicOutStream& (*pf)(nsBasicOutStream&))
+                                      {
+                                           return pf(*this);
+                                      }
+    void                              put(char c);
+    PRInt32                           write(const void* s, PRInt32 n);
+    void                              flush();
+    
+    // Output streamers.  Add more as needed
+    nsBasicOutStream&                 operator << (const char* buf);
+    nsBasicOutStream&                 operator << (char ch);
+    nsBasicOutStream&                 operator << (short val);
+    nsBasicOutStream&                 operator << (unsigned short val);
+    nsBasicOutStream&                 operator << (long val);
+    nsBasicOutStream&                 operator << (unsigned long val);
+
+    ostream*                          GetStandardStream() const { return mStdStream; }
+
+protected:
+
+    nsBasicFileStream&                mBase;    
+	ostream*                          mStdStream;
+}; // class nsBasicOutStream
 
 //========================================================================================
 class NS_BASE nsInputFileStream
 //========================================================================================
 :	public nsBasicFileStream
+,	public nsBasicInStream
 {
 public:
 	enum  { kDefaultMode = PR_RDONLY };
@@ -179,22 +252,9 @@ public:
                                           int nsprMode = kDefaultMode,
                                           PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
-                                      , mStdStream(0) {}
+                                      , nsBasicInStream(*this, 0)
+                                      {}
 
-    nsInputFileStream&                operator >> (nsInputFileStream& (*pf)(nsInputFileStream&))
-                                      {
-                                           return pf(*this);
-                                       }
-    void                              get(char& c);
-    PRInt32                           read(void* s, PRInt32 n);
-    bool                              readline(char* s,  PRInt32 n);
-                                          // Result always null-terminated
-                                          // false result indicates line was truncated
-                                          // to fit buffer, or an error occurred.
-
-    // Input streamers.  Add more as needed
-    nsInputFileStream&                operator >> (char& ch);
-    
     void                              open(
                                            const nsFilePath& inFile,
                                            int nsprMode = kDefaultMode,
@@ -206,15 +266,13 @@ private:
 
     nsInputFileStream&                operator >> (char* buf); // TOO DANGEROUS. DON'T DEFINE.
 
-protected:
-
-	istream*                          mStdStream;
 }; // class nsInputFileStream
 
 //========================================================================================
 class NS_BASE nsOutputFileStream
 //========================================================================================
 :	public nsBasicFileStream
+,	public nsBasicOutStream
 {
 public:
 	enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
@@ -225,9 +283,9 @@ public:
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
-                                      , mStdStream(0) {}
+                                      , nsBasicOutStream(*this, 0)
+                                      {}
  
-    ostream*                          GetStandardStream() const { return mStdStream; }
     inline void                       open(
                                           const nsFilePath& inFile,
                                           int nsprMode = kDefaultMode,
@@ -235,32 +293,40 @@ public:
                                       {
                                           nsBasicFileStream::open(inFile, nsprMode, accessMode);
                                       }
-    nsOutputFileStream&               operator << (nsOutputFileStream& (*pf)(nsOutputFileStream&))
-                                      {
-                                           return pf(*this);
-                                      }
-    void                              put(char c);
-    PRInt32                           write(const void* s, PRInt32 n);
-    void                              flush();
-    
-    // Output streamers.  Add more as needed
-    nsOutputFileStream&               operator << (const char* buf);
-    nsOutputFileStream&               operator << (char ch);
-    nsOutputFileStream&               operator << (short val);
-    nsOutputFileStream&               operator << (unsigned short val);
-    nsOutputFileStream&               operator << (long val);
-    nsOutputFileStream&               operator << (unsigned long val);
-
-protected:
-
-	ostream*                          mStdStream;
 }; // class nsOutputFileStream
+
+//========================================================================================
+class NS_BASE nsIOFileStream
+//========================================================================================
+:	public nsBasicFileStream
+,	public nsBasicOutStream
+,	public nsBasicInStream
+{
+public:
+	enum  { kDefaultMode = (PR_RDWR | PR_CREATE_FILE) };
+
+                                      nsIOFileStream(
+                                           const nsFilePath& inFile,
+                                           int nsprMode = kDefaultMode,
+                                           PRIntn accessMode = 00700) // <- OCTAL
+                                      : nsBasicFileStream(inFile, nsprMode, accessMode)
+                                      , nsBasicInStream(*this, 0)
+                                      , nsBasicOutStream(*this, 0)
+                                      {}
+ 
+    inline void                       open(
+                                          const nsFilePath& inFile,
+                                          int nsprMode = kDefaultMode,
+                                          PRIntn accessMode = 00700) // <- OCTAL
+                                      {
+                                          nsBasicFileStream::open(inFile, nsprMode, accessMode);
+                                      }
+}; // class nsIOFileStream
 
 //========================================================================================
 //        Manipulators
 //========================================================================================
-NS_BASE nsOutputFileStream& nsEndl(nsOutputFileStream& os);
+NS_BASE nsBasicOutStream& nsEndl(nsBasicOutStream& os);
  
 
 #endif /* _FILESTREAM_H_ */
-

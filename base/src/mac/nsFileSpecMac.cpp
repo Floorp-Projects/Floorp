@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -550,7 +550,7 @@ nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& operator << (nsOutputFileStream& s, const nsNativeFileSpec& spec)
+nsBasicOutStream& operator << (nsBasicOutStream& s, const nsNativeFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
 	s << spec.mSpec.vRefNum << ", " << spec.mSpec.parID << ", \"";

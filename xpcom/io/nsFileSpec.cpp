@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -48,6 +48,10 @@ NS_NAMESPACE nsFileSpecHelpers
     NS_NAMESPACE_PROTOTYPE char* AllocCat(const char* inString1, const char* inString2);
     NS_NAMESPACE_PROTOTYPE char* StringAssign(char*& ioString, const char* inOther);
     NS_NAMESPACE_PROTOTYPE char* ReallocCat(char*& ioString, const char* inString1);
+#ifdef XP_PC
+    NS_NAMESPACE_PROTOTYPE void NativeToUnix(char*& ioPath);
+    NS_NAMESPACE_PROTOTYPE void UnixToNative(char*& ioPath);
+#endif
 } NS_NAMESPACE_END
 
 
@@ -163,8 +167,10 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 	const char kSeparator = '/'; // I repeat: this should be a unix-style path.
     const int kSkipFirst = 1;
 
-#ifdef XP_WIN
-    NS_ASSERTION( pathCopy[2] == '|', "No drive letter!" );
+#ifdef XP_PC
+    // Either this is a relative path, or we ensure that it has
+    // a drive letter specifier.
+    NS_ASSERTION( pathCopy[0] != '/' || pathCopy[2] == '|', "No drive letter!" );
 #endif
     char* currentStart = pathCopy;
     char* currentEnd = strchr(currentStart + kSkipFirst, kSeparator);
@@ -313,7 +319,7 @@ void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 } // nsFileURL::operator =
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& operator << (nsOutputFileStream& s, const nsFileURL& url)
+nsBasicOutStream& operator << (nsBasicOutStream& s, const nsFileURL& url)
 //----------------------------------------------------------------------------------------
 {
     return (s << url.mURL);
@@ -330,8 +336,16 @@ nsFilePath::nsFilePath(const char* inString, bool inCreateDirs)
 :    mPath(nsFileSpecHelpers::StringDup(inString))
 {
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
+
+#ifdef XP_PC
+    nsFileSpecHelpers::UnixToNative(mPath);
+#endif
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
+#ifdef XP_PC
+    NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
+    nsFileSpecHelpers::NativeToUnix(mPath);
+#endif
 }
 #endif
 
@@ -379,9 +393,15 @@ void nsFilePath::operator = (const char* inString)
     mNativeFileSpec = inString;
 	nsFileSpecHelpers::StringAssign(mPath, (const char*)nsFilePath(mNativeFileSpec));
 #else
-    nsFileSpecHelpers::StringAssign(mPath, inString);
-    nsFileSpecHelpers::Canonify(mPath, true);
+#ifdef XP_PC
+	nsFileSpecHelpers::UnixToNative(mPath);
 #endif
+    // Make canonical and absolute.
+    nsFileSpecHelpers::Canonify(mPath, false /* XXX? */);
+#ifdef XP_PC
+	nsFileSpecHelpers::NativeToUnix(mPath);
+#endif
+#endif // XP_MAC
 }
 
 //----------------------------------------------------------------------------------------
@@ -535,12 +555,14 @@ void nsNativeFileSpec::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
     mPath = nsFileSpecHelpers::StringAssign(mPath, inString);
+    // Make canonical and absolute.
+    nsFileSpecHelpers::Canonify(mPath, true /* XXX? */);
 }
 #endif //XP_UNIX
 
 #if (defined(XP_UNIX) || defined(XP_PC))
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& operator << (nsOutputFileStream& s, const nsNativeFileSpec& spec)
+nsBasicOutStream& operator << (nsBasicOutStream& s, const nsNativeFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
     return (s << (const char*)spec.mPath);
@@ -555,4 +577,3 @@ nsNativeFileSpec nsNativeFileSpec::operator + (const char* inRelativePath) const
     result += inRelativePath;
     return result;
 } // nsNativeFileSpec::operator +
-
