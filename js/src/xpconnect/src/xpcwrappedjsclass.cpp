@@ -43,6 +43,34 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 // the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;
 
+static inline void DoPreScriptEvaluated(JSContext* cx)
+{
+// XXX should we do this?
+//    JS_BeginRequest(cx);
+}
+
+static inline void DoPostScriptEvaluated(JSContext* cx)
+{
+// XXX should we do this?
+//    JS_EndRequest(cx);
+
+#ifndef XPCONNECT_STANDALONE
+    // If this is a DOM JSContext, then notify nsIScriptContext of script 
+    // completion so that it can reset its infinite loop detection mechanism.
+    //
+    // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
+    // private set then that private *must* be a pointer to an nsISupports.
+   
+    nsISupports *supports = (nsISupports*) JS_GetContextPrivate(cx);
+    if(supports)
+    {
+        nsCOMPtr<nsIScriptContext> scx = do_QueryInterface(supports);
+        if(scx)
+            scx->ScriptEvaluated(PR_FALSE);
+    }
+#endif /* XPCONNECT_STANDALONE */
+}
+
 // static
 nsXPCWrappedJSClass*
 nsXPCWrappedJSClass::GetNewOrUsedClass(XPCJSRuntime* rt,
@@ -169,8 +197,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nsnull;
 
+    DoPreScriptEvaluated(cx);
+
     // XXX we should install an error reporter that will sent reports to 
-    // some as yet non-existent JS error console via a service.
+    // the JS error console service.
 
     jsval e;
     JSBool hadExpection = JS_GetPendingException(cx, &e);
@@ -181,6 +211,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
         success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, &retval);
     }
+
     if(success)
         success = JS_ValueToObject(cx, retval, &retObj);
     JS_SetErrorReporter(cx, older);
@@ -189,6 +220,8 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     else
         JS_ClearPendingException(cx);
 
+    DoPostScriptEvaluated(cx);
+    
     return success ? retObj : nsnull;
 }
 
@@ -507,6 +540,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     if(!xpc || !cx || !xpcc || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
+    DoPreScriptEvaluated(cx);
+
     xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nsnull);
     xpc->SetPendingException(nsnull);
@@ -800,21 +835,14 @@ pre_call_clean_up:
         {
             if(NS_FAILED(e_result))
             {
-                // XXX we should send the error string to some as yet 
-                // non-existent JS error console via a service.
-                // Below is a quick hack to show the error/exception text
-                // via printf in debug builds only
-#ifdef DEBUG
                 static const char line[] = 
                     "************************************************************\n";
-                static const char disclaimer[] = 
-                    "** NOTE: This report will only be printed in DEBUG builds.**\n";
                 static const char preamble[] = 
                     "* Call to xpconnect wrapped JSObject produced this error:  *\n";
                 static const char cant_get_text[] = 
                     "FAILED TO GET TEXT FROM EXCEPTION\n";
+                
                 printf(line);
-                printf(disclaimer);     
                 printf(preamble);
                 char* text;
                 if(NS_SUCCEEDED(xpc_exception->ToString(&text)) && text)
@@ -825,8 +853,8 @@ pre_call_clean_up:
                 }
                 else
                     printf(cant_get_text);     
-                printf(line);     
-#endif
+                printf(line); 
+                    
                 // Log the exception to the JS Console, so that users can do
                 // something with it.
                 nsCOMPtr<nsIConsoleService> consoleService
@@ -839,6 +867,7 @@ pre_call_clean_up:
                     rv = xpc_exception->GetData(getter_AddRefs(errorData));
                     if(NS_SUCCEEDED(rv))
                         scriptError = do_QueryInterface(errorData);
+                    
                     if(nsnull == scriptError)
                     {
                         // No luck getting one from the exception, so
@@ -892,7 +921,6 @@ pre_call_clean_up:
                             }
                         }
                     }
-
                     if(nsnull != scriptError)
                         consoleService->LogMessage(scriptError);
                 }
@@ -1144,7 +1172,10 @@ done:
         nsMemory::Free((void*)conditional_iid);
 
     if(cx)
+    {
         JS_SetErrorReporter(cx, older);
+        DoPostScriptEvaluated(cx);
+    }
 
     NS_IF_RELEASE(xpc);
 #ifdef DEBUG_stats_jband

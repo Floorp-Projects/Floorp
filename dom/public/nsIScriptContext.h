@@ -301,9 +301,14 @@ public:
    * A GC may be done if "necessary."
    * This call is necessary if script evaluation is done
    * without using the EvaluateScript method.
+   * @param aTerminated If true then call termination function if it was 
+   *    previously set. Within DOM this will always be true, but outside 
+   *    callers (such as xpconnect) who may do script evaluations nested
+   *    inside DOM script evaluations can pass false to avoid premature
+   *    calls to the termination function.
    * @return NS_OK if the method is successful
    */
-  NS_IMETHOD ScriptEvaluated(void) = 0;
+  NS_IMETHOD ScriptEvaluated(PRBool aTerminated) = 0;
 
   /**
    * Let the script context know who its owner is.

@@ -603,7 +603,7 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
     aRetValue.Truncate();
   }
 
-  ScriptEvaluated();
+  ScriptEvaluated(PR_TRUE);
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
@@ -740,7 +740,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
       aRetValue->Truncate();
   }
 
-  ScriptEvaluated();
+  ScriptEvaluated(PR_TRUE);
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
@@ -908,7 +908,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
                    ? !JSVAL_IS_BOOLEAN(val) || (aReverseReturnResult ? !JSVAL_TO_BOOLEAN(val) : JSVAL_TO_BOOLEAN(val))
                    : JS_TRUE;
 
-    ScriptEvaluated();
+    ScriptEvaluated(PR_TRUE);
   }
 
   if (NS_FAILED(stack->Pop(nsnull)))
@@ -1288,9 +1288,9 @@ nsJSContext::GC()
 }
 
 NS_IMETHODIMP
-nsJSContext::ScriptEvaluated(void)
+nsJSContext::ScriptEvaluated(PRBool aTerminated)
 {
-  if (mTerminationFunc) {
+  if (aTerminated && mTerminationFunc) {
     (*mTerminationFunc)(mRef);
     mRef = nsnull;
     mTerminationFunc = nsnull;
