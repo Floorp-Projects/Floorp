@@ -28,9 +28,10 @@ interface nsIEditorSpellCheck : nsISupports
   boolean       CheckCurrentWord(in wstring suggestedWord);
   void          ReplaceWord(in wstring misspelledWord, in wstring replaceWord, in boolean allOccurrences);
   void          IgnoreWordAllOccurrences(in wstring word);
+  void          GetPersonalDictionary();
+  wstring       GetPersonalDictionaryWord();
   void          AddWordToDictionary(in wstring word);
   void          RemoveWordFromDictionary(in wstring word);
-  wstring       GetPersonalDictionaryWord(in wstring word);
   void          CloseSpellChecking();
 
 };

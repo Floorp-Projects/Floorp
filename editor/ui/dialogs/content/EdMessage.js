@@ -57,6 +57,7 @@ function Startup()
   button1 = document.getElementById("button1");
   button2 = document.getElementById("button2");
   button3 = document.getElementById("button3");
+  button4 = document.getElementById("button4");
   // All buttons must have the same parent
   buttonParent = button1.parentNode;
 
@@ -87,6 +88,15 @@ function Startup()
   } else {
     buttonParent.removeChild(button3);
   }
+
+  button4Text = window.arguments[6];
+  if (button4Text && button4Text.length > 0)
+  {
+    dump(button4Text+"\n");
+    button4.setAttribute("value", button4Text);
+  } else {
+    buttonParent.removeChild(button4);
+  }
 }
 
 function onButton1()
@@ -104,5 +114,11 @@ function onButton2()
 function onButton3()
 {
   window.opener.msgResult = 3;
+  window.close();
+}
+
+function onButton3()
+{
+  window.opener.msgResult = 4;
   window.close();
 }

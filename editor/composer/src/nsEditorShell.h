@@ -184,16 +184,17 @@ class nsEditorShell :   public nsIEditorShell,
 
 
     /* Spell check interface */
-	  NS_IMETHOD StartSpellChecking(PRUnichar **_retval);
-	  NS_IMETHOD GetNextMisspelledWord(PRUnichar **_retval);
-	  NS_IMETHOD GetSuggestedWord(PRUnichar **_retval);
-	  NS_IMETHOD CheckCurrentWord(const PRUnichar *suggestedWord, PRBool *_retval);
-	  NS_IMETHOD ReplaceWord(const PRUnichar *misspelledWord, const PRUnichar *replaceWord, PRBool allOccurrences);
-	  NS_IMETHOD IgnoreWordAllOccurrences(const PRUnichar *word);
-	  NS_IMETHOD AddWordToDictionary(const PRUnichar *word);
-	  NS_IMETHOD RemoveWordFromDictionary(const PRUnichar *word);
-	  NS_IMETHOD GetPersonalDictionaryWord(const PRUnichar *word, PRUnichar **_retval);
-	  NS_IMETHOD CloseSpellChecking();
+    NS_IMETHOD StartSpellChecking(PRUnichar **_retval);
+    NS_IMETHOD GetNextMisspelledWord(PRUnichar **_retval);
+    NS_IMETHOD GetSuggestedWord(PRUnichar **_retval);
+    NS_IMETHOD CheckCurrentWord(const PRUnichar *suggestedWord, PRBool *_retval);
+    NS_IMETHOD ReplaceWord(const PRUnichar *misspelledWord, const PRUnichar *replaceWord, PRBool allOccurrences);
+    NS_IMETHOD IgnoreWordAllOccurrences(const PRUnichar *word);
+    NS_IMETHOD GetPersonalDictionary();
+    NS_IMETHOD GetPersonalDictionaryWord(PRUnichar **_retval);
+    NS_IMETHOD AddWordToDictionary(const PRUnichar *word);
+    NS_IMETHOD RemoveWordFromDictionary(const PRUnichar *word);
+    NS_IMETHOD CloseSpellChecking();
 
 
     // nsIDocumentLoaderObserver

@@ -153,8 +153,12 @@ titledbutton.PixelOrPercent {
 }
 
 titledbutton.SizeToCell {
-  /* BUG: Setting this to 100% chops off right border of button */
-  width: 90%;
+  width: 100%;
+}
+
+titledbutton.CloseButton {
+  width: 100%;
+  margin-top: 10px;
 }
 
 titledbutton.MsgButton {
