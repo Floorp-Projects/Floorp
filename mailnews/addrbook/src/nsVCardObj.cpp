@@ -96,7 +96,7 @@ extern "C" {
   char    **fieldedProp;
 
 #ifdef __cplusplus
-    };
+    }
 #endif
 
 
