@@ -325,7 +325,7 @@ input[type="submit"] {
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   color: ButtonText; 
-  padding: 0px 1px 0px 1px;
+  padding: 2px 0 2px 0;
   font: button;
   cursor: default;
   white-space: pre;
@@ -334,6 +334,11 @@ input[type="submit"] {
   -moz-user-focus: normal;
   -moz-binding: none;
 }
+
+button {
+  padding: 0px 1px 0px 1px;
+}
+
 
 *|*:button-content {
   display: block;
