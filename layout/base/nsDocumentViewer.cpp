@@ -467,6 +467,7 @@ protected:
   nsString mHintCharset;
   PRInt32 mHintCharsetSource;
   nsString mForceCharacterSet;
+  nsString mPrevDocCharacterSet;
 };
 
 //------------------------------------------------------------------
@@ -2396,6 +2397,31 @@ NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSetSource(PRInt32 *aHintCharac
   *aHintCharacterSetSource = mHintCharsetSource;
   return NS_OK;
 }
+
+
+NS_IMETHODIMP DocumentViewerImpl::GetPrevDocCharacterSet(PRUnichar * *aPrevDocCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aPrevDocCharacterSet);
+
+  *aPrevDocCharacterSet = ToNewUnicode(mPrevDocCharacterSet);
+
+  return NS_OK;
+}
+
+static void
+SetChildPrevDocCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  aChild->SetPrevDocCharacterSet((PRUnichar*) aClosure);
+}
+
+
+NS_IMETHODIMP DocumentViewerImpl::SetPrevDocCharacterSet(const PRUnichar* aPrevDocCharacterSet)
+{
+  mPrevDocCharacterSet = aPrevDocCharacterSet;  
+  return CallChildren(SetChildPrevDocCharacterSet,
+                      (void*) aPrevDocCharacterSet);
+}
+
 
 static void
 SetChildHintCharacterSetSource(nsIMarkupDocumentViewer* aChild, void* aClosure)

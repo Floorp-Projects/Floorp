@@ -70,6 +70,11 @@ interface nsIMarkupDocumentViewer : nsISupports
 	*/
 	attribute PRInt32 hintCharacterSetSource;
 
+	/*
+	character set from prev document 
+	*/
+	attribute wstring prevDocCharacterSet;
+
 	//void GetCharacterSetHint(in wstring hintCharset, in PRInt32 charsetSource);
 
 	/**

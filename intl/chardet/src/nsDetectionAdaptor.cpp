@@ -44,6 +44,7 @@
 #include "nsIParser.h"
 #include "nsIDocument.h"
 #include "nsDetectionAdaptor.h"
+#include "nsIContentSink.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -65,6 +66,10 @@ NS_IMETHODIMP nsMyObserver::Notify(
           mWeakRefParser->GetDocumentCharset(existingCharset, existingSource);  
           if (existingSource < kCharsetFromAutoDetection) {
             mWeakRefParser->SetDocumentCharset(newcharset, kCharsetFromAutoDetection);
+            nsCOMPtr<nsIContentSink> contentSink = mWeakRefParser->GetContentSink();
+            if (contentSink)
+              contentSink->SetDocumentCharset(newcharset);
+
             if(mWeakRefDocument) 
               mWeakRefDocument->SetDocumentCharacterSet(newcharset);
           }
