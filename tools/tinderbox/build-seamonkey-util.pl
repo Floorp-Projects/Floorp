@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.235 $ ';
+$::UtilsVersion = '$Revision: 1.236 $ ';
 
 package TinderUtils;
 
@@ -947,7 +947,7 @@ sub get_profile_dir {
         $profile_dir = "$ENV{HOME}/Library/Mozilla/Profiles/$Settings::MozProfileName";
     } else {
         # *nix
-        $profile_dir = "$build_dir/.mozilla/$Settings::MozProfileName";
+        $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/$Settings::MozProfileName";
     }
 
     return $profile_dir;
