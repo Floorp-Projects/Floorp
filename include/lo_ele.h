@@ -123,12 +123,8 @@
 #define LO_HEADING		25
 #define LO_SPAN			26
 #define LO_DIV			27
-#ifdef SHACK
 #define LO_BUILTIN      28
 #define LO_SPACER		29
-#else
-#define LO_SPACER		28
-#endif /* SHACK */
 
 #define LO_FONT_NORMAL      0x0000
 #define LO_FONT_BOLD        0x0001
@@ -989,7 +985,6 @@ struct LO_CommonPluginStruct_struct {
 #endif		
 };
 
-#ifdef SHACK
 struct LO_BuiltinStruct_struct {
 		int16 type;
 		int16 x_offset;
@@ -1029,7 +1024,6 @@ struct LO_BuiltinStruct_struct {
 		int32 percent_width; /* needed for relayout. */
 		int32 percent_height; /* needed for relayout. */
 };
-#endif /* SHACK */
 
 struct LO_EmbedStruct_struct {
     struct LO_CommonPluginStruct_struct objTag;     /* "superclass" */
@@ -1273,9 +1267,7 @@ union LO_Element_struct {
 	LO_SpanStruct lo_span;
 	LO_DivStruct lo_div;
 	LO_SpacerStruct lo_spacer;
-#ifdef SHACK
 	LO_BuiltinStruct lo_builtin;
-#endif /* SHACK */
 };
 
 struct LO_ObjectStruct_struct {
@@ -1365,9 +1357,7 @@ typedef enum LO_LayerType_enum {
 #define LO_BLINK_GROUP_NAME "_BLINKGROUP"
 #define LO_CONTENT_LAYER_NAME "_CONTENT"
 #define LO_EMBED_LAYER_NAME "_EMBED"
-#ifdef SHACK
 #define LO_BUILTIN_LAYER_NAME "_BUILTIN"
-#endif /* SHACK */
 
 #define LO_DOCUMENT_LAYER_ID 0
 

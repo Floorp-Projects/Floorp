@@ -547,10 +547,8 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->SetFormElementToggle)(context, form_element,toggle)
 #define FE_FreeEmbedElement(context, data) \
 			(*context->funcs->FreeEmbedElement)(context, data)
-#ifdef SHACK
 #define FE_FreeBuiltinElement(context, data) \
                         (*context->funcs->FreeBuiltinElement)(context, data)
-#endif
 #endif /* MOZ_NGLAYOUT */
 #define FE_CreateEmbedWindow(context, data) \
             (*context->funcs->CreateEmbedWindow)(context, data)
@@ -588,10 +586,8 @@ BOOL   FE_FileType(char * path,
 #ifndef MOZ_NGLAYOUT
 #define FE_DisplayEmbed(context, iLocation , embed_struct) \
 			(*context->funcs->DisplayEmbed)(context, iLocation ,embed_struct)
-#ifdef SHACK
 #define FE_DisplayBuiltin(context, iLocation , builtin_struct) \
                         (*context->funcs->DisplayBuiltin)(context, iLocation ,builtin_struct)
-#endif
 #endif /* MOZ_NGLAYOUT */
 #define FE_DisplayJavaApp(context, iLocation , java_struct) \
 			(*context->funcs->DisplayJavaApp)(context, iLocation ,java_struct)
@@ -744,9 +740,7 @@ void            FE_ResetFormElement(MWContext * context, LO_FormElementStruct * 
 void            FE_SetFormElementToggle(MWContext * context, LO_FormElementStruct * form_element, Bool toggle);
 #ifndef MOZ_NGLAYOUT
 void            FE_FreeEmbedElement(MWContext *context, LO_EmbedStruct *);
-#ifdef SHACK
 void            FE_FreeBuiltinElement(MWContext *context, LO_BuiltinStruct *);
-#endif
 #endif /* MOZ_NGLAYOUT */
 void            FE_FreeJavaAppElement(MWContext *context, struct LJAppletData *appletData);
 void            FE_HideJavaAppElement(MWContext *context, void*);
@@ -771,9 +765,7 @@ extern void FE_DisplaySubtext(MWContext * context, int iLocation, LO_TextStruct 
 extern void FE_DisplayText(MWContext * context, int iLocation, LO_TextStruct *text, Bool need_bg);
 #ifndef MOZ_NGLAYOUT
 void        FE_DisplayEmbed(MWContext * context, int iLocation ,LO_EmbedStruct *embed_struct);
-#ifdef SHACK
 void        FE_DisplayBuiltin(MWContext * context, int iLocation ,LO_BuiltinStruct *builtin_struct);
-#endif
 #endif /* MOZ_NGLAYOUT */
 void        FE_DisplayJavaApp(MWContext * context, int iLocation ,LO_JavaAppStruct *java_struct);
 #ifndef MOZ_NGLAYOUT
