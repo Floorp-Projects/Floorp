@@ -118,6 +118,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) mozilla/js; \
 	$(CVSCO_LIZARD) mozilla/caps; \
 	$(CVSCO_LIZARD) mozilla/modules/security/freenav; \
+	$(CVSCO_LIZARD) mozilla/rdf;
 
 pull_xpcom:
 	cd $(DEPTH)/..; \
