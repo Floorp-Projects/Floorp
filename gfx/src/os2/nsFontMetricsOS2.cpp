@@ -965,7 +965,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
      // points size is less than the minimum or more than the maximum point
      // size available for Tms Rmn and Helv.
     if( gSubstituteVectorFonts &&
-        (points > 18 || points < 8) &&
+        (points > 18 || points < 8 || (gDPI != 96 && gDPI != 120)) &&
         GetVectorSubstitute( ps, fattrs->szFacename, bBold, bItalic, alias) )
     {
       PL_strcpy( fattrs->szFacename, alias );
@@ -979,10 +979,18 @@ nsresult nsFontMetricsOS2::RealizeFont()
       long lFonts = 0;
       PFONTMETRICS pMetrics = getMetrics( lFonts, fattrs->szFacename, ps);
 
+      nscoord tempDPI;
+      /* No vector substitute and we still have odd DPI - fix it */
+      if (gDPI <= 96 ) {
+         tempDPI = 96;
+      } else {
+         tempDPI = 120;
+      }
+
       int curPoints = 0;
       for( int i = 0; i < lFonts; i++)
       {
-        if( pMetrics[i].sYDeviceRes == gDPI )
+        if( pMetrics[i].sYDeviceRes == tempDPI )
         {
           if (pMetrics[i].sNominalPointSize / 10 == points)
           {
