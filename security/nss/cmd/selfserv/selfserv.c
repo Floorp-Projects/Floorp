@@ -318,7 +318,9 @@ printSecurityInfo(PRFileDesc *fd)
     	}
     }
     if (requestCert)
-	cert = SSL_RevealCert(fd);
+	cert = SSL_PeerCertificate(fd);
+    else
+	cert = SSL_LocalCertificate(fd);
     if (cert) {
 	char * ip = CERT_NameToAscii(&cert->issuer);
 	char * sp = CERT_NameToAscii(&cert->subject);
@@ -334,6 +336,19 @@ printSecurityInfo(PRFileDesc *fd)
 	cert = NULL;
     }
     FLUSH;
+}
+
+static int MakeCertOK;
+
+static SECStatus
+myBadCertHandler( void *arg, PRFileDesc *fd)
+{
+    int err = PR_GetError();
+    if (!MakeCertOK)
+	fprintf(stderr, 
+	    "selfserv: -- SSL: Client Certificate Invalid, err %d.\n%s\n", 
+            err, SECU_Strerror(err));
+    return (MakeCertOK ? SECSuccess : SECFailure);
 }
 
 /**************************************************************************
@@ -1191,6 +1206,10 @@ server_main(
 	    }
 	}
     }
+
+    if (MakeCertOK)
+	SSL_BadCertHook(model_sock, myBadCertHandler, NULL);
+
     /* end of ssl configuration. */
 
 
@@ -1353,7 +1372,10 @@ main(int argc, char **argv)
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
-    optstate = PL_CreateOptState(argc, argv, "2:3DM:RTc:d:p:mn:hi:f:rt:vw:xl");
+    /* please keep this list of options in ASCII collating sequence.
+    ** numbers, then capital letters, then lower case, alphabetical. 
+    */
+    optstate = PL_CreateOptState(argc, argv, "2:3DM:RTc:d:f:hi:lmn:op:rt:vw:x");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1362,8 +1384,6 @@ main(int argc, char **argv)
 	case '3': disableSSL3 = PR_TRUE; break;
 
 	case 'D': noDelay = PR_TRUE; break;
-
-        case 'l': useLocalThreads = PR_TRUE; break;
 
 	case 'M': 
 	    maxProcs = PORT_Atoi(optstate->value); 
@@ -1383,11 +1403,15 @@ main(int argc, char **argv)
 
 	case 'h': Usage(progName); exit(0); break;
 
+	case 'i': pidFile = optstate->value; break;
+
+        case 'l': useLocalThreads = PR_TRUE; break;
+
 	case 'm': useModelSocket = PR_TRUE; break;
 
 	case 'n': nickName = strdup(optstate->value); break;
 
-	case 'i': pidFile = optstate->value; break;
+	case 'o': MakeCertOK = 1; break;
 
 	case 'p': port = PORT_Atoi(optstate->value); break;
 
