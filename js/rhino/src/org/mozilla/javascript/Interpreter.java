@@ -493,8 +493,7 @@ public class Interpreter extends LabelTable {
                 */
                     Node target = (Node)(node.getProp(Node.TARGET_PROP));
                     target.putProp(Node.FINALLY_PROP, node);
-                    iCodeTop = addGoto(node, TokenStream.GOSUB,
-                                                        iCodeTop);
+                    iCodeTop = addGoto(node, TokenStream.GOSUB, iCodeTop);
                 }
                 break;
             
@@ -848,20 +847,25 @@ public class Interpreter extends LabelTable {
                         exception object.
                     */
                     while (child != null) {
-                        if (lastChild == catchTarget) {
+                        if (catchTarget != null && lastChild == catchTarget) {
                             itsStackDepth = 1;
                             if (itsStackDepth > itsData.itsMaxStack)
                                 itsData.itsMaxStack = itsStackDepth;
                         }
                         /*
-                            When the following child is the catchTarget,
+                            When the following child is the catchTarget
+                            (or the finallyTarget if there are no catches),
                             the current child is the goto at the end of
                             the try statemets, we need to emit the endtry
                             before that goto.
                         */
-                        if (child.getNextSibling() == catchTarget)
+                        Node nextSibling = child.getNextSibling();
+                        if (nextSibling == catchTarget ||
+                            nextSibling == finallyTarget)
+                        {
                             iCodeTop = addByte((byte) TokenStream.ENDTRY,
-                                                                iCodeTop);
+                                               iCodeTop);
+                        }
                         iCodeTop = generateICode(child, iCodeTop);
                         lastChild = child;
                         child = child.getNextSibling();
