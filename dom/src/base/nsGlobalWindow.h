@@ -54,6 +54,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIControllers.h"
+#include "nsIObserver.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMViewCSS.h"
@@ -248,6 +249,7 @@ protected:
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
   static nsresult CheckSecurityIsChromeCaller(PRBool *isChrome);
+  static PRBool CanSetProperty(const char *aPrefName);
 
   void MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle);
 
@@ -440,26 +442,28 @@ class nsIContentViewerEdit;
 
 class nsISelectionController;
 
-class nsDOMWindowController : public nsIController
+class nsDOMWindowController : public nsIController,
+                              public nsIObserver
 {
 public:
-	nsDOMWindowController( nsIDOMWindowInternal* aWindow );
+  nsDOMWindowController(nsIDOMWindowInternal* aWindow);
   virtual ~nsDOMWindowController();
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
+  NS_DECL_NSIOBSERVER
 
 private:
   nsresult GetEventStateManager(nsIEventStateManager **esm);
   static int PR_CALLBACK BrowseWithCaretPrefCallback(const char* aPrefName, void* instance_data);
   nsresult GetPresShell(nsIPresShell **aPresShell);
-	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
+  nsresult GetEditInterface(nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
 
   nsresult DoCommandWithWebNavigationInterface(const char * aCommandName);
   nsresult DoCommandWithEditInterface(const char * aCommandName);
   nsresult DoCommandWithSelectionController(const char * aCommandName);
 
-	nsIDOMWindowInternal *mWindow;
+  nsIDOMWindowInternal *mWindow;
   PRBool mBrowseWithCaret;
 };
 #endif // DOM_CONTROLLER

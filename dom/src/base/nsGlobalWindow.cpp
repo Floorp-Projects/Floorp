@@ -96,7 +96,10 @@
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIProgrammingLanguage.h"
@@ -148,7 +151,8 @@
 // belonging to the back-end like nsIContentPolicy
 #include "nsIPopupWindowManager.h"
 
-static nsIEntropyCollector* gEntropyCollector          = nsnull;
+static nsIEntropyCollector *gEntropyCollector          = nsnull;
+static nsIPrefBranch       *gPrefBranch                = nsnull;
 static PRInt32              gRefCnt                    = 0;
 nsIXPConnect *GlobalWindowImpl::sXPConnect             = nsnull;
 nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
@@ -157,8 +161,7 @@ nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
 #define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
 
 // CIDs
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
@@ -173,23 +176,9 @@ static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.properties";
 
 
-
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
 
-static PRBool CanSetProperty(const char * prefName)
-{
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (!prefs) {
-    return PR_FALSE;
-  }
-
-  PRBool prefValue = PR_TRUE;
-  // if pref is set to true, we can't set the property
-  prefs->GetBoolPref(prefName, &prefValue);
-
-  return !prefValue;
-}
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -213,25 +202,19 @@ GlobalWindowImpl::GlobalWindowImpl() :
   // to create the entropy collector, so we should
   // try to get one until we succeed.
   if (gRefCnt++ == 0 || !gEntropyCollector) {
-    nsCOMPtr<nsIEntropyCollector> enCol =
-      do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
+    CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
+  }
 
-    if (enCol) {
-      gEntropyCollector = enCol;
-      NS_ADDREF(gEntropyCollector);
-    }
+  if (!gPrefBranch) {
+    CallGetService(NS_PREFSERVICE_CONTRACTID, &gPrefBranch);
   }
 
   if (!sXPConnect) {
-    nsServiceManager::GetService(nsIXPConnect::GetCID(),
-                                 nsIXPConnect::GetIID(),
-                                 (nsISupports **)&sXPConnect);
+    CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   }
 
   if (!sSecMan) {
-    nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                                 NS_GET_IID(nsIScriptSecurityManager),
-                                 (nsISupports **)&sSecMan);
+    CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecMan);
   }
 }
 
@@ -244,6 +227,12 @@ GlobalWindowImpl::~GlobalWindowImpl()
   mDocument = nsnull;           // Forces Release
 
   CleanUp();
+
+  if (!gRefCnt) {
+    // Destroy the Pref Branch last, since some things need
+    // to use it before it goes away.
+    NS_IF_RELEASE(gPrefBranch);
+  }
 }
 
 // static
@@ -1957,15 +1946,15 @@ GlobalWindowImpl::Dump(const nsAString& aStr)
     // enable output from dump() or not, in debug builds it's always
     // enabled.
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-    if (!prefs)
+    if (!gPrefBranch) {
       return NS_OK;
+    }
 
     PRBool enable_dump = PR_FALSE;
 
     // if pref doesn't exist, disable dump output.
-    nsresult rv = prefs->GetBoolPref("browser.dom.window.dump.enabled",
-                                     &enable_dump);
+    nsresult rv = gPrefBranch->GetBoolPref("browser.dom.window.dump.enabled",
+                                           &enable_dump);
 
     if (NS_FAILED(rv) || !enable_dump) {
       return NS_OK;
@@ -2399,23 +2388,25 @@ GlobalWindowImpl::Home()
   if (!mDocShell)
     return NS_OK;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  NS_ENSURE_TRUE(prefs, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(gPrefBranch);
 
-  // if we get here, we know prefs is not null
-  nsXPIDLString url;
-  prefs->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE,
-                                 getter_Copies(url));
+  nsCOMPtr<nsIPrefLocalizedString> url;
+  gPrefBranch->GetComplexValue(PREF_BROWSER_STARTUP_HOMEPAGE,
+                               NS_GET_IID(nsIPrefLocalizedString),
+                               getter_AddRefs(url));
   nsString homeURL;
-  if (!url) {
+  if (url) {
+    nsXPIDLString tmp;
+    url->GetData(getter_Copies(tmp));
+    homeURL = tmp;
+  }
+  else {
     // if all else fails, use this
 #ifdef DEBUG_seth
     printf("all else failed.  using %s as the home page\n", DEFAULT_HOME_PAGE);
 #endif
     homeURL.AssignWithConversion(DEFAULT_HOME_PAGE);
   }
-  else
-    homeURL = url;
 
   nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
@@ -2794,6 +2785,21 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc)
   }
 }
 
+// static
+PRBool
+GlobalWindowImpl::CanSetProperty(const char *aPrefName)
+{
+  NS_ENSURE_STATE(gPrefBranch);
+
+  PRBool prefValue = PR_TRUE;
+  gPrefBranch->GetBoolPref(aPrefName, &prefValue);
+
+  // If the pref is set to true, we can not set the property
+  // and vice versa.
+  return !prefValue;
+}
+
+
 /*
  * Examine the current document state to see if we're in a way that is
  * typically abused by web designers.  This routine returns PR_TRUE if
@@ -2815,16 +2821,16 @@ GlobalWindowImpl::CheckForAbusePoint ()
       return PR_FALSE;
   }
   
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (!prefs)
+  if (!gPrefBranch) {
     return PR_FALSE;
+  }
   
   if (!mIsDocumentLoaded || mRunningTimeout) {
     return IsPopupBlocked(mDocument);
   }
 
   PRInt32 clickDelay = 0;
-  prefs->GetIntPref("dom.disable_open_click_delay", &clickDelay);
+  gPrefBranch->GetIntPref("dom.disable_open_click_delay", &clickDelay);
   if (clickDelay) {
     PRTime now, ll_delta;
     PRInt32 delta;
@@ -5658,13 +5664,15 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
   nsresult rv = NS_OK;
   *aCookieEnabled = PR_FALSE;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (NS_FAILED(rv) || prefs == nsnull)
-    return rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
+  if (!prefBranch) {
+    prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_STATE(prefBranch);
+  }
 
 #ifdef MOZ_PHOENIX
   PRBool cookiesEnabled;
-  rv = prefs->GetBoolPref("network.cookie.enable", &cookiesEnabled);
+  rv = prefBranch->GetBoolPref("network.cookie.enable", &cookiesEnabled);
   
   if (NS_FAILED(rv))
     return rv;
@@ -5672,7 +5680,8 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
   *aCookieEnabled = cookiesEnabled;
 #else
   PRInt32 cookieBehaviorPref;
-  rv = prefs->GetIntPref("network.cookie.cookieBehavior", &cookieBehaviorPref);
+  rv = prefBranch->GetIntPref("network.cookie.cookieBehavior",
+                              &cookieBehaviorPref);
 
   if (NS_FAILED(rv))
     return rv;
@@ -5691,12 +5700,14 @@ NavigatorImpl::JavaEnabled(PRBool *aReturn)
   *aReturn = PR_FALSE;
 
   // determine whether user has enabled java.
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
+  if (!prefBranch) {
+    prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_STATE(prefBranch);
+  }
 
   // if pref doesn't exist, map result to false.
-  if (NS_FAILED(prefs->GetBoolPref("security.enable_java", aReturn))) {
+  if (NS_FAILED(prefBranch->GetBoolPref("security.enable_java", aReturn))) {
     *aReturn = PR_FALSE;
     return NS_OK;
   }
@@ -5785,8 +5796,11 @@ NavigatorImpl::Preference()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPref> pref(do_GetService(kPrefServiceCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
+  if (!prefBranch) {
+    prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_STATE(prefBranch);
+  }
 
   JSString *str = ::JS_ValueToString(cx, argv[0]);
   NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
@@ -5800,13 +5814,13 @@ NavigatorImpl::Preference()
   if (argc == 1) {
     PRInt32 prefType;
 
-    pref->GetPrefType(prefStr, &prefType);
+    prefBranch->GetPrefType(prefStr, &prefType);
 
-    switch (prefType & nsIPref::ePrefValuetypeMask) {
-    case nsIPref::ePrefString:
+    switch (prefType) {
+    case nsIPrefBranch::PREF_STRING:
       {
         nsXPIDLCString prefCharVal;
-        rv = pref->CopyCharPref(prefStr, getter_Copies(prefCharVal));
+        rv = prefBranch->GetCharPref(prefStr, getter_Copies(prefCharVal));
         NS_ENSURE_SUCCESS(rv, rv);
 
         JSString *retStr = ::JS_NewStringCopyZ(cx, prefCharVal);
@@ -5817,10 +5831,10 @@ NavigatorImpl::Preference()
         break;
       }
 
-    case nsIPref::ePrefInt:
+    case nsIPrefBranch::PREF_INT:
       {
         PRInt32 prefIntVal;
-        rv = pref->GetIntPref(prefStr, &prefIntVal);
+        rv = prefBranch->GetIntPref(prefStr, &prefIntVal);
         NS_ENSURE_SUCCESS(rv, rv);
 
         *retval = INT_TO_JSVAL(prefIntVal);
@@ -5828,11 +5842,11 @@ NavigatorImpl::Preference()
         break;
       }
 
-    case nsIPref::ePrefBool:
+    case nsIPrefBranch::PREF_BOOL:
       {
         PRBool prefBoolVal;
 
-        rv = pref->GetBoolPref(prefStr, &prefBoolVal);
+        rv = prefBranch->GetBoolPref(prefStr, &prefBoolVal);
         NS_ENSURE_SUCCESS(rv, rv);
 
         *retval = BOOLEAN_TO_JSVAL(prefBoolVal);
@@ -5853,17 +5867,17 @@ NavigatorImpl::Preference()
       JSString *valueJSStr = ::JS_ValueToString(cx, argv[1]);
       NS_ENSURE_TRUE(valueJSStr, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = pref->SetCharPref(prefStr, ::JS_GetStringBytes(valueJSStr));
+      rv = prefBranch->SetCharPref(prefStr, ::JS_GetStringBytes(valueJSStr));
     } else if (JSVAL_IS_INT(argv[1])) {
       jsint valueInt = JSVAL_TO_INT(argv[1]);
 
-      rv = pref->SetIntPref(prefStr, (PRInt32) valueInt);
+      rv = prefBranch->SetIntPref(prefStr, (PRInt32) valueInt);
     } else if (JSVAL_IS_BOOLEAN(argv[1])) {
       JSBool valueBool = JSVAL_TO_BOOLEAN(argv[1]);
 
-      rv = pref->SetBoolPref(prefStr, (PRBool) valueBool);
+      rv = prefBranch->SetBoolPref(prefStr, (PRBool) valueBool);
     } else if (JSVAL_IS_NULL(argv[1])) {
-      rv = pref->DeleteBranch(prefStr);
+      rv = prefBranch->DeleteBranch(prefStr);
     }
   }
 
@@ -5943,6 +5957,7 @@ NS_IMPL_RELEASE(nsDOMWindowController)
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIController)
   NS_INTERFACE_MAP_ENTRY(nsIController)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
 
@@ -5956,16 +5971,19 @@ nsDOMWindowController::nsDOMWindowController(nsIDOMWindowInternal *aWindow)
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_SUCCEEDED(GetEventStateManager(getter_AddRefs(esm))))
     esm->ResetBrowseWithCaret(&mBrowseWithCaret);
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs)
-    prefs->RegisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsDOMWindowController::BrowseWithCaretPrefCallback, (void*)this);
+
+  nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(gPrefBranch));
+  if (pbi) {
+    pbi->AddObserver("accessibility.browsewithcaret", this, PR_FALSE);
+  }
 }
 
 nsDOMWindowController::~nsDOMWindowController()
 {
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs) 
-    prefs->UnregisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsDOMWindowController::BrowseWithCaretPrefCallback, (void*)this);
+  nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(gPrefBranch));
+  if (pbi) {
+    pbi->RemoveObserver("accessibility.browsewithcaret", this);
+  }
 }
 
 nsresult
@@ -5992,18 +6010,23 @@ nsDOMWindowController::GetEventStateManager(nsIEventStateManager **aEventStateMa
   return NS_ERROR_FAILURE;
 }
 
-int PR_CALLBACK
-nsDOMWindowController::BrowseWithCaretPrefCallback(const char* aPrefName, void* instance_data)
+NS_IMETHODIMP
+nsDOMWindowController::Observe(nsISupports *aSubject, const char *aTopic,
+                               const PRUnichar *aData)
 {
-  nsDOMWindowController* domWindowController = (nsDOMWindowController*)instance_data;
-  NS_ASSERTION(domWindowController, "bad instance data");
+  NS_ASSERTION(nsDependentString(aData) ==
+                   NS_LITERAL_STRING("accessibility.browsewithcaret"),
+               "Wrong pref");
+
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIEventStateManager> esm;
+  rv = GetEventStateManager(getter_AddRefs(esm));
+  if (NS_SUCCEEDED(rv)) {
+    rv = esm->ResetBrowseWithCaret(&mBrowseWithCaret);
+  }
 
-  if (NS_SUCCEEDED(domWindowController->GetEventStateManager(getter_AddRefs(esm))))
-    esm->ResetBrowseWithCaret(&domWindowController->mBrowseWithCaret);
-
-  return 0;  // PREF_OK
+  return rv;
 }
 
 nsresult
