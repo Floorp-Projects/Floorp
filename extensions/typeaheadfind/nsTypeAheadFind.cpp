@@ -70,6 +70,7 @@
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
+#include "nsISelectElement.h"
 #include "nsILink.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
@@ -510,6 +511,10 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       NS_FAILED(keyEvent->GetMetaKey(&isMeta)))
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsISelectElement> selectEl(do_QueryInterface(domEventTarget));
+  if (selectEl)  // Don't steal keys from select element - has it's own incremental find for options
+    return NS_OK;
+
   if ((charCode == 'g' || charCode=='G') && !mTypeAheadBuffer.IsEmpty() && isAlt + isMeta + isCtrl == 1 && (
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_CONTROL && isCtrl) || 
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_ALT     && isAlt ) || 
@@ -575,6 +580,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       }
       mFocusedDocSelection->CollapseToStart();
       CancelFind();
+      aEvent->PreventDefault(); // Prevent normal processing of this keystroke
       return NS_OK;
     }
     mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length() - 1);
@@ -1157,8 +1163,10 @@ void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
   if (!aPresShell || !mFocusedDocSelCon)
     return;
   // Paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
-  mFocusedDocSelCon->SetDisplaySelection(aEnabled? NS_CONST_CAST(PRInt16, nsISelectionController::SELECTION_ATTENTION): 
-                                         NS_CONST_CAST(PRInt16, nsISelectionController::SELECTION_ON));
+  if (aEnabled)
+    mFocusedDocSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ATTENTION);
+  else
+    mFocusedDocSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
   mFocusedDocSelCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
 
   nsCOMPtr<nsICaret> caret;
