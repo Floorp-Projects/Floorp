@@ -96,6 +96,18 @@ typedef void * nsNativeDeviceContext;
 /* print preview: needs at least one printer */
 #define NS_ERROR_GFX_PRINTER_PRINTPREVIEW          \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+13)
+/* print: starting document */
+#define NS_ERROR_GFX_PRINTER_STARTDOC          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+14)
+/* print: ending document */
+#define NS_ERROR_GFX_PRINTER_ENDDOC          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+15)
+/* print: starting page */
+#define NS_ERROR_GFX_PRINTER_STARTPAGE          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+16)
+/* print: ending page */
+#define NS_ERROR_GFX_PRINTER_ENDPAGE          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+17)
 
 /**
  * Conts need for Print Preview

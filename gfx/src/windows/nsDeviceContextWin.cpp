@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
+#define DOC_TITLE_LENGTH      64
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -974,19 +975,47 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   return devConWin->Init(dc, this); // take ownership of the DC
 }
 
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+static void DisplayLastError()
+{
+  LPVOID lpMsgBuf;
+  DWORD errCode = GetLastError();
+
+  FormatMessage( 
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+      NULL,
+      GetLastError(),
+      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+      (LPTSTR) &lpMsgBuf,
+      0,
+      NULL 
+  );
+
+  // Display the string.
+  MessageBox( NULL, (const char *)lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
+}
+#define DISPLAY_LAST_ERROR DisplayLastError();
+#else
+#define DISPLAY_LAST_ERROR 
+#endif
+
+
 NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_GFX_PRINTER_STARTDOC;
 
-  if (NULL != mDC){
+  if (NULL != mDC) {
     DOCINFO docinfo;
 
     nsString titleStr;
     titleStr = aTitle;
+    if (titleStr.Length() > DOC_TITLE_LENGTH) {
+      titleStr.SetLength(DOC_TITLE_LENGTH-3);
+      titleStr.AppendWithConversion("...");
+    }
     char *title = GetACPString(titleStr);
 
     char* docName = nsnull;
-    nsresult  rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
     if (printService) {
       PRBool printToFile = PR_FALSE;
@@ -1015,10 +1044,12 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
 
-    if (::StartDoc(mDC, &docinfo) > 0)
+    if (::StartDoc(mDC, &docinfo) > 0) {
       rv = NS_OK;
-    else
-      rv = NS_ERROR_FAILURE;
+    } else {
+      DISPLAY_LAST_ERROR
+      rv = NS_ERROR_GFX_PRINTER_STARTDOC;
+    }
 
     if (title != nsnull) delete [] title;
     if (docName != nsnull) nsMemory::Free(docName);
@@ -1031,10 +1062,12 @@ NS_IMETHODIMP nsDeviceContextWin :: EndDocument(void)
 {
   if (NULL != mDC)
   {
-    if (::EndDoc(mDC) > 0)
+    if (::EndDoc(mDC) > 0) {
       return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
+    } else {
+      DISPLAY_LAST_ERROR
+      return NS_ERROR_GFX_PRINTER_ENDDOC;
+    }
   }
 
   return NS_OK;
@@ -1046,8 +1079,10 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginPage(void)
   {
     if (::StartPage(mDC) > 0)
       return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
+    else {
+      DISPLAY_LAST_ERROR
+      return NS_ERROR_GFX_PRINTER_STARTPAGE;
+    }
   }
 
   return NS_OK;
@@ -1057,10 +1092,12 @@ NS_IMETHODIMP nsDeviceContextWin :: EndPage(void)
 {
   if (NULL != mDC)
   {
-    if (::EndPage(mDC) > 0)
+    if (::EndPage(mDC) > 0) {
       return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
+    } else {
+      DISPLAY_LAST_ERROR
+      return NS_ERROR_GFX_PRINTER_ENDPAGE;
+    }
   }
 
   return NS_OK;

@@ -917,7 +917,7 @@ nsresult nsDeviceContextOS2::BeginDocument(PRUnichar * aTitle)
     if (lResult == DEV_OK)
       rv = NS_OK;
     else
-      rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_GFX_PRINTER_STARTDOC;
 
     if (title != nsnull) {
       delete [] title;
@@ -939,7 +939,7 @@ nsresult nsDeviceContextOS2::EndDocument()
     if (lResult == DEV_OK)
       return NS_OK;
     else
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_GFX_PRINTER_ENDDOC;
   }
 
   return NS_OK;
@@ -962,7 +962,7 @@ nsresult nsDeviceContextOS2::EndPage()
     if (lResult == DEV_OK)
       return NS_OK;
     else
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_GFX_PRINTER_ENDPAGE;
   }
 
   return NS_OK;
