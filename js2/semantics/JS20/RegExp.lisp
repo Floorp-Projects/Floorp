@@ -141,17 +141,13 @@
             (begin
              (const m1 matcher ((gen-matcher :disjunction) 0))
              (function (e (t r-e-input) (index integer)) r-e-result
-               (const x r-e-match (new r-e-match index (fill-capture (count-parens :disjunction))))
+               (const x r-e-match (new r-e-match index (repeat capture undefined (count-parens :disjunction))))
                (return (m1 t x success-continuation)))
              (return e)))))
        
        (%print-actions)
        (define (success-continuation (x r-e-match)) r-e-result
          (return x))
-       (define (fill-capture (i integer)) (vector capture)
-         (if (= i 0)
-           (return (vector-of capture))
-           (return (append (fill-capture (- i 1)) (vector-of capture undefined)))))
        
        
        (%heading 2 "Disjunctions")
@@ -265,6 +261,7 @@
        (%charclass :decimal-digit)
        
        
+       (deftag +infinity)
        (deftype limit (union integer (tag +infinity)))
        
        (define (reset-parens (x r-e-match) (p integer) (n-parens integer)) r-e-match
