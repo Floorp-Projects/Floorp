@@ -345,9 +345,10 @@ struct PK11SessionStr {
  * The array of sessionLock's protect the session hash table (head[])
  * as well as the reference count of session objects in that bucket
  * (head[]->refCount),  objectLock protects all elements of the token
- * object hash table (tokObjects[]), and slotLock protects the
- * remaining protected elements:  password, isLoggedIn, ssoLoggedIn,
- * sessionIDCount, sessionCount, and rwSessionCount.
+ * object hash table (tokObjects[], tokenIDCount, and tokenHashTable),
+ * and slotLock protects the remaining protected elements:
+ * password, isLoggedIn, ssoLoggedIn, sessionIDCount, sessionCount,
+ * and rwSessionCount.
  */
 struct PK11SlotStr {
     CK_SLOT_ID		slotID;
