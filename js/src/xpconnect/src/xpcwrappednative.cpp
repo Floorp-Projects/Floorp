@@ -69,8 +69,6 @@ nsXPCWrappedNative::Release(void)
 void
 nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
 {
-    NS_PRECONDITION(1 == mRefCnt, "bad JSObject finalization");
-
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     if(NULL != (ds = GetDynamicScriptable()) &&
