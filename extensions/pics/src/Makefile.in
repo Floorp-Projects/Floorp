@@ -38,7 +38,10 @@ CSRCS		= \
 		lablpars.c \
 		$(NULL)
 
-CPPSRCS		= nsPICS.cpp
+CPPSRCS		= \
+		nsPICS.cpp \
+		nsPICSElementObserver.cpp \
+		$(NULL)
 
 # we don't want the shared lib
 FORCE_STATIC_LIB = 1
