@@ -689,12 +689,15 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   nsRect viewRect;
   aView->GetDimensions(viewRect);
 
-  nsRect damageRect = damageRectInPixels;
+  nsRect damageRect;
   nsRect paintRect;
   float  p2t;
   mContext->GetDevUnitsToAppUnits(p2t);
-  damageRect.ScaleRoundOut(p2t);
-
+  damageRect.x = NSToIntRound(damageRectInPixels.x * p2t);
+  damageRect.y = NSToIntRound(damageRectInPixels.y * p2t);
+  damageRect.width = NSToIntRound(damageRectInPixels.width * p2t);
+  damageRect.height = NSToIntRound(damageRectInPixels.height * p2t);
+  
   // move the view rect into widget coordinates
   viewRect.x = 0;
   viewRect.y = 0;
