@@ -42,7 +42,7 @@
   <script type="application/x-javascript">
   <![CDATA[
   
-  var _elementIDs = ["accOrgImages", "networkImageBehaviour", "networkImageWarnAboutImages"];
+  var _elementIDs = ["accOrgImages", "networkImageBehaviour", "networkImageWarnAboutImages", "imageLooping"];
 
   function init()
   {
@@ -116,6 +116,19 @@
               prefstring="pref.advanced.images.disable_button.view_image" prefattribute="disabled"/>
     </box>
 
+  </titledbox>
+  <titledbox orient="vertical">
+    <label value="&animLoopingDetails.label;"/>
+    <radiogroup id="imageLooping" orient="vertical" autostretch="never"
+                  pref="true" preftype="string" prefstring="image.animation_mode"
+                  prefattribute="value">
+        <radio group="imageLooping" value="normal" label="&animLoopForever.label;"
+               accesskey="&animLoopForever.accesskey;"/>
+        <radio group="imageLooping" value="once" label="&animLoopOnce.label;"
+               accesskey="&animLoopOnce.accesskey;"/>
+        <radio group="imageLooping" value="never" label="&animLoopNever.label;"
+               accesskey="&animLoopNever.accesskey;"/>
+    </radiogroup>
   </titledbox>
 
 </window>
