@@ -27,10 +27,6 @@
 #ifdef XP_UNIX
 #undef Bool
 #endif
-#if 0
-#include "xp.h"
-#include "xp_str.h"
-#endif
 #include "xp_mem.h"
 
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
