@@ -66,6 +66,7 @@ interface oeIDateTime : nsISupports
     attribute short day;
     attribute short hour;
     attribute short minute;
+    attribute boolean utc;
     PRTime getTime();
     void setTime( in PRTime ms );
     string toString();

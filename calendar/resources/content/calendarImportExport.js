@@ -149,18 +149,34 @@ const ZULU_OFFSET_MILLIS = new Date().getTimezoneOffset() * 60 * 1000;
 
 function convertZuluToLocal( calendarEvent )
 {
+   if( calendarEvent.start.utc == true )
+   {
    var zuluStartTime = calendarEvent.start.getTime();
-   var zuluEndTime = calendarEvent.end.getTime();
    calendarEvent.start.setTime( zuluStartTime  - ZULU_OFFSET_MILLIS );
+      calendarEvent.start.utc = false;
+   }
+   if( calendarEvent.end.utc == true )
+   {
+      var zuluEndTime = calendarEvent.end.getTime();
    calendarEvent.end.setTime( zuluEndTime  - ZULU_OFFSET_MILLIS );
+      calendarEvent.end.utc = false;
+   }
 }
 
 function convertLocalToZulu( calendarEvent )
 {
+   if( calendarEvent.start.utc == false )
+   {
    var zuluStartTime = calendarEvent.start.getTime();
-   var zuluEndTime = calendarEvent.end.getTime();
    calendarEvent.start.setTime( zuluStartTime  + ZULU_OFFSET_MILLIS );
+      calendarEvent.start.utc = true;
+   }
+   if( calendarEvent.end.utc == false )
+   {
+      var zuluEndTime = calendarEvent.end.getTime();
    calendarEvent.end.setTime( zuluEndTime  + ZULU_OFFSET_MILLIS );
+      calendarEvent.end.utc = true;
+   }
 }
 
 // Can something from dateUtils be used here?
@@ -361,12 +377,18 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    var sTextiCalendar = "";
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
-      var calendarEvent = calendarEventArray[ eventArrayIndex ];
+      var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
 
       // convert time to represent local to produce correct DTSTART and DTEND
       if(calendarEvent.allDay != true)
       convertLocalToZulu( calendarEvent );
      
+      // check if all required properties are available
+      if( calendarEvent.method == 0 )
+         calendarEvent.method = calendarEvent.ICAL_METHOD_PUBLISH;
+      if( calendarEvent.stamp.year ==  0 )
+         calendarEvent.stamp.setTime( new Date() );
+
       if ( doPatchForExport )
         sTextiCalendar += patchICalStringForExport( calendarEvent.getIcalString() );
       else
@@ -379,33 +401,11 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
 
 /**** patchICalStringForExport
  * Function to hack an iCalendar text block for use in other applications
- *  Adds METHOD and DTSTAMP fields, and patch TRIGGER field for Outlook
+ *  Patch TRIGGER field for Outlook
  */
  
 function patchICalStringForExport( sTextiCalendar )
 {
-   // HACK: Remove this hack when Calendar supports METHOD properties
-   var i = sTextiCalendar.indexOf("METHOD")
-   if(i == -1) 
-   {
-      var i = sTextiCalendar.indexOf("VERSION")
-      if(i != -1) {
-         sTextiCalendar = 
-            sTextiCalendar.substring(0,i) + "METHOD:PUBLISH\n" + sTextiCalendar.substring(i, sTextiCalendar.length);
-      }
-   }
-   
-   // HACK: Remove this hack when Calendar supports DTSTAMP properties
-   var i = sTextiCalendar.indexOf("DTSTAMP")
-   if(i == -1) 
-   {
-      var i = sTextiCalendar.indexOf("UID")
-      if(i != -1) {
-         sTextiCalendar = 
-            sTextiCalendar.substring(0,i) + "DTSTAMP:20020430T114937Z\n" + sTextiCalendar.substring(i, sTextiCalendar.length);
-      }
-   }
-   
    // HACK: TRIGGER patch hack for Outlook 2000
    var i = sTextiCalendar.indexOf("TRIGGER\n ;VALUE=DURATION\n :-");
    if(i != -1) {

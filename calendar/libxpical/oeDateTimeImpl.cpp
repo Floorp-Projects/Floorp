@@ -170,6 +170,18 @@ NS_IMETHODIMP oeDateTimeImpl::Clear()
     return NS_OK;
 }
 
+NS_IMETHODIMP oeDateTimeImpl::GetUtc(PRBool *retval)
+{
+    *retval = m_datetime.is_utc;
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeDateTimeImpl::SetUtc(PRBool newval)
+{
+    m_datetime.is_utc = newval;
+    return NS_OK;
+}
+
 void oeDateTimeImpl::AdjustToWeekday( short weekday ) {
     short currentday = icaltime_day_of_week( m_datetime );
     while( currentday != weekday ) {
