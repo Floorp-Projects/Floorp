@@ -1350,7 +1350,7 @@ nsXULElement::SetLazyState(LazyState aFlags)
     nsresult rv = EnsureSlots();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mSlots->mLazyState |= aFlags;
+    mSlots->mLazyState = mSlots->mLazyState | aFlags;
 
     return NS_OK;
 }
