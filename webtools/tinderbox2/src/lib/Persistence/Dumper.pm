@@ -4,7 +4,8 @@
 # using Data::Dumper.  I suggest using this while debugging Tinderbox
 # as the data structures can be viewed in a text editor or even
 # modified by hand if need be. However, most of my cpu time during
-# testing is going into this function.
+# testing is going into this function.  This module has an implicit
+# eval and should not be used for securty sensitive uses.
 
 # dprofpp says that:
 
@@ -13,8 +14,8 @@
 #	was spend in 32878 calls to Data::Dumper::_dump()
 
 
-# $Revision: 1.5 $ 
-# $Date: 2000/11/28 00:28:18 $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/01/04 00:21:03 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Dumper.pm,v $ 
 # $Name:  $ 
@@ -101,6 +102,13 @@ sub load_structure {
   # variable named '$r'.
 
   my ($r);
+
+  # It is tempting to filter the file for security reasons only
+  # allowing data to be set and no commands run.  This is not a wise
+  # idea since we rely on this module for debugging other modules.
+  # Should the filtering rule be buggy, which is likely, then
+  # debugging is much harder.  If people are worried about security
+  # they should use storable.
 
   require($data_file) ||
     die("Could not eval filename: $data_file: $!\n");
