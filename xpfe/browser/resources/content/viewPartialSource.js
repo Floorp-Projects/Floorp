@@ -84,7 +84,7 @@ function onLoadViewPartialSource()
   else
     viewPartialSourceForFragment(window.arguments[2], window.arguments[3]);
 
-  window._content.focus();
+  window.content.focus();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

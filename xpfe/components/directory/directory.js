@@ -179,8 +179,8 @@ function Init()
       httpDS.encoding = "ISO-8859-1";
 
       // Use a default character set.
-      if (window._content.defaultCharacterset)
-        httpDS.encoding = window._content.defaultCharacterset;
+      if (window.content.defaultCharacterset)
+        httpDS.encoding = window.content.defaultCharacterset;
     }
   }
 
@@ -216,7 +216,7 @@ function OnClick(event)
   var tree = document.getElementById("tree");
   if (tree.currentIndex >= 0) {
     var item = tree.contentView.getItemAtIndex(tree.currentIndex);
-    window._content.location.href = item.getAttributeNS(NC_NS, "url");
+    window.content.location.href = item.getAttributeNS(NC_NS, "url");
   }
 }
 

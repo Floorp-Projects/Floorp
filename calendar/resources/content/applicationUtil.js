@@ -80,7 +80,7 @@ function launchBrowser( UrlToGoTo )
        else if ("loadURI" in navWindow)
          navWindow.loadURI(UrlToGoTo);
        else
-         navWindow._content.location.href = UrlToGoTo;
+         navWindow.content.location.href = UrlToGoTo;
      }
      // if all else fails, open a new window 
      else {

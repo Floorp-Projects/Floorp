@@ -111,8 +111,8 @@ function NSPrintSetup()
     gPrintSettings = GetPrintSettings();
 
     var webBrowserPrint = null;
-    if (_content) {
-      webBrowserPrint = _content
+    if (content) {
+      webBrowserPrint = content
         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
         .getInterface(Components.interfaces.nsIWebBrowserPrint);
     }
@@ -136,7 +136,7 @@ function NSPrintSetup()
 function NSPrint()
 {
   try {
-    var webBrowserPrint = _content
+    var webBrowserPrint = content
           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
           .getInterface(Components.interfaces.nsIWebBrowserPrint);
     if (webBrowserPrint) {

@@ -93,7 +93,7 @@ function openNewWindowWith(url, sendReferrer)
   var charsetArg = null;
   var wintype = document.firstChild.getAttribute('windowtype');
   if (wintype == "navigator:browser")
-    charsetArg = "charset=" + window._content.document.characterSet;
+    charsetArg = "charset=" + window.content.document.characterSet;
 
   var referrer = sendReferrer ? getReferrer(document) : null;
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, referrer);
@@ -163,7 +163,7 @@ function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
   var wintype = browserDocument.firstChild.getAttribute('windowtype');
   var originCharset;
   if (wintype == "navigator:browser") {
-    originCharset = window._content.document.characterSet;
+    originCharset = window.content.document.characterSet;
   }
 
   // open link in new tab
@@ -236,7 +236,7 @@ function saveDocument(aDocument)
   if (aDocument)
     saveInternal(aDocument.location.href, aDocument, false);
   else
-    saveInternal(_content.location.href, null, false);
+    saveInternal(content.location.href, null, false);
 }
 
 function saveInternal(aURL, aDocument,
@@ -873,5 +873,5 @@ function getCharsetforSave(aDocument)
   if (document.commandDispatcher.focusedWindow)
     return document.commandDispatcher.focusedWindow.document.characterSet;
 
-  return  window._content.document.characterSet;
+  return  window.content.document.characterSet;
 }

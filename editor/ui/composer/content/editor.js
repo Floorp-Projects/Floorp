@@ -3424,7 +3424,7 @@ function UpdateTOC()
 {
   window.openDialog("chrome://editor/content/EdInsertTOC.xul",
                     "_blank", "chrome,close,modal,titlebar");
-  window._content.focus();
+  window.content.focus();
 }
 
 function InitTOCMenu()

@@ -1720,7 +1720,7 @@ function MsgAddAllToAddressBook() {}
 
 function SpaceHit(event)
 {
-  var contentWindow = window.top._content;
+  var contentWindow = window.top.content;
 
   if (event && event.shiftKey) {
     // if at the start of the message, go to the previous one

@@ -61,7 +61,7 @@ addEventListener("load", initEditorContextMenuListener, false);
 function editDocument(aDocument)      
 {
   if (!aDocument)
-    aDocument = window._content.document;
+    aDocument = window.content.document;
 
   editPage(aDocument.URL, window, false); 
 }
@@ -106,8 +106,8 @@ function editPage(url, launchWindow, delay)
   var wintype = document.firstChild.getAttribute('windowtype');
   var charsetArg;
 
-  if (launchWindow && (wintype == "navigator:browser") && launchWindow._content.document)
-    charsetArg = "charset=" + launchWindow._content.document.characterSet;
+  if (launchWindow && (wintype == "navigator:browser") && launchWindow.content.document)
+    charsetArg = "charset=" + launchWindow.content.document.characterSet;
 
   try {
     var uri = createURI(url, null, null);

@@ -168,7 +168,7 @@ function CreateMailWindowGlobals()
         secureUI = Components.classes[secureUIContractID].createInstance();
         if (secureUI) {
           secureUI = secureUI.QueryInterface(Components.interfaces.nsISecureBrowserUI);
-          secureUI.init(_content, securityIcon);
+          secureUI.init(content, securityIcon);
         }
       }
     }

@@ -359,7 +359,7 @@ function EditorStartLog()
     var edlog = GetCurrentEditor().QueryInterface(Components.interfaces.nsIEditorLogging);
     var fs = EditorGetScriptFileSpec();
     edlog.startLogging(fs);
-    window._content.focus();
+    window.content.focus();
 
     fs = null;
   }
@@ -371,7 +371,7 @@ function EditorStopLog()
   try {
     var edlog = GetCurrentEditor().QueryInterface(Components.interfaces.nsIEditorLogging);
     edlog.stopLogging();
-    window._content.focus();
+    window.content.focus();
   }
   catch(ex) { dump("Can't stop logging!:\n" + ex + "\n"); }
 }
@@ -381,7 +381,7 @@ function EditorRunLog()
   var fs;
   fs = EditorGetScriptFileSpec();
   EditorExecuteScript(fs);
-  window._content.focus();
+  window.content.focus();
 }
 
 // --------------------------- TransactionManager ---------------------------
