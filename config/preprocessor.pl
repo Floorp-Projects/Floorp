@@ -71,7 +71,7 @@ exit(0);
 ########################################################################
 
 package main;
-use File::Spec;
+use File::Spec 0.8;
 
 sub include {
     my($stack, $filename) = @_;
