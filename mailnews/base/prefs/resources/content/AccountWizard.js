@@ -870,6 +870,12 @@ function FixupAccountDataForIsp(accountData)
 
     if (!accountData.smtp.username &&
         accountData.smtpRequiresUsername) {
+      // fix for bug #107953
+      // if incoming hostname is same as smtp hostname
+      // use the server username (insetad of the email username)
+      if (accountData.smtp.hostname == accountData.incomingServer.hostName)
+        accountData.smtp.username = accountData.incomingServer.username;
+      else
         accountData.smtp.username = username;
     }
 }
