@@ -143,7 +143,7 @@ nsPluginsDir::nsPluginsDir()
       PL_strcpy(&path[pathlen + 1], "plugins"); 
       //dir = PR_OpenDir(path);
 
-	  allocPath = PL_strdup(path);
+	  allocPath = path;//PL_strdup(path);
 	  *(nsFileSpec*)this = allocPath;
     } 
   } 
