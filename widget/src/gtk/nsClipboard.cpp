@@ -656,6 +656,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
   switch (type)
   {
   case GDK_TARGET_STRING:
+  case TARGET_COMPOUND_TEXT:
   case TARGET_TEXT_PLAIN:
   case TARGET_TEXT_XIF:
   case TARGET_TEXT_UNICODE:
@@ -738,7 +739,6 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   void     *clipboardData;
   PRUint32 dataLength;
   nsresult rv;
-  GdkAtom type = GDK_NONE;
 
   // Make sure we have a transferable:
   if (!cb->mTransferable) {
@@ -755,39 +755,29 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   switch(aInfo)
     {
     case GDK_TARGET_STRING:
-      type = GDK_TARGET_STRING;
-      dataFlavor = kTextMime;
-      break;
     case TARGET_TEXT_PLAIN:
-      type = sSelTypes[aInfo];
       dataFlavor = kTextMime;
       break;
     case TARGET_TEXT_XIF:
-      type = sSelTypes[aInfo];
       dataFlavor = kXIFMime;
       break;
     case TARGET_TEXT_UNICODE:
-      type = sSelTypes[aInfo];
+    case TARGET_COMPOUND_TEXT:
       dataFlavor = kUnicodeMime;
       break;
     case TARGET_TEXT_HTML:
-      type = sSelTypes[aInfo];
       dataFlavor = kHTMLMime;
       break;
     case TARGET_AOLMAIL:
-      type = sSelTypes[aInfo];
       dataFlavor = kAOLMailMime;
       break;
     case TARGET_IMAGE_PNG:
-      type = sSelTypes[aInfo];
       dataFlavor = kPNGImageMime;
       break;
     case TARGET_IMAGE_JPEG:
-      type = sSelTypes[aInfo];
       dataFlavor = kJPEGImageMime;
       break;
     case TARGET_IMAGE_GIF:
-      type = sSelTypes[aInfo];
       dataFlavor = kGIFImageMime;
       break;
     default:
@@ -796,21 +786,22 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       }
     }
 #ifdef DEBUG_CLIPBOARD
-  g_print("- aInfo is for %s\n", gdk_atom_name(type));
+  g_print("- aInfo is for %s\n", gdk_atom_name(aInfo));
 #endif
 
   // Get data out of transferable.
-  rv = cb->mTransferable->GetTransferData(&dataFlavor, 
+  rv = cb->mTransferable->GetTransferData(&dataFlavor,
                                           &clipboardData,
                                           &dataLength);
 
   if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
+    size_t size = 1;
     // find the number of bytes in the data for the below thing
-    size_t size = sizeof(clipboardData[0]);
-    g_print("************  *****************      ******************* %i\n", size);
+    //    size_t size = sizeof((void*)((unsigned char)clipboardData[0]));
+    //    g_print("************  *****************      ******************* %i\n", size);
 
     gtk_selection_data_set(aSelectionData,
-                           type, size*8,
+                           aInfo, size*8,
                            (unsigned char *)clipboardData,
                            dataLength);
   }
