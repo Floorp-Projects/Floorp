@@ -121,7 +121,7 @@
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_PC))
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || (defined(XP_PC) && !defined(XP_OS2)))
 #define NS_USING_NAMESPACE
 #endif
 
@@ -144,6 +144,13 @@
 #ifdef XP_MAC
 #include <Files.h>
 #elif defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
+#if defined(XP_OS2)
+#define INCL_DOS
+#define INCL_DOSERRORS
+#include <os2.h>
+#include <sys/types.h> // required for dirent.h
+#include "prio.h"
+#endif
 #include <dirent.h>
 #elif defined(XP_PC)
 

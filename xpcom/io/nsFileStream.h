@@ -103,11 +103,11 @@ class nsIFileSpec;
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_PC))
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || (defined(XP_PC) && !defined(XP_OS2)))
 #define NS_USING_NAMESPACE
 #endif
 
-#if !defined(NS_USING_STL) && (defined(__MWERKS__) || defined(XP_PC))
+#if !defined(NS_USING_STL) && (defined(__MWERKS__) || (defined(XP_PC) && !defined(XP_OS2)))
 #define NS_USING_STL
 #endif
 
