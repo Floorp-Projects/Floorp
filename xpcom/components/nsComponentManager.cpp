@@ -61,8 +61,6 @@
 #include "nsLocalFile.h"
 #include "nsNativeComponentLoader.h"
 #include "nsRegistry.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prcmon.h"
 #include "xptinfo.h" // this after nsISupports, to pick up IID so that xpt stuff doesn't try to define it itself...
@@ -121,7 +119,7 @@ const char versionValueName[]="VersionString";
 
 const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
 const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
-const static char XPCOM_GRECOMPONENT_PREFIX[] = "gre:";
+const char XPCOM_LIB_PREFIX[]          = "lib:";
 
 const static char persistentRegistryFilename[]     = "compreg.dat";
 const static char persistentRegistryTempFilename[] = "compreg.tmp";
@@ -672,8 +670,7 @@ ConvertContractIDKeyToString(PLDHashTable *table,
 }
 
 // this is safe to call during InitXPCOM
-static nsresult GetLocationFromDirectoryService(const char* prop, 
-                                                nsIFile** aDirectory)
+static nsresult GetDefaultComponentsDirectory(nsIFile** aDirectory)
 {
     nsCOMPtr<nsIProperties> directoryService;
     nsDirectoryService::Create(nsnull, 
@@ -683,11 +680,10 @@ static nsresult GetLocationFromDirectoryService(const char* prop,
     if (!directoryService) 
         return NS_ERROR_FAILURE;
     
-    return directoryService->Get(prop, 
+    return directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
                                  NS_GET_IID(nsIFile), 
                                  (void**)aDirectory);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl
@@ -698,9 +694,7 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     : 
     mMon(NULL), 
     mNativeComponentLoader(0),
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
     mStaticComponentLoader(0),
-#endif
     mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED), 
     mLoaderData(nsnull),
     mRegistryDirty(PR_FALSE)
@@ -720,6 +714,8 @@ nsresult nsComponentManagerImpl::Init(void)
     if (nsComponentManagerLog == nsnull)
     {
         nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("xpcom-log-version : " NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
     }
 
     // Initialize our arena
@@ -802,9 +798,8 @@ nsresult nsComponentManagerImpl::Init(void)
         mStaticComponentLoader->Init(this, nsnull);
     }
 #endif
-    NR_StartupRegistry();
 
-    GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(mComponentsDir));
+    GetDefaultComponentsDirectory(getter_AddRefs(mComponentsDir));
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -815,26 +810,11 @@ nsresult nsComponentManagerImpl::Init(void)
 
     mComponentsOffset = componentDescriptor.Length();
 
-    GetLocationFromDirectoryService(NS_GRE_COMPONENT_DIR, getter_AddRefs(mGREComponentsDir));
-    if (mGREComponentsDir) {
-        nsresult rv = mGREComponentsDir->GetNativePath(componentDescriptor);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("No GRE component manager");
-            return rv;
-        }
-        mGREComponentsOffset = componentDescriptor.Length();
-    }
-
+    NR_StartupRegistry();
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
            ("nsComponentManager: Initialized."));
 
     return NS_OK;
-}
-
-PRIntn PR_CALLBACK AutoRegEntryDestroy(nsHashKey *aKey, void *aData, void* aClosure)
-{
-    delete (AutoRegEntry*)aData;
-    return kHashEnumerateNext;
 }
 
 nsresult nsComponentManagerImpl::Shutdown(void) 
@@ -860,8 +840,11 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 #endif     
         }
     }    
-
-    mAutoRegEntries.Reset(AutoRegEntryDestroy);
+    for (i = mAutoRegEntries.Count() - 1; i >= 0; i--) {
+        AutoRegEntry* entry = NS_STATIC_CAST(AutoRegEntry*, mAutoRegEntries[i]);
+        delete entry;
+        mAutoRegEntries.RemoveElementAt(i);
+    }
 
     // Release all cached factories
     if (mContractIDs.ops) {
@@ -934,16 +917,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS8(nsComponentManagerImpl,
 nsresult
 nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
 {
-    if (uuid.Equals(NS_GET_IID(nsINativeComponentLoader)))
+    if (uuid.Equals(NS_GET_IID(nsIServiceManager)))
     {
-        if (!mNativeComponentLoader)
-            return NS_ERROR_NOT_INITIALIZED;
-        
-        return mNativeComponentLoader->QueryInterface(uuid, result);
+        *result = NS_STATIC_CAST(nsIServiceManager*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
     }
 
-    NS_WARNING("This isn't supported");
-    // fall through to QI as anything QIable is a superset of what can be
+    // fall through to QI as anything QIable is a superset of what canbe
     // got via the GetInterface()
     return  QueryInterface(uuid, result);
 }
@@ -960,12 +941,10 @@ AutoRegEntry::AutoRegEntry(const char* name, PRInt64* modDate)
 {
     mName = PL_strdup(name);
     mModDate = *modDate;
-    mData = nsnull;
 }
 AutoRegEntry::~AutoRegEntry()
 {
     if (mName) PL_strfree(mName);
-    if (mData) PL_strfree(mData);
 }
 
 PRBool 
@@ -974,19 +953,6 @@ AutoRegEntry::Modified(PRInt64 *date)
     return !LL_EQ(*date, mModDate);
 }
 
-void
-AutoRegEntry::SetOptionalData(const char* data)
-{
-    if (mData)
-        PL_strfree(mData);
-
-    if (!data) {
-        mData = nsnull;
-        return;
-    }
-
-    mData = PL_strdup(data);
-}
 
 static
 PRBool ReadSectionHeader(nsManifestLineReader& reader, const char *token)
@@ -1118,9 +1084,8 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         if (!reader.NextLine())
             break;
 
-        //name,last_modification_date[,optionaldata]
-        int parts = reader.ParseLine(values, lengths, 3);
-        if (2 > parts)
+        //name,last_modification_date
+        if (2 != reader.ParseLine(values, lengths, 2))
             break;
 
         PRInt64 a = nsCRT::atoll(values[1]);
@@ -1129,11 +1094,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        if (parts == 3)
-            entry->SetOptionalData(values[2]);
-
-        nsCStringKey key((const char*)values[0]);
-        mAutoRegEntries.Put(&key, entry);
+        mAutoRegEntries.AppendElement(entry);
     }
 
     if (ReadSectionHeader(reader, "CLASSIDS"))
@@ -1321,20 +1282,18 @@ ClassIDWriter(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
-PRIntn PR_CALLBACK
-AutoRegEntryWriter(nsHashKey *aKey, void *aData, void* aClosure)
+PR_STATIC_CALLBACK(PRBool)
+AutoRegEntryWriter(void* aElement, void *aData)
 {
-    PRFileDesc* fd = (PRFileDesc*) aClosure;
-    AutoRegEntry* entry = (AutoRegEntry*) aData;
+    PRFileDesc* fd = (PRFileDesc*) aData;
+    AutoRegEntry* entry = (AutoRegEntry*) aElement;
 
-    const char* extraData = entry->GetOptionalData();
-    const char *fmt;
-    if (extraData)
-        fmt = "%s,%lld,%s\n";
-    else
-        fmt = "%s,%lld\n";
-    PR_fprintf(fd, fmt, entry->GetName(), entry->GetDate(), extraData);
-    
+     //name,last_modification_date    
+    PR_fprintf(fd,
+               "%s,%lld\n",
+               entry->GetName(),
+               entry->GetDate());
+
     return PR_TRUE;
 }
 
@@ -1441,7 +1400,7 @@ nsComponentManagerImpl::WritePersistentRegistry()
     if (!PR_fprintf(fd, "\n[COMPONENTS]\n"))
         goto out;
 
-    mAutoRegEntries.Enumerate(AutoRegEntryWriter, (void*)fd);
+    mAutoRegEntries.EnumerateForwards(AutoRegEntryWriter, (void*)fd);
 
     PersistentWriterArgs args;
     args.mFD = fd;
@@ -1867,7 +1826,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         rv = NS_ERROR_FACTORY_NOT_REGISTERED;
     }
 
-
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
     {
         char *buf = aClass.ToString();
@@ -1892,9 +1850,9 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
  */
 nsresult
 nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
-                                                   nsISupports *aDelegate,
-                                                   const nsIID &aIID,
-                                                   void **aResult)
+                                               nsISupports *aDelegate,
+                                               const nsIID &aIID,
+                                               void **aResult)
 {
     // test this first, since there's no point in creating a component during
     // shutdown -- whether it's available or not would depend on the order it
@@ -2416,6 +2374,13 @@ MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
 }
 
 nsresult
+nsComponentManagerImpl::RegistryNameForLib(const char *aLibName,
+                                           char **aRegistryName)
+{
+    return MakeRegistryName(aLibName, XPCOM_LIB_PREFIX, aRegistryName);
+}
+
+nsresult
 nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
                                                 char **aRegistryName)
 {
@@ -2429,42 +2394,30 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
         return NS_OK;
     }
 
-
-    // First check to see if this component is in the application
-    // components directory
     PRBool containedIn;
     mComponentsDir->Contains(aSpec, PR_TRUE, &containedIn);
 
-    nsCAutoString nativePathString;
+    nsCAutoString persistentDescriptor;
 
     if (containedIn){
-        rv = aSpec->GetNativePath(nativePathString);
+        rv = aSpec->GetNativePath(persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
 
-        const char* relativeLocation = nativePathString.get() + mComponentsOffset + 1;
-        return MakeRegistryName(relativeLocation, XPCOM_RELCOMPONENT_PREFIX, aRegistryName);
-    } 
+        const char* relativeLocation = persistentDescriptor.get() + mComponentsOffset + 1;
 
-    // Next check to see if this component is in the GRE
-    // components directory
-
-    mGREComponentsDir->Contains(aSpec, PR_TRUE, &containedIn);
-
-    if (containedIn){
-        rv = aSpec->GetNativePath(nativePathString);
+        rv = MakeRegistryName(relativeLocation, XPCOM_RELCOMPONENT_PREFIX, 
+                              aRegistryName);
+    } else {
+        /* absolute names include volume info on Mac, so persistent descriptor */
+        rv = aSpec->GetNativePath(persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
-    
-        const char* relativeLocation = nativePathString.get() + mGREComponentsOffset + 1;
-        return MakeRegistryName(relativeLocation, XPCOM_GRECOMPONENT_PREFIX, aRegistryName);
-    } 
+        rv = MakeRegistryName(persistentDescriptor.get(), XPCOM_ABSCOMPONENT_PREFIX,
+                              aRegistryName);
+    }
 
-    /* absolute names include volume info on Mac, so persistent descriptor */
-    rv = aSpec->GetNativePath(nativePathString);
-    if (NS_FAILED(rv))
-        return rv;
-    return MakeRegistryName(nativePathString.get(), XPCOM_ABSCOMPONENT_PREFIX, aRegistryName);
+    return rv;
 }
 
 nsresult
@@ -2502,22 +2455,6 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
         *aSpec = file;
         return rv;
     }
-
-    if (!strncmp(aLocation, XPCOM_GRECOMPONENT_PREFIX, 4)) {
-
-        if (!mGREComponentsDir)
-            return NS_ERROR_NOT_INITIALIZED;
-
-        nsILocalFile* file = nsnull;
-        rv = mGREComponentsDir->Clone((nsIFile**)&file);       
-
-        if (NS_FAILED(rv)) return rv;
-
-        rv = file->AppendRelativeNativePath(nsDependentCString(aLocation + 4));
-        *aSpec = file;
-        return rv;
-    }
-
     *aSpec = nsnull;
     return NS_ERROR_INVALID_ARG;
 }
@@ -2661,6 +2598,13 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
     return rv;
 }
 
+/*
+ * Register a ``library'', which is a DLL location named by a simple filename
+ * such as ``libnsappshell.so'', rather than a relative or absolute path.
+ *
+ * It implies application/x-moz-dll as the component type, and skips the
+ * FindLoaderForType phase.
+ */
 nsresult
 nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
                                              const char *aClassName,
@@ -2669,8 +2613,12 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
                                              PRBool aReplace,
                                              PRBool aPersist)
 {
-    // deprecated and obsolete.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsXPIDLCString registryName;
+    nsresult rv = RegistryNameForLib(aDllName, getter_Copies(registryName));
+    if (NS_FAILED(rv))
+        return rv;
+    return RegisterComponentCommon(aClass, aClassName, aContractID, registryName,
+                                   aReplace, aPersist, nativeComponentType);
 }
 
 /*
@@ -3062,7 +3010,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     } 
     else 
     {
-        GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(dir));
+        GetDefaultComponentsDirectory(getter_AddRefs(dir));
         if (!dir)
             return NS_ERROR_UNEXPECTED;
     }
@@ -3140,7 +3088,7 @@ nsComponentManagerImpl::AutoRegisterNonNativeComponents(nsIFile* spec)
     nsCOMPtr<nsIFile> directory = spec;
 
     if (!directory) {
-        GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(directory));
+        GetDefaultComponentsDirectory(getter_AddRefs(directory));
         if (!directory)
             return NS_ERROR_UNEXPECTED;
     }
@@ -3468,13 +3416,19 @@ nsComponentManagerImpl::HasFileChanged(nsIFile *file, const char *loaderString, 
     if (NS_FAILED(rv))
         return rv;
 
-    nsCStringKey key(registryName);
-    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
-    if (entry)
-        *_retval = entry->Modified(&modDate);
-    else
-        *_retval = PR_TRUE;
+    PRInt32 count = mAutoRegEntries.Count();
+    for (PRInt32 i = 0; i<count; i++)
+    {
+        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
+        NS_ASSERTION(entry, "bad entry in array");
 
+        if (!strcmp(registryName.get(), entry->GetName()))
+        {
+            // Found in our array.
+            *_retval = entry->Modified(&modDate);
+            return NS_OK;
+        }
+    }
     return NS_OK;
 }
 
@@ -3488,20 +3442,25 @@ nsComponentManagerImpl::SaveFileInfo(nsIFile *file, const char *loaderString, PR
         return rv;
 
     // check to see if exists in the array before adding it so that we don't have dups.
-    nsCStringKey key(registryName);
-    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
-
-    if (entry)
+    PRInt32 count = mAutoRegEntries.Count();
+    for (PRInt32 i = 0; i<count; i++)
     {
-        entry->SetDate(&modDate);
-        return NS_OK;
+        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
+        NS_ASSERTION(entry, "bad entry in array");
+
+        if (!strcmp(registryName.get(), entry->GetName()))
+        {
+            entry->SetDate(&modDate);
+            return NS_OK;
+        }
     }
 
-    entry = new AutoRegEntry(registryName, &modDate);
+    AutoRegEntry *entry = new AutoRegEntry(registryName, &modDate);
+
     if (!entry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mAutoRegEntries.Put(&key, entry);
+    mAutoRegEntries.AppendElement(entry);
     return NS_OK;
 }
 
@@ -3514,65 +3473,21 @@ nsComponentManagerImpl::RemoveFileInfo(nsIFile *file, const char *loaderString)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCStringKey key(registryName);
-    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Remove(&key);
-    if (entry)
-        delete entry;
+    PRInt32 count = mAutoRegEntries.Count();
+    for (PRInt32 i = 0; i<count; i++)
+    {
+        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
+        NS_ASSERTION(entry, "bad entry in array");
 
+        if (!strcmp(registryName.get(), entry->GetName()))
+        {
+            mAutoRegEntries.RemoveElementAt(i);
+            delete entry;
+            return NS_OK;
+        }
+    }
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsComponentManagerImpl::GetOptionalData(nsIFile *file, 
-                                        const char *loaderString, 
-                                        char **_retval)
-{
-    nsXPIDLCString registryName;
-    nsresult rv = RegistryLocationForSpec(file, getter_Copies(registryName));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCStringKey key(registryName);
-    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
-    if (!entry) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-    const char* opData = entry->GetOptionalData();
-    
-    if (opData)
-        *_retval = ToNewCString(nsDependentCString(opData));
-    else
-        *_retval = nsnull;
-    return NS_OK;
- }
-
-NS_IMETHODIMP
-nsComponentManagerImpl::SetOptionalData(nsIFile *file, 
-                                        const char *loaderString, 
-                                        const char *data)
-{
-    nsXPIDLCString registryName;
-    nsresult rv = RegistryLocationForSpec(file, getter_Copies(registryName));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCStringKey key(registryName);
-    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
-
-    if (!entry) {
-        PRInt64 zero = LL_Zero();
-        entry = new AutoRegEntry(registryName, &zero);
-        if (!entry)
-            return NS_ERROR_OUT_OF_MEMORY;
-        
-        mAutoRegEntries.Put(&key, entry);
-    }
-
-    entry->SetOptionalData(data);
-
-    return NS_OK;
- }
-
 
 NS_IMETHODIMP 
 nsComponentManagerImpl::FlushPersistentStore(PRBool now)

@@ -52,9 +52,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
 #include "nsEmbedString.h"
-#else
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsINativeComponentLoader.h"
 #endif
 
 nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
@@ -227,16 +224,14 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount,
                                  const nsModuleComponentInfo* components,
                                  nsModuleConstructorProc ctor,
-                                 nsModuleDestructorProc dtor,
-                                 const char** aLibDepends)
+                                 nsModuleDestructorProc dtor)
     : mInitialized(PR_FALSE), 
       mModuleName(moduleName),
       mComponentCount(componentCount),
       mComponents(components),
       mFactoriesNotToBeRegistered(nsnull),
       mCtor(ctor),
-      mDtor(dtor),
-      mLibraryDependencies(aLibDepends)
+      mDtor(dtor)
 {
 }
 
@@ -465,25 +460,6 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
         cp++;
     }
 
-#ifndef XPCOM_GLUE
-     // We want to tell the component loader of any dependencies
-     // we have so that the loader can resolve them for us.
-
-     nsCOMPtr<nsINativeComponentLoader> loader = do_GetInterface(aCompMgr);
-     if (loader && mLibraryDependencies) 
-     {
-         for(int i=0; mLibraryDependencies[i] != nsnull && 
-                 mLibraryDependencies[i][0] != '\0'; i++)
-         {
-             loader->AddDependentLibrary(aPath, 
-                                         mLibraryDependencies[i]);
-         }
-         loader = nsnull;
-     }
-#endif
-
-
-
     return rv;
 }
 
@@ -538,7 +514,7 @@ NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
     // Create and initialize the module instance
     nsGenericModule *m = 
         new nsGenericModule(info->mModuleName, info->mCount, info->mComponents,
-                            info->mCtor, info->mDtor, info->mLibraryDependencies);
+                            info->mCtor, info->mDtor);
 
     if (!m)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -567,7 +543,6 @@ NS_NewGenericModule(const char* moduleName,
     info.mComponents = components;
     info.mCount      = componentCount;
     info.mDtor       = dtor;
-    info.mLibraryDependencies = nsnull;
 
     return NS_NewGenericModule2(&info, result);
 }

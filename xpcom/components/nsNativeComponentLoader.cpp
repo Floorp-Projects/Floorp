@@ -76,9 +76,7 @@ nsNativeComponentLoader::~nsNativeComponentLoader()
     delete mDllStore;
 }
     
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsNativeComponentLoader, 
-                              nsIComponentLoader,
-                              nsINativeComponentLoader);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNativeComponentLoader, nsIComponentLoader);
 
 NS_IMETHODIMP
 nsNativeComponentLoader::GetFactory(const nsIID & aCID,
@@ -130,7 +128,13 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
         return rv;      // XXX translate error code?
     
     rv = GetFactoryFromModule(dll, aCID, _retval);
-
+#ifdef OBSOLETE_MODULE_LOADING
+    if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_FACTORY_NOT_LOADED) {
+            rv = GetFactoryFromNSGetFactory(dll, aCID, serviceMgr, _retval);
+        }
+    }
+#endif
     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
            ("nsNativeComponentLoader: Factory creation %s for %s",
             (NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"),
@@ -272,6 +276,25 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     {
         rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
     }
+#ifdef OBSOLETE_MODULE_LOADING
+    else
+    {
+        // Try the old method of module unloading
+        nsCanUnloadProc proc = (nsCanUnloadProc)dll->FindSymbol("NSCanUnload");
+        if (proc)
+        {
+            canUnload = proc(serviceMgr);
+            rv = NS_OK;    // No error status returned by call.
+        }
+        else
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+                   ("nsNativeComponentLoader: Unload cant get nsIModule or NSCanUnload for %s",
+                    dll->GetDisplayPath()));
+            return rv;
+        }
+    }
+#endif /* OBSOLETE_MODULE_LOADING */
 
     mobj = nsnull; // Release our reference to the module object
     // When shutting down, whether we can unload the dll or not,
@@ -397,6 +420,21 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
         }
         mobj = NULL;    // Force a release of the Module object before unload()
     }
+#ifdef OBSOLETE_MODULE_LOADING
+    else
+    {
+        res = NS_ERROR_NO_INTERFACE;
+        nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
+        if (regproc)
+        {
+            // Call the NSRegisterSelfProc to enable dll registration
+            res = regproc(serviceMgr, registryLocation);
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+                   ("nsNativeComponentLoader: %s using OBSOLETE NSRegisterSelf()",
+                    dll->GetDisplayPath()));
+        }
+    }
+#endif /* OBSOLETE_MODULE_LOADING */
 
     // Update the timestamp and size of the dll in registry
     // Don't enter deferred modules in the registry, because it might only be
@@ -541,6 +579,19 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
         if (NS_FAILED(res)) return res;
         mobj->UnregisterSelf(mCompMgr, fs, registryName);
     }
+#ifdef OBSOLETE_MODULE_LOADING
+    else
+    {
+        res = NS_ERROR_NO_INTERFACE;
+        nsUnregisterProc unregproc =
+            (nsUnregisterProc) dll->FindSymbol("NSUnregisterSelf");
+        if (unregproc)
+        {
+            // Call the NSUnregisterSelfProc to enable dll de-registration
+            res = unregproc(serviceMgr, dll->GetPersistentDescriptorString());
+        }
+    }
+#endif /* OBSOLETE_MODULE_LOADING */
     return res;
 }
 
@@ -812,7 +863,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // It is ok to do this even if the creation of nsDll
         // didnt succeed. That way we wont do this again
         // when we encounter the same dll.
-        dll = new nsDll(component, persistentDescriptor);
+        dll = new nsDll(persistentDescriptor);
         if (dll == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         mDllStore->Put(&key, (void *) dll);
@@ -948,14 +999,19 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec,
 
     if (!aSpec)
     {
-        // what I want to do here is QI for a Component Registration Manager.  Since this 
-        // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
-        nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
-        if (obsoleteManager)
-            rv = obsoleteManager->SpecForRegistryLocation(aLocation,
-                                                          getter_AddRefs(spec));
-        if (NS_FAILED(rv))
-            return rv;
+        if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4)) {
+            dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
+            if (!dll) return NS_ERROR_OUT_OF_MEMORY;
+        } else {
+            // what I want to do here is QI for a Component Registration Manager.  Since this 
+            // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+            nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+            if (obsoleteManager)
+                rv = obsoleteManager->SpecForRegistryLocation(aLocation,
+                                                              getter_AddRefs(spec));
+            if (NS_FAILED(rv))
+                return rv;
+        }
     }
     else
     {
@@ -990,35 +1046,11 @@ nsNativeComponentLoader::GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
                                   (void **)aFactory);
 }
 
-
-NS_IMETHODIMP
-nsNativeComponentLoader::AddDependentLibrary(nsIFile* aFile, const char* libName)
+nsresult
+nsNativeComponentLoader::GetFactoryFromNSGetFactory(nsDll *aDll,
+                                                    const nsCID &aCID,
+                                                    nsIServiceManager *aServMgr,
+                                                    nsIFactory **aFactory)
 {
-    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr);
-    if (!manager) 
-    {
-        NS_WARNING("Something is terribly wrong");
-        return NS_ERROR_FAILURE;
-    }
-
-    // the native component loader uses the optional data
-    // to store a space delimited list of dependent library 
-    // names
-
-    if (!libName) 
-    {
-        manager->SetOptionalData(aFile, nsnull, nsnull);
-        return NS_OK;
-    }
-
-    nsXPIDLCString data;
-    manager->GetOptionalData(aFile, nsnull, getter_Copies(data));
-
-    if (!data.IsEmpty())
-        data.Append(NS_LITERAL_CSTRING(" "));
-
-    data.Append(nsDependentCString(libName));
-    
-    manager->SetOptionalData(aFile, nsnull, data);
-    return NS_OK;
+    return NS_ERROR_FACTORY_NOT_LOADED;
 }

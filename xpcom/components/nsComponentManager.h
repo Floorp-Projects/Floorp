@@ -73,6 +73,8 @@ class nsIServiceManager;
 // to service mapping and has no cid mapping.
 #define NS_COMPONENT_TYPE_SERVICE_ONLY -2
 
+extern const char XPCOM_LIB_PREFIX[];
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Array of Loaders and their type strings
@@ -94,6 +96,7 @@ class nsComponentManagerImpl
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
+
     // Since the nsIComponentManagerObsolete and nsIComponentManager share some of the 
     // same interface function names, we have to manually define the functions here.
     // The only function that is in nsIComponentManagerObsolete and is in nsIComponentManager
@@ -151,6 +154,7 @@ public:
     NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result);
 
 protected:
+    nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
                                      const char *aContractID,
@@ -205,14 +209,9 @@ protected:
     PRMonitor*          mMon;
 
     nsNativeComponentLoader *mNativeComponentLoader;
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
     nsIComponentLoader  *mStaticComponentLoader;
-#endif
     nsCOMPtr<nsIFile>   mComponentsDir;
     PRInt32             mComponentsOffset;
-
-    nsCOMPtr<nsIFile>   mGREComponentsDir;
-    PRInt32             mGREComponentsOffset;
 
     // Shutdown
     #define NS_SHUTDOWN_NEVERHAPPENED 0
@@ -225,7 +224,7 @@ protected:
     int mMaxNLoaderData;
 
     PRBool              mRegistryDirty;
-    nsHashtable         mAutoRegEntries;
+    nsVoidArray         mAutoRegEntries;
     nsCOMPtr<nsICategoryManager>  mCategoryManager;
 
     PLArenaPool   mArena;
@@ -261,6 +260,24 @@ protected:
 #define NS_MOZILLA_DIR_NAME		"Mozilla"
 #define NS_MOZILLA_DIR_PERMISSION	00700
 #endif /* XP_BEOS */
+
+/**
+ * When using the registry we put a version number in it.
+ * If the version number that is in the registry doesn't match
+ * the following, we ignore the registry. This lets news versions
+ * of the software deal with old formats of registry and not
+ *
+ * alpha0.20 : First time we did versioning
+ * alpha0.30 : Changing autoreg to begin registration from ./components on unix
+ * alpha0.40 : repository -> component manager
+ * alpha0.50 : using nsIRegistry
+ * alpha0.60 : xpcom 2.0 landing
+ * alpha0.70 : using nsIFileSpec. PRTime -> PRUint32
+ * alpha0.90 : using nsIComponentLoader, abs:/rel:/lib:, shaver-cleanup
+ * alpha0.92 : restructured registry keys
+ * alpha0.93 : changed component names to native strings instead of UTF8
+ */
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.93"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -330,6 +347,7 @@ struct nsContractIDTableEntry : public PLDHashEntryHdr {
 class AutoRegEntry
 {
 public:
+    AutoRegEntry(){};
     AutoRegEntry(const char* name, PRInt64* modDate);
     virtual ~AutoRegEntry();
 
@@ -338,14 +356,8 @@ public:
     void    SetDate(PRInt64 *date) { mModDate = *date;}
     PRBool  Modified(PRInt64 *date);
 
-    // this is the optional field line in the compreg.dat.
-    // it must not contain any comma's and it must be null terminated.
-    char*   GetOptionalData() {return mData;};
-    void    SetOptionalData(const char* data);
-
 private:
     char*   mName;
-    char*   mData;
     PRInt64 mModDate;
 };
 #endif // nsComponentManager_h__

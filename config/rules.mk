@@ -524,18 +524,6 @@ endif
 endif
 endif
 
-# Dependent libs
-ifdef IS_COMPONENT
-DEPENDENT_LIBS = $(patsubst -l%,$(LIB_PREFIX)%$(DLL_SUFFIX),$(filter -l%, $(EXTRA_DSO_LDOPTS)))
-ifneq (,$(strip $(DEPENDENT_LIBS)))
-_BEFORE := , \"
-_AFTER := ,\"
-_DEP_DEFINES = -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
-_DEP_DEFINES := $(subst $(_BEFORE),$(_AFTER),$(_DEP_DEFINES))
-DEFINES	+= $(_DEP_DEFINES)
-endif
-endif
-
 ################################################################################
 
 all:: 
@@ -1681,7 +1669,6 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "SHARED_LIBS         = $(SHARED_LIBS)"
 	@echo "EXTRA_DSO_LIBS      = $(EXTRA_DSO_LIBS)"
 	@echo "EXTRA_DSO_LDOPTS    = $(EXTRA_DSO_LDOPTS)"
-	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
 	@echo --------------------------------------------------------------------------------
 endif
 	+$(LOOP_OVER_MOZ_DIRS)
