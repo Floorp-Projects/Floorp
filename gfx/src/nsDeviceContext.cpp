@@ -432,10 +432,10 @@ NS_IMETHODIMP DeviceContextImpl::FirstExistingFont(const nsFont& aFont, nsString
   return NS_OK;
 }
 
-class StringKey: public nsHashKey 
+class FontAliasKey: public nsHashKey 
 {
 public:
-  StringKey(const nsString& aString)
+  FontAliasKey(const nsString& aString)
     : mString(aString)
   {}
 
@@ -446,7 +446,7 @@ public:
   nsAutoString  mString;
 };
 
-PRUint32 StringKey::HashValue(void) const
+PRUint32 FontAliasKey::HashValue(void) const
 {
   PRUint32 hash = 0;
   PRUnichar* string = mString;
@@ -459,14 +459,14 @@ PRUint32 StringKey::HashValue(void) const
   return hash;
 }
 
-PRBool StringKey::Equals(const nsHashKey *aKey) const
+PRBool FontAliasKey::Equals(const nsHashKey *aKey) const
 {
-  return mString.EqualsIgnoreCase(((StringKey*)aKey)->mString);
+  return mString.EqualsIgnoreCase(((FontAliasKey*)aKey)->mString);
 }
 
-nsHashKey* StringKey::Clone(void) const
+nsHashKey* FontAliasKey::Clone(void) const
 {
-  return new StringKey(mString);
+  return new FontAliasKey(mString);
 }
 
 static nsAutoString  gTimes("Times");
@@ -514,7 +514,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
       if (NS_OK == CheckFontExistence(aAlias)) {
         nsString* entry = aAlias.ToNewString();
         if (nsnull != entry) {
-          StringKey key(aFont);
+          FontAliasKey key(aFont);
           mFontAliasTable->Put(&key, entry);
         }
         else {
@@ -524,7 +524,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
       else if ((0 < aAltAlias.Length()) && (NS_OK == CheckFontExistence(aAltAlias))) {
         nsString* entry = aAltAlias.ToNewString();
         if (nsnull != entry) {
-          StringKey key(aFont);
+          FontAliasKey key(aFont);
           mFontAliasTable->Put(&key, entry);
         }
         else {
@@ -549,7 +549,7 @@ NS_IMETHODIMP DeviceContextImpl::GetLocalFontName(const nsString& aFaceName, nsS
   }
 
   if (nsnull != mFontAliasTable) {
-    StringKey key(aFaceName);
+    FontAliasKey key(aFaceName);
     const nsString* alias = (const nsString*)mFontAliasTable->Get(&key);
     if (nsnull != alias) {
       aLocalName = *alias;
