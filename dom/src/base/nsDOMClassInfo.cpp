@@ -3338,6 +3338,7 @@ DOMJSClass_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if ((name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo ||
        !name_struct->mData->mConstructorCID) &&
+      name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructor &&
       name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructorAlias) {
     // ignore return value, we return JS_FALSE anyway
     NS_ERROR("object instantiated without constructor");
@@ -3812,14 +3813,18 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    // If there was a JS_DefineUCFunction() I could use it here, but
-    // no big deal...
-    JSFunction *f = ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
-                                        DOMJSClass_Construct, 0,
-                                        JSPROP_READONLY);
+    // If there was a JS_DefineUCObject() we could use it here...
+    JSObject* class_obj = ::JS_DefineObject(cx, obj, ::JS_GetStringBytes(str),
+                                            &sDOMJSClass, 0, 0);
+    if (!class_obj) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-    if (!f) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!::JS_SetPrivate(cx, class_obj,
+                         NS_CONST_CAST(void *,
+                                       NS_STATIC_CAST(const void *,
+                                                      class_name)))) {
+      return NS_ERROR_UNEXPECTED;
     }
 
     *did_resolve = PR_TRUE;
