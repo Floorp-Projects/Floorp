@@ -85,7 +85,7 @@ const PRInt32 kBackward = 1;
 #endif
 
 // XXX Used to control whether we implement document.layers
-#define NS_IMPLEMENT_DOCUMENT_LAYERS
+//#define NS_IMPLEMENT_DOCUMENT_LAYERS
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -1787,7 +1787,7 @@ nsHTMLDocument::GetLayers(nsIDOMHTMLCollection** aLayers)
 {
 #ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
   if (nsnull == mLayers) {
-    mAnchors = new nsContentList(this, MatchLayers, nsnull);
+    mLayers = new nsContentList(this, MatchLayers, nsnull);
     if (nsnull == mLayers) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
