@@ -18,7 +18,7 @@
  
 
 #include "nsDTDUtils.h"
-#include "CNavDTD.h"
+#include "CNavDTD.h" 
 
 static CTokenDeallocator gTokenKiller;
  
@@ -147,7 +147,7 @@ eHTMLTags nsTagStack::Last() const {
  */
 nsDTDContext::nsDTDContext(int aDefaultSize) {
 #ifndef NS_DEBUG
-  mStyles =new nsTagStack*[mCapacity];
+  mStyles =new nsTagStack*[aDefaultSize];
 #endif
   mOpenStyles=0;
   nsCRT::zero(mStyles,mTags.mCapacity*sizeof(void*));
@@ -160,9 +160,7 @@ nsDTDContext::nsDTDContext(int aDefaultSize) {
  */
 nsDTDContext::~nsDTDContext() {
 #ifndef NS_DEBUG
-  delete mTags;
   delete mStyles;
-  mTags=0;
   mStyles=0;
 #endif
 }
