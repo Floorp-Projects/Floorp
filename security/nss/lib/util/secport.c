@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.12 2002/03/15 05:54:21 wtc%netscape.com Exp $
+ * $Id: secport.c,v 1.13 2002/04/04 00:11:48 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -258,6 +258,12 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 	PZ_Lock(lock);
     }
     if (!pvd) {
+	/* Each of NSPR's DLLs has a function libVersionPoint().
+	** We could do a lot of extra work to be sure we're calling the
+	** one in the DLL that holds PR_FreeArenaPool, but instead we
+	** rely on the fact that ALL NSPR DLLs in the same directory
+	** must be from the same release, and we call which ever one we get. 
+	*/
 	/* no need for thread protection here */
 	pvd = libVersionPoint();
 	if ((pvd->vMajor > 4) || 
@@ -529,7 +535,7 @@ PORT_UCS2_ASCIIConversion(PRBool toUnicode, unsigned char *inBuf,
 int
 NSS_PutEnv(const char * envVarName, const char * envValue)
 {
-#if  defined(XP_MAC)
+#if  defined(XP_MAC) || defined(_WIN32_WCE)
     return SECFailure;
 #else
     SECStatus result = SECSuccess;

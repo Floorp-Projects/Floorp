@@ -38,10 +38,14 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.1 2000/03/31 19:39:29 relyea%netscape.com Exp $
+ * $Id: secder.h,v 1.2 2002/04/04 00:11:48 nelsonb%netscape.com Exp $
  */
 
+#if defined(_WIN32_WCE)
+#else
 #include <time.h>
+#endif
+
 #include "plarena.h"
 #include "prlong.h"
 

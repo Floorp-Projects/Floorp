@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.4 2002/03/15 05:54:22 wtc%netscape.com Exp $
+ * $Id: secport.h,v 1.5 2002/04/04 00:11:48 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -85,7 +85,10 @@
 #include "watcomfx.h"
 #endif
 
-#ifdef XP_MAC
+#if defined(_WIN32_WCE)
+#include <windef.h>
+#include <types.h>
+#elif defined( XP_MAC ) 
 #include <types.h>
 #include <time.h> /* for time_t below */
 #else
@@ -100,7 +103,11 @@
 
 #include <ctype.h>
 #include <string.h>
+#if defined(_WIN32_WCE)
+#include <stdlib.h>	/* WinCE puts some stddef symbols here. */
+#else
 #include <stddef.h>
+#endif
 #include <stdlib.h>
 #include "prtypes.h"
 #include "prlog.h"	/* for PR_ASSERT */
