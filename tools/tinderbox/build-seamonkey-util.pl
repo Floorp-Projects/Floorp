@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.215 $ ';
+$::UtilsVersion = '$Revision: 1.216 $ ';
 
 package TinderUtils;
 
@@ -742,7 +742,6 @@ sub BuildIt {
 
 
         my $build_status = 'none';
-        my $status = 0;
 
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
@@ -754,16 +753,8 @@ sub BuildIt {
             # version of client.mk once; we might have more than one
             # cvs tree so set CVSROOT here to avoid confusion.
             $ENV{CVSROOT} = $Settings::moz_cvsroot;
-
-            $status = run_system_cmd("$Settings::CVS $cvsco " .
-                                     "$TreeSpecific::name/client.mk", 
-                                     $Settings::CVSCheckoutTimeout);
-            if ($status->{exit_value} != 0) {            
-                $build_status = 'busted';
-                print_log "Error: Initial checkout of client.mk failed. status = $status\n";
-            } else {
-                $build_status = 'success';
-            }
+            
+            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
           }
           
           # Create toplevel source directory.
@@ -790,48 +781,29 @@ sub BuildIt {
                 }
               }
             }
-
-            # Pull using separate step so that we can timeout if necessary
-            my $make_co = "$Settings::Make -f client.mk " .
-                "$TreeSpecific::checkout_target";
-            if ($Settings::FastUpdate) {
-                $make_co = "$Settings::Make -f client.mk fast-update";
-            }
-
-            # Run the checkout command.
-            if ($build_status ne 'busted') {
-                $status = run_system_cmd("$make_co", 
-                                         $Settings::CVSCheckoutTimeout);
-                if ($status->{exit_value} != 0) {
-                    $build_status = 'busted';
-                    print_log "Error: CVS checkout failed.\n";
-                } else {
-                    $build_status = 'success';
-                }
-            }
-
             # Build up initial make command.
             my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
+            if ($Settings::FastUpdate) {
+              $make = "$Settings::Make -f client.mk fast-update && $Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
+            }
 
             # Build up target string.
-            my $targets;
-            $targets = "$TreeSpecific::clobber_target" unless $Settings::BuildDepend;
-            $targets .= " $TreeSpecific::build_target";
+            my $targets = $TreeSpecific::checkout_target;
+            $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
 
             # Make sure we have an ObjDir if we need one.
             mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
             # Run the make command.
-            if ($build_status ne 'busted') {
-                $status = run_shell_command "$make $targets";
-                if ($status != 0) {
-                    $build_status = 'busted';
-                } elsif (not BinaryExists($full_binary_name)) {
-                    print_log "Error: binary not found: $binary_basename\n";
-                    $build_status = 'busted';
-                } else {
-                    $build_status = 'success';
-                }
+            my $status = 0;
+            $status = run_shell_command "$make $targets";
+            if ($status != 0) {
+              $build_status = 'busted';
+            } elsif (not BinaryExists($full_binary_name)) {
+              print_log "Error: binary not found: $binary_basename\n";
+              $build_status = 'busted';
+            } else {
+              $build_status = 'success';
             }
 
             # TestGtkEmbed is only built by default on certain platforms.
