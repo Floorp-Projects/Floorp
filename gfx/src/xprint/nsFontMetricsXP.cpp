@@ -3410,7 +3410,7 @@ nsFontEnumeratorXp::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 }
 
 NS_IMETHODIMP 
-nsFontEnumeratorXP::UpdateFontList()
+nsFontEnumeratorXp::UpdateFontList()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
