@@ -52,7 +52,6 @@ public:
     nsMsgFilterDataSource();
     virtual ~nsMsgFilterDataSource();
   
-    NS_DECL_ISUPPORTS
     NS_IMETHOD GetTargets(nsIRDFResource *source,
                           nsIRDFResource *property,
                           PRBool aTruthValue,

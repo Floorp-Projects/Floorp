@@ -48,8 +48,6 @@
 
 #define NC_RDF_ENABLED NC_NAMESPACE_URI "Enabled"
 
-NS_IMPL_ISUPPORTS1(nsMsgFilterDataSource, nsIRDFDataSource)
-
 nsrefcnt nsMsgFilterDataSource::mGlobalRefCount = 0;
 nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Child;
 nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Name;
