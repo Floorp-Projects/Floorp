@@ -1062,7 +1062,7 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
         NS_ConvertUTF8toUTF16 convertedProfName(profileName);
 #else
         nsCAutoString temp;
-        NS_ConvertUnicodeToNative(profile, temp);
+        NS_CopyUnicodeToNative(profile, temp);
         nsCAutoString profileName(nsUnescape(temp.BeginWriting()));
         nsAutoString convertedProfName;
         NS_CopyNativeToUnicode(profileName, convertedProfName);
