@@ -60,17 +60,6 @@ public:
 	virtual PRBool GetIsRowOrderTopToBottom() { return PR_TRUE; }
 	virtual PRInt32 GetLineStride() { return mRowBytes; }
 	
-	NS_IMETHOD SetNaturalWidth(PRInt32 naturalwidth);
-	NS_IMETHOD SetNaturalHeight(PRInt32 naturalheight);
-	virtual PRInt32 GetNaturalWidth() { return mNaturalWidth; } 
-	virtual PRInt32 GetNaturalHeight() { return mNaturalHeight; } 
-	
-	NS_IMETHOD SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2); 
-	virtual PRInt32 GetDecodedX1() { return mDecodedX1; }
-	virtual PRInt32 GetDecodedY1() { return mDecodedY1; }
-	virtual PRInt32 GetDecodedX2() { return mDecodedX2; }
-	virtual PRInt32 GetDecodedY2() { return mDecodedY2; }
-	
 	virtual nsColorMap *GetColorMap() { return nsnull; }
 
 	// The heavy lifting
@@ -99,15 +88,9 @@ public:
 	
 	virtual PRBool GetHasAlphaMask() { return mAlphaBits != nsnull; }
 	virtual PRUint8 *GetAlphaBits() { return mAlphaBits; }
-	virtual PRInt32 GetAlphaWidth() { return mAlphaWidth; }
-	virtual PRInt32 GetAlphaHeight() { return mAlphaHeight; }
 	virtual PRInt32 GetAlphaLineStride() { return mAlphaRowBytes; }
-	virtual nsIImage *DuplicateImage();
 	
-	virtual void SetAlphaLevel(PRInt32 aAlphaLevel);
-	virtual PRInt32 GetAlphaLevel() { return 0; }
 	virtual PRInt8 GetAlphaDepth() { return mAlphaDepth; }
-	virtual void MoveAlphaMask(PRInt32 aX, PRInt32 aY);
 	
 	NS_IMETHOD LockImagePixels(PRBool aMaskPixels);
 	NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels);
@@ -129,9 +112,6 @@ private:
 	PRInt32 mRowBytes;
 	PRInt32 mSizeImage;
 	
-	PRInt32 mNaturalWidth;
-	PRInt32 mNaturalHeight;
-	
 	// Keeps track of what part of image has been decoded
 	PRInt32 mDecodedX1;
 	PRInt32 mDecodedY1;
@@ -140,8 +120,6 @@ private:
 	
 	// Alpha layer members
 	PRUint8 *mAlphaBits;
-	PRInt16 mAlphaWidth;
-	PRInt16 mAlphaHeight;
 	PRInt16 mAlphaRowBytes;
 	PRInt8 mAlphaDepth;
 	

@@ -56,7 +56,7 @@ public:
 	*/
 	virtual nsresult		Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
 	virtual PRInt32			GetBytesPix()					{ return mBytesPerPixel; }
-	virtual PRBool			GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
+	virtual PRBool			GetIsRowOrderTopToBottom() { return PR_TRUE; }
 
 	virtual PRInt32			GetWidth()						{ return mWidth; }
 	virtual PRInt32			GetHeight()						{ return mHeight;}
@@ -65,25 +65,10 @@ public:
 	virtual PRInt32			GetLineStride()				{ return mRowBytes; }
 	virtual PRBool			GetHasAlphaMask()			{ return mMaskBitsHandle != nsnull; }
 
-		NS_IMETHOD		 SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
-		NS_IMETHOD		 SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
-		virtual PRInt32			GetNaturalWidth() {return mNaturalWidth; }
-		virtual PRInt32			GetNaturalHeight() {return mNaturalHeight; }
-
-		NS_IMETHOD					SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);				 
-		virtual PRInt32			GetDecodedX1() { return mDecodedX1;}
-		virtual PRInt32			GetDecodedY1() { return mDecodedY1;}
-		virtual PRInt32			GetDecodedX2() { return mDecodedX2;}
-		virtual PRInt32			GetDecodedY2() { return mDecodedY2;}
-
-
 	virtual PRUint8*		GetAlphaBits();
-	virtual PRInt32			GetAlphaWidth()				{ return mAlphaWidth; }
-	virtual PRInt32			GetAlphaHeight()			{ return mAlphaHeight; }
 	virtual PRInt32			GetAlphaLineStride()	{ return mARowBytes; }
 
 	virtual void				ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
-	virtual PRBool			IsOptimized()					{ return PR_FALSE; }
 	virtual nsresult		Optimize(nsIDeviceContext* aContext);
 	virtual nsColorMap* GetColorMap()					{ return nsnull;}
 
@@ -109,8 +94,6 @@ public:
 	
   NS_IMETHOD          DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
                                   nscoord aDWidth, nscoord aDHeight);
-	virtual void				SetAlphaLevel(PRInt32 aAlphaLevel);
-	virtual PRInt32			GetAlphaLevel();
 	virtual void*				GetBitInfo()					{ return nsnull; }
 
 	NS_IMETHOD					LockImagePixels(PRBool aMaskPixels);
@@ -199,12 +182,7 @@ private:
 	Handle					mMaskBitsHandle;	// handle for the mask bits
 	
 	PRInt16					mAlphaDepth;		// alpha layer depth
-	PRInt16					mAlphaWidth;		// alpha layer width
-	PRInt16					mAlphaHeight;		// alpha layer height
 	PRInt32					mARowBytes;			// alpha row bytes
-
-	PRInt32					mNaturalWidth;
-	PRInt32					mNaturalHeight;
 
 	PRInt32					mDecodedX1;				//Keeps track of what part of image
 	PRInt32					mDecodedY1;				// has been decoded.
@@ -214,10 +192,8 @@ private:
 	//nsPoint					mLocation;			// alpha mask location
 
 	//PRInt8					mImageCache;		// place to save off the old image for fast animation
-	//PRInt16					mAlphaLevel;		// an alpha level every pixel uses
 
 	PRIntn					mPixelDataSize;
-	PRBool					mIsTopToBottom;
 
 	static OSErr			CreatePixMapInternal( PRInt32 aWidth, 
 	                                        PRInt32 aHeight, 

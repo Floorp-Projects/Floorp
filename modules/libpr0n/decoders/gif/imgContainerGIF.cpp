@@ -154,12 +154,6 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
       mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
       mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB_A1, 24);
 
-      nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mCompositingFrame));
-      if (ireq) {
-        nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
-        img->SetDecodedRect(0, 0, mSize.width, mSize.height);
-      }
-
       nsCOMPtr<gfxIImageFrame> firstFrame;
       inlinedGetFrameAt(0, getter_AddRefs(firstFrame));
 

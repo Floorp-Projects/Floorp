@@ -118,21 +118,6 @@ public:
   virtual PRInt32 GetHeight() = 0;
 
   /**
-   * Set/Get the decoded dimensions for the pixelmap
-   * 01/11/2000 - pnunn
-   */
-  NS_IMETHOD          SetDecodedRect(PRInt32, PRInt32, PRInt32, PRInt32) = 0;
-  virtual PRInt32     GetDecodedX1() = 0;
-  virtual PRInt32     GetDecodedY1() = 0;
-  virtual PRInt32     GetDecodedX2() = 0;
-  virtual PRInt32     GetDecodedY2() = 0;
-
-  NS_IMETHOD     SetNaturalWidth(PRInt32) = 0;
-  NS_IMETHOD     SetNaturalHeight(PRInt32) = 0;
-  virtual PRInt32     GetNaturalWidth() = 0;
-  virtual PRInt32     GetNaturalHeight() = 0;
-
-  /**
    * Get a pointer to the bits for the pixelmap, only if it is not optimized
    * @update - dwc 2/1/99
    * @return address of the DIB pixel array
@@ -162,20 +147,6 @@ public:
   virtual PRUint8 * GetAlphaBits() = 0;
 
   /**
-   * Get the width of the alpha mask
-   * @update - dwc 2/1/99
-   * @return The width in pixels
-   */
-  virtual PRInt32     GetAlphaWidth() = 0;
-
-  /**
-   * Get the height of the alpha mask
-   * @update - dwc 2/1/99
-   * @return The width in pixels
-   */
-  virtual PRInt32     GetAlphaHeight()  = 0;
-
-  /**
    * Get the number of bytes per scanline for the alpha mask
    * @update - dwc 2/1/99
    * @return The number of bytes in each scanline
@@ -189,13 +160,6 @@ public:
    * @param aUpdateRect The rectangle to update
    */
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect) = 0;
-
-  /**
-   * Returns if the pixelmap has been converted to an optimized pixelmap
-   * @update - dwc 2/1/99
-   * @return If true, it is optimized
-   */
-  virtual PRBool IsOptimized() = 0;
 
   /**
    * Converted this pixelmap to an optimized pixelmap for the device
@@ -260,20 +224,6 @@ public:
   NS_IMETHOD DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
   /**
-   * Set the alpha level for the image
-   * @update - dwc 2/1/99
-   * @param  the alpha level to set for the image, from 0 to 100%
-   */
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) = 0;
-
-  /**
-   * Get the alpha level for the image
-   * @update - dwc 2/1/99
-   * @return  the alpha level for the image, from 0 to 100%
-   */
-  virtual PRInt32 GetAlphaLevel() = 0;
-
-  /**
    * Get the alpha depth for the image mask
    * @update - lordpixel 2001/05/16
    * @return  the alpha mask depth for the image, ie, 0, 1 or 8
@@ -314,20 +264,6 @@ public:
    * @return error result
    */
   NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels) = 0;
-  
-  //get the color space metrics for this image
-  //virtual NI_ColorSpec * GetColorSpec() = 0;                       fix
-
-  //get the color which should be considered transparent.
-  //if this image is color mapped, this value will be an
-  //index into the color map. hokey? yes, but it avoids
-  //another silly api or struct.
-  //virtual nscolor GetTransparentColor() = 0;                       fix.
 };
-
-//change notification API flag bits
-#define NS_IMAGE_UPDATE_COLORMAP  1
-#define NS_IMAGE_UPDATE_PIXELS    2
-#define NS_IMAGE_UPDATE_ALPHA     4
 
 #endif

@@ -66,19 +66,8 @@ public:
   virtual PRInt32     GetWidth();
   virtual PRUint8*    GetBits();
   virtual void*       GetBitInfo();
-  virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
+  virtual PRBool      GetIsRowOrderTopToBottom() { return PR_TRUE; }
   virtual PRInt32     GetLineStride();
-
-  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
-  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
-  virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
-  virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
-
-  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);
-  virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
-  virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
-  virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
-  virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
 
   virtual nsColorMap* GetColorMap();
 
@@ -105,19 +94,13 @@ public:
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
                            PRInt32 aDepth,
                            nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized();
 
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
 
   virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull; }        
   virtual PRUint8*    GetAlphaBits();
-  virtual PRInt32     GetAlphaWidth();
-  virtual PRInt32     GetAlphaHeight();
   virtual PRInt32     GetAlphaLineStride();
-  virtual nsIImage*   DuplicateImage();
 
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
-  virtual PRInt32 GetAlphaLevel();
   /**
    * Get the alpha depth for the image mask
    * @update - lordpixel 2001/05/16
@@ -129,7 +112,6 @@ public:
     else
       return mAlphaDepth;
   }
-  virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
 
   NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
   NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
@@ -206,9 +188,6 @@ private:
   PRInt32       mRowBytes;
   PRInt32       mSizeImage;
 
-  PRInt32       mNaturalWidth;
-  PRInt32       mNaturalHeight;
-
   PRInt32       mDecodedX1;         // Keeps track of what part of image
   PRInt32       mDecodedY1;         // has been decoded.
   PRInt32       mDecodedX2;
@@ -219,14 +198,11 @@ private:
   // alpha layer members
   PRInt32       mAlphaRowBytes;     // alpha bytes per row
   PRInt32       mTrueAlphaRowBytes; // alpha bytes per row
-  PRInt32       mAlphaWidth;        // alpha layer width
-  PRInt32       mAlphaHeight;       // alpha layer height
   PRInt8        mAlphaDepth;        // alpha layer depth
   PRInt8        mTrueAlphaDepth;    // alpha layer depth
   PRPackedBool  mIsSpacer;
   PRPackedBool  mPendingUpdate;
 
-  PRPackedBool  mIsTopToBottom;
   PRInt8        mNumBytesPixel;
   PRUint8       mFlags;             // flags set by ImageUpdated
   PRInt8        mDepth;             // bits per pixel

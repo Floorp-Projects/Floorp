@@ -81,22 +81,10 @@ public:
   */
   virtual PRInt32     GetBytesPix()       { return mNumBytesPixel; }
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
-  virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
+  virtual PRBool      GetIsRowOrderTopToBottom() { return PR_FALSE; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetBits() ;
   virtual PRInt32     GetLineStride()     { return mRowBytes; }
-
-  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
-  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
-  virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
-  virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
-
- 
-  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
-  virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
-  virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
-  virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
-  virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
 
   virtual PRBool      GetHasAlphaMask()   { return mAlphaBits != nsnull; }
 
@@ -110,11 +98,8 @@ public:
   virtual nsColorMap* GetColorMap() {return mColorMap;}
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized()       { return mIsOptimized; }
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
-  virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
 
 
@@ -159,15 +144,6 @@ public:
    * @return the number of bytes in this span
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
-
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
-
-  /** 
-   * Get the alpha level assigned.
-   * @update dc - 10/29/98
-   * @return The alpha level from 0 to 1
-   */
-  virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
 
   /**
    * Get the alpha depth for the image mask
@@ -262,8 +238,8 @@ private:
    */
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 
+  PRPackedBool        mInitialized;
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
-  PRBool              mIsTopToBottom;     // rows in image are top to bottom 
   PRInt16             mNumPaletteColors;  // Number of colors in the pallete 256 
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
@@ -278,17 +254,11 @@ private:
   PRBool              mIsLocked;			    // variable to keep track of the locking
   PRBool              mDIBTemp;           // boolean to let us know if DIB was created as temp
 
-  PRInt32		          mNaturalWidth;
-  PRInt32		          mNaturalHeight;
-    
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
   PRInt8              mAlphaDepth;        // alpha layer depth
   PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
-  PRInt16             mAlphaWidth;        // alpha layer width
-  PRInt16             mAlphaHeight;       // alpha layer height
   PRInt8              mImageCache;        // place to save off the old image for fast animation
-  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   HBITMAP             mHBitmap;           // the GDI bitmaps
   HBITMAP             mDIBSection;
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
