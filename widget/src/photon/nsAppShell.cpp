@@ -149,6 +149,11 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
   char *home=nsnull;
   char *path=nsnull;
 
+  if (!PhWidLog)
+  {
+    PhWidLog =  PR_NewLogModule("PhWidLog");
+  }
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Create\n"));
 
   int argc = bac ? *bac : 0;

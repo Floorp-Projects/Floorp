@@ -23,16 +23,19 @@
 
 
 #include "nscore.h"
-#include "nsIMemory.h"
 #include "plstr.h"
-#include "stdio.h"
+#include "prlink.h"
 
 #include "nsSound.h"
+
+#include "nsIURL.h"
+#include "nsNetUtil.h"
+#include "nsCOMPtr.h"
 
 #include <Pt.h>
 #include "nsPhWidgetLog.h"
 
-NS_IMPL_ISUPPORTS(nsSound, NS_GET_IID(nsISound));
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
@@ -40,6 +43,7 @@ nsSound::nsSound()
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::nsSound this=<%p>\n", this));
 
   NS_INIT_REFCNT();
+  mInited = PR_FALSE;
 }
 
 nsSound::~nsSound()
@@ -48,6 +52,17 @@ nsSound::~nsSound()
 
 }
 
+nsresult nsSound::Init()
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Init this=<%p> mInited=<%d>\n", this, mInited));
+
+  if (mInited) return NS_OK;
+
+  mInited = PR_TRUE;
+  return NS_OK;
+}
+
+#if 0
 nsresult NS_NewSound(nsISound** aSound)
 {
   NS_PRECONDITION(aSound != nsnull, "null ptr");
@@ -61,14 +76,7 @@ nsresult NS_NewSound(nsISound** aSound)
   NS_ADDREF(*aSound);
   return NS_OK;
 }
-
-// not currently used.. may go away
-NS_METHOD nsSound::Init(void)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Init this=<%p>\n", this));
-
-  return NS_OK;
-}
+#endif
 
 
 NS_METHOD nsSound::Beep()
@@ -78,9 +86,24 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIURI *aURI)
+NS_METHOD nsSound::Play(nsIURL *aURL)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Play - Not Implemented\n"));
   NS_NOTYETIMPLEMENTED("nsSound::Play");
   return NS_OK;
 }
+
+NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
+                                        nsISupports *context,
+                                        nsresult aStatus,
+                                        PRUint32 stringLen,
+                                        const char *stringData)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (NS_FAILED(aStatus))
+    return NS_ERROR_FAILURE;
+
+  return rv;
+}
+
