@@ -5818,7 +5818,7 @@ if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     if test -z "$MOZ_DEBUG"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     fi
-    if test "$MOZ_OPTIMIZE" == "1"; then
+    if test "$MOZ_OPTIMIZE" = "1"; then
         ac_configure_args="$ac_configure_args --enable-optimize"
     fi
     if test "$OS_ARCH" = "WINNT" && test "$NS_TRACE_MALLOC"; then
@@ -5867,7 +5867,7 @@ if test "$MOZ_LDAP_XPCOM"; then
     if test -z "$MOZ_DEBUG"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     fi
-    if test "$MOZ_OPTIMIZE" == "1"; then
+    if test "$MOZ_OPTIMIZE" = "1"; then
         ac_configure_args="$ac_configure_args --enable-optimize"
     fi
     if test -n "$HAVE_64BIT_OS"; then
