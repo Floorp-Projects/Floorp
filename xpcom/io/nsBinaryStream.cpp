@@ -182,6 +182,7 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
 #ifdef IS_BIG_ENDIAN
     rv = WriteBytes(NS_REINTERPRET_CAST(const char*, aString), byteCount);
 #else
+    // XXX use WriteSegments here to avoid copy!
     PRUnichar *copy, temp[64];
     if (length <= 64) {
         copy = temp;
@@ -190,6 +191,7 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
         if (!copy)
             return NS_ERROR_OUT_OF_MEMORY;
     }
+    NS_ASSERTION((PRUptrdiff(aString) & 0x1) == 0, "aString not properly aligned");
     for (PRUint32 i = 0; i < length; i++)
         copy[i] = NS_SWAP16(aString[i]);
     rv = WriteBytes(NS_REINTERPRET_CAST(const char*, copy), byteCount);
@@ -462,7 +464,7 @@ nsBinaryInputStream::ReadCString(nsACString& aString)
 // sometimes, WriteSegmentToString will be handed an odd-number of
 // bytes, which means we only have half of the last PRUnichar
 struct WriteStringClosure {
-    nsAString* mString;
+    PRUnichar *mWriteCursor;
     PRPackedBool mHasCarryoverByte;
     char mCarryoverByte;
 };
@@ -493,9 +495,9 @@ WriteSegmentToString(nsIInputStream* aStream,
 {
     NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
     NS_PRECONDITION(sizeof(PRUnichar) == 2, "We can't handle other sizes!");
-    
+
     WriteStringClosure* closure = NS_STATIC_CAST(WriteStringClosure*,aClosure);
-    nsAString* outString = closure->mString;
+    PRUnichar *cursor = closure->mWriteCursor;
 
     // we're always going to consume the whole buffer no matter what
     // happens, so take care of that right now.. that allows us to
@@ -506,13 +508,12 @@ WriteSegmentToString(nsIInputStream* aStream,
     if (closure->mHasCarryoverByte) {
         // re-create the two-byte sequence we want to work with
         char bytes[2] = { closure->mCarryoverByte, *aFromSegment };
-        PRUnichar unichar = *(PRUnichar*)bytes;
+        *cursor = *(PRUnichar*)bytes;
         // Now the little endianness dance
 #ifdef IS_LITTLE_ENDIAN
-        outString->Append(PRUnichar(NS_SWAP16(unichar)));
-#else
-        outString->Append(unichar);        
+        *cursor = (PRUnichar) NS_SWAP16(*cursor);
 #endif
+        ++cursor;
         
         // now skip past the first byte of the buffer.. code from here
         // can assume normal operations, but should not assume aCount
@@ -523,17 +524,21 @@ WriteSegmentToString(nsIInputStream* aStream,
         closure->mHasCarryoverByte = PR_FALSE;
     }
     
+    // this array is possibly unaligned... be careful how we access it!
     const PRUnichar *unicodeSegment =
         NS_REINTERPRET_CAST(const PRUnichar*, aFromSegment);
+
+    // calculate number of full characters in segment (aCount could be odd!)
     PRUint32 segmentLength = aCount / sizeof(PRUnichar);
 
-    // this sucks. we have to swap every 2 bytes on some machines
+    // copy all data into our aligned buffer.  byte swap if necessary.
+    memcpy(cursor, unicodeSegment, segmentLength * sizeof(PRUnichar));
+    PRUnichar *end = cursor + segmentLength;
 #ifdef IS_LITTLE_ENDIAN
-    for (PRUint32 i = 0; i < segmentLength; i++)
-        outString->Append(PRUnichar(NS_SWAP16(unicodeSegment[i])));
-#else    
-    outString->Append(unicodeSegment, segmentLength);
+    for (; cursor < end; ++cursor)
+        *cursor = (PRUnichar) NS_SWAP16(*cursor);
 #endif
+    closure->mWriteCursor = end;
 
     // remember this is the modifed aCount and aFromSegment,
     // so that will take into account the fact that we might have
@@ -558,10 +563,13 @@ nsBinaryInputStream::ReadString(nsAString& aString)
     rv = Read32(&length);
     if (NS_FAILED(rv)) return rv;
 
-    aString.Truncate();
+    // pre-allocate output buffer, and get direct access to buffer...
+    aString.SetLength(length);
+    nsAString::iterator start;
+    aString.BeginWriting(start);
     
     WriteStringClosure closure;
-    closure.mString = &aString;
+    closure.mWriteCursor = start.get();
     closure.mHasCarryoverByte = PR_FALSE;
     
     rv = ReadSegments(WriteSegmentToString, &closure,
