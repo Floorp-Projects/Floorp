@@ -19,15 +19,19 @@
 #ifndef __nsProxyEvent_h_
 #define __nsProxyEvent_h_
 
+#include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
 
 #include "nsIEventQueue.h"
 #include "plevent.h"
+#include "prtypes.h"
 #include "xptcall.h"
 #include "xptinfo.h"
     
+class nsProxyObjectCallInfo;
+
 #define PROXY_SYNC    0x0001  // act just like a function call.
 #define PROXY_ASYNC   0x0002  // fire and forget.  This will return immediately and you will lose all return information.
 #define PROXY_ALWAYS  0x0004   // ignore check to see if the eventQ is on the same thread as the caller, and alway return a proxied object.
@@ -63,44 +67,50 @@
 
 class nsProxyObject : public nsISupports  
 {
-    public:
-                            
-        NS_DECL_ISUPPORTS
+public:
+                        
+    NS_DECL_ISUPPORTS
+        NS_DEFINE_STATIC_IID_ACCESSOR(nsCOMTypeInfo<nsISupports>::GetIID())    
+    nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject);
+    nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
 
-                            nsProxyObject();
-                            nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject);
-                            nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
+    virtual             ~nsProxyObject();
 
-        
-        virtual             ~nsProxyObject();
+    nsresult            Post(PRUint32 methodIndex, nsXPTMethodInfo *info, 
+                             nsXPTCMiniVariant *params, nsIInterfaceInfo *interfaceInfo);
+    
+    nsresult            NestedEventLoop(nsProxyObjectCallInfo *proxyInfo);
+    nsISupports*        GetRealObject() const { return mRealObject; }
+    nsIEventQueue*      GetQueue();
+    PRInt32             GetProxyType() const { return mProxyType; }
 
-        nsresult            Post(PRUint32 methodIndex, nsXPTMethodInfo *info, nsXPTCMiniVariant *params, nsIInterfaceInfo *interfaceInfo);
-        
-        nsISupports*        GetRealObject() const { return mRealObject; }
-        nsIEventQueue*      GetQueue() const { return mDestQueue; }
-        PRInt32             GetProxyType() const { return mProxyType; }
-
-        
+    
 
 
-    private:
-        
-        typedef enum
-        {
-            convertOutParameters = 1, 
-            convertInParameters,
-            convertAllParameters
+private:
+#ifdef AUTOPROXIFICATION       
+    typedef enum
+    {
+        convertOutParameters = 1, 
+        convertInParameters,
+        convertAllParameters
 
-        } AutoProxyConvertTypes;
+    } AutoProxyConvertTypes;
 
-#ifdef AUTOPROXIFICATION
-        nsresult            AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
-                                                   nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType);
+
+    nsresult            AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
+                                               nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType);
 #endif
-        nsIEventQueue       *mDestQueue;                 /* destination queue */
-        nsISupports         *mRealObject;                /* the non-proxy object that this event is referring to */
-        PRBool              mRealObjectOwned;
-        PRInt32             mProxyType;
+    
+    nsIEventQueue       *mDestQueue;                 /* destination queue */
+    nsISupports         *mRealObject;                /* the non-proxy object that this event is referring to. 
+                                                        This is a strong ref. */
+
+    PRBool              mRealObjectOwned;
+    PRInt32             mProxyType;
+    
+    nsresult convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
+                                         nsXPTCVariant **fullParam, uint8 *paramCount);
 
         
  };
@@ -119,22 +129,28 @@ public:
     virtual ~nsProxyObjectCallInfo();
     
     PRUint32            GetMethodIndex() const { return mMethodIndex; }
-    
     nsXPTCVariant*      GetParameterList() const { return mParameterList; }
     PRUint32            GetParameterCount() const { return mParameterCount; }
     PLEvent*            GetPLEvent() const { return mEvent; }
     nsresult            GetResult() const { return mResult; }
     nsProxyObject*      GetProxyObject() const { return mOwner; }
+    PRBool              GetCompleted();
+
     void                SetResult(nsresult rv) {mResult = rv; }
+    void                SetCompleted();
 
 private:
     
-    nsProxyObject   *mOwner;
     nsresult         mResult;                    /* this is the return result of the called function */
     PRUint32         mMethodIndex;               /* which method to be called? */
     nsXPTCVariant   *mParameterList;             /* marshalled in parameter buffer */
     PRUint32         mParameterCount;            /* number of params */
     PLEvent         *mEvent;                     /* the current plevent */       
+    PRInt32          mCompleted;                 /* is true when the method has been called. */
+    
+    nsCOMPtr<nsProxyObject>   mOwner;            /* this is the strong referenced nsProxyObject */
+    
+
 };
 
 

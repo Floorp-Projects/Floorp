@@ -21,6 +21,7 @@
 #include "nsProxyEventPrivate.h"
 #include "nsProxyObjectManager.h"
 
+#include "pratom.h"
 #include "prmem.h"          // for  PR_NEW
 #include "xptcall.h"
 
@@ -30,7 +31,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
-#include "nsIAtom.h"  //hack!
+#include "nsIAtom.h"  //hack!  Need a way to define a component as threadsafe (ie. sta).
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
@@ -43,6 +44,7 @@ nsProxyObjectCallInfo::nsProxyObjectCallInfo(nsProxyObject* owner,
                                               PRUint32 parameterCount, 
                                               PLEvent *event)
 {
+    mCompleted        = 0;
     mOwner            = owner;
     mMethodIndex      = methodIndex;
     mParameterList    = parameterList;
@@ -59,33 +61,31 @@ nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
         free( (void*) mParameterList);
 }
 
-NS_IMPL_ISUPPORTS0(nsProxyObject)
-
-nsProxyObject::nsProxyObject()
+PRBool              
+nsProxyObjectCallInfo::GetCompleted()
 {
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-     
-    mRealObjectOwned = PR_FALSE;
-    mRealObject      = nsnull;
-    mDestQueue       = nsnull;
-    mProxyType       = PROXY_SYNC;
+    return (PRBool)mCompleted;
+}
+void                
+nsProxyObjectCallInfo::SetCompleted()
+{
+    PR_AtomicSet(&mCompleted, 1);
 }
 
+
+NS_IMPL_ISUPPORTS0(nsProxyObject)
 
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    mRealObjectOwned = PR_FALSE;
     mRealObject      = realObject;
     mProxyType       = proxyType;
     mDestQueue       = destQueue;
 
     NS_ADDREF(mRealObject);
     NS_ADDREF(mDestQueue);
-
 }
 
 
@@ -94,45 +94,98 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    mRealObjectOwned = PR_TRUE;
+
+    nsComponentManager::CreateInstance(aClass, 
+                                       aDelegate,
+                                       aIID,
+                                       (void**) &mRealObject);
+
     mProxyType       = proxyType;
     mDestQueue       = destQueue;
 
     NS_ADDREF(mDestQueue);
-    
-    nsresult rv = nsComponentManager::CreateInstance(aClass, 
-                                                     aDelegate,
-                                                     aIID,
-                                                     (void**) &mRealObject);
-
-    if (NS_FAILED(rv)) 
-    {
-        mRealObjectOwned = PR_FALSE;
-        mRealObject      = nsnull;
-    }
 }
 
 nsProxyObject::~nsProxyObject()
 {
     if (mDestQueue)
-        mDestQueue->EnterMonitor();
-        // FIX!   mDestQueue->RevokeEvents(this);
-    	
-    if(mRealObject != nsnull)
-    {
-        if (!mRealObjectOwned)
-            NS_RELEASE(mRealObject);
-        else
-            NS_RELEASE(mRealObject);
-    }
-
-    if (mDestQueue)
-        mDestQueue->ExitMonitor();
-
-    if (mDestQueue != nsnull)
         NS_RELEASE(mDestQueue);
+    
+    if(mRealObject)
+        NS_RELEASE(mRealObject);
 }
 
+
+nsIEventQueue*      
+nsProxyObject::GetQueue() 
+{ 
+    if (mDestQueue)
+        NS_ADDREF(mDestQueue);
+    return mDestQueue; 
+}
+        
+nsresult
+nsProxyObject::NestedEventLoop(nsProxyObjectCallInfo *proxyInfo)
+{
+    if (proxyInfo == nsnull) return NS_ERROR_NULL_POINTER;
+
+    PLEvent*  event = proxyInfo->GetPLEvent();
+    PRBool eventLoopCreated = PR_FALSE;
+    nsresult rv; 
+
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsIEventQueue *eventQ;
+    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    if (NS_FAILED(rv))
+    {
+        rv = eventQService->CreateThreadEventQueue();
+        eventLoopCreated = PR_TRUE;
+        if (NS_FAILED(rv))
+            return rv;
+        
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    }
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    while (! proxyInfo->GetCompleted())
+    {
+        rv = eventQ->GetEvent(&event);
+        if (NS_FAILED(rv)) break;
+        eventQ->HandleEvent(event);
+    }  
+
+    NS_RELEASE(eventQ);
+
+    if (eventLoopCreated)
+        eventQService->DestroyThreadEventQueue();
+
+    return rv;
+}
+        
+        
+nsresult
+nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsXPTCVariant **fullParam, uint8 *paramCount)
+{
+    uint8 pCount = methodInfo->GetParamCount();
+
+    *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * pCount);
+    
+    if (*fullParam == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (int i = 0; i < pCount; i++)
+        (*fullParam)[i].Init(params[i], methodInfo->GetParam(i).GetType());
+    
+    *paramCount = pCount;
+
+    return NS_OK;
+}
+        
 nsresult
 nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsIInterfaceInfo *interfaceInfo)            
 {
@@ -144,9 +197,14 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     if (mRealObject == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-  
     if (methodInfo->IsNotXPCOM())
         return NS_ERROR_PROXY_INVALID_IN_PARAMETER;
+    
+    PLEvent *event = PR_NEW(PLEvent);
+    
+    if (event == nsnull) 
+        return NS_ERROR_OUT_OF_MEMORY;   
+        
     ///////////////////////////////////////////////////////////////////////
     // Auto-proxification
     ///////////////////////////////////////////////////////////////////////
@@ -158,33 +216,19 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     if (NS_FAILED(rv))
         return rv;
 
-    // convert the nsXPTCMiniVariant to a nsXPTCVariant
-
-    uint8 paramCount = methodInfo->GetParamCount();
-
-    nsXPTCVariant   *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
+    nsXPTCVariant *fullParam;
+    uint8 paramCount; 
+    rv = convertMiniVariantToVariant(methodInfo, params, &fullParam, &paramCount);
     
-    for (int i = 0; i < paramCount; i++)
-        fullParam[i].Init(params[i], methodInfo->GetParam(i).GetType());
-    
-    mDestQueue->EnterMonitor();
-    
-    NS_ASSERTION(mRealObject, "no native object");
-    
-    NS_ADDREF_THIS();  // so that our destructor does not pull out from under us.  This will be released in the DestroyHandler()
-    
-    PLEvent *event = PR_NEW(PLEvent);
-    
-    if (event == nsnull) 
-    {
-        mDestQueue->ExitMonitor();
-            return NS_ERROR_OUT_OF_MEMORY;   
-    }
+    if (NS_FAILED(rv))
+        return rv;
 
     nsProxyObjectCallInfo *proxyInfo = new nsProxyObjectCallInfo(this, methodIndex, fullParam, paramCount, event);
     
     if (proxyInfo == nsnull)
+    {
         return NS_ERROR_OUT_OF_MEMORY;  
+    }
 
     PL_InitEvent(event, 
                  proxyInfo,
@@ -193,7 +237,22 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
    
     if (mProxyType & PROXY_SYNC)
     {
-        mDestQueue->PostSynchronousEvent(event, nsnull);
+        PRBool callDirectly;
+        mDestQueue->IsQueueOnCurrentThread(&callDirectly);
+
+        if (callDirectly)
+        {
+            EventHandler(event); 
+        }
+        else
+        {
+            mDestQueue->PostEvent(event);
+            
+            rv = NestedEventLoop(proxyInfo);
+            
+            if (NS_FAILED(rv))
+                return rv;
+        }
         
         rv = proxyInfo->GetResult();
         delete proxyInfo;
@@ -206,17 +265,15 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
 #endif
         ///////////////////////////////////////////////////////////////////////
         
-        mDestQueue->ExitMonitor();
         return rv;
     }
-    else if (mProxyType & PROXY_ASYNC)
+    
+    if (mProxyType & PROXY_ASYNC)
     {
         mDestQueue->PostEvent(event);
-        mDestQueue->ExitMonitor();
         return NS_OK;
     }
     
-    mDestQueue->ExitMonitor();
     return NS_ERROR_UNEXPECTED;
     
 }
@@ -326,7 +383,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                     else
                     {
 
-                        nsIEventQueue *eventQ;
+                        nsIEventQueue *eventQ = nsnull;
                         /* 
                            if the parameter is coming |in|, it should only be called on the callers thread.
                            else, if the parameter is an |out| thread, it should only be called on the proxy
@@ -340,23 +397,21 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                         else
                         {
                             NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-                            if ( NS_SUCCEEDED( rv ) )
-                            {
-                                rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-                                if ( NS_FAILED( rv ) )
-                                {
-                                    // the caller does not have an eventQ of their own.  bad.
-                                    eventQ = GetQueue();
-                                    rv = NS_OK; // todo: remove!
-#ifdef DEBUG
-                        printf("**************************************************\n");
-                        printf("xpcom-proxy: Caller does not have an EventQ\n");
-                        printf("**************************************************\n");
-#endif /* DEBUG */
-                                    
-                                }   
-                            }
+                            if ( NS_FAILED( rv ) )  
+                                return rv
 
+                            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+                            if ( NS_FAILED( rv ) )
+                            {
+                                // the caller does not have an eventQ of their own.  bad.
+                                eventQ = GetQueue();
+                                rv = NS_OK; // todo: remove!
+#ifdef DEBUG
+                                printf("**************************************************\n");
+                                printf("xpcom-proxy: Caller does not have an EventQ\n");
+                                printf("**************************************************\n");
+#endif /* DEBUG */
+                            }   
                         }
 
                         /* This is a hack until we can do some lookup 
@@ -373,6 +428,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                         {
                             nsAllocator::Free((void*)iid);
                             NS_RELEASE(manager);
+                            NS_RELEASE(eventQ);
                             continue;
                         }
                 
@@ -385,6 +441,8 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                                                              GetProxyType(), 
                                                              (void**) &aProxyObject);
                         }
+                        
+                        NS_RELEASE(eventQ);
                     }
 
                     nsAllocator::Free((void*)iid);
@@ -439,6 +497,8 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
     return rv;
 }
 #endif
+
+
 void DestroyHandler(PLEvent *self) 
 {
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
@@ -448,45 +508,33 @@ void DestroyHandler(PLEvent *self)
     {        
         delete owner;
     }
-
-    // decrement once since we increased it during the Post()
-    NS_RELEASE(proxyObject);
+    else
+    {
+        owner->SetCompleted();
+    }
 }
 
 void* EventHandler(PLEvent *self) 
 {
-    nsProxyObjectCallInfo *info        = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
-    nsProxyObject         *proxyObject = info->GetProxyObject();
-    nsIEventQueue         *eventQ      = proxyObject->GetQueue();
-
+    nsProxyObjectCallInfo *info = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
+    
     if (info != nsnull)
     {
-       if (eventQ == nsnull || proxyObject == nsnull)
+       nsProxyObject *proxyObject = info->GetProxyObject();
+        
+       if (proxyObject)
        {
-            info->SetResult(NS_ERROR_OUT_OF_MEMORY) ;
-            return NULL;
+           // invoke the magic of xptc...
+           nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
+                                             info->GetMethodIndex(),
+                                             info->GetParameterCount(), 
+                                             info->GetParameterList());
+          info->SetResult(rv);
        }
-
-       // invoke the magic of xptc...
-       nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
-                                         info->GetMethodIndex(),
-                                         info->GetParameterCount(), 
-                                         info->GetParameterList());
-    
-       info->SetResult(rv);
-       
+       else
+       {
+           info->SetResult(NS_ERROR_OUT_OF_MEMORY);
+       }
     }
     return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-

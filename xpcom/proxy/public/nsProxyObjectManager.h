@@ -87,6 +87,7 @@ class nsIProxyObjectManager : public nsISupports
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IPROXYEVENT_MANAGER_IID; return iid; }
+    static const nsIID& GetCID() { static nsIID iid = NS_PROXYEVENT_MANAGER_CID; return iid; }
 
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
