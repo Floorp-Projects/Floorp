@@ -29,6 +29,15 @@
 static char* kNullPointer = "null pointer";
 #endif
 
+#ifdef CSS_REPORT_PARSE_ERRORS
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsIServiceManager.h"
+#include "nsComponentManagerUtils.h"
+#endif
+
 // Don't bother collecting whitespace characters in token's mIdent buffer
 #undef COLLECT_WHITESPACE
 
@@ -164,6 +173,9 @@ nsCSSScanner::nsCSSScanner()
   mPushback = mLocalPushback;
   mPushbackCount = 0;
   mPushbackSize = 4;
+#ifdef CSS_REPORT_PARSE_ERRORS
+  mLastRead = 0;
+#endif
 }
 
 nsCSSScanner::~nsCSSScanner()
@@ -187,10 +199,58 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput)
   NS_IF_ADDREF(aInput);
 }
 
+#ifdef CSS_REPORT_PARSE_ERRORS
+
+void nsCSSScanner::InitErrorReporting(nsIURI* aURI)
+{
+  if (aURI) {
+    aURI->GetSpec(getter_Copies(mFileName));
+  } else {
+    mFileName = "from DOM";
+  }
+  mLineNumber = 1;
+  mColNumber = 0;
+}
+
+void nsCSSScanner::ReportError(const PRUnichar* aError)
+{
+  printf("CSS Error (%s :%lu.%lu): %s.\n",
+         mFileName.get(),
+         mLineNumber,
+         mColNumber,
+         NS_ConvertUCS2toUTF8(aError).GetBuffer());
+
+  // Log it to the JavaScript console
+  nsCOMPtr<nsIConsoleService> consoleService
+    (do_GetService("mozilla.consoleservice.1"));
+  nsCOMPtr<nsIScriptError> errorObject
+    (do_CreateInstance("mozilla.scripterror.1"));
+
+  if (consoleService && errorObject) {
+    nsresult rv;
+    rv = errorObject->Init(aError,
+                           NS_ConvertASCIItoUCS2(mFileName.get()).GetUnicode(),
+                           NS_LITERAL_STRING(""),
+                           mLineNumber,
+                           mColNumber,
+                           0,
+                           "CSS Parser");
+    if (NS_SUCCEEDED(rv))
+      consoleService->LogMessage(errorObject);
+  }
+
+}
+
+#endif // CSS_REPORT_PARSE_ERRORS
+
 void nsCSSScanner::Close()
 {
   NS_IF_RELEASE(mInput);
 }
+
+#ifdef CSS_REPORT_PARSE_ERRORS
+#define TAB_STOP_WIDTH 8
+#endif
 
 // Returns -1 on error or eof
 PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
@@ -211,6 +271,17 @@ PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
       }
     }
     rv = PRInt32(mBuffer[mOffset++]);
+#ifdef CSS_REPORT_PARSE_ERRORS
+    if (((rv == '\n') && (mLastRead != '\r')) || (rv == '\r')) {
+      mLineNumber++;
+      mColNumber = 0;
+    } else if (rv == '\t') {
+      mColNumber = ((mColNumber - 1 + TAB_STOP_WIDTH) / TAB_STOP_WIDTH)
+                   * TAB_STOP_WIDTH;
+    } else if (rv != '\n') {
+      mColNumber++;
+    }
+#endif
   }
   mLastRead = rv;
 //printf("Read => %x\n", rv);
