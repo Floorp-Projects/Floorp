@@ -446,6 +446,7 @@ lo_new_text_element(MWContext *context,
 	text_ele->y_offset = 0;
 	text_ele->width = 0;
 	text_ele->height = 0;
+	text_ele->line_height = 0;
 	text_ele->next = NULL;
 	text_ele->prev = NULL;
 
@@ -993,6 +994,7 @@ lo_InsertWordBreak(MWContext *context, lo_DocState *state)
 	text_ele->y_offset = 0;
 	text_ele->width = 0;
 	text_ele->height = 0;
+	text_ele->line_height = 0;
 	text_ele->next = NULL;
 	text_ele->prev = NULL;
 
@@ -4102,6 +4104,9 @@ lo_PlaceBulletStr(MWContext *context, lo_DocState *state)
 	FE_GetTextInfo(context, bullet_text, &text_info);
 	bullet_text->width = lo_correct_text_element_width(&text_info);
 	bullet_text->height = text_info.ascent + text_info.descent;
+	bullet_text->line_height = 0;
+	bullet_text->y_offset = 0;
+	bullet_text->x_offset = 0;
 
 	bullet_text->type = LO_TEXT;
 	bullet_text->ele_id = NEXT_ELEMENT;
@@ -4186,6 +4191,7 @@ lo_make_quote_text(MWContext *context, lo_DocState *state, int32 margin)
 	quote_text->x_offset = 0;
 	quote_text->y = state->y;
 	quote_text->y_offset = 0;
+	quote_text->line_height = 0;
 
 	quote_text->anchor_href = state->current_anchor;
 
@@ -6397,6 +6403,7 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				text_data->y_offset = 0;
 				text_data->width = width;
 				text_data->height = 0;
+				text_data->line_height = 0;
 				text_data->next = NULL;
 				text_data->prev = NULL;
 
@@ -7960,6 +7967,7 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 		new_text_data->x_offset = 0;
 		new_text_data->y = state->y;
 		new_text_data->y_offset = 0;
+		new_text_data->line_height = 0;
 		new_text_data->height = 0;
 		new_text_data->next = NULL;
 		new_text_data->prev = NULL;
