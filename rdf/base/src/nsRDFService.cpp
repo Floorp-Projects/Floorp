@@ -985,8 +985,11 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
 {
     // Sanity checks
     NS_PRECONDITION(aResource != nsnull, "null ptr");
+    NS_PRECONDITION(!aURI.IsEmpty(), "URI is empty");
     if (! aResource)
         return NS_ERROR_NULL_POINTER;
+    if (aURI.IsEmpty())
+        return NS_ERROR_INVALID_ARG;
 
     const nsAFlatCString& flatURI = PromiseFlatCString(aURI);
     PR_LOG(gLog, PR_LOG_DEBUG, ("rdfserv get-resource %s", flatURI.get()));
