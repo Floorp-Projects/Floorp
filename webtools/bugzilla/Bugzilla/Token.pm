@@ -116,11 +116,19 @@ sub IssuePasswordToken {
 
     # Retrieve the user's ID from the database.
     my $quotedloginname = &::SqlQuote($loginname);
-    &::SendSQL("SELECT userid FROM profiles WHERE login_name = $quotedloginname");
-    my ($userid) = &::FetchSQLData();
+    &::SendSQL("SELECT profiles.userid, tokens.issuedate FROM profiles 
+                    LEFT JOIN tokens
+                    ON tokens.userid = profiles.userid
+                    AND tokens.tokentype = 'password'
+                    AND tokens.issuedate > DATE_SUB(NOW(), INTERVAL 10 MINUTE)
+                    WHERE login_name = $quotedloginname");
+    my ($userid, $toosoon) = &::FetchSQLData();
+
+    if ($toosoon) {
+        ThrowUserError('too_soon_for_new_token');
+    };
 
     my $token_ts = time();
-    my $issuedate = time2str("%Y-%m-%d %H:%M", $token_ts);
 
     # Generate a unique token and insert it into the tokens table.
     # We have to lock the tokens table before generating the token, 
@@ -130,7 +138,7 @@ sub IssuePasswordToken {
     my $quotedtoken = &::SqlQuote($token);
     my $quotedipaddr = &::SqlQuote($::ENV{'REMOTE_ADDR'});
     &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , tokentype , eventdata )
-                VALUES      ( $userid , '$issuedate' , $quotedtoken , 'password' , $quotedipaddr )");
+                VALUES      ( $userid , NOW() , $quotedtoken , 'password' , $quotedipaddr )");
     &::SendSQL("UNLOCK TABLES");
 
     # Mail the user the token along with instructions for using it.

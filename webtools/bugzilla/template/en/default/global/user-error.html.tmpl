@@ -895,6 +895,11 @@
     The token you submitted does not exist, has expired, or has
     been cancelled.
 
+  [% ELSIF error == "too_soon_for_new_token" %]
+    [% title = "Too Soon For New Token" %]
+    You have requested a password token too recently to request
+    another.  Please wait a while and try again.
+
   [% ELSIF error == "unknown_keyword" %]
     [% title = "Unknown Keyword" %]
     <code>[% keyword FILTER html %]</code> is not a known keyword.
