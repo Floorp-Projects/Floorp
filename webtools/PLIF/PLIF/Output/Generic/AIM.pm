@@ -30,6 +30,7 @@ package PLIF::Output::Generic::AIM;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
+use PLIF::Exception;
 @ISA = qw(PLIF::Service);
 1;
 
@@ -61,13 +62,12 @@ sub init {
         };
     }
     # Apply Configuration
-    eval {
+    try {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.aim');
-    };
-    if ($@) {
-        $self->dump(9, "failed to get the AIM configuration, not going to bother to connect: $@");
+    } except {
+        $self->dump(9, "failed to get the AIM configuration, not going to bother to connect: @_");
         $self->handle(undef);
-    } else {
+    } otherwise {
         $self->open();
     }
 }

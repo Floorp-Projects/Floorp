@@ -30,6 +30,7 @@ package PLIF::Database;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
+use PLIF::Exception;
 @ISA = qw(PLIF::Service);
 1;
 
@@ -43,13 +44,13 @@ sub class {
     return 'undefined';
 }
 
-sub type {
-    my $self = shift;
-    return $self->SUPER::type(@_);
-}
-
 # lastError returns a database-specific error code
 sub lastError {
     my $self = shift;
     $self->notImplemented();
 }
+
+
+package PLIF::Exception::Database; use vars qw(@ISA @EXPORT); @ISA = qw(PLIF::Exception);
+package PLIF::Exception::Database::Version; use vars qw(@ISA @EXPORT); @ISA = qw(PLIF::Exception::Database);
+package PLIF::Exception::Database::Duplicate; use vars qw(@ISA @EXPORT); @ISA = qw(PLIF::Exception::Database);

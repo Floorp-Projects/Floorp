@@ -30,6 +30,7 @@ package PLIF::Database::ConfigurationFile;
 use strict;
 use vars qw(@ISA);
 use PLIF::Database;
+use PLIF::Exception;
 @ISA = qw(PLIF::Database);
 1;
 
@@ -61,20 +62,22 @@ sub filename {
 sub read {
     my $self = shift;
     my $settings;
-    eval {
+    try {
         $settings = $self->doRead($self->filename);
-    };
-    if ($@) {
-        $self->warn(3, $@);
-        return;
+    } except {
+        # if we weren't successful, warn and abort
+        $self->warn(3, @_);
+    } otherwise {
+        # else, we were successful, so go ahead and process the data
+        # make sure ensureRead doesn't call us again -- the configuration file calls propertySet, which calls ensureRead:
+        $self->{'_DIRTY'} = undef;
+        if ($settings) {
+            $settings =~ /^(.*)$/so;
+            eval($1); # untaint the configuration file
+            $self->assert(defined($@), 1, 'Error processing configuration file \''.($self->filename).'\': '.$@);
+        }
+        $self->{'_DIRTY'} = 0;
     }
-    $self->{'_DIRTY'} = undef; # to prevent recursion: eval -> propertySet -> ensureRead (dirty check) -> read -> eval
-    if ($settings) {
-        $settings =~ /^(.*)$/so;
-        eval($1); # untaint the configuration file
-        $self->assert(defined($@), 1, 'Error processing configuration file \''.($self->filename).'\': '.$@);
-    }
-    $self->{'_DIRTY'} = 0;
 }
 
 # reads the database unless that was already done

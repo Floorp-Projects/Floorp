@@ -30,6 +30,7 @@ package PLIF::DataSource::User::MySQL;
 use strict;
 use vars qw(@ISA);
 use PLIF::DataSource::User;
+use PLIF::Exception;
 @ISA = qw(PLIF::DataSource::User);
 1;
 
@@ -332,15 +333,10 @@ sub addRight {
     my($app, $name) = @_;
     $self->assert($name, 1, 'Tried to add a right without a right name');
     # only adds $name if it isn't there already, because name is a unique index
-    eval {
+    try {
         $self->database($app)->execute('INSERT INTO rights SET name=?', $name);
-    };
-    if ($@) {
-        # check for a mySQL specific error code for 'duplicate' and
-        # reraise the error if it wasn't the problem
-        if ($self->database($app)->lastError ne '1062') {
-            $self->error(1, $@); # reraise
-        }
+    } catch PLIF::Exception::Database::Duplicate with {
+        # ignore this error, reraise the others
     }
 }
 

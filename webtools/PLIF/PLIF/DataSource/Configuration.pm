@@ -30,6 +30,7 @@ package PLIF::DataSource::Configuration;
 use strict;
 use vars qw(@ISA);
 use PLIF::DataSource;
+use PLIF::Exception;
 @ISA = qw(PLIF::DataSource);
 1;
 
@@ -58,19 +59,18 @@ sub setupConfigure {
     my $self = shift;
     my($app) = @_;
     $self->dump(9, 'about to configure Configuration data source...');
-    eval {
+    try {
         # if it failed earlier but without crashing the app, then it
         # will fail again (we only stop trying once it works)
         $self->database($app)->ensureRead();
-    };
-    if ($@) {
+    } except {
         # well, that didn't go down too well. Let's create a brand
         # spanking new configuration file, since they clearly don't
         # have one.
         $app->output->setupProgress('configuration');
         $self->database($app)->assumeRead(); # new file at the ready
         # options should now be set by the users of the datasource.
-    }
+    };
     $self->dump(9, 'done configuring Configuration data source');
     return; # no problems
 }

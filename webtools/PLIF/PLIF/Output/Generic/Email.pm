@@ -30,6 +30,7 @@ package PLIF::Output::Generic::Email;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
+use PLIF::Exception;
 @ISA = qw(PLIF::Service);
 1;
 
@@ -48,13 +49,12 @@ sub init {
     my($app) = @_;
     $self->SUPER::init(@_);
     require Net::SMTP; import Net::SMTP; # DEPENDENCY
-    eval {
+    try {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.email');
-    };
-    if ($@) {
+    } except {
         $self->dump(9, "failed to get the SMTP configuration, not going to bother to connect: $@");
         $self->handle(undef);
-    } else {
+    } otherwise {
         $self->open();
     }
 }
@@ -62,21 +62,14 @@ sub init {
 sub open {
     my $self = shift;
     my($app, $session, $string) = @_;
-    eval {
-        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required (so it says in man perlfunc)
+    try {
+        local $SIG{ALRM} = sub { raise PLIF::Exception::Alarm };
         local $^W = 0; # XXX shut up warnings in Net::SMTP
         $self->handle(Net::SMTP->new($self->host, 'Timeout' => $self->timeout));
         alarm(0);
+    } catch PLIF::Exception::Alarm with {
+        # timed out -- ignore
     };
-    if ($@) {
-        if ($@ ne "alarm\n") {
-            # propagate unexpected errors
-            die($@);
-        }
-        # timed out
-    } else {
-        # everything ok
-    }
     if (not defined($self->handle)) {
         $self->warn(4, 'Could not create the SMTP handle');
     }
@@ -94,22 +87,14 @@ sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
     $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t send mail');
-    eval {
-        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required (so it says in man perlfunc)
+    try {
+        local $SIG{ALRM} = sub { raise PLIF::Exception::Alarm };
         $self->assert($self->handle->mail($self->from), 1, 'Could not start sending mail');
         $self->assert($self->handle->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
         $self->assert($self->handle->data($string), 1, 'Could not send mail body');
         alarm(0);
-    };
-    if ($@) {
-        if ($@ ne "alarm\n") {
-            # propagate unexpected errors
-            die($@);
-        }
-        # timed out
+    } catch PLIF::Exception::Alarm with {
         $self->error(1, 'Timed out while trying to send e-mail');
-    } else {
-        # everything ok
     }
 }
 

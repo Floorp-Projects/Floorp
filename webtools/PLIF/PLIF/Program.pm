@@ -30,6 +30,7 @@ package PLIF::Program;
 use strict;
 use vars qw(@ISA);
 use PLIF::Controller;
+use PLIF::Exception;
 @ISA = qw(PLIF::Controller);
 
 # the center of the PLIF-based application:
@@ -54,7 +55,7 @@ sub init {
 sub run {
     my $self = shift;
     do {
-        eval {
+        try {
             # the input device is the same throughout the application
             # see constructor above
             if ($self->verifyInput()) {
@@ -68,11 +69,10 @@ sub run {
                     $self->noCommand();
                 }
             } # verifyInput should deal with the errors
+        } except {
+            $self->dump(3, "previous command didn't go over well: @_");
+            $self->output->reportFatalError(@_);
         };
-        if ($@) {
-            $self->dump(3, "previous command didn't go over well: $@");
-            $self->output->reportFatalError($@);
-        }
         # command has been completed, reset it
         $self->command(undef);
         # In case we used a progressive output device, let it shut

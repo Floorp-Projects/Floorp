@@ -30,6 +30,7 @@ package PLIF::DataSource::Strings;
 use strict;
 use vars qw(@ISA);
 use PLIF::DataSource;
+use PLIF::Exception;
 @ISA = qw(PLIF::DataSource);
 1;
 
@@ -81,14 +82,13 @@ sub getCustomisedString {
         }
         if (not defined($self->stringsCache->{$variant}->{$string})) {
             my @results;
-            eval {
+            try {
                 @results = $self->getString($app, $variant, $string);
-            };
-            if ($@) {
+            } except {
                 # ok, so, er, it seems that didn't go to well
                 # XXX do we want to do an error here or something?
-                $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
-            }
+                $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: @_");
+            };
             if (@results) {
                 $self->stringsCache->{$variant}->{$string} = \@results;
                 return @results;
@@ -143,15 +143,14 @@ sub variants {
     my $self = shift;
     my($app, $protocol) = @_;
     if (not defined($self->variantsCache->{$protocol})) {
-        eval {
+        try {
             $self->variantsCache->{$protocol} = $self->getVariants($app, $protocol);
-        };
-        if ($@) {
+        } except {
             # ok, so, er, it seems that didn't go to well
             # XXX do we want to do an error here or something?
-            $self->warn(4, "While I was looking for the variants, I failed with: $@");
-            return []; # no variants here, no sir!
-        }
+            $self->warn(4, "While I was looking for the variants, I failed with: @_");
+            $self->variantsCache->{$protocol} = []; # no variants here, no sir!
+        };
     }
     return $self->variantsCache->{$protocol};
 }

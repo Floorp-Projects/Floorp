@@ -30,6 +30,8 @@ package PLIF::Database::ResultsFrame::DBI;
 use strict;
 use vars qw(@ISA);
 use PLIF;
+use PLIF::Database;
+use PLIF::Exception;
 @ISA = qw(PLIF);
 1;
 
@@ -57,29 +59,49 @@ sub rowsAffected {
 sub row {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
-    # XXX check for error
-    if (wantarray) {
-        return $self->handle->fetchrow_array();
-    } else {
-        my $array = $self->handle->fetchrow_arrayref();
-        if ((not defined($array)) or @$array == 0) {
-            # no data
-            return undef;
-        } elsif (@$array == 1) {
-            # only one data point
-            return $array->[0];
+    my @result = try {
+        if (wantarray) {
+            return $self->handle->fetchrow_array();
         } else {
-            # more than one data point
-            return $array;
+            my $array = $self->handle->fetchrow_arrayref();
+            if ((not defined($array)) or @$array == 0) {
+                # no data
+                return undef;
+            } elsif (@$array == 1) {
+                # only one data point
+                return $array->[0];
+            } else {
+                # more than one data point
+                return $array;
+            }
         }
-    }
+    } except {
+        my($exception) = @_;
+        if (my $error = $self->lastError) {
+            $self->raiseError();
+        } else {
+            # some random other exception
+            raise $exception;
+        }
+    };
+    return @result;
 }
 
 sub rows {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
-    # XXX check for error
-    return $self->handle->fetchall_arrayref();
+    my $result = try {
+        $self->handle->fetchall_arrayref();
+    } except {
+        my($exception) = @_;
+        if (my $error = $self->lastError) {
+            $self->raiseError();
+        } else {
+            # some random other exception
+            raise $exception;
+        }
+    };
+    return $result;
 }
 
 sub reexecute {
@@ -90,6 +112,23 @@ sub reexecute {
         return $self;
     } else {
         return undef;
+    }
+}
+
+sub raiseError {
+    my $self = shift;
+    if ($self->lastError eq '1062') {
+        # XXX MySQL specific
+        # This should only be used by MySQL-specific DBI data sources
+        raise PLIF::Exception::Database::Duplicate (
+            'code' => $self->lastError,
+            'message' => $self->handle->errstr,
+        );
+    } else {
+        raise PLIF::Exception::Database (
+            'code' => $self->lastError,
+            'message' => $self->handle->errstr,
+        );
     }
 }
 

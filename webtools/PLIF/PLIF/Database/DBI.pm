@@ -31,6 +31,7 @@ use strict;
 use vars qw(@ISA);
 use PLIF::Database;
 use PLIF::Database::ResultsFrame::DBI;
+use PLIF::Exception;
 @ISA = qw(PLIF::Database);
 1;
 
@@ -57,24 +58,22 @@ sub init {
 sub openDB {
     my $self = shift;
     my($app) = @_;
-    eval {
+    try {
         $self->getConfig($app);
-    };
-    if ($@) {
+    } except {
         $self->handle(undef);
-        $self->errstr($@);
-        $self->dump(9, "failed to get the database configuration, not going to bother to connect: $@");
-    } else {
-        eval {
+        $self->errstr(@_);
+        $self->dump(9, "failed to get the database configuration, not going to bother to connect: @_");
+    } otherwise {
+        try {
             $self->handle(DBI->connect($self->connectString, $self->username, $self->password,
                                        {RaiseError => 0, PrintError => 0, AutoCommit => 1, Taint => 1}));
             $self->errstr($DBI::errstr);
             $self->dump(9, 'created a database object without raising an exception');
-        };
-        if ($@) {
+        } except {
             $self->handle(undef);
-            $self->errstr($@);
-            $self->error(1, "failed to connect to the database because of $@");
+            $self->errstr(@_);
+            $self->error(1, "failed to connect to the database because of @_");
         }
     }
 }
@@ -133,12 +132,10 @@ sub createResultsFrame {
         }
     }
     my $handle = $self->handle->prepare($statement);
-    if ($handle and ((not defined($execute)) or $handle->execute(@values))) {
+    if ($handle and (not $execute or $handle->execute(@values))) {
         return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);
-    } elsif (not $execute) {
-        return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);        
     } else {
-        $self->error(1, $handle->errstr);
+        raise PLIF::Exception::Database ('message' => $handle->errstr);
     }
 }
 
@@ -210,16 +207,16 @@ sub setupConfigure {
     $self->dump(9, "checking to see if we can connect to the database.");
 
     ## Check the database itself
+    my $return;
     $app->output->setupProgress("$prefix.admin.checking");
-    eval {
+    try {
         DBI->connect($self->connectString, $self->username, $self->password,
                      {RaiseError => 1, PrintError => 0, AutoCommit => 1, Taint => 1})->disconnect();
+    } except {
+        $return = $self->setupConfigureDatabase($app, $prefix);
     };
-    if ($@) {
-        my $return = $self->setupConfigureDatabase($app, $prefix);
-        if (defined($return)) {
-            return $return; # propagate errors
-        }
+    if (defined($return)) {
+        return $return; # propagate errors
     }
 
     ## Finally, restart DBI
