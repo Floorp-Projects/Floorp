@@ -42,6 +42,14 @@
 #include "nsHashtable.h"
 #include "nsAgg.h"
 
+#define NS_PROPERTIES_CID                            \
+{ /* 4de2bc90-b1bf-11d3-93b6-00104ba0fd40 */         \
+    0x4de2bc90,                                      \
+    0xb1bf,                                          \
+    0x11d3,                                          \
+    {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
 class nsIUnicharInputStream;
 
 class nsProperties : public nsIProperties, public nsHashtable {

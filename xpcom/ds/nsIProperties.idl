@@ -37,15 +37,33 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(61c1b3c0-b1bf-11d3-93b6-00104ba0fd40)]
+/*
+ * Simple mapping service interface.
+ * @status FROZEN
+ */
+
+[scriptable, uuid(78650582-4e93-4b60-8e85-26ebd3eb14ca)]
 interface nsIProperties : nsISupports
 {
     /**
-     * Defines a new property. 
-     * @return NS_ERROR_FAILURE if a property with that name already
-     * exists.
+     * Gets a property with a given name. 
+     *
+     * @return NS_ERROR_FAILURE if a property with that name doesn't exist.
+     * @return NS_ERROR_NO_INTERFACE if the found property fails to QI to the 
+     * given iid.
      */
-    void define(in string prop, in nsISupports initialValue);
+    void get(in string prop, in nsIIDRef iid, 
+             [iid_is(iid),retval] out nsQIResult result);
+
+    /**
+     * Sets a property with a given name to a given value. 
+     */
+    void set(in string prop, in nsISupports value);
+
+    /**
+     * Returns true if the property with the given name exists.
+     */
+    boolean has(in string prop);
 
     /**
      * Undefines a property.
@@ -55,49 +73,12 @@ interface nsIProperties : nsISupports
     void undefine(in string prop);
 
     /**
-     * Gets a property with a given name. 
-     * @return NS_ERROR_FAILURE if a property with that name doesn't
-     * exist.
+     *  Returns an array of the keys.
      */
-    void get(in string prop, in nsIIDRef uuid, 
-             [iid_is(uuid),retval] out nsQIResult result);
-
-    /**
-     * Sets a property with a given name to a given value. 
-     * @return NS_ERROR_FAILURE if a property with that name doesn't
-     * exist.
-     */
-    void set(in string prop, in nsISupports value);
-
-    /**
-     * Returns true if the property with the given name exists.
-     */
-    boolean has(in string prop);
+    void getKeys(out PRUint32 count, [array, size_is(count), retval] out string keys);
 };
 
 %{C++
-
-#define NS_PROPERTIES_CID                            \
-{ /* 4de2bc90-b1bf-11d3-93b6-00104ba0fd40 */         \
-    0x4de2bc90,                                      \
-    0xb1bf,                                          \
-    0x11d3,                                          \
-    {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-#define NS_PROPERTIES_CONTRACTID    "@mozilla.org/properties;1"
-#define NS_PROPERTIES_CLASSNAME "Properties"
-
-#include "nsIComponentManager.h"
-
-inline nsresult
-NS_NewIProperties(nsISupports* outer, nsIProperties* *result)
-{
-    static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
-    return nsComponentManager::CreateInstance(kPropertiesCID, 
-                                              outer,
-                                              NS_GET_IID(nsIProperties),
-                                              (void**)result);
-}
-
+#define NS_PROPERTIES_CONTRACTID "@mozilla.org/properties;1"
+#define NS_PROPERTIES_CLASSNAME  "Properties"
 %}

@@ -2133,8 +2133,7 @@ nsProfile::DefineLocaleDefaultsDir()
             if (NS_SUCCEEDED(rv))
                 rv = localeDefaults->AppendNative(localeName);
         }
-        (void) directoryService->Undefine(NS_APP_PROFILE_DEFAULTS_50_DIR);
-        rv = directoryService->Define(NS_APP_PROFILE_DEFAULTS_50_DIR, localeDefaults);
+        rv = directoryService->Set(NS_APP_PROFILE_DEFAULTS_50_DIR, localeDefaults);
     }
     return rv;
 }
