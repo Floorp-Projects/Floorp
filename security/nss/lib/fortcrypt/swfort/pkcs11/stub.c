@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: stub.c,v 1.3 2001/01/30 02:03:47 wtc%netscape.com Exp $
+ * $Id: stub.c,v 1.4 2001/09/20 22:07:33 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -272,7 +272,7 @@ PR_IMPLEMENT(PRLock *)
 PR_NewLock(void) {
 	PRLock *lock = NULL;
 
-	FMUTEX_Create(&lock);
+	FMUTEX_Create((void **)&lock);
 
 	/* if we don't have a lock, FMUTEX can deal with things */
 	if (lock == NULL) lock=(PRLock *) 1;

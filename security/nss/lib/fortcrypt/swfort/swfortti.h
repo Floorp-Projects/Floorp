@@ -43,8 +43,31 @@
 #include "seccomon.h"
 #include "mcom_db.h"  /* really should be included by certt.h */
 #include "certt.h"
-#include "keyt.h"
+/*#include "keyt.h"*/
+#include "blapit.h"
 #include "swfortt.h"
+
+
+typedef enum { 
+    fortezzaDSAKey = 0, 
+    fortezzaDHKey = 1
+} FORTEZZAKeyType;
+
+/*
+** Low Level private key object
+** This is only used by the raw Crypto engines (crypto), keydb (keydb),
+** and PKCS #11. Everyone else uses the high level key structure.
+*/
+struct FORTEZZAPrivateKeyStr {
+    PLArenaPool *arena;
+    FORTEZZAKeyType keyType;
+    union {
+	DSAPrivateKey dsa;
+	DHPrivateKey  dh;
+    } u;
+};
+typedef struct FORTEZZAPrivateKeyStr FORTEZZAPrivateKey;
+
 
 /* the following parameters are tunable. The bigger the key registers are,
  * the less likely the PKCS #11 module will thrash. */

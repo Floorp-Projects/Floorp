@@ -513,14 +513,7 @@ SECItem *
 FORT_PutSWFile(FORTSignedSWFile *sw_init_file)
 {
     SECItem *outBits, *tmpBits;
-    PRArenaPool *arena = NULL;
 
-
-    /* get the local arena... be sure to free this at the end */
-    /* arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE); */
-    /* if (arena == NULL) goto fail; */
-
-    /*outBits = (SECItem *) PORT_ArenaZAlloc(arena,sizeof(SECItem)); */
     outBits = PORT_ZNew(SECItem);
     if (outBits == NULL) goto fail;
 

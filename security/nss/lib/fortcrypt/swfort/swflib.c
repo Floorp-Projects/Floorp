@@ -43,7 +43,7 @@
 #include "prio.h"
 
 #include "swforti.h"
-#include "keytlow.h"
+/*#include "keytlow.h"*/
 /* #include "dh.h" */
 #include "blapi.h"
 #include "maci.h"
@@ -51,7 +51,7 @@
 /* #include "hasht.h" */
 #include "secitem.h"
 #include "secrng.h"
-#include "keylow.h"
+/*#include "keylow.h" */
 #include "secder.h"
 
 #ifdef XP_UNIX
@@ -403,7 +403,7 @@ int
 MACI_GenerateTEK(HSESSION hSession, int flags, int target, 
      CI_RA CI_FAR Ra, CI_RA CI_FAR Rb, unsigned int YSize, CI_Y CI_FAR pY )
 {
-    SECKEYLowPrivateKey *key 		= NULL;
+    FORTEZZAPrivateKey *key 		= NULL;
     fortSlotEntry *      certEntry;
     unsigned char *      w		= NULL;
     SECItem              *q;
@@ -430,7 +430,7 @@ MACI_GenerateTEK(HSESSION hSession, int flags, int target,
     /* get the cert from the entry, then look up the key from that cert */
     certEntry = fort_GetCertEntry(swtoken->config_file,swtoken->certIndex);
     if (certEntry == NULL) return CI_INV_CERT_INDEX;
-    key = fort_GetPrivKey(swtoken,dhKey,certEntry);
+    key = fort_GetPrivKey(swtoken,fortezzaDHKey,certEntry);
     if (key == NULL) return CI_NO_X; 
 
     if (certEntry->exchangeKeyInformation) {
@@ -512,7 +512,7 @@ MACI_GenerateTEK(HSESSION hSession, int flags, int target,
     ret = CI_OK;
 loser:
     if (w) PORT_Free(w);
-    if (key) SECKEY_LowDestroyPrivateKey(key);
+    if (key) fort_DestroyPrivateKey(key);
     
     return ret;
 }
@@ -903,7 +903,7 @@ MACI_SetPersonality(HSESSION session, int cert)
 int
 MACI_Sign(HSESSION session, CI_HASHVALUE CI_FAR hash, CI_SIGNATURE CI_FAR sig)
 {
-    SECKEYLowPrivateKey *key 		= NULL;
+    FORTEZZAPrivateKey *key 		= NULL;
     fortSlotEntry *      certEntry	= NULL;
     int                  ret 		= CI_OK;
     SECStatus            rv;
@@ -922,7 +922,7 @@ MACI_Sign(HSESSION session, CI_HASHVALUE CI_FAR hash, CI_SIGNATURE CI_FAR sig)
 
     /* extract the private key from the personality */
     ret = CI_OK;
-    key = fort_GetPrivKey(swtoken,dsaKey,certEntry);
+    key = fort_GetPrivKey(swtoken,fortezzaDSAKey,certEntry);
     if (key == NULL) {
 	ret = CI_NO_X;
 	goto loser;
@@ -946,7 +946,7 @@ MACI_Sign(HSESSION session, CI_HASHVALUE CI_FAR hash, CI_SIGNATURE CI_FAR sig)
 
     /* clean up */
 loser:
-    if (key != NULL) SECKEY_LowDestroyPrivateKey(key);
+    if (key != NULL) fort_DestroyPrivateKey(key);
 
     return ret;
 }

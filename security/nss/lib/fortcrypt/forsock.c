@@ -519,10 +519,10 @@ extern PRBool fort11_FortezzaIsUserCert(unsigned char *label);
 
 static int
 GetValidPersonality (FortezzaSocket *inSocket) {
-    int index;
+    int index = -1; /* return an invalid personalidyt if one isn't found */
     int i;
     PRBool unLoadList = PR_FALSE;
-    int numPersonalities;
+    int numPersonalities = 0;
 
     if (!inSocket->personalitiesLoaded) {
         numPersonalities = inSocket->numPersonalities;
@@ -553,7 +553,7 @@ int RestoreState (FortezzaContext *inContext, CryptoType inType) {
     FortezzaSocket *socket = inContext->fortezzaSocket;
     HSESSION        hs     = socket->maciSession; 
     CI_IV           bogus_iv;
-    int             rv, cryptoType;
+    int             rv, cryptoType = -1;
     int             personality = inContext->fortezzaKey->id;
 
     if (key == NULL)
@@ -593,6 +593,7 @@ int RestoreState (FortezzaContext *inContext, CryptoType inType) {
     if (rv != CI_OK) {
         return SOCKET_FAILURE;
     }
+    /*PORT_Assert(cryptoType != -1); */
 
     rv = MACI_Restore(hs, cryptoType, inContext->cardState);
     if (rv != CI_OK) {
