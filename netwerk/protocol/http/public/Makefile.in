@@ -37,7 +37,6 @@ SDK_XPIDLSRCS   = \
 
 XPIDLSRCS	= \
 		nsIHttpChannelInternal.idl \
-		nsIHttpNotify.idl \
 		nsIHttpProtocolHandler.idl \
 		nsIHttpEventSink.idl \
 		nsIHttpAuthenticator.idl \

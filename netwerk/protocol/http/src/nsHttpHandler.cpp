@@ -36,14 +36,11 @@
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpNotify.h"
 #include "nsIURL.h"
 #include "nsIStandardURL.h"
 #include "nsICacheService.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
-#include "nsIObserverService.h"
-#include "nsINetModRegEntry.h"
 #include "nsICacheService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
@@ -75,7 +72,6 @@ extern PRThread *gSocketThread;
 #endif
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
@@ -238,13 +234,12 @@ nsHttpHandler::Init()
                                   NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
                                   NS_HTTP_STARTUP_TOPIC);    
     
-    nsCOMPtr<nsIObserverService> observerSvc =
-        do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (observerSvc) {
-        observerSvc->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
-        observerSvc->AddObserver(this, "profile-change-net-restore", PR_TRUE);
-        observerSvc->AddObserver(this, "session-logout", PR_TRUE);
-        observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    mObserverService = do_GetService("@mozilla.org/observer-service;1");
+    if (mObserverService) {
+        mObserverService->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
+        mObserverService->AddObserver(this, "profile-change-net-restore", PR_TRUE);
+        mObserverService->AddObserver(this, "session-logout", PR_TRUE);
+        mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
  
     StartPruneDeadConnectionsTimer();
@@ -486,80 +481,18 @@ nsHttpHandler::GetIOService(nsIIOService** result)
 nsresult
 nsHttpHandler::OnModifyRequest(nsIHttpChannel *chan)
 {
-    nsresult rv;
-
     LOG(("nsHttpHandler::OnModifyRequest [chan=%x]\n", chan));
-
-    if (!mNetModuleMgr) {
-        mNetModuleMgr = do_GetService(kNetModuleMgrCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    nsCOMPtr<nsISimpleEnumerator> modules;
-    rv = mNetModuleMgr->EnumerateModules(
-            NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_CONTRACTID,
-            getter_AddRefs(modules));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupports> sup;
-
-    // notify each module...
-    while (NS_SUCCEEDED(modules->GetNext(getter_AddRefs(sup)))) {
-        nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(sup, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsINetNotify> netNotify;
-        rv = entry->GetSyncProxy(getter_AddRefs(netNotify));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIHttpNotify> httpNotify = do_QueryInterface(netNotify, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        // fire off the notification, ignore the return code.
-        httpNotify->OnModifyRequest(chan);
-    }
-    
+    if (mObserverService)
+        mObserverService->NotifyObservers(chan, NS_HTTP_ON_MODIFY_REQUEST_TOPIC, nsnull);
     return NS_OK;
 }
 
 nsresult
 nsHttpHandler::OnExamineResponse(nsIHttpChannel *chan)
 {
-    nsresult rv;
-
     LOG(("nsHttpHandler::OnExamineResponse [chan=%x]\n", chan));
-
-    if (!mNetModuleMgr) {
-        mNetModuleMgr = do_GetService(kNetModuleMgrCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    nsCOMPtr<nsISimpleEnumerator> modules;
-    rv = mNetModuleMgr->EnumerateModules(
-            NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID,
-            getter_AddRefs(modules));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupports> sup;
-    nsCOMPtr<nsINetModRegEntry> entry;
-    nsCOMPtr<nsINetNotify> netNotify;
-    nsCOMPtr<nsIHttpNotify> httpNotify;
-
-    // notify each module...
-    while (NS_SUCCEEDED(modules->GetNext(getter_AddRefs(sup)))) {
-        entry = do_QueryInterface(sup, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = entry->GetSyncProxy(getter_AddRefs(netNotify));
-        if (NS_FAILED(rv)) return rv;
-
-        httpNotify = do_QueryInterface(netNotify, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        // fire off the notification, ignore the return code.
-        httpNotify->OnExamineResponse(chan);
-    }
-    
+    if (mObserverService)
+        mObserverService->NotifyObservers(chan, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, nsnull);
     return NS_OK;
 }
 

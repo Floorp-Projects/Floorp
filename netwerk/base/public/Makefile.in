@@ -54,9 +54,6 @@ XPIDLSRCS	= \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
 		nsIMIMEInputStream.idl \
-		nsINetModRegEntry.idl \
-		nsINetModuleMgr.idl \
-		nsINetNotify.idl \
 		nsIPasswordManager.idl \
 		nsIPasswordManagerInternal.idl \
 		nsIProgressEventSink.idl \
