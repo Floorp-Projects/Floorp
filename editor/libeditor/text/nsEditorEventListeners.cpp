@@ -127,28 +127,6 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  PRUint32 keyCode;
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
-  keyEvent = do_QueryInterface(aKeyEvent);
-  if (keyEvent) 
-  {
-    if (NS_SUCCEEDED(keyEvent->GetKeyCode(&keyCode)))
-    {
-      if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode)
-      {
-        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-        PRUint32 flags=0;
-        mEditor->GetFlags(&flags);
-        if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
-          return NS_OK; // let it be used for focus switching
-
-        // else we insert the tab straight through
-        htmlEditor->EditorKeyPress(keyEvent);
-        ScrollSelectionIntoView();
-        return NS_ERROR_BASE; // "I handled the event, don't do default processing"
-      }
-    }
-  }
   return NS_OK;
 }
 
@@ -235,14 +213,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
     }
     
-#if 0    
-      // XXX: this must change.  DOM_VK_tab must be handled here, not in keyDown
-      if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode) 
-      {
-        return NS_OK; // ignore tabs here, they're handled in keyDown if at all
-      }
-#endif
-
     htmlEditor->EditorKeyPress(keyEvent);
     ScrollSelectionIntoView();
   }
