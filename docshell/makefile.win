@@ -21,6 +21,6 @@
 
 DEPTH=..
 
-DIRS=base html	build
+DIRS=base build
 
 include <$(DEPTH)\config\rules.mak>
