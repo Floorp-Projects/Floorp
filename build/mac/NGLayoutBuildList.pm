@@ -450,10 +450,16 @@ sub BuildClientDist()
 	{
 	#NETWERK
 		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",					"$distdirectory:netwerk:");
-		_InstallFromManifest(":mozilla:netwerk:util:public:MANIFEST",					"$distdirectory:netwerk:");
    		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
    		_InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",				"$distdirectory:idl:");
+   		_InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   		_InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   		_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   		_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",		"$distdirectory:idl:");
    		_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",			"$distdirectory:netwerk:");
+   		_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   		_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
+		_InstallFromManifest(":mozilla:netwerk:util:public:MANIFEST",					"$distdirectory:netwerk:");
 	} else {
 	#NETWORK
 	    _InstallFromManifest(":mozilla:network:public:MANIFEST",						"$distdirectory:network:");
@@ -835,6 +841,8 @@ sub BuildIDLProjects()
 		BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
 		BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
 		BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
+		BuildIDLProject(":mozilla:netwerk:protocol:jar:macbuild:jarIDL.mcp","jar");
+		BuildIDLProject(":mozilla:netwerk:protocol:res:macbuild:resIDL.mcp","res");
 		
 		# mime service
 		# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
@@ -1061,6 +1069,8 @@ sub BuildCommonProjects()
 		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:res:macbuild:res.mcp",			"res$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",	            "JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
