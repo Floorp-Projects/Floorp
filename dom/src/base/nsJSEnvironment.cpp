@@ -64,6 +64,8 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 static PRLogModuleInfo* gJSDiagnostics = nsnull;
 #endif
 
+#include "nsIScriptError.h"
+
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
@@ -83,25 +85,62 @@ NS_ScriptErrorReporter(JSContext *cx,
         NS_WARN_IF_FALSE(PR_FALSE, "Failed to get a global Object Owner");
         return;
       }
-      
-      const char* error;
-      if (message) {
-        error = message;
+
+      // Make an nsIScriptError and populate it with information from
+      // this error.
+      nsCOMPtr<nsIScriptError>
+        errorObject(do_CreateInstance("mozilla.scripterror.1"));
+
+      // XXX possible here to distinguish between XUL and content js?
+      // or could just expose setCategory and twiddle it later.
+      const char *category = "XUL/Content JavaScript";
+
+      if (errorObject == nsnull) {
+        return NS_ERROR_NOT_AVAILABLE;
       }
       else {
-        error = "<unknown>";
-      }
-  
-      if(report) {
-          owner->ReportScriptError(error,
-                                   report->filename,
-                                   report->lineno,
-                                   report->linebuf);
-      }
-      else {
-          owner->ReportScriptError(error, nsnull, 0, nsnull);
+        nsresult rv = NS_ERROR_FAILURE;
+        if (report) {
+          nsAutoString fileUni;
+          fileUni.AssignWithConversion(report->filename);
+          const PRUnichar *newFileUni = fileUni.ToNewUnicode();
+          PRUint32 column = report->uctokenptr - report->uclinebuf;
+          rv = errorObject->Init(report->ucmessage, newFileUni,
+                                 report->uclinebuf, report->lineno,
+                                 column, report->flags, category);
+          nsAllocator::Free((void *)newFileUni);
+        } else if (message) {
+          nsAutoString messageUni;
+          messageUni.AssignWithConversion(message);
+          const PRUnichar *newMessageUni = messageUni.ToNewUnicode();
+          rv = errorObject->Init(newMessageUni, nsnull, nsnull,
+                                 0, 0, 0, category);
+          nsAllocator::Free((void *)newMessageUni);
+        }
+        
+        if (NS_SUCCEEDED(rv))
+          owner->ReportScriptError(errorObject);
       }
     }
+  }
+
+  // Print it to stderr as well, for the benefit of those invoking
+  // mozilla with -console.
+  nsAutoString error;
+  error.Assign("JavaScript ");
+  error.Append(JSREPORT_IS_WARNING(report->flags) ? "warning: " : "error: ");
+  error += "\n";
+  error.Append(report->filename);
+  error.Append(" line ");
+  error.Append(report->lineno, 10);
+  error.Append(": ");
+  error.Append(report->ucmessage);
+  error += "\n";
+  
+  char *errorStr = error.ToNewCString();
+  if (errorStr) {
+    fprintf(stderr, "%s\n", errorStr);
+    nsAllocator::Free(errorStr);
   }
 
 #ifdef PR_LOGGING

@@ -40,7 +40,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
-#include "nsIPrompt.h" // as long as ReportScriptError raises an alert box.
+#include "nsIPrompt.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -1954,91 +1954,33 @@ NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString, 
-   const char* aFileName, PRInt32 aLineNo, const char* aLineBuf)
+NS_IMETHODIMP nsDocShell::ReportScriptError(nsIScriptError *errorObject)
 {
    nsresult rv;
+
+   if (errorObject == nsnull)
+      return NS_ERROR_NULL_POINTER;
 
    // Get the console service, where we're going to register the error.
    nsCOMPtr<nsIConsoleService> consoleService
       (do_GetService("mozilla.consoleservice.1"));
-   
-   // Make an nsIScriptError, populate it with information from this
-   // error, then log it with the console service.  The UI can then
-   // poll the service to update the JavaScript console.
-   nsCOMPtr<nsIScriptError>
-      errorObject(do_CreateInstance("mozilla.scripterror.1"));
 
-   if (consoleService != nsnull && errorObject != nsnull)
+   if (consoleService != nsnull)
       {
-      // Mock up wide strings until we fix the interface.
-      nsAutoString message(aErrorString);
-      PRUnichar *msgUni = message.ToNewUnicode();
-      nsAutoString filename(aFileName);
-      PRUnichar *fileUni = filename.ToNewUnicode();
-      nsAutoString sourceline(aLineBuf);
-      PRUnichar *slUni = sourceline.ToNewUnicode();
-
-      // make category depend on xul/!xul
-      const char *category;
-      category = mItemType == typeContent
-               ? "XUL javascript"
-               : "content javascript";
-
-      rv = errorObject->Init(msgUni, fileUni, slUni, aLineNo, 0, 0, category);
-
-      nsAllocator::Free(msgUni);
-      nsAllocator::Free(fileUni);
-      nsAllocator::Free(slUni);
-
+      rv = consoleService->LogMessage(errorObject);
       if (NS_SUCCEEDED(rv))
          {
-         rv = consoleService->LogMessage(errorObject);
-         if (NS_SUCCEEDED(rv))
-            {
-#ifndef DEBUG               
-            return NS_OK;
-#endif
-            }
+         return NS_OK;
+         }
+      else
+         {
+         return rv;
          }
       }
-
-   // If reporting via the console service fails for some reason, fall
-   // back to printing to stdout.
-   nsAutoString error;
-   error.Assign("JavaScript Error: ");
-   error.Append(aErrorString);
-   error += "\n";
-
-   if(aFileName)
+   else
       {
-      error += "URL: ";
-      error += aFileName;
-      error += "\n";
+      return NS_ERROR_NOT_AVAILABLE;
       }
-
-   if(aLineNo)
-      {
-      error += "Line number: ";
-      error.Append(aLineNo, 10);
-      error += "\n";
-      }
-
-   if(aLineBuf)
-      {
-      error += "Line text: ";
-      error += aLineBuf;
-      error += "\n";
-      }
-
-   char* errorStr = error.ToNewCString();
-   if(errorStr)
-      {
-      fprintf(stderr, "%s\n", errorStr);
-      nsAllocator::Free(errorStr);
-      }
-
-   return NS_OK;
 }
 
 //*****************************************************************************
