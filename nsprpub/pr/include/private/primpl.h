@@ -1524,9 +1524,10 @@ struct PRThread {
     */
     PRUint32 tpdLength;             /* thread's current vector length */
     void **privateData;             /* private data vector or NULL */
-    PRInt32 errorStringSize;        /* byte length of current error string | zero */
     PRErrorCode errorCode;          /* current NSPR error code | zero */
     PRInt32 osErrorCode;            /* mapping of errorCode | zero */
+    PRIntn  errorStringLength;      /* textLength from last call to PR_SetErrorText() */
+    PRInt32 errorStringSize;        /* malloc()'d size of buffer | zero */
     char *errorString;              /* current error string | NULL */
 
 #if defined(_PR_PTHREADS)

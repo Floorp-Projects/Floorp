@@ -74,6 +74,7 @@ CSRCS =             \
 	dlltest.c		\
 	dtoa.c			\
 	errcodes.c		\
+	errset.c		\
 	exit.c  		\
 	fdcach.c		\
 	fileio.c		\
