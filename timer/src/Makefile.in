@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifneq (,$(filter beos os2 rhapsody photon,$(OS_ARCH)))
+ifneq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = $(MOZ_WIDGET_TOOLKIT)
 else
 DIRS = unix
