@@ -65,7 +65,7 @@ inCSSValueSearch::inCSSValueSearch()
 
 inCSSValueSearch::~inCSSValueSearch()
 {
-  delete mProperties;
+  delete[] mProperties;
   delete mResults;
 }
 
