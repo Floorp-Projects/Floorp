@@ -6,11 +6,18 @@ This directory is for miscellaneous tools associated with mozilla.
 Table of Contents
 =================
 
+* cvs.py
+    A python script to checkout trees with multiple threads.
+    Works on Unix and Windows. I have not tested the Mac.
+    With this script, pulls can take five minutes instead of twenty.
+    Of course, this script pounds the cvs server three times as hard,
+    so use it with discretion.
+
 * trees.pl (a.k.a moz)
     A perl script to navigate mozilla source trees.
-    Run trees -h for usage. You will probably need to copy 'trees' into
+    Run trees -h for usage. You will probably need to copy 'trees.pl' into
     your home directory somewhere (Just be careful to keep it up to date).
-    You wrap 'trees' in a shell alias called 'moz' to let you do things like,
+    Wrap 'trees.pl' in a shell alias called 'moz' to let you do things like,
       moz gecko webshell   - cd to webshell directory in gecko tree
       moz gecko2           - cd to same directory in gecko2 tree
       moz /                - cd to the root of the tree
