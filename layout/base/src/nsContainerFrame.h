@@ -21,86 +21,7 @@
 #include "nsSplittableFrame.h"
 
 /**
- * Implementation of a container frame. Supports being used a pseudo-
- * frame (a frame that maps the same content as its parent).
- *
- * Container frame iterates its child content and for each content object creates
- * one or more child frames. There are three member variables (class invariants)
- * used to manage this mapping:
- * <dl>
- * <dt>mFirstContentOffset
- *   <dd>the content offset of the first piece of content mapped by this container.
- * <dt>mLastContentOffset
- *   <dd>the content offset of the last piece of content mapped by this container
- * <dt>mLastContentIsComplete
- *   <dd>a boolean indicating whether the last piece of content mapped by this
- *       container is complete, or whether its frame needs to be continued.
- * </dl>
- *
- * Here are the rules governing the state of the class invariants. The debug member
- * functions PreReflowCheck() and PostReflowCheck() validate these rules. For the
- * purposes of this discussion an <i>empty</i> frame is defined as a container
- * frame with a null child-list, i.e. its mFirstChild is nsnull.
- *
- * <h3>Non-Empty Frames</h3>
- * For a container frame that is not an empty frame the following must be true:
- * <ul>
- * <li>if the first child frame is a pseudo-frame then mFirstContentOffset must be
- *     equal to the first child's mFirstContentOffset; otherwise, mFirstContentOffset
- *     must be equal to the first child frame's index in parent
- * <li>if the last child frame is a pseudo-frame then mLastContentOffset must be
- *     equal to the last child's mLastContentOffset; otherwise, mLastContentOffset
- *     must be equal to the last child frame's index in parent
- * <li>if the last child is a pseudo-frame then mLastContentIsComplete should be
- *     equal to that last child's mLastContentIsComplete; otherwise, if the last
- *     child frame has a next-in-flow then mLastContentIsComplete must be PR_TRUE
- * </ul>
- *
- * <h3>Empty Frames</h3>
- * For an empty container frame the following must be true:
- * <ul>
- * <li>mFirstContentOffset must be equal to the NextContentOffset() of the first
- *     non-empty prev-in-flow
- * <li>mChildCount must be 0
- * </ul>
- *
- * The value of mLastContentOffset and mLastContentIsComplete are <i>undefined</i>
- * for an empty frame.
- *
- * <h3>Next-In-Flow List</h3>
- * The rule is that if a container frame is not complete then the mFirstContentOffset,
- * mLastContentOffset, and mLastContentIsComplete of its next-in-flow frames must
- * <b>always</b> correct. This means that whenever you push/pull child frames from a
- * next-in-flow you <b>must</b> update that next-in-flow's state so that it is
- * consistent with the aforementioned rules for empty and non-empty frames.
- *
- * <h3>Pulling-Up Frames</h3>
- * In the processing of pulling-up child frames from a next-in-flow it's possible
- * to pull-up all the child frames from a next-in-flow thereby leaving the next-in-flow
- * empty. There are two cases to consider:
- * <ol>
- * <li>All of the child frames from all of the next-in-flow have been pulled-up.
- *     This means that all the next-in-flow frames are empty, the container being
- *     reflowed is complete, and the next-in-flows will be deleted.
- *
- *     In this case the next-in-flows' mFirstContentOffset is also undefined.
- * <li>Not all the child frames from all the next-in-flows have been pulled-up.
- *     This means the next-in-flow consists of one or more empty frames followed
- *     by one or more non-empty frames. Note that all the empty frames must be
- *     consecutive. This means it is illegal to have an empty frame followed by
- *     a non-empty frame, followed by an empty frame, followed by a non-empty frame.
- * </ol>
- *
- * <h3>Pseudo-Frames</h3>
- * As stated above, when pulling/pushing child frames from/to a next-in-flow the
- * state of the next-in-flow must be updated.
- *
- * If the next-in-flow is a pseudo-frame then not only does the next-in-flow's state
- * need to be updated, but the state of its geometric parent must be updated as well.
- * See member function PropagateContentOffsets() for details.
- *
- * This rule is applied recursively, so if the next-in-flow's geometric parent is
- * also a pseudo-frame then its geometric parent must be updated.
+ * Implementation of a container frame.
  */
 class nsContainerFrame : public nsSplittableFrame
 {
@@ -138,13 +59,8 @@ public:
   // IndexOf() returns -1 if the frame is not in the child list.
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
 
-  // Returns true if this frame is being used a pseudo frame
-  // XXX deprecated
-  PRBool      IsPseudoFrame() const;
-
   // Debugging
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
   NS_IMETHOD  VerifyTree() const;
 
   /**

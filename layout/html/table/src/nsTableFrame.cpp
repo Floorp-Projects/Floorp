@@ -2915,6 +2915,29 @@ PRBool nsTableFrame::IsNested(const nsReflowState& aReflowState, nsStylePosition
   return result;
 }
 
+static PRBool
+IsPseudoFrame(nsIFrame* aFrame)
+{
+  nsIContent* content;
+  nsIFrame*   parentFrame;
+  PRBool      result = PR_FALSE;
+
+  aFrame->GetContent(content);
+  aFrame->GetGeometricParent(parentFrame);
+  if (nsnull != parentFrame) {
+    nsIContent* parentContent;
+     
+    parentFrame->GetContent(parentContent);
+    if (parentContent == content) {
+      result = PR_TRUE;
+    }
+    NS_RELEASE(parentContent);
+  }
+
+  NS_RELEASE(content);
+  return result;
+}
+
 /* helper method for getting the width of the table's containing block */
 nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
 {
@@ -2935,7 +2958,8 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
     if (NS_OK==rv) 
     { // we found a block, see if it's really a table cell (which means we're a nested table)
       PRBool skipThisBlock=PR_FALSE;
-      if (PR_TRUE==((nsContainerFrame*)block)->IsPseudoFrame())
+      // XXX FIX ME...
+      if (IsPseudoFrame(block))
       {
         const nsReflowState* parentRS = rs->parentReflowState;
         if (nsnull!=parentRS)

@@ -79,14 +79,6 @@ public:
 
   NS_IMETHOD VerifyTree() const;
 
-#if 0
-  // nsContainerFrame
-  virtual void PropagateContentOffsets(nsIFrame* aChild,
-                                       PRInt32 aFirstContentOffset,
-                                       PRInt32 aLastContentOffset,
-                                       PRBool aLastContentIsComplete);
-#endif
-
 protected:
   PRBool  mIsPseudoFrame;
 
@@ -125,6 +117,9 @@ private:
   nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,
                              const nsMargin& aBorderPadding,
                              const nsSize&   aMaxSize);
+
+  // XXX FIX ME...
+  PRBool IsPseudoFrame() const;
 };
 
 #endif /* nsBodyFrame_h___ */
