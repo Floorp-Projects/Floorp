@@ -18,25 +18,20 @@
 
 #pragma once
 
-#include "CConfigActiveScroller.h"
+#include <LScrollerView.h>
 
 /******************************************************************************
  * CHyperScroller 
  * Each hyperview needs the ability to show/hide a 
  * - focus/dragging border
  * - scrollers
- * This is implemented as an addition to the LScroller class, because LScroller
- * already manages the scrollbars
  ******************************************************************************/
 
-class CHyperScroller: public CConfigActiveScroller
+class CHyperScroller: public LScrollerView
 {
-	typedef CConfigActiveScroller Inherited;
+	typedef LScrollerView Inherited;
 
-
-public:
-	//friend class CHyperView;		// this class no longer exists
-	
+public:	
 					enum { class_ID = 'HSCR' };
 					
 				 	CHyperScroller( LStream* inStream );	
@@ -82,12 +77,12 @@ protected:
 	SBooleanRect		mExpanded;
 
 	Rect			CalcDummySizeBox();	// Rectangle enclosing the dummy box
-	void			DrawEmptyScroller( LStdControl* scrollBar );
-	LStdControl*	fVerticalBar;	// When it is hidden, we need to save this value
+	void			DrawEmptyScroller( LScrollBar* scrollBar );
+	LScrollBar*		fVerticalBar;	// When it is hidden, we need to save this value
 									// because LScroller assumes that we want scrollbars
 									// to be visible. The only way to turn this off 
 									// is to set scrollbars to NIL.
-	LStdControl*	fHorizontalBar;
+	LScrollBar*		fHorizontalBar;
 	
 	Boolean			mHandleGrowIconManually;
 };

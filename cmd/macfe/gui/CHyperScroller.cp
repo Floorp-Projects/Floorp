@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include <LScrollBar.h>
 #include "CHyperScroller.h"
 #include "UGraphicGizmos.h"
 #include "macgui.h"
@@ -31,7 +32,7 @@ const ResIDT cSizeBoxIconID = 29200;
 #include "CHTMLView.h"
 
 CHyperScroller::CHyperScroller(LStream *inStream)
-	:	CConfigActiveScroller(inStream)
+	:	LScrollerView(inStream)
 {
 	fVerticalBar = NULL;
 	fHorizontalBar = NULL;
@@ -187,7 +188,7 @@ void CHyperScroller::AdjustScrollBars()
 			}
 
 		if ( need_inherited_AdjustScrollbars )
-			/*inherited*/	CConfigActiveScroller::AdjustScrollBars();
+			Inherited::AdjustScrollBars();
 	}
 
 Boolean CHyperScroller::ScrolledToMaxVerticalExtent()
@@ -266,7 +267,7 @@ void CHyperScroller::ShowScrollbars( Boolean horiOn, Boolean vertOn )
 		if (mHandleGrowIconManually || hasHorizontal || horiOn)
 			theVerticalSize -= (ScrollBar_Size - 1);
 
-		LStdControl* theBar = (mVerticalBar != NULL) ? mVerticalBar : fVerticalBar;
+		LScrollBar* theBar = (mVerticalBar != NULL) ? mVerticalBar : fVerticalBar;
 		StFocusAndClipIfHidden theControlClip(theBar);
 		theBar->PlaceInSuperFrameAt((theFrameSize.width - ScrollBar_Size), 0, false);
 		theBar->ResizeFrameTo(ScrollBar_Size, theVerticalSize, false);
@@ -311,7 +312,7 @@ void CHyperScroller::ShowScrollbars( Boolean horiOn, Boolean vertOn )
 
 	if ( mScrollingView )
 		AdjustHyperViewBounds();
-	CConfigActiveScroller::AdjustScrollBars(); // call inherited AdjustScrollBars(), as mine could call _this_ routine back
+	Inherited::AdjustScrollBars(); // call inherited AdjustScrollBars(), as mine could call _this_ routine back
 
 	// ¥ only refresh the little box. Refreshing the whole view causes flashes
 //	if (HasScrollbars())	
@@ -381,7 +382,7 @@ void CHyperScroller::DrawDummySizeBox()
 	}
 }
 
-void CHyperScroller::DrawEmptyScroller( LStdControl* scrollBar )
+void CHyperScroller::DrawEmptyScroller( LScrollBar* scrollBar )
 {
 	Rect		frame;
 
@@ -450,7 +451,7 @@ void CHyperScroller::DrawSelf(void)
 // This cannot be done inside the constructor, because -1 offset means that there are no scrollers
 void CHyperScroller::FinishCreateSelf()
 {
-	LScroller::FinishCreateSelf();
+	Inherited::FinishCreateSelf();
 	
 // FIX ME!!! put back in
 //	if (((CHTMLView*)mScrollingView)->GetScrollable() != LO_SCROLL_YES)
