@@ -58,9 +58,9 @@ Rights Reserved.
 		
 		<treehead>
 			<treerow>
-				<treecell onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName');">&nameColumn.label;</treecell>
-				<treecell onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');">&emailColumn.label;</treecell>
-				<treecell onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');">&phoneColumn.label;</treecell>
+				<treecell value="&nameColumn.label;" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName');"/>
+				<treecell value="&emailColumn.label;" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
+				<treecell value="&phoneColumn.label;" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
 			</treerow>
 		</treehead>
 
