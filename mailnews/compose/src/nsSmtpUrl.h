@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"
 #include "nsISmtpServer.h"
+#include "nsIInterfaceRequestor.h"
 
 class nsMailtoUrl : public nsIMailtoUrl, public nsIURI
 {
@@ -100,6 +101,7 @@ protected:
 	nsCOMPtr<nsIFileSpec> m_fileName;
 	nsCOMPtr<nsIMsgIdentity> m_senderIdentity;
     nsCOMPtr<nsIPrompt> m_netPrompt;
+    nsCOMPtr<nsIInterfaceRequestor> m_callbacks;
     nsCOMPtr<nsISmtpServer> m_smtpServer;
 
 	// it is possible to encode the message to parse in the form of a url.

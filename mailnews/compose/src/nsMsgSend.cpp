@@ -67,7 +67,6 @@
 #include "nsTextFormatter.h"
 #include "nsIWebShell.h"
 #include "nsIPrompt.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIAppShellService.h"
 #include "nsMailHeaders.h"
 #include "nsIDocShell.h"
@@ -90,7 +89,6 @@ static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
-static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID); 
 
 #define PREF_MAIL_SEND_STRUCT "mail.send_struct"
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
@@ -227,6 +225,24 @@ void nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
 
   if (msgWindow)
       msgWindow->GetPromptDialog(aPrompt);
+}
+
+nsresult nsMsgComposeAndSend::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
+{
+  nsCOMPtr<nsIMsgWindow> msgWindow;
+  nsCOMPtr<nsIMsgMailSession> mailSession(do_GetService(kMsgMailSessionCID));
+  mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+  if (msgWindow) {
+    nsCOMPtr<nsIDocShell> docShell;
+    msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(docShell));
+    if (ir) {
+      *aCallbacks = ir;
+      NS_ADDREF(*aCallbacks);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 void 
@@ -2885,11 +2901,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     // to the top most mail window...after all, that's where we are going to be sending status
     // update information too....
 
-    nsCOMPtr<nsIPrompt> netPrompt;
-    GetDefaultPrompt(getter_AddRefs(netPrompt));
-    
-    if (!netPrompt)
-      netPrompt = do_GetService(kCNetSupportDialogCID);
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      GetNotificationCallbacks(getter_AddRefs(callbacks));
 
     // Tell the user we are sending the message!
     nsXPIDLString msg; 
@@ -2898,7 +2911,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
                                       mMailSendListener, nsnull, 
-                                      netPrompt, nsnull);
+                                      callbacks, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....

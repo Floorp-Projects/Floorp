@@ -31,6 +31,7 @@
 interface nsIMsgIdentity;
 interface nsIPrompt;
 interface nsISmtpServer;
+interface nsIInterfaceRequestor;
 
 [scriptable, uuid(16ADF2F1-BBAD-11d2-804E-006008128C4E)]
 interface nsISmtpUrl : nsISupports {
@@ -65,6 +66,7 @@ interface nsISmtpUrl : nsISupports {
 	// smtp://sspitzer@tintin/...
 	attribute nsIMsgIdentity senderIdentity;
     attribute nsIPrompt prompt;
+    attribute nsIInterfaceRequestor notificationCallbacks;
     attribute nsISmtpServer smtpServer;
 };
 

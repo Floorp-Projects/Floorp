@@ -28,7 +28,7 @@ interface nsIURI;
 interface nsIUrlListener;
 interface nsISupportsArray;
 interface nsIMsgIdentity;
-interface nsIPrompt;
+interface nsIInterfaceRequestor;
 
 [scriptable, uuid(FBAF0F10-CA9B-11d2-8063-006008128C4E)]
 interface nsISmtpService : nsISupports {
@@ -53,9 +53,9 @@ interface nsISmtpService : nsISupports {
 
   void SendMailMessage(in nsIFileSpec aFilePath, in string aRecipients, 
                        in nsIMsgIdentity aSenderIdentity,
-					   in nsIUrlListener aUrlListener, 
+                       in nsIUrlListener aUrlListener, 
                        in nsISmtpServer aServer,
-                       in nsIPrompt aNetPrompt,
+                       in nsIInterfaceRequestor aNotificationCallbacks,
                        out nsIURI aURL);
 
   /**

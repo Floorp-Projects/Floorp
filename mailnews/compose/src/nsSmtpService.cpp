@@ -36,8 +36,8 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgIdentity.h"
-#include "nsIPrompt.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsINetSupportDialogService.h"
 
 typedef struct _findServerByKeyEntry {
     const char *key;
@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 static NS_DEFINE_CID(kCMailtoUrlCID, NS_MAILTOURL_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // foward declarations...
 nsresult
@@ -63,7 +64,7 @@ NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                    const char* aRecipients, 
                    nsIMsgIdentity * aSenderIdentity,
                    nsIUrlListener * aUrlListener,
-                   nsIPrompt * aNetPrompt,
+                   nsIInterfaceRequestor* aNotificationCallbacks,
                    nsIURI ** aUrl);
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer);
@@ -89,7 +90,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         nsIMsgIdentity * aSenderIdentity,
                                         nsIUrlListener * aUrlListener, 
                                         nsISmtpServer * aServer,
-                                        nsIPrompt * aNetPrompt,
+                                        nsIInterfaceRequestor* aNotificationCallbacks,
                                         nsIURI ** aURL)
 {
 	nsIURI * urlToRun = nsnull;
@@ -122,7 +123,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 		{
       rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
                               aRecipients, aSenderIdentity, aUrlListener,
-                              aNetPrompt, &urlToRun); // this ref counts urlToRun
+                              aNotificationCallbacks, &urlToRun); // this ref counts urlToRun
       if (NS_SUCCEEDED(rv) && urlToRun)	
       {
         nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
@@ -153,7 +154,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                             const char * aRecipients, 
                             nsIMsgIdentity * aSenderIdentity,
                             nsIUrlListener * aUrlListener, 
-                            nsIPrompt * aNetPrompt,
+                            nsIInterfaceRequestor* aNotificationCallbacks,
                             nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
@@ -184,7 +185,11 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
             smtpUrl->SetRecipients(aRecipients);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
-            smtpUrl->SetPrompt(aNetPrompt);
+            smtpUrl->SetNotificationCallbacks(aNotificationCallbacks);
+            nsCOMPtr<nsIPrompt> smtpPrompt(do_GetInterface(aNotificationCallbacks));
+            if (!smtpPrompt)
+                smtpPrompt = do_GetService(kNetSupportDialogCID);
+            smtpUrl->SetPrompt(smtpPrompt);
 			url->RegisterListener(aUrlListener);
 		}
 		rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);

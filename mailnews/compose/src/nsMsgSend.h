@@ -169,6 +169,7 @@ class nsMsgSendPart;
 class nsMsgCopy;
 class nsMsgDeliveryListener;
 class nsIPrompt;
+class nsIInterfaceRequestor;
 
 class nsMsgComposeAndSend : public nsIMsgSend
 {
@@ -404,7 +405,7 @@ public:
 
 protected:
   nsCOMPtr<nsIMsgStringService> mComposeBundle;
-
+  nsresult GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks);
 };
 
 // 

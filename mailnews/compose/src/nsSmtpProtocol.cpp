@@ -291,65 +291,67 @@ nsSmtpProtocol::~nsSmtpProtocol()
 
 void nsSmtpProtocol::Initialize(nsIURI * aURL)
 {
-	NS_PRECONDITION(aURL, "invalid URL passed into Smtp Protocol");
-	nsresult rv = NS_OK;
+    NS_PRECONDITION(aURL, "invalid URL passed into Smtp Protocol");
+    nsresult rv = NS_OK;
 
-	m_flags = 0;
-  m_prefAuthMethod = PREF_AUTH_NONE;
+    m_flags = 0;
+    m_prefAuthMethod = PREF_AUTH_NONE;
     m_prefTrySSL = PREF_SSL_TRY;
-	m_port = SMTP_PORT;
-  m_tlsInitiated = PR_FALSE;
+    m_port = SMTP_PORT;
+    m_tlsInitiated = PR_FALSE;
 
-	m_urlErrorState = NS_ERROR_FAILURE;
+    m_urlErrorState = NS_ERROR_FAILURE;
 
-  if (!SMTPLogModule)
-     SMTPLogModule = PR_NewLogModule("SMTP");
-
-	if (aURL) 
-    m_runningURL = do_QueryInterface(aURL);
-
-  if (!mSmtpBundle)
-    mSmtpBundle = do_GetService(NS_MSG_SMTPSTRINGSERVICE_CONTRACTID);
-
-    // extract out message feedback if there is any.
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
-	if (mailnewsUrl)
-		mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
-
-	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
-	m_dataBufSize = OUTPUT_BUFFER_SIZE;
-
-	m_nextState = SMTP_START_CONNECT;
-	m_nextStateAfterResponse = SMTP_START_CONNECT;
-	m_responseCode = 0;
-	m_previousResponseCode = 0;
-	m_continuationResponse = -1; 
-    m_tlsEnabled = PR_FALSE;
-	m_addressCopy = nsnull;
-	m_addresses = nsnull;
-	m_addressesLeft = nsnull;
-	m_verifyAddress = nsnull;	
-	m_totalAmountWritten = 0;
-	m_totalMessageSize = 0;
-	m_originalContentLength = 0;
-
-  // ** may want to consider caching the server capability to save lots of
-  // round trip communication between the client and server
-  nsCOMPtr<nsISmtpServer> smtpServer;
-  m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
-  if (smtpServer) {
-      smtpServer->GetAuthMethod(&m_prefAuthMethod);
-      smtpServer->GetTrySSL(&m_prefTrySSL);
-  }
+    if (!SMTPLogModule)
+        SMTPLogModule = PR_NewLogModule("SMTP");
     
-  rv = RequestOverrideInfo(smtpServer);
-  // if we aren't waiting for a login override, then go ahead an
-  // open the network connection like we normally would have.
-  if (NS_FAILED(rv) || !TestFlag(SMTP_WAIT_FOR_REDIRECTION)) {
+    if (aURL) 
+        m_runningURL = do_QueryInterface(aURL);
+
+    if (!mSmtpBundle)
+        mSmtpBundle = do_GetService(NS_MSG_SMTPSTRINGSERVICE_CONTRACTID);
+    
+    // extract out message feedback if there is any.
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
+    if (mailnewsUrl)
+        mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+
+    m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
+    m_dataBufSize = OUTPUT_BUFFER_SIZE;
+
+    m_nextState = SMTP_START_CONNECT;
+    m_nextStateAfterResponse = SMTP_START_CONNECT;
+    m_responseCode = 0;
+    m_previousResponseCode = 0;
+    m_continuationResponse = -1; 
+    m_tlsEnabled = PR_FALSE;
+    m_addressCopy = nsnull;
+    m_addresses = nsnull;
+	m_addressesLeft = nsnull;
+    m_verifyAddress = nsnull;	
+    m_totalAmountWritten = 0;
+    m_totalMessageSize = 0;
+    m_originalContentLength = 0;
+
+    // ** may want to consider caching the server capability to save lots of
+    // round trip communication between the client and server
+    nsCOMPtr<nsISmtpServer> smtpServer;
+    m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+    if (smtpServer) {
+        smtpServer->GetAuthMethod(&m_prefAuthMethod);
+        smtpServer->GetTrySSL(&m_prefTrySSL);
+    }
+    
+    rv = RequestOverrideInfo(smtpServer);
+    // if we aren't waiting for a login override, then go ahead an
+    // open the network connection like we normally would have.
+    if (NS_SUCCEEDED(rv) && TestFlag(SMTP_WAIT_FOR_REDIRECTION))
+        return;
+
     nsXPIDLCString hostName;
     aURL->GetHost(getter_Copies(hostName));
     PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", (const char *) hostName));
-
+    
     if (m_prefTrySSL != PREF_SSL_NEVER) {
         rv = OpenNetworkSocket(aURL, "tls");
         if (NS_FAILED(rv) && m_prefTrySSL == PREF_SSL_TRY) {
@@ -359,7 +361,18 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     } else {
         rv = OpenNetworkSocket(aURL, nsnull);
     }
-  }
+    
+    if (NS_FAILED(rv))
+        return;
+
+    nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(aURL));
+    if (smtpUrl) {
+        nsCOMPtr<nsIInterfaceRequestor> callbacks;
+        smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
+        nsCOMPtr<nsIChannel> channel(do_QueryInterface(m_request));
+        if (channel)
+          channel->SetNotificationCallbacks(callbacks);
+    }
 }
 
 const char * nsSmtpProtocol::GetUserDomainName()

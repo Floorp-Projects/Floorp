@@ -534,6 +534,24 @@ nsSmtpUrl::GetPrompt(nsIPrompt **aNetPrompt)
 }
 
 NS_IMETHODIMP
+nsSmtpUrl::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
+{
+    NS_ENSURE_ARG_POINTER(aCallbacks);
+    m_callbacks = aCallbacks;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpUrl::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
+{
+    NS_ENSURE_ARG_POINTER(aCallbacks);
+    if (!m_callbacks) return NS_ERROR_NULL_POINTER;
+    *aCallbacks = m_callbacks;
+    NS_ADDREF(*aCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSmtpUrl::SetSmtpServer(nsISmtpServer * aSmtpServer)
 {
     NS_ENSURE_ARG_POINTER(aSmtpServer);
