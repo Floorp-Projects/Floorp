@@ -215,12 +215,12 @@ nsAutoCompleteMdbResult::RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDb)
   nsIMdbRow *row = mResults.ObjectAt(aRowIndex);
   NS_ENSURE_TRUE(row, NS_ERROR_INVALID_ARG);
 
-  mResults.RemoveObjectAt(aRowIndex);
-
   if (aRemoveFromDb && mTable && mEnv) {
     mdb_err err = mTable->CutRow(mEnv, row);
     NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
   }
+
+  mResults.RemoveObjectAt(aRowIndex);
 
   return NS_OK;
 }
