@@ -547,9 +547,9 @@ function delayedStartup()
 #endif
 
   // Start update checker
-  // var updates = Components.classes["@mozilla.org/updates/background-update-service;1"]
-  //                         .getService(Components.interfaces.nsIBackgroundUpdateService);
-  // updates.checkForUpdates();
+  // var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+  //                         .getService(Components.interfaces.nsIUpdateService);
+  // updates.watchForUpdates();
 }
 
 function Shutdown()
@@ -4530,13 +4530,12 @@ function BrowserOpenExtensions(aOpenMode)
   
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService(Components.interfaces.nsIWindowMediator);
-  var lastEM = wm.getMostRecentWindow(EMTYPE);
-
   var needToOpen = true;
-  var windows = wm.getEnumerator(EMTYPE);
+  var windowType = EMTYPE + "-" + aOpenMode;
+  var windows = wm.getEnumerator(windowType);
   while (windows.hasMoreElements()) {
     var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
-    if (theEM.gWindowType == aOpenMode) {
+    if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
       theEM.focus();
       needToOpen = false;
       break;
@@ -4544,7 +4543,7 @@ function BrowserOpenExtensions(aOpenMode)
   }
 
   if (needToOpen) {
-    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
     const EMFEATURES = "chrome,dialog=no,resizable";
     window.openDialog(EMURL, "", EMFEATURES, aOpenMode);
   }
