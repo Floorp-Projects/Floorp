@@ -54,7 +54,7 @@
 
 // unicode conversion
 #define NS_IMPL_IDS
-  #include "nsIPlatformCharset.h"
+#  include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 #include "nsISaveAsCharset.h"
   
