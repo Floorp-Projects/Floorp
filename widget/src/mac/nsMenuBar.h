@@ -39,6 +39,7 @@
 extern nsWeakPtr gMacMenubar;
 
 class nsIWidget;
+class nsIDocument;
 
 
 namespace MenuHelpers
@@ -170,6 +171,7 @@ protected:
   PRBool       mIsMenuBarAdded;
   
   nsWeakPtr   mWebShellWeakRef;    // weak ref to webshell
+  nsIDocument *         mDocument;          // pointer to doc
 
   // Mac Specific
   Handle      mMacMBarHandle;
