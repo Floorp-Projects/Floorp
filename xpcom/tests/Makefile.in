@@ -111,6 +111,11 @@ EXPORT_RESOURCE = \
 	$(srcdir)/test.properties \
 	$(NULL)
 
+# Needed to resolve __yylex (?)
+ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
+LIBS		+= -lpcap
+endif
+
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
 
