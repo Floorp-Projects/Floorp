@@ -714,7 +714,7 @@ PRInt32
 Rule::LookupSymbol(const nsAReadableString& aSymbol) const
 {
     for (PRInt32 i = 0; i < mCount; ++i) {
-        if (aSymbol == mSymbols[i].mSymbol)
+        if (mSymbols[i].mSymbol.Equals(aSymbol))
             return mSymbols[i].mVariable;
     }
 
