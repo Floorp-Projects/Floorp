@@ -105,15 +105,18 @@
 ;   binds var1, var2, ..., varn such that (list* var1 var2 ... varn) is equal to v;
 ;   evaluates body with these bindings;
 ;   returns the result values from the body.
+; var1 through varn-1 may be nil, in which case it is not bound.
 (defmacro list*-bind ((var1 &rest vars) expr &body body)
   (labels
     ((gen-let*-bindings (var1 vars expr)
        (if vars
-         (let ((expr-var (gensym "REST")))
-           (list*
-            (list expr-var expr)
-            (list var1 (list 'car expr-var))
-            (gen-let*-bindings (car vars) (cdr vars) (list 'cdr expr-var))))
+         (if var1
+           (let ((expr-var (gensym "REST")))
+             (list*
+              (list expr-var expr)
+              (list var1 (list 'car expr-var))
+              (gen-let*-bindings (car vars) (cdr vars) (list 'cdr expr-var))))
+           (gen-let*-bindings (car vars) (cdr vars) (list 'cdr expr)))
          (list
           (list var1 expr)))))
     (list* 'let* (gen-let*-bindings var1 vars expr) body)))
@@ -376,6 +379,16 @@
           (acons (cons key (nreverse additional-keys)) data
                  (collect-equivalences (nreverse filtered-rest) :test test)))
         (acons (list key) data (collect-equivalences rest :test test))))))
+
+
+; Return true if item is a member of the tree of conses.
+(defun tree-member (item tree &key (test #'eql))
+  (cond
+   ((funcall test item tree))
+   ((consp tree)
+    (or (tree-member item (car tree) :test test)
+        (tree-member item (cdr tree) :test test)))
+   (t nil)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
