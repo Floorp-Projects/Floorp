@@ -229,7 +229,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
          nsAutoString url(str);
 
          //about:blank URL's do not have ClearScope called on page change.
-         if(url != "about:blank")
+         if(!url.Equals("about:blank"))
             {
             ClearAllTimeouts();
   
@@ -807,7 +807,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetName(nsString& aName)
    if(docShellAsItem)
       docShellAsItem->GetName(getter_Copies(name));
 
-   aName = name;
+   aName.Assign(name);
    return NS_OK;
 }
 
@@ -1825,7 +1825,7 @@ PRBool GlobalWindowImpl::AddProperty(JSContext* aContext, JSObject* aObj,
       mPropName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
       if(mPropName.Length() > 2)
          mPrefix.Assign(mPropName.GetUnicode(), 2);
-      if(mPrefix == "on")
+      if(mPrefix.Equals("on"))
          return CheckForEventListener(aContext, mPropName);
       }
    return PR_TRUE;
@@ -3482,9 +3482,9 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
   
    // XXX Comparisons should really be atom based
 
-   if(aPropName == "onmousedown" || aPropName == "onmouseup" ||
-      aPropName ==  "onclick" || aPropName == "onmouseover" ||
-      aPropName == "onmouseout")
+   if(aPropName.Equals("onmousedown") || aPropName.Equals("onmouseup") ||
+      aPropName.Equals("onclick") || aPropName.Equals("onmouseover") ||
+      aPropName.Equals("onmouseout"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {
@@ -3498,8 +3498,8 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
             }
          }
       }
-   else if(aPropName == "onkeydown" || aPropName == "onkeyup" || 
-      aPropName == "onkeypress")
+   else if(aPropName.Equals("onkeydown") || aPropName.Equals("onkeyup") || 
+      aPropName.Equals("onkeypress"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {
@@ -3514,7 +3514,7 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
             }
          }
       }
-   else if(aPropName == "onmousemove")
+   else if(aPropName.Equals("onmousemove"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {
@@ -3529,7 +3529,7 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
             }
          }
       }
-   else if(aPropName == "onfocus" || aPropName == "onblur")
+   else if(aPropName.Equals("onfocus") || aPropName.Equals("onblur"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {
@@ -3544,8 +3544,8 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
             }
          }
       }
-   else if(aPropName == "onsubmit" || aPropName == "onreset" || 
-      aPropName == "onchange" || aPropName == "onselect")
+   else if(aPropName.Equals("onsubmit") || aPropName.Equals("onreset") || 
+      aPropName.Equals("onchange") || aPropName.Equals("onselect"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {
@@ -3560,9 +3560,9 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
             }
          }
       }
-   else if(aPropName == "onload" || aPropName == "onunload" || 
-      aPropName == "onclose" || aPropName == "onabort" || 
-      aPropName == "onerror")
+   else if(aPropName.Equals("onload") || aPropName.Equals("onunload") || 
+      aPropName.Equals("onclose") || aPropName.Equals("onabort") || 
+      aPropName.Equals("onerror"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {
@@ -3577,7 +3577,7 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
             }
          }
       }
-   else if(aPropName == "onpaint")
+   else if(aPropName.Equals("onpaint"))
       {
       if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
          {

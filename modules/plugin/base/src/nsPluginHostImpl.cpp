@@ -1964,7 +1964,7 @@ public:
 	NS_METHOD NamedItem(const nsString& aName, nsIDOMMimeType** aReturn)
 	{
 		for (int index = mPluginTag.mVariants - 1; index >= 0; --index) {
-			if (aName == mPluginTag.mMimeTypeArray[index])
+			if (aName.Equals(mPluginTag.mMimeTypeArray[index]))
 				return Item(index, aReturn);
 		}
 		return NS_OK;
