@@ -425,6 +425,21 @@ PRUint32 nsDeviceContextMac :: ConvertPixel(nscolor aColor)
   return (newcolor);
 }
 
+nsresult nsDeviceContextMac :: LoadIconImage(PRInt32 aId, nsIImage*& aImage)
+{
+  return nsnull;
+}
+
+nsresult nsDeviceContextMac :: CheckFontExistence(const char * aFontName)
+{
+  return NS_OK;
+}
+
+nsresult nsDeviceContextMac :: CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  return nsnull;
+}
+
 void nsDeviceContextMac :: InstallColormap()
 {
 #if 0
