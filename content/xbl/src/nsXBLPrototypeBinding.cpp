@@ -1350,7 +1350,9 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
       // Now remove the inherits attribute from the element so that it doesn't
       // show up on clones of the element.  It is used
       // by the template only, and we don't need it anymore.
-      aElement->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::inherits, PR_FALSE);
+      // XXXdwh Don't do this for XUL elements, since it faults them into heavyweight
+      // elements. Should nuke from the prototype instead.
+      // aElement->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::inherits, PR_FALSE);
 
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
