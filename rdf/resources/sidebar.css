@@ -47,9 +47,10 @@ treecell {
  white-space: nowrap;
 } 
 
-treecell[selectedcell] {
- background-color: yellow;
- }
+treeitem[selected] {
+ background-color: #000080;
+ color: white;
+}
  
 treecell[sortActive="true"][sortDirection="ascending"] {
  background-color: green;
