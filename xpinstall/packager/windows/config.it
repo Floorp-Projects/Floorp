@@ -70,7 +70,7 @@ url=$ArchiveUrl$
 ;   Setup Type 1 - second radio button
 ;   Setup Type 2 - third radio button
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
-Default Setup Type=Setup Type 0
+Default Setup Type=Setup Type 1
 
 ; Default Font Size is 32
 ; Default Font Color is WHITE (of BLACK and GREEN)
@@ -152,7 +152,7 @@ Readme App=notepad.exe
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
 ;*** LOCALIZE ME BABY ***
-Description Short=B&ase
+Description Short=B&rowser only
 ;*** LOCALIZE ME BABY ***
 Description Long=Program will be installed with the minimal options.
 
@@ -164,7 +164,6 @@ C1=Component1
 C2=Component3
 C3=Component5
 C4=Component6
-C5=Component7
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -335,9 +334,9 @@ $InstallSizeArchive$:xpcom.xpi
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
-Description Short=Mozilla Seamonkey
+Description Short=Mozilla Navigator
 ;*** LOCALIZE ME BABY ***
-Description Long=Browser software for the internet
+Description Long=The Mozilla internet browser
 Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
@@ -351,7 +350,7 @@ Attributes=SELECTED|DISABLED
 [Component2]
 Description Short=Mail & News
 ;*** LOCALIZE ME BABY ***
-Description Long=Seamonkey Mail & News
+Description Long=Mozilla Mail & News
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
