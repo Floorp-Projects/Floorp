@@ -26,61 +26,53 @@
 
 */
 
-@import url(chrome://communicator/skin/);
+/* Hide twisty for files */
+.treecell-indent[type="FILE"] > .tree-cell-twisty 
+  {
+    list-style-image      : none;
+  }
 
-/* Hide the twisty when type != DIRECTORY (XXX is there a '!=' in CSS?) */
-treeitem[type="FILE"] > treerow > treecell > .twisty {
-  list-style-image: none;
-}
+.treecell-filename
+  {
+    list-style-image      : url("chrome://communicator/skin/directory/file-icon.gif");
+  }  
+  
+treeitem[selected="true"] > treerow > .treecell-filename
+  {
+    list-style-image      : url("chrome://communicator/skin/directory/file-icon-sel.gif");
+  }
+  
+treeitem[container="true"] > treerow > .treecell-filename
+  {
+    list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed.gif");
+  }
+treeitem[container="true"][selected="true"] > treerow > .treecell-filename
+  {
+    list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed-sel.gif");
+  }
 
-/* Show an animated icon when a directory is loading */
-treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .twisty {
-  list-style-image: url("resource:/res/rdf/loading.gif");
-}
-
-/* Show an animated icon when a symbolic link is loading */
-treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > treecell > .twisty {
-  list-style-image: url("resource:/res/rdf/loading.gif");
-}
-
-/* Make a filenames look like links */
-treeitem > treerow > treecell.filename {
-  color: #666699;
-  text-decoration: underline;
-}
-
-treeitem > treerow > treecell.filename:hover {
-  color: #333366;
-  text-decoration: underline;
-}
-
-treeitem > treerow > treecell.filename:active {
-  color: #990000;
-  text-decoration: underline;
-}
+treeitem[container="true"][open="true"] > treerow > .treecell-filename
+  {
+    list-style-image      : url("chrome://communicator/skin/directory/file-folder-open.gif");
+  }
+treeitem[container="true"][open="true"][selected="true"] > treerow > .treecell-filename
+  {
+    list-style-image      : url("chrome://communicator/skin/directory/file-folder-open-sel.gif");
+  }
+  
+  
+/* Show an animated icon when a directory/symlink is loading */
+treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > .treecell-filename > .tree-cell-twisty,
+treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-cell-twisty
+  {
+    list-style-image      : url("chrome://global/skin/loading.gif");
+  }
 
 /* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
-treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename {
-  color: inherit;
-  text-decoration: inherit;
-  font-style: italic;
-}
-
-treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename:hover {
-  color: inherit;
-  text-decoration: inherit;
-  font-style: italic;
-}
-
-treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename:active {
-  color: inherit;
-  text-decoration: inherit;
-  font-style: italic;
-}
-
-/* Override rule in xul.css that colors the selected row blue */
-treeitem[selected="true"] > treerow {
-  color: inherit;
-  background-color: inherit;
-}
+.treecell-filename[type="SYMBOLIC-LINK"] 
+  {
+    color                 : inherit;
+    text-decoration       : inherit;
+    font-style            : italic;
+  }
 

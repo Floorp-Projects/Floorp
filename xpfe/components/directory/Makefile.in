@@ -45,7 +45,15 @@ CHROME_CONTENT	= \
 		directory.js \
 		$(NULL)
 
-CHROME_SKIN	= directory.css
+CHROME_SKIN	= \
+		directory.css \
+		file-folder-closed.gif \
+		file-folder-closed-sel.gif \
+		file-folder-open.gif \
+		file-folder-open-sel.gif \
+		file-icon.gif \
+		file-icon-sel.gif \
+		$(NULL)
 
 EXPORT_RESOURCE_LOCALE	= ${srcdir}/locale/en-US/directory.dtd
 
