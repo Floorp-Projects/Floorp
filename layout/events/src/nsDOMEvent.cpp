@@ -346,6 +346,16 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
   return NS_OK;
 }
 
+NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
+{
+  if (mTarget != aTarget) {
+    NS_IF_RELEASE(mTarget);
+    NS_IF_ADDREF(aTarget);
+    mTarget = aTarget;
+  }
+  return NS_OK;
+}
+
 const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 {
   switch(aEventType) {
