@@ -119,7 +119,10 @@ nsDSURIContentListener::DoContent(const char* aContentType,
     }
 
     rv = mDocShell->CreateContentViewer(aContentType, request, aContentHandler);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE; // it's okay if we don't know how to handle the content   
+    if (NS_FAILED(rv)) {
+       // it's okay if we don't know how to handle the content   
+        return NS_OK;
+    }
 
     if(loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
         mDocShell->SetFocus();
