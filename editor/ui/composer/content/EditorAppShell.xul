@@ -498,15 +498,23 @@
     </menu>
   </menubar>
   
+  <broadcaster id="Editor:Document:Dirty" dirty="false"/>
+
   <broadcaster id="Editor:Style:IsBold" bold="false"/>
-  <broadcaster id="Editor:Style:IsItalic"/>
-  <broadcaster id="Editor:Style:IsUnderline"/>
+  <broadcaster id="Editor:Style:IsItalic" italic="false"/>
+  <broadcaster id="Editor:Style:IsUnderline" underline="false"/>
+  <broadcaster id="Editor:Paragraph:Format" format=""/>
+  <broadcaster id="Editor:Font:Face" font=""/>
+  <broadcaster id="Editor:Font:Size" size=""/>
 
     <toolbox id="EditorToolbars">
       <toolbar id="EditToolbar">
 	      <titledbutton src="&newEditorIcon.url;" align="bottom" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
 	      <titledbutton src="&openEditorIcon.url;" align="bottom" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
-	      <titledbutton id="saveButton" src="&saveIcon.url;" align="bottom" value="&saveCmd.label;" class="popup" onclick="EditorSave()"/>
+
+	      <titledbutton id="SaveButton" src="&saveIcon.url;" align="bottom" value="&saveCmd.label;" class="popup" onclick="EditorSave()">
+	        <observes element="Editor:Document:Dirty" attribute="dirty" onchange="onDirtyChange()"/>
+	      </titledbutton>
 <!-- Not supporting publishing (yet?) -->
 <!--      <titledbutton src="&publishIcon.url;" align="bottom" value="&publishToolbarCmd.label;" class="popup"/> -->
 	      <titledbutton src="&printIcon.url;" align="bottom" value="&printToolbarCmd.label;" class="popup"/>
@@ -521,16 +529,23 @@
 	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" align="bottom" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
 	  </toolbar>
       <toolbar id="FormatToolbar">
-		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft">
+          <observes element="Editor:Paragraph:Format" attribute="format" onchange="onParagraphFormatChange()"/>
+        </titledbutton>
 		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="left" popup="FontSizeMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
-        <titledbutton id="BoldButton" value="&formatToolbar.boldChar;" onclick="EditorApplyStyle('b')">
-		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-        </titledbutton>
-	      <titledbutton id="ItalicButton" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
-	      <titledbutton id="UnderlineButton" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
+
+		    <titledbutton id="boldButton" value="&formatToolbar.boldChar;" onclick="EditorToggleStyle('bold')">
+		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onStyleChange('bold')"/>
+		    </titledbutton>
+		    <titledbutton id="italicButton" value="&formatToolbar.italicChar;" onclick="EditorToggleStyle('italic')">
+		      <observes element="Editor:Style:IsItalic" attribute="italic" onchange="onStyleChange('italic')"/>
+		    </titledbutton>
+		    <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" onclick="EditorToggleStyle('underline')">
+		      <observes element="Editor:Style:IsUnderline" attribute="underline" onchange="onStyleChange('underline')"/>
+		    </titledbutton>
 <!--
         <titledbutton id="BoldButton" src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
 		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
