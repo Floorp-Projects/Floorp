@@ -2108,7 +2108,6 @@ function AttachFile()
       fp.appendFilters(nsIFilePicker.filterAll);
       if (fp.show() == nsIFilePicker.returnOK) {
         currentAttachment = fp.fileURL.spec;
-        //dump("nsIFilePicker - "+currentAttachment+"\n");
         SetLastAttachDirectory(fp.file)
       }
   }
@@ -2119,22 +2118,17 @@ function AttachFile()
   if (currentAttachment == "")
     return;
 
-  if (!(DuplicateFileCheck(currentAttachment)))
+  if (DuplicateFileCheck(currentAttachment))
   {
-    var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
-    attachment.url = currentAttachment;
-    AddAttachment(attachment);
-    gContentChanged = true;
+    dump("Error, attaching the same item twice\n");
   }
   else
   {
-    dump("###ERROR ADDING DUPLICATE FILE \n");
-    var errorTitle = sComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
-    var errorMsg = sComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
-    if (gPromptService)
-      gPromptService.alert(window, errorTitle, errorMsg);
-    else
-      window.alert(errorMsg);
+    var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
+                     .createInstance(Components.interfaces.nsIMsgAttachment);
+    attachment.url = currentAttachment;
+    AddAttachment(attachment);
+    gContentChanged = true;
   }
 }
 
@@ -2156,7 +2150,7 @@ function AddAttachment(attachment)
     }
     catch(e) {cell.setAttribute("tooltiptext", attachment.url);}
     cell.setAttribute("class", "treecell-iconic");
-    cell.setAttribute('src', "moz-icon:" + attachment.url);
+    cell.setAttribute("src", "moz-icon:" + attachment.url);
     row.appendChild(cell);
     item.appendChild(row);
     bucketBody.appendChild(item);
@@ -2534,40 +2528,56 @@ function AttachmentBucketClicked(event)
 }
 
 var attachmentBucketObserver = {
+
+  canHandleMultipleItems: true,
+
   onDrop: function (aEvent, aData, aDragSession)
     {
-      var prettyName;
-      var rawData = aData.data;
-      switch (aData.flavour.contentType) {
-      case "text/x-moz-url":
-      case "text/x-moz-message-or-folder":
-        var separator = rawData.indexOf("\n");
-        if (separator != -1) {
-          prettyName = rawData.substr(separator+1);
-          rawData = rawData.substr(0,separator);
-        }
-        break;
-      case "application/x-moz-file":
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-            .getService(Components.interfaces.nsIIOService);
-        rawData = ioService.getURLSpecFromFile(aData.data);
-        break;
-      }
-      if (!(DuplicateFileCheck(rawData)))
+      var dataList = aData.dataList;
+      var dataListLength = dataList.length;
+      var errorTitle;
+      var attachment;
+      var errorMsg;
+
+      for (var i = 0; i < dataListLength; i++) 
       {
-        var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
-        attachment.url = rawData;
-        attachment.name = prettyName;
-        AddAttachment(attachment);
-        gContentChanged = true;
-      }
-      else {
-        var errorTitle = sComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
-        var errorMsg = sComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
-        if (gPromptService)
-          gPromptService.alert(window, errorTitle, errorMsg);
-        else
-          window.alert(errorMsg);
+        var item = dataList[i].first;
+        var prettyName;
+        var rawData = item.data;
+        
+        if (item.flavour.contentType == "text/x-moz-url" ||
+            item.flavour.contentType == "text/x-moz-message-or-folder" ||
+            item.flavour.contentType == "application/x-moz-file")
+        {
+          if (item.flavour.contentType == "application/x-moz-file")
+          {
+            var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+            rawData = ioService.getURLSpecFromFile(aData.data);
+          }
+          else
+          {
+            var separator = rawData.indexOf("\n");
+            if (separator != -1) 
+            {
+              prettyName = rawData.substr(separator+1);
+              rawData = rawData.substr(0,separator);
+            }
+          }
+
+          if (DuplicateFileCheck(rawData)) 
+          {
+            dump("Error, attaching the same item twice\n");
+          }
+          else 
+          {
+            attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
+                         .createInstance(Components.interfaces.nsIMsgAttachment);
+            attachment.url = rawData;
+            attachment.name = prettyName;
+            AddAttachment(attachment);
+          }
+        }
       }
     },
 
