@@ -523,6 +523,19 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // rect to be drawn. This is much faster than ReResolvingStyle
   // Bug 32920
   Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+
+  // Make sure the content area gets updated for where the dropdown was
+  // This is only needed for embedding, the focus may go to 
+  // the chrome that is not part of the Gecko system (Bug 83493)
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIViewManager> vm;
+    presShell->GetViewManager(getter_AddRefs(vm));
+    if (vm) {
+      vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    }
+  }
 }
 
 void
