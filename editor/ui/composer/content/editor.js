@@ -1929,39 +1929,6 @@ function AddAttrToElem(dom, attr_name, attr_value, elem)
   }
 }
 
-function UpdateSaveButton(modified)
-{
-  var saveButton = document.getElementById("saveButton");
-   if (saveButton)
-  {
-    if (modified) {
-      saveButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveMod.gif");
-    } else {
-      saveButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveFile.gif");
-    }
-  }
-}
-
-function EditorReflectDocState()
-{
-  var docState = window.editorShell.documentStatus;
-  var stateString;
-
-  if (docState == 0) {
-    stateString = "unmodified";
-  } else {
-    stateString = "modified";
-  }
-
-  var oldModified = documentModified;
-  documentModified = (window.editorShell.documentStatus != 0);
-
-  if (oldModified != documentModified)
-    UpdateSaveButton(documentModified);
-
-  return true;
-}
-
 // --------------------------- Logging stuff ---------------------------
 
 function EditorGetNodeFromOffsets(offsets)
