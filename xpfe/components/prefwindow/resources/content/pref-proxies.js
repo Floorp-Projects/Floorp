@@ -1,65 +1,118 @@
+var http;
+var httpPort;
+var noProxy;
+var ssl;
+var sslPort;
+var ftp;
+var ftpPort;
+var gopher;
+var gopherPort;
+var socks;
+var socksPort;
+var socksVersion;
+var socksRemoteDNS;
+var advancedButton;
+var autoURL;
+var autoReload;
+var radiogroup;
+var shareSettings;
+
 function Startup()
 {
+  initElementVars();
+
+  // Calculate a sane default for network.proxy.share_proxy_settings.
+  if (shareSettings.getAttribute("value") == "")
+    shareSettings.setAttribute("value", defaultForShareSettingsPref());
+
   DoEnabling();
+  
+  // Use "" instead of "0" as the default for the port number.
+  // "0" doesn't make sense as a port number.
+  if (httpPort.value == "0")
+    httpPort.setAttribute("value", "");
+
+  // The pref value 3 for network.proxy.type is unused to maintain
+  // backwards compatibility. Treat 3 equally to 0. See bug 115720.
+  if (radiogroup.value == 3)
+    radiogroup.selectedIndex = 0;
+}
+
+function initElementVars()
+{
+  http = document.getElementById("networkProxyHTTP");
+  httpPort = document.getElementById("networkProxyHTTP_Port");
+  ssl = document.getElementById("networkProxySSL");
+  sslPort = document.getElementById("networkProxySSL_Port");
+  ftp = document.getElementById("networkProxyFTP");
+  ftpPort = document.getElementById("networkProxyFTP_Port");
+  gopher = document.getElementById("networkProxyGopher");
+  gopherPort = document.getElementById("networkProxyGopher_Port");
+  socks = document.getElementById("networkProxySOCKS");
+  socksPort = document.getElementById("networkProxySOCKS_Port");
+  socksVersion = document.getElementById("networkProxySOCKSVersion");
+  socksRemoteDNS = document.getElementById("networkProxySOCKSRemoteDNS");
+  noProxy = document.getElementById("networkProxyNone");
+  advancedButton = document.getElementById("advancedButton");
+  autoURL = document.getElementById("networkProxyAutoconfigURL");
+  autoReload = document.getElementById("autoReload");
+  radiogroup = document.getElementById("networkProxyType");
+  shareSettings = document.getElementById("networkProxyShareSettings");
+}
+
+// Returns true if all protocol specific proxies and all their
+// ports are set to the same value, false otherwise.
+function defaultForShareSettingsPref()
+{
+  return http.value == ftp.getAttribute("value") &&
+         http.value == gopher.getAttribute("value") &&
+         http.value == ssl.getAttribute("value") &&
+         httpPort.value == ftpPort.getAttribute("value") &&
+         httpPort.value == sslPort.getAttribute("value") &&
+         httpPort.value == gopherPort.getAttribute("value");
 }
 
 function DoEnabling()
-{
-  var i;
-  var ftp = document.getElementById("networkProxyFTP");
-  var ftpPort = document.getElementById("networkProxyFTP_Port");
-  var gopher = document.getElementById("networkProxyGopher");
-  var gopherPort = document.getElementById("networkProxyGopher_Port");
-  var http = document.getElementById("networkProxyHTTP");
-  var httpPort = document.getElementById("networkProxyHTTP_Port");
-  var socks = document.getElementById("networkProxySOCKS");
-  var socksPort = document.getElementById("networkProxySOCKS_Port");
-  var socksVersion = document.getElementById("networkProxySOCKSVersion");
-  var socksVersion4 = document.getElementById("networkProxySOCKSVersion4");
-  var socksVersion5 = document.getElementById("networkProxySOCKSVersion5");
-  var ssl = document.getElementById("networkProxySSL");
-  var sslPort = document.getElementById("networkProxySSL_Port");
-  var noProxy = document.getElementById("networkProxyNone");
-  var autoURL = document.getElementById("networkProxyAutoconfigURL");
-  var autoReload = document.getElementById("autoReload");
-  var copyButton = document.getElementById("reuseProxy");
-
+{  
   // convenience arrays
-  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, socks, socksPort, socksVersion, socksVersion4, socksVersion5, ssl, sslPort, noProxy, copyButton];
+  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, socks,
+                socksPort, socksVersion, socksRemoteDNS, ssl, sslPort, noProxy,
+                advancedButton, shareSettings];
   var auto = [autoURL, autoReload];
 
-  // radio buttons
-  var radiogroup = document.getElementById("networkProxyType");
-
-  var prefstring;
-  switch ( radiogroup.value ) {
+  switch (radiogroup.value)
+  {
     case "0":
-      for (i = 0; i < manual.length; i++)
-        manual[i].setAttribute( "disabled", "true" );
-      for (i = 0; i < auto.length; i++)
-        auto[i].setAttribute( "disabled", "true" );
+    case "4":
+      disable(manual);
+      disable(auto);
       break;
     case "1":
-      for (i = 0; i < auto.length; i++)
-        auto[i].setAttribute( "disabled", "true" );
+      disable(auto);
       if (!radiogroup.disabled)
-	for (i = 0; i < manual.length; i++) {
-	  prefstring = manual[i].getAttribute( "prefstring" );
-	  if (!parent.hPrefWindow.getPrefIsLocked(prefstring))
-	    manual[i].removeAttribute( "disabled" );
-	}
+        enableUnlockedElements(manual);
       break;
     case "2":
     default:
-      for (i = 0; i < manual.length; i++)
-        manual[i].setAttribute( "disabled", "true" );
+      disable(manual);
       if (!radiogroup.disabled)
-        for (i = 0; i < auto.length; i++) {
-	  prefstring = manual[i].getAttribute( "prefstring" );
-	  if (!parent.hPrefWindow.getPrefIsLocked(prefstring))
-            auto[i].removeAttribute( "disabled" );
-	}
+        enableUnlockedElements(auto);
       break;
+  }
+}
+
+function disable(elements)
+{
+  for (var i = 0; i < elements.length; i++)
+    elements[i].setAttribute("disabled", "true");
+}
+
+function enableUnlockedElements(elements)
+{
+  for (var i = 0; i < elements.length; i++) {
+    var prefstring = elements[i].getAttribute("prefstring");
+    if (!parent.hPrefWindow.getPrefIsLocked(prefstring))
+      elements[i].removeAttribute("disabled");
   }
 }
 
@@ -67,42 +120,39 @@ const nsIProtocolProxyService = Components.interfaces.nsIProtocolProxyService;
 const kPROTPROX_CID = '{e9b301c0-e0e4-11D3-a1a8-0050041caf44}';
 
 function ReloadPAC() {
-  var autoURL = document.getElementById("networkProxyAutoconfigURL");
   var pps = Components.classesByID[kPROTPROX_CID]
                        .getService(nsIProtocolProxyService);
   pps.configureFromPAC(autoURL.value);
 }
 
-function DoProxyCopy()
-{
-  var http = document.getElementById("networkProxyHTTP");
-  var httpPort = document.getElementById("networkProxyHTTP_Port");
-  var httpValue = http.value;
-  var httpPortValue = httpPort.value;
-  if (httpValue && httpPortValue && parseInt(httpPortValue) > 0) {
-    var ftp = document.getElementById("networkProxyFTP");
-    var gopher = document.getElementById("networkProxyGopher");
-    var ssl = document.getElementById("networkProxySSL");
-    var ftpPort = document.getElementById("networkProxyFTP_Port");
-    var gopherPort = document.getElementById("networkProxyGopher_Port");
-    var sslPort = document.getElementById("networkProxySSL_Port");
-    ftp.value = httpValue;
-    gopher.value = httpValue;
-    ssl.value = httpValue;
-    ftpPort.value = httpPortValue;
-    gopherPort.value = httpPortValue;
-    sslPort.value = httpPortValue;
-  }
-}
-
 function FixProxyURL()
 {
   const nsIURIFixup = Components.interfaces.nsIURIFixup;
-  var proxyURL = document.getElementById("networkProxyAutoconfigURL");
   try {
     var URIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                              .getService(nsIURIFixup);
-    proxyURL.value = URIFixup.createFixupURI(proxyURL.value,
-                                             nsIURIFixup.FIXUP_FLAG_NONE).spec;
+    autoURL.value = URIFixup.createFixupURI(autoURL.value,
+                                            nsIURIFixup.FIXUP_FLAG_NONE).spec;
   } catch (e) {}
+}
+
+function openAdvancedDialog()
+{
+  openDialog("chrome://communicator/content/pref/pref-proxies-advanced.xul",
+             "AdvancedProxyPreferences",
+             "chrome,titlebar,centerscreen,resizable=no,modal");
+}
+
+function DoProxyCopy()
+{
+  if (shareSettings.getAttribute("value") != "true")
+    return;
+
+  ftp.setAttribute("value", http.value);
+  ssl.setAttribute("value", http.value);
+  gopher.setAttribute("value", http.value);
+
+  ftpPort.setAttribute("value", httpPort.value);
+  sslPort.setAttribute("value", httpPort.value);
+  gopherPort.setAttribute("value", httpPort.value);
 }

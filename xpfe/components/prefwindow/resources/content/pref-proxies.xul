@@ -21,6 +21,7 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+    Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,12 +45,12 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["networkProxyType",
+    var _elementIDs = ["networkProxyType", "networkProxyShareSettings",
                        "networkProxyFTP", "networkProxyFTP_Port",
                        "networkProxyGopher", "networkProxyGopher_Port",
                        "networkProxyHTTP", "networkProxyHTTP_Port", 
                        "networkProxySOCKS", "networkProxySOCKS_Port",
-                       "networkProxySOCKSVersion",
+                       "networkProxySOCKSVersion", "networkProxySOCKSRemoteDNS",
                        "networkProxySSL", "networkProxySSL_Port", 
                        "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
@@ -58,14 +59,40 @@
   <stringbundle id="bundle_prefutilities"
                 src="chrome://pref/locale/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
-  
-  <groupbox flex="1">
-    <caption label="&proxyTitle.label;"/>
 
+  <description>&proxy.description;</description>  
+  <groupbox>
+    <caption label="&proxyTitle.label;"/>
     <radiogroup id="networkProxyType" prefstring="network.proxy.type" align="stretch">
-        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-      <grid class="indent" flex="1">
+      <vbox align="left">
+        <radio value="0" label="&directTypeRadio.label;"
+               accesskey="&directTypeRadio.accesskey;"
+               oncommand="DoEnabling();"/>
+
+        <radio value="4" label="&wpadTypeRadio.label;"
+               accesskey="&wpadTypeRadio.accesskey;"
+               oncommand="DoEnabling();"/>
+
+        <radio value="2" label="&autoTypeRadio.label;"
+               accesskey="&autoTypeRadio.accesskey;"
+               oncommand="DoEnabling();"/>
+      </vbox>
+
+      <hbox class="indent" flex="1" align="center">
+        <textbox id="networkProxyAutoconfigURL" flex="1" preftype="string" class="uri-element"
+                 prefstring="network.proxy.autoconfig_url" onchange="FixProxyURL();"/>
+        <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
+                oncommand="ReloadPAC();"
+                prefstring="pref.advanced.proxies.disable_button.reload"/>
+      </hbox>
+
+      <vbox align="left">
+        <radio value="1" label="&manualTypeRadio.label;"
+               accesskey="&manualTypeRadio.accesskey;"
+               oncommand="DoEnabling();"/>
+      </vbox>
+
+      <grid class="indent">
         <columns>
           <column/>
           <column flex="1"/>
@@ -78,74 +105,14 @@
             </hbox>
             <hbox align="center">
               <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
-                       flex="1" class="uri-element"/>
+                       flex="1" class="uri-element" onchange="DoProxyCopy();"/>
               <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
               <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
-                       size="5"/>
+                       size="5" onchange="DoProxyCopy();"/>
+              <button id="advancedButton" label="&advanced.label;"
+                      accesskey="&advanced.accesskey;"
+                      oncommand="openAdvancedDialog();"/>
             </hbox>
-          </row>
-          <row>
-            <spacer/>
-            <hbox align="center">
-              <button id="reuseProxy" label="&reuseProxy.label;" accesskey="&reuseProxy.accesskey;" oncommand="DoProxyCopy();" />
-            </hbox>
-          </row>
-          <row align="center">
-            <hbox align="center" pack="end">
-              <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
-            </hbox>
-            <hbox align="center">
-              <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"
-                       flex="1" class="uri-element"/>
-              <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
-              <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
-                       size="5"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <hbox align="center" pack="end">
-              <label value="&ftp.label;" accesskey="&ftp.accesskey;" control="networkProxyFTP"/>
-            </hbox>
-            <hbox align="center">
-              <textbox id="networkProxyFTP" preftype="string" prefstring="network.proxy.ftp"
-                       flex="1" class="uri-element"/>
-              <label value="&port.label;" accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port"/>
-              <textbox id="networkProxyFTP_Port" preftype="int" prefstring="network.proxy.ftp_port"
-                       size="5"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <hbox align="center" pack="end">
-              <label value="&gopher.label;" accesskey="&gopher.accesskey;" control="networkProxyGopher"/>
-            </hbox>
-            <hbox align="center">
-              <textbox id="networkProxyGopher" preftype="string" prefstring="network.proxy.gopher"
-                       flex="1" class="uri-element"/>
-              <!-- gopher port doesn't have an accesskey because the window needs a redesign - bbaetz -->
-              <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="networkProxyGopher_Port"/>
-              <textbox id="networkProxyGopher_Port" preftype="int" prefstring="network.proxy.gopher_port"
-                         prefattribute="value" size="5"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <hbox align="center" pack="end">
-              <label value="&socks.label;" accesskey="&socks.accesskey;" control="networkProxySOCKS"/>
-            </hbox>
-            <hbox align="center">
-              <textbox id="networkProxySOCKS" preftype="string" prefstring="network.proxy.socks"
-                       flex="1" class="uri-element"/>
-            <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
-              <textbox id="networkProxySOCKS_Port" preftype="int" prefstring="network.proxy.socks_port"
-                       size="5"/>
-            </hbox>
-          </row>
-          <row>
-            <spacer/>
-            <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
-                        prefstring="network.proxy.socks_version">
-                <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
-                <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
-            </radiogroup>
           </row>
 
           <row align="center"> 
@@ -160,16 +127,35 @@
           </row>
         </rows>
       </grid>
-      <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-      <hbox class="indent" flex="1" align="center">
-        <textbox id="networkProxyAutoconfigURL" flex="1" preftype="string" class="uri-element"
-                 prefstring="network.proxy.autoconfig_url" onchange="FixProxyURL();"/>
-        <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
-                oncommand="ReloadPAC();"
-                prefstring="pref.advanced.proxies.disable_button.reload"/>
-      </hbox>
     </radiogroup>
-
   </groupbox>
-</page>
 
+  <!-- Data elements for data transfer to and from the "Advanced" dialog. -->
+  <data id="networkProxySSL" prefattribute="value"
+        preftype="string" prefstring="network.proxy.ssl"/>
+  <data id="networkProxySSL_Port" prefattribute="value"
+        preftype="int" prefstring="network.proxy.ssl_port"/>
+
+  <data id="networkProxyFTP" prefattribute="value"
+        preftype="string" prefstring="network.proxy.ftp"/>
+  <data id="networkProxyFTP_Port" prefattribute="value"
+        preftype="int" prefstring="network.proxy.ftp_port"/>
+
+  <data id="networkProxyGopher" prefattribute="value"
+        preftype="string" prefstring="network.proxy.gopher"/>
+  <data id="networkProxyGopher_Port" prefattribute="value"
+        preftype="int" prefstring="network.proxy.gopher_port"/>
+
+  <data id="networkProxySOCKS" prefattribute="value"
+        preftype="string" prefstring="network.proxy.socks"/>
+  <data id="networkProxySOCKS_Port" prefattribute="value"
+        preftype="int" prefstring="network.proxy.socks_port"/>
+  <data id="networkProxySOCKSVersion" prefattribute="value"
+        preftype="int" prefstring="network.proxy.socks_version"/>
+  <data id="networkProxySOCKSRemoteDNS" prefattribute="value"
+        preftype="bool" prefstring="network.proxy.socks_remote_dns"/>
+
+  <data id="networkProxyShareSettings" prefattribute="value"
+        preftype="bool" prefdefval=""
+        prefstring="network.proxy.share_proxy_settings"/>
+</page>

@@ -3,39 +3,23 @@
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
 <!ENTITY  lHeader                       "Proxies">
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
+<!ENTITY  proxy.description             "A Proxy is a network service that can filter and speed up your Internet connection.">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
-<!ENTITY  directTypeRadio.accesskey     "d">
-<!ENTITY  manualTypeRadio.label         "Manual proxy configuration">
-<!ENTITY  manualTypeRadio.accesskey     "m">
+<!ENTITY  directTypeRadio.accesskey     "D">
+<!ENTITY  manualTypeRadio.label         "Manual proxy configuration:">
+<!ENTITY  manualTypeRadio.accesskey     "M">
+<!ENTITY  wpadTypeRadio.label           "Automatically discover the proxy configuration">
+<!ENTITY  wpadTypeRadio.accesskey       "A">
 <!ENTITY  autoTypeRadio.label           "Automatic proxy configuration URL:">
-<!ENTITY  autoTypeRadio.accesskey       "a">
-<!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
-<!ENTITY  configAutoconfigText.accesskey "u">
+<!ENTITY  autoTypeRadio.accesskey       "c">
 <!ENTITY  reload.label                  "Reload">
-<!ENTITY  reload.accesskey              "l">
-<!ENTITY  ftp.label                     "FTP Proxy:">
-<!ENTITY  ftp.accesskey                 "f">
-<!ENTITY  gopher.label                  "Gopher Proxy:">
-<!ENTITY  gopher.accesskey              "g">
-<!ENTITY  http.label                    "HTTP Proxy:">
-<!ENTITY  http.accesskey                "x">
-<!ENTITY  reuseProxy.label              "Use these settings for SSL, FTP and Gopher">
-<!ENTITY  reuseProxy.accesskey          "e">
-<!ENTITY  ssl.label                     "SSL Proxy:">
-<!ENTITY  ssl.accesskey                 "s">
-<!ENTITY  socks.label                   "SOCKS Host:">
-<!ENTITY  socks.accesskey               "c">
-<!ENTITY  socks4.label                  "SOCKS v4">
-<!ENTITY  socks4.accesskey              "k">
-<!ENTITY  socks5.label                  "SOCKS v5">
-<!ENTITY  socks5.accesskey              "v">
+<!ENTITY  reload.accesskey              "R">
+<!ENTITY  http.label                    "Proxy:">
+<!ENTITY  http.accesskey                "P">
 <!ENTITY  port.label                    "Port:">
-<!ENTITY  HTTPport.accesskey            "p">
-<!ENTITY  SSLport.accesskey             "o">
-<!ENTITY  FTPport.accesskey             "r">
-<!-- No accesskey for gopher (':' doesn't go well) - mpt's going to redesign the window -->
-<!ENTITY  gopherPort.accesskey          "">
-<!ENTITY  SOCKSport.accesskey           "t">
+<!ENTITY  HTTPport.accesskey            "o">
+<!ENTITY  advanced.label                "Advanced...">
+<!ENTITY  advanced.accesskey            "v">
 <!ENTITY  noproxy.label                 "No Proxy for:">
-<!ENTITY  noproxy.accesskey             "n">
-<!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz">
+<!ENTITY  noproxy.accesskey             "N">
+<!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz, 192.168.1.0/24">
