@@ -110,8 +110,7 @@ void CALLBACK FireTimeout(HWND aWindow,
   if (eventQueueEmpty) {
     // while event queue is empty, fire off waiting timers
     while (sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
-           !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, 0, WM_TIMER-1, PM_NOREMOVE) ||
-             WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, WM_TIMER+1, WM_USER-1, PM_NOREMOVE)) ) {
+           !WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, WM_TIMER+1, WM_TIMER-1, PM_NOREMOVE) ) {
 
       sTimerQueue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
     }
@@ -131,6 +130,7 @@ nsTimer::nsTimer() : nsITimer()
   mClosure = nsnull;
   mTimerID = 0;
   mTimerRunning = PR_FALSE;
+  mDeferred = PR_FALSE;
 
   static int cachedService = 0;
   if (cachedService == 0) {
@@ -271,6 +271,7 @@ void nsTimer::StartOSTimer(PRUint32 aDelay)
            timerHWND = sGlue->Get();
            heartbeatTimer = WinStartTimer(NULLHANDLE, timerHWND, HEARTBEATTIMERID, HEARTBEATTIMEOUT);
         }
+        SetDeferred(PR_TRUE); // Defer this timer to the next heartbeat cycle
         sTimerQueue->AddReadyQueue(this);
         return;
      }
