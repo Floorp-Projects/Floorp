@@ -112,7 +112,7 @@ public:
   NS_IMETHOD GetDOMWindow(nsIDOMWindow** aDOMWindow);
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
+  nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,

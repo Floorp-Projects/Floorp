@@ -29,7 +29,7 @@
 #include "nsISplashScreen.h"
 %}
 
-interface nsIWebShellWindow;
+interface nsIXULWindow;
 interface nsIURI;
 interface nsIXULWindowCallbacks;
 interface nsICmdLineService;
@@ -97,43 +97,15 @@ interface nsIAppShellService : nsISupports
    * @param aInitialHeight like aInitialWidth, but subtly different.
    * @param aResult the newly created window is returned here.
    */
-  void CreateTopLevelWindow(in nsIWebShellWindow aParent,
+  void CreateTopLevelWindow(in nsIXULWindow aParent,
                             in nsIURI aUrl, 
                             in boolean aShowWindow, 
                             in boolean aLoadDefaultPage,
                             in PRUint32 aChromeMask,
                             in nsIXULWindowCallbacks aCallbacks,
                             in long aInitialWidth, in long aInitialHeight,
-                            out nsIWebShellWindow aResult);
+                            out nsIXULWindow aResult);
 
-  /**
-   * Run a window modally.
-   * @param aWindow the window to run modally.  If null or pointing to null,
-   *                a new window is created.  If aWindow != null, the window
-   *                is returned from this method, but callers should use it
-   *                carefully: it's been closed, and is therefore partially
-   *                deconstructed.  Note that all other parameters are ignored
-   *                if an already created window is passed in.
-   * @param aParent the parent window.  Can be null.
-   * @param aUrl the contents of the window.
-   * @param aChromeMask chrome flags affecting the kind of OS border
-   *                    given to the window. see nsIBrowserWindow for
-   *                    bit/flag definitions.
-   * @param aCallbacks interface providing C++ hooks for window initialization
-   *                   before the window is made visible.  Deprecated.
-   * @param aInitialWidth width, in pixels, of the window.  Width of window
-   *                      at creation.  Can be overridden by the "width"
-   *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
-   *                      the window to wrap to its contents.
-   * @param aInitialHeight like aInitialWidth.
-   */
-  void RunModalDialog(      inout nsIWebShellWindow aWindow,
-                            in nsIWebShellWindow aParent, 
-                            in nsIURI aUrl, 
-                            in PRUint32 aChromeMask,
-                            in nsIXULWindowCallbacks aCallbacks,
-                            in long aInitialWidth, in long aInitialHeight);
-                         
   // Apply Initialize function  to each app shell component.
   void EnumerateAndInitializeComponents();
 
@@ -141,7 +113,7 @@ interface nsIAppShellService : nsISupports
    * Close a window.
    * @param aWindow a window.
    */
-  void CloseTopLevelWindow(in nsIWebShellWindow aWindow);
+  void CloseTopLevelWindow(in nsIXULWindow aWindow);
 
   [noscript]
   void CreateHiddenWindow();
@@ -152,7 +124,7 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  void GetHiddenWindow(out nsIWebShellWindow aResult);
+  void GetHiddenWindow(out nsIXULWindow aResult);
 
   /**
    * Return the (singleton) application hidden window as an nsIDOMWindow,
@@ -171,13 +143,13 @@ interface nsIAppShellService : nsISupports
    * knows it can't quit until it's out of registered windows.
    * @param aWindow yes
    */
-  void RegisterTopLevelWindow(in nsIWebShellWindow aWindow);
+  void RegisterTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
    * Remove a window from the application's window registry.
    * @param aWindow you see the pattern
    */
-  void UnregisterTopLevelWindow(in nsIWebShellWindow aWindow);
+  void UnregisterTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
    * Remove the splash screen (if visible).  This need be called

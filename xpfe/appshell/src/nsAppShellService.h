@@ -29,6 +29,10 @@
 #include "nsIAppShell.h"
 #include "plevent.h"
 
+//Interfaces Needed
+#include "nsIXULWindow.h"
+#include "nsIWindowMediator.h"
+
 class nsAppShellService : public nsIAppShellService,
                           public nsIObserver,
                           public nsSupportsWeakReference
@@ -44,13 +48,13 @@ protected:
   virtual ~nsAppShellService();
 
   void RegisterObserver(PRBool aRegister);
-  NS_IMETHOD JustCreateTopWindow(nsIWebShellWindow *aParent,
+  NS_IMETHOD JustCreateTopWindow(nsIXULWindow *aParent,
                                  nsIURI *aUrl, 
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  nsIXULWindowCallbacks *aCallbacks,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 nsIWebShellWindow **aResult);
+                                 nsIXULWindow **aResult);
   void InitializeComponent( const nsCID &aComponentCID );
   void ShutdownComponent( const nsCID &aComponentCID );
   typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
@@ -59,8 +63,8 @@ protected:
   nsIAppShell* mAppShell;
   nsISupportsArray* mWindowList;
   nsICmdLineService* mCmdLineService;
-  nsIWindowMediator* mWindowMediator;
-  nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
+  nsCOMPtr<nsIWindowMediator> mWindowMediator;
+  nsCOMPtr<nsIXULWindow>      mHiddenWindow;
   PRBool mDeleteCalled;
   nsISplashScreen *mSplashScreen;
 

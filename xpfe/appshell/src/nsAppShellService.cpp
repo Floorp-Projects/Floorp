@@ -41,8 +41,6 @@
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
-#include "nsIWindowMediator.h"
-
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
@@ -97,10 +95,14 @@ nsAppShellService::~nsAppShellService()
   NS_IF_RELEASE(mWindowList);
   NS_IF_RELEASE(mCmdLineService);
   NS_IF_RELEASE(mSplashScreen);
-  if (mHiddenWindow)
-    mHiddenWindow->Close(); // merely releasing the ref isn't enough!
-  if (mWindowMediator)
-    nsServiceManager::ReleaseService(kWindowMediatorCID, mWindowMediator);
+  nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+  if(hiddenWin)
+    hiddenWin->Close();
+  
+  hiddenWin = nsnull;
+  mHiddenWindow = nsnull;
+
+  mWindowMediator = nsnull;
   /* Note we don't unregister with the observer service
      (RegisterObserver(PR_FALSE)) because, being refcounted, we can't have
      reached our own destructor until after the ObserverService has shut down
@@ -189,8 +191,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
   RegisterObserver(PR_TRUE);
  
 // enable window mediation
-  rv = nsServiceManager::GetService(kWindowMediatorCID, NS_GET_IID(nsIWindowMediator),
-                                   (nsISupports**) &mWindowMediator);
+  mWindowMediator = do_GetService(kWindowMediatorCID);
 
 //  CreateHiddenWindow();	// rjc: now require this to be explicitly called
 
@@ -209,14 +210,14 @@ nsAppShellService::CreateHiddenWindow()
 #if XP_MAC
   rv = NS_NewURI(&url, "chrome://global/content/hiddenWindow.xul");
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWebShellWindow> newWindow;
+    nsCOMPtr<nsIXULWindow> newWindow;
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         0, nsnull, 0, 0,
                         getter_AddRefs(newWindow));
 #else
   rv = NS_NewURI(&url, "about:blank");
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWebShellWindow> newWindow;
+    nsCOMPtr<nsIXULWindow> newWindow;
     	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         NS_CHROME_ALL_CHROME, nsnull, 100, 100,
                         getter_AddRefs(newWindow));
@@ -412,10 +413,9 @@ nsAppShellService::Quit()
     mShuttingDown = PR_TRUE;
 
     // Enumerate through each open window and close it
-    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    if (mWindowMediator) {
       nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-      rv = windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+      rv = mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
 
       if (NS_SUCCEEDED(rv)) {
         PRBool more;
@@ -513,13 +513,13 @@ nsAppShellService::Shutdown(void)
  * Create a new top level window and display the given URL within it...
  */
 NS_IMETHODIMP
-nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
+nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
                                   nsIURI *aUrl, 
                                   PRBool aShowWindow, PRBool aLoadDefaultPage,
                                   PRUint32 aChromeMask,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                  nsIWebShellWindow **aResult)
+                                  nsIXULWindow **aResult)
 
 {
   nsresult rv;
@@ -541,13 +541,13 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
  * Just do the window-making part of CreateTopLevelWindow
  */
 NS_IMETHODIMP
-nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
+nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                  nsIURI *aUrl, 
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  nsIXULWindowCallbacks *aCallbacks,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 nsIWebShellWindow **aResult)
+                                 nsIXULWindow **aResult)
 {
   nsresult rv;
   nsWebShellWindow* window;
@@ -599,7 +599,7 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
     if (NS_SUCCEEDED(rv)) {
 
       // this does the AddRef of the return value
-      rv = window->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void **) aResult);
+      rv = CallQueryInterface(NS_STATIC_CAST(nsIWebShellWindow*, window), aResult);
 #if 0
       // If intrinsically sized, don't show until we have the size figured out
       // (6 Dec 99: this is causing new windows opened from anchor links to
@@ -618,21 +618,21 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
 
 
 NS_IMETHODIMP
-nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
+nsAppShellService::CloseTopLevelWindow(nsIXULWindow* aWindow)
 {
-  return aWindow->Close();
+   nsCOMPtr<nsIWebShellWindow> webShellWin(do_QueryInterface(aWindow));
+   NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
+   return webShellWin->Close();
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenWindow(nsIWebShellWindow **aWindow)
+nsAppShellService::GetHiddenWindow(nsIXULWindow **aWindow)
 {
-  nsIWebShellWindow *rv;
+  NS_ENSURE_ARG_POINTER(aWindow);
 
-  NS_ASSERTION(aWindow, "null param to GetHiddenWindow");
-  rv = mHiddenWindow;
-  NS_IF_ADDREF(rv);
-  *aWindow = rv;
-  return rv ? NS_OK : NS_ERROR_FAILURE;
+  *aWindow = mHiddenWindow;
+  NS_IF_ADDREF(*aWindow);
+  return *aWindow ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -647,16 +647,14 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
         if ( mHiddenWindow ) {
             // Convert hidden window to nsIDOMWindow and extract its JSContext.
             do {
-                // 1. Get webshell for hidden window.
-                nsCOMPtr<nsIWebShell> webShell;
-                rv = mHiddenWindow->GetWebShell( *getter_AddRefs( webShell ) );
+                // 1. Get doc for hidden window.
+                nsCOMPtr<nsIDocShell> docShell;
+                rv = mHiddenWindow->GetDocShell(getter_AddRefs(docShell));
                 if (NS_FAILED(rv)) break;
 
                 // 2. Convert that to an nsIDOMWindow.
-                nsCOMPtr<nsIDOMWindow> hiddenDOMWindow;
-                rv = mHiddenWindow->ConvertWebShellToDOMWindow( webShell,
-                                                                getter_AddRefs( hiddenDOMWindow ) );
-                if (NS_FAILED(rv)) break;
+                nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(do_GetInterface(docShell));
+                if(!hiddenDOMWindow) break;
 
                 // 3. Get script global object for the window.
                 nsCOMPtr<nsIScriptGlobalObject> sgo;
@@ -686,107 +684,24 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
     return rv;
 }
 
-/* Create a Window, run it modally, and destroy it.  To make initial control
-   settings or get information out of the dialog before dismissal, use
-   event handlers.  This wrapper method is desirable because of the
-   complications creeping in to the modal window story: there's a lot of setup.
-   See the code..
-
-   If a window is passed in via the first parameter, that window will be
-   the one displayed modally.  If no window is passed in (if *aWindow is null)
-   the window created will be returned in *aWindow.  Note that by the time
-   this function exits, that window has been partially destroyed.  We return it
-   anyway, in the hopes that it may be queried for results, somehow.
-   This may be a mistake.  It is returned addrefed (by the QueryInterface
-   to nsIWebShellWindow in CreateTopLevelWindow).
-*/
-NS_IMETHODIMP
-nsAppShellService::RunModalDialog(
-                      nsIWebShellWindow **aWindow,
-                      nsIWebShellWindow *aParent,
-                      nsIURI *aUrl, 
-                      PRUint32 aChromeMask,
-                      nsIXULWindowCallbacks *aCallbacks,
-                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
-{
-  nsresult          rv;
-  nsIWebShellWindow *theWindow;
-  nsIEventQueue     *pushedQueue;
-
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  pushedQueue = NULL;
-  if (aWindow && *aWindow) {
-    theWindow = *aWindow;
-    NS_ADDREF(theWindow);
-    rv = NS_OK;
-  } else {
-    eventQService->PushThreadEventQueue(&pushedQueue);
-    rv = CreateTopLevelWindow(aParent, aUrl, PR_TRUE, PR_TRUE, aChromeMask,
-            aCallbacks, aInitialWidth, aInitialHeight, &theWindow);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-    nsresult gotParent;
-    gotParent = aParent ? aParent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                          NS_ERROR_FAILURE;
-    // Windows OS wants the parent disabled for modality
-    if (NS_SUCCEEDED(gotParent))
-      parentWindowWidgetThing->Enable(PR_FALSE);
-    theWindow->ShowModal();
-    if (NS_SUCCEEDED(gotParent))
-      parentWindowWidgetThing->Enable(PR_TRUE);
-
-    // return the used window if possible, or otherwise get rid of it
-    if (aWindow)
-      if (*aWindow)
-        NS_RELEASE(theWindow); // we borrowed it, now let it go
-      else
-        *aWindow = theWindow;  // and it's addrefed from Create...
-    else
-      NS_RELEASE(theWindow);   // can't return it; let it go
-  }
-
-  if (pushedQueue)
-    eventQService->PopThreadEventQueue(pushedQueue);
-
-  return rv;
-}
-
-
 /*
  * Register a new top level window (created elsewhere)
  */
 NS_IMETHODIMP
-nsAppShellService::RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
+nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
 {
-  nsresult rv;
+   mWindowList->AppendElement(aWindow);
 
-  nsIWebShellContainer* wsc;
-  rv = aWindow->QueryInterface(NS_GET_IID(nsIWebShellContainer), (void **) &wsc);
-  if (NS_SUCCEEDED(rv)) {
-    mWindowList->AppendElement(wsc);
-    NS_RELEASE(wsc);
-    
-    nsIWindowMediator* service;
-		if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, NS_GET_IID(nsIWindowMediator), (nsISupports**) &service ) ) )
-		{
-			service->RegisterWindow( aWindow);
-			nsServiceManager::ReleaseService(kWindowMediatorCID, service);
-		}
-  }
-  return rv;
+   if(mWindowMediator)
+      mWindowMediator->RegisterWindow(aWindow);
+
+   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
+nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 {
-  
-
 	if (mDeleteCalled) {
 		// return an error code in order to:
 		// - avoid doing anything with other member variables while we are in the destructor
@@ -795,21 +710,13 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 		return NS_ERROR_FAILURE;
 	}
   
-  nsIWindowMediator* service;
-  if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, NS_GET_IID(nsIWindowMediator), (nsISupports**) &service ) ) )
-  {
-	service->UnregisterWindow( aWindow );
-	nsServiceManager::ReleaseService(kWindowMediatorCID, service);
-  }
+  if(mWindowMediator)
+     mWindowMediator->UnregisterWindow(aWindow);
 	
   nsresult rv;
 
-  nsIWebShellContainer* wsc;
-  rv = aWindow->QueryInterface(NS_GET_IID(nsIWebShellContainer), (void **) &wsc);
-  if (NS_SUCCEEDED(rv)) {
-    mWindowList->RemoveElement(wsc);
-    NS_RELEASE(wsc);
-  }
+  mWindowList->RemoveElement(aWindow);
+
   PRUint32 cnt;
   rv = mWindowList->Count(&cnt);
   if (NS_FAILED(rv)) return rv;

@@ -77,7 +77,6 @@ protected:
       PRBool aPrimary, const PRUnichar* aID);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
       PRInt32 aCY);
-   NS_IMETHOD ShowModal();
    NS_IMETHOD ExitModalLoop();
    NS_IMETHOD GetNewWindow(PRInt32 aChromeFlags, 
       nsIDocShellTreeItem** aDocShellTreeItem);

@@ -65,7 +65,7 @@
 // This will go away once the dialog box starts popping off the window that triggered the load. 
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
-#include "nsIWebShellWindow.h" // TODO remove later
+#include "nsIXULWindow.h" // TODO remove later
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #include "nsINetPrompt.h"
@@ -1503,14 +1503,12 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             This is dependent on the completion of the new 
             design of the webshell. 
         */
-      NS_WITH_SERVICE(nsIAppShellService, appshellservice, 
-              kAppShellServiceCID, &rv);
-      if(NS_FAILED(rv))
-          return rv;
-      nsCOMPtr<nsIWebShellWindow> webshellwindow;
-      appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
-      nsCOMPtr<nsINetPrompt> prompter( 
-              do_QueryInterface(webshellwindow));
+      nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+      NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIXULWindow> xulWindow;
+      appShellService->GetHiddenWindow(getter_AddRefs( xulWindow ) );
+      nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( xulWindow ) );
       
       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
               kProxyObjectManagerCID, &rv);

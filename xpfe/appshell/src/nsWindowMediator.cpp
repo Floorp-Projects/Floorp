@@ -36,7 +36,6 @@
 #include "nsIWindowMediator.h"
 #include "nsCOMPtr.h"
 #include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsISimpleEnumerator.h"
@@ -44,6 +43,11 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsWindowMediator.h"
+
+// Interfaces Needed
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIXULWindow.h"
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
@@ -76,16 +80,17 @@ nsresult NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
     return rv;
 }
 
-nsresult GetDOMWindow( nsIWebShellWindow* inWindow, nsCOMPtr< nsIDOMWindow>& outDOMWindow )
+nsresult GetDOMWindow( nsIXULWindow* inWindow, nsCOMPtr< nsIDOMWindow>& outDOMWindow )
 {
-	nsCOMPtr<nsIWebShell> webShell;
+	nsCOMPtr<nsIDocShell> docShell;
 
-	inWindow->GetWebShell( *getter_AddRefs( webShell ) );
-	return inWindow->ConvertWebShellToDOMWindow( webShell, getter_AddRefs( outDOMWindow ) );
+	inWindow->GetDocShell(getter_AddRefs(docShell));
+   outDOMWindow = do_GetInterface(docShell);
+   return outDOMWindow ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
-nsCOMPtr<nsIDOMNode> GetDOMNodeFromWebShell(nsIWebShell *aShell)
+nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
 {
   nsCOMPtr<nsIDOMNode> node;
 
@@ -111,13 +116,13 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromWebShell(nsIWebShell *aShell)
   return node;
 }
 
-void GetAttribute( nsIWebShellWindow* inWindow, const nsAutoString& inAttribute, nsAutoString& outValue )
+void GetAttribute( nsIXULWindow* inWindow, const nsAutoString& inAttribute, nsAutoString& outValue )
 {
-  nsIWebShell* shell = NULL;
+  nsCOMPtr<nsIDocShell> shell;
   if ( inWindow &&
-  		NS_SUCCEEDED(inWindow->GetWebShell( shell ) ) )
+  		NS_SUCCEEDED(inWindow->GetDocShell(getter_AddRefs(shell))))
   {
-  		nsCOMPtr<nsIDOMNode> node( GetDOMNodeFromWebShell ( shell ) );
+  		nsCOMPtr<nsIDOMNode> node( GetDOMNodeFromDocShell ( shell ) );
  		
 	  if (node )
 	  {
@@ -125,11 +130,10 @@ void GetAttribute( nsIWebShellWindow* inWindow, const nsAutoString& inAttribute,
   		if ( webshellElement.get() )
   			webshellElement->GetAttribute(inAttribute.GetUnicode(), outValue );
   	  }
-  	NS_IF_RELEASE( shell );
   }
 }
 
-void GetWindowType( nsIWebShellWindow* inWindow, nsAutoString& outType )
+void GetWindowType( nsIXULWindow* inWindow, nsAutoString& outType )
 {
  	nsAutoString typeAttrib("windowtype");
  	GetAttribute( inWindow, typeAttrib, outType );
@@ -139,7 +143,7 @@ class nsWindowMediator;
 
 struct nsWindowInfo
 {
-	nsWindowInfo( nsIWebShellWindow* inWindow, PRInt32 inTimeStamp ):
+	nsWindowInfo( nsIXULWindow* inWindow, PRInt32 inTimeStamp ):
 				 mTimeStamp( inTimeStamp ), mWindow( inWindow )
 	{
 	}
@@ -150,7 +154,7 @@ struct nsWindowInfo
 	
 	nsCOMPtr<nsIRDFResource>	   mRDFID;
 	PRInt32			  mTimeStamp;
-	nsCOMPtr<nsIWebShellWindow> mWindow;
+	nsCOMPtr<nsIXULWindow> mWindow;
 	
 	nsAutoString    GetType()
 		{ 
@@ -234,7 +238,7 @@ nsWindowMediator::~nsWindowMediator()
 
        
         
-NS_IMETHODIMP nsWindowMediator::RegisterWindow( nsIWebShellWindow* inWindow )
+NS_IMETHODIMP nsWindowMediator::RegisterWindow( nsIXULWindow* inWindow )
 {	
 	if ( inWindow == NULL  )
 		return NS_ERROR_INVALID_ARG;
@@ -263,7 +267,7 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow( nsIWebShellWindow* inWindow )
 	 return NS_OK;
 }
 
-NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsIWebShellWindow* inWindow )
+NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsIXULWindow* inWindow )
 {
 	// Find Window info
 	PRInt32 count = mWindowList.Count();
@@ -350,7 +354,7 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
 	*outWindow = NULL;
 	PRInt32 lastTimeStamp = -1;
 	PRInt32 count = mWindowList.Count();
-	nsIWebShellWindow* mostRecentWindow = NULL;
+	nsIXULWindow* mostRecentWindow = NULL;
 	nsAutoString typeString( inType );
 	// Find the most window with the highest time stamp that matches the requested type
 	for ( int32 i = 0; i< count; i++ )
@@ -383,7 +387,7 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
 }
 
 
-NS_IMETHODIMP nsWindowMediator::UpdateWindowTimeStamp( nsIWebShellWindow* inWindow )
+NS_IMETHODIMP nsWindowMediator::UpdateWindowTimeStamp( nsIXULWindow* inWindow )
 {
 	PRInt32 count = mWindowList.Count();
 	for ( int32 i = 0; i< count; i++ )
@@ -401,7 +405,7 @@ NS_IMETHODIMP nsWindowMediator::UpdateWindowTimeStamp( nsIWebShellWindow* inWind
 }
 
 
-NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIWebShellWindow* inWindow, const PRUnichar* inTitle )
+NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIXULWindow* inWindow, const PRUnichar* inTitle )
 {
 	PRInt32 count = mWindowList.Count();
 	nsresult rv;

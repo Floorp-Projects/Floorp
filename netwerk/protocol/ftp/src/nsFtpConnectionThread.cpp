@@ -41,7 +41,7 @@
 
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
-#include "nsIWebShellWindow.h" // TODO remove later
+#include "nsIXULWindow.h" // TODO remove later
 #include "nsINetPrompt.h"
 
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
@@ -804,12 +804,12 @@ nsFtpConnectionThread::S_user() {
     } else {
         if (!mUsername.Length()) {
 
-            NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+            NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
 
-            nsCOMPtr<nsIWebShellWindow> webshellwindow;
-            appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
-            nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( webshellwindow ) );
+            nsCOMPtr<nsIXULWindow> xulWindow;
+            appShellService->GetHiddenWindow(getter_AddRefs( xulWindow ) );
+            nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( xulWindow ) );
 
             NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -883,12 +883,12 @@ nsFtpConnectionThread::S_pass() {
     } else {
         if (!mPassword.Length() || mRetryPass) {
             // ignore any password we have, it's not working
-            NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+            NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
 
-            nsCOMPtr<nsIWebShellWindow> webshellwindow;
-            appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
-            nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( webshellwindow ) );
+            nsCOMPtr<nsIXULWindow> xulWindow;
+            appShellService->GetHiddenWindow(getter_AddRefs( xulWindow ) );
+            nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( xulWindow ) );
 
             NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
             if (NS_FAILED(rv)) return rv;

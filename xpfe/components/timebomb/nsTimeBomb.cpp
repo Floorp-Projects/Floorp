@@ -28,13 +28,15 @@
 #include "nspr.h"
 #include "plstr.h"
 
-#include "nsIWebShellWindow.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "nsIBrowserWindow.h"
 
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+
+//Interfaces Needed
+#include "nsIXULWindow.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -52,7 +54,7 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIWebShellWindow>  window;
+    nsCOMPtr<nsIXULWindow>  window;
     rv = appShell->CreateTopLevelWindow(nsnull, 
                                         URL,
                                         PR_TRUE, 
