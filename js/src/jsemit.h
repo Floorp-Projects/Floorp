@@ -480,16 +480,23 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
  */
 #define CG_COUNT_FINAL_SRCNOTES(cg, cnt)                                      \
     JS_BEGIN_MACRO                                                            \
-        cnt = (cg)->main.noteCount + 1;                                       \
-        if ((cg)->prolog.noteCount) {                                         \
-            cnt += (cg)->prolog.noteCount;                                    \
-            if ((cg)->prolog.currentLine != (cg)->firstLine) {                \
-                ptrdiff_t diff_ = CG_PROLOG_OFFSET(cg) -                      \
-                                  (cg)->prolog.lastNoteOffset;                \
-                if (diff_ > SN_DELTA_MASK)                                    \
-                    cnt += JS_HOWMANY(diff_ - SN_DELTA_MASK, SN_XDELTA_MASK); \
-                cnt += 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);   \
+        ptrdiff_t diff_ = CG_PROLOG_OFFSET(cg) - (cg)->prolog.lastNoteOffset; \
+        cnt = (cg)->prolog.noteCount + (cg)->main.noteCount + 1;              \
+        if ((cg)->prolog.noteCount &&                                         \
+            (cg)->prolog.currentLine != (cg)->firstLine) {                    \
+            if (diff_ > SN_DELTA_MASK)                                        \
+                cnt += JS_HOWMANY(diff_ - SN_DELTA_MASK, SN_XDELTA_MASK);     \
+            cnt += 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);       \
+        } else {                                                              \
+            if (cg->main.noteCount) {                                         \
+                jssrcnote *sn_ = (cg)->main.notes;                            \
+                ptrdiff_t delta_ = SN_IS_XDELTA(sn_)                          \
+                                   ? SN_XDELTA_MASK - (*sn_ & SN_XDELTA_MASK) \
+                                   : SN_DELTA_MASK - (*sn_ & SN_DELTA_MASK);  \
+                diff_ -= JS_MIN(delta_, diff_);                               \
             }                                                                 \
+            if (diff_)                                                        \
+                cnt += JS_HOWMANY(diff_, SN_XDELTA_MASK);                     \
         }                                                                     \
     JS_END_MACRO
 
