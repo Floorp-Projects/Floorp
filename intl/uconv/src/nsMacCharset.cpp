@@ -30,6 +30,11 @@
 #include "nsIMacLocale.h"
 #include "nsLocaleCID.h"
 
+// {84B0F181-C6C7-11d2-B3B0-00805F8A6670}
+#undef NS_IMPL_IDS
+NS_DECLARE_ID(kIPlatformCharsetIID, 
+ 0x84b0f181, 0xc6c7, 0x11d2, 0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
+
 NS_DEFINE_IID(kMacLocaleIID,NS_IMACLOCALE_IID);
 NS_DEFINE_CID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
 

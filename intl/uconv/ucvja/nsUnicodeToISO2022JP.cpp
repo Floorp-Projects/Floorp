@@ -24,6 +24,10 @@
 #include "nsIComponentManager.h"
 #include "nsUCVJADll.h"
 
+// Class ID for our UnicodeEncoderHelper implementation
+// {1767FC50-CAA4-11d2-8AA9-00600811A836}
+static NS_DEFINE_CID(kUnicodeEncodeHelperCID, NS_UNICODEENCODEHELPER_CID);
+
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -153,7 +157,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::FillInfo(PRUint32* aInfo)
 
   if (mHelper == nsnull) {
     res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        kIUnicodeEncodeHelperIID, (void**) & mHelper);
+        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
     
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
@@ -172,7 +176,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
 
   if (mHelper == nsnull) {
     res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        kIUnicodeEncodeHelperIID, (void**) & mHelper);
+        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
     
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
