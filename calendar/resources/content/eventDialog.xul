@@ -154,7 +154,7 @@
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
                         <hbox  id="start-date-box" align="center">
-                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );updateEndDate( this );"/>
+                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
                             <textbox id="start-time-text" readonly="true" value=""        onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
@@ -166,7 +166,7 @@
                             <label value="&newevent.enddate.label;"/>
                         </hbox>
                         <hbox  id="end-date-box" align="center">
-                            <datepicker id="end-date-picker" value="" ondatepick="updateDateDifference( this )"/>
+                            <datepicker id="end-date-picker" value="" ondatepick="onDatePick( this );"/>
                             <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image id="end-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
