@@ -1223,7 +1223,9 @@ function sv_restore ()
     }
 
     if ("savedState" in this) {
+        this.freeze();
         restoreBranch (this.stack.childData, this.savedState);
+        this.thaw();
         this.scrollTo (this.savedState.firstVisible, -1);
     }
 }
