@@ -74,7 +74,7 @@ function AbNewAddressBook()
 
 function AbCreateNewAddressBook(name)
 {
-	top.addressbook.NewAddressBook(document.getElementById('dirTree').database, document.getElementById('resultsTree'), name);
+	top.addressbook.newAddressBook(document.getElementById('dirTree').database, document.getElementById('resultsTree'), name);
 }
 
 function AbPrintCard()
