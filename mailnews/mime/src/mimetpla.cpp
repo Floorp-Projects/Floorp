@@ -35,6 +35,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 #include "prprf.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
@@ -423,12 +424,54 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
         prefaceResultStr += "<div class=\"moz-txt-sig\">";
     }
 
+    // Get a mail charset of this message.
+    MimeInlineText  *inlinetext = (MimeInlineText *) obj;
+    char *mailCharset = NULL;
+    if (inlinetext->charset && *(inlinetext->charset))
+      mailCharset = inlinetext->charset;
+
     /* This is the main TXT to HTML conversion:
        escaping (very important), eventually recognizing etc. */
     PRUnichar* lineResultUnichar = nsnull;
-    rv = conv->ScanTXT(lineSourceStr.GetUnicode() + logicalLineStart,
-                       whattodo, &lineResultUnichar);
-    if (NS_FAILED(rv)) return -1;
+
+    if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
+        !mailCharset || !nsMsgI18Nstateful_charset(mailCharset))
+    {
+      rv = conv->ScanTXT(lineSourceStr.GetUnicode() + logicalLineStart,
+                         whattodo, &lineResultUnichar);
+      if (NS_FAILED(rv)) return -1;
+    }
+    else
+    {
+      // If nsMimeMessageSaveAs, the string is in mail charset (and stateful, e.g. ISO-2022-JP).
+      // convert to unicode so it won't confuse ScanTXT.
+      nsAutoString ustr;
+      nsCAutoString cstr(line, length);
+
+      rv = nsMsgI18NConvertToUnicode((nsCAutoString) mailCharset, cstr, ustr);
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUnichar *u;
+        rv = conv->ScanTXT(ustr.GetUnicode() + logicalLineStart, whattodo, &u);
+        if (NS_SUCCEEDED(rv))
+        {
+          ustr.Assign(u);
+          Recycle(u);
+          rv = nsMsgI18NConvertFromUnicode((nsCAutoString) mailCharset, ustr, cstr);
+          if (NS_SUCCEEDED(rv))
+          {
+            // create PRUnichar* which contains NON unicode 
+            // as the following code expecting it
+            ustr.AssignWithConversion(cstr);                                                  
+            lineResultUnichar = ustr.ToNewUnicode();
+            if (!lineResultUnichar) return -1;
+          }
+        }
+      }
+      if (NS_FAILED(rv))
+        return -1;
+    }
+
 
     // avoid an extra string copy by using nsSubsumeStr, this transfers
     // ownership of wresult to strresult so don't try to free wresult later.

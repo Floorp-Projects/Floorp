@@ -33,6 +33,7 @@
 #include "nsIServiceManager.h"
 #include "mimemoz2.h"
 #include "prprf.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -335,13 +336,55 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
                       might not be able to display the glyphs. */
     }
 
-    /* This is the main TXT to HTML conversion:
-       escaping (very important), eventually recognizing etc. */
-    rv = conv->ScanTXT(lineSource.GetUnicode(), whattodo, &wresult);
-    if (NS_FAILED(rv)) return -1;
+    // Get a mail charset of this message.
+    MimeInlineText  *inlinetext = (MimeInlineText *) obj;
+    char *mailCharset = NULL;
+    if (inlinetext->charset && *(inlinetext->charset))
+      mailCharset = inlinetext->charset;
 
-    lineResult = wresult;
-    Recycle(wresult);
+    if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
+        !mailCharset || !nsMsgI18Nstateful_charset(mailCharset))
+    {
+      /* This is the main TXT to HTML conversion:
+	       escaping (very important), eventually recognizing etc. */
+      rv = conv->ScanTXT(lineSource.GetUnicode(), whattodo, &wresult);
+      if (NS_FAILED(rv)) return -1;
+      lineResult = wresult;
+      Recycle(wresult);
+    }
+    else
+    {
+      // If nsMimeMessageSaveAs, the string is in mail charset (and stateful, e.g. ISO-2022-JP).
+      // convert to unicode so it won't confuse ScanTXT.
+      char *newcstr;
+
+      newcstr = lineSource.ToNewCString();      // lineSource uses nsString but the string is NOT unicode
+      if (!newcstr) return -1;
+
+      nsAutoString ustr;
+      nsCAutoString cstr;
+
+      cstr.Assign(newcstr);
+      Recycle(newcstr);
+
+      rv = nsMsgI18NConvertToUnicode((nsCAutoString) mailCharset, cstr, ustr);
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUnichar *u;
+        rv = conv->ScanTXT(ustr.GetUnicode(), whattodo, &u);
+        if (NS_SUCCEEDED(rv))
+        {
+          ustr.Assign(u);
+          Recycle(u);
+          rv = nsMsgI18NConvertFromUnicode((nsCAutoString) mailCharset, ustr, cstr);
+          if (NS_SUCCEEDED(rv))
+            lineResult.AssignWithConversion(cstr);   // create nsString which contains NON unicode 
+                                                     // as the following code expecting it
+        }
+      }
+      if (NS_FAILED(rv))
+        return -1;
+    }
   }
   else
   {
