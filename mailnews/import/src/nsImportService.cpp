@@ -163,26 +163,33 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////
-nsresult NS_NewImportService(nsIImportService** aImportService);
-
-nsresult NS_NewImportService(nsIImportService** aImportService)
+NS_IMETHODIMP NS_NewImportService( nsISupports* aOuter, REFNSIID aIID, void **aResult)
 {
-    NS_PRECONDITION(aImportService != nsnull, "null ptr");
-    if (! aImportService)
-        return NS_ERROR_NULL_POINTER;
-	
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return( NS_ERROR_NULL_POINTER);
+    if (aOuter) {                                                    
+        *aResult = nsnull;
+        return( NS_ERROR_NO_AGGREGATION);
+    }
+
 	if (!gImportService) {	
     	gImportService = new nsImportService();
     	if (! gImportService)
-        	return NS_ERROR_OUT_OF_MEMORY;
+        	return( NS_ERROR_OUT_OF_MEMORY);
 	}       
 
     NS_ADDREF( gImportService);
-    
-    *aImportService = gImportService;
-    
-    return NS_OK;
+
+	nsresult rv = gImportService->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {
+        *aResult = nsnull;
+    }
+    NS_RELEASE( gImportService);
+
+	return( rv);
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 

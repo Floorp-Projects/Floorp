@@ -269,11 +269,11 @@ PRBool OutlookSettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 	nsresult rv = pMgr->FindServer( (const char *)pBytes, pServerName, "imap", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = pMgr->CreateIncomingServer( "imap", getter_AddRefs( in));
+		rv = pMgr->CreateIncomingServer( (const char *)pBytes, pServerName, "imap", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "imap");
-			rv = in->SetHostName( pServerName);
-			rv = in->SetUsername( (char *)pBytes);
+			// rv = in->SetHostName( pServerName);
+			// rv = in->SetUsername( (char *)pBytes);
 			
 			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", pServerName, (char *)pBytes);
 
@@ -334,11 +334,11 @@ PRBool OutlookSettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 	nsresult rv = pMgr->FindServer( (const char *)pBytes, pServerName, "pop3", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = pMgr->CreateIncomingServer( "pop3", getter_AddRefs( in));
+		rv = pMgr->CreateIncomingServer( (const char *)pBytes, pServerName, "pop3", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "pop3");
-			rv = in->SetHostName( pServerName);
-			rv = in->SetUsername( (char *)pBytes);
+			// rv = in->SetHostName( pServerName);
+			// rv = in->SetUsername( (char *)pBytes);
 
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", pServerName, (char *)pBytes);
 

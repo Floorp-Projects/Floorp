@@ -710,11 +710,11 @@ PRBool nsEudoraWin32::BuildPOPAccount( nsIMsgAccountManager *accMgr, const char 
 	nsresult rv = accMgr->FindServer( userName, serverName, "pop3", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = accMgr->CreateIncomingServer( "pop3", getter_AddRefs( in));
+		rv = accMgr->CreateIncomingServer( userName, serverName, "pop3", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "pop3");
-			rv = in->SetHostName( serverName);
-			rv = in->SetUsername( userName);
+			// rv = in->SetHostName( serverName);
+			// rv = in->SetUsername( userName);
 
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", (const char *)serverName, (const char *)userName);
 
@@ -766,11 +766,11 @@ PRBool nsEudoraWin32::BuildIMAPAccount( nsIMsgAccountManager *accMgr, const char
 	nsresult rv = accMgr->FindServer( userName, serverName, "imap", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = accMgr->CreateIncomingServer( "imap", getter_AddRefs( in));
+		rv = accMgr->CreateIncomingServer( userName, serverName, "imap", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "imap");
-			rv = in->SetHostName( serverName);
-			rv = in->SetUsername( userName);
+			// rv = in->SetHostName( serverName);
+			// rv = in->SetUsername( userName);
 			
 			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", (const char *)serverName, (const char *)userName);
 			

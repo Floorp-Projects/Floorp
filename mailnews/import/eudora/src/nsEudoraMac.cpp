@@ -682,11 +682,11 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 	nsresult rv = accMgr->FindServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "pop3", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = accMgr->CreateIncomingServer( "pop3", getter_AddRefs( in));
+		rv = accMgr->CreateIncomingServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "pop3", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "pop3");
-			rv = in->SetHostName( *(pStrs[kPopServerStr]));
-			rv = in->SetUsername( *(pStrs[kPopAccountNameStr]));
+			// rv = in->SetHostName( *(pStrs[kPopServerStr]));
+			// rv = in->SetUsername( *(pStrs[kPopAccountNameStr]));
 
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", (const char *)(*(pStrs[kPopServerStr])), (const char *)(*(pStrs[kPopAccountNameStr])));
 
@@ -730,11 +730,11 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 	nsresult rv = accMgr->FindServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "imap", getter_AddRefs( in));
 	if (NS_FAILED( rv) || (in == nsnull)) {
 		// Create the incoming server and an account for it?
-		rv = accMgr->CreateIncomingServer( "imap", getter_AddRefs( in));
+		rv = accMgr->CreateIncomingServer( *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), "imap", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "imap");
-			rv = in->SetHostName( *(pStrs[kPopServerStr]));
-			rv = in->SetUsername( *(pStrs[kPopAccountNameStr]));
+			// rv = in->SetHostName( *(pStrs[kPopServerStr]));
+			// rv = in->SetUsername( *(pStrs[kPopAccountNameStr]));
 			
 			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", (const char *)(*(pStrs[kPopServerStr])), (const char *)(*(pStrs[kPopAccountNameStr])));
 			

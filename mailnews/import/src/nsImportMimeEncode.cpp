@@ -455,8 +455,3 @@ NS_METHOD nsIImportMimeEncodeImpl::Initialize(nsIFileSpec *inFile, nsIFileSpec *
 	return( NS_OK);
 }
 
-nsresult NS_NewImportMimeEncode( nsIImportMimeEncode **aEncoder)
-{
-	return( nsIImportMimeEncodeImpl::Create( nsnull, nsIImportMimeEncode::GetIID(), (void **)aEncoder));
-}
-

@@ -948,7 +948,7 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 		return( PR_FALSE);
 	}
 	
-	rv = accMgr->CreateIncomingServer( "none", getter_AddRefs( server));
+	rv = accMgr->CreateIncomingServer( "import", hostName, "none", getter_AddRefs( server));
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Failed to create a 'none' incoming server\n");
 		return( PR_FALSE);
@@ -959,8 +959,8 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	GetUniquePrettyName( accMgr, prettyName);
 	
 	server->SetPrettyName( (PRUnichar *) prettyName.GetUnicode());
-	server->SetHostName( hostName);
-	server->SetUsername( "import");  
+	// server->SetHostName( hostName);
+	// server->SetUsername( "import");  
 
 	
 	// create a new account with the server and identity.
