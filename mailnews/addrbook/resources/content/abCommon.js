@@ -9,6 +9,7 @@ var ResultsPaneController =
 		{
 			case "cmd_selectAll":
 			case "cmd_delete":
+			case "button_delete":
                 return true;
 			default:
 				return false;
@@ -24,11 +25,19 @@ var ResultsPaneController =
 				return true;
 			
 			case "cmd_delete":
+			case "button_delete":
 				var resultsTree = document.getElementById('resultsTree');
+				var numSelected = 0;
 				if ( resultsTree && resultsTree.selectedItems )
-					return true;
-				else
-					return false;
+					numSelected = resultsTree.selectedItems.length;
+				if ( command == "cmd_delete" )
+				{
+					if ( numSelected < 2 )
+						goSetMenuValue(command, 'valueCard');
+					else
+						goSetMenuValue(command, 'valueCards');
+				}
+				return ( numSelected > 0 );
 			
 			default:
 				return false;
@@ -50,6 +59,7 @@ var ResultsPaneController =
 				break;
 			
 			case "cmd_delete":
+			case "button_delete":
 				if ( resultsTree )
 				{
 					var cardList = resultsTree.selectedItems;
@@ -70,6 +80,7 @@ var DirPaneController =
 		{
 			case "cmd_selectAll":
 			case "cmd_delete":
+			case "button_delete":
                 return true;
 			default:
 				return false;
@@ -84,6 +95,9 @@ var DirPaneController =
 			case "cmd_selectAll":
 				return true;
 			case "cmd_delete":
+			case "button_delete":
+				if ( command == "cmd_delete" )
+					goSetMenuValue(command, 'valueAddressBook');
 				var dirTree = document.getElementById('dirTree');
 				if ( dirTree && dirTree.selectedItems )
 					return true;
@@ -110,6 +124,7 @@ var DirPaneController =
 				break;
 
 			case "cmd_delete":
+			case "button_delete":
 				if ( dirTree )
 					top.addressbook.DeleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
 				break;

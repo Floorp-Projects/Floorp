@@ -52,6 +52,11 @@ Rights Reserved.
 <html:script src="chrome://navigator/content/contentframe.js" />
 
 <commands id="commands">
+	<commandset id="CommandUpdate_Mail"
+				commandupdater="true"
+				events="focus,blur,tree-select"
+				oncommandupdate="goUpdateCommand('button_delete')"/>
+
 	<commandset id="globalEditMenuItems"/>
 </commands>
 
@@ -171,9 +176,6 @@ Rights Reserved.
 			<menuitem id="menu_paste"/>
 			 <menuseparator/>
 			<menuitem id="menu_delete"/>
-			 <menuseparator/>
-			<menuitem value="&deleteMsgCmd.label;" oncommand="MsgDeleteMessage(false);"/>
-			<menuitem value="&deleteFolderCmd.label;" oncommand="MsgDeleteFolder();"/>
 			 <menuseparator/>
 			<menuitem id="menu_selectAll"/>
 	        <menuitem value="&selectThreadCmd.label;" oncommand="MsgSelectThread();"/>
@@ -495,7 +497,7 @@ Rights Reserved.
             <titledbutton id="button_forward" class="button28" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
             <toolbarseparator/>
             <titledbutton id="button_next" class="other28" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-            <titledbutton id="button_delete" class="other28" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
+            <titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
             <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="Print()"/>
             <titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
             <spring flex="100%"/>

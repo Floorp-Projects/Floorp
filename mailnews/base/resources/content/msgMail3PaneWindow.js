@@ -109,8 +109,6 @@ function OnLoadMessenger()
     loadStartFolder();
 
     AddToSession();
-    
-    goSetDefaultController(DefaultController);
 }
 
 function OnUnloadMessenger()
@@ -282,6 +280,9 @@ function InitPanes()
 	var folderTree = GetFolderTree();
 	if(folderTree)
 		OnLoadFolderPane(folderTree);
+		
+	top.controllers.appendController(DefaultController);
+	SetupCommandUpdateHandlers();
 }
 
 function OnLoadFolderPane(folderTree)

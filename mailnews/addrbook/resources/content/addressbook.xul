@@ -198,7 +198,7 @@ Rights Reserved.
             	<toolbarseparator/>
 				<titledbutton id="button_editcard" class="other28" align="top" value="&editButton.label;" onclick="AbEditCard()"/>
 				<titledbutton id="button_newmessage" class="other28" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
-				<titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
+				<titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
 
 				<box align="vertical" flex="100%">
 					<spring flex="1"/> 

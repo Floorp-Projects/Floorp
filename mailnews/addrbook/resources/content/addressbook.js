@@ -1,40 +1,6 @@
 var addressbook = 0;
 var editCardCallback = 0;
 
-// Default Controller object for window
-var DefaultController =
-{
-    supportsCommand: function(command)
-	{
-        switch ( command )
-		{
-			case "cmd_delete":
-                return true;
-			default:
-				return false;
-		}
-	},
-
-	isCommandEnabled: function(command)
-	{
-		dump('DefaultController::isCommandEnabled(' + command + ')\n');
-		switch ( command )
-		{
-			case "cmd_delete":
-				// set the menu to the default text
-				goSetMenuValue(command, 'valueDefault');
-				return false;
-			
-			default:
-				return false;
-		}
-	},
-
-	doCommand: function(command)
-	{
-	}
-};
-
 function OnLoadAddressBook()
 {
 	// FIX ME - later we will be able to use onload from the overlay
@@ -60,6 +26,8 @@ function CommandUpdate_AddressBook()
 {
 	dump("CommandUpdate_AddressBook\n");
 	
+	goUpdateCommand('button_delete');
+	
 	// get selection info from dir pane
 	var tree = document.getElementById('dirTree');
 	var oneAddressBookSelected = false;
@@ -78,53 +46,6 @@ function CommandUpdate_AddressBook()
 	goSetCommandEnabled('cmd_SortByName', oneAddressBookSelected);
 	goSetCommandEnabled('cmd_SortByEmail', oneAddressBookSelected);
 	goSetCommandEnabled('cmd_SortByPhone', oneAddressBookSelected);
-	
-	AbUpdateCommandDelete();
-}
-
-
-// This function updates the text of the delete menu item and sets the state of the delete button
-function AbUpdateCommandDelete()
-{
-	var command = "cmd_delete";
-	var focusedElement = document.commandDispatcher.focusedNode;
-
-	var id = 0;
-	if ( focusedElement )
-		id = focusedElement.getAttribute('id');
-
-	dump("focusedOn = " + id + "\n");
-
-	switch ( id )
-	{
-		case "dirTree":
-			// menu text
-			goSetMenuValue(command, 'valueAddressBook');
-			// delete button
-			var dirTree = document.getElementById('dirTree');
-			var numSelected = 0;
-			if ( dirTree && dirTree.selectedItems )
-				numSelected = dirTree.selectedItems.length;
-			goSetCommandEnabled('button_delete', (numSelected>0));
-			break;
-		case "resultsTree":
-			// menu text
-			var resultsTree = document.getElementById('resultsTree');
-			var numSelected = 0;
-			if ( resultsTree && resultsTree.selectedItems )
-				numSelected = resultsTree.selectedItems.length;
-			if ( numSelected < 2 )
-				goSetMenuValue(command, 'valueCard');
-			else
-				goSetMenuValue(command, 'valueCards');
-			// delete button
-			goSetCommandEnabled('button_delete', (numSelected>0));
-			break;
-		default:
-			goSetMenuValue(command, 'valueDefault');
-			goSetCommandEnabled('button_delete', false);
-			break;
-	}
 }
 
 

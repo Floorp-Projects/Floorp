@@ -30,7 +30,7 @@
 	      rdf:datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
 	      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-		  onselect="top.FolderPaneSelectionChange()">
+		  onselect="top.FolderPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');">
 
 	  <template>
 	  	<rule>

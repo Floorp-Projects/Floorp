@@ -140,11 +140,6 @@ function goDoCommand(command)
 }
 
 
-function goSetDefaultController(controller)
-{
-	top.controllers.appendController(controller);
-}
-
 function goSetCommandEnabled(id, enabled)
 {
 	var node = top.document.getElementById(id);

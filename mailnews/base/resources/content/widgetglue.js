@@ -32,8 +32,6 @@ var DefaultController =
 		switch ( command )
 		{
 			case "cmd_undo":
-				return true;
-			
 			case "cmd_redo":
 				return true;
 			
@@ -47,8 +45,6 @@ var DefaultController =
 		switch ( command )
 		{
 			case "cmd_undo":
-				return true;
-			
 			case "cmd_redo":
 				return true;
 			
@@ -82,6 +78,7 @@ var FolderPaneController =
 		{
 			case "cmd_selectAll":
 			case "cmd_delete":
+			case "button_delete":
 				return true;
 			
 			default:
@@ -98,8 +95,14 @@ var FolderPaneController =
 				return true;
 			
 			case "cmd_delete":
-				goSetMenuValue(command, 'valueFolder');
-				return true;
+			case "button_delete":
+				if ( command == "cmd_delete" )
+					goSetMenuValue(command, 'valueFolder');
+				var folderTree = GetFolderTree();
+				if ( folderTree && folderTree.selectedItems )
+					return true;
+				else
+					return false;
 			
 			default:
 				return false;
@@ -120,7 +123,9 @@ var FolderPaneController =
 				break;
 			
 			case "cmd_delete":
-				MsgDeleteFolder();
+			case "button_delete":
+				// add this back in when folder delete has warning
+				//MsgDeleteFolder();
 				break;
 		}
 	}
@@ -136,6 +141,7 @@ var ThreadPaneController =
 		{
 			case "cmd_selectAll":
 			case "cmd_delete":
+			case "button_delete":
 				return true;
 			
 			default:
@@ -152,8 +158,20 @@ var ThreadPaneController =
 				return true;
 			
 			case "cmd_delete":
-				goSetMenuValue(command, 'valueMessage');
-				return true;
+			case "button_delete":
+				var threadTree = GetThreadTree();
+				dump("threadTree = " + threadTree + "\n");
+				var numSelected = 0;
+				if ( threadTree && threadTree.selectedItems )
+					numSelected = threadTree.selectedItems.length;
+				if ( command == "cmd_delete" )
+				{
+					if ( numSelected < 2 )
+						goSetMenuValue(command, 'valueMessage');
+					else
+						goSetMenuValue(command, 'valueMessages');
+				}
+				return ( numSelected > 0 );
 			
 			default:
 				return false;
@@ -175,6 +193,10 @@ var ThreadPaneController =
 			
 			case "cmd_delete":
 				MsgDeleteMessage(false);
+				break;
+			
+			case "button_delete":
+				MsgDeleteMessage(true);
 				break;
 		}
 	}

@@ -30,7 +30,7 @@ Rights Reserved.
 >
 
 <tree datasources="rdf:null" id="threadTree" style="width: 100%; height: 100%"
-	  		  onselect="top.ThreadPaneSelectionChange(event.target)"
+	  		  onselect="top.ThreadPaneSelectionChange(event.target); document.commandDispatcher.updateCommands('tree-select');"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 
   <template>
