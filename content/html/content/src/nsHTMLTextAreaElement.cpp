@@ -146,6 +146,8 @@ protected:
   char*                    mValue;
   /** Whether or not the value has changed since its default value was given. */
   PRPackedBool             mValueChanged;
+  /** Whether or not we are already handling select event. */
+  PRPackedBool             mHandlingSelect;
 
   NS_IMETHOD SelectAll(nsIPresContext* aPresContext);
   /**
@@ -190,9 +192,10 @@ NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult,
 
 
 nsHTMLTextAreaElement::nsHTMLTextAreaElement()
+  : mValue(nsnull),
+    mValueChanged(PR_FALSE),
+    mHandlingSelect(PR_FALSE)
 {
-  mValue = nsnull;
-  mValueChanged = PR_FALSE;
 }
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
@@ -689,6 +692,13 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
+  PRBool isSelectEvent = (aEvent->message == NS_FORM_SELECTED);
+  // Don't dispatch a second select event if we are already handling
+  // one.
+  if (isSelectEvent && mHandlingSelect) {
+    return NS_OK;
+  }
+
   // We have anonymous content underneath
   // that we need to hide.  We need to set the event target now
   // to ourselves
@@ -739,9 +749,17 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
     aEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
+  if (isSelectEvent) {
+    mHandlingSelect = PR_TRUE;
+  }
+
   rv = nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext, aEvent,
                                                          aDOMEvent,
                                                          aFlags, aEventStatus);
+
+  if (isSelectEvent) {
+    mHandlingSelect = PR_FALSE;
+  }
 
   // Reset the flag for other content besides this text field
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
