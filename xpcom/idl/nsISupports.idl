@@ -30,8 +30,7 @@
 native nsQIResult(void *);
 native voidStar(void*);
 native voidStarRef(void**);
-native nsCIDRef(nsCID&);
-native nsIIDRef(nsIID&);
+native nsIIDRef(REFNSIID);
 
 typedef unsigned long   nsrefcnt;
 
@@ -40,7 +39,7 @@ typedef unsigned long   nsrefcnt;
 	uuid(00000000-0000-0000-c000-000000000046)
 ]
 interface nsISupports {
-  void QueryInterface(in nsIID uuid, out nsQIResult result);
-  [notxpcom] void AddRef();
-  [notxpcom] void Release();
+  void QueryInterface(in nsIIDRef uuid, out nsQIResult result);
+  [notxpcom] nsrefcnt AddRef();
+  [notxpcom] nsrefcnt Release();
 };
