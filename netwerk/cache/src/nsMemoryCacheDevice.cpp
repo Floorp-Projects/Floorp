@@ -164,10 +164,10 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),"entry is already on a list!");
-
 	if (!entry->IsDoomed()) {
-        // append entry to the eviction list
+ 	    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),"entry is already on a list!");
+	
+		// append entry to the eviction list
         PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, 0)]);
 
         // add entry to hashtable of mem cache entries
