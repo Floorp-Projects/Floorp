@@ -356,19 +356,25 @@ function EditorGetScriptFileSpec()
 
 function EditorStartLog()
 {
-  var edlog = gEditor.QueryInterface(Components.interfaces.nsIEditorLogging);
-  var fs = EditorGetScriptFileSpec();
-  edlog.startLogging(fs);
-  window._content.focus();
+  try {
+    var edlog = gEditor.QueryInterface(Components.interfaces.nsIEditorLogging);
+    var fs = EditorGetScriptFileSpec();
+    edlog.startLogging(fs);
+    window._content.focus();
 
-  fs = null;
+    fs = null;
+  }
+  catch(ex) { dump("Can't start logging!:\n" + ex + "\n");
 }
 
 function EditorStopLog()
 {
-  var edlog = gEditor.QueryInterface(Components.interfaces.nsIEditorLogging);
-  edlog.stopLogging();
-  window._content.focus();
+  try {
+    var edlog = gEditor.QueryInterface(Components.interfaces.nsIEditorLogging);
+    edlog.stopLogging();
+    window._content.focus();
+  }
+  catch(ex) { dump("Can't start logging!:\n" + ex + "\n");
 }
 
 function EditorRunLog()

@@ -46,6 +46,7 @@ interface nsIFile;
 interface nsIEditorLogging : nsISupports
 {
   /** Start logging.
+   * @param aLogFile     The file to which the log should be written.
     */
   void startLogging(in nsIFile aLogFile);
 
