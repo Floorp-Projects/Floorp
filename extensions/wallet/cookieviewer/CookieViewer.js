@@ -240,9 +240,9 @@ function CreatePermissionList()
 // purpose  : an home-brewed object that represents a individual permission in the stream
 function Permission(number,type,domain)
 {
-  this.number       = (arguments.length) ? number     : null;
-  this.type         = (arguments.length) ? type       : null;
-  this.domain       = (arguments.length) ? domain     : null;
+  this.number       = (number) ? number : null;
+  this.type         = (type) ? type : null;
+  this.domain       = (domain) ? domain : null;
 }
 
 // function : <CookieViewer.js>::loadPermissions();
