@@ -161,7 +161,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     contractID.Append(Substring(begin, end));
 
     // convert to lowercase, as all about: modules are lowercase
-    contractID.ToLowerCase();
+    ToLowerCase(contractID);
 
     nsCOMPtr<nsIAboutModule> aboutMod(do_GetService(contractID.get(), &rv));
     if (NS_SUCCEEDED(rv)) {
