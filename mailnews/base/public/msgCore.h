@@ -72,3 +72,9 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 
 #define NS_MSG_FAILED(err) \
  (NS_IS_MSG_ERROR(err) && NS_FAILED(err))
+
+/* is this where we define our errors? Obviously, there has to be a central
+	place so we don't use the same error codes.
+*/
+#define NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE NS_MSG_GENERATE_FAILURE(5)
+#define NS_MSG_ERROR_FOLDER_SUMMARY_MISSING NS_MSG_GENERATE_FAILURE(6)
