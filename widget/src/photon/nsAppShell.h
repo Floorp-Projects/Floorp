@@ -25,7 +25,11 @@
 /**
  * Native Photon Application shell wrapper
  */
+
 class nsIEventQueueService;
+class EventQueueTokenQueue;
+struct PRLock;
+
 
 class nsAppShell : public nsIAppShell
 {
@@ -54,21 +58,22 @@ class nsAppShell : public nsIAppShell
 
     // XXX temporary for Dialog investigation
 
-    NS_IMETHOD        GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
-    NS_IMETHOD        DispatchNativeEvent(void * aEvent);
+//    NS_IMETHOD        GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
+//    NS_IMETHOD        DispatchNativeEvent(void * aEvent);
     NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
                                   PRBool *aForWindow);
 
   private:
 
     nsDispatchListener   *mDispatchListener;
-//    nsISelectionMgr      *mSelectionMgr;
+//nsISelectionMgr      *mSelectionMgr;
     unsigned long        mEventBufferSz;
     PhEvent_t            *mEvent;
     static PRBool        mPtInited;
 
-  protected:
-      nsIEventQueueService * mEventQService;
+//nsIEventQueueService * mEventQService;
+	PRLock               *mLock;
+	EventQueueTokenQueue *mEventQueueTokens;
 };
 
 #endif // nsAppShell_h__
