@@ -66,6 +66,7 @@
 #include "nsXPIDLString.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -157,6 +158,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return NS_ERROR_FAILURE;
     }
 
+    JSObject *globalJSObject = global->GetGlobalJSObject();
+
     nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
@@ -174,7 +177,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     // if necessary.  So, basically, this call ensures that a document gets
     // created -- if necessary.
     nsCOMPtr<nsIDOMDocument> doc;
-
     rv = domWindow->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "No DOMDocument!");
     if (NS_FAILED(rv)) {
@@ -187,6 +189,31 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return rv;
 
     if (!scriptContext) return NS_ERROR_FAILURE;
+
+    // Grab a context to evaluate the javascript: URL on. If the
+    // evaluation of a javascript: URL is caused by some running
+    // script, use the context of the running script. If no JS is
+    // running, use the context of the window where the javascript:
+    // URL is being evaluated.
+    nsCOMPtr<nsIScriptContext> evalContext;
+
+    nsCOMPtr<nsIJSContextStack> stack = 
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (stack) {
+        JSContext *cx;
+        if (NS_SUCCEEDED(stack->Peek(&cx)) && cx &&
+            (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
+            nsISupports *supports =
+                NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(cx));
+
+            evalContext = do_QueryInterface(supports);
+        }
+    }
+
+    if (!evalContext) {
+        // No JS on the stack, use the window's context.
+        evalContext = scriptContext;
+    }
 
     // Unescape the script
     NS_UnescapeURL(script);
@@ -221,7 +248,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         nsCOMPtr<nsIPrincipal> objectPrincipal;
         rv = securityManager->GetObjectPrincipal(
                                 (JSContext*)scriptContext->GetNativeContext(),
-                                global->GetGlobalJSObject(),
+                                globalJSObject,
                                 getter_AddRefs(objectPrincipal));
         if (NS_FAILED(rv))
             return rv;
@@ -267,17 +294,15 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     // Finally, we have everything needed to evaluate the expression.
     nsString result;
     PRBool bIsUndefined;
-    {
-        NS_ConvertUTF8toUCS2 scriptString(script);
-        rv = scriptContext->EvaluateString(scriptString,
-                                           nsnull,      // obj
-                                           principal,
-                                           url.get(),   // url
-                                           1,           // line no
-                                           nsnull,
-                                           result,
-                                           &bIsUndefined);
-    }
+
+    rv = evalContext->EvaluateString(NS_ConvertUTF8toUCS2(script),
+                                     globalJSObject, // obj
+                                     principal,
+                                     url.get(),      // url
+                                     1,              // line no
+                                     nsnull,
+                                     result,
+                                     &bIsUndefined);
 
     if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
