@@ -39,7 +39,12 @@
 
 #include "nsString.h"
 
+#using <mscorlib.dll>
+#using <System.Windows.Forms.dll>
+#using <System.dll>
+
 using namespace System;
+using namespace System::Windows::Forms;
 
 namespace Mozilla
 {
@@ -47,12 +52,18 @@ namespace Mozilla
   {
     public __gc class Gecko
     {
-      public:
-        static bool InitEmbedding();
-        static bool TermEmbedding();
+    public:
+      Gecko(Form *Form);
 
-        bool OpenURL(IntPtr hWnd, String *url);
-        bool Resize(IntPtr hWnd);
+      static void TermEmbedding();
+
+      void OpenURL(String *url);
+      void Resize();
+
+    private:
+      Form *mForm;
+
+      static bool sIsInitialized = false;
     }; // class Gecko
 
     // Throw an exception if NS_FAILED(rv)
