@@ -21,16 +21,20 @@
  */
 
 
+#include "nsFTPChannel.h"
 #include "nsFtpControlConnection.h"
 #include "prlog.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIStreamProvider.h"
+#include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
+
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 class nsFtpStreamProvider : public nsIStreamProvider {
 public:
@@ -106,16 +110,18 @@ nsrefcnt nsFtpControlConnection::Release(void)
     {
         // mPipe has a reference to |this| caused by AsyncRead() 
         // Break this cycle by calling disconnect.  
-        Disconnect();
+        Disconnect(NS_BINDING_ABORTED);
     }
     return count;
 }
 
-nsFtpControlConnection::nsFtpControlConnection(nsITransport* socketTransport)
-:  mCPipe(socketTransport)
+nsFtpControlConnection::nsFtpControlConnection(const char* host, PRUint32 port)
 {
     NS_INIT_REFCNT();
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection created", this));
+
+    mHost = host;
+    mPort = port;
     mServerType = 0;
     mConnected =  PR_FALSE;
 
@@ -146,36 +152,46 @@ nsFtpControlConnection::IsAlive()
 nsresult 
 nsFtpControlConnection::Connect()
 {
-    if (!mCPipe) 
-        return NS_ERROR_NULL_POINTER;
-
     nsresult rv;
+
+    if (!mCPipe) {        
+        nsCOMPtr<nsITransport> transport;
+        // build our own
+        nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
+        rv = sts->CreateTransport(mHost, 
+                                  mPort,
+                                  nsnull, -1,
+                                  FTP_COMMAND_CHANNEL_SEG_SIZE, 
+                                  FTP_COMMAND_CHANNEL_MAX_SIZE, 
+                                  getter_AddRefs(mCPipe)); // the command transport
+        if (NS_FAILED(rv)) return rv;
+    } 
+
+    nsCOMPtr<nsISocketTransport> sTrans (do_QueryInterface(mCPipe));
+    if (!sTrans)
+        return NS_ERROR_FAILURE;
+    
+    sTrans->SetReuseConnection(PR_TRUE);
+    
     nsCOMPtr<nsIInputStream> inStream;
-
-#ifdef DOUGT_IS_SICK
-    nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mCPipe);
-    if (!sTrans) return NS_ERROR_FAILURE;
-    rv = sTrans->SetSocketTimeout(25);  
-    if (NS_FAILED(rv)) return rv;
-#endif
-
+    
     rv = NS_NewPipe(getter_AddRefs(inStream),
                     getter_AddRefs(mOutStream),
                     64,  // segmentSize
                     256, // maxSize
                     PR_TRUE, 
-                    PR_TRUE);
-
+                        PR_TRUE);
+    
     if (NS_FAILED(rv)) return rv;
-
+    
     nsCOMPtr<nsIStreamProvider> provider;
     NS_NEWXPCOM(provider, nsFtpStreamProvider);
     if (!provider) return NS_ERROR_OUT_OF_MEMORY;
-
+    
     // setup the stream provider to get data from the pipe.
     NS_STATIC_CAST(nsFtpStreamProvider*, 
-        NS_STATIC_CAST(nsIStreamProvider*, provider))->mInStream = inStream;
-
+                   NS_STATIC_CAST(nsIStreamProvider*, provider))->mInStream = inStream;
+    
     rv = mCPipe->AsyncWrite(provider, 
                             NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)this),
                             0, PRUint32(-1),
@@ -189,21 +205,23 @@ nsFtpControlConnection::Connect()
                            nsnull, 0, PRUint32(-1), 0, 
                            getter_AddRefs(mReadRequest));
 
-    if (NS_FAILED(rv)) return rv;
-
     mConnected = PR_TRUE;
-    return NS_OK;
+    return rv;
 }
 
 nsresult 
-nsFtpControlConnection::Disconnect()
+nsFtpControlConnection::Disconnect(nsresult status)
 {
     if (!mConnected) return NS_ERROR_FAILURE;
     
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection disconnecting", this));
-    mConnected = PR_FALSE;
-    if (mWriteRequest) mWriteRequest->Cancel(NS_BINDING_ABORTED);
-    if (mReadRequest) mReadRequest->Cancel(NS_BINDING_ABORTED);
+    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection disconnecting (%x)", this, status));
+
+    if (NS_FAILED(status)) {
+        mConnected = PR_FALSE;
+    }
+
+    if (mWriteRequest) mWriteRequest->Cancel(status);    
+    if (mReadRequest) mReadRequest->Cancel(status);
     return NS_OK;
 }
 

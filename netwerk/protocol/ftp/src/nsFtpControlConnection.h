@@ -25,6 +25,7 @@
 
 #include "nsCOMPtr.h"
 
+#include "nsIURI.h"
 #include "nsIStreamListener.h"
 #include "nsIRequest.h"
 #include "nsITransport.h"
@@ -39,11 +40,11 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-	nsFtpControlConnection(nsITransport* socketTransport);
+	nsFtpControlConnection(const char* host, PRUint32 port);
 	virtual ~nsFtpControlConnection();
     
     nsresult Connect();
-    nsresult Disconnect();
+    nsresult Disconnect(nsresult status);
     nsresult Write(nsCString& command, PRBool suspend);
     
     void     GetReadRequest(nsIRequest** request) { NS_IF_ADDREF(*request=mReadRequest); }
@@ -62,6 +63,9 @@ private:
 	PRLock* mLock;  // protects mListener.
 
     
+    nsCAutoString    mHost;
+    PRUint32         mPort;
+
     nsCOMPtr<nsIRequest>        mReadRequest;
     nsCOMPtr<nsIRequest>        mWriteRequest;
     nsCOMPtr<nsITransport>      mCPipe;
