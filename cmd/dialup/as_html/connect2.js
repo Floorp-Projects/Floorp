@@ -267,6 +267,21 @@ function configureDialer()
 	navigator.preference("network.hosts.smtp_server",		parent.parent.globals.document.vars.SMTP.value);
 	navigator.preference("network.hosts.nntp_server",		parent.parent.globals.document.vars.NNTP.value);
 
+	var leaveMailOnServer = parent.parent.globals.GetNameValuePair( theFile, "Mode Selection", "Leave_On_Server" );
+
+	parent.parent.globals.debug( "Leave_mail flag is set to " + leaveMailOnServer );
+
+	if (leaveMailOnServer != "")
+	{
+		leaveMailOnServer = leaveMailOnServer.toLowerCase();
+
+		if ( leaveMailOnServer == "true" )
+			navigator.preference( "mail.leave_on_server", true );
+		else if ( leaveMailOnServer == "false" )
+			navigator.preference( "mail.leave_on_server", false );
+	}
+
+
 	navigator.preference("network.hosts.pop_server",	parent.parent.globals.document.vars.mailServer.value);
 	if (parent.parent.globals.document.vars.mailProtocol.value.toUpperCase() == "IMAP")	{
 		navigator.preference("mail.server_type",			1);
@@ -275,7 +290,7 @@ function configureDialer()
 		navigator.preference("mail.server_type",			0);
 		}
 
-	var mailID=""
+	var mailID="";
 	var mailAccount = parent.parent.globals.document.vars.emailName.value;
 	x = mailAccount.indexOf("@");
 	if (x>=0)	{
