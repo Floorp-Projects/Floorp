@@ -3436,6 +3436,8 @@ nsBrowserAccess.prototype =
                                 .getInterface(nsCI.nsIDOMWindow);
             loadURI(url, null);
           }
+          if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
+            content.focus();
         } catch(e) {
         }
     }
