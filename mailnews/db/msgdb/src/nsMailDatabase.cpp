@@ -21,6 +21,7 @@
 #include "nsDBFolderInfo.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsFileStream.h"
+#include "nsLocalFolderSummarySpec.h"
 
 nsMailDatabase::nsMailDatabase()
 : m_folderName("")
@@ -38,8 +39,10 @@ nsMailDatabase::~nsMailDatabase()
 {
 	nsMailDatabase	*mailDB;
 	int				statResult;
-	XP_StatStruct	st;
+	struct stat st;
 	PRBool			newFile = PR_FALSE;
+	nsLocalFolderSummarySpec	summarySpec(dbName);
+
 	nsDBFolderInfo	*folderInfo = NULL;
 
 // OK, dbName is probably folder name, since I can't figure out how nsFilePath interacts
@@ -55,8 +58,9 @@ nsMailDatabase::~nsMailDatabase()
 		mailDB->AddRef();
 		return(NS_OK);
 	}
+
 	// if the old summary doesn't exist, we're creating a new one.
-	if (XP_Stat (folderName, &st, xpMailFolderSummary) && create)
+	if (stat ((const char *) summarySpec, &st) && create)
 		newFile = PR_TRUE;
 
 
@@ -67,13 +71,10 @@ nsMailDatabase::~nsMailDatabase()
 	
 	mailDB->m_folderName = PL_strdup(folderName);
 
-	dbName = WH_FileName(folderName, xpMailFolderSummary);
-	if (!dbName) 
-		return NS_ERROR_OUT_OF_MEMORY;
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
-	statResult = XP_Stat (folderName, &st, xpMailFolder);
+	statResult = stat ((const char *) dbName, &st);
 
 	nsresult err = mailDB->OpenMDB(dbName, create);
 	PR_Free(dbName);
@@ -388,3 +389,57 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 	nsresult ret = NS_OK;
 	return ret;
 }
+
+/* static */
+nsresult nsMailDatabase::SetFolderInfoValid(nsFilePath &folderName, int num, int numunread)
+{
+	struct stat st;
+	nsLocalFolderSummarySpec	summarySpec(folderName);
+	nsFilePath					summaryPath(summarySpec);
+	nsresult		err;
+
+	if (stat((const char*) folderName, &st)) 
+		return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+
+	// should we have type safe downcast methods again?
+	nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);
+	if (pMessageDB == NULL)
+	{
+		pMessageDB = new nsMailDatabase;
+		// ### this does later stuff (marks latered messages unread), which may be a problem
+		err = pMessageDB->OpenMDB(summaryPath, FALSE);
+		if (err != NS_OK)
+		{
+			delete pMessageDB;
+			pMessageDB = NULL;
+		}
+	}
+	else
+		pMessageDB->AddRef();
+
+
+	if (pMessageDB == NULL)
+	{
+		printf("Exception opening summary file\n");
+		return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+	}
+	
+	{
+		pMessageDB->m_dbFolderInfo->m_folderSize = st.st_size;
+		pMessageDB->m_dbFolderInfo->m_folderDate = st.st_mtime;
+		pMessageDB->m_dbFolderInfo->ChangeNumVisibleMessages(num);
+		pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
+		pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
+	}
+	pMessageDB->Close();
+	return NS_OK;
+}
+
+
+// This is used to remember that the db is out of sync with the mail folder
+// and needs to be regenerated.
+void nsMailDatabase::SetReparse(PRBool reparse)
+{
+	m_reparse = reparse;
+}
+
