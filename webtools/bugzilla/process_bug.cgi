@@ -443,6 +443,9 @@ SWITCH: for ($::FORM{'knob'}) {
             PuntTryAgain("You must specify a component whose owner should " .
                          "get assigned these bugs.");
         }
+        if ($::FORM{'compconfirm'}) {
+            DoConfirm();
+        }
         ChangeStatus('NEW');
         SendSQL("select initialowner from components where program=" .
                 SqlQuote($::FORM{'product'}) . " and value=" .
