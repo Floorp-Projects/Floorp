@@ -1105,6 +1105,28 @@ extern "C" void FE_FreeSingleByteTable(void **hres)
 	::FreeResource((HGLOBAL) hres);
 }
 
+
+extern "C" INTLCharSetID FE_GetCharSetID(INTL_CharSetID_Selector selector) 
+{ 
+ INTLCharSetID charsetID = CS_DEFAULT; 
+
+ switch (selector) 
+ { 
+ case INTL_FileNameCsidSel: 
+ case INTL_DefaultTextWidgetCsidSel: 
+  charsetID = (INTLCharSetID) CIntlWin::GetSystemLocaleCsid(); 
+  break; 
+ default: 
+  break; 
+ } 
+#ifdef DEBUG_ricardob 
+ XP_ASSERT(CS_DEFAULT != charsetID); 
+#endif 
+
+ return charsetID; 
+} 
+
+
 /*--------------------------------------------------------------------------*/
 
 #define MAXNUMOFCSIDLIST 64

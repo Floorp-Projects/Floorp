@@ -2884,6 +2884,25 @@ INTL_ResourceCharSet(void)
 	return fe_LocaleCharSetName;
 }
 
+
+INTLCharSetID
+FE_GetCharSetID(INTL_CharSetID_Selector selector)
+{
+        INTLCharSetID charsetID = CS_DEFAULT;
+
+        switch (selector)
+        {
+        case INTL_FileNameCsidSel:
+        case INTL_DefaultTextWidgetCsidSel:
+                charsetID = (INTLCharSetID) fe_LocaleCharSetID;
+                break;
+        default:
+                break;
+        }
+        XP_ASSERT(CS_DEFAULT != charsetID);
+
+        return charsetID;
+}
 void
 INTL_Relayout(MWContext *pContext)
 {
