@@ -30,8 +30,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.22 $ 
-# $Date: 2002/05/06 19:08:55 $ 
+# $Revision: 1.23 $ 
+# $Date: 2002/05/10 21:20:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
@@ -84,7 +84,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.22 $ )[1];
+$VERSION = ( qw $Revision: 1.23 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -215,7 +215,7 @@ sub trim_db_history {
 # clear data structures in preparation for printing a new table
 
 sub status_table_start {
-  my ($self, $row_times, $tree, ) = @_;
+  my ($self, $row_times, $tree, $association) = @_;
 
   # create an ordered list of all times which any data is stored
 
@@ -233,15 +233,52 @@ sub status_table_start {
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
   my ($earliest_data) = $row_times->[0] + $first_cell_seconds;
 
-  $NEXT_DB = 0;
-  while ( ($DB_TIMES[$NEXT_DB] > $earliest_data) &&    
-          ($NEXT_DB < $#DB_TIMES) ) {
-    $NEXT_DB++
+  $NEXT_DB{$tree}{$association} = 0;
+  while ( ($DB_TIMES[$NEXT_DB{$tree}{$association}] > $earliest_data) &&    
+          ($NEXT_DB{$tree}{$association} < $#DB_TIMES) ) {
+    $NEXT_DB{$tree}{$association}++
   }
 
   return ;  
 }
 
+
+
+sub cell_data {
+    my ($tree, $db_index, $last_time, $association) = @_;
+    
+    my %authors = ();
+    
+    my ($first_notice_time) = $DB_TIMES[$NEXT_DB{$tree}{$association}];
+    
+    while (1) {
+        my ($time) = $DB_TIMES[$db_index];
+
+        # find the DB entries which are needed for this cell
+        ($time < $last_time) && last;
+        ($db_index >= $#DB_TIMES) && last;
+        
+        $db_index++;
+
+        foreach $author (keys %{ $DATABASE{$tree}{$time} }) {
+            my $rec = $DATABASE{$tree}{$time}{$author};
+            if (
+                (defined($association)) &&
+                (!(defined($rec->{'associations'}->{$association})))
+                ) {
+                next;
+            }
+            $authors{$author} = $rec;
+        }
+        
+    } # while (1)
+    
+    
+    return ($db_index, $first_notice_time, \%authors);
+}
+
+
+# Given a notice return a formatted HTML representation of the text.
 
 sub render_notice {
     my ($notice) = @_;
@@ -252,155 +289,273 @@ sub render_notice {
     my $mailaddr = $notice->{'mailaddr'};
     
     my ($pretty_time) = HTMLPopUp::timeHTML($time);
+    my $mailto = "mailto:$mailaddr?subject=Tinderbox Notice";
+    my $hidden_info = (
+                       "\t\t\t<!-- ".
+                       "posted from remote host: $remote_host".
+                       " at time: $notice->{'localposttime'} ".
+                       "-->\n".
+                       "");
 
     # If the user requests for us to lie about the time, we should
     # also tell when the note was really posted.
 
     my $localpostedtime;
-    if ( $notice->{'posttime'} - $notice->{'time'} > $main::SECONDS_PER_HOUR) {
-       $localpostedtime = (
-                           "<br>(Actually posted at: ". 
-                           $notice->{'localposttime'}.
-                           ")\n".
-                           "");
+    if ( 
+         ($notice->{'posttime'} - $notice->{'time'}) > 
+         $main::SECONDS_PER_HOUR
+         ) {
+        $localpostedtime = (
+                            "(Actually posted at: ". 
+                            $notice->{'localposttime'}.
+                            ")<br>\n".
+                            "");
     }
+    
+    my $rendered_association;
+    my $assocations_ref = $notice->{'associations'};
+    if ($assocations_ref) {
+        foreach $association (sort keys %{ $assocations_ref }) {
+            $rendered_association .= (
+                                      "\t\t\t<tt>-".
+                                      $association.
+                                      "-</tt><br>\n"
+                                      );
+         }
+     }
 
-    my ($rendered_notice) = (
-                             "\t\t<p>\n".
-                             "\t\t\t[<b>".
-                             HTMLPopUp::Link(
-                                             "linktxt"=>$mailaddr,
-                                             "href"=>"mailto:$mailaddr?subject=\"Tinderbox Notice\"",
-                                             "name"=>"$time\.$mailaddr",
-                                             ).
-                           " - ".
-                           HTMLPopUp::Link(
-                                           "linktxt"=>$pretty_time,
-                                           "href"=>"\#$time",
-                                           ).
-                           "</b>]".
-                           $localpostedtime.
-                           "\n".
-                           "<!-- posted from remote host: $remote_host at time : $notice->{'localposttime'} -->\n".
-                           "\t\t</p>\n".
-                           "\t\t<p>\n".
-                           "$note\n".
-                           "\t\t</p>\n"
-                          );
+     my ($rendered_notice) = (
+                              "\t\t<br>\n".
+                              "\t\t\t[<b>".
+                              HTMLPopUp::Link(
+                                              "linktxt"=>$mailaddr,
+                                              "href"=>$mailto,
+                                              "name"=>"$time\.$mailaddr",
+                                              ).
+                            " - ".
+                            HTMLPopUp::Link(
+                                            "linktxt"=>$pretty_time,
+                                            "href"=>"\#$time",
+                                            ).
+                            "</b>]<br>\n".
+                              $localpostedtime.
+                              $rendered_association.
+                              $hidden_info.
+                              "\t\t<p>\n".
+                              "$note\n".
+                              "\t\t</p>\n"
+                              );
 
     return $rendered_notice;
+ }
+
+
+ # return all the notices so we can write to the disk this data. Those
+ # users with text browsers can view this data without popups.
+
+ sub get_all_rendered_notices {
+     my ($self, $tree, ) = @_;
+
+     my $rendered_notices;
+
+     my @db_times = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+
+     foreach $time (@db_times) {    
+
+         $localtime = localtime($time);
+         $rendered_notices .= (
+                               "\n\n".
+                               # allow us to reference individual
+                               # notices in the file
+                               HTMLPopUp::Link(
+                                               "name"=>$time,
+                                               "href"=>"\#$time",
+                                               #"linktxt" => $localtime,
+                                               ).
+                               "<!-- $localtime -->".
+                               "\n".
+                               "");
+
+         foreach $author (keys %{ $DATABASE{$tree}{$time} }) {
+             my $new_notice = 
+                 render_notice($DATABASE{$tree}{$time}{$author});
+
+             $rendered_notices .= "<p>".$new_notice."</p>";
+         } # foreach $author
+
+     } # foreach $time
+
+
+     return $rendered_notices;
+ }
+
+ # Given a data structure which represents all applicable notices for a
+ # cell render the popup and graphic image which is appropriate. This
+ # is used by the code which renders the whole cell in <td>'s.
+
+
+ sub rendered_cell_contents {
+     my ($tree, $authors, $first_notice_time, ) = @_;
+
+     my $rendered_notices;
+     my $num_notices =0;
+     foreach $author (sort keys %{ $authors }) {
+         my $new_notice = 
+             render_notice($authors->{$author});
+
+         $rendered_notices .= "<p>".$new_notice."</p>";
+         $num_notices++
+     } # foreach $author
+
+
+     ($rendered_notices) ||
+         return ;
+
+     # create a url to a cgi script so that those who do not use pop up
+     # menus can view the notice.
+
+     my $href = (FileStructure::get_filename($tree, 'tree_URL').
+                 "/all_notices.html\#$first_notice_time");
+    
+    # the popup window software is pretty sensitive to newlines and
+    # terminating quotes.  Take those out of the message.
+
+    my $title = (
+                 "Notice Board: ".
+                 HTMLPopUp::timeHTML($first_notice_time)
+                 );
+
+    $out =  (
+                "\t\t".
+                HTMLPopUp::Link(
+                                
+                                # If notice available is an image then
+                                # we need the spaces to make the popup
+                                # on mouse over work.
+                                
+                                "linktxt" => " $NOTICE_AVAILABLE ",
+                                "href" => $href,
+                                "windowtxt" => $rendered_notices,
+                                "windowtitle" => $title,
+                                "windowheight" => (175 * $num_notices)+100,
+                                ).
+                "\n".
+                "");
+
+    return $out;
 }
 
-sub get_all_rendered_notices {
-    my ($self, $tree, ) = @_;
-    
-    my $rendered_notices;
-    
-    my @db_times = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+# Create one cell (possibly taking up many rows) which will show
+# that no authors have checked in during this time.
 
-    foreach $time (@db_times) {    
-        
-        $localtime = localtime($time);
-        $rendered_notices .= (
-                              "\n\n".
-                              # allow us to reference individual
-                              # notices in the file
-                              HTMLPopUp::Link(
-                                              "name"=>$time,
-                                              "href"=>"\#$time",
-                                              #"linktxt" => $localtime,
-                                              ).
-                              "<!-- $localtime -->".
-                              "\n".
-                              "");
+sub render_empty_cell {
+    my ($tree, $till_time, $rowspan) = @_;
 
-        foreach $author (keys %{ $DATABASE{$tree}{$time} }) {
-            my $new_notice = 
-                render_notice($DATABASE{$tree}{$time}{$author});
+    my $local_till_time = localtime($till_time);
+    return ("\t<!-- Notice: empty data. ".
+            "tree: $tree, ".
+            "filling till: '$local_till_time', ".
+            "-->\n".
             
-            $rendered_notices .= "<p>".$new_notice."</p>";
-        } # foreach $author
-        
-    } # foreach $time
+            "\t\t<td align=center rowspan=$rowspan>".
+            "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+}
 
 
-    return $rendered_notices;
+sub Notice_Link {
+    my ($self, $last_time, $tree, $association) = @_;
+
+    my ($db_index, $first_notice_time, $authors) =
+        cell_data($tree, 
+                  $NEXT_DB{$tree}{$association},
+                  $last_time, 
+                  $association);
+
+    $NEXT_DB{$tree}{$association} = $db_index;
+
+    my $html = rendered_cell_contents($tree, 
+                                      $authors, $first_notice_time);
+
+    return $html;
 }
 
 
 sub status_table_row {
-  my ($self, $row_times, $row_index, $tree, ) = @_;
+    my ($self, $row_times, $row_index, $tree,) = @_;
+    
+    my @html;
 
-  my @outrow = ();
-  my @authors = ();
+    # skip this column because it is part of a multi-row missing data
+    # cell?
 
-  # we assume that tree states only change rarely so there are very
-  # few cells which have more then one state associated with them.
-  # It does not matter what we do with those cells.
+    if ( $NEXT_ROW{$tree}{$association} != $row_index ) {
+        
+        push @html, ("\t<!-- Notice: skipping. ".
+                     "tree: $tree, ".
+                     "additional_skips: ".
+                     ($NEXT_ROW{$tree}{$association} - $row_index).", ".
+                     " -->\n");
+        return @html;
+    }
+    
+    my ($db_index, $first_notice_time, $authors) =
+        cell_data($tree, 
+                  $NEXT_DB{$tree}{$association},
+                  $row_times->[$row_index], 
+                  undef);
+    
+    # If there is data for this cell render it and return.
 
-  my $rendered_notice = '';
-  my $num_notices = 0;
+    if (scalar(%{$authors})) {
+        
+        $NEXT_DB{$tree}{$association} = $db_index;
+        $NEXT_ROW{$tree}{$association} = $row_index + 1;
+        @html = rendered_cell_contents(
+                                       $tree, 
+                                       $authors, $first_notice_time);
 
-  my ($first_notice_time) = $DB_TIMES[$NEXT_DB];
+        my $out = (
+                   "\t<td align=center>\n".
+                   "@html".
+                   "\t</td>\n".
+                   "");
 
-  while (1) {
-    my ($time) = $DB_TIMES[$NEXT_DB];
-
-    # find the DB entries which are needed for this cell
-    ($time < $row_times->[$row_index]) && last;
-
-    foreach $author (keys %{ $DATABASE{$tree}{$time} }) {
-      my $new_notice = 
-          render_notice($DATABASE{$tree}{$time}{$author});
-
-      $rendered_notice .= "<p>".$new_notice."</p>";
-      push @authors, $author;
-      $num_notices++;
+        return $out;          
     }
 
-    $NEXT_DB++;
-    ($NEXT_DB > $#DB_TIMES) && last;
-  }
+    # Create a multi-row dummy cell for missing data.
+    # Cell stops if there is data in the following cell.
+    
+    my $rowspan = 0;
+    my ($next_db_index);
+    $next_db_index = $db_index;
+    
+    while (
+           ($row_index+$rowspan <=  $#{ $row_times }) &&
 
-
-  # create a url to a cgi script so that those who do not use pop up
-  # menus can view the notice.
-
-  my $href = (FileStructure::get_filename($tree, 'tree_URL').
-              "/all_notices.html\#$first_notice_time");
-
-  if ($rendered_notice) {
-
-    # the popup window software is pretty sensitive to newlines and
-    # terminating quotes.  Take those out of the message.
-
-
-    @outrow =  (
-                "\t<td>\n".
-                "\t\t".
-                HTMLPopUp::Link(
-
-                                # if notice available is an image then
-                                # we need the spaces to make the popup
-                                # on mouse over work.
-
-                                "linktxt" => " $NOTICE_AVAILABLE ",
-                                "href" => $href,
-                                "windowtxt" => $rendered_notice,
-                                "windowtitle" => "Notice Board",
-                                "windowheight" => (175 * $num_notices)+100,
-                               ).
-                "\n".
-                "\t</td>\n");
-  } else {
-    @outrow = ("\t<!-- skipping: Notice: tree: $tree -->\n".
-               "\t\t<td>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
-
-  }
-
-
-  return @outrow; 
+           (!(scalar(%{$authors}))) 
+           ) {
+        
+        $db_index = $next_db_index;
+        $rowspan++ ;
+        
+        ($next_db_index, $first_notice_time, $authors) =
+            cell_data($tree, 
+                      $db_index, 
+                      $row_times->[$row_index+$rowspan], 
+                      undef);
+    }
+    
+    $NEXT_ROW{$tree}{$association} = $row_index + $rowspan;
+    $NEXT_DB{$tree}{$association} = $db_index;
+    
+    @html= render_empty_cell($tree, 
+                             $row_times->[$row_index+$rowspan], 
+                             $rowspan);
+    
+    return @html;
 }
+
 
 
 

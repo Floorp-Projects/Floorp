@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.53 $ 
-# $Date: 2002/05/08 22:30:12 $ 
+# $Revision: 1.54 $ 
+# $Date: 2002/05/10 21:20:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -148,31 +148,33 @@ use File::Basename;
 
 use lib '#tinder_libdir#';
 
+use HTMLPopUp;
 use BuildStatus;
 use TinderDB::BasicTxtDB;
 use VCDisplay;
 use Utils;
 use TinderConfig;
+use TinderDB::Notice;
 
 $VERSION = '#tinder_version#';
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
-# as part of the configuration for mozilla.org, they want most cells
-# which are empty to not have borders but the builds cells are
-# different. yeck!
-
-$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
-    "&nbsp;";
-
-$DISPLAY_BUILD_ERRORS = $TinderConfig::DISPLAY_BUILD_ERRORS  ||
-    1;
+if (defined ($TinderConfig::DISPLAY_BUILD_ERRORS)) {
+    $DISPLAY_BUILD_ERRORS = $TinderConfig::DISPLAY_BUILD_ERRORS;
+} else {
+    $DISPLAY_BUILD_ERRORS = 1;
+}
 
 
 # The number of most recent builds used in computing the averages
 # which estimate the build times.
 
 $NUM_OF_AVERAGE = 10;
+
+# We 'have a' notice so that we can put stars in our column.
+ 
+$NOTICE= TinderDB::Notice->new();
 
 # Find the name of each build and the proper order to display them.
 # No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
@@ -263,6 +265,12 @@ sub latest_status {
 }
 
 
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    return build_names();
+}
 
 #  Prepare information for popupwindows on row headers and also the
 #  link to bonsai giving the aproximate times that the build was
@@ -1076,6 +1084,9 @@ sub status_table_start {
   
   my (@all_build_names) = all_build_names($tree);
   foreach $buildname (@all_build_names) {
+
+    $NOTICE->status_table_start($row_times, $tree, $buildname);
+
     my ($db_index) = 0;
     my ($current_rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
     while ( 
@@ -1139,20 +1150,38 @@ sub status_table_row {
         $rowspan++ ;
       }
 
+      $NEXT_ROW{$tree}{$buildname} = $row_index + $rowspan;
+
       my ($cell_color) = BuildStatus::status2html_colors('not_running');
       my ($cell_options) = ("rowspan=$rowspan ".
                             "bgcolor=$cell_color ");
       my ($lc_time) = localtime($current_rec->{'timenow'});
+
+      my $notice = $NOTICE->Notice_Link(
+                                        $row_times->[$row_index + $rowspan],
+                                        $tree,
+                                        $buildname,
+                                        );
+      my $cell_contents;
+      if ($notice) {
+          $cell_contents = (
+                            "\t\t\t". 
+                            $notice.
+                            "\n".
+                            "");
+      } else {
+          $cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
+      }
 
       push @outrow, ("\t<!-- not_running: Build:".
                      "tree: $tree, ".
                      "build: $buildname, ".
                      "previous_end: $lc_time, ".
                      "-->\n".
-
+                     
                      "\t\t<td align=center $cell_options>".
-                     "$EMPTY_TABLE_CELL</td>\n");
-      $NEXT_ROW{$tree}{$buildname} =  $row_index + $rowspan;
+                     "$cell_contents</td>\n");
+
       next;
     }
 
@@ -1279,6 +1308,17 @@ sub status_table_row {
                    "\n".
                    "");
     }
+
+
+     $links .= (
+               "\t\t\t". 
+               $NOTICE->Notice_Link(
+                                    $current_rec->{'starttime'},
+                                    $tree,
+                                    $buildname,
+                                    ).
+               "\n".
+               "");
 
     
     $links.=  "\t\t\t".$text_browser_color_string."\n";

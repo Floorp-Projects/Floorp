@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.59 $ 
-# $Date: 2002/05/09 03:08:38 $ 
+# $Revision: 1.60 $ 
+# $Date: 2002/05/10 21:20:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -99,9 +99,10 @@ use Utils;
 use HTMLPopUp;
 use TreeData;
 use VCDisplay;
+use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.59 $ )[1];
+$VERSION = ( qw $Revision: 1.60 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -112,6 +113,9 @@ $VC_NAME = $TinderConfig::VC_NAME || "CVS";
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
     '(\d\d\d+)';
 
+# We 'have a' notice so that we can put stars in our column.
+
+$NOTICE= TinderDB::Notice->new();
 
 # Print out the Database in a visually useful form so that I can
 # debug timing problems.  This is not called by any code. I use this
@@ -336,7 +340,7 @@ sub status_table_legend {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
-    return "$VC_NAME";
+    return $VC_NAME;
 }
 
 
@@ -411,8 +415,10 @@ sub render_authors {
     }
     
     my $query_links = '';
-    $query_links.=  "\t\t".$text_browser_color_string."\n";
-    
+    if ($text_browser_color_string) {
+        $query_links.=  "\t\t".$text_browser_color_string."\n";
+    }
+
     if ( scalar(%authors) ) {
         
         # find the times which bound the cell so that we can set up a
@@ -564,24 +570,24 @@ sub render_authors {
                              "  -->\n".
                              "");
 
-#            $links .= (
-#                       "\t\t\t". 
-#                       TinderDB::Notice::Notice_Link(
-#                                                     'tree' => $tree,
-#                                                     'associated' => $VC_NAME,
-#                                                     'mindate' => $mindate,
-#                                                     'maxdate' => $maxdate,
-#                                                     )
-#                       "\n"
-#                       );
-
             $query_links .= "\t\t".$query_link."\n";
             
         } # foreach %author
     } # if %authors
 
-    $query_links.=  "\t\t".$text_browser_color_string."\n";
-    
+    my $notice = $NOTICE->Notice_Link(
+                                      $maxdate,
+                                      $tree,
+                                      $VC_NAME,
+                                      );
+    if ($notice) {
+        $query_links.= "\t\t".$notice."\n";
+    }
+
+    if ($text_browser_color_string) {
+        $query_links.=  "\t\t".$text_browser_color_string."\n";
+    }
+
     @outrow = (
                "\t<!-- VC_Bonsai: authors -->\n".               
                "\t<td align=center $cell_options>\n".
@@ -612,9 +618,25 @@ sub render_empty_cell {
         $text_browser_color_string = 
           HTMLPopUp::text_browser_color_string($cell_color, $char) ;
     }
+    my $notice = $NOTICE->Notice_Link(
+                                      $till_time,
+                                      $tree,
+                                      $VC_NAME,
+                                      );
     
-    my $cell_contents =  $text_browser_color_string || 
-        $HTMLPopUp::EMPTY_TABLE_CELL;
+
+    my $cell_contents;
+    if ($text_browser_color_string) {
+        $cell_contents .= $text_browser_color_string;
+    }
+
+    if ($notice) {
+        $cell_contents .= "\n\t\t".$notice."\n";
+    }
+
+    if (!($cell_contents)) {
+        $cell_contents = "\n\t\t".$HTMLPopUp::EMPTY_TABLE_CELL."\n";
+    }
 
     return ("\t<!-- VC_Bonsai: empty data. ".
             "tree: $tree, ".
@@ -652,6 +674,8 @@ sub status_table_start {
           ($NEXT_DB{$tree} < $#DB_TIMES) ) {
     $NEXT_DB{$tree}++
   }
+
+  $NOTICE->status_table_start($row_times, $tree, $VC_NAME);
 
   # we do not store a treestate with every database entry.
   # remember the treestate as we travel through the database.

@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.17 $ 
-# $Date: 2002/05/09 03:09:12 $ 
+# $Revision: 1.18 $ 
+# $Date: 2002/05/10 21:20:28 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -74,9 +74,10 @@ use Utils;
 use HTMLPopUp;
 use TreeData;
 use VCDisplay;
+use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.17 $ )[1];
+$VERSION = ( qw $Revision: 1.18 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -84,6 +85,9 @@ $VERSION = ( qw $Revision: 1.17 $ )[1];
 # name of the bug tracking system
 $BT_NAME = $TinderConfig::BT_NAME || "BT";
 
+# We 'have a' notice so that we can put stars in our column.
+ 
+$NOTICE= TinderDB::Notice->new();
 
 # get the recent data from where the MDA puts the parsed data.
 
@@ -179,6 +183,14 @@ sub status_table_header {
   }
 
   return ($out);
+}
+
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    my (@columns) = BTData::get_all_columns();
+    return @columns;
 }
 
 
@@ -319,16 +331,33 @@ sub cell_data {
 # that no authors have checked in during this time.
 
 sub render_empty_cell {
-    my ($tree, $till_time, $rowspan) = @_;
+    my ($tree, $till_time, $rowspan, $column) = @_;
 
+    my $notice = $NOTICE->Notice_Link(
+                                      $till_time,
+                                      $tree,
+                                      $column,
+                                      );
+    
+    my $cell_contents;
+    if ($notice) {
+        $cell_contents = (
+                          "\t\t\t". 
+                          $notice.
+                          "\n".
+                          "");
+    } else {
+        $cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
+    }
+ 
     my $local_till_time = localtime($till_time);
     return ("\t<!-- BT_Generic: empty data. ".
-            "tree: $tree, ".
+            "tree: $tree, column: $column, ".
             "filling till: '$local_till_time', ".
             "-->\n".
             
             "\t\t<td align=center rowspan=$rowspan>".
-            "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+            "$cell_contents</td>\n");
 }
 
 
@@ -353,9 +382,11 @@ sub status_table_start {
   my (@columns) = BTData::get_all_columns();
 
   foreach $column (@columns) {  
+      $NOTICE->status_table_start($row_times, $tree, $column);
+
       $NEXT_DB{$tree}{$column} = 0;
-      while ( ($DB_TIMES[$NEXT_DB] > $earliest_data) &&    
-              ($NEXT_DB{$tree} < $#DB_TIMES) ) {
+      while ( ($DB_TIMES[$NEXT_DB{$tree}{$column}] > $earliest_data) &&    
+              ($NEXT_DB{$tree}{$column} < $#DB_TIMES) ) {
           $NEXT_DB{$tree}{$column}++;
       }
   }
@@ -396,6 +427,17 @@ sub render_one_column {
             my $html = render_bug($bug_ids->{$bug_id});
             push @html, $html;
         }
+
+        $notice .= (
+                    "\t\t\t". 
+                    $NOTICE->Notice_Link(
+                                         $DB_TIMES[$NEXT_DB{$tree}{$column}],
+                                         $tree,
+                                         $column,
+                                         ).
+                    "\n".
+                    "");    
+
         my $out = (
                    "\t<td align=center>\n".
                    "@html".
@@ -433,7 +475,7 @@ sub render_one_column {
     
     @html= render_empty_cell($tree, 
                              $row_times->[$row_index+$rowspan], 
-                             $rowspan);
+                             $rowspan, $column);
 
     return @html;
 }
