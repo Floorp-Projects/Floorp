@@ -49,14 +49,14 @@ sub provides {
 
 sub init {
     my $self = shift;
-    my($app, $user, $fieldID, $fieldTypeData, $fieldCategory, $fieldName, $fieldData) = @_;
+    my($app, $user, $fieldID, $fieldCategory, $fieldName, $fieldTypeData, $fieldData) = @_;
     # do not hold on to $user!
     $self->app($app);
     $self->userID($user->userID); # change this at your peril
     $self->fieldID($fieldID); # change this at your peril
-    $self->typeData($fieldTypeData); # change this at your peril
     $self->category($fieldCategory); # change this at your peril
     $self->name($fieldName); # change this at your peril
+    $self->typeData($fieldTypeData); # change this at your peril
     $self->data($fieldData); # this is the only thing you should be changing
     # don't forget to update the user's 'hash' function if you add more fields
     $self->{'_DELETE'} = 0;

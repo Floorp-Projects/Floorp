@@ -105,21 +105,21 @@ sub getFields {
     my $self = shift;
     my($app) = @_;
     $self->notImplemented();
-    # return [fieldID, category, name, type, data]*
+    # return [type, fieldID, category, name, typeData]*
 }
 
-sub getFieldFromID {
+sub getFieldByID {
     my $self = shift;
     my($app, $fieldID) = @_;
     $self->notImplemented();
-    # return [fieldID, category, name, type, data]
+    # return [type, fieldID, category, name, typeData]
 }
 
-sub getFieldFromCategoryAndName {
+sub getFieldByName {
     my $self = shift;
     my($app, $category, $name) = @_;
     $self->notImplemented();
-    # return [fieldID, category, name, type, data]
+    # return [type, fieldID, category, name, typeData]
 }
 
 sub setField {

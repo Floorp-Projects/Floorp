@@ -52,7 +52,11 @@ sub provides {
 sub createFieldByID {
     my $self = shift;
     my($app, $user, $fieldID, $fieldData) = @_;
-    return undef; # XXX
+    my($type, @data) = $app->getService('dataSource.user')->getFieldByID($app, $fieldID);
+    $app->assert(defined($type), 1, "Database contains a user with a field ID '$fieldID' but that field ID is not defined");
+    my $field = $app->getServiceInstance("user.field.$type", $user, @data, $fieldData);
+    $app->assert(defined($field), 1, "Database contains a field of type '$type' but there is no service providing that type");
+    return $field;
 }
 
 # typically used when the field is being created
@@ -61,5 +65,9 @@ sub createFieldByName {
     my($app, $user, $fieldCategory, $fieldName, $fieldData) = @_;
     # fieldData is likely to be undefined, as the field is unlikely to
     # exist for this user.
-    return undef; # XXX
+    my($type, @data) = $app->getService('dataSource.user')->getFieldByName($app, $fieldCategory, $fieldName);
+    $app->assert(defined($type), 1, "Database contains a user with a field name '$fieldCategory.$fieldName' but that field is not defined");
+    my $field = $app->getServiceInstance("user.field.$type", $user, @data, $fieldData);
+    $app->assert(defined($field), 1, "Database contains a field of type '$type' but there is no service providing that type");
+    return $field;
 }
