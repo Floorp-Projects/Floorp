@@ -150,7 +150,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
         else {
           aChildList = frame;
         }
-        legendFrame->DeleteFrame(aPresContext);
+        legendFrame->Destroy(aPresContext);
       } 
       else {
         nsIFrame* nextFrame;

@@ -38,7 +38,7 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD Paint(nsIPresContext &aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,

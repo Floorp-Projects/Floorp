@@ -130,7 +130,7 @@ public:
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD  Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD  GetContent(nsIContent** aContent) const;
   NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,

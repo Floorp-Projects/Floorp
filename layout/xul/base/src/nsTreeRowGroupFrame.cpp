@@ -77,11 +77,11 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 }
 
 NS_IMETHODIMP
-nsTreeRowGroupFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsTreeRowGroupFrame::Destroy(nsIPresContext& aPresContext)
 {
   if (mScrollbar) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
-    mScrollbar->DeleteFrame(aPresContext);
+    mScrollbar->Destroy(aPresContext);
   }
   return NS_OK;
 }

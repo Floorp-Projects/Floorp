@@ -25,7 +25,7 @@ nsFrameList::DeleteFrames(nsIPresContext& aPresContext)
   while (nsnull != frame) {
     nsIFrame* next;
     frame->GetNextSibling(&next);
-    frame->DeleteFrame(aPresContext);
+    frame->Destroy(aPresContext);
     mFirstChild = frame = next;
   }
 }
@@ -111,7 +111,7 @@ nsFrameList::DeleteFrame(nsIPresContext& aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (RemoveFrame(aFrame)) {
-    aFrame->DeleteFrame(aPresContext);
+    aFrame->Destroy(aPresContext);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -208,7 +208,7 @@ nsFrameList::ReplaceAndDeleteFrame(nsIPresContext& aPresContext,
   NS_PRECONDITION(nsnull != aOldFrame, "null ptr");
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
   if (ReplaceFrame(aParent, aOldFrame, aNewFrame)) {
-    aNewFrame->DeleteFrame(aPresContext);
+    aNewFrame->Destroy(aPresContext);
     return PR_TRUE;
   }
   return PR_FALSE;

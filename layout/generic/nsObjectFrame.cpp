@@ -383,7 +383,7 @@ nsObjectFrame::Init(nsIPresContext&  aPresContext,
       mFrames.AppendFrame(this, aNewFrame);
     }
     else
-      aNewFrame->DeleteFrame(aPresContext);
+      aNewFrame->Destroy(aPresContext);
   }
 
   return rv;

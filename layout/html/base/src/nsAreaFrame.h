@@ -56,7 +56,7 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,

@@ -42,13 +42,13 @@ nsBulletFrame::~nsBulletFrame()
 }
 
 NS_IMETHODIMP
-nsBulletFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsBulletFrame::Destroy(nsIPresContext& aPresContext)
 {
   // Stop image loading first
   mImageLoader.StopAllLoadImages(&aPresContext);
 
   // Let base class do the rest
-  return nsFrame::DeleteFrame(aPresContext);
+  return nsFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

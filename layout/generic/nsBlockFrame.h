@@ -84,7 +84,7 @@ public:
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext* aParentContext,

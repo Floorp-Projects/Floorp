@@ -372,7 +372,7 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsFrame::Destroy(nsIPresContext& aPresContext)
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext.GetShell(getter_AddRefs(shell));

@@ -193,12 +193,12 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 }
 
 NS_METHOD
-nsTitledButtonFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsTitledButtonFrame::Destroy(nsIPresContext& aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.StopAllLoadImages(&aPresContext);
 
-  return nsLeafFrame::DeleteFrame(aPresContext);
+  return nsLeafFrame::Destroy(aPresContext);
 }
 
 

@@ -65,10 +65,10 @@ NS_NewPositionedInlineFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsPositionedInlineFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mAbsoluteContainer.DeleteFrames(aPresContext);
-  return nsInlineFrame::DeleteFrame(aPresContext);
+  mAbsoluteContainer.DestroyFrames(aPresContext);
+  return nsInlineFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -318,10 +318,10 @@ nsInlineFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsInlineFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsInlineFrame::Destroy(nsIPresContext& aPresContext)
 {
   mFrames.DeleteFrames(aPresContext);
-  return nsInlineFrameSuper::DeleteFrame(aPresContext);
+  return nsInlineFrameSuper::Destroy(aPresContext);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -389,7 +389,7 @@ nsInlineFrame::CreateAnonymousBlock(nsIPresContext& aPresContext,
                                               getter_AddRefs(newSC));
     rv = bf->Init(aPresContext, mContent, this, newSC, nsnull);
     if (NS_FAILED(rv)) {
-      bf->DeleteFrame(aPresContext);
+      bf->Destroy(aPresContext);
       delete bf;
     }
     else {
@@ -1058,7 +1058,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             anonymousBlock->GetParent((nsIFrame**) &anonymousBlockParent);
             nsAnonymousBlockFrame* ab = anonymousBlock;
             anonymousBlock->RemoveFramesFrom(aOldFrame);
-            aOldFrame->DeleteFrame(aPresContext);
+            aOldFrame->Destroy(aPresContext);
             while (nsnull != nextInFlow) {
               nsIFrame* nextParent;
               nextInFlow->GetParent(&nextParent);
@@ -1068,7 +1068,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
               ab->RemoveFirstFrame();
               nsIFrame* nextNextInFlow;
               nextInFlow->GetNextInFlow(&nextNextInFlow);
-              nextInFlow->DeleteFrame(aPresContext);
+              nextInFlow->Destroy(aPresContext);
               nextInFlow = nextNextInFlow;
             }
 
@@ -1134,7 +1134,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
           anonymousBlock->GetParent((nsIFrame**) &anonymousBlockParent);
           anonymousBlock->RemoveFirstFrame();
           aOldFrame->GetNextInFlow(&nextInFlow);
-          aOldFrame->DeleteFrame(aPresContext);
+          aOldFrame->Destroy(aPresContext);
           while (nsnull != nextInFlow) {
             nsIFrame* nextParent;
             nextInFlow->GetParent(&nextParent);
@@ -1144,7 +1144,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             anonymousBlock->RemoveFirstFrame();
             nsIFrame* nextNextInFlow;
             nextInFlow->GetNextInFlow(&nextNextInFlow);
-            nextInFlow->DeleteFrame(aPresContext);
+            nextInFlow->Destroy(aPresContext);
             nextInFlow = nextNextInFlow;
           }
 

@@ -1606,7 +1606,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
   // Create an area frame that will format the cell's content
   rv = NS_NewTableCellInnerFrame(&aNewCellBodyFrame);
   if (NS_FAILED(rv)) {
-    aNewCellFrame->DeleteFrame(*aPresContext);
+    aNewCellFrame->Destroy(*aPresContext);
     aNewCellFrame = nsnull;
     return rv;
   }

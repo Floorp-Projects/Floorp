@@ -164,11 +164,11 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsMenuFrame::Destroy(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DeleteFrames(aPresContext);
-  return nsBoxFrame::DeleteFrame(aPresContext);
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 // Called to prevent events from going to anything inside the menu.

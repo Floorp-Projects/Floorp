@@ -277,10 +277,10 @@ void nsTreeFrame::FireChangeHandler(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP 
-nsTreeFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsTreeFrame::Destroy(nsIPresContext& aPresContext)
 {
   ClearSelection(aPresContext);
-  return nsTableFrame::DeleteFrame(aPresContext);
+  return nsTableFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

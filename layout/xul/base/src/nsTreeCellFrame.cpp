@@ -332,8 +332,8 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
 }
 
 NS_IMETHODIMP
-nsTreeCellFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsTreeCellFrame::Destroy(nsIPresContext& aPresContext)
 {
   mTreeFrame->RemoveFromSelection(aPresContext, this);
-  return nsTableCellFrame::DeleteFrame(aPresContext);
+  return nsTableCellFrame::Destroy(aPresContext);
 }

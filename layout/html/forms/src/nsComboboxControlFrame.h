@@ -77,7 +77,7 @@ public:
                                    PRInt32* aLocalChange);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                nsIAtom*        aListName,

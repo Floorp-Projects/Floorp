@@ -154,7 +154,7 @@ nsLineBox::DeleteLineList(nsIPresContext& aPresContext, nsLineBox* aLine)
     for (nsIFrame* child = aLine->mFirstChild; child; ) {
       nsIFrame* nextChild;
       child->GetNextSibling(&nextChild);
-      child->DeleteFrame(aPresContext);
+      child->Destroy(aPresContext);
       child = nextChild;
     }
 
