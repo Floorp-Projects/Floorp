@@ -54,21 +54,21 @@ Rights Reserved.
 							<spacer flex="1"/>
 							<text for="FirstName" value="&FirstName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-								<textbox id="FirstName" flex="1" oninput="top.GenerateDisplayName()"/>
+								<textbox id="FirstName" flex="1" oninput="GenerateDisplayName()"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
 							<text for="LastName" value="&LastName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-								<textbox id="LastName" flex="1" oninput="top.GenerateDisplayName()"/>
+								<textbox id="LastName" flex="1" oninput="GenerateDisplayName()"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
 							<text for="DisplayName" value="&DisplayName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-								<textbox id="DisplayName" flex="1" oninput="top.DisplayNameChanged()"/>
+								<textbox id="DisplayName" flex="1" oninput="DisplayNameChanged()"/>
 							</hbox>
 						</hbox>
 						<hbox>
