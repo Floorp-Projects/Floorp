@@ -21,8 +21,8 @@ if (verifyDiskSpace(fProgram, srDest))
     var cf = getFolder(fProgram,"chrome");
     registerChrome(ctype, getFolder(cf,"packages/core"));
     registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
-    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
     registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic"));
+    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
     registerChrome(LOCALE|DELAYED_CHROME, getFolder(cf,"locales/en-US"));
 
     // make an alias to the browser on the desktop 
