@@ -20,6 +20,7 @@
 <!ENTITY biffEnd.label "minutes">
 <!ENTITY leaveOnServer.label "Leave messages on server">
 <!ENTITY deleteOnServer.label "Delete messages on server when deleted locally.">
+<!ENTITY downloadOnBiff.label "Automatically download any new messages">
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">

@@ -39,6 +39,8 @@
                         type="checkbox"/>&biffStart.label;
             <html:input name="server.biffMinutes" type="text" size="3"/>
             &biffEnd.label;
+  <html:div><html:input name="server.downloadOnBiff"
+                        type="checkbox"/>&downloadOnBiff.label;</html:div>
   </html:div>
   </box>
   <tabcontrol flex="100%">
