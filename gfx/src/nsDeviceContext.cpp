@@ -459,7 +459,7 @@ public:
 PRUint32 FontAliasKey::HashValue(void) const
 {
   PRUint32 hash = 0;
-  const PRUnichar* string = mString;
+  const PRUnichar* string = mString.GetUnicode();
   PRUnichar ch;
   while ((ch = *string++) != 0) {
     // FYI: hash = hash*37 + ch

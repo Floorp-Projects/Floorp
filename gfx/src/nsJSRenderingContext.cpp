@@ -62,7 +62,7 @@ GetRenderingContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
         }
