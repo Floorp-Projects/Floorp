@@ -41,6 +41,7 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsCRT.h"
 #include "nsMemory.h"
@@ -51,7 +52,6 @@
 #include "nsQuickSort.h"
 #ifndef XPCOM_STANDALONE
 #include "nsIZipReader.h"
-#include "nsIPref.h"
 #endif /* XPCOM_STANDALONE */
 #include "nsIInputStream.h"
 
@@ -62,6 +62,7 @@
 #include "prprf.h"
 #include "prio.h"
 #include "prtime.h"
+#include "prenv.h"
 
 #include <stdio.h>
 #include <stdarg.h>
