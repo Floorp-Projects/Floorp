@@ -45,6 +45,7 @@
 #endif
 
 #ifdef XP_BEOS
+#include <be/app/Application.h>
 #include <string.h>
 extern "C" const char * strsignal(int);
 #else
@@ -120,7 +121,16 @@ ah_crap_handler(int signum)
 } 
 #endif // CRAWL_STACK_ON_SIGSEGV
 
-
+#ifdef XP_BEOS
+void beos_signal_handler(int signum) {
+#ifdef DEBUG
+	fprintf(stderr, "beos_signal_handler: %d\n", signum);
+#endif
+	if (be_app->Lock()) {
+		be_app->Quit();
+	}
+}
+#endif 
 
 void InstallUnixSignalHandlers(const char *ProgramName)
 {
@@ -182,4 +192,8 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 	    }
     }
 #endif //SOLARIS
+
+#ifdef XP_BEOS
+	signal(SIGTERM, beos_signal_handler);
+#endif
 }

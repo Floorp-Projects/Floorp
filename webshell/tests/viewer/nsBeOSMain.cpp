@@ -19,10 +19,12 @@
  *
  * Contributor(s): 
  */
+#include <signal.h>
+#include <be/app/Application.h>
+
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 //#include "JSConsole.h"
-#include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsIImageManager.h"
 #include <stdlib.h>
@@ -101,18 +103,50 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 //----------------------------------------------------------------------
 
+class nsViewerBeOSApp : public BApplication
+{
+public:
+  nsViewerBeOSApp(int argc, char **argv) 
+    : BApplication("application/x-vnd.mozilla.viewer") {
+
+    if (!viewer_app) {
+      viewer_app = new nsNativeViewerApp();
+    }
+
+    if (viewer_app) {
+      NS_ADDREF(viewer_app);
+      viewer_app->Initialize(argc, argv);
+      viewer_app->Run();
+      NS_RELEASE(viewer_app);
+    }
+  }
+
+private:
+  nsViewerApp *viewer_app;
+
+};
+
+//----------------------------------------------------------------------
+
+static nsViewerBeOSApp *beos_app = 0;
+
+static void beos_signal_handler(int signum) {
+  fprintf(stderr, "beos_signal_handler: %d\n", signum);
+  if (beos_app) {
+    beos_app->Quit();
+  }
+}
+
 int main(int argc, char **argv)
 {
-  int result = B_OK;
-  nsViewerApp* app = new nsNativeViewerApp();
-  if(app)
-  {
-    NS_ADDREF(app);
-    app->Initialize(argc, argv);
-    app->Run();
-    NS_RELEASE(app);
-  }
+  signal(SIGTERM, beos_signal_handler);
+
+  beos_app = new nsViewerBeOSApp(argc, argv);
+
+  if (beos_app)
+    beos_app->Run();
   else
-    result = B_NO_MEMORY;
-  return result;
+    return B_NO_MEMORY;
+
+  return 0;
 }
