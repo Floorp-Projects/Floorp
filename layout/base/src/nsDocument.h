@@ -21,6 +21,7 @@
 #include "nsIDocument.h"
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDOMEventCapturer.h"
@@ -30,6 +31,7 @@
 
 class nsISelection;
 class nsIEventListenerManager;
+class nsDOMStyleSheetCollection;
 
 class nsPostData : public nsIPostData {
 public:
@@ -51,8 +53,12 @@ protected:
 
 
 // Base class for our document implementations
-class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner, 
-                   public nsIDOMEventCapturer, public nsIJSScriptObject {
+class nsDocument : public nsIDocument, 
+                   public nsIDOMDocument, 
+                   public nsIDOMNSDocument,
+                   public nsIScriptObjectOwner, 
+                   public nsIDOMEventCapturer, 
+                   public nsIJSScriptObject {
 public:
   NS_DECL_ISUPPORTS
 
@@ -123,6 +129,8 @@ public:
   virtual PRInt32 GetNumberOfStyleSheets();
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
+  virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
+                                          PRBool mDisabled);
 
   /**
    * Set the object from which a document can get a script context.
@@ -213,7 +221,8 @@ public:
   NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
-
+  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);
+                     
   // nsIDOMNode interface
   NS_IMETHOD    GetNodeName(nsString& aNodeName);
   NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
@@ -299,6 +308,7 @@ protected:
   nsIEventListenerManager* mListenerManager;
   PRBool mDisplaySelection;
   PRBool mInDestructor;
+  nsDOMStyleSheetCollection *mDOMStyleSheets;
 };
 
 #endif /* nsDocument_h___ */

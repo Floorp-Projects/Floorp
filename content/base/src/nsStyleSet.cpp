@@ -91,6 +91,10 @@ public:
                                nsIContent*     aContent,
                                nsIFrame*       aParentFrame,
                                nsIFrame*&      aFrameSubTree);
+  NS_IMETHOD  ReconstructFrames(nsIPresContext* aPresContext,
+                                nsIContent*     aContent,
+                                nsIFrame*       aParentFrame,
+                                nsIFrame*       aFrameSubTree);
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer);
@@ -483,6 +487,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
 
     if (nsnull != rules) {
+      // XXX Stop-gap fix to prevent ua.css rules from being applied
+      // to XML elements
       nsIHTMLContent *htmlContent;
       nsresult rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
       PRInt32 ruleCount = 0;
@@ -655,6 +661,16 @@ NS_IMETHODIMP StyleSetImpl::ConstructFrame(nsIPresContext* aPresContext,
                                            aParentFrame, aFrameSubTree);
 }
 
+NS_IMETHODIMP   
+StyleSetImpl::ReconstructFrames(nsIPresContext* aPresContext,
+                                nsIContent*     aContent,
+                                nsIFrame*       aParentFrame,
+                                nsIFrame*       aFrameSubTree)
+{
+  return mFrameConstructor->ReconstructFrames(aPresContext, aContent,
+                                              aParentFrame, aFrameSubTree);
+}
+
 NS_IMETHODIMP StyleSetImpl::ContentAppended(nsIPresContext* aPresContext,
                                             nsIContent*     aContainer,
                                             PRInt32         aNewIndexInContainer)
@@ -709,6 +725,7 @@ StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
   return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
                                              aAttribute, aHint);
 }
+
 
 // xxx style rules enumeration
 

@@ -138,6 +138,8 @@ public:
   virtual PRInt32 GetNumberOfStyleSheets() = 0;
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) = 0;
   virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
+                                          PRBool mDisabled) = 0;
 
   /**
    * Set the object from which a document can get a script context.

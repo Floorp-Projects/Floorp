@@ -22,6 +22,7 @@
 #include "nsIStyleSheet.h"
 
 class nsICSSStyleRule;
+class nsIDocument;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \
@@ -43,6 +44,7 @@ public:
   virtual PRInt32   StyleSheetCount() = 0;
   virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) = 0;
 
+  virtual void      SetDocument(nsIDocument* aDocument) = 0;
 };
 
 extern NS_HTML nsresult

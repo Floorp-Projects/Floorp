@@ -103,34 +103,41 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   NS_FRAME_TRACE_REFLOW_IN("RootFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;
+  // XXX Copy the reflow state so that we can change the 
+  // reason in cases where we're inserting and deleting
+  // frames from the root. Troy may want to reconstruct
+  // this routine.
+  nsHTMLReflowState reflowState(aReflowState);
 
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  if (eReflowReason_Incremental == reflowState.reason) {
     // See if we're the target frame
     nsIFrame* targetFrame;
-    aReflowState.reflowCommand->GetTarget(targetFrame);
+    reflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
       nsIReflowCommand::ReflowType  reflowType;
       nsIFrame*                     childFrame;
 
       // Get the reflow type
-      aReflowState.reflowCommand->GetType(reflowType);
+      reflowState.reflowCommand->GetType(reflowType);
 
       if ((nsIReflowCommand::FrameAppended == reflowType) ||
           (nsIReflowCommand::FrameInserted == reflowType)) {
         // Insert the frame into the child list
-        aReflowState.reflowCommand->GetChildFrame(childFrame);
+        reflowState.reflowCommand->GetChildFrame(childFrame);
         if (nsnull == mFirstChild) {
           mFirstChild = childFrame;
         } else {
           nsIFrame* lastChild = LastFrame(mFirstChild);
           lastChild->SetNextSibling(childFrame);
         }
-
+        // XXX This is wrong. Only the new child should be reflowed 
+        // with this reason. The rest should just be resized.
+        reflowState.reason = eReflowReason_Initial;
       } else if (nsIReflowCommand::FrameRemoved == reflowType) {
         nsIFrame* deletedFrame;
 
         // Get the child frame we should delete
-        aReflowState.reflowCommand->GetChildFrame(deletedFrame);
+        reflowState.reflowCommand->GetChildFrame(deletedFrame);
 
         // Remove it from the child list
         if (deletedFrame == mFirstChild) {
@@ -157,12 +164,13 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
           
         // Delete the frame
         deletedFrame->DeleteFrame(aPresContext);
+        reflowState.reason = eReflowReason_Resize;
       }
 
     } else {
       nsIFrame* nextFrame;
       // Get the next frame in the reflow chain
-      aReflowState.reflowCommand->GetNext(nextFrame);
+      reflowState.reflowCommand->GetNext(nextFrame);
       NS_ASSERTION(nextFrame == mFirstChild, "unexpected next reflow command frame");
     }
   }
@@ -175,11 +183,11 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     nsMargin borderPadding;
     spacing->CalcBorderPaddingFor(this, borderPadding);
 
-    nsSize  kidMaxSize(aReflowState.maxSize);
+    nsSize  kidMaxSize(reflowState.maxSize);
     kidMaxSize.width -= borderPadding.left + borderPadding.right;
     kidMaxSize.height -= borderPadding.top + borderPadding.bottom;
     nsHTMLReflowMetrics desiredSize(nsnull);
-    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, reflowState,
                                      kidMaxSize);
     // XXX HACK
     kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
@@ -204,17 +212,17 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // then do a repaint to make sure we repaint correctly.
     // XXX We could be smarter about only damaging the border/padding area
     // that was affected by the resize...
-    if ((eReflowReason_Resize == aReflowState.reason) &&
+    if ((eReflowReason_Resize == reflowState.reason) &&
         ((borderPadding.left != 0) || (borderPadding.top != 0) ||
          (borderPadding.right != 0) || (borderPadding.bottom) != 0)) {
-      nsRect  damageRect(0, 0, aReflowState.maxSize.width, aReflowState.maxSize.height);
+      nsRect  damageRect(0, 0, reflowState.maxSize.width, reflowState.maxSize.height);
       Invalidate(damageRect, PR_FALSE);
     }
   }
 
   // Return the max size as our desired size
-  aDesiredSize.width = aReflowState.maxSize.width;
-  aDesiredSize.height = aReflowState.maxSize.height;
+  aDesiredSize.width = reflowState.maxSize.width;
+  aDesiredSize.height = reflowState.maxSize.height;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 

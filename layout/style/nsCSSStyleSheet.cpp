@@ -567,6 +567,8 @@ public:
   virtual PRInt32   StyleSheetCount();
   virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet);
 
+  virtual void      SetDocument(nsIDocument *aDocument);
+
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   // nsIDOMStyleSheet interface
@@ -614,6 +616,8 @@ protected:
   RuleHash*             mRuleHash;
   CSSStyleRuleCollectionImpl* mRuleCollection;
   CSSImportsCollectionImpl* mImportsCollection;
+  nsIDocument*          mDocument;
+  PRBool                mDisabled;
   void *                mScriptObject;
 };
 
@@ -668,6 +672,8 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
   mParent = nsnull;
   mRuleCollection = nsnull;
   mImportsCollection = nsnull;
+  mDocument = nsnull;
+  mDisabled = PR_FALSE;
   mScriptObject = nsnull;
 #ifdef DEBUG_REFS
   ++gInstanceCount;
@@ -711,6 +717,9 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
     mOrderedRules->EnumerateForwards(DropStyleSheetReference, nsnull);
   }
   ClearHash();
+  // XXX The document reference is not reference counted and should
+  // not be released. The document will let us know when it is going
+  // away.
 }
 
 NS_IMPL_ADDREF(CSSStyleSheetImpl)
@@ -1234,6 +1243,13 @@ nsresult CSSStyleSheetImpl::GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& a
   return NS_OK;
 }
 
+void  CSSStyleSheetImpl::SetDocument(nsIDocument *aDocument)
+{
+  // This reference is not reference counted and should not be
+  // released. The document will tell us when it goes away.
+  mDocument = aDocument;
+}
+
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
   nsAutoString buffer;
@@ -1290,15 +1306,20 @@ void CSSStyleSheetImpl::BuildHash(void)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetDisabled(PRBool* aDisabled)
 {
-  // XXX TBI
-  *aDisabled = PR_FALSE;
+  *aDisabled = mDisabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP    
 CSSStyleSheetImpl::SetDisabled(PRBool aDisabled)
 {
-  // XXX TBI
+
+  if ((nsnull != mDocument) && (mDisabled != aDisabled)) {
+    mDocument->SetStyleSheetDisabledState(this, aDisabled);
+  }
+
+  mDisabled = aDisabled;
+
   return NS_OK;
 }
 

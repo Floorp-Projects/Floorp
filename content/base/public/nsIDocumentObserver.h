@@ -188,6 +188,22 @@ public:
                              nsIStyleSheet* aStyleSheet) = 0;
 
   /**
+   * A StyleSheet has just disabled or enabled.
+   * This method is called automatically when the disabled state
+   * of a StyleSheet gets changed. The style sheet passes this
+   * notification to the document. The notification is passed on 
+   * to all of the document observers.
+   *
+   * @param aDocument The document being observed
+   * @param aStyleSheet the StyleSheet that has been added
+   * @param aDisabled PR_TRUE if the sheet is disabled, PR_FALSE if
+   *        it is enabled
+   */
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled) = 0;
+
+  /**
    * The document is in the process of being destroyed.
    * This method is called automatically during document
    * destruction.
