@@ -5,6 +5,18 @@
 use Getopt::Std;
 use Cwd;
 
+sub cleanup
+{
+    my ($cleanupArgs) = @_;
+    print "+++ removing temp files\n";
+    @fileList = split(/ /,$cleanupArgs);
+    foreach $file (@fileList) {
+        if ($file) {
+            unlink($file) || die "error: can't remove '$file' $!";
+        }
+    }
+}
+
 sub JarIt
 {
     my ($jarfile, $args) = @_;
@@ -71,12 +83,13 @@ sub EnsureFileInDir
         }
         MkDirs($dir);
         CopyFile($file, $destPath);
+        $cleanupArgs = "$cleanupArgs $destPath";
         return 1;
     }
     return 0;
 }
 
-getopt("d:o:");
+getopt("d:");
 
 my $destPath = ".";
 if (defined($opt_d)) {
@@ -90,9 +103,11 @@ while (<>) {
         my $jarfile = "$destPath/$1"; 
 
         my $args = "";
+        $cleanupArgs = "";
+
         while (<>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
-				my $dest = $1;
+                my $dest = $1;
                 my $srcPath = $2;
 
                 if ( $srcPath ) {  
@@ -105,12 +120,13 @@ while (<>) {
                 # end with blank line
                 last;
             } else {
-        	JarIt($jarfile, $args);
+                JarIt($jarfile, $args);
+                cleanup($cleanupArgs);
                 goto start;
             }
         }
         JarIt($jarfile, $args);
-
+        cleanup($cleanupArgs);
     } elsif (/^\s*\#.*$/) {
         # skip comments
     } elsif (/^\s*$/) {
