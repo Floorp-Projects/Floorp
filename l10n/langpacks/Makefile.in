@@ -26,6 +26,6 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= en-DE
+# DIRS	= en-DE
 
 include $(topsrcdir)/config/rules.mk
