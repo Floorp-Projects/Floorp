@@ -147,7 +147,9 @@ int main(int argc, char* argv[])
   }
   // Default URL if one was not provided in the cmdline
   // Changed by kostello on 2/10/99 to look for -editor
-  // or -
+  // or -mail command line and load the appropriate URL.
+  // Please let me know if this is incorrect and I will
+  // change it. -- Greg Kostello
   if (nsnull == urlstr){
     char* cmdResult = nsnull;
 
