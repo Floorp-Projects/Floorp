@@ -35,7 +35,7 @@ class nsIDOMEventListener : public nsISupports {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTLISTENER_IID; return iid; }
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTLISTENER_IID)
 
  /**
   * Processes all events excepting mouse and key events. 

@@ -34,7 +34,7 @@ class nsIDOMKeyListener : public nsIDOMEventListener {
 
 public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IDOMKEYLISTENER_IID; return iid; }
+     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMKEYLISTENER_IID)
     
     /**
      * Processes a key pressed event

@@ -36,7 +36,7 @@ class nsIDOMMouseListener : public nsIDOMEventListener {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMMOUSELISTENER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMOUSELISTENER_IID)
 
   /**
   * Processes a mouse down event

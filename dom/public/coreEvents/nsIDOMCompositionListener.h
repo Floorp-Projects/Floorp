@@ -35,7 +35,7 @@ class nsIDOMCompositionListener : public nsIDOMEventListener {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCOMPOSITIONLISTENER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCOMPOSITIONLISTENER_IID)
 
   virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
   virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
