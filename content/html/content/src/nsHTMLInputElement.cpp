@@ -412,6 +412,34 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(this, it, aDeep);
 
+  switch (mType) {
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_FILE:
+      if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+        // We don't have our default value anymore.  Set our value on
+        // the clone.
+        nsAutoString value;
+        GetValue(value);
+        // SetValueInternal handles setting the VALUE_CHANGED bit for us
+        it->SetValueInternal(value, nsnull);
+      }
+      break;
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_CHECKBOX:
+      if (GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+        // We no longer have our original checked state.  Set our
+        // checked state on the clone.
+        PRBool checked;
+        GetChecked(&checked);
+        it->SetChecked(checked);
+      }
+      break;
+    default:
+      break;
+  }
+          
+
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
   NS_ADDREF(*aReturn);
