@@ -1397,33 +1397,6 @@ nsDNSService::Resolve(const char *i_hostname, char **o_ip)
     *o_ip = 0;
     NS_ENSURE_ARG_POINTER(i_hostname);
 
-    if (0==PL_strncmp(i_hostname, "localhost", 9))
-    {
-        static PRBool readOnce = PR_FALSE;
-        if (!readOnce || !mMyIPAddress)
-        {
-            readOnce = PR_TRUE;
-            char name[100];
-            if (PR_GetSystemInfo(PR_SI_HOSTNAME, 
-                        name, 
-                        sizeof(name)) == PR_SUCCESS)
-            {
-                char* hostname = nsCRT::strdup(name);
-                if (NS_SUCCEEDED(Resolve(hostname, &mMyIPAddress)))
-                {
-                    CRTFREEIF(hostname);
-                }
-                else
-                {
-                    CRTFREEIF(hostname);
-                    return NS_ERROR_FAILURE;
-                }
-            }
-        }
-        *o_ip = nsCRT::strdup(mMyIPAddress);
-        return *o_ip ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-    }
-
     PRHostEnt he;
     char netdbbuf[PR_NETDB_BUF_SIZE];
 
@@ -1445,6 +1418,35 @@ nsDNSService::Resolve(const char *i_hostname, char **o_ip)
         }
     }
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDNSService::GetMyIPAddress(char * *o_ip)
+{
+    NS_ENSURE_ARG_POINTER(o_ip);
+    static PRBool readOnce = PR_FALSE;
+    if (!readOnce || !mMyIPAddress)
+    {
+        readOnce = PR_TRUE;
+        char name[100];
+        if (PR_GetSystemInfo(PR_SI_HOSTNAME, 
+                    name, 
+                    sizeof(name)) == PR_SUCCESS)
+        {
+            char* hostname = nsCRT::strdup(name);
+            if (NS_SUCCEEDED(Resolve(hostname, &mMyIPAddress)))
+            {
+                CRTFREEIF(hostname);
+            }
+            else
+            {
+                CRTFREEIF(hostname);
+                return NS_ERROR_FAILURE;
+            }
+        }
+    }
+    *o_ip = nsCRT::strdup(mMyIPAddress);
+    return *o_ip ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 // a helper function to convert an IP address to long value. 
