@@ -300,6 +300,8 @@ typedef struct {
   XML_StartCdataSectionHandler m_startCdataSectionHandler;
   XML_EndCdataSectionHandler m_endCdataSectionHandler;
   XML_DefaultHandler m_defaultHandler;
+  XML_StartDoctypeDeclHandler m_startDoctypeDeclHandler;
+  XML_EndDoctypeDeclHandler m_endDoctypeDeclHandler;
   XML_UnparsedEntityDeclHandler m_unparsedEntityDeclHandler;
   XML_NotationDeclHandler m_notationDeclHandler;
   XML_StartNamespaceDeclHandler m_startNamespaceDeclHandler;
@@ -364,6 +366,8 @@ typedef struct {
 #define startCdataSectionHandler (((Parser *)parser)->m_startCdataSectionHandler)
 #define endCdataSectionHandler (((Parser *)parser)->m_endCdataSectionHandler)
 #define defaultHandler (((Parser *)parser)->m_defaultHandler)
+#define startDoctypeDeclHandler (((Parser *)parser)->m_startDoctypeDeclHandler)
+#define endDoctypeDeclHandler (((Parser *)parser)->m_endDoctypeDeclHandler)
 #define unparsedEntityDeclHandler (((Parser *)parser)->m_unparsedEntityDeclHandler)
 #define notationDeclHandler (((Parser *)parser)->m_notationDeclHandler)
 #define startNamespaceDeclHandler (((Parser *)parser)->m_startNamespaceDeclHandler)
@@ -452,6 +456,8 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   startCdataSectionHandler = 0;
   endCdataSectionHandler = 0;
   defaultHandler = 0;
+  startDoctypeDeclHandler = 0;
+  endDoctypeDeclHandler = 0;
   unparsedEntityDeclHandler = 0;
   notationDeclHandler = 0;
   startNamespaceDeclHandler = 0;
@@ -496,6 +502,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   namespaceSeparator = '!';
 #ifdef XML_DTD
   parentParser = 0;
+  paramEntityParsing = XML_PARAM_ENTITY_PARSING_NEVER;
 #endif
   ns = 0;
   poolInit(&tempPool);
@@ -762,6 +769,14 @@ void XML_SetDefaultHandlerExpand(XML_Parser parser,
 {
   defaultHandler = handler;
   defaultExpandInternalEntities = 1;
+}
+
+void XML_SetDoctypeDeclHandler(XML_Parser parser,
+			       XML_StartDoctypeDeclHandler start,
+			       XML_EndDoctypeDeclHandler end)
+{
+  startDoctypeDeclHandler = start;
+  endDoctypeDeclHandler = end;
 }
 
 void XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
@@ -1953,13 +1968,11 @@ enum XML_Error doIgnoreSection(XML_Parser parser,
   tok = XmlIgnoreSectionTok(enc, s, end, &next);
   *eventEndPP = next;
   switch (tok) {
-#ifdef XML_DTD
   case XML_TOK_IGNORE_SECT:
     if (defaultHandler)
       reportDefault(parser, enc, s, next);
     *startPtr = next;
     return XML_ERROR_NONE;
-#endif /* XML_DTD */
   case XML_TOK_INVALID:
     *eventPP = next;
     return XML_ERROR_INVALID_TOKEN;
@@ -2198,6 +2211,16 @@ doProlog(XML_Parser parser,
 	enum XML_Error result = processXmlDecl(parser, 0, s, next);
 	if (result != XML_ERROR_NONE)
 	  return result;
+	enc = encoding;
+      }
+      break;
+    case XML_ROLE_DOCTYPE_NAME:
+      if (startDoctypeDeclHandler) {
+	const XML_Char *name = poolStoreString(&tempPool, enc, s, next);
+	if (!name)
+	  return XML_ERROR_NO_MEMORY;
+	startDoctypeDeclHandler(handlerArg, name);
+	poolClear(&tempPool);
       }
       break;
 #ifdef XML_DTD
@@ -2206,6 +2229,7 @@ doProlog(XML_Parser parser,
 	enum XML_Error result = processXmlDecl(parser, 1, s, next);
 	if (result != XML_ERROR_NONE)
 	  return result;
+	enc = encoding;
       }
       break;
 #endif /* XML_DTD */
@@ -2255,6 +2279,8 @@ doProlog(XML_Parser parser,
 	    && !notStandaloneHandler(handlerArg))
 	  return XML_ERROR_NOT_STANDALONE;
       }
+      if (endDoctypeDeclHandler)
+	endDoctypeDeclHandler(handlerArg);
       break;
     case XML_ROLE_INSTANCE_START:
       processor = contentProcessor;
@@ -2598,7 +2624,8 @@ doProlog(XML_Parser parser,
       case XML_TOK_PARAM_ENTITY_REF:
 	break;
       default:
-	reportDefault(parser, enc, s, next);
+	if (role != XML_ROLE_IGNORE_SECT)
+	  reportDefault(parser, enc, s, next);
       }
     }
     s = next;
