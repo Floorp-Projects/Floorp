@@ -17,40 +17,8 @@
 # Netscape Communications Corporation.  All Rights Reserved.
 
 SUBDIRS=		\
-	addressbook	\
-	calypso		\
-	composition	\
-	dnd		\
-	dog		\
-	filters		\
-	mime		\
-	prefs		\
-	search		\
-	storage		\
-	ui		\
+	nntp		\
 	util		\
-	view		\
-	widgets		\
 	$(NULL)
 
-SRCS=				\
-	Main.java		\
-	TestFolderViewer.java	\
-	$(NULL)
-
-#	SelfTest.java		\
-
-
-include rules.mk
-
-TARFILE=/tmp/grendel.tar.gz
-tar::
-	@echo writing $(TARFILE)... ;			\
-	dir=`pwd | sed 's@^.*/\([^/]*\)$$@\1@'` ;	\
-	cd .. ; tar -vcf - $$dir			\
-		--exclude '*.class'			\
-		--exclude '*.bak'			\
-		--exclude '*~'				\
-		--exclude 'core'			\
-		--exclude '*.orig'			\
-	| gzip -v9 > $(TARFILE)
+include ../../rules.mk
