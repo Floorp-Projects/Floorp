@@ -219,12 +219,12 @@ pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.p
 pref("mail.identity.default.compose_html", true);
 pref("mail.identity.default.valid", true);
 pref("mail.identity.default.fcc",true);
-pref("mail.identity.default.fcc_folder","mailbox://nobody@Local Folders/Sent");
+pref("mail.identity.default.fcc_folder","mailbox://nobody@Local%20Folders/Sent");
 pref("mail.identity.default.bcc_self",false);
 pref("mail.identity.default.bcc_others",false);
 pref("mail.identity.default.bcc_list","");
-pref("mail.identity.default.draft_folder","mailbox://nobody@Local Folders/Drafts");
-pref("mail.identity.default.stationery_folder","mailbox://nobody@Local Folders/Templates");
+pref("mail.identity.default.draft_folder","mailbox://nobody@Local%20Folders/Drafts");
+pref("mail.identity.default.stationery_folder","mailbox://nobody@Local%20Folders/Templates");
 pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
 
@@ -234,7 +234,7 @@ pref("mail.collect_email_address_outgoing", true);
 pref("mail.collect_email_address_newsgroup", false);
 pref("mail.collect_email_address_enable_size_limit", true);
 pref("mail.collect_email_address_size_limit", 700);
-pref("mail.default_sendlater_uri","mailbox://nobody@Local Folders/Unsent Messages");
+pref("mail.default_sendlater_uri","mailbox://nobody@Local%20Folders/Unsent%20Messages");
 
 pref("mail.server.default.port", -1);
 pref("mail.server.default.offline_support_level", -1);
