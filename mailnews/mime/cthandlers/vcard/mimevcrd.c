@@ -1735,12 +1735,10 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 	if (htmlLine)
 	{
 		htmlLine[0] = '\0';
-// RICHIECSS - TEMPORARY FIX FOR A LAYOUT PROBLEM
-//		PL_strcat (htmlLine, "<DT>");
+		PL_strcat (htmlLine, "<DT>");
 		PL_strcat (htmlLine, line);
-// RICHIECSS - TEMPORARY FIX FOR A LAYOUT PROBLEM
-//              PL_strcat (htmlLine, "</DT>");
-	    status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+                PL_strcat (htmlLine, "</DT>");
+	        status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 		PR_Free ((void*) htmlLine);
 	}
 	else
