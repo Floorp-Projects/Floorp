@@ -111,8 +111,18 @@ calMemoryCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
-        if (aItem.id == null)
+        if (aItem.id == null && aItem.isMutable)
             aItem.id = "uuid:" + (new Date()).getTime();
+
+        if (aItem.id == null) {
+            if (aListener)
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.ADD,
+                                               aItem.id,
+                                               "Can't set ID on non-mutable item to addItem");
+            return;
+        }
 
         if (this.mItems[aItem.id] != null) {
             // is this an error?
@@ -121,71 +131,94 @@ calMemoryCalendar.prototype = {
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.ADD,
                                                aItem.id,
-                                               "ID already eists for addItem");
+                                               "ID already exists for addItem");
             return;
         }
 
-        this.mItems[aItem.id] = aItem;
-
-        // notify observers
-        this.observeAddItem(aItem);
+        var newItem = aItem.clone();
+        newItem.parent = this;
+        newItem.generation = 1;
+        newItem.makeImmutable();
+        this.mItems[newItem.id] = newItem;
 
         // notify the listener
         if (aListener)
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.ADD,
-                                           aItem.id,
-                                           aItem);
+                                           newItem.id,
+                                           newItem);
+        // notify observers
+        this.observeAddItem(newItem);
     },
 
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
         if (aItem.id == null ||
-            this.mItems[aItem.id] == null) {
+            this.mItems[aItem.id] == null ||
+            aItem.parent != this)
+        {
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
                                                aItem.id,
-                                               "ID for modifyItem doesn't exist or is null");
+                                               "ID for modifyItem doesn't exist, is null, or is from different calendar");
             return;
         }
 
-        // technically, they should be the same item
-        var modifiedItem = this.mItems[aItem.id];
-        this.mItems[aItem.id] = aItem;
+        var oldItem = this.mItems[aItem.id];
 
-        // notify observers
-        this.observeModifyItem(modifiedItem, aItem);
+        if (oldItem.generation != aItem.generation) {
+            if (aListener)
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.MODIFY,
+                                               aItem.id,
+                                               "generation mismatch in modifyItem");
+            return;
+        }
+
+        var newItem = aItem.clone();
+        newItem.generation += 1;
+        newItem.makeImmutable();
+        this.mItems[newItem.id] = newItem;
 
         if (aListener)
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.MODIFY,
-                                           aItem.id,
-                                           aItem);
+                                           newItem.id,
+                                           newItem);
+        // notify observers
+        this.observeModifyItem(oldItem, newItem);
     },
 
-    // void deleteItem( in string id, in calIOperationListener aListener );
-    deleteItem: function (aId, aListener) {
-        if (aId == null ||
-            this.mItems[aId] == null) {
+    // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );
+    deleteItem: function (aItem, aListener) {
+        if (aItem.id == null || this.mItems[aItem.id] == null || aItem.parent != this) {
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
                                                aId,
-                                               "ID doesn't exist for deleteItem");
+                                               "ID is null or is from different calendar in deleteItem");
             return;
         }
 
-        deletedItem = this.mItems[aId];
-        delete this.mItems[aId];
+        var oldItem = this.mItems[aItem.id];
+        if (oldItem.generation != aItem.generation) {
+            if (aListener)
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.DELETE,
+                                               aId,
+                                               "generation mismatch in deleteItem");
+            return;
+        }
 
-        // notify observers
-        observeDeleteItem(deletedItem);
+        delete this.mItems[aItem.id];
 
         if (aListener)
             aListener.onOperationComplete (this,
@@ -193,7 +226,8 @@ calMemoryCalendar.prototype = {
                                            aListener.DELETE,
                                            aId,
                                            null);
-
+        // notify observers
+        observeDeleteItem(oldItem);
     },
 
     // void getItem( in string id, in calIOperationListener aListener );
