@@ -151,7 +151,11 @@ typedef juint			jsize;
 #endif
 
 /* moved from jni.h -- Sun's new jni.h doesn't have this anymore */
+#ifdef __cplusplus
+typedef class _jobject *jref;
+#else
 typedef struct _jobject *jref;
+#endif
 
 typedef unsigned char	jbool;
 typedef char			jbyte;
