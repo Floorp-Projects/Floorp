@@ -951,7 +951,7 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
       if(host)
         host->StopPluginInstance(mInstance);
     }
-    NS_RELEASE(mInstance);
+    NS_IF_RELEASE(mInstance);
   }
 
   mWindow = nsnull;
