@@ -267,7 +267,7 @@ ALL_TRASH = \
 	$(wildcard gts_tmp_*) \
 	$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)	
 ALL_TRASH_DIRS = \
-	$(GARBAGE_DIRS)
+	$(GARBAGE_DIRS) /no-such-file
 else
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
@@ -279,7 +279,7 @@ ALL_TRASH = \
 	$(PROGRAM:$(BIN_SUFFIX)=.lib) $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=.lib) \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 ALL_TRASH_DIRS = \
-	$(GARBAGE_DIRS)
+	$(GARBAGE_DIRS) /no-such-file
 endif
 
 ifdef JAVA_OR_NSJVM
