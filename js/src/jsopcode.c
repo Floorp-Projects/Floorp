@@ -607,7 +607,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 	    jp->indent -= 4;
 	}
 
-	caseExprOff = isCondSwitch 
+	caseExprOff = isCondSwitch
                       ? (ptrdiff_t) js_CodeSpec[JSOP_CONDSWITCH].length
                       : 0;
 
@@ -703,7 +703,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 {
     JSContext *cx;
     JSPrinter *jp;
-    jsbytecode *endpc, *done, *forelem_tgt;
+    jsbytecode *endpc, *done, *forelem2_done;
     ptrdiff_t len, todo, oplen, cond, next, tail;
     JSOp op, lastop, saveop;
     JSCodeSpec *cs, *topcs;
@@ -960,7 +960,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    if (!lval)
 			return JS_FALSE;
 
-		    /* 
+		    /*
                      * The offset tells distance to the end of the right-hand
                      * operand of the comma operator.
                      */
@@ -1266,7 +1266,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		js_printf(jp, " in %s) {\n", rval);
 		jp->indent += 4;
 		DECOMPILE_CODE(pc + oplen,
-		    len - (oplen + js_CodeSpec[JSOP_GOTO].length));
+			       len - (oplen + js_CodeSpec[JSOP_GOTO].length));
 		jp->indent -= 4;
 		js_printf(jp, "\t}\n");
 		todo = -2;
@@ -1277,26 +1277,27 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		LOCAL_ASSERT(*pc == JSOP_IFEQ);
 		len = js_CodeSpec[JSOP_IFEQ].length;
                 /*
-                    this gets a little wacky. Only the length of the body of
-                    the for statement PLUS the indexing expression is known
-                    here, so we pass it to the enumelem decompilation via this
-                    local. Hopefully no intervening code can mess up the value?
-                */
-		forelem_tgt = pc + GET_JUMP_OFFSET(pc);
+                 * This gets a little wacky.  Only the length of the for loop
+                 * body PLUS the element-indexing expression is known here, so
+                 * we pass it to the immediately following code to decompile
+                 * JSOP_ENUMELEM via the 'forelem2_done' local.
+                 */
+		forelem2_done = pc + GET_JUMP_OFFSET(pc);
                 break;
 
-              case JSOP_ENUMELEM:
-                /*
-                    the stack has the object and the index expression.
-                    The for body length can now be adjusted to account for
-                    the length of the indexing epxression.
-                */
-                atom = NULL;
+	      case JSOP_ENUMELEM:
+		/*
+		 * The stack has the object under the (top) index expression.
+		 * The "rval" property id is underneath those two on the stack.
+		 * The for loop body length can now be adjusted to account for
+		 * the length of the indexing expression.
+		 */
+		atom = NULL;
 		xval = POP_STR();
 		lval = POP_STR();
-                rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
-                len = forelem_tgt - pc;
-                goto do_forinbody;
+		rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
+		len = forelem2_done - pc;
+		goto do_forinbody;
 
 	      case JSOP_DUP2:
 		rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-2]);
@@ -2192,7 +2193,7 @@ js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
 	goto do_fallback;
 
     /*
-     * Using an object for which js_DefaultValue fails as part of an expression 
+     * Using an object for which js_DefaultValue fails as part of an expression
      * blows this assert.  Disabled for now.
      * JS_ASSERT(JS_UPTRDIFF(pc, script->code) < (jsuword)script->length);
      */

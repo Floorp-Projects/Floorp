@@ -1062,7 +1062,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	fp = cx->fp;
 	oldsp = fp->sp;
 	fp->sp = sp;
-	ok = js_Invoke(cx, argc, JS_FALSE);
+	ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
 	rval = fp->sp[-1];
 	fp->sp = oldsp;
 

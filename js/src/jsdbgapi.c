@@ -626,25 +626,25 @@ JS_PUBLIC_API(JSBool)
 JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
 {
     return fp->constructing;
-}        
+}
 
 JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
     return fp->debugging;
-}        
+}
 
 JS_PUBLIC_API(jsval)
 JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 {
     return fp->rval;
-}        
+}
 
 JS_PUBLIC_API(void)
 JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval)
 {
     fp->rval = rval;
-}        
+}
 
 /************************************************************************/
 
@@ -741,8 +741,9 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 #if JS_HAS_CALL_OBJECT
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
-	OBJ_GET_CLASS(cx, obj)->getProperty == sprop->getter)
+	sprop->getter == js_CallClass.getProperty) {
 	pd->flags |= JSPD_ARGUMENT;
+    }
 #endif /* JS_HAS_CALL_OBJECT */
     pd->spare = 0;
     pd->slot = (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))
