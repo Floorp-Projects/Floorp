@@ -72,22 +72,6 @@ public:
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
 };
 
-/**
-  * Text nodes have no children, but since double inheritance
-  *  no-worky we have to re-impl the LeafAccessiblity blocks 
-  *  this way.
-  */
-class nsTextAccessible : public nsLinkableAccessible
-{
-
-public:
-  nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-};
-
 
 #endif
 

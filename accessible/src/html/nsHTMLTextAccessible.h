@@ -39,7 +39,7 @@
 #ifndef _nsHTMLTextAccessible_H_
 #define _nsHTMLTextAccessible_H_
 
-#include "nsFormControlAccessible.h"
+#include "nsTextAccessible.h"
 
 class nsIWeakReference;
 

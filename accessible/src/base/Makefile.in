@@ -56,6 +56,7 @@ CPPSRCS = \
   nsGenericAccessible.cpp \
   nsRootAccessible.cpp \
   nsSelectAccessible.cpp \
+  nsTextAccessible.cpp \
   $(NULL)
 
 EXPORTS = \
