@@ -1165,6 +1165,25 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
   return NS_OK;
 }
 
+nsresult ns4xPluginInstance::GetValueInternal(NPPVariable variable, void* value)
+{
+  nsresult  res = NS_OK;
+  if(fCallbacks->getvalue && mStarted) {
+
+    NS_TRY_SAFE_CALL_RETURN(res, 
+                            CallNPP_GetValueProc(fCallbacks->getvalue, 
+                                                 &fNPP, 
+                                                 variable, 
+                                                 value), 
+                                                 fLibrary, this);
+    NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+    ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
+    this, &fNPP, variable, value, res));
+  }
+
+  return res;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
@@ -1190,17 +1209,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
       break;
 
     default:
-      if(fCallbacks->getvalue && mStarted) {
-        NS_TRY_SAFE_CALL_RETURN(res, 
-                                CallNPP_GetValueProc(fCallbacks->getvalue, 
-                                                     &fNPP, 
-                                                     (NPPVariable)variable, 
-                                                     value), 
-                                                     fLibrary, this);
-        NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-        ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
-        this, &fNPP, variable, value, res));
-      }
+      res = GetValueInternal((NPPVariable)variable, value);
   }
 
   return res;
@@ -1254,7 +1263,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetScriptablePeer(void * *aScriptablePeer)
     return NS_ERROR_NULL_POINTER;
 
   *aScriptablePeer = nsnull;
-  return GetValue(nsPluginInstanceVariable_ScriptableInstance, aScriptablePeer);
+  return GetValueInternal(NPPVpluginScriptableInstance, aScriptablePeer);
 }
 
 
@@ -1262,13 +1271,9 @@ NS_IMETHODIMP ns4xPluginInstance :: GetScriptablePeer(void * *aScriptablePeer)
 /* readonly attribute nsIIDPtr scriptableInterface; */
 NS_IMETHODIMP ns4xPluginInstance :: GetScriptableInterface(nsIID * *aScriptableInterface)
 {
-#if !defined(XP_MACOSX) // Workaround suspected bug
   if (!aScriptableInterface)
     return NS_ERROR_NULL_POINTER;
 
   *aScriptableInterface = nsnull;
-  return GetValue(nsPluginInstanceVariable_ScriptableIID, (void*)aScriptableInterface);
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
+  return GetValueInternal(NPPVpluginScriptableIID, (void*)aScriptableInterface);
 }
