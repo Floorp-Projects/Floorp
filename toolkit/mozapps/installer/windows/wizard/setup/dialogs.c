@@ -334,9 +334,9 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     SetDlgItemText(hDlg, IDC_RADIO_ACCEPT, diLicense.szRadioAccept);
     SetDlgItemText(hDlg, IDC_RADIO_DECLINE, diLicense.szRadioDecline);
 
-    // Check the "Accept" Radio button by default. 
-    CheckDlgButton(hDlg, IDC_RADIO_ACCEPT, BST_CHECKED);
-    SendMessage(GetDlgItem(hDlg, IDC_RADIO_ACCEPT), BM_SETCHECK, BST_CHECKED, 0);
+    // Check the "Decline" Radio button by default. 
+    CheckDlgButton(hDlg, IDC_RADIO_DECLINE, BST_CHECKED);
+    SendMessage(GetDlgItem(hDlg, IDC_RADIO_DECLINE), BM_SETCHECK, BST_CHECKED, 0);
 
     // License Text
     lstrcpy(szBuf, szSetupDir);
