@@ -1992,11 +1992,11 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDOMEventTarget> currentTarget(aCurrentTarget);
   nsCOMPtr<nsIDOMElement> currentFocus;
   nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIPresShell> shell;
+  nsCOMPtr<nsIPresShell> shell = aPresContext->PresShell();
   nsString empty;
 
   if (aEvent->message == NS_CONTEXTMENU_KEY) {
-    aPresContext->PresShell()->GetDocument(getter_AddRefs(doc));
+    shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       if (privWindow) {
