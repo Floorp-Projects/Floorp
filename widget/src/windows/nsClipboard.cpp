@@ -631,12 +631,16 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
       PRUint32 dataLen;
 
       // Get the data as a bunch-o-bytes from the clipboard
+      // this call hands back new memory with the contents copied into it
       mTransferable->GetTransferData(df, &data, &dataLen);
 
       // now place it on the Clipboard
       if (nsnull != data) {
         PlaceDataOnClipboard(format, (char *)data, dataLen);
       }
+
+      // Now, delete the memory that was created by the transferable
+      delete [] data;
     }
   }
   delete dfList;
