@@ -200,6 +200,9 @@ nsHTMLImageElement::nsHTMLImageElement()
 
 nsHTMLImageElement::~nsHTMLImageElement()
 {
+  if (mRequest) {
+    mRequest->Cancel(NS_ERROR_FAILURE);
+  }
 }
 
 
@@ -817,9 +820,9 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
       // If we have a loader we're in the middle of loading a image,
       // we'll cancel that load and start a new one.
 
-      // if (mRequest) {
-      //   mRequest->Cancel() ?? cancel the load?
-      // }
+      if (mRequest) {
+        mRequest->Cancel(NS_ERROR_FAILURE);
+      }
 
       nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
       if (!il) {

@@ -158,6 +158,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(ImageListener,
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
+  NS_PRECONDITION(!mDocument->mImageRequest, "OnStartRequest called twice!");
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) {
     return NS_ERROR_FAILURE;
@@ -217,6 +218,9 @@ nsImageDocument::nsImageDocument()
 
 nsImageDocument::~nsImageDocument()
 {
+  if (mImageRequest) {
+    mImageRequest->Cancel(NS_ERROR_FAILURE);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsHTMLDocument)
@@ -302,10 +306,14 @@ NS_IMETHODIMP
 nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
   if (!aScriptGlobalObject) {
-    // If the global object is being set to null, then it means we are
-    // going away soon. Drop our ref to imgRequest so that we don't end
-    // up leaking due to cycles through imgLib
-    mImageRequest = nsnull;
+    // If the global object is being set to null, then it means we are going
+    // away soon. Drop our ref to imgRequest so that we don't end up leaking
+    // due to cycles through imgLib.  This should not be really necessary
+    // anymore, but it's a belt-and-suspenders thing.
+    if (mImageRequest) {
+      mImageRequest->Cancel(NS_ERROR_FAILURE);
+      mImageRequest = nsnull;
+    }
 
     if (mImageResizingEnabled) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageElement);

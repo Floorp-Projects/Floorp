@@ -82,7 +82,7 @@ private:
 
   imgRequest *mOwner;
 
-  nsCOMPtr<imgIDecoderObserver> mListener;
+  imgIDecoderObserver* mListener;  // Weak ref; see imgILoader.idl
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;

@@ -272,6 +272,15 @@ private:
     // broken image and loading image icons
   public:
     IconLoad(nsIPresContext *aPresContext):mRefCount(0),mIconsLoaded(PR_FALSE) { GetPrefs(aPresContext); }
+    ~IconLoad()
+    {
+      if (mIconLoads[0].mRequest) {
+        mIconLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
+      }
+      if (mIconLoads[1].mRequest) {
+        mIconLoads[1].mRequest->Cancel(NS_ERROR_FAILURE);
+      }
+    }
     void AddRef(void) { ++mRefCount; }
     PRBool Release(void) { return --mRefCount == 0; }
     void GetPrefs(nsIPresContext *aPresContext);
