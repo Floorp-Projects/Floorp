@@ -71,103 +71,19 @@ Message0=This will uninstall %s from your system.  Click Uninstall to begin unin
 ;Process Name=psm.exe
 ;Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot might be necessary.  Setup will then be able to continue.
 
+[Restore Desktop Integration Associations]
+.gif=TRUE
+.htm=TRUE
+.html=TRUE
+.jpeg=TRUE
+.jpg=TRUE
+.png=TRUE
+.xml=TRUE
+.xul=TRUE
 
-
-
-; The Timing key needs to be one of the following values:
-;   pre download     - process before any files have been downloaded.
-;   post download    - process after all files have been downloaded.
-;   pre xpcom        - process before the xpcom file has been uncompressed.
-;   post xpcom       - process after the xpcom file has been uncompressed.
-;   pre smartupdate  - process before the smartupdate engine has been launched.
-;   post smartupdate - process after the smartupdate engine has been launched.
-;   pre launchapp    - process before the launching of executables.
-;   post launchapp   - process after the launching of executables.
-;   depend reboot    - process depending on if a reboot is necessary or not.
-;                      if reboot is necessary, installer can set it up so
-;                      the app runs once upon windows reboot.
-
-;Uncompress FileX sections
-;[Uncompress File0]
-;Timing=post download
-;Source=[XPI PATH]\xpcom.xpi
-;Destination=[SETUP PATH]
-;Message=Configuring Seamonkey, please wait...
-
-;[Uncompress File1]
-;Timing=post download
-;Source=[XPI PATH]\extratest.xpi
-;Destination=[SETUP PATH]
-;Message=Configuring Extra test files, please wait...
-
-;Move FileX sections
-;[Move File0]
-;Timing=post download
-;Source=[SETUP PATH]\bin\*
-;Destination=[SETUP PATH]\program
-
-;[Move File1]
-;Timing=post download
-;Source=[SETUP PATH]\ftmain\*
-;Destination=[SETUP PATH]\program
-
-;Copy FileX sections
-;[Copy File0]
-;Timing=post launchapp
-;Source=[JRE BIN PATH]\npjava*.dll
-;Destination=[SETUP PATH]\Plugins
-;Fail If Exists=FALSE
-
-;[Copy File1]
-;Timing=post launchapp
-;Source=[TEMP]\xtratest\bin\*.*
-;Destination=[SETUP PATH]
-;Fail If Exists=FALSE
-
-;[Copy File1]
-;Timing=post download
-;Source=[SETUP PATH]\bin\*.exe
-;Destination=[TEMP]
-;Fail If Exists=
-
-;Create DirectoryX sections
-;[Create Directory0]
-;Timing=post download
-;Destination=[SETUP PATH]\Plugins
-
-;[Create Directory1]
-;Timing=post download
-;Destination=[TEMP]\Test\temp
-
-;Delete FileX sections
-;[Delete File0]
-;Timing=post download
-;Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
-
-;Remove DirectoryX sections
-;[Remove Directory0]
-;Timing=post launchapp
-;Destination=[TEMP]\xtratest
-;Remove subdirs=TRUE
-
-;RunAppX sections
-;[RunApp0]
-;Timing=depend reboot
-;Wait=FALSE
-;Target=[SETUP PATH]\$MainExeFile$
-;Parameters=-installer
-;WorkingDir=[SETUP PATH]
-
-;[Windows Registry0]
-;Root Key=HKEY_LOCAL_MACHINE
-;Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
-;Name=Program Folder Path
-;Name Value=[Default Folder]
-;Type=REG_SZ
-;Decrypt Key=FALSE
-;Decrypt Name=FALSE
-;Decrypt Name Value=TRUE
-;Overwrite Key=TRUE
-;Overwrite Name=TRUE
-;Timing=pre smartupdate
+[Restore Desktop Integration Protocols]
+chrome=TRUE
+ftp=TRUE
+http=TRUE
+https=TRUE
 

@@ -35,6 +35,7 @@ OBJS =                          \
     .\$(OBJDIR)\dialogs.obj     \
     .\$(OBJDIR)\parser.obj      \
     .\$(OBJDIR)\ifuncns.obj     \
+    .\$(OBJDIR)\rdi.obj         \
     $(NULL)
 
 WIN_LIBS=                       \

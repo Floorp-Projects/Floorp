@@ -33,7 +33,7 @@ DWORD       Uninstall(sil* silFile);
 void        ParseForFile(LPSTR szString, LPSTR szKey, LPSTR szFile, DWORD dwShortFilenameBufSize);
 void        ParseForCopyFile(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwShortFilenameBufSize);
 void        ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD dwRootKeyBufSize, LPSTR szKey, DWORD dwKeyBufSize, LPSTR szName, DWORD dwNameBufSize);
-void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey);
+void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete);
 void        DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 DWORD       GetLogFile(LPSTR szTargetPath, LPSTR szInFilename, LPSTR szOutBuf, DWORD dwOutBufSize);
 void        RemoveUninstaller(LPSTR szUninstallFilename);

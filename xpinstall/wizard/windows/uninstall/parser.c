@@ -163,12 +163,17 @@ void DeInitSilNodes(sil **silHead)
   SilNodeDelete(silTemp);
 }
 
-void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey)
+void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete)
 {
   HKEY      hkResult;
   DWORD     dwErr;
   DWORD     dwTotalSubKeys;
   DWORD     dwTotalValues;
+  DWORD     dwSubKeySize;
+  FILETIME  ftLastWriteFileTime;
+  char      szSubKey[MAX_BUF];
+  char      szNewKey[MAX_BUF];
+  long      lRv;
 
   dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_QUERY_VALUE, &hkResult);
   if(dwErr == ERROR_SUCCESS)
@@ -178,8 +183,32 @@ void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey)
     RegQueryInfoKey(hkResult, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
     RegCloseKey(hkResult);
 
-    if((dwTotalSubKeys == 0) && (dwTotalValues == 0))
+    if(((dwTotalSubKeys == 0) && (dwTotalValues == 0)) || bAbsoluteDelete)
+    {
+      if(dwTotalSubKeys && bAbsoluteDelete)
+      {
+        do
+        {
+          dwSubKeySize = sizeof(szSubKey);
+          lRv = 0;
+          if(RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult) == ERROR_SUCCESS)
+          {
+            if((lRv = RegEnumKeyEx(hkResult, 0, szSubKey, &dwSubKeySize, NULL, NULL, NULL, &ftLastWriteFileTime)) == ERROR_SUCCESS)
+            {
+              RegCloseKey(hkResult);
+              lstrcpy(szNewKey, szKey);
+              AppendBackSlash(szNewKey, sizeof(szNewKey));
+              lstrcat(szNewKey, szSubKey);
+              DeleteWinRegKey(hkRootKey, szNewKey, bAbsoluteDelete);
+            }
+            else
+              RegCloseKey(hkResult);
+          }
+        } while(lRv != ERROR_NO_MORE_ITEMS);
+      }
+
       dwErr = RegDeleteKey(hkRootKey, szKey);
+    }
   }
 }
 
@@ -565,7 +594,7 @@ DWORD Uninstall(sil* silInstallLogHead)
       {
         ParseForWinRegInfo(szSubStr, KEY_CREATE_REG_KEY, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
         hkRootKey = ParseRootKey(szRootKey);
-        DeleteWinRegKey(hkRootKey, szKey);
+        DeleteWinRegKey(hkRootKey, szKey, FALSE);
       }
       else if(((szSubStr = strstr(szLCLine, KEY_CREATE_FOLDER)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
