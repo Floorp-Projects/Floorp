@@ -43,7 +43,6 @@
 #define nsDigestAuth_h__
 
 #include "nsIHttpAuthenticator.h"
-#include "nsISignatureVerifier.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
@@ -57,6 +56,8 @@
 #define EXPANDED_DIGEST_LENGTH 32
 #define NONCE_COUNT_LENGTH 8
 
+class nsISignatureVerifier;
+
 //-----------------------------------------------------------------------------
 // nsHttpDigestAuth
 //-----------------------------------------------------------------------------
@@ -68,7 +69,7 @@ class nsHttpDigestAuth : public nsIHttpAuthenticator
     NS_DECL_NSIHTTPAUTHENTICATOR
 
     nsHttpDigestAuth();
-    virtual ~nsHttpDigestAuth() {}
+    ~nsHttpDigestAuth();
 
   protected:
     nsresult ExpandToHex(const char * digest, char * result);
