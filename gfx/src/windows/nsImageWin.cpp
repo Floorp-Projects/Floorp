@@ -109,27 +109,54 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 //------------------------------------------------------------
 
 // set up the pallete to the passed in color array, RGB only in this array
-void nsImageWin :: ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect)
+void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
   PRInt32 i;
   PRUint8 *cpointer;
 
   if (aFlags & nsImageUpdateFlags_kColorMapChanged)
   {
+    PRUint8 *gamma = aContext->GetGammaTable();
+
     if (mColorMap->NumColors > 0)
     {
       cpointer = mColorTable;
 
       for(i = 0; i < mColorMap->NumColors; i++)
       {
-		    *cpointer++ = mColorMap->Index[(3 * i) + 2];
-		    *cpointer++ = mColorMap->Index[(3 * i) + 1];
-		    *cpointer++ = mColorMap->Index[(3 * i)];
+		    *cpointer++ = gamma[mColorMap->Index[(3 * i) + 2]];
+		    *cpointer++ = gamma[mColorMap->Index[(3 * i) + 1]];
+		    *cpointer++ = gamma[mColorMap->Index[(3 * i)]];
 		    *cpointer++ = 0;
       }
     }
 
     this->MakePalette();
+  }
+  else if ((aFlags & nsImageUpdateFlags_kBitsChanged) &&
+           (nsnull != aUpdateRect))
+  {
+    if (mNumPalleteColors == 0)
+    {
+      PRInt32 x, y, span = CalcBytesSpan(mBHead->biWidth), idx;
+      PRUint8 *pixels = mImageBits + aUpdateRect->y * span + aUpdateRect->x * 3;
+      PRUint8 *gamma = aContext->GetGammaTable();
+      
+      for (y = 0; y < aUpdateRect->height; y++)
+      {
+        for (x = 0, idx = 0; x < aUpdateRect->width; x++)
+        {
+          pixels[idx] = gamma[pixels[idx]];
+          idx++;
+          pixels[idx] = gamma[pixels[idx]];
+          idx++;
+          pixels[idx] = gamma[pixels[idx]];
+          idx++;
+        }
+
+        pixels += span;
+      }
+    }
   }
 }
 
@@ -660,12 +687,12 @@ PRInt32  nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
 {
   PRInt32 spanbytes;
 
-  spanbytes = (aWidth * mBHead->biBitCount) / 32; 
+  spanbytes = (aWidth * mBHead->biBitCount) >> 5;
 
-	if (((PRUint32)mBHead->biWidth * mBHead->biBitCount) % 32) 
+	if (((PRUint32)mBHead->biWidth * mBHead->biBitCount) & 0x1F) 
 		spanbytes++;
 
-	spanbytes *= 4;
+	spanbytes <<= 2;
 
   return(spanbytes);
 }

@@ -41,7 +41,7 @@ public:
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
   virtual nsColorMap* GetColorMap() {return mColorMap;}
-  virtual void        ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect);
+  virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return mIsOptimized; }
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
@@ -174,6 +174,8 @@ private:
    * Calculate the amount of memory needed for the initialization of the pixelmap
    */
   void ComputeMetrics();
+
+  PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPalleteColors;  // either 8 or 0

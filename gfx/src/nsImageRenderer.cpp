@@ -155,7 +155,10 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
           *mapptr++ = cmap->map[i].green;
           *mapptr++ = cmap->map[i].blue;
         }
-        img->ImageUpdated(nsImageUpdateFlags_kColorMapChanged, nsnull);
+
+        nsIDeviceContext  *dx = rc->GetDeviceContext();
+        img->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
+        NS_IF_RELEASE(dx);
                 
         if (aImage->header.transparent_pixel) {
             PRUint8 red, green, blue;
@@ -193,10 +196,13 @@ ImageRendererImpl::UpdatePixmap(void* aDisplayContext,
 				PRInt32 aWidth, PRInt32 aHeight)
 {
     nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
-    nsIImage *img = (nsIImage *)aImage->client_data;
+    nsIImage            *img = (nsIImage *)aImage->client_data;
+    nsIDeviceContext    *dx = rc->GetDeviceContext();
+    nsRect              drect(aXOffset, aYOffset, aWidth, aHeight);
 
-    // XXX The nsIImage interface has an ImageUpdated method that
-    // has been commented out.
+    img->ImageUpdated(dx, nsImageUpdateFlags_kBitsChanged, &drect);
+
+    NS_IF_RELEASE(dx);
 }
 
 void 

@@ -137,7 +137,7 @@ public:
    @param aFlags Used to pass in parameters for the update
    @param aUpdateRect The rectangle to update
    */
-  virtual void ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect) = 0;
+  virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect) = 0;
 
   /**
    * Returns if the pixelmap has been converted to an optimized pixelmap
