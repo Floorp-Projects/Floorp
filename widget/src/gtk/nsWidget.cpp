@@ -1853,20 +1853,6 @@ nsWidget::OnDragEnterSignal(GdkDragContext *aGdkDragContext,
 nsWidget::OnDragLeaveSignal(GdkDragContext   *context,
                             guint             aTime)
 {
-  // tell anyone who is interested to stop tracking drags, but only when
-  // we're leaving a window, not a child widget
-  nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
-  if ( !parent ) {
-    printf("stopping\n");
-    nsCOMPtr<nsIDragService> dragServ ( do_GetService("component://netscape/widget/dragservice") );
-    if ( dragServ ) {
-      nsCOMPtr<nsIDragSession> session;
-      dragServ->GetCurrentSession ( getter_AddRefs(session) );
-      if ( session )
-        session->StopTracking();
-    }
-  }
-
   // update our drag context
   UpdateDragContext(NULL, NULL, aTime);
 
@@ -1918,16 +1904,6 @@ nsWidget::OnDragDropSignal(GtkWidget      *aWidget,
                            gint            y,
                            guint           aTime)
 {
-  // tell anyone who is interested to stop tracking drags, but only when
-  // we're leaving a window, not a child widget
-  nsCOMPtr<nsIDragService> dragServ ( do_GetService("component://netscape/widget/dragservice") );
-  if ( dragServ ) {
-    nsCOMPtr<nsIDragSession> session;
-    dragServ->GetCurrentSession ( getter_AddRefs(session) );
-    if ( session )
-      session->StopTracking();
-  }
-
   UpdateDragContext(aWidget, aDragContext, aTime);
 
   nsMouseEvent    event;
