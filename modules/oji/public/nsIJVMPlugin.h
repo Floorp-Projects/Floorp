@@ -84,6 +84,10 @@ public:
 	 */
 	NS_IMETHOD
 	SpendTime(PRUint32 timeMillis) = 0;
+
+	NS_IMETHOD
+	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj) = 0;
+
 };
 
 #define NS_IJVMPLUGIN_IID                            \
