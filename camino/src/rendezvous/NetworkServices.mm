@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define BIND_8_COMPAT // need this to build on Panther
 
 #include <sys/types.h>
 #include <netinet/in.h>
