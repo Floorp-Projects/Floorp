@@ -134,10 +134,19 @@ calDavCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
-        if (aItem.id == null)
+
+        if (aItem.id == null && aItem.isMutable)
             aItem.id = "uuid:" + (new Date()).getTime();
 
-        // XXX do we need to check the server to see if this already exists?
+        if (aItem.id == null) {
+            if (aListener)
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.ADD,
+                                               aItem.id,
+                                               "Can't set ID on non-mutable item to addItem");
+            return;
+        }
 
         // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
@@ -157,30 +166,35 @@ calDavCalendar.prototype = {
 
                 // notify observers
                 // XXX should be called after listener?
-                savedthis.observeAddItem(aItem);
+                savedthis.observeAddItem(newItem);
 
             } else {
+                // XXX real error handling
                 dump("Error adding item: " + aStatusCode + "\n");
                 retVal = Components.results.NS_ERROR_FAILURE;
 
             }
-
-            // XXX ensure immutable version returned
 
             // notify the listener
             if (aListener)
                 aListener.onOperationComplete (savedthis,
                                                retVal,
                                                aListener.ADD,
-                                               aItem.id,
-                                               aItem);
+                                               newItem.id,
+                                               newItem);
         }
 
+        var newItem = aItem.clone();
+        newItem.parent = this;
+        newItem.generation = 1;
+        newItem.makeImmutable();
+
+        // XXX use if not exists
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
-        webSvc.putFromString(eventResource, "text/calendar", aItem.icalString, 
-                             listener, null);
+        webSvc.putFromString(eventResource, "text/calendar", 
+                             newItem.icalString, listener, null);
 
         return;
     },
@@ -231,7 +245,6 @@ calDavCalendar.prototype = {
             }
 
             // XXX ensure immutable version returned
-            
             // notify listener
             if (aListener) {
                 aListener.onOperationComplete (savedthis, retVal,
@@ -247,6 +260,7 @@ calDavCalendar.prototype = {
             return;
         }
 
+        // XXX use etag as generation
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
@@ -303,6 +317,7 @@ calDavCalendar.prototype = {
             savedthis.observeDeleteItem(aItem);
         }
 
+        // XXX check etag/generation
         // do WebDAV remove
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
@@ -374,6 +389,8 @@ calDavCalendar.prototype = {
             const calIItemBase = Components.interfaces.calIItemBase;
             const calITodo = Components.interfaces.calITodo;
             const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
+            const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
+
             var itemsFound = Array();
             var startTime = 0;
             var endTime = END_OF_TIME;
@@ -427,9 +444,7 @@ calDavCalendar.prototype = {
                     tmpitem = item.QueryInterface(calIEvent);
                     itemStartTime = item.startDate.nativeTime || 0;
                     itemEndTime = item.endDate.nativeTime || END_OF_TIME;
-                
-                    if (itemReturnOccurrences)
-                        itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
+
                 } else if (item instanceof calITodo) {
                     // if it's a todo, also filter based on completeness
                     if (item.percentComplete == 100 && !itemCompletedFilter)
@@ -438,20 +453,30 @@ calDavCalendar.prototype = {
                         continue;
                     
                     itemEndTime = itemStartTime = item.entryTime.nativeTime || 0;
-                
-                    if (itemReturnOccurrences)
-                        itemtoadd = makeOccurrence(item, item.entryTime, item.entryTime);
                 } else {
                     // XXX unknown item type, wth do we do?
                     continue;
                 }
 
-                // determine whether any endpoint falls within the range
-                if (itemStartTime <= endTime && itemEndTime >= startTime) {
-                    if (itemtoadd == null)
-                        itemtoadd = item;
-                
-                    itemsFound.push(itemtoadd);
+
+                if (itemStartTime <= endTime) {
+                    // figure out if there are recurrences here we care about
+                    if (itemReturnOccurrences && item.recurrenceInfo &&
+                        item.recurrenceInfo.recurType != calIRecurrenceInfo.CAL_RECUR_INVALID)
+                        {
+                            // there might be some recurrences here that we need to handle
+                            var recs = item.recurrenceInfo.getOccurrencesBetween (item, startTime, endTime, {});
+                            for (var i = 0; i < recs.length; i++) {
+                                itemsFound.push(recs[i]);
+                            }
+                        } else if (itemEndTime >= startTime) {
+                        // no occurrences
+                        if (itemReturnOccurrences)
+                            itemtoadd = makeOccurrence(item, itemStartDate, itemEndDate);
+                        else
+                            itemtoadd = item;
+                        itemsFound.push(itemtoadd);
+                    }
                 }
 
                 if (aCount && itemsFound.length >= aCount)
