@@ -22,6 +22,7 @@
 #include "nsNetService.h"
 #include "nsNetStream.h"
 #include "nsNetFile.h"
+#include "nsStubContext.h"
 #include "prefapi.h"
 #include "mkprefs.h"
 extern "C" {
@@ -93,8 +94,6 @@ extern "C" int NET_TotalNumberOfProcessingURLs;
 extern "C" HTTP_Version DEFAULT_VERSION;
 
 extern "C" void net_AddrefContext(MWContext* window_id);
-MWContext *new_stub_context(URL_Struct *URL_s);
-void free_stub_context(MWContext *window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
 #if defined(XP_WIN) && !defined(NETLIB_THREAD)
