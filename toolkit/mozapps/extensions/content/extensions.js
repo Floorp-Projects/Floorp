@@ -44,7 +44,10 @@ function flushDataSource()
 // Event Handlers
 function onExtensionSelect(aEvent)
 {
-  aEvent.target.setAttribute("last-selected", aEvent.target.selected.id);
+  if (aEvent.target.selected)
+    aEvent.target.setAttribute("last-selected", aEvent.target.selected.id);
+  else
+    aEvent.target.removeAttribute("last-selected");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -270,7 +273,6 @@ var gExtensionsViewController = {
   commands: { 
     cmd_close: function ()
     {
-      dump("*** close \n");
       closeWindow(true);
     },  
       
@@ -363,24 +365,61 @@ var gExtensionsViewController = {
     
     cmd_update: function ()
     {
-      var updateURL = gExtensionsView.selected.getAttribute("updateURL");
-      if (updateURL) {
-      
-      }
-      else {
-        "smartupdate.update.extensions"
-      }
+      if (gWindowState == "extensions")
+        gExtensionManager.updateExtension(gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null);
+      else if (gWindowState == "themes")
+        gExtensionManager.updateTheme(gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null);
     },
     
     cmd_uninstall: function ()
     {
-    
+      // Confirm the uninstall
+      var extensionsStrings = document.getElementById("extensionsStrings");
+      var brandStrings = document.getElementById("brandStrings");
+
+      var name = gExtensionsView.selected.getAttribute("name");
+      var title = extensionsStrings.getFormattedString("queryUninstallTitle", [name]);
+      if (gWindowState == "extensions")
+        message = extensionsStrings.getFormattedString("queryUninstallExtensionMessage", [name, name]);
+      else if (gWindowState == "themes")
+        message = extensionsStrings.getFormattedString("queryUninstallThemeMessage", [name]);
+
+      // XXXben - improve the wording on the buttons here!
+      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                .getService(Components.interfaces.nsIPromptService);
+      if (!promptSvc.confirm(window, title, message))
+        return;
+
+      var selectedID = gExtensionsView.selected.id;
+      var selectedElement = document.getElementById(selectedID);
+      var nextElement = selectedElement.nextSibling;
+      if (!nextElement)
+        nextElement = selectedElement.previousSibling;
+      nextElement = nextElement.id;
+      
+      if (gWindowState == "extensions")
+        gExtensionManager.uninstallExtension(stripPrefix(selectedID));
+      else if (gWindowState == "themes")
+        gExtensionManager.uninstallTheme(stripPrefix(selectedID));
+      
+      gExtensionsView.selected = document.getElementById(nextElement);
+
+#if ANNOYING_ASS_ALERTS
+      // Show an alert message telling the user they need to restart for the
+      // action to take effect.
+      message = extensionsStrings.getFormattedString("restartBeforeUninstallMessage", 
+                                                     [gExtensionsView.selected.getAttribute("name"),
+                                                      brandStrings.getString("brandShortName")]);
+
+      promptSvc.alert(window, extensionsStrings.getString("restartBeforeUninstallTitle"), message);
+#endif
     },
     
     cmd_disable: function ()
     {
       gExtensionManager.disableExtension(stripPrefix(gExtensionsView.selected.id));
 
+#if ANNOYING_ASS_ALERTS
       // Show an alert message telling the user they need to restart for the
       // action to take effect.
       var extensionsStrings = document.getElementById("extensionsStrings");
@@ -393,12 +432,14 @@ var gExtensionsViewController = {
       var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                 .getService(Components.interfaces.nsIPromptService);
       promptSvc.alert(window, extensionsStrings.getString("restartBeforeDisableTitle"), message);
+#endif
     },
     
     cmd_enable: function ()
     {
       gExtensionManager.enableExtension(stripPrefix(gExtensionsView.selected.id));
 
+#if ANNOYING_ASS_ALERTS
       // Show an alert message telling the user they need to restart for the
       // action to take effect.
       var extensionsStrings = document.getElementById("extensionsStrings");
@@ -411,6 +452,7 @@ var gExtensionsViewController = {
       var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                 .getService(Components.interfaces.nsIPromptService);
       promptSvc.alert(window, extensionsStrings.getString("restartBeforeEnableTitle"), message);
+#endif
     },
   }
 };

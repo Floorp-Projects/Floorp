@@ -50,9 +50,6 @@
 #define NS_DOWNLOADMANAGER_CONTRACTID \
   "@mozilla.org/download-manager;1"
 
-#define NS_EXTENSIONMANAGER_CONTRACTID \
-  "@mozilla.org/extension-manager;1"
-
 #define NS_FORMHISTORY_CONTRACTID \
   "@mozilla.org/satchel/form-history;1"
 
@@ -84,10 +81,6 @@
 
 #define NS_DOWNLOADMANAGER_CID \
     { 0xedb0490e, 0x1dd1, 0x11b2, { 0x83, 0xb8, 0xdb, 0xf8, 0xd8, 0x59, 0x06, 0xa6 } }
-
-// {8A115FAA-7DCB-4e8f-979B-5F53472F51CF}
-#define NS_EXTENSIONMANAGER_CID \
-{ 0x8a115faa, 0x7dcb, 0x4e8f, { 0x97, 0x9b, 0x5f, 0x53, 0x47, 0x2f, 0x51, 0xcf } }
 
 // {895DB6C7-DBDF-40ea-9F64-B175033243DC}
 #define NS_FORMFILLCONTROLLER_CID \

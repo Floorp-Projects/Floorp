@@ -43,13 +43,11 @@
 #include "nsIIOService.h"
 #include "nsILocalFile.h"
 #include "nsIProtocolHandler.h"
+#include "nsIRDFContainer.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsLiteralString.h"
 #include "rdf.h"
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIRDFDataSource
 
 NS_IMPL_ISUPPORTS2(nsExtensionManagerDataSource, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
@@ -82,8 +80,16 @@ static nsIRDFLiteral* gTrueValue = nsnull;
 static nsIRDFLiteral* gFalseValue = nsnull;
 static nsIRDFLiteral* gInstallProfile = nsnull;
 static nsIRDFLiteral* gInstallGlobal = nsnull;
+static nsIRDFResource* gExtensionsRoot = nsnull;
+static nsIRDFResource* gThemesRoot = nsnull;
 
 #define EM_RDF_URI "http://www.mozilla.org/2004/em-rdf#"
+
+#define PREF_EM_DEFAULTUPDATEURL "update.url.extensions"
+#define PREF_EM_APP_ID "app.id"
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIRDFDataSource
 
 nsExtensionManagerDataSource::nsExtensionManagerDataSource()
 {
@@ -103,6 +109,9 @@ nsExtensionManagerDataSource::nsExtensionManagerDataSource()
   gRDFService->GetLiteral(NS_LITERAL_STRING("global").get(), &gInstallGlobal);
   gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &gTrueValue);
   gRDFService->GetLiteral(NS_LITERAL_STRING("false").get(), &gFalseValue);
+
+  gRDFService->GetResource(NS_LITERAL_CSTRING("urn:mozilla:extension:root"), &gExtensionsRoot);
+  gRDFService->GetResource(NS_LITERAL_CSTRING("urn:mozilla:themes:root"), &gThemesRoot);
 }
 
 nsExtensionManagerDataSource::~nsExtensionManagerDataSource()
@@ -135,6 +144,8 @@ nsExtensionManagerDataSource::~nsExtensionManagerDataSource()
   NS_IF_RELEASE(gFalseValue);
   NS_IF_RELEASE(gInstallProfile);
   NS_IF_RELEASE(gInstallGlobal);
+  NS_IF_RELEASE(gExtensionsRoot);
+  NS_IF_RELEASE(gThemesRoot);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -330,7 +341,113 @@ nsExtensionManagerDataSource::DisableExtension(const char* aExtensionID)
 nsresult
 nsExtensionManagerDataSource::UninstallExtension(const char* aExtensionID)
 {
+  nsCOMPtr<nsIRDFContainer> ctr(do_CreateInstance("@mozilla.org/rdf/container;1"));
+  ctr->Init(this, gExtensionsRoot);
+
+  nsCString resourceURI = NS_LITERAL_CSTRING("urn:mozilla:extension:");
+  resourceURI += aExtensionID;
+
+  nsCOMPtr<nsIRDFResource> extension;
+  gRDFService->GetResource(resourceURI, getter_AddRefs(extension));
+
+  ctr->RemoveElement(extension, PR_TRUE);
+
   return SetExtensionProperty(aExtensionID, gToBeUninstalledArc, gTrueValue);
+}
+
+// This returns an array of URIs in the form:
+// http://www.foo.com/software/ext1/update.cgi
+// http://www.bar.com/update.php?ext=%7B0e4007ea-0b6b-4487-8e1b-479f65599e74%7D
+// http://update.mozilla.org/genericUpdate.php?ext=%7B0e4007ea-0b6b-4487-8e1b-479f65599e74%7D%2C%7B0e4007ea-0b6b-4487-8e1b-479f65599e74%7D&app=%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D
+// (specific URLs first, followed by a generic 
+nsresult
+nsExtensionManagerDataSource::GetConsolidatedUpdateURLs(nsISupportsArray* aURIs)
+{
+  nsCOMPtr<nsIRDFContainer> ctr(do_CreateInstance("@mozilla.org/rdf/container;1"));
+  ctr->Init(this, gExtensionsRoot);
+
+  nsCOMPtr<nsISimpleEnumerator> e;
+  ctr->GetElements(getter_AddRefs(e));
+
+  do {
+    e->HasMoreElements(&hasMore);
+    if (!hasMore)
+      break;
+
+    nsCOMPtr<nsIRDFResource> res;
+    e->GetNext(getter_AddRefs(res));
+
+    nsCAutoString url;
+    GetUpdateURLForExtensionInternal(res, url);
+    
+    // If there's no specific Update URL specified for this extension, we want to
+    // add this extension to the list that we'll pass to the generic update server.
+    if (url.IsEmpty())  {
+      
+    }
+
+
+  }
+  while (PR_TRUE);
+}
+
+nsresult
+nsExtensionManagerDataSource::GetUpdateURLForExtension(const char* aExtensionID, PRUnichar* aResult)
+{
+  nsCString resourceURI = NS_LITERAL_CSTRING("urn:mozilla:extension:");
+  resourceURI += aExtensionID;
+
+  nsCOMPtr<nsIRDFResource> extension;
+  gRDFService->GetResource(resourceURI, getter_AddRefs(extension));
+
+  nsCAutoString url;
+  GetUpdateURLForExtensionInternal(extension, url);
+
+}
+
+void
+nsExtensionManagerDataSource::GetUpdateURLForExtensionInternal(nsIRDFResource* aResource, nsACString& aResult)
+{
+  PRBool hasUpdateURLArc;
+  mDataSource->HasArcOut(extension, gUpdateURLArc, &hasUpdateURLArc);
+  if (hasUpdateURLArc) {
+    nsCOMPtr<nsIRDFNode> updateURL;
+    mDataSource->GetTarget(extension, gUpdateURLArc, PR_TRUE, getter_AddRefs(updateURL));
+
+    nsCOMPtr<nsIRDFResource> updateURLResource(do_QueryInterface(updateURL));
+
+    if (updateURLResource) {
+      nsXPIDLCString value;
+      updateURLResource->GetValueConst(getter_Shares(value));
+
+      nsXPIDLCString app;
+      nsCOMPtr<nsIPrefBranch> prefSvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      prefSvc->GetCharPref(PREF_EM_APP_ID, getter_Copies(app));
+      
+      nsXPIDLCString id;
+      extension->GetValue(getter_Copies(id));
+      const nsACString& extensionPrefix = NS_LITERAL_CSTRING("urn:mozilla:extension:");
+      PRInt32 prefixLength = extensionPrefix.Length();
+      id.Cut(prefixLength, id.Length() - prefixLength);
+
+      ReplaceAll(value, NS_LITERAL_CSTRING("%APP%"), app);
+      ReplaceAll(value, NS_LITERAL_CSTRING("%ITEM%"), id);
+
+      aResult = value;
+    }
+  }
+}
+
+void
+nsExtensionManagerDataSource::ReplaceAll(nsACString& aString, const nsACString& aKey, const nsACString& aReplace)
+{
+  nsACString::const_iterator startString, startSubstring, end;
+  aString.BeginReading(startString);
+  aString.BeginReading(startSubstring);
+  aString.EndReading(end);
+
+  while (FindInReadable(aKey, startSubstring, end))
+    aString.Replace(Distance(startString, startSubstring), aKey.Length(), aReplace);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

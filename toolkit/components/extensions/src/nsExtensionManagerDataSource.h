@@ -66,6 +66,12 @@ public:
 
   nsresult LoadExtensions(PRBool aProfile);
 
+  nsresult GetUpdateURL(PRUnichar** aResult);
+  void     GetUpdateURLForExtensionInternal(nsIRDFResource* aResource, 
+                                            nsACString& aResult);
+  void     ReplaceAll(nsACString& aString, const nsACString& aKey, 
+                      const nsACString& aReplace);
+
 protected:
   nsresult SetExtensionProperty(const char* aExtensionID, 
                                 nsIRDFResource* aPropertyArc, 

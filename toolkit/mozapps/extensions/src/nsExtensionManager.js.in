@@ -1,0 +1,571 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Extension Manager.
+ *
+ * The Initial Developer of the Original Code is Ben Goodger.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Ben Goodger <ben@bengoodger.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+var gExtensionManager = null;
+
+function nsExtensionManager()
+{
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+                     .getService(Components.interfaces.nsIObserverService);
+  os.addObserver(this, "profile-after-change", false);
+  
+  dump("*** global extensions startup!\n");
+}
+
+nsExtensionManager.prototype = {
+
+  // nsIObserver
+  observe: function (aSubject, aTopic, aData)
+  {
+    if (aTopic == "profile-after-change") {
+      var os = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+      os.removeObserver(this, "profile-after-change");
+      
+      dump("*** profile extensions startup\n");
+    }
+  },
+
+  // nsIExtensionManager
+  installExtensionFromStream: function (aStream, aUseProfile)
+  {
+    var parser = Components.classes["@mozilla.org/rdf/xml-parser;1"]
+                           .createInstance(Components.interfaces.nsIRDFXMLParser);
+    var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
+                       .createInstance(Components.interfaces.nsIRDFDataSource);
+    var streamListener = parser.parseAsync(ds, null);
+    
+    var bytesAvailable;
+    do {
+      bytesAvailable = aStream.available();
+      if (!bytesAvailable)
+        break;
+      
+      streamListener.onDataAvailable(null, null, aStream, 0, bytesAvailable);
+    }
+    while (1);
+    
+    this._ensureDS();
+    
+    this._ds.installExtension(ds, aUseProfile);
+  },
+      
+  uninstallExtension: function (aExtensionID)
+  {
+    this._ds.uninstallExtension(aExtensionID);
+  },
+  
+  enableExtension: function (aExtensionID)
+  {
+    this._ds.enableExtension(aExtensionID);
+  },
+  
+  disableExtension: function (aExtensionID)
+  {
+    this._ds.disableExtension(aExtensionID);
+  },
+  
+  updateExtension: function (aExtensionID)
+  {
+    this._ds.getUpdateURLs(aExtensionID);
+  },
+
+  // Themes
+  installTheme: function (aThemeID)
+  {
+  
+  },
+  
+  uninstallTheme: function (aThemeID)
+  {
+  
+  },
+
+  updateTheme: function (aThemeID)
+  {
+  
+  },
+  
+  get datasource()
+  {
+    this._ensureDS();
+    return this._ds;
+  },
+  
+  //
+  _ds: null,
+    
+  // Other
+  _ensureDS: function ()
+  {
+    if (!this._ds) {
+      this._ds = new nsExtensionsDataSource();
+      if (this._ds) {
+        this._ds.loadExtensions(false);
+        this._ds.loadExtensions(true);
+      }
+    }
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIExtensionManager) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+const PREF_EM_DEFAULTUPDATEURL = "update.url.extensions";
+const PREF_EM_APP_ID = "app.id";
+
+function EM_NS(aProperty)
+{
+  return "http://www.mozilla.org/2004/em-rdf#" + aProperty;
+}
+
+function nsExtensionsDataSource()
+{
+  this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+}
+
+nsExtensionsDataSource.prototype = {
+  _rdf: null,
+  
+  _emR: function (aProperty) 
+  {
+    return this._rdf.GetResource(EM_NS(aProperty));
+  },
+  
+  _emL: function (aLiteral)
+  {
+    return this._rdf.GetLiteral(aLiteral);
+  },
+  
+  _setProperty: function (aDS, aSource, aProperty, aNewValue)
+  {
+    var oldValue = aDS.GetTarget(aSource, aProperty, true);
+    if (oldValue)
+      aDS.Change(aSource, aProperty, oldValue, aNewValue);
+    else
+      aDS.Assert(aSource, aProperty, aNewValue, true);
+  },
+  
+  _setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue)
+  {
+    var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
+    var installLocation = this.GetTarget(extension, this._emR("installLocation"), true);
+    var isProfile = installLocation.EqualsNode(this._emR("profile"));
+    var ds = isProfile ? this._profileExtensions : this._appExtensions;
+    
+    this._setProperty(ds, extension, aPropertyArc, aPropertyValue);
+
+    this._flush(isProfile);  
+  },
+  
+  enableExtension: function (aExtensionID)
+  {
+    this._setExtensionProperty(aExtensionID, this._emR("toBeEnabled"), this._emL("true"));
+    this._setExtensionProperty(aExtensionID, this._emR("toBeDisabled"), this._emL("false"));
+    this._setExtensionProperty(aExtensionID, this._emR("disabled"), this._emL("false"));
+  },
+  
+  disableExtension: function (aExtensionID)
+  {
+    this._setExtensionProperty(aExtensionID, this._emR("toBeDisabled"), this._emL("true"));
+    this._setExtensionProperty(aExtensionID, this._emR("toBeEnabled"), this._emL("false"));
+    this._setExtensionProperty(aExtensionID, this._emR("disabled"), this._emL("true"));
+  },
+  
+  uninstallExtension: function (aExtensionID)
+  {
+    var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                        .createInstance(Components.interfaces.nsIRDFContainer);
+    ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+    
+    var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
+    ctr.RemoveElement(extension, true);
+    
+    this._setExtensionProperty(aExtensionID, this._emR("toBeUninstalled"), this._emL("true"));
+  },
+  
+  getUpdateURLs: function (aExtensionID)
+  {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var appID = pref.getCharPref(PREF_EM_APP_ID);
+  
+    var urls = [];
+    if (aExtensionID) {
+      var updateURL = this._getUpdateURLInternal(aExtensionID);
+      updateURL = updateURL.replace(/%APP%/g, escape(appID));
+      updateURL = updateURL.replace(/%ITEM%/g, escape(aExtensionID));
+      urls.push(updateURL);
+    }
+    else {
+      var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                          .createInstance(Components.interfaces.nsIRDFContainer);
+      ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+      
+      var urlHash = { };
+      
+      var e = ctr.GetElements();
+      while (e.hasMoreElements()) {
+        var r = e.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var extensionID = r.Value.substr("urn:mozilla:extension:".length, r.Value.length);
+        var updateURL = this._getUpdateURLInternal(extensionID);
+        if (!(updateURL in urlHash))
+          urlHash[updateURL] = [];
+          
+        urlHash[updateURL].push(extensionID);
+      }
+      
+      for (var url in urlHash) {
+        var guidString = "";
+        var urlCount = urlHash[url].length;
+        for (var i = 0; i < urlCount; ++i)
+          guidString += escape(urlHash[url][i] + (i < urlCount - 1 ? "," : ""));
+        dump("*** guidString = " + guidString + "\n");
+        url = url.replace(/%APP%/g, appID);
+        url = url.replace(/%ITEM%/g, guidString);
+        urls.push(url);
+      }
+    }
+    dump("*** urls = " + urls + "\n");
+    return urls;
+  },
+  
+  _getUpdateURLInternal: function (aExtensionID)
+  {
+    var updateURL;
+    var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
+   
+    if (this.hasArcOut(extension, this._emR("updateURL"))) {
+      updateURL = this.GetTarget(extension, this._emR("updateURL"), true);
+      if (updateURL) 
+        updateURL = updateURL.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    }
+    
+    if (!updateURL) {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      updateURL = pref.getCharPref(PREF_EM_DEFAULTUPDATEURL);
+    }
+    return updateURL;
+  },
+  
+  loadExtensions: function (aProfile)
+  {
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
+    var key = aProfile ? "ProfD" : "ProfD"; // XCurProcDir
+    var extensionsFile = fileLocator.get(key, Components.interfaces.nsIFile);
+    extensionsFile.append("Extensions");
+    extensionsFile.append("extensions.rdf");
+    
+    if (!extensionsFile.exists())
+      return;
+
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+    var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    var dsURL = fph.getURLSpecFromFile(extensionsFile);
+    
+    var ds = this._rdf.GetDataSourceBlocking(dsURL);
+    
+    if (aProfile) {
+      this._profileExtensions = ds;
+      if (!this._composite) 
+        this._composite = Components.classes["@mozilla.org/rdf/datasource;1?name=composite-datasource"]
+                                    .createInstance(Components.interfaces.nsIRDFDataSource);
+      if (this._appExtensions)
+        this._composite.RemoveDataSource(this._appExtensions);
+      this._composite.AddDataSource(this._profileExtensions);
+      if (this._appExtensions)
+        this._composite.AddDataSource(this._appExtensions);  
+    }
+    else {
+      this._appExtensions = ds;
+      
+      if (!this._composite)
+        this._composite = Components.classes["@mozilla.org/rdf/datasource;1?name=composite-datasource"]
+                                    .createInstance(Components.interfaces.nsIRDFCompositeDataSource);
+      this._composite.AddDataSource(this._appExtensions);
+    }
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIRDFDataSource
+
+  _appExtensions: null,
+  _profileExtensions: null,  
+  _composite: null,
+  
+  get URI()
+  {
+    return "rdf:extensions";
+  },
+  
+  GetSource: function (aProperty, aTarget, aTruthValue)
+  {
+    return this._composite.GetSource(aProperty, aTarget, aTruthValue);
+  },
+  
+  GetSources: function (aProperty, aTarget, aTruthValue)
+  {
+    return this._composite.GetSources(aProperty, aTarget, aTruthValue);
+  },
+  
+  GetTarget: function (aSource, aProperty, aTruthValue)
+  {
+    if (aProperty.EqualsNode(this._emR("iconURL"))) {
+      var hasIconURL = this._composite.hasArcOut(aSource, aProperty);
+      // If the download entry doesn't have a IconURL property, use a
+      // generic icon URL instead.
+      if (!hasIconURL)
+        return this._rdf.GetResource("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
+    }
+    else if (aProperty.EqualsNode(this._emR("installLocation"))) {
+      var hasNameArc = this._profileExtensions.hasArcOut(aSource, this._emR("name"));
+      var hasVersionArc = this._profileExtensions.hasArcOut(aSource, this._emR("version"));
+      return hasNameArc && hasVersionArc ? this._emL("profile") : this._emL("global");
+    }
+    
+    return this._composite.GetTarget(aSource, aProperty, aTruthValue);
+  },
+  
+  GetTargets: function (aSource, aProperty, aTruthValue)
+  {
+    return this._composite.GetTargets(aSource, aProperty, aTruthValue);
+  },
+  
+  Assert: function (aSource, aProperty, aTarget, aTruthValue)
+  {
+    return Components.results.NS_RDF_ASSERTION_REJECTED;
+  },
+  
+  Unassert: function (aSource, aProperty, aTarget)
+  {
+    return Components.results.NS_RDF_ASSERTION_REJECTED;
+  },
+  
+  Change: function (aSource, aProperty, aOldTarget, aNewTarget)
+  {
+    return Components.results.NS_RDF_ASSERTION_REJECTED;
+  },
+
+  Move: function (aSource, aNewSource, aProperty, aTarget)
+  {
+    return Components.results.NS_RDF_ASSERTION_REJECTED;
+  },
+  
+  HasAssertion: function (aSource, aProperty, aTarget, aTruthValue)
+  {
+    return this._composite.HasAssertion(aSource, aProperty, aTarget, aTruthValue);
+  },
+  
+  AddObserver: function (aObserver)
+  {
+    this._composite.AddObserver(aObserver);
+  },
+  
+  RemoveObserver: function (aObserver)
+  {
+    this._composite.RemoveObserver(aObserver);
+  },
+  
+  ArcLabelsIn: function (aNode)
+  {
+    return this._composite.ArcLabelsIn(aNode);
+  },
+  
+  ArcLabelsOut: function (aSource)
+  {
+    return this._composite.ArcLabelsOut(aSource);
+  },
+  
+  GetAllResources: function ()
+  {
+    return this._composite.GetAllResources();
+  },
+  
+  IsCommandEnabled: function (aSources, aCommand, aArguments)
+  {
+    return this._composite.IsCommandEnabled(aSources, aCommand, aArguments);
+  },
+  
+  DoCommand: function (aSources, aCommand, aArguments)
+  {
+    this._composite.DoCommand(aSources, aCommand, aArguments);
+  },
+  
+  GetAllCmds: function (aSource)
+  {
+    return this._composite.GetAllCmds(aSource);
+  },
+  
+  hasArcIn: function (aNode, aArc)
+  {
+    return this._composite.hasArcIn(aNode, aArc);
+  },
+  
+  hasArcOut: function (aSource, aArc)
+  {
+    return this._composite.hasArcOut(aSource, aArc);
+  },
+  
+  beginUpdateBatch: function ()
+  {
+    return this._composite.beginUpdateBatch();
+  },
+  
+  endUpdateBatch: function ()
+  {
+    return this._composite.endUpdateBatch();
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIRDFRemoteDataSource
+  
+  get loaded()
+  {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  
+  init: function (aURI)
+  {
+  },
+  
+  refresh: function (aBlocking)
+  {
+  },
+  
+  flush: function ()
+  {
+    this._flush(false);
+    this._flush(true);
+  },
+  
+  flushTo: function (aURI)
+  {
+  },
+  
+  _flush: function (aIsProfile)
+  { 
+    var ds = aIsProfile ? this._profileExtensions : this._appExtensions;
+    var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    rds.Flush();
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIRDFDataSource) &&
+        !aIID.equals(Components.interfaces.nsIRDFRemoteDataSource) && 
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+
+var gModule = {
+  _firstTime: true,
+  
+  registerSelf: function (aComponentManager, aFileSpec, aLocation, aType) 
+  {
+    if (this._firstTime) {
+      this._firstTime = false;
+      throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
+    }
+    aComponentManager = aComponentManager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    
+    aComponentManager.registerFactoryLocation(this._cid, 
+                                              "Extension Manager",
+                                              this._contractId,
+                                              aFileSpec,
+                                              aLocation,
+                                              aType);
+    
+    // Make the Extension Manager a startup observer
+    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
+                                    .getService(Components.interfaces.nsICategoryManager);
+    categoryManager.addCategoryEntry("app-startup", "Extension Manager", 
+                                     "service," + this._contractId, true, true, null);
+  },
+  
+  getClassObject: function (aComponentManager, aCID, aIID) 
+  {
+    if (!aCID.equals(this._cid))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+      
+    if (!aIID.equals(Components.interfaces.nsIFactory))
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    
+    return this._factory;
+  },
+
+  _cid: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
+
+  _contractId: "@mozilla.org/extension-manager;1",
+  
+  _factory: {
+    createInstance: function (aOuter, aIID) 
+    {
+      if (aOuter != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      
+      if (!gExtensionManager)
+        gExtensionManager = new nsExtensionManager();
+        
+      return gExtensionManager.QueryInterface(aIID);
+    }
+  },
+  
+  canUnload: function (aComponentManager) 
+  {
+    return true;
+  }
+};
+
+function NSGetModule(compMgr, fileSpec) 
+{
+  return gModule;
+}
