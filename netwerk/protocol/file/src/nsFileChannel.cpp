@@ -605,3 +605,4 @@ nsFileChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     }
     return NS_OK;
 }
+
