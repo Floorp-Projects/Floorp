@@ -1793,6 +1793,17 @@ dnl ========================================================
 dnl Check options
 dnl ========================================================
 
+dnl ========================================================
+dnl =
+dnl = --enable-strip
+dnl = 
+dnl = Enable stripping of libs and executables
+dnl = 
+dnl ========================================================
+AC_ARG_ENABLE(strip,
+[  --enable-strip          Enable stripping of shared libs and programs],
+  [ ENABLE_STRIP=1 ])
+
 dnl
 dnl Apparently, some systems cannot properly check for the pthread
 dnl library unless <pthread.h> is included so we need to test
@@ -2155,6 +2166,7 @@ AC_SUBST(USE_N32)
 AC_SUBST(USE_64)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(GC_LEAK_DETECTOR)
+AC_SUBST(ENABLE_STRIP)
 
 AC_SUBST(USE_PTHREADS)
 AC_SUBST(USE_BTHREADS)
