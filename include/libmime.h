@@ -68,9 +68,9 @@ typedef struct MimeHeaders
 
 typedef struct MimeDisplayOptions MimeDisplayOptions;
 typedef struct MimeParseStateObject MimeParseStateObject;
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
 typedef struct MSG_AttachmentData MSG_AttachmentData;
-#endif
+/*#endif*/
 
 XP_BEGIN_PROTOS
 
@@ -547,6 +547,10 @@ extern void MIME_GetMessageCryptoState(MWContext *context,
 
 extern int MIME_DisplayAttachmentPane(MWContext* context);
 #endif /* MOZILLA_30 */
+
+/* Register message/rfc822, message/news, etc. with netlib. */
+extern void MIME_RegisterConverters(void);
+
 
 XP_END_PROTOS
 
