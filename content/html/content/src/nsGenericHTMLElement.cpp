@@ -1608,7 +1608,6 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
     GetBaseURL(getter_AddRefs(baseURL));
 
     // Get absolute URL.
-    nsCAutoString buf;
     nsresult rv = NS_NewURIWithDocumentCharset(aURI, relURLSpec, mDocument,
                                                baseURL);
     if (NS_FAILED(rv)) {
