@@ -127,35 +127,34 @@ nsRenderingContextPh :: nsRenderingContextPh()
   NS_INIT_REFCNT();
   
   mGC = nsnull;
-  mTMatrix = new nsTransform2D();
-  mRegion = new nsRegionPh();
+  mTMatrix         = new nsTransform2D();
+  mRegion          = new nsRegionPh();
   mRegion->Init();
-  mFontMetrics = nsnull;
-  mSurface = nsnull;
-  mMainSurface = nsnull;
-  mDCOwner = nsnull;
-  mContext = nsnull;
-  mP2T = 1.0f;
-  mWidget = nsnull;
-  mPhotonFontName = nsnull;
-  Mask = nsnull;
+  mFontMetrics     = nsnull;
+  mSurface         = nsnull;
+  mMainSurface     = nsnull;
+  mDCOwner         = nsnull;
+  mContext         = nsnull;
+  mP2T             = 1.0f;
+  mWidget          = nsnull;
+  mPhotonFontName  = nsnull;
+  Mask             = nsnull;
+  mLineStyle       = nsLineStyle_kSolid;
 
   //default objects
   //state management
 
-  mStates = nsnull;
-  mStateCache = new nsVoidArray();
-  mCurrFontMetrics = nsnull;
-  mGammaTable = nsnull;
-
-#ifdef NS_DEBUG
-  mInitialized = PR_FALSE;
-#endif
-
-  mScriptObject = nsnull;
+  mStates          = nsnull;
+  mStateCache      = new nsVoidArray();
+  mGammaTable      = nsnull;
+  mScriptObject    = nsnull;
   
   if( mPtGC == nsnull )
     mPtGC = PgGetGC();
+
+  #ifdef NS_DEBUG
+  mInitialized     = PR_FALSE;
+  #endif
 
   PushState();
 }
@@ -715,7 +714,8 @@ NS_IMETHODIMP nsRenderingContextPh :: GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle(nsLineStyle aLineStyle)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetLineStyle  - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetLineStyle\n"));
+  mLineStyle = aLineStyle;
   return NS_OK;
 }
 
@@ -723,6 +723,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle(nsLineStyle aLineStyle)
 NS_IMETHODIMP nsRenderingContextPh :: GetLineStyle(nsLineStyle &aLineStyle)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetLineStyle  - Not Implemented\n"));
+  aLineStyle = mLineStyle;
   return NS_OK;
 }
 
@@ -881,6 +882,10 @@ NS_IMETHODIMP nsRenderingContextPh :: DestroyDrawingSurface(nsDrawingSurface aDS
 NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", aX0, aY0, aX1, aY1 ));
+
+  if( nsLineStyle_kNone == mLineStyle )
+    return NS_OK;
+
   nscoord x0,y0,x1,y1;
 
   x0 = aX0;
@@ -894,6 +899,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", x0, y0, x1, y1 ));
 
   SELECT(mSurface);
+  SetPhLineStyle();
   PgDrawILine( x0, y0, x1, y1 );
 
   return NS_OK;
@@ -903,6 +909,9 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
 NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::DrawPolyLine\n"));
+
+  if( nsLineStyle_kNone == mLineStyle )
+    return NS_OK;
 
   PhPoint_t *pts;
 
@@ -922,6 +931,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRIn
     }
 
     SELECT(mSurface);
+    SetPhLineStyle();
     PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE );
 
     delete [] pts;
@@ -1743,4 +1753,28 @@ rid = gc->rid;
   }
 //  PgSetMultiClip( 0, NULL );
 }
+
+
+void nsRenderingContextPh::SetPhLineStyle()
+{
+  switch( mLineStyle )
+  {
+  case nsLineStyle_kSolid:
+    PgSetStrokeDash( nsnull, 0, 0x10000 );
+    break;
+
+  case nsLineStyle_kDashed:
+    PgSetStrokeDash( "\10\4", 2, 0x10000 );
+    break;
+
+  case nsLineStyle_kDotted:
+    PgSetStrokeDash( "\1", 1, 0x10000 );
+    break;
+
+  case nsLineStyle_kNone:
+  default:
+    break;
+  }
+}
+
 
