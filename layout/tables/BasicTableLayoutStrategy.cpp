@@ -332,9 +332,9 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   // allocate the rest to auto columns, with some exceptions
   if ( (tableIsAutoWidth && (perAdjTableWidth - totalAllocated > 0)) ||
        (!tableIsAutoWidth && (totalAllocated < maxWidth)) ) {
-	PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
+    PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
     PRBool excludePct  = (totalCounts[PCT] != numEffCols);
-    PRBool excludeFix  = (totalCounts[PCT] + totalCounts[FIX] < numEffCols);
+    PRBool excludeFix  = (totalCounts[PCT] + totalCounts[FIX] + totalCounts[FIX_ADJ] < numEffCols);
     PRBool excludePro  = (totalCounts[DES_CON] > 0);
     PRBool exclude0Pro = (totalCounts[MIN_PRO] != num0Proportional);
     if (tableIsAutoWidth) {
@@ -844,6 +844,19 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
         }
         colFrame->SetWidth(aWidthIndex + NUM_MAJOR_WIDTHS, newColAdjWidth);
         colFrame->SetConstrainingCell(aCellFrame); // XXX is this right?
+      }
+      else {        
+        if((newColAdjWidth > 0) && (FIX == aWidthIndex)) {
+          if(colFrame->GetWidth(FIX) < 0) {
+            nscoord desCon = colFrame->GetWidth(DES_CON);
+            if (desCon > newColAdjWidth) {
+              newColAdjWidth = desCon;
+            }
+          }
+          if(colFrame->GetWidth(FIX_ADJ) < newColAdjWidth) {
+            colFrame->SetWidth(FIX_ADJ, PR_MAX(colWidth,newColAdjWidth));
+          }
+        }
       }
     }
   }
