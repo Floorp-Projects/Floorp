@@ -1340,7 +1340,7 @@ nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
     GetDestination(r,uri);
 
     if ((uri.get()) && (!strncmp(uri, kFTPProtocol, sizeof(kFTPProtocol) - 1))) {
-      if (uri[strlen(uri)-1] == '/') {
+      if (uri.Last() == '/') {
         isContainerFlag = PR_TRUE;
       }
     }
