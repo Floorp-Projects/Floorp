@@ -36,15 +36,16 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
+  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
+  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
+
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
 
-  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
-  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
-  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
-  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
