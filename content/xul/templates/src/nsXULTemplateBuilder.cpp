@@ -1981,7 +1981,6 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
         }
 
         rv = mDB->Assert(resource, property, value, PR_TRUE);
-        NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new property value");
         if (NS_FAILED(rv)) return rv;
     }
 
