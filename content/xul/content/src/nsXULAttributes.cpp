@@ -400,8 +400,8 @@ nsXULAttribute::GetBaseURI(nsAString &aURI)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::CompareTreePosition(nsIDOMNode* aOther,
-                                    PRUint16* aReturn)
+nsXULAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
+                                        PRUint16* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;

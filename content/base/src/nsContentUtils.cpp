@@ -50,6 +50,7 @@
 #include "nsINodeInfo.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNodeList.h"
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
@@ -1023,12 +1024,11 @@ nsContentUtils::GetCommonAncestor(nsIDOMNode *aNode,
 {
   *aCommonAncestor = nsnull;
 
-  nsAutoVoidArray nodeArray;
-  nsresult rv = GetFirstDifferentAncestors(aNode, aOther, &nodeArray);
+  nsCOMArray<nsIDOMNode> nodeArray;
+  nsresult rv = GetFirstDifferentAncestors(aNode, aOther, nodeArray);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDOMNode *common =
-    NS_STATIC_CAST(nsIDOMNode*, nodeArray.ElementAt(0));
+  nsIDOMNode *common = nodeArray[0];
 
   NS_ASSERTION(common, "The common ancestor is null!  Very bad!");
 
@@ -1042,33 +1042,33 @@ nsContentUtils::GetCommonAncestor(nsIDOMNode *aNode,
 nsresult
 nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
                                            nsIDOMNode *aOther,
-                                           nsVoidArray* aDifferentNodes)
+                                           nsCOMArray<nsIDOMNode>& aDifferentNodes)
 {
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_ARG_POINTER(aOther);
 
-  if (aDifferentNodes->Count() != 0) {
+  if (aDifferentNodes.Count() != 0) {
     NS_WARNING("The aDifferentNodes array passed in is not empty!");
-    aDifferentNodes->Clear();
+    aDifferentNodes.Clear();
   }
 
   // Test if both are the same node.
   if (aNode == aOther) {
-    aDifferentNodes->AppendElement(NS_STATIC_CAST(void*, aNode));
+    aDifferentNodes.AppendObject(aNode);
     return NS_OK;
   }
 
-  nsAutoVoidArray nodeAncestors;
-  nsAutoVoidArray otherAncestors;
+  nsCOMArray<nsIDOMNode> nodeAncestors;
+  nsCOMArray<nsIDOMNode> otherAncestors;
 
   // Insert all the ancestors of |aNode|
   nsCOMPtr<nsIDOMNode> node(aNode);
   nsCOMPtr<nsIDOMNode> ancestor(node);
   do {
-    nodeAncestors.AppendElement(node.get());
+    nodeAncestors.AppendObject(node);
     node->GetParentNode(getter_AddRefs(ancestor));
     if (ancestor == aOther) {
-      aDifferentNodes->AppendElement(NS_STATIC_CAST(void*, aOther));
+      aDifferentNodes.AppendObject(aOther);
       return NS_OK;
     }
     node = ancestor;
@@ -1078,10 +1078,10 @@ nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMNode> other(aOther);
   ancestor = other;
   do {
-    otherAncestors.AppendElement(other.get());
+    otherAncestors.AppendObject(other);
     other->GetParentNode(getter_AddRefs(ancestor));
     if (ancestor == aNode) {
-      aDifferentNodes->AppendElement(NS_STATIC_CAST(void*, aNode));
+      aDifferentNodes.AppendObject(aNode);
       return NS_OK;
     }
     other = ancestor;
@@ -1090,7 +1090,7 @@ nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
   PRInt32 nodeIdx  = nodeAncestors.Count() - 1;
   PRInt32 otherIdx = otherAncestors.Count() - 1;
 
-  if (nodeAncestors.ElementAt(nodeIdx) != otherAncestors.ElementAt(otherIdx)) {
+  if (nodeAncestors[nodeIdx] != otherAncestors[otherIdx]) {
     NS_ERROR("This function was called on two disconnected nodes!");
     return NS_ERROR_FAILURE;
   }
@@ -1100,16 +1100,137 @@ nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
   do {
     --nodeIdx;
     --otherIdx;
-  } while (nodeAncestors.ElementAt(nodeIdx) == otherAncestors.ElementAt(otherIdx));
+  } while (nodeAncestors[nodeIdx] == otherAncestors[otherIdx]);
 
   NS_ASSERTION(nodeIdx >= 0 && otherIdx >= 0,
                "Something's wrong: our indices should not be negative here!");
 
-  aDifferentNodes->AppendElement(nodeAncestors.ElementAt(nodeIdx + 1));
-  aDifferentNodes->AppendElement(nodeAncestors.ElementAt(nodeIdx));
-  aDifferentNodes->AppendElement(otherAncestors.ElementAt(otherIdx));
+  aDifferentNodes.AppendObject(nodeAncestors[nodeIdx + 1]);
+  aDifferentNodes.AppendObject(nodeAncestors[nodeIdx]);
+  aDifferentNodes.AppendObject(otherAncestors[otherIdx]);
 
   return NS_OK;
+}
+
+PRUint16
+nsContentUtils::ComparePositionWithAncestors(nsIDOMNode *aNode,
+                                             nsIDOMNode *aOther)
+{
+#ifdef DEBUG
+  PRInt16 nodeType = 0;
+  PRInt16 otherType = 0;
+  aNode->GetNodeType(&nodeType);
+  aOther->GetNodeType(&otherType);
+
+  NS_PRECONDITION(nodeType != nsIDOMNode::ATTRIBUTE_NODE &&
+                  nodeType != nsIDOMNode::DOCUMENT_NODE &&
+                  nodeType != nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
+                  nodeType != nsIDOMNode::ENTITY_NODE &&
+                  nodeType != nsIDOMNode::NOTATION_NODE &&
+                  otherType != nsIDOMNode::ATTRIBUTE_NODE &&
+                  otherType != nsIDOMNode::DOCUMENT_NODE &&
+                  otherType != nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
+                  otherType != nsIDOMNode::ENTITY_NODE &&
+                  otherType != nsIDOMNode::NOTATION_NODE,
+                  "Bad.  Go read the documentation in the header!");
+#endif // DEBUG
+
+  PRUint16 mask = 0;
+
+  nsCOMArray<nsIDOMNode> nodeAncestors;
+
+  nsresult rv =
+    nsContentUtils::GetFirstDifferentAncestors(aNode, aOther, nodeAncestors);
+
+  if (NS_FAILED(rv)) {
+    // If there is no common container node, then the order is based upon
+    // order between the root container of each node that is in no container.
+    // In this case, the result is disconnected and implementation-dependent.
+    mask = (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+            nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+
+    return mask;
+  }
+
+  nsIDOMNode* commonAncestor = nodeAncestors[0];
+
+  if (commonAncestor == aNode) {
+    mask = (nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED |
+            nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
+
+    return mask;
+  }
+
+  if (commonAncestor == aOther) {
+    mask |= (nsIDOMNode::DOCUMENT_POSITION_CONTAINS |
+             nsIDOMNode::DOCUMENT_POSITION_PRECEDING);
+
+    return mask;
+  }
+
+  // GetFirstDifferentAncestors should only succeed if one of the
+  // two nodes is the common ancestor, or if we have a common ancestor
+  // and the two first different ancestors.  We checked the case above
+  // where one of the two nodes were the common ancestor, so we must
+  // have three items in our array now.
+  NS_ASSERTION(commonAncestor && nodeAncestors.Count() == 3,
+               "Something's wrong");
+
+  nsIDOMNode* nodeAncestor = nodeAncestors[1];
+  nsIDOMNode* otherAncestor = nodeAncestors[2];
+
+  if (nodeAncestor && otherAncestor) {
+    // Find out which of the two nodes comes first in the document order.
+    // First get the children of the common ancestor.
+    nsCOMPtr<nsIDOMNodeList> children;
+    commonAncestor->GetChildNodes(getter_AddRefs(children));
+    PRUint32 numKids;
+    children->GetLength(&numKids);
+    for (PRUint32 i = 0; i < numKids; ++i) {
+      // Then go through the children one at a time to see which we hit first.
+      nsCOMPtr<nsIDOMNode> childNode;
+      children->Item(i, getter_AddRefs(childNode));
+      if (childNode == nodeAncestor) {
+        mask |= nsIDOMNode::DOCUMENT_POSITION_FOLLOWING;
+        break;
+      }
+
+      if (childNode == otherAncestor) {
+        mask |= nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+        break;
+      }
+    }
+  }
+
+  return mask;
+}
+
+PRUint16
+nsContentUtils::ReverseDocumentPosition(PRUint16 aDocumentPosition)
+{
+  // Disconnected and implementation-specific flags cannot be reversed.
+  // Keep them.
+  PRUint16 reversedPosition =
+    aDocumentPosition & (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+                         nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+
+  // Following/preceding
+  if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_FOLLOWING) {
+    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+  }
+  else if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_PRECEDING) {
+    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_FOLLOWING;
+  }
+
+  // Is contained/contains.
+  if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_CONTAINS) {
+    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED;
+  }
+  else if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED) {
+    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_CONTAINS;
+  }
+
+  return reversedPosition;
 }
 
 inline PRBool

@@ -3349,27 +3349,71 @@ nsDocument::GetBaseURI(nsAString &aURI)
 }
 
 NS_IMETHODIMP
-nsDocument::CompareTreePosition(nsIDOMNode* aOther,
-                                PRUint16* aReturn)
+nsDocument::CompareDocumentPosition(nsIDOMNode* aOther,
+                                    PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
-  PRUint16 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+  NS_PRECONDITION(aReturn, "Must have an out parameter");
 
-  PRBool sameNode = PR_FALSE;
-  IsSameNode(aOther, &sameNode);
-  if (sameNode) {
-    mask |= (nsIDOMNode::TREE_POSITION_SAME_NODE |
-             nsIDOMNode::TREE_POSITION_EQUIVALENT);
+  if (this == aOther) {
+    // If the two nodes being compared are the same node,
+    // then no flags are set on the return.
+    *aReturn = 0;
+
+    return NS_OK;
+  }
+
+  PRUint16 mask = 0;
+
+  nsCOMPtr<nsIContent> otherContent(do_QueryInterface(aOther));
+  if (!otherContent) {
+    PRUint16 otherNodeType = 0;
+    aOther->GetNodeType(&otherNodeType);
+    NS_ASSERTION(otherNodeType == nsIDOMNode::DOCUMENT_NODE ||
+                 otherNodeType == nsIDOMNode::ATTRIBUTE_NODE,
+                 "Hmm, this really _should_ support nsIContent...");
+    if (otherNodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+      nsCOMPtr<nsIDOMAttr> otherAttr(do_QueryInterface(aOther));
+      NS_ASSERTION(otherAttr, "Attributes really should be supporting "
+                              "nsIDOMAttr you know...");
+
+      nsCOMPtr<nsIDOMElement> otherOwnerEl;
+      otherAttr->GetOwnerElement(getter_AddRefs(otherOwnerEl));
+      if (otherOwnerEl) {
+        // Documents have no direct relationship to attribute
+        // nodes.  So we'll look at our relationship in relation
+        // to its owner element, since that is also our relation
+        // to the attribute.
+        return CompareDocumentPosition(otherOwnerEl, aReturn);
+      }
+    }
+
+    // If there is no common container node, then the order
+    // is based upon order between the root container of each
+    // node that is in no container. In this case, the result
+    // is disconnected and implementation-dependent.
+    mask |= (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+             nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+
+    *aReturn = mask;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> otherDoc;
+  otherContent->GetDocument(*getter_AddRefs(otherDoc));
+  if (this == otherDoc) {
+    // If the node being compared is contained by our node,
+    // then it follows it.
+    mask |= (nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED |
+             nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
   }
   else {
-    nsCOMPtr<nsIDOMDocument> otherDoc;
-    aOther->GetOwnerDocument(getter_AddRefs(otherDoc));
-    nsCOMPtr<nsIDOMNode> other(do_QueryInterface(otherDoc));
-    IsSameNode(other, &sameNode);
-    if (sameNode) {
-      mask |= (nsIDOMNode::TREE_POSITION_DESCENDANT |
-               nsIDOMNode::TREE_POSITION_FOLLOWING);
-    }
+    // If there is no common container node, then the order
+    // is based upon order between the root container of each
+    // node that is in no container. In this case, the result
+    // is disconnected and implementation-dependent.
+    mask |= (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+             nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
   }
 
   *aReturn = mask;

@@ -125,7 +125,8 @@ public:
   // nsIDOM3Node
   NS_IMETHOD    GetBaseURI(nsAString& aURI)
   { aURI.Truncate(); return NS_OK; }
-  NS_IMETHOD    CompareTreePosition(nsIDOMNode *aOther, PRUint16* aReturn);
+  NS_IMETHOD    CompareDocumentPosition(nsIDOMNode *aOther,
+                                        PRUint16* aReturn);
   NS_IMETHOD    IsSameNode(nsIDOMNode *aOther, PRBool* aReturn);
   NS_IMETHOD    LookupNamespacePrefix(const nsAString& aNamespaceURI,
                                       nsAString& aPrefix) {
@@ -395,44 +396,55 @@ nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsDocumentFragment::CompareTreePosition(nsIDOMNode* aOther,
-                                        PRUint16* aReturn)
+nsDocumentFragment::CompareDocumentPosition(nsIDOMNode* aOther,
+                                            PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
-  PRUint32 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+  NS_PRECONDITION(aReturn, "Must have an out parameter");
 
-  PRBool sameNode = PR_FALSE;
-  IsSameNode(aOther, &sameNode);
-  if (sameNode) {
-    mask |= nsIDOMNode::TREE_POSITION_SAME_NODE;
+  if (this == aOther) {
+    // If the two nodes being compared are the same node,
+    // then no flags are set on the return.
+    *aReturn = 0;
+    return NS_OK;
   }
-  else {
-    nsCOMPtr<nsIDOMNode> other(aOther);
-    while (other) {
-      IsSameNode(other, &sameNode);
-      if (sameNode) {
-        mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
+
+  PRUint16 mask = 0;
+
+  nsCOMPtr<nsIDOMNode> other(aOther);
+  do {
+    nsCOMPtr<nsIDOMNode> tmp(other);
+    tmp->GetParentNode(getter_AddRefs(other));
+    if (!other) {
+      // No parent.  Check to see if we're at an attribute node.
+      PRUint16 nodeType = 0;
+      tmp->GetNodeType(&nodeType);
+      if (nodeType != nsIDOMNode::ATTRIBUTE_NODE) {
+        // If there is no common container node, then the order
+        // is based upon order between the root container of each
+        // node that is in no container. In this case, the result
+        // is disconnected and implementation-dependent.
+        mask |= (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+                 nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+
         break;
       }
 
-      nsCOMPtr<nsIDOMNode> tmp(other);
-      tmp->GetParentNode(getter_AddRefs(other));
-      if (!other) {
-        // No parent.  Check to see if we're at an attribute node.
-        PRUint16 nodeType = 0;
-        tmp->GetNodeType(&nodeType);
-        if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
-          // If we are, let's get the owner element and continue up the tree
-          nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(tmp));
-          nsCOMPtr<nsIDOMElement> owner;
-          attr->GetOwnerElement(getter_AddRefs(owner));
-          other = do_QueryInterface(owner);
-          continue;
-        }
-        break;
-      }
+      // If we are, let's get the owner element and continue up the tree
+      nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(tmp));
+      nsCOMPtr<nsIDOMElement> owner;
+      attr->GetOwnerElement(getter_AddRefs(owner));
+      other = do_QueryInterface(owner);
     }
-  }
+
+    if (NS_STATIC_CAST(nsIDOMNode*, this) == other) {
+      // If the node being compared is contained by our node,
+      // then it follows it.
+      mask |= (nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED |
+               nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
+      break;
+    }
+  } while (other);
 
   *aReturn = mask;
   return NS_OK;
@@ -444,7 +456,7 @@ nsDocumentFragment::IsSameNode(nsIDOMNode* aOther,
 {
   PRBool sameNode = PR_FALSE;
 
-  if (this == aOther) {
+  if (NS_STATIC_CAST(nsIDOMNode*, this) == aOther) {
     sameNode = PR_TRUE;
   }
 

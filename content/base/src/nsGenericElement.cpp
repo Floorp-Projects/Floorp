@@ -246,26 +246,21 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 }
 
 NS_IMETHODIMP
-nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
-                                    PRUint16* aReturn)
+nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
+                                        PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
-  PRUint16 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+  NS_PRECONDITION(aReturn, "Must have an out parameter");
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   if (node == aOther) {
-    mask |= nsIDOMNode::TREE_POSITION_SAME_NODE;
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
-    // Loose nodes without an owner document are not equivalent
-    // in tree position since they are not in any tree.
-    // Add the 'equivalent' flag only if we have an owner document.
-    if (doc) {
-      mask |= nsIDOMNode::TREE_POSITION_EQUIVALENT;
-    }
-    *aReturn = mask;
+    // If the two nodes being compared are the same node,
+    // then no flags are set on the return.
+    *aReturn = 0;
     return NS_OK;
   }
+
+  PRUint16 mask = 0;
 
   // If the other node is an attribute, document, or document fragment,
   // we can find the position easier by comparing this node relative to
@@ -275,22 +270,11 @@ nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
   if (otherType == nsIDOMNode::ATTRIBUTE_NODE ||
       otherType == nsIDOMNode::DOCUMENT_NODE  ||
       otherType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-    PRUint16 otherMask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+    PRUint16 otherMask = 0;
     nsCOMPtr<nsIDOM3Node> other(do_QueryInterface(aOther));
-    other->CompareTreePosition(node, &otherMask);
-    if (otherMask & nsIDOMNode::TREE_POSITION_FOLLOWING) {
-      mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
-    } else if (otherMask & nsIDOMNode::TREE_POSITION_PRECEDING) {
-      mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
-    }
+    other->CompareDocumentPosition(node, &otherMask);
 
-    if (otherMask & nsIDOMNode::TREE_POSITION_ANCESTOR) {
-      mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
-    } else if (otherMask & nsIDOMNode::TREE_POSITION_DESCENDANT) {
-      mask |= nsIDOMNode::TREE_POSITION_ANCESTOR;
-    }
-
-    *aReturn = mask;
+    *aReturn = nsContentUtils::ReverseDocumentPosition(otherMask);
     return NS_OK;
   }
 
@@ -298,86 +282,24 @@ nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
   {
     PRUint16 nodeType = 0;
     node->GetNodeType(&nodeType);
-    NS_ASSERTION((nodeType == nsIDOMNode::ELEMENT_NODE ||
-                  nodeType == nsIDOMNode::TEXT_NODE ||
-                  nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-                  nodeType == nsIDOMNode::ENTITY_REFERENCE_NODE ||
-                  nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-                  nodeType == nsIDOMNode::COMMENT_NODE),
-                 "Invalid node type!");
+
+    if (nodeType == nsIDOMNode::ENTITY_NODE ||
+        nodeType == nsIDOMNode::NOTATION_NODE) {
+      NS_NOTYETIMPLEMENTED("Entities and Notations are not fully supported yet");
+    }
+    else {
+      NS_ASSERTION((nodeType == nsIDOMNode::ELEMENT_NODE ||
+                    nodeType == nsIDOMNode::TEXT_NODE ||
+                    nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
+                    nodeType == nsIDOMNode::ENTITY_REFERENCE_NODE ||
+                    nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
+                    nodeType == nsIDOMNode::COMMENT_NODE),
+                   "Invalid node type!");
+    }
   }
 #endif
 
-  nsAutoVoidArray nodeAncestors;
-
-  nsresult rv =
-    nsContentUtils::GetFirstDifferentAncestors(node, aOther, &nodeAncestors);
-
-  if (NS_FAILED(rv)) {
-    // The nodes have no common ancestor.  We're done.
-    *aReturn = mask;
-    return NS_OK;
-  }
-
-  nsIDOMNode* commonAncestor =
-    NS_STATIC_CAST(nsIDOMNode*, nodeAncestors.ElementAt(0));
-
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
-
-  if (commonAncestor == node) {
-    mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
-    // Should nodes in a document fragment get following/preceding?
-    // Currently we assume they can't.
-    // XXXcaa - See bug 154166.
-    if (doc) {
-      mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
-    }
-    *aReturn = mask;
-    return NS_OK;
-  }
-
-  if (commonAncestor == aOther) {
-    mask |= nsIDOMNode::TREE_POSITION_ANCESTOR;
-    // Should nodes in a document fragment get following/preceding?
-    // Currently we assume they can't.
-    // XXXcaa - See bug 154166.
-    if (doc) {
-      mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
-    }
-    *aReturn = mask;
-    return NS_OK;
-  }
-
-  if (commonAncestor && doc && nodeAncestors.Count() == 3) {
-    nsIDOMNode* nodeAncestor =
-      NS_STATIC_CAST(nsIDOMNode*, nodeAncestors.ElementAt(1));
-    nsIDOMNode* otherAncestor =
-      NS_STATIC_CAST(nsIDOMNode*, nodeAncestors.ElementAt(2));
-
-    if (nodeAncestor && otherAncestor) {
-      // Find out which of the two nodes comes first in the document order.
-      // First get the children of the common ancestor.
-      nsCOMPtr<nsIDOMNodeList> children;
-      commonAncestor->GetChildNodes(getter_AddRefs(children));
-      PRUint32 numKids;
-      children->GetLength(&numKids);
-      for (PRUint32 i = 0; i < numKids; ++i) {
-        // Then go through the children one at a time to see which we hit first.
-        nsCOMPtr<nsIDOMNode> childNode;
-        children->Item(i, getter_AddRefs(childNode));
-        if (childNode == nodeAncestor) {
-          mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
-          break;
-        }
-
-        if (childNode == otherAncestor) {
-          mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
-          break;
-        }
-      }
-    }
-  }
+  mask |= nsContentUtils::ComparePositionWithAncestors(node, aOther);
 
   *aReturn = mask;
   return NS_OK;
