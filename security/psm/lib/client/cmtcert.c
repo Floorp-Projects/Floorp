@@ -188,12 +188,21 @@ char * CMT_GetGenKeyResponse(PCMT_CONTROL control, CMKeyGenTagArg * arg,
                              CMKeyGenTagReq *next)
 {
     CMTItem message;
+    char *keystring = NULL;
+    CMTSocket sock;
 
     memset(&message, 0, sizeof(CMTItem));
     CMT_LOCK(control->mutex);
-    CMT_ReadMessageDispatchEvents(control, &message);
+    sock = control->sock;
+    if (control->sockFuncs.select(&sock, 1, 1) == sock) {
+        /* Make sure there's a message waiting to be read so 
+         * that we avoid deadlock
+         */
+        CMT_ReadMessageDispatchEvents(control, &message);
+        keystring = cmt_processreplytooldkeygen(&message, arg, next);
+    }
     CMT_UNLOCK(control->mutex);
-    return cmt_processreplytooldkeygen(&message, arg, next);
+    return keystring;
 }
 
 char * CMT_GenKeyOldStyle(PCMT_CONTROL control, CMKeyGenTagArg * arg, 
