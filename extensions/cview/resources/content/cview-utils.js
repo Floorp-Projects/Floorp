@@ -28,6 +28,7 @@
  * avoid a dependancy on chatzilla
  */
 
+var dumpln;
 if (typeof document == "undefined") /* in xpcshell */
     dumpln = print;
 else
@@ -39,6 +40,7 @@ else
     else
         dumpln = function () {} /* no suitable function */
 
+var dd;
 if (DEBUG)
     dd = dumpln;
 else
@@ -116,7 +118,7 @@ function dumpObjectTree (o, recurse, compress, level)
             case "function":
                 var sfunc = o[i].toString().split("\n");
                 if (sfunc[2] == "    [native code]")
-                    var sfunc = "[native code]";
+                    sfunc = "[native code]";
                 else
                     sfunc = sfunc.length + " lines";
                 s += pfx + tee + i + " (function) " + sfunc + "\n";

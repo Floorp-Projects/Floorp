@@ -860,7 +860,10 @@ function tolr_getshare()
     if (this.parentRecord)
         return this.parentRecord._share;
     else
+    {
         ASSERT (0, "TOLabelRecord cannot be the root of a visible tree.");
+        return null;
+    }
 }
 
 /* TORootRecord is used internally by TreeOView, you probably don't need to make
@@ -1146,7 +1149,7 @@ function tov_getcelltxt (index, colID)
     if (row._colValues)
         return row._colValues[colID];
     else
-        return;
+        return null;
 }
 
 TreeOView.prototype.getCellProperties =

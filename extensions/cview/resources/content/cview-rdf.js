@@ -154,7 +154,7 @@ function rdf_duassert (n1, a, n2)
         return;
     }
     
-    return this.ds.Change (n1, a, oldN2, n2);
+    this.ds.Change (n1, a, oldN2, n2);
     
 }
 
