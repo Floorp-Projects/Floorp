@@ -35,8 +35,8 @@
 # ***** END LICENSE BLOCK *****
 
 var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImagePref",
-                   "popupPolicy", "allowWindowMoveResize", "allowWindowFlip", "allowHideStatusBar", 
-                   "allowWindowStatusChange", "allowImageSrcChange"];
+                   "popupPolicy", "allowWindowMoveResize", "allowWindowFlip", "allowControlContextMenu", 
+                   "allowHideStatusBar", "allowWindowStatusChange", "allowImageSrcChange"];
 var permType = "popup";
 var gImagesPref, gImagesEnabled, gImagesRestricted;
 

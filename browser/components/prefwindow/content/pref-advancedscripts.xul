@@ -47,15 +47,15 @@
 
     <script type="application/x-javascript">
     <![CDATA[
-      var elements = ["allowWindowMoveResize", "allowWindowFlip", "allowHideStatusBar", 
-                      "allowWindowStatusChange", "allowImageSrcChange"];
+      var elements = ["allowWindowMoveResize", "allowWindowFlip", "allowControlContextMenu", 
+                      "allowHideStatusBar", "allowWindowStatusChange", "allowImageSrcChange"];
 
       function onDialogLoad()
       {
         for (var i = 0; i < elements.length; ++i) {
           var prefElt = window.opener.document.getElementById(elements[i]);
           var checkbox = document.getElementById(elements[i]);
-          checkbox.checked = !prefElt.checked;
+          checkbox.checked = prefElt.checked;
         }
       }
     
@@ -64,7 +64,7 @@
         for (var i = 0; i < elements.length; ++i) {
           var prefElt = window.opener.document.getElementById(elements[i]);
           var checkbox = document.getElementById(elements[i]);
-          prefElt.checked = !checkbox.checked;
+          prefElt.checked = checkbox.checked;
         }
       }
     ]]>
@@ -75,11 +75,10 @@
     <listbox flex="1" rows="6">
       <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
       <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
+      <listitem type="checkbox" id="allowControlContextMenu" label="&allowControlContextMenu.label;"/>
       <listitem type="checkbox" id="allowHideStatusBar" label="&allowHideStatusBar.label;"/>          
       <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
       <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
     </listbox>
         
 </dialog>
-
-        
