@@ -78,10 +78,17 @@ nsMsgLineBuffer::nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convert
 {
 	m_handler = handler;
 	m_convertNewlinesP = convertNewlinesP;
+    m_lookingForCRLF = PR_TRUE;
 }
 
 nsMsgLineBuffer::~nsMsgLineBuffer()
 {
+}
+
+void
+nsMsgLineBuffer::SetLookingForCRLF(PRBool b)
+{
+  m_lookingForCRLF = b;
 }
 
 PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_size)
@@ -107,31 +114,39 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
         
         for (s = net_buffer; s < net_buffer_end; s++)
 		{
+          if (m_lookingForCRLF) {
             /* Move forward in the buffer until the first newline.
                Stop when we see CRLF, CR, or LF, or the end of the buffer.
                *But*, if we see a lone CR at the *very end* of the buffer,
                treat this as if we had reached the end of the buffer without
                seeing a line terminator.  This is to catch the case of the
                buffers splitting a CRLF pair, as in "FOO\r\nBAR\r" "\nBAZ\r\n".
-		   */
-            if (*s == CR || *s == LF)
-			{
-                newline = s;
-                if (newline[0] == CR)
-				{
-                    if (s == net_buffer_end - 1)
-					{
-                        /* CR at end - wait for the next character. */
-                        newline = 0;
-                        break;
-					}
-                    else if (newline[1] == LF)
-                        /* CRLF seen; swallow both. */
-                        newline++;
-				}
-                newline++;
-				break;
+            */
+            if (*s == CR || *s == LF) {
+              newline = s;
+              if (newline[0] == CR) {
+                if (s == net_buffer_end - 1) {
+                  /* CR at end - wait for the next character. */
+                  newline = 0;
+                  break;
+                }
+                else if (newline[1] == LF) {
+                  /* CRLF seen; swallow both. */
+                  newline++;
+                }
+              }
+              newline++;
+              break;
 			}
+          }
+          else {
+            /* if not looking for a CRLF, stop at CR or LF.  (for example, when parsing the newsrc file).  this fixes #9896, where we'd lose the last line of anything we'd parse that used CR as the line break. */
+            if (*s == CR || *s == LF) {
+              newline = s;
+              newline++;
+              break;
+            }
+          }
 		}
         
         /* Ensure room in the net_buffer and append some or all of the current

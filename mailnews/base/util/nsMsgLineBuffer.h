@@ -66,9 +66,11 @@ protected:
 	nsMsgLineBuffer(PRBool convertNewlinesP);
 
 	PRInt32 ConvertAndSendBuffer();
+    void SetLookingForCRLF(PRBool b);
 
 	nsMsgLineBufferHandler *m_handler;
 	PRBool		m_convertNewlinesP;
+    PRBool      m_lookingForCRLF; 
 };
 
 // I'm adding this utility class here for lack of a better place. This utility class is similar to nsMsgLineBuffer

@@ -73,6 +73,12 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
 {
   mIsNewsHost = PR_FALSE;
   mIsNewsHostInitialized = PR_FALSE;
+  /* we're parsing the newsrc file, and the line breaks are platform specific.
+   * if MSG_LINEBREAK != CRLF, then we aren't looking for CRLF 
+   */
+  if (PL_strcmp(MSG_LINEBREAK, CRLF)) {
+    SetLookingForCRLF(PR_FALSE);
+  }
 //  NS_INIT_REFCNT(); done by superclass
 }
 
