@@ -414,7 +414,6 @@
                                status="rdf:http://home.netscape.com/WEB-rdf#status"
                                rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
                                image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                               validate="never"
                                statustext="rdf:http://home.netscape.com/NC-rdf#URL"
                                tooltip="ptTooltip"
                                label="rdf:http://home.netscape.com/NC-rdf#Name"/>
@@ -453,8 +452,7 @@
             <xul:menupopup>
               <xul:menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                             label="rdf:http://home.netscape.com/NC-rdf#Name"
-                            image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                            validate="never"/>
+                            image="rdf:http://home.netscape.com/NC-rdf#Icon"/>
             </xul:menupopup>
           </xul:rule>
 
