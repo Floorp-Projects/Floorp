@@ -1,19 +1,16 @@
-<style type="text/css">
-
-BODY,TD, FORM, INPUT {
+body,td, form, input {
   background-color: #ffffff;
 }
 
 #find { width: 80px; left: 255px; top: 120px; font-style: normal; position: absolute; visibility:  height: 32px; visible; z-index: auto}
 #cancel { width: 80px; left: 165px; top: 120px; font-style: normal; position: absolute; visibility:  height: 32px; visible; z-index: auto}
 
-BODY,TD {
+body,td {
     font-size: 8pt;
 }
-BODY {
+body {
     height:200px;
     margin: 0px 0px 0px 0px;
     background-color:#ffffff;	
 
 }
-</style>

@@ -17,7 +17,7 @@ toolbox {
         background-color:darkgray;
 }
 
-:TOOLBOX-NORMAL {
+:toolbox-normal {
 	background-color: lightgray;
 	color: lightgray;
 	border-bottom: solid darkGray 1px;
@@ -25,7 +25,7 @@ toolbox {
 	border-left: solid white 0px;
 	border-right: solid darkGray 1px;
 }
-:TOOLBOX-ROLLOVER {
+:toolbox-rollover {
 	background-color: purple;
 	color: green;
 	border-bottom: solid darkGray 1px;
@@ -45,6 +45,6 @@ button.throbber {
 	background-color:red;
 	background-image:url("resource:/res/throbber/anims00.gif");
 }
-throbber [busy] {
+throbber[busy] {
 	background-image:url("resource:/res/throbber/anims07.gif");
 }

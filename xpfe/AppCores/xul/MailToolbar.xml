@@ -1,52 +1,52 @@
 <?xml version="1.0"?> 
-<window xmlns:html="http://www.w3.org/TR/REC-html40">
-<window xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
 
-<html:script LANGUAGE="JavaScript">
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+            xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 
-function StartUp()
-{
-  appCore = AppCoresManager.Find("MailAppCore");  
-  if (appCore==null) {
-    appCore = new MailCore();
-    if (appCore != null) {
-	  dump("MailAppCore was created!\n");
-      appCore.Init("MailAppCore");
-	  appCore.MailCompleteCallback("MailSent();");
-	  appCore.SetWindow(window);
+  <html:script language="JavaScript">
+
+  function StartUp()
+  {
+    appCore = AppCoresManager.Find("MailAppCore");  
+    if (appCore==null) {
+      appCore = new MailCore();
+      if (appCore != null) {
+	    dump("MailAppCore was created!\n");
+        appCore.Init("MailAppCore");
+	    appCore.MailCompleteCallback("MailSent();");
+	    appCore.SetWindow(window);
+      }
     }
   }
-}
 
-function SendMailMessage()
-{
-  dump("SendMailMessage!\n");
-  var appCore = AppCoresManager.Find("MailAppCore");
-  if (appCore != null) {
-	dump("Mail was sent!\n");
-	appCore.SendMail(window.parent.frames[1].document.forms[0].elements[1].value, 
-	                 window.parent.frames[1].document.forms[0].elements[2].value, 
-					 window.parent.frames[1].document.forms[0].elements[4].value);
-  }
+  function SendMailMessage()
+  {
+    dump("SendMailMessage!\n");
+    var appCore = AppCoresManager.Find("MailAppCore");
+    if (appCore != null) {
+	  dump("Mail was sent!\n");
+	  appCore.SendMail(window.parent.frames[1].document.forms[0].elements[1].value, 
+	                   window.parent.frames[1].document.forms[0].elements[2].value, 
+					   window.parent.frames[1].document.forms[0].elements[4].value);
+    }
   
-}
+  }
 
-function MailSent()
-{
+  function MailSent()
+  {
 
-  // Clear Them
-  window.parent.frames[1].document.forms[0].elements[1].value = "";
-  window.parent.frames[1].document.forms[0].elements[2].value = "";
-  window.parent.frames[1].document.forms[0].elements[4].value = "";
+    // Clear Them
+    window.parent.frames[1].document.forms[0].elements[1].value = "";
+    window.parent.frames[1].document.forms[0].elements[2].value = "";
+    window.parent.frames[1].document.forms[0].elements[4].value = "";
 
-}
+  }
 
-</html:script>
+  </html:script>
 
 
-<window>
   <xul:commands>
     <xul:command name="nsCmd:StartUp" onCommand="StartUp();"/>
     <xul:command name="nsCmd:MailSendMsg" onCommand="SendMailMessage();"/>
@@ -56,22 +56,22 @@ function MailSent()
    
     <xul:toolbar>
           <html:button cmd="nsCmd:MailSendMsg" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/Mail_SendMsg.gif"/><html:BR/>Send
+                          <html:img src="resource:/res/toolbar/Mail_SendMsg.gif"/><html:br/>Send
           </html:button>
           <html:button cmd="nsCmd:MailGetMsg" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/Mail_GetMsg.gif"/><html:BR/>GetMsg
+                          <html:img src="resource:/res/toolbar/Mail_GetMsg.gif"/><html:br/>GetMsg
           </html:button>
           <html:button cmd="nsCmd:MailNewMsg" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/Mail_NewMsg.gif"/><html:BR/>New Msg
+                          <html:img src="resource:/res/toolbar/Mail_NewMsg.gif"/><html:br/>New Msg
           </html:button>
           <html:button cmd="nsCmd:MailReply" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/Mail_Reply.gif"/><html:BR/>Reply
+                          <html:img src="resource:/res/toolbar/Mail_Reply.gif"/><html:br/>Reply
           </html:button>
           <html:button cmd="nsCmd:MailForward" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/Mail_Forward.gif"/><html:BR/>Forward
+                          <html:img src="resource:/res/toolbar/Mail_Forward.gif"/><html:br/>Forward
           </html:button>
           <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:BR/>Print
+                          <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
           </html:button>
           <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
                   <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
@@ -79,14 +79,14 @@ function MailSent()
     </xul:toolbar>
     
     <xul:toolbar>
-		<html:FORM>
-    	<html:SELECT style="width:200px;">
-		<html:OPTION>INBOX</HTML:OPTION>
-		</html:SELECT>
-		</html:FORM>
+		<html:form>
+    	<html:select style="width:200px;">
+		<html:option>INBOX</html:option>
+		</html:select>
+		</html:form>
     </xul:toolbox>
     
   </xul:toolbox>
   
-</window>
+</xul:window>
 

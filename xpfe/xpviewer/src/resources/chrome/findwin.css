@@ -1,6 +1,4 @@
-<style type="text/css">
-
-BODY,TD, FORM {
+body,td, form {
     font-family: Sans-Serif;
     background-color: #bbbbbb;
   }
@@ -9,11 +7,11 @@ BODY,TD, FORM {
 #cancel { width: 80px; left: 350px; top: 40px; font-style: normal; position: absolute; visibility:  height: 32px; visible; z-index: auto}
 
 
-BODY,TD {
+body,td {
     font-size: 8pt;
 }
 
-BODY {
+body {
     margin: 0px 0px 0px 0px;
 	height: 200px;
 	background-color: #bbbbbb;
