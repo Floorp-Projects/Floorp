@@ -162,7 +162,7 @@ protected:
   nsDrawingSurfaceGTK   *mSurface;
   nsIDeviceContext      *mContext;
   nsIFontMetrics        *mFontMetrics;
-  nsRegionGTK           *mClipRegion;
+  nsIRegion             *mClipRegion;
   nsTransform2D         *mTMatrix;
   float                  mP2T;
   GdkWChar*              mDrawStringBuf;

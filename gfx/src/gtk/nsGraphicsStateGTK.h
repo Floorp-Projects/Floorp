@@ -29,7 +29,7 @@ class nsGraphicsState
 public:
 
   nsTransform2D  *mMatrix;
-  nsRegionGTK    *mClipRegion;
+  nsIRegion      *mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;

@@ -22,16 +22,30 @@
 #include "xregion.h"
 #include "prmem.h"
 
+#ifdef DEBUG_REGIONS
+static int nRegions;
+#endif
+
 nsRegionGTK::nsRegionGTK()
 {
   NS_INIT_REFCNT();
-  
+
+#ifdef DEBUG_REGIONS
+  ++nRegions;
+  printf("REGIONS+ = %i\n", nRegions);
+#endif
+
   mRegion = nsnull;
   mRegionType = eRegionComplexity_empty;
 }
 
 nsRegionGTK::~nsRegionGTK()
 {
+#ifdef DEBUG_REGIONS
+  --nRegions;
+  printf("REGIONS- = %i\n", nRegions);
+#endif
+
   if (mRegion)
     ::gdk_region_destroy(mRegion);
   mRegion = nsnull;
@@ -41,7 +55,6 @@ NS_IMPL_ISUPPORTS1(nsRegionGTK, nsIRegion)
 
 nsresult nsRegionGTK::Init(void)
 {
-  NS_ADDREF_THIS();
   mRegion = ::gdk_region_new();
   mRegionType = eRegionComplexity_empty;
   return NS_OK;
