@@ -1271,11 +1271,11 @@ nsresult nsMsgDatabase::InitNewDB()
       allThreadsTableOID.mOid_Scope = m_threadRowScopeToken;
       allThreadsTableOID.mOid_Id = kAllThreadsTableKey;
       
-      mdberr  = GetStore()->NewTableWithOid(GetEnv(), &allMsgHdrsTableOID, m_hdrTableKindToken, 
+      mdberr  = store->NewTableWithOid(GetEnv(), &allMsgHdrsTableOID, m_hdrTableKindToken, 
         PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
       
       // error here is not fatal.
-      GetStore()->NewTableWithOid(GetEnv(), &allThreadsTableOID, m_allThreadsTableKindToken, 
+      store->NewTableWithOid(GetEnv(), &allThreadsTableOID, m_allThreadsTableKindToken, 
         PR_FALSE, nsnull, &m_mdbAllThreadsTable);
 
       m_dbFolderInfo = dbFolderInfo;
