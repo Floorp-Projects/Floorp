@@ -40,7 +40,8 @@
 #include "nsIDOMClassInfo.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannel.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsLiteralString.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGDocument)
