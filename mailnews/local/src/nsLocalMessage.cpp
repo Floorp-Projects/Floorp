@@ -49,19 +49,11 @@ NS_IMPL_ISUPPORTS_INHERITED(nsLocalMessage, nsMessage, nsIDBMessage)
 NS_IMETHODIMP nsLocalMessage::GetMsgFolder(nsIMsgFolder **folder)
 {
 	nsresult rv;
-	if(mFolder)
-	{
-		*folder = mFolder;
-		NS_ADDREF(mFolder);
-		rv = NS_OK;
-	}
-	else
-	{
+
+  rv = nsMessage::GetMsgFolder(folder);
+  if (NS_FAILED(rv))
 		rv = GetFolderFromURI(folder);
-	}
 	return rv;
-
-
 }
 
 nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)

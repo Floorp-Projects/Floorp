@@ -48,19 +48,10 @@ NS_IMPL_ISUPPORTS_INHERITED(nsImapMessage, nsMessage, nsIDBMessage)
 NS_IMETHODIMP nsImapMessage::GetMsgFolder(nsIMsgFolder **folder)
 {
 	nsresult rv;
-	if(mFolder)
-	{
-		*folder = mFolder;
-		NS_ADDREF(mFolder);
-		rv = NS_OK;
-	}
-	else
-	{
+  rv = nsMessage::GetMsgFolder(folder);
+  if (NS_FAILED(rv))
 		rv = GetFolderFromURI(folder);
-	}
 	return rv;
-
-
 }
 
 nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)

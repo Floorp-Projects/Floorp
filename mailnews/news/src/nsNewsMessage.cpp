@@ -48,20 +48,11 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNewsMessage, nsMessage, nsIDBMessage)
 
 NS_IMETHODIMP nsNewsMessage::GetMsgFolder(nsIMsgFolder **folder)
 {
-	nsresult rv;
-	if(mFolder)
-	{
-		*folder = mFolder;
-		NS_ADDREF(mFolder);
-		rv = NS_OK;
-	}
-	else
-	{
-		rv = GetFolderFromURI(folder);
-	}
-	return rv;
-
-
+  nsresult rv;
+  rv = nsMessage::GetMsgFolder(folder);
+  if (NS_FAILED(rv))
+    rv = GetFolderFromURI(folder);
+  return rv;
 }
 
 //Note this is the same as the function in LocalMessage except for news uri specific stuff.
