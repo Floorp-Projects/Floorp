@@ -44,6 +44,7 @@ my $form = $cgi->Vars;
 my $vars;
 $vars->{'form'} = $form;
 $vars->{'newsgroup'} = $newsgroup;
+$vars->{'stylesheet'} = $form->{'stylesheet'} || "hendrix.css";
 
 my $template = Template->new({
     INCLUDE_PATH => ["template"],
