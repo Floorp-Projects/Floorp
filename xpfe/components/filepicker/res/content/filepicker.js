@@ -2,23 +2,31 @@
 
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsILocalFile_PROGID = "component://mozilla/file/local";
+const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 
 var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
 var retvals;
+var filePickerMode;
 
 function onLoad() {
 
   if (window.arguments) {
     var o = window.arguments[0];
     retvals = o.retvals; /* set this to a global var so we can set return values */
-    var title = o.title;
-    var mode = o.mode;
-    var filterTitles = o.filters.titles;
-    var filterTypes = o.filters.types;
-    var numFilters = filterTitles.length;
+    const title = o.title;
+    filePickerMode = o.mode;
+    const directory = o.displayDirectory;
+    const initialText = o.defaultString;
+    const filterTitles = o.filters.titles;
+    const filterTypes = o.filters.types;
+    const numFilters = filterTitles.length;
 
     window.title = title;
 
+    if (initialText) {
+      textInput = document.getElementById("textInput");
+      textInput.value = initialText;
+    }
     /* build filter popup */
     var filterPopup = document.createElement("menupopup");
 
@@ -36,23 +44,80 @@ function onLoad() {
   // setup the dialogOverlay.xul button handlers
   doSetOKCancel(onOK, onCancel);
 
-  sfile.initWithPath("/");
+  if (directory) {
+    sfile.initWithPath(directory);
+  } else {
+    sfile.initWithPath("/");
+  }
+
+  addToHistory(sfile.path);
+
   getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
 }
 
 function onOK()
 {
+  var ret = false;
   textInput = document.getElementById("textInput");
 
   var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
   file.initWithPath(textInput.value);
 
-  if (file.isFile() && !file.isDirectory()) {
-    retvals.file = file;
-    return true;
+  var isDir = false;
+  var isFile = false;
+
+  if (file.exists()) {
+    isDir = file.isDirectory();
+    isFile = file.isFile();
+  } else {
+    /* look for something in our current directory */
+    var nfile = sfile.clone();
+    nfile.append(file.path);
+    dump(nfile.path);
+    if (nfile.exists()) {
+      file = nfile;
+    } else {
+      if (filePickerMode == nsIFilePicker.modeSave)
+        file = nfile;
+      else
+        file = null;
+    }
   }
 
-  return false;
+  if (!file)
+    return false;
+
+  var isDir = file.isDirectory();
+  var isFile = file.isFile();
+
+  switch(filePickerMode) {
+  case nsIFilePicker.modeLoad:
+    if (isFile) {
+      retvals.file = file;
+      retvals.directory = file.parent.path;
+      ret = true;
+    } else if (isDirectory) {
+      if (!sfile.equals(file)) {
+        gotoDirectory(file.path);
+      }
+    }
+    break;
+  case nsIFilePicker.modeSave:
+    if (isFile) {
+      // we need to pop up a dialog asking if you want to save
+      retvals.directory = file.parent.path;
+      ret = false;
+    }
+    break;
+  case nsIFilePicker.modeGetFolder:
+    if (isDir) {
+      retvals.directory = file.parent.path;
+      return;
+    }
+    break;
+  }
+
+  return ret;
 }
 
 function onCancel()
