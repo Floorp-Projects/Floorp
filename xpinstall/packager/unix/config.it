@@ -48,7 +48,7 @@ C7=Component8
 ; *** LOCALIZE ME BABY ***
 Description Short=Complete
 ; *** LOCALIZE ME BABY ***
-Description Long=Navigator, Mail & News, Chatzilla, Debugger, and Inspector
+Description Long=Navigator, Mail & News, Spellchecker, Chatzilla, Debugger, and Inspector
 C0=Component0
 C1=Component1
 C2=Component2
@@ -60,6 +60,7 @@ C7=Component7
 C8=Component8
 C9=Component9
 C10=Component10
+C11=Component11
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -90,6 +91,7 @@ C7=Component7
 C8=Component8
 C9=Component9
 C10=Component10
+C11=Component11
 
 
 ;-------------------------------------------------------------------------
@@ -207,6 +209,16 @@ Description Long=DOM Inspector
 Archive=inspector.xpi
 $InstallSize$:inspector
 $InstallSizeArchive$:inspector.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component11]
+Description Short=Spellchecker
+; *** LOCALIZE ME BABY ***
+Description Long=Spellchecker
+Archive=spellcheck.xpi
+$InstallSize$:spellcheck
+$InstallSizeArchive$:spellcheck.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
