@@ -24,9 +24,7 @@ registerChrome(ctype, getFolder(cf,"packages/core"));
 registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
 registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
 registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic"));
-registerChrome(LOCALE|DELAYED_CHROME, getFolder(cf,"locales/en-US"));
 
-err = getLastError();
 if (err==SUCCESS)
 {
 	err = performInstall(); 
