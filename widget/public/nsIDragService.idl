@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+#include "nsIDragSession.idl"
+
+%{ C++
+
+class nsIRegion;
+
+%}
+
+[ptr] native nsIRegion (nsIRegion);
+
+
+[scriptable, uuid(8B5314BB-DB01-11d2-96CE-0060B0FB9956)]
+interface nsIDragService : nsISupports
+{
+  const long DRAGDROP_ACTION_NONE = 0;
+  const long DRAGDROP_ACTION_COPY = 1;
+  const long DRAGDROP_ACTION_MOVE = 2;
+  const long DRAGDROP_ACTION_LINK = 4;
+  
+  /**
+    * Starts a modal drag session with an array of transaferables 
+    *
+    * @param  aTransferables - an array of transferables to be dragged
+    * @param  aRegion - a region containing rectangles for cursor feedback, 
+    *            in window coordinates.
+    * @param  aActionType - specified which of copy/move/link are allowed
+    */
+  [noscript] void InvokeDragSession ( in nsISupportsArray aTransferables, 
+                             in nsIRegion aRegion, in unsigned long aActionType );
+
+  /**
+    * Returns the current Drag Session  
+    */
+  nsIDragSession GetCurrentSession ( ) ;
+
+  /**
+    * Tells the Drag Service to start a drag session. This is called when
+    * an external drag occurs
+    */
+  void StartDragSession ( ) ;
+
+  /**
+    * Tells the Drag Service to end a drag session. This is called when
+    * an external drag occurs
+    */
+  void EndDragSession ( ) ;
+  
+};
+
+
+%{ C++
+
+%}
