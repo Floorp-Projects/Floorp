@@ -26,7 +26,7 @@
 #include "nsVoidArray.h"
 
 class nsIPref;
-class nsDocLoader;
+class nsWebCrawler;
 class nsBrowserWindow;
 
 class nsViewerApp : public nsINetContainerApplication,
@@ -73,14 +73,14 @@ protected:
   nsIPref* mPrefs;
   nsString mStartURL;
   PRBool mDoPurify;
-  PRBool mJiggleLayout;
   PRBool mLoadTestFromFile;
+  PRBool mCrawl;
   nsString mInputFileName;
   PRInt32 mNumSamples;
   nsVoidArray mInputFiles;
   PRInt32 mDelay;
   PRInt32 mRepeatCount;
-  nsDocLoader* mDocLoader;
+  nsWebCrawler* mCrawler;
 };
 
 class nsNativeViewerApp : public nsViewerApp {
