@@ -42,8 +42,8 @@ enum TypeKind
 	tkArray,			//  4			no			sometimes		// Java arrays
 	tkInterface			//  4			no			  no			// Java interfaces
 };
-const nPrimitiveTypeKinds = tkDouble + 1;
-const nTypeKinds = tkInterface + 1;
+const uint nPrimitiveTypeKinds = tkDouble + 1;
+const uint nTypeKinds = tkInterface + 1;
 
 inline bool NS_EXTERN isPrimitiveKind(TypeKind tk) {return tk <= tkDouble;}
 inline bool NS_EXTERN isNonVoidPrimitiveKind(TypeKind tk) {return tk >= tkBoolean && tk <= tkDouble;}
@@ -571,14 +571,14 @@ enum StandardClass {
     cString,					    // java.lang.String
 	cInterruptedException			// java.lang.InterruptedException
 };
-const nStandardClasses = cString + 1;
-const firstOrdinaryStandardClass = cThrowable;
+const uint nStandardClasses = cString + 1;
+const uint firstOrdinaryStandardClass = cThrowable;
 
 // Standard interfaces
 enum StandardInterface {
 	iCloneable						// java.lang.Cloneable
 };
-const nStandardInterfaces = iCloneable + 1;
+const uint nStandardInterfaces = iCloneable + 1;
 
 
 // Standard objects
@@ -592,7 +592,7 @@ enum StandardObject {
 	oNullPointerException,			// new java.lang.NullPointerException()
 	oInterruptedException           // new java.lang.InterruptedException()
 };
-const nStandardObjects = oNullPointerException + 1;
+const uint nStandardObjects = oNullPointerException + 1;
 
 
 class NS_EXTERN Standard

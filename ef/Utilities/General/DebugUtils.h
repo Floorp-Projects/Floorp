@@ -24,7 +24,7 @@
 
 #ifdef DEBUG_LOG
 
-const tabWidth = 0;								// Width of tabs in output stream; 0 means no tabs
+const uint tabWidth = 0;	// Width of tabs in output stream; 0 means no tabs
 
 void printSpaces(LogModuleObject &f, int nSpaces);
 void printMargin(LogModuleObject &f, int margin);

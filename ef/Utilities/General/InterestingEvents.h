@@ -125,7 +125,7 @@ public:
 					}
 
 
-					~EventListener() {  }
+					virtual ~EventListener() {  }
 
 	virtual void	listenToMessage(BroadcastEventKind inKind, void* inArgument) = 0;
 };

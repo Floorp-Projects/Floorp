@@ -29,9 +29,9 @@
 UT_DEFINE_LOG_MODULE(Debugger);
 
 DebuggerState::DebuggerState(Pool& p) : 
-	pool(p),
+	breakpoints(NULL),
 	enabled(false),
-	breakpoints(NULL)
+	pool(p)
 {
 }
 

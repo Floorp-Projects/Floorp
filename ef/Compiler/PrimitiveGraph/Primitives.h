@@ -44,7 +44,7 @@ enum PrimitiveFormat
 	pfSysCall,			// SysCall
 	pfCall				// Call
 };
-const nPrimitiveFormats = pfCall + 1;
+const uint nPrimitiveFormats = pfCall + 1;
 
 enum PrimitiveCategory
 {
@@ -78,7 +78,7 @@ enum PrimitiveCategory
 	pcSysCall,	// SysCall
 	pcCall		// Call
 };
-const nPrimitiveCategories = pcCall + 1;
+const uint nPrimitiveCategories = pcCall + 1;
 
 extern const PrimitiveFormat categoryFormats[nPrimitiveCategories];
 
@@ -290,6 +290,8 @@ class DataNode
 
   public:
     DataNode(ValueKind kind) : kind(kind), constant(true) {};
+
+    virtual ~DataNode() {};
 
 	// Use these instead of expressions like "getFormat() == pfLd" because the latter doesn't do
 	// type checking -- the compiler will happily let you make errors like "getFormat() == pcLd".

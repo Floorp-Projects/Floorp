@@ -246,6 +246,8 @@ public:
   InsnExternalUse(DataNode* inSrcPrimitive, Pool& inPool, Uint8 inUse) : 
   	InsnUseXDefineYFromPool(inSrcPrimitive, inPool, inUse, 0) {}
 
+  virtual ~InsnExternalUse() {}
+
   virtual InstructionFlags 		getFlags() const { return (ifExternalInsn); }
 
 #ifdef DEBUG_LOG
@@ -261,6 +263,8 @@ protected:
 public:
   InsnExternalDefine(DataNode* inSrcPrimitive, Pool& inPool, Uint8 inDefine) :
   	InsnUseXDefineYFromPool(inSrcPrimitive, inPool, 0, inDefine) {}
+
+  virtual ~InsnExternalDefine() {}
 
   virtual InstructionFlags getFlags() const { return (ifExternalInsn); }
 
