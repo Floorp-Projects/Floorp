@@ -596,7 +596,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & aState)
 // Move this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
+NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
@@ -610,7 +610,7 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 //#if 0
   printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
@@ -639,8 +639,8 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
-                           PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                           PRInt32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
