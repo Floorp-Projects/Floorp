@@ -54,25 +54,6 @@ typedef struct _nsMsgRDFNotification {
 
 //Some property declarations
 
-#define NC_RDF_SUBJECT				NC_NAMESPACE_URI "Subject"
-#define NC_RDF_SENDER				NC_NAMESPACE_URI "Sender"
-#define NC_RDF_RECIPIENT			NC_NAMESPACE_URI "Recipient"
-#define NC_RDF_DATE					NC_NAMESPACE_URI "Date"
-#define NC_RDF_STATUS				NC_NAMESPACE_URI "Status"
-#define NC_RDF_STATUS_STRING				NC_NAMESPACE_URI "StatusString"
-#define NC_RDF_FLAGGED				NC_NAMESPACE_URI "Flagged"
-#define NC_RDF_PRIORITY				NC_NAMESPACE_URI "Priority"
-#define NC_RDF_PRIORITY_STRING				NC_NAMESPACE_URI "PriorityString"
-#define NC_RDF_SIZE					NC_NAMESPACE_URI "Size"
-#define NC_RDF_LINES					NC_NAMESPACE_URI "Lines"
-#define NC_RDF_ISUNREAD				NC_NAMESPACE_URI "IsUnread"
-#define NC_RDF_ISIMAPDELETED				NC_NAMESPACE_URI "IsImapDeleted"
-#define NC_RDF_ISOFFLINE				NC_NAMESPACE_URI "IsOffline"
-#define NC_RDF_ORDERRECEIVED		NC_NAMESPACE_URI "OrderReceived"
-#define NC_RDF_HASATTACHMENT		NC_NAMESPACE_URI "HasAttachment"
-#define NC_RDF_MESSAGETYPE			NC_NAMESPACE_URI "MessageType"
-#define NC_RDF_THREADSTATE			NC_NAMESPACE_URI "ThreadState"
-
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_NAME					NC_NAMESPACE_URI "Name"
 #define NC_RDF_OPEN					NC_NAMESPACE_URI "open"
@@ -140,9 +121,6 @@ typedef struct _nsMsgRDFNotification {
 
 
 nsresult createNode(const PRUnichar *str, nsIRDFNode **, nsIRDFService *rdfService);
-
-//Given a PRTime create an nsIRDFNode that is really a date literal.
-nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfService);
 
 //Given an PRInt32 creates an nsIRDFNode that is really an int literal.
 nsresult createIntNode(PRInt32 value, nsIRDFNode **node, nsIRDFService *rdfService);

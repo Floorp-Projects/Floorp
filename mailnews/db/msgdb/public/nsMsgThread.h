@@ -88,6 +88,7 @@ protected:
   nsIMdbRow             *m_metaRow;
   PRBool                m_cachedValuesInitialized;
   nsMsgKey              m_threadRootKey;
+  PRUint32              m_newestMsgDate;
 };
 
 #endif

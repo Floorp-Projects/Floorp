@@ -62,39 +62,25 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfS
   return rv;
 }
 
-nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfService)
-{
-	*node = nsnull;
-	nsresult rv; 
-	if (!rdfService) return NS_ERROR_NULL_POINTER;  
-	nsCOMPtr<nsIRDFDate> date;
-	rv = rdfService->GetDateLiteral(time, getter_AddRefs(date));
-	if(NS_SUCCEEDED(rv)) {
-		*node = date;
-		NS_IF_ADDREF(*node);
-	}
-	return rv;
-}
-
 nsresult createIntNode(PRInt32 value, nsIRDFNode **node, nsIRDFService *rdfService)
 {
-	*node = nsnull;
-	nsresult rv; 
-	if (!rdfService) return NS_ERROR_NULL_POINTER;  
-	nsCOMPtr<nsIRDFInt> num;
-	rv = rdfService->GetIntLiteral(value, getter_AddRefs(num));
-	if(NS_SUCCEEDED(rv)) {
-		*node = num;
-		NS_IF_ADDREF(*node);
-	}
-	return rv;
+  *node = nsnull;
+  nsresult rv; 
+  if (!rdfService) return NS_ERROR_NULL_POINTER;  
+  nsCOMPtr<nsIRDFInt> num;
+  rv = rdfService->GetIntLiteral(value, getter_AddRefs(num));
+  if(NS_SUCCEEDED(rv)) {
+    *node = num;
+    NS_IF_ADDREF(*node);
+  }
+  return rv;
 }
 
 nsresult createBlobNode(PRUint8 *value, PRUint32 &length, nsIRDFNode **node, nsIRDFService *rdfService)
 {
   NS_ENSURE_ARG_POINTER(node);
   NS_ENSURE_ARG_POINTER(rdfService);
-
+  
   *node = nsnull;
   nsCOMPtr<nsIRDFBlob> blob;
   nsresult rv = rdfService->GetBlobLiteral(value, length, getter_AddRefs(blob));
@@ -104,27 +90,25 @@ nsresult createBlobNode(PRUint8 *value, PRUint32 &length, nsIRDFNode **node, nsI
 }
 
 nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,
-							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion)
+                               nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion)
 {
-	nsresult rv;
-	if(!hasAssertion)
-		return NS_ERROR_NULL_POINTER;
-
-	nsCOMPtr<nsIRDFNode> currentTarget;
-
-	rv = dataSource->GetTarget(folderResource, property,tv, getter_AddRefs(currentTarget));
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFLiteral> value1(do_QueryInterface(target));
-		nsCOMPtr<nsIRDFLiteral> value2(do_QueryInterface(currentTarget));
-		if(value1 && value2)
-			//If the two values are equal then it has this assertion
-			*hasAssertion = (value1 == value2);
-	}
-	else
-		rv = NS_NOINTERFACE;
-
-	return rv;
-
+  NS_ENSURE_ARG_POINTER(hasAssertion);
+  
+  nsCOMPtr<nsIRDFNode> currentTarget;
+  
+  nsresult rv = dataSource->GetTarget(folderResource, property,tv, getter_AddRefs(currentTarget));
+  if(NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIRDFLiteral> value1(do_QueryInterface(target));
+    nsCOMPtr<nsIRDFLiteral> value2(do_QueryInterface(currentTarget));
+    if(value1 && value2)
+      //If the two values are equal then it has this assertion
+      *hasAssertion = (value1 == value2);
+  }
+  else
+    rv = NS_NOINTERFACE;
+  
+  return rv;
+  
 }
 

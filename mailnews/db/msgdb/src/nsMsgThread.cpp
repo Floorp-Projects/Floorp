@@ -77,6 +77,7 @@ void nsMsgThread::Init()
   m_mdbTable = nsnull;
   m_mdbDB = nsnull;
   m_metaRow = nsnull;
+  m_newestMsgDate = 0;
   m_cachedValuesInitialized = PR_FALSE;
 }
 
@@ -106,6 +107,7 @@ nsresult nsMsgThread::InitCachedValues()
     err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
     err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, &m_numUnreadChildren);
     err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, &m_threadRootKey, nsMsgKey_None);
+    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadNewestMsgDateColumnToken, &m_newestMsgDate, 0);
     // fix num children if it's wrong. this doesn't work - some DB's have a bogus thread table
     // that is full of bogus headers - don't know why.
     PRUint32 rowCount = 0;
@@ -245,13 +247,17 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   nsresult ret = NS_OK;
   nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
   PRUint32 newHdrFlags = 0;
+  PRUint32 msgDate;
   nsMsgKey newHdrKey = 0;
   PRBool parentKeyNeedsSetting = PR_TRUE;
   
   nsIMdbRow *hdrRow = hdr->GetMDBRow();
   hdr->GetFlags(&newHdrFlags);
   hdr->GetMessageKey(&newHdrKey);
-  
+  hdr->GetDateInSeconds(&msgDate);
+  if (msgDate > m_newestMsgDate)
+    SetNewestMsgDate(msgDate);
+
   if (newHdrFlags & MSG_FLAG_IGNORED)
     SetFlags(m_flags | MSG_FLAG_IGNORED);
 
@@ -546,7 +552,13 @@ NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child, nsIDBChangeAnnounc
   child->GetThreadParent(&threadParent);
   ReparentChildrenOf(key, threadParent, announcer);
   
-  if (!(flags & MSG_FLAG_READ))
+  // if this was the newest msg, clear the newest msg date so we'll recalc.
+  PRUint32 date;
+  child->GetDateInSeconds(&date);
+  if (date == m_newestMsgDate)
+    SetNewestMsgDate(0);
+
+ if (!(flags & MSG_FLAG_READ))
     ChangeUnreadChildCount(-1);
   ChangeChildCount(-1);
   return RemoveChild(key);
@@ -884,16 +896,16 @@ nsresult nsMsgThread::ReparentMsgsWithInvalidParent(PRUint32 numChildren, nsMsgK
   // run through looking for messages that don't have a correct parent, 
   // i.e., a parent that's in the thread!
   for (PRInt32 childIndex = 0; childIndex < (PRInt32) numChildren; childIndex++)
-	{
+  {
     nsCOMPtr <nsIMsgDBHdr> curChild;
-		ret  = GetChildHdrAt(childIndex, getter_AddRefs(curChild));
-		if (NS_SUCCEEDED(ret) && curChild)
-		{
-			nsMsgKey parentKey;
+    ret  = GetChildHdrAt(childIndex, getter_AddRefs(curChild));
+    if (NS_SUCCEEDED(ret) && curChild)
+    {
+      nsMsgKey parentKey;
       nsCOMPtr <nsIMsgDBHdr> parent;
-
-			curChild->GetThreadParent(&parentKey);
-
+      
+      curChild->GetThreadParent(&parentKey);
+      
       if (parentKey != nsMsgKey_None)
       {
         GetChild(parentKey, getter_AddRefs(parent));
@@ -1000,10 +1012,8 @@ nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
 
 nsresult nsMsgThread::SetThreadRootKey(nsMsgKey threadRootKey)
 {
-  nsresult ret = NS_OK;
   m_threadRootKey = threadRootKey;
-  ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, threadRootKey);
-  return ret;
+  return m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, threadRootKey);
 }
 
 nsresult nsMsgThread::GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **result, PRInt32 *resultIndex)
@@ -1074,5 +1084,43 @@ NS_IMETHODIMP nsMsgThread::GetFirstUnreadChild(nsIMsgDBHdr **result)
   }
   
   return rv;
+}
+
+NS_IMETHODIMP nsMsgThread::GetNewestMsgDate(PRUint32 *aResult) 
+{
+  // if this hasn't been set, figure it out by enumerating the msgs in the thread.
+  if (!m_newestMsgDate)
+  {
+    PRUint32 numChildren;
+    nsresult rv = NS_OK;
+  
+    GetNumChildren(&numChildren);
+  
+    if ((PRInt32) numChildren < 0)
+      numChildren = 0;
+  
+    for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++)
+    {
+      nsCOMPtr <nsIMsgDBHdr> child;
+      rv = GetChildHdrAt(childIndex, getter_AddRefs(child));
+      if (NS_SUCCEEDED(rv) && child)
+      {
+        PRUint32 msgDate;
+        child->GetDateInSeconds(&msgDate);
+        if (msgDate > m_newestMsgDate)
+          m_newestMsgDate = msgDate;
+      }
+    }
+  
+  }
+  *aResult = m_newestMsgDate;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgThread::SetNewestMsgDate(PRUint32 aNewestMsgDate) 
+{
+  m_newestMsgDate = aNewestMsgDate;
+  return m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadNewestMsgDateColumnToken, aNewestMsgDate);
 }
 

@@ -745,6 +745,7 @@ nsMsgDatabase::nsMsgDatabase()
         m_messageCharSetColumnToken(0),
         m_threadParentColumnToken(0),
         m_threadRootKeyColumnToken(0),
+        m_threadNewestMsgDateColumnToken(0),
         m_offlineMsgOffsetColumnToken(0),
         m_offlineMessageSizeColumnToken(0),
         m_HeaderParser(nsnull),
@@ -1252,6 +1253,7 @@ const char *kThreadSubjectColumnName = "threadSubject";
 const char *kMessageCharSetColumnName = "msgCharSet";
 const char *kThreadParentColumnName = "threadParent";
 const char *kThreadRootColumnName = "threadRoot";
+const char *kThreadNewestMsgDateColumnName = "threadNewestMsgDate";
 const char *kOfflineMsgOffsetColumnName = "msgOffset";
 const char *kOfflineMsgSizeColumnName = "offlineMsgSize";
 struct mdbOid gAllMsgHdrsTableOID;
@@ -1409,6 +1411,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
       GetStore()->StringToToken(GetEnv(),  kMessageThreadIdColumnName, &m_messageThreadIdColumnToken);
       GetStore()->StringToToken(GetEnv(),  kThreadIdColumnName, &m_threadIdColumnToken);
       GetStore()->StringToToken(GetEnv(),  kThreadFlagsColumnName, &m_threadFlagsColumnToken);
+      GetStore()->StringToToken(GetEnv(),  kThreadNewestMsgDateColumnName, &m_threadNewestMsgDateColumnToken);
       GetStore()->StringToToken(GetEnv(),  kThreadChildrenColumnName, &m_threadChildrenColumnToken);
       GetStore()->StringToToken(GetEnv(),  kThreadUnreadChildrenColumnName, &m_threadUnreadChildrenColumnToken);
       GetStore()->StringToToken(GetEnv(),  kThreadSubjectColumnName, &m_threadSubjectColumnToken);

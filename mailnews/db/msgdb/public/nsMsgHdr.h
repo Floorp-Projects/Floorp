@@ -54,12 +54,12 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
-    virtual				~nsMsgHdr();
+    virtual ~nsMsgHdr();
 
-	virtual nsresult	GetRawFlags(PRUint32 *result);
-    void				Init();
-	virtual nsresult	InitCachedValues();
-	virtual nsresult	InitFlags();
+    virtual nsresult    GetRawFlags(PRUint32 *result);
+    void                Init();
+    virtual nsresult    InitCachedValues();
+    virtual nsresult    InitFlags();
 
     NS_DECL_ISUPPORTS
 
@@ -71,28 +71,28 @@ protected:
     nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue, PRUint32 defaultValue = 0);
     nsresult    BuildRecipientsFromArray(const char *names, const char *addresses, PRUint32 numAddresses, nsCAutoString& allRecipients);
 
-	// reference and threading stuff.
-	nsresult	ParseReferences(const char *references);
-	const char*	GetNextReference(const char *startNextRef, nsCString &reference);
-	const char* GetPrevReference(const char *prevRef, nsCString &reference);
+    // reference and threading stuff.
+    nsresult	ParseReferences(const char *references);
+    const char*	GetNextReference(const char *startNextRef, nsCString &reference);
+    const char* GetPrevReference(const char *prevRef, nsCString &reference);
 
     nsMsgKey	m_threadId; 
     nsMsgKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
     nsMsgKey	m_threadParent;	// message this is a reply to, in thread.
-    PRTime  		m_date;                         
-    PRUint32		m_messageSize;	// lines for news articles, bytes for mail messages
-    PRUint32		m_statusOffset;	// offset in a local mail message of the mozilla status hdr
-    PRUint32		m_flags;
-    PRUint16		m_numReferences;	// x-ref header for threading
-    nsCStringArray		m_references;  // avoid parsing references every time we want one
-    nsMsgPriorityValue	m_priority;
+    PRTime      m_date;                         
+    PRUint32    m_messageSize;	// lines for news articles, bytes for mail messages
+    PRUint32    m_statusOffset;	// offset in a local mail message of the mozilla status hdr
+    PRUint32    m_flags;
+    PRUint16    m_numReferences;	// x-ref header for threading
+    nsCStringArray      m_references;  // avoid parsing references every time we want one
+    nsMsgPriorityValue  m_priority;
 
     // nsMsgHdrs will have to know what db and row they belong to, since they are really
     // just a wrapper around the msg row in the mdb. This could cause problems,
     // though I hope not.
-    nsMsgDatabase	*m_mdb;
-    nsIMdbRow		*m_mdbRow;
-    PRUint32		m_initedValues;
+    nsMsgDatabase *m_mdb;
+    nsIMdbRow     *m_mdbRow;
+    PRUint32      m_initedValues;
 };
 
 #endif

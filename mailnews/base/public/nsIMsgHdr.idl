@@ -94,6 +94,7 @@ interface nsIMsgHdr : nsISupports
     attribute unsigned long offlineMessageSize;
     /* common headers */
     attribute PRTime date;
+    readonly attribute unsigned long dateInSeconds;
     attribute string messageId;
     attribute string ccList;
     attribute string author;

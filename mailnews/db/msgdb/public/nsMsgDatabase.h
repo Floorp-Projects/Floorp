@@ -251,6 +251,7 @@ protected:
   mdb_token     m_messageCharSetColumnToken;
   mdb_token     m_threadParentColumnToken;
   mdb_token     m_threadRootKeyColumnToken;
+  mdb_token     m_threadNewestMsgDateColumnToken;
   mdb_token     m_offlineMsgOffsetColumnToken;
   mdb_token     m_offlineMessageSizeColumnToken;
   nsIMsgHeaderParser	*m_HeaderParser;
