@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.17 $ $Date: 2001/11/28 16:23:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.18 $ $Date: 2001/11/29 19:34:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -117,6 +117,7 @@ NSSTrustDomain_Destroy
 	    nssList_Clear(td->tokenList, token_destructor);
 	    nssList_Destroy(td->tokenList);
 	}
+	nssTrustDomain_DestroyCache(td);
 	/* Destroy the trust domain */
 	nssArena_Destroy(td->arena);
     }
@@ -982,6 +983,7 @@ NSSTrustDomain_CreateCryptoContext
 	return NULL;
     }
     rvCC->td = td;
+    rvCC->arena = arena;
     return rvCC;
 }
 

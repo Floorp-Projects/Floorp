@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.5 $ $Date: 2001/11/28 16:23:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.6 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -57,11 +57,11 @@ extern const NSSError NSS_ERROR_NOT_FOUND;
 NSS_IMPLEMENT PRStatus
 NSSCryptoContext_Destroy
 (
-  NSSCryptoContext *td
+  NSSCryptoContext *cc
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+    nssArena_Destroy(cc->arena);
+    return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus

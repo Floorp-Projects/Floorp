@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.11 $ $Date: 2001/11/28 20:19:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.12 $ $Date: 2001/11/29 19:34:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -247,7 +247,14 @@ nssTrustDomain_DestroyCache
   NSSTrustDomain *td
 )
 {
+    if (!td->cache) {
+	return PR_FAILURE;
+    }
     PZ_DestroyLock(td->cache->lock);
+    nssHash_Destroy(td->cache->issuerAndSN);
+    nssHash_Destroy(td->cache->subject);
+    nssHash_Destroy(td->cache->nickname);
+    nssHash_Destroy(td->cache->email);
     nssArena_Destroy(td->cache->arena);
     td->cache = NULL;
 #ifdef DEBUG_CACHE
