@@ -97,6 +97,9 @@ static inline PRBool is_context_menu_key(const nsKeyEvent& inKeyEvent);
 static void   key_event_to_context_menu_event(const nsKeyEvent* inKeyEvent,
                                               nsMouseEvent* outCMEvent);
 
+static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
+static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
+
 /* callbacks from widgets */
 static gboolean expose_event_cb           (GtkWidget *widget,
                                            GdkEventExpose *event);
@@ -3127,6 +3130,10 @@ gboolean
 enter_notify_event_cb (GtkWidget *widget,
                        GdkEventCrossing *event)
 {
+    if (is_parent_ungrab_enter(event)) {
+        return TRUE;
+    }
+
     nsWindow *window = get_window_for_gdk_window(event->window);
     if (!window)
         return TRUE;
@@ -3141,6 +3148,10 @@ gboolean
 leave_notify_event_cb (GtkWidget *widget,
                        GdkEventCrossing *event)
 {
+    if (is_parent_grab_leave(event)) {
+        return TRUE;
+    }
+
     nsWindow *window = get_window_for_gdk_window(event->window);
     if (!window)
         return TRUE;
@@ -3677,6 +3688,25 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
     aCMEvent->clickCount = 0;
     aCMEvent->acceptActivation = PR_FALSE;
+}
+
+/* static */
+int
+is_parent_ungrab_enter(GdkEventCrossing *aEvent)
+{
+    return (GDK_CROSSING_UNGRAB == aEvent->mode) &&
+        ((GDK_NOTIFY_ANCESTOR == aEvent->detail) ||
+         (GDK_NOTIFY_VIRTUAL == aEvent->detail));
+
+}
+
+/* static */
+int
+is_parent_grab_leave(GdkEventCrossing *aEvent)
+{
+    return (GDK_CROSSING_GRAB == aEvent->mode) &&
+        ((GDK_NOTIFY_ANCESTOR == aEvent->detail) ||
+            (GDK_NOTIFY_VIRTUAL == aEvent->detail));
 }
 
 #ifdef ACCESSIBILITY
