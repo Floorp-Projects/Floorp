@@ -1490,6 +1490,7 @@ sub FormatTimeUnit {
 # Constructs a format object from URL parameters. You most commonly call it 
 # like this:
 # my $format = GetFormat("foo/bar", $::FORM{'format'}, $::FORM{'ctype'});
+
 sub GetFormat {
     my ($template, $format, $ctype) = @_;
 
@@ -1505,11 +1506,28 @@ sub GetFormat {
     $template .= ($format ? "-$format" : "");
     $template .= ".$ctype.tmpl";
 
+    # Now check that the template actually exists. We only want to check
+    # if the template exists; any other errors (eg parse errors) will
+    # end up being detected laer.
+    eval {
+        Bugzilla->template->context->template($template);
+    };
+    # This parsing may seem fragile, but its OK:
+    # http://lists.template-toolkit.org/pipermail/templates/2003-March/004370.html
+    # Even if it is wrong, any sort of error is going to cause a failure
+    # eventually, so the only issue would be an incorrect error message
+    if ($@ && $@->info =~ /: not found$/) {
+        ThrowUserError("format_not_found", { 'format' => $format,
+                                             'ctype' => $ctype,
+                                           });
+    }
+
+    # Else, just return the info
     return
     {
         'template'    => $template ,
         'extension'   => $ctype ,
-        'ctype' => $::contenttypes->{$ctype} || "text/plain" ,
+        'ctype' => $::contenttypes->{$ctype} ,
     };
 }
 

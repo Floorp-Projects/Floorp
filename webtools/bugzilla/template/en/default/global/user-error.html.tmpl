@@ -192,6 +192,11 @@
   [% ELSIF error == "flag_type_name_invalid" %]
     [% title = "Flag Type Name Invalid" %]
     The name <em>[% name FILTER html %]</em> must be 1-50 characters long.
+
+  [% ELSIF error == "format_not_found" %]
+    [% title = "Format Not Found" %]
+    The requested format <em>[% format FILTER html %]</em> does not exist with
+    a content type of <em>[% ctype FILTER html %]</em>.
     
   [% ELSIF error == "flag_type_sortkey_invalid" %]
     [% title = "Flag Type Sort Key Invalid" %]
