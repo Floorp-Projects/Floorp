@@ -70,6 +70,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		SmtpServerList.xul \
 		SmtpServerList.js \
 		smtpEditOverlay.xul \
+		smtpEditOverlay.js \
 		SmtpServerEdit.xul \
 		SmtpServerEdit.js \
 		$(NULL)

@@ -62,6 +62,12 @@ install::
 	$(MAKE_INSTALL) aw-done.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) accountUtils.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) ispUtils.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) SmtpServerList.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) SmtpServerList.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) SmtpServerEdit.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) SmtpServerEdit.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) smtpEditOverlay.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) smtpEditOverlay.js	$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
@@ -85,7 +91,6 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\aw-identity.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-server.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-newsserver.xul
-	rm -f $(DIST)\chrome\messenger\content\default\aw-smtp.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-login.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accname.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-done.xul

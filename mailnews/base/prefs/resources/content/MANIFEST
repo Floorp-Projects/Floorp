@@ -58,3 +58,9 @@ aw-accname.xul
 aw-accname.js
 aw-done.xul
 aw-done.js
+SmtpServerList.xul
+SmtpServerList.js
+SmtpServerEdit.xul
+SmtpServerEdit.js
+smtpEditOverlay.xul
+smtpEditOverlay.js
