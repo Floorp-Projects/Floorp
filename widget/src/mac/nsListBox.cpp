@@ -101,6 +101,7 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
 
 		mValue = kLDESRsrcID;
 		nsresult res = Inherited::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+		mValue = 0;
 
 	nsMacResources::CloseLocalResourceFile();
 
@@ -111,10 +112,12 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
 		if (mListHandle)
 		{
 			SetMultipleSelection(mMultiSelect);
-			::SetControlMinimum(mControl, 0);
+			StartDraw();
+			::LSetDrawingMode(mVisible, mListHandle);
+			::SetControlMinimum(mControl, 1);
 			::SetControlMaximum(mControl, 0);
 			::SetControlValue(mControl, 0);
-			::LSetDrawingMode(mVisible, mListHandle);
+  		EndDraw();
 		}
 		else
 			res = NS_ERROR_FAILURE;
@@ -523,6 +526,7 @@ PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 					EventRecord* osEvent = (EventRecord*)aEvent.nativeMsg;
 					EventModifiers modifiers = (osEvent ? osEvent->modifiers : 0);
 					::LClick(thePoint, modifiers, mListHandle);
+					ControlChanged(GetSelectedIndex());
 				}
 				//¥TODO: the mouseUp event is eaten by TrackControl.
 				//¥ We must create it and dispatch it after the mouseDown;

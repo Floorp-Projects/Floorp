@@ -41,6 +41,7 @@ nsMacControl::nsMacControl() : nsWindow()
 	mMax			= 1;
 	mWidgetArmed	= PR_FALSE;
 	mMouseInButton	= PR_FALSE;
+
 	mControl		= nsnull;
 	mControlType	= pushButProc;
 
@@ -221,6 +222,30 @@ PRBool  nsMacControl::DispatchMouseEvent(nsMouseEvent &aEvent)
 		return PR_TRUE;
 	return (Inherited::DispatchMouseEvent(aEvent));
 }
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void  nsMacControl::ControlChanged(PRInt32 aNewValue)
+{
+	if (aNewValue != mValue)
+	{
+		mValue = aNewValue;
+		mLastValue = mValue;	// safely assume that the control has been repainted already
+
+		nsGUIEvent guiEvent;
+		nsPoint point(0,0);
+		guiEvent.eventStructType = NS_GUI_EVENT;
+		guiEvent.message	= NS_CONTROL_CHANGE;
+ 		guiEvent.point		= point;
+ 		guiEvent.time	 	= PR_IntervalNow();
+ 		guiEvent.widget	 	= this;
+ 		guiEvent.nativeMsg	= nsnull;
+		Inherited::DispatchWindowEvent(guiEvent);
+	}
+}
+
 
 #pragma mark -
 //-------------------------------------------------------------------------
