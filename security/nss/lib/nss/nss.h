@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.24 2002/12/17 23:04:46 wtc%netscape.com Exp $
+ * $Id: nss.h,v 1.25 2003/03/20 23:12:43 wtc%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -54,7 +54,6 @@ SEC_BEGIN_PROTOS
 #define NSS_VMINOR   8
 #define NSS_VPATCH   0
 #define NSS_BETA     PR_TRUE
-
 
 /*
  * Return a boolean that indicates whether the underlying library
