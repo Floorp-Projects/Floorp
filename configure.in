@@ -2891,41 +2891,10 @@ then
         MOZ_GLE=
         MOZ_GLE_LDFLAGS= )
 
-    MOZ_ARG_WITH_BOOL(static-gtk,
-    [  --with-static-gtk       Link GTK statically if possible],
-        sysstaticgtk=$enableval)
+    MOZ_GTK_LDFLAGS=$GTK_LIBS
 
-    if test "$sysstaticgtk" != "yes"; then
-        MOZ_GTK_LDFLAGS=$GTK_LIBS
-
-        if test "$MOZ_GLE"; then
-            MOZ_GTK_LDFLAGS=`echo $MOZ_GTK_LDFLAGS | sed -e 's/-lgtk/-lgle -lgtk/'`
-        fi
-    else
-       changequote(,)
-
-       GTK_LIBS_LOC=`echo $GTK_LIBS | sed 's/\(.*\)\(-lgtk.*\)/\1/'`
-
-       GTK_STATIC_LOC=`echo $GTK_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
-       GTK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gtk[^ ]*\) .*/\1/'`
-       GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
-
-       GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
-       if test ! "$GLIB_STATIC_LOC" ; then
-         GLIB_STATIC_LOC=$GTK_STATIC_LOC
-       fi
-       GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
-       GLIB_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(glib[^ ]*\) .*/\1/'`
-
-       GTK_OTHER_LIBS=`echo $GTK_LIBS | sed 's/^.*-lglib *\(.*\)/\1/'`
-
-       changequote([,])
-
-       MOZ_GTK_LDFLAGS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
-       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
-       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
-       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
-       MOZ_GTK_LDFLAGS="$MOZ_GTK_LDFLAGS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
+    if test "$MOZ_GLE"; then
+        MOZ_GTK_LDFLAGS=`echo $MOZ_GTK_LDFLAGS | sed -e 's/-lgtk/-lgle -lgtk/'`
     fi
 
     MOZ_GTK_CFLAGS=$GTK_CFLAGS
@@ -2976,27 +2945,7 @@ then
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
 
-    MOZ_ARG_WITH_BOOL(static-qt,
-    [  --with-static-qt        Link qt statically if possible],
-        sysstaticqt=$withval)
-
-    if test "$sysstaticqt" != "yes"; then
-       MOZ_QT_LDFLAGS=$QT_LIBS
-    else
-       changequote(,)
-
-       QT_LIBS_LOC=`echo $QT_LIBS | sed 's/\(.*\)\(-lqt.*\)/\1/'`
-
-       QT_STATIC_LOC=`echo $QT_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
-       QT_STATIC=`echo $QT_LIBS | sed 's/^.*-l\(qt[^ ]*\) .*/\1/'`
-
-       changequote([,])
-
-       MOZ_QT_LDFLAGS="$QT_STATIC_LOC/lib${QT_STATIC}.a"
-       MOZ_QT_LDFLAGS="$MOZ_QT_LDFLAGS $QT_STATIC_LOC/lib${QT_STATIC}.a"
-       MOZ_QT_LDFLAGS="$MOZ_QT_LDFLAGS $QT_LIBS_LOC"
-    fi
-
+    MOZ_QT_LDFLAGS=$QT_LIBS
     MOZ_QT_CFLAGS=$QT_CFLAGS
 
     AC_LANG_CPLUSPLUS
