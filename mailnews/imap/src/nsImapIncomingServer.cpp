@@ -1609,8 +1609,11 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 	nsresult rv;
 	nsCOMPtr <nsIImapProtocol> imapProtocol;
 	nsCOMPtr <nsIEventQueue> aEventQueue;
+	nsCAutoString cookie(pCookieData, pCookieSize);
     // Get current thread envent queue
-
+#ifdef DEBUG_bienvenu
+	pPort = 144;	// while server guys debug their stuff, hard code port to 144 (not 143)
+#endif
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
@@ -1640,7 +1643,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 			m_waitingForConnectionInfo = PR_FALSE;
             if (NS_SUCCEEDED(rv) && protocolInstance)
             {
-				protocolInstance->OverrideConnectionInfo(pHost, pPort, pCookieData);
+				protocolInstance->OverrideConnectionInfo(pHost, pPort, cookie.GetBuffer());
 				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
 				if (NS_SUCCEEDED(rv) && url)
 				{
