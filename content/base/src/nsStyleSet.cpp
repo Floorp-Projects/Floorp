@@ -416,7 +416,13 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
     lastUserRN = mRuleWalker->GetCurrentNode();
   }
 
-  nsRuleNode* lastDocRN = lastUserRN;
+  nsRuleNode* lastPresHintRN = lastUserRN;
+  if (mRuleProcessors[ePresHintSheet].Count()) {
+    mRuleProcessors[ePresHintSheet].EnumerateForwards(aCollectorFunc, aData);
+    lastPresHintRN = mRuleWalker->GetCurrentNode();
+  }
+  
+  nsRuleNode* lastDocRN = lastPresHintRN;
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
@@ -436,6 +442,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
   AddImportantRules(lastDocRN, lastUserRN);   //doc
   AddImportantRules(lastOvrRN, lastDocRN);    //ovr
+  // There should be no imporant rules in the preshint level
   AddImportantRules(lastUserRN, lastAgentRN); //user
   AddImportantRules(lastAgentRN, nsnull);     //agent
 
@@ -453,6 +460,9 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   // Walk the user rules next.
   mRuleProcessors[eUserSheet].EnumerateForwards(aFunc, aData);
 
+  // Walk preshint rules.
+  mRuleProcessors[ePresHintSheet].EnumerateForwards(aFunc, aData);
+  
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
@@ -513,9 +523,10 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
                "content must be element");
 
   if (aContent && presContext) {
-    if (mRuleProcessors[eAgentSheet].Count() ||
-        mRuleProcessors[eUserSheet].Count()  ||
-        mRuleProcessors[eDocSheet].Count()   ||
+    if (mRuleProcessors[eAgentSheet].Count()    ||
+        mRuleProcessors[eUserSheet].Count()     ||
+        mRuleProcessors[ePresHintSheet].Count() ||
+        mRuleProcessors[eDocSheet].Count()      ||
         mRuleProcessors[eOverrideSheet].Count()) {
       RulesMatchingData data(presContext, aContent, mRuleWalker);
       FileRules(EnumRulesMatching, &data);
@@ -536,9 +547,10 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
   nsIPresContext *presContext = PresContext();
 
   if (presContext) {
-    if (mRuleProcessors[eAgentSheet].Count() ||
-        mRuleProcessors[eUserSheet].Count()  ||
-        mRuleProcessors[eDocSheet].Count()   ||
+    if (mRuleProcessors[eAgentSheet].Count()    ||
+        mRuleProcessors[eUserSheet].Count()     ||
+        mRuleProcessors[ePresHintSheet].Count() ||
+        mRuleProcessors[eDocSheet].Count()      ||
         mRuleProcessors[eOverrideSheet].Count()) {
       result = GetContext(presContext, aParentContext,
                           nsCSSAnonBoxes::mozNonElement).get();
@@ -588,9 +600,10 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
                "content (if non-null) must be element");
 
   if (aPseudoTag && presContext) {
-    if (mRuleProcessors[eAgentSheet].Count() ||
-        mRuleProcessors[eUserSheet].Count()  ||
-        mRuleProcessors[eDocSheet].Count()   ||
+    if (mRuleProcessors[eAgentSheet].Count()    ||
+        mRuleProcessors[eUserSheet].Count()     ||
+        mRuleProcessors[ePresHintSheet].Count() ||
+        mRuleProcessors[eDocSheet].Count()      ||
         mRuleProcessors[eOverrideSheet].Count()) {
       PseudoRulesMatchingData data(presContext, aParentContent, aPseudoTag,
                                    aComparator, mRuleWalker);
@@ -620,9 +633,10 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
                "content (if non-null) must be element");
 
   if (aPseudoTag && presContext) {
-    if (mRuleProcessors[eAgentSheet].Count() ||
-        mRuleProcessors[eUserSheet].Count()  ||
-        mRuleProcessors[eDocSheet].Count()   ||
+    if (mRuleProcessors[eAgentSheet].Count()    ||
+        mRuleProcessors[eUserSheet].Count()     ||
+        mRuleProcessors[ePresHintSheet].Count() ||
+        mRuleProcessors[eDocSheet].Count()      ||
         mRuleProcessors[eOverrideSheet].Count()) {
       PseudoRulesMatchingData data(presContext, aParentContent, aPseudoTag,
                                    nsnull, mRuleWalker);
@@ -777,9 +791,10 @@ nsStyleSet::HasStateDependentStyle(nsIPresContext* aPresContext,
   nsReStyleHint result = nsReStyleHint(0);
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-      (mRuleProcessors[eAgentSheet].Count() ||
-       mRuleProcessors[eUserSheet].Count()  ||
-       mRuleProcessors[eDocSheet].Count()   ||
+      (mRuleProcessors[eAgentSheet].Count()    ||
+       mRuleProcessors[eUserSheet].Count()     ||
+       mRuleProcessors[ePresHintSheet].Count() ||
+       mRuleProcessors[eDocSheet].Count()      ||
        mRuleProcessors[eOverrideSheet].Count())) {  
     StatefulData data(aPresContext, aContent, aStateMask);
     WalkRuleProcessors(SheetHasStatefulStyle, &data);
@@ -820,9 +835,10 @@ nsStyleSet::HasAttributeDependentStyle(nsIPresContext* aPresContext,
   nsReStyleHint result = nsReStyleHint(0);
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-      (mRuleProcessors[eAgentSheet].Count() ||
-       mRuleProcessors[eUserSheet].Count()  ||
-       mRuleProcessors[eDocSheet].Count()   ||
+      (mRuleProcessors[eAgentSheet].Count()     ||
+       mRuleProcessors[eUserSheet].Count()      ||
+       mRuleProcessors[ePresHintSheet].Count()  ||
+       mRuleProcessors[eDocSheet].Count()       ||
        mRuleProcessors[eOverrideSheet].Count())) {  
     AttributeData data(aPresContext, aContent, aAttribute, aModType);
     WalkRuleProcessors(SheetHasAttributeStyle, &data);

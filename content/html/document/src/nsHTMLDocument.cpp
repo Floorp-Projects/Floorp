@@ -392,6 +392,15 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mContentType = "text/html";
 }
 
+nsStyleSet::sheetType
+nsHTMLDocument::GetAttrSheetType()
+{
+  if (IsXHTML()) {
+    return nsDocument::GetAttrSheetType();
+  }
+  
+  return nsStyleSet::ePresHintSheet;
+}
 
 nsresult
 nsHTMLDocument::CreateShell(nsIPresContext* aContext,
