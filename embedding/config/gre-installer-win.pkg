@@ -70,6 +70,7 @@ components\webbrowserpersist.xpt
 ;
 components\xmlextras.dll
 components\xmlextras.xpt
+components\xmlextras_interfaceinfo.xpt
 
 ;
 ; XP Install Support
