@@ -2212,6 +2212,19 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
             scrollOffsetY = frameBounds.y;
           }
         }
+      } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent) {
+        // Scroll only if no part of the frame is visible in this view
+        if (frameBounds.YMost() < visibleRect.y) {
+          // Scroll up so the frame's top edge is visible
+          scrollOffsetY = frameBounds.y;
+        }  else if (frameBounds.y > visibleRect.YMost()) {
+          // Scroll down so the frame's bottom edge is visible. Make sure the
+          // frame's top edge is still visible
+          scrollOffsetY += frameBounds.YMost() - visibleRect.YMost();
+          if (scrollOffsetY > frameBounds.y) {
+            scrollOffsetY = frameBounds.y;
+          }
+         }      
       } else {
         // Align the frame edge according to the specified percentage
         nscoord frameAlignY = frameBounds.y + (frameBounds.height * aVPercent) / 100;
@@ -2233,14 +2246,27 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
             scrollOffsetX = frameBounds.x;
           }
         }
-      
+      } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent) {
+        // Scroll only if no part of the frame is visible in this view
+        if (frameBounds.XMost() < visibleRect.x) {
+          // Scroll left so the frame's left edge is visible
+          scrollOffsetX = frameBounds.x;
+        }  else if (frameBounds.x > visibleRect.XMost()) {
+          // Scroll right so the frame's right edge is visible. Make sure the
+          // frame's left edge is still visible
+          scrollOffsetX += frameBounds.XMost() - visibleRect.XMost();
+          if (scrollOffsetX > frameBounds.x) {
+            scrollOffsetX = frameBounds.x;
+          }
+        }           
       } else {
         // Align the frame edge according to the specified percentage
         nscoord frameAlignX = frameBounds.x + (frameBounds.width * aHPercent) / 100;
         scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
       }
-      
-      scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+      if (scrollOffsetX != 0 || scrollOffsetY != 0) {
+        scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+      }
     }
   }
   return rv;
