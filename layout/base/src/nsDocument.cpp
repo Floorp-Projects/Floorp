@@ -188,6 +188,7 @@ nsDocument::~nsDocument()
   }
 
   NS_IF_RELEASE(mRootContent);
+
   // Delete references to style sheets
   index = mStyleSheets.Count();
   while (--index >= 0) {
@@ -456,6 +457,15 @@ nsIScriptContextOwner *nsDocument::GetScriptContextOwner()
 
 void nsDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
 {
+  // XXX HACK ALERT! If the script context owner is null, the document
+  // will soon be going away. So tell our content that to lose its
+  // reference to the document. This has to be done before we
+  // actually set the script context owner to null so that the
+  // content elements can remove references to their script objects.
+  if ((nsnull == aScriptContextOwner) && (nsnull != mRootContent)) {
+    mRootContent->SetDocument(nsnull, PR_TRUE);
+  }
+
   if (nsnull != mScriptContextOwner) {
     NS_RELEASE(mScriptContextOwner);
   }

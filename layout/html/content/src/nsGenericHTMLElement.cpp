@@ -1115,10 +1115,65 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
   return sheet;
 }
 
-nsresult
-nsGenericHTMLElement::SetDocument(nsIDocument* aDocument)
+static void
+SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
 {
+  PRInt32 i, n;
+  aContent->ChildCount(n);
+  for (i = 0; i < n; i++) {
+    nsIContent* child;
+    aContent->ChildAt(i, child);
+    if (nsnull != child) {
+      child->SetDocument(aDocument, PR_TRUE);
+    }
+  }
+}
+
+nsresult
+nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+{
+  // If we were part of a document, make sure we get rid of the
+  // script context reference to our script object so that our
+  // script object can be freed (or collected).
+  if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
+      (nsnull != mDOMSlots->mScriptObject)) {
+    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+      nsIScriptContext *context;
+      if (NS_OK == owner->GetScriptContext(&context)) {
+        context->RemoveReference((void *)&mDOMSlots->mScriptObject,
+                                mDOMSlots->mScriptObject);
+        NS_RELEASE(context);
+      }
+      NS_RELEASE(owner);
+    }
+  }
+
   mDocument = aDocument;
+
+  // If we already have a script object and now we're being added
+  // to a document, make sure that the script context adds a 
+  // reference to our script object. This will ensure that it
+  // won't be freed (or collected) out from under us.
+  if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
+      (nsnull != mDOMSlots->mScriptObject)) {
+    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+      nsIScriptContext *context;
+      if (NS_OK == owner->GetScriptContext(&context)) {
+        nsAutoString tag;
+        char tagBuf[50];
+        
+        mTag->ToString(tag);
+        tag.ToCString(tagBuf, sizeof(tagBuf));
+        context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
+                                   mDOMSlots->mScriptObject,
+                                   tagBuf);
+        NS_RELEASE(context);
+      }
+      NS_RELEASE(owner);
+    }
+  }
 
   if ((nsnull != mDocument) && (nsnull != mAttributes)) {
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
@@ -1126,6 +1181,10 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument)
       sheet->SetAttributesFor(mContent, mAttributes); // sync attributes with sheet
       NS_RELEASE(sheet);
     }
+  }
+
+  if (PR_TRUE == aDeep) {
+    SetDocumentInChildrenOf(mContent, aDocument);
   }
 
   return NS_OK;
@@ -1833,6 +1892,14 @@ nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
     res = factory->NewScriptElement(tag, aContext, mContent,
                                     mParent, (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
+    
+    char tagBuf[50];
+    tag.ToCString(tagBuf, sizeof(tagBuf));
+    if (nsnull != mDocument) {
+      aContext->AddNamedReference((void *)&slots->mScriptObject,
+                                  slots->mScriptObject,
+                                  tagBuf);
+    }
   }
   *aScriptObject = slots->mScriptObject;
   return res;
@@ -3121,21 +3188,6 @@ nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
   return NS_OK;
 }
 
-static void
-SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
-{
-  PRInt32 i, n;
-  aContent->ChildCount(n);
-  for (i = 0; i < n; i++) {
-    nsIContent* child;
-    aContent->ChildAt(i, child);
-    if (nsnull != child) {
-      child->SetDocument(aDocument);
-      SetDocumentInChildrenOf(child, aDocument);
-    }
-  }
-}
-
 // XXX It's possible that newChild has already been inserted in the
 // tree; if this is the case then we need to remove it from where it
 // was before placing it in it's new home
@@ -3217,7 +3269,8 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
 }
 
 nsresult
-nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild, 
+                                           nsIDOMNode** aReturn)
 {
   nsIContent* content = nsnull;
   *aReturn = nsnull;
@@ -3359,7 +3412,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
     aKid->SetParent(mContent);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
-      aKid->SetDocument(doc);
+      aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
@@ -3381,12 +3434,12 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
     aKid->SetParent(mContent);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
-      aKid->SetDocument(doc);
+      aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
         doc->ContentReplaced(mContent, oldKid, aKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull);
+    oldKid->SetDocument(nsnull, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
@@ -3403,7 +3456,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     aKid->SetParent(mContent);
     nsIDocument* doc = mDocument;
     if (nsnull != doc) {
-      aKid->SetDocument(doc);
+      aKid->SetDocument(doc, PR_FALSE);
       if (aNotify) {
         doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
@@ -3424,7 +3477,7 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         doc->ContentRemoved(mContent, oldKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull);
+    oldKid->SetDocument(nsnull, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }

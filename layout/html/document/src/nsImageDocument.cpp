@@ -271,7 +271,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  root->SetDocument(this);
+  root->SetDocument(this, PR_FALSE);
   SetRootContent(root);
 
   nsIHTMLContent* body;
@@ -279,7 +279,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  body->SetDocument(this);
+  body->SetDocument(this, PR_FALSE);
 
   nsIHTMLContent* center;
   nsIAtom* centerAtom = NS_NewAtom("P");
@@ -288,7 +288,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  center->SetDocument(this);
+  center->SetDocument(this, PR_FALSE);
 
   nsIHTMLContent* image;
   nsIAtom* imgAtom = NS_NewAtom("IMG");
@@ -297,7 +297,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  image->SetDocument(this);
+  image->SetDocument(this, PR_FALSE);
 
   nsAutoString src;
   mDocumentURL->ToString(src);

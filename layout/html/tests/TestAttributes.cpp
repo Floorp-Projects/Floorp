@@ -239,7 +239,7 @@ int main(int argc, char** argv)
   PRBool canHaveKids;
   text->CanContainChildren(canHaveKids);
   NS_ASSERTION(!canHaveKids,"");
-  text->SetDocument(myDoc);
+  text->SetDocument(myDoc, PR_FALSE);
 
 #if 0
   // Query ITextContent interface
@@ -270,7 +270,7 @@ int main(int argc, char** argv)
   }
   container->CanContainChildren(canHaveKids);
   NS_ASSERTION(canHaveKids,"");
-  container->SetDocument(myDoc);
+  container->SetDocument(myDoc, PR_FALSE);
 
   container->AppendChildTo(text, PR_FALSE);
   PRInt32 nk;

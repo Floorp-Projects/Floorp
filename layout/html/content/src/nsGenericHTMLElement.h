@@ -119,7 +119,7 @@ public:
 
   // Implementation for nsIContent
   nsresult GetDocument(nsIDocument*& aResult) const;
-  nsresult SetDocument(nsIDocument* aDocument);
+  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
   nsresult GetParent(nsIContent*& aResult) const;
   nsresult SetParent(nsIContent* aParent);
   nsresult IsSynthetic(PRBool& aResult) {
@@ -626,8 +626,8 @@ public:
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
     return _g.GetDocument(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD SetDocument(nsIDocument* aDocument) {                         \
-    return _g.SetDocument(aDocument);                                      \
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) {           \
+    return _g.SetDocument(aDocument, aDeep);                               \
   }                                                                        \
   NS_IMETHOD GetParent(nsIContent*& aResult) const {                       \
     return _g.GetParent(aResult);                                          \
