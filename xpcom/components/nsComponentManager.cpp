@@ -3128,9 +3128,12 @@ nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
     for (int i = 0; i < mNLoaderData; i++) {
         PRBool didRegister;
         if (!mLoaderData[i].loader) {
-            rv = GetLoaderForType(i, &mLoaderData[i].loader);
+            nsCOMPtr<nsIComponentLoader> loader;
+            rv = GetLoaderForType(i, getter_AddRefs(loader));
             if (NS_FAILED(rv))
                 continue;
+            // |GetLoaderForType| has filled in |mLoaderData[i].loader|:
+            NS_ASSERTION(loader == mLoaderData[i].loader, "oops");
         }
         rv = mLoaderData[i].loader->AutoRegisterComponent((int)when, component, &didRegister);
         if (NS_SUCCEEDED(rv) && didRegister)
