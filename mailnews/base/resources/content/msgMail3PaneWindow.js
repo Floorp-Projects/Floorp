@@ -144,12 +144,11 @@ var folderListener = {
 			if(gNextMessageAfterDelete)
 			{
 				var nextMessage = document.getElementById(gNextMessageAfterDelete);
-        gNextMessageAfterDelete = null;
+	       gNextMessageAfterDelete = null;
 				SelectNextMessage(nextMessage);
 				var threadTree = GetThreadTree();
 				if(threadTree)
 					threadTree.ensureElementIsVisible(nextMessage);
-				
 			}
 		}
 	}
@@ -1162,17 +1161,6 @@ function GetSelectedMsgFolders()
 	return folderArray;
 }
 
-function GetFirstSelectedMsgFolder()
-{
-	var result = null;
-	var selectedFolders = GetSelectedMsgFolders();
-	if (selectedFolders.length > 0) {
-		result = selectedFolders[0];
-	}
-
-	return result;
-}
-
 function GetSelectedMessages()
 {
 	var threadTree = GetThreadTree();
@@ -1199,16 +1187,19 @@ function GetLoadedMsgFolder()
 {
 	var loadedFolder = GetThreadTreeFolder();
 	var folderUri = loadedFolder.getAttribute("ref");
-	var folderResource = RDF.GetResource(folderUri);
-	if(folderResource)
+	if(folderUri && folderUri != "" && folderUri !="null")
 	{
-		try {
-			var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-			return msgFolder;
-		}
-		catch (ex) {
-			dump(ex + "\n");
-			dump("we know about this.  see bug #35591\n");
+		var folderResource = RDF.GetResource(folderUri);
+		if(folderResource)
+		{
+			try {
+				var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+				return msgFolder;
+			}
+			catch (ex) {
+				dump(ex + "\n");
+				dump("we know about this.  see bug #35591\n");
+			}
 		}
 	}
 	return null;
@@ -1228,10 +1219,17 @@ function GetLoadedMessage()
 
 function GetCompositeDataSource(command)
 {
-	if(command == "GetNewMessages" || command == "Copy" || command == "NewFolder")
+	if(command == "GetNewMessages" || command == "Copy" || command == "NewFolder" ||
+	   command == "MarkAllMessagesRead")
 	{
 		var folderTree = GetFolderTree();
 		return folderTree.database;
+	}
+	else if(command == "MarkMessageRead" || command == "MarkMessageFlagged" ||
+			command == "MarkThreadAsRead")
+	{
+		var threadTree = GetThreadTree();
+		return threadTree.database;
 	}
 
 	return null;

@@ -18,6 +18,17 @@
  * Rights Reserved.
  */
 
+function GetFirstSelectedMsgFolder()
+{
+	var result = null;
+	var selectedFolders = GetSelectedMsgFolders();
+	if (selectedFolders.length > 0) {
+		result = selectedFolders[0];
+	}
+
+	return result;
+}
+
 function MsgGetMessage() 
 {
 	var folders = GetSelectedMsgFolders();
@@ -42,7 +53,7 @@ function MsgCopyMessage(destFolder)
 
 function MsgNewMessage(event)
 {
-  var loadedFolder = GetLoadedMsgFolder();
+  var loadedFolder = GetFirstSelectedMsgFolder();
   var messageArray = GetSelectedMessages();
 
   if (event.shiftKey)
@@ -116,6 +127,14 @@ function MsgForwardAsInline(event)
     ComposeMessage(msgComposeType.ForwardInline, msgComposeFormat.Default, loadedFolder, messageArray);
 }
 
+
+function MsgEditMessageAsNew()
+{
+	var loadedFolder = GetLoadedMsgFolder();
+	var messageArray = GetSelectedMessages();
+    ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
+}
+
 function MsgHome(url)
 {
   window.open( url, "_blank", "chrome,dependent=yes,all" );
@@ -142,7 +161,6 @@ function MsgSubscribe()
 	catch (ex) {
 		useRealSubscribeDialog = false;
 	}
-
 	var preselectedFolder = GetFirstSelectedMsgFolder();
 	if (useRealSubscribeDialog)  {
 			Subscribe(windowTitle, preselectedFolder);
@@ -150,26 +168,6 @@ function MsgSubscribe()
 	else {
 			CreateNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle, preselectedFolder);
 	}
-}
-
-function MsgAccountManager()
-{
-    window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,modal");
-}
-
-// we do this from a timer because if this is called from the onload=
-// handler, then the parent window doesn't appear until after the wizard
-// has closed, and this is confusing to the user
-function MsgAccountWizard()
-{
-    setTimeout("msgOpenAccountWizard();", 0);
-}
-
-function msgOpenAccountWizard()
-{
-    window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                      "AccountWizard", "chrome,modal");
 }
 
 function MsgSaveAsFile() 
@@ -239,3 +237,74 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
 
 }
 
+function MsgMarkMsgAsRead(markRead)
+{
+	var selectedMessages = GetSelectedMessages();
+	var compositeDataSource = GetCompositeDataSource("MarkMessageRead");
+
+	MarkMessagesRead(compositeDataSource, selectedMessages, markRead);
+}
+
+function MsgMarkAsFlagged(markFlagged)
+{
+	var selectedMessages = GetSelectedMessages();
+	var compositeDataSource = GetCompositeDataSource("MarkMessageFlagged");
+
+	MarkMessagesFlagged(compositeDataSource, selectedMessages, markFlagged);
+}
+
+
+function MsgMarkAllRead()
+{
+	var compositeDataSource = GetCompositeDataSource("MarkAllMessagesRead");
+	var folder = GetLoadedMsgFolder();
+
+	if(folder)
+		MarkAllMessagesRead(compositeDataSource, folder);
+}
+
+function MsgMarkThreadAsRead()
+{
+	
+	var messageList = GetSelectedMessages();
+	if(messageList.length == 1)
+	{
+		var message = messageList[0];
+		var compositeDataSource = GetCompositeDataSource("MarkThreadAsRead");
+
+		MarkThreadAsRead(compositeDataSource, message);
+	}
+
+}
+
+function MsgMarkByDate() {}
+function MsgOpenAttachment() {}
+function MsgUpdateMsgCount() {}
+function MsgImport() {}
+function MsgWorkOffline() {}
+function MsgSynchronize() {}
+function MsgGetSelectedMsg() {}
+function MsgGetFlaggedMsg() {}
+function MsgSelectThread() {}
+function MsgSelectFlaggedMsg() {}
+function MsgShowFolders(){}
+function MsgFolderProperties() {}
+function MsgShowLocationbar() {}
+function MsgViewThreadsUnread() {}
+function MsgViewWatchedThreadsUnread() {}
+function MsgViewIgnoreThread() {}
+function MsgViewAttachInline() {}
+function MsgWrapLongLines() {}
+function MsgIncreaseFont() {}
+function MsgDecreaseFont() {}
+function MsgShowImages() {}
+function MsgRefresh() {}
+function MsgViewPageInfo() {}
+function MsgFirstUnreadMessage() {}
+function MsgFirstFlaggedMessage() {}
+function MsgGoBack() {}
+function MsgGoForward() {}
+function MsgAddSenderToAddressBook() {}
+function MsgAddAllToAddressBook() {}
+function MsgIgnoreThread() {}
+function MsgWatchThread() {}

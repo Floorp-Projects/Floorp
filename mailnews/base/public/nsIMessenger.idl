@@ -63,24 +63,6 @@ interface nsIMessenger : nsISupports {
 					  in boolean isMove);
 
     void OpenURL(in string url);
-	void MarkMessagesRead(in nsIRDFCompositeDataSource database,
-                          in nsISupportsArray messages,
-						  in boolean markRead);
-	void MarkMessageRead(in nsIRDFCompositeDataSource database,
-                         in nsIRDFResource message,
-                         in boolean markRead);
-	void MarkAllMessagesRead(in nsIRDFCompositeDataSource database,
-                             in nsIRDFResource folder);
-
-	void MarkMessagesFlagged(in nsIRDFCompositeDataSource database,
-                             in nsISupportsArray messages,
-                             in boolean markFlagged);
-	void MarkMessageFlagged(in nsIRDFCompositeDataSource database,
-                            in nsIRDFResource message,
-                            in boolean markFlagged);
-	void markThreadRead(in nsIRDFCompositeDataSource database,
-						 in nsIMsgFolder folder,
-						 in nsIMsgThread thread);
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in wstring name);
     void CompactFolder(in nsIRDFCompositeDataSource db,

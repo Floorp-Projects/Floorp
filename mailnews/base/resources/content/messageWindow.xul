@@ -48,6 +48,7 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/commandglue.js"/>
 <html:script src="chrome://messenger/content/mailWindow.js"/>
 <html:script src="chrome://messenger/content/messageWindow.js"/>
+<html:script src="chrome://messenger/content/accountUtils.js"/>
 
 	<broadcasterset id="broadcasterset"/>
 

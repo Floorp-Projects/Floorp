@@ -21,6 +21,9 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+var accountManagerProgID   = "component://netscape/messenger/account-manager";
+var messengerMigratorProgID   = "component://netscape/messenger/migrator";
+
 // returns the first account with an invalid server or identity
 
 function getFirstInvalidAccount(accounts)
@@ -50,3 +53,59 @@ function getFirstInvalidAccount(accounts)
     return null;
 }
 
+function verifyAccounts() {
+    var openWizard = false;
+    var prefillAccount;
+    
+    try {
+        var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
+
+        var accounts = am.accounts;
+
+        // as long as we have some accounts, we're fine.
+        var accountCount = accounts.Count();
+        if (accountCount > 0) {
+            prefillAccount = getFirstInvalidAccount(accounts);
+            dump("prefillAccount = " + prefillAccount + "\n");
+        } else {
+            try {
+                messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
+                dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
+                messengerMigrator.UpgradePrefs();
+            }
+            catch (ex) {
+                // upgrade prefs failed, so open account wizard
+                openWizard = true;
+            }
+        }
+
+        if (openWizard || prefillAccount) {
+            MsgAccountWizard(prefillAccount);
+        }
+
+    }
+    catch (ex) {
+        dump("error verifying accounts " + ex + "\n");
+        return;
+    }
+}
+
+// we do this from a timer because if this is called from the onload=
+// handler, then the parent window doesn't appear until after the wizard
+// has closed, and this is confusing to the user
+function MsgAccountWizard()
+{
+    setTimeout("msgOpenAccountWizard();", 0);
+}
+
+function msgOpenAccountWizard()
+{
+    window.openDialog("chrome://messenger/content/AccountWizard.xul",
+                      "AccountWizard", "chrome,modal");
+}
+
+function MsgAccountManager()
+{
+    window.openDialog("chrome://messenger/content/AccountManager.xul",
+                      "AccountManager", "chrome,modal");
+}

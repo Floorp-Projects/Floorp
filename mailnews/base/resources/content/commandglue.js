@@ -452,7 +452,13 @@ function ToggleMessageRead(treeItem)
 	var tree = GetThreadTree();
 	var isUnread = treeItem.getAttribute('IsUnread');
 	var unread = (isUnread == "true");
-	messenger.MarkMessageRead(tree.database, treeItem.resource, unread);
+
+	var messageResource = RDF.GetResource(treeItem.getAttribute('id'));
+	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+	var messageArray = new Array(1);
+	messageArray[0] = message;
+
+	MarkMessagesRead(tree.database, messageArray, unread);
 }
 
 function ToggleMessageFlagged(treeItem)
@@ -460,10 +466,15 @@ function ToggleMessageFlagged(treeItem)
 
 	var tree = GetThreadTree();
 	var flaggedValue = treeItem.getAttribute('Flagged');
-	dump('flaggedValue is ' + flaggedValue);
-	dump('\n');
 	var flagged = (flaggedValue =="flagged");
-	messenger.MarkMessageFlagged(tree.database, treeItem.resource, !flagged);
+
+	var messageResource = RDF.GetResource(treeItem.getAttribute('id'));
+	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+	var messageArray = new Array(1);
+	messageArray[0] = message;
+
+	MarkMessagesFlagged(tree.database, messageArray, !flagged);
+
 }
 
 //Called when the splitter in between the thread and message panes is clicked.

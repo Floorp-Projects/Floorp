@@ -79,7 +79,7 @@ function CopyMessages(compositeDataSource, srcFolder, destFolder, messages, isMo
 		folderArray.AppendElement(destFolderResource);
 
 		var argumentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-		var srcFolderResource = destFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+		var srcFolderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 		argumentArray.AppendElement(srcFolderResource);
 		ConvertMessagesToResourceArray(messages, argumentArray);
 		
@@ -113,11 +113,10 @@ function getIdentityForServer(server)
 	dump("ComposeMessage folder="+folder+"\n");
 	try 
 	{
-		server = folder.server;
 		if(folder)
 		{
 			// get the incoming server associated with this uri
-			var server = folder.server;
+			server = folder.server;
 
 			// if they hit new or reply and they are reading a newsgroup
 			// turn this into a new post or a reply to group.
@@ -136,11 +135,12 @@ function getIdentityForServer(server)
           					newsgroup = folder.name; 
 				    }
 			}
+	        identity = getIdentityForServer(server);
+		    // dump("identity = " + identity + "\n");
+
 		}
         
-        identity = getIdentityForServer(server);
 
-		// dump("identity = " + identity + "\n");
 	}
 	catch (ex) 
 	{
@@ -302,3 +302,69 @@ function SaveAsTemplate(message, folder)
 		messenger.saveAs(uri, false, identity, msgWindow);
 	}
 }
+
+function MarkMessagesRead(compositeDataSource, messages, markRead)
+{
+
+	var messageResourceArray = ConvertMessagesToResourceArray(messages, null);
+	var command;
+
+	if(markRead)
+		command = "http://home.netscape.com/NC-rdf#MarkRead";
+	else
+		command = "http://home.netscape.com/NC-rdf#MarkUnread";
+
+	DoRDFCommand(compositeDataSource, command, messageResourceArray, null);
+
+}
+
+function MarkMessagesFlagged(compositeDataSource, messages, markFlagged)
+{
+
+	var messageResourceArray = ConvertMessagesToResourceArray(messages, null);
+	var command;
+
+	if(markFlagged)
+		command = "http://home.netscape.com/NC-rdf#MarkFlagged";
+	else
+		command = "http://home.netscape.com/NC-rdf#MarkUnflagged";
+
+	DoRDFCommand(compositeDataSource, command, messageResourceArray, null);
+
+}
+
+function MarkAllMessagesRead(compositeDataSource, folder)
+{
+
+	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+	var folderResourceArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	folderResourceArray.AppendElement(folderResource);
+
+	DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkAllMessagesRead", folderResourceArray, null);
+}
+
+function MarkThreadAsRead(compositeDataSource, message)
+{
+
+	if(message)
+	{
+		var folder = message.GetMsgFolder();
+		if(folder)
+		{
+			var thread = folder.getThreadForMessage(message);
+			if(thread)
+			{
+				var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+				var folderResourceArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+				folderResourceArray.AppendElement(folderResource);
+
+				var argumentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+				argumentArray.AppendElement(thread);
+
+				DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkThreadRead", folderResourceArray, argumentArray);
+			}
+		}
+	}
+}
+
+

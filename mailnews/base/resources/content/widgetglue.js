@@ -283,20 +283,12 @@ function GetSelectedFolderURI()
 	return uri;
 }
 
-
-
-
-
-
-function MsgOpenAttachment() {}
-
 function MsgSendUnsentMsg() 
 {
     var identity = getIdentityForSelectedServer();
 	messenger.SendUnsentMessages(identity);
 }
 
-function MsgUpdateMsgCount() {}
 
 function MsgRenameFolder() 
 {
@@ -429,15 +421,6 @@ function MsgCompactFolder()
 	}
 }
 
-function MsgImport() {}
-function MsgWorkOffline() {}
-function MsgSynchronize() {}
-function MsgGetSelectedMsg() {}
-function MsgGetFlaggedMsg() {}
-
-function MsgSelectThread() {}
-function MsgSelectFlaggedMsg() {}
-
 function MsgFind() {
     messenger.find();
 }
@@ -475,18 +458,6 @@ function MsgToggleSplitter(id)
         splitter.setAttribute("state", "collapsed")
 }
 
-function MsgShowFolders()
-{
-
-
-}
-
-function MsgFolderProperties() {}
-
-function MsgShowLocationbar() {}
-function MsgViewThreadsUnread() {}
-function MsgViewWatchedThreadsUnread() {}
-function MsgViewIgnoreThread() {}
 
 function MsgViewAllHeaders() 
 {
@@ -507,18 +478,11 @@ function MsgViewBriefHeaders()
 	return true;
 }
 
-function MsgViewAttachInline() {}
-function MsgWrapLongLines() {}
-function MsgIncreaseFont() {}
-function MsgDecreaseFont() {}
-
 function MsgReload() 
 {
 	ThreadPaneSelectionChange()
 }
 
-function MsgShowImages() {}
-function MsgRefresh() {}
 
 function MsgViewPageSource() 
 {
@@ -564,9 +528,6 @@ function MsgViewPageSource()
 	}
 }
 
-function MsgViewPageInfo() {}
-function MsgFirstUnreadMessage() {}
-function MsgFirstFlaggedMessage() {}
 
 function MsgStop() {
 	StopUrls();
@@ -608,82 +569,6 @@ function MsgPreviousFlaggedMessage()
 	GoPreviousMessage(navigateFlagged, true);
 }
 
-function MsgGoBack() {}
-function MsgGoForward() {}
-
-function MsgEditMessageAsNew()
-{
-    ComposeMessage(msgComposeType.Template, msgComposeFormat.Default);
-}
-
-function MsgAddSenderToAddressBook() {}
-function MsgAddAllToAddressBook() {}
-
-function MsgMarkMsgAsRead(markRead)
-{
-  dump("\MsgMarkMsgAsRead from XUL\n");
-  var tree = GetThreadTree();
-  //get the selected elements
-  var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-  messenger.MarkMessagesRead(tree.database, messageList, markRead);
-}
-
-function MsgMarkThreadAsRead()
-{
-	var tree = GetThreadTree();
-	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-	if(messageList.Count() == 1)
-	{
-		var messageSupports = messageList.GetElementAt(0);
-		if(messageSupports)
-		{
-			var message = messageSupports.QueryInterface(Components.interfaces.nsIMessage);
-			if(message)
-			{
-				var folder = message.GetMsgFolder();
-				if(folder)
-				{
-					var thread = folder.getThreadForMessage(message);
-					if(thread)
-					{
-						messenger.markThreadRead(tree.database, folder, thread);
-					}
-				}
-			}
-		}
-	}
-
-}
-
-function MsgMarkByDate() {}
-function MsgMarkAllRead()
-{
-	var folderTree = GetFolderTree();
-	var selectedFolderList = folderTree.selectedItems;
-	if(selectedFolderList.length > 0)
-	{
-		var selectedFolder = selectedFolderList[0];
-		messenger.MarkAllMessagesRead(folderTree.database, selectedFolder.resource);
-	}
-	else {
-		dump("Nothing was selected\n");
-	}
-}
-
-function MsgMarkAsFlagged(markFlagged)
-{
-  dump("\MsgMarkMsgAsFlagged from XUL\n");
-  var tree = GetThreadTree();
-  //get the selected elements
-  var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-  messenger.MarkMessagesFlagged(tree.database, messageList, markFlagged);
-
-}
-
-function MsgIgnoreThread() {}
-function MsgWatchThread() {}
-
-
 function GetMsgFolderFromUri(uri)
 {
 	//dump("GetMsgFolderFromUri of " + uri + "\n");
@@ -707,43 +592,4 @@ function GetResourceFromUri(uri)
 	return resource;
 }  
 
-var accountManagerProgID   = "component://netscape/messenger/account-manager";
-var messengerMigratorProgID   = "component://netscape/messenger/migrator";
-
-function verifyAccounts() {
-    var openWizard = false;
-    var prefillAccount;
-    
-    try {
-        var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
-
-        var accounts = am.accounts;
-
-        // as long as we have some accounts, we're fine.
-        var accountCount = accounts.Count();
-        if (accountCount > 0) {
-            prefillAccount = getFirstInvalidAccount(accounts);
-            dump("prefillAccount = " + prefillAccount + "\n");
-        } else {
-            try {
-                messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
-                dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
-                messengerMigrator.UpgradePrefs();
-            }
-            catch (ex) {
-                // upgrade prefs failed, so open account wizard
-                openWizard = true;
-            }
-        }
-
-        if (openWizard || prefillAccount) {
-            MsgAccountWizard(prefillAccount);
-        }
-
-    }
-    catch (ex) {
-        dump("error verifying accounts " + ex + "\n");
-        return;
-    }
-}
 

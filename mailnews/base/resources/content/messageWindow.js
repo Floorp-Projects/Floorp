@@ -32,6 +32,7 @@ function OnLoadMessageWindow()
 {
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
+	verifyAccounts();
 
 	InitMsgWindow();
 
