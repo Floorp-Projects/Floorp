@@ -549,7 +549,7 @@ void nsHTMLTagContent::TriggerLink(nsIPresContext& aPresContext,
                                        PRBool aClick)
 {
   nsILinkHandler* handler;
-  if (NS_OK == aPresContext.GetLinkHandler(&handler)) {
+  if (NS_OK == aPresContext.GetLinkHandler(&handler) && (nsnull != handler)) {
     // Resolve url to an absolute url
     nsIURL* docURL = nsnull;
     nsIDocument* doc;
