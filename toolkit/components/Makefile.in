@@ -48,6 +48,9 @@ else
 ifdef MOZ_STANDALONE_COMPOSER
 DIRS = console filepicker printing viewsource
 else
+ifdef MOZ_SUNBIRD
+DIRS = console filepicker printing passwordmgr
+else
 DIRS = 		\
 	autocomplete \
 	console \
@@ -70,6 +73,6 @@ DIRS += downloads build
 
 endif
 endif
-
+endif
 
 include $(topsrcdir)/config/rules.mk
