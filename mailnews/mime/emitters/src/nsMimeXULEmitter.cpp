@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -723,6 +723,8 @@ nsMimeXULEmitter::DumpAttachmentMenu()
   UtilityWriteCRLF("<popup id=\"attachmentPopup\">");
   UtilityWriteCRLF("<menu>");
 
+  char *escapedUrl;
+
   // Now we can finally write out the attachment information...  
   if (mAttachArray->Count() > 0)
   {
@@ -737,10 +739,16 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       UtilityWrite("<menuitem value=\"");
       UtilityWrite(attachInfo->displayName);
       UtilityWrite("\" oncommand=\"OpenAttachURL('");
-      // mscott --> i'm intentionally breaking attachements (they don't work yet anyway) in msg display
-      // until we properly escape the url spec and replace '&' with &amp so we don't make the xml parser
-      // think we are feeding it an entity reference!
-//      UtilityWrite(attachInfo->urlSpec);
+      escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
+      if (escapedUrl)
+      {
+        UtilityWrite(escapedUrl);
+        nsCRT::free(escapedUrl);
+      }
+      else
+      {
+        UtilityWrite(attachInfo->urlSpec);
+      }
       UtilityWrite("mailboxMessage://dummyMessage");
       UtilityWriteCRLF("' );\"  />");
     }
@@ -748,6 +756,75 @@ nsMimeXULEmitter::DumpAttachmentMenu()
 
   UtilityWriteCRLF("</menu>");
   UtilityWriteCRLF("</popup>");
+
+#if defined (DEBUG_jefft)
+	// **** jefft - this is a temporary implementation
+  if (mAttachArray->Count() > 0)
+  {
+	  PRInt32     i;
+
+	  UtilityWriteCRLF("<menubar>");
+
+	  UtilityWriteCRLF("<menu value=\"Open Attachment(s)\">");
+	  UtilityWriteCRLF("<menupopup>");
+
+	  for (i=0; i<mAttachArray->Count(); i++)
+	  {
+		  attachmentInfoType *attachInfo = (attachmentInfoType
+											*)mAttachArray->ElementAt(i);
+		  if (!attachInfo)
+			  continue;
+		  
+		  UtilityWrite("<menuitem value=\"");
+		  UtilityWrite(attachInfo->displayName);
+		  UtilityWrite("\" oncommand=\"OpenAttachURL('");
+          escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
+          if (escapedUrl)
+          {
+            UtilityWrite(escapedUrl);
+            nsCRT::free(escapedUrl);
+          }
+          else
+          {
+            UtilityWrite(attachInfo->urlSpec);
+          }
+		  UtilityWriteCRLF("' );\"  />");
+	  }
+	  UtilityWriteCRLF("</menupopup>");
+	  UtilityWriteCRLF("</menu>");
+
+	  UtilityWriteCRLF("<menu value=\"Save Attachment(s)\">");
+	  UtilityWriteCRLF("<menupopup>");
+
+	  for (i=0; i<mAttachArray->Count(); i++)
+	  {
+		  attachmentInfoType *attachInfo = (attachmentInfoType
+											*)mAttachArray->ElementAt(i);
+		  if (!attachInfo)
+			  continue;
+		  
+		  UtilityWrite("<menuitem value=\"");
+		  UtilityWrite(attachInfo->displayName);
+		  UtilityWrite("\" oncommand=\"SaveAttachURL('");
+          escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
+          if (escapedUrl)
+          {
+            UtilityWrite(escapedUrl);
+            nsCRT::free(escapedUrl);
+          }
+          else
+          {
+            UtilityWrite(attachInfo->urlSpec);
+          }
+		  UtilityWriteCRLF("' );\"  />");
+	  }
+	  UtilityWriteCRLF("</menupopup>");
+	  UtilityWriteCRLF("</menu>");
+
+	  UtilityWriteCRLF("</menubar>");
+  }
+
+#endif
   UtilityWriteCRLF(buttonXUL);
 
   UtilityWriteCRLF("</box>");

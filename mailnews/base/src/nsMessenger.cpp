@@ -89,6 +89,7 @@
 #include "nsLayoutCID.h"
 #include "nsIPresContext.h"
 #include "nsIStringStream.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -412,20 +413,32 @@ nsMessenger::OpenURL(const char * url)
 #ifdef DEBUG_MESSENGER
 		printf("nsMessenger::OpenURL(%s)\n",url);
 #endif    
-		nsIMsgMessageService * messageService = nsnull;
-		nsresult rv = GetMessageServiceFromURI(url, &messageService);
-
-		if (NS_SUCCEEDED(rv) && messageService)
-		{
-			messageService->DisplayMessage(url, mWebShell, nsnull, nsnull);
-			ReleaseMessageServiceFromURI(url, messageService);
-		}
+        char* unescapedUrl = PL_strdup(url);
+        if (unescapedUrl)
+        {
+          nsUnescape(unescapedUrl);
+          
+          nsIMsgMessageService * messageService = nsnull;
+          nsresult rv = GetMessageServiceFromURI(unescapedUrl,
+                                                 &messageService);
+          
+          if (NS_SUCCEEDED(rv) && messageService)
+          {
+			messageService->DisplayMessage(unescapedUrl, mWebShell, nsnull, nsnull);
+			ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+          }
 		//If it's not something we know about, then just load the url.
-		else
-		{
-			nsString urlStr(url);
+          else
+          {
+			nsString urlStr(unescapedUrl);
 			mWebShell->LoadURL(urlStr.GetUnicode());
-		}
+          }
+          PL_strfree(unescapedUrl);
+        }
+        else
+        {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
 	}
 	return NS_OK;
 }
