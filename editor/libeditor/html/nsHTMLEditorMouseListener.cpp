@@ -118,10 +118,6 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       if (!target) return NS_ERROR_NULL_POINTER;
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
-      PRInt32 clickCount;
-      res = mouseEvent->GetDetail(&clickCount);
-      if (NS_FAILED(res)) return res;
-
       nsCOMPtr<nsISelection> selection;
       mEditor->GetSelection(getter_AddRefs(selection));
       if (!selection) return NS_OK;
