@@ -257,6 +257,7 @@ private:
 #endif
 
 protected:
+    nsSize      mLastSize;
     static      nsWindow* gCurrentWindow;
     PRBool      mIsTopWidgetWindow;
     nsPoint     mLastPoint;

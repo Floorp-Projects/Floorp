@@ -327,8 +327,9 @@ nsWindow::nsWindow() : nsBaseWidget()
     mWindowType         = eWindowType_child;
     mBorderStyle        = eBorderStyle_default;
     mBorderlessParent   = 0;
-   
     mIsInMouseCapture   = PR_FALSE;
+    mLastSize.width = 0;
+    mLastSize.height = 0;
 
 	  mIMEProperty		= 0;
 	  mIMEIsComposing		= PR_FALSE;
@@ -340,6 +341,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	  mIMECompClauseString = NULL;
 	  mIMECompClauseStringSize = 0;
 	  mIMECompClauseStringLength = 0;
+
 
    static BOOL gbInitHKL = FALSE;
    if(! gbInitHKL)
@@ -2884,40 +2886,38 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               newWidth = PRInt32(r.right - r.left);
               newHeight = PRInt32(r.bottom - r.top);
               nsRect rect(wp->x, wp->y, newWidth, newHeight);
-              //if (newWidth != mBounds.width)
+              if (newWidth != mLastSize.width)
               {
                 RECT drect;
 
                 //getting wider
 
-                drect.left = wp->x + mBounds.width;
-                drect.top = wp->y;
-                drect.right = drect.left + (newWidth - mBounds.width);
+                drect.left = wp->x + mLastSize.width;
+                drect.top = wp->y; 
+                drect.right = drect.left + (newWidth - mLastSize.width);
                 drect.bottom = drect.top + newHeight;
 
-//                ::InvalidateRect(mWnd, NULL, FALSE);
-//                ::InvalidateRect(mWnd, &drect, FALSE);
                 ::RedrawWindow(mWnd, &drect, NULL,
                                RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
               }
-              //if (newHeight != mBounds.height)
+              if (newHeight != mLastSize.height)
               {
                 RECT drect;
 
                 //getting taller
 
                 drect.left = wp->x;
-                drect.top = wp->y + mBounds.height;
+                drect.top = wp->y + mLastSize.height;
                 drect.right = drect.left + newWidth;
-                drect.bottom = drect.top + (newHeight - mBounds.height);
+                drect.bottom = drect.top + (newHeight - mLastSize.height);
 
-//                ::InvalidateRect(mWnd, NULL, FALSE);
-//                ::InvalidateRect(mWnd, &drect, FALSE);
                 ::RedrawWindow(mWnd, &drect, NULL,
                                RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
               }
               mBounds.width  = newWidth;
               mBounds.height = newHeight;
+              mLastSize.width = newWidth;
+              mLastSize.height = newHeight;
               ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
 
               // recalculate the width and height
