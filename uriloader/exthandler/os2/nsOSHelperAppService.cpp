@@ -201,6 +201,8 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       
     // if we were given an application to use then use it....otherwise
     // make the registry call to launch the app
+    path.Insert('\"', 0);
+    path.Append('\"');
     const char * strPath = path.get();
     nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
     if (NS_FAILED(rv = process->Init(application)))
