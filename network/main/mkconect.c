@@ -62,6 +62,8 @@
 #include "os2sock.h"
 #endif /* XP_OS2 */
 
+#include "timing.h"
+
 #ifdef XP_UNIX
 /* #### WARNING, this is duplicated in mksockrw.c
  */
@@ -521,7 +523,11 @@ net_dns_lookup(MWContext *windowID,
 	PR_ASSERT(hpbuf);
 
 	/* Not asyncronus, completes a full lookup before returing. */
+    TIMING_MSG(("netlib: net_dns_lookup: begin PR_GetHostByName: host=\"%s\"", host));
 	status = PR_GetHostByName(host, dbbuf, PR_NETDB_BUF_SIZE, hpbuf);
+    TIMING_MSG(("netlib: net_dns_lookup: end PR_GetHostByName: host=\"%s\" result=%s",
+                 host, (status == PR_SUCCESS) ? "success" : "failure"));
+
 
 	if(status == PR_SUCCESS) {
 		/* Success, hpbuf points to a valid hostent. */
@@ -538,6 +544,7 @@ net_dns_lookup(MWContext *windowID,
 	 * if it's not done yet.
 	 *
 	 * dbbuf and hpbuf are not needed in ASYNC_DNS case. */
+    TIMING_MSG(("netlib: net_dns_lookup: begin AsyncDNSLookup host=\"%s\"", host));
 #ifdef MODULAR_NETLIB
 	status = NET_AsyncDNSLookup(windowID, host, hostEnt, socket);
 #else
@@ -553,9 +560,11 @@ net_dns_lookup(MWContext *windowID,
 	}
 	else if(status == 0) {
 		/* Success, hostEnt points to a valid hostent. */
+        TIMING_MSG(("netlib: net_dns_lookup: end AsyncDNSLookup host=\"%s\" (cached)", host));
 		NET_InGetHostByName--;
 		return status;
 	}
+    TIMING_MSG(("netlib: net_dns_lookup: end AsyncDNSLookup host=\"%s\" (failed)", host));
 #endif /* ASYNC_DNS */
 	/* FAIL */
 	NET_InGetHostByName--;
@@ -683,6 +692,10 @@ net_FindAddress (const char *host_ptr,
 		 * succeeded and propagated the cache entry before this one
 		 * finished.
 		 */
+
+        TIMING_MSG(("netlib: net_FindAddress: DNS entry in netlib cache host_ptr=\"%s\"",
+                    host_ptr));
+
         NET_ClearDNSSelect(window_id, sock);
 		
 	    net_addr->inet.ip = cache_pointer->ips[0];
@@ -780,6 +793,9 @@ net_FindAddress (const char *host_ptr,
         		NET_Progress(window_id, msg);
 				PR_Free(msg);
 			  }
+
+            TIMING_MSG(("netlib: net_FindAddress: doing DNS lookup host_ptr=\"%s\"",
+                        (remapped_host_port ? remapped_host_port : host_port)));
 
 #ifndef ASYNC_DNS
 			status = net_dns_lookup( 
@@ -909,6 +925,8 @@ net_start_first_connect(const char   *host,
 	 * later
 	 */
 	tcp_con_data->begin_time = time(NULL);
+    TIMING_MSG(("netlib: net_start_first_connect: creating TCP "
+                "connection to host=\"%s\"", host));
 
 #define CONNECT_TIMEOUT  0
 
@@ -1059,6 +1077,7 @@ NET_BeginConnect (CONST char   *url,
 		return MK_OFFLINE;	
 #endif /* MOZ_OFFLINE */
 	TRACEMSG(("NET_BeginConnect called for url: %s", url));
+    TIMING_MSG(("netlib: NET_BeginConnect: url=\"%s\"", url));
 
 	/* One time startup flag. If this is the first time in BeginConnect,
 	 * make sure the socks is setup if it needs to be.
@@ -1303,6 +1322,7 @@ NET_FinishConnect (CONST char   *url,
 	char *host=NULL;
 
 	TRACEMSG(("NET_FinishConnect called for url: %s", url));
+    TIMING_MSG(("netlib: NET_FinishConnect: url=\"%s\"", url));
 
 	if(!*tcp_con_data)  /* safty valve */
 	  {
@@ -1366,6 +1386,9 @@ NET_FinishConnect (CONST char   *url,
             FREE_AND_CLEAR(host_string);
             return MK_UNABLE_TO_LOCATE_HOST;
           }
+
+        TIMING_MSG(("netlib: NET_FinishConnect: DNS lookup complete: url=\"%s\"",
+                    url));
 
         status = net_start_first_connect(host, *sock, window_id, 
 										 *tcp_con_data, error_msg);
@@ -1479,6 +1502,8 @@ error_out:
 							return -1;
 					  }
 
+                    TIMING_MSG(("netlib: NET_FinishConnect: trying new address, url=\"%s\"", url));
+
 					/* Go get another of the ip addresses */
     				status = net_FindAddress(host, 
 				 				&((*tcp_con_data)->net_addr), 
@@ -1502,6 +1527,8 @@ error_out:
 				}
 				else
 					FREE(host);
+
+                TIMING_MSG(("netlib: NET_FinishConnect: error, url=\"%s\"", url));
 
 				HG92362
                 if (error == PR_CONNECT_REFUSED_ERROR)
@@ -1531,7 +1558,8 @@ error_out:
 					}
 		      }
         }
-    
+
+        TIMING_MSG(("netlib: NET_FinishConnect: connection made url=\"%s\"", url));
 		TRACEMSG(("mktcp.c: Successful connection (message 1)"));
 		NET_FreeTCPConData(*tcp_con_data);
 		*tcp_con_data = 0;

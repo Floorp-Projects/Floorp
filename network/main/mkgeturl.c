@@ -149,6 +149,8 @@
 void net_ReleaseContext(MWContext *context);
 #endif
 
+#include "timing.h"
+
 /* for XP_GetString() */
 #include "xpgetstr.h"
 extern int MK_CONNECTION_REFUSED;
@@ -2040,6 +2042,10 @@ NET_GetURL (URL_Struct *URL_s,
    TRACEMSG(("Called NET_GetURL with FO: %d URL %-.1900s --", output_format, URL_s->address));
    TRACEMSG(("with method: %d, and post headers: %s", URL_s->method,
             URL_s->post_headers ? URL_s->post_headers : "none"));
+
+    TIMING_MSG(("netlib: NET_GetURL: URL=\"%s\" FO=%d method=%d post_headers=\"%s\"",
+                 URL_s->address, output_format, URL_s->method,
+                 URL_s->post_headers ? URL_s->post_headers : ""));
 
 	/* if this URL is for prefetching, put it on the wait queue until
 	 * everything else is done
