@@ -44,6 +44,10 @@ public:
 };
 
 
+/**
+ * This constructs a content sink that is intended to be used
+ * with an nsIDocument to construct a content model.
+ */
 nsresult
 NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
                              nsIDocument* aDoc,
@@ -51,6 +55,10 @@ NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
                              nsIWebShell* aWebShell);
 
 
+/**
+ * This constructs a content sink that can be used without a
+ * document, say, to create a stand-alone in-memory graph.
+ */
 nsresult
 NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
                            nsIURL* aURL);
