@@ -115,7 +115,6 @@ public:
     PRUint32 GetBytesTransfered() {return mBytesTransfered;} ;
     void Uploading(PRBool value);
     void SetRetrying(PRBool retry);
-    PRBool HaveFiredNotification() { return mFired; };
     
 protected:
 
@@ -130,7 +129,7 @@ protected:
     PRPackedBool   mDelayedOnStartFired;
     PRPackedBool   mUploading;
     PRPackedBool   mRetrying;
-    PRPackedBool   mFired;
+
     nsresult DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt);
 };
 
@@ -153,8 +152,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS8(DataRequestForwarder,
 DataRequestForwarder::DataRequestForwarder()
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder CREATED\n", this));
-        
-    mFired = PR_FALSE;
+
     mBytesTransfered = 0;
     mRetrying = mUploading = mDelayedOnStartFired = PR_FALSE;
     NS_INIT_ISUPPORTS();
@@ -278,7 +276,6 @@ nsresult
 DataRequestForwarder::DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder DelayedOnStartRequest \n", this)); 
-    mFired = PR_TRUE;
     return mListener->OnStartRequest(this, ctxt); 
 }
 
@@ -1963,19 +1960,8 @@ nsFtpState::Cancel(nsresult status)
     if (NS_SUCCEEDED(mControlStatus))
         mControlStatus = status;
 
-    // kill the data connection immediately. But first, save it's
-    // notification-firing state
-    PRBool fired = PR_FALSE;
-    if (mDRequestForwarder) {
-        fired = mDRequestForwarder->HaveFiredNotification();
-        NS_RELEASE(mDRequestForwarder);
-    }
-    if (mDPipeRequest) {
-        mDPipeRequest->Cancel(status);
-        mDPipeRequest = 0;
-    }
-
-    (void) StopProcessing(fired);   
+    if (mKeepRunning)
+        (void) StopProcessing();   
     return NS_OK;
 }
 
@@ -2374,7 +2360,7 @@ nsFtpState::KillControlConnection() {
 }
 
 nsresult
-nsFtpState::StopProcessing(PRBool aPreventNotification) {
+nsFtpState::StopProcessing() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState stopping", this));
 
 #ifdef DEBUG_dougt
@@ -2395,17 +2381,28 @@ nsFtpState::StopProcessing(PRBool aPreventNotification) {
     if ( NS_SUCCEEDED(broadcastErrorCode))
         broadcastErrorCode = mInternalError;
 
-    if (mChannel && !aPreventNotification &&
-        ( (!mDRequestForwarder) || 
-          ( mDRequestForwarder && !mDRequestForwarder->HaveFiredNotification() ))) {
-        nsCOMPtr<nsIStreamListener> channelListener = do_QueryInterface(mChannel);
-        NS_ASSERTION(channelListener, "ftp channel should be a stream listener");
-        nsCOMPtr<nsIStreamListener> asyncListener;
-        NS_NewAsyncStreamListener(getter_AddRefs(asyncListener), channelListener, NS_UI_THREAD_EVENTQ);
-        if(asyncListener) {
-            (void) asyncListener->OnStartRequest(this, nsnull);
-            (void) asyncListener->OnStopRequest(this, nsnull, broadcastErrorCode);
+    if (mDPipeRequest && NS_FAILED(broadcastErrorCode))
+        mDPipeRequest->Cancel(broadcastErrorCode);
+    
+    if (mDRequestForwarder) {
+        NS_RELEASE(mDRequestForwarder);
+    }
+    else
+    {
+        // The forwarding object was never created which  means that we never sent our notifications.
+        
+        nsCOMPtr<nsIRequestObserver> asyncObserver = do_QueryInterface(mChannel);
+        nsCOMPtr<nsIRequestObserver> arg = do_QueryInterface(mChannel);
+
+        NS_NewRequestObserverProxy(getter_AddRefs(asyncObserver), 
+                                   arg,
+                                   NS_CURRENT_EVENTQ);
+        if(asyncObserver) {
+            (void) asyncObserver->OnStartRequest(this, nsnull);
+            (void) asyncObserver->OnStopRequest(this, nsnull, broadcastErrorCode);
         }
+
+
     }
 
     // Clean up the event loop

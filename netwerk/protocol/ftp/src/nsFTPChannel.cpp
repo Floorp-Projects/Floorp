@@ -630,17 +630,18 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
 
     nsresult rv = NS_OK;
     
-    mStatus = aStatus;
-    
+    if (NS_SUCCEEDED(mStatus))
+        mStatus = aStatus;
+
     if (mListener) {
-        (void) mListener->OnStopRequest(this, mUserContext, aStatus);
+        (void) mListener->OnStopRequest(this, mUserContext, mStatus);
     }
     if (mLoadGroup) {
-        (void) mLoadGroup->RemoveRequest(this, nsnull, aStatus);
+        (void) mLoadGroup->RemoveRequest(this, nsnull, mStatus);
     }
     
     if (mCacheEntry) {
-        if (NS_SUCCEEDED(aStatus)) {
+        if (NS_SUCCEEDED(mStatus)) {
             (void) mCacheEntry->SetExpirationTime( NowInSeconds() + 900 ); // valid for 15 minutes.
             (void) mCacheEntry->MarkValid();
 	}
@@ -666,12 +667,14 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
            ("nsFTPChannel::OnStartRequest() called [this=%x, request=%x]\n", 
             this, request));
    
-    nsresult rv = NS_OK;
-    request->GetStatus(&mStatus);
+    if (NS_SUCCEEDED(mStatus))
+        request->GetStatus(&mStatus);
+    
     nsCOMPtr<nsIResumableChannel> resumable = do_QueryInterface(request);
     if (resumable)
         resumable->GetEntityID(getter_AddRefs(mEntityID));
     
+    nsresult rv = NS_OK;
     if (mListener) {
         rv = mListener->OnStartRequest(this, mUserContext);
         if (NS_FAILED(rv)) return rv;
