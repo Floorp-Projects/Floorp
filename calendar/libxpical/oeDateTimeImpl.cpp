@@ -164,6 +164,12 @@ NS_IMETHODIMP oeDateTimeImpl::SetTime( PRTime ms )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeDateTimeImpl::Clear()
+{
+	m_datetime = icaltime_null_time();
+    return NS_OK;
+}
+
 void oeDateTimeImpl::AdjustToWeekday( short weekday ) {
     short currentday = icaltime_day_of_week( m_datetime );
     while( currentday != weekday ) {

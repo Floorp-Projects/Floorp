@@ -310,7 +310,7 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     icalcomponent_add_property( vtodo, prop );
 
     //completed
-    if( m_completed ) {
+    if( m_completed && !icaltime_is_null_time( m_completed->m_datetime ) ) {
         prop = icalproperty_new_completed( m_completed->m_datetime );
         icalcomponent_add_property( vtodo, prop );
     }

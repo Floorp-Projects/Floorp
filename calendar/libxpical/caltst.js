@@ -85,6 +85,7 @@ function TestAll()
    var iCalTodo = TestFetchTodo( id );
    id = TestUpdateTodo( iCalTodo );
    TestDeleteTodo( id );
+   TestFilterTodo( id );
    alert( "Test Successfull" );
 }
 
@@ -480,3 +481,66 @@ function TestDeleteTodo( id )
        alert( "Delete failed" );
 }
 
+function TestFilterTodo()
+{
+    var iCalTodoComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
+    
+    var iCalTodo = iCalTodoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
+
+    iCalTodo.id = 999999999;
+
+    iCalTodo.start.year = 2002;
+    iCalTodo.start.month = 0;
+    iCalTodo.start.day = 1;
+    iCalTodo.start.hour = 0;
+    iCalTodo.start.minute = 0;
+
+    iCalTodo.due.year = 2003;
+    iCalTodo.due.month = 0;
+    iCalTodo.due.day = 1;
+    iCalTodo.due.hour = 0;
+    iCalTodo.due.minute = 0;
+
+    var id = iCalLib.addTodo( iCalTodo );
+
+	var todoList = this.iCalLib.getAllTodos();
+
+	if ( !todoList.hasMoreElements() ) {
+		alert( "TestFilterTodo-Step1: failed" );
+		return;
+	}
+	
+	var now = Date();
+
+	iCalLib.filter.completed.setTime( now );
+
+	todoList = this.iCalLib.getAllTodos();
+
+	if ( !todoList.hasMoreElements() ) {
+		alert( "TestFilterTodo-Step2: failed" );
+		return;
+	}
+
+	iCalTodo.completed.setTime( now );
+
+	now = Date();
+	iCalLib.filter.completed.setTime( now );
+
+	todoList = this.iCalLib.getAllTodos();
+
+	if ( todoList.hasMoreElements() ) {
+		alert( "TestFilterTodo-Step3: failed" );
+		return;
+	}
+
+	iCalTodo.completed.clear();
+
+	todoList = this.iCalLib.getAllTodos();
+
+	if ( !todoList.hasMoreElements() ) {
+		alert( "TestFilterTodo-Step4: failed" );
+		return;
+	}
+
+    iCalLib.deleteTodo( id );
+}

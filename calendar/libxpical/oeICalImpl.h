@@ -168,6 +168,47 @@ public:
     }
 };
 
+class oeICalFilter : public oeIICalTodo 
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_OEIICALEVENT
+  NS_DECL_OEIICALTODO
+
+  oeICalFilter();
+  virtual ~oeICalFilter();
+  oeDateTimeImpl *m_completed;
+private:
+/*    char *m_id;
+    char *m_syncid;
+    char *m_title;
+    char *m_description;
+    char *m_location;
+    char *m_category;
+    bool m_isprivate;
+    bool m_allday;
+    bool m_hasalarm;
+    unsigned long m_alarmlength;
+    char *m_alarmunits;
+    char *m_alarmemail;
+    char *m_inviteemail;
+    short m_recurtype;
+    unsigned long m_recurinterval;
+    bool m_recur;
+    bool m_recurforever;
+    char *m_recurunits;
+    short m_recurweekdays;
+    short m_recurweeknumber;
+    oeDateTimeImpl *m_start;
+    oeDateTimeImpl *m_end;
+    oeDateTimeImpl *m_recurend;
+    icaltimetype m_lastalarmack;
+    std::vector<PRTime> m_exceptiondates;
+    std::vector<PRTime> m_snoozetimes;
+    int m_percent;
+    oeDateTimeImpl *m_due;*/
+};
+
 class oeICalImpl : public oeIICal
 {
  public:
@@ -204,4 +245,6 @@ private:
     TodoList m_todolist;
     nsITimer *m_alarmtimer;
     char serveraddr[200];
+    oeICalFilter *m_filter;
+    bool SatisfiesFilter( oeIICalTodo *comp );
 };

@@ -286,6 +286,9 @@ oeICalImpl::oeICalImpl()
         m_batchMode = false;
 
         m_alarmtimer = nsnull;
+
+        m_filter = new oeICalFilter();
+        NS_ADDREF( m_filter );
 }
 
 oeICalImpl::~oeICalImpl()
@@ -303,6 +306,8 @@ oeICalImpl::~oeICalImpl()
         m_alarmtimer->Release();
         m_alarmtimer = nsnull;
     }
+
+    NS_RELEASE( m_filter );
 }
 
 /**
@@ -1780,29 +1785,6 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
 }
 
 NS_IMETHODIMP
-oeICalImpl::GetAllTodos(nsISimpleEnumerator **resultList )
-{
-#ifdef ICAL_DEBUG
-    printf( "oeICalImpl::GetAllTodos()\n" );
-#endif
-    nsCOMPtr<oeEventEnumerator> todoEnum = new oeEventEnumerator();
-    
-    if (!todoEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    TodoList *tmplistptr = &m_todolist;
-    while( tmplistptr ) {
-        if( tmplistptr->todo ) {
-            todoEnum->AddEvent( tmplistptr->todo );
-        }
-        tmplistptr = tmplistptr->next;
-    }
-
-    // bump ref count
-    return todoEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-}
-
-NS_IMETHODIMP
 oeICalImpl::DeleteTodo( const char *id )
 {
 #ifdef ICAL_DEBUG
@@ -1981,3 +1963,365 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+oeICalImpl::GetAllTodos(nsISimpleEnumerator **resultList )
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetAllTodos()\n" );
+#endif
+    nsCOMPtr<oeEventEnumerator> todoEnum = new oeEventEnumerator();
+    
+    if (!todoEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    TodoList *tmplistptr = &m_todolist;
+    while( tmplistptr ) {
+        if( tmplistptr->todo ) {
+            if( SatisfiesFilter( tmplistptr->todo ) )
+                todoEnum->AddEvent( tmplistptr->todo );
+        }
+        tmplistptr = tmplistptr->next;
+    }
+
+    // bump ref count
+    return todoEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+}
+
+/*************************************************************************************************************/
+/*************************************************************************************************************/
+/*************************************************************************************************************/
+/*    Filter stuff here                                                                                      */
+/*************************************************************************************************************/
+/*************************************************************************************************************/
+
+bool oeICalImpl::SatisfiesFilter( oeIICalTodo *comp )
+{
+    bool result=false;
+    if( m_filter && m_filter->m_completed ) {
+        if( icaltime_is_null_time( m_filter->m_completed->m_datetime  ) )
+            return true;
+    }
+    oeDateTimeImpl *completed;
+    nsresult rv;
+    rv = comp->GetCompleted( (oeIDateTime **)&completed );
+    if( NS_FAILED( rv ) ) {
+        #ifdef ICAL_DEBUG
+	    printf( "oeICalImpl::SatisfiesFilter() : WARNING GetCompleted() unsuccessful\n" );
+        #endif
+        return false;
+    }
+    if( icaltime_is_null_time( completed->m_datetime ) )
+        result = true;
+    if( icaltime_compare( completed->m_datetime , m_filter->m_completed->m_datetime ) > 0 )
+        result = true;
+    NS_RELEASE( completed );
+    return result;
+}
+
+NS_IMETHODIMP oeICalImpl::GetFilter( oeIICalTodo **retval )
+{
+    *retval = m_filter;
+    NS_ADDREF(*retval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalImpl::ResetFilter()
+{
+    if( m_filter && m_filter->m_completed )
+        m_filter->m_completed->m_datetime = icaltime_null_time();
+    return NS_OK;
+}
+  
+NS_IMPL_ISUPPORTS1(oeICalFilter, oeIICalTodo)
+
+oeICalFilter::oeICalFilter()
+{
+    NS_INIT_ISUPPORTS();
+
+    nsresult rv;
+	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_completed ))) {
+        m_completed = nsnull;
+	}
+}
+
+oeICalFilter::~oeICalFilter()
+{
+    if( m_completed )
+        m_completed->Release();
+}
+
+NS_IMETHODIMP oeICalFilter::GetId(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetId(const char *aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetTitle(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetTitle(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetDescription(char * *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetDescription(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetLocation(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetLocation(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetCategory(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetCategory(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetPrivateEvent(PRBool *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetPrivateEvent(PRBool aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetSyncId(char * *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetSyncId(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetAllDay(PRBool *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP oeICalFilter::SetAllDay(PRBool aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetAlarm(PRBool *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetAlarm(PRBool aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetAlarmUnits(char * *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetAlarmUnits(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetAlarmLength(PRUint32 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetAlarmLength(PRUint32 aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetAlarmEmailAddress(char * *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetAlarmEmailAddress(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetInviteEmailAddress(char * *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetInviteEmailAddress(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecurInterval(PRUint32 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetRecurInterval(PRUint32 aNewVal )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecurUnits(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetRecurUnits(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecur(PRBool *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetRecur(PRBool aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecurForever(PRBool *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP oeICalFilter::SetRecurForever(PRBool aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetLastAlarmAck(PRTime *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP oeICalFilter::SetLastAlarmAck(PRTime aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetNextRecurrence( PRTime begin, PRTime *retval, PRBool *isvalid ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetPreviousOccurrence( PRTime beforethis, PRTime *retval, PRBool *isvalid ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetStart(oeIDateTime * *start)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetEnd(oeIDateTime * *end)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecurEnd(oeIDateTime * *recurend)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecurWeekdays(PRInt16 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP oeICalFilter::SetRecurWeekdays(PRInt16 aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetRecurWeekNumber(PRInt16 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetRecurWeekNumber(PRInt16 aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetIcalString(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::ParseIcalString(const char *aNewVal, PRBool *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::AddException( PRTime exdate )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::RemoveAllExceptions()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetExceptions(nsISimpleEnumerator **datelist )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetSnoozeTime( PRTime snoozetime )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::Clone( oeIICalEvent **ev )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetDue(oeIDateTime * *due)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetCompleted(oeIDateTime * *completed)
+{
+    *completed = m_completed;
+    NS_ADDREF(*completed);
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalFilter::GetPercent(PRInt16 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetPercent(PRInt16 aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

@@ -62,6 +62,7 @@ interface oeIDateTime : nsISupports
     PRTime getTime();
     void setTime( in PRTime ms );
     string toString();
+    void clear();
 };
 
 [scriptable, uuid(89c5cd5a-af2d-45e6-83c7-2f2420a13626)]
@@ -134,6 +135,7 @@ interface oeIICal : nsISupports
 	void Test();
 
     attribute boolean batchMode;
+    readonly attribute oeIICalTodo filter;
 
 	void setServer( in string str );
     void addObserver( in oeIICalObserver observer );
@@ -156,6 +158,8 @@ interface oeIICal : nsISupports
 	void deleteTodo( in string id );
 	oeIICalTodo fetchTodo( in string id );
 	nsISimpleEnumerator getAllTodos();
+
+    void resetFilter();
 };
 
 
