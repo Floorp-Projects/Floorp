@@ -1164,14 +1164,9 @@ function EditorInitFormatMenu()
             break;
           case 'A':
             if(element.href)
-            {
               objStr = editorShell.GetString("Link");
-              EditorInsertOrEditLink();  
-            } else if (element.name)
-            {
+            else if (element.name)
               objStr = editorShell.GetString("NamedAnchor");
-              EditorInsertOrEditNamedAnchor();  
-            }
             break;
         }
         menuStr = menuStr.replace(/%obj%/,objStr);        
@@ -1503,9 +1498,9 @@ function EditorInsertOrEditTable(insertAllowed)
 {
   var table = editorShell.GetElementOrParentByTagName("table", null);
   if (table) {
-//TEMP FOR BETA1: Disable item - dialog not working
-    dump("Function not implemented\n");
-    return;
+   //TEMP FOR BETA1: Disable item - dialog not working
+     dump("Function not implemented\n");
+     return;
     // Edit properties of existing table
     dump("Existing table found ... Editing its properties\n");
 
@@ -1531,31 +1526,36 @@ function EditorTableCellProperties()
 
 function EditorSelectTableCell()
 {
-  editorShell.SelectTableCell();
+//TEMP FOR BETA1: Disable item - dialog not working
+//  editorShell.SelectTableCell();
   contentWindow.focus();
 }
 
 function EditorSelectAllTableCells()
 {
-  editorShell.SelectAllTableCells();
+//TEMP FOR BETA1: Disable item - dialog not working
+//  editorShell.SelectAllTableCells();
   contentWindow.focus();
 }
 
 function EditorSelectTable()
 {
-  editorShell.SelectTableCell();
+//TEMP FOR BETA1: Disable item - dialog not working
+//  editorShell.SelectTableCell();
   contentWindow.focus();
 }
 
 function EditorSelectTableRow()
 {
-  editorShell.SelectTableRow();
+//TEMP FOR BETA1: Disable item - dialog not working
+//  editorShell.SelectTableRow();
   contentWindow.focus();
 }
 
 function EditorSelectTableColumn()
 {
-  editorShell.SelectTableColumn();
+//TEMP FOR BETA1: Disable item - dialog not working
+//  editorShell.SelectTableColumn();
   contentWindow.focus();
 }
 

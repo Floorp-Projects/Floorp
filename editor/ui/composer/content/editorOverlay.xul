@@ -557,10 +557,10 @@
     <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
           accesskey="&tableselectmenu.accesskey;">
     <menupopup>
-        <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorSelectTable()"/>
-        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorSelectTableRow()"/>
-        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorSelectTableColumn()"/>
-        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorSelectTableCell()"/>
+        <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorSelectTable()" disabled="true"/>
+        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorSelectTableRow()" disabled="true"/>
+        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorSelectTableColumn()" disabled="true"/>
+        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorSelectTableCell()" disabled="true"/>
     </menupopup>
     </menu>
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
