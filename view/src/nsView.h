@@ -97,7 +97,9 @@ public:
                            PRBool aEnableDragDrop = PR_TRUE,
                            PRBool aResetVisibility = PR_TRUE,
                            nsContentType aContentType = eContentTypeInherit);
+#ifdef DEBUG
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   NS_IMETHOD  Destroy();
   /**

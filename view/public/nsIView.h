@@ -326,12 +326,14 @@ public:
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore) = 0;
 
+#ifdef DEBUG
   /**
    * Output debug info to FILE
    * @param out output file handle
    * @param aIndent indentation depth
    */
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent = 0) const = 0;
+#endif // DEBUG
 
   /**
    * @result true iff this is the root view for its view manager
