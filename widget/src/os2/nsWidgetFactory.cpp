@@ -140,6 +140,7 @@ PR_STATIC_CALLBACK(void)
 nsWidgetOS2ModuleDtor(nsIModule *self)
 {
   nsWindow::ReleaseGlobals();
+  nsFilePicker::ReleaseGlobals();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetOS2Module,
