@@ -2331,19 +2331,12 @@ sub BuildXPAppProjects()
     print("--- Starting XPApp projects ----\n");
 
     # Components
-    BuildOneProject(":mozilla:xpfe:components:timebomb:macbuild:timebomb.mcp", "tmbm$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",  "ucth$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",  "xfer$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:search:macbuild:Search.mcp", "Search$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:directory:Directory.mcp", "Directory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:urlbarhistory:macbuild:urlbarhistory.mcp", "urlbarhistory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoComplete.mcp", "AutoComplete$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);        
+    BuildOneProject(":mozilla:xpfe:components:macbuild:appcomps.mcp", "appcomps$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     # Applications
     BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",             "AppShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
