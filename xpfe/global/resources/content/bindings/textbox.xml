@@ -109,7 +109,7 @@
     <content>
       <xul:hbox class="textbox-input-box" flex="1">
         <html:textarea class="textbox-textarea" flex="1" anonid="input"
-                       inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
+                       inherits="onfocus,onblur,value,disabled,rows,cols,readonly,wrap"/>
       </xul:hbox>
     </content>
   </binding>
