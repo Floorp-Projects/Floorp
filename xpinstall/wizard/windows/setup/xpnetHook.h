@@ -36,7 +36,6 @@ int DownloadFiles(char *szInputIniFile,
                   char *szProxyUser,
                   char *szProxyPasswd,
                   BOOL bShowRetryMsg,
-                  int *iNetRetries,
                   BOOL bIgnoreNetworkError,
                   char *szFailedFile,
                   DWORD dwFailedFileSize);

@@ -1403,7 +1403,6 @@ long RetrieveRedirectFile()
                           diAdvancedSettings.szProxyUser,     /* proxy server user (optional)            */
                           diAdvancedSettings.szProxyPasswd,   /* proxy password (optional)               */
                           FALSE,                              /* show retry message                      */
-                          NULL,                               /* receive the number of network retries   */
                           TRUE,                               /* ignore network error                    */
                           NULL,                               /* buffer to store the name of failed file */
                           0);                                 /* size of failed file name buffer         */
@@ -1525,7 +1524,6 @@ long RetrieveArchives()
   char      szBuf[MAX_BUF];
   char      szPartiallyDownloadedFilename[MAX_BUF];
   int       iCRCRetries;
-  int       iNetRetries;
   int       iRv;
 
   /* retrieve the redirect.ini file */
@@ -1579,7 +1577,6 @@ long RetrieveArchives()
    * the archives is not considered a "retry".  Subsequent downloads are
    * considered retries. */
   iCRCRetries = 0;
-  iNetRetries = 0;
   bDone = FALSE;
   do
   {
@@ -1595,7 +1592,6 @@ long RetrieveArchives()
                               diAdvancedSettings.szProxyUser,     /* proxy server user (optional)            */
                               diAdvancedSettings.szProxyPasswd,   /* proxy password (optional)               */
                               iCRCRetries,                        /* show retry message                      */
-                              &iNetRetries,                       /* receive the number of network retries   */
                               FALSE,                              /* ignore network error                    */
                               szFailedFile,                       /* buffer to store the name of failed file */
                               sizeof(szFailedFile));              /* size of failed file name buffer         */
@@ -1620,11 +1616,6 @@ long RetrieveArchives()
       }
       else
       {
-        int iComponentIndex = SiCNodeGetIndexDS(szFailedFile);
-        siC *siCObject      = SiCNodeGetObject(iComponentIndex, TRUE, AC_ALL);
-
-        ++siCObject->iNetRetries;
-
         /* Download failed.  Error message was already shown by DownloadFiles().
          * Simple exit loop here  */
         bDone = TRUE;
@@ -1661,13 +1652,12 @@ long RetrieveArchives()
       LogISComponentsFailedCRC(NULL, W_DOWNLOAD);
   }
 
+  LogISDownloadProtocol(diDownloadOptions.dwUseProtocol);
+  LogMSDownloadProtocol(diDownloadOptions.dwUseProtocol);
+
   if(lResult == WIZ_OK)
   {
-    if(bDownloadTriggered)
-      LogISDownloadStatus("ok", NULL);
-
-    UnsetSetupCurrentDownloadFile();
-    UnsetDownloadState();
+    LogISDownloadStatus("ok", NULL);
   }
   else if(bDownloadTriggered)
   {
@@ -1675,7 +1665,15 @@ long RetrieveArchives()
     LogISDownloadStatus(szBuf, szFailedFile);
   }
 
+  /* We want to log the download status regardless if we downloaded or not. */
   LogMSDownloadStatus(lResult);
+
+  if(lResult == WIZ_OK)
+  {
+    UnsetSetupCurrentDownloadFile();
+    UnsetDownloadState();
+  }
+
   return(lResult);
 }
 
@@ -2574,6 +2572,7 @@ siC *CreateSiCNode()
 
   siCNode->iNetRetries      = 0;
   siCNode->iCRCRetries      = 0;
+  siCNode->iNetTimeOuts     = 0;
   siCNode->siCDDependencies = NULL;
   siCNode->siCDDependees    = NULL;
   siCNode->Next             = NULL;
@@ -4876,7 +4875,7 @@ HRESULT CheckInstances()
       else
         szWN = szWindowName;
 
-      if((hwndFW = FindWindow(szClassName, szWN)) != NULL)
+      if((hwndFW = FindWindow(szCN, szWN)) != NULL)
       {
         if(*szMessage != '\0')
         {

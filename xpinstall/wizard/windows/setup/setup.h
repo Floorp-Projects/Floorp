@@ -421,6 +421,7 @@ struct sinfoComponent
   BOOL            bForceUpgrade;
   int             iNetRetries;
   int             iCRCRetries;
+  int             iNetTimeOuts;
   siCD            *siCDDependencies;
   siCD            *siCDDependees;
   siC             *Next;

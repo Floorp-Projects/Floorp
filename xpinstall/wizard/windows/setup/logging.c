@@ -252,20 +252,60 @@ void LogISComponentsToDownload(void)
   }
 }
 
+void LogISDownloadProtocol(DWORD dwProtocolType)
+{
+  char szBuf[MAX_BUF];
+  char szProtocolType[MAX_BUF];
+
+  switch(dwProtocolType)
+  {
+    case UP_HTTP:
+      lstrcpy(szProtocolType, "HTTP");
+      break;
+
+    default:
+      lstrcpy(szProtocolType, "FTP");
+      break;
+  }
+
+  wsprintf(szBuf, "\n    Download protocol: %s\n", szProtocolType);
+  UpdateInstallStatusLog(szBuf);
+}
+
 void LogISDownloadStatus(char *szStatus, char *szFailedFile)
 {
   char szBuf[MAX_BUF];
+  siC   *siCObject = NULL;
+  DWORD dwIndex;
 
   if(szFailedFile)
     wsprintf(szBuf,
-             "\n    Download status:\n        %s\n          file: %s\n",
+             "\n    Download status: %s\n          file: %s\n\n",
              szStatus,
              szFailedFile);
   else
     wsprintf(szBuf,
-             "\n    Download status:\n        %s\n",
+             "\n    Download status: %s\n",
              szStatus);
   UpdateInstallStatusLog(szBuf);
+
+  dwIndex = 0;
+  siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(siCObject->dwAttributes & SIC_SELECTED)
+    {
+      wsprintf(szBuf, "        %s: NetRetries:%d, CRCRetries:%d, NetTimeOuts:%d\n",
+               siCObject->szDescriptionShort,
+               siCObject->iNetRetries,
+               siCObject->iCRCRetries,
+               siCObject->iNetTimeOuts);
+      UpdateInstallStatusLog(szBuf);
+    }
+
+    ++dwIndex;
+    siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  }
 }
 
 void LogISComponentsFailedCRC(char *szList, int iWhen)
@@ -391,6 +431,18 @@ void LogISDiskSpace(dsN *dsnComponentDSRequirement)
   }
 }
 
+void LogISTurboMode(BOOL bTurboMode)
+{
+  char szBuf[MAX_BUF];
+
+  if(bTurboMode)
+    wsprintf(szBuf, "\n    Turbo Mode: true\n");
+  else
+    wsprintf(szBuf, "\n    Turbo Mode: false\n");
+
+  UpdateInstallStatusLog(szBuf);
+}
+
 void LogMSProductInfo(void)
 {
   char szBuf[MAX_BUF];
@@ -418,6 +470,26 @@ void LogMSProductInfo(void)
   AppendToGlobalMessageStream(szBuf);
 }
 
+void LogMSDownloadProtocol(DWORD dwProtocolType)
+{
+  char szMessageStream[MAX_BUF_TINY];
+  char szProtocolType[MAX_BUF];
+
+  switch(dwProtocolType)
+  {
+    case UP_HTTP:
+      lstrcpy(szProtocolType, "HTTP");
+      break;
+
+    default:
+      lstrcpy(szProtocolType, "FTP");
+      break;
+  }
+
+  wsprintf(szMessageStream, "&DownloadProtocol=%s", szProtocolType);
+  AppendToGlobalMessageStream(szMessageStream);
+}
+
 void LogMSDownloadStatus(int iDownloadStatus)
 {
   char szMessageStream[MAX_BUF_TINY];
@@ -438,15 +510,18 @@ void LogMSDownloadFileStatus(void)
   siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
   while(siCObject)
   {
-    if(siCObject->iNetRetries || siCObject->iCRCRetries)
+    if(siCObject->iNetRetries ||
+       siCObject->iCRCRetries ||
+       siCObject->iNetTimeOuts)
     {
       char szFileInfo[MAX_BUF_SMALL];
 
       wsprintf(szFileInfo,
-               "&%s=%d,%d",
+               "&%s=%d,%d,%d",
                siCObject->szArchiveName,
                siCObject->iNetRetries,
-               siCObject->iCRCRetries);
+               siCObject->iCRCRetries,
+               siCObject->iNetTimeOuts);
 
       lstrcat(szMessageStream, szFileInfo);
     }
@@ -479,5 +554,13 @@ void LogMSXPInstallStatus(char *szFile, int iErr)
      ((iErr != E_USER_CANCEL) &&
       (iErr != WIZ_OK))))
     gErrorMessageStream.bSendMessage = TRUE;
+}
+
+void LogMSTurboMode(BOOL bTurboMode)
+{
+  char szMessageStream[MAX_BUF];
+
+  wsprintf(szMessageStream, "&TM=%d", bTurboMode);
+  AppendToGlobalMessageStream(szMessageStream);
 }
 
