@@ -220,7 +220,7 @@ oeICalContainerImpl::~oeICalContainerImpl()
  * Notice that the second parameter to the macro is the static IID accessor
  * method, and NOT the #defined IID.
  */
-NS_IMPL_ISUPPORTS1(oeICalContainerImpl, oeIICalContainer);
+NS_IMPL_ISUPPORTS1(oeICalContainerImpl, oeIICalContainer)
 
 NS_IMETHODIMP
 oeICalContainerImpl::AddCalendar( const char *server ) {

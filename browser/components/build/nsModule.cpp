@@ -68,4 +68,4 @@ static const nsModuleComponentInfo components[] =
     nsDownloadProxyConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components);
+NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components)

@@ -38,7 +38,7 @@
 
 #include "nsAccessibleEventData.h"
 
-NS_IMPL_ISUPPORTS1(nsAccessibleEventData, nsIAccessibleEvent);
+NS_IMPL_ISUPPORTS1(nsAccessibleEventData, nsIAccessibleEvent)
 
 nsAccessibleEventData::nsAccessibleEventData(PRUint32 aEventType, nsIAccessible *aAccessible, 
                                              nsIAccessibleDocument *aDocAccessible, 

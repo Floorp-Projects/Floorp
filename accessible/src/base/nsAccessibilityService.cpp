@@ -130,7 +130,7 @@ nsAccessibilityService::~nsAccessibilityService()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsAccessibilityService, nsIAccessibilityService, nsIAccessibleRetrieval,
-                              nsIObserver, nsIWebProgressListener, nsISupportsWeakReference);
+                              nsIObserver, nsIWebProgressListener, nsISupportsWeakReference)
 
 // nsIObserver
 

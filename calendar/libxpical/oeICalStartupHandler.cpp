@@ -39,7 +39,7 @@
 #include "nsString.h"
 #include "oeICalStartupHandler.h"
 
-NS_IMPL_ISUPPORTS1(oeICalStartupHandler, nsICmdLineHandler);
+NS_IMPL_ISUPPORTS1(oeICalStartupHandler, nsICmdLineHandler)
 
 oeICalStartupHandler::oeICalStartupHandler()
 {

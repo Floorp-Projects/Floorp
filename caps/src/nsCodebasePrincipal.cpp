@@ -61,8 +61,8 @@ NS_IMPL_CI_INTERFACE_GETTER3(nsCodebasePrincipal,
                              nsIPrincipal,
                              nsISerializable)
 
-NSBASEPRINCIPALS_ADDREF(nsCodebasePrincipal);
-NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);
+NSBASEPRINCIPALS_ADDREF(nsCodebasePrincipal)
+NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal)
 
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //

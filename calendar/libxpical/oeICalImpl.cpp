@@ -300,7 +300,7 @@ oeICalImpl::~oeICalImpl()
  * Notice that the second parameter to the macro is the static IID accessor
  * method, and NOT the #defined IID.
  */
-NS_IMPL_ISUPPORTS1(oeICalImpl, oeIICal);
+NS_IMPL_ISUPPORTS1(oeICalImpl, oeIICal)
 
 EventList *oeICalImpl::GetEventList()
 {
