@@ -1757,32 +1757,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
       result = resultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(newIt));
       if (NS_SUCCEEDED(result) && newIt)
       {
-        if (aDirection == eDirPrevious){
-          if (NS_SUCCEEDED(GetNextPrevLineFromeBlockFrame(aTracker,
-                                        aDirection, 
-                                        resultFrame, 
-                                        0, 
-                                        aDesiredX,
-                                        aResultContent, 
-                                        aContentOffset,
-                                        1,//start from end,
-                                        aResultFrame
-                                        )))
-            return NS_OK;
-        }
-        else {
-          if (NS_SUCCEEDED(GetNextPrevLineFromeBlockFrame(aTracker,
-                                        aDirection, 
-                                        resultFrame, 
-                                        0, 
-                                        aDesiredX,
-                                        aResultContent, 
-                                        aContentOffset,
-                                        -1,//start from beginning
-                                        aResultFrame
-                                        )))
-            return NS_OK;
-        }
+        *aResultFrame = resultFrame;
+        return NS_OK;
       }
       //resultFrame is not a block frame
 
@@ -1899,22 +1875,46 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
             result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
           }
         }
-        if (NS_FAILED(result) || !it || !blockFrame)
+        //this block is now one child down from blockframe
+        if (NS_FAILED(result) || !it || !blockFrame || !thisBlock)
           return result;
         result = it->FindLineContaining(thisBlock, &thisLine);
         if (NS_FAILED(result))
           return result;
-        result = GetNextPrevLineFromeBlockFrame(aTracker,
+        int edgeCase = 0;//no edge case. this should look at thisLine
+        PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
+        //this part will find a frame or a block frame. if its a block frame
+        //it will "drill down" to find a viable frame or it will return an error.
+        do {
+          result = GetNextPrevLineFromeBlockFrame(aTracker,
                                         aDirection, 
                                         blockFrame, 
                                         thisLine, 
                                         aDesiredX,
                                         aResultContent, 
                                         aContentOffset,
-                                        0, //start from thisLine
+                                        edgeCase, //start from thisLine
                                         aResultFrame
                                         );
-        thisBlock = blockFrame;
+          doneLooping = PR_TRUE; //do not continue with while loop
+          if (NS_SUCCEEDED(result) && *aResultFrame){
+            result = (*aResultFrame)->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+            if (NS_SUCCEEDED(result) && it)//we have struck another block element!
+            {
+              doneLooping = PR_FALSE;
+              if (aDirection == eDirPrevious)
+                edgeCase = 1;//far edge, search from end backwards
+              else
+                edgeCase = -1;//near edge search from beginning onwards
+              thisLine=0;//this line means nothing now.
+              //everything else means something so keep looking "inside" the block
+              blockFrame = *aResultFrame;
+
+            }
+            else
+              result = NS_OK;//THIS is to mean that everything is ok to the containing while loop
+          }
+        }while(!doneLooping);
 
       }
       break;
