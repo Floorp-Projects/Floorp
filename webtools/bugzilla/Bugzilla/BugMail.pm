@@ -512,7 +512,7 @@ sub getEmailAttributes (\%\@$) {
     my (@flags,@uniqueFlags,%alreadySeen) = ();
     
     # Add a flag if the status of the bug is "unconfirmed".
-    if ($bug->{'bug_status'} eq $::unconfirmedstate) {
+    if ($bug->{'bug_status'} eq 'UNCONFIRMED') {
         push (@flags, 'Unconfirmed')
     };
     

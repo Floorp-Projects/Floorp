@@ -28,7 +28,7 @@ package Bugzilla::Bug;
 use strict;
 
 use Bugzilla::RelationSet;
-use vars qw($unconfirmedstate $legal_keywords @legal_platform
+use vars qw($legal_keywords @legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bugs_status
             @settable_resolution %components %versions %target_milestone
             @enterable_products %milestoneurl %prodmaxvotes);
@@ -258,7 +258,7 @@ sub initBug  {
 
   $self->{'milestoneurl'} = $::milestoneurl{$self->{product}};
 
-  $self->{'isunconfirmed'} = ($self->{bug_status} eq $::unconfirmedstate);
+  $self->{'isunconfirmed'} = ($self->{bug_status} eq 'UNCONFIRMED');
   $self->{'isopened'} = &::IsOpenedState($self->{bug_status});
   
   my @depends = EmitDependList("blocked", "dependson", $bug_id);

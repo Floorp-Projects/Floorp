@@ -44,7 +44,6 @@ use vars qw(@legal_bug_status @legal_resolution);
 sub sillyness {
     my $zz;
     $zz = %::MFORM;
-    $zz = $::unconfirmedstate;
 }
 
 my %ctl = ( 
@@ -1435,7 +1434,7 @@ if ($action eq 'update') {
         # 3. enough votes to confirm
         SendSQL("SELECT bug_id FROM bugs " .
                 "WHERE product_id = $product_id " .
-                "  AND bug_status = '$::unconfirmedstate' " .
+                "  AND bug_status = 'UNCONFIRMED' " .
                 "  AND votes >= $votestoconfirm");
         if (MoreSQLData()) {
             print "<br>Checking unconfirmed bugs in this product for any which now have sufficient votes.";

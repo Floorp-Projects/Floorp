@@ -43,7 +43,6 @@ use Bugzilla::Bug;
 require "CGI.pl";
 
 use vars qw(
-  $unconfirmedstate
   $template
   $vars
   @enterable_products
@@ -454,7 +453,7 @@ if (FetchOneColumn()) {
     if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
         push(@status, "NEW");
     }
-    push(@status, $unconfirmedstate);
+    push(@status, 'UNCONFIRMED');
 } else {
     push(@status, "NEW");
 }

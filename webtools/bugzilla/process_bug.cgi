@@ -411,7 +411,7 @@ sub CheckCanChangeField {
     # *Only* users with "canconfirm" privs can confirm bugs.
     if ($field eq "canconfirm"
         || ($field eq "bug_status"
-            && $oldvalue eq $::unconfirmedstate
+            && $oldvalue eq 'UNCONFIRMED'
             && IsOpenedState($newvalue)))
     {
         $PrivilegesRequired = 3;
@@ -587,8 +587,7 @@ sub ChangeStatus {
             # When reopening, we need to check whether the bug was ever
             # confirmed or not
             $::query .= "bug_status = CASE WHEN everconfirmed = 1 THEN " .
-                         SqlQuote($str) . " ELSE " .
-                         SqlQuote($::unconfirmedstate) . " END";
+                         SqlQuote($str) . " ELSE 'UNCONFIRMED' END";
         } elsif (IsOpenedState($str)) {
             # Note that we cannot combine this with the above branch - here we
             # need to check if bugs.bug_status is open, (since we don't want to
@@ -620,7 +619,7 @@ sub ChangeStatus {
             $::query .= "bug_status = CASE WHEN bug_status IN($open_state) THEN " .
                                         "(CASE WHEN everconfirmed = 1 THEN " .
                                             SqlQuote($str) . " ELSE " .
-                                            SqlQuote($::unconfirmedstate) . " END) ELSE " .
+                                            " 'UNCONFIRMED' END) ELSE " .
                                         "bug_status END";
         } else {
             $::query .= "bug_status = " . SqlQuote($str);
@@ -1188,7 +1187,7 @@ foreach my $id (@idlist) {
         || $::FORM{'knob'} eq 'reassign')
     {
         $formhash{'assigned_to'} = $assignee;
-        if ($oldhash{'bug_status'} eq $::unconfirmedstate) {
+        if ($oldhash{'bug_status'} eq 'UNCONFIRMED') {
             $formhash{'bug_status'} = $oldhash{'bug_status'};
         }
     }

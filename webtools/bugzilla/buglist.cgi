@@ -52,7 +52,6 @@ use vars qw($db_name
             @legal_severity
             @settable_resolution
             @target_milestone
-            $unconfirmedstate
             $userid
             @versions);
 
@@ -947,7 +946,7 @@ if ($dotweak) {
     $vars->{'severities'} = \@::legal_severity;
     $vars->{'resolutions'} = \@::settable_resolution;
 
-    $vars->{'unconfirmedstate'} = $::unconfirmedstate;
+    $vars->{'unconfirmedstate'} = 'UNCONFIRMED';
 
     $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
 

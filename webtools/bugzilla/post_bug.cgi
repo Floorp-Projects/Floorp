@@ -158,7 +158,7 @@ if (UserInGroup("canedit") || UserInGroup("canconfirm")) {
     $::FORM{'bug_status'} ||= "NEW";
 } else {
     # Default to UNCONFIRMED if we are using it, NEW otherwise
-    $::FORM{'bug_status'} = $::unconfirmedstate;
+    $::FORM{'bug_status'} = 'UNCONFIRMED';
     SendSQL("SELECT votestoconfirm FROM products WHERE id = $product_id");
     if (!FetchOneColumn()) {
         $::FORM{'bug_status'} = "NEW";
@@ -182,7 +182,7 @@ CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
 CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
 CheckFormField(\%::FORM, 'priority',     \@::legal_priority);
 CheckFormField(\%::FORM, 'op_sys',       \@::legal_opsys);
-CheckFormField(\%::FORM, 'bug_status',   [$::unconfirmedstate, 'NEW']);
+CheckFormField(\%::FORM, 'bug_status',   ['UNCONFIRMED', 'NEW']);
 CheckFormField(\%::FORM, 'version',          $::versions{$product});
 CheckFormField(\%::FORM, 'component',        $::components{$product});
 CheckFormField(\%::FORM, 'target_milestone', $::target_milestone{$product});
@@ -198,7 +198,7 @@ foreach my $field (@bug_fields) {
 }
 
 if (exists $::FORM{'bug_status'} 
-    && $::FORM{'bug_status'} ne $::unconfirmedstate) 
+    && $::FORM{'bug_status'} ne 'UNCONFIRMED') 
 {
     push(@used_fields, "everconfirmed");
     $::FORM{'everconfirmed'} = 1;

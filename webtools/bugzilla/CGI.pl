@@ -251,13 +251,13 @@ sub CheckIfVotedConfirmed {
             "WHERE bugs.bug_id = $id AND products.id = bugs.product_id");
     my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
     my $ret = 0;
-    if ($votes >= $votestoconfirm && $status eq $::unconfirmedstate) {
+    if ($votes >= $votestoconfirm && $status eq 'UNCONFIRMED') {
         SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .
                 "WHERE bug_id = $id");
         my $fieldid = GetFieldID("bug_status");
         SendSQL("INSERT INTO bugs_activity " .
                 "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($id,$who,now(),$fieldid,'$::unconfirmedstate','NEW')");
+                "($id,$who,now(),$fieldid,'UNCONFIRMED','NEW')");
         if (!$everconfirmed) {
             $fieldid = GetFieldID("everconfirmed");
             SendSQL("INSERT INTO bugs_activity " .

@@ -95,8 +95,6 @@ $::ENV{'PATH'} = '';
 $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
-$::unconfirmedstate = "UNCONFIRMED";
-
 # The following subroutine is for debugging purposes only.
 # Uncommenting this sub and the $::SIG{__DIE__} trap underneath it will
 # cause any fatal errors to result in a call stack trace to help track
@@ -959,7 +957,7 @@ sub GetBugLink {
             my ($pre, $title, $post) = ("", "", "");
 
             $title = $bug_state;
-            if ($bug_state eq $::unconfirmedstate) {
+            if ($bug_state eq 'UNCONFIRMED') {
                 $pre = "<i>";
                 $post = "</i>";
             }
@@ -1183,7 +1181,7 @@ sub IsOpenedState {
 # is considered an open bug.
 
 sub OpenStates {
-    return ('NEW', 'REOPENED', 'ASSIGNED', $::unconfirmedstate);
+    return ('NEW', 'REOPENED', 'ASSIGNED', 'UNCONFIRMED');
 }
 
 
