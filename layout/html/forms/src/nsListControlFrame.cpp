@@ -529,7 +529,7 @@ nsListControlFrame::DisplaySelected(nsIContent* aContent)
   nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
   if (PR_TRUE == mDisplayed) {
     aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
-    ForceRedraw();
+    //ForceRedraw();
   } else {
     aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_FALSE);
   }
@@ -547,7 +547,7 @@ nsListControlFrame::DisplayDeselected(nsIContent* aContent)
   nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
   if (PR_TRUE == mDisplayed) {
     aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
-    ForceRedraw();
+    //ForceRedraw();
   } else {
     aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_FALSE);
   }
@@ -602,7 +602,7 @@ nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent)
           NS_RELEASE(options);
           return inx;
         }
-       NS_RELEASE(option);
+        NS_RELEASE(option);
       }
     }
     NS_RELEASE(options);
@@ -998,8 +998,9 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsListControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                      nscoord aInnerHeight) const
+nsListControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerHeight) const
 {
    return NSIntPixelsToTwips(0, aPixToTwip); 
 }
@@ -1008,11 +1009,11 @@ nsListControlFrame::GetVerticalInsidePadding(float aPixToTwip,
 //---------------------------------------------------------
 nscoord 
 nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
-                                        float aPixToTwip, 
-                                        nscoord aInnerWidth,
-                                        nscoord aCharWidth) const
+                                               float aPixToTwip, 
+                                               nscoord aInnerWidth,
+                                               nscoord aCharWidth) const
 {
-  return GetVerticalInsidePadding(aPixToTwip, aInnerWidth);
+  return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
 }
 
 
@@ -1203,13 +1204,15 @@ nsListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
     return;
   }
   nsIContent* content = GetOptionContent(aIndex);
-  NS_ASSERTION(nsnull != content, "Failed to retrieve option content");
-  if (aSelected) {
-    DisplaySelected(content);
-  } else {
-    DisplayDeselected(content);
+  //NS_ASSERTION(nsnull != content && aIndex == 0, "Failed to retrieve option content");
+  if (nsnull != content) {
+    if (aSelected) {
+      DisplaySelected(content);
+    } else {
+      DisplayDeselected(content);
+    }
+    NS_RELEASE(content);
   }
-  NS_IF_RELEASE(content);
 }
 
 //---------------------------------------------------------
@@ -2000,18 +2003,18 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
     nsIContent * content;
     stateManager->GetEventTargetContent(&content);
+#ifdef DEBUG_rods
     ///////////////////
   {
     nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
     if (NS_SUCCEEDED(content->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) getter_AddRefs(optElem)))) {      
       nsAutoString val;
       optElem->GetValue(val);
-#ifdef DEBUG_rods
       printf("val [%s]\n", val.ToNewCString());
-#endif
     }
   }
     ///////////////////
+#endif
     nsIContent * optionContent = GetOptionFromContent(content);
     NS_RELEASE(content);
     if (nsnull != optionContent) {
@@ -2051,7 +2054,34 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
     if (IsInDropDownMode() == PR_TRUE) {
-      // Do nothing
+      // the pop up stole focus away from the webshell
+      // now I am giving it back
+      nsIFrame * parentFrame;
+      GetParentWithView(&parentFrame);
+      if (nsnull != parentFrame) {
+        nsIView * pView;
+        parentFrame->GetView(&pView);
+        if (nsnull != pView) {
+          nsIWidget *window = nsnull;
+
+          nsIView *ancestor = pView;
+          while (nsnull != ancestor) {
+            ancestor->GetWidget(window); // addrefs
+            if (nsnull != window) {
+              window->SetFocus();
+              NS_IF_RELEASE(window);
+	            break;
+	          }
+	          ancestor->GetParent(ancestor);
+          }
+        }
+      }
+      // turn back on focus events
+      nsIEventStateManager *stateManager;
+      if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
+        stateManager->ConsumeFocusEvents(PR_TRUE);
+        NS_RELEASE(stateManager);
+      }
     } else {
       mSelectedIndex    = curIndex;
       mOldSelectedIndex = oldIndex;
@@ -2080,14 +2110,21 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
             return NS_OK;
           }
         }
-        NS_RELEASE(stateManager);
-      }
+        // This will consume the focus event we get from the clicking on the dropdown
+        //stateManager->ConsumeFocusEvents(PR_TRUE);
 
-      PRBool isDroppedDown;
-      mComboboxFrame->IsDroppedDown(&isDroppedDown);
-      mComboboxFrame->ShowDropDown(!isDroppedDown);
-      if (isDroppedDown) {
-        CaptureMouseEvents(PR_FALSE);
+
+        PRBool isDroppedDown;
+        mComboboxFrame->IsDroppedDown(&isDroppedDown);
+        mComboboxFrame->ShowDropDown(!isDroppedDown);
+        // Reset focus on main webshell here
+        //stateManager->SetContentState(mContent, NS_EVENT_STATE_FOCUS);
+
+        if (isDroppedDown) {
+          CaptureMouseEvents(PR_FALSE);
+        }
+
+        NS_RELEASE(stateManager);
       }
     }
   }
@@ -2127,52 +2164,93 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 // nsIDOMKeyListener
 //----------------------------------------------------------------------
 nsresult
+nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+  return NS_OK;
+}
+
+nsresult
 nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);
-  PRUint32 code;
-  uiEvent->GetCharCode(&code);
-  //printf("%c %d   ", code, code);
-  uiEvent->GetKeyCode(&code);
-  //printf("%c %d\n", code, code);
+  if (uiEvent) {
+    PRUint32 code;
+    uiEvent->GetCharCode(&code);
+    //printf("%c %d   ", code, code);
+    uiEvent->GetKeyCode(&code);
+    //printf("%c %d\n", code, code);
 
-  nsresult rv = NS_ERROR_FAILURE; 
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
+    nsresult rv = NS_ERROR_FAILURE; 
+    nsIDOMHTMLCollection* options = GetOptions(mContent);
 
-  if (nsnull != options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
+    if (nsnull != options) {
+      PRUint32 numOptions;
+      options->GetLength(&numOptions);
 
-    if (numOptions == 0) {
-      rv = NS_OK;
-    } else {
-      PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1);
-      PRInt32 inx;
-      for (inx = selectedIndex;inx<(PRInt32)numOptions;inx++) {
-        nsIDOMHTMLOptionElement* optionElement = GetOption(*options, inx);
-        if (nsnull != optionElement) {
-          nsAutoString text;
-          if (NS_CONTENT_ATTR_HAS_VALUE == optionElement->GetText(text)) {
-            //printf("%d == %d\n", text.CharAt(0), code);
-            char * buf = text.ToNewCString();
-            //printf("[%s] ", buf);
-            char c = buf[0];
-            delete [] buf;
-            if (c == (char)code) {
-              mOldSelectedIndex = mSelectedIndex;
-              mSelectedIndex    = inx;
-              SingleSelection();
-              if (nsnull != mComboboxFrame) {
-                mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
-              }
-              break;
+      if (numOptions == 0) {
+        rv = NS_OK;
+      } else {
+        if (code == nsIDOMUIEvent::DOM_VK_UP) {
+          printf("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
+          if (mSelectedIndex > 0) {
+            mOldSelectedIndex = mSelectedIndex;
+            mSelectedIndex--;
+            SingleSelection();
+            if (nsnull != mComboboxFrame) {
+              mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
             }
           }
-          NS_RELEASE(optionElement);
+          printf("  After: %d\n", mSelectedIndex);
+        } if (code == nsIDOMUIEvent::DOM_VK_DOWN) {
+          printf("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
+          if ((mSelectedIndex+1) < (PRInt32)numOptions) {
+            mOldSelectedIndex = mSelectedIndex;
+            mSelectedIndex++;
+            SingleSelection();
+            if (nsnull != mComboboxFrame) {
+              mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+            }
+          }
+          printf("  After: %d\n", mSelectedIndex);
+        } if (code == nsIDOMUIEvent::DOM_VK_RETURN) {
+          if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+            mComboboxFrame->ListWasSelected(mPresContext); 
+          } 
+        } if (code == nsIDOMUIEvent::DOM_VK_ESCAPE) {
+          if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+            mSelectedIndex = mSelectedIndexWhenPoppedDown;
+            mComboboxFrame->ListWasSelected(mPresContext); 
+          } 
+        } else {
+          PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1);
+          PRInt32 inx;
+          for (inx = selectedIndex;inx<(PRInt32)numOptions;inx++) {
+            nsIDOMHTMLOptionElement* optionElement = GetOption(*options, inx);
+            if (nsnull != optionElement) {
+              nsAutoString text;
+              if (NS_CONTENT_ATTR_HAS_VALUE == optionElement->GetText(text)) {
+                //printf("%d == %d\n", text.CharAt(0), code);
+                char * buf = text.ToNewCString();
+                //printf("[%s] ", buf);
+                char c = buf[0];
+                delete [] buf;
+                if (c == (char)code) {
+                  mOldSelectedIndex = mSelectedIndex;
+                  mSelectedIndex    = inx;
+                  SingleSelection();
+                  if (nsnull != mComboboxFrame) {
+                    mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                  }
+                  break;
+                }
+              }
+              NS_RELEASE(optionElement);
+            }
+          }
         }
       }
+      NS_RELEASE(options);
     }
-    NS_RELEASE(options);
   }
 
   return NS_OK;
