@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.14 $ $Date: 2002/02/05 22:08:12 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.15 $ $Date: 2002/03/01 02:13:42 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -189,6 +189,7 @@ nssList_Clear(nssList *list, nssListElementDestructorFunc destructor)
     nssListElement *node, *tmp;
     NSSLIST_LOCK_IF(list);
     node = list->head;
+    list->head = NULL;
     while (node && list->count > 0) {
 	if (destructor) (*destructor)(node->data);
 	link = &node->link;
