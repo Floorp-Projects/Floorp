@@ -9113,6 +9113,17 @@ of access. It should be granted by system administrators only.")
 ResDef(CAPS_TARGET_URL_SILENTINSTALL, (CAPS_MSG_BASE + 201), "\
 #SilentInstall")
 
+ResDef(CAPS_TARGET_DESC_ALL_JAVA_PERMISSION, (CAPS_MSG_BASE + 202), "\
+Complete access to your computer for java programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION, (CAPS_MSG_BASE + 203), "\
+Complete access required by java programs to your computer, such as Java \
+Virtual machine reading, writing, deleting information from your disk, \
+and to send receive and send information to any computer on the Internet.")
+
+ResDef(CAPS_TARGET_URL_ALL_JAVA_PERMISSION, (CAPS_MSG_BASE + 204), "\
+#AllJavaPermission")
+
 
 /* The following messages are for Software Update */
 #define SU_MSG_BASE XP_MSG_BASE + 4000
