@@ -28,6 +28,8 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Properties;
 
+import java.awt.Container;
+
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -57,7 +59,7 @@ import org.xml.sax.SAXParseException;
  * <LI>Action lookups.
  * </UL>
  */
-public class XMLMenuBuilder {
+public class XMLMenuBuilder extends XMLWidgetBuilder {
   static final String id_attr = "id";
   static final String menu_tag = "menu";
   static final String label_attr = "label";
@@ -72,26 +74,35 @@ public class XMLMenuBuilder {
 
   Hashtable button_group;
   Hashtable actions;
-  Properties properties;
   JMenuBar component;
-  JFrame reference;
 
   /**
    * Build a menu builder which operates on XML formatted data
    * 
-   * @param frame the frame the menu is built for
+   * @param ref the reference point for properties location
    * @param actionList array of UIAction objects to map to
    */
-  public XMLMenuBuilder(JFrame frame, UIAction[] actionList) {
+  public XMLMenuBuilder(Class ref, UIAction[] actionList) {
     button_group = new Hashtable();
     actions = new Hashtable();
+    this.ref = ref;
 
     if (actionList != null) {
       for (int i = 0; i < actionList.length; i++) {
 	actions.put(actionList[i].getName(), actionList[i]);
       }
     }
-    reference = frame;
+  }
+
+
+  /**
+   * Build a menu builder which operates on XML formatted data
+   * 
+   * @param frame reference point for properties location
+   * @param actionList array of UIAction objects to map to
+   */
+  public XMLMenuBuilder(JFrame frame, UIAction[] actionList) {
+    this(frame.getClass(), actionList);
   }
 
   /**
@@ -129,27 +140,7 @@ public class XMLMenuBuilder {
     }
   }
 
-  /**
-   * Set the element as the item containing configuration for the 
-   * builder
-   *
-   * @param config the element containing configuration data
-   */
-  public void setConfiguration(Element config) {
-    try {
-      URL linkURL;
-      // get the string properties
-      if (config.getAttribute("href") != null 
-	  && config.getAttribute("role").equals("stringprops")
-	  && config.getTagName().equals("link")) {
-	linkURL = reference.getClass().getResource(config.getAttribute("href"));
-	properties = new Properties();
-	if (linkURL != null) properties.load(linkURL.openStream());
-      }
-    } catch (IOException io) {
-      io.printStackTrace();
-    }
-  }
+
 
   /**
    * Build a menu bar from the data in the tree
@@ -193,15 +184,15 @@ public class XMLMenuBuilder {
     JComponent container = null;
     JComponent item = null;
 
-    if (node.getNodeType() == ELEMENT_TYPE) {
-      // things will recurse through here
-      item = buildComponent((Element)node, parent);
+    if (node.getNodeType() != ELEMENT_TYPE) return; // can't process it
 
-      // find out where we stash the item
-      if (item != null) {
-	Element current = (Element)node;
-	parent.add(item);
-      }
+    // things will recurse through here
+    item = buildComponent((Element)node, (JComponent)parent);
+
+    // find out where we stash the item
+    if (item != null) {
+      Element current = (Element)node;
+      parent.add(item);
     }
   }
 
@@ -291,20 +282,6 @@ public class XMLMenuBuilder {
 
   protected JMenuItem buildMenuItem(Element current) {
     return new JMenuItem();
-  }
-
-  protected String getReferencedLabel(Element current, String attr) {
-    String label = current.getAttribute(attr);
-    
-    if (properties == null) return label;
-
-    // if it starts with a '$' we crossreference to properties
-    if (label != null && label.charAt(0) == '$') {
-      String key = label.substring(1);
-      label = properties.getProperty(key, label);
-    }
-
-    return label;
   }
 
   public static void main(String[] args) throws Exception {
