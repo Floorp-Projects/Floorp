@@ -184,6 +184,7 @@ bin/components/rdf.xpt
 bin/components/shistory.xpt
 bin/components/sidebar.xpt
 bin/components/signonviewer.xpt
+bin/components/txtsvc.xpt
 bin/components/unicharutil.xpt
 bin/components/uriloader.xpt
 bin/components/exthandler.xpt
