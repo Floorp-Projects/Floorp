@@ -15,6 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+
+
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #undef NS_IMPL_IDS 
@@ -48,6 +51,8 @@
 #include "nsCRT.h"
 #include "nsIURL.h"
 #include "nsIHTMLDocument.h"
+
+#include "nsIFormProcessor.h"
 
 #ifdef NECKO
 #include "nsIIOService.h"
@@ -91,6 +96,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 
+
+
 #define SPECIFY_CHARSET_IN_CONTENT_TYPE
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -109,6 +116,8 @@ static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
+static NS_DEFINE_IID(kFormProcessorCID, NS_IFORMPROCESSOR_CID);
 
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -407,6 +416,33 @@ void DebugPrint(char* aLabel, nsString aString)
   delete [] out;
 }
 
+
+
+// Give the form process observer a chance to modify the value passed for form submission
+nsresult
+nsFormFrame::ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame* aFrameControl, const nsString& aName, nsString& aValue)
+{
+  nsresult res = NS_OK;
+
+  nsIFrame *frame = nsnull;
+  res = aFrameControl->QueryInterface(kIFrameIID, (void **)&frame);
+  if (NS_SUCCEEDED(res) && (frame)) {
+    nsCOMPtr<nsIContent> content;
+    nsresult rv = frame->GetContent(getter_AddRefs(content));
+    if (NS_SUCCEEDED(rv) && content) {
+      nsCOMPtr<nsIDOMHTMLElement> formElement;
+      res = content->QueryInterface(kIDOMHTMLElementIID, getter_AddRefs(formElement));
+      if (NS_SUCCEEDED(res) && formElement) {
+	 	    res = aFormProcessor.ProcessValue(formElement, aName, aValue);
+		    NS_ASSERTION(NS_SUCCEEDED(res), "unable Notify form process observer"); 
+      }
+    }
+  }
+
+  return res;
+}
+
+
 // submission
 
 NS_IMETHODIMP
@@ -415,6 +451,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   if (!mContent) {
     return NS_FORM_NOTOK;
   }
+
+   // Get a service to process the value part of the form data
+   // If one doesn't exist, that fine. It's not required.
+  nsresult result = NS_OK;
+  NS_WITH_SERVICE(nsIFormProcessor, formProcessor, kFormProcessorCID, &result)
 
   nsString data; // this could be more efficient, by allocating a larger buffer
 
@@ -437,7 +478,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   }
 
   // Notify observers that the form is being submitted.
-  nsresult result = NS_OK;
+  result = NS_OK;
   NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_PROGID, &result);
   if (NS_FAILED(result)) return result;
 
@@ -461,10 +502,10 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
   nsIFileSpec* multipartDataFile = nsnull;
   if (isURLEncoded) {
-    result = ProcessAsURLEncoded(isPost, data, fcFrame);
+    result = ProcessAsURLEncoded(formProcessor, isPost, data, fcFrame);
   }
   else {
-    result = ProcessAsMultipart(multipartDataFile, fcFrame);
+    result = ProcessAsMultipart(formProcessor, multipartDataFile, fcFrame);
   }
 
   // Don't bother submitting form if we failed to generate a valid submission
@@ -683,7 +724,7 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
 }
 
 #define CRLF "\015\012"   
-nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
+nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
   nsresult rv = NS_OK;
   nsString buf;
@@ -722,7 +763,12 @@ nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFor
               buf += *convName;
               delete convName;
               buf += "=";
-              nsString* convValue = URLEncode(values[valueX], encoder);
+              nsAutoString newValue;
+              newValue = values[valueX];
+              if (aFormProcessor) {
+                ProcessValue(*aFormProcessor, child, names[valueX], newValue);
+              }
+              nsString* convValue = URLEncode(newValue, encoder);
               buf += *convValue;
               delete convValue;
             }
@@ -815,7 +861,7 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 #define MULTIPART "multipart/form-data"
 #define SEP "--"
 
-nsresult nsFormFrame::ProcessAsMultipart(nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame)
+nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame)
 {
   char buffer[BUFSIZE];
   PRInt32 numChildren = mFormControls.Count();
@@ -872,17 +918,22 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFileSpec*& aMultipartDataFile, nsIFo
           char* name = nsnull;
           char* value = nsnull;
 
+          nsString valueStr = values[valueX];
+          if (aFormProcessor) {
+            ProcessValue(*aFormProcessor, child, names[valueX], valueStr);
+          }
+   
           if(encoder) {
               name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
-              value  = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
+              value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
           }
 
           if(nsnull == name)
             name  = names[valueX].ToNewCString();
           if(nsnull == value)
-            value = values[valueX].ToNewCString();
+            value = valueStr.ToNewCString();
 
-          if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
+          if ((0 == names[valueX].Length()) || (0 == valueStr.Length())) {
             continue;
           }
 
@@ -897,8 +948,8 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFileSpec*& aMultipartDataFile, nsIFo
           if (NS_FORM_INPUT_FILE == type) { 
             contentLen += PL_strlen(FILENAME);
             const char* fileNameStart = GetFileNameWithinPath(value);
-	    contentLen += PL_strlen(fileNameStart);
-	  }
+	          contentLen += PL_strlen(fileNameStart);
+          }
           // End Content-Disp Line (quote plus CRLF)
           contentLen += 1 + crlfLen;  // ending name quote plus CRLF
 
