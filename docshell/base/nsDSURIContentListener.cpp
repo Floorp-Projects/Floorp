@@ -66,28 +66,18 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
 {
    NS_ENSURE_ARG_POINTER(aContentHandler && aAbortProcess);
 
-  /* The URIDispatcher will give the content listener a shot at handling
-     the content before it tries other means. If the content listener
-     wants to handle the content then it should return a stream listener
-     the data should be pushed into. 
-     aContentType --> the content type we need to handle
-     aCommand --> verb for the action (this comes from layout???)
-     aWindowTarget --> name of the target window if any
-     aStreamListener --> the content viewer the content should be displayed in
-                        You should return null for this out parameter if you do
-                        not want to handle this content type.
-	 aAbortProcess --> If you want to handle the content yourself and you don't
-					   want the dispatcher to do anything else, return TRUE for
-					   this parameter. 
-  */
+   if(HandleInCurrentDocShell(aContentType, aCommand, aWindowTarget, 
+      aOpenedChannel, aContentHandler))
+      { 
+      // In this condition content will start to be directed here.
+      nsCOMPtr<nsIURI> uri;
 
-   if(HandleInCurrentDocShell(aContentType, aCommand, aWindowTarget))
-      {
-      //XXX Start Load here....
-      //XXX mDocShell->SetCurrentURI(nsIChannel::GetURI()));
-
+      //XXXQ Do we want the original or the current URI?
+      aOpenedChannel->GetOriginalURI(getter_AddRefs(uri));
+      // XXXIMPL Session history set this page as a page that has been visited
+      mDocShell->SetCurrentURI(uri);
       }
-   else
+   else if(mParentContentListener)
       return mParentContentListener->DoContent(aContentType, aCommand, 
          aWindowTarget, aOpenedChannel, aContentHandler, aAbortProcess);
 
@@ -108,23 +98,17 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
 //*****************************************************************************   
 
 PRBool nsDSURIContentListener::HandleInCurrentDocShell(const char* aContentType,
-   const char* aCommand, const char* aWindowTarget)
+   const char* aCommand, const char* aWindowTarget, nsIChannel* aOpenedChannel,
+   nsIStreamListener** aContentHandler)
 {
-   nsAutoString contentType(aContentType);
-   PRBool fCanHandle = PR_FALSE;
-   /* XXX Remove this
-   NS_ENSURE_SUCCESS(mDocShell->CanHandleContentType(contentType.GetUnicode(),
-      &fCanHandle), PR_FALSE);*/
+   NS_ENSURE_TRUE(mDocShell, PR_FALSE);
 
-   NS_ENSURE_TRUE(fCanHandle, PR_FALSE);
+   //XXXQ Should we have to match the windowTarget???
 
-   /*  XXX Implement
-   1.) Check content type
-   2.)  See if we can handle the command
-   3.)  See if the target is for us  
-   */
+   NS_ENSURE_SUCCESS(mDocShell->CreateContentViewer(aContentType, aCommand,
+      aOpenedChannel, aContentHandler), PR_FALSE);
 
-   return PR_FALSE;
+   return PR_TRUE;
 }
 
 //*****************************************************************************

@@ -48,10 +48,11 @@ protected:
    void GetPresContext(nsIPresContext** aPresContext);
    void SetPresContext(nsIPresContext* aPresContext);
    PRBool HandleInCurrentDocShell(const char* aContentType, 
-      const char* aCommand, const char* aWindowTarget);
+      const char* aCommand, const char* aWindowTarget, 
+      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
 
 protected:
-   nsDocShell*                  mDocShell;
+   nsDocShell*                      mDocShell;
    nsCOMPtr<nsIURIContentListener>  mParentContentListener;
    nsCOMPtr<nsIPresContext>         mPresContext;
 };
