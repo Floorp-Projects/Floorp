@@ -2064,6 +2064,10 @@ HTMLContentSink::ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
     nsIAtom* atom = NS_NewAtom(tmp);
     rv = NS_NewHTMLOption(&mCurrentOption, atom);
     if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
+      // Add another reference to the option since we remember it both
+      // on our container stack and in mCurrentOption
+      NS_ADDREF(mCurrentOption);
+
       // Add remaining attributes from the tag
       //rv = AddAttributes(aNode, mCurrentOption);
 	    *aInstancePtrResult = mCurrentOption;
@@ -2112,6 +2116,7 @@ HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
         break;
       }
       control->SetContent(currentText);
+      NS_RELEASE(control);
     }
   }
   return NS_OK;
