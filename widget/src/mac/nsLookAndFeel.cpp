@@ -47,6 +47,7 @@ nsLookAndFeel::~nsLookAndFeel()
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
     nsresult res = NS_OK;
+
     if (mXPLookAndFeel)
     {
         res = mXPLookAndFeel->GetColor(aID, aColor);
@@ -88,11 +89,11 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
+        RGBColor macColor;
         GrafPtr thePort;
         ::GetPort(&thePort);
        	if (thePort)
        	{
-          RGBColor macColor;
           ::GetPortHiliteColor(thePort,&macColor);
           aColor = NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
        	}
@@ -120,75 +121,116 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     //
     
     case eColor_buttontext:
+    	res = GetMacTextColor(kThemeTextColorPushButtonActive, aColor, NS_RGB(0x00,0x00,0x00));
+	    break;
     case eColor_captiontext:
+    	res = GetMacTextColor(kThemeTextColorWindowHeaderActive, aColor, NS_RGB(0x00,0x00,0x00));
+	    break;
     case eColor_menutext:
+    	res = GetMacTextColor(kThemeTextColorMenuItemActive, aColor, NS_RGB(0x00,0x00,0x00));
+	    break;
     case eColor_infotext:
+		//this will only work on MacOS 9. Mac OS < 9 will use hardcoded value
+    	res = GetMacTextColor(kThemeTextColorNotification, aColor, NS_RGB(0x00,0x00,0x00));
+	    break;    
     case eColor_windowtext:
-        aColor = NS_RGB(0x0,0x0,0x0);
-        break;
+		//DialogActive is closest match to "windowtext"
+    	res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
+	    break;
     case eColor_activecaption:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
+    	//no way to fetch this colour. HARDCODING to Platinum
+ 		//res = GetMacBrushColor(??, aColor, NS_RGB(0xCC,0xCC,0xCC));
+		//active titlebar etc is #CCCCCC
+    	aColor = NS_RGB(0xCC,0xCC,0xCC);
+    	res = NS_OK;
+	    break;
     case eColor_activeborder:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
+		//If it means anything at all on Mac OS, then its black in every theme I've tried,
+		//but Aqua *has* no border!
+    	res = GetMacBrushColor(kThemeBrushBlack, aColor, NS_RGB(0x00,0x00,0x00));
+	    break;
    case eColor_appworkspace:
         // NOTE: this is an MDI color and does not exist on macOS.
-        aColor = NS_RGB(0x66,0x99,0xff);
-        break;      
+		//used the closest match, which will likely be white.
+    	res = GetMacBrushColor(kThemeBrushDocumentWindowBackground, aColor, NS_RGB(0x63,0x63,0xCE));
+	    break;   
     case eColor_background:
         // NOTE: chances are good this is a pattern, not a pure color. What do we do?
-        aColor = NS_RGB(0x66,0x99,0xff);
+        // Seconded. This is almost never going to be a flat colour...
+        //incidentally, this is supposed to be the colour of the desktop, though how anyone
+        //is supposed to guess that from the name?
+        aColor = NS_RGB(0x63,0x63,0xCE);
+        res = NS_OK;
         break;
     case eColor_buttonface:
-        aColor = NS_RGB(0xde,0xde,0xde);
-        break;
+    	res = GetMacBrushColor(kThemeBrushButtonFaceActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
+	    break;
     case eColor_buttonhighlight:
-        aColor = NS_RGB(0xff,0xff,0xff);
-        break;
+		//lighter of 2 possible highlight colours available
+    	res = GetMacBrushColor(kThemeBrushButtonActiveLightHighlight, aColor, NS_RGB(0xFF,0xFF,0xFF));
+	    break;
     case eColor_buttonshadow:
-        aColor = NS_RGB(0x73,0x73,0x73);
-        break;
+		//darker of 2 possible shadow colours available
+    	res = GetMacBrushColor(kThemeBrushButtonActiveDarkShadow, aColor, NS_RGB(0x77,0x77,0x77));
+	    break;
     case eColor_graytext:
-        aColor = NS_RGB(0x76,0x76,0x76);
-        break;
+    	res = GetMacTextColor(kThemeTextColorDialogInactive, aColor, NS_RGB(0x77,0x77,0x77));
+	    break;
     case eColor_inactiveborder:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
+		//ScrollBar DelimiterInactive looks like an odd constant to use, but gives the right colour in most themes, 
+		//also if you look at where this colour is *actually* used, it is pretty much what we want
+    	res = GetMacBrushColor(kThemeBrushScrollBarDelimiterInactive, aColor, NS_RGB(0x55,0x55,0x55));
+	    break;
     case eColor_inactivecaption:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
+		//best guess. Usually right in most themes I think
+    	res = GetMacBrushColor(kThemeBrushDialogBackgroundInactive, aColor, NS_RGB(0xDD,0xDD,0xDD));
+	    break;
     case eColor_inactivecaptiontext:
-        aColor = NS_RGB(0x76,0x76,0x76);
-        break;
+    	res = GetMacTextColor(kThemeTextColorWindowHeaderInactive, aColor, NS_RGB(0x77,0x77,0x77));
+		break;
     case eColor_scrollbar:
-        aColor = NS_RGB(0xad,0xad,0xad);
-        break;
+        //this is the scrollbar trough. HARDCODING no way to get this colour
+ 		//res = GetMacBrushColor(??, aColor, NS_RGB(0xAA,0xAA,0xAA));
+    	aColor = NS_RGB(0xAA,0xAA,0xAA);
+    	res = NS_OK;
+	    break;
     case eColor_threeddarkshadow:
+		res = GetMacBrushColor(kThemeBrushButtonActiveDarkShadow, aColor, NS_RGB(0x77,0x77,0x77));
+	    break;
     case eColor_threedshadow:
-        aColor = NS_RGB(0x9c,0x9c,0x9c);
-        break;
+		res = GetMacBrushColor(kThemeBrushButtonActiveLightShadow, aColor, NS_RGB(0x99,0x99,0x99));
+	    break;
     case eColor_threedface:
-        aColor = NS_RGB(0xaa,0xaa,0xaa);
-        break;
+		res = GetMacBrushColor(kThemeBrushButtonFaceActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
+	    break;
     case eColor_threedhighlight:
-        aColor = NS_RGB(0xa0,0xa0,0xa0);
-        break;
+		res = GetMacBrushColor(kThemeBrushButtonActiveLightHighlight, aColor, NS_RGB(0xFF,0xFF,0xFF));
+	    break;
     case eColor_threedlightshadow:
-        aColor = NS_RGB(0xff,0xff,0xff);
-        break;
+		//the description in the CSS2 spec says this is on the side facing the lightsource,
+		//so its not a shadow in Mac OS terms, its the darker of the highlights 
+		res = GetMacBrushColor(kThemeBrushButtonActiveDarkHighlight, aColor, NS_RGB(0xDD,0xDD,0xDD));
+	    break;
     case eColor_menu:
+		//best guess. Menus have similar background to dialogs in most themes
+		res = GetMacBrushColor(kThemeBrushDialogBackgroundActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
+	    break;
     case eColor_infobackground:
+		//Brush exists on on MacOS 9. Earlier Mac OS will use default Platinum colour
+		res = GetMacBrushColor(kThemeBrushNotificationWindowBackground, aColor, NS_RGB(0xFF,0xFF,0xC6));
+	    break;
     case eColor_windowframe:
-        aColor = NS_RGB(0xde,0xde,0xde);
-        break;
+    	//no way to fetch this colour. HARDCODING to Platinum
+ 		//res = GetMacBrushColor(??, aColor, NS_RGB(0xCC,0xCC,0xCC));
+    	aColor = NS_RGB(0xCC,0xCC,0xCC);
+    	res = NS_OK;
+	    break;
     case eColor_window:
-        aColor = NS_RGB(0xff,0xff,0xff);
-        break;
+		res = GetMacBrushColor(kThemeBrushDocumentWindowBackground, aColor, NS_RGB(0xFF,0xFF,0xFF));        
+		break;
     case eColor__moz_field:
-        aColor = NS_RGB(0xff,0xff,0xff);
+		aColor = NS_RGB(0xff,0xff,0xff);
         break;
-
     default:
         NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
         aColor = NS_RGB(0xff,0xff,0xff);
@@ -197,6 +239,36 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     }
 
     return res;
+}
+
+NS_IMETHODIMP nsLookAndFeel::GetMacBrushColor(	const PRInt32 aBrushType, nscolor & aColor,
+												const nscolor & aDefaultColor)
+{
+	OSStatus err = noErr;
+	RGBColor macColor;
+	
+	err = ::GetThemeBrushAsColor(aBrushType, 32, true, &macColor);
+	if (err == noErr) 
+		aColor =  NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
+	else
+		aColor = aDefaultColor;
+	return NS_OK;
+	
+}
+
+NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & aColor,
+											 const nscolor & aDefaultColor)
+{
+	OSStatus err = noErr;
+	RGBColor macColor;
+	
+	err = ::GetThemeTextColor(aTextType, 32, true, &macColor);
+	if (err == noErr) 
+		aColor =  NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
+	else
+		aColor = aDefaultColor;
+	return NS_OK;
+	
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
@@ -278,6 +350,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_MenusCanOverlapOSBar:
         // xul popups are not allowed to overlap the menubar.
+        aMetric = 0;
+        break;
+    case eMetric_DisplayFullWindow:
         aMetric = 0;
         break;
     default:

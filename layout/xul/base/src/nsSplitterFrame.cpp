@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Blake Ross <blakeross@telocity.com>
  */
 
 //
@@ -47,6 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsFrameNavigator.h"
 #include "nsHTMLParts.h"
+#include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
 #include "nsIStyleContext.h"
 #include "nsWidgetsCID.h"
@@ -55,11 +57,9 @@
 #include "nsIServiceManager.h"
 #include "nsHTMLContainerFrame.h"
 
-#define REAL_TIME_DRAG
-
-
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
-
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+PRInt32 realTimeDrag;
 
 class nsSplitterInfo {
 public:
@@ -349,6 +349,15 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
+  nsILookAndFeel* lookAndFeel;
+  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel))) {
+     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DragFullWindow, realTimeDrag);
+     NS_RELEASE(lookAndFeel);
+  }
+  else {
+     realTimeDrag = 1;
+  }
+
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX Hack because we need the pres context in some of the event handling functions...
@@ -358,10 +367,11 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   nsIView* view;
   GetView(aPresContext, &view);
 
-#if defined(REAL_TIME_DRAG) || defined(XP_UNIX)
-    view->SetContentTransparency(PR_TRUE);
-    view->SetZIndex(kMaxZ);
-#else
+  if (realTimeDrag) {
+     view->SetContentTransparency(PR_TRUE);
+     view->SetZIndex(kMaxZ);
+  }
+  else {
      // currently this only works on win32 and mac
      static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
      nsCOMPtr<nsIViewManager> viewManager;
@@ -371,7 +381,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
 
      // Need to have a widget to appear on top of other widgets.
      view->CreateWidget(kCChildCID);
-#endif
+  }
 
   mInner->mState = nsSplitterFrameInner::Open;
   mInner->AddListener(aPresContext);
@@ -594,7 +604,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
             CollapseDirection dir = GetCollapseDirection();
 
             // if we are in a collapsed position
-            if ((oldPos > 0 && oldPos > pos && dir == After) || (oldPos < 0 && oldPos < pos && dir == Before))
+            if (realTimeDrag && ((oldPos > 0 && oldPos > pos && dir == After) || (oldPos < 0 && oldPos < pos && dir == Before)))
             {
                 // and we are not collapsed then collapse
                 if (currentState == Dragging) {
@@ -616,6 +626,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                          
                         }
                     }
+                
                 }
             } else {
                 // if we are not in a collapsed position and we are not dragging make sure
@@ -623,11 +634,10 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                 if (currentState != Dragging)
                   mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
 
-#ifdef REAL_TIME_DRAG
-                AdjustChildren(aPresContext);
-#else
-                MoveSplitterBy(aPresContext, pos);
-#endif
+                if (realTimeDrag)
+                  AdjustChildren(aPresContext);
+                else
+                  MoveSplitterBy(aPresContext, pos);
 
             }
             
@@ -1047,70 +1057,70 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
    // printf("----- Posting Dirty -----\n");
 
    
-#ifdef REAL_TIME_DRAG
-//    nsBoxLayoutState state(aPresContext);
-  //  state.SetLayoutReason(nsBoxLayoutState::Resize);
+if (realTimeDrag) {
+    //    nsBoxLayoutState state(aPresContext);
+    //  state.SetLayoutReason(nsBoxLayoutState::Resize);
     //mParentBox->Layout(state);
-  /*
+    /*
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
 
     shell->EnterReflowLock();
     shell->ProcessReflowCommands(PR_TRUE);
     shell->ExitReflowLock(PR_FALSE);
-*/
+    */
 
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
-        nsIFrame* frame = nsnull;
-        mParentBox->GetFrame(&frame);
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIFrame* frame = nsnull;
+    mParentBox->GetFrame(&frame);
 
-        /*
-        shell->EnterReflowLock();
-        nsRect                bounds;
-        mParentBox->GetBounds(bounds);
-        nsSize                maxSize(bounds.width, bounds.height);
-        nsIRenderingContext*  rcx = nsnull;
-        nsresult rv = shell->CreateRenderingContext(frame, &rcx);
-        nsHTMLReflowState reflowState(aPresContext, frame,
+    /*
+    shell->EnterReflowLock();
+    nsRect                bounds;
+    mParentBox->GetBounds(bounds);
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsIRenderingContext*  rcx = nsnull;
+    nsresult rv = shell->CreateRenderingContext(frame, &rcx);
+    nsHTMLReflowState reflowState(aPresContext, frame,
                                       eReflowReason_Resize, rcx, maxSize);
-        nsBoxLayoutState state(aPresContext, reflowState);
-        mParentBox->Layout(state);
-        shell->ExitReflowLock(PR_TRUE);
-        */
+    nsBoxLayoutState state(aPresContext, reflowState);
+    mParentBox->Layout(state);
+    shell->ExitReflowLock(PR_TRUE);
+    */
      
-       nsCOMPtr<nsIViewManager> viewManager;
-        nsIView* view = nsnull;
-        frame->GetView(aPresContext, &view);
+    nsCOMPtr<nsIViewManager> viewManager;
+    nsIView* view = nsnull;
+    frame->GetView(aPresContext, &view);
 
-        nsRect damageRect(0,0,0,0);
-        mParentBox->GetContentRect(damageRect);
+    nsRect damageRect(0,0,0,0);
+    mParentBox->GetContentRect(damageRect);
 
-        if (view) {
-          view->GetViewManager(*getter_AddRefs(viewManager));
-    
-        } else {
-          nsPoint   offset;
-  
-          frame->GetOffsetFromView(aPresContext, offset, &view);
-          NS_ASSERTION(nsnull != view, "no view");
-          damageRect += offset;
-          view->GetViewManager(*getter_AddRefs(viewManager));
-        }
+    if (view) {
+        view->GetViewManager(*getter_AddRefs(viewManager));    
+    }
+    else {
+        nsPoint   offset;
+        frame->GetOffsetFromView(aPresContext, offset, &view);
+        NS_ASSERTION(nsnull != view, "no view");
+        damageRect += offset;
+        view->GetViewManager(*getter_AddRefs(viewManager));
+    }
 
-        viewManager->DisableRefresh();
-        shell->FlushPendingNotifications();  
-        viewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
+    viewManager->DisableRefresh();
+    shell->FlushPendingNotifications();  
+    viewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
 
-        viewManager->UpdateView(view, damageRect, NS_VMREFRESH_IMMEDIATE);
+    viewManager->UpdateView(view, damageRect, NS_VMREFRESH_IMMEDIATE);
 
 
-#else 
+}
+else {
     //mOuter->mState |= NS_FRAME_IS_DIRTY;
     //mOuter->mParent->ReflowDirtyChild(shell, mOuter->mParent);
     nsBoxLayoutState state(aPresContext);
     mOuter->MarkDirty(state);
-#endif
+}
 
 }
 
@@ -1201,13 +1211,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
      return;
 
   content->SetAttribute(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
-#ifndef REAL_TIME_DRAG
   aChildBox->MarkDirty(aState);
-#else
-  aChildBox->MarkDirty(aState);
-#endif
-
-  //printf("\n");
 }
 
 
@@ -1308,6 +1312,3 @@ nsSplitterFrameInner::MoveSplitterBy(nsIPresContext* aPresContext, nscoord aDiff
   nsBoxLayoutState state(aPresContext);
   mParentBox->Redraw(state, &invalid, PR_TRUE);
 }
-
-
-
