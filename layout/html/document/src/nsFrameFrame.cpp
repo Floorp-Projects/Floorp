@@ -751,6 +751,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
               value.Mid(valuePiece, 7, 1) == 1 && valuePiece.EqualsWithConversion("-")))
             isContent = PR_TRUE;
       }
+      NS_IF_RELEASE(typeAtom);
       if (isContent) {
         // The web shell's type is content.
         docShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);

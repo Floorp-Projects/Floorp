@@ -511,7 +511,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
   // which causes the active state to be removed from the event state manager immediately after it
   // it the select is set to the active state.
   
-  nsCOMPtr<nsIAtom> activeAtom ( dont_QueryInterface(NS_NewAtom(kMozDropdownActive)));
+  nsCOMPtr<nsIAtom> activeAtom ( dont_AddRef(NS_NewAtom(kMozDropdownActive)));
   if (PR_TRUE == aShowPopup) {
     mContent->SetAttribute(kNameSpaceID_None, activeAtom, nsAutoString(), PR_TRUE);
   } else {
