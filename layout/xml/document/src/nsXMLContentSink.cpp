@@ -978,7 +978,7 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
 #ifdef MOZ_XSL
 nsresult
 nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
-                                      const nsAutoString& aHref)
+                                      const nsAReadableString& aHref)
 {
   nsresult result = NS_OK;
   result = NS_NewURI(aUrl, aHref, mDocumentBaseURL);
