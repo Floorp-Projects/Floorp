@@ -105,6 +105,7 @@ protected:
   virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
 };
 
+#ifdef MOZ_EXTRA_X11CONVERTERS
 class nsUnicodeToGB18030Font0: public nsUnicodeToGB18030
 {
 public:
@@ -124,6 +125,7 @@ public:
 protected: 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 };
+#endif 
 
 #endif /* nsUnicodeToGBK_h___ */
 

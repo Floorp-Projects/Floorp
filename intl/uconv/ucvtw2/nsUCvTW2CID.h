@@ -52,6 +52,7 @@
   { 0x379c2776, 0xec77, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
 
+#ifdef MOZ_EXTRA_X11CONVERTERS
 // Class ID for our UnicodeToCNS11643p1 charset converter
 // {BA615197-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UNICODETOCNS11643P1_CID \
@@ -81,5 +82,6 @@
 // Class ID for our UnicodeToCNS11643p7 charset converter
 #define NS_UNICODETOCNS11643P7_CID \
   { 0x9416bfb9, 0x1f93, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
+#endif
 
 #endif /* nsUCvTW2CID_h___ */

@@ -147,6 +147,8 @@ PRBool nsUnicodeToGB18030::EncodeSurrogate(
   } 
   return PR_FALSE; 
 } 
+
+#ifdef MOZ_EXTRA_X11CONVERTERS
 //-----------------------------------------------------------------------
 //  nsUnicodeToGB18030Font0
 //-----------------------------------------------------------------------
@@ -319,6 +321,7 @@ NS_IMETHODIMP nsUnicodeToGB18030Font1::FillInfo(PRUint32 *aInfo)
   // end of Arabic script
   return res;
 }
+#endif
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [implementation]
 

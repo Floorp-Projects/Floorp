@@ -65,10 +65,12 @@
 #define NS_UNICODETOGB2312_CID \
   { 0x379c2777, 0xec77, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
+#ifdef MOZ_EXTRA_X11CONVERTERS
 // Class ID for our UnicodeToGB2312GL charset converter
 // {BA615196-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UNICODETOGB2312GL_CID \
   { 0xba615196, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
+#endif
 
 // Class ID for our UnicodeToGBK charset converter
 // {BA61519B-1DFA-11d3-B3BF-00805F8A6670}
@@ -107,6 +109,7 @@
 #define NS_UNICODETOGB18030_CID \
   { 0xa59da932, 0x4091, 0x11d5, { 0xa1, 0x45, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42 } }
 
+#ifdef MOZ_EXTRA_X11CONVERTERS
 // Class ID for our UnicodeToGB18030Font0 charset converter
 // {A59DA933-4091-11d5-A145-005004832142}
 #define NS_UNICODETOGB18030Font0_CID \
@@ -116,6 +119,7 @@
 // {A59DA934-4091-11d5-A145-005004832142}
 #define NS_UNICODETOGB18030Font1_CID \
   { 0xa59da934, 0x4091, 0x11d5, { 0xa1, 0x45, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42 } }
+#endif
 
 // Class ID for our GBKToUnicode charset converter
 // {A59DA935-4091-11d5-A145-005004832142}
