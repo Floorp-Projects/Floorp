@@ -25,6 +25,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
+#include "nsIFactory.h"
 #include "nsIRegistry.h"
 #include "nsISupportsPrimitives.h"
 #include "nsComponentManager.h"
@@ -150,7 +151,7 @@ NS_IMPL_ISUPPORTS1(nsCategoryManager, nsICategoryManager)
 nsCategoryManager::nsCategoryManager()
     : nsObjectHashtable(0, 0, Destroy_CategoryNode, 0)
   {
-    // Nothing else to do here...
+    NS_INIT_REFCNT();
   }
 
 nsresult
@@ -460,3 +461,70 @@ nsCategoryManager::UnregisterCategoryHandler( const char *category,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
  
+ 
+class nsCategoryManagerFactory : public nsIFactory
+   {
+     public:
+       nsCategoryManagerFactory();
+
+       NS_DECL_ISUPPORTS
+      NS_DECL_NSIFACTORY
+   };
+
+NS_IMPL_ISUPPORTS1(nsCategoryManagerFactory, nsIFactory)
+
+nsCategoryManagerFactory::nsCategoryManagerFactory()
+  {
+    NS_INIT_REFCNT();
+  }
+
+NS_IMETHODIMP
+nsCategoryManagerFactory::CreateInstance( nsISupports* aOuter, const nsIID& aIID, void** aResult )
+  {
+    // assert(aResult);
+
+    *aResult = 0;
+
+    nsresult status = NS_OK;
+    if ( aOuter )
+      status = NS_ERROR_NO_AGGREGATION;
+    else
+      {
+         nsCOMPtr<nsICategoryManager> new_category_manager = new nsCategoryManager;
+         if ( new_category_manager )
+          status = new_category_manager->QueryInterface(aIID, aResult);
+         else
+           status = NS_ERROR_OUT_OF_MEMORY;
+      }
+
+    return status;
+  }
+
+NS_IMETHODIMP
+nsCategoryManagerFactory::LockFactory( PRBool )
+  {
+      // Not implemented...
+    return NS_OK;
+  }
+
+extern "C"
+NS_EXPORT
+nsresult
+NS_CategoryManagerGetFactory( nsIFactory** aFactory )
+  {
+    // assert(aFactory);
+
+    nsresult status;
+
+    *aFactory = 0;
+    if ( nsIFactory* new_factory = NS_STATIC_CAST(nsIFactory*, new nsCategoryManagerFactory) )
+      {
+        *aFactory = new_factory;
+        NS_ADDREF(*aFactory);
+        status = NS_OK;
+      }
+    else
+      status = NS_ERROR_OUT_OF_MEMORY;
+
+    return status;
+  }
