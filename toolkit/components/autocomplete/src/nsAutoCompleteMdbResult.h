@@ -53,22 +53,9 @@ public:
   nsAutoCompleteMdbResult();
   virtual ~nsAutoCompleteMdbResult();
 
-  // nsIAutoCompleteBaseResult
-  NS_IMETHOD SetSearchString(const nsAString &aSearchString);
-  NS_IMETHOD SetErrorDescription(const nsAString &aErrorDescription);
-  NS_IMETHOD SetDefaultIndex(PRInt32 aDefaultIndex);
-  NS_IMETHOD SetSearchResult(PRUint32 aSearchResult);
+  NS_DECL_NSIAUTOCOMPLETEBASERESULT
+  NS_DECL_NSIAUTOCOMPLETEMDBRESULT
 
-  // nsIAutoCompleteMdbResult
-  NS_IMETHOD Init(nsIMdbEnv *aEnv, nsIMdbTable *aTable);
-  NS_IMETHOD SetTokens(mdb_scope aValueToken, eDataType aValueType, mdb_scope aCommentToken, eDataType aCommentType);
-  NS_IMETHOD AddRow(nsIMdbRow *aRow);
-  NS_IMETHOD RemoveRowAt(PRUint32 aRowIndex);
-  NS_IMETHOD GetRowAt(PRUint32 aRowIndex, nsIMdbRow **aRow);
-  NS_IMETHOD GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString &aValue);
-  NS_IMETHOD GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACString &aValue);
-  NS_IMETHOD GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 *aValue);
-  
 protected:
   nsAutoVoidArray mResults;
 
@@ -81,9 +68,9 @@ protected:
   nsIMdbTable *mTable;
   
   mdb_scope mValueToken;
-  eDataType mValueType;
+  PRInt16   mValueType;
   mdb_scope mCommentToken;
-  eDataType mCommentType;
+  PRInt16   mCommentType;
 };
 
 #endif // __nsAutoCompleteResultBase__
