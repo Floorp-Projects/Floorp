@@ -195,7 +195,7 @@ mozTXTToHTMLConv::FindURLStart(const nsAutoString& text, const PRUint32 pos,
     for (; i >= 0
              && text[PRUint32(i)] != '>' && text[PRUint32(i)] != '<'
              && text[PRUint32(i)] != '"' && text[PRUint32(i)] != '\''
-             && text[PRUint32(i)] != '`' && text[PRUint32(i)] != ','
+             && text[PRUint32(i)] != '`' 
              && text[PRUint32(i)] != '{' && text[PRUint32(i)] != '['
              && text[PRUint32(i)] != '(' && text[PRUint32(i)] != '|'
              && text[PRUint32(i)] != '\\'
