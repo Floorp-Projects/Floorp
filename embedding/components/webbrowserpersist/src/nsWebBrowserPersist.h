@@ -53,7 +53,7 @@ struct URIData;
 class nsWebBrowserPersist : public nsIInterfaceRequestor,
                             public nsIWebBrowserPersist,
                             public nsIStreamListener,
-                            public nsDOMWalkerCallback,
+                            public nsIDOMWalkerCallback,
                             public nsIProgressEventSink,
                             public nsSupportsWeakReference
 {
@@ -69,7 +69,8 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIPROGRESSEVENTSINK
-    
+    NS_DECL_NSIDOMWALKERCALLBACK
+
 // Protected members
 protected:    
     virtual ~nsWebBrowserPersist();
@@ -133,9 +134,6 @@ private:
     nsresult SaveGatheredURIs(nsIURI *aFileAsURI);
     PRBool SerializeNextFile();
     void CalcTotalProgress();
-
-    // nsDOMWalkerCallback method
-    nsresult OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort);
 
     // Hash table enumerators
     static PRBool PR_CALLBACK EnumPersistURIs(

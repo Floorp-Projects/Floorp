@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,23 +20,12 @@
  *   Adam Lock <adamlock@netscape.com>
  */
 
-#ifndef NSDOMWALKER_H
-#define NSDOMWALKER_H
+#include "nsIDOMWalker.idl"
 
-#include "nsIDOMNode.h"
-#include "nsCDOMWalker.h"
-
-class nsDOMWalker :
-    public nsIDOMWalker
-{
-// Public members
-public:
-    nsDOMWalker();
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMWALKER
-protected:
-    virtual ~nsDOMWalker();
-};
-
-#endif
+%{ C++
+// {2abe95e1-59fb-4b24-84c9-db164d5eb540}
+#define NS_DOMWALKER_CID \
+{ 0x2abe95e1, 0x59fb, 0x4b24, {0x84, 0xc9, 0xdb, 0x16, 0x4d, 0x5e, 0xb5, 0x40} }
+#define NS_DOMWALKER_CONTRACTID \
+"@mozilla.org/embedding/browser/nsDOMWalker;1"
+%}
