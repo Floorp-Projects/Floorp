@@ -43,12 +43,13 @@
 #include "nsMenuItem.h"
 #include <imm.h>
 
-
+//#define DRAG_DROP
 #ifdef DRAG_DROP
+#include "nsNativeDragTarget.h"
 //#include "nsDropTarget.h"
-#include "DragDrop.h"
-#include "DropTar.h"
-#include "DropSrc.h"
+//#include "DragDrop.h"
+//#include "DropTar.h"
+//#include "DropSrc.h"
 #endif
 
 // For clipboard support
@@ -117,9 +118,8 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMECompositionUniString = NULL;
 
 #ifdef DRAG_DROP
-    mDragDrop           = nsnull;
-    mDropTarget         = nsnull;
-    mDropSource         = nsnull;
+    mNativeDragTarget = nsnull;
+    //mDragSource         = nsnull;
 #endif
 
 }
@@ -149,12 +149,10 @@ nsWindow::~nsWindow()
   }
 
   NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
+
 #ifdef DRAG_DROP
-  NS_IF_RELEASE(mDropTarget); 
-  NS_IF_RELEASE(mDropSource); 
-  if (mDragDrop)
-    delete mDragDrop;
-  //NS_IF_RELEASE(mDragDrop); 
+  //NS_IF_RELEASE(mDragTarget); 
+  //NS_IF_RELEASE(mDragSource); 
 #endif
 
   //XXX Temporary: Should not be caching the font
@@ -604,24 +602,24 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      gOLEInited = TRUE;
    }
 #ifdef DRAG_DROP
-
-   mDragDrop = new CfDragDrop();
-   //mDragDrop->AddRef();
-   mDragDrop->Initialize(this);
-
-   /*mDropTarget = new CfDropTarget(*mDragDrop);
-   mDropTarget->AddRef();
-
-   mDropSource = new CfDropSource(*mDragDrop);
-   mDropSource->AddRef();*/
-
-   /*mDropTarget = new nsDropTarget(this);
-   mDropTarget->AddRef();
-   if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mDropTarget,TRUE,FALSE)) {
-     if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mDropTarget)) {
-
+   mNativeDragTarget = new nsNativeDragTarget(this);
+   if (NULL != mNativeDragTarget) {
+     mNativeDragTarget->AddRef();
+     if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,TRUE,FALSE)) {
+       if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget)) {
+       }
      }
-   }*/
+   }
+   //mDragDrop = new CfDragDrop();
+   //mDragDrop->AddRef();
+   //mDragDrop->Initialize(this);
+
+   /*mDragTarget = new CfDropTarget(*mDragDrop);
+   mDragTarget->AddRef();
+
+   mDragSource = new CfDropSource(*mDragDrop);
+   mDragSource->AddRef();*/
+
 #endif
 
     // call the event callback to notify about creation
@@ -691,6 +689,14 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
   }
 
+#ifdef DRAG_DROP
+  if (NULL != mNativeDragTarget) {
+    if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
+    }
+    NS_RELEASE(mNativeDragTarget);
+  }
+#endif
+
   // destroy the HWND
   if (mWnd) {
     // prevent the widget from causing additional events
@@ -705,7 +711,7 @@ NS_METHOD nsWindow::Destroy()
     if (PR_FALSE == mOnDestroyCalled)
       OnDestroy();
   }
-  
+
   return NS_OK;
 }
 
@@ -1354,7 +1360,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 //
 //-------------------------------------------------------------------------
 
-PRBool nsWindow::OnKey(PRUint32 aEventType, UINT nChar, UINT nRepCnt, UINT nFlags)
+PRBool nsWindow::OnKey(PRUint32 aEventType, PRBool aCalcCharCode, TCHAR aCharCode, UINT nChar, UINT nRepCnt, UINT nFlags)
 {
   if (nChar == NS_VK_CAPS_LOCK ||
       nChar == NS_VK_ALT ||
@@ -1371,14 +1377,19 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, UINT nChar, UINT nRepCnt, UINT nFlag
 
   InitEvent(event, aEventType, &point);
 
-  // Now let windows do the conversion to the ascii code
-  WORD asciiChar = 0;
-  BYTE kbstate[256];
-  ::GetKeyboardState(kbstate);
-  ToAscii(nChar, nFlags & 0xff, kbstate, &asciiChar, 0);
+  if (aCalcCharCode) {
+    // Now let windows do the conversion to the ascii code
+    WORD asciiChar = 0;
+    BYTE kbstate[256];
+    ::GetKeyboardState(kbstate);
+    ToAscii(nChar, nFlags & 0xff, kbstate, &asciiChar, 0);
+    event.charCode = (char)asciiChar;
+  } else {
+    event.charCode = aCharCode;
+  }
 
   event.keyCode = nChar;
-  event.charCode = (char)asciiChar;
+printf("charCode %d  keyCode %d\n",  event.charCode, event.keyCode);
 
   event.isShift   = mIsShiftDown;
   event.isControl = mIsControlDown;
@@ -1688,6 +1699,7 @@ NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 //-------------------------------------------------------------------------
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
+    static UINT vkKeyCached = 0;                // caches VK code fon WM_KEYDOWN
     static BOOL firstTime = TRUE;                // for mouse wheel logic
     static int  iDeltaPerLine, iAccumDelta ;     // for mouse wheel logic
     ULONG       ulScrollLines ;                  // for mouse wheel logic
@@ -1777,34 +1789,45 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = OnPaint();
             break;
 
-        case WM_KEYUP: 
-
+        case WM_CHAR:
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            {
-            LONG data = (LONG)lParam;
-            LONG newdata = (data & 0x00FF00);
-            //LONG newdata2 = (data & 0xFFFF00F);
-            int x = 0;
-            }
             
-			if (!mIMEIsComposing)
-				result = OnKey(NS_KEY_UP, wParam, LOWORD(lParam), HIWORD(lParam));
-			else
-				result = PR_FALSE;
+			      if (!mIMEIsComposing)
+				      result = OnKey(NS_KEY_UP, FALSE, wParam, vkKeyCached, LOWORD(lParam), HIWORD(lParam));
+			      else
+				      result = PR_FALSE;
+          break;
+
+        case WM_KEYUP: 
+            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+            
+			      if (!mIMEIsComposing)
+				      result = OnKey(NS_KEY_UP, TRUE, 0, wParam, LOWORD(lParam), HIWORD(lParam));
+			      else
+				      result = PR_FALSE;
             break;
 
-        case WM_KEYDOWN:
-
-            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-			
-			if (!mIMEIsComposing)
-				result = OnKey(NS_KEY_DOWN, wParam, LOWORD(lParam), HIWORD(lParam));
-			else
-				result = PR_FALSE;
+        case WM_KEYDOWN: 
+            {
+            vkKeyCached = (UINT)wParam;
+            if (vkKeyCached < 32 || vkKeyCached > 126) {
+              mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+              mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+              mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+			  
+			        if (!mIMEIsComposing)
+				        result = OnKey(NS_KEY_DOWN, TRUE, 0, wParam, LOWORD(lParam), HIWORD(lParam));
+			        else
+				        result = PR_FALSE;
+            } else {
+              // thse are handled by WM_CHAR
+  				    result = PR_FALSE;
+            }
+            }
             break;
 
         // say we've dealt with erase background if widget does
@@ -1822,6 +1845,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_LBUTTONDOWN:
+            SetFocus();
             //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             break;
@@ -2151,7 +2175,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 
         case WM_DROPFILES: {
-          HDROP hDropInfo = (HDROP) wParam;
+          /*HDROP hDropInfo = (HDROP) wParam;
 	        UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
 
 	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
@@ -2166,7 +2190,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.mIsFileURL = PR_FALSE;
             event.mURL       = (PRUnichar *)fileStr.GetUnicode();
             DispatchEvent(&event, status);
-	        }
+	        }*/
         } break;
 
       case WM_DESTROYCLIPBOARD: {
