@@ -272,7 +272,7 @@ inline static PRBool is_eol(char c) {return c == '\n' || c == '\r';}
 PRBool
 ManifestLineReader::NextLine()
 {
-    if(mNext == mLimit)
+    if(mNext >= mLimit)
         return PR_FALSE;
 
     mCur = mNext;
