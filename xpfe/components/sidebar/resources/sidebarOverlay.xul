@@ -9,15 +9,15 @@
 <html:script language="JavaScript"
   src="chrome://sidebar/content/sidebarOverlay.js"/>
 
-  <box id="sidebarbox" align="vertical" persist="hidden style width">
+  <box id="sidebarbox" align="vertical" persist="hidden width">
     <box id="titlebox">
       <spring flex="100%"/>
       <titledbutton class="borderless"
         value="&sidebar.reload.label;"
-        onclick="reloadSidebar()" />
+        onclick="sidebarReload()" />
       <titledbutton class="borderless"
         value="&sidebar.customize.label;" 
-        onclick="customizeSidebar();" />
+        onclick="sidebarCustomize();" />
       <spring flex="100%"/>
     </box>
     <box id="sidebarpanels" align="vertical" flex='100%'/>
