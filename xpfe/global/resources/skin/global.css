@@ -1357,3 +1357,21 @@ window html|input[type=checkbox] {
   border: 1px inset rgb(192, 192, 192);
   color:black;
 }
+
+window html|input[type=checkbox]:hover {
+  border: 1px solid black;
+}
+
+window html|input[type=checkbox][disabled] {
+  border: 1px solid;
+}
+
+window html|input[type=checkbox][disabled]:hover {
+  border: 1px solid rgb(153, 153, 153);
+}
+
+window html|input[type=checkbox]:focus {
+  border:1px dotted rgb(153, 153, 153);
+}
+
+
