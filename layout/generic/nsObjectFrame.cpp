@@ -1240,11 +1240,10 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
 #endif
 
   // Check to see if content-policy wants to veto this
-  if(aURI != nsnull)
+  if(aURI)
   {
-    PRBool shouldLoad = PR_TRUE; // default permit
     nsresult rv;
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent, &rv);
+    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(mContent, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDocument> document;
@@ -1254,13 +1253,19 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     if (! document)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(document->GetScriptGlobalObject(), &rv));
+    nsIURI *docURI = document->GetDocumentURI();
+    //don't care if we can't get the originating URL
 
-    if (NS_SUCCEEDED(rv) &&
-        NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::OBJECT,
-                                               aURI, element, domWin, &shouldLoad)) &&
-        !shouldLoad) {
-      return NS_OK;
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
+                                   aURI,
+                                   docURI,
+                                   domNode,
+                                   nsDependentCString(aMimetype ? aMimetype : ""),
+                                   nsnull, //extra
+                                   &shouldLoad);
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+      return NS_CONTENT_BLOCKED_SHOW_ALT;
     }
   }
 

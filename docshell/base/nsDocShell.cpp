@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+  * vim: ft=cpp tw=78 sw=4 et ts=4
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -4965,18 +4966,36 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // First, notify any nsIContentPolicy listeners about the document load.
     // Only abort the load if a content policy listener explicitly vetos it!
     //
-    PRBool bShouldLoad = PR_TRUE;
-    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface((nsIDocShell*)this);
+    nsCOMPtr<nsIDOMElement> requestingElement;
 
-    (void) NS_CheckContentLoadPolicy((IsFrame() ? nsIContentPolicy::SUBDOCUMENT
-                                                : nsIContentPolicy::DOCUMENT),
-                                     aURI,
-                                     nsnull,
-                                     domWindow,
-                                     &bShouldLoad);
-    if (!bShouldLoad) {
-      // XXX: There must be a better return code...
-      return NS_ERROR_FAILURE;
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    PRUint32 contentType;
+    if (IsFrame()) {
+        nsCOMPtr<nsIDOMWindowInternal> intWin(do_QueryInterface(mScriptGlobal));
+        if (intWin)
+            intWin->GetFrameElement(getter_AddRefs(requestingElement));
+#ifdef DEBUG_riceman
+        NS_ASSERTION(requestingElement, "A frame but no DOM element!?");
+#endif
+        contentType = nsIContentPolicy::TYPE_SUBDOCUMENT;
+    } else {
+        contentType = nsIContentPolicy::TYPE_DOCUMENT;
+    }
+
+    rv = NS_CheckContentLoadPolicy(contentType,
+                                   aURI,
+                                   aReferrer,
+                                   requestingElement,
+                                   EmptyCString(), //mime guess
+                                   nsnull,         //extra
+                                   &shouldLoad);
+
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+        if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
+            return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+        }
+
+        return NS_ERROR_CONTENT_BLOCKED;
     }
 
     nsCOMPtr<nsISupports> owner(aOwner);

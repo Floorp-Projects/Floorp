@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: ft=cpp tw=78 sw=4 et ts=8
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -40,7 +41,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMNode.h"
+#include "nsContentPolicyUtils.h"
 
 nsWebBrowserContentPolicy::nsWebBrowserContentPolicy()
 {
@@ -54,53 +56,75 @@ nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy()
 
 NS_IMPL_ISUPPORTS1(nsWebBrowserContentPolicy, nsIContentPolicy)
 
-NS_IMETHODIMP
-nsWebBrowserContentPolicy::ShouldLoad(PRInt32 contentType,
-                                      nsIURI *contentLocation,
-                                      nsISupports *context,
-                                      nsIDOMWindow *window, PRBool *shouldLoad)
+static nsresult
+PerformPolicyCheck(PRUint32    contentType,
+                   nsIDOMNode *requestingNode,
+                   PRInt16    *decision)
 {
-    *shouldLoad = PR_TRUE;
+    NS_PRECONDITION(decision, "Null out param");
 
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = 
-        do_QueryInterface(window);
-    if (!scriptGlobal)
-        return NS_OK;
+    *decision = nsIContentPolicy::ACCEPT;
 
-    nsIDocShell *shell = scriptGlobal->GetDocShell();
+    nsIDocShell *shell = NS_CP_GetDocShellFromDOMNode(requestingNode);
     /* We're going to dereference shell, so make sure it isn't null */
     if (!shell)
-      return NS_OK;
-    
+        return NS_OK;
+
+    nsresult rv;
+    PRBool allowed = PR_TRUE;
+
     switch (contentType) {
-      case nsIContentPolicy::OBJECT:
-        return shell->GetAllowPlugins(shouldLoad);
-      case nsIContentPolicy::SCRIPT:
-        return shell->GetAllowJavascript(shouldLoad);
-      case nsIContentPolicy::SUBDOCUMENT:
-        return shell->GetAllowSubframes(shouldLoad);
-#if 0       
-        /* need to actually check that it's a meta tag, maybe */
-      case nsIContentPolicy::CONTROL_TAG:
-        return shell->GetAllowMetaRedirects(shouldLoad); /* meta _refresh_ */
+      case nsIContentPolicy::TYPE_OBJECT:
+        rv = shell->GetAllowPlugins(&allowed);
+        break;
+      case nsIContentPolicy::TYPE_SCRIPT:
+        rv = shell->GetAllowJavascript(&allowed);
+        break;
+      case nsIContentPolicy::TYPE_SUBDOCUMENT:
+        rv = shell->GetAllowSubframes(&allowed);
+        break;
+#if 0
+      /* XXXtw: commented out in old code; add during conpol phase 2 */
+      case nsIContentPolicy::TYPE_REFRESH:
+        rv = shell->GetAllowMetaRedirects(&allowed); /* meta _refresh_ */
+        break;
 #endif
-      case nsIContentPolicy::IMAGE:
-        return shell->GetAllowImages(shouldLoad);
+      case nsIContentPolicy::TYPE_IMAGE:
+        rv = shell->GetAllowImages(&allowed);
+        break;
       default:
         return NS_OK;
     }
-    
+
+    if (NS_SUCCEEDED(rv) && !allowed) {
+        *decision = nsIContentPolicy::REJECT_TYPE;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
-nsWebBrowserContentPolicy::ShouldProcess(PRInt32 contentType,
-                                         nsIURI *contentLocation,
-                                         nsISupports *context,
-                                         nsIDOMWindow *window,
-                                         PRBool *shouldProcess)
+nsWebBrowserContentPolicy::ShouldLoad(PRUint32          contentType,
+                                      nsIURI           *contentLocation,
+                                      nsIURI           *requestingLocation,
+                                      nsIDOMNode       *requestingNode,
+                                      const nsACString &mimeGuess,
+                                      nsISupports      *extra,
+                                      PRInt16          *shouldLoad)
 {
-    /* XXX use this for AllowJavascript (sic) control? */
-    *shouldProcess = PR_TRUE;
-    return NS_OK;
+    return PerformPolicyCheck(contentType, requestingNode, shouldLoad);
 }
 
+NS_IMETHODIMP
+nsWebBrowserContentPolicy::ShouldProcess(PRUint32          contentType,
+                                         nsIURI           *contentLocation,
+                                         nsIURI           *requestingLocation,
+                                         nsIDOMNode       *requestingNode,
+                                         const nsACString &mimeGuess,
+                                         nsISupports      *extra,
+                                         PRInt16          *shouldProcess)
+{
+    *shouldProcess = nsIContentPolicy::ACCEPT;
+    return NS_OK;
+    //LATER:
+    //  return PerformPolicyCheck(contentType, requestingNode, shouldProcess);
+}

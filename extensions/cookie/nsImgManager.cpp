@@ -42,7 +42,6 @@
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrefService.h"
@@ -50,6 +49,7 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIDocShell.h"
 #include "nsString.h"
+#include "nsContentPolicyUtils.h"
 
 // Possible behavior pref values
 #define IMAGE_ACCEPT 0
@@ -63,27 +63,6 @@ static const char kImageBlockImageInMailNewsPrefName[] = "mailnews.message_displ
 static const PRUint8      kImageBehaviorPrefDefault = IMAGE_ACCEPT;
 static const PRPackedBool kImageWarningPrefDefault = PR_FALSE;
 static const PRPackedBool kImageBlockImageInMailNewsPrefDefault = PR_FALSE;
-
-static inline already_AddRefed<nsIDocShell>
-GetRootDocShell(nsIDOMWindow *aWindow)
-{
-  nsIDocShell *rootShell = nsnull;
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
-  if (globalObj) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-      do_QueryInterface(globalObj->GetDocShell());
-
-    if (docShellTreeItem) {
-      nsCOMPtr<nsIDocShellTreeItem> rootItem;
-      docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-
-      CallQueryInterface(rootItem, &rootShell);
-    }
-  }
-
-  return rootShell;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsImgManager Implementation
@@ -149,33 +128,65 @@ nsImgManager::PrefChanged(nsIPrefBranch *aPrefBranch,
     mBlockInMailNewsPref = val;
 }
 
-// nsIContentPolicy Implementation
-NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType, 
-                                       nsIURI *aContentLoc,
-                                       nsISupports *aContext,
-                                       nsIDOMWindow *aWindow,
-                                       PRBool *aShouldLoad)
+/**
+ * Helper function to get the root DocShell given a DOMNode
+ *
+ * @param aNode a DOMNode (cannot be null)
+ * @return the root DocShell containing the DOMNode, if found
+ */
+static inline already_AddRefed<nsIDocShell>
+GetRootDocShell(nsIDOMNode *node)
 {
-  *aShouldLoad = PR_TRUE;
-  nsresult rv = NS_OK;
+  nsIDocShell *docshell = NS_CP_GetDocShellFromDOMNode(node);
+  if (!docshell)
+    return nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(docshell, &rv));
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  // we want the app docshell, so don't use GetSameTypeRootTreeItem
+  rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsIDocShell *result;
+  CallQueryInterface(rootItem, &result);
+  return result;
+}
+
+// nsIContentPolicy Implementation
+NS_IMETHODIMP nsImgManager::ShouldLoad(PRUint32          aContentType,
+                                       nsIURI           *aContentLocation,
+                                       nsIURI           *aRequestingLocation,
+                                       nsIDOMNode       *aRequestingNode,
+                                       const nsACString &aMimeGuess,
+                                       nsISupports      *aExtra,
+                                       PRInt16          *aDecision)
+{
+  *aDecision = nsIContentPolicy::ACCEPT;
+  nsresult rv;
 
   // we can't do anything w/ out this
-  if (!aContentLoc)
-    return rv;
+  if (!aContentLocation)
+    return NS_OK;
 
-  if (aContentType == nsIContentPolicy::IMAGE) {
+  if (aContentType == nsIContentPolicy::TYPE_IMAGE) {
     // we only want to check http, https, ftp
+    // remember ftp for a later check (disabling ftp images from mailnews)
     PRBool isFtp;
-    rv = aContentLoc->SchemeIs("ftp", &isFtp);
+    rv = aContentLocation->SchemeIs("ftp", &isFtp);
     NS_ENSURE_SUCCESS(rv,rv);
 
     PRBool needToCheck = isFtp;
     if (!needToCheck) {
-      rv = aContentLoc->SchemeIs("http", &needToCheck);
+      rv = aContentLocation->SchemeIs("http", &needToCheck);
       NS_ENSURE_SUCCESS(rv,rv);
 
       if (!needToCheck) {
-        rv = aContentLoc->SchemeIs("https", &needToCheck);
+        rv = aContentLocation->SchemeIs("https", &needToCheck);
         NS_ENSURE_SUCCESS(rv,rv);
       }
     }
@@ -184,35 +195,7 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
     if (!needToCheck)
       return NS_OK;
 
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
-    if (content) {
-      // XXXbz GetOwnerDocument
-      doc = content->GetDocument();
-      if (!doc) {
-        nsINodeInfo *nodeinfo = content->GetNodeInfo();
-        if (nodeinfo) {
-          doc = nodeinfo->GetDocument();
-        }
-      }
-    }
-
-    if (!doc && aWindow) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      aWindow->GetDocument(getter_AddRefs(domDoc));
-      doc = do_QueryInterface(domDoc);
-    }
-    
-    if (!doc) {
-      // XXX what to do if there is really no document?
-      return NS_OK;
-    }
-    
-    nsIURI *baseURI = doc->GetBaseURI();
-    if (!baseURI)
-      return rv;
-
-    nsCOMPtr<nsIDocShell> docshell = GetRootDocShell(aWindow);
+    nsCOMPtr<nsIDocShell> docshell(GetRootDocShell(aRequestingNode));
     if (docshell) {
       PRUint32 appType;
       rv = docshell->GetAppType(&appType);
@@ -221,26 +204,34 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
         // because we don't want to send the users email address
         // as the anonymous password
         if (mBlockInMailNewsPref || isFtp) {
-          *aShouldLoad = PR_FALSE;
+          *aDecision = nsIContentPolicy::REJECT_REQUEST;
           return NS_OK;
         }
       }
     }
       
-    rv =  TestPermission(aContentLoc, baseURI, aShouldLoad);
-    if (NS_FAILED(rv))
-      return rv;
+    PRBool shouldLoad;
+    rv =  TestPermission(aContentLocation, aRequestingLocation, &shouldLoad);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!shouldLoad)
+      *aDecision = nsIContentPolicy::REJECT_REQUEST;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImgManager::ShouldProcess(PRInt32 aContentType,
-                                          nsIURI *aDocumentLoc,
-                                          nsISupports *aContext,
-                                          nsIDOMWindow *aWindow,
-                                          PRBool *_retval)
+NS_IMETHODIMP nsImgManager::ShouldProcess(PRUint32          aContentType,
+                                          nsIURI           *aContentLocation,
+                                          nsIURI           *aRequestingLocation,
+                                          nsIDOMNode       *aRequestingNode,
+                                          const nsACString &aMimeGuess,
+                                          nsISupports      *aExtra,
+                                          PRInt16          *aDecision)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //TODO: implement this to check images loaded into a raw document (as in,
+  //outside of a web page)
+
+  *aDecision = nsIContentPolicy::ACCEPT;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -593,6 +593,12 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            // mechanism for reading properties of the underlying XPCOM object
+            // (ignoring potential getters/setters added by malicious content)
+            var safeGetProperty = function(obj, propname) {
+              return Components.lookupMethod(obj, propname).call(obj);
+            };
+
             if (!this.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
 
@@ -604,25 +610,54 @@
             if (!href)
               return;
 
-            // Verify that the load of this icon is legal.  We use the same
-            // content policy that is used for a Web page loading images.
-            var contentPolicy = Components.classes['@mozilla.org/layout/content-policy;1'].getService(Components.interfaces.nsIContentPolicy);
-            if (!contentPolicy)
+            try {
+              var contentPolicy =
+                Components.classes['@mozilla.org/layout/content-policy;1']
+                          .getService(Components.interfaces.nsIContentPolicy);
+            } catch(e) {
               return; // Refuse to load if we can't do a security check.
+            }
 
+            // Verify that the load of this icon is legal.
+            // We check first with the security manager
+            const secMan =
+              Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Components.interfaces.nsIScriptSecurityManager);
+
+            // Get the IOService so we can make URIs
+            const ioService =
+              Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService);
+
+            const targetDoc = safeGetProperty(event.target, "ownerDocument");
             // Make a URI out of our href.
-            var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance();
-            uri = uri.QueryInterface(Components.interfaces.nsIURI);
+            var docCharset = safeGetProperty(targetDoc, "characterSet");
+            var uri = ioService.newURI(href, docCharset, null);
+
+            var origURIStr = safeGetProperty(targetDoc, "documentURI");
+            var origURI = ioService.newURI(origURIStr, docCharset, null);
+
+            const nsIScriptSecMan =
+              Components.interfaces.nsIScriptSecurityManager;
+
+            try {
+              secMan.checkLoadURI(origURI, uri, nsIScriptSecMan.STANDARD);
+            } catch(e) {
+              return;
+            }
 
             var notifyListeners = true;
             var i;
 
+            // Security says okay, now ask content policy
             if (this.mTabbedMode) {
               // We need to update a tab.
               for (i = 0; i < this.browsers.length; i++) {
                 if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
-                  if (!contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
-                                                uri, event.originalTarget, this.browsers[i].contentWindow))
+                  if (contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.TYPE_IMAGE,
+                                               uri, origURI, event.target,
+                                               safeGetProperty(event.target, "type"),
+                                               null) != Components.interfaces.nsIContentPolicy.ACCEPT)
                     return;
 
                   this.mTabListeners[i].mIcon = href;
@@ -631,9 +666,11 @@
                 }
               }
             }
-            else if (this.contentDocument != event.originalTarget.ownerDocument ||
-                     !contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
-                                               uri, event.originalTarget, this.mCurrentBrowser.contentWindow))
+            else if ((this.contentDocument != event.originalTarget.ownerDocument) ||
+                     (contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.TYPE_IMAGE,
+                                               uri, origURI, event.target,
+                                               safeGetProperty(event.target, "type"),
+                                               null) != Components.interfaces.nsIContentPolicy.ACCEPT))
               return;
 
             if (notifyListeners && this.mProgressListeners) {

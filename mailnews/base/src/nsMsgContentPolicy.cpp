@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsIContentPolicy.h"
 
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
 static const char kAllowPlugins[] = "mailnews.message_display.allow.plugins";
@@ -100,21 +101,27 @@ nsresult nsMsgContentPolicy::Init()
 }
 
 NS_IMETHODIMP
-nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, nsISupports *aContext,
-                               nsIDOMWindow *aWindow, PRBool *shouldLoad)
+nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
+                               nsIURI           *aContentLocation,
+                               nsIURI           *aRequestingLocation,
+                               nsIDOMNode       *aRequestingNode,
+                               const nsACString &aMimeGuess,
+                               nsISupports      *aExtra,
+                               PRInt16          *aDecision)
 {
   nsresult rv = NS_OK;
-  *shouldLoad = PR_TRUE;
+  *aDecision = nsIContentPolicy::ACCEPT;
 
-  if (!aContentLocation || !aContext) 
+  if (!aContentLocation) 
       return rv;
 
-  if (aContentType == nsIContentPolicy::OBJECT)
+  if (aContentType == nsIContentPolicy::TYPE_OBJECT)
   {
       // only allow the plugin to load if the allow plugins pref has been set
-      *shouldLoad = mAllowPlugins;
+      *aDecision = mAllowPlugins ? nsIContentPolicy::ACCEPT :
+                                   nsIContentPolicy::REJECT_TYPE;
   }
-  else if (aContentType == nsIContentPolicy::IMAGE)
+  else if (aContentType == nsIContentPolicy::TYPE_IMAGE)
   {
     PRBool isFtp = PR_FALSE;
     rv = aContentLocation->SchemeIs("ftp", &isFtp);
@@ -124,7 +131,7 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
       // never allow ftp for mail messages, 
       // because we don't want to send the users email address
       // as the anonymous password
-      *shouldLoad = PR_FALSE;
+      *aDecision = nsIContentPolicy::REJECT_REQUEST;
     }
     else // check for http and https urls...block those if necessary
     {
@@ -140,7 +147,8 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
       if (needToCheck) // http or https ? 
       {
         // check the 'disable remote images pref' and block the image if appropriate
-        *shouldLoad = !mBlockRemoteImages;
+        *aDecision = mBlockRemoteImages ? nsIContentPolicy::ACCEPT :
+                                          nsIContentPolicy::REJECT_REQUEST;
       }
     }
   }
@@ -148,13 +156,17 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
   return rv;
 }
 
-NS_IMETHODIMP nsMsgContentPolicy::ShouldProcess(PRInt32 contentType,
-                                                nsIURI *contentLocation,
-                                                nsISupports *context,
-                                                nsIDOMWindow *window,
-                                                PRBool *shouldProcess)
+NS_IMETHODIMP
+nsMsgContentPolicy::ShouldProcess(PRUint32          aContentType,
+                                  nsIURI           *aContentLocation,
+                                  nsIURI           *aRequestingLocation,
+                                  nsIDOMNode       *aRequestingNode,
+                                  const nsACString &aMimeGuess,
+                                  nsISupports      *aExtra,
+                                  PRInt16          *aDecision)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aDecision = nsIContentPolicy::ACCEPT;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)

@@ -3478,6 +3478,27 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       result = localTrue == (data.mContent == lastChild);
     }
+    else if (nsCSSPseudoClasses::onlyChild == pseudoClass->mAtom) {
+      nsIContent *onlyChild = nsnull;
+      nsIContent *moreChild = nsnull;
+      nsIContent *parent = data.mParentContent;
+      if (parent) {
+        PRInt32 index = -1;
+        do {
+          onlyChild = parent->GetChildAt(++index);
+          // stop at first non-comment, non-whitespace and non-text node
+        } while (onlyChild &&
+                 !IsSignificantChild(onlyChild, PR_FALSE));
+        if (data.mContent == onlyChild) {
+          // see if there's any more
+          do {
+            moreChild = parent->GetChildAt(++index);
+          } while (moreChild && !IsSignificantChild(moreChild, PR_FALSE));
+        }
+      }
+      result = localTrue == (data.mContent == onlyChild &&
+                             moreChild == nsnull);
+    }
     else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
       nsIContent *child = nsnull;
       nsIContent *element = data.mContent;
