@@ -28,7 +28,6 @@
 #include "nsSoftwareUpdateIIDs.h"
 
 #include "nsInstall.h"
-//#include "zipfile.h" // replaced by nsIZipReader.h
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
@@ -55,7 +54,7 @@ extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *gl
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(const nsFileSpec* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(const nsFileSpec& jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
