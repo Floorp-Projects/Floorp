@@ -51,88 +51,115 @@ public:
 
 	NS_IMETHOD SetHeader(PRInt32 header, const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetHeader(PRInt32 header, char **_retval);
+	const char* GetHeader(PRInt32 header);
 
 	NS_IMETHOD SetBoolHeader(PRInt32 header, PRBool bValue, PRInt32 *_retval);
 	NS_IMETHOD GetBoolHeader(PRInt32 header, PRBool *_retval);
-
+	PRBool GetBoolHeader(PRInt32 header);
 
 	/* Convenience routines to get and set header's value... */
 	NS_IMETHOD SetFrom(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetFrom(char **_retval);
+	const char* GetFrom(void) {return GetHeader(MSG_FROM_HEADER_MASK);}
 
 	NS_IMETHOD SetReplyTo(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetReplyTo(char **_retval);
+	const char* GetReplyTo() {return GetHeader(MSG_REPLY_TO_HEADER_MASK);}
 
 	NS_IMETHOD SetTo(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetTo(char **_retval);
+	const char* GetTo() {return GetHeader(MSG_TO_HEADER_MASK);}
 
 	NS_IMETHOD SetCc(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetCc(char **_retval);
+	const char* GetCc() {return GetHeader(MSG_CC_HEADER_MASK);}
 
 	NS_IMETHOD SetBcc(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetBcc(char **_retval);
+	const char* GetBcc() {return GetHeader(MSG_BCC_HEADER_MASK);}
 
 	NS_IMETHOD SetFcc(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetFcc(char **_retval);
+	const char* GetFcc() {return GetHeader(MSG_FCC_HEADER_MASK);}
 
 	NS_IMETHOD SetNewsFcc(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetNewsFcc(char **_retval);
+	const char* GetNewsFcc() {return GetHeader(MSG_NEWS_FCC_HEADER_MASK);}
 
 	NS_IMETHOD SetNewsBcc(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetNewsBcc(char **_retval);
+	const char* GetNewsBcc() {return GetHeader(MSG_NEWS_BCC_HEADER_MASK);}
 
 	NS_IMETHOD SetNewsgroups(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetNewsgroups(char **_retval);
+	const char* GetNewsgroups() {return GetHeader(MSG_NEWSGROUPS_HEADER_MASK);}
 
 	NS_IMETHOD SetFollowupTo(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetFollowupTo(char **_retval);
+	const char* GetFollowupTo() {return GetHeader(MSG_FOLLOWUP_TO_HEADER_MASK);}
 
 	NS_IMETHOD SetSubject(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetSubject(char **_retval);
+	const char* GetSubject() {return GetHeader(MSG_SUBJECT_HEADER_MASK);}
 
 	NS_IMETHOD SetAttachments(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetAttachments(char **_retval);
+	const char* GetAttachments() {return GetHeader(MSG_ATTACHMENTS_HEADER_MASK);}
 
 	NS_IMETHOD SetOrganization(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetOrganization(char **_retval);
+	const char* GetOrganization() {return GetHeader(MSG_ORGANIZATION_HEADER_MASK);}
 
 	NS_IMETHOD SetReferences(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetReferences(char **_retval);
+	const char* GetReferences() {return GetHeader(MSG_REFERENCES_HEADER_MASK);}
 
 	NS_IMETHOD SetOtherRandomHeaders(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetOtherRandomHeaders(char **_retval);
+	const char* GetOtherRandomHeaders() {return GetHeader(MSG_OTHERRANDOMHEADERS_HEADER_MASK);}
 
 	NS_IMETHOD SetNewspostUrl(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetNewspostUrl(char **_retval);
+	const char* GetNewspostUrl() {return GetHeader(MSG_NEWSPOSTURL_HEADER_MASK);}
 
 	NS_IMETHOD SetDefaultBody(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetDefaultBody(char **_retval);
+	const char* GetDefaultBody() {return GetHeader(MSG_DEFAULTBODY_HEADER_MASK);}
 
 	NS_IMETHOD SetPriority(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetPriority(char **_retval);
+	const char* GetPriority() {return GetHeader(nsMsgPriority_HEADER_MASK);}
 
 	NS_IMETHOD SetMessageEncoding(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetMessageEncoding(char **_retval);
+	const char* GetMessageEncoding() {return GetHeader(MSG_MESSAGE_ENCODING_HEADER_MASK);}
 
 	NS_IMETHOD SetCharacterSet(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetCharacterSet(char **_retval);
+	const char* GetCharacterSet() {return GetHeader(MSG_CHARACTER_SET_HEADER_MASK);}
 
 	NS_IMETHOD SetMessageId(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetMessageId(char **_retval);
+	const char* GetMessageId() {return GetHeader(MSG_MESSAGE_ID_HEADER_MASK);}
 
 	NS_IMETHOD SetHTMLPart(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetHTMLPart(char **_retval);
+	const char* GetHTMLPart() {return GetHeader(MSG_HTML_PART_HEADER_MASK);}
 
 	NS_IMETHOD SetTemplateName(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetTemplateName(char **_retval);
+	const char* GetTemplateName() {return GetHeader(MSG_X_TEMPLATE_HEADER_MASK);}
 
 	NS_IMETHOD SetReturnReceipt(PRBool value, PRInt32 *_retval);
 	NS_IMETHOD GetReturnReceipt(PRBool *_retval);
+	PRBool GetReturnReceipt() {return GetBoolHeader(MSG_RETURN_RECEIPT_BOOL_HEADER_MASK);}
 
 	NS_IMETHOD SetAttachVCard(PRBool value, PRInt32 *_retval);
 	NS_IMETHOD GetAttachVCard(PRBool *_retval);
+	PRBool GetAttachVCard() {return GetBoolHeader(MSG_RETURN_RECEIPT_BOOL_HEADER_MASK);}
 
-	int SetBody(const char*);
+	NS_IMETHOD SetBody(const char *value, PRInt32 *_retval);
+	NS_IMETHOD GetBody(char **_retval);
 	const char* GetBody();
 
 	int AppendBody(const char*);

@@ -182,17 +182,17 @@ nsresult nsMsgCompFields::GetHeader(PRInt32 header, char **_retval)
 {
 	NS_PRECONDITION(nsnull != _retval, "nsnull ptr");
 
+	*_retval = NS_CONST_CAST(char*, GetHeader(header));
+	return NS_OK;
+}
+
+const char* nsMsgCompFields::GetHeader(PRInt32 header)
+{
     int i = DecodeHeader(header);
     if (i >= 0) {
-		if (m_headers[i])
-			*_retval = m_headers[i];
-		else
-			*_retval = "";
-	}
-	else
-		*_retval = NULL;
-
-	return NS_OK;
+		return m_headers[i] ? m_headers[i] : "";
+    }
+    return NULL;
 }
 
 nsresult nsMsgCompFields::SetBoolHeader(PRInt32 header, PRBool bValue, PRInt32 *_retval)
@@ -217,7 +217,12 @@ nsresult nsMsgCompFields::SetBoolHeader(PRInt32 header, PRBool bValue, PRInt32 *
 nsresult nsMsgCompFields::GetBoolHeader(PRInt32 header, PRBool *_retval)
 {
 	NS_PRECONDITION(nsnull != _retval, "nsnull ptr");
-/*JFD
+	*_retval = GetBoolHeader(header);
+	return NS_OK;
+}
+
+PRBool nsMsgCompFields::GetBoolHeader(PRInt32 header)
+{
 	NS_ASSERTION ((int) header >= (int) MSG_RETURN_RECEIPT_BOOL_HEADER_MASK &&
 			   (int) header < (int) MSG_LAST_BOOL_HEADER_MASK, "invalid header index");
 
@@ -226,8 +231,6 @@ nsresult nsMsgCompFields::GetBoolHeader(PRInt32 header, PRBool *_retval)
 		 return PR_FALSE;
 
 	return m_boolHeaders[header];
-*/
-	return NS_OK;
 }
 
 nsresult nsMsgCompFields::SetFrom(const char *value, PRInt32 *_retval)
@@ -566,17 +569,28 @@ extern "C" const char* MSG_GetCompFieldsHeader(MSG_CompositionFields *fields,
 */
 
 
-int
-nsMsgCompFields::SetBody(const char* value)
+nsresult nsMsgCompFields::SetBody(const char *value, PRInt32 *_retval)
 {
+	long retval = 0;
+
     PR_FREEIF(m_body);
     if (value) {
 		m_body = nsCRT::strdup(value);
-		if (!m_body) return MK_OUT_OF_MEMORY;
+		if (!m_body)
+			retval = MK_OUT_OF_MEMORY;
     }
-    return 0;
+	if (_retval)
+		*_retval = retval;
+
+    return NS_OK;
 }
 
+nsresult nsMsgCompFields::GetBody(char **_retval)
+{
+	NS_PRECONDITION(nsnull != _retval, "nsnull ptr");
+	*_retval = NS_CONST_CAST(char*, GetBody());
+	return NS_OK;
+}
 
 const char* 
 nsMsgCompFields::GetBody()
@@ -590,7 +604,7 @@ nsMsgCompFields::AppendBody(const char* value)
 {
     if (!value || !*value) return 0;
     if (!m_body) {
-		return SetBody(value);
+		return SetBody(value, NULL);
     } else {
 		char* tmp = (char*) PR_MALLOC(nsCRT::strlen(m_body) + nsCRT::strlen(value) + 1);
 		if (tmp) {
