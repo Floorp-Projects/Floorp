@@ -41,10 +41,6 @@ import org.mozilla.javascript.*;
  */
 public class RegExpImpl implements RegExpProxy {
 
-    public RegExpImpl() {
-        parens = new ObjArray();
-    }
-
     public boolean isRegExp(Scriptable obj) {
         return obj instanceof NativeRegExp;
     }
@@ -270,7 +266,7 @@ public class RegExpImpl implements RegExpProxy {
             result = i - matchlen[0];
             break;
         }
-        int size = parens.size();
+        int size = (parens == null) ? 0 : parens.length;
         parensp[0] = new String[size];
         for (int num = 0; num < size; num++) {
             SubString parsub = getParenSubString(num);
@@ -283,9 +279,10 @@ public class RegExpImpl implements RegExpProxy {
      * Analog of REGEXP_PAREN_SUBSTRING in C jsregexp.h.
      * Assumes zero-based; i.e., for $3, i==2
      */
-    SubString getParenSubString(int i) {
-        if (i < parens.size()) {
-            SubString parsub = (SubString)parens.get(i);
+    SubString getParenSubString(int i)
+    {
+        if (parens != null && i < parens.length) {
+            SubString parsub = parens[i];
             if (parsub != null) {
                 return parsub;
             }
@@ -295,7 +292,7 @@ public class RegExpImpl implements RegExpProxy {
 
     String          input;         /* input string to match (perl $_, GC root) */
     boolean         multiline;     /* whether input contains newlines (perl $*) */
-    ObjArray        parens;        /* Vector of SubString; last set of parens
+    SubString[]     parens;        /* Vector of SubString; last set of parens
                                       matched (perl $1, $2) */
     SubString       lastMatch;     /* last string matched (perl $&) */
     SubString       lastParen;     /* last paren matched (perl $+) */
@@ -426,7 +423,7 @@ class ReplaceData extends GlobData {
                 }
             }
             else {  /* ECMA 3, 1-9 or 01-99 */
-                int parenCount = res.parens.size();
+                int parenCount = (res.parens == null) ? 0 : res.parens.length;
                 num = NativeRegExp.unDigit(dc);
                 if (num > parenCount)
                     return null;
@@ -487,12 +484,12 @@ class ReplaceData extends GlobData {
         if (lambda != null) {
             // invoke lambda function with args lastMatch, $1, $2, ... $n,
             // leftContext.length, whole string.
-            ObjArray parens = reImpl.parens;
-            int parenCount = parens.size();
+            SubString[] parens = reImpl.parens;
+            int parenCount = (parens == null) ? 0 : parens.length;
             Object[] args = new Object[parenCount + 3];
             args[0] = reImpl.lastMatch.toString();
             for (int i=0; i < parenCount; i++) {
-                SubString sub = (SubString) parens.get(i);
+                SubString sub = parens[i];
                 if (sub != null) {
                     args[i+1] = sub.toString();
                 } else {

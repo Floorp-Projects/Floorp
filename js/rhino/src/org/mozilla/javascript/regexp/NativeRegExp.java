@@ -2552,19 +2552,19 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         if (state.parenCount > re.parenCount)
             throw new RuntimeException();
         if (state.parenCount == 0) {
-            res.parens.clear();
+            res.parens = null;
             res.lastParen = SubString.emptySubString;
         } else {
             SubString parsub = null;
             int num;
-            res.parens.setSize(re.parenCount);
+            res.parens = new SubString[re.parenCount];
             for (num = 0; num < re.parenCount; num++) {
                 int cap_index = state.parens_index(num);
                 String parstr;
                 if (cap_index != -1) {
                     int cap_length = state.parens_length(num);
                     parsub = new SubString(gData.cpbegin,cap_index,cap_length);
-                    res.parens.set(num, parsub);
+                    res.parens[num] = parsub;
                     if (matchType == TEST) continue;
                     parstr = parsub.toString();
                     obj.put(num+1, obj, parstr);
