@@ -1,4 +1,4 @@
-#!/export2/gnu/files/perl-5.6.0/bin/perl -w
+#!/usr/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
