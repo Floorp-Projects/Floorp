@@ -28,6 +28,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIProxyObjectManager.h"
@@ -41,8 +42,6 @@
 #include "imgRequestProxy.h"
 
 #include "ImageLogging.h"
-
-#include "nsMimeTypes.h"
 
 #ifdef DEBUG_pavlov
 #include "nsIEnumerator.h"
@@ -109,16 +108,9 @@ inline int merge_flags(const nsLoadFlags& inFlags, nsLoadFlags& outFlags)
 
 /* imgIRequest loadImage (in nsIURI aURI, in nsIURI parentURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
 
-NS_IMETHODIMP imgLoader::LoadImage(
-  nsIURI *aURI,
-  nsIURI *parentURI,
-  nsILoadGroup *aLoadGroup,
-  imgIDecoderObserver *aObserver,
-  nsISupports *aCX,
-  nsLoadFlags aLoadFlags,
-  nsISupports *cacheKey,
-  imgIRequest *aRequest,
-  imgIRequest **_retval)
+NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsIURI *parentURI, nsILoadGroup *aLoadGroup,
+                                   imgIDecoderObserver *aObserver, nsISupports *aCX, nsLoadFlags aLoadFlags,
+                                   nsISupports *cacheKey, imgIRequest *aRequest, imgIRequest **_retval)
 {
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
@@ -325,8 +317,6 @@ NS_IMETHODIMP imgLoader::LoadImage(
 
     request->Init(newChannel, entry, cacheId, aCX);
 
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
 
     // create the proxy listener
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
@@ -337,33 +327,41 @@ NS_IMETHODIMP imgLoader::LoadImage(
 
     NS_ADDREF(pl);
 
-    // set the referrer if this is an HTTP request
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(newChannel));
-    if (aLoadGroup && httpChannel) {
-      nsresult rv;
-      // Get the defloadRequest from the loadgroup
-      nsCOMPtr<nsIRequest> defLoadRequest;
-      rv = aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(defLoadRequest));
+    if (aLoadGroup) {
+      // Get the notification callbacks from the load group and set them on the channel
+      nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor;
+      aLoadGroup->GetNotificationCallbacks(getter_AddRefs(interfaceRequestor));
+      if (interfaceRequestor)
+        newChannel->SetNotificationCallbacks(interfaceRequestor);
 
-      if (NS_SUCCEEDED(rv) && defLoadRequest) {
-        nsCOMPtr<nsIChannel> reqChannel(do_QueryInterface(defLoadRequest));
+      // set the referrer if this is an HTTP request
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(newChannel));
 
-        if (reqChannel) {
-          // Get the referrer from the loadchannel
-          nsCOMPtr<nsIURI> referrer;
-          rv = reqChannel->GetURI(getter_AddRefs(referrer));
-          if (NS_SUCCEEDED(rv)) {
-            // Set the referrer
-            httpChannel->SetReferrer(referrer, nsIHttpChannel::REFERRER_INLINES);
+      if (httpChannel) {
+        nsresult rv;
+        // Get the defloadRequest from the loadgroup
+        nsCOMPtr<nsIRequest> defLoadRequest;
+        rv = aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(defLoadRequest));
+
+        if (NS_SUCCEEDED(rv) && defLoadRequest) {
+          nsCOMPtr<nsIChannel> reqChannel(do_QueryInterface(defLoadRequest));
+
+          if (reqChannel) {
+            // Get the referrer from the loadchannel
+            nsCOMPtr<nsIURI> referrer;
+            rv = reqChannel->GetURI(getter_AddRefs(referrer));
+            if (NS_SUCCEEDED(rv)) {
+              // Set the referrer
+              httpChannel->SetReferrer(referrer, nsIHttpChannel::REFERRER_INLINES);
+            }
           }   
         }
       }
     }
 
-    /* XXX Are we calling AsyncOpen() too early?  Is it possible for
-       AsyncOpen to result in an OnStartRequest to the channel before
-       we call CreateNewProxyForRequest() ?
-     */
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
+
     nsresult asyncOpenResult = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, pl), nsnull);
 
     NS_RELEASE(pl);
