@@ -647,7 +647,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
         if (menuitemNodeType.Equals("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals("separator")) {
+        } else if (menuitemNodeType.Equals("menuseparator")) {
           pnsMenu->AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
           // Load a submenu
@@ -859,7 +859,7 @@ void nsWebShellWindow::LoadSubMenu(
         if (menuitemNodeType.Equals("menuitem")) {
           // Load a menuitem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals("separator")) {
+        } else if (menuitemNodeType.Equals("menuseparator")) {
           pnsMenu->AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
           // Add a submenu
