@@ -114,8 +114,6 @@ public:
 
   NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot);
 
-  NS_IMETHOD SetSpecialTopOfDoc(PRBool aIsAtTop) { mSpecialTopOfDoc = aIsAtTop; return NS_OK; }
-
   NS_IMETHOD FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType);
 
 protected:
@@ -221,7 +219,6 @@ protected:
   PRInt32     mLockCursor;
 
   // DocShell Traversal Data Memebers
-  PRPackedBool mSpecialTopOfDoc;
   nsCOMPtr<nsIContent> mLastContentFocus;
 
   //Anti-recursive stack controls

@@ -102,10 +102,7 @@ public:
   // Method for moving the focus forward/back.
   NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot)=0;
 
-  // Method for indicating that we are at top of a doc in a special situation
-  NS_IMETHOD SetSpecialTopOfDoc(PRBool aIsAtTop)=0;
-
-    //-- Special Enums needed for DocShell Identification
+  //-- Special Enums needed for DocShell Identification
   enum eDocType {eChrome = 0, eGenericContent, eFrameSet, eFrame, eIFrame};
   NS_IMETHOD FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType) = 0;
 
