@@ -777,16 +777,15 @@ function BrowserPrint()
 
 function BrowserSetDefaultCharacterSet(aCharset)
 {
-  appCore.setDefaultCharacterSet(aCharset); //XXXjag see bug 67442
-  BrowserReload();
+  // no longer needed; set when setting Force; see bug 79608
 }
 
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var charsetConverterManager = Components.classes["@mozilla.org/charset-converter-manager;1"]
-                                          .getService(Components.interfaces.nsICharsetConverterManager2);
-  var characterSet = charsetConverterManager.GetCharsetAtom(aCharset);
-  getBrowser().documentCharsetInfo.forcedCharset = characterSet;
+  var docCharset = getBrowser().docShell.QueryInterface(
+                            Components.interfaces.nsIDocCharset);
+  docCharset.charset = aCharset;
+  BrowserReload();
 }
 
 function BrowserSetForcedDetector()
