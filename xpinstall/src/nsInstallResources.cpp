@@ -42,6 +42,11 @@ static nsXPIResourceTableItem XPIResTable[] =
     { "ExecuteWithArgs",    "Executing: %s with argument: %s" },
     { "Patch",              "Patching: %s" },
     { "Uninstall",          "Uninstalling: %s" },
+    { "RegSkin",            "Register Skin: %s" },
+    { "RegLocale",          "Register Locale: %s" },
+    { "RegContent",         "Register Content: %s" },
+    { "RegPackage",         "Register Package: %s" },
+
 
     { "CopyFile",             "Copy File: %s to %s" },
     { "ExecuteFile",          "Execute File: %s" },
