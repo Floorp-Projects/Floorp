@@ -623,9 +623,6 @@ DownloadItem::DownloadItem():mStartTime(0)
 
 DownloadItem::~DownloadItem()
 {
-  char* persistentDescriptor;
-  mTarget->GetPersistentDescriptor(&persistentDescriptor);
-  mDownloadManager->AssertProgressInfoFor(persistentDescriptor);
 }
 
 nsresult

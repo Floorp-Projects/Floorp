@@ -60,19 +60,19 @@ interface nsIDownloadItem : nsIWebProgressListener {
      * prettyName
      * The user-readable description of the download.
      */
-    attribute wstring prettyName;
+    readonly attribute wstring prettyName;
     
     /**
      * source
      * The source of the download.
      */
-    attribute nsIURI source;
+    readonly attribute nsIURI source;
     
     /**
      * target
      * The local file where the download is being saved.
      */
-    attribute nsILocalFile target;
+    readonly attribute nsILocalFile target;
     
     /**
      * percentComplete
@@ -102,7 +102,7 @@ interface nsIDownloadItem : nsIWebProgressListener {
      * being used.
      */
 
-    attribute nsIWebBrowserPersist persist;
+    readonly attribute nsIWebBrowserPersist persist;
     
     /**
      * observer
