@@ -2771,13 +2771,6 @@ if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c ctl` -ne 
 fi
 
 dnl ========================================================
-dnl build idlc
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(idltool,
-[  --enable-idlc           Build idl tool ],
-    BUILD_IDLC=1)
-
-dnl ========================================================
 dnl experimental ldap features
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(ldap-experimental,
@@ -3864,7 +3857,6 @@ AC_SUBST(IBMBIDI)
 AC_SUBST(SUNCTL)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_USER_DIR)
-AC_SUBST(BUILD_IDLC)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)
