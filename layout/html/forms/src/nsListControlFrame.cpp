@@ -1972,22 +1972,7 @@ nsListControlFrame::ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxLi
 NS_IMETHODIMP
 nsListControlFrame::GetName(nsAString* aResult)
 {
-  nsresult result = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIHTMLContent* formControl = nsnull;
-    result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&formControl);
-    if (NS_SUCCEEDED(result) && formControl) {
-      nsHTMLValue value;
-      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(*aResult);
-        }
-      }
-      NS_RELEASE(formControl);
-    }
-  }
-  return result;
+  return nsFormControlHelper::GetName(mContent, aResult);
 }
  
 

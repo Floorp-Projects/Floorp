@@ -2383,37 +2383,13 @@ nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 NS_IMETHODIMP
 nsTextControlFrame::GetName(nsAString* aResult)
 {
-  nsresult rv = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIHTMLContent* formControl = nsnull;
-    rv = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&formControl);
-    if (NS_SUCCEEDED(rv) && formControl) {
-      nsHTMLValue value;
-      rv = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(*aResult);
-        }
-      }
-      NS_RELEASE(formControl);
-    }
-  }
-  return rv;
+  return nsFormControlHelper::GetName(mContent, aResult);
 }
 
 NS_IMETHODIMP
 nsTextControlFrame::GetType(PRInt32* aType) const
 {
-  nsresult rv = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIFormControl* formControl = nsnull;
-    rv = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
-    if ((NS_OK == rv) && formControl) {
-      rv = formControl->GetType(aType);
-      NS_RELEASE(formControl);
-    }
-  }
-  return rv;
+  return nsFormControlHelper::GetType(mContent, aType);
 }
 
 nsresult

@@ -122,8 +122,6 @@ nsHTMLLegendElement::nsHTMLLegendElement()
 
 nsHTMLLegendElement::~nsHTMLLegendElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
 }
 
 
@@ -139,6 +137,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLegendElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
+// nsIDOMHTMLLegendElement
 nsresult
 nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
@@ -167,25 +166,20 @@ nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLContainerFormElement::GetForm(aForm);
 }
 
-
 // nsIFormControl
 
 NS_IMETHODIMP
 nsHTMLLegendElement::GetType(PRInt32* aType)
 {
-  if (aType) {
-    *aType = NS_FORM_LEGEND;
-    return NS_OK;
-  } else {
-    return NS_FORM_NOTOK;
-  }
+  NS_ASSERTION(aType, "Null pointer bad!");
+  *aType = NS_FORM_LEGEND;
+  return NS_OK;
 }
 
 

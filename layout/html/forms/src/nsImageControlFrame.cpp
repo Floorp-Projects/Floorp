@@ -401,11 +401,7 @@ nsImageControlFrame::GetType(PRInt32* aType) const
 NS_IMETHODIMP
 nsImageControlFrame::GetName(nsAString* aResult)
 {
-  if (nsnull == aResult) {
-    return NS_OK;
-  } else {
-    return nsFormControlHelper::GetName(mContent, aResult);
-  }
+  return nsFormControlHelper::GetName(mContent, aResult);
 }
 
 NS_IMETHODIMP

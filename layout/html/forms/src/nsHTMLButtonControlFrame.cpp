@@ -225,54 +225,19 @@ nsHTMLButtonControlFrame::GetDefaultLabel(nsString& aString)
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetType(PRInt32* aType) const
 {
-  nsresult result = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIFormControl* formControl = nsnull;
-    result = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = formControl->GetType(aType);
-      NS_RELEASE(formControl);
-    }
-  }
-  return result;
+  return nsFormControlHelper::GetType(mContent, aType);
 }
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetName(nsAString* aResult)
 {
-  nsresult result = NS_FORM_NOTOK;
-
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-
-  if (formControl) {
-    nsHTMLValue value;
-    result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(*aResult);
-      }
-    }
-  }
-  return result;
+  return nsFormControlHelper::GetName(mContent, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetValue(nsAString* aResult)
 {
-  nsresult result = NS_FORM_NOTOK;
-
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-
-  if (formControl) {
-    nsHTMLValue value;
-    result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(*aResult);
-      }
-    }
-  }
-  return result;
+  return nsFormControlHelper::GetValueAttr(mContent, aResult);
 }
 
 PRBool

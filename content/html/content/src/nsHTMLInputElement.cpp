@@ -158,8 +158,6 @@ public:
   NS_DECL_NSIDOMNSHTMLINPUTELEMENT
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
-                     PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
@@ -389,9 +387,6 @@ nsHTMLInputElement::nsHTMLInputElement(PRBool aFromParser)
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
-
   if (mValue) {
     nsMemory::Free(mValue);
   }
@@ -513,6 +508,8 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 }
+
+// nsIDOMHTMLInputElement
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
@@ -909,14 +906,6 @@ nsHTMLInputElement::GetRadioGroupContainer()
   }
   return retval;
 }
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetForm(nsIDOMHTMLFormElement* aForm,
-                            PRBool aRemoveFromForm)
-{
-  return nsGenericHTMLLeafFormElement::SetForm(aForm, aRemoveFromForm);
-}
-
 
 nsresult
 nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)

@@ -69,7 +69,7 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLFieldSetElement
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  NS_DECL_NSIDOMHTMLFIELDSETELEMENT
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
@@ -118,8 +118,6 @@ nsHTMLFieldSetElement::nsHTMLFieldSetElement()
 
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
 }
 
 // nsISupports
@@ -166,8 +164,7 @@ nsHTMLFieldSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-
-// nsIContent
+// nsIDOMHTMLFieldSetElement
 
 NS_IMETHODIMP
 nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
@@ -180,13 +177,12 @@ nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLFieldSetElement::GetType(PRInt32* aType)
 {
-  if (aType) {
-    *aType = NS_FORM_FIELDSET;
-    return NS_OK;
-  } else {
-    return NS_FORM_NOTOK;
-  }
+  NS_ASSERTION(aType, "Null pointer bad");
+  *aType = NS_FORM_FIELDSET;
+  return NS_OK;
 }
+
+
 
 #ifdef DEBUG
 NS_IMETHODIMP
