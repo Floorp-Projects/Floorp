@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+
 #include "nsIPref.h" 
 #include "prmem.h"
 
@@ -112,6 +113,9 @@ static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
+#ifdef PURIFY
+#include "pure.h"
+#endif
 
 #define THROBBING_N
 
@@ -313,24 +317,24 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
     case NS_SIZE:
       sizeEvent = (nsSizeEvent*)aEvent;  
       bw->Layout(sizeEvent->windowSize->width,
-		 sizeEvent->windowSize->height);
+                 sizeEvent->windowSize->height);
       result = nsEventStatus_eConsumeNoDefault;
       break;
 
     case NS_DESTROY:
-      {
-	nsViewerApp* app = bw->mApp;
-	app->CloseWindow(bw);
-	result = nsEventStatus_eConsumeDoDefault;
+    {
+      nsViewerApp* app = bw->mApp;
+      app->CloseWindow(bw);
+      result = nsEventStatus_eConsumeDoDefault;
 
 #ifndef XP_MAC
-	// XXX Really shouldn't just exit, we should just notify somebody...
-	if (0 == nsBrowserWindow::gBrowsers.Count()) {
-	  app->Exit();
-	}
-#endif
+      // XXX Really shouldn't just exit, we should just notify somebody...
+      if (0 == nsBrowserWindow::gBrowsers.Count()) {
+        app->Exit();
       }
-      return result;
+#endif
+    }
+    return result;
 
     case NS_MENU_SELECTED:
       result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->mCommand);
@@ -432,6 +436,52 @@ HandleLocationEvent(nsGUIEvent *aEvent)
   }
   return result;
 }
+
+#ifdef PURIFY
+static void
+DispatchPurifyEvent(PRInt32 aID)
+{
+  if (!PurifyIsRunning()) {
+      printf("!!! Re-run viewer under Purify to use this menu item.\n");
+      return;
+  }
+
+  switch (aID) {
+  case VIEWER_PURIFY_SHOW_NEW_LEAKS:
+    PurifyPrintf("viewer: new leaks");
+    PurifyNewLeaks();
+    break;
+  case VIEWER_PURIFY_SHOW_ALL_LEAKS:
+    PurifyPrintf("viewer: all leaks");
+    PurifyAllLeaks();
+    break;
+  case VIEWER_PURIFY_CLEAR_ALL_LEAKS:
+    PurifyPrintf("viewer: clear leaks");
+    PurifyClearLeaks();
+    break;
+  case VIEWER_PURIFY_SHOW_ALL_HANDLES_IN_USE:
+    PurifyPrintf("viewer: all handles");
+    PurifyAllHandlesInuse();
+    break;
+  case VIEWER_PURIFY_SHOW_NEW_IN_USE:
+    PurifyPrintf("viewer: new in-use");
+    PurifyNewInuse();
+    break;
+  case VIEWER_PURIFY_SHOW_ALL_IN_USE:
+    PurifyPrintf("viewer: all in-use");
+    PurifyAllInuse();
+    break;
+  case VIEWER_PURIFY_CLEAR_ALL_IN_USE:
+    PurifyPrintf("viewer: clear in-use");
+    PurifyClearInuse();
+    break;
+  case VIEWER_PURIFY_HEAP_VALIDATE:
+    PurifyPrintf("viewer: heap validate");
+    PurifyHeapValidate(PURIFY_HEAP_ALL, PURIFY_HEAP_BLOCKS_ALL, NULL);
+    break;
+  }
+}
+#endif
 
 nsEventStatus
 nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
@@ -572,6 +622,19 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_IMAGE_INSPECTOR:
     DoImageInspector();
     break;
+
+#ifdef PURIFY
+  case VIEWER_PURIFY_SHOW_NEW_LEAKS:
+  case VIEWER_PURIFY_SHOW_ALL_LEAKS:
+  case VIEWER_PURIFY_CLEAR_ALL_LEAKS:
+  case VIEWER_PURIFY_SHOW_ALL_HANDLES_IN_USE:
+  case VIEWER_PURIFY_SHOW_NEW_IN_USE:
+  case VIEWER_PURIFY_SHOW_ALL_IN_USE:
+  case VIEWER_PURIFY_CLEAR_ALL_IN_USE:
+  case VIEWER_PURIFY_HEAP_VALIDATE:
+    DispatchPurifyEvent(aID);
+    break;
+#endif
 
   case VIEWER_ZOOM_500:
   case VIEWER_ZOOM_300:
