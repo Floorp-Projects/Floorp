@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.14 2000/08/05 03:37:46 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.15 2000/08/08 03:20:35 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -801,7 +801,6 @@ CLEANUP:
 mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
 {
   mp_digit *pb = MP_DIGITS(b);
-  mp_word  w;
   mp_int   tmp;
   mp_err   res;
   mp_size  ib;
@@ -830,22 +829,12 @@ mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
   /* Outer loop:  Digits of b */
   for(ib = 0; ib < USED(b); ib++) {
     mp_digit b_i    = *pb++;
-    mp_digit *pc    = DIGITS(c) + ib;
-    mp_digit *pa    = DIGITS(a);
-    mp_digit *palim = DIGITS(a) + USED(a);
 
     if(b_i == 0)
       continue;
 
-    w = 0;
     /* Inner product:  Digits of a */
-    while (pa < palim) {
-      w += ((mp_word)b_i * *pa++) + *pc;
-      *pc++ = ACCUM(w);
-      w = CARRYOUT(w);
-    }
-
-    *pc = (mp_digit)w;
+    s_mp_mul_d_add_offset(a, b_i, c, ib);
   }
 
   s_mp_clamp(c);
@@ -876,7 +865,7 @@ CLEANUP:
 /* sqr = a^2;   Caller provides both a and tmp; */
 mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
 {
-  mp_digit *pa, *pb, *ps, *alim;
+  mp_digit *pa, *ps, *alim;
   mp_word  w; 
   mp_digit d, k;
   mp_err   res;
@@ -908,23 +897,7 @@ mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
   for (ix = 0; pa < alim; ++ix) {
     d = *pa++;
     ps = MP_DIGITS(sqr) + 1 + (ix << 1);
-    k = 0;
-    for (pb = pa; pb < alim; ) {
-      w = d * (mp_word)*pb++ + k + *ps;
-      *ps++ = ACCUM(w);
-      k = CARRYOUT(w);
-    } /* while (pa < alim) */
-
-    /* If we are carrying out, propagate the carry to the next digit
-       in the output.  This may cascade, so we have to be somewhat
-       circumspect -- but we will have enough precision in the output
-       that we won't overflow 
-     */
-    while (k) {
-      w = k + (mp_word)*ps;
-      *ps++ = ACCUM(w);
-      k = CARRYOUT(w);
-    }
+    s_mp_mul_add(pa, alim - pa, d, ps);
   } /* for(ix ...) */
 
   /* now sqr *= 2 */
@@ -2046,6 +2019,123 @@ mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y)
 
 /* }}} */
 
+/* Given a and prime p, computes c and k such that a*c == 2**k (mod p).
+** Returns k (positive) or error (negative).
+** This technique from the paper "Fast Modular Reciprocals" (unpublished)
+** by Richard Schroeppel (a.k.a. Captain Nemo).
+*/
+mp_err s_mp_almost_inverse(const mp_int *a, const mp_int *p, mp_int *c)
+{
+  mp_err res;
+  mp_err k    = 0;
+  mp_int d, f, g;
+
+  ARGCHK(a && p && c, MP_BADARG);
+
+#define MP_CHECKOK(x) if (MP_OKAY > (res = (x))) goto CLEANUP
+
+  MP_DIGITS(&d) = 0;
+  MP_DIGITS(&f) = 0;
+  MP_DIGITS(&g) = 0;
+  MP_CHECKOK( mp_init(&d) );
+  MP_CHECKOK( mp_init_copy(&f, a) );	/* f = a */
+  MP_CHECKOK( mp_init_copy(&g, p) );	/* g = p */
+
+  mp_set(c, 1);
+  mp_zero(&d);
+
+  if (mp_cmp_z(&f) == 0) {
+    res = MP_UNDEF;
+  } else 
+  for (;;) {
+    int diff_sign;
+    while (mp_iseven(&f)) {
+      s_mp_div_2d(&f, 1);
+      MP_CHECKOK( s_mp_mul_2d(&d, 1) );
+      ++k;
+    }
+    if (mp_cmp_d(&f, 1) == MP_EQ) {	/* f == 1 */
+      res = k;
+      break;
+    }
+    diff_sign = mp_cmp(&f, &g);
+    if (diff_sign < 0) {		/* f < g */
+      s_mp_exch(&f, &g);
+      s_mp_exch(c, &d);
+    } else if (diff_sign == 0) {		/* f == g */
+      res = MP_UNDEF;		/* a and p are not relatively prime */
+      break;
+    }
+    if ((MP_DIGIT(&f,0) % 4) == (MP_DIGIT(&g,0) % 4)) {
+      MP_CHECKOK( mp_sub(&f, &g, &f) );	/* f = f - g */
+      MP_CHECKOK( mp_sub(c,  &d,  c) );	/* c = c - d */
+    } else {
+      MP_CHECKOK( mp_add(&f, &g, &f) );	/* f = f + g */
+      MP_CHECKOK( mp_add(c,  &d,  c) );	/* c = c + d */
+    }
+  }
+
+CLEANUP:
+  mp_clear(&d);
+  mp_clear(&f);
+  mp_clear(&g);
+  return res;
+}
+
+/* Compute T = (P ** -1) mod (2 ** 32).  Also works for 16-bit mp_digits.
+** This technique from the paper "Fast Modular Reciprocals" (unpublished)
+** by Richard Schroeppel (a.k.a. Captain Nemo).
+*/
+mp_digit  s_mp_invmod_32b(mp_digit P)
+{
+  mp_digit T = P;
+  T *= 2 - (P * T);
+  T *= 2 - (P * T);
+  T *= 2 - (P * T);
+  T *= 2 - (P * T);
+  return T;
+}
+
+/* Given c, k, and prime p, where a*c == 2**k (mod p), 
+** Compute x = (a ** -1) mod p.  This is similar to Montgomery reduction.
+** This technique from the paper "Fast Modular Reciprocals" (unpublished)
+** by Richard Schroeppel (a.k.a. Captain Nemo).
+*/
+mp_err  s_mp_fixup_reciprocal(const mp_int *c, const mp_int *p, int k, mp_int *x)
+{
+  int      k_orig = k;
+  mp_digit r;
+  mp_size  ix;
+  mp_err   res;
+
+  if (mp_cmp_z(c) < 0) {		/* c < 0 */
+    MP_CHECKOK( mp_add(c, p, x) );	/* x = c + p */
+  } else {
+    MP_CHECKOK( mp_copy(c, x) );	/* x = c */
+  }
+
+  /* make sure x is large enough */
+  MP_CHECKOK( s_mp_pad(x, MP_USED(p) + 2 + MP_USED(x)) );
+
+  r = 0 - s_mp_invmod_32b(MP_DIGIT(p,0));
+
+  for (ix = 0; k > 0; ix++) {
+    int      j = (k > MP_DIGIT_BIT) ? MP_DIGIT_BIT : k;
+    mp_digit v = r * MP_DIGIT(x, ix);
+    if (j < MP_DIGIT_BIT) {
+      v &= ((mp_digit)1 << j) - 1;	/* v = v mod (2 ** j) */
+    }
+    s_mp_mul_d_add_offset(p, v, x, ix); /* x += p * v * (RADIX ** ix) */
+    k -= j;
+  }
+  s_mp_clamp(x);
+  s_mp_div_2d(x, k_orig);
+  res = MP_OKAY;
+
+CLEANUP:
+  return res;
+}
+
 /* {{{ mp_invmod(a, m, c) */
 
 /*
@@ -2066,13 +2156,21 @@ mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c)
   if(mp_cmp_z(a) == 0 || mp_cmp_z(m) == 0)
     return MP_RANGE;
 
-  if((res = mp_init(&g)) != MP_OKAY)
-    return res;
-  if((res = mp_init(&x)) != MP_OKAY)
-    goto X;
+  MP_DIGITS(&g) = 0;
+  MP_DIGITS(&x) = 0;
 
-  if((res = mp_xgcd(a, m, &g, &x, NULL)) != MP_OKAY)
-    goto CLEANUP;
+  if (mp_isodd(m)) {
+    int k;
+    MP_CHECKOK( s_mp_almost_inverse(a, m, c) );
+    k = res;
+    MP_CHECKOK( s_mp_fixup_reciprocal(c, m, k, c) );
+    return res;
+  }
+
+  MP_CHECKOK( mp_init(&x) );
+  MP_CHECKOK( mp_init(&g) );
+
+  MP_CHECKOK( mp_xgcd(a, m, &g, &x, NULL) );
 
   if(mp_cmp_d(&g, 1) != MP_EQ) {
     res = MP_UNDEF;
@@ -2084,7 +2182,6 @@ mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c)
 
 CLEANUP:
   mp_clear(&x);
-X:
   mp_clear(&g);
 
   return res;
@@ -3179,36 +3276,23 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 
 /* }}} */
 
-/* c += a * b * (MP_RADIX ** offset);  */
-/* Caller must assure c has enough space. */
-/* Caller must clamp when done. */
-mp_err	s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size offset)
+/* c += a * b */
+void s_mp_mul_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
-  mp_word   w;
-  mp_digit *pc;
-  mp_digit *pa    = MP_DIGITS(a);
-  mp_digit *palim = MP_DIGITS(a) + MP_USED(a);
+  mp_word   w = 0;
 
-  pc = MP_DIGITS(c) + offset;
-  w = 0;
   /* Inner product:  Digits of a */
-  while (pa < palim) {
-    w += ((mp_word)b * *pa++) + *pc;
-    *pc++ = ACCUM(w);
+  while (a_len--) {
+    w += ((mp_word)b * *a++) + *c;
+    *c++ = ACCUM(w);
     w = CARRYOUT(w);
   }
 
   while (w) {
-    w += *pc;
-    *pc++ = ACCUM(w);
+    w += *c;
+    *c++ = ACCUM(w);
     w = CARRYOUT(w);
   }
-  /* reuse offset here as a new "used" value */
-  offset = pc - MP_DIGITS(c);
-  if (offset > MP_USED(c))
-    MP_USED(c) = offset;
-  /* don't clamp. Caller will clamp. */
-  return MP_OKAY;
 }
 
 #if MP_SQUARE

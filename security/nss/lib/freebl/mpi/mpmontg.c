@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.5 2000/08/04 19:58:20 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.6 2000/08/08 03:20:35 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -119,26 +119,6 @@ loser:
   return rv;
 }
 
-/* compute n0', given n0, n0' = -(n0 ** -1) mod MP_RADIX
-**		where n0 = least significant mp_digit of N, the modulus.
-** This technique from the paper "Fast Modular Reciprocals" (unpublished)
-** by Richard Schroeppel (a.k.a. Captain Nemo).
-*/ 
-STATIC
-mp_err mp_n_to_n0prime(mp_mont_modulus *mmm)
-{
-  mp_digit n0    	= MP_DIGIT(&mmm->N, 0);
-  mp_digit n0inv     	= n0;
-
-/* 4 iterations suffice for integers up to 32 bits. */
-  n0inv *= 2 - n0 * n0inv;
-  n0inv *= 2 - n0 * n0inv;
-  n0inv *= 2 - n0 * n0inv;
-  n0inv *= 2 - n0 * n0inv;
-
-  mmm->n0prime = 0 - n0inv;
-  return MP_OKAY;
-}
 
 mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent, 
 		  const mp_int *modulus, mp_int *result)
@@ -171,7 +151,11 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   i = mpl_significant_bits(modulus);
   i += MP_DIGIT_BIT - 1;
   mmm.b = i - i % MP_DIGIT_BIT;
-  MP_CHECKOK( mp_n_to_n0prime(&mmm) );
+
+  /* compute n0', given n0, n0' = -(n0 ** -1) mod MP_RADIX
+  **		where n0 = least significant mp_digit of N, the modulus.
+  */
+  mmm.n0prime = 0 - s_mp_invmod_32b( MP_DIGIT(modulus, 0) );
 
   MP_CHECKOK( mp_to_mont(base, &mmm, &square) );
 
