@@ -344,10 +344,12 @@ nsLineLayout::WordBreakReflow()
 nsresult
 nsLineLayout::ReflowMappedChild()
 {
-  if (mMustReflowMappedChildren) {
+  if (mMustReflowMappedChildren || PR_TRUE) {
+/*
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                  ("nsLineLayout::ReflowMappedChild: must reflow frame=%p[%d]",
                   mKidFrame, mKidIndex));
+*/
     return ReflowChild(nsnull);
   }
 
