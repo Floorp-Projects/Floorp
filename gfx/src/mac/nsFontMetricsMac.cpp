@@ -129,7 +129,7 @@ nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
       langGroup.AssignLiteral("ja");
       
   	nsString lang;
-    mFontMapping = new nsUnicodeFontMappingMac(mFont, mContext, langGroup, lang);
+    mFontMapping = new nsUnicodeFontMappingMac(&mFont, mContext, langGroup, lang);
   }
   
 	return mFontMapping;
