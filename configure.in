@@ -2474,17 +2474,18 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =
-dnl = --enable-low-fat
+dnl = MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
 dnl = 
-dnl = Take out unneeded symbols from the .dynsym of .so files
+dnl = Flags to strip unused symbols from .so components
 dnl = 
 dnl ========================================================
-MOZ_LOW_FAT=
+MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 
-MOZ_ARG_ENABLE_BOOL(low-fat,
-[  --enable-low-fat       Take out unneeded symbols from the .dynsym of .so files ],
-  [MOZ_LOW_FAT=1 ])
-
+case "$host" in
+*-linux*)
+    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(topsrcdir)/build/unix/gnu-ld-scripts/components-version-script'
+    ;;
+esac
 dnl ========================================================
 
 dnl ========================================================
@@ -2817,7 +2818,7 @@ AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(BUILD_IDLC)
 AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
 
-AC_SUBST(MOZ_LOW_FAT)
+AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_STRIP_NOT_EXPORTED)
 
 AC_SUBST(MOZ_GLE)

@@ -61,11 +61,7 @@ BUILD_IDLC = @BUILD_IDLC@
 
 MOZ_STRIP_NOT_EXPORTED = @MOZ_STRIP_NOT_EXPORTED@
 
-MOZ_LOW_FAT = @MOZ_LOW_FAT@
-
-ifdef MOZ_LOW_FAT
-MOZ_COMPONENTS_LOW_FAT_LDFLAGS = -Wl,--version-script,$(topsrcdir)/build/unix/gnu-ld-scripts/components-version-script
-endif
+MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS = @MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS@
 
 ClientWallet=@ClientWallet@
 CookieManagement=@CookieManagement@
