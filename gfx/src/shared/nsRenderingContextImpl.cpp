@@ -40,6 +40,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIImage.h"
 #include "nsTransform2D.h"
+#include "nsIRegion.h"
 #include <stdlib.h>
 
 
@@ -333,6 +334,13 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
       return NS_OK;
     }
   }
+
+  // Multiple paint rects may have been coalesced into a bounding box, so
+  // ensure that this rect is actually within the clip region before we draw.
+  nsCOMPtr<nsIRegion> clipRegion;
+  GetClipRegion(getter_AddRefs(clipRegion));
+  if (clipRegion && !clipRegion->ContainsRect(dr.x, dr.y, dr.width, dr.height))
+    return NS_OK;
 
   return img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
                    dr.x, dr.y, dr.width, dr.height);
