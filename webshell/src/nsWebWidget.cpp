@@ -441,7 +441,9 @@ NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec)
   }
 
   // Now load the document
+  mPresShell->EnterReflowLock();
   doc->LoadURL(url);
+  mPresShell->ExitReflowLock();
 
   NS_RELEASE(doc);
 
