@@ -20,8 +20,10 @@
     </para>
 
     <warning>
-      These files pre-date the templatisation work done as part of the
-      2.16 release, and have not been updated. 
+      <para>
+        These files pre-date the templatisation work done as part of the
+        2.16 release, and have not been updated.
+      </para>
     </warning>
     
     <para>
