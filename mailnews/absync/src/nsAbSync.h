@@ -31,6 +31,7 @@
 #include "nsIAbDirectory.h"
 #include "nsAbSyncCRCModel.h"
 #include "nsVoidArray.h"
+#include "nsIStringBundle.h"
 
 //
 // Basic Sync Logic
@@ -147,6 +148,7 @@ private:
   void            InternalInit();
   nsresult        InternalCleanup();
   nsresult        CleanServerTable(nsVoidArray *aArray);
+  PRUnichar       *GetString(const PRUnichar *aStringName);
 
   nsCOMPtr<nsIAbSyncPostEngine>   mPostEngine;
   nsString                        mPostString;
@@ -156,6 +158,7 @@ private:
 
   PRInt32                         mLastChangeNum;
   char                            *mUserName;
+  nsCOMPtr<nsIStringBundle>       mStringBundle;
 
   // Setting for ABSync operations...
   char                            *mAbSyncServer;

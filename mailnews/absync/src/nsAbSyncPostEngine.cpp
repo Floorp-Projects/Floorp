@@ -91,6 +91,7 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
 
   mPostEngineState =  nsIAbSyncPostEngineState::nsIAbSyncPostIdle;
   mTransactionID = 0;
+  mMessageSize = 0;
 }
 
 nsAbSyncPostEngine::~nsAbSyncPostEngine()
@@ -511,6 +512,10 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
   mProtocolResponse = NS_ConvertASCIItoUCS2("");
   mTotalWritten = 0;
 
+  if (aProtocolRequest)
+    mMessageSize = nsCRT::strlen(aProtocolRequest);
+  else
+    mMessageSize = 0;
   char *tSpec = PR_smprintf("%s?%s", aSpec, aProtocolRequest);
   if (!tSpec)
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the string */

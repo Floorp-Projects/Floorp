@@ -28,6 +28,7 @@ XPIDLSRCS=\
 	      .\nsIAbSyncListener.idl		\
       	.\nsIAbSyncPostEngine.idl			\
       	.\nsIAbSyncPostListener.idl			\
+      	.\nsIAbSyncDriver.idl			\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

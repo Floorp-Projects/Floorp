@@ -72,5 +72,15 @@
 #define NS_ABSYNC_POST_LISTENER_PROGID			\
   "component://netscape/absync/postlistener"
   
+//
+// Sync Driver
+//
+#define NS_ADDBOOK_SYNCDRIVER_PROGID \
+  "component://netscape/addressbook/services/syncdriver"
+#define NS_ADDBOOK_SYNCDRIVER_CID \
+{	/* 40D1D3DA-1637-11d4-8FE1-00A024A7D144 */		    \
+  0x40d1d3da, 0x1637, 0x11d4,                       \
+  { 0x8f, 0xe1, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } \
+}
   
 #endif // nsAbSyncCID_h__

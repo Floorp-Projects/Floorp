@@ -37,6 +37,8 @@
 #include "nsSyncDecoderRing.h"
 #include "plstr.h"
 #include "nsString.h"
+#include "nsTextFormatter.h"
+#include "nsIStringBundle.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -45,6 +47,7 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
@@ -52,6 +55,11 @@ NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
 nsAbSync::nsAbSync()
 {
   NS_INIT_ISUPPORTS();
+
+  // For listener array stuff...
+  mListenerArrayCount = 0;
+  mListenerArray = nsnull;
+  mStringBundle = nsnull;
 
   InternalInit();
   InitSchemaColumns();
@@ -61,8 +69,6 @@ void
 nsAbSync::InternalInit()
 {
   /* member initializers and constructor code */
-  mListenerArray = nsnull;
-  mListenerArrayCount = 0;
   mCurrentState = nsIAbSyncState::nsIAbSyncIdle;
   mTransactionID = 100;
   mPostEngine = nsnull;
@@ -470,17 +476,6 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   if (NS_FAILED(rv))
     goto EarlyExit;
 
-  //
-  // if we have nothing in mPostString, then we can just return OK...no 
-  // sync was needed
-  //
-  // if (mPostString.IsEmpty())
-  // {
-  //  rv = NS_OK;
-  //  OnStopOperation(mTransactionID, NS_OK, nsnull, nsnull);
-  //  goto EarlyExit;
-  // }
-
   // We can keep this object around for reuse...
   if (!mPostEngine)
   {
@@ -492,15 +487,16 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   }
 
   // Ok, add the header to this protocol string information...
-  // prefixStr = PR_smprintf("last=%u&protocol=%d&client=seamonkey&ver=%s&", mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo", mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&user=%s", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, mUserName);
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&", mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&user=%s&", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, mUserName);
   if (!prefixStr)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
-    OnStopOperation(mTransactionID, NS_OK, nsnull, nsnull);
+    OnStopOperation(mTransactionID, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     goto EarlyExit;
   }
 
@@ -515,8 +511,12 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   rv = mPostEngine->SendAbRequest(postSpec, mAbSyncPort, protocolRequest, mTransactionID);
   if (NS_SUCCEEDED(rv))
   {
-    // RICHIE_TODO - need to kick the end of operation listener
     mCurrentState = nsIAbSyncState::nsIAbSyncRunning;
+  }
+  else
+  {
+    OnStopOperation(mTransactionID, rv, nsnull, nsnull);
+    goto EarlyExit;
   }
 
 EarlyExit:
@@ -1666,6 +1666,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
   // If no response, then this is a problem...
   if (!aProtocolResponse)
   {
+    // RICHIE_TODO START HERE DUDE...NICE DIALOGS!
     printf("\7RICHIE_GUI: Server returned invalid response!\n");
     return NS_ERROR_FAILURE;
   }
@@ -2097,7 +2098,44 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   return rv;
 }
 
+#define AB_STRING_URL       "chrome://messenger/locale/addressbook/addressBook.properties"
 
+PRUnichar *
+nsAbSync::GetString(const PRUnichar *aStringName)
+{
+	nsresult    res = NS_OK;
+  PRUnichar   *ptrv = nsnull;
+
+	if (!mStringBundle)
+	{
+		char    *propertyURL = AB_STRING_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(mStringBundle));
+		}
+	}
+
+	if (mStringBundle)
+		res = mStringBundle->GetStringFromName(aStringName, &ptrv);
+
+  if ( NS_SUCCEEDED(res) && (ptrv) )
+    return ptrv;
+  else
+    return nsCRT::strdup(aStringName);
+}
+
+/*********** RICHIE_TODO
+These are the types for the phone entries!
+
+Pager:
+Home:
+Work:
+Fax:
+Cellular:
+*****/
 
 /************ UNUSED FOR NOW
 aCard->SetDisplayName(aTagValue->GetUnicode());

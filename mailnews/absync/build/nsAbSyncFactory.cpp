@@ -36,8 +36,10 @@
 #include "nsAbSync.h"
 #include "nsAbSyncPostEngine.h"
 
+#include "nsABSyncDriver.h"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSync);
-// NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSyncPostEngine);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSyncDriver)
 
 ////////////////////////////////////////////////////////////
 //
@@ -52,7 +54,11 @@ static nsModuleComponentInfo components[] =
   { "Addressbook Sync Post Engine",
     NS_ABSYNC_POST_ENGINE_CID,
     NS_ABSYNC_POST_ENGINE_PROGID,
-    nsAbSyncPostEngine::Create }
+    nsAbSyncPostEngine::Create },
+  { "The Address Book Sync Driver", 
+    NS_ADDBOOK_SYNCDRIVER_CID,
+    NS_ADDBOOK_SYNCDRIVER_PROGID,
+    nsAbSyncDriverConstructor }    
 };
 
 NS_IMPL_NSGETMODULE("nsAbSyncModule", components)
