@@ -293,7 +293,7 @@ nsresult NS_NewImageNetContextSync(ilINetContext **aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilINetContext *cx = new ImageNetContextSyncImpl(TV_IMG_NTWK_SERVER);
+  ilINetContext *cx = new ImageNetContextSyncImpl(IMG_NTWK_SERVER);
   if (cx == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
