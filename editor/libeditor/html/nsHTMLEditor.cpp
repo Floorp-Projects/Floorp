@@ -213,6 +213,9 @@ nsHTMLEditor::~nsHTMLEditor()
 
   if (--sInstanceCount == 0 && sParserService)
     sParserService = 0;
+
+  if (mHTMLCSSUtils)
+    delete mHTMLCSSUtils;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditor, nsEditor)
@@ -292,6 +295,8 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     mCSSAware = PRBool(0 == aFlags);
 
     // Init the HTML-CSS utils
+    if (mHTMLCSSUtils)
+      delete mHTMLCSSUtils;
     result = NS_NewHTMLCSSUtils(&mHTMLCSSUtils);
     if (NS_FAILED(result)) { return result; }
     mHTMLCSSUtils->Init(this);
