@@ -173,6 +173,8 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
 
   mPreloadedAttachmentCount = 0;
   mRemoteAttachmentCount = 0;
+  mCompFieldLocalAttachments = 0;
+  mCompFieldRemoteAttachments = 0;
 
 	NS_INIT_REFCNT();
 }
@@ -779,14 +781,11 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (status < 0)
 		goto FAIL;
 
-	/* Set up the first part (user-typed.)  For now, do it even if the first
-	* part is empty; we need to add things to skip it if this part is empty.
-	* ###tw
-	*/
+	// Set up the first part (user-typed.)  For now, do it even if the first
+	// part is empty; we need to add things to skip it if this part is empty.
 
-
-	/* Set up encoder for the first part (message body.)
-	*/
+	// Set up encoder for the first part (message body.)
+	//
 	NS_ASSERTION(!m_attachment1_encoder_data, "not-null m_attachment1_encoder_data");
 	if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_BASE64))
 	{
@@ -878,7 +877,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 
       nsXPIDLCString turl;
       ma->mURL->GetSpec(getter_Copies(turl));
-	  hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
+	    hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
 												   ma->m_description,
 												   ma->m_x_mac_type,
 												   ma->m_x_mac_creator,
@@ -1013,8 +1012,7 @@ HJ91531
 
 
 int
-mime_write_message_body (nsMsgComposeAndSend *state,
-						 char *buf, PRInt32 size)
+mime_write_message_body (nsMsgComposeAndSend *state, char *buf, PRInt32 size)
 {
   HJ62011
 
@@ -1320,17 +1318,250 @@ PRUint32                  i;
   return GetBodyFromEditor();
 }
 
+nsresult
+nsMsgComposeAndSend::CountCompFieldAttachments()
+{
+  char  *attachmentList = (char *)mCompFields->GetAttachments();
+  mCompFieldLocalAttachments = 0;
+  mCompFieldRemoteAttachments = 0;
+
+  if ((!attachmentList) || (!*attachmentList))
+    return NS_OK;
+
+  // Make our local copy...
+  attachmentList = PL_strdup(mCompFields->GetAttachments());
+
+  // parse the attachment list 
+#ifdef NS_DEBUG
+  printf("Comp fields attachment list = %s\n", (const char*)attachmentList);
+#endif
+
+  char      *token = nsnull;
+  char      *rest = NS_CONST_CAST(char*, (const char*)attachmentList);
+  nsString  str("",eOneByte);
+  
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) 
+  {
+    str = token;
+    str.StripWhitespace();
+    
+    if (str != "") 
+    {
+      // Check to see if this is a file URL, if so, don't retrieve
+      // like a remote URL...
+      //
+      // RICHIE SHERRY
+      // Ok, try to optimize and see where it gets you :-( If we say these
+      // are local files and don't do a fetch, we don't get the Content/Type
+      // of the attachment which totally screws the operation...so until we 
+      // plugin some sort of disk_file -> content_type mapping service, we are
+      // going to "fetch" all URL's even if they are local
+      /************************************************************************
+      if (str.Compare("file://", PR_TRUE, 7) == 0)
+      {
+        mCompFieldLocalAttachments++;
+#ifdef NS_DEBUG
+        printf("Counting LOCAL attachment %d: %s\n", 
+                mCompFieldLocalAttachments, str.GetBuffer());
+#endif
+      }
+      else    // This is a remote URL...
+      ************************************************************************/
+      {
+        mCompFieldRemoteAttachments++;
+#ifdef NS_DEBUG
+        printf("Counting REMOTE attachment %d: %s\n", 
+                mCompFieldRemoteAttachments, str.GetBuffer());
+#endif
+      }
+
+      str = "";
+    }
+
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+
+  PR_FREEIF(attachmentList);
+  return NS_OK;
+}
+
+// 
+// Since we are at the head of the list, we start from ZERO.
+//
+nsresult
+nsMsgComposeAndSend::AddCompFieldLocalAttachments()
+{
+  // If none, just return...
+  if (mCompFieldLocalAttachments <= 0)
+    return NS_OK;
+
+  char  *attachmentList = (char *)mCompFields->GetAttachments();
+  if ((!attachmentList) || (!*attachmentList))
+    return NS_ERROR_FAILURE;
+
+  // Make our local copy...
+  attachmentList = PL_strdup(mCompFields->GetAttachments());
+
+  // parse the attachment list for local attachments
+  PRUint32  newLoc = 0;
+  char      *token = nsnull;
+  char      *rest = NS_CONST_CAST(char*, (const char*)attachmentList);
+  nsString  str("",eOneByte);
+  
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) 
+  {
+    str = token;
+    str.StripWhitespace();
+    
+    if (str != "") 
+    {
+      // Just look for local file:// attachments and do the right thing.
+      if (str.Compare("file://", PR_TRUE, 7) == 0)
+      {
+#ifdef NS_DEBUG
+        printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
+#endif
+        //
+        // Now we have to setup the m_attachments entry for the file://
+        // URL that is passed in...
+        //
+        m_attachments[newLoc].mDeleteFile = PR_FALSE;
+			  m_attachments[newLoc].m_mime_delivery_state = this;
+
+			  // These attachments are already "snarfed"...
+			  m_attachments[newLoc].m_done = PR_TRUE;
+
+        if (m_attachments[newLoc].mURL)
+          NS_RELEASE(m_attachments[newLoc].mURL);
+
+        nsMsgNewURL(&(m_attachments[newLoc].mURL), str.GetBuffer());
+
+        if (m_attachments[newLoc].mFileSpec)
+          delete (m_attachments[newLoc].mFileSpec);
+			  m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL(str) );
+
+			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
+        ++newLoc;
+      }
+
+      str = "";
+    }
+
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+
+  PR_FREEIF(attachmentList);
+  return NS_OK;
+}
+
+nsresult
+nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
+                                                   PRInt32    *aMailboxCount, 
+                                                   PRInt32    *aNewsCount)
+{
+  // If none, just return...
+  if (mCompFieldRemoteAttachments <= 0)
+    return NS_OK;
+
+  char  *attachmentList = (char *)mCompFields->GetAttachments();
+  if ((!attachmentList) || (!*attachmentList))
+    return NS_ERROR_FAILURE;
+
+  // Make our local copy...
+  attachmentList = PL_strdup(mCompFields->GetAttachments());
+
+  // parse the attachment list for local attachments
+  PRUint32  newLoc = aStartLocation;
+  char      *token = nsnull;
+  char      *rest = NS_CONST_CAST(char*, (const char*)attachmentList);
+  nsString  str("",eOneByte);
+  
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) 
+  {
+    str = token;
+    str.StripWhitespace();
+    
+    if (str != "") 
+    {
+      // Just look for files that are NOT local file attachments and do 
+      // the right thing.
+      //
+      // RICHIE SHERRY
+      // Ok, try to optimize and see where it gets you :-( If we say these
+      // are local files and don't do a fetch, we don't get the Content/Type
+      // of the attachment which totally screws the operation...so until we 
+      // plugin some sort of disk_file -> content_type mapping service, we are
+      // going to "fetch" all URL's even if they are local
+      /************************************************************************
+      if (str.Compare("file://", PR_TRUE, 7) != 0)
+      *************************************************************************/
+      {
+#ifdef NS_DEBUG
+        printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
+#endif
+
+        m_attachments[newLoc].mDeleteFile = PR_TRUE;
+        m_attachments[newLoc].m_done = PR_FALSE;
+			  m_attachments[newLoc].m_mime_delivery_state = this;
+
+        if (m_attachments[newLoc].mURL)
+          NS_RELEASE(m_attachments[newLoc].mURL);
+
+        nsMsgNewURL(&(m_attachments[newLoc].mURL), str.GetBuffer());
+
+			  PR_FREEIF(m_attachments[newLoc].m_charset);
+			  m_attachments[newLoc].m_charset = PL_strdup (mCompFields->GetCharacterSet());
+			  PR_FREEIF(m_attachments[newLoc].m_encoding);
+			  m_attachments[newLoc].m_encoding = PL_strdup ("7bit");
+
+			  /* Count up attachments which are going to come from mail folders
+			     and from NNTP servers. */
+        nsXPIDLCString turl;
+        m_attachments[newLoc].mURL->GetSpec(getter_Copies(turl));
+			  if (PL_strncasecmp(turl, "mailbox:",8) ||
+					  PL_strncasecmp(turl, "IMAP:",5))
+				    (*aMailboxCount)++;
+			  else
+				  if (PL_strncasecmp(turl, "news:",5) ||
+						  PL_strncasecmp(turl, "snews:",6))
+					  (*aNewsCount)++;
+
+			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
+
+        ++newLoc;
+      }
+
+      str = "";
+    }
+
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+
+  PR_FREEIF(attachmentList);
+  return NS_OK;
+}
+
 int 
 nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 						                         const nsMsgAttachedFile *preloaded_attachments)
 { 
   //
   // First, count the total number of attachments we are going to process
-  // for this operation!
+  // for this operation! This is a little more complicated than you might
+  // think because we have a few ways to specify attachments. Via the nsMsgAttachmentData
+  // as well as the composition fields.
   //
+  CountCompFieldAttachments();
 
   // Count the preloaded attachments!
   mPreloadedAttachmentCount = 0;
+
+  // For now, manually add the local attachments in the comp field!
+  mPreloadedAttachmentCount += mCompFieldLocalAttachments;
+
   if (preloaded_attachments && preloaded_attachments[0].orig_url) 
   {
 		while (preloaded_attachments[mPreloadedAttachmentCount].orig_url)
@@ -1344,6 +1575,9 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
     mRemoteAttachmentCount = mMultipartRelatedAttachmentCount = GetMultipartRelatedCount();
   else
     mRemoteAttachmentCount = mMultipartRelatedAttachmentCount = 0;  // The constructor took care of this, but just to be sure
+
+  // For now, manually add the remote attachments in the comp field!
+  mRemoteAttachmentCount += mCompFieldRemoteAttachments;
 
   PRInt32     tCount = 0;
   if (attachments && attachments[0].url) 
@@ -1366,6 +1600,11 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   nsCRT::memset(m_attachments, 0, (sizeof(nsMsgAttachmentHandler) * m_attachment_count)); 
   PRUint32     i;    // counter for location in attachment array...
 
+  //
+  // First, we need to attach the files that are defined in the comp fields...
+  if (NS_FAILED(AddCompFieldLocalAttachments()))
+    return NS_ERROR_INVALID_ARG;
+
   // Now handle the preloaded attachments...
   if (preloaded_attachments && preloaded_attachments[0].orig_url) 
   {
@@ -1374,7 +1613,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 		// files.
 		m_pre_snarfed_attachments_p = PR_TRUE;
 
-		for (i = 0; i < mPreloadedAttachmentCount; i++) 
+		for (i = mCompFieldLocalAttachments; i < mPreloadedAttachmentCount; i++) 
     {
       m_attachments[i].mDeleteFile = PR_FALSE;
 			m_attachments[i].m_mime_delivery_state = this;
@@ -1407,15 +1646,11 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 			m_attachments[i].mFileSpec = new nsFileSpec(*(preloaded_attachments[i].file_spec));
 
 			m_attachments[i].m_size = preloaded_attachments[i].size;
-			m_attachments[i].m_unprintable_count =
-			preloaded_attachments[i].unprintable_count;
-			m_attachments[i].m_highbit_count =
-			preloaded_attachments[i].highbit_count;
+			m_attachments[i].m_unprintable_count = preloaded_attachments[i].unprintable_count;
+			m_attachments[i].m_highbit_count = preloaded_attachments[i].highbit_count;
 			m_attachments[i].m_ctl_count = preloaded_attachments[i].ctl_count;
-			m_attachments[i].m_null_count =
-			preloaded_attachments[i].null_count;
-			m_attachments[i].m_max_column =
-			preloaded_attachments[i].max_line_length;
+			m_attachments[i].m_null_count = preloaded_attachments[i].null_count;
+			m_attachments[i].m_max_column = preloaded_attachments[i].max_line_length;
 
 			/* If the attachment has an encoding, and it's not one of
 			the "null" encodings, then keep it. */
@@ -1444,6 +1679,13 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   }
 
   //
+  // Now add the comp field remote attachments...
+  //
+  if (NS_FAILED( AddCompFieldRemoteAttachments( (mPreloadedAttachmentCount + mMultipartRelatedAttachmentCount), 
+                                                 &mailbox_count, &news_count) ))
+    return NS_ERROR_INVALID_ARG;
+
+  //
   // Now deal remote attachments and attach multipart/related attachments (url's and such..)
   // first!
   //
@@ -1451,7 +1693,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   {
     PRInt32     locCount = -1;
 
-    for (i = (mPreloadedAttachmentCount + mMultipartRelatedAttachmentCount); i < m_attachment_count; i++) 
+    for (i = (mPreloadedAttachmentCount + mMultipartRelatedAttachmentCount + mCompFieldRemoteAttachments); i < m_attachment_count; i++) 
     {
       locCount++;
       m_attachments[i].mDeleteFile = PR_TRUE;
@@ -1502,7 +1744,8 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   }
 
   if ( (attachments && attachments[0].url) || 
-       (mMultipartRelatedAttachmentCount > 0) )
+       (mMultipartRelatedAttachmentCount > 0) ||
+       (mCompFieldRemoteAttachments > 0) )
   {
 	  // If there is more than one mailbox URL, or more than one NNTP url,
 	  // do the load in serial rather than parallel, for efficiency.
@@ -1550,7 +1793,8 @@ int nsMsgComposeAndSend::SetMimeHeader(MSG_HEADER_SET header, const char *value)
 		dupHeader = mime_fix_addr_header(value);
 	else if (header &  (MSG_NEWSGROUPS_HEADER_MASK| MSG_FOLLOWUP_TO_HEADER_MASK))
 		dupHeader = mime_fix_news_header(value);
-	else  if (header & (MSG_FCC_HEADER_MASK | MSG_ORGANIZATION_HEADER_MASK |  MSG_SUBJECT_HEADER_MASK | MSG_REFERENCES_HEADER_MASK | MSG_X_TEMPLATE_HEADER_MASK))
+	else  if (header & (MSG_FCC_HEADER_MASK | MSG_ORGANIZATION_HEADER_MASK |  MSG_SUBJECT_HEADER_MASK | 
+                      MSG_REFERENCES_HEADER_MASK | MSG_X_TEMPLATE_HEADER_MASK | MSG_ATTACHMENTS_HEADER_MASK))
 		dupHeader = mime_fix_header(value);
 	else
 		NS_ASSERTION(PR_FALSE, "invalid header");	// unhandled header mask - bad boy.
@@ -1621,7 +1865,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   }
   else
   {
-    // RICHIE - SHERRY - need to deal with news FCC's also!
+    // RICHIE SHERRY - need to deal with news FCC's also!
     char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, PR_FALSE);
     if ( (uri) && (*uri) )
     {
@@ -1649,6 +1893,9 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 	SetMimeHeader(MSG_SUBJECT_HEADER_MASK, fields->GetSubject());
 	SetMimeHeader(MSG_REFERENCES_HEADER_MASK, fields->GetReferences());
 	SetMimeHeader(MSG_X_TEMPLATE_HEADER_MASK, fields->GetTemplateName());
+
+  // For the new way to deal with attachments from the FE...
+  SetMimeHeader(MSG_ATTACHMENTS_HEADER_MASK, fields->GetAttachments());
 
 	pStr = fields->GetOtherRandomHeaders();
 	if (pStr)
@@ -1805,7 +2052,7 @@ nsMsgComposeAndSend::Init(
   // Ok, now watch me pull a rabbit out of my hat....what we need
   // to do here is figure out what the body will be. If this is a
   // MHTML request, then we need to do some processing of the document
-  // from and figure out what we need to package along with this message
+  // and figure out what we need to package along with this message
   // to send. See ProcessMultipartRelated() for further details.
   //
 

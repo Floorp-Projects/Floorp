@@ -346,11 +346,6 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
       else
         tEditor = nsnull;    
 
-#ifdef DEBUG
-      printf("RHP:  do your magic here.\n");
-      printf("Attachments: %s\n",m_compFields->GetAttachments());
-#endif
-
       rv = mMsgSend->CreateAndSendMessage(
                     tEditor,
                     identity,

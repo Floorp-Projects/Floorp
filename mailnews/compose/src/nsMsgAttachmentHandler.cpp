@@ -78,6 +78,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 	m_decrypted_p = PR_FALSE;
 	
   // For analyzing the attachment file...
+  m_file_analyzed = PR_FALSE;
   m_ctl_count = 0;
 	m_null_count = 0;
 	m_current_column = 0;
@@ -155,6 +156,9 @@ nsMsgAttachmentHandler::AnalyzeSnarfedFile(void)
 	char chunk[256];
 	PRInt32 numRead = 0;
 
+  if (m_file_analyzed)
+    return;
+
   if (mFileSpec)
 	{
 		nsInputFileStream fileHdl(*mFileSpec, PR_RDONLY, 0);
@@ -167,6 +171,9 @@ nsMsgAttachmentHandler::AnalyzeSnarfedFile(void)
 					AnalyzeDataChunk(chunk, numRead);
 			}
 			while (numRead > 0);
+
+      fileHdl.close();
+      m_file_analyzed = PR_TRUE;
 		}
 	}
 }
@@ -188,8 +195,10 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
   if (m_already_encoded_p)
     goto DONE;
   
-    /* Allow users to override our percentage-wise guess on whether
-	 the file is text or binary */
+  AnalyzeSnarfedFile();
+
+  /* Allow users to override our percentage-wise guess on whether
+	the file is text or binary */
   if (NS_SUCCEEDED(rv) && prefs) 
     prefs->GetBoolPref ("mail.file_attach_binary", &forceB64);
   

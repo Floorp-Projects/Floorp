@@ -110,6 +110,7 @@ public:
   PRUint32              m_current_column;
   PRUint32              m_max_column;
   PRUint32              m_lines;
+  PRBool                m_file_analyzed;
 
   MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
 };

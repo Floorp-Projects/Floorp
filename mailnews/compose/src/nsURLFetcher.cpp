@@ -139,9 +139,9 @@ nsURLFetcher::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
 }
 
 nsresult
-nsURLFetcher::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
+nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
 {
-#ifdef NS_DEBUG_richie
+#ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStopRequest()\n");
 #endif
 

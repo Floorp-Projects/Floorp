@@ -267,6 +267,10 @@ public:
   int	        GatherMimeAttachments();
   int         HackAttachments(const struct nsMsgAttachmentData *attachments,
 					                    const struct nsMsgAttachedFile *preloaded_attachments);
+  nsresult    CountCompFieldAttachments();
+  nsresult    AddCompFieldLocalAttachments();
+  nsresult    AddCompFieldRemoteAttachments(PRUint32  aStartLocation, PRInt32 *aMailboxCount, PRInt32 *aNewsCount);
+
   // Deal with multipart related data
   nsresult    ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aNewsCount); 
   PRUint32    GetMultipartRelatedCount(void);
@@ -376,6 +380,9 @@ public:
   PRUint32                mPreloadedAttachmentCount;
   PRUint32                mRemoteAttachmentCount;
   PRUint32                mMultipartRelatedAttachmentCount; // the number of mpart related attachments
+
+  PRUint32                mCompFieldLocalAttachments;     // the number of file:// attachments in the comp fields
+  PRUint32                mCompFieldRemoteAttachments;    // the number of remote attachments in the comp fields
 
   //
   // attachment states and other info...

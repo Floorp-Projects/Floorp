@@ -402,11 +402,14 @@ int main(int argc, char *argv[])
       pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
       PR_snprintf(subject, sizeof(subject), "Spam from: %s", addr);
 
+
       pMsgCompFields->SetSubject(nsAutoString(subject).GetUnicode());
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
       pMsgCompFields->SetBody(nsAutoString(email).GetUnicode());
       pMsgCompFields->SetCharacterSet(nsAutoString("us-ascii").GetUnicode());
       
+      pMsgCompFields->SetAttachments(nsAutoString("http://www.netscape.com").GetUnicode());
+
       PRInt32 nBodyLength;
       PRUnichar    *pUnicharBody;
       char    *pBody;
