@@ -754,9 +754,16 @@ function SetSelectionButtons()
 function SetSpanEnable()
 {
   // If entire row is selected, don't allow changing colspan...
-  dialog.RowSpanInput.setAttribute("disabled", (SelectedCellsType == SELECT_COLUMN) ? "true" : "false");
+  if ( SelectedCellsType == SELECT_COLUMN )
+    dialog.RowSpanInput.setAttribute("disabled", "true");
+  else
+    dialog.RowSpanInput.removeAttribute("disabled");
+
   // ...and similarly:
-  dialog.ColSpanInput.setAttribute("disabled", (SelectedCellsType == SELECT_ROW) ? "true" : "false");
+  if ( SelectedCellsType == SELECT_ROW )
+    dialog.ColSpanInput.setAttribute("disabled", "true");
+  else
+    dialog.ColSpanInput.removeAttribute("disabled");
 }
 
 function SwitchPanel(newPanel)
