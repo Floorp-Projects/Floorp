@@ -100,7 +100,7 @@ wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourNativeBC,
 
 wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourNativeBC,
                                              InputStreamShim *yourShim) :
-    nsActionEvent(), mNativeBrowserControl(yourNativeBC), mUriString(nsnull),
+    nsActionEvent(), mNativeBrowserControl(yourNativeBC),
     mContentType(nsnull), mProperties(nsnull), mShim(yourShim)
 {
 }

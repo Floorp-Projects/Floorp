@@ -33,7 +33,7 @@
 #include "nsIStringBundle.h"
 #include "nsIServiceManager.h"
 
-#include "nsString2.h"
+#include "nsString.h"
 
 #include "NativeBrowserControl.h"
 
