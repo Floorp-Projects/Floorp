@@ -327,7 +327,10 @@ Rights Reserved.
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="msgaccounts:/">
       <template>
-        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+            <!-- don't show nntp servers in the file picker -->
+        </rule>
+         <rule iscontainer="true" isempty="false">
           <menupopup>
               <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
@@ -337,10 +340,7 @@ Rights Reserved.
               </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-            <!-- don't show nntp servers in the file picker -->
-        </rule>
-        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+       <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <menupopup>
              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
