@@ -496,6 +496,11 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(gHTMLElementFactory);
         NS_IF_RELEASE(gXMLElementFactory);
 
+        if (gNameSpaceManager) {
+            nsServiceManager::ReleaseService(kNameSpaceManagerCID, gNameSpaceManager);
+            gNameSpaceManager = nsnull;
+        }
+
         if (gXULUtils) {
             nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
             gXULUtils = nsnull;
