@@ -106,7 +106,7 @@
             <radio
               id      = "originalsizeRadio" 
               value   = "&originalSizeRadio.label;"
-              oncommand = "doDimensionEnabling( false );"/>
+              oncommand = "doDimensionEnabling( true );"/>
             <radio
               id      = "customsizeRadio" 
               value   = "&customSizeRadio.label;"
