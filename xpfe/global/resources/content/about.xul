@@ -36,6 +36,8 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
         class="dialog"
         title="&title.label;">
 
+<keyset id="dialogKeys"/>
+
 <box align="vertical" flex="100%" style="margin: 0.5em;">
 
 <tabbox orient="vertical" flex="100%">
