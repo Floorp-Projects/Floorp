@@ -223,6 +223,10 @@ components/libwidget_mac.dylib
 components/widget.xpt
 libwidget.rsrc
 
+; xmlextras, optional for XMLHttpRequest support
+components/libxmlextras.dylib
+components/xmlextras.xpt
+
 ; xpconnect
 components/libxpconnect.dylib
 components/xpconnect.xpt

@@ -230,6 +230,9 @@ libsoftokn3.so
 libssl3.so
 libnssckbi.so
 
+; xmlextras, optional for XMLHttpRequest support
+components/libxmlextras.so
+components/xmlextras.xpt
 
 res/language.properties
 res/langGroups.properties
