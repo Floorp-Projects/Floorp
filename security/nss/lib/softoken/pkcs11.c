@@ -2844,7 +2844,7 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
     pInfo->cryptokiVersion.minor = 11;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
     pInfo->libraryVersion.major = 3;
-    pInfo->libraryVersion.minor = 7;
+    pInfo->libraryVersion.minor = 8;
     PORT_Memcpy(pInfo->libraryDescription,libraryDescription,32);
     pInfo->flags = 0;
     return CKR_OK;
@@ -2886,7 +2886,7 @@ CK_RV NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
     /* ok we really should read it out of the keydb file. */
     /* pInfo->hardwareVersion.major = NSSLOWKEY_DB_FILE_VERSION; */
     pInfo->hardwareVersion.major = 3;
-    pInfo->hardwareVersion.minor = 7;
+    pInfo->hardwareVersion.minor = 8;
     return CKR_OK;
 }
 
