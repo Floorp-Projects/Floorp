@@ -44,4 +44,4 @@ public:
 
 };
 
-#endif __nsIccessibilityService_h__
+#endif /* __nsIccessibilityService_h__ */
