@@ -134,13 +134,6 @@ static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
-
-enum nsContentType {
-	TEXT_RDF, 
-	TEXT_XUL,
-};
-
-////////////////////////////////////////////////////////////////////////
 // nsElementMap
 
 class nsElementMap
@@ -563,6 +556,13 @@ public:
                            nsRDFDOMNodeList* aElements);
 
 protected:
+    // pseudo constants
+    static PRInt32 gRefCnt;
+    static nsIAtom* kAttributeAtom;
+    static nsIAtom* kElementAtom;
+    static nsIAtom* kIdAtom;
+    static nsIAtom* kObservesAtom;
+
     nsIContent*
     FindContent(const nsIContent* aStartNode,
                 const nsIContent* aTest1,
@@ -602,6 +602,11 @@ protected:
     nsILineBreaker*            mLineBreaker;
 };
 
+PRInt32 XULDocumentImpl::gRefCnt;
+nsIAtom* XULDocumentImpl::kAttributeAtom;
+nsIAtom* XULDocumentImpl::kElementAtom;
+nsIAtom* XULDocumentImpl::kIdAtom;
+nsIAtom* XULDocumentImpl::kObservesAtom;
 
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
@@ -628,15 +633,22 @@ XULDocumentImpl::XULDocumentImpl(void)
 {
     NS_INIT_REFCNT();
 
-
     nsresult rv;
 
     // construct a selection object
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRangeListCID,
                                                     nsnull,
                                                     kIDOMSelectionIID,
-                                                    (void**) &mSelection)))
-        PR_ASSERT(0);
+                                                    (void**) &mSelection))) {
+        NS_ERROR("unable to create DOM selection");
+    }
+
+    if (gRefCnt++ == 0) {
+        kAttributeAtom = NS_NewAtom("attribute");
+        kElementAtom   = NS_NewAtom("element");
+        kIdAtom        = NS_NewAtom("id");
+        kObservesAtom  = NS_NewAtom("observes");
+    }
 }
 
 XULDocumentImpl::~XULDocumentImpl()
@@ -662,6 +674,13 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mParser);
     NS_IF_RELEASE(mLineBreaker);
+
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(kAttributeAtom);
+        NS_IF_RELEASE(kElementAtom);
+        NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kObservesAtom);
+    }
 }
 
 
@@ -1917,9 +1936,6 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
         {
             // Find the node that we're supposed to be
             // observing and perform the hookup.
-            nsIAtom* pElementAtom = NS_NewAtom("element");
-            nsIAtom* pAttributeAtom = NS_NewAtom("attribute");
-
             nsString elementValue;
             nsString attributeValue;
 
@@ -1929,11 +1945,11 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
             pChildContent->GetNameSpaceID(namespaceID);
 
             pChildContent->GetAttribute(namespaceID, 
-                                        pElementAtom,
+                                        kElementAtom,
                                         elementValue);
             
             pChildContent->GetAttribute(namespaceID, 
-                                        pAttributeAtom,
+                                        kAttributeAtom,
                                         attributeValue);
 
             nsIDOMNode* pDOMNode = nsnull;
@@ -2203,15 +2219,12 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
                                    nsIDOMNode** aReturn)
 {
     // See if we match.
-    nsIAtom* pIDAtom = NS_NewAtom("id");
     PRInt32 namespaceID;
     anElement->GetNameSpaceID(namespaceID);
     
     nsString idValue;
 
-    anElement->GetAttribute(namespaceID, pIDAtom, idValue);
-
-    NS_RELEASE(pIDAtom);
+    anElement->GetAttribute(namespaceID, kIdAtom, idValue);
 
     if (idValue == anID)
     {
