@@ -35,6 +35,8 @@
     orient="vertical">
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdSpellCheck.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
@@ -104,8 +106,13 @@
         <spacer/>
       </row>
       <row>
-        <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>
-         <!-- contents are appended by JS -->
+        <menulist id="LanguageMenulist" class="small-margin" oncommand="SelectLanguage()">
+          <menupopup>
+            <menuitem value="more-cmd" label="&moreDictionaries.label;"/>
+            <menuseparator/>
+            <!-- dynamic content populated by JS -->
+          </menupopup>
+        </menulist>
         <hbox flex="1">
           <button class="dialog spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
           <button class="dialog spell-check" id="Close"   label="&closeButton.label;"   oncommand="onClose()"/>
