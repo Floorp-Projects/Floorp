@@ -542,24 +542,17 @@ nsContainerBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 }
 
 NS_IMETHODIMP
-nsContainerBox::Layout(nsBoxLayoutState& aState)
+nsContainerBox::DoLayout(nsBoxLayoutState& aState)
 {
-  EnterLayout(aState);
-
-  nsresult rv = NS_OK;
-
   PRUint32 oldFlags = 0;
   aState.GetLayoutFlags(oldFlags);
   aState.SetLayoutFlags(0);
 
+  nsresult rv = NS_OK;
   if (mLayoutManager)
     rv = mLayoutManager->Layout(this, aState);
 
   aState.SetLayoutFlags(oldFlags);
-
-  SyncLayout(aState);
-
-  ExitLayout(aState);
 
   return rv;
 }
@@ -578,19 +571,6 @@ nsContainerBox::GetLayoutManager(nsIBoxLayout** aLayout)
   NS_IF_ADDREF(*aLayout);
   return NS_OK;
 }
-
-/*
-nsresult
-nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect, PRUint32 aLayoutFlags)
-{
-    PRUint32 oldFlags = 0;
-    aState.GetLayoutFlags(oldFlags);
-    aState.SetLayoutFlags(aLayoutFlags);
-    nsresult rv = LayoutChildAt(aState, aBox, aRect);
-    aState.SetLayoutFlags(oldFlags);
-    return rv;
-}
-*/
 
 nsresult
 nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect)

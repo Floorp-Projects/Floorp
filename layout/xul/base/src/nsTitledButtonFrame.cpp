@@ -1394,10 +1394,10 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
  * Ok return our dimensions
  */
 NS_IMETHODIMP
-nsTitledButtonFrame::Layout(nsBoxLayoutState& aState)
+nsTitledButtonFrame::DoLayout(nsBoxLayoutState& aState)
 {
   mNeedsLayout = PR_TRUE;
-  return nsLeafBoxFrame::Layout(aState);
+  return nsLeafBoxFrame::DoLayout(aState);
 }
 
 /**

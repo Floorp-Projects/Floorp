@@ -90,7 +90,8 @@ public:
   NS_IMETHOD GetHAlign(Halignment& aAlign);
   NS_IMETHOD NeedsRecalc();
   NS_IMETHOD GetInset(nsMargin& aInset);
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD BeginLayout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetDebug(PRBool& aDebug);
 
   //NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);

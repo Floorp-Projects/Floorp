@@ -56,7 +56,7 @@ public:
                   nsIFrame*        aPrevInFlow);
 
     // nsIBox
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
 
   // The following four methods are all overridden so that the menu children

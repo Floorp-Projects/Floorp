@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIBox
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
 
   // The nsIAnonymousContentCreator interface

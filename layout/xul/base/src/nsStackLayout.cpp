@@ -29,23 +29,9 @@
 
 #include "nsStackLayout.h"
 #include "nsIStyleContext.h"
-#include "nsIPresContext.h"
-#include "nsIContent.h"
 #include "nsCOMPtr.h"
-#include "nsHTMLIIDs.h"
-#include "nsUnitConversion.h"
-#include "nsINameSpaceManager.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
-#include "nsIReflowCommand.h"
-#include "nsHTMLParts.h"
-#include "nsIPresShell.h"
-#include "nsStyleChangeList.h"
-#include "nsCSSRendering.h"
-#include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
-#include "nsContainerBox.h"
 
 nsCOMPtr<nsIBoxLayout> nsStackLayout::gInstance = new nsStackLayout();
 

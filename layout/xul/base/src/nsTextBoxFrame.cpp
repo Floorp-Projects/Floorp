@@ -560,11 +560,11 @@ nsTextBoxFrame::UpdateAccessUnderline()
 
 
 NS_IMETHODIMP
-nsTextBoxFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
+nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 {
   mState |= NS_STATE_NEED_LAYOUT;
 
-  return nsLeafBoxFrame::Layout(aBoxLayoutState);
+  return nsLeafBoxFrame::DoLayout(aBoxLayoutState);
 }
 
 NS_IMETHODIMP

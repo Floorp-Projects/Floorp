@@ -42,8 +42,10 @@ public:
   NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed);
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetFrame(nsIFrame** aFrame);
+  NS_IMETHOD SetIncludeOverflow(PRBool aInclude);
+  NS_IMETHOD GetOverflow(nsSize& aOverflow);
   NS_IMETHOD NeedsRecalc();
 
   NS_IMETHOD Recycle(nsIPresShell* aPresShell);
@@ -90,6 +92,8 @@ protected:
   nscoord mCachedMaxElementHeight;
   PRBool mStyleChange;
   PRBool mSizeSet;
+  nsSize mOverflow;
+  PRBool mIncludeOverflow;
 };
 
 #endif

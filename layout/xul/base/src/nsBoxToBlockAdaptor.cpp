@@ -124,6 +124,9 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   mWasCollapsed = PR_FALSE;
   mCachedMaxElementHeight = 0;
   mStyleChange = PR_FALSE;
+  mOverflow.width = 0;
+  mOverflow.height = 0;
+  mIncludeOverflow = PR_TRUE;
   NeedsRecalc();
 }
 
@@ -200,6 +203,20 @@ nsBoxToBlockAdaptor::NeedsRecalc()
   SizeNeedsRecalc(mMaxSize);
   CoordNeedsRecalc(mFlex);
   CoordNeedsRecalc(mAscent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxToBlockAdaptor::GetOverflow(nsSize& aOverflow)
+{
+  aOverflow = mOverflow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxToBlockAdaptor::SetIncludeOverflow(PRBool aInclude)
+{
+  mIncludeOverflow = aInclude;
   return NS_OK;
 }
 
@@ -433,7 +450,7 @@ nsBoxToBlockAdaptor::IsCollapsed(nsBoxLayoutState& aState, PRBool& aCollapsed)
 }
 
 nsresult
-nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
+nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
 {
    nsRect ourRect(0,0,0,0);
    GetBounds(ourRect);
@@ -802,13 +819,13 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
-
-    PRBool includeOverFlow = PR_TRUE;
-    aState.GetIncludeOverFlow(includeOverFlow);
-
        if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
+         // make sure we store the overflow size
+         mOverflow.width  = aDesiredSize.mOverflowArea.width;
+         mOverflow.height = aDesiredSize.mOverflowArea.height;
+
          // include the overflow size in our child's rect?
-         if (includeOverFlow) {
+         if (mIncludeOverflow) {
              //printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
              aDesiredSize.width = aDesiredSize.mOverflowArea.width;
              if (aDesiredSize.width <= aWidth)
@@ -831,14 +848,14 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                  mFrame->GetFrameState(&kidState);
                  if (kidState & NS_FRAME_OUTSIDE_CHILDREN)
                     aDesiredSize.height = aDesiredSize.mOverflowArea.height;
+
               }
              }
          }
-
-         // make sure we store the overflow size
-         aState.SetOverFlowSize(nsSize(aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.width));
-        }
-          
+       } else {
+         mOverflow.width  = aDesiredSize.width;
+         mOverflow.height = aDesiredSize.height;
+       }
 
     // ok we need the max ascent of the items on the line. So to do this
     // ask the block for its line iterator. Get the max ascent.

@@ -121,7 +121,7 @@ public:
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
 
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
@@ -143,7 +143,7 @@ public:
   NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
                          nscoord *aWidth, 
                          nscoord *aHeight) const;
-
+ 
   NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 

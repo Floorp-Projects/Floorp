@@ -261,7 +261,7 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Layout(nsBoxLayoutState& aState)
+nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 {
   EnsureOrient();
 
