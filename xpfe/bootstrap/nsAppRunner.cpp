@@ -47,7 +47,6 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIWalletService.h"
 #include "nsIWebShell.h"
-#include "nsICookieService.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindow.h"
 #include "nsIClipboard.h"
@@ -539,14 +538,6 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   nsTraceRefcnt::SetPrefServiceAvailability(PR_TRUE);
 #endif
 
-  // fire up an instance of the cookie manager.
-  // I'm doing this using the serviceManager for convenience's sake.
-  // Presumably an application will init it's own cookie service a 
-  // different way (this way works too though).
-  nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
-  // quiet the compiler
-  (void)cookieService;
-  
 	// Enumerate AppShellComponenets
 	appShell->EnumerateAndInitializeComponents();
 	
