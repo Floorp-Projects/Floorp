@@ -59,7 +59,7 @@ public:
 
 protected:
 	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl(const nsString& aSpec);
+    virtual nsresult ParseUrl();
 	virtual const char * GetUserName() { return nsnull;}
 
 	// mailboxurl specific state

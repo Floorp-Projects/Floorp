@@ -389,7 +389,7 @@ nsresult nsMailboxUrl::ParseSearchPart()
 }
 
 // warning: don't assume when parsing the url that the protocol part is "news"...
-nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
+nsresult nsMailboxUrl::ParseUrl()
 {
 	if (m_filePath)
 		delete m_filePath;
@@ -403,7 +403,7 @@ NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
 	if (NS_SUCCEEDED(rv))
-		rv = ParseUrl(nsAutoString());
+		rv = ParseUrl();
 	return rv;
 }
 
