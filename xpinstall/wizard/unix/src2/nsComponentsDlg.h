@@ -50,6 +50,9 @@ public:
     
     static void     RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
                                 GdkEventButton *aEvent, gpointer aData);
+    static void     KeyPressed(GtkWidget *aWidget, GdkEventKey *aEvent, 
+                               gpointer aData);
+    static void     ToggleRowSelection(GtkWidget *aEvent, gint aRow);
 
 /*--------------------------------------------------------------------*
  *   INI Properties

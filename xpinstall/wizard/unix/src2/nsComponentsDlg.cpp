@@ -26,9 +26,11 @@
 #include "nsXInstaller.h"
 #include "check_on.xpm"
 #include "check_off.xpm"
+#include <gdk/gdkkeysyms.h>
 
 static nsSetupType     *sCustomST; // cache a pointer to the custom setup type
 static GtkWidget       *sDescLong;
+static gint             sCurrRowSelected;
 
 nsComponentsDlg::nsComponentsDlg() :
     mMsg0(NULL),
@@ -348,8 +350,13 @@ nsComponentsDlg::Show(int aDirection)
             currComp = currComp->GetNext();
         }
 
+        // by default, first row selected upon Show()
+        sCurrRowSelected = 0; 
+
         gtk_signal_connect(GTK_OBJECT(list), "select_row",
                            GTK_SIGNAL_FUNC(RowSelected), NULL);
+        gtk_signal_connect(GTK_OBJECT(list), "key_press_event",
+                           GTK_SIGNAL_FUNC(KeyPressed), NULL);
         gtk_container_add(GTK_CONTAINER(scrollwin), list);
         gtk_widget_show(list);
         gtk_widget_show(scrollwin);
@@ -468,6 +475,28 @@ nsComponentsDlg::RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
 {
     DUMP("RowSelected");
 
+    sCurrRowSelected = aRow;
+
+    // only toggle row selection state for clicks on the row
+    if (aColumn == -1 && !aEvent)
+        return;
+
+    ToggleRowSelection(aWidget, aRow);
+}
+
+void
+nsComponentsDlg::KeyPressed(GtkWidget *aWidget, GdkEventKey *aEvent, 
+                            gpointer aData)
+{
+  DUMP("KeyPressed");
+
+  if (aEvent->keyval == GDK_space)
+      ToggleRowSelection(aWidget, sCurrRowSelected);
+}
+
+void
+nsComponentsDlg::ToggleRowSelection(GtkWidget *aWidget, gint aRow)
+{
     int numRows = 0, currRow = 0;
     GtkStyle *style = NULL;
     GdkBitmap *ch_mask = NULL;

@@ -176,6 +176,9 @@ nsWelcomeDlg::Show(int aDirection)
     if (gCtx->back)
         gtk_widget_hide(gCtx->back);
 
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
+
     if (aDirection == nsXInstallerDlg::BACKWARD_MOVE)
     {
         // change the button titles back to Back/Next
