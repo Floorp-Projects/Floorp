@@ -42,12 +42,44 @@
 
 #include "nsRegionPool.h"
 
+static RegionToRectsUPP sAddRectToArrayProc;
+static RegionToRectsUPP sCountRectProc;
+
+static OSStatus
+AddRectToArrayProc(UInt16 message, RgnHandle rgn, const Rect *inRect, void *inArray)
+{
+  if (message == kQDRegionToRectsMsgParse) {
+    nsRegionRectSet* rects = NS_REINTERPRET_CAST(nsRegionRectSet*, inArray);
+    nsRegionRect* rect = &rects->mRects[rects->mNumRects++];
+    rect->x = inRect->left;
+    rect->y = inRect->top;
+    rect->width = inRect->right - inRect->left;
+    rect->height = inRect->bottom - inRect->top;
+    rects->mArea += rect->width * rect->height;
+  }
+
+  return noErr;
+}
+
+static OSStatus
+CountRectProc(UInt16 message, RgnHandle rgn, const Rect* inRect, void* rectCount)
+{
+  if (message == kQDRegionToRectsMsgParse)
+    ++(*NS_REINTERPRET_CAST(long*, rectCount));
+
+  return noErr;
+}
+
 //---------------------------------------------------------------------
 
 nsRegionMac::nsRegionMac()
 {
 	mRegion = nsnull;
 	mRegionType = eRegionComplexity_empty;
+  if (!sAddRectToArrayProc) {
+    sAddRectToArrayProc = NewRegionToRectsUPP(AddRectToArrayProc);
+    sCountRectProc = NewRegionToRectsUPP(CountRectProc);
+  }
 }
 
 //---------------------------------------------------------------------
@@ -211,158 +243,31 @@ PRBool nsRegionMac::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
 
 NS_IMETHODIMP nsRegionMac::GetRects(nsRegionRectSet **aRects)
 {
-	nsRegionRectSet *rects;
+	NS_ASSERTION(aRects, "bad ptr");
 
-	NS_ASSERTION(!(nsnull == aRects), "bad ptr");
+	nsRegionRectSet* rects = *aRects;
+  long numrects = 0;
+  QDRegionToRects(mRegion, kQDParseRegionFromTopLeft, sCountRectProc, &numrects);
 
-	rects = *aRects;
+	if (!rects || rects->mRectsLen < (PRUint32) numrects) {
+    void* buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + sizeof(nsRegionRect) * (numrects - 1));
 
-	if (nsnull == rects) {
-		rects = (nsRegionRectSet *)PR_Malloc(sizeof(nsRegionRectSet) + (sizeof(nsRegionRect) << 3));
+		if (!buf) {
+      if (rects)
+        rects->mNumRects = 0;
 
-		if (nsnull == rects) {
-			*aRects = nsnull;
-			return NS_ERROR_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
 		}
 
-		rects->mRectsLen = 9;
+    rects = (nsRegionRectSet*) buf;
+		rects->mRectsLen = numrects;
 	}
 
 	rects->mNumRects = 0;
 	rects->mArea = 0;
+  QDRegionToRects(mRegion, kQDParseRegionFromTopLeft, sAddRectToArrayProc, rects);
 
-/* This is a minor adaptation of code written by Hugh Fisher
-   and published in the RegionToRectangles example in the InfoMac archives.
-   ported to raptor from old macfe. MMP
-*/
-#define EndMark 	32767
-#define MaxY		32767
-#define StackMax	1024
-
-	typedef struct {
-		short	size;
-		Rect	bbox;
-		short	data[0];
-	} ** Internal;
-	
-	Internal  region;
-	short	    width, xAdjust, y, index, x1, x2, x;
-	short	    stackStorage[1024];
-	short     *buffer;
-	
-	region = (Internal)mRegion;
-	
-	/* Check for plain rectangle */
-	if ((**region).size == 10) {
-		rects->mRects[0].x = (**region).bbox.left;
-		rects->mRects[0].y = (**region).bbox.top;
-		rects->mRects[0].width = (**region).bbox.right - (**region).bbox.left;
-		rects->mRects[0].height = (**region).bbox.bottom - (**region).bbox.top;
-
-		rects->mNumRects = 1;
-		rects->mArea = rects->mRects[0].width * rects->mRects[0].height;
-
-		*aRects = rects;
-
-		return NS_OK;
-	}
-
-	/* Got to scale x coordinates into range 0..something */
-	xAdjust = (**region).bbox.left;
-	width = (**region).bbox.right - xAdjust;
-
-	/* Most regions will be less than 1024 pixels wide */
-
-	if (width < StackMax)
-		buffer = stackStorage;
-	else {
-		buffer = (short *)PR_Malloc(width * 2);
-
-		if (buffer == NULL) {
-			/* Truly humungous region or very low on memory.
-			   Quietly doing nothing seems to be the
-			   traditional Quickdraw response. */
-			*aRects = rects;
-			return NS_OK;
-    	}
-	}
-
-	/* Initialise scan line list to bottom edges */
-
-	for (x = (**region).bbox.left; x < (**region).bbox.right; x++)
-		buffer[x - xAdjust] = MaxY;
-
-	index = 0;
-
-	/* Loop until we hit an empty scan line */
-
-	while ((**region).data[index] != EndMark) {
-		y = (**region).data[index];
-		index++;
-
-		/* Loop through horizontal runs on this line */
-
-		while ((**region).data[index] != EndMark) {
-			x1 = (**region).data[index];
-			index ++;
-			x2 = (**region).data[index];
-			index ++;
-			x = x1;
-
-			while (x < x2) {
-				if (buffer[x - xAdjust] < y) {
-					nsRegionRect box;
-
-					/* We have a bottom edge - how long for? */
-
-					box.x = x;
-					box.y  = buffer[x - xAdjust];
-
-					while (x < x2 && buffer[x - xAdjust] == box.y) {
-						buffer[x - xAdjust] = MaxY;
-						x ++;
-					}
-
-					/* Pass to client proc */
-					box.width  = x - box.x;
-					box.height = y - box.y;
-
-					if (rects->mNumRects == rects->mRectsLen) {
-						void *buf = PR_Realloc((void *)rects, sizeof(nsRegionRectSet) + sizeof(nsRegionRect) * (rects->mRectsLen + 7));
-
-						if (nsnull != buf) {
-							rects = (nsRegionRectSet *)buf;
-							rects->mRectsLen += 8;
-						}
-					}
-
-					if (rects->mNumRects != rects->mRectsLen) {
-						rects->mArea += box.width * box.height;
-						rects->mRects[rects->mNumRects] = box;
-						rects->mNumRects++;
-					}
-				} else {
-					/* This becomes a top edge */
-
-					buffer[x - xAdjust] = y;
-					x ++;
-				}
-			}
-		}
-
-		index ++;
-	}
-
-	/* Clean up after ourselves */
-
-	if (width >= StackMax)
-		PR_Free((void *)buffer);
-
-#undef EndMark
-#undef MaxY
-#undef StackMax
-
-	*aRects = rects;
+  *aRects = rects;
 
 	return NS_OK;
 }
