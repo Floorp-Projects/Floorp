@@ -5012,11 +5012,13 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       flow = (nsBlockFrame*) flow->mNextInFlow;
       NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
       // add defensive pointer check for bug 56894
-      if(flow) {
+      if (flow) {
         lines = flow->mLines;
         line = lines.begin();
         line_end = lines.end();
         prevSibling = nsnull;
+      } else {
+        aDeletedFrame = nsnull;
       }
     }
   }
