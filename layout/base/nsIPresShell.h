@@ -250,6 +250,7 @@ public:
    */
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType) = 0;
+  NS_IMETHOD CancelAllReflowCommands() = 0;
 
   /**
    * Flush all pending notifications such that the presentation is
@@ -386,7 +387,7 @@ public:
     */
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, 
                                    nsIFrame* aFrame, 
-                                   nsIContent* aContent, 
+                                   nsIContent* aContent,
                                    PRUint32 aFlags,
                                    nsEventStatus* aStatus) = 0;
 

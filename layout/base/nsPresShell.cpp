@@ -600,17 +600,18 @@ struct nsCallbackEventRequest
 class DummyLayoutRequest : public nsIChannel
 {
 protected:
-  DummyLayoutRequest();
+  DummyLayoutRequest(nsIPresShell* aPresShell);
   virtual ~DummyLayoutRequest();
 
   static PRInt32 gRefCnt;
   static nsIURI* gURI;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
+  nsWeakPtr mPresShell;
 
 public:
   static nsresult
-  Create(nsIChannel** aResult);
+  Create(nsIChannel** aResult, nsIPresShell* aPresShell);
 
   NS_DECL_ISUPPORTS
 
@@ -669,9 +670,9 @@ NS_IMPL_RELEASE(DummyLayoutRequest);
 NS_IMPL_QUERY_INTERFACE2(DummyLayoutRequest, nsIRequest, nsIChannel);
 
 nsresult
-DummyLayoutRequest::Create(nsIChannel** aResult)
+DummyLayoutRequest::Create(nsIChannel** aResult, nsIPresShell* aPresShell)
 {
-  DummyLayoutRequest* request = new DummyLayoutRequest();
+  DummyLayoutRequest* request = new DummyLayoutRequest(aPresShell);
   if (!request)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -681,7 +682,7 @@ DummyLayoutRequest::Create(nsIChannel** aResult)
 }
 
 
-DummyLayoutRequest::DummyLayoutRequest()
+DummyLayoutRequest::DummyLayoutRequest(nsIPresShell* aPresShell)
 {
   NS_INIT_REFCNT();
 
@@ -690,6 +691,8 @@ DummyLayoutRequest::DummyLayoutRequest()
       rv = NS_NewURI(&gURI, "about:layout-dummy-request", nsnull);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:layout-dummy-request");
   }
+
+  mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
 }
 
 
@@ -703,8 +706,13 @@ DummyLayoutRequest::~DummyLayoutRequest()
 NS_IMETHODIMP
 DummyLayoutRequest::Cancel(nsresult status)
 {
-  // XXX Cancel layout - Implement this if we decide to enable the layout.reflow.async.duringDocLoad pref
-  return NS_OK;
+  // Cancel layout
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell) {
+    rv = presShell->CancelAllReflowCommands();
+  }
+  return rv;
 }
 
 // ----------------------------------------------------------------------------
@@ -772,6 +780,7 @@ public:
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType);  
+  NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD FlushPendingNotifications();
 
   /**
@@ -947,6 +956,7 @@ protected:
 
   nsresult ReflowCommandAdded(nsIReflowCommand* aRC);
   nsresult ReflowCommandRemoved(nsIReflowCommand* aRC);
+
   nsresult AddDummyLayoutRequest(void);
   nsresult RemoveDummyLayoutRequest(void);
 
@@ -1376,7 +1386,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (gMaxRCProcessingTime == -1) {
     // First, set the defaults
     gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
-    gAsyncReflowDuringDocLoad = PR_FALSE;
+    gAsyncReflowDuringDocLoad = PR_TRUE;
 
     // Get the prefs service
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
@@ -2760,6 +2770,20 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowT
 
 
 NS_IMETHODIMP
+PresShell::CancelAllReflowCommands()
+{
+  PRInt32 n = mReflowCommands.Count();
+  nsIReflowCommand* rc;
+  for (PRInt32 i = 0; i < n; i++) {
+    rc = NS_STATIC_CAST(nsIReflowCommand*, mReflowCommands.ElementAt(0));
+    mReflowCommands.RemoveElementAt(0);
+    ReflowCommandRemoved(rc);
+    NS_RELEASE(rc);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   nsIEventStateManager *manager;
@@ -3471,7 +3495,7 @@ PresShell::HandlePostedReflowCallbacks()
       node = node->next;
       mFirstCallbackEventRequest = node;
       FreeFrame(sizeof(nsCallbackEventRequest), toFree);
-      callback->ReflowFinished(this, &shouldFlush); 
+      callback->ReflowFinished(this, &shouldFlush);
       NS_RELEASE(callback);
    }
 
@@ -3496,7 +3520,7 @@ PresShell::HandlePostedDOMEvents()
         mLastDOMEventRequest = nsnull;
       }
 
-      node->content->HandleDOMEvent(mPresContext, node->event, nsnull, NS_EVENT_FLAG_INIT, &status);   
+      node->content->HandleDOMEvent(mPresContext, node->event, nsnull, NS_EVENT_FLAG_INIT, &status);
       NS_RELEASE(node->content);
       delete node->event;
       node->nsDOMEventRequest::~nsDOMEventRequest(); // doesn't do anything, but just in case
@@ -4640,7 +4664,7 @@ PresShell::AddDummyLayoutRequest(void)
   nsresult rv = NS_OK;
 
   if (gAsyncReflowDuringDocLoad) {
-    rv = DummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest));
+    rv = DummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), this);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILoadGroup> loadGroup;
