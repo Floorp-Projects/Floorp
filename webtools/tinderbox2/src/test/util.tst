@@ -5,8 +5,8 @@
 # Util.tst - simple regression tests for the Util.pm module
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:13:17 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/28 00:21:36 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/util.tst,v $ 
 # $Name:  $ 
@@ -217,7 +217,12 @@ sub max_tst {
 
  ( 1 == scalar( max(1,1,1,1,1,1,1)) ) || die();
  ( 7 == ( max(1,2,3,4,5,6,7)) ) || die();
+ ( 7 == ( max(7,6,5,4,3,2,1,0,-3)) ) || die();
  ( 7 == ( max(7)) ) || die();
+ ( 7 == ( max(0,7)) ) || die();
+ ( 7 == ( max(7,0)) ) || die();
+ ( 0 == ( max(-7,0)) ) || die();
+ ( 0 == ( max(0,-7)) ) || die();
 
  return 1;
 }
