@@ -4,40 +4,29 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/profileMigrationProgress.dtd" >
 
-
-<window
-	xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	align="vertical"
 	onload="onLoad()"
 	title="&window.title;"
 	class="dialog"> 
-  
-  <html:script language="javascript" src="chrome://communicator/content/profile/profileMigrationProgress.js"/> 
+
+  <script language="javascript" src="chrome://communicator/content/profile/profileMigrationProgress.js"/> 
 
   <keyset id="keyset"/>
 
-  <spring style="height: 1em;"/>
-  <box align="horizontal" flex="100%" style="width: 400px;">
-    <spring style="width: 1em"/>
-	  <box autostretch="never">
-      <image class="message-icon"/>
-	  </box>
-    <spring style="width: 1em"/>
-    <box align="vertical" flex="100%">
-      <text id="info.header" style="font-weight: bold;" value="&dialogTitle.label;" />
-      <spring style="height: 1em;"/>
-      <text id="info1" flex="100%" value="&currentlyProcessing.text;" />
-      <text id="info2" flex="100%" value="&downloadBeforeUpdate.text;" />
-      <spring style="height: 1em;"/>
-      <box id="pm-box" align="horizontal">
-        <progressmeter id="dialog.progress" mode="undetermined" flex="100%"/>
-        <spring style="width: 2em;"/>
-      </box>
-      <spring style="height: 1em;"/>
-    </box>
-    <spring style="width: 1em"/>
-  </box>
+  <box align="horizontal">
+  	<box autostretch="never">
+      		<image class="message-icon"/>
+	</box>
+    	<box align="vertical" flex="100%">
+		<text id="info.header" value="&dialogTitle.label;" />
+		<text id="info1" flex="100%" value="&currentlyProcessing.text;" />
+		<text id="info2" flex="100%" value="&downloadBeforeUpdate.text;" />
+		<box id="pm-box" align="horizontal">
+			<progressmeter id="dialog.progress" mode="undetermined" flex="100%"/>
+		</box>
+   	</box>
+   </box>
 
 </window>
 
