@@ -34,6 +34,7 @@
 
 #include "nspr.h"
 #include "prlock.h"
+#include "nsXPIDLString.h"
 #include "NSReg.h"
 #include "VerReg.h"
 #include "nsIDirectoryService.h"
@@ -531,22 +532,14 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir)
     nsresult rv = aDir->Clone(getter_AddRefs(mProgramDir));
 
     // make sure registry updates go to the right place
-    char* tempPath;
-    rv = aDir->GetPath(&tempPath);
+    nsXPIDLCString tempPath;
+    rv = aDir->GetPath(getter_Copies(tempPath));
+    if (NS_SUCCEEDED(rv))
         VR_SetRegDirectory( tempPath );
 
     // Create the logfile observer
     nsLoggingProgressListener *logger = new nsLoggingProgressListener();
     RegisterListener(logger);
-
-    // setup version registry path
-    char*    path;
-    aDir->GetPath( &path );
-    if (NS_SUCCEEDED(rv))
-    {
-        VR_SetRegDirectory( path );
-        nsCRT::free( path );
-    }
 
     return rv;
 }

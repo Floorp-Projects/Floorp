@@ -53,6 +53,7 @@ class nsRegisterItem : public nsInstallObject
 
     private:
         nsCString mURL;
+        nsCOMPtr<nsIFile> mChrome;
         PRUint32  mChromeType;
 };
 
