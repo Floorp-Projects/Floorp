@@ -2793,7 +2793,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
                         PRBool aIsOutline)
 {
   QBCurve   thecurve;
-  nscolor   sideColor;
+  nscolor   sideColor = NS_RGB(0,0,0);
   nsPoint   polypath[MAXPOLYPATHSIZE];
   PRInt32   curIndex,c1Index,c2Index,junk;
   PRInt8    border_Style;
