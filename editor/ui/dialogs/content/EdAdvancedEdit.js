@@ -18,30 +18,49 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *   Ben Goodger
+ *   Ben "Count XULula" Goodger
  */
 
+/**************         FOR NOW         **************/
+var TEXT_WIDGETS_DONT_SUCK  = false;
+var PERFORMANCE_BOOSTS      = false;
+ 
 /**************         GLOBALS         **************/
-var tagname     = null;
-var element     = null;
+
+var tagname     = null; // element.nodeName;
+var element     = null; // handle for the actual element
 
 var HTMLAttrs   = [];   // html attributes
 var CSSAttrs    = [];   // css attributes
 var JSEAttrs    = [];   // js events 
 
+var HTMLRAttrs  = [];   // removed html attributes
+var CSSRAttrs   = [];   // removed css attributes
+var JSERAttrs   = [];   // removed js events
+
 /************** INITIALISATION && SETUP **************/
+
+/**
+ * function   : void Startup();
+ * parameters : none
+ * returns    : none
+ * desc.      : startup and initialisation, prepares dialog. 
+ **/
 function Startup()
 {
-  dump("Welcome to EdAdvancedEdit '99 \n");
   // This is the return value for the parent,
-  //  who only needs to know if OK was clicked
+  // who only needs to know if OK was clicked
   window.opener.AdvancedEditOK = false;
 
   if (!InitEditorShell())
     return;
 
+  // initialise the ok and cancel buttons
   doSetOKCancel(onOK, null);
 
+  // load string bundle
+  bundle = srGetStrBundle("chrome://editor/locale/editor.properties");
+    
   // Element to edit is passed in
   element = window.arguments[1];
   if (!element || element == "undefined") {
@@ -50,36 +69,41 @@ function Startup()
   }
   dump("*** Element passed into Advanced Edit: "+element+" ***\n");
 
+  // place the tag name in the header
   var tagLabel = document.getElementById("tagLabel");
   if(tagLabel.hasChildNodes()) {
     tagLabel.removeChild(tagLabel.firstChild);
   }
-
   var textLabel = document.createTextNode("<" + element.nodeName + ">");
   tagLabel.appendChild(textLabel);
 
   // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.AddHTMLAttributeNameInput = document.getElementById("AddHTMLAttributeNameInput");
+  dialog                            = new Object;
+  dialog.AddHTMLAttributeNameInput  = document.getElementById("AddHTMLAttributeNameInput");
   dialog.AddHTMLAttributeValueInput = document.getElementById("AddHTMLAttributeValueInput");
-  dialog.AddHTMLAttribute = document.getElementById("AddHTMLAttribute");
-  dialog.AddCSSAttributeNameInput = document.getElementById("AddCSSAttributeNameInput");
-  dialog.AddCSSAttributeValueInput = document.getElementById("AddCSSAttributeValueInput");
-  dialog.AddCSSAttribute = document.getElementById("AddCSSAttribute");
-  dialog.AddJSEAttributeNameInput = document.getElementById("AddJSEAttributeNameInput");
-  dialog.AddJSEAttributeValueInput = document.getElementById("AddJSEAttributeValueInput");
-  dialog.AddJSEAttribute = document.getElementById("AddJSEAttribute");
+  dialog.AddHTMLAttribute           = document.getElementById("AddHTMLAttribute");
+  dialog.AddCSSAttributeNameInput   = document.getElementById("AddCSSAttributeNameInput");
+  dialog.AddCSSAttributeValueInput  = document.getElementById("AddCSSAttributeValueInput");
+  dialog.AddCSSAttribute            = document.getElementById("AddCSSAttribute");
+  dialog.AddJSEAttributeNameInput   = document.getElementById("AddJSEAttributeNameInput");
+  dialog.AddJSEAttributeValueInput  = document.getElementById("AddJSEAttributeValueInput");
+  dialog.AddJSEAttribute            = document.getElementById("AddJSEAttribute");
 
   // build the attribute trees
   BuildHTMLAttributeTable();
   BuildCSSAttributeTable();
   BuildJSEAttributeTable();
+ 
+  // size the dialog properly
   window.sizeToContent();
 }
 
-// for..in loop, typeof, /^on/ match
-
-
+/**
+ * function   : bool onOK ( void );
+ * parameters : none
+ * returns    : boolean true to close the window
+ * desc.      : event handler for ok button
+ **/
 function onOK()
 {
   dump("in onOK\n")
@@ -89,63 +113,201 @@ function onOK()
   return true; // do close the window
 }
 
-// function EdAvancedEdit.js::<UpdateObject> 
-// Updates the copy of the page object with the data set in this dialog.
+/**
+ * function   : void UpdateObject ( void );
+ * parameters : none
+ * returns    : none
+ * desc.      : Updates the copy of the page object with the data set in this dialog.
+ **/
 function UpdateObject()
 {
-  dump("in UpdateObject\n");
-  var HTMLAList = document.getElementById("HTMLAList");
-  var CSSAList = document.getElementById("CSSAList");
-  var JSEAList = document.getElementById("JSEAList");
+    UpdateHTMLAttributes();
+    UpdateCSSAttributes();
+    UpdateJSEAttributes();
+}
+
+/**
+ * function   : bool CheckAttributeNameSimilarity ( string attName, array attArray );
+ * parameters : attribute to look for, array of current attributes
+ * returns    : false if attribute already exists, true if it does not
+ * desc.      : checks to see if any other attributes by the same name as the arg supplied
+ *              already exist.
+ **/
+function CheckAttributeNameSimilarity(attName, attArray)
+{
+  for(var i = 0; i < attArray.length; i++)
+  {
+    if(attName == attArray[i]) 
+      return false;
+  }
+  return true;
+}
+
+/**
+ * function   : bool CheckAttributeNotRemoved ( string attName, array attArray );
+ * parameters : attribute to look for, array of deleted attributes
+ * returns    : false if attribute already exists, true if it does not
+ * desc.      : check to see if the attribute is in the array marked for removal 
+ *              before updating the final object
+ **/
+function CheckAttributeNotRemoved( attName, attArray )
+{
+  dump("IN CAAAAAAAA\n");
+  dump("CAAAA: " + attArray + "\n");
+  for( var i = 0; i < attArray.length; i++ ) 
+  {
+    if( attName == attArray[i] )
+      return false;
+  }
+  return true;
+}
+
+/**
+ * function   : void doRemoveAttribute( DOMElement which);
+ * parameters : DOMElement that was context-clicked.
+ * returns    : nothing
+ * desc.      : removes an attribute or attributes from the tree
+ **/
+// Note: now changing this to remove all selected ITEMS. this makes it easier. 
+function doRemoveAttribute( which )
+{
+  if(which.nodeName != "tree") {
+    var tree = which.parentNode;
+    while ( tree.nodeName != "tree" )
+    {
+      tree = tree.parentNode; // climb up the tree one notch
+    } // now we are pointing at the tree element
+  } else
+    tree = which;
   
-  // HTML ATTRIBUTES
-  for(var i = 0; i < HTMLAList.childNodes.length; i++)
+  var kids = tree.lastChild;  // treechildren element of tree
+  var selArray = [];
+  for ( var i = 0; i < tree.selectedItems.length; i++ )
   {
-    var item = HTMLAList.childNodes[i];
-    var name = TrimString(item.firstChild.firstChild.firstChild.nodeValue);
-    var value = TrimString(item.firstChild.lastChild.firstChild.value);
-    dump("HTML Attrs: n: " + name + "; v: " + value + "\n");
-    element.setAttribute(name,value);
+    var item = tree.selectedItems[i];
+    // add to array of removed items for the particular panel that is displayed
+    var name = item.firstChild.firstChild;
+    switch ( tree.id ) {
+      case "HTMLATree":
+        HTMLRAttrs[HTMLRAttrs.length] = TrimString(name.getAttribute("value"));
+        dump("HTMLRAttrs[" + (HTMLRAttrs.length - 1) + "]: " + HTMLRAttrs[HTMLRAttrs.length-1] + "\n");
+        break;
+      case "CSSATree":   
+        CSSRAttrs[CSSRAttrs.length] = TrimString(name.getAttribute("value"));
+        break;
+      case "JSEATree":
+        JSERAttrs[JSERAttrs.length] = TrimString(name.getAttribute("value"));
+        break;      
+      default: break;
+    }
+    selArray[i] = item;
   }
-  // CSS ATTRIBUTES
-  var styleString = "";
-  for(var i = 0; i < CSSAList.childNodes.length; i++)
+  // need to do this in a separate loop because selectedItems is NOT STATIC and 
+  // this causes problems.
+  for ( var i = 0; i < selArray.length; i++ )
   {
-    var item = CSSAList.childNodes[i];
-    var name = TrimString(item.firstChild.firstChild.firstChild.nodeValue);
-    var value = TrimString(item.firstChild.lastChild.firstChild.value);
-    if(name.lastIndexOf(":") == (name.length - 1) && name.length > 0)
-      name = name.substring(0,name.length-1);
-    if(value.lastIndexOf(";") == (value.length - 1) && value.length > 0)
-      value = name.substring(0,value.length-1);
-    if(i == (CSSAList.childNodes.length - 1))
-      styleString += name + ": " + value + ";";   // last property
-    else
-      styleString += name + ": " + value + "; ";
-  }
-  dump("stylestring: ||" + styleString + "||\n");
-  var name = "width";
-  if(styleString.length > 0) {
-    element.setAttribute(name,styleString);
-  }
-  // JS EVENT HANDLERS
-  for(var i = 0; i < JSEAList.childNodes.length; i++)
-  {
-    var item = JSEAList.childNodes[i];
-    name = TrimString(item.firstChild.firstChild.firstChild.nodeValue);
-    value = TrimString(item.firstChild.lastChild.firstChild.value);
-    element.setAttribute(name,value);
+    // remove the item
+    kids.removeChild ( selArray[i] );
+  } 
+}
+
+/**
+ * function   : void doAddAttribute( DOMElement which );
+ * parameters : DOMElement referring to element context-clicked
+ * returns    : nothing
+ * desc.      : focusses the add attribute "name" field in the current pane.
+ **/
+function doAddAttribute(which)
+{
+  if(which.nodeName != "tree") {
+    var tree = which.parentNode;
+    while ( tree.nodeName != "tree" )
+    {
+      tree = tree.parentNode; // climb up the tree one notch
+    } // now we are pointing at the tree element
+  } else
+    tree = which;
+
+  switch(tree.id) {
+    case "HTMLATree":
+      document.getElementById("AddHTMLAttributeNameInput").focus();
+      break;
+    case "CSSATree":
+      document.getElementById("AddCSSAttributeNameInput").focus();
+      break;
+    case "JSEATree":
+      document.getElementById("AddJSEAttributeNameInput").focus();
+      break;
+    default:
+      break;
   }
 }
 
-// checks to see if any other attributes by the same name as the arg supplied
-// already exist.
-function CheckAttributeNameSimilarity(attName, attArray)
+function doSelect(e)
 {
-    for(var i = 0; i < attArray.length; i++)
+  if ( TEXT_WIDGETS_DONT_SUCK && PERFORMANCE_BOOSTS ) {
+    var cell  = e.target.parentNode.lastChild;
+    var input = cell.firstChild;
+
+    var selitems = document.getElementsByAttribute("class","FocusSelected");
+    for ( var i = 0; i < selitems.length; i++ )
     {
-        if(attName == attArray[i]) 
-            return false;
+      if ( selitems[i].nodeName == "input" ) {
+        selitems[i].removeAttribute("class","FocusSelected");
+        selitems[i].setAttribute("class","AttributesCell");
+      } else if ( selitems[i].nodeName == "treecell" )
+        selitems[i].removeAttribute("class","FocusSelected");
     }
-    return true;
+  
+    cell.setAttribute("class","FocusSelected");
+    input.setAttribute("class","FocusSelected");
+    input.focus();
+  }
 }
+
+// adds a generalised treeitem.
+function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
+{
+  attArray[attArray.length] = name;
+  var treekids    = document.getElementById ( treekids );
+  var treeitem    = document.createElement ( "treeitem" );
+  var treerow     = document.createElement ( "treerow" );
+  var attrcell    = document.createElement ( "treecell" );
+  attrcell.setAttribute( "value", name.toLowerCase() );
+  treerow.appendChild ( attrcell );
+  
+  if ( !valueCaseFunc ) {
+    // no handling function provided, create default cell.
+    var valcell = CreateCellWithField ( name, value);
+    treerow.appendChild ( valcell );
+  } else 
+    valueCaseFunc();  // run user specified function for adding content
+  
+  treeitem.appendChild ( treerow );
+  treekids.appendChild ( treeitem );
+  return treeitem;
+}
+
+// creates a generic treecell with field inside.
+// optional parameters for initial values.
+function CreateCellWithField( name, value )
+{
+  var valcell     = document.createElement ( "treecell" );
+  valcell.setAttribute ( "class", "value" );
+  valcell.setAttribute ( "treeallowevents", "true" );
+  var valField    = document.createElement ( "html:input" );
+  valField.setAttribute ( "type", "text" );
+  if ( name  ) valField.setAttribute ( "id", name );
+  if ( value ) valField.setAttribute ( "value", value );
+  valField.setAttribute ( "flex", "100%" );
+  valField.setAttribute ( "class", "AttributesCell" );
+  valcell.appendChild ( valField );
+  return valcell;
+}
+
+// todo: implement attribute parsing, e.g. colorpicker appending, etc.
+function AttributeParser( name, value )
+{
+  
+}
+

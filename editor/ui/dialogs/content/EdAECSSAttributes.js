@@ -14,9 +14,8 @@ function BuildCSSAttributeTable()
     if(style.indexOf(":") != -1) {
       name = TrimString(nvpairs.split(":")[0]);
       value = TrimString(nvpairs.split(":")[1]);
-      if(!AddCSSAttribute(name,value)) {
+      if ( !AddTreeItem( name, value, "CSSATree", CSSAttrs ) )
         dump("Failed to add CSS attribute: " + i + "\n");
-      }    
     } else
       return false;
   }
@@ -26,57 +25,30 @@ function BuildCSSAttributeTable()
     if(nvpairs[i].indexOf(":") != -1) {
       name = TrimString(nvpairs[i].split(":")[0]);
       value = TrimString(nvpairs[i].split(":")[1]);
-      if(!AddCSSAttribute(name,value)) {
+      if( !AddTreeItem( name, value, "CSSATree", CSSAttrs ) )
         dump("Failed to add CSS attribute: " + i + "\n");
-      }    
     }
   }
 }
   
-function AddCSSAttribute(name,value)
-{
-  var treekids = document.getElementById("CSSAList");
-  if(!CheckAttributeNameSimilarity(name, CSSAttrs)) {
-    dump("repeated CSS attribute, ignoring\n");
-    return false;
-  }
-  CSSAttrs[CSSAttrs.length] = name;
-  
-  var treeitem    = document.createElement("treeitem");
-  var treerow     = document.createElement("treerow");
-  var attrcell    = document.createElement("treecell");
-  var attrcontent = document.createTextNode(name.toLowerCase());
-  attrcell.appendChild(attrcontent);
-  treerow.appendChild(attrcell);
-  var valcell     = document.createElement("treecell");
-  valcell.setAttribute("class","value");
-  var valField    = document.createElement("html:input");
-  var attrValue   = value;
-  valField.setAttribute("type","text");
-  valField.setAttribute("id",name.toLowerCase());
-  valField.setAttribute("value",attrValue);
-  valField.setAttribute("flex","100%");
-  valField.setAttribute("class","AttributesCell");
-  valcell.appendChild(valField);
-  treerow.appendChild(valcell);
-  treeitem.appendChild(treerow);
-  treekids.appendChild(treeitem);
-  return true;
-}
-
 // add an attribute to the tree widget
-function onAddCSSAttribute()
+function onAddCSSAttribute( which )
 {
+  if( !which ) 
+    return;
+  if( which.getAttribute ( "disabled" ) )
+    return;
+
   var name = dialog.AddCSSAttributeNameInput.value;
   var value = TrimString(dialog.AddCSSAttributeValueInput.value);
 
   if(name == "")
     return;
 
-  // WHAT'S GOING ON? NAME ALWAYS HAS A VALUE OF accented "a"???
-  dump(name+"= New Attribute Name - SHOULD BE EMPTY\n");
+  if ( !CheckAttributeNameSimilarity( name, CSSAttrs ) )
+    return false;
 
-  if(AddCSSAttribute(name,value)) {
+  if ( AddTreeItem ( name, value, "CSSAList", CSSAttrs ) ) {
     dialog.AddCSSAttributeNameInput.value = "";
     dialog.AddCSSAttributeValueInput.value = "";
   } 
@@ -84,12 +56,48 @@ function onAddCSSAttribute()
 }
 
 // does enabling based on any user input.
-function doCSSEnabling()
+function doCSSEnabling( keycode )
 {
-    var name = TrimString(dialog.AddCSSAttributeNameInput.value).toLowerCase();
-    if( name == "" || !CheckAttributeNameSimilarity(name,CSSAttrs)) {
-        dialog.AddCSSAttribute.setAttribute("disabled","true");
-    } else {
-        dialog.AddCSSAttribute.removeAttribute("disabled");
-    }
+  if(keycode == 13) {
+    onAddCSSAttribute( document.getElementById ( "AddCSSAttribute" ) );
+    return;
+  }
+  var name = TrimString(dialog.AddCSSAttributeNameInput.value).toLowerCase();
+  if( name == "" || !CheckAttributeNameSimilarity(name,CSSAttrs))
+    dialog.AddCSSAttribute.setAttribute("disabled","true");
+  else
+    dialog.AddCSSAttribute.removeAttribute("disabled");
 }
+
+function UpdateCSSAttributes()
+{
+  dump("===============[ Setting and Updating STYLE ]===============\n");
+  var CSSAList = document.getElementById("CSSAList");
+  var styleString = "";
+  for(var i = 0; i < CSSAList.childNodes.length; i++)
+  {
+    var item = CSSAList.childNodes[i];
+    var name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    var value = TrimString(item.firstChild.lastChild.firstChild.value);
+    // this code allows users to be sloppy in typing in values, and enter
+    // things like "foo: " and "bar;". This will trim off everything after the 
+    // respective character. 
+    if(name.indexOf(":") != -1)
+      name = name.substring(0,name.lastIndexOf(":"));
+    if(value.indexOf(";") != -1)
+      value = value.substring(0,value.lastIndexOf(";"));
+    if(i == (CSSAList.childNodes.length - 1))
+      styleString += name + ": " + value + ";";   // last property
+    else
+      styleString += name + ": " + value + "; ";
+  }
+  dump("stylestring: ||" + styleString + "||\n");
+  if(styleString.length > 0) {
+    element.removeAttribute("style");
+    element.setAttribute("style",styleString);  // NOTE BUG 18894!!!
+  } else {
+    if(element.getAttribute("style"))
+      element.removeAttribute("style");
+  }
+}
+
