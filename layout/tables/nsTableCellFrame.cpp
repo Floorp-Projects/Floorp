@@ -183,7 +183,7 @@ void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
     if(NS_CONTENT_ATTR_NOT_THERE != result) {
       // content has nowrap (is not mapped to style be cause it has width)
       // set the max element size to the value of the fixed width (NAV/IE quirk)
-      maxElemWidth = stylePosition->mWidth.GetCoordValue();
+      maxElemWidth = NS_MAX(maxElemWidth, stylePosition->mWidth.GetCoordValue());
     }
   }
   mPass1MaxElementSize.width = maxElemWidth;
