@@ -726,15 +726,13 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
   }
 
   int len=1; //init to a non-zero value
-  int err;
 
   if(!mParserContext->mTransferBuffer)
     mParserContext->mTransferBuffer = new char[CParserContext::eTransferBufferSize+1];
 
   while (len > 0) {
-
-    len = pIStream->Read(&err, mParserContext->mTransferBuffer, 0, mParserContext->eTransferBufferSize);
-    if(len>0) {
+    nsresult rv = pIStream->Read(mParserContext->mTransferBuffer, 0, mParserContext->eTransferBufferSize, &len);
+    if((rv == NS_OK) && (len>0)) {
 
       if(mParserFilter)
          mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &len);

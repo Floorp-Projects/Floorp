@@ -274,7 +274,7 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  printf("outer paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+//printf("outer paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mFirstChild) {
     mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
@@ -418,7 +418,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  printf("inner paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+//printf("inner paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mWebShell) {
     //mWebShell->Show();
   }

@@ -25,6 +25,10 @@
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsplugin.h"
+#include "nsIPluginHost.h"
+#include "nsString.h"
+#include "prmem.h"
 
 #define nsObjectFrameSuper nsLeafFrame
 
@@ -192,6 +196,44 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
                                aMetrics.height);
     if (NS_OK != rv) {
       return rv;
+    }
+
+    static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+
+    nsISupports    *container, *pluginsup;
+    nsIPluginHost  *pm;
+
+    rv = aPresContext.GetContainer(&container);
+
+    if (NS_OK == rv) {
+      rv = container->QueryInterface(kIPluginHostIID, (void **)&pm);
+
+      if (NS_OK == rv) {
+        nsString  type;
+        char      *buf;
+        PRInt32   buflen;
+
+        mContent->GetAttribute(nsString("type"), type);
+
+        buflen = type.Length();
+
+        if (buflen > 0) {
+          buf = (char *)PR_Malloc(buflen + 1);
+
+          if (nsnull != buf) {
+            type.ToCString(buf, buflen + 1);
+
+            rv = pm->InstantiatePlugin(buf, &pluginsup);
+
+            if (NS_OK == rv) {
+            }
+          }
+        }
+
+        NS_RELEASE(pm);
+      }
+
+      NS_RELEASE(container);
     }
   }
   else {

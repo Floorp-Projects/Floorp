@@ -314,7 +314,7 @@ nsHTMLFramesetFrame::Paint(nsIPresContext& aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
-  printf("frameset paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+//printf("frameset paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 }
 
