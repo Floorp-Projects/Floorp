@@ -118,14 +118,14 @@ nsXPInstallManager::~nsXPInstallManager()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS6( nsXPInstallManager,
+NS_IMPL_THREADSAFE_ISUPPORTS7( nsXPInstallManager,
                                nsIXPIListener,
                                nsIXPIDialogService,
                                nsIObserver,
                                nsIStreamListener,
                                nsIProgressEventSink,
-                               nsIInterfaceRequestor);
-
+                               nsIInterfaceRequestor,
+                               nsPICertNotification)
 
 
 NS_IMETHODIMP
