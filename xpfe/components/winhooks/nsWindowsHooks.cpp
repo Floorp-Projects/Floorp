@@ -375,7 +375,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
                     // Next, get bundle that provides text for dialog.
                     nsCOMPtr<nsIStringBundle> bundle;
                     nsCOMPtr<nsIStringBundle> brandBundle;
-                    rv = bundleService->CreateBundle( "chrome://global/locale/nsWindowsHooks.properties",
+                    rv = bundleService->CreateBundle( "chrome://global-platform/locale/nsWindowsHooks.properties",
                                                       getter_AddRefs( bundle ) );
                     rv = bundleService->CreateBundle( "chrome://global/locale/brand.properties",
                                                       getter_AddRefs( brandBundle ) );
