@@ -59,6 +59,17 @@ nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
   // this should only be called with a null document, which indicates
   // that we're being torn down.
   NS_ASSERTION(aDocument == nsnull, "SetDocument called with non-null document");
+
+  // Drop the view's ref to us.
+  nsAutoString view; view.AssignWithConversion("view");
+  nsCOMPtr<nsISupports> suppView;
+  GetPropertyAsSupports(view.GetUnicode(), getter_AddRefs(suppView));
+  nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
+  if (outlinerView)
+    outlinerView->SetOutliner(nsnull); // Break the circular ref between the view and us.
+
+  mOutlinerBody = nsnull;
+
   return nsBoxObject::SetDocument(aDocument);
 }
 

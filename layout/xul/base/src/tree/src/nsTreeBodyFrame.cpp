@@ -296,16 +296,9 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
   delete mColumns;
   mColumns = nsnull;
   
-  // Drop our ref to the view.
-  if (mView)
-    mView->SetOutliner(nsnull);
-
   // Save off our info into the box object.
   if (mOutlinerBoxObject) {
     nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mOutlinerBoxObject));
-    nsAutoString view; view.AssignWithConversion("view");
-    box->SetPropertyAsSupports(view.GetUnicode(), mView);
-
     if (mTopRowIndex > 0) {
       nsAutoString topRowStr; topRowStr.AssignWithConversion("topRow");
       nsAutoString topRow;
@@ -363,8 +356,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
           // Scroll to the given row.
           ScrollToRow(rowIndex);
 
-          // Clear out the property info.
-          box->RemoveProperty(view.GetUnicode());
+          // Clear out the property info for the top row, but we always keep the
+          // view current.
           box->RemoveProperty(topRow.GetUnicode());
 
           return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
@@ -422,9 +415,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
 NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 {
   // First clear out the old view.
+  nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mOutlinerBoxObject));
+  nsAutoString view; view.AssignWithConversion("view");
+  
   if (mView) {
     mView->SetOutliner(nsnull);
     mView = nsnull;
+    box->RemoveProperty(view.GetUnicode());
 
     // Only reset the top row index and delete the columns if we had an old non-null view.
     mTopRowIndex = 0;
@@ -442,7 +439,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
   if (mView) {
     // View, meet the outliner.
     mView->SetOutliner(mOutlinerBoxObject);
-    
+ 
+    box->SetPropertyAsSupports(view.GetUnicode(), mView);
+
     // Give the view a new empty selection object to play with, but only if it
     // doesn't have one already.
     nsCOMPtr<nsIOutlinerSelection> sel;
