@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.72 $ ';
+$::Version = '$Revision: 1.73 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -294,9 +294,11 @@ sub mail_build_finished_message {
     
     open LOG, "$logfile" or die "Couldn't open logfile, $logfile: $!";
     while (<LOG>) {
-        for (my $offset = 0; ; $offset += 1000) {
-            my $output = substr $_, $offset, 1000;
-            last if $output eq undef;
+        my $length = length($_);
+        for (my $offset = 0; $offset < $length ; $offset += 1000) {
+            my $chars_left = $length - $offset;
+            my $output_length = $chars_left < 1000 ? $chars_left : 1000;
+            my $output = substr $_, $offset, $output_length;
             $output =~ s/^\.$//g;
             $output =~ s/\n//g;
             print OUTLOG "$output\n";

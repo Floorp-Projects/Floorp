@@ -231,7 +231,7 @@ if (!$needsHeading) {
 
 # NEW CLASSES
 @keys = sort { $newMap{$b}{bloatDelta} <=> $newMap{$a}{bloatDelta} } keys %newMap;
-my $needsHeading = 1;
+$needsHeading = 1;
 my $ltotal = 0;
 my $btotal = 0;
 foreach $key (@keys) {
@@ -256,9 +256,9 @@ if (!$needsHeading) {
 
 # OLD CLASSES
 @keys = sort { ($oldMap{$b}{bloat} || 0) <=> ($oldMap{$a}{bloat} || 0) } keys %oldMap;
-my $needsHeading = 1;
-my $ltotal = 0;
-my $btotal = 0;
+$needsHeading = 1;
+$ltotal = 0;
+$btotal = 0;
 foreach $key (@keys) {
     if (!defined($newMap{$key})) {
         my $leaks = $oldMap{$key}{leaked};
