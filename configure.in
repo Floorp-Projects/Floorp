@@ -964,6 +964,8 @@ case "$target" in
     if test "$MOZ_TOOLS"; then
         _MOZTOOLS=`cd $MOZ_TOOLS ; pwd`
         _MOZTOOLS=`echo $_MOZTOOLS | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+        GLIB_CFLAGS="-I${_MOZTOOLS}/include"
+        GLIB_LIBS="${_MOZTOOLS}/lib/glib-1.2.lib"
         LIBIDL_CFLAGS="-I${_MOZTOOLS}/include"
         LIBIDL_LIBS="${_MOZTOOLS}/lib/libidl-0.6.lib ${_MOZTOOLS}/lib/glib-1.2.lib"
    else
