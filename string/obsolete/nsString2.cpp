@@ -19,6 +19,7 @@
 
 #include <ctype.h>
 #include <string.h> 
+#include <stdlib.h>
 #include "nsString.h"
 #include "nsDebug.h"
 #include "nsDeque.h"

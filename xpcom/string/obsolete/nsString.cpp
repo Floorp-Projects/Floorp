@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <string.h> 
 #include <stdio.h>
+#include <stdlib.h>
 #include "nsString.h"
 #include "nsDebug.h"
 #include "nsCRT.h"
