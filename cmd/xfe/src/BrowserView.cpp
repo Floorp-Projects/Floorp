@@ -111,11 +111,14 @@ XFE_BrowserView::showNavCenter()
 											   this, 
 											   m_contextData);
 
+        // hack! Load something for now.  Eventually tie to toolbar
+        _navCenterView->newBookmarksPane();
+
 		// Add _navCenterView to the sub-view list of browser view
 		addView(_navCenterView);
-
-		_navCenterView->show();
 	}
+    
+    XP_ASSERT(_navCenterView);
 
 	// Show the nav center
 	_navCenterView->show();
