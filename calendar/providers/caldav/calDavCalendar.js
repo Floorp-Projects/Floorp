@@ -62,8 +62,8 @@ function calDavCalendar() {
 }
 
 // some shorthand
-const nsIWebDavOperationListener = 
-    Components.interfaces.nsIWebDavOperationListener;
+const nsIWebDAVOperationListener = 
+    Components.interfaces.nsIWebDAVOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
 const calIEvent = Components.interfaces.calIEvent;
@@ -586,7 +586,7 @@ calDavCalendar.prototype = {
     observeDeleteItem: function (aDeletedItem) {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onDeleteItem (aDeletedItem);
-    },
+    }
 };
 
 
