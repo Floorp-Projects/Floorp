@@ -1595,6 +1595,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     InitKeyEvent(event, aEvent);
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
+        event.keyCode = 0;
         // if the control, meta, or alt key is down, then we should leave
         // the isShift flag alone (probably not a printable character)
         // if none of the other modifier keys are pressed then we need to
