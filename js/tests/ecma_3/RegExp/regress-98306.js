@@ -32,11 +32,17 @@
 //-----------------------------------------------------------------------------
 var bug = 98306;
 var summary = "Testing that we don't crash on this code -";
+var cnUSERAGENT = 'Mozilla/5.0 (Windows; U; WinNT4.0; en-US; rv:0.9.3+) Gecko/20010828';
+var cnUBOUND = 10;
+var obj;
+var re;
+
 
 
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
+
 
 
 function test()
@@ -45,15 +51,21 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  // This caused an immediate crash -
-  var obj1 = new BrowserData('Hello');
+  // Sometimes it was necessary to try these more than once to crash
+  for (var i=0; i<cnUBOUND; i++)
+  {
+    // This alone caused a crash -
+    obj = new BrowserData('Hello');
 
-  // Here is a more realistic string. Test this, too -
-  var sUserAgent = 'Mozilla/5.0 (Windows; U; WinNT4.0; en-US; rv:0.9.3+) Gecko/20010828';
-  var obj2 = new BrowserData(sUserAgent);
+    // Here is a more realistic string. Test this, too.
+    obj = new BrowserData(cnUSERAGENT);
 
-  // This alone also caused a crash - 
-  "Hello".match(/[/]/);
+    // These also caused crashes -
+    "Hello".match(/[/]/);
+    re = /[/;
+    re = /[/]/;
+    re = /[//]/;
+  }
 
   exitFunc ('test');
 }
