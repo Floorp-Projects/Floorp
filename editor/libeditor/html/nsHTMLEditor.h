@@ -680,11 +680,13 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outFragNode,
                                         PRInt32 *outRangeStartHint,
                                         PRInt32 *outRangeEndHint);
-  nsresult   ParseFragment(const nsAString & aFragStr, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult   ParseFragment(const nsAString & aStr, nsVoidArray &aTagStack, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                       nsCOMArray<nsIDOMNode>& outNodeList,
                                       PRInt32 aRangeStartHint,
                                       PRInt32 aRangeEndHint);
+  nsresult CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode);
+  void     FreeTagStackStrings(nsVoidArray &tagStack);
   nsresult GetListAndTableParents( PRBool aEnd, 
                                    nsCOMArray<nsIDOMNode>& aListOfNodes,
                                    nsCOMArray<nsIDOMNode>& outArray);
