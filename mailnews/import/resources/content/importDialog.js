@@ -472,6 +472,8 @@ function ShowImportResultsRaw(title, results, good)
   nextButton.removeAttribute("disabled");
   var cancelButton = document.getElementById("cancel");
   cancelButton.setAttribute("disabled", "true");
+  var backButton = document.getElementById("back");
+  backButton.setAttribute("disabled", "true");
 
   // If the Local Folder is not existed, create it after successfully 
   // import "mail" and "settings"
