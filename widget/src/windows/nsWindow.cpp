@@ -1246,7 +1246,12 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
 {
   nsKeyEvent event;
-  InitEvent(event, aEventType);
+  nsPoint point;
+
+  point.x = 0;
+  point.y = 0;
+
+  InitEvent(event, aEventType, &point);
   event.keyCode   = aKeyCode;
   event.isShift   = mIsShiftDown;
   event.isControl = mIsControlDown;
