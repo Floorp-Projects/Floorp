@@ -49,9 +49,10 @@ static char *rtype_array[20] = {"Byte", "Short", "Integer", "Long",
 
 PRBool
 GenproxyClass(FILE *out,
-                  XPTCursor *cursor,
-                  XPTInterfaceDirectoryEntry *ide, 
-                  XPTHeader *header);
+              XPTCursor *cursor,
+              XPTInterfaceDirectoryEntry *ide, 
+              XPTHeader *header,
+              PRBool iface);
 
 PRBool GenproxyMethodPrototype(FILE *out, 
                                XPTHeader *header, 
@@ -73,7 +74,7 @@ GenproxyGetStringForRefType(XPTHeader *header, XPTTypeDescriptor *td,
 
 static void
 genproxy_usage(char *argv[]) {
-    fprintf(stdout, "Usage: %s [-v] <filename.xpt>\n"
+    fprintf(stdout, "Usage: %s [-v] [-i] <filename.xpt>\n"
             "       -v verbose mode\n", argv[0]);
 }
 
@@ -86,7 +87,7 @@ static int mac_get_args(char*** argv)
 	
 	*argv = args;
 	
-	printf("choose an .xpt file to dump.\n");
+	printf("choose an .xpt file to parse.\n");
 	
 	StandardGetFile(NULL, 0, NULL, &reply);
 	if (reply.sfGood && !reply.sfIsFolder) {
@@ -135,45 +136,48 @@ int
 main(int argc, char **argv)
 {
     PRBool verbose_mode = PR_FALSE;
+    PRBool interface_mode = PR_FALSE;
+    PRBool bytecode_mode = PR_FALSE;
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
     size_t flen;
     char *name;
+    const char *dirname = NULL;
     char *whole;
     FILE *in;
     FILE *out;
     int i;
+    int c;
 
 #ifdef XP_MAC
-	if (argc == 0 || argv == NULL)
+    if (argc == 0 || argv == NULL)
 	argc = mac_get_args(&argv);
 #endif
 
-    switch (argc) {
-    case 2:
-        if (argv[1][0] == '-') {
+    while ((c = getopt(argc, argv, "vibd:")) != EOF) {
+        switch (c) {
+        case 'v':
+            verbose_mode = PR_TRUE;
+            break;
+        case 'i':
+            interface_mode = PR_TRUE;
+            break;
+        case 'b':
+            bytecode_mode = PR_TRUE;
+            break;
+        case 'd':
+            dirname = optarg;
+            break;
+        case '?':
             genproxy_usage(argv);
             return 1;
         }
-        name = argv[1];
-        flen = get_file_length(name);
-        in = fopen(name, "rb");
-        break;
-    case 3:
-        verbose_mode = PR_TRUE;
-        if (argv[1][0] != '-' || argv[1][1] != 'v') {
-            genproxy_usage(argv);
-            return 1;
-        }
-        name = argv[2];
-        flen = get_file_length(name);
-        in = fopen(name, "rb");
-        break;
-    default:
-        genproxy_usage(argv);
-        return 1;
     }
+
+    name = argv[optind];
+    flen = get_file_length(name);
+    in = fopen(name, "rb");
 
     if (!in) {
         perror("FAILED: fopen");
@@ -215,12 +219,29 @@ main(int argc, char **argv)
             XPTInterfaceDirectoryEntry *ide = &header->interface_directory[i];
             char javaname[256];
 
+            javaname[0] = 0;
+
             if (ide->interface_descriptor == NULL) {
                 continue;
             }
 
-            strcpy(javaname, ide->name);
-            strcat(javaname, "__Proxy.java");
+            /* XXX: is this XP? */
+            if (dirname != NULL) {
+                int len;
+                strcpy(javaname, dirname);
+                len = strlen(javaname);
+                if (javaname[len - 1] != '/') {
+                    javaname[len] = '/';
+                    javaname[len+1] = 0;
+                }
+            }
+            strcat(javaname, ide->name);
+            if (interface_mode) {
+                strcat(javaname, ".java");
+            }
+            else {
+                strcat(javaname, "__Proxy.java");
+            }
 
             out = fopen(javaname, "w");
 
@@ -229,7 +250,7 @@ main(int argc, char **argv)
                 return 1;
             }
 
-            if (!GenproxyClass(out, cursor, ide, header)) {
+            if (!GenproxyClass(out, cursor, ide, header, interface_mode)) {
                 return PR_FALSE;
                 perror("FAILED: Cannot print interface");
                 return 1;
@@ -272,15 +293,28 @@ classname_iid_define(const char *className)
     return result;
 }
 
+static void
+print_IID(struct nsID *iid, FILE *file)
+{
+    fprintf(file, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            (PRUint32) iid->m0, (PRUint32) iid->m1,(PRUint32) iid->m2,
+            (PRUint32) iid->m3[0], (PRUint32) iid->m3[1],
+            (PRUint32) iid->m3[2], (PRUint32) iid->m3[3],
+            (PRUint32) iid->m3[4], (PRUint32) iid->m3[5],
+            (PRUint32) iid->m3[6], (PRUint32) iid->m3[7]);
+            
+}
+
 PRBool
 GenproxyClass(FILE *out,
               XPTCursor *cursor,
               XPTInterfaceDirectoryEntry *ide, 
-              XPTHeader *header) {
+              XPTHeader *header,
+              PRBool iface) {
     int i;
     XPTInterfaceDescriptor *id = ide->interface_descriptor;
     XPTInterfaceDirectoryEntry *parent_ide = NULL;
-    const char *iidName = classname_iid_define(ide->name);  /* XXX: Leak */
+    const char *iidName = classname_iid_define(ide->name);
     
     if (id->parent_interface) {
         parent_ide = &header->interface_directory[id->parent_interface - 1];
@@ -303,30 +337,63 @@ GenproxyClass(FILE *out,
                 parent_ide->name_space ? parent_ide->name_space : "org.mozilla.xpcom",
                 parent_ide->name);
     }
-    else {
+    else if (!iface) {
         fprintf(out, "import org.mozilla.xpcom.XPComUtilities;\n");
+        fprintf(out, "import org.mozilla.xpcom.ComObject;\n");
     }
     fprintf(out, "import org.mozilla.xpcom.nsID;\n");
 
-    fprintf(out, "\nclass %s__Proxy", ide->name);
+    if (iface) {
+        fprintf(out, "\npublic interface %s", ide->name);
 
-    if (parent_ide) {
-        fprintf(out, " extends %s__Proxy", parent_ide->name);
+        if (parent_ide) {
+            fprintf(out, " extends %s", parent_ide->name);
+        }
+        fprintf(out,  " {\n", ide->name);
+
+        fprintf(out, 
+                "\n    public static final String %s_STRING = \"", iidName);
+
+        print_IID(&ide->iid, out);
+
+        fprintf(out, "\";\n\n");
+
+        fprintf(out, 
+                "    public static final nsID %s = new nsID(%s_STRING);\n", 
+                iidName, iidName);
     }
+    else {
+        fprintf(out, "\nclass %s__Proxy", ide->name);
 
-    fprintf(out,  " implements %s {\n", ide->name);
+        if (parent_ide) {
+            fprintf(out, " extends %s__Proxy", parent_ide->name);
+        }
+        fprintf(out,  " implements %s {\n", ide->name);
+    }
 
     for (i = 0; i < id->num_methods; i++) {
-        if (!GenproxyMethodPrototype(out, header, &id->method_descriptors[i])) {
+        XPTMethodDescriptor *md = &id->method_descriptors[i];
+
+        if (XPT_MD_IS_HIDDEN(md->flags)) {
+            continue;
+        }
+
+        if (!GenproxyMethodPrototype(out, header, md)) {
             return PR_FALSE;
         }
-        /* XXX: KLUDGE method index for now */
-        if (!GenproxyMethodBody(out, header, 
-                                &id->method_descriptors[i], i+3, iidName)) {
-            return PR_FALSE;
+        if (iface) {
+            fprintf(out, ";\n");
         }
+        else {
+            /* XXX: KLUDGE method index for now */
+            if (!GenproxyMethodBody(out, header, md, i+3, iidName)) {
+                return PR_FALSE;
+            }
+        }
+        fprintf(out, "\n");
     }
     fprintf(out, "}\n");
+    free((void *)iidName);
     return PR_TRUE;
 }
 
@@ -337,10 +404,6 @@ GenproxyMethodPrototype(FILE *out, XPTHeader *header, XPTMethodDescriptor *md) {
     int retval_ind = -1;
     XPTParamDescriptor *pd;
 
-    if (XPT_MD_IS_HIDDEN(md->flags)) {
-        return PR_TRUE;
-    }
-
     /* Find index of retval */
     for (i = 0; i < md->num_args; i++) {
         pd = &md->params[i];
@@ -350,13 +413,21 @@ GenproxyMethodPrototype(FILE *out, XPTHeader *header, XPTMethodDescriptor *md) {
         }
     }
 
+    /* "Hidden" methods are protected (if reflected at all) */
+    if (XPT_MD_IS_HIDDEN(md->flags)) {
+        fprintf(out, "    protected ");
+    }
+    else {
+        fprintf(out, "    public ");
+    }
+
     if (XPT_MD_IS_GETTER(md->flags)) {
         pd = &md->params[0];
 
         if (!GenproxyGetStringForType(header, &pd->type, &param_type)) {
             return PR_FALSE;
         }
-        fprintf(out, "    public %s get%c%s()", 
+        fprintf(out, "%s get%c%s()", 
                 param_type, 
                 toupper(md->name[0]),
                 (md->name)+1);
@@ -367,7 +438,7 @@ GenproxyMethodPrototype(FILE *out, XPTHeader *header, XPTMethodDescriptor *md) {
         if (!GenproxyGetStringForType(header, &pd->type, &param_type)) {
             return PR_FALSE;
         }
-        fprintf(out, "    public void set%c%s(%s p0)", 
+        fprintf(out, "void set%c%s(%s p0)", 
                 toupper(md->name[0]),
                 (md->name)+1,
                 param_type);
@@ -384,7 +455,7 @@ GenproxyMethodPrototype(FILE *out, XPTHeader *header, XPTMethodDescriptor *md) {
             }
         }
 
-        fprintf(out, "    public %s %s(", param_type, md->name);
+        fprintf(out, "%s %s(", param_type, md->name);
 
         for (i = 0; i < md->num_args; i++) {
             pd = &md->params[i];
@@ -402,11 +473,6 @@ GenproxyMethodPrototype(FILE *out, XPTHeader *header, XPTMethodDescriptor *md) {
             fprintf(out, "%s", param_type);
             if (XPT_PD_IS_OUT(pd->flags)) {
                 fprintf(out, "[]");
-                /*
-                  if (XPT_PD_IS_SHARED(pd->flags)) {
-                  fprintf(out, "shared ");
-                  }
-                */
             }
             fprintf(out, " p%d", i);
         }
@@ -574,597 +640,4 @@ GenproxyXPTString(FILE *out, XPTString *str)
     return PR_TRUE;
 }
 
-#if 0
-PRBool
-GenproxyHeader(XPTCursor *cursor, XPTHeader *header, 
-               const int indent, PRBool verbose_mode) 
-{
-    int i;
-    
-    fprintf(stdout, "Header:\n");
 
-    if (verbose_mode) {
-        fprintf(stdout, "%*sMagic beans:           ", indent, " ");
-        for (i=0; i<16; i++) {
-            fprintf(stdout, "%02x", header->magic[i]);
-        }
-        fprintf(stdout, "\n");
-        if (strncmp((const char*)header->magic, XPT_MAGIC, 16) == 0)
-            fprintf(stdout, "%*s                       PASSED\n", indent, " ");
-        else
-            fprintf(stdout, "%*s                       FAILED\n", indent, " ");
-    }
-    fprintf(stdout, "%*sMajor version:         %d\n", indent, " ",
-            header->major_version);
-    fprintf(stdout, "%*sMinor version:         %d\n", indent, " ",
-            header->minor_version);    
-    fprintf(stdout, "%*sNumber of interfaces:  %d\n", indent, " ",
-            header->num_interfaces);
-
-    if (verbose_mode) {
-        fprintf(stdout, "%*sFile length:           %d\n", indent, " ",
-                header->file_length);
-        fprintf(stdout, "%*sData pool offset:      %d\n\n", indent, " ",
-                header->data_pool);
-    }
-    
-    fprintf(stdout, "%*sAnnotations:\n", indent, " ");
-    if (!GenproxyAnnotations(header->annotations, indent*2, verbose_mode))
-        return PR_FALSE;
-
-    fprintf(stdout, "\nInterface Directory:\n");
-    for (i=0; i<header->num_interfaces; i++) {
-        if (verbose_mode) {
-            fprintf(stdout, "%*sInterface #%d:\n", indent, " ", i);
-            if (!GenproxyInterfaceDirectoryEntry(cursor,
-                                                 &header->interface_directory[i],
-                                                 header, indent*2,
-                                                 verbose_mode)) {
-                return PR_FALSE;
-            }
-        } else {
-            if (!GenproxyInterfaceDirectoryEntry(cursor,
-                                                 &header->interface_directory[i],
-                                                 header, indent,
-                                                 verbose_mode)) {
-                return PR_FALSE;
-            }
-        }
-    }
-
-    return PR_TRUE;
-}    
-
-PRBool
-GenproxyAnnotations(XPTAnnotation *ann, const int indent, PRBool verbose_mode) 
-{
-    int i = -1;
-    XPTAnnotation *last;
-    int new_indent = indent + BASE_INDENT;
-
-    do {
-        i++;
-        if (XPT_ANN_IS_PRIVATE(ann->flags)) {
-            if (verbose_mode) {
-                fprintf(stdout, "%*sAnnotation #%d is private.\n", 
-                        indent, " ", i);
-            } else {
-                fprintf(stdout, "%*sAnnotation #%d:\n", 
-                        indent, " ", i);
-            }                
-            fprintf(stdout, "%*sCreator:      ", new_indent, " ");
-            if (!GenproxyXPTString(ann->creator))
-                return PR_FALSE;
-            fprintf(stdout, "\n");
-            fprintf(stdout, "%*sPrivate Data: ", new_indent, " ");            
-            if (!GenproxyXPTString(ann->private_data))
-                return PR_FALSE;
-            fprintf(stdout, "\n");
-        } else {
-            fprintf(stdout, "%*sAnnotation #%d is empty.\n", 
-                    indent, " ", i);
-        }
-        last = ann;
-        ann = ann->next;
-    } while (!XPT_ANN_IS_LAST(last->flags));
-        
-    if (verbose_mode) {
-        fprintf(stdout, "%*sAnnotation #%d is the last annotation.\n", 
-                indent, " ", i);
-    }
-
-    return PR_TRUE;
-}
-
-static void
-print_IID(struct nsID *iid, FILE *file)
-{
-    fprintf(file, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-            (PRUint32) iid->m0, (PRUint32) iid->m1,(PRUint32) iid->m2,
-            (PRUint32) iid->m3[0], (PRUint32) iid->m3[1],
-            (PRUint32) iid->m3[2], (PRUint32) iid->m3[3],
-            (PRUint32) iid->m3[4], (PRUint32) iid->m3[5],
-            (PRUint32) iid->m3[6], (PRUint32) iid->m3[7]);
-            
-}
-
-PRBool
-GenproxyInterfaceDirectoryEntry(XPTCursor *cursor, 
-                                XPTInterfaceDirectoryEntry *ide, 
-                                XPTHeader *header, const int indent,
-                                PRBool verbose_mode)
-{
-    int new_indent = indent + BASE_INDENT;
-
-    if (verbose_mode) {
-        fprintf(stdout, "%*sIID:                             ", indent, " ");
-        print_IID(&ide->iid, stdout);
-        fprintf(stdout, "\n");
-        
-        fprintf(stdout, "%*sName:                            %s\n", 
-                indent, " ", ide->name);
-        fprintf(stdout, "%*sNamespace:                       %s\n", 
-                indent, " ", ide->name_space ? ide->name_space : "none");
-        fprintf(stdout, "%*sAddress of interface descriptor: %p\n", 
-                indent, " ", ide->interface_descriptor);
-
-        fprintf(stdout, "%*sDescriptor:\n", indent, " ");
-    
-        if (!GenproxyInterfaceDescriptor(cursor, ide->interface_descriptor, 
-                                         header, new_indent, verbose_mode)) {
-            return PR_FALSE;
-        }
-    } else {
-        fprintf(stdout, "%*s- %s::%s (", indent, " ", 
-                ide->name_space ? ide->name_space : "", ide->name);
-        print_IID(&ide->iid, stdout);
-        fprintf(stdout, "):\n");
-        if (!GenproxyInterfaceDescriptor(cursor, ide->interface_descriptor, 
-                                         header, new_indent, verbose_mode)) {
-            return PR_FALSE;
-        }
-    }
-
-    return PR_TRUE;
-}    
-
-PRBool
-GenproxyInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
-                            XPTHeader *header, const int indent,
-                            PRBool verbose_mode)
-{
-    XPTInterfaceDirectoryEntry *parent_ide;
-    int i;
-    int new_indent = indent + BASE_INDENT;
-    int more_indent = new_indent + BASE_INDENT;
-
-    if (!id) {
-        fprintf(stdout, "%*s[Unresolved]\n", indent, " ");
-        return PR_TRUE;
-    }
-
-    if (id->parent_interface) {
-
-        parent_ide = &header->interface_directory[id->parent_interface - 1];
-
-        fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
-                parent_ide->name_space ? 
-                parent_ide->name_space : "", 
-                parent_ide->name);
-    }
-
-    fprintf(stdout, "%*sFlags:\n", indent, " ");
-
-    fprintf(stdout, "%*sScriptable: %s\n", new_indent, " ", 
-            XPT_ID_IS_SCRIPTABLE(id->flags) ? "TRUE" : "FALSE");
-
-    if (verbose_mode) {
-        if (id->parent_interface) {
-            fprintf(stdout, 
-                    "%*sIndex of parent interface (in data pool): %d\n", 
-                    indent, " ", id->parent_interface);
-            
-        }
-    } else {
-    }   
-
-    if (id->num_methods > 0) {
-        if (verbose_mode) {
-            fprintf(stdout, 
-                    "%*s# of Method Descriptors:                   %d\n", 
-                    indent, " ", id->num_methods);
-        } else {
-            fprintf(stdout, "%*sMethods:\n", indent, " ");
-        }
-
-        for (i=0; i<id->num_methods; i++) {
-            if (verbose_mode) {
-                fprintf(stdout, "%*sMethod #%d:\n", new_indent, " ", i);
-                if (!GenproxyMethodDescriptor(header,
-                                              &id->method_descriptors[i], 
-                                              more_indent, verbose_mode)) {
-                    return PR_FALSE;
-                } 
-            } else { 
-                if (!GenproxyMethodDescriptor(header,
-                                              &id->method_descriptors[i], 
-                                              new_indent, verbose_mode)) {
-                    return PR_FALSE;
-                } 
-            }
-        }        
-    } else {
-        fprintf(stdout, "%*sMethods:\n", indent, " ");
-        fprintf(stdout, "%*sNo Methods\n", new_indent, " ");
-    }
-    
-    if (id->num_constants > 0) {
-        if (verbose_mode) {
-            fprintf(stdout, 
-                    "%*s# of Constant Descriptors:                  %d\n", 
-                    indent, " ", id->num_constants);
-        } else {
-            fprintf(stdout, "%*sConstants:\n", indent, " ");
-        }
-        
-        for (i=0; i<id->num_constants; i++) {
-            if (verbose_mode) {
-                fprintf(stdout, "%*sConstant #%d:\n", new_indent, " ", i);
-                if (!GenproxyConstDescriptor(header, 
-                                             &id->const_descriptors[i], 
-                                             more_indent, verbose_mode))
-                return PR_FALSE;
-            } else {
-                if (!GenproxyConstDescriptor(header, 
-                                             &id->const_descriptors[i], 
-                                             new_indent, verbose_mode)) {
-                    return PR_FALSE;
-                }
-            }
-        }
-    } else { 
-        fprintf(stdout, "%*sConstants:\n", indent, " ");
-        fprintf(stdout, "%*sNo Constants\n", new_indent, " ");
-    }
-
-    return PR_TRUE;
-}
-
-PRBool
-GenproxyMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
-                         const int indent, PRBool verbose_mode)
-{
-    int i;
-    int new_indent = indent + BASE_INDENT;
-    int more_indent = new_indent + BASE_INDENT;
-
-    if (verbose_mode) {
-        fprintf(stdout, "%*sName:             %s\n", indent, " ", md->name);
-        fprintf(stdout, "%*sIs Getter?        ", indent, " ");
-        if (XPT_MD_IS_GETTER(md->flags))
-            fprintf(stdout, "TRUE\n");
-        else 
-            fprintf(stdout, "FALSE\n");
-        
-        fprintf(stdout, "%*sIs Setter?        ", indent, " ");
-        if (XPT_MD_IS_SETTER(md->flags))
-            fprintf(stdout, "TRUE\n");
-        else 
-            fprintf(stdout, "FALSE\n");
-        
-        fprintf(stdout, "%*sIs Varargs?       ", indent, " ");
-        if (XPT_MD_IS_VARARGS(md->flags))
-            fprintf(stdout, "TRUE\n");
-        else 
-            fprintf(stdout, "FALSE\n");
-        
-        fprintf(stdout, "%*sIs Constructor?   ", indent, " ");
-        if (XPT_MD_IS_CTOR(md->flags))
-            fprintf(stdout, "TRUE\n");
-        else 
-            fprintf(stdout, "FALSE\n");
-        
-        fprintf(stdout, "%*sIs Hidden?        ", indent, " ");
-        if (XPT_MD_IS_HIDDEN(md->flags))
-            fprintf(stdout, "TRUE\n");
-        else 
-            fprintf(stdout, "FALSE\n");
-        
-        fprintf(stdout, "%*s# of arguments:   %d\n", indent, " ", md->num_args);
-        fprintf(stdout, "%*sParameter Descriptors:\n", indent, " ");
-        
-        for (i=0; i<md->num_args; i++) {
-            fprintf(stdout, "%*sParameter #%d:\n", new_indent, " ", i);
-            
-            if (!GenproxyParamDescriptor(header, &md->params[i], more_indent, 
-                                         verbose_mode, PR_FALSE))
-                return PR_FALSE;
-        }
-   
-        fprintf(stdout, "%*sResult:\n", indent, " ");
-        if (!GenproxyParamDescriptor(header, md->result, new_indent,
-                                     verbose_mode, PR_TRUE)) {
-            return PR_FALSE;
-        }
-    } else {
-        char *param_type;
-        XPTParamDescriptor *pd;
-
-        if (!GenproxyGetStringForType(header, &md->result->type, &param_type)) {
-            return PR_FALSE;
-        }
-        fprintf(stdout, "%*s%c%c%c%c%c %s %s(", indent - 6, " ",
-                XPT_MD_IS_GETTER(md->flags) ? 'G' : ' ',
-                XPT_MD_IS_SETTER(md->flags) ? 'S' : ' ',
-                XPT_MD_IS_HIDDEN(md->flags) ? 'H' : ' ',
-                XPT_MD_IS_VARARGS(md->flags) ? 'V' : ' ',
-                XPT_MD_IS_CTOR(md->flags) ? 'C' : ' ',
-                param_type, md->name);
-        for (i=0; i<md->num_args; i++) {
-            if (i!=0) {
-                fprintf(stdout, ", ");
-            }
-            pd = &md->params[i];
-            if (XPT_PD_IS_IN(pd->flags)) {
-                fprintf(stdout, "in");
-                if (XPT_PD_IS_OUT(pd->flags)) {
-                    fprintf(stdout, "/out ");
-                    if (XPT_PD_IS_RETVAL(pd->flags)) {
-                        fprintf(stdout, "retval ");
-                    }
-                    if (XPT_PD_IS_SHARED(pd->flags)) {
-                        fprintf(stdout, "shared ");
-                    }
-                } else {
-                    fprintf(stdout, " ");
-                }
-            } else {
-                if (XPT_PD_IS_OUT(pd->flags)) {
-                    fprintf(stdout, "out ");
-                    if (XPT_PD_IS_RETVAL(pd->flags)) {
-                        fprintf(stdout, "retval ");
-                    }
-                    if (XPT_PD_IS_SHARED(pd->flags)) {
-                        fprintf(stdout, "shared ");
-                    }
-                } else {
-                    param_problems = PR_TRUE;
-                    fprintf(stdout, "XXX ");
-                }
-            }
-            if (!GenproxyGetStringForType(header, &pd->type, &param_type)) {
-                return PR_FALSE;
-            }
-            fprintf(stdout, "%s", param_type);
-        }
-        fprintf(stdout, ");\n");   
-    }
-    return PR_TRUE;
-}
-    
-PRBool
-GenproxyParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
-                        const int indent, PRBool verbose_mode, 
-                        PRBool is_result)
-{
-    int new_indent = indent + BASE_INDENT;
-    
-    if (!XPT_PD_IS_IN(pd->flags) && 
-        !XPT_PD_IS_OUT(pd->flags) &&
-        (XPT_PD_IS_RETVAL(pd->flags) ||
-         XPT_PD_IS_SHARED(pd->flags))) {
-        param_problems = PR_TRUE;
-        fprintf(stdout, "XXX\n");
-    } else {
-        if (!XPT_PD_IS_IN(pd->flags) && !XPT_PD_IS_OUT(pd->flags)) {
-            if (is_result) {
-                if (XPT_TDP_TAG(pd->type.prefix) != TD_UINT32 &&
-                    XPT_TDP_TAG(pd->type.prefix) != TD_VOID) {
-                    param_problems = PR_TRUE;
-                    fprintf(stdout, "XXX\n");   
-                }
-            } else {
-                param_problems = PR_TRUE;
-                fprintf(stdout, "XXX\n");
-            }
-        }
-    }
-
-    fprintf(stdout, "%*sIn Param?   ", indent, " ");
-    if (XPT_PD_IS_IN(pd->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-    
-    fprintf(stdout, "%*sOut Param?  ", indent, " ");
-    if (XPT_PD_IS_OUT(pd->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-    
-    fprintf(stdout, "%*sRetval?     ", indent, " ");
-    if (XPT_PD_IS_RETVAL(pd->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sShared?     ", indent, " ");
-    if (XPT_PD_IS_SHARED(pd->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sType Descriptor:\n", indent, " ");
-    if (!GenproxyTypeDescriptor(&pd->type, new_indent, verbose_mode))
-        return PR_FALSE;
-    
-    return PR_TRUE;
-}
-
-PRBool
-GenproxyTypeDescriptor(XPTTypeDescriptor *td, int indent, PRBool verbose_mode)
-{
-    int new_indent = indent + BASE_INDENT;
-
-    fprintf(stdout, "%*sIs Pointer?        ", indent, " ");
-    if (XPT_TDP_IS_POINTER(td->prefix.flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sIs Unique Pointer? ", indent, " ");
-    if (XPT_TDP_IS_UNIQUE_POINTER(td->prefix.flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sIs Reference?      ", indent, " ");
-    if (XPT_TDP_IS_REFERENCE(td->prefix.flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sTag:               %d\n", indent, " ", 
-            XPT_TDP_TAG(td->prefix));
-    
-    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
-        fprintf(stdout, "%*sInterfaceTypeDescriptor:\n", indent, " "); 
-        fprintf(stdout, "%*sIndex of IDE:             %d\n", new_indent, " ", 
-                td->type.interface);
-    }
-
-    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
-        fprintf(stdout, "%*sInterfaceTypeDescriptor:\n", indent, " "); 
-        fprintf(stdout, "%*sIndex of Method Argument: %d\n", new_indent, " ", 
-                td->type.argnum);        
-    }
-
-    return PR_TRUE;
-}
-
-PRBool
-GenproxyConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
-                        const int indent, PRBool verbose_mode)
-{
-    int new_indent = indent + BASE_INDENT;
-    char *const_type;
-/*      char *out; */
-    PRUint32 uintout;
-    PRInt32 intout;
-
-    if (verbose_mode) {
-        fprintf(stdout, "%*sName:   %s\n", indent, " ", cd->name);
-        fprintf(stdout, "%*sType Descriptor: \n", indent, " ");
-        if (!GenproxyTypeDescriptor(&cd->type, new_indent, verbose_mode))
-            return PR_FALSE;
-        fprintf(stdout, "%*sValue:  ", indent, " ");
-    } else {
-        if (!GenproxyGetStringForType(header, &cd->type, &const_type)) {
-            return PR_FALSE;
-        }
-        fprintf(stdout, "%*s%s %s = ", indent, " ", const_type, cd->name);
-    }        
-
-    switch(XPT_TDP_TAG(cd->type.prefix)) {
-    case TD_INT8:
-        fprintf(stdout, "%d", cd->value.i8);
-        break;
-    case TD_INT16:
-        fprintf(stdout, "%d", cd->value.i16);
-        break;
-    case TD_INT64:
-        /* XXX punt for now to remove NSPR linkage...
-         * borrow from mozilla/nsprpub/pr/src/io/prprf.c::cvt_ll? */
-
-/*          out = PR_smprintf("%lld", cd->value.i64); */
-/*          fputs(out, stdout); */
-/*          PR_smprintf_free(out); */
-        LL_L2I(intout, cd->value.i64);
-        fprintf(stdout, "%d", intout);
-        break;
-    case TD_INT32:
-        fprintf(stdout, "%d", cd->value.i32);
-        break;
-    case TD_UINT8:
-        fprintf(stdout, "%d", cd->value.ui8);
-        break;
-    case TD_UINT16:
-        fprintf(stdout, "%d", cd->value.ui16);
-        break;
-    case TD_UINT64:
-/*          out = PR_smprintf("%lld", cd->value.ui64); */
-/*          fputs(out, stdout); */
-/*          PR_smprintf_free(out); */
-        /* XXX punt for now to remove NSPR linkage. */
-        LL_L2UI(uintout, cd->value.ui64);
-        fprintf(stdout, "%d", uintout);
-        break;
-    case TD_UINT32:
-        fprintf(stdout, "%d", cd->value.ui32);
-        break;
-    case TD_FLOAT:
-        fprintf(stdout, "%f", cd->value.flt);
-        break;
-    case TD_DOUBLE:
-        fprintf(stdout, "%g", cd->value.dbl);
-        break;
-    case TD_BOOL:
-        if (cd->value.bul)
-            fprintf(stdout, "TRUE");
-        else 
-            fprintf(stdout, "FALSE");
-            break;
-    case TD_CHAR:
-        fprintf(stdout, "%c", cd->value.ch);
-        break;
-    case TD_WCHAR:
-        fprintf(stdout, "%c", cd->value.wch & 0xff);
-        break;
-    case TD_VOID:
-        fprintf(stdout, "VOID");
-        break;
-    case TD_PNSIID:
-        if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-            print_IID(cd->value.iid, stdout);
-        } else 
-            return PR_FALSE;
-        break;
-    case TD_PBSTR:
-        if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-            if (!GenproxyXPTString(cd->value.string))
-                return PR_FALSE;
-        } else 
-            return PR_FALSE;
-        break;            
-    case TD_PSTRING:
-        if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-            fprintf(stdout, "%s", cd->value.str);
-        } else 
-            return PR_FALSE;
-        break;
-    case TD_PWSTRING:
-        if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-            PRUint16 *ch = cd->value.wstr;
-            while (*ch) {
-                fprintf(stdout, "%c", *ch & 0xff);
-                ch++;
-            }
-        } else 
-            return PR_FALSE;
-        break;
-    default:
-        perror("Unrecognized type");
-        return PR_FALSE;
-        break;   
-    }
-    
-    if (verbose_mode) {
-        fprintf(stdout, "\n");
-    } else {
-        fprintf(stdout, ";\n");
-    }
-
-    return PR_TRUE;
-}
-
-#endif

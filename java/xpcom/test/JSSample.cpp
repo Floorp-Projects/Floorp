@@ -30,67 +30,8 @@ public:
   // nsISupports methods  
   NS_DECL_ISUPPORTS
 
-  /* void PrintStats (); */
-  NS_IMETHOD PrintStats();
-
-  /* attribute long someInt; */
-  NS_IMETHOD GetSomeInt(PRInt32 *aSomeInt);
-  NS_IMETHOD SetSomeInt(PRInt32 aSomeInt);
-
-  /* attribute boolean someBool; */
-  NS_IMETHOD GetSomeBool(PRBool *aSomeBool);
-  NS_IMETHOD SetSomeBool(PRBool aSomeBool);
-
-  /* readonly attribute long roInt; */
-  NS_IMETHOD GetRoInt(PRInt32 *aRoInt);
-
-  /* attribute double someDouble; */
-  NS_IMETHOD GetSomeDouble(double *aSomeDouble);
-  NS_IMETHOD SetSomeDouble(double aSomeDouble);
-
-  /* attribute string someName; */
-  NS_IMETHOD GetSomeName(char * *aSomeName);
-  NS_IMETHOD SetSomeName(char * aSomeName);
-
-  /* readonly attribute string roString; */
-  NS_IMETHOD GetRoString(char * *aRoString);
-
-  /* void TakeInt (in long anInt); */
-  NS_IMETHOD TakeInt(PRInt32 anInt);
-
-  /* long GiveInt (); */
-  NS_IMETHOD GiveInt(PRInt32 *_retval);
-
-  /* long GiveAndTake (inout long anInt); */
-  NS_IMETHOD GiveAndTake(PRInt32 *anInt, PRInt32 *_retval);
-
-  /* string TooManyArgs (in short oneInt, in short twoInt, inout long redInt, out short blueInt, in double orNothing, in long johnSilver, in boolean algebra); */
-  NS_IMETHOD TooManyArgs(PRInt16 oneInt, 
-                         PRInt16 twoInt, 
-                         PRInt32 *redInt, 
-                         PRInt16 *blueInt, 
-                         double orNothing, 
-                         PRInt64 johnSilver, 
-                         PRBool algebra, 
-                         char **_retval);
-
-  /* string CatStrings (in string str1, in string str2); */
-  NS_IMETHOD CatStrings(const char *str1, const char *str2, char **_retval);
-
-  /* void AppendString (inout string str1, in string str2); */
-  NS_IMETHOD AppendString(char **str1, const char *str2);
-
-  /* JSIComplex NewComplex (in long complex1, in long complex2); */
-  NS_IMETHOD NewComplex(PRInt32 aReal, PRInt32 aImaginary, JSIComplex **_retval);
-
-  /* JSIComplex AddComplex (in JSIComplex complex1, in JSIComplex complex2); */
-  NS_IMETHOD AddComplex(JSIComplex *complex1, JSIComplex *complex2, JSIComplex **_retval);
-
-  /* void AddInPlace (inout JSIComplex complex1, in JSIComplex complex2); */
-  NS_IMETHOD AddInPlace(JSIComplex **complex1, JSIComplex *complex2);
-
-  /* long AddTwoInts(int long complex1, in JSIComplex complex2); */
-  NS_IMETHOD AddTwoInts(PRInt32 int1, PRInt32 int2, PRInt32 *_retval);
+  // JSISample methods
+  NS_DECL_JSISAMPLE
 
 private:
   /* attribute long someInt; */
@@ -113,14 +54,8 @@ private:
 };  
 
 // Globals, need to check if safe to unload module
-static PRInt32 gLockCnt = 0; 
-static PRInt32 gInstanceCnt = 0; 
-
-// Define constants for easy use
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kISampleIID, JSISAMPLE_IID);  
-static NS_DEFINE_IID(kIComplexIID, JSICOMPLEX_IID);  
+//static PRInt32 gLockCnt = 0; 
+// static PRInt32 gInstanceCnt = 0; 
 
 static NS_DEFINE_CID(kSampleCID, JS_SAMPLE_CID);
 
@@ -141,13 +76,8 @@ public:
   // nsISupports methods  
   NS_DECL_ISUPPORTS
 
-  /* attribute long real; */
-  NS_IMETHOD GetReal(PRInt32 *aReal);
-  NS_IMETHOD SetReal(PRInt32 aReal);
-
-  /* attribute long imaginary; */
-  NS_IMETHOD GetImaginary(PRInt32 *aImaginary);
-  NS_IMETHOD SetImaginary(PRInt32 aImaginary);
+  // nsISupports methods  
+  NS_DECL_JSICOMPLEX
 
 private:
   PRInt32 real_;
@@ -182,7 +112,7 @@ JSSample::JSSample()
 {  
   // Zero reference counter
   NS_INIT_ISUPPORTS();
-  PR_AtomicIncrement(&gInstanceCnt);
+  // PR_AtomicIncrement(&gInstanceCnt);
 }
 
 JSSample::~JSSample()  
@@ -190,40 +120,13 @@ JSSample::~JSSample()
   // Make sure there are no dangling pointers to us,
   // debug only
   NS_ASSERTION(mRefCnt == 0,"Wrong ref count");
-  PR_AtomicDecrement(&gInstanceCnt);
+  // PR_AtomicDecrement(&gInstanceCnt);
 }  
 
-NS_IMETHODIMP JSSample::QueryInterface(const nsIID &aIID,  
-				       void **aResult)  
-{  
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
 
-  // Always NULL result, in case of failure  
-  *aResult = NULL;  
+// Use the official macros to implement nsISupports
+NS_IMPL_ISUPPORTS1(JSSample, JSISample)
 
-  if (aIID.Equals(kISupportsIID)) {  
-    *aResult = NS_STATIC_CAST(nsISupports*, this);  
-  } else if (aIID.Equals(kISampleIID)) {  
-    *aResult = NS_STATIC_CAST(JSISample*, this);  
-  }  
-  else {
-    *aResult = nsnull;
-    return NS_ERROR_NO_INTERFACE;  
-  }
-
-  // Add reference counter for outgoing pointer
-  NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*,*aResult));
-
-  return NS_OK;  
-} 
-
-// Use the convenience macros to implement reference counting.
-// They simply add or decrement the reference counter variable,
-// Release also deletes this object if the counter reaches zero.
-NS_IMPL_ADDREF(JSSample)
-NS_IMPL_RELEASE(JSSample)
 
 NS_IMETHODIMP JSSample::PrintStats()  
 {  
@@ -452,7 +355,7 @@ JSComplex::JSComplex()
 {  
   // Zero reference counter
   NS_INIT_ISUPPORTS();
-  PR_AtomicIncrement(&gInstanceCnt);
+  // PR_AtomicIncrement(&gInstanceCnt);
 }
 
 JSComplex::JSComplex(int aReal, int aImaginary) : 
@@ -460,7 +363,7 @@ JSComplex::JSComplex(int aReal, int aImaginary) :
 {  
   // Zero reference counter
   NS_INIT_ISUPPORTS();
-  PR_AtomicIncrement(&gInstanceCnt);
+  // PR_AtomicIncrement(&gInstanceCnt);
 }
 
 JSComplex::~JSComplex()  
@@ -468,40 +371,13 @@ JSComplex::~JSComplex()
   // Make sure there are no dangling pointers to us,
   // debug only
   NS_ASSERTION(mRefCnt == 0,"Wrong ref count");
-  PR_AtomicDecrement(&gInstanceCnt);
+  // PR_AtomicDecrement(&gInstanceCnt);
 }  
 
-NS_IMETHODIMP JSComplex::QueryInterface(const nsIID &aIID,  
-				       void **aResult)  
-{  
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
 
-  // Always NULL result, in case of failure  
-  *aResult = NULL;  
+// Use the official macros to implement nsISupports
+NS_IMPL_ISUPPORTS1(JSComplex, JSIComplex)
 
-  if (aIID.Equals(kISupportsIID)) {  
-    *aResult = NS_STATIC_CAST(nsISupports*, this);  
-  } else if (aIID.Equals(kIComplexIID)) {  
-    *aResult = NS_STATIC_CAST(JSIComplex*, this);  
-  }  
-  else {
-    *aResult = nsnull;
-    return NS_ERROR_NO_INTERFACE;  
-  }
-
-  // Add reference counter for outgoing pointer
-  NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*,*aResult));
-
-  return NS_OK;  
-} 
-
-// Use the convenience macros to implement reference counting.
-// They simply add or decrement the reference counter variable,
-// Release also deletes this object if the counter reaches zero.
-NS_IMPL_ADDREF(JSComplex)
-NS_IMPL_RELEASE(JSComplex)
 
 /* attribute long real; */
 NS_IMETHODIMP JSComplex::GetReal(PRInt32 *aReal) {
@@ -539,7 +415,7 @@ JSSampleFactory::JSSampleFactory()
 {  
   // Zero reference counter
   NS_INIT_ISUPPORTS();
-  PR_AtomicIncrement(&gInstanceCnt);
+  // PR_AtomicIncrement(&gInstanceCnt);
 }
 
 JSSampleFactory::~JSSampleFactory()  
@@ -547,42 +423,12 @@ JSSampleFactory::~JSSampleFactory()
   // Make sure there are no dangling pointers to us,
   // debug only
   NS_ASSERTION(mRefCnt == 0,"Wrong ref count");
-  PR_AtomicDecrement(&gInstanceCnt);
+  // PR_AtomicDecrement(&gInstanceCnt);
 }  
 
-NS_IMETHODIMP JSSampleFactory::QueryInterface(const nsIID &aIID,  
-					      void **aResult)  
-{  
-  if (!aResult) {  
-    return NS_ERROR_NULL_POINTER;  
-  }
 
-  // Always NULL result, in case of failure  
-  *aResult = nsnull;  
-
-  if (aIID.Equals(kISupportsIID)) {
-    // Every interface supports nsISupports
-    *aResult = NS_STATIC_CAST(nsISupports*,this);
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = NS_STATIC_CAST(nsIFactory*,this);
-  } else {
-    // We do not support this interface.
-    // Null result, and return error.
-    *aResult = nsnull;
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  // Add reference counter for outgoing pointer
-  NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*,*aResult));
-
-  return NS_OK;
-}  
-
-// Use the convenience macros to implement reference counting.
-// They simply add or decrement the reference counter variable,
-// Release also deletes this object if the counter reaches zero.
-NS_IMPL_ADDREF(JSSampleFactory)
-NS_IMPL_RELEASE(JSSampleFactory)
+// Use the official macros to implement nsISupports
+NS_IMPL_ISUPPORTS1(JSSampleFactory, nsIFactory)
 
 
 NS_IMETHODIMP JSSampleFactory::CreateInstance(nsISupports *aOuter,
@@ -614,9 +460,9 @@ NS_IMETHODIMP JSSampleFactory::CreateInstance(nsISupports *aOuter,
 NS_IMETHODIMP JSSampleFactory::LockFactory(PRBool aLock) 
 { 
   if (aLock) { 
-    PR_AtomicIncrement(&gLockCnt); 
+      // PR_AtomicIncrement(&gLockCnt); 
   } else { 
-    PR_AtomicDecrement(&gLockCnt); 
+      // PR_AtomicDecrement(&gLockCnt); 
   } 
 
   return NS_OK;
@@ -654,7 +500,7 @@ extern "C" {
       return NS_ERROR_OUT_OF_MEMORY; 
     }
 
-    nsresult rv = inst->QueryInterface(kIFactoryIID, 
+    nsresult rv = inst->QueryInterface(NS_GET_IID(nsIFactory), 
 				       (void **) aResult); 
 
     if (NS_FAILED(rv)) { 
@@ -665,7 +511,8 @@ extern "C" {
   }
 
   NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) {
-    return PRBool(gInstanceCnt == 0 && gLockCnt == 0); 
+      return PR_FALSE;
+      // return PRBool(gInstanceCnt == 0 && gLockCnt == 0); 
   }
 
   NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, 

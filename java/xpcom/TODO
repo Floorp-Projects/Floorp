@@ -88,3 +88,5 @@ recycled.
 -- Cache previously allocated wrapper objects, to prevent unnecessary
 allocation.
 
+-- Thread-safe object release
+

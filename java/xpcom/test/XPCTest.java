@@ -13,11 +13,10 @@
  */
 
 import java.util.Vector;
+import java.lang.reflect.Method;
 import org.mozilla.xpcom.*;
 
 public class XPCTest {
-    private static boolean didRegister = false;
-
     static ComObject CreateSampleInstance() {
 	nsID kSampleCID = 
 	    new nsID("d3944dd0-ae1a-11d1-b66c-00805f8a2676");
@@ -26,16 +25,7 @@ public class XPCTest {
 	    new nsID("57ecad90-ae1a-11d1-b66c-00805f8a2676");
 
 
-	if (!didRegister) {
-	    XPComUtilities.RegisterComponent(kSampleCID,
-					     "JSSample",
-					     "component://javasoft/sample",
-					     "libsample.so",
-					     false,
-					     false);
-	    didRegister = true;
-	}
-
+	// XXX: convert to nsIComponentManager calls
 	return (ComObject)XPComUtilities.CreateInstance(kSampleCID,
 							null,
 							kISampleIID);
@@ -44,13 +34,9 @@ public class XPCTest {
     public static void main(String[] argv) {
 	String command = "PrintStats";
 	int    cmdOffset = -1;
+	boolean useXPCMethod = true;
 
 	try {
-	    // KLUDGE: load libraries
-	    //System.out.println(System.getProperty("java.library.path"));
-	    //System.loadLibrary("plds3");
-	    //System.loadLibrary("xpcom");
-
 	    Object[] params = null;
 
 	    // Process arguments
@@ -58,12 +44,25 @@ public class XPCTest {
 		params = new Object[0];
 	    }
 	    else {
-		command = argv[0];
+		int argi = 0;
+		while (argv[argi].charAt(0) == '-') {
+		    switch(argv[argi].charAt(1)) {
+		    case 'r':
+			useXPCMethod = false;
+			break;
+		    case 'x':
+			useXPCMethod = true;
+			break;
+		    }
+		    argi++;
+		}
+
+		command = argv[argi++];
 		if (Character.isDigit(command.charAt(0))) {
 		    cmdOffset = Integer.parseInt(command);
 		}
 
-		params = paramArray(argv, 1);
+		params = paramArray(argv, argi);
 	    }
 
 	    ComObject sample = CreateSampleInstance();
@@ -83,10 +82,23 @@ public class XPCTest {
 						   cmdOffset, 
 						   params);
 	    }
-	    else {
+	    else if (useXPCMethod) {
 		XPCMethod method = new XPCMethod(kISampleIID, command);
 
 		method.invoke(sample, params);
+	    }
+	    else {
+		Method[] methods = sample.getClass().getMethods();
+
+		for (int i = 0; i < methods.length; i++) {
+		    if (methods[i].getName().equals(command)) {
+			Object retval =
+			    methods[i].invoke(sample, params);
+			System.out.print("Retval: ");  // DEBUG
+			System.out.println(retval);  // DEBUG
+			break;
+		    }
+		}
 	    }
 
 	    // Get "out" parameters and return value
@@ -159,6 +171,10 @@ public class XPCTest {
 		case 'r':
 		case '0':
 		    vector.addElement(null);
+		    break;
+		case '@':
+		    argi++;
+		    vector.addElement(new nsID(argv[argi]));
 		    break;
 		case 'z':
 		    argi++;

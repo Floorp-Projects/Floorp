@@ -33,6 +33,10 @@ difficult, and
 1. Make sure MOZILLA_FIVE_HOME is set correctly, and that JDKHOME indicates 
    a valid JDK 1.2 installation.
 
+   *IMPORTANT*: remove the jni.h, jni_md.h, and jri.h in mozilla/dist/bin,
+                before compiling native code.  Otherwise, the header 
+                mismatch will cause crashes in JNI code.
+
 2. Insure that the following are in your LD_LIBRARY_PATH:
 
 	$MOZILLA_FIVE_HOME

@@ -59,6 +59,28 @@ static inline void* ToPtr(jlong l) {
     return (void *)result;
 }
 
+#undef DEBUG_GETSET_ID
+
+#ifdef DEBUG_GETSET_ID
+static void GetClassName(char *namebuf, JNIEnv *env, jobject self, int len) {
+    jclass clazz = env->GetObjectClass(self);
+    jclass clazz_clazz = env->GetObjectClass(clazz);
+    jmethodID nameID = env->GetMethodID(clazz_clazz, "getName", "()Ljava/lang/String;");
+    jstring string = (jstring)env->CallObjectMethod(clazz, nameID);
+
+    jsize jstrlen = env->GetStringUTFLength(string);
+    const char *utf = env->GetStringUTFChars(string, NULL);
+
+    if (jstrlen >= len) {
+	jstrlen = len;
+    }
+    strncpy(namebuf, utf, jstrlen);
+    namebuf[jstrlen] = '\0';
+
+    env->ReleaseStringUTFChars(string, utf);
+}
+#endif
+
 /********************** ID **************************/
 
 jobject ID_NewJavaID(JNIEnv *env, const nsIID* iid) {
@@ -78,6 +100,14 @@ nsID *ID_GetNative(JNIEnv *env, jobject self) {
     jclass clazz = env->FindClass(ID_CLASS_NAME);
     jfieldID nsidptrID = env->GetFieldID(clazz, ID_FIELD_NAME, ID_FIELD_TYPE);
 
+#ifdef DEBUG_GETSET_ID
+    char classname[128];
+
+    GetClassName(classname, env, self, sizeof(classname));
+    fprintf(stderr, "ID_GetNative: self instanceof %s\n", classname);
+    fflush(stderr);
+#endif
+
     assert(env->IsInstanceOf(self, clazz));
 
     jlong nsidptr = env->GetLongField(self, nsidptrID);
@@ -88,6 +118,14 @@ nsID *ID_GetNative(JNIEnv *env, jobject self) {
 void ID_SetNative(JNIEnv *env, jobject self, nsID *id) {
     jclass clazz = env->FindClass(ID_CLASS_NAME);
     jfieldID nsidptrID = env->GetFieldID(clazz, ID_FIELD_NAME, ID_FIELD_TYPE);
+
+#ifdef DEBUG_GETSET_ID
+    char classname[128];
+
+    GetClassName(classname, env, self, sizeof(classname));
+    fprintf(stderr, "ID_SetNative: self instanceof %s\n", classname);	    
+    fflush(stderr);
+#endif
 
     assert(env->IsInstanceOf(self, clazz));
 
@@ -100,6 +138,17 @@ jboolean ID_IsEqual(JNIEnv *env, jobject self, jobject other) {
     jboolean result = JNI_FALSE;
     jclass clazz = env->FindClass(ID_CLASS_NAME);
     jfieldID nsidptrID = env->GetFieldID(clazz, ID_FIELD_NAME, ID_FIELD_TYPE);
+
+#ifdef DEBUG_GETSET_ID
+    char classname[128];
+
+    GetClassName(classname, env, self, sizeof(classname));
+    fprintf(stderr, "ID_IsEqual: self instanceof %s\n", classname);	    
+
+    GetClassName(classname, env, other, sizeof(classname));
+    fprintf(stderr, "ID_IsEqual: other instanceof %s\n", classname);	    
+    fflush(stderr);
+#endif
 
     assert(env->IsInstanceOf(self, clazz));
 

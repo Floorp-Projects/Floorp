@@ -71,6 +71,11 @@ extern nsID*    ID_GetNative(JNIEnv *env, jobject self);
 extern void     ID_SetNative(JNIEnv *env, jobject self, nsID* id);
 extern jboolean ID_IsEqual(JNIEnv *env, jobject self, jobject other);
 
+#ifndef jlong_L2I
+#  define jlong_L2I(_i, _l) ((_i) = (_l))
+#  define jlong_I2L(_l, _i) ((_l) = (_i))
+#endif
+
 #ifdef __cplusplus
 }
 #endif

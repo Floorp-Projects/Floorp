@@ -10,9 +10,9 @@ SHLIB_FLAGS=-fpic
 SHLIB_LDFLAGS=-shared
 DEFINES=-DXP_UNIX
 INCLUDE=-I$(MOZILLA)/dist/include -I$(MOZILLA)/xpcom/public -I../src -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris -I$(JDKHOME)/include/linux
-#LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lxp -lreg -lplds3 -lplc3 -lnspr3 -lstdc++
-LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lxp -lplds3 -lplc3 -lnspr3 -lstdc++
-XPTDIR=$(MOZILLA)/dist/bin/components
+LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lplds3 -lplc3 -lnspr3
+
+COMPDIR=$(MOZILLA)/dist/bin/components
 
 XPIDL=$(MOZILLA)/dist/bin/xpidl
 
@@ -25,16 +25,13 @@ CLASSDIR=$(MOZILLA)/dist/classes
 
 TEST_CLASSES=XPCTest.class
 
-PROXY_CLASSES=org/mozilla/xpcom/JSISample__Proxy.class \
-	      org/mozilla/xpcom/JSIComplex__Proxy.class
-
-PROXY_SRCS=JSISample__Proxy.java \
-	   JSIComplex__Proxy.java
+PROXY_JAR=sample.jar
+PROXY_DIR=_genproxy
 
 
 .SUFFIXES: .java .class .cpp .o
 
-all: sample xptest $(TEST_CLASSES)
+all: sample xptest $(TEST_CLASSES) $(PROXY_JAR)
 
 #
 # Build class files.
@@ -52,7 +49,7 @@ all: sample xptest $(TEST_CLASSES)
 #
 # Sample XPCOM module.
 #
-sample: JSISample.h libsample.so $(XPTDIR)/JSISample.xpt
+sample: JSISample.h $(COMPDIR)/libxpjtest.so $(COMPDIR)/xpjtest.xpt
 
 #
 # Build sample header & typelib
@@ -62,15 +59,18 @@ JSISample.cpp: JSISample.h
 JSISample.h: JSISample.idl
 	$(XPIDL) -w -v -m header -I $(MOZILLA)/dist/idl JSISample.idl
 
-$(XPTDIR)/JSISample.xpt: JSISample.idl
-	$(XPIDL) -w -v -m typelib -o $(XPTDIR)/JSISample -I $(MOZILLA)/dist/idl JSISample.idl
+$(COMPDIR)/xpjtest.xpt: JSISample.idl
+	$(XPIDL) -w -v -m typelib -o $(COMPDIR)/xpjtest -I $(MOZILLA)/dist/idl JSISample.idl
 
 #
 # Sample object shared library
 #
-libsample.so: JSISample.h JSSample.o
-	$(CPP) $(SHLIB_LDFLAGS) $(LIBS) -o libsample.so JSSample.o 
-	chmod +x libsample.so
+libxpjtest.so: JSISample.h JSSample.o
+	$(CPP) $(SHLIB_LDFLAGS) -L$(MOZILLA)/dist/lib -lxpcom -o libxpjtest.so JSSample.o 
+	chmod +x libxpjtest.so
+
+$(COMPDIR)/libxpjtest.so: libxpjtest.so
+	../../../config/nsinstall -R -m 555 libxpjtest.so $(COMPDIR)
 
 #
 # C++ test program
@@ -80,9 +80,12 @@ xptest: xptest.o ../src/libxpjava.so
 
 xptest.cpp: ../src/xpjava.h
 
-#$(PROXY_CLASSES): $(GENPROXY) $(XPTDIR)/JSISample.xpt
-#	genproxy $(XPTDIR)/JSISample.xpt
-#	$(JAVAC) -g -d . -classpath $(CLASSDIR):. *.java
+$(PROXY_JAR): $(GENPROXY) $(COMPDIR)/xpjtest.xpt
+	- mkdir $(PROXY_DIR)
+	$(GENPROXY) -d $(PROXY_DIR) $(COMPDIR)/xpjtest.xpt
+	$(GENPROXY) -i -d $(PROXY_DIR) $(COMPDIR)/xpjtest.xpt
+	$(JAVAC) -g -d $(PROXY_DIR) -classpath $(CLASSDIR):. $(PROXY_DIR)/*.java
+	(cd $(PROXY_DIR); jar cf ../$(PROXY_JAR) org)
 
 clean:
-	$(RM) *.o *.so core xptest $(XPTDIR)/JSISample.xpt JSISample.h $(TEST_CLASSES) $(PROXY_SRCS) $(PROXY_CLASSES)
+	$(RM) -r *.o *.so core xptest $(COMPDIR)/libxpjtest.so $(COMPDIR)/xpjtest.xpt JSISample.h $(TEST_CLASSES) $(PROXY_JAR) $(PROXY_DIR)

@@ -720,10 +720,11 @@ extern jobject VariantToJObject(JNIEnv *env, const nsXPTCVariant *current) {
 nsresult InitXPCOM() {
     nsresult res;
 
+#ifdef DEBUG_frankm
     cerr << "Initializing XPCOM" << endl;
+#endif
 
-    // Autoregistration happens here. The rest of RegisterComponent() calls should happen
-    // only for dlls not in the components directory.
+    // Autoregistration magic.  Boogeda boogeda.
 
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
@@ -746,7 +747,9 @@ nsresult InitXPCOM() {
 
     // Get InterfaceInfoManager
 
+#ifdef DEBUG_frankm
     cerr << "Getting InterfaceInfoManager" << endl;
+#endif
 
     interfaceInfoManager = XPTI_GetInterfaceInfoManager();
 
@@ -754,6 +757,10 @@ nsresult InitXPCOM() {
         cerr << "Failed to find InterfaceInfoManager" << endl;
         return res;
     }
+
+#ifdef DEBUG_frankm
+    cerr << "XPCOM Initialized" << endl;
+#endif
 
     return res;
 }

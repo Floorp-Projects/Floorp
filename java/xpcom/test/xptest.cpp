@@ -38,24 +38,25 @@ static NS_DEFINE_CID(kSampleCID, JS_SAMPLE_CID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
-#define SAMPLE_DLL "sampl32.dll"
+#define XPCOM_DLL  "xpcom.dll"
+#define SAMPLE_DLL "xpjtest.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL  "XPCOM_DLL"
-#define SAMPLE_DLL "SAMPL_DLL"
+#define SAMPLE_DLL "XPJTEST_DLL"
 #else
 #define XPCOM_DLL  "libxpcom.so"
-#define SAMPLE_DLL "libsample.so"
+#define SAMPLE_DLL "libxpjtest.so"
 #endif
 #endif
 
 
-nsXPTCVariant *ParamsFromArgv(const nsXPTMethodInfo *mi,
-			      int argi, int argc, char **argv) {
+void ParamsFromArgv(nsXPTCVariant *result, 
+		    const nsXPTMethodInfo *mi,
+		    int argi, int argc, char **argv) {
   uint8 paramcount = mi->GetParamCount();
 
-  nsXPTCVariant *result = new nsXPTCVariant[paramcount];
+  memset(result, 0, sizeof(nsXPTCVariant) * paramcount);
 
   for (int i = 0; i < paramcount; i++) {
     nsXPTParamInfo param = mi->GetParam(i);
@@ -120,7 +121,6 @@ nsXPTCVariant *ParamsFromArgv(const nsXPTMethodInfo *mi,
 	break;
       case nsXPTType::T_CHAR_STR:
 	result[i].val.p = argv[argi];
-#if 0
 	// Copying every time would be wasteful
 	if (param.IsOut()) {
 	  char *tmpstr = new char[strlen(argv[argi]) + 1];
@@ -128,7 +128,6 @@ nsXPTCVariant *ParamsFromArgv(const nsXPTMethodInfo *mi,
 	  result[i].val.p = tmpstr;
 	  result[i].flags |= nsXPTCVariant::VAL_IS_OWNED;
 	}
-#endif
 	break;
       case nsXPTType::T_VOID:
       case nsXPTType::T_IID:
@@ -220,21 +219,6 @@ int main(int argc, char **argv)
     // Initialize XPCOM
     InitXPCOM();
 
-    // Register Factory
-    cerr << "Registering Sample Factory" << endl;
-
-    res = nsComponentManager::RegisterComponent(kSampleCID,
-						"JSSample",
-						"component://javasoft/sample",
-						SAMPLE_DLL,
-						PR_FALSE,
-						PR_FALSE);
-
-    if (NS_FAILED(res)) {
-	cerr << "Failed to register factory" << endl;
-	return res;
-    }
-
     // Create Instance
     res = nsComponentManager::CreateInstance(kSampleCID,
 					     nsnull, 
@@ -280,7 +264,14 @@ int main(int argc, char **argv)
     }
 
     // Translate and marshall arguments
-    nsXPTCVariant *params = ParamsFromArgv(mi, 2, argc, argv);
+    nsXPTCVariant params[32]; 
+
+    if (paramcount > (sizeof(params)/sizeof(nsXPTCVariant))) {
+	cerr << "Too Many Params" << endl;
+	return 1;
+    }
+
+    ParamsFromArgv(params, mi, 2, argc, argv);
 
     cerr << "Arguments are: " << endl;
 
