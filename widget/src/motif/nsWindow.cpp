@@ -578,6 +578,7 @@ void nsWindow::SetBounds(const nsRect &aRect)
 //-------------------------------------------------------------------------
 void nsWindow::GetBounds(nsRect &aRect)
 {
+printf("IN get bounds %d %d \n", mBounds.width, mBounds.height);
 
 
   /*XWindowAttributes attrs ;
@@ -1039,6 +1040,8 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
+
+    nsRect* size = aEvent.windowSize;
   /*if (mWidget) {
     Arg arg[3];
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Setting to 600,800\n");
@@ -1050,6 +1053,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   }*/
 
   if (mEventCallback && !mIgnoreResize) {
+printf("IN ON Resize %d %d %d %d\n",size->x, size->y, size->width, size->height);
     return(DispatchEvent(&aEvent));
   }
   return FALSE;

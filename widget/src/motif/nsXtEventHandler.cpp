@@ -28,6 +28,9 @@
 
 #define DBG 0
 
+nsRect gResizeRect;
+int gResized = 0;
+
 //==============================================================
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
                             XtPointer  p,
@@ -142,6 +145,7 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   pevent.rect = (nsRect *)&rect;
   XEvent xev;
 
+#if 0
   int count = 0;
   while (XPeekEvent(XtDisplay(w), &xev))
   {
@@ -154,6 +158,7 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
        break;
      }
   }
+#endif
 
   widgetWindow->OnPaint(pevent);
 
@@ -510,12 +515,28 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
       //printf("doResize %s  %d %d %d %d rect %d %d\n",  (doResize ?"true":"false"),
              //attrs.x, attrs.y, attrs.width, attrs.height, rect.width, rect.height);
 
+        // NOTE: THIS May not be needed when embedded in chrome
+      printf("Adding timeout\n");
+
+extern XtAppContext gAppContext;
+
+      if (! gResized)
+        XtAppAddTimeOut(gAppContext, 1000, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
+
+      gResizeRect.x = rect.x;
+      gResizeRect.y = rect.y;
+      gResizeRect.width = rect.width;
+      gResizeRect.height = rect.height;
+      gResized = 1;
+
+#if 0
       //doResize = PR_TRUE;
       if (doResize) {
         //printf("??????????????????????????????? Doing Resize\n");
         widgetWindow->SetBounds(rect); // This needs to be done inside OnResize
         widgetWindow->OnResize(event);
       }
+#endif
     }
   }
 }
@@ -579,4 +600,19 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
   if (p != nsnull) {
     widgetWindow->OnOk();
   }
+}
+
+void nsXtWidget_Refresh_Callback(XtPointer call_data)
+{
+    nsSizeEvent event;
+    event.message = NS_SIZE;
+    event.widget  = (nsWindow *) call_data;
+    event.time    = 0; //TBD
+    event.windowSize = (nsRect *)&gResizeRect;
+
+ printf("In timer\n");
+ nsWindow* widgetWindow = (nsWindow*)call_data;
+ widgetWindow->SetBounds(gResizeRect); // This needs to be done inside OnResize
+ widgetWindow->OnResize(event);
+ gResized = 0;
 }
