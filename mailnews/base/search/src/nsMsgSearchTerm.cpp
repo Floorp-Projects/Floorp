@@ -1200,7 +1200,10 @@ nsMsgSearchTerm::GetBooleanAnd(PRBool *aResult)
 NS_IMETHODIMP
 nsMsgSearchTerm::SetBooleanAnd(PRBool aValue)
 {
-    m_booleanOp = (aValue) ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
+    if (aValue)
+        m_booleanOp = nsMsgSearchBooleanOperator(nsMsgSearchBooleanOp::BooleanAND);
+    else
+        m_booleanOp = nsMsgSearchBooleanOperator(nsMsgSearchBooleanOp::BooleanOR);
     return NS_OK;
 }
 
