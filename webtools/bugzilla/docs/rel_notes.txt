@@ -328,6 +328,9 @@ XML::Parser (any)
   (bug 121741)
 - Operating system detection fixes.
   (bugs 92763, 135666)
+- QA contacts now receive emails when a new bug is created and
+  their only email preference was being added or removed from QA.
+  (bug 143091)
 
 ************************************************************
 *** USERS UPGRADING FROM 2.14 OR EARLIER - 2.14.1 ISSUES ***
