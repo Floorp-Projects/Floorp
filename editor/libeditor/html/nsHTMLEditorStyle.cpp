@@ -545,15 +545,12 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
   PRBool sameNode = (startNode==endNode);
   
   // split any matching style nodes above the start of range
-  res = SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty, aAttribute);
-  if (NS_FAILED(res)) return res;
-
-  if (sameNode && (startNode != origStartNode))
   {
-    // our startNode got split.  This changes the offset of the end of our range.
-    endOffset -= origStartOffset;
+    nsAutoTrackDOMPoint tracker(mRangeUpdater, address_of(endNode), &endOffset);
+    res = SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty, aAttribute);
+    if (NS_FAILED(res)) return res;
   }
-  
+
   // second verse, same as the first...
   res = SplitStyleAbovePoint(address_of(endNode), &endOffset, aProperty, aAttribute);
   if (NS_FAILED(res)) return res;
@@ -1270,7 +1267,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
       // splitting them as appropriate
       res = SplitStyleAboveRange(range, aProperty, aAttribute);
       if (NS_FAILED(res)) return res;
-      
+
       // check for easy case: both range endpoints in same text node
       nsCOMPtr<nsIDOMNode> startNode, endNode;
       res = range->GetStartContainer(getter_AddRefs(startNode));
