@@ -43,7 +43,7 @@ Rights Reserved.
 				<treechildren>
 					<treeitem uri="...">
 						<treerow>
-					    	<treecell class="cardicon" value="rdf:http://home.netscape.com/NC-rdf#DisplayName"/>
+					    	<treecell class="cardicon" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#Company"/>
@@ -54,7 +54,7 @@ Rights Reserved.
 		</template>
 
 		<treecolgroup id="theColumns">
-			<treecol persist="hidden width" style="width:2*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#DisplayName"/>
+			<treecol persist="hidden width" style="width:2*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 			<treecol persist="hidden width" style="width:3*" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
 			<treecol persist="hidden width" style="width:2*" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
 			<treecol persist="hidden width" style="width:2*" id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Company"/>
@@ -62,7 +62,7 @@ Rights Reserved.
 		
 		<treehead>
 			<treerow id="headRow">
-				<treecell value="&nameColumn.label;" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName');"/>
+				<treecell value="&nameColumn.label;" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
 				<treecell value="&emailColumn.label;" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
 				<treecell value="&workPhoneColumn.label;" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
 				<treecell value="&organizationColumn.label;" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
