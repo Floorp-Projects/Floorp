@@ -6,7 +6,7 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_THUNDERBIRD
-DIRS = console
+DIRS = console filepicker
 else
 DIRS = autocomplete console filepicker history satchel viewsource build
 endif
