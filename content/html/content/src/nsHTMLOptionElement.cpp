@@ -314,7 +314,11 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
     // This does not need to be SetSelected (which sets selected in the select)
     // because we *will* be initialized when we are placed into a select.  Plus
     // it seems like that's just inviting an infinite loop.
-    SetSelectedInternal(selected, PR_TRUE);
+    // We can pass |aNotify == PR_FALSE| since |GetSelected| is called
+    // from |nsHTMLSelectElement::InsertOptionsIntoList|, which is
+    // guaranteed to be called before frames are created for the
+    // content.
+    SetSelectedInternal(selected, PR_FALSE);
   }
 
   *aValue = mIsSelected;

@@ -12166,6 +12166,16 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
         rv = ContentInserted(aPresContext, container, aContent, indexInContainer, mTempFrameTreeState, PR_FALSE);
       }      
     }
+  } else {
+    // The content is the root node, so just rebuild the world.
+    // However, double check that it's really part of the document,
+    // since rebuilding the frame tree can have bad effects, especially
+    // if it's the frame tree for chrome (see bug 157322).
+    nsCOMPtr<nsIDocument> doc;
+    aContent->GetDocument(*getter_AddRefs(doc));
+    NS_ASSERTION(doc, "received style change for content not in document");
+    if (doc)
+      ReconstructDocElementHierarchy(aPresContext);
   }
   return rv;
 }
