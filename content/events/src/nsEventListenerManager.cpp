@@ -97,7 +97,11 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
-typedef NS_IMETHOD_CALLBACK(nsIDOMEventListener, GenericHandler)(nsIDOMEvent*);
+typedef
+NS_STDCALL_FUNCPROTO(nsresult,
+                     GenericHandler,
+                     nsIDOMEventListener, HandleEvent, 
+                     (nsIDOMEvent*));
 
 /*
  * Things here are not as they appear.  Namely, |ifaceListener| below is

@@ -60,8 +60,11 @@ public:
   NS_IMETHOD AddObserver(nsISVGValueObserver* observer);
   NS_IMETHOD RemoveObserver(nsISVGValueObserver* observer);
 
-  typedef nsresult 
-  NS_STDCALL_FUNCPROTO(nsISVGValueObserver::*SVGObserverNotifyFunction,(nsISVGValue*));
+  typedef
+  NS_STDCALL_FUNCPROTO(nsresult,
+                       SVGObserverNotifyFunction,
+                       nsISVGValueObserver, DidModifySVGObservable,
+                       (nsISVGValue*));
 
   
 protected:
