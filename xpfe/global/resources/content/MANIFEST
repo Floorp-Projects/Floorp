@@ -13,6 +13,8 @@ commonDialog.xul
 commonDialog.js
 strres.js
 about.html
+credits.html
+about.xul
 charsetOverlay.xul
 charsetOverlay.js
 charsetDetectorsOverlay.js

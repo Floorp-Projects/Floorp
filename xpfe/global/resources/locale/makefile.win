@@ -37,6 +37,7 @@ install::
 	$(MAKE_INSTALL) charsetDetectorsOverlay.dtd $(DISTBROWSER)
   $(MAKE_INSTALL) wizardManager.properties $(DISTBROWSER)
   $(MAKE_INSTALL) wizardOverlay.dtd $(DISTBROWSER)
+  $(MAKE_INSTALL) about.dtd $(DISTBROWSER)
   
 clobber::
   rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*

@@ -1,0 +1,55 @@
+<?xml version="1.0"?> 
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/about.dtd"> 
+
+<window
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical"
+        class="dialog"
+        title="&title.label;">
+
+<box align="vertical" flex="100%" style="margin: 0.5em;">
+
+<tabcontrol flex="100%" align="vertical">
+  <tabbox>
+    <tab selected="true">&aboutTab.label;</tab>
+    <tab>&contributorsTab.label;</tab>
+  </tabbox>
+
+  <tabpanel align="vertical" flex="100%">
+    <html:iframe style="border: 1px inset gray;" src="about:"/>
+    <html:iframe style="border: 1px inset gray;" src="credits.html"/>
+  </tabpanel>
+</tabcontrol>
+
+<box align="horizontal" style="margin-top: 1em;">
+  <spring flex="100%"/>
+  <titledbutton id="ok" class="dialog push" value="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>
+</box>
+
+</box>
+</window>

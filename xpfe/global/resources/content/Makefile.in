@@ -46,6 +46,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/charsetOverlay.js \
 		$(srcdir)/strres.js \
 		$(srcdir)/about.html \
+		$(srcdir)/about.xul \
+		$(srcdir)/credits.html \
 		$(srcdir)/charsetDetectorsOverlay.js \
 		$(srcdir)/charsetDetectorsOverlay.xul \
 		$(srcdir)/selectDialog.js \

@@ -103,6 +103,11 @@ function goToggleToolbar( id, elementID )
 	}
 }
 
+function goAboutDialog()
+{
+	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+}
+
 
 //
 // Command Updater functions
