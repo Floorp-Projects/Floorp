@@ -40,6 +40,11 @@
 #include "prtime.h"
 #include "prlog.h"
 
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+#include "nsSpecialSystemDirectory.h"
+#include "prio.h"
+
 ////////////////////////////////////////////////////////////////////////
 // Interface IDs
 
@@ -77,6 +82,8 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Referer);
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastVisitDate);
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastModifiedDate);
 
+
+
 typedef struct _HistoryEntry {
     PRTime date;
     char* url;
@@ -91,12 +98,13 @@ rdf_HashPointer(const void* key)
     return (PLHashNumber) key;
 }
 
+
+
 class nsHistoryDataSource : public nsIRDFHistoryDataSource {
 protected:
     nsIRDFDataSource*  mInner;
     nsVoidArray        mFiles;
     char*              mCurrentFilePath;
-    FILE*              mCurrentFile;
     nsVoidArray        mPendingWrites; 
     PLHashTable*       mLastVisitDateHash; 
     PRExplodedTime     mSessionTime;
@@ -109,7 +117,7 @@ protected:
     nsIRDFResource*    mResourceHistoryBySite;
 
     nsresult ReadHistory(void);
-    nsresult ReadOneHistoryFile(const char* uri);
+    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, char *fileURL);
     nsresult AddPageToGraph(char* url, char* title, char* referer,  PRTime date);
     nsresult AddToDateHierarchy (PRTime date, nsIRDFResource* resource) ;
     nsresult getSiteOfURL(char* url, nsIRDFResource** resource) ;
@@ -122,7 +130,8 @@ public:
         NS_INIT_REFCNT();
     }
 
-    virtual ~nsHistoryDataSource(void) {
+    virtual ~nsHistoryDataSource(void)
+    {
         NS_RELEASE(mInner);
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
     }
@@ -247,8 +256,12 @@ public:
 
 };
 
+
+
 NS_IMPL_ADDREF(nsHistoryDataSource);
 NS_IMPL_RELEASE(nsHistoryDataSource);
+
+
 
 NS_IMETHODIMP
 nsHistoryDataSource::QueryInterface(REFNSIID aIID, void** aResult)
@@ -269,6 +282,8 @@ nsHistoryDataSource::QueryInterface(REFNSIID aIID, void** aResult)
         return NS_NOINTERFACE;
     }
 }
+
+
 
 NS_IMETHODIMP
 nsHistoryDataSource::Init(const char* uri)
@@ -306,43 +321,78 @@ nsHistoryDataSource::Init(const char* uri)
  
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &mSessionTime);
     
+    mCurrentFilePath = nsnull;
     if (NS_FAILED(rv = ReadHistory()))
         return rv;
 
-    if (!mCurrentFile) {
-        char fileurl[256];
-        PR_snprintf(fileurl, sizeof(fileurl), "res\\rdf\\History\\%i.hst",  PR_Now());
+    if (!mCurrentFilePath)
+    {
+        char filename[256];
+        PR_snprintf(filename, sizeof(filename), "%i.hst", PR_Now());
+
+	nsSpecialSystemDirectory historyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	historyFile += "res";
+	historyFile += "rdf";
+	historyFile += "History";
+	historyFile.SetLeafName(filename);
+
+	nsFilePath	filePath(historyFile);
+	mCurrentFilePath = filePath;
     }
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsHistoryDataSource::AddPage (const char* uri, const char* referer, PRTime time) {
-    HE he = (HE) PR_Malloc(sizeof(HistoryEntry));
-    he->date = time;
-    he->url = (char*) uri;
-    he->referer = (char*) referer;
-    mPendingWrites.AppendElement(he);
-    return NS_OK;
-}
+
 
 NS_IMETHODIMP 
-nsHistoryDataSource::SetPageTitle (const char* uri, PRUnichar* title) {
-    for (PRInt32 i = mPendingWrites.Count() - 1; i >= 0; --i) {
-        HE wr = (HE) mPendingWrites.ElementAt(i);
-        if (strcmp(wr->url, uri) == 0) {
-            char timeBuffer[256];
-            PRExplodedTime etime;
-            PR_ExplodeTime(wr->date, PR_LocalTimeParameters, &etime);
-            PR_FormatTimeUSEnglish(timeBuffer, 256, "%a %b %d %H:%M:%S %Y", &etime);
-            fprintf(mCurrentFile, "%s\t%s\t%s\t%s\n", wr->url, title, wr->referer, timeBuffer);
-            mPendingWrites.RemoveElement(wr);
-            AddPageToGraph(wr->url,  (char*) title, wr->referer,  PR_Now()) ;
-            PR_Free(wr);
-            return NS_OK;
-        }    
-    }
-    return NS_OK;
+nsHistoryDataSource::AddPage (const char* uri, const char* referer, PRTime time)
+{
+	HE he = (HE) PR_Malloc(sizeof(HistoryEntry));
+	if (he)
+	{
+		he->date = time;
+		he->url = (char*) uri;
+		he->referer = (char*) referer;
+		mPendingWrites.AppendElement(he);
+		return(NS_OK);
+	}
+	return(NS_ERROR_OUT_OF_MEMORY);
+}
+
+
+
+NS_IMETHODIMP 
+nsHistoryDataSource::SetPageTitle (const char* uri, PRUnichar* title)
+{
+	for (PRInt32 i = mPendingWrites.Count() - 1; i >= 0; --i)
+	{
+		HE wr = (HE) mPendingWrites.ElementAt(i);
+		if (strcmp(wr->url, uri) == 0)
+		{
+			char timeBuffer[256];
+			PRExplodedTime etime;
+			PR_ExplodeTime(wr->date, PR_LocalTimeParameters, &etime);
+			PR_FormatTimeUSEnglish(timeBuffer, 256, "%a %b %d %H:%M:%S %Y", &etime);
+
+			char *buffer = PR_smprintf("%s\t%s\t%s\t%s\n", wr->url, title, wr->referer, timeBuffer);
+			if (buffer)
+			{
+				PRFileDesc *fd = PR_Open(mCurrentFilePath, PR_APPEND, 0744);
+				if (fd)
+				{
+					PR_Write(fd, buffer, strlen(buffer));
+					PR_Close(fd);
+				}
+				PR_smprintf_free(buffer);
+			}
+
+			mPendingWrites.RemoveElement(wr);
+			AddPageToGraph(wr->url,  (char*) title, wr->referer,  PR_Now()) ;
+			PR_Free(wr);
+			return(NS_OK);
+		}    
+	}
+	return(NS_OK);
 }
 
 
@@ -350,157 +400,198 @@ nsHistoryDataSource::SetPageTitle (const char* uri, PRUnichar* title) {
 PRBool
 endsWith (const char* pattern, const char* uuid)
 {
-  short l1 = strlen(pattern);
-  short l2 = strlen(uuid);
-  short index;
-  if (l2 < l1) return PR_FALSE;  
-  for (index = 1; index <= l1; index++) {
-    if (pattern[l1-index] != uuid[l2-index]) return PR_FALSE;
-  }  
-  return PR_TRUE;
+	short l1 = strlen(pattern);
+	short l2 = strlen(uuid);
+	short index;
+	if (l2 < l1) return PR_FALSE;  
+	for (index = 1; index <= l1; index++)
+	{
+		if (pattern[l1-index] != uuid[l2-index])
+			return PR_FALSE;
+	}  
+	return PR_TRUE;
 }
+
+
 
 nsresult
 nsHistoryDataSource::ReadHistory(void)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    char fileurl[256];
-    PRInt32 n = PR_SKIP_BOTH;
-    PRDirEntry	*de;
-    PRDir* dir;
-    PR_snprintf(fileurl, sizeof(fileurl), "res\\rdf\\History");
-    dir =  PR_OpenDir(fileurl);
-    while ((dir != NULL) && ((de = PR_ReadDir(dir, (PRDirFlags)(n++))) != NULL)) {
-        if (endsWith(".hst", de->name)) ReadOneHistoryFile(de->name);
-    }
-    if (dir) PR_CloseDir(dir);
-    return NS_OK;
+	nsSpecialSystemDirectory historyDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	historyDir += "res";
+	historyDir += "rdf";
+	historyDir += "History";
+
+#ifdef	XP_MAC
+	PRBool	wasAlias = PR_FALSE;
+	historyDir.ResolveAlias(wasAlias);
+#endif
+
+	for (nsDirectoryIterator i(historyDir); i.Exists(); i++)
+	{
+		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
+		nsFilePath		filePath(nativeSpec);
+		nsFileSpec		fileSpec(filePath);
+		char			*fileURL = filePath;
+		if (fileURL)
+		{
+			if (endsWith(".hst", fileURL))
+			{
+				nsInputFileStream strm(fileSpec);
+				if (strm.is_open())
+				{
+					ReadOneHistoryFile(strm, fileURL);
+				}
+			}
+		}
+	}
+	return(NS_OK);
 }
+
 
 
 nsresult
-nsHistoryDataSource::ReadOneHistoryFile(const char* fileName)
+nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, char *fileURL)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    char fileurl[256];
-    FILE* f;
-    PR_snprintf(fileurl, sizeof(fileurl), "res\\rdf\\History\\%s", fileName);
-    if ((f = fopen(fileurl, "rw")) != nsnull) {
-        char* buffer = (char*) PR_Malloc(1024 * 4);
-        int n = 0;
-        char *title, *url, *referer, *date;
-        PRTime time;
-        PRTime fileTime = LL_ZERO;
-        while (fgets(buffer, 1024 * 4, f) != 0) {
-            // url<tab>title<tab>referer<tab>date
-            url = buffer;
-			buffer[strlen(buffer)-1] = '\0';
-            title = strchr(buffer, '\t') + 1;
-            *(title - 1) = '\0';
-            referer = strchr(title, '\t') + 1;
-            *(referer - 1) = '\0';
-            date = strchr(referer, '\t') + 1;         
-			*(date -1 ) = '\0';
-            PR_ParseTimeString (date, 0, &time);
-            if (LL_IS_ZERO(fileTime)) { 
-                PRExplodedTime etime;
-                fileTime = time;
-                PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
-                if (etime.tm_yday == mSessionTime.tm_yday) mCurrentFile = f;
-            }
-            AddPageToGraph(url, title, referer,  time);
-        }        
-        PR_Free(buffer);  
-		if (f != mCurrentFile) fclose(f);
-    }
-    return rv;
+	nsresult	rv = NS_ERROR_FAILURE;
+	nsAutoString	buffer;
+
+	while (! aStream.eof() && ! aStream.failed())
+	{
+		nsresult rv = NS_OK;
+		char c = aStream.get();
+		if (c != '\r')
+		{
+			buffer += c;
+		}
+		else
+		{
+			int n = 0;
+			char *title, *url, *referer, *date;
+			PRTime time;
+			PRTime fileTime = LL_ZERO;
+
+			char *aLine = buffer.ToNewCString();
+			if (aLine)
+			{
+				url = aLine;
+				title = strchr(aLine, '\t') + 1;
+				*(title - 1) = '\0';
+				referer = strchr(title, '\t') + 1;
+				*(referer - 1) = '\0';
+				date = strchr(referer, '\t') + 1;         
+				*(date -1 ) = '\0';
+				PR_ParseTimeString (date, 0, &time);
+				if (LL_IS_ZERO(fileTime))
+				{
+					PRExplodedTime etime;
+					fileTime = time;
+					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
+					if (etime.tm_yday == mSessionTime.tm_yday) mCurrentFilePath = fileURL;
+				}
+				AddPageToGraph(url, title, referer,  time);
+				delete [] aLine;
+			}
+
+			buffer = "";
+		}        
+	}
+	return(rv);
 }
 
+
+
 nsresult 
-nsHistoryDataSource::getSiteOfURL(char* url, nsIRDFResource** resource) {
-    char* str = strstr(url, "://");
-    char buff[256];
-	 nsIRDFLiteral  *titleLiteral;
-    PRBool foundp;
-    if (!str) return NS_ERROR_FAILURE;
-    str = str + 3;
-    if (str[0] == '/') str++;
-    char* estr = strchr(str, '/');
-    if (!estr) estr = str + strlen(str);
-    if ((estr - str) > 256) return NS_ERROR_FAILURE;
+nsHistoryDataSource::getSiteOfURL(char* url, nsIRDFResource** resource)
+{
+	char* str = strstr(url, "://");
+	char buff[256];
+	nsIRDFLiteral  *titleLiteral;
+	PRBool foundp;
+	if (!str) return NS_ERROR_FAILURE;
+	str = str + 3;
+	if (str[0] == '/') str++;
+	char* estr = strchr(str, '/');
+	if (!estr) estr = str + strlen(str);
+	if ((estr - str) > 256) return NS_ERROR_FAILURE;
 	memset(buff, '\0', 256);
-    static const char kHistoryURLPrefix[] = "hst:site?";
-    strcpy(buff, kHistoryURLPrefix);
-    strncat(buff, str, (estr-str));
-    if (NS_OK != gRDFService->FindResource(buff, resource, &foundp)) return NS_ERROR_FAILURE;
-    if (foundp) return NS_OK;
-    if (NS_OK != gRDFService->GetResource(buff, resource)) return NS_ERROR_FAILURE;
-    mInner->Assert(mResourceHistoryBySite,  mResourceChild, *resource, 1);
-    nsAutoString ptitle(buff + sizeof(kHistoryURLPrefix) - 1);	
-    gRDFService->GetLiteral(ptitle, &titleLiteral);
+
+	// Note: start with "NC:" so that URL won't be shown
+	static const char kHistoryURLPrefix[] = "NC:hst:site?";
+	strcpy(buff, kHistoryURLPrefix);
+	strncat(buff, str, (estr-str));
+	if (NS_OK != gRDFService->FindResource(buff, resource, &foundp)) return NS_ERROR_FAILURE;
+	if (foundp) return NS_OK;
+	if (NS_OK != gRDFService->GetResource(buff, resource)) return NS_ERROR_FAILURE;
+	mInner->Assert(mResourceHistoryBySite,  mResourceChild, *resource, 1);
+	nsAutoString ptitle(buff + sizeof(kHistoryURLPrefix) - 1);	
+	gRDFService->GetLiteral(ptitle, &titleLiteral);
 	mInner->Assert(*resource, mResourceTitle, titleLiteral, 1);
-    return NS_OK;
+	return NS_OK;
 }
+
+
 
 nsresult 
 nsHistoryDataSource::AddPageToGraph(char* url, char* title, 
-                                    char* referer,  PRTime date) {
-    char* histURL = (char*) PR_Malloc(strlen(url) + 7);    
-    nsIRDFResource *pageResource, *refererResource, *histResource, *siteResource;    
-    nsIRDFLiteral  *titleLiteral;
-    nsIRDFDate     *dateLiteral;
-    PR_snprintf(histURL, strlen(histURL), "hst://%s", url);
-    nsresult rv = getSiteOfURL(url, &siteResource);
-    if (rv != NS_OK) return rv;
-    gRDFService->GetResource(url, &pageResource);
-    gRDFService->GetResource(histURL, &histResource);
-    gRDFService->GetResource(referer, &refererResource);
-    gRDFService->GetDateLiteral(date, &dateLiteral);
-    nsAutoString ptitle(title);
-    gRDFService->GetLiteral(ptitle, &titleLiteral);
-    mInner->Assert(histResource,  mResourcePage, pageResource, 1);
-    mInner->Assert(histResource,  mResourceDate, dateLiteral, 1);
-    mInner->Assert(pageResource,  mResourceTitle, titleLiteral, 1);
-    mInner->Assert(histResource,  mResourceReferer, refererResource, 1);
-    mInner->Assert(siteResource,  mResourceChild, pageResource, 1);
-    AddToDateHierarchy(date, histResource);
-    UpdateLastVisitDate (pageResource, 1/* date */) ;
-    NS_RELEASE(histResource);
-    NS_RELEASE(siteResource);
-    NS_RELEASE(pageResource);
-    NS_RELEASE(refererResource);
-    NS_RELEASE(dateLiteral);
-    NS_RELEASE(titleLiteral);
-    PR_Free(histURL);
-    return NS_OK;
+                                    char* referer,  PRTime date)
+{
+	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
+	char *histURL = PR_smprintf("hst://%s", url);
+	if (histURL)
+	{
+		nsIRDFResource	*siteResource;    
+		rv = getSiteOfURL(url, &siteResource);
+		if (rv == NS_OK)
+		{
+			nsIRDFResource *pageResource, *refererResource, *histResource;    
+			nsIRDFLiteral  *titleLiteral;
+			nsIRDFDate     *dateLiteral;
+
+			gRDFService->GetResource(url, &pageResource);
+			gRDFService->GetResource(histURL, &histResource);
+			gRDFService->GetResource(referer, &refererResource);
+			gRDFService->GetDateLiteral(date, &dateLiteral);
+			nsAutoString ptitle(title);
+			gRDFService->GetLiteral(ptitle, &titleLiteral);
+			mInner->Assert(histResource,  mResourcePage, pageResource, 1);
+			mInner->Assert(histResource,  mResourceDate, dateLiteral, 1);
+			mInner->Assert(pageResource,  mResourceTitle, titleLiteral, 1);
+			mInner->Assert(histResource,  mResourceReferer, refererResource, 1);
+			mInner->Assert(siteResource,  mResourceChild, pageResource, 1);
+			AddToDateHierarchy(date, histResource);
+			UpdateLastVisitDate (pageResource, 1/* date */);
+			NS_RELEASE(histResource);
+			NS_RELEASE(siteResource);
+			NS_RELEASE(pageResource);
+			NS_RELEASE(refererResource);
+			NS_RELEASE(dateLiteral);
+			NS_RELEASE(titleLiteral);
+		}
+		PR_smprintf_free(histURL);
+	}
+	return(rv);
 }
 
+
+
 nsresult
-nsHistoryDataSource::AddToDateHierarchy (PRTime date, nsIRDFResource* resource) {
-    return NS_OK;
+nsHistoryDataSource::AddToDateHierarchy (PRTime date, nsIRDFResource* resource)
+{
+	return(NS_OK);
 }
+
+
 
 nsresult
 NS_NewRDFHistoryDataSource(nsIRDFDataSource** result)
 {
-    nsHistoryDataSource* ds = new nsHistoryDataSource();
+	nsHistoryDataSource* ds = new nsHistoryDataSource();
 
-    if (! ds)
-        return NS_ERROR_NULL_POINTER;
+	if (! ds)
+		return NS_ERROR_NULL_POINTER;
 
-    *result = ds;
-    NS_ADDREF(*result);
-    return NS_OK;
+	*result = ds;
+	NS_ADDREF(*result);
+	return(NS_OK);
 }
-    
-    
-
-
-
-
-
-
-
-
-
-
