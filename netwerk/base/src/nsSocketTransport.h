@@ -28,6 +28,7 @@
 #include "nsIBuffer.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
 #include "nsIPipe.h"
