@@ -2302,7 +2302,9 @@ nsMenuPopupFrame::Notify(nsITimer* aTimer)
       } // if not the menu with an open submenu
     } // if menu open
     
-    mCloseTimer->Cancel();
+    if (mCloseTimer) {
+      mCloseTimer->Cancel();
+    }
   }
   
   mCloseTimer = nsnull;
