@@ -3404,16 +3404,17 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       // now try to get the folder in question...
       nsCOMPtr<nsIFolder> rootFolder;
       server->GetRootFolder(getter_AddRefs(rootFolder));
-      rv = rootFolder->FindSubFolder(folderName, getter_AddRefs(aFolder));
-
+      nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
+      nsCOMPtr <nsIMsgImapMailFolder> subFolder;
+      if (imapRoot)
+      {
+        imapRoot->FindOnlineSubFolder(folderName, getter_AddRefs(subFolder));
+        aFolder = do_QueryInterface(subFolder);
+      }
       nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aFolder);
       nsCOMPtr <nsIFolder> parent;
-      if (!aFolder)
-      {
-        NS_ASSERTION(PR_FALSE, "no folder for url");
-        return NS_ERROR_NULL_POINTER;
-      }
-      aFolder->GetParent(getter_AddRefs(parent));
+      if (aFolder)
+        aFolder->GetParent(getter_AddRefs(parent));
       nsXPIDLCString serverKey;
       nsCAutoString userPass;
       rv = mailnewsUrl->GetUserPass(userPass);
@@ -3425,7 +3426,8 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       {
         fullFolderName = nsIMAPNamespaceList::GenerateFullFolderNameWithDefaultNamespace(serverKey.get(), folderName.get(), userPass.get(), kOtherUsersNamespace, nsnull);
         // if this is another user's folder, let's see if we're already subscribed to it.
-        rv = rootFolder->FindSubFolder(fullFolderName, getter_AddRefs(aFolder));
+        rv = imapRoot->FindOnlineSubFolder(fullFolderName, getter_AddRefs(subFolder));
+        aFolder = do_QueryInterface(subFolder);
         if (aFolder)
           aFolder->GetParent(getter_AddRefs(parent));
       }
@@ -3444,8 +3446,8 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
         rv = IMAPGetStringBundle(getter_AddRefs(bundle));
         NS_ENSURE_SUCCESS(rv, rv);
         // need to convert folder name from mod-utf7 to unicode
-        nsString unescapedName;
-        unescapedName.AssignWithConversion(fullFolderName);
+        nsXPIDLString unescapedName;
+        CreateUnicodeStringFromUtf7(fullFolderName, getter_Copies(unescapedName));
         const PRUnichar *formatStrings[1] = { unescapedName.get() };
 
         rv = bundle->FormatStringFromID(IMAP_SUBSCRIBE_PROMPT,
@@ -3466,12 +3468,10 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
             // now we have the real folder name to try to subscribe to. Let's try running
             // a subscribe url and returning that as the uri we've created.
             // We need to convert this to unicode because that's what subscribe wants :-(
-            // but first, we need to convert it to utf7
-            char *utf7Name = CreateUtf7ConvertedString(fullFolderName, PR_TRUE);
+            // It's already in mod-utf7.
             nsAutoString unicodeName;
-            unicodeName.AssignWithConversion(utf7Name);
+            unicodeName.AssignWithConversion(fullFolderName);
             rv = imapServer->SubscribeToFolder(unicodeName.get(), PR_TRUE, getter_AddRefs(subscribeURI));
-            PR_Free(utf7Name);
             if (NS_SUCCEEDED(rv) && subscribeURI)
             {
               nsCOMPtr <nsIImapUrl> imapSubscribeUrl = do_QueryInterface(subscribeURI);
@@ -3500,7 +3500,7 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
         *_retval = nsnull;
         PR_Free(fullFolderName);
       }
-      else // this folder exists - check if this is a click on a link to the folder
+      else if (fullFolderName)// this folder exists - check if this is a click on a link to the folder
       {     // in which case, we'll select it.
         nsCOMPtr <nsIMsgFolder> imapFolder;
         nsCOMPtr <nsIImapServerSink> serverSink;
@@ -3980,8 +3980,13 @@ nsImapService::DownloadAllOffineImapFolders(nsIMsgWindow *aMsgWindow, nsIUrlList
 {
   nsImapOfflineDownloader *downloadForOffline = new nsImapOfflineDownloader(aMsgWindow, aListener);
   if (downloadForOffline)
-    return downloadForOffline->ProcessNextOperation();
-
+  {
+    // hold reference to this so it won't get deleted out from under itself.
+    NS_ADDREF(downloadForOffline); 
+    nsresult rv = downloadForOffline->ProcessNextOperation();
+    NS_RELEASE(downloadForOffline);
+    return rv;
+  }
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
