@@ -16,6 +16,7 @@
 
 $OLDFILE = $ARGV[0];
 $NEWFILE = $ARGV[1];
+$LABEL   = $ARGV[2];
 
 sub processFile {
     my ($filename, $map, $prevMap) = @_;
@@ -166,8 +167,16 @@ printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",
 my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "B\n";
 my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "B\n";
 
-print "TinderboxPrint:<a title=\"nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
-print "TinderboxPrint:<a title=\"nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
+if($LABEL) {
+  print "TinderboxPrint:$LABEL Lk/Bl\n";
+  my $shortlabel = substr($LABEL, 0, 1);
+  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
+  print "TinderboxPrint:<a title=\"$LABEL nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
+} else {
+  print "TinderboxPrint:<a title=\"nsTraceRefcnt leaks\">Lk:$leakstr</a>\n";
+  print "TinderboxPrint:<a title=\"nsTraceRefcnt bloat\">Bl:$bloatstr</a>\n";
+}
+
 
 ################################################################################
 

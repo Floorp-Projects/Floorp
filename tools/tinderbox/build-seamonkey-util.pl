@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.103 $ ';
+$::UtilsVersion = '$Revision: 1.104 $ ';
 
 package TinderUtils;
 
@@ -746,8 +746,10 @@ sub run_all_tests {
     # people change contractids on us (since we don't autoreg opt builds)
     #
     unlink("$binary_dir/component.reg");
-    AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0,
-			 $Settings::RegxpcomTimeout);
+	if($Settings::RegxpcomTest) {
+	  AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0,
+				$Settings::RegxpcomTimeout);
+	}
 
 	#
 	# Make sure we have a profile to run tests.  This is assumed to be called
@@ -793,7 +795,11 @@ sub run_all_tests {
 	$pref_file = $_ while <PREFS>;
 	chomp $pref_file;
 
-	print_log "pref_file = $pref_file\n";
+	# Find profile_dir while we're at it.
+	my $profile_dir = $pref_file;
+	$profile_dir =~ s!(.*)/.*!$1!;
+
+	
 
 	#
 	# Some tests need browser.dom.window.dump.enabled set to true, so
@@ -810,6 +816,11 @@ sub run_all_tests {
 		open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
 		print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
 		close PREFS;
+
+		# Chances are we will be timing these tests.  Bring gettime() into memory
+		# by calling it once, before any tests run.
+		Time::PossiblyHiRes::getTime();
+
 	  } else {
 		print_log "Already set browser.dom.window.dump.enabled\n";
 	  }
@@ -856,7 +867,8 @@ sub run_all_tests {
 
     # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
-        $test_result = BloatTest($binary, $build_dir, $Settings::BloatTestTimeout);
+	  $test_result = BloatTest($binary, $build_dir, " -f bloaturls.txt", "browser",
+							   $Settings::BloatTestTimeout);
     }
     
     # New and improved bloat/leak test (based on trace-malloc)
@@ -892,7 +904,9 @@ sub run_all_tests {
     }
 
 	# Mail bloat/leak test.
-	# Needs -DBUILD_MAIL_SMOKETEST set in mozconfig
+	# Needs:
+	#   BUILD_MAIL_SMOKETEST=1 set in environment
+	#   $Settings::CleanProfile = 0
 	#
 	# 1) Create pop account qatest03/Ne!s-pe
 	# 2) cp http://www.mozilla.org/mailnews/bloat_Inbox to profile
@@ -901,8 +915,29 @@ sub run_all_tests {
 	# 5) exit on success
 	#
     if ($Settings::MailBloatTest and $test_result eq 'success') {
-	  print_log "MailBloatTest ... goes here\n";
+
+	  print_log "______________MailBloatTest______________\n";	  
+
+	  my $inbox_dir = "Mail/nsmail-2";
+
+	  chdir("$profile_dir/$inbox_dir");
 	  
+	  # Download new, test Inbox on top of existing one.
+	  # wget will not re-download, using -N to check timestamps.
+	  system("wget -N -T 60 http://www.mozilla.org/mailnews/bloat_Inbox");
+
+	  # Replace the Inbox file.
+	  unlink("Inbox");
+	  system("cp bloat_Inbox Inbox");
+
+	  # Remove the Inbox.msf file.
+	  unlink("Inbox.msf");
+
+	  $test_result = BloatTest($binary, $build_dir, " -mail", "mail",
+							   $Settings::BloatTestTimeout);
+
+	  # back to build_dir
+	  chdir($build_dir);
 	}
 
 
@@ -1561,7 +1596,7 @@ sub FileBasedTest {
 # to turn the pageloader code on.  These are on by default for debug.
 #
 sub BloatTest {
-    my ($binary, $build_dir, $timeout_secs) = @_;
+    my ($binary, $build_dir, $args, $bloatdiff_label, $timeout_secs) = @_;
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/bloat-cur.log";
@@ -1582,7 +1617,7 @@ sub BloatTest {
 	unless ($Settings::MozProfileName eq "") {
 	  $cmd .= " -P $Settings::MozProfileName";
 	}
-	$cmd .= " -f bloaturls.txt";
+	$cmd .= " $args";
 
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
 						 $timeout_secs);
@@ -1600,7 +1635,7 @@ sub BloatTest {
     }
 
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
-    open DIFF, "perl $build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
+    open DIFF, "perl $build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log $bloatdiff_label|"
       or die "Unable to run bloatdiff.pl";
     print_log $_ while <DIFF>;
     close DIFF;
