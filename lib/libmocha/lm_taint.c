@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -77,7 +77,7 @@ typedef PRBool
 (*nsCapsFn)(void* context, struct nsTarget *target, PRInt32 callerDepth);
 
 static JSBool
-callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
+callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              jsval *rval, nsCapsFn fn, char *name)
 {
     JSString *str;
@@ -88,7 +88,7 @@ callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         JS_ReportError(cx, "String argument expected for %s.", name);
         return JS_FALSE;
     }
-    /* 
+    /*
      * We don't want to use JS_ValueToString because we want to be able
      * to have an object to represent a target in subsequent versions.
      * XXX but then use of an object will cause errors here....
@@ -114,7 +114,7 @@ callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 
 JSBool
-lm_netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc, 
+lm_netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
                                         jsval *argv, jsval *rval)
 {
     return callCapsCode(cx, obj, argc, argv, rval, nsCapsIsPrivilegeEnabled,
@@ -122,7 +122,7 @@ lm_netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc
 }
 
 JSBool
-lm_netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc, 
+lm_netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                      jsval *argv, jsval *rval)
 {
     return callCapsCode(cx, obj, argc, argv, rval, nsCapsEnablePrivilege,
@@ -130,7 +130,7 @@ lm_netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 JSBool
-lm_netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc, 
+lm_netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                       jsval *argv, jsval *rval)
 {
     return callCapsCode(cx, obj, argc, argv, rval, nsCapsDisablePrivilege,
@@ -138,7 +138,7 @@ lm_netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 JSBool
-lm_netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc, 
+lm_netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                      jsval *argv, jsval *rval)
 {
     return callCapsCode(cx, obj, argc, argv, rval, nsCapsRevertPrivilege,
@@ -147,9 +147,9 @@ lm_netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
 
 static JSFunctionSpec PrivilegeManager_static_methods[] = {
     { isPrivilegeEnabledStr, lm_netscape_security_isPrivilegeEnabled,   1},
-    { enablePrivilegeStr,    lm_netscape_security_enablePrivilege,	1},
-    { disablePrivilegeStr,   lm_netscape_security_disablePrivilege,	1},
-    { revertPrivilegeStr,    lm_netscape_security_revertPrivilege,	1},
+    { enablePrivilegeStr,    lm_netscape_security_enablePrivilege,      1},
+    { disablePrivilegeStr,   lm_netscape_security_disablePrivilege,     1},
+    { revertPrivilegeStr,    lm_netscape_security_revertPrivilege,      1},
     {0}
 };
 
@@ -163,13 +163,13 @@ lm_InitSecurity(MochaDecoder *decoder)
     jsval      v;
     JSObject   *securityObj;
 
-    /* 
-     * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege, 
+    /*
+     * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege,
      * et. al. so that code that worked with 4.0 can still work.
      */
 
-    /* 
-     * Find Object.prototype's class by walking up the window object's 
+    /*
+     * Find Object.prototype's class by walking up the window object's
      * prototype chain.
      */
     cx = decoder->js_context;
@@ -181,7 +181,7 @@ lm_InitSecurity(MochaDecoder *decoder)
     if (!JS_GetProperty(cx, decoder->window_object, "netscape", &v))
         return JS_FALSE;
     if (JSVAL_IS_OBJECT(v)) {
-        /* 
+        /*
          * "netscape" property of window object exists; must be LiveConnect
          * package. Get the "security" property.
          */
@@ -191,18 +191,18 @@ lm_InitSecurity(MochaDecoder *decoder)
         securityObj = JSVAL_TO_OBJECT(v);
     } else {
         /* define netscape.security object */
-        obj = JS_DefineObject(cx, decoder->window_object, "netscape", 
+        obj = JS_DefineObject(cx, decoder->window_object, "netscape",
                               objectClass, NULL, 0);
         if (obj == NULL)
             return JS_FALSE;
-        securityObj = JS_DefineObject(cx, obj, "security", objectClass, 
+        securityObj = JS_DefineObject(cx, obj, "security", objectClass,
                                       NULL, 0);
         if (securityObj == NULL)
             return JS_FALSE;
     }
 
     /* Define PrivilegeManager object with the necessary "static" methods. */
-    obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass, 
+    obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass,
                           NULL, 0);
     if (obj == NULL)
         return JS_FALSE;
@@ -212,24 +212,24 @@ lm_InitSecurity(MochaDecoder *decoder)
 
 
 static void
-lm_PrintToConsole(const char *data) 
+lm_PrintToConsole(const char *data)
 {
-	if (lm_console_is_ready) {
-        /* XXX: raman: We should write to JS console when it is ready */
-	    /* JS_PrintToConsole(data); */
-	} else {
-	    MWContext* someRandomContext = XP_FindSomeContext();
-		FE_Alert(someRandomContext, data);
-	}
+    if (lm_console_is_ready) {
+    /* XXX: raman: We should write to JS console when it is ready */
+        /* JS_PrintToConsole(data); */
+    } else {
+        MWContext* someRandomContext = XP_FindSomeContext();
+        FE_Alert(someRandomContext, data);
+    }
 }
 
 PR_PUBLIC_API(int)
-LM_PrintZigError(int status, void *zigPtr, const char *metafile, 
+LM_PrintZigError(int status, void *zigPtr, const char *metafile,
                  char *pathname, char *errortext)
 {
     ZIG *zig = (ZIG *) zigPtr;
     char* data;
-	char* error_fmt = "# Error: %s (%d)\n#\tjar file: %s\n#\tpath:     %s\n";
+    char* error_fmt = "# Error: %s (%d)\n#\tjar file: %s\n#\tpath:     %s\n";
     char* zig_name = NULL;
     int len;
 
@@ -238,7 +238,7 @@ LM_PrintZigError(int status, void *zigPtr, const char *metafile,
     if (zig) {
         zig_name = SOB_get_url(zig);
     }
-        
+
     if (!zig_name) {
         zig_name = "unknown";
     }
@@ -248,35 +248,35 @@ LM_PrintZigError(int status, void *zigPtr, const char *metafile,
     }
 
     /* Add 16 slop bytes */
-	len = strlen(error_fmt) + strlen(zig_name) + strlen(pathname) + 
-		  strlen(errortext) + 32;
+    len = strlen(error_fmt) + strlen(zig_name) + strlen(pathname) +
+          strlen(errortext) + 32;
 
     if ((data = malloc(len)) == 0) {
-	    return 0;
+        return 0;
     }
-	sprintf(data, error_fmt, errortext, status, zig_name, pathname);
+    sprintf(data, error_fmt, errortext, status, zig_name, pathname);
 
     lm_PrintToConsole(data);
-	XP_FREE(data);
+    XP_FREE(data);
 
-	return 0;
+    return 0;
 }
 
 PR_PUBLIC_API(char *)
-LM_LoadFromZipFile(void *zip, char *fn) 
+LM_LoadFromZipFile(void *zip, char *fn)
 {
     struct stat st;
     char* data;
- 
+
     if (!ns_zip_stat((ns_zip_t *)zip, fn, &st)) {
-	    return NULL;
+        return NULL;
     }
     if ((data = malloc((size_t)st.st_size + 1)) == 0) {
-	    return NULL;
+        return NULL;
     }
     if (!ns_zip_get((ns_zip_t *)zip, fn, data, st.st_size)) {
-	    XP_FREE(data);
-	    return NULL;
+        XP_FREE(data);
+        return NULL;
     }
     data[st.st_size] = '\0';
     return data;
@@ -326,8 +326,8 @@ lm_GetCompilationPrincipals(MochaDecoder *decoder,
          */
         principals = lm_GetPrincipalsFromStackFrame(lm_writing_context);
         principals = LM_NewJSPrincipals(NULL, NULL, principals
-						    ? principals->codebase
-						    : NULL);
+                                                    ? principals->codebase
+                                                    : NULL);
         if (principals == NULL) {
             JS_ReportOutOfMemory(cx);
             return NULL;
@@ -359,20 +359,20 @@ find_creator_url(MWContext *context)
 
     he = SHIST_GetCurrent(&context->hist);
     if (he) {
-	address = he->wysiwyg_url;
-	if (!address)
-	    address = he->address;
-	switch (NET_URL_Type(address)) {
-	  case MOCHA_TYPE_URL:
-	    /* This type cannot name the true origin (server) of JS code. */
-	    break;
-	  case WYSIWYG_TYPE_URL:
-	    return LM_SkipWysiwygURLPrefix(address);
-	  case VIEW_SOURCE_TYPE_URL:
-	    XP_ASSERT(0);
-	  default:
-	    return address;
-	}
+        address = he->wysiwyg_url;
+        if (!address)
+            address = he->address;
+        switch (NET_URL_Type(address)) {
+          case MOCHA_TYPE_URL:
+            /* This type cannot name the true origin (server) of JS code. */
+            break;
+          case WYSIWYG_TYPE_URL:
+            return LM_SkipWysiwygURLPrefix(address);
+          case VIEW_SOURCE_TYPE_URL:
+            XP_ASSERT(0);
+          default:
+            return address;
+        }
     }
 
     if (context->grid_parent) {
@@ -390,10 +390,10 @@ find_creator_url(MWContext *context)
             if (!opener->visited) {
                 opener->visited = JS_TRUE;
                 address = opener->window_context
-			? find_creator_url(opener->window_context)
-			: NULL;
+                        ? find_creator_url(opener->window_context)
+                        : NULL;
                 opener->visited = JS_FALSE;
-                if (address) 
+                if (address)
                     return address;
             }
         }
@@ -420,8 +420,8 @@ find_origin_url(JSContext *cx, MochaDecoder *decoder)
             url_string = lm_unknown_origin_str;
         } else {
             url_string = lm_GetSubjectOriginURL(cx);
-	    if (!url_string)
-		return NULL;
+            if (!url_string)
+                return NULL;
         }
     }
     return url_string;
@@ -488,9 +488,9 @@ sameOrigins(JSContext *cx, const char *origin1, const char *origin2)
     cmp2 = getCanonicalizedOrigin(cx, origin2);
     if (cmp1 && cmp2 &&
         XP_STRNCASECMP(cmp1, file_url_prefix, FILE_URL_PREFIX_LEN) == 0 &&
-	XP_STRNCASECMP(cmp2, file_url_prefix, FILE_URL_PREFIX_LEN) == 0) {
-	ok = JS_TRUE;
-	goto done;
+        XP_STRNCASECMP(cmp2, file_url_prefix, FILE_URL_PREFIX_LEN) == 0) {
+        ok = JS_TRUE;
+        goto done;
     }
     ok = (JSBool)(cmp1 && cmp2 && XP_STRCMP(cmp1, cmp2) == 0);
 
@@ -513,26 +513,26 @@ lm_CheckPermissions(JSContext *cx, JSObject *obj, JSTarget target)
 
     /*
      * Hold onto reference to the running decoder's principals
-     * in case a call to lm_GetInnermostPrincipals ends up 
-     * dropping a reference due to an origin changing 
+     * in case a call to lm_GetInnermostPrincipals ends up
+     * dropping a reference due to an origin changing
      * underneath us.
      */
     running = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
     principals = running ? running->principals : NULL;
     if (principals)
-	JSPRINCIPALS_HOLD(cx, principals);
+        JSPRINCIPALS_HOLD(cx, principals);
 
     objectOrigin = lm_GetObjectOriginURL(cx, obj);
 
     if (subjectOrigin == NULL || objectOrigin == NULL) {
-	result = JS_FALSE;
-	goto out;
+        result = JS_FALSE;
+        goto out;
     }
 
     /* Now see whether the origin methods and servers match. */
     if (sameOrigins(cx, subjectOrigin, objectOrigin)) {
-	result = JS_TRUE;
-	goto out;
+        result = JS_TRUE;
+        goto out;
     }
 
     /*
@@ -541,8 +541,8 @@ lm_CheckPermissions(JSContext *cx, JSObject *obj, JSTarget target)
      * Check for that here
      */
     if (target != JSTARGET_MAX && lm_CanAccessTarget(cx, target)) {
-	result = JS_TRUE;
-	goto out;
+        result = JS_TRUE;
+        goto out;
     }
 
     JS_ReportError(cx, access_error_message, subjectOrigin);
@@ -550,7 +550,7 @@ lm_CheckPermissions(JSContext *cx, JSObject *obj, JSTarget target)
 
 out:
     if (principals)
-	JSPRINCIPALS_DROP(cx, principals);
+        JSPRINCIPALS_DROP(cx, principals);
     return result;
 }
 
@@ -642,7 +642,7 @@ lm_GetSubjectOriginURL(JSContext *cx)
 
         str = LJ_GetAppletScriptOrigin(env);
         if (!str)
-	    return NULL;
+            return NULL;
         return str;
     }
 #endif
@@ -670,8 +670,8 @@ newSharedZig(ns_zip_t *zip)
     ZIG *zig;
     SharedZig *result;
 
-    zig = nsInitializeZig(zip, 
-                          (int (*) (int, ZIG *, const char *, 
+    zig = nsInitializeZig(zip,
+                          (int (*) (int, ZIG *, const char *,
                                     char *, char *)) LM_PrintZigError);
     if (zig == NULL)
         return NULL;
@@ -725,11 +725,11 @@ void
 lm_DestroyPrincipalsList(JSContext *cx, JSPrincipalsList *p)
 {
     while (p) {
-	JSPrincipalsList *next = p->next;
-	if (p->principals)
-	    JSPRINCIPALS_DROP(cx, p->principals);
-	XP_FREE(p);
-	p = next;
+        JSPrincipalsList *next = p->next;
+        if (p->principals)
+            JSPRINCIPALS_DROP(cx, p->principals);
+        XP_FREE(p);
+        p = next;
     }
 }
 
@@ -849,8 +849,9 @@ LM_NewJSPrincipals(URL_Struct *archive, char *id, const char *codebase)
         if (fn) {
 #ifdef XP_MAC
             /*
-             * Unfortunately, ns_zip_open wants a Unix-style name. Convert Mac path
-             * to a Unix-style path. This code is copied from appletStubs.c.
+             * Unfortunately, ns_zip_open wants a Unix-style name. Convert
+             * Mac path to a Unix-style path. This code is copied from
+             * appletStubs.c.
              */
             OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
             char *unixPath = NULL;
@@ -1031,9 +1032,9 @@ lm_GetInnermostPrincipals(JSContext *cx, JSObject *container,
                                                           NULL);
             const char *origin_url;
 
-	    /* 
-             * We need to check that the origin hasn't changed underneath 
-             * us as a result of user navigation. 
+            /*
+             * We need to check that the origin hasn't changed underneath
+             * us as a result of user navigation.
              */
             origin_url = find_origin_url(cx, decoder);
             if (!origin_url)
@@ -1045,7 +1046,7 @@ lm_GetInnermostPrincipals(JSContext *cx, JSObject *container,
                     return decoder->principals;
                 data = (JSPrincipalsData *) decoder->principals;
                 if (data->codebaseBeforeSettingDomain &&
-                    sameOrigins(cx, origin_url, 
+                    sameOrigins(cx, origin_url,
                                 data->codebaseBeforeSettingDomain))
                 {
                     /* document.domain was set, so principals are okay */
@@ -1076,7 +1077,7 @@ JSBool lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSObject *newParent;
 
     if (!JSVAL_IS_OBJECT(*vp))
-	return JS_TRUE;
+        return JS_TRUE;
     newParent = JSVAL_TO_OBJECT(*vp);
     if (newParent) {
         const char *oldOrigin = lm_GetObjectOriginURL(cx, obj);
@@ -1084,7 +1085,7 @@ JSBool lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (!sameOrigins(cx, oldOrigin, newOrigin))
             return JS_TRUE;
     } else {
-        if (!JS_InstanceOf(cx, obj, &lm_layer_class, 0) && 
+        if (!JS_InstanceOf(cx, obj, &lm_layer_class, 0) &&
             !JS_InstanceOf(cx, obj, &lm_window_class, 0))
         {
             return JS_TRUE;
@@ -1125,11 +1126,11 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
     const char *fn;
 
     if(decoder->principals)  {
-	/* The decoder's js_context isn't in a request, so we should put it
-	 *   in one during this call. */
-	JS_BeginRequest(decoder->js_context);
+        /* The decoder's js_context isn't in a request, so we should put it
+         *   in one during this call. */
+        JS_BeginRequest(decoder->js_context);
         principals = lm_GetInnermostPrincipals(decoder->js_context, obj, NULL);
-	JS_EndRequest(decoder->js_context);
+        JS_EndRequest(decoder->js_context);
     }  else  {
         principals = NULL;
     }
@@ -1154,28 +1155,28 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
             list = list->next;
         }
         if (list == NULL) {
-	    list = XP_ALLOC(sizeof(*list));
+            list = XP_ALLOC(sizeof(*list));
             if (list == NULL) {
                 JS_ReportOutOfMemory(cx);
-		return JS_FALSE;
+                return JS_FALSE;
             }
-	    list->principals = subjPrincipals;
-	    JSPRINCIPALS_HOLD(cx, list->principals);
-	    list->next = (JSPrincipalsList *) decoder->early_access_list;
-	    decoder->early_access_list = list;
+            list->principals = subjPrincipals;
+            JSPRINCIPALS_HOLD(cx, list->principals);
+            list->next = (JSPrincipalsList *) decoder->early_access_list;
+            decoder->early_access_list = list;
         }
-	/*
-	 * XXX - Still possible to modify contents of another page
-	 * even if cross-origin access is disabled by setting to
-	 * about:blank, modifying, and then loading the attackee.
+        /*
+         * XXX - Still possible to modify contents of another page
+         * even if cross-origin access is disabled by setting to
+         * about:blank, modifying, and then loading the attackee.
          * Similarly with window.open("").
-	 */
+         */
         return JS_TRUE;
     }
 
-    /* 
-     * If object doesn't have signed scripts and cross-origin access 
-     * is enabled, return true. 
+    /*
+     * If object doesn't have signed scripts and cross-origin access
+     * is enabled, return true.
      */
     data = (JSPrincipalsData *) principals;
     if (data->signedness != HAS_SIGNED_SCRIPTS && lm_GetCrossOriginEnabled())
@@ -1382,7 +1383,7 @@ createPrincipalsArray(JSPrincipals *principals)
     if (principals == (JSPrincipals *) &unknownPrincipals)
         return NULL;
 
-    hasCodebase = (JSBool)(principals->codebase && 
+    hasCodebase = (JSBool)(principals->codebase &&
                   XP_STRCMP(principals->codebase, lm_unknown_origin_str) != 0);
 
     /* First count the number of principals */
@@ -1428,8 +1429,8 @@ createPrincipalsArray(JSPrincipals *principals)
         fingPrint = (FINGERZIG *) item->data;
 
         /* create a  new nsPrincipal(CERT_KEY, fingPrint->key) */
-        principal = nsCapsNewPrincipal(nsPrincipalType_CertKey, 
-                                       fingPrint->key, 
+        principal = nsCapsNewPrincipal(nsPrincipalType_CertKey,
+                                       fingPrint->key,
                                        fingPrint->length,
                                        zig);
         nsCapsRegisterPrincipal(principal);
@@ -1446,7 +1447,7 @@ createPrincipalsArray(JSPrincipals *principals)
         if (javaCodebase == NULL)
             return NULL;
         principal = nsCapsNewPrincipal(nsPrincipalType_CodebaseExact,
-                                       javaCodebase, 
+                                       javaCodebase,
                                        XP_STRLEN(javaCodebase),
                                        NULL);
         nsCapsRegisterPrincipal(principal);
@@ -1516,9 +1517,10 @@ static char *targetStrings[] = {
 
 
 /*
-** If given principals can access the given target, return true. Otherwise return false.
-** The script must already have explicitly requested access to the given target.
-*/
+ * If given principals can access the given target, return true. Otherwise
+ * return false.  The script must already have explicitly requested access
+ * to the given target.
+ */
 static JSBool
 principalsCanAccessTarget(JSContext *cx, JSTarget target)
 {
@@ -1582,9 +1584,9 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
                 /* XXX: The following is a LiveConnect call. We need to find
                  * out from the VM who the principal is (may be get the
                  * certificate from VM and create a principal from it).
-                 * Pass that principal to canExtendTrust call. Until this is 
+                 * Pass that principal to canExtendTrust call. Until this is
                  * fixed deny the privileged operations from Java to JS.
-                 */ 
+                 */
                 /* XXX: raman: We need to fix this with LiveConnect integration.
                  *  javaPrincipals = nsCapsGetClassPrincipalsFromStack(cx, 0);
                  */
@@ -1593,7 +1595,7 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
                 }
             }
             return (JSBool)nsCapsIsPrivilegeEnabled(cx, capsTarget, 0);
-        } 
+        }
 #endif /* JAVA */
         /* No annotation in stack */
         return JS_FALSE;
@@ -1729,9 +1731,10 @@ verifyPrincipals(MochaDecoder *decoder, JSPrincipals *containerPrincipals,
 
     containerData = (JSPrincipalsData *) containerPrincipals;
 
-    containerZip = containerData && containerData->signedness != HAS_UNSIGNED_SCRIPTS
-                   ? containerData->zip
-                   : NULL;
+    containerZip =
+        (containerData && containerData->signedness != HAS_UNSIGNED_SCRIPTS)
+        ? containerData->zip
+        : NULL;
 
     if (data->zip == NULL && containerZip == NULL)
         return JS_FALSE;
@@ -1967,7 +1970,7 @@ LM_RegisterPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
         if (inner == container) {
             if (containerData->signedness == HAS_NO_SCRIPTS) {
                 lm_SetContainerPrincipals(cx, container, principals);
-                return principals; 
+                return principals;
             }
             /*
              * Intersect principals and container principals,
@@ -2011,13 +2014,13 @@ typedef struct JSFrameIterator {
 } JSFrameIterator;
 
 static JSFrameIterator *
-lm_NewJSFrameIterator(void *context) 
+lm_NewJSFrameIterator(void *context)
 {
     JSContext *cx = (JSContext *)context;
     JSFrameIterator *result;
     void *array;
     JRIEnv *env = NULL;
-    
+
     result = XP_ALLOC(sizeof(JSFrameIterator));
     if (result == NULL) {
         return NULL;
@@ -2035,8 +2038,8 @@ lm_NewJSFrameIterator(void *context)
         ? JS_GetFramePrincipalArray(cx, result->fp)
         : NULL;
     result->intersect = array;
-    result->sawEmptyPrincipals = 
-        (result->intersect == NULL && result->fp && 
+    result->sawEmptyPrincipals =
+        (result->intersect == NULL && result->fp &&
          JS_GetFrameScript(cx, result->fp))
         ? PR_TRUE : PR_FALSE;
 
@@ -2050,9 +2053,9 @@ lm_NextJSJavaFrame(struct JSFrameIterator *iterator)
     void *current;
     void *previous;
 
-	if (iterator->fp == 0) {
-		return PR_FALSE;
-	}
+    if (iterator->fp == 0) {
+        return PR_FALSE;
+    }
 
     current = JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
     if (current == NULL) {
@@ -2071,7 +2074,7 @@ lm_NextJSJavaFrame(struct JSFrameIterator *iterator)
     return iterator->fp != NULL;
 }
 
-static PRBool 
+static PRBool
 nextJSFrame(struct JSFrameIterator **iteratorp)
 {
     JSFrameIterator *iterator = *iteratorp;
@@ -2085,9 +2088,9 @@ nextJSFrame(struct JSFrameIterator **iteratorp)
     return result;
 }
 
-/* 
+/*
  *
- *  CALLBACKS to walk the stack 
+ *  CALLBACKS to walk the stack
  *
  */
 
@@ -2096,7 +2099,7 @@ typedef struct NSJSJavaFrameWrapper {
 } NSJSJavaFrameWrapper;
 
 struct NSJSJavaFrameWrapper *
-lm_NewNSJSJavaFrameWrapperCB(void *context) 
+lm_NewNSJSJavaFrameWrapperCB(void *context)
 {
     struct NSJSJavaFrameWrapper *result;
 
@@ -2127,14 +2130,10 @@ PRBool lm_IsEndOfFrameCB(struct NSJSJavaFrameWrapper *wrapper)
 
 PRBool lm_IsValidFrameCB(struct NSJSJavaFrameWrapper *wrapper)
 {
-    if (wrapper->iterator == NULL) {
-        return PR_FALSE;
-    } else {
-        return PR_TRUE; 
-    }
+    return (wrapper->iterator != NULL);
 }
 
-void *lm_GetNextFrameCB(struct NSJSJavaFrameWrapper *wrapper, int *depth) 
+void *lm_GetNextFrameCB(struct NSJSJavaFrameWrapper *wrapper, int *depth)
 {
     if ((wrapper->iterator == NULL) ||
         (!nextJSFrame(&(wrapper->iterator)))) {
@@ -2174,7 +2173,7 @@ void * lm_GetAnnotationCB(struct NSJSJavaFrameWrapper *wrapper)
         (iterator->intersect &&
          !canExtendTrust(iterator->cx, current, iterator->intersect)))
         return NULL;
-    
+
     return annotaion;
 }
 
@@ -2183,7 +2182,7 @@ void * lm_SetAnnotationCB(struct NSJSJavaFrameWrapper *wrapper, void *privTable)
     if (wrapper->iterator) {
         JSFrameIterator *iterator = wrapper->iterator;
         JS_SetFrameAnnotation(iterator->cx, iterator->fp, privTable);
-    } 
+    }
     return privTable;
 }
 
@@ -2194,7 +2193,8 @@ static PRBool privManagerInited = PR_FALSE;
 static void
 setupJSCapsCallbacks()
 {
-    if (privManagerInited) return;
+    if (privManagerInited)
+        return;
     privManagerInited = TRUE;
 
     nsCapsInitialize();
@@ -2208,4 +2208,3 @@ setupJSCapsCallbacks()
     setOJIGetAnnotationCallback(lm_GetAnnotationCB);
     setOJISetAnnotationCallback(lm_SetAnnotationCB);
 }
-
