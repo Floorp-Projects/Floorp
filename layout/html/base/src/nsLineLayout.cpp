@@ -20,6 +20,8 @@
 #include "nsCSSLayout.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
+#include "nsIPresContext.h"
+#include "nsIFontMetrics.h"
 
 void
 nsTextRun::List(FILE* out, PRInt32 aIndent)
@@ -38,14 +40,14 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
 
 //----------------------------------------------------------------------
 
-nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
-                                 nsISpaceManager* aSpaceManager)
+nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
+                           nsISpaceManager* aSpaceManager)
+  : mPresContext(aPresContext)
 {
-  mPresContext = aPresContext;
   mSpaceManager = aSpaceManager;
   mListPositionOutside = PR_FALSE;
   mLineNumber = 0;
-  mLeftEdge = 0;
+//  mLeftEdge = 0;
   mColumn = 0;
   mSkipLeadingWS = PR_TRUE;
 
@@ -100,7 +102,7 @@ nsLineLayout::AddText(nsIFrame* aTextFrame)
 // XXX move this somewhere else!!!
 PRBool
 nsLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
-                                   const nsStylePosition* aPosition)
+                                const nsStylePosition* aPosition)
 {
   if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
     return PR_FALSE;
