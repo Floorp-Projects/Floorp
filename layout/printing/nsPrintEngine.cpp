@@ -142,7 +142,8 @@ static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprom
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
@@ -587,9 +588,9 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 
   if (mIsDoingPrintPreview) {
     PRBool okToPrint = PR_FALSE;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (prefs) {
-      prefs->GetBoolPref("print.whileInPrintPreview", &okToPrint);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      prefBranch->GetBoolPref("print.whileInPrintPreview", &okToPrint);
     }
     if (!okToPrint) {
       ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW, PR_FALSE);
@@ -758,10 +759,10 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
     mPrt->mPrintSettings->GetPrintSilent(&printSilently);
 
     // Check prefs for a default setting as to whether we should print silently
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (prefs) {
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
       PRBool alwaysPrintSilent;
-      if (NS_SUCCEEDED(prefs->GetBoolPref("print.always_print_silent", &alwaysPrintSilent))) {
+      if (NS_SUCCEEDED(prefBranch->GetBoolPref("print.always_print_silent", &alwaysPrintSilent))) {
         printSilently = alwaysPrintSilent;
       }
     }
@@ -1621,9 +1622,9 @@ nsPrintEngine::CheckDocumentForPPCaching()
   // Only check if it is the first time into PP
   if (!mOldPrtPreview) {
     // First check the Pref
-    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-    if (prefs) {
-      prefs->GetBoolPref("print.always_cache_old_pres", &cacheOldPres);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      prefBranch->GetBoolPref("print.always_cache_old_pres", &cacheOldPres);
     }
 
     // Temp fix for FrameSet Print Preview Bugs
@@ -1695,9 +1696,9 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
   // if it is already being shown then don't bother to find out if it should be
   // so skip this and leave mShowProgressDialog set to FALSE
   if (!mPrt->mProgressDialogIsShown) {
-    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-    if (prefs) {
-      prefs->GetBoolPref("print.show_print_progress", &mPrt->mShowProgressDialog);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      prefBranch->GetBoolPref("print.show_print_progress", &mPrt->mShowProgressDialog);
     }
   }
 
@@ -5120,10 +5121,10 @@ PRBool nsPrintEngine::mIsDoingRuntimeTesting = PR_FALSE;
 void 
 nsPrintEngine::InitializeTestRuntimeError()
 {
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
     mIsDoingRuntimeTesting = PR_FALSE;
-    prefs->GetBoolPref("print.doing_runtime_error_checking", &mIsDoingRuntimeTesting);
+    prefBranch->GetBoolPref("print.doing_runtime_error_checking", &mIsDoingRuntimeTesting);
   }
 
   mLayoutDebugObj = do_GetService("@mozilla.org/debug/debugobject;1");
