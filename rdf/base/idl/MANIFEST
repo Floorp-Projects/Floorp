@@ -10,3 +10,4 @@ nsIRDFResource.idl
 nsIRDFService.idl
 nsIRDFXMLDataSource.idl
 nsIRDFXMLSource.idl
+xulstubs.idl
