@@ -888,6 +888,12 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
   return PR_TRUE;
 }
 
+/**
+ * |GetContext| implements sharing of style contexts (not just the data
+ * on the rule nodes) between siblings and cousins of the same
+ * generation.  (It works for cousins of the same generation since
+ * |aParentContext| could itself be a shared context.)
+ */
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
                                           nsIStyleContext* aParentContext, 
                                           nsIAtom* aPseudoTag, 
