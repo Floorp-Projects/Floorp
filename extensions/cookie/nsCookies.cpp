@@ -1356,7 +1356,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     }
     if ( !bCookieAdded ) {
       /* no shorter strings found in list */
-      cookie_list->AppendElement(prev_cookie);
+      cookie_list->InsertElementAt(prev_cookie, 0);
     }
   }
 
