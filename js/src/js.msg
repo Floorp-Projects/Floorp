@@ -90,7 +90,7 @@ MSG_DEF(JSMSG_TOO_MANY_LITERALS,       14, 0, JSEXN_INTERNALERR, "too many liter
 MSG_DEF(JSMSG_CANT_WATCH,              15, 1, JSEXN_NONE, "can't watch non-native objects of class {0}")
 MSG_DEF(JSMSG_STACK_UNDERFLOW,         16, 2, JSEXN_INTERNALERR, "internal error compiling {0}: stack underflow at pc {1}")
 MSG_DEF(JSMSG_NEED_DIET,               17, 1, JSEXN_INTERNALERR, "{0} too large")
-MSG_DEF(JSMSG_BAD_CASE,                18, 0, JSEXN_SYNTAXERR, "invalid case expression")
+MSG_DEF(JSMSG_BAD_CASE,                18, 2, JSEXN_SYNTAXERR, "{0}, line {1}: invalid case expression")
 MSG_DEF(JSMSG_READ_ONLY,               19, 1, JSEXN_ERR, "{0} is read-only")
 MSG_DEF(JSMSG_BAD_FORMAL,              20, 0, JSEXN_SYNTAXERR, "malformed formal parameter")
 MSG_DEF(JSMSG_SAME_FORMAL,             21, 1, JSEXN_NONE, "duplicate formal argument {0}")
@@ -235,4 +235,3 @@ MSG_DEF(JSMSG_BAD_URI,                159, 0, JSEXN_URIERR, "malformed URI seque
 MSG_DEF(JSMSG_GETTER_ONLY,            160, 0, JSEXN_TYPEERR, "setting a property that has only a getter")
 MSG_DEF(JSMSG_TRAILING_COMMA,         161, 0, JSEXN_SYNTAXERR, "trailing comma is not legal in ECMA-262 object initializers")
 MSG_DEF(JSMSG_UNDEFINED_PROP,         162, 1, JSEXN_TYPEERR, "reference to undefined property {0}")
-MSG_DEF(JSMSG_USELESS_EXPR,           163, 0, JSEXN_TYPEERR, "useless expression")
