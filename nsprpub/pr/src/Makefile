@@ -239,6 +239,13 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
+ifeq ($(MOZ_BITS),32)
+ifdef MOZ_DEBUG
+ifdef GLOWCODE
+	EXTRA_LIBS += c:/bin/glowcode/glowcode.lib
+endif
+endif
+endif
 else
 ifeq ($(OS_TARGET), OS2)
 OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \

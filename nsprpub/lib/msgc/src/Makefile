@@ -57,6 +57,13 @@ DLLBASE=/BASE:0x30000000
 #RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
 #OS_LIBS = user32.lib
 EXTRA_LIBS = $(DIST)/lib/libnspr$(NSPR_VERSION).lib
+
+ifdef MOZ_DEBUG
+ifdef GLOWCODE
+EXTRA_LIBS += c:/bin/glowcode/glowcode.lib
+endif
+endif
+
 endif
 else
 ifeq ($(OS_ARCH), AIX)

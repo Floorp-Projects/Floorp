@@ -73,6 +73,10 @@ LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 LCFLAGS = $(LCFLAGS)
 LLIBS = $(LLIBS) $(LIBNSPR)
 
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
+
 #//
 #// Win16 places ALL public header files in $(PUBLIC)/win16
 #//

@@ -65,7 +65,11 @@ OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE
 #
 #OPTIMIZER=-Z7 -DDEBUG -UNDEBUG -D_DEBUG -D_CRTDBG_MAP_ALLOC
 OPTIMIZER=-Z7 -DDEBUG -UNDEBUG -D_DEBUG
+!if defined(GLOWCODE) && "$(MOZ_BITS)"=="32"
+OS_LFLAGS=/DEBUG /DEBUGTYPE:BOTH /INCLUDE:_GlowCode /PDB:NONE
+!else
 OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE
+!endif
 
 !else
 #
@@ -121,7 +125,8 @@ OS_LIBS=kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib
 #// Specify the special flags for creating EXEs
 #//
 #//------------------------------------------------------------------------
-!ifdef SWAPTUNER
+!if defined(SWAPTUNER) || (defined(GLOWCODE) && defined(GLOWPROF) && "$(MOZ_BITS)"=="32")
+# this seems to get lost
 EXE_CFLAGS=/Gh
 !else
 EXE_CFLAGS=/Gy
