@@ -785,6 +785,12 @@ NS_IMPL_QUERY_HEAD(nsWebShell)
 NS_IMPL_QUERY_TAIL(nsIWebShell)
 
 NS_IMETHODIMP
+nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
+{
+  return GetInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
 nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
    NS_ENSURE_ARG_POINTER(aInstancePtr);
