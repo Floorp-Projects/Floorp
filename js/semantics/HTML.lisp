@@ -375,6 +375,7 @@
     ((:cartesian-product-10 2) (:script "document.write(U_times)"))     ;#x00D7
     ((:identical-10 2) (:script "document.write(U_equiv)"))             ;#x2261
     ((:circle-plus-10 2) (:script "document.write(U_oplus)"))           ;#x2295
+    ((:empty-10 2) (:script "document.write(U_empty)"))                 ;#x2205
     ((:intersection-10 1) (:script "document.write(U_cap)"))            ;#x2229
     ((:union-10 1) (:script "document.write(U_cup)"))                   ;#x222A
     ((:member-10 2) (:script "document.write(U_isin)"))                 ;#x2208
@@ -457,7 +458,6 @@
     ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
-    ((:unit 4) (:global-variable "unit"))
     ((:true 4) (:global-variable "true"))
     ((:false 5) (:global-variable "false"))
     ))
