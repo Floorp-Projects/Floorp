@@ -329,8 +329,16 @@ function onOK()
     {
       editorShell.MakeOrChangeList(ListType, dialog.ChangeAllRadio.checked);
 
-      // Get the new list created:
-      ListElement = editorShell.GetElementOrParentByTagName(ListType, null);
+      if (ListType)
+      {
+        // Get the new list created:
+        ListElement = editorShell.GetElementOrParentByTagName(ListType, null);
+      }
+      else
+      {
+        // We removed an existing list
+        ListElement = null;
+      }
     }
 
     // Set the new list attributes
