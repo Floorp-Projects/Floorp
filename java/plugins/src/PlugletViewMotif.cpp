@@ -31,6 +31,9 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 
+#include <gdksuperwin.h>
+#include <gtkmozbox.h>
+
 #include "PlugletViewMotif.h"
 #include "PlugletEngine.h"
 
@@ -90,12 +93,13 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
         }
         return PR_FALSE;
     }
-    GtkWidget * containerWidget = (GtkWidget *) win->window;
+    GdkSuperWin * superWin = (GdkSuperWin *) win->window;
     Window parentWindowID;
     Window rootWindowID;
     Window * childrenWindowIDs;
     unsigned int numberOfChildren;
-    int containerWindowID = GDK_WINDOW_XWINDOW(containerWidget->window);
+    int containerWindowID = GDK_WINDOW_XWINDOW(superWin->shell_window);
+
     Status status = XQueryTree(GDK_DISPLAY(), containerWindowID,
                                &rootWindowID, &parentWindowID,
                                &childrenWindowIDs, & numberOfChildren);
@@ -105,6 +109,8 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
     if (WindowID == containerWindowID) {
         return PR_FALSE;
     }
+
+
     WindowID = containerWindowID;
     AWT_LOCK();
     XSync(awt_display, FALSE);
