@@ -31,10 +31,7 @@
 var cview = new Object();
 /*
  * instead of creating a slew of global variables, all app-wide values are
- * stored on this cview object.  Doing this instead of global variable is
- * somewhat religious; it avoids any "m" prefix for module vars, makes
- * it trivial to track down all globals, and in theory makes it possible
- * to embed the code in another app without colliding globals.
+ * stored on this cview object.
  */
 
 /* number of items to process per refresh step */
@@ -77,7 +74,7 @@ function refreshComponentsStep()
         cview.rdf.Assert (res, cview.rdf.resContractID,
                           cview.rdf.GetLiteral(cls.name));
         cview.rdf.Assert (res, cview.rdf.resCLSID,
-                          cview.rdf.GetLiteral(cls.id));
+                          cview.rdf.GetLiteral(cls.number));
         cview.rdf.Assert (res, cview.rdf.resShow,
                           cview.rdf.litTrue);
         cview.rdf.Assert (cview.rdf.resRoot, cview.rdf.resCmp, res);
@@ -142,12 +139,12 @@ function refreshInterfacesStep()
 
         if (!ifc)
             break;
-            
+
         var res = cview.rdf.GetResource ("interface:" + (++cview.interfaceID));
         cview.rdf.Assert (res, cview.rdf.resIName,
                           cview.rdf.GetLiteral(ifc.name));
         cview.rdf.Assert (res, cview.rdf.resIID,
-                          cview.rdf.GetLiteral(ifc.id));
+                          cview.rdf.GetLiteral(ifc.number));
         cview.rdf.Assert (res, cview.rdf.resShow,
                           cview.rdf.litTrue);        
         cview.rdf.Assert (cview.rdf.resRoot, cview.rdf.resIfc, res);

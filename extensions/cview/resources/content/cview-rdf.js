@@ -83,6 +83,14 @@ function rdf_getr (s)
 RDFHelper.prototype.GetLiteral =
 function rdf_getl (s)
 {
+    if (!s)
+    {
+        dd ("rdf_getl: no argument provided!");
+        dd (getStackTrace());
+        
+        return "";
+    }
+    
     return this.svc.GetLiteral(s);
 }
 
@@ -92,7 +100,7 @@ function rdf_assert (n1, a, n2, f)
     if (typeof f == "undefined")
         f = true;
 
-    /*return this.dAssert (n1, a, n2, f);*/
+//    return this.dAssert (n1, a, n2, f);
     return this.ds.Assert (n1, a, n2, f);
 }
 
@@ -111,7 +119,10 @@ function rdf_dassert (n1, a, n2, f)
     var n2v = n2 ? n2.Value : "!!!";
     
     if (!n1 || !a || !n2)
+    {
+        dd ("n1 " + n1v + " a " + av + " n2 " + n2v);
         dd(getStackTrace());
+    }
     
     this.ds.Assert (n1, a, n2, f)
 }

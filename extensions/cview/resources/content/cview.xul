@@ -24,7 +24,8 @@
 
 <!DOCTYPE window>
 
-<?xml-stylesheet href="chrome://cview/skin" type="text/css"?>
+<!-- ?xml-stylesheet href="chrome://cview/skin" type="text/css"? -->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -120,8 +121,9 @@
   </toolbox>
 
   <box id="outer-box" flex="1">
-    <box id="component-box" align="vertical" flex="1">
-    <text id="component-label" value="Components..."/>
+    <box id="component-box" align="vertical" flex="1" width="50%">
+    <text id="component-label" value="Components..." crop="right"
+      autostretch="never"/>
 <!--
   datasources="rdf:null" makes the tree able to get it's contents from an
   rdf datasource, but delays saying which one until runtime.
@@ -144,8 +146,8 @@
 -->
         <rule xpcom:show="true">
         <treechildren flex="1">
-          <treeitem uri="...">
-            <treerow onclick="onComponentClick(event);"
+          <treeitem uri="..." flex="1">
+            <treerow onclick="onComponentClick(event);" flex="1" crop="right"
               contractid="rdf:http://www.mozilla.org/NC-xpcom#contractid">
 <!--
   Even though we specified the onClick handler as an attribute of the
@@ -154,10 +156,12 @@
   cview-handlers.js:onComponentClick().
 -->
                 <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#contractid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#contractid"
+                    crop="right" flex="1" autostretch="never"/>
                 </treecell>
                 <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#clsid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#clsid"
+                    crop="right" flex="1" autostretch="never"/>
                 </treecell>
             </treerow>
           </treeitem>
@@ -166,19 +170,20 @@
       </template>
 
       <treecolgroup>
-        <treecol flex="1"
+        <treecol flex="1" width="75%"
           resource="http://www.mozilla.org/NC-xpcom#contractid"/>
-        <treecol flex="1"
+        <splitter class="tree-splitter"/>
+        <treecol flex="1" width="25%"
           resource="http://www.mozilla.org/NC-xpcom#clsid"/>
       </treecolgroup>
 
       <treehead>
         <treerow>
-          <treecell id="componentcol-contractid"
+          <treecell id="componentcol-contractid" flex="1"
             resource="http://www.mozilla.org/NC-xpcom#contractid"
             class="treecell-header sortDirectionIndicator" value="ContractID"
             onclick="return onSortCol('componentcol-contractid');"/>
-          <treecell id="componentcol-clsid"
+          <treecell id="componentcol-clsid" flex="1"
             resource="http://www.mozilla.org/NC-xpcom#clsid"
             class="treecell-header sortDirectionIndicator" value="CLSID"
             onclick="return onSortCol('componentcol-clsid');"/>
@@ -187,10 +192,13 @@
     </tree>
     </box>
 
-    <splitter id="main-splitter" align="vertical" collapse="before"/>
+    <splitter id="main-splitter" align="vertical" collapse="before">
+      <grippy/>
+    </splitter>
 
-    <box id="interface-box" align="vertical" flex="1">
-    <text id="interface-label" value="Interfaces..."/>
+    <box id="interface-box" align="vertical" flex="1" width="50%">
+    <text id="interface-label" value="Interfaces..." crop="right"
+      autostretch="never"/>
     <tree id="interface-list" container="true" datasources="rdf:null" flex="1"
       containment="http://www.mozilla.org/NC-xpcom#interface">
 
@@ -199,14 +207,16 @@
         <rule xpcom:show="true">
         <treechildren flex="1">
           <treeitem uri="...">
-            <treerow onclick="onInterfaceClick(event);"
+            <treerow onclick="onInterfaceClick(event);" crop="right"
               iname="rdf:http://www.mozilla.org/NC-xpcom#iname"
               context="interfacePopup">
                 <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iname"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iname"
+                    crop="right" flex="1" autostretch="never"/>
                 </treecell>
                 <treecell>
-                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iid"
+                    crop="right" flex="1" autostretch="never"/>
                 </treecell>
             </treerow>
           </treeitem>
@@ -215,9 +225,10 @@
       </template>
 
       <treecolgroup>
-        <treecol flex="1"
+        <treecol flex="1" width="75%"
           resource="http://www.mozilla.org/NC-xpcom#iname"/>
-        <treecol flex="1"
+        <splitter class="tree-splitter"/>
+        <treecol flex="1" width="25%"
           resource="http://www.mozilla.org/NC-xpcom#iid"/>
       </treecolgroup>
 

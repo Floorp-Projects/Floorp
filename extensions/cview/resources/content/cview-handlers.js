@@ -162,8 +162,30 @@ function onChangeDisplayMode (e)
         dd ("** UNKNOWN ID '" + id + "' in onChangeDisplayMode **");
         return;
     }
-
-    var typeDesc = (ary[1] == "cmp") ? "Components" : "Interfaces";
+    
+    var typeDesc;
+        var el;
+    if (ary[1] == "cmp") {
+        typeDesc = "Components";
+        el = document.getElementById("menu-cmp-show-all");
+        el.setAttribute("checked", false);
+        el = document.getElementById("menu-cmp-show-contains");
+        el.setAttribute("checked", false);
+        el = document.getElementById("menu-cmp-show-starts-with");
+        el.setAttribute("checked", false);
+    } else {
+        typeDesc = "Interfaces";
+        el = document.getElementById("menu-ifc-show-all");
+        el.setAttribute("checked", false);
+        el = document.getElementById("menu-ifc-show-contains");
+        el.setAttribute("checked", false);
+        el = document.getElementById("menu-ifc-show-starts-with");
+        el.setAttribute("checked", false);
+        el = document.getElementById("menu-ifc-show-implemented-by");
+        el.setAttribute("checked", false);
+    }
+    
+    e.target.setAttribute ("checked", true);
     var filter = "";
 
     if (ary[2] == "contains")
