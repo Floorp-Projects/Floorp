@@ -70,7 +70,7 @@ var helpBaseURI;
 
 const defaultHelpFile = "chrome://help/locale/mozillahelp.rdf";
 // Set from nc:defaulttopic. It is used when the requested uri has no topic specified. 
-const defaultTopic = "welcome"; 
+var defaultTopic = "welcome"; 
 var searchDatasources = "rdf:null";
 var searchDS = null;
 

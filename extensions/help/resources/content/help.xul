@@ -28,18 +28,13 @@
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 
   <menupopup id="backMenu" position="after_start"
      onpopupshowing="return createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <menupopup id="forwardMenu" position="after_start"
      onpopupshowing="return createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  <popupset id="contentAreaContextSet"/>
+  <popupset id="helpContextSet"/>
   <broadcasterset id="helpBroadcasters">
     <broadcaster id="canGoBack"    disabled="true"/>
     <broadcaster id="canGoForward" disabled="true"/>
@@ -343,10 +338,8 @@
         <hbox id="browser" flex="1">
           <!-- type attribute is used by frame construction to locate iframes
                intended to hold (html) content -->
-          <browser context="contentAreaContextMenu" type="content-primary" id="help-content"
-              src="about:blank" flex="1"
-              ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
-              onclick="return contentAreaClick(event);"/>
+          <browser context="helpContextMenu" type="content-primary" id="help-content"
+              src="about:blank" flex="1"/>
         </hbox>
       </vbox>
     </hbox>

@@ -36,12 +36,12 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE overlay SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
-<overlay id="contentAreaContextOverlay"
+<overlay id="helpContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Help Context Menu -->
-  <popupset id="contentAreaContextSet">
-    <popup id="contentAreaContextMenu">
+  <popupset id="helpContextSet">
+    <popup id="helpContextMenu">
       <menuitem id="context-back"
                 label="&goBackCmd.label;"
                 accesskey="&goBackCmd.accesskey;"
