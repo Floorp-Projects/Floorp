@@ -6,7 +6,10 @@
 <!DOCTYPE window
 [
 <!ENTITY nameCol.label "Name">
-
+<!ENTITY duplicate.label "Duplicate">
+<!ENTITY delete.label "Delete">
+<!ENTITY newAccount.label "New Account">
+<!ENTITY setAsDefault.label "Set As Default">
 ]>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -45,14 +48,14 @@
 </tree>
 <box align="vertical">
 <box align="horizontal">
-<titledbutton class="push" flex="50%" name="Duplicate" value="Duplicate"/>
-<titledbutton class="push" flex="50%" name="Delete" value="Delete"/>
+<titledbutton class="push" flex="50%" name="Duplicate" value="&duplicate.label;"/>
+<titledbutton class="push" flex="50%" name="Delete" value="&delete.label;"/>
 </box>
 <box align="horizontal">
-<titledbutton class="push" name="NewAccount" value="New Account" flex="100%"/>
+<titledbutton class="push" name="NewAccount" value="&newAccount.label;" flex="100%"/>
 </box>
 <box align="horizontal">
-<titledbutton class="push" name="Default" value="Set As Default" flex="100%"/>
+<titledbutton class="push" name="Default" value="&setAsDefault.label;" flex="100%"/>
 </box>
 </box>
 </xul:window>
