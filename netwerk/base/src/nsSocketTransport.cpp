@@ -788,6 +788,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 {
   PRStatus status;
   nsresult rv = NS_OK;
+  PRBool proxyTransparent = PR_FALSE;
 
   NS_ASSERTION(eSocketState_WaitConnect == mCurrentState, "Wrong state.");
 
@@ -871,6 +872,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                   // it do not have to worry about proxy stuff
                   proxyHost = nsnull;
                   proxyPort = -1;
+                  proxyTransparent = PR_TRUE;
               }
           }
       }
@@ -974,9 +976,10 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
           "rv = %x.\n\n",
           mHostName, mPort, this, rv));
   
-  if (rv == NS_OK && mSecurityInfo && mProxyHost) {
+  if (rv == NS_OK && mSecurityInfo && mProxyHost && mProxyHost && proxyTransparent) {
       // if the connection phase is finished, and the ssl layer
-      // has been pushed, and we were proxying, it's time
+      // has been pushed, and we were proxying (transparently; ie. nothing
+      // has to happen in the protocol layer above us), it's time
       // for the ssl to "step up" and start doing it's thing.
       nsCOMPtr<nsIPSMSocketInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
       if (NS_SUCCEEDED(rv) && securityInfo) {
