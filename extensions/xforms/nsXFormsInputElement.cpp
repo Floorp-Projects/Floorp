@@ -48,6 +48,7 @@
 #include "nsIXFormsControl.h"
 #include "nsISchema.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsXFormsAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMXPathResult.h"
@@ -58,7 +59,7 @@
 #include "nsIDOMXPathExpression.h"
 
 /**
- * Implementation of the XForms \<input\> element.
+ * Implementation of the XForms \<input\> and \<textarea\> elements.
  */
 class nsXFormsInputElement : public nsXFormsXMLVisualStub,
                              public nsIDOMFocusListener,
@@ -90,12 +91,16 @@ public:
   NS_IMETHOD Focus(nsIDOMEvent *aEvent);
   NS_IMETHOD Blur(nsIDOMEvent *aEvent);
 
-  nsXFormsInputElement() : mElement(nsnull) {}
+  nsXFormsInputElement(PRBool isTextArea = PR_FALSE)
+    : mElement(nsnull)
+    , mIsTextArea(isTextArea)
+    {}
 
 private:
   nsCOMPtr<nsIDOMElement> mLabel;
-  nsCOMPtr<nsIDOMHTMLInputElement> mInput;
+  nsCOMPtr<nsIDOMElement> mControl;
   nsIDOMElement *mElement;
+  PRBool mIsTextArea;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
@@ -125,9 +130,9 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 
   // Our anonymous content structure will look like this:
   //
-  // <label>                (mLabel)
-  //   <span/>              (insertion point)
-  //   <input/>             (mInput)
+  // <label>                         (mLabel)
+  //   <span/>                       (insertion point)
+  //   <input/> or <textarea/>       (mControl)
   // </label>
 
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -149,13 +154,12 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   mLabel->AppendChild(element, getter_AddRefs(childReturn));
 
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          NS_LITERAL_STRING("input"),
-                          getter_AddRefs(element));
+                          mIsTextArea ? NS_LITERAL_STRING("textarea")
+                                      : NS_LITERAL_STRING("input"),
+                          getter_AddRefs(mControl));
+  NS_ENSURE_TRUE(mControl, NS_ERROR_FAILURE);
 
-  mInput = do_QueryInterface(element);
-  NS_ENSURE_TRUE(mInput, NS_ERROR_FAILURE);
-
-  mLabel->AppendChild(mInput, getter_AddRefs(childReturn));
+  mLabel->AppendChild(mControl, getter_AddRefs(childReturn));
 
   // We can't use xtf handleDefault here because editor stops blur events from
   // bubbling, and we can't use a system event group handler because blur
@@ -164,7 +168,7 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   // content can't get at the anonymous content to install an event handler,
   // and the event doesn't bubble up.
 
-  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mInput);
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mControl);
   NS_ASSERTION(targ, "input must be an event target!");
 
   targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
@@ -193,7 +197,7 @@ nsXFormsInputElement::GetInsertionPoint(nsIDOMElement **aPoint)
 NS_IMETHODIMP
 nsXFormsInputElement::OnDestroyed()
 {
-  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mInput);
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mControl);
   if (NS_LIKELY(targ != nsnull)) {
     targ->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
   }
@@ -253,7 +257,7 @@ nsXFormsInputElement::Focus(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 {
-  if (!mInput)
+  if (!mControl)
     return NS_OK;
 
   nsCOMPtr<nsIDOMNode> modelNode;
@@ -276,14 +280,25 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   if (!singleNode)
     return NS_OK;
 
-  nsAutoString value, type;
-  mInput->GetType(type);
-  if (type.EqualsLiteral("checkbox")) {
-    PRBool checked;
-    mInput->GetChecked(&checked);
-    value.AssignASCII(checked ? "1" : "0", 1);
+  nsAutoString value;
+  if (mIsTextArea) {
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mControl);
+    NS_ENSURE_STATE(textArea);
+
+    textArea->GetValue(value);
   } else {
-    mInput->GetValue(value);
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mControl);
+    NS_ENSURE_STATE(input);
+
+    nsAutoString type;
+    input->GetType(type);
+    if (type.EqualsLiteral("checkbox")) {
+      PRBool checked;
+      input->GetChecked(&checked);
+      value.AssignASCII(checked ? "1" : "0", 1);
+    } else {
+      input->GetValue(value);
+    }
   }
 
   nsXFormsUtils::SetNodeValue(singleNode, value);
@@ -295,7 +310,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInputElement::Refresh()
 {
-  if (!mInput)
+  if (!mControl)
     return NS_OK;
 
   nsCOMPtr<nsIDOMNode> modelNode;
@@ -315,55 +330,70 @@ nsXFormsInputElement::Refresh()
   // should clear the content. But the content should be left if the element
   // is unbound.
   // @see https://bugzilla.mozilla.org/show_bug.cgi?id=265216
-  if (model) {
-    model->AddFormControl(this);
+  if (!model)
+    return NS_OK;
 
-    nsCOMPtr<nsIDOMNode> resultNode;
-    if (result)
-      result->GetSingleNodeValue(getter_AddRefs(resultNode));
+  model->AddFormControl(this);
 
-    if (resultNode) {
-      nsAutoString text;
-      nsXFormsUtils::GetNodeValue(resultNode, text);
+  nsCOMPtr<nsIDOMNode> resultNode;
+  if (result)
+    result->GetSingleNodeValue(getter_AddRefs(resultNode));
 
-      nsCOMPtr<nsISchemaType> type;
-      model->GetTypeForControl(this, getter_AddRefs(type));
-      nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
-      PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
+  if (!resultNode)
+    return NS_OK;
 
-      if (biType)
-        biType->GetBuiltinType(&typeValue);
+  // find out if the control should be made readonly
+  PRBool isReadOnly = PR_FALSE;
+  nsCOMPtr<nsIContent> nodeContent = do_QueryInterface(resultNode);
+  if (nodeContent) {
+    nsIDOMXPathExpression *expr =
+      NS_STATIC_CAST(nsIDOMXPathExpression*,
+                     nodeContent->GetProperty(nsXFormsAtoms::readonly));
 
-      if (typeValue == nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN) {
-        mInput->SetAttribute(NS_LITERAL_STRING("type"),
-                             NS_LITERAL_STRING("checkbox"));
-
-        mInput->SetChecked(text.EqualsLiteral("true") ||
-                           text.EqualsLiteral("1"));
-      } else {
-        mInput->RemoveAttribute(NS_LITERAL_STRING("type"));
-        mInput->SetValue(text);
+    if (expr) {
+      expr->Evaluate(mElement,
+                     nsIDOMXPathResult::BOOLEAN_TYPE, nsnull,
+                     getter_AddRefs(result));
+      if (result) {
+        result->GetBooleanValue(&isReadOnly);
       }
-
-      PRBool isReadOnly = PR_FALSE;
-      nsCOMPtr<nsIContent> nodeContent = do_QueryInterface(resultNode);
-      if (nodeContent) {
-        nsIDOMXPathExpression *expr =
-          NS_STATIC_CAST(nsIDOMXPathExpression*,
-                         nodeContent->GetProperty(nsXFormsAtoms::readonly));
-
-        if (expr) {
-          expr->Evaluate(mElement,
-                         nsIDOMXPathResult::BOOLEAN_TYPE, nsnull,
-                         getter_AddRefs(result));
-          if (result) {
-            result->GetBooleanValue(&isReadOnly);
-          }
-        }
-      }
-
-      mInput->SetReadOnly(isReadOnly);
     }
+  }
+
+  // get the text value for the control
+  nsAutoString text;
+  nsXFormsUtils::GetNodeValue(resultNode, text);
+
+  if (mIsTextArea) {
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mControl);
+    NS_ENSURE_STATE(textArea);
+
+    textArea->SetValue(text);
+    textArea->SetReadOnly(isReadOnly);
+  } else {
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mControl);
+    NS_ENSURE_STATE(input);
+
+    nsCOMPtr<nsISchemaType> type;
+    model->GetTypeForControl(this, getter_AddRefs(type));
+    nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
+    PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
+
+    if (biType)
+      biType->GetBuiltinType(&typeValue);
+
+    if (typeValue == nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN) {
+      input->SetAttribute(NS_LITERAL_STRING("type"),
+                           NS_LITERAL_STRING("checkbox"));
+
+      input->SetChecked(text.EqualsLiteral("true") ||
+                         text.EqualsLiteral("1"));
+    } else {
+      input->RemoveAttribute(NS_LITERAL_STRING("type"));
+      input->SetValue(text);
+    }
+
+    input->SetReadOnly(isReadOnly);
   }
 
   return NS_OK;
@@ -373,6 +403,17 @@ NS_HIDDEN_(nsresult)
 NS_NewXFormsInputElement(nsIXTFElement **aResult)
 {
   *aResult = new nsXFormsInputElement();
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_HIDDEN_(nsresult)
+NS_NewXFormsTextAreaElement(nsIXTFElement **aResult)
+{
+  *aResult = new nsXFormsInputElement(PR_TRUE);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 
