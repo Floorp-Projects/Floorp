@@ -1474,10 +1474,10 @@ PRIVATE void net_CacheComplete (NET_StreamClass *stream)
     CacheDataObject* obj = stream->data_object;
     PR_ASSERT(obj && obj->cache_object);
 
-    /*Write it out to the module */
+    /*Add it to the module and mark it as completed */
     CacheObject_Synch(obj->cache_object);
+    CacheObject_SetIsCompleted(obj->cache_object, TRUE);
 
-    (obj->cache_object);
     /* Plugins can use this file */
     /* If object is in memory GetFilename will return null so this is ok */
     if (obj->URL_s && CacheObject_GetFilename(obj->cache_object))
@@ -1491,7 +1491,7 @@ PRIVATE void net_CacheComplete (NET_StreamClass *stream)
      (*obj->next_stream->complete)(obj->next_stream);
      PR_Free(obj->next_stream);
     }
-    CacheObject_Destroy(obj->cache_object);
+    
     /* Do the things I don't as yet understand or have time to */
     PR_REMOVE_LINK(&obj->links);
     PR_Free(obj);
@@ -1768,7 +1768,7 @@ NET_CacheConverter (FO_Present_Types format_out,
     cache_object = CacheObject_Create(URL_s->address);
     if (!cache_object)
      return 0;
-    
+    do_disk_cache = FALSE; /* Testing remove later */
     CacheObject_SetModule(cache_object, (PRInt16) (do_disk_cache ? DISK_MODULE_ID : MEM_MODULE_ID));
     CacheObject_SetExpires(cache_object, URL_s->expires);
     CacheObject_SetEtag(cache_object, URL_s->etag);
@@ -2658,7 +2658,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
     URL_s->last_modified = 0;
 
     if (!CacheManager_Contains(URL_s->address))
-     return 0;
+        return 0;
     else
     {
      /* mkabout.c relies on updating the URL_struct with the found info */
@@ -2666,10 +2666,25 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
      /* Copy all the stuff from CacheObject to URL_struct */
      if (pObject)
      {
-         /* TODO */
          URL_s->expires = CacheObject_GetExpires(pObject);
          URL_s->last_modified = CacheObject_GetLastModified(pObject);
-         /* TODO */
+         StrAllocCopy(URL_s->charset, CacheObject_GetCharset(pObject));
+         StrAllocCopy(URL_s->content_encoding, CacheObject_GetContentEncoding(pObject));
+         if (!URL_s->preset_content_type)
+         {
+             StrAllocCopy(URL_s->content_type, CacheObject_GetContentType(pObject));
+         }
+         /* StrAllocCopy(URL_s->page_services_url, CacheObject_GetPageServicesURL() */
+        
+         /* Only set these for HTTP URLs otherwise the content-length will mess up files that
+          * dont return it and are different. 
+          */
+         if(!PL_strncasecmp(URL_s->address, "http", 4) || !PL_strncasecmp(URL_s->address, "ftp", 3))
+         {
+             URL_s->content_length = CacheObject_GetContentLength(pObject);
+             URL_s->real_content_length = CacheObject_GetContentLength(pObject); /* TODO */
+         }
+
          URL_s->cache_object = pObject;
 
          return NU_CACHE_TYPE_URL;
