@@ -89,8 +89,6 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", request);
 
-  mLock = PR_NewLock();
-
   mOwner = NS_STATIC_CAST(imgIRequest*, request);
   mListener = aObserver;
   mContext = cx;
