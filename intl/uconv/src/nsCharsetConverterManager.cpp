@@ -214,7 +214,6 @@ nsresult nsCharsetConverterManager::CreateMapping()
   nsIRegistry * registry = NULL;
   nsIEnumerator * components = NULL;
   nsIRegistry::Key uconvKey, key;
-  char buff[1024];
 
   // XXX hack; make these dynamic
   mEncArray = new ConverterInfo [100];
@@ -544,21 +543,11 @@ NS_IMETHODIMP nsManagerFactory::CreateInstance(nsISupports *aDelegate,
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
 
-  nsresult res = NS_OK;
+  nsICharsetConverterManager * t = nsCharsetConverterManager::GetInstance();  
+  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsICharsetConverterManager>::GetIID()))
-  {
-    nsICharsetConverterManager * t = nsCharsetConverterManager::GetInstance();  
-    if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-    res = t->QueryInterface(aIID, aResult);
-    if (NS_FAILED(res)) delete t;
-  } else if(aIID.Equals(kIUnicodeDecodeUtilIID)) {
-    nsIUnicodeDecodeUtil * t = new nsUnicodeDecodeUtil();
-    if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-    res = t->QueryInterface(aIID, aResult);
-    if (NS_FAILED(res)) delete t;
-  }
-  
+  nsresult res = t->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) delete t;
 
   return res;
 }
