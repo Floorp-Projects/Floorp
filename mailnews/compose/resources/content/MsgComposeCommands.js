@@ -2852,8 +2852,6 @@ function loadHTMLMsgPrefs() {
   try { 
     fontFace = pref.getCharPref("msgcompose.font_face");
     doStatefulCommand('cmd_fontFace', fontFace);
-    EditorRemoveTextProperty("font","face");
-    EditorSetTextProperty("font", "face", fontFace);
   } catch (e) {}
 
   try { 

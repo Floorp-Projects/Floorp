@@ -4137,15 +4137,22 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
       if (domElement)
       {
         PRBool hasAttribute;
+        nsAutoString color;
         if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("background"), &hasAttribute))
             && hasAttribute)  // There is a background image
           *_retval = nsIMsgCompConvertible::No; 
-        else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("text"), &hasAttribute))
-            && hasAttribute)  // There is a text color
+        else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("text"), &hasAttribute)) &&
+                 hasAttribute &&
+                 NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("text"), color)) &&
+                 !color.Equals(NS_LITERAL_STRING("#000000"))) {
           *_retval = nsIMsgCompConvertible::Altering;
-        else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("bgcolor"), &hasAttribute))
-            && hasAttribute)  // There is a background color
+        }
+        else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("bgcolor"), &hasAttribute)) &&
+                 hasAttribute &&
+                 NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("bgcolor"), color)) &&
+                 !color.Equals(NS_LITERAL_STRING("#FFFFFF"), nsCaseInsensitiveStringComparator())) {
           *_retval = nsIMsgCompConvertible::Altering;
+        }
 
         //ignore special color setting for link, vlink and alink at this point.
       }
