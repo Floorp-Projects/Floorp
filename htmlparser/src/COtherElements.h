@@ -97,9 +97,9 @@ inline PRBool ContainsGroup(CGroupMembers& aGroupSet,CGroupMembers& aGroup) {
   return result;
 }
 
-inline PRBool ListContainsTag(eHTMLTags* aTagList,eHTMLTags aTag) {
+inline PRBool ListContainsTag(const eHTMLTags* aTagList,eHTMLTags aTag) {
   if(aTagList) {
-    eHTMLTags *theNextTag=aTagList;
+    const eHTMLTags *theNextTag=aTagList;
     while(eHTMLTag_unknown!=*theNextTag) {
       if(aTag==*theNextTag) {
         return PR_TRUE;
@@ -362,9 +362,9 @@ public:
   eHTMLTags       mDelegate;
   CGroupMembers   mGroup;
   CGroupMembers   mContainsGroups;
-  eHTMLTags       *mIncludeKids;
-  eHTMLTags       *mExcludeKids;
-  eHTMLTags       *mAutoClose;    //other start tags that close this container
+  const eHTMLTags       *mIncludeKids;
+  const eHTMLTags       *mExcludeKids;
+  const eHTMLTags       *mAutoClose;    //other start tags that close this container
 };
 
 
@@ -1932,8 +1932,8 @@ public:
 /**********************************************************
   This is for the body element...
  **********************************************************/
-static eHTMLTags gBodyKids[] = {eHTMLTag_button, eHTMLTag_del, eHTMLTag_ins, eHTMLTag_map,eHTMLTag_script, eHTMLTag_unknown};
-static eHTMLTags gBodyExcludeKids[] = {eHTMLTag_applet, eHTMLTag_button, eHTMLTag_iframe, eHTMLTag_object, eHTMLTag_unknown};
+static const eHTMLTags gBodyKids[] = {eHTMLTag_button, eHTMLTag_del, eHTMLTag_ins, eHTMLTag_map,eHTMLTag_script, eHTMLTag_unknown};
+static const eHTMLTags gBodyExcludeKids[] = {eHTMLTag_applet, eHTMLTag_button, eHTMLTag_iframe, eHTMLTag_object, eHTMLTag_unknown};
 
 class CBodyElement: public CElement {
 public:
@@ -2140,27 +2140,27 @@ public:
 
 static CElementTable *gElementTable = 0;
 
-static eHTMLTags kDLKids[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_unknown};
-static eHTMLTags kAutoCloseDD[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_dl,eHTMLTag_unknown};
-static eHTMLTags kButtonExcludeKids[]={ eHTMLTag_a,eHTMLTag_button,eHTMLTag_select,eHTMLTag_textarea,
+static const eHTMLTags kDLKids[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_unknown};
+static const eHTMLTags kAutoCloseDD[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_dl,eHTMLTag_unknown};
+static const eHTMLTags kButtonExcludeKids[]={ eHTMLTag_a,eHTMLTag_button,eHTMLTag_select,eHTMLTag_textarea,
                                         eHTMLTag_input,eHTMLTag_iframe,eHTMLTag_form,eHTMLTag_isindex,
                                         eHTMLTag_fieldset,eHTMLTag_unknown};
-static eHTMLTags kColgroupKids[]={eHTMLTag_col,eHTMLTag_unknown};
-static eHTMLTags kDirKids[]={eHTMLTag_li,eHTMLTag_unknown};
-static eHTMLTags kOptionGroupKids[]={eHTMLTag_option,eHTMLTag_unknown};
-static eHTMLTags kFieldsetKids[]={eHTMLTag_legend,eHTMLTag_unknown};
-static eHTMLTags kFormKids[]={eHTMLTag_script,eHTMLTag_unknown};
-static eHTMLTags kLIExcludeKids[]={eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_unknown};
-static eHTMLTags kMapKids[]={eHTMLTag_area,eHTMLTag_unknown};
-static eHTMLTags kPreExcludeKids[]={eHTMLTag_image,eHTMLTag_object,eHTMLTag_applet,
+static const eHTMLTags kColgroupKids[]={eHTMLTag_col,eHTMLTag_unknown};
+static const eHTMLTags kDirKids[]={eHTMLTag_li,eHTMLTag_unknown};
+static const eHTMLTags kOptionGroupKids[]={eHTMLTag_option,eHTMLTag_unknown};
+static const eHTMLTags kFieldsetKids[]={eHTMLTag_legend,eHTMLTag_unknown};
+static const eHTMLTags kFormKids[]={eHTMLTag_script,eHTMLTag_unknown};
+static const eHTMLTags kLIExcludeKids[]={eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_unknown};
+static const eHTMLTags kMapKids[]={eHTMLTag_area,eHTMLTag_unknown};
+static const eHTMLTags kPreExcludeKids[]={eHTMLTag_image,eHTMLTag_object,eHTMLTag_applet,
                                     eHTMLTag_big,eHTMLTag_small,eHTMLTag_sub,eHTMLTag_sup,
                                     eHTMLTag_font,eHTMLTag_basefont,eHTMLTag_unknown};
-static eHTMLTags kSelectKids[]={eHTMLTag_optgroup,eHTMLTag_option,eHTMLTag_unknown};
-static eHTMLTags kBlockQuoteKids[]={eHTMLTag_script,eHTMLTag_unknown};
-static eHTMLTags kFramesetKids[]={eHTMLTag_noframes,eHTMLTag_unknown};
-static eHTMLTags kObjectKids[]={eHTMLTag_param,eHTMLTag_unknown};
-static eHTMLTags kTBodyKids[]={eHTMLTag_tr,eHTMLTag_unknown};
-static eHTMLTags kUnknownKids[]={eHTMLTag_html,eHTMLTag_unknown};
+static const eHTMLTags kSelectKids[]={eHTMLTag_optgroup,eHTMLTag_option,eHTMLTag_unknown};
+static const eHTMLTags kBlockQuoteKids[]={eHTMLTag_script,eHTMLTag_unknown};
+static const eHTMLTags kFramesetKids[]={eHTMLTag_noframes,eHTMLTag_unknown};
+static const eHTMLTags kObjectKids[]={eHTMLTag_param,eHTMLTag_unknown};
+static const eHTMLTags kTBodyKids[]={eHTMLTag_tr,eHTMLTag_unknown};
+static const eHTMLTags kUnknownKids[]={eHTMLTag_html,eHTMLTag_unknown};
 
 
 inline CElement* CElement::GetElement(eHTMLTags aTag) {
@@ -2496,7 +2496,7 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
 
     if(aTag->mIncludeKids) {
       printf("\n%s",prefix);
-      eHTMLTags *theKid=aTag->mIncludeKids;
+      const eHTMLTags *theKid=aTag->mIncludeKids;
       printf("+ ");
       while(eHTMLTag_unknown!=*theKid){
         const PRUnichar *t = nsHTMLTags::GetStringValue(*theKid++);
@@ -2506,7 +2506,7 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
 
     if(aTag->mExcludeKids) {
       printf("\n%s",prefix);
-      eHTMLTags *theKid=aTag->mExcludeKids;
+      const eHTMLTags *theKid=aTag->mExcludeKids;
       printf("- ");
       while(eHTMLTag_unknown!=*theKid){
         const PRUnichar *t = nsHTMLTags::GetStringValue(*theKid++);

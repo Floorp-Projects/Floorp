@@ -52,109 +52,109 @@
 
 
 //First, define the set of taglists for tags with special parents...
-TagList  gAParents={1,{eHTMLTag_map}};
-TagList  gInAddress={1,{eHTMLTag_address}};
-TagList  gInHead={1,{eHTMLTag_head}};
-TagList  gInTable={1,{eHTMLTag_table}};
-TagList  gInHTML={1,{eHTMLTag_html}};
-TagList  gInBody={1,{eHTMLTag_body}};
-TagList  gInForm={1,{eHTMLTag_form}};
-TagList  gInFieldset={1,{eHTMLTag_fieldset}};
-TagList  gInTR={1,{eHTMLTag_tr}};
-TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
-TagList  gInFrameset={1,{eHTMLTag_frameset}};
-TagList  gInNoframes={1,{eHTMLTag_noframes}};
+static const TagList  gAParents={1,{eHTMLTag_map}};
+static const TagList  gInAddress={1,{eHTMLTag_address}};
+static const TagList  gInHead={1,{eHTMLTag_head}};
+static const TagList  gInTable={1,{eHTMLTag_table}};
+static const TagList  gInHTML={1,{eHTMLTag_html}};
+static const TagList  gInBody={1,{eHTMLTag_body}};
+static const TagList  gInForm={1,{eHTMLTag_form}};
+static const TagList  gInFieldset={1,{eHTMLTag_fieldset}};
+static const TagList  gInTR={1,{eHTMLTag_tr}};
+static const TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
+static const TagList  gInFrameset={1,{eHTMLTag_frameset}};
+static const TagList  gInNoframes={1,{eHTMLTag_noframes}};
 //Removed ADDRESS to solve 24885
-TagList  gInP={2,{eHTMLTag_span,eHTMLTag_table}}; // added table for bug 43678, removed FORM bug 94269
-TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
-TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
-TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
-TagList  gFramesetParents={2,{eHTMLTag_html,eHTMLTag_frameset}};
-TagList  gLegendParents={1,{eHTMLTag_fieldset}};
-TagList  gAreaParent={1,{eHTMLTag_map}};
-TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
-TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
-TagList  gTREndParents={5,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_applet}};
+static const TagList  gInP={2,{eHTMLTag_span,eHTMLTag_table}}; // added table for bug 43678, removed FORM bug 94269
+static const TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
+static const TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
+static const TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
+static const TagList  gFramesetParents={2,{eHTMLTag_html,eHTMLTag_frameset}};
+static const TagList  gLegendParents={1,{eHTMLTag_fieldset}};
+static const TagList  gAreaParent={1,{eHTMLTag_map}};
+static const TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
+static const TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
+static const TagList  gTREndParents={5,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_applet}};
 
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
 //*********************************************************************************************
 
-TagList  gContainsText={4,{eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity}};
-TagList  gUnknownKids={2,{eHTMLTag_html,eHTMLTag_frameset}};
-TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
-TagList  gContainsParam={1,{eHTMLTag_param}};
-TagList  gColgroupKids={1,{eHTMLTag_col}}; 
-TagList  gAddressKids={1,{eHTMLTag_p}};
-TagList  gBodyKids={8, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
+static const TagList  gContainsText={4,{eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity}};
+static const TagList  gUnknownKids={2,{eHTMLTag_html,eHTMLTag_frameset}};
+static const TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
+static const TagList  gContainsParam={1,{eHTMLTag_param}};
+static const TagList  gColgroupKids={1,{eHTMLTag_col}}; 
+static const TagList  gAddressKids={1,{eHTMLTag_p}};
+static const TagList  gBodyKids={8, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
                         eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li,eHTMLTag_param}}; // Added PARAM for bug 54448
-TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
+static const TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
 
-TagList  gDLRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_dd}};
-TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
-TagList  gDTKids={1,{eHTMLTag_dt}};
-TagList  gFieldsetKids={2,{eHTMLTag_legend,eHTMLTag_text}};
-TagList  gFontKids={3,{eHTMLTag_legend,eHTMLTag_table,eHTMLTag_text}}; // Added table to fix bug 93365
-TagList  gFormKids={1,{eHTMLTag_keygen}};
-TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
+static const TagList  gDLRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_dd}};
+static const TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
+static const TagList  gDTKids={1,{eHTMLTag_dt}};
+static const TagList  gFieldsetKids={2,{eHTMLTag_legend,eHTMLTag_text}};
+static const TagList  gFontKids={3,{eHTMLTag_legend,eHTMLTag_table,eHTMLTag_text}}; // Added table to fix bug 93365
+static const TagList  gFormKids={1,{eHTMLTag_keygen}};
+static const TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
-TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
-TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
+static const TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
+static const TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
 
-TagList  gLabelKids={1,{eHTMLTag_span}};
-TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
-TagList  gMapKids={1,{eHTMLTag_area}};
-TagList  gPreKids={2,{eHTMLTag_hr,eHTMLTag_center}};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
+static const TagList  gLabelKids={1,{eHTMLTag_span}};
+static const TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
+static const TagList  gMapKids={1,{eHTMLTag_area}};
+static const TagList  gPreKids={2,{eHTMLTag_hr,eHTMLTag_center}};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
-TagList  gTableKids={9,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
+static const TagList  gTableKids={9,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
                      eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,
                      eHTMLTag_map,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382
   
-TagList  gTableElemKids={7,{eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr}};
-TagList  gTRKids={4,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
-TagList  gTBodyKids={2,{eHTMLTag_tr,eHTMLTag_form}}; // Removed INPUT - Ref. Bug 20087, 25382
-TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
+static const TagList  gTableElemKids={7,{eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr}};
+static const TagList  gTRKids={4,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
+static const TagList  gTBodyKids={2,{eHTMLTag_tr,eHTMLTag_form}}; // Removed INPUT - Ref. Bug 20087, 25382
+static const TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 
 
 //*********************************************************************************************
 // The following tag lists are used to define common set of root notes for the HTML elements...
 //*********************************************************************************************
 
-TagList  gRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_select}}; // Added SELECT to fix bug 98645
-TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th}};
-TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
+static const TagList  gRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_select}}; // Added SELECT to fix bug 98645
+static const TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th}};
+static const TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
  
-TagList  gLIRootTags={8,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td,eHTMLTag_th}};
+static const TagList  gLIRootTags={8,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td,eHTMLTag_th}};
 
-TagList  gOLRootTags={5,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td,eHTMLTag_th,eHTMLTag_select}};
-TagList  gTDRootTags={6,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table,eHTMLTag_applet}};
-TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
+static const TagList  gOLRootTags={5,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td,eHTMLTag_th,eHTMLTag_select}};
+static const TagList  gTDRootTags={6,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table,eHTMLTag_applet}};
+static const TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
 
 //*********************************************************************************************
 // The following tag lists are used to define the autoclose properties of the html elements...
 //*********************************************************************************************
 
-TagList  gBodyAutoClose={1,{eHTMLTag_head}};
-TagList  gTBodyAutoClose={5,{eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_th}};  // TD|TH inclusion - Bug# 24112
-TagList  gCaptionAutoClose={1,{eHTMLTag_tbody}};
-TagList  gLIAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
-TagList  gPAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
-TagList  gHRAutoClose={1,{eHTMLTag_p}};
-TagList  gOLAutoClose={2,{eHTMLTag_p,eHTMLTag_ol}};
-TagList  gDivAutoClose={1,{eHTMLTag_p}};
+static const TagList  gBodyAutoClose={1,{eHTMLTag_head}};
+static const TagList  gTBodyAutoClose={5,{eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_th}};  // TD|TH inclusion - Bug# 24112
+static const TagList  gCaptionAutoClose={1,{eHTMLTag_tbody}};
+static const TagList  gLIAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
+static const TagList  gPAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
+static const TagList  gHRAutoClose={1,{eHTMLTag_p}};
+static const TagList  gOLAutoClose={2,{eHTMLTag_p,eHTMLTag_ol}};
+static const TagList  gDivAutoClose={1,{eHTMLTag_p}};
 
-TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6}};
+static const TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6}};
 
-TagList  gTableCloseTags={6,{eHTMLTag_td,eHTMLTag_tr,eHTMLTag_th,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot}};
-TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
-TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
-TagList  gDTCloseTags={3,{eHTMLTag_p,eHTMLTag_dd,eHTMLTag_dt}};
-TagList  gULCloseTags={1,{eHTMLTag_li}};
-TagList  gULAutoClose={2,{eHTMLTag_p,eHTMLTag_ul}}; //fix bug 50261..
+static const TagList  gTableCloseTags={6,{eHTMLTag_td,eHTMLTag_tr,eHTMLTag_th,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot}};
+static const TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
+static const TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
+static const TagList  gDTCloseTags={3,{eHTMLTag_p,eHTMLTag_dd,eHTMLTag_dt}};
+static const TagList  gULCloseTags={1,{eHTMLTag_li}};
+static const TagList  gULAutoClose={2,{eHTMLTag_p,eHTMLTag_ul}}; //fix bug 50261..
 
 
-TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
-TagList  gCaptionExcludableParents={1,{eHTMLTag_td}}; //Ref Bug 26488
+static const TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
+static const TagList  gCaptionExcludableParents={1,{eHTMLTag_td}}; //Ref Bug 26488
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
@@ -178,19 +178,19 @@ nsHTMLElement* gHTMLElements=0;
 void Initialize(eHTMLTags aTag,
                 eHTMLTags aRequiredAncestor,
                 eHTMLTags aExcludingAncestor, 
-                TagList*  aRootNodes, 
-                TagList*  aEndRootNodes,
-                TagList*  aAutocloseStart,    
-                TagList*  aAutocloseEnd,      
-                TagList*  aSynonymousTags,    
-                TagList*  aExcludableParents,  
+                const TagList* aRootNodes, 
+                const TagList*  aEndRootNodes,
+                const TagList*  aAutocloseStart,    
+                const TagList*  aAutocloseEnd,      
+                const TagList*  aSynonymousTags,    
+                const TagList*  aExcludableParents,  
                 int       aParentBits,        
                 int       aInclusionBits, 
                 int       aExclusionBits,     
                 int       aSpecialProperties,
                 PRUint32  aPropagateRange,
-                TagList*  aSpecialParents,    
-                TagList*  aSpecialKids,    
+                const TagList*  aSpecialParents,    
+                const TagList*  aSpecialKids,    
                 eHTMLTags aSkipTarget
                 ) 
 {
@@ -1410,8 +1410,8 @@ PRBool nsHTMLElement::CanBeContained(eHTMLTags aChildTag,nsDTDContext &aContext)
     result=PR_TRUE;
 
     if(0<theCount){
-      TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
-      TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
+      const TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+      const TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
       if(theRootTags) {
         PRInt32 theRootIndex=LastOf(aContext,*theRootTags);
         PRInt32 theSPIndex=(theSpecialParents) ? LastOf(aContext,*theSpecialParents) : kNotFound;  
@@ -1467,7 +1467,7 @@ PRBool nsHTMLElement::CanBeContained(eHTMLTags aChildTag,nsDTDContext &aContext)
 PRInt32 nsHTMLElement::GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
   PRInt32 theChildIndex=aContext.LastOf(aChildTag);
   if(kNotFound==theChildIndex) {
-    TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
+    const TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
     if(theSynTags) {
       theChildIndex=LastOf(aContext,*theSynTags);
     } 
@@ -1770,7 +1770,7 @@ PRBool nsHTMLElement::IsExcludableParent(eHTMLTags aParent) const{
 
   if(!IsTextTag(mTagID)) {
     if(mExcludableParents) {
-      TagList* theParents=mExcludableParents;
+      const TagList* theParents=mExcludableParents;
       if(FindTagInSet(aParent,theParents->mTags,theParents->mCount))
         result=PR_TRUE;
     }
@@ -1874,7 +1874,7 @@ PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild,PRBool& aExclusively) {
  */
 PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) {
   PRBool result=PR_FALSE;
-  TagList* theRootTags=gHTMLElements[aChild].GetRootTags();
+  const TagList* theRootTags=gHTMLElements[aChild].GetRootTags();
 
   if(theRootTags){
     if(!FindTagInSet(mTagID,theRootTags->mTags,theRootTags->mCount)){
@@ -2175,7 +2175,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     // Note: we intentionally make 2 passes: 
     // The first pass tries to exactly match, the 2nd pass matches the group.
 
-    TagList* theRootTags=gHTMLElements[mTagID].GetEndRootTags();
+    const TagList* theRootTags=gHTMLElements[mTagID].GetEndRootTags();
     PRInt32 theIndexCopy=theIndex;
     while(--theIndex>=anIndex){
       eHTMLTags theTag=aContext.TagAt(theIndex);
@@ -2241,14 +2241,14 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
       return CanContainSelf();  //not many tags can contain themselves...
     }
 
-    TagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
+    const TagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
     if(theCloseTags){
       if(FindTagInSet(mTagID,theCloseTags->mTags,theCloseTags->mCount))
         return PR_FALSE;
     }
 
     if(gHTMLElements[aChild].mExcludableParents) {
-      TagList* theParents=gHTMLElements[aChild].mExcludableParents;
+      const TagList* theParents=gHTMLElements[aChild].mExcludableParents;
       if(FindTagInSet(mTagID,theParents->mTags,theParents->mCount))
         return PR_FALSE;
     }

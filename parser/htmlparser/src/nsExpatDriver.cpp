@@ -52,7 +52,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 
-static const char* kWhitespace = " \r\n\t"; // Optimized for typical cases
+static const char kWhitespace[] = " \r\n\t"; // Optimized for typical cases
 
 /***************************** EXPAT CALL BACKS *******************************/
 

@@ -83,8 +83,8 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID); 
  
 #ifdef DEBUG
-static const  char* kNullToken = "Error: Null token given";
-static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
+static const  char kNullToken[] = "Error: Null token given";
+static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 #endif
 
 #ifdef  ENABLE_CRC
@@ -1191,8 +1191,8 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
   PRInt32 theCount=aContext.GetCount();
 
   if(0<theCount){
-    TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
-    TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
+    const TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    const TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
     if(theRootTags) {
       PRInt32 theRootIndex=LastOf(aContext,*theRootTags);
       PRInt32 theSPIndex=(theSpecialParents) ? LastOf(aContext,*theSpecialParents) : kNotFound;  
@@ -1784,9 +1784,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 static
-PRBool HasCloseablePeerAboveRoot(TagList& aRootTagList,nsDTDContext& aContext,eHTMLTags aTag,PRBool anEndTag) {
+PRBool HasCloseablePeerAboveRoot(const TagList& aRootTagList,nsDTDContext& aContext,eHTMLTags aTag,PRBool anEndTag) {
   PRInt32   theRootIndex=LastOf(aContext,aRootTagList);  
-  TagList*  theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
+  const TagList*  theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
   PRInt32 theChildIndex=-1;
 
   if(theCloseTags) {
@@ -1839,8 +1839,8 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
                 3. Otherwise its non-specified and we simply presume we can close it.
           */
  
-        TagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
-        TagList* theRootTags=gHTMLElements[aCurrentTag].GetEndRootTags();
+        const TagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
+        const TagList* theRootTags=gHTMLElements[aCurrentTag].GetEndRootTags();
       
         if(theCloseTags){  
             //at a min., this code is needed for H1..H6
@@ -2767,7 +2767,7 @@ PRBool CNavDTD::BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTML
   eHTMLTags theParentTag=aParentTag; //just init to get past first condition...
 
   do {
-    TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    const TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
     if(theRootTags) {
       theParentTag=theRootTags->mTags[0];
       if(CanContain(theParentTag,aChildTag)) {
@@ -3676,7 +3676,7 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
   }
   
   nsresult result=NS_OK;
-  TagList* theRootTags=gHTMLElements[aTarget].GetRootTags();
+  const TagList* theRootTags=gHTMLElements[aTarget].GetRootTags();
   eHTMLTags theParentTag=(theRootTags) ? theRootTags->mTags[0] : eHTMLTag_unknown;
   pos=mBodyContext->LastOf(theParentTag);
   if(kNotFound!=pos) {

@@ -607,7 +607,7 @@ struct TagList {
  * @param   aTagList
  * @return  index of tag, or kNotFound if not found
  */
-inline PRInt32 LastOf(nsDTDContext& aContext,TagList& aTagList){
+inline PRInt32 LastOf(nsDTDContext& aContext, const TagList& aTagList){
   int max = aContext.GetCount();
   int index;
   for(index=max-1;index>=0;index--){

@@ -88,8 +88,8 @@ nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
-const char* kUnorderedStringError = "String argument must be ordered. Don't you read API's?";
+static const char kBadHTMLText[] ="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
+static const char kUnorderedStringError[] = "String argument must be ordered. Don't you read API's?";
 
 #ifdef __INCREMENTAL
 const int   kBufsize=1;
