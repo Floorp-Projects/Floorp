@@ -15,10 +15,39 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../../..
-
-include $(DEPTH)/config/config.mk
+DEPTH=../../../..
 
 TARGET = $(LIBRARY)
 
+LIBRARY_NAME=cachelib
+
+MISCDEP = 		    \
+    $(LIBNSPR)  	    \
+    $(DIST)/lib/xpcom32.lib \
+    $(NULL)
+
+MODULE = cache
+
+CPPSRCS	= nsCacheObject.cpp 	\
+		  nsCacheModule.cpp 	\
+		  nsCacheManager.cpp 	\
+		  nsMemModule.cpp 		\
+		  nsDiskModule.cpp 		\
+		  nsCacheTrace.cpp 		\
+		  nsCachePref.cpp 		\
+		  nsMemCacheObject.cpp	\
+	 	  $(NULL)
+
+REQUIRES = dbm nspr pref xpcom 
+
+LLIBS =				 \
+ 	$(DIST)/lib/xpcom32.lib  \
+	$(LIBNSPR)		 \
+	$(NULL)
+
 include $(DEPTH)/config/rules.mk
+
+INCLUDES += -I../include	\
+			-I../public		\
+			$(NULL)
+

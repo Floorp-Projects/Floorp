@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include <string.h>
 #include <prtypes.h>
 #include <plstr.h>
 
@@ -124,10 +123,10 @@ nsCacheObject* nsMemModule::GetObject(const char* i_url) const
 	if (m_pFirstObject && i_url && *i_url)
 	{
 		nsMemCacheObject* pObj = m_pFirstObject;
-		int inlen = strlen(i_url);
+		int inlen = PL_strlen(i_url);
 		do
 		{
-			if (0 == _strnicmp(pObj->ThisObject()->Address(), i_url, inlen))
+			if (0 == PL_strncasecmp(pObj->ThisObject()->Address(), i_url, inlen))
 				return pObj->ThisObject();
 			pObj = pObj->Next();
 		}
