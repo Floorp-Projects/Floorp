@@ -19,52 +19,47 @@
   Rights Reserved.
   
   Contributor(s):
+  Jason Kersey (kerz@netscape.com)
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletPreview.dtd" >
 
 <window title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        class="dialog"
-        onload="Startup()">
+        orient="vertical" class="dialog" onload="Startup()">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletPreview.js"/>
   <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
 
   <keyset id="dialogKeys"/>
-           
-  <hbox>
-    <text value="&heading.label;"/>
-    <spacer flex="100%"/>
-    <button label="&viewdata.label;" oncommand="formShow();"/>
-  </hbox>
 
-  <spacer style="height: 20px;"/>
-  <hbox class="tabpanel" autostretch="never" style="overflow: auto; height: 260px;">
-    <grid class="indent">
-      <columns>
-        <column width="25"/>
-        <column width="150"/>
-        <column width="250"/>
+  <label value="&heading.label;"/>    
+  
+  <spacer/>
+  
+  <hbox class="tabpanel inset" flex="1" style="overflow: auto;">
+    <grid class="indent" flex="1">
+      <columns flex="1">
+        <column flex="1" crop="right"/>
+        <column flex="2"/>
       </columns>
-      <rows id="rows">
-      </rows>
+      <rows id="rows"/>      
     </grid>
   </hbox>
-
-  <spacer style="height: 20px;"/>
-
+  
   <hbox>
     <checkbox id="checkbox" label="&bypass.label;"/>
-    <spacer flex="100%"/>
+  </hbox>
+  
+  <hbox>
+    <button label="&viewdata.label;" oncommand="formShow();"/>
+    <spacer flex="1"/>
+    <hbox id="okCancelButtons"/>
   </hbox>
 
-  <spacer style="height: 20px;"/>
-
-  <hbox id="okCancelButtons"/>
 </window>

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Jason Kersey (kerz@netscape.com)
  */
 
 /* for xpconnect */
@@ -48,7 +49,6 @@ function Startup() {
     if(prefillList[i] != 0) {
       count = prefillList[i];
       menuPopup = document.createElement("menupopup");
-//      menuList.setAttribute("size", Number(count)+1);
     }
     count--;
     var menuItem = document.createElement("menuitem");
@@ -57,7 +57,7 @@ function Startup() {
     }
     menuItem.setAttribute("label", prefillList[i+2]);
 
-    /* avoid making duplicate entries in the same menulist */
+    // Avoid making duplicate entries in the same menulist
     var child = menuPopup.firstChild;
     var alreadyThere = false;
     while (child) {
@@ -72,26 +72,34 @@ function Startup() {
     }
 
     if(count == 0) {
+      //create the menulist of form data options.
       var menuList = document.createElement("menulist");
       menuList.setAttribute("data", prefillList[i+1]);
       menuList.setAttribute("id", "xx"+(++fieldCount));
       menuList.setAttribute("allowevents", "true");
-//    menuList.setAttribute("editable", "true");  // done later to avoid crash
       menuList.appendChild(menuPopup);
 
-      var text = document.createElement("text");
-      text.setAttribute("value", prefillList[i+1]);
-
+      //create the checkbox for the menulist.
       var localCheckBox = document.createElement("checkbox");
       localCheckBox.setAttribute("id", "x"+fieldCount);
       // Note: menulist name is deliberately chosen to be x + checkbox name in
       //       order to make it easy to get to menulist from associated checkbox
       localCheckBox.setAttribute("oncommand", "UpdateMenuListEnable(this)");
       localCheckBox.setAttribute("checked", "true");
+      localCheckBox.setAttribute("crop", "right");
+      
+      //fix label so it only shows title of field, not any of the url.
+      var colonPos = prefillList[i+1].indexOf(':');
+      var checkBoxLabel;
+      if (colonPos != -1)
+        checkBoxLabel = prefillList[i+1].slice(colonPos + 1)
+      else
+        checkBoxLabel = prefillList[i+1];
+      localCheckBox.setAttribute("label", checkBoxLabel );
 
+      //append all the items into the row.
       var row = document.createElement("row");
       row.appendChild(localCheckBox);
-      row.appendChild(text);
       row.appendChild(menuList);
 
       var rows = document.getElementById("rows");
