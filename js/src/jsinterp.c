@@ -2921,6 +2921,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_OBJECT:
           {
+#if 0
             jsatomid atomIndex;
             JSAtomMap *atomMap;
 
@@ -3022,6 +3023,10 @@ js_Interpret(JSContext *cx, jsval *result)
                 }
                 atomMap->vector[atomIndex] = atom;
             }
+#else
+            atom = GET_ATOM(cx, script, pc);
+            JS_ASSERT(ATOM_IS_OBJECT(atom));
+#endif
             rval = ATOM_KEY(atom);
             PUSH_OPND(rval);
             obj = NULL;
