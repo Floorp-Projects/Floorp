@@ -229,8 +229,29 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&pageInfoCmd.label;" oncommand="BrowserPageInfo();"/>
       <menuseparator />
       <menuitem value="&translateMenu.label;" oncommand="Translate();"/>
-      <menuitem value="&webContentMenu.label;" 
-                oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
+      <menu value="&webContentMenu.label;" 
+            datasources="rdf:chrome" 
+            ref="urn:mozilla:locale:root" 
+            sortResource="http://www.mozilla.org/rdf/chrome#name"
+            sortDirection="ascending">
+        <template>
+          <rule>
+            <menupopup>
+              <menuitem class="standrad" uri="rdf:*" 
+                        value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                        data="rdf:http://www.mozilla.org/rdf/chrome#name" 
+                        oncommand="selectLocale(event)" />
+            </menupopup>
+          </rule>
+         </template>
+
+       <menupopup>
+          <menuitem value="&downloadMore.label;" 
+                    oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
+          <menuseparator />
+       </menupopup>
+      </menu>
+
       <menuseparator />
 <!-- Deprecated BEGIN
                 <menu value="&dcharMenu.label;">
@@ -465,23 +486,6 @@ END of Deprecated -->
       <menuitem value="&QAKnownBugCmd.label;"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
       <menuseparator />
       <menuitem value="&strresCmd.label;"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
-
-      <menu value="&languages.label;" 
-            datasources="rdf:chrome" 
-            ref="urn:mozilla:locale:root" 
-            sortResource="http://www.mozilla.org/rdf/chrome#name"
-            sortDirection="ascending">
-		<template>
-		  <rule>
-            <menupopup>
-			  <menuitem class="standrad" uri="rdf:*" 
-                        value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                        data="rdf:http://www.mozilla.org/rdf/chrome#name" 
-                        oncommand="selectLocale(event)" />
-            </menupopup>
-          </rule>
-		</template>
-      </menu>
 
       <menuseparator />
       <menuitem value="&BloatDumpNewCmd.label;" oncommand="window._content.location.href='about:bloat?new'"/>
