@@ -722,25 +722,22 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
     return rv; // bail at this point
   }
 
-  // only do the following for the object tag
-  if (aContent->Tag() == nsHTMLAtoms::object) {
-    // for now, we should try to do the same for "document" types and
-    // create an iframe-like sub-frame
-    if (IsSupportedDocument(aContent)) {
-      nsIFrame * aNewFrame = nsnull;
-      rv = NS_NewSubDocumentFrame(aPresContext->PresShell(), &aNewFrame);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // XXX we're using the same style context for ourselves and the
-      // iframe.  If this ever changes, please fix HandleChild() to deal.
-      rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
-      if (NS_SUCCEEDED(rv)) {
-        nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
-        mFrames.AppendFrame(this, aNewFrame);
-      } else {
-        aNewFrame->Destroy(aPresContext);
-      }
+  // for now, we should try to do the same for "document" types and
+  // create an iframe-like sub-frame
+  if (IsSupportedDocument(aContent)) {
+    nsIFrame * aNewFrame = nsnull;
+    rv = NS_NewSubDocumentFrame(aPresContext->PresShell(), &aNewFrame);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    // XXX we're using the same style context for ourselves and the
+    // iframe.  If this ever changes, please fix HandleChild() to deal.
+    rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
+    if (NS_SUCCEEDED(rv)) {
+      nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
+      mFrames.AppendFrame(this, aNewFrame);
+    } else {
+      aNewFrame->Destroy(aPresContext);
     }
   }
 
