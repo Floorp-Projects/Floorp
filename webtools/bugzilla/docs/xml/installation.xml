@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.73 2004/07/22 17:33:26 kiko%async.com.br Exp $ -->
+<!-- $Id: installation.xml,v 1.74 2004/07/23 22:02:37 bugreport%peshkin.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -2019,6 +2019,22 @@ pid-file=/home/foo/mymysql/the.pid
       </para>
     </section>
         
+    <section>
+      <title>The Apache webserver is not serving Bugzilla pages</title>
+      <para>
+        After you have run <command>checksetup.pl</command> twice,
+        run <command>testserver.pl http://yoursite.yourdomain/yoururl</command>
+        to confirm that your webserver is configured properly for
+        Bugzilla.
+      </para>
+<programlisting><![CDATA[./testserver.pl http://landfill.bugzilla.org/bugzilla-tip
+TEST-OK Webserver is running under group id in $webservergroup.
+TEST-OK Got ant picture.
+TEST-OK Webserver is executing CGIs.
+TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-tip/localconfig.
+]]></programlisting>
+    </section>
+
     <section>
       <title>I installed a Perl module, but 
       <filename>checksetup.pl</filename> claims it's not installed!</title>
