@@ -88,12 +88,15 @@ sub sillyness {
     $zz = %::target_milestone;
 }
 
+# XML::Parser automatically unquotes characters when it
+# parses the XML, so this routine shouldn't be needed
+# for anything (see bug 109530).
 sub UnQuoteXMLChars {
     $_[0] =~ s/&amp;/&/g;
     $_[0] =~ s/&lt;/</g;
     $_[0] =~ s/&gt;/>/g;
-    $_[0] =~ s/&apos;/'/g;
-    $_[0] =~ s/&quot;/"/g;
+    $_[0] =~ s/&apos;/'/g;  # ' # Darned emacs colors
+    $_[0] =~ s/&quot;/"/g;  # " # Darned emacs colors
 #    $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
     return($_[0]);
 }
@@ -318,7 +321,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
       $long_description .= "$sorted_descs[$z]->{'bug_when'}"; 
       $long_description .= " ----\n\n";
     }
-    $long_description .=  UnQuoteXMLChars($sorted_descs[$z]->{'thetext'});
+    $long_description .=  $sorted_descs[$z]->{'thetext'};
     $long_description .=  "\n";
   }
 
@@ -351,12 +354,12 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   if ( (defined $bug_fields{'bug_file_loc'}) && ($bug_fields{'bug_file_loc'}) ){
       push (@query, "bug_file_loc");
-      push (@values, SqlQuote(UnQuoteXMLChars($bug_fields{'bug_file_loc'})));
+      push (@values, SqlQuote($bug_fields{'bug_file_loc'}));
       }
 
   if ( (defined $bug_fields{'short_desc'}) && ($bug_fields{'short_desc'}) ){
       push (@query, "short_desc");
-      push (@values, SqlQuote(UnQuoteXMLChars($bug_fields{'short_desc'})) );
+      push (@values, SqlQuote($bug_fields{'short_desc'}) );
       }
 
 
