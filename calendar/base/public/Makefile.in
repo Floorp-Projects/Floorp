@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Dan Mosedale <dan.mosedale@oracle.com>
+#   Mike Shaver <shaver@off.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,13 +46,14 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= calbase
 XPIDL_MODULE	= calbase
 
-XPIDLSRCS	= calIDateTime.idl   \
-		  calIItemBase.idl   \
-		  calITodo.idl       \
-		  calIEvent.idl      \
+XPIDLSRCS	= calIAttendee.idl   \
 		  calICalendar.idl   \
+		  calIDateTime.idl   \
+		  calIEvent.idl      \
 		  calIICSService.idl \
+		  calIItemBase.idl   \
 		  calIRecurrenceInfo.idl \
+		  calITodo.idl       \
 		  $(NULL)
 
 EXPORTS		= calBaseCID.h

@@ -1,21 +1,21 @@
+/* GENERATED FILE; DO NOT EDIT. SOURCE IS calEvent.js.pre */
 function calEvent() {
     this.wrappedJSObject = this;
     this.initItemBase();
     this.initEvent();
 }
 
+
+var calItemBase;
+
 calEvent.prototype = {
-    __proto__: (new calItemBase()),
+    __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
-        if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calIItemBase) &&
-            !aIID.equals(Components.interfaces.calIEvent))
-        {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
+        if (aIID.equals(Components.interfaces.calIEvent))
+            return this;
 
-        return this;
+        return this.__proto__.QueryInterface(aIID);
     },
 
     initEvent: function () {

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Mike Shaver <shaver@off.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,34 +36,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CALBASECID_H_
-#define CALBASECID_H_
+#include "nsISupports.idl"
 
-/* C++ */
-#define CAL_DATETIME_CID \
-    { 0x85475b45, 0x110a, 0x443c, { 0xaf, 0x3f, 0xb6, 0x63, 0x98, 0xa5, 0xa7, 0xcd } }
-#define CAL_DATETIME_CONTRACTID \
-    "@mozilla.org/calendar/datetime;1"
+[scriptable,uuid(5d1f2c7c-29bb-4090-94c2-cabe278fe567)]
+interface calIAttendee : nsISupports
+{
+  readonly attribute boolean isMutable;
 
-#define CAL_ICSSERVICE_CID \
-    { 0xf2f65cf2, 0x880e, 0x4960, { 0xb3, 0x7b, 0xae, 0x02, 0x05, 0xb6, 0xe3, 0x42 } }
-#define CAL_ICSSERVICE_CONTRACTID \
-    "@mozilla.org/calendar/ics-service;1"
+  // makes this item immutable
+  void makeImmutable();
 
-/* JS -- Update these from calItemModule.js */
-#define CAL_EVENT_CID \
-    { 0x974339d5, 0xab86, 0x4491, { 0xaa, 0xaf, 0x2b, 0x2c, 0xa1, 0x77, 0xc1, 0x2b } }
-#define CAL_EVENT_CONTRACTID \
-    "@mozilla.org/calendar/event;1"
+  // clone always returns a mutable event
+  calIAttendee clone();
 
-#define CAL_TODO_CID \
-    { 0x7af51168, 0x6abe, 0x4a31, { 0x98, 0x4d, 0x6f, 0x8a, 0x39, 0x89, 0x21, 0x2d } }
-#define CAL_TODO_CONTRACTID \
-    "@mozilla.org/calendar/todo;1"
+  attribute AUTF8String id;
+  attribute AUTF8String commonName;
+  attribute boolean     rsvp;
 
-#define CAL_ATTENDEE_CID \
-    { 0x5c8dcaa3, 0x170c, 0x 4a73, { 0x81, 0x42, 0xd5, 0x31, 0x15, 0x6f, 0x66, 0x4d } }
-#define CAL_ATTENDEE_CONTRACTID \
-    "@mozilla.org/calendar/attendee;1"
+  const PRUint32 ROLE_CHAIR = 20041;
+  const PRUint32 ROLE_REQ_PARTICIPANT = 20042;
+  const PRUint32 ROLE_OPT_PARTICIPANT = 20043;
+  const PRUint32 ROLE_NON_PARTICIPANT = 20044;
+  attribute PRUint32    role;
 
-#endif /* CALBASECID_H_ */
+  const PRUint32 PARTSTAT_NEEDSACTION = 20018;
+  const PRUint32 PARTSTAT_ACCEPTED    = 20019;
+  const PRUint32 PARTSTAT_DECLINED    = 20020;
+  const PRUint32 PARTSTAT_NONE        = 20025;
+  attribute PRUint32    participationStatus;
+
+  const PRUint32 CUTYPE_INDIVIDUAL    = 20001;
+  const PRUint32 CUTYPE_GROUP         = 20002;
+  const PRUint32 CUTYPE_RESOURCE      = 20003;
+  const PRUint32 CUTYPE_ROOM          = 20004;
+  attribute PRUint32    userType;
+
+};

@@ -56,6 +56,8 @@ interface calIMutableDateTime;
 interface calIRecurrenceInfo;
 interface calIMutableRecurrenceInfo;
 
+interface calIAttendee;
+
 //
 // calIItemBase
 //
@@ -164,6 +166,14 @@ interface calIItemBase : nsISupports
   nsIVariant getProperty(in AString name);
   void setProperty(in AString name, in nsIVariant value);
   void deleteProperty(in AString name);
+
+  // The array returned here is not live; it will not reflect calls to
+  // removeAttendee/addAttendee that follow the call to getAttendees.
+  void getAttendees(out PRUint32 count,
+                    [array,size_is(count),retval] out calIAttendee attendees);
+  calIAttendee getAttendeeById(in AUTF8String id);
+  void removeAttendee(in calIAttendee attendee);
+  void addAttendee(in calIAttendee attendee);
 };
 
 //

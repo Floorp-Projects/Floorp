@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Mike Shaver <shaver@off.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,59 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// calEvent.js
-//
-
-//
-// constructor
-//
-function calEvent() {
+function calAttendee() {
     this.wrappedJSObject = this;
-    this.initItemBase();
-    this.initEvent();
 }
 
-// var trickery to suppress lib-as-component errors from loader
-var calItemBase;
-
-calEvent.prototype = {
-    __proto__: calItemBase ? (new calItemBase()) : {},
-
+calAttendee.prototype = {
     QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.calIEvent))
-            return this;
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calIAttendee))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
 
-        return this.__proto__.QueryInterface(aIID);
+        return this;
     },
 
-    initEvent: function () {
-        this.mStartDate = createCalDateTime();
-        this.mEndDate = createCalDateTime();
-        this.mStampDate = createCalDateTime();
+    mImmutable: false,
+    get isMutable() { return !this.mImmutable; },
+    
+    makeImmutable : function() {
+        this.mImmutable = true;
     },
 
-    clone: function () {
-        var m = new calEvent();
-        this.cloneItemBaseInto(m);
-        if (this.mStartDate)
-            m.mStartDate = this.mStartDate.clone();
-        if (this.mEndDate)
-            m.mEndDate = this.mEndDate.clone();
-        if (this.mStampDate)
-            m.mStampDate = this.mStampDate.clone();
-
-        return m;
-    },
-
-    makeImmutable: function () {
-        if (this.mStartDate)
-            this.mStartDate.makeImmutable();
-        if (this.mEndDate)
-            this.mEndDate.makeImmutable();
-        if (this.mStampDate)
-            this.mStampDate.makeImmutable();
-        this.makeItemBaseImmutable();
+    clone: function() {
+        var a = new calAttendee();
+        var allProps = ["id", "commonName", "rsvp", "role", "participantStatus",
+                        "userType"];
+        for (var i in allProps)
+            a[allProps[i]] = this[allProps[i]];
+        return a;
     },
 
 #define MEMBER_ATTR(varname, initvalue, attrname) \
@@ -97,9 +72,16 @@ calEvent.prototype = {
     get attrname() { return this.varname; },      \
     set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
 
-    MEMBER_ATTR(mStartDate, null, startDate),
-    MEMBER_ATTR(mEndDate, null, endDate),
-    MEMBER_ATTR(mStampDate, null, stampDate)
-
-#undef MEMBER_ATTR
+    MEMBER_ATTR(mId, null, id),
+    MEMBER_ATTR(mCommonName, null, commonName),
+    MEMBER_ATTR(mRsvp, false, rsvp),
+    MEMBER_ATTR(mRole, Components.interfaces.calIAttendee.ROLE_OPT_PARTICIPANT, role),
+    MEMBER_ATTR(mRole, Components.interfaces.calIAttendee.ROLE_OPT_PARTICIPANT, role),
+    MEMBER_ATTR(mParticipationStatus,
+                Components.interfaces.calIAttendee.PARTSTAT_NEEDSACTION,
+                participationStatus),
+    MEMBER_ATTR(mUserType, Components.interfaces.calIAttendee.CUTYPE_INDIVIDUAL, userType)
+    
+    
+#undef MEMBER_ATTR    
 };

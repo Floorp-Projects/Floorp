@@ -1,3 +1,4 @@
+/* GENERATED FILE; DO NOT EDIT. SOURCE IS calItemBase.js.pre */
 function calItemBase() { }
 
 calItemBase.prototype = {
@@ -26,6 +27,8 @@ calItemBase.prototype = {
         if (this.mAlarmTime)
             this.mAlarmTime.makeImmutable();
 
+        for (var i = 0; i < this.mAttendees.length; i++)
+            this.mAttendees[i].makeImmutable();
         this.mImmutable = true;
     },
 
@@ -36,6 +39,8 @@ calItemBase.prototype = {
 
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
+
+        this.mAttendees = [];
 
 
         this.mRecurrenceInfo = null;
@@ -112,6 +117,37 @@ calItemBase.prototype = {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
         this.mProperties.deleteProperty(aName);
+    },
+
+    getAttendees: function (countObj) {
+        countObj.value = this.mAttendees.length;
+        return this.mAttendees.concat([]);
+    },
+    getAttendeeById: function (id) {
+        for (var i = 0; i < this.mAttendees.length; i++)
+            if (this.mAttendees[i].id == id)
+                return this.mAttendees[i];
+        return null;
+    },
+    removeAttendee: function (attendee) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        var found = false, newAttendees = [];
+        for (var i = 0; i < this.mAttendees.length; i++) {
+            if (this.mAttendees[i] != attendee)
+                newAttendees.push(this.mAttendees[i]);
+            else
+                found = true;
+        }
+        if (found)
+            this.mAttendees = newAttendees;
+        else
+            throw Component.results.NS_ERROR_INVALID_ARG;
+    },
+    addAttendee: function (attendee) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mAttendees.push(attendee);
     }
 };
 

@@ -36,17 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Update these in calBaseCID.h */
+const componentData =
+    [
+     /* calItemBase must be first: later scripts depend on it */
+    {cid: null,
+     contractid: null,
+     script: "calItemBase.js",
+     constructor: null},
+
+    {cid: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
+     contractid: "@mozilla.org/calendar/event;1",
+     script: "calEvent.js",
+     constructor: "calEvent"},
+
+    {cid: Components.ID("{7af51168-6abe-4a31-984d-6f8a3989212d}"),
+     contractid: "@mozilla.org/calendar/todo;1",
+     script: null,
+     constructor: "calTodo"},
+
+    {cid: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),
+     contractid: "@mozilla.org/calendar/item-occurrence;1",
+     script: null,
+     constructor: "calItemOccurrence"},
+
+    {cid: Components.ID("{5c8dcaa3-170c-4a73-8142-d531156f664d}"),
+     contractid: "@mozilla.org/calendar/attendee;1",
+     script: "calAttendee.js",
+     constructor: "calAttendee"}
+    ];
+
 var calItemModule = {
-    /* Update these in calBaseCID.h */
-    mEventCID: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
-    mEventContractId: "@mozilla.org/calendar/event;1",
-
-    mTodoCID: Components.ID("{7af51168-6abe-4a31-984d-6f8a3989212d}"),
-    mTodoContractId: "@mozilla.org/calendar/todo;1",
-
-    mItemOccurrenceCID: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),
-    mItemOccurrenceContractId: "@mozilla.org/calendar/item-occurrence;1",
-
     mScriptsLoaded: false,
     loadScripts: function () {
         if (this.mScriptsLoaded)
@@ -67,11 +87,14 @@ var calItemModule = {
 
         // NS_XPCOM_COMPONENT_DIR
         var appdir = dirsvc.get("ComsD", Components.interfaces.nsIFile);
-        var files = [ "calItemBase.js", "calEvent.js" ];
 
-        for (var i = 0; i < files.length; i++) {
+        for (var i = 0; i < componentData.length; i++) {
+            var scriptName = componentData[i].script;
+            if (!scriptName)
+                continue;
+
             var f = appdir.clone();
-            f.append(files[i]);
+            f.append(scriptName);
 
             var fileurl = iosvc.newFileURI(f);
             loader.loadSubScript(fileurl.spec, null);
@@ -83,18 +106,37 @@ var calItemModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-        var cids = [ this.mEventCID, this.mTodoCID, this.mItemOccurrenceCID ];
-        var contractids = [ this.mEventContractId, this.mTodoContractId, this.mItemOccurrenceContractId ];
-
-        for (var i = 0; i < cids.length; i++) {
-            dump ("calItemModule: registering " + contractids[i] + "\n");
-            compMgr.registerFactoryLocation(cids[i],
+        for (var i = 0; i < componentData.length; i++) {
+            var comp = componentData[i];
+            if (!comp.cid)
+                continue;
+            dump ("calItemModule: registering " + comp.contractid + "\n");
+            compMgr.registerFactoryLocation(comp.cid,
                                             "",
-                                            contractids[i],
+                                            comp.contractid,
                                             fileSpec,
                                             location,
                                             type);
         }
+    },
+
+    makeFactoryFor: function(constructor) {
+        var factory = {
+            QueryInterface: function (aIID) {
+                if (!aIID.equals(Components.interfaces.nsISupports) &&
+                    !aIID.equals(Components.interfaces.nsIFactory))
+                    throw Components.results.NS_ERROR_NO_INTERFACE;
+                return this;
+            },
+
+            createInstance: function (outer, iid) {
+                if (outer != null)
+                    throw Components.results.NS_ERROR_NO_AGGREGATION;
+                return (new constructor()).QueryInterface(iid);
+            }
+        };
+
+        return factory;
     },
 
     getClassObject: function (compMgr, cid, iid) {
@@ -104,61 +146,13 @@ var calItemModule = {
         if (!this.mScriptsLoaded)
             this.loadScripts();
 
-        if (cid.equals(this.mEventCID))
-            return this.mEventFactory;
-
-        if (cid.equals(this.mTodoCID))
-            return this.mTodoFactory;
-
-        if (cid.equals(this.mItemOccurrenceCID))
-            return this.mItemOccurrenceFactory;
+        for (var i = 0; i < componentData.length; i++) {
+            if (cid.equals(componentData[i].cid))
+                // eval to get usual scope-walking
+                return this.makeFactoryFor(eval(componentData[i].constructor));
+        }
 
         throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-
-    mEventFactory: {
-        QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.nsISupports) &&
-                !aIID.equals(Components.interfaces.nsIFactory))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
-
-        createInstance: function (outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-            return (new calEvent()).QueryInterface(iid);
-        }
-    },
-
-    mTodoFactory: {
-        QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.nsISupports) &&
-                !aIID.equals(Components.interfaces.nsIFactory))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
-
-        createInstance: function (outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-            return (new calTodo()).QueryInterface(iid);
-        }
-    },
-
-    mItemOccurrenceFactory: {
-        QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.nsISupports) &&
-                !aIID.equals(Components.interfaces.nsIFactory))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
-
-        createInstance: function (outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-            return (new calItemOccurrence()).QueryInterface(iid);
-        }
     },
 
     canUnload: function(compMgr) {

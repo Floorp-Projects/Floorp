@@ -66,8 +66,9 @@ CPPSRCS = calDateTime.cpp \
 
 
 EXTRA_COMPONENTS = \
-	calItemBase.js \
+	calAttendee.js \
 	calEvent.js \
+	calItemBase.js \
 	calItemModule.js \
 	$(NULL)
 
@@ -75,3 +76,12 @@ include $(topsrcdir)/config/rules.mk
 
 #%.js: %.js.pre
 #	cpp -P -undef $(DEFINES) $(ACDEFINES) $^ > $@
+
+CPP_FODDER = calItemBase calEvent calAttendee
+
+rebuild:
+	for i in $(CPP_FODDER); do \
+	  (echo "/* GENERATED FILE; DO NOT EDIT. SOURCE IS $$i.js.pre */"; \
+	   cpp -P -undef $(DEFINES) $(ACDEFINES) $(srcdir)/$$i.js.pre) \
+	  > $(srcdir)/$$i.js; \
+	done
