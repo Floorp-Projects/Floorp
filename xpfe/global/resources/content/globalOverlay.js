@@ -134,9 +134,9 @@ function FillInTooltip ( tipElement )
 {
   var retVal = false;
   var textNode = document.getElementById("TOOLTIP-tooltipText");
-  while (textNode.hasChildNodes())
-    textNode.removeChild(textNode.firstChild);
   if (textNode) {
+    while (textNode.hasChildNodes())
+      textNode.removeChild(textNode.firstChild);
     var tipText = tipElement.getAttribute("tooltiptext");
     if (tipText) {
       var node = document.createTextNode(tipText);
