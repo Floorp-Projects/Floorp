@@ -547,6 +547,7 @@ nsThreadPoolRunnable::Run()
                ("nsIThreadPool thread %p running %p\n", th, this));
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
+        NS_RELEASE(request);
 
         // let the thread pool know we've finished a run
         PR_CEnterMonitor(mPool);
