@@ -348,7 +348,7 @@ void KillPopData(char* data)
 
 // nsPop3Protocol class implementation
 
-nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, FALSE), m_username(eOneByte), m_password(eOneByte), m_commandResponse(eOneByte), m_senderInfo (eOneByte)
+nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, FALSE), m_username(eOneByte), m_password(eOneByte), m_senderInfo (eOneByte), m_commandResponse(eOneByte)
 {
 	Initialize(aURL);
 }
