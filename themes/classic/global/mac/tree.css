@@ -16,12 +16,19 @@ tree {
  *  this is the tree class used by dialogs to create treeviews with 
  *  inset borders, and default dialog spacing.
  **/
-.inset {
-  border-top: 1px solid #000000;
-  border-bottom: 1px solid #000000;
-  border-left: 1px solid #000000;
+
+tree.inset {
+  border-left: 1px solid #9D9D9D;
+  border-top: 1px solid #9D9D9D;
+  border-right: 1px solid #FFFFFF;
+  border-bottom: 1px solid #FFFFFF;
   margin: 1px 5px 2px 5px;
 }
+
+tree.inset > .tree-container-treerows {
+  border: 1px solid #000000;
+}
+
 
 treeitem > treerow {
 	border-bottom : 1px solid #FFFFFF;
@@ -38,27 +45,59 @@ treecell {
   padding: 1px 0px 1px 2px;
 } 
 
-.treecell-header { 
+.treecell-header, .treecell-inset-header { 
+  behavior: url("chrome://global/skin/classicBindings.xml#treeheader");
   background-color: #CCCCCC; 
+  border-left: 1px solid #666666 !important;
+  border-top: 1px solid #666666 !important;
+  border-right: 1px solid #333333 !important;
+  border-bottom: 1px solid #333333 !important;
   color: black;
-  border-right: 1px solid white;
+  padding: 0px;
   vertical-align: middle;
-  padding: 0px 0px 0px 5px;
 } 
 
-.treecell-inset-header {
-  border-top: 1px solid #FFFFFF;
-  border-bottom: 1px solid #666666;
+.treecell-header > .treeheader-box,
+.treecell-inset-header > .treeheader-box {
+  padding: 2px 2px 2px 6px;
   border-left: 1px solid #FFFFFF;
-  border-right: 1px solid #666666;
+  border-top: 1px solid #FFFFFF;
+  border-bottom: 1px solid #888888;
+  border-right: 1px solid #888888;
 }
 
-tree.inset > treehead > treerow > treecell.sortable:active {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid #FFFFFF;
-  border-left: 1px solid #666666;
-  border-right: 1px solid #FFFFFF;
+.treecell-header:hover:active,
+.treecell-inset-header:hover:active {
+  background-color: #888888;
+  border-left: 1px solid #111111;
+  border-top: 1px solid #111111;
+  border-right: 1px solid #444444;
+  border-bottom: 1px solid #444444;
+  color: #FFFFFF;
 }
+
+.treecell-header[sortActive="true"], 
+.treecell-inset-header[sortActive="true"] {
+  background-color: #888888;
+  border-left: 1px solid #111111 !important;
+  border-top: 1px solid #111111 !important;
+  border-right: 1px solid #444444 !important;
+  border-bottom: 1px solid #444444 !important;
+}
+
+.treecell-header:hover:active > .treeheader-box,
+.treecell-inset-header:hover:active > .treeheader-box,
+.treecell-header[sortActive="true"] > .treeheader-box,
+.treecell-inset-header[sortActive="true"] > .treeheader-box {
+  border-left: 1px solid #555555;
+  border-top: 1px solid #555555;
+  border-right: 1px solid #AAAAAA;
+  border-bottom: 1px solid #AAAAAA;
+}
+
+/* todo: need to make dupes of the above to indicate columns with
+   sort directions */
+
 
 /** class="propertylist" ******************************************
  *  class for cells in grid-formatted property lists.
@@ -138,4 +177,14 @@ treecol[sortDirection="true"],
 treecol[sortActive="true"]
   {
     background-color       : #DFDFDF;
+  }
+
+#popupCell
+  {
+    behavior: url("chrome://global/skin/classicBindings.xml#treeheader-children");
+  }
+
+.treecell-popup-icon
+  {
+    list-style-image       : url("chrome://global/skin/columnselect.gif");
   }
