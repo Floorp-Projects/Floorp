@@ -280,20 +280,18 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   // bottom and/or right portion of the cell is painted by translating
   // the rendering context.
   PRBool clipState;
-  aRenderingContext.PushState();
   nsPoint offset;
   GetCollapseOffset(&aPresContext, offset);
   if ((0 != offset.x) || (0 != offset.y)) {
+    aRenderingContext.PushState();
     aRenderingContext.Translate(offset.x, offset.y);
-  }
-  // Bug 6674 is fixed by uncommenting the following if statement, but sample 4 resizing 
-  // of the collapsed table rows then paints incorrectly
-  //if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
                                 nsClipCombine_kIntersect, clipState);
-  //}
+  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  aRenderingContext.PopState(clipState);
+  if ((0 != offset.x) || (0 != offset.y)) {
+    aRenderingContext.PopState(clipState);
+  }
   
   return NS_OK;
   /*nsFrame::Paint(aPresContext,
