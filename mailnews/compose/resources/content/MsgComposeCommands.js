@@ -640,9 +640,8 @@ function AddAttachment(attachment)
 		var item = document.createElement("treeitem");
 		var row = document.createElement("treerow");
 		var cell = document.createElement("treecell");
-		var text = document.createTextNode(attachment);
 		
-		cell.appendChild(text);
+		cell.setAttribute("value", attachment);
 		row.appendChild(cell);
 		item.appendChild(row);
 		bucketBody.appendChild(item);
@@ -669,15 +668,15 @@ function GenerateAttachmentsString()
 			if (row.childNodes &&  row.childNodes.length)
 			{
 				cell = row.childNodes[0];
-				if (cell.childNodes &&  cell.childNodes.length)
+				if (cell)
 				{
-					text = cell.childNodes[0];
-					if (text && text.data && text.data.length)
+					text = cell.getAttribute("value");
+					if (text.length)
 					{
 						if (attachments == "")
-							attachments = text.data;
+							attachments = text;
 						else
-							attachments = attachments + "," + text.data;
+							attachments = attachments + "," + text;
 					}
 				}
 			}
