@@ -25,6 +25,7 @@
 #define nsFilePicker_h__
 
 #include "nsBaseFilePicker.h"
+#include "nsString.h"
 
 #include <gtk/gtk.h>
 
@@ -61,7 +62,7 @@ protected:
   const nsString*	mTitles;
   const nsString*	mFilters;
   nsString		  mDefault;
-  nsIFileSpec  *mDisplayDirectory;
+  nsCOMPtr<nsIFile> mDisplayDirectory;
   PRInt16       mSelectedType;
 };
 

@@ -22,7 +22,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
+#include "nsIFile.idl"
 
 interface nsIDOMWindow;
 
@@ -76,7 +76,7 @@ interface nsIFilePicker : nsISupports
   * @param      displayDirectory  the name of the directory
   *
   */
-  attribute nsIFileSpec displayDirectory;
+  attribute nsIFile displayDirectory;
 
 
  /**
@@ -84,7 +84,7 @@ interface nsIFilePicker : nsISupports
   *
   * @return Returns the file currently selected
   */
-  readonly attribute nsIFileSpec file;
+  readonly attribute nsIFile file;
 
  /**
   * Show File Dialog. The dialog is displayed modally.
