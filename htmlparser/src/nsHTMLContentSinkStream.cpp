@@ -1154,8 +1154,10 @@ PRBool nsHTMLContentSinkStream::BreakBeforeOpen(eHTMLTags aTag)
   {
     case  eHTMLTag_html:
       result = PR_FALSE;
-    break;
-
+      break;
+    case  eHTMLTag_title:
+      result = PR_TRUE;
+      break;
     default:
       result = IsBlockLevel(aTag);
   }
@@ -1171,12 +1173,14 @@ PRBool nsHTMLContentSinkStream::BreakAfterOpen(eHTMLTags aTag)
   switch (aTag)
   {
     case eHTMLTag_html:
+    case eHTMLTag_head:
     case eHTMLTag_body:
     case eHTMLTag_ul:
     case eHTMLTag_ol:
     case eHTMLTag_table:
     case eHTMLTag_tbody:
     case eHTMLTag_style:
+    case eHTMLTag_tr:
     case eHTMLTag_br:
       result = PR_TRUE;
       break;
@@ -1222,11 +1226,15 @@ PRBool nsHTMLContentSinkStream::BreakAfterClose(eHTMLTags aTag)
 
   switch (aTag)
   {
-    case  eHTMLTag_html:
-    case  eHTMLTag_tr:
-    case  eHTMLTag_th:
-    case  eHTMLTag_td:
-    case  eHTMLTag_pre:
+    case eHTMLTag_html:
+    case eHTMLTag_head:
+    case eHTMLTag_body:
+    case eHTMLTag_tr:
+    case eHTMLTag_th:
+    case eHTMLTag_td:
+    case eHTMLTag_pre:
+    case eHTMLTag_title:
+    case eHTMLTag_meta:
       result = PR_TRUE;
     break;
 
@@ -1247,7 +1255,9 @@ PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag)
 
   switch (aTag)
   {
+    case eHTMLTag_head:
     case eHTMLTag_table:
+    case eHTMLTag_tr:
     case eHTMLTag_ul:
     case eHTMLTag_ol:
     case eHTMLTag_tbody:
