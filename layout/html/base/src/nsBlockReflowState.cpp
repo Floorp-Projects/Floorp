@@ -5548,23 +5548,21 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
             break;//done
         }
       }
-      nsCOMPtr<nsIContent> content;
-      PRInt32 contentOffset;
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
-      result = nsFrame::GetNextPrevLineFromeBlockFrame(tracker,
-                                          eDirNext, 
+      nsPeekOffsetStruct pos;
+      pos.mTracker = tracker;
+      pos.mDirection = eDirNext;
+      pos.mDesiredX = aEvent->point.x;
+      
+      result = nsFrame::GetNextPrevLineFromeBlockFrame(&pos,
                                           mainframe, 
                                           closestLine-1, 
-                                          aEvent->point.x,
-                                          getter_AddRefs(content), 
-                                          &contentOffset,
-                                          0,
-                                          &resultFrame
+                                          0
                                           );
-
-      if (NS_SUCCEEDED(result) && resultFrame){
-        result = resultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+      
+      if (NS_SUCCEEDED(result) && pos.mResultFrame){
+        result = pos.mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
         mainframe = resultFrame;
       }
       if (!resultFrame)
