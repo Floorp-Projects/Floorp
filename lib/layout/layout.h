@@ -204,13 +204,7 @@ typedef struct lo_LayerStack lo_LayerStack;
 typedef struct lo_ObjectStack_struct {
 	LO_ObjectStruct *object;
 	struct lo_ObjectStack_struct *next;
-#ifdef OJI
-    struct lo_NVList parameters;
-#else
-    uint32 param_count;
-    char **param_names;
-    char **param_values;
-#endif
+    lo_NVList parameters;
 	char* data_url;
 	MWContext* context;
 	struct lo_DocState_struct* state;

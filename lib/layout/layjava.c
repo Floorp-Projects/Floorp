@@ -201,14 +201,8 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 	java_app->attr_archive = NULL;
 	java_app->attr_name = NULL;
 
-#ifdef OJI
     LO_NVList_Init( &java_app->attributes );
     LO_NVList_Init( &java_app->parameters );
-#else
- 	java_app->param_cnt = 0;
- 	java_app->param_names = NULL;
- 	java_app->param_values = NULL;
-#endif
 
 	java_app->may_script = FALSE;
 

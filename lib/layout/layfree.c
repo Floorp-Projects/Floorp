@@ -36,9 +36,8 @@ extern void NPL_DeleteSessionData(MWContext*, void*);
 #pragma profile on
 #endif
 
-#ifdef OJI
 static void 
-lo_FreeNVListItems(struct lo_NVList* list)
+lo_FreeNVListItems(lo_NVList* list)
 {
 
   if (list->names != NULL)
@@ -69,7 +68,6 @@ lo_FreeNVListItems(struct lo_NVList* list)
   }
   list->n = 0;
 }
-#endif
 
 void
 lo_FreeFormElementData(LO_FormElementData *element_data)
@@ -520,40 +518,9 @@ lo_ScrapeElement(MWContext *context, LO_Element *element, Bool freeTableOrCellSt
 				PA_FREE(element->lo_embed.embed_src);
 			}
 			element->lo_embed.embed_src = NULL;
-#ifdef OJI
+
             lo_FreeNVListItems( &element->lo_embed.attributes );
             lo_FreeNVListItems( &element->lo_embed.parameters );
-#else 
- 			/* Free all the attribute names */
- 			if (element->lo_embed.attribute_list != NULL)
- 			{
- 				int32 	current;
- 				
- 				for (current=0; current<element->lo_embed.attribute_cnt; current++)
- 				{
- 					PA_FREE(element->lo_embed.attribute_list[current]);
- 					element->lo_embed.attribute_list[current] = NULL;
- 				}
- 						
- 				PA_FREE(element->lo_embed.attribute_list);
- 				element->lo_embed.attribute_list = NULL;
- 			}
-
- 			/* Free all the attribute values */
- 			if (element->lo_embed.value_list != NULL)
- 			{
- 				int32 	current;
- 				
- 				for (current=0; current<element->lo_embed.attribute_cnt; current++)
- 				{
- 					PA_FREE(element->lo_embed.value_list[current]);
- 					element->lo_embed.value_list[current] = NULL;
- 				}
- 
- 				PA_FREE(element->lo_embed.value_list);
- 				element->lo_embed.value_list = NULL;
- 			}
-#endif /* OJI */
 
 			/*
 			 * If there is session data here after we
@@ -597,41 +564,12 @@ lo_ScrapeElement(MWContext *context, LO_Element *element, Bool freeTableOrCellSt
 				element->lo_java.attr_name = NULL;
 			}
 			if (element->lo_java.objTag.base_url != NULL)
-                        {
+			{
 				PA_FREE(element->lo_java.objTag.base_url);
 				element->lo_java.objTag.base_url = NULL;
-                        }
-#ifdef OJI
-                        lo_FreeNVListItems( &element->lo_java.attributes );
-                        lo_FreeNVListItems( &element->lo_java.parameters );
-#else
- 			if (element->lo_java.param_names != NULL)
- 			{
- 				int32 	current;
- 				
- 				for (current=0; current<element->lo_java.param_cnt; current++)
- 				{
- 					PA_FREE(element->lo_java.param_names[current]);
- 					element->lo_java.param_names[current] = NULL;
- 				}
- 						
- 				PA_FREE(element->lo_java.param_names);
- 				element->lo_java.param_names = NULL;
- 			}
- 			if (element->lo_java.param_values != NULL)
- 			{
- 				int32 	current;
- 				
- 				for (current=0; current<element->lo_java.param_cnt; current++)
- 				{
- 					PA_FREE(element->lo_java.param_values[current]);
- 					element->lo_java.param_values[current] = NULL;
- 				}
- 
- 				PA_FREE(element->lo_java.param_values);
- 				element->lo_java.param_values = NULL;
- 			}
-#endif /* OJI */
+            }
+            lo_FreeNVListItems( &element->lo_java.attributes );
+            lo_FreeNVListItems( &element->lo_java.parameters );
 
 			/*
 			 * If there is session data here after we

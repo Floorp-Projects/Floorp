@@ -244,20 +244,12 @@ lo_FormatEmbed(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		embed->objTag.height = 0;
 		embed->objTag.next = NULL;
 		embed->objTag.prev = NULL;
-#ifdef OJI
+
         LO_NVList_Init( &embed->attributes );
         LO_NVList_Init( &embed->parameters );
 
 		embed->attributes.n = PA_FetchAllNameValues(tag,
 			&(embed->attributes.names), &(embed->attributes.values), CS_FE_ASCII);
-#else
- 		embed->attribute_cnt = 0;
- 		embed->attribute_list = NULL;
- 		embed->value_list = NULL;
-  
- 		embed->attribute_cnt = PA_FetchAllNameValues(tag,
- 			&(embed->attribute_list), &(embed->value_list), CS_FE_ASCII);
-#endif
 
 		lo_FormatEmbedInternal(context, state, tag, embed, FALSE, FALSE);
 #ifdef	ANTHRAX
@@ -276,21 +268,11 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 	int32 typeIndex = -1;
 	int32 classidIndex = -1;
 
-#ifdef OJI
     LO_NVList_Init(&embed->attributes);
 
 	embed->attributes.n = PA_FetchAllNameValues(tag,
 		&(embed->attributes.names), &(embed->attributes.values), CS_FE_ASCII);
-#else
- 	embed->attribute_cnt = 0;
- 	embed->attribute_list = NULL;
- 	embed->value_list = NULL;
-  
- 	embed->attribute_cnt = PA_FetchAllNameValues(tag,
- 		&(embed->attribute_list), &(embed->value_list), CS_FE_ASCII);
-#endif
 
-#ifdef OJI
  	for (count = 0; count < (uint32)embed->attributes.n; count++)
   	{
      if (  (XP_STRCASECMP(embed->attributes.names[count], PARAM_MAYSCRIPT) == 0) 
@@ -298,22 +280,25 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
            StrAllocCopy(embed->attributes.values[count], "true");
      }
    }
-#else
+
+/* beard: should the following still be used? */
+#if !defined(OJI)
 	/*
 	 * Look through the parameters and replace "id"
 	 * with "name" and "data" with "src", so that 
 	 * other code that looks up parameters by name
 	 * can believe this is a normal EMBED.
 	 */
- 	for (count = 0; count < (uint32)embed->attribute_cnt; count++)
+ 	for (count = 0; count < (uint32)embed->attributes.n; count++)
   	{
- 		if (XP_STRCASECMP(embed->attribute_list[count], PARAM_ID) == 0)
- 			StrAllocCopy(embed->attribute_list[count], PARAM_NAME);
- 		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_DATA) == 0)
- 			StrAllocCopy(embed->attribute_list[count], "src");
- 		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_TYPE) == 0)
+  		char* attrName = embed->attributes.names[count];
+ 		if (XP_STRCASECMP(attrName, PARAM_ID) == 0)
+ 			StrAllocCopy(embed->attributes.names[count], PARAM_NAME);
+ 		else if (XP_STRCASECMP(attrName, PARAM_DATA) == 0)
+ 			StrAllocCopy(embed->attributes.names[count], "src");
+ 		else if (XP_STRCASECMP(attrName, PARAM_TYPE) == 0)
   			typeIndex = count;
- 		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_CLASSID) == 0)
+ 		else if (XP_STRCASECMP(attrName, PARAM_CLASSID) == 0)
   			classidIndex = count;
   	}
  	
@@ -326,8 +311,8 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 		if (typeIndex >= 0)
 		{
 			/* Change current value of TYPE to application/oleobject */
- 			if (XP_STRCASECMP(embed->value_list[typeIndex], APPLICATION_OLEOBJECT) != 0)
- 				StrAllocCopy(embed->value_list[typeIndex], APPLICATION_OLEOBJECT);
+ 			if (XP_STRCASECMP(embed->attributes.values[typeIndex], APPLICATION_OLEOBJECT) != 0)
+ 				StrAllocCopy(embed->attributes.values[typeIndex], APPLICATION_OLEOBJECT);
 		}
 		else
 		{
@@ -337,34 +322,31 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 			names[0] = XP_STRDUP(PARAM_TYPE);
 			values[0] = XP_STRDUP(APPLICATION_OLEOBJECT);
 			
- 			lo_AppendParamList((uint32*) &(embed->attribute_cnt),
- 							   &(embed->attribute_list),
- 							   &(embed->value_list),
+ 			lo_AppendParamList((uint32*) &(embed->attributes.n),
+ 							   &(embed->attributes.names),
+ 							   &(embed->attributes.values),
 							   1, names, values);
 		}
 		
 		/* Lop off the "clsid:" prefix from the CLASSID attribute */
-		if (XP_STRNCASECMP(embed->value_list[classidIndex], "clsid:", 6) == 0)
+		if (XP_STRNCASECMP(embed->attributes.values[classidIndex], "clsid:", 6) == 0)
 		{
-			char* classID = &(embed->value_list[classidIndex][6]);
-			XP_MEMMOVE(embed->value_list[classidIndex], classID,
+			char* classID = &(embed->attributes.values[classidIndex][6]);
+			XP_MEMMOVE(embed->attributes.values[classidIndex], classID,
 					   (XP_STRLEN(classID) + 1) * sizeof(char));
 		}
 	}
-#endif
+#endif /* !OJI */
 
 	/*
 	 * Merge any parameters passed in with the ones in this tag.
 	 * Separate the merged <PARAM> tag attributes from the
 	 * <OBJECT> tag attributes with an extra "PARAM" attribute.
 	 */
-#ifdef OJI
     LO_NVList_Init(&embed->parameters);
-#endif
 
 	if (param_count > 0)
 	{
-#ifdef OJI
         int i;
 
         /* Add all <PARAM> tag parameters to the parameters list */
@@ -378,26 +360,6 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
                    param_values, 
                    param_count*sizeof(char*) );
         embed->parameters.n = param_count;
-#else
-		char* names[1];
- 		char* values[1];
- 		names[0] = XP_STRDUP(PT_PARAM);
- 		values[0] = NULL;
- 		
- 		/* Add "PARAM" to the list */
- 		lo_AppendParamList((uint32*) &(embed->attribute_cnt),
- 						   &(embed->attribute_list),
- 						   &(embed->value_list),
- 						   1, names, values);
- 
- 		/* Add all <PARAM> tag paramters to the list */
- 		lo_AppendParamList((uint32*) &(embed->attribute_cnt),
- 						   &(embed->attribute_list),
- 						   &(embed->value_list),
- 						   param_count,
- 						   param_names,
- 						   param_values);
-#endif /* OJI */
 
 		if (param_names != NULL)
 			XP_FREE(param_names);
@@ -444,13 +406,8 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	/*
 	 * Convert any javascript in the values
 	 */
-#ifdef OJI
 	lo_ConvertAllValues(context, embed->attributes.values, embed->attributes.n,
 						tag->newline_count);
-#else
-	lo_ConvertAllValues(context, embed->value_list, embed->attribute_cnt,
-						tag->newline_count);
-#endif
 
 	/* don't double-count loading plugins due to table relayout */
 	if (!state->in_relayout)

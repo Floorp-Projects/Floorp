@@ -712,7 +712,6 @@ void
 lo_DeleteObjectStack(lo_ObjectStack* top)
 {
 	/* Delete parameters */
-#ifdef OJI
 	if (top->parameters.n > 0)
 	{
 		uint32 index;
@@ -737,32 +736,6 @@ lo_DeleteObjectStack(lo_ObjectStack* top)
 			XP_FREE(top->parameters.values);
 		}
 	}
-#else
- 	if (top->param_count > 0)
-  	{
-  		uint32 index;
-  		
- 		if (top->param_values != NULL)
-  		{
- 			for (index = 0; index < top->param_count; index++)
-  			{
- 				if (top->param_names[index] != NULL)
- 					XP_FREE(top->param_names[index]);
-  			}
- 			XP_FREE(top->param_names);
-  		}
-  		
- 		if (top->param_values != NULL)
-  		{
- 			for (index = 0; index < top->param_count; index++)
-  			{
- 				if (top->param_values[index] != NULL)
- 					XP_FREE(top->param_values[index]);
- 			}
- 			XP_FREE(top->param_values);
-  		}
-  	}
-#endif /* OJI */
 	
 	/* Delete tag copy */
 	if (top->clone_tag != NULL)
@@ -913,44 +886,24 @@ lo_ProcessObjectTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool
                            top->clone_tag,
                            (LO_EmbedStruct*) object,
                            FALSE, /* Stream not started */
-#ifdef OJI
                            top->parameters.n,
                            top->parameters.names,
                            top->parameters.values);
-             top->formatted_object = TRUE;
-             LO_NVList_Init( &top->parameters );
-#else
-                           top->param_count,
-                           top->param_names,
-                           top->param_values);
 						top->formatted_object = TRUE;
-						top->param_count = 0;
-						top->param_names = NULL;
-						top->param_values = NULL;
-#endif /* OJI */
+						LO_NVList_Init( &top->parameters );
 					}
 					else if (object->lo_element.type == LO_BUILTIN)
 					{
 						lo_FormatBuiltinObject(context,
-                                                                       state,
-                                                                       top->clone_tag,
-                                                                       (LO_BuiltinStruct*) object,
-                                                                       FALSE, /* Stream not started */
-#ifdef OJI
-                                                                       top->parameters.n,
-                                                                       top->parameters.names,
-                                                                       top->parameters.values);
+                                               state,
+                                               top->clone_tag,
+                                               (LO_BuiltinStruct*) object,
+                                               FALSE, /* Stream not started */
+                                               top->parameters.n,
+                                               top->parameters.names,
+                                               top->parameters.values);
 						top->formatted_object = TRUE;
-                                                LO_NVList_Init( &top->parameters );
-#else
-                                                                       top->param_count,
-                                                                       top->param_names,
-                                                                       top->param_values);
-						top->formatted_object = TRUE;
-						top->param_count = 0;
-						top->param_names = NULL;
-						top->param_values = NULL;
-#endif /* OJI */
+                        LO_NVList_Init( &top->parameters );
 					}
 
 #ifdef JAVA
@@ -990,15 +943,9 @@ lo_ProcessParamTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool 
 	    {
 	    	LO_JavaAppStruct* java_app = state->current_java;
 			lo_ObjectParam(context, state, tag,
-#ifdef OJI
 						   (uint32*) &(java_app->parameters.n),
 						   &(java_app->parameters.names),
 						   &(java_app->parameters.values));
-#else 
-						   (uint32*) &(java_app->param_cnt),
-						   &(java_app->param_names),
-						   &(java_app->param_values));
-#endif /* OJI */
 		}
 		else 
 
@@ -1006,17 +953,10 @@ lo_ProcessParamTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool 
 
 		if (top != NULL && top->read_params == FALSE)
 		{
-#ifdef OJI
 			lo_ObjectParam(context, state, tag,
 						   &(top->parameters.n),
 						   &(top->parameters.names),
 						   &(top->parameters.values));
-#else 
-			lo_ObjectParam(context, state, tag,
-						   &(top->param_count),
-						   &(top->param_names),
-						   &(top->param_values));
-#endif /* OJI */
 		}
 	}
 }
@@ -1093,7 +1033,6 @@ LO_NewObjectStream(FO_Present_Types format_out, void* type,
 			/* Now we know the object type */
 			top->object->lo_element.lo_plugin.type = LO_EMBED;
 			
-#ifdef OJI
 			lo_FormatEmbedObject(top->context,
 								 top->state,
 								 top->clone_tag,
@@ -1102,22 +1041,8 @@ LO_NewObjectStream(FO_Present_Types format_out, void* type,
 								 top->parameters.n,
 								 top->parameters.names,
 								 top->parameters.values);
-			top->parameters.n = 0;
-			top->parameters.names = NULL;
-			top->parameters.values = NULL;
-#else
-			lo_FormatEmbedObject(top->context,
-								 top->state,
-								 top->clone_tag,
-								 (LO_EmbedStruct*) top->object,
-								 TRUE,
-								 top->param_count,
-								 top->param_names,
-								 top->param_values);
-			top->param_count = 0;
-			top->param_names = NULL;
-			top->param_values = NULL;
-#endif
+
+			LO_NVList_Init(&top->parameters);
 			top->formatted_object = TRUE;
 
 			/* Set the FE data that libplug expects */
@@ -1408,7 +1333,6 @@ static void lo_SetJavaArgs(char* tag, LO_JavaAppStruct* current_java)
 				}
 				
 			/* increment and resize array */
-#ifdef OJI
 			++(current_java->parameters.n);
 			current_java->parameters.names = XP_REALLOC(current_java->parameters.names, current_java->parameters.n*sizeof(char*));
 			XP_ASSERT(current_java->parameters.names);
@@ -1418,17 +1342,6 @@ static void lo_SetJavaArgs(char* tag, LO_JavaAppStruct* current_java)
 			/* point the new array elements to the newly allocated paramName and paramValue */
 			current_java->parameters.names[current_java->parameters.n-1] = paramName;
 			current_java->parameters.values[current_java->parameters.n-1] = paramValue;
-#else
-			++(current_java->param_count);
-			current_java->param_names = XP_REALLOC(current_java->param_names, current_java->param_count*sizeof(char*));
-			XP_ASSERT(current_java->param_names);
-			current_java->param_values = XP_REALLOC(current_java->param_values, current_java->param_count*sizeof(char*));
-			XP_ASSERT(current_java->param_values);
-			
-			/* point the new array elements to the newly allocated paramName and paramValue */
-			current_java->param_names[current_java->param_count-1] = paramName;
-			current_java->param_values[current_java->param_count-1] = paramValue;
-#endif
 		}
 }
 #endif
