@@ -125,26 +125,13 @@ nsCodebasePrincipal::GetURI(nsIURI **uri)
 NS_IMETHODIMP
 nsCodebasePrincipal::GetOrigin(char **origin) 
 {
-    nsXPIDLCString s;
-    if (NS_FAILED(mURI->GetScheme(getter_Copies(s))))
-        return NS_ERROR_FAILURE;
-
-    nsCAutoString t;
-    t.Assign(s);
-    t.Append("://");
+	nsXPIDLCString s;
     if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s))))
-	{
-        t.Append(s);
-	}
-	else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) 
+		return mURI->GetPrePath(origin);
+
     // Some URIs (e.g., nsSimpleURI) don't support host. Just
     // get the full spec.
-		t.Assign(s);
-	else
-        return NS_ERROR_FAILURE;
-	
-	*origin = t.ToNewCString();
-    return *origin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+	return mURI->GetSpec(origin);
 }
 
 NS_IMETHODIMP
