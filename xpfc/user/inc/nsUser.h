@@ -20,6 +20,7 @@
 #define nsUser_h___
 
 #include "nsIUser.h"
+#include "nsAgg.h"
 
 class nsUser : public nsIUser
 
@@ -27,7 +28,7 @@ class nsUser : public nsIUser
 public:
   nsUser(nsISupports* outer);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_AGGREGATED
 
   NS_IMETHOD Init();
 

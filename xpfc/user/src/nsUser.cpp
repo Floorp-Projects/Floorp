@@ -26,7 +26,7 @@ static NS_DEFINE_IID(kCIUserIID,    NS_IUSER_IID);
 
 nsUser :: nsUser(nsISupports* outer)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_AGGREGATED(outer);
   mUserName = "";
 }
 
@@ -34,33 +34,21 @@ nsUser :: ~nsUser()
 {
 }
 
-nsresult nsUser::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kCUserCID);                         
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) (nsUser *)this;                                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kCIUserIID)) {                                          
-    *aInstancePtr = (void*) (nsIUser *)this;                                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) (this);                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
-  return (NS_ERROR_NO_INTERFACE);
+NS_IMPL_AGGREGATED(nsUser);
+
+NS_METHOD nsUser::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
+{
+    if (NULL == aInstancePtr) {                                            
+        return NS_ERROR_NULL_POINTER;                                        
+    }                                                                      
+    if (aIID.Equals(kCIUserIID) || aIID.Equals(kISupportsIID) || aIID.Equals(kCUserCID)) {
+        *aInstancePtr = (void*) this; 
+        AddRef(); 
+        return NS_OK; 
+    } 
+    return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsUser)
-NS_IMPL_RELEASE(nsUser)
 
 nsresult nsUser :: Init()
 {
