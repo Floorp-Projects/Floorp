@@ -34,6 +34,7 @@
 #endif
 #include "CBrowserWindow.h" // need for MapWindowTypeToMBARResID - mjc
 #include "menusharing.h"
+#include <LAppearanceMBAR.h>
 
 CNSMenuBarManager* CNSMenuBarManager::sManager = NULL;
 
@@ -159,8 +160,13 @@ void CNSMenuBarManager::SwitchMenuBar(ResIDT inMenuBarID)
 		currentMenuBar->RemoveMenu(historyMenu);
 	delete (currentMenuBar);
 	DisposeSharedMenus();
-	// create new menubar
-	new LMenuBar( inMenuBarID );
+	
+	// create new menubar (use appearance if present)
+	if ( UEnvironment::HasFeature( env_HasAppearance ) )
+		new LAppearanceMBAR(inMenuBarID);
+	else
+		new LMenuBar(inMenuBarID);
+		
 	// now put go and window menus into new menubar
 	currentMenuBar = LMenuBar::GetCurrentMenuBar();
 	if (inMenuBarID == MBAR_Initial)
