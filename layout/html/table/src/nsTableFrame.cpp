@@ -698,6 +698,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord rightInset = borderPadding.right;
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
+  nsReflowReason  reflowReason = eReflowReason_Resize;
 
   /* assumes that Table's children are in the following order:
    *  Captions
@@ -739,12 +740,13 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
         kidDel = kid->GetDelegate(aPresContext);
         nsresult rv = kidDel->CreateFrame(aPresContext, kid,
                                           this, kidStyleContext, kidFrame);
+        reflowReason = eReflowReason_Initial;
         NS_RELEASE(kidDel);
       }
 
       nsSize maxKidElementSize(0,0);
       nsReflowState kidReflowState(kidFrame, aReflowState, availSize,
-                                   eReflowReason_Resize);
+                                   reflowReason);
       kidFrame->WillReflow(*aPresContext);
       result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
