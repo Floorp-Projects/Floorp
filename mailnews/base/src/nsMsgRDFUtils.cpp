@@ -127,3 +127,4 @@ nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* fol
 	return rv;
 
 }
+

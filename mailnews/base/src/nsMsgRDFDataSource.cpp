@@ -310,3 +310,4 @@ nsMsgRDFDataSource::unassertEnumFunc(void *aElement, void *aData)
                      note->object);
   return PR_TRUE;
 }
+
