@@ -43,13 +43,35 @@
       if ( trans ) {
         trans.addDataFlavor("moz/toolbaritem");
         var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
+        var data = null;
         if ( genData ) data = genData.QueryInterface(Components.interfaces.nsISupportsWString);
         if ( data ) {
         
-          //XXX replace with the real data when rdf is hooked up.
-          data.data = "toolbar item, baby!";
-          
-          trans.setTransferData ( "moz/toolbaritem", genData, 38 );  // double byte data (19*2)
+		var id = event.target.getAttribute("id");
+		data.data = id;
+
+		dump("ID: " + id + "\n");
+
+		var database = toolbar.database;
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if ((!rdf) || (!database))	return(false);
+
+		// make sure its a bookmark, bookmark separator, or bookmark folder
+		var src = rdf.GetResource(id, true);
+		var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
+		var target = database.GetTarget(src, prop, true);
+		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFResource);
+		if (target)	target = target.Value;
+		if ((!target) || (target == ""))	return(false);
+
+		dump("Type: '" + target + "'\n");
+
+		if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
+		   (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
+		   (target != "http://home.netscape.com/NC-rdf#Folder"))	return(false);
+
+          trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (19*2)
           var transArray = Components.classes["component://netscape/supports-array"].createInstance();
           if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
           if ( transArray ) {
@@ -82,6 +104,19 @@
         var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
         if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
         if ( trans ) {
+
+		// get references to various services/resources once up-front
+		var personalToolbarRes = null;
+		
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf)
+		{
+			personalToolbarRes = rdf.GetResource("NC:PersonalToolbarFolder");
+		}
+		var rdfc = Components.classes["component://netscape/rdf/container"].getService();
+		if (rdfc)  rdfc = rdfc.QueryInterface(Components.interfaces.nsIRDFContainer);
+
           trans.addDataFlavor("moz/toolbaritem");
           for ( var i = 0; i < dragSession.numDropItems; ++i ) {
             dragSession.getData ( trans, i );
@@ -92,12 +127,39 @@
             if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
             if ( dataObj ) {
             
-              //XXX do something real here! remember len is in bytes, not chars
-              dataObj.data[len.value / 2] = null;
-              dump ( "!!! got data len = " + len.value + " |" + dataObj.data + "|\n" );
+              // remember len is in bytes, not chars
+              var id = dataObj.data.substring(0, len.value / 2);
+              dump("ID: '" + id + "'\n");
               
+		var objectRes = rdf.GetResource(id, true);
+
               dragSession.canDrop = true;
-              var dropAccepted = true;        
+              var dropAccepted = true;
+              
+		var toolbar = document.getElementById("PersonalToolbar");
+		var database = toolbar.database;
+		if (database && rdf && rdfc && personalToolbarRes && objectRes)
+		{
+			
+			rdfc.Init(database, personalToolbarRes);
+
+			// Note: RDF Sequences are one-based, not zero-based
+
+			// XXX figure out the REAL index to insert at;
+			// for the moment, insert it as the first element (pos=1)
+			var newIndex = 1;
+	
+			var currentIndex = rdfc.IndexOf(objectRes);
+			if (currentIndex > 0)
+			{
+				dump("Element '" + id + "' was at position # " + currentIndex + "\n");
+//				rdfc.RemoveElement(objectRes, true);
+				dump("Element '" + id + "' removed from position # " + currentIndex + "\n");
+			}
+//			rdfc.InsertElementAt(objectRes, newIndex, true);
+			dump("Element '" + id + "' re-inserted at new position # " + newIndex + ".\n");
+		}
+
             } 
           
           } // foreach drag item
@@ -120,7 +182,7 @@
     if ( dragService ) {
       var dragSession = dragService.getCurrentSession();
       if ( dragSession ) {
-        if ( dragSession.isDataFlavorSupported("mozilla/toolbaritem") )
+        if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
           validFlavor = true;
         //XXX other flavors here...
       }
