@@ -9,7 +9,7 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<!-- change the xul key for Unix -->
-	<keyset id="unixoverlaykeyset">
+	<keyset id="defaultKeySet">
 	<xulkey key="alt" />
 	</keyset>
 

@@ -29,6 +29,8 @@
 
 <html:script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
 
+  <keyset id="platformOverlayKeyset" />
+
   <keyset id="defaultKeySet">
 
     <!-- defined in globalOverlay -->
