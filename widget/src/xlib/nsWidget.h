@@ -170,7 +170,7 @@ protected:
                                   XSetWindowAttributes aAttr, unsigned long aMask);
   virtual void CreateNative(Window aParent, nsRect aRect);
   virtual void DestroyNative();
-  virtual void DestroyNativeChildren();
+  static void  DestroyNativeChildren(Display *aDisplay, Window aWindow);
   void         CreateGC(void);
   void         Map(void);
   void         Unmap(void);

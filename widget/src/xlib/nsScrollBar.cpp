@@ -47,25 +47,11 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
 
 nsScrollbar::~nsScrollbar()
 {
-  if (mBar) {
-    XDestroyWindow(mDisplay, mBar);
-    DeleteWindowCallback(mBar);
-  }
 }
 
-nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-  
-  static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
-    *aInstancePtr = (void*) ((nsIScrollbar*)this);
-    NS_ADDREF_THIS();
-    result = NS_OK;
-  }
-  
-  return result;
-}
+NS_INTERFACE_MAP_BEGIN(nsScrollbar)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbar)
+NS_INTERFACE_MAP_END_INHERITING(nsWidget)
 
 NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
@@ -274,6 +260,22 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   AddWindowCallback(mBar, this);
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::CreateNative created window 0x%lx with bar 0x%lx\n",
          mBaseWindow, mBar));
+}
+
+void nsScrollbar::DestroyNative()
+{
+  // override since we have two native widgets
+  if (mBar) {
+    DestroyNativeChildren(mDisplay, mBar);
+
+    XDestroyWindow(mDisplay, mBar);
+    DeleteWindowCallback(mBar);
+    mBar = 0;
+  }
+  if (mBaseWindow) {
+    nsWidget::DestroyNative();
+    mBaseWindow = 0;
+  }
 }
 
 NS_IMETHODIMP nsScrollbar::Show(PRBool bState)

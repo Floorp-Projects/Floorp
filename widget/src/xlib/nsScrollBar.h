@@ -52,6 +52,7 @@ public:
                                  PRInt32 aWidth,
                                  PRInt32 aHeight,
                                  PRBool   aRepaint);
+  virtual void DestroyNative();  // override since we have 2 native widgets
   
   // nsIScrollBar implementation
   NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
