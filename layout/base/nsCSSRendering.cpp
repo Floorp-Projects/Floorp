@@ -1423,10 +1423,10 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
   nscolor sideColor;
-  if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
-    if (aBorderStyle.GetBorderColor(NS_SIDE_TOP, sideColor)) {
-      DrawSide(aRenderingContext, NS_SIDE_TOP,
-               aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
+  if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
+    if (aBorderStyle.GetBorderColor(NS_SIDE_BOTTOM, sideColor)) {
+      DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
+               aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
                sideColor,
                bgColor->mBackgroundColor, inside,outside, aSkipSides,
                twipsPerPixel, aGap);
@@ -1441,10 +1441,10 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                twipsPerPixel, aGap);
     }
   }
-  if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
-    if (aBorderStyle.GetBorderColor(NS_SIDE_BOTTOM, sideColor)) {
-      DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
-               aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
+  if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
+    if (aBorderStyle.GetBorderColor(NS_SIDE_TOP, sideColor)) {
+      DrawSide(aRenderingContext, NS_SIDE_TOP,
+               aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
                sideColor,
 			   bgColor->mBackgroundColor,inside, outside,aSkipSides,
 			   twipsPerPixel, aGap);
