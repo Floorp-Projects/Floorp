@@ -49,7 +49,7 @@ class nsSlidingSharedBufferList
     : public nsSharedBufferList
   {
     public:
-      nsSlidingSharedBufferList() : mRefCount(0) { }
+      nsSlidingSharedBufferList( Buffer* aBuffer ) : nsSharedBufferList(aBuffer), mRefCount(0) { }
 
       void  AcquireReference()    { ++mRefCount; }
       void  ReleaseReference()    { if ( !--mRefCount ) delete this; }
@@ -87,7 +87,8 @@ class nsSlidingSubstring
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
       
     protected:
-      nsSharedBufferList::Position  mStart, mEnd;
+      nsSharedBufferList::Position  mStart;
+      nsSharedBufferList::Position  mEnd;
       nsSlidingSharedBufferList&    mBufferList;
       PRUint32                      mLength;
   };
@@ -103,7 +104,7 @@ class nsSlidingString
     : public nsSlidingSubstring
   {
     public:
-      nsSlidingString();
+      nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
 
         // you are giving ownership to the string, it takes and keeps your buffer, deleting it when done
       void AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );

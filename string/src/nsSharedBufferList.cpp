@@ -49,7 +49,7 @@ nsSharedBufferList::~nsSharedBufferList()
 
 
 nsSharedBufferList::Buffer*
-nsSharedBufferList::NewBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace )
+nsSharedBufferList::NewSingleAllocationBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace )
   {
     size_t    object_size    = ((sizeof(Buffer) + sizeof(PRUnichar) - 1) / sizeof(PRUnichar)) * sizeof(PRUnichar);
     PRUint32  buffer_length  = aDataLength + aAdditionalSpace;
@@ -65,10 +65,16 @@ nsSharedBufferList::NewBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRU
             PRUnichar* toBegin = buffer_ptr;
             copy_string(aData, aData+aDataLength, toBegin);
           }
-        return new (object_ptr) Buffer(buffer_ptr, buffer_ptr+aDataLength, buffer_ptr, buffer_ptr+buffer_length);
+        return new (object_ptr) Buffer(buffer_ptr, buffer_ptr+aDataLength, buffer_ptr, buffer_ptr+buffer_length, PR_TRUE);
       }
 
     return 0;
+  }
+
+nsSharedBufferList::Buffer*
+nsSharedBufferList::NewWrappingBuffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
+  {
+    return new Buffer(aDataStart, aDataEnd, aDataStart, aStorageEnd);
   }
 
 
@@ -108,13 +114,13 @@ nsSharedBufferList::SplitBuffer( const Position& aSplitPosition )
 
     if ( (bufferToSplit->DataLength() >> 1) > splitOffset )
       {
-        Buffer* new_buffer = NewBuffer(bufferToSplit->DataStart(), PRUint32(splitOffset));
+        Buffer* new_buffer = NewSingleAllocationBuffer(bufferToSplit->DataStart(), PRUint32(splitOffset));
         LinkBuffer(bufferToSplit->mPrev, new_buffer, bufferToSplit);
         bufferToSplit->DataStart(aSplitPosition.mPosInBuffer);
       }
     else
       {
-        Buffer* new_buffer = NewBuffer(bufferToSplit->DataStart()+splitOffset, PRUint32(bufferToSplit->DataLength()-splitOffset));
+        Buffer* new_buffer = NewSingleAllocationBuffer(bufferToSplit->DataStart()+splitOffset, PRUint32(bufferToSplit->DataLength()-splitOffset));
         LinkBuffer(bufferToSplit, new_buffer, bufferToSplit->mNext);
         bufferToSplit->DataEnd(aSplitPosition.mPosInBuffer);
       }
