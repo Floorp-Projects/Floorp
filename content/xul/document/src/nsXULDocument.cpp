@@ -4244,12 +4244,15 @@ nsXULDocument::AddChromeOverlays()
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIURI> uri;
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsISimpleEnumerator> oe;
-    reg->GetOverlays(uri, getter_AddRefs(oe));
+
+    {
+        nsCOMPtr<nsIURI> uri;
+        rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
+
+        reg->GetOverlays(uri, getter_AddRefs(oe));
+    }
 
     if (!oe)
         return NS_OK;
@@ -4520,7 +4523,7 @@ nsXULDocument::ResumeWalk()
         nsTime finish = PR_Now();
         nsInt64 diff64 = finish - mLoadStart;
         PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
-        printf("***** XUL document loaded in %ldmsec\n", diff);
+        printf("***** XUL document loaded in %dmsec\n", diff);
     }
 #endif
 
@@ -4545,13 +4548,13 @@ nsXULDocument::ResumeWalk()
         nsTime finish = PR_Now();
         nsInt64 diff64 = finish - mLoadStart;
         PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
-        printf("***** XUL document flowed in %ldmsec\n", diff);
+        printf("***** XUL document flowed in %dmsec\n", diff);
     }
 
     {
         nsInt64 now(PR_Now());
         now /= nsInt64(1000);
-        printf("### ResumeWalk complete %ld\n", PRInt32(now));
+        printf("### ResumeWalk complete %d\n", PRInt32(now));
     }
 #endif
 

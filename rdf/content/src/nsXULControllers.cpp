@@ -26,7 +26,6 @@
 #include "nsISupportsArray.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIXULCommandDispatcher.h"
 #include "nsIDOMFocusListener.h"
 #include "nsRDFCID.h"
@@ -76,13 +75,12 @@ public:
   
 protected:
     nsISupportsArray* mControllers;
-    nsIDOMXULCommandDispatcher* mCommandDispatcher;
 };
 
 ////////////////////////////////////////////////////////////////////////
 
 XULControllersImpl::XULControllersImpl(void) :
-  mControllers(nsnull), mCommandDispatcher(nsnull)
+  mControllers(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -90,7 +88,6 @@ XULControllersImpl::XULControllersImpl(void) :
 XULControllersImpl::~XULControllersImpl(void)
 {
 	NS_IF_RELEASE(mControllers);
-  NS_IF_RELEASE(mCommandDispatcher);
 }
 
 NS_IMPL_ADDREF(XULControllersImpl)
@@ -118,22 +115,6 @@ XULControllersImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 
-  /* attribute nsIDOMXULCommandDispatcher commandDispatcher; */
-  NS_IMETHODIMP XULControllersImpl::GetCommandDispatcher(nsIDOMXULCommandDispatcher * *aCommandDispatcher)
-  {
-    NS_IF_ADDREF(mCommandDispatcher);
-    *aCommandDispatcher = mCommandDispatcher;
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP XULControllersImpl::SetCommandDispatcher(nsIDOMXULCommandDispatcher * aCommandDispatcher)
-  {
-    NS_IF_RELEASE(mCommandDispatcher);
-    mCommandDispatcher = aCommandDispatcher;
-    NS_IF_ADDREF(mCommandDispatcher);
-    return NS_OK;
-  }
-  
   /* boolean SupportsCommand (in string command); */
   NS_IMETHODIMP XULControllersImpl::GetControllerForCommand(const PRUnichar *command, nsIController** _retval)
   {
