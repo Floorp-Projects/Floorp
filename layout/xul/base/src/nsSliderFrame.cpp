@@ -335,12 +335,14 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   EnsureOrient();
 
+#ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_DEBUG_WAS_SET) {
       if (mState & NS_STATE_SET_TO_DEBUG)
           SetDebug(aState, PR_TRUE);
       else
           SetDebug(aState, PR_FALSE);
   }
+#endif
 
   // get the content area inside our borders
   nsRect clientRect(0,0,0,0);

@@ -59,7 +59,6 @@ public:
   NS_IMETHOD HasDirtyChildren(PRBool& aIsDirty);
   NS_IMETHOD MarkDirty(nsBoxLayoutState& aState);
   NS_IMETHOD MarkDirtyChildren(nsBoxLayoutState& aState);
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect);
   NS_IMETHOD GetBounds(nsRect& aRect);
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
@@ -92,8 +91,6 @@ public:
 
   NS_IMETHOD Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
   NS_IMETHOD NeedsRecalc();
-  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
-  NS_IMETHOD GetDebug(PRBool& aDebug);
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
@@ -102,6 +99,10 @@ public:
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
 #ifdef DEBUG_LAYOUT
+  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
+  NS_IMETHOD GetDebug(PRBool& aDebug);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
+
   NS_IMETHOD DumpBox(FILE* out);
 #endif
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);

@@ -96,7 +96,9 @@ public:
 
     // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+#ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
+#endif
 
   // Used to destroy our popup frames.
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -139,7 +141,9 @@ protected:
   void UpdateDismissalListener(nsIMenuParent* aMenuParent);
 
 protected:
+#ifdef DEBUG_LAYOUT
   nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
+#endif
 
   nsPopupFrameList* mPopupList;
   

@@ -1066,6 +1066,7 @@ nsMenuFrame::MarkChildrenStyleChange()
   return rv;
 }
 
+#ifdef DEBUG_LAYOUT
 NS_IMETHODIMP
 nsMenuFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 {
@@ -1100,6 +1101,7 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
 
       return NS_OK;
 }
+#endif
 
 static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& aAlign)
 {
@@ -1853,7 +1855,9 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
 
     nsBoxLayoutState state(aPresContext);
+#ifdef DEBUG_LAYOUT
     SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+#endif
     rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
@@ -1882,7 +1886,9 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
 
     mPopupFrames.AppendFrames(nsnull, aFrameList);
     nsBoxLayoutState state(aPresContext);
+#ifdef DEBUG_LAYOUT
     SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+#endif
     rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 

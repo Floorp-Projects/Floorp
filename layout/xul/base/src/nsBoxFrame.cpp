@@ -124,8 +124,10 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 //#define DO_NOISY_REFLOW
 #endif
 
+#ifdef DEBUG_LAYOUT
 PRBool nsBoxFrame::gDebug = PR_FALSE;
 nsIBox* nsBoxFrame::mDebugChild = nsnull;
+#endif
 
 nsresult
 NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
@@ -275,10 +277,11 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
 
   CacheAttributes();
 
+#ifdef DEBUG_LAYOUT
     // if we are root and this
   if (mState & NS_STATE_IS_ROOT) 
       GetDebugPref(aPresContext);
-
+#endif
 
   mMouseThrough = unset;
 
@@ -348,6 +351,7 @@ nsBoxFrame::CacheAttributes()
         mState &= ~NS_STATE_AUTO_STRETCH;
 
 
+#ifdef DEBUG_LAYOUT
   PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
   PRBool debugSet = GetInitialDebug(debug); 
   if (debugSet) {
@@ -359,8 +363,10 @@ nsBoxFrame::CacheAttributes()
   } else {
         mState &= ~NS_STATE_DEBUG_WAS_SET;
   }
+#endif
 }
 
+#ifdef DEBUG_LAYOUT
 PRBool
 nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 {
@@ -385,6 +391,7 @@ nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 
   return PR_FALSE;
 }
+#endif
 
 PRBool
 nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
@@ -927,7 +934,9 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
      return NS_OK;
   }
 
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
+#endif
 
   nsresult rv = NS_OK;
   rv = nsContainerBox::GetPrefSize(aBoxLayoutState, mPrefSize);
@@ -945,7 +954,9 @@ nsBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
      return NS_OK;
   }
 
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
+#endif
 
   nsresult rv = NS_OK;
   rv = nsContainerBox::GetAscent(aBoxLayoutState, mAscent);
@@ -963,7 +974,9 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
      return NS_OK;
   }
 
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
+#endif
 
   nsresult rv = NS_OK;
 
@@ -983,7 +996,9 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
      return NS_OK;
   }
 
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aBoxLayoutState);
+#endif
 
   nsresult rv = NS_OK;
 
@@ -1012,6 +1027,7 @@ nsBoxFrame::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
   return rv;
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
 {
@@ -1025,6 +1041,7 @@ nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
     SetDebug(aState, gDebug);
   }
 }
+#endif
 
 NS_IMETHODIMP
 nsBoxFrame::BeginLayout(nsBoxLayoutState& aState)
@@ -1035,8 +1052,9 @@ nsBoxFrame::BeginLayout(nsBoxLayoutState& aState)
   // mark ourselves as dirty so no child under us 
   // can post an incremental layout.
   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
-
+#endif
 
   return rv;
 }
@@ -1064,6 +1082,7 @@ nsBoxFrame::Destroy(nsIPresContext* aPresContext)
   return nsContainerFrame::Destroy(aPresContext);
 } 
 
+#ifdef DEBUG_LAYOUT
 NS_IMETHODIMP
 nsBoxFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 {
@@ -1087,6 +1106,7 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsBoxFrame::NeedsRecalc()
@@ -1146,9 +1166,11 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
    // insert the frames in out regular frame list
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
+#ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
        SetDebugOnChildList(state, mFirstChild, PR_TRUE);
+#endif
 
    CheckFrameOrder();
    SanityCheck(mFrames);
@@ -1175,9 +1197,11 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
    // append in regular frames
    mFrames.AppendFrames(this, aFrameList); 
 
+#ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
        SetDebugOnChildList(state, mFirstChild, PR_TRUE);
+#endif
 
    CheckFrameOrder();
    SanityCheck(mFrames);
@@ -1232,8 +1256,10 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsHTMLAtoms::valign ||
         aAttribute == nsXULAtoms::orient  ||
         aAttribute == nsXULAtoms::pack    ||
-        aAttribute == nsXULAtoms::dir     ||
-        aAttribute == nsXULAtoms::debug) {
+#ifdef DEBUG_LAYOUT
+        aAttribute == nsXULAtoms::debug   ||
+#endif
+        aAttribute == nsXULAtoms::dir) {
 
       mValign = nsBoxFrame::vAlign_Top;
       mHalign = nsBoxFrame::hAlign_Left;
@@ -1262,6 +1288,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
       else
         mState &= ~NS_STATE_EQUAL_SIZE;
 
+#ifdef DEBUG_LAYOUT
       PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
       PRBool debugSet = GetInitialDebug(debug);
       if (debugSet) {
@@ -1274,6 +1301,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
       } else {
         mState &= ~NS_STATE_DEBUG_WAS_SET;
       }
+#endif
 
       PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
       GetInitialAutoStretch(autostretch);
@@ -1322,6 +1350,7 @@ nsBoxFrame::GetInset(nsMargin& margin)
 {
   margin.SizeTo(0,0,0,0);
 
+#ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
      nsMargin debugMargin(0,0,0,0);
      nsMargin debugBorder(0,0,0,0);
@@ -1336,6 +1365,7 @@ nsBoxFrame::GetInset(nsMargin& margin)
      margin += debugMargin;
      margin += debugPadding;
   }
+#endif
 
   return NS_OK;
 }
@@ -1397,11 +1427,13 @@ nsBoxFrame::CheckFrameOrder()
   }
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetDebugPref(nsIPresContext* aPresContext)
 {
     gDebug = nsContentUtils::GetBoolPref("xul.debug.box");
 }
+#endif
 
 NS_IMETHODIMP
 nsBoxFrame::Paint(nsIPresContext*      aPresContext,
@@ -1507,13 +1539,15 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags)
 {
-  nsMargin debugBorder;
-  nsMargin debugMargin;
-  nsMargin debugPadding;
   nsMargin border;
   nsRect inner;
 
   GetBorder(border);
+
+#ifdef DEBUG_LAYOUT
+  nsMargin debugBorder;
+  nsMargin debugMargin;
+  nsMargin debugPadding;
 
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
@@ -1582,7 +1616,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
            aRenderingContext.SetColor(color);
         }
   }
-
+#endif
 
   const nsStyleDisplay* disp = GetStyleDisplay();
 
@@ -1630,6 +1664,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   if (hasClipped)
     aRenderingContext.PopState();
 
+#ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
     float p2t;
@@ -1710,6 +1745,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
     if (hasClipped)
        aRenderingContext.PopState();
   }
+#endif
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -1761,12 +1797,14 @@ nsBoxFrame::GetType() const
   return nsLayoutAtoms::boxFrame;
 }
 
+#ifdef DEBUG_LAYOUT
 NS_IMETHODIMP
 nsBoxFrame::GetDebug(PRBool& aDebug)
 {
   aDebug = (mState & NS_STATE_CURRENTLY_IN_DEBUG);
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP  
 nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
@@ -1785,6 +1823,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
   nsPoint originOffset;
   GetOriginToViewOffset(aPresContext, originOffset, &view);
 
+#ifdef DEBUG_LAYOUT
   // get the debug frame.
   if (view || (mState & NS_STATE_IS_ROOT))
   {
@@ -1801,6 +1840,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
       }
     }
   }
+#endif
 
   nsIFrame *hit = nsnull;
   nsPoint tmp;
@@ -2203,6 +2243,7 @@ nsBoxFrame::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRende
         //DrawKnob(aPresContext, aRenderingContext, x + size - spacerSize, y, spacerSize);
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetDebugBorder(nsMargin& aInset)
 {
@@ -2225,7 +2266,7 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 {
     aPadding.SizeTo(2,2,2,2);
 }
-
+#endif
 
 void 
 nsBoxFrame::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels)

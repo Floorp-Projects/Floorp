@@ -103,7 +103,10 @@ public:
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+#ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, PRBool aDebug);
+  NS_IMETHOD GetDebug(PRBool& aDebug);
+#endif
   NS_IMETHOD GetFrame(nsIFrame** aFrame);
   NS_IMETHOD GetVAlign(Valignment& aAlign);
   NS_IMETHOD GetHAlign(Halignment& aAlign);
@@ -111,7 +114,6 @@ public:
   NS_IMETHOD GetInset(nsMargin& aInset);
   NS_IMETHOD BeginLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetDebug(PRBool& aDebug);
   NS_IMETHOD SetParent(const nsIFrame* aParent);
 
   //NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
@@ -208,12 +210,12 @@ public:
 protected:
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName);
+    virtual void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
     virtual PRBool HasStyleChange();
     virtual void SetStyleChangeFlag(PRBool aDirty);
 
-    virtual void PropagateDebug(nsBoxLayoutState& aState);
 
 
 
@@ -258,7 +260,6 @@ protected:
                                            nsIFrame**        aFrame);
 
 private: 
-    nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
     // helper methods
     void TranslateEventCoords(nsIPresContext* aPresContext,
@@ -268,23 +269,26 @@ private:
     static PRBool AdjustTargetToScope(nsIFrame* aParent, nsIFrame*& aTargetFrame);
 
 
-    PRBool GetInitialDebug(PRBool& aDebug);
-
-    void GetDebugPref(nsIPresContext* aPresContext);
 
 
 #ifdef DEBUG_LAYOUT
+    nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+    PRBool GetInitialDebug(PRBool& aDebug);
+    void GetDebugPref(nsIPresContext* aPresContext);
+
     nsresult DisplayDebugInfoFor(nsIBox*         aBox, 
                                  nsIPresContext* aPresContext,
                                  nsPoint&        aPoint,
                                  PRInt32&        aCursor);
-#endif
-
-    nsresult GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize);
 
     void GetDebugBorder(nsMargin& aInset);
     void GetDebugPadding(nsMargin& aInset);
     void GetDebugMargin(nsMargin& aInset);
+
+#endif
+
+    nsresult GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize);
+
     void PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels);
 
 #ifdef DEBUG_LAYOUT
@@ -306,8 +310,10 @@ private:
 
     nsIPresContext* mPresContext;
 
+#ifdef DEBUG_LAYOUT
     static PRBool gDebug;
     static nsIBox* mDebugChild;
+#endif
 
 }; // class nsBoxFrame
 

@@ -733,13 +733,6 @@ nsBox::NeedsRecalc()
   return NS_OK;
 }
 
-nsresult
-nsBox::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
-{
-    return NS_OK;
-}
-
-
 void
 nsBox::SizeNeedsRecalc(nsSize& aSize)
 {
@@ -1488,6 +1481,13 @@ nsBox::BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize)
    BoundsCheck(aMinSize.height, aPrefSize.height, aMaxSize.height);
 }
 
+#ifdef DEBUG_LAYOUT
+nsresult
+nsBox::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
+{
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsBox::GetDebugBoxAt( const nsPoint& aPoint,
                       nsIBox**     aBox)
@@ -1542,6 +1542,7 @@ nsBox::GetDebug(PRBool& aDebug)
   aDebug = PR_FALSE;
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsBox::GetMouseThrough(PRBool& aMouseThrough)
