@@ -13,7 +13,9 @@ ecma/Date/15.9.4.3.js
 #See bug number 94506 
 ecma_3/Function/regress-94506.js
 #Verify error for bad branch 
-js1_5/Regress/regress-96526.js
+js1_5/Regress/regress-96526-001.js
+js1_5/Regress/regress-96526-002.js
+js1_5/Regress/regress-96526-003.js
 #
 # Unfixable bugs:
 #
