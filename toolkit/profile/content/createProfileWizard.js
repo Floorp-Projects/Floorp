@@ -101,7 +101,6 @@ function chooseProfileFolder()
 
   // Disable the "Default Folder..." button when the default profile folder
   // was selected manually in the File Picker.
-  // This is always false on Windows, until bug 221872 is fixed.
   document.getElementById("useDefault").disabled =
     (newProfileRoot.parent.equals(gDefaultProfileParent));
 
