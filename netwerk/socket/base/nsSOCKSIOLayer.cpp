@@ -563,11 +563,11 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     // First, we need to look up our proxy...
     char scratch[PR_NETDB_BUF_SIZE];
     PRHostEnt hostentry;
-    char * proxyHost;
+    nsXPIDLCString proxyHost;
 
-    nsresult rv = info->GetProxyHost(&proxyHost);
+    nsresult rv = info->GetProxyHost(getter_Copies(proxyHost));
 
-    if (NS_FAILED(rv) || !proxyHost || !(*proxyHost)) {
+    if (NS_FAILED(rv) || proxyHost.IsEmpty()) {
         return PR_FAILURE;
     }
 
@@ -578,12 +578,12 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
         return PR_FAILURE;
     }
 
-    LOGDEBUG(("nsSOCKSIOLayerConnect SOCKS %u; proxyHost: %s.", socksVersion, proxyHost));
+    LOGDEBUG(("nsSOCKSIOLayerConnect SOCKS %u; proxyHost: %s.", socksVersion, proxyHost.get()));
 
     status = PR_GetHostByName(proxyHost, scratch, PR_NETDB_BUF_SIZE, &hostentry);
     
     if (PR_SUCCESS != status) {
-        LOGERROR(("PR_GetHostByName() failed. proxyHost = %s, status = %x.",proxyHost, status));
+        LOGERROR(("PR_GetHostByName() failed. proxyHost = %s, status = %x.",proxyHost.get(), status));
         return status;
     }
     
@@ -646,7 +646,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     status = fd->lower->methods->connect(fd->lower, &proxyAddr, connectWait);
     
     if (PR_SUCCESS != status) {
-        LOGERROR(("Failed to TCP connect to the proxy server (%s): timeout = %d, status = %x.",proxyHost, connectWait, status));
+        LOGERROR(("Failed to TCP connect to the proxy server (%s): timeout = %d, status = %x.",proxyHost.get(), connectWait, status));
         PR_SetSocketOption(fd, &sockopt);
         return status;
     }
