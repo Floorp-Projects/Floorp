@@ -846,35 +846,42 @@ ParseAtom(CompilerState *state)
             }
         }
         if (op == REOP_END) {
-	    num = state->parenCount++;	/* \1 is numbered 0, etc. */
+            num = state->parenCount++;	/* \1 is numbered 0, etc. */
             op = REOP_LPAREN;
-	    state->cp = cp + 1;
+            cp++;
         }
         else
-            state->cp = cp + 3;
-	ren2 = ParseRegExp(state);
-	if (!ren2)
+            cp += 3;
+        state->cp = cp;
+        /* Handle empty paren */
+        if (*cp == ')') {
+            ren2 = NewRENode(state, REOP_EMPTY, NULL);
+        }
+        else {
+            ren2 = ParseRegExp(state);
+            if (!ren2)
+                return NULL;
+            cp = state->cp;
+            if (*cp != ')') {
+                js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                            NULL,
+                                            JSREPORT_ERROR,
+                                            JSMSG_MISSING_PAREN, ocp);
+                return NULL;
+            }
+        }
+        cp++;
+        ren = NewRENode(state, op, ren2);
+        if (!ren)
 	    return NULL;
-	cp = state->cp;
-	if (*cp != ')') {
-            js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        NULL,
-                                        JSREPORT_ERROR,
-                                        JSMSG_MISSING_PAREN, ocp);
-	    return NULL;
-	}
-	cp++;
-	ren = NewRENode(state, op, ren2);
-	if (!ren)
-	    return NULL;
-	ren->flags = ren2->flags & (RENODE_ANCHORED | RENODE_NONEMPTY);
-	ren->u.num = num;
+        ren->flags = ren2->flags & (RENODE_ANCHORED | RENODE_NONEMPTY);
+        ren->u.num = num;
         if ((op == REOP_LPAREN) || (op == REOP_LPARENNON)) {
                 /* Assume RPAREN ops immediately succeed LPAREN ops */
-	    ren2 = NewRENode(state, (REOp)(op + 1), NULL);
-	    if (!ren2 || !SetNext(state, ren, ren2))
-	        return NULL;
-	    ren2->u.num = num;
+            ren2 = NewRENode(state, (REOp)(op + 1), NULL);
+            if (!ren2 || !SetNext(state, ren, ren2))
+                return NULL;
+            ren2->u.num = num;
         }
         break;
 
@@ -1112,6 +1119,7 @@ nothex:
 	break;
 
       default:
+
       do_flat:
 	while ((c = *++cp) && (cp != state->cpend) && !js_strchr(metachars, c))
 	    ;
@@ -1872,7 +1880,6 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           for (cp2 = cp; cp2 < cpend; cp2++)
               if (*cp2 == '\n')
                   break;
-          if (cp2 == cp) return NULL;
           while (cp2 >= cp) {
               const jschar *cp3 = matchRENodes(state, ren->next, NULL, cp2);
               if (cp3 != NULL) {
@@ -2588,6 +2595,7 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *opt, *str;
     JSRegExp *oldre, *re;
     JSBool ok;
+    JSObject *obj2;
 
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
 	return JS_FALSE;
@@ -2601,22 +2609,52 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             goto out;
         }
     } else {
-	str = js_ValueToString(cx, argv[0]);
+        if (JSVAL_IS_OBJECT(argv[0])) {
+            obj2 = JSVAL_TO_OBJECT(argv[0]);
+            /*
+             * If we get passed in a RegExp object we construct a new
+             * RegExp that is a duplicate of it by re-compiling the
+             * original source code. ECMA requires that it be an error
+             * here if the flags are specified. (We must use the flags
+             * from the original RegExp also).
+             */
+            if (obj2 && OBJ_GET_CLASS(cx, obj2) == &js_RegExpClass) {
+                if (argc >= 2 && !JSVAL_IS_VOID(argv[1])) { /* 'flags' defined */
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                         JSMSG_NEWREGEXP_FLAGGED);
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                re = (JSRegExp*) JS_GetPrivate(cx, obj2);
+                if (!re) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                re = js_NewRegExp(cx, NULL, re->source, re->flags, JS_FALSE);
+                goto madeit;
+            }
+        }
+        str = js_ValueToString(cx, argv[0]);
 	if (!str) {
 	    ok = JS_FALSE;
 	    goto out;
 	}
 	argv[0] = STRING_TO_JSVAL(str);
-	if (argc > 1) {
-	    opt = js_ValueToString(cx, argv[1]);
-	    if (!opt) {
-		ok = JS_FALSE;
-		goto out;
-	    }
-	    argv[1] = STRING_TO_JSVAL(opt);
-	}
+        if (argc > 1) {
+            if (JSVAL_IS_VOID(argv[1]))
+                opt = NULL;
+            else {
+                opt = js_ValueToString(cx, argv[1]);
+                if (!opt) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                argv[1] = STRING_TO_JSVAL(opt);
+            }
+        }
     }
     re = js_NewRegExpOpt(cx, NULL, str, opt, JS_FALSE);
+madeit:
     if (!re) {
 	ok = JS_FALSE;
 	goto out;
@@ -2713,8 +2751,19 @@ static JSFunctionSpec regexp_methods[] = {
 static JSBool
 RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    /* If not constructing, replace obj with a new RegExp object. */
     if (!cx->fp->constructing) {
+        /*
+         * If first arg is regexp and no flags are given, just return the arg.
+         * (regexp_compile detects the regexp + flags case and throws a
+         * TypeError.)  See 10.15.3.1.
+         */
+        if ((argc < 2 || JSVAL_IS_VOID(argv[1])) && JSVAL_IS_OBJECT(argv[0]) &&
+            OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[0])) == &js_RegExpClass) {
+            *rval = argv[0];
+            return JS_TRUE;
+        }
+
+        /* Otherwise, replace obj with a new RegExp object. */
 	obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
 	if (!obj)
 	    return JS_FALSE;
