@@ -273,6 +273,14 @@ pref("mailnews.reuse_message_window", true);
 pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.properties");
 pref("mailnews.start_page.enabled", true);
 
+pref("mailnews.remember_selected_message", true);
+
+pref("mail.toolbars.showbutton.file", true);
+pref("mail.toolbars.showbutton.next", true);
+pref("mail.toolbars.showbutton.junk", false); // not yet...
+pref("mail.toolbars.showbutton.print", true);
+pref("mail.toolbars.showbutton.stop", true);
+
 pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
 
 /* default prefs for Mozilla 5.0 */
