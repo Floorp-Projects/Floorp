@@ -325,6 +325,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         // Cancel any read and/or write requests...
         SetFlag(eSocketRead_Done);
         SetFlag(eSocketWrite_Done);
+
+        CloseConnection();
         //
         // Fall into the Done state...
         //
