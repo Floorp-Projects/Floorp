@@ -1314,9 +1314,16 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         break;
 
       default:
-        // XXX For the time being ignore everything else. We should deal with
-        // things like table cells and create anonymous frames...
-        break;
+        // For non table related frames (e.g. forms) make them children of the outer table frame
+        // XXX also need to deal with things like table cells and create anonymous frames...
+        nsIFrame* nonTableRelatedFrame;
+        nsIAtom*  tag;
+        childContent->GetTag(tag);
+        ConstructFrameByTag(aPresContext, childContent, aNewFrame, tag, childStyleContext,
+                            aAbsoluteItems, nonTableRelatedFrame);
+        childList->SetNextSibling(nonTableRelatedFrame);
+        NS_IF_RELEASE(tag);
+       break;
       }
 
       // If it's not a caption frame, then link the frame into the inner
@@ -1482,12 +1489,11 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // Unless the 'overflow' policy forbids scrolling, wrap the frame in a
     // scroll frame.
     nsIFrame*             scrollFrame = nsnull;
-    PRInt32               scrolling = -1;
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      styleContext->GetStyleData(eStyleStruct_Display);
-  
-    // XXX Check the webshell and see if scrolling is enabled there. This needs
-    // to go away...
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      styleContext->GetMutableStyleData(eStyleStruct_Display);
+ 
+    // XXX This needs to go away... Yes, but where.
+    // Check the webshell and see if scrolling is enabled there. 
     nsISupports* container;
     if (nsnull != aPresContext) {
       aPresContext->GetContainer(&container);
@@ -1495,17 +1501,18 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
         nsIWebShell* webShell = nsnull;
         container->QueryInterface(kIWebShellIID, (void**) &webShell);
         if (nsnull != webShell) {
+          PRInt32 scrolling = -1;
           webShell->GetScrolling(scrolling);
+          if (-1 != scrolling) {
+            display->mOverflow = scrolling;
+          }
           NS_RELEASE(webShell);
         }
         NS_RELEASE(container);
       }
     }
-    if (-1 == scrolling) {
-      scrolling = display->mOverflow;
-    }
-  
-    if (NS_STYLE_OVERFLOW_HIDDEN != scrolling) {
+
+    if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
       NS_NewScrollFrame(scrollFrame);
       scrollFrame->Init(*aPresContext, aDocElement, aRootFrame, styleContext);
   

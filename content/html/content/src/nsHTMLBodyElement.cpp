@@ -264,16 +264,18 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
       float         p2t;
       mPart->GetAttributeCount(attrCount);
       aPresContext->GetScaledPixelsToTwips(p2t);
+      nscoord bodyMarginWidth  = -1;
+      nscoord bodyMarginHeight = -1;
 
       if (0 < attrCount) {
         // if marginwidth/marginheigth is set reflect them as 'margin'
         mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
         if (eHTMLUnit_Pixel == value.GetUnit()) {
-          nscoord marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-          if (marginWidth < 0) {
-            marginWidth = 0;
+          bodyMarginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+          if (bodyMarginWidth < 0) {
+            bodyMarginWidth = 0;
           }
-          nsStyleCoord  widthCoord(marginWidth);
+          nsStyleCoord  widthCoord(bodyMarginWidth);
           styleSpacing->mMargin.SetLeft(widthCoord);
           styleSpacing->mMargin.SetRight(widthCoord);
           count++;
@@ -281,12 +283,12 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 
         mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
         if (eHTMLUnit_Pixel == value.GetUnit()) {
-          nscoord marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-          if (marginHeight < 0) {
-            marginHeight = 0;
+          bodyMarginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+          if (bodyMarginHeight < 0) {
+            bodyMarginHeight = 0;
           }
       
-          nsStyleCoord  heightCoord(marginHeight);
+          nsStyleCoord  heightCoord(bodyMarginHeight);
           styleSpacing->mMargin.SetTop(heightCoord);
           styleSpacing->mMargin.SetBottom(heightCoord);
           count++;
@@ -300,33 +302,53 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
       }
 
       // XXX This is all pretty hokey...
-      if (count < 2) {
-        // if marginwidth or marginheight is set in the web shell reflect them
-        // as margin
+
+      // if marginwidth or marginheight is set in the <frame> and not set in the <body>
+      // reflect them as margin in the <body>
+      if ((0 > bodyMarginWidth) || (0 > bodyMarginHeight)) {
         nsISupports* container;
         aPresContext->GetContainer(&container);
         if (nsnull != container) {
+          nsCompatibility mode;
+          aPresContext->GetCompatibilityMode(mode);
           nsIWebShell* webShell = nsnull;
           container->QueryInterface(kIWebShellIID, (void**) &webShell);
           if (nsnull != webShell) {
-            PRInt32 marginWidth, marginHeight;
-            webShell->GetMarginWidth(marginWidth);    // -1 indicates not set
-            webShell->GetMarginHeight(marginHeight);  // -1 indicates not set
-            if ((marginWidth >= 0) && (marginHeight < 0)) { // nav quirk 
-              marginHeight = 0;
+            nscoord pixel = NSIntPixelsToTwips(1, p2t);
+            nscoord frameMarginWidth, frameMarginHeight; 
+            webShell->GetMarginWidth(frameMarginWidth); // -1 indicates not set   
+            webShell->GetMarginHeight(frameMarginHeight); 
+            if ((frameMarginWidth >= 0) && (0 > bodyMarginWidth)) { // set in <frame> & not in <body> 
+              if (eCompatibility_NavQuirks == mode) { // allow 0 margins
+                if ((0 > bodyMarginHeight) && (0 > frameMarginHeight)) { // another nav quirk 
+                  frameMarginHeight = 0;
+                }
+              } else { // margins are at least 1 pixel
+                if (0 == frameMarginWidth) {
+                  frameMarginWidth = pixel;
+                }
+              }
             }
-            if ((marginHeight >= 0) && (marginWidth < 0)) { // nav quirk
-              marginWidth = 0;
+            if ((frameMarginHeight >= 0) && (0 > bodyMarginHeight)) { // set in <frame> & not in <body> 
+              if (eCompatibility_NavQuirks == mode) { // allow 0 margins
+                if ((0 > bodyMarginWidth) && (0 > frameMarginWidth)) { // another nav quirk 
+                  frameMarginWidth = 0;
+                }
+              } else { // margins are at least 1 pixel
+                if (0 == frameMarginHeight) {
+                  frameMarginHeight = pixel;
+                }
+              }
             }
 
-            if (marginWidth > 0) {
-              nsStyleCoord widthCoord(NSIntPixelsToTwips(marginWidth, p2t));
+            if ((0 > bodyMarginWidth) && (frameMarginWidth >= 0)) {
+              nsStyleCoord widthCoord(frameMarginWidth);
               styleSpacing->mMargin.SetLeft(widthCoord);
               styleSpacing->mMargin.SetRight(widthCoord);
             }
 
-            if (marginHeight > 0) {
-              nsStyleCoord heightCoord(NSIntPixelsToTwips(marginHeight, p2t));
+            if ((0 > bodyMarginHeight) && (frameMarginHeight >= 0)) {
+              nsStyleCoord heightCoord(frameMarginHeight);
               styleSpacing->mMargin.SetTop(heightCoord);
               styleSpacing->mMargin.SetBottom(heightCoord);
             }
@@ -485,6 +507,7 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
     }
     NS_RELEASE(parentContext);
   }
+
 
   return NS_OK;
 }
