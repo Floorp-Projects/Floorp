@@ -95,7 +95,7 @@ OleRegisterMgr::OleRegisterMgr()
 {
   //DWORD dwVer = ::OleBuildVersion();
 
-  if (S_OK != ::OleInitialize(NULL)) {
+  if (FAILED(::OleInitialize(NULL))) {
     NS_ASSERTION(0, "***** OLE has not been initialized!\n");
   } else {
     //printf("***** OLE has been initialized!\n");
