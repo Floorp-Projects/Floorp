@@ -900,23 +900,6 @@ sub BuildClientDist()
 	#XPINSTALL (the one and only!)
 	_InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",						"$distdirectory:xpinstall:");
 
-	#FULL CIRCLE	
-	if ($main::MOZ_FULLCIRCLE)
-	{
-		_InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory");
-	
-		if ($main::DEBUG)
-		{
-			#_InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer_debug:");
-		} 
-		else
-		{
-			#_InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer:");
-			_InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory");
-		}
-	}
-
-
 	# XPFE COMPONENTS
 	 _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",				"$distdirectory:xpfe:components");
 	 _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",			"$distdirectory:idl:");
@@ -1010,11 +993,6 @@ sub BuildDist()
 	mkpath([ ":mozilla:dist:viewer:Plugins", ":mozilla:dist:viewer_debug:Plugins"]);
 	mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
 	
-	if ($main::MOZ_FULLCIRCLE)
-	{
-		mkpath([ $dist_dir."TalkBack"]);
-	}
-
 	BuildRuntimeDist();
 	BuildClientDist();
 	

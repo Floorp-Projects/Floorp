@@ -67,7 +67,6 @@ $BUILD_ROOT				= ":";
 								# then turn off all $pull variables, and set $BUILD_ROOT.
 $DEBUG					= 1;
 $CARBON					= 0;	# Turn on to build with TARGET_CARBON
-$MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 
@@ -167,12 +166,6 @@ if ($build{most})
 
 chdir("::::");
 $MOZ_SRC = cwd();
-
-if ($MOZ_FULLCIRCLE)
-{
-	#// Get the Build Number for the Master.ini(Full Circle) n'stuff
-	$buildnum = Moz::SetBuildNumber();
-}
 
 if ($USE_TIMESTAMPED_LOGS)
 {

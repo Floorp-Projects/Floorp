@@ -35,7 +35,6 @@ use Moz;
 $DEBUG					= 0;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
 $NECKO					= 1;
-$MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 
@@ -135,12 +134,6 @@ if ($build{most})
 
 chdir("::::");
 $MOZ_SRC = cwd();
-
-if ($MOZ_FULLCIRCLE)
-{
-	#// Get the Build Number for the Master.ini(Full Circle) n'stuff
-	$buildnum = Moz::SetBuildNumber();
-}
 
 if ($USE_TIMESTAMPED_LOGS)
 {
