@@ -1486,6 +1486,10 @@ nsresult nsRange::ToString(nsString& aReturn)
   if (!cStart || !cEnd) {
     return NS_OK;
   }
+
+#ifdef DEBUG
+      printf("Range dump: -----------------------\n");
+#endif /* DEBUG */
     
   // effeciency hack for simple case
   if (cStart == cEnd)
@@ -1494,6 +1498,13 @@ nsresult nsRange::ToString(nsString& aReturn)
     
     if (textNode)
     {
+#ifdef DEBUG
+      // If debug, dump it:
+      nsCOMPtr<nsIContent> cN (do_QueryInterface(mStartParent));
+      if (cN) cN->List(stdout);
+      printf("End Range dump: -----------------------\n");
+#endif /* DEBUG */
+
       // grab the text
       if (NS_FAILED(textNode->SubstringData(mStartOffset,mEndOffset-mStartOffset,aReturn)))
         return NS_ERROR_UNEXPECTED;
@@ -1517,6 +1528,10 @@ nsresult nsRange::ToString(nsString& aReturn)
   iter->CurrentNode(getter_AddRefs(cN));
   while (cN && (NS_COMFALSE == iter->IsDone()))
   {
+#ifdef DEBUG
+    // If debug, dump it:
+    cN->List(stdout);
+#endif /* DEBUG */
     nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(cN) );
     if (textNode) // if it's a text node, get the text
     {
@@ -1546,6 +1561,10 @@ nsresult nsRange::ToString(nsString& aReturn)
     }
     iter->CurrentNode(getter_AddRefs(cN));
   }
+
+#ifdef DEBUG
+  printf("End Range dump: -----------------------\n");
+#endif /* DEBUG */
   return NS_OK;
 }
 
