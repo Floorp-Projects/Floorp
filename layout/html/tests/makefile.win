@@ -22,8 +22,7 @@ PROG1 = .\$(OBJDIR)\TestCSSScanner.exe
 PROG2 = .\$(OBJDIR)\TestCSSPropertyLookup.exe
 PROG3 = .\$(OBJDIR)\TestCSSParser.exe
 PROG4 = .\$(OBJDIR)\TestAttributes.exe
-PROG5 = .\$(OBJDIR)\TestInlineFrame.exe
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5)
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)
 
 DEFINES = -D_IMPL_NS_HTML
 
@@ -101,5 +100,3 @@ $(PROG2): $(OBJDIR) TestCSSPropertyLookup.cpp
 $(PROG3): $(OBJDIR) TestCSSParser.cpp
 
 $(PROG4): $(OBJDIR) TestAttributes.cpp
-
-$(PROG5): $(OBJDIR) TestInlineFrame.cpp
