@@ -50,7 +50,7 @@ extern "C" {
    CHUNK := [ RANGE | VALUE ]
    RANGE := -LENGTH START
    START := VALUE
-   LENGTH := int32
+   LENGTH := PRInt32
    VALUE := a literal positive integer, for now
    it could also be an offset from the previous value.
    LENGTH could also perhaps be a less-than-32-bit quantity,
@@ -80,7 +80,7 @@ nsNNTPArticleSet::nsNNTPArticleSet(MSG_NewsHost* host)
 	m_cached_value_index = 0;
 	m_length = 0;
 	m_data_size = 10;
-	m_data = (int32 *) PL_Malloc (sizeof (int32) * m_data_size);
+	m_data = (PRInt32 *) PL_Malloc (sizeof (PRInt32) * m_data_size);
 	m_host = host;
 }
 
@@ -93,10 +93,10 @@ nsNNTPArticleSet::~nsNNTPArticleSet()
 
 XP_Bool nsNNTPArticleSet::Grow()
 {
-	int32 new_size;
-	int32 *new_data;
+	PRInt32 new_size;
+	PRInt32 *new_data;
 	new_size = m_data_size * 2;
-	new_data = (int32 *) XP_REALLOC (m_data, (size_t) (sizeof (int32) * new_size));
+	new_data = (PRInt32 *) XP_REALLOC (m_data, (size_t) (sizeof (PRInt32) * new_size));
 	if (! new_data)
 		return FALSE;
 	m_data_size = new_size;
@@ -107,14 +107,14 @@ XP_Bool nsNNTPArticleSet::Grow()
 
 nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, MSG_NewsHost* host)
 {
-	int32 *head, *tail, *end;
+	PRInt32 *head, *tail, *end;
 
 	m_host = host;
 	m_cached_value = -1;
 	m_cached_value_index = 0;
 	m_length = 0;
 	m_data_size = 10;
-	m_data = (int32 *) PL_Malloc (sizeof (int32) * m_data_size);
+	m_data = (PRInt32 *) PL_Malloc (sizeof (PRInt32) * m_data_size);
 	if (!m_data) return;
 
 	head = m_data;
@@ -127,12 +127,12 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, MSG_NewsHost* host)
 
 	while (isspace (*numbers)) numbers++;
 	while (*numbers) {
-		int32 from = 0;
-		int32 to;
+		PRInt32 from = 0;
+		PRInt32 to;
 
 		if (tail >= end - 4) {
 			/* out of room! */
-			int32 tailo = tail - head;
+			PRInt32 tailo = tail - head;
 			if (!Grow()) {
 				FREEIF(m_data);
 				return;
@@ -219,7 +219,7 @@ nsNNTPArticleSet::Create(const char* value, MSG_NewsHost* host)
 
 /* Returns the lowest non-member of the set greater than 0.
  */
-int32
+PRInt32
 nsNNTPArticleSet::FirstNonMember ()
 {
 	if (m_length <= 0) {
@@ -267,14 +267,14 @@ nsNNTPArticleSet::FirstNonMember ()
 char *
 nsNNTPArticleSet::Output()
 {
-	int32 size;
-	int32 *head;
-	int32 *tail;
-	int32 *end;
-	int32 s_size;
+	PRInt32 size;
+	PRInt32 *head;
+	PRInt32 *tail;
+	PRInt32 *end;
+	PRInt32 s_size;
 	char *s_head;
 	char *s, *s_end;
-	int32 last_art = -1;
+	PRInt32 last_art = -1;
 
 	size = m_length;
 	head = m_data;
@@ -290,13 +290,13 @@ nsNNTPArticleSet::Output()
 	if (! s) return 0;
 
 	while (tail < end) {
-		int32 from;
-		int32 to;
+		PRInt32 from;
+		PRInt32 to;
 
 		if (s > (s_end - (12 * 2 + 10))) { /* 12 bytes for each number (enough
 											  for "2147483647" aka 2^31-1),
 											  plus 10 bytes of slop. */
-			int32 so = s - s_head;
+			PRInt32 so = s - s_head;
 			s_size += 200;
 			char* tmp = new char[s_size];
 			if (tmp) PL_strcpy(tmp, s_head);
@@ -342,15 +342,15 @@ nsNNTPArticleSet::Output()
 	return s_head;
 }
 
-int32 
+PRInt32 
 nsNNTPArticleSet::GetLastMember()
 {
 	if (m_length > 1)
 	{
-		int32 nextToLast = m_data[m_length - 2];
+		PRInt32 nextToLast = m_data[m_length - 2];
 		if (nextToLast < 0)	// is range at end?
 		{
-			int32 last = m_data[m_length - 1];
+			PRInt32 last = m_data[m_length - 1];
 			return (-nextToLast + last - 1);
 		}
 		else	// no, so last number must be last member
@@ -364,7 +364,7 @@ nsNNTPArticleSet::GetLastMember()
 		return 0;
 }
 
-void nsNNTPArticleSet::SetLastMember(int32 newHighWaterMark)
+void nsNNTPArticleSet::SetLastMember(PRInt32 newHighWaterMark)
 {
 	if (newHighWaterMark < GetLastMember())
 	{
@@ -372,12 +372,12 @@ void nsNNTPArticleSet::SetLastMember(int32 newHighWaterMark)
 		{
 			if (m_length > 1)
 			{
-				int32 nextToLast = m_data[m_length - 2];
-				int32 curHighWater;
+				PRInt32 nextToLast = m_data[m_length - 2];
+				PRInt32 curHighWater;
 				if (nextToLast < 0)	// is range at end?
 				{
-					int32 rangeStart = m_data[m_length - 1];
-					int32 rangeLength = -nextToLast;
+					PRInt32 rangeStart = m_data[m_length - 1];
+					PRInt32 rangeLength = -nextToLast;
 					curHighWater = (rangeLength + rangeStart - 1);
 					if (curHighWater > newHighWaterMark)
 					{
@@ -416,15 +416,15 @@ void nsNNTPArticleSet::SetLastMember(int32 newHighWaterMark)
 	}
 }
 
-int32 
+PRInt32 
 nsNNTPArticleSet::GetFirstMember()
 {
 	if (m_length > 1)
 	{
-		int32 first = m_data[0];
+		PRInt32 first = m_data[0];
 		if (first < 0)	// is range at start?
 		{
-			int32 second = m_data[1];
+			PRInt32 second = m_data[1];
 			return (second);
 		}
 		else	// no, so first number must be first member
@@ -457,18 +457,18 @@ nsNNTPArticleSet::GetFirstMember()
 XP_Bool
 nsNNTPArticleSet::Optimize()
 {
-	int32 input_size;
-	int32 output_size;
-	int32 *input_tail;
-	int32 *output_data;
-	int32 *output_tail;
-	int32 *input_end;
-	int32 *output_end;
+	PRInt32 input_size;
+	PRInt32 output_size;
+	PRInt32 *input_tail;
+	PRInt32 *output_data;
+	PRInt32 *output_tail;
+	PRInt32 *input_end;
+	PRInt32 *output_end;
 
 	input_size = m_length;
 	output_size = input_size + 1;
 	input_tail = m_data;
-	output_data = (int32 *) PL_Malloc (sizeof (int32) * output_size);
+	output_data = (PRInt32 *) PL_Malloc (sizeof (PRInt32) * output_size);
 	output_tail = output_data;
 	input_end = input_tail + input_size;
 	output_end = output_data + output_size;
@@ -479,7 +479,7 @@ nsNNTPArticleSet::Optimize()
 	m_cached_value = -1;
 
 	while (input_tail < input_end) {
-		int32 from, to;
+		PRInt32 from, to;
 		XP_Bool range_p = (*input_tail < 0);
 
 		if (range_p) {
@@ -525,7 +525,7 @@ nsNNTPArticleSet::Optimize()
 				to++;
 				input_tail++;
 			} else {
-				int32 L2 = (- *input_tail) + 1;
+				PRInt32 L2 = (- *input_tail) + 1;
 				output_tail[-2] -= L2; /* increase length by N */
 				to += L2;
 				input_tail += 2;
@@ -562,13 +562,13 @@ nsNNTPArticleSet::Optimize()
 
 
 XP_Bool
-nsNNTPArticleSet::IsMember(int32 number)
+nsNNTPArticleSet::IsMember(PRInt32 number)
 {
 	XP_Bool value = FALSE;
-	int32 size;
-	int32 *head;
-	int32 *tail;
-	int32 *end;
+	PRInt32 size;
+	PRInt32 *head;
+	PRInt32 *tail;
+	PRInt32 *end;
 
 	size = m_length;
 	head = m_data;
@@ -585,8 +585,8 @@ nsNNTPArticleSet::IsMember(int32 number)
 	while (tail < end) {
 		if (*tail < 0) {
 			/* it's a range */
-			int32 from = tail[1];
-			int32 to = from + (-(tail[0]));
+			PRInt32 from = tail[1];
+			PRInt32 to = from + (-(tail[0]));
 			if (from > number) {
 				/* This range begins after the number - we've passed it. */
 				value = FALSE;
@@ -625,12 +625,12 @@ DONE:
 
 
 int
-nsNNTPArticleSet::Add(int32 number)
+nsNNTPArticleSet::Add(PRInt32 number)
 {
-	int32 size;
-	int32 *head;
-	int32 *tail;
-	int32 *end;
+	PRInt32 size;
+	PRInt32 *head;
+	PRInt32 *tail;
+	PRInt32 *end;
 
 	size = m_length;
 	head = m_data;
@@ -647,8 +647,8 @@ nsNNTPArticleSet::Add(int32 number)
 	while (tail < end) {
 		if (*tail < 0) {
 			/* it's a range */
-			int32 from = tail[1];
-			int32 to = from + (-(tail[0]));
+			PRInt32 from = tail[1];
+			PRInt32 to = from + (-(tail[0]));
 
 			if (from <= number && to >= number) {
 				/* This number is already present - we don't need to do
@@ -686,7 +686,7 @@ nsNNTPArticleSet::Add(int32 number)
 	   avoiding massive duplication of code, simply insert a literal here and
 	   then run the optimizer.
 	   */
-	int32 mid = (tail - head); 
+	PRInt32 mid = (tail - head); 
 
 	if (m_data_size <= m_length + 1) {
 		int endo = end - head;
@@ -703,7 +703,7 @@ nsNNTPArticleSet::Add(int32 number)
 		m_data[m_length++] = number;
 	} else {
 		/* need to insert (or edit) in the middle */
-		int32 i;
+		PRInt32 i;
 		for (i = size; i > mid; i--) {
 			m_data[i] = m_data[i-1];
 		}
@@ -718,12 +718,12 @@ nsNNTPArticleSet::Add(int32 number)
 
 
 int
-nsNNTPArticleSet::Remove(int32 number)
+nsNNTPArticleSet::Remove(PRInt32 number)
 {
-	int32 size;
-	int32 *head;
-	int32 *tail;
-	int32 *end;
+	PRInt32 size;
+	PRInt32 *head;
+	PRInt32 *tail;
+	PRInt32 *end;
 
 	size = m_length;
 	head = m_data;
@@ -745,12 +745,12 @@ nsNNTPArticleSet::Remove(int32 number)
 	m_cached_value = -1;
 
 	while (tail < end) {
-		int32 mid = (tail - m_data);
+		PRInt32 mid = (tail - m_data);
 
 		if (*tail < 0) {
 			/* it's a range */
-			int32 from = tail[1];
-			int32 to = from + (-(tail[0]));
+			PRInt32 from = tail[1];
+			PRInt32 to = from + (-(tail[0]));
 
 			if (number < from || number > to) {
 				/* Not this range */
@@ -802,7 +802,7 @@ nsNNTPArticleSet::Remove(int32 number)
 				/* The number being deleted is in the middle of a range which
 				   must be split. This increases overall length by 2.
 				   */
-				int32 i;
+				PRInt32 i;
 				int endo = end - head;
 				if (m_data_size - m_length <= 2) {
 					if (!Grow()) return MK_OUT_OF_MEMORY;
@@ -866,8 +866,8 @@ nsNNTPArticleSet::Remove(int32 number)
 }
 
 
-static int32*
-msg_emit_range(int32* tmp, int32 a, int32 b)
+static PRInt32*
+msg_emit_range(PRInt32* tmp, PRInt32 a, PRInt32 b)
 {
 	if (a == b) {
 		*tmp++ = a;
@@ -881,15 +881,15 @@ msg_emit_range(int32* tmp, int32 a, int32 b)
 
 
 int
-nsNNTPArticleSet::AddRange(int32 start, int32 end)
+nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 {
-	int32 tmplength;
-	int32* tmp;
-	int32* in;
-	int32* out;
-	int32* tail;
-	int32 a;
-	int32 b;
+	PRInt32 tmplength;
+	PRInt32* tmp;
+	PRInt32* in;
+	PRInt32* out;
+	PRInt32* tail;
+	PRInt32 a;
+	PRInt32 b;
 	XP_Bool didit = FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
@@ -903,7 +903,7 @@ nsNNTPArticleSet::AddRange(int32 start, int32 end)
 	}
 
 	tmplength = m_length + 2;
-	tmp = (int32*) PL_Malloc(sizeof(int32) * tmplength);
+	tmp = (PRInt32*) PL_Malloc(sizeof(PRInt32) * tmplength);
 
 	if (!tmp) return MK_OUT_OF_MEMORY;
 
@@ -959,13 +959,13 @@ nsNNTPArticleSet::AddRange(int32 start, int32 end)
 	return 1;
 }
 
-int32
-nsNNTPArticleSet::CountMissingInRange(int32 range_start, int32 range_end)
+PRInt32
+nsNNTPArticleSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 {
-	int32 count;
-	int32 *head;
-	int32 *tail;
-	int32 *end;
+	PRInt32 count;
+	PRInt32 *head;
+	PRInt32 *tail;
+	PRInt32 *end;
 
 	PR_ASSERT (range_start >= 0 && range_end >= 0 && range_end >= range_start);
 	if (range_start < 0 || range_end < 0 || range_end < range_start) return -1;
@@ -979,8 +979,8 @@ nsNNTPArticleSet::CountMissingInRange(int32 range_start, int32 range_end)
 	while (tail < end) {
 		if (*tail < 0) {
 			/* it's a range */
-			int32 from = tail[1];
-			int32 to = from + (-(tail[0]));
+			PRInt32 from = tail[1];
+			PRInt32 to = from + (-(tail[0]));
 			if (from < range_start) from = range_start;
 			if (to > range_end) to = range_end;
 
@@ -1000,17 +1000,17 @@ nsNNTPArticleSet::CountMissingInRange(int32 range_start, int32 range_end)
 
 
 int 
-nsNNTPArticleSet::FirstMissingRange(int32 min, int32 max,
-								  int32* first, int32* last)
+nsNNTPArticleSet::FirstMissingRange(PRInt32 min, PRInt32 max,
+								  PRInt32* first, PRInt32* last)
 {
-	int32 size;
-	int32 *head;
-	int32 *tail;
-	int32 *end;
-	int32 from = 0;
-	int32 to = 0;
-	int32 a;
-	int32 b;
+	PRInt32 size;
+	PRInt32 *head;
+	PRInt32 *tail;
+	PRInt32 *end;
+	PRInt32 from = 0;
+	PRInt32 to = 0;
+	PRInt32 a;
+	PRInt32 b;
 
 	PR_ASSERT(first && last);
 	if (!first || !last) return -1;
@@ -1060,17 +1060,17 @@ nsNNTPArticleSet::FirstMissingRange(int32 min, int32 max,
 // I'm guessing Terry didn't include this because he doesn't think we're going
 // to need it. I'm not so sure. I'm putting it in for now.
 int 
-nsNNTPArticleSet::LastMissingRange(int32 min, int32 max,
-								  int32* first, int32* last)
+nsNNTPArticleSet::LastMissingRange(PRInt32 min, PRInt32 max,
+								  PRInt32* first, PRInt32* last)
 {
-  int32 size;
-  int32 *head;
-  int32 *tail;
-  int32 *end;
-  int32 from = 0;
-  int32 to = 0;
-  int32 a;
-  int32 b;
+  PRInt32 size;
+  PRInt32 *head;
+  PRInt32 *tail;
+  PRInt32 *end;
+  PRInt32 from = 0;
+  PRInt32 to = 0;
+  PRInt32 a;
+  PRInt32 b;
 
   PR_ASSERT(first && last);
   if (!first || !last) return -1;
@@ -1168,7 +1168,7 @@ nsNNTPArticleSet::test_adder (void)
   char *string;
   nsNNTPArticleSet *set;
   char *s;
-  int32 i;
+  PRInt32 i;
 
   START("0-70,72-99,105,107,110-111,117-200");
 
@@ -1281,8 +1281,8 @@ nsNNTPArticleSet::test_ranges(void)
   char *string;
   nsNNTPArticleSet *set;
   char *s;
-  int32 i;
-  int32 j;
+  PRInt32 i;
+  PRInt32 j;
 
   START("20-40,72-99,105,107,110-111,117-200");
 
