@@ -1,0 +1,11 @@
+
+@import url("chrome://inspector/skin/treeEditable.css");
+
+.tree-editable {
+  -moz-binding: url("treeEditable.xml#treeEditable");
+}
+
+.treecell-editable {
+  -moz-binding: url("treeEditable.xml#treecellEditable");
+}
+

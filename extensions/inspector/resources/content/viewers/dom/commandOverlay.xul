@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE rdf [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd1;
+]>
+
+<overlay id="ovDOMViewerCommands"
+        xmlns:ins="http://www.mozilla.org/inspector#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <broadcasterset id="brsGlobalCommands">
+    <broadcaster id="cmd:selectByClick" viewer="dom"
+      oncommand="inspector.getViewer('dom').selectByClick()"/>
+
+    <broadcaster id="cmd:find" viewer="dom"
+      oncommand="inspector.getViewer('dom').showFindDialog()"/>
+
+    <broadcaster id="cmd:findNext" viewer="dom"
+      oncommand="inspector.getViewer('dom').findNext()"/>
+
+    <broadcaster id="cmd:toggleAnon" viewer="dom"
+      oncommand="inspector.getViewer('dom').toggleAnonContent()"/>
+
+    <broadcaster id="cmd:showColumns" viewer="dom"
+      oncommand="inspector.getViewer('dom').showColumnsDialog()"/>
+  </broadcasterset>
+
+</overlay>
+
+        

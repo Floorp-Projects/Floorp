@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://inspector/skin/titledSplitter.css"?>
+
+<bindings id="bdsTitledSplitter"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="titledSplitter" extends="xul:splitter">
+    <content>
+      <xul:box class="titledsplitter-container" orient="vertical" flex="1">
+        <xul:spring class="titledsplitter-dragbar"/>
+        <xul:box class="titledsplitter-titlebox" flex="1" onmousedown="event.stopPropagation()">
+          <xul:box autostretch="never">
+            <xul:text class="titledsplitter-text" inherits="value"/>
+          </xul:box>
+          <xul:spring flex="1"/>
+          <xul:box class="titledsplitter-closebutton" onclick="this.parentNode.parentNode.parentNode.close();"/>
+        </xul:box>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <property name="isOpened">
+        <getter><![CDATA[
+          return this.mOpened;
+        ]]></getter>
+      </property>
+
+      <property name="collapsee">
+        <getter><![CDATA[
+          var collapse = this.getAttribute("collapse");
+          return collapse == "before" ? this.previousSibling : this.nextSibling;
+        ]]></getter>
+      </property>
+
+      <method name="open">
+        <body><![CDATA[
+          var collapsee = this.collapsee;
+          if (collapsee) {
+            this.setAttribute("closed", "false");
+            this.setAttribute("collapsed", "false");
+            collapsee.setAttribute("collapsed", "false");
+            this.mOpened = true;
+            this.onopen();
+          }
+        ]]></body>
+      </method>
+
+      <method name="close">
+        <body><![CDATA[
+          var collapsee = this.collapsee;
+          if (collapsee) {
+            this.setAttribute("closed", "true");
+            this.setAttribute("collapsed", "true");
+            collapsee.setAttribute("collapsed", "true");
+            this.mOpened = false;
+            this.onopen();
+          }
+        ]]></body>
+      </method>
+      
+      <method name="onopen">
+        <body><![CDATA[
+          if (!this.mOnOpen) {
+            var js = this.getAttribute("onopen");
+            if (js)
+              this.mOnOpen = new Function(js);
+          }          
+
+          if (this.mOnOpen) {
+            return this.mOnOpen();
+          }
+        ]]></body>
+      </method>
+    
+    </implementation>
+    
+    <handlers>
+      <handler event="bindingattached"><![CDATA[
+        this.mOpened = false;
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/search/junkImgs.dtd">
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
+
+<window id="winJunkImgs" class="dialog"
+        title="&junkImgs.title;"
+        persist="screenX screenY"    
+        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="Javascript" src="chrome://inspector/content/search/modules/junkImgs/dialog.js"/>
+  <script language="Javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
+
+  <box orient="vertical">
+    <html style="width: 400px">&junkImgsDescription;</html>
+    <box autostretch="never">
+      <text id="txSearchPath" value="Search Path:"/>
+      <textfield id="txfSearchPath" flex="1" style="width: 25em;" persist="true"/>
+      <button id="btnSearchPathBrowser" value="Browse" onclick="dialog.browse()"/>
+    </box>
+    <!--
+    <box autostretch="never">
+      <text id="txRemotePath" value="Target URL:"/>
+      <textfield id="txfRemotePath" flex="1" persist="true"/>
+    </box>
+    <box autostretch="never">
+      <checkbox id="cbIsSkin" value="Target is a Skin" checked="true" persist="true"/>
+    </box>
+    -->
+  </box>
+
+  <box id="okCancelButtonsRight"/>
+
+</window>
+
+        

@@ -1,0 +1,44 @@
+
+.titled-splitter {
+  border-top: 1px outset InactiveCaption;
+  border-bottom: 1px outset InactiveCaption;
+  background-color: InactiveCaption;
+  color: InactiveCaptionText;
+  cursor: default;
+}
+
+box[orient="vertical"] > .titled-splitter {
+  cursor: default;
+}
+
+.titledsplitter-container {
+  padding-bottom: 2px;
+}
+
+.titledsplitter-dragbar {
+  min-height: 2px;
+  cursor: n-resize !important;
+}
+
+.titledsplitter-titlebox {
+  padding: 0px 5px 0px 5px;
+}
+
+.titledsplitter-text {
+  font-weight: bold;
+}
+
+.titledsplitter-closebutton {
+  margin: 1px;
+  border: 1px outset ThreeDFace;
+  padding: 1px;
+  min-width: 14px;
+  min-height: 14px;
+  background: ThreeDFace url("chrome://inspector/skin/titledsplitter-close.gif") no-repeat center center;
+}
+
+.titledsplitter-closebutton:hover:active {
+  border-style: inset;
+}
+
+

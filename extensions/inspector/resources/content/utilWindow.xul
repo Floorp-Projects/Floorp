@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<window id="inspectorUtilWindow"
+        width="200" height="200"
+        persist="screenX screenY width height sizemode"
+        onload="opener.UtilWindowOpenListener(window)"
+        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+    <spring flex="1"/>
+    <box id="bxOuter" orient="horizontal" flex="1">
+      <spring flex="1"/>
+      <box id="bxCenter" autostretch="never"/>
+      <spring flex="1"/>
+    </box>
+    <spring flex="1"/>
+
+</window>
+
+        

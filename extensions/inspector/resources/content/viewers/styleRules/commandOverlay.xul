@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE rdf SYSTEM "chrome://inspector/locale/viewers/styleRules.dtd">
+
+<overlay id="ovStyleRulesViewerCommands"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <broadcasterset id="brsGlobalCommands">
+  </broadcasterset>
+
+</overlay>
+
+        

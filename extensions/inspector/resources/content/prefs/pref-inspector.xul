@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/prefs.dtd">
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<window id="winPref" orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="Javascript" src="chrome://inspector/content/extensions/wsm-colorpicker.js"/>
+
+  <script language="Javascript"><![CDATA[
+    var _elementIDs = [
+      "cprElBorderColor",
+      "txfElBorderWidth",
+      "txfElDuration",
+      "txfElSpeed",
+      "cbElOn"
+     ];
+    
+    function initFunction()
+    {
+      parent.initPanel("chrome://inspector/content/prefs/pref-inspector.xul");
+    }
+
+    AddColorPicker(initFunction);
+
+  ]]></script>
+
+  <box class="box-smallheader" title="&Inspector.label;"/>
+
+  <box id="bxGeneralPrefs">
+    <titledbox>
+      <title><text value="Element Blinking"/></title>
+      <box orient="vertical">
+        <grid>
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row autostretch="never">
+              <text value="Border Color"/>
+              <box autostretch="never">
+                <colorpicker id="cprElBorderColor" type="button"
+                  pref="true" preftype="color" prefstring="inspector.blink.border-color" prefattribute="color"/>
+              </box>
+            </row>
+            <row autostretch="never">
+              <text value="Border Width"/>
+              <box autostretch="never">
+                <textfield id="txfElBorderWidth" style="width: 4em"
+                  pref="true" preftype="int" prefstring="inspector.blink.border-width" prefattribute="value"/>
+                <text value="(px)"/>
+              </box>
+            </row>
+            <row autostretch="never">
+              <text value="Blink Duration"/>
+              <box autostretch="never">
+                <textfield id="txfElDuration" style="width: 4em"
+                  pref="true" preftype="int" prefstring="inspector.blink.duration" prefattribute="value"/>
+                <text value="(s)"/>
+              </box>
+            </row>
+            <row autostretch="never">
+              <text value="Blink Speed"/>
+              <box autostretch="never">
+                <textfield id="txfElSpeed" style="width: 4em"
+                  pref="true" preftype="int" prefstring="inspector.blink.speed" prefattribute="value"/>
+                <text value="(ms)"/>
+               </box>
+            </row>
+          </rows>
+        </grid>
+        <box autostretch="never">
+          <checkbox id="cbElOn" value="Blink Selected Element"
+              pref="true" preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
+        </box>
+      </box>
+    </titledbox>
+  </box>
+
+</window>
+
+        

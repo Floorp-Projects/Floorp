@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
+
+<window id="winNodeDefault" class="color-dialog" 
+        orient="vertical"
+        xmlns:ins="&INS-rdf;"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <!--============================= SCRIPTS ============================= -->
+
+  <script language="javascript" src="chrome://inspector/content/viewers/styleRules/styleRules.js"/>
+
+  <script language="javascript" src="chrome://inspector/content/utils.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+
+  <!--============================= POPUPS ============================== -->
+
+  <popupset id="psPopups">
+    <popup id="ppStyleRuleContext" oncreate="return viewer.onCreateRulePopup()">
+      <menuitem value="New" oncommand="viewer.cmdNewRule()"/>
+      <menuitem value="Delete" oncommand="viewer.cmdDeleteSelectedRule()"/>
+      <menuitem value="Disable" oncommand="viewer.cmdToggleSelectedRule()"/>
+      <menuseparator/>
+      <menuitem value="Open File in Editor" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
+    </popup>
+
+    <popup id="ppStyleDecContext">
+      <menuitem value="New Property" oncommand="viewer.cmdNewProperty()"/>
+      <menuitem value="Edit" oncommand="viewer.cmdEditSelectedProperty()"/>
+      <menuitem value="Delete" oncommand="viewer.cmdDeleteSelectedProperty()"/>
+      <menuseparator/>
+      <menuitem value="Toggle !important" oncommand="viewer.cmdToggleSelectedImportant()"/>
+    </popup>
+  </popupset>
+
+  <!--============================= CONTENT ============================== -->
+
+  <box orient="vertical">
+    <tree id="trStyleRules"
+      flex="1" context="ppStyleRuleContext"
+      onselect="viewer.onRuleSelect()"
+      datasources="rdf:null" ref="inspector:RuleRoot">
+
+      <template>
+        <rule>
+          <conditions>
+            <content uri="?uri"/>
+            <triple subject="?uri" predicate="&INS-rdf;Rule" object="?rule"/>
+          </conditions>
+
+          <bindings>
+            <binding subject="?rule" predicate="&INS-rdf;Selector" object="?selector"/>
+            <binding subject="?rule" predicate="&INS-rdf;FileURL" object="?fileURL"/>
+            <binding subject="?rule" predicate="&INS-rdf;Weight" object="?weight"/>
+            <binding subject="?rule" predicate="&INS-rdf;LineNum" object="?lineNum"/>
+          </bindings>
+
+          <action>
+            <treechildren>
+              <treeitem uri="?rule">
+                <treerow>
+                  <treecell value="?selector"/>
+                  <treecell value="?fileURL"/>
+                  <treecell value="?weight"/>
+                  <treecell value="?lineNum"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </action>
+        </rule>
+      </template>
+
+      <treecolgroup>
+        <treecol id="tcolNodeName" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="tcolNodeValue" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="tcolNodeValue" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="tcolNodeValue" flex="1"/>
+      </treecolgroup>
+      
+      <treehead>
+        <treerow>
+          <treecell class="treecell-header" value="Selector"/>
+          <treecell class="treecell-header" value="File"/>
+          <treecell class="treecell-header" value="Weight"/>
+          <treecell class="treecell-header" value="Line"/>
+        </treerow>
+      </treehead>
+
+      <treechildren flex="1"/>
+    </tree>
+  </box>
+
+  <splitter orient="horizontal" collapse="after">
+    <grippy/>
+  </splitter>
+
+  <tree id="trStyleDec" class="tree-editable"
+    onafteredit="viewer.cmdSetSelectedPropertyValue(event.editingItem, event.newValue)"
+    flex="1" context="ppStyleDecContext"
+    datasources="rdf:null" ref="inspector:DecRoot">
+
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?uri"/>
+          <triple subject="?uri" predicate="&INS-rdf;Property" object="?prop"/>
+        </conditions>
+
+        <bindings>
+          <binding subject="?prop" predicate="&INS-rdf;PropertyPriority" object="?priority"/>
+          <binding subject="?prop" predicate="&INS-rdf;PropertyName" object="?name"/>
+          <binding subject="?prop" predicate="&INS-rdf;PropertyValue" object="?value"/>
+        </bindings>
+
+        <action>
+          <treechildren>
+            <treeitem uri="?prop">
+              <treerow>
+                <treecell class="treecell-priority treecell-iconic" ins-type="priority" ins:priority="?priority"/>
+                <treecell value="?name" ins-type="name"/>
+                <treecell class="treecell-editable" value="?value" ins-type="value"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </action>
+      </rule>
+    </template>
+
+    <treecolgroup>
+      <treecol id="tcolPropPriority"/>
+      <treecol id="tcolPropName" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="tcolPropValue" flex="1"/>
+    </treecolgroup>
+    
+    <treehead>
+      <treerow>
+        <treecell class="treecell-header" value="!"/>
+        <treecell class="treecell-header" value="Name"/>
+        <treecell class="treecell-header" value="Value"/>
+      </treerow>
+    </treehead>
+
+    <treechildren flex="1"/>
+  </tree>    
+
+</window>
+
+        

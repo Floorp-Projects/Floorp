@@ -1,0 +1,9 @@
+
+@import url("chrome://inspector/skin");
+@import url("chrome://inspector/content/extensions/treeEditable.css");
+
+@namespace ins url("http://www.mozilla.org/inspector#");
+
+.treecell-priority[ins|priority="!important"] {
+  list-style-image: url("chrome://inspector/skin/iconImportant.gif");
+}

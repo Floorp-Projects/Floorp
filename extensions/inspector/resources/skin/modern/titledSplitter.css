@@ -1,0 +1,44 @@
+
+.titled-splitter {
+  border: 1px solid #000000;
+  background-color: #5B7693;
+  cursor: default;
+}
+
+box[orient="vertical"] > .titled-splitter {
+  cursor: default;
+}
+
+.titledsplitter-container {
+  padding-bottom: 2px;
+}
+
+.titledsplitter-dragbar {
+  border-top: 1px solid #92ABC9;
+  min-height: 2px;
+  cursor: n-resize;
+}
+
+.titledsplitter-titlebox {
+  padding: 0px 5px 0px 5px;
+}
+
+.titledsplitter-text {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.titledsplitter-closebutton {
+  margin: 1px;
+  border: 1px outset #D4B3C4;
+  padding: 1px;
+  min-width: 14px;
+  min-height: 14px;
+  background: #D4B3C4 url("chrome://inspector/skin/titledsplitter-close.gif") no-repeat center center;
+}
+
+.titledsplitter-closebutton:hover:active {
+  border-style: inset;
+}
+
+

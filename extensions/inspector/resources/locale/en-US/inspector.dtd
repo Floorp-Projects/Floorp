@@ -1,0 +1,60 @@
+
+<!ENTITY thDOMNodes.label "DOM Nodes">
+<!ENTITY txDocument.label "Document">
+<!ENTITY btnInspect.label "Inspect">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "File">
+<!ENTITY mnWindows.label "Inspect a Window">
+<!ENTITY mnWindows.accesskey "w">
+<!ENTITY mnFile.accesskey "f">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspect a URL">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdExit.label "Exit">
+  <!ENTITY cmdExit.accesskey "x">
+
+<!ENTITY mnEdit.label "Edit">
+<!ENTITY mnEdit.accesskey "e">
+  <!ENTITY cmdUndo.label "Undo">
+  <!ENTITY cmdUndo.accesskey "u">
+  <!ENTITY cmdRedo.label "Redo">
+  <!ENTITY cmdRedo.accesskey "r">
+  <!ENTITY cmdCut.label "Cut">
+  <!ENTITY cmdCut.accesskey "t">
+  <!ENTITY cmdCopy.label "Copy">
+  <!ENTITY cmdCopy.accesskey "c">
+  <!ENTITY cmdPaste.label "Paste">
+  <!ENTITY cmdPaste.accesskey "p">
+  <!ENTITY cmdDelete.label "Delete">
+  <!ENTITY cmdDelete.accesskey "d">
+  <!ENTITY cmdPrefs.label "Preferences">
+  <!ENTITY cmdPrefs.accesskey "f">
+
+<!ENTITY mnSearch.label "Search">
+<!ENTITY mnSearch.accesskey "s">
+  <!ENTITY mnSearchPlugins.label "Extensions">
+  <!ENTITY mnSearchPlugins.accesskey "e">
+    <!ENTITY cmdRunSearch.label "Run...">
+    <!ENTITY cmdRunSearch.accesskey "r">
+
+<!ENTITY mnView.label "View">
+<!ENTITY mnView.accesskey "v">
+  <!ENTITY cmdToggleBrowser.label "Browser">
+  <!ENTITY cmdToggleSearch.label "Search Results">
+  <!ENTITY cmdFlashSelected.label "Blink Selected Element">
+
+<!ENTITY mnHelp.label "Help">
+<!ENTITY mnHelp.accesskey "h">
+  <!ENTITY cmdNotes.label "Release Notes...">
+  <!ENTITY cmdNotes.accesskey "n">
+  <!ENTITY cmdAbout.label "About Document Inspector">
+  <!ENTITY cmdAbout.accesskey "a">
+
+<!ENTITY cmdViewSearchItem.label "View...">
+<!ENTITY cmdEditSearchItem.label "Edit...">
+<!ENTITY cmdCopySearchItemLine.label "Copy Line">
+<!ENTITY cmdCopySearchItemAll.label "Copy All">
+<!ENTITY cmdSaveSearchItemText.label "Save...">
+<!ENTITY cmdClearSearch.label "Clear">
+<!ENTITY cmdHideSearchItems.label "Hide">

@@ -1,0 +1,5 @@
+
+<!ENTITY inspectorTaskCmd.label "Document Inspector">
+<!ENTITY inspectorTaskCmd.commandkey "i">
+<!ENTITY inspectorTaskCmd.accesskey "I">
+

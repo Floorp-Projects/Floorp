@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/prefs.dtd">
+
+<overlay id="ovPrefs" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <treechildren id="panelChildren">
+    <treeitem id="inspector" container="true" open="true">
+      <treerow>       
+        <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-inspector.xul" value="&Inspector.label;"/> 
+      </treerow>
+      <treechildren id="inspectorChildren">
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-sidebar.xul" value="&Sidebar.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+  </treechildren>
+
+</overlay>
+
+        

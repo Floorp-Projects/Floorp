@@ -1,0 +1,53 @@
+
+@import url("chrome://inspector/skin");
+
+.toolbar-header1 {
+  margin: 2px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#bxURLBar {
+  padding: 3px;
+}
+
+#bxURLBarContainer {
+  margin: 0px 3px 0px 3px;
+  border: 1px inset #ffffff;
+  padding: 0px 1px 0px 1px;
+  background-color: #ffffff;
+}
+
+#mbHistory.menubutton-icon {
+  border: none;
+  list-style-image: url("chrome://global/skin/menulist-arrow.gif");
+}
+
+.button-toolbar-3 {
+  margin: 0px !important;
+  border: 0px !important;
+}
+
+#imgURLBarIcon {
+  margin: 1px 1px 0px 1px;
+  list-style-image: url("chrome://navigator/skin/location.gif");
+}
+
+#bxSearch {
+  height: 150px;
+}
+
+#bxStatus {
+  border-top: 1px inset #6E89AB; 
+  padding: 2px;
+  min-width: 1px;
+  background-color: #6E89AB;
+  color: #D0E7E7;
+  font-size: smaller;
+}
+
+#txStatus {
+  margin-left: 5px;
+}
+

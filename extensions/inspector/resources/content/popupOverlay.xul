@@ -1,0 +1,67 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<overlay id="ovPopupsMain"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <popupset id="ppsGlobalPopupset">
+    <popup id="ppSearchResults">
+      <!--
+        <menuitem id="ppSearchResults-view" value="&cmdViewSearchItem.label;" observes="cmdViewSearchItem"/>
+        <menuitem id="ppSearchResults-edit" value="&cmdEditSearchItem.label;" observes="cmdEditSearchItem"/>
+      -->
+      <menuseparator id="ppSearchResults-insertion"/>
+      <menuitem id="ppSearchResults-copyLine" value="&cmdCopySearchItemLine.label;" observes="cmdCopySearchItemLine"/>
+      <menuitem id="ppSearchResults-copyAll" value="&cmdCopySearchItemAll.label;" observes="cmdCopySearchItemAll"/>
+      <menuitem id="ppSearchResults-save" value="&cmdSaveSearchItemText.label;" observes="cmdSaveSearchItemText"/>
+      <menuseparator/>
+      <menuitem id="ppSearchResults-clear" value="&cmdClearSearch.label;" observes="cmdClearSearch"/>
+      <menuitem id="ppSearchResults-hide" value="&cmdHideSearchItems.label;" observes="cmdToggleSearch"/>
+    </popup>
+  </popupset>
+
+  <menupopup id="mppFile">
+    <menuitem value="&cmdShowOpenURLDialog.label;..." accesskey="&cmdShowOpenURLDialog.accesskey;" observes="cmdShowOpenURLDialog"/>
+    <menuseparator/>
+    <menuitem value="&cmdExit.label;" accesskey="&cmdExit.accesskey;" observes="cmdExit"/>
+  </menupopup>
+
+  <menupopup id="mppEdit">
+    <menuitem value="&cmdUndo.label;" accesskey="&cmdUndo.accesskey;" observes="cmdUndo"/>
+    <menuitem value="&cmdRedo.label;" accesskey="&cmdRedo.accesskey;" observes="cmdRedo"/>
+    <menuseparator/>
+    <menuitem value="&cmdCut.label;" accesskey="&cmdCut.accesskey;" observes="cmdCut"/>
+    <menuitem value="&cmdCopy.label;" accesskey="&cmdCopy.accesskey;" observes="cmdCopy"/>
+    <menuitem value="&cmdPaste.label;" accesskey="&cmdPaste.accesskey;" observes="cmdPaste"/>
+    <menuitem value="&cmdDelete.label;" accesskey="&cmdDelete.accesskey;" observes="cmdDelete"/>
+    <menuseparator/>
+    <menuitem value="&cmdPrefs.label;..." accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
+  </menupopup>
+
+  <menupopup id="mppSearch" oncreate="inspector.initPopup(this)">
+    <menuseparator/>
+    <menu value="&mnSearchPlugins.label;" accesskey="&mnSearchPlugins.accesskey;">
+      <menupopup id="mppSearchPlugins">
+        <menuitem value="&cmdRunSearch.label;" accesskey="&cmdRunSearch.accesskey;" observes="cmdRunSearch"/>
+      </menupopup>
+    </menu>
+  </menupopup>
+
+  <menupopup id="mppView" >
+    <menuitem class="menuitem-iconic" type="checkbox" value="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
+    <menuitem class="menuitem-iconic" type="checkbox" value="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
+    <menuseparator/>
+    <menuitem class="menuitem-iconic" type="checkbox" value="&cmdFlashSelected.label;" observes="cmdFlashSelected"/>
+  </menupopup>
+
+  <menupopup id="mppHelp">
+    <menuitem value="&cmdNotes.label;" accesskey="&cmdNotes.accesskey;" observes="cmdShowNotes"/>
+    <menuseparator/>
+    <menuitem value="&cmdAbout.label;" accesskey="&cmdAbout.accesskey;" observes="cmdShowAbout"/>
+  </menupopup>
+
+</overlay>
