@@ -132,7 +132,7 @@ sub show_user {
     
     SendSQL("LOCK TABLES bugs READ, products READ, votes WRITE,
              cc READ, bug_group_map READ, user_group_map READ,
-             cc AS selectVisible_cc READ");
+             cc AS selectVisible_cc READ, groups READ");
     
     if ($canedit && $bug_id) {
         # Make sure there is an entry for this bug
