@@ -36,17 +36,21 @@ $ENV{CVSROOT}    = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 if ($query->param()) {
   &parse_params;
 
-  if ($query->param(preview) eq "yes") {
+  if ($query->param(preview) eq "1") {
     print "Content-type: text/html\n\n";
     &print_script_preview;
-  } else {
+    exit 0;
+  } elsif ($query->param(saveas) eq "1") {
     print "Content-type: text/saveas\n\n";
     &print_script;
+    exit 0;
   }
-} else {
-  print "Content-type: text/html\n\n";
-  &print_configure_form;
 }
+print "Content-type: text/html\n\n";
+&print_configure_form;
+
+## End main program
+#########################################################
 
 sub parse_params {
   if ($query->param('nspr_option') eq 'userdefined') {
@@ -87,7 +91,8 @@ sub print_script_preview {
     </HEAD>
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
-	<form action='config.cgi' method='get'>);
+	<form action='config.cgi' method='get'>
+        <input type='hidden' name='saveas' value='1'>);
 
     foreach $param ($query->param()) {
       if ($param =~ /^(MOZ_|--)/) {
@@ -205,7 +210,7 @@ sub print_configure_form {
     Mozilla Unix Build Configurator</b></font><p>
 
     <FORM action='config.cgi' method='POST'>
-    <INPUT Type='hidden' name='preview' value='yes'>
+    <INPUT Type='hidden' name='preview' value='1'>
 
     This form produces a script that you can save and use to configure your
     mozilla build. If this form does not have some options you want, you can
@@ -299,7 +304,7 @@ sub print_configure_form {
 
     <br>
     <font size=+1 face="Helvetica,Arial"><b>
-    Options for `<code>configure</code>' script:</b></font><br>
+    Options for "<code>configure</code>" script:</b></font><br>
 
     <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0><tr><td>
     <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
@@ -339,18 +344,21 @@ sub print_configure_form {
 sub bool_option {
   my ($name, $help) = @_;
 
-  print qq(<tr><td align=right>
-	   <INPUT type='checkbox' name='$name' value="yes">
-	   </td><td>$name
-	   </td><td>$help</td></tr>
-	  );
+  print "<tr><td align=right>";
+  print "<INPUT type='checkbox' name='$name' value='yes'";
+  print " CHECKED" if $query->param($name) eq 'yes';
+  print ">";
+  print "</td><td>$name";
+  print "</td><td>$help</td></tr>";
 }
 
 sub string_option {
   my ($name, $help) = @_;
 
   print "<tr><td align=right>$name=</td><td align=left>";
-  print "<INPUT type='text' name='$name'>";
+  print "<INPUT type='text' name='$name'";
+  print " value='".$query->param($name)."'" if defined $query->param($name);
+  print ">";
   print "</td><td>$help</td></tr>\n";
 }
 
