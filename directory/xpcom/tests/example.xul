@@ -1,57 +1,40 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<window title="LDAP Manager Prototype"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical">
+  <outliner flex="1">
+    <outlinercol id="description"
+                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                 flex="1"
+                 label="Description"
+                 sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#description"
+                 sortActive="true"
+                 primary="true"
+                 persist="width sortActive sortDirection" />
 
-  <tree datasources="rdf:ldap"
-        flex="2" id="testTree" 
-        ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??sub?drink=*">
+    <splitter class="tree-splitter" />
 
-   <template>
-     <rule>
-       <conditions>
-         <content uri="?uri" />
-         <triple subject="?uri"
-                 predicate="http://home.netscape.com/NC-rdf#child"
-                 object="?child" />
-       </conditions> 
+    <outlinercol id="cn"
+                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                 flex="1"
+                 label="CN"
+                 sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn"
+                 persist="width sortActive sortDirection" />
 
-       <bindings>
-         <binding subject="?child"
-	          predicate="http://www.mozilla.org/LDAPATTR-rdf#drink"
-                  object="?drink" />
-         <binding subject="?child"
-                  predicate="http://www.mozilla.org/LDAPATTR-rdf#givenname"
-                  object="?givenname" />
-       </bindings>	    
-
-       <action>
-         <treechildren flex="1">
-           <treeitem uri="?child">
-             <treerow>
-               <treecell class="treecell-indent" label="?drink" flex="1" />
-               <treecell label="?givenname" flex="1" />
-             </treerow>
-           </treeitem>
-         </treechildren>
-       </action>
-
-    </rule>     
-  </template>
-
-  <treecols id="theColumns">
-    <treecol id="drink" flex="1" />
-    <treecol id="givenname" flex="1" />
-  </treecols>
-
-  <treehead>
-    <treerow id="headRow">
-      <treecell label="Drink" flex="1" />
-      <treecell label="Given Name" flex="1" />
-    </treerow>
-   </treehead>
-  </tree>
-
+    <outlinerbody id="tree"
+                  datasources="rdf:ldap"
+                  ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??one?(objectclass=*)"
+                  flex="1"
+                  containment="http://home.netscape.com/NC-rdf#recursiveChild">
+      <template>
+        <outlinerrow uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
+          <outlinercell ref="description"
+                        label="rdf:http://www.mozilla.org/LDAPATTR-rdf#description" />
+          <outlinercell ref="cn"
+                        label="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn" />
+        </outlinerrow>
+      </template>
+    </outlinerbody>
+  </outliner>
 </window>
-

@@ -50,6 +50,17 @@ const NS_RDF_NO_VALUE = NS_ERROR_RDF_BASE + 2;
 const NS_RDF_ASSERTION_ACCEPTED = Components.results.NS_OK;
 const NS_RDF_ASSERTION_REJECTED = NS_ERROR_RDF_BASE + 3;
 
+// Scope constants
+//
+const SCOPE_BASE = Components.interfaces.nsILDAPURL.SCOPE_BASE;
+const SCOPE_ONELEVEL = Components.interfaces.nsILDAPURL.SCOPE_ONELEVEL;
+const SCOPE_SUBTREE = Components.interfaces.nsILDAPURL.SCOPE_SUBTREE;
+
+// Types of delegates
+const MESSAGE = 1;
+const FLAT_LIST = 2;
+const RECURSIVE_LIST = 3;
+
 // ArrayEnumerator courtesy of Brendan Eich <brendan@mozilla.org>
 //
 function ArrayEnumerator(array) {
@@ -119,9 +130,12 @@ nsLDAPDataSource.prototype = {
     // make it hard for the datasource and/or component to be GCed?
     //
     kRDF_instanceOf: {},
+    kNC_DN: {},
     kNC_child: {},
-    mRdfSvc: {},
+    kNC_recursiveChild: {},
 
+    mRdfSvc: {},
+    
     // since we implement multiple interfaces, we have to provide QI
     //
     QueryInterface: function(iid) {
@@ -134,6 +148,26 @@ nsLDAPDataSource.prototype = {
       return this;
     },
 
+    /**
+     * nsIRDFRemoteDataSource
+     */
+
+    /**
+     * This value is <code>true</code> when the datasource has
+     * fully loaded itself.
+     */
+    get loaded() {
+        debug("getter for loaded called\n");
+        // We're never fully loaded
+        return false;
+    },
+
+    /**
+     * Specify the URI for the data source: this is the prefix
+     * that will be used to register the data source in the
+     * data source registry.
+     * @param aURI the URI to load
+     */
     Init: function(aURI)
     {
         if (DEBUG) {
@@ -160,12 +194,40 @@ nsLDAPDataSource.prototype = {
 
         // get some RDF Resources that we'll need
         //
-        this.kRDF_instanceOf = this.mRdfSvc.GetResource( RDF_NAMESPACE_URI +
-                "instanceOf");
-        this.kNC_child = this.mRdfSvc.GetResource( NC_NAMESPACE_URI + "child");
-        this.kNC_Folder = this.mRdfSvc.GetResource( NC_NAMESPACE_URI + 
-                                                    "Folder");
+        this.kRDF_instanceOf = this.mRdfSvc.GetResource(RDF_NAMESPACE_URI +
+                                                        "instanceOf");
+        this.kNC_DN = this.mRdfSvc.GetResource(NC_NAMESPACE_URI + "DN");
+        this.kNC_child = this.mRdfSvc.GetResource(NC_NAMESPACE_URI + "child");
+        this.kNC_recursiveChild = this.mRdfSvc.GetResource(NC_NAMESPACE_URI +
+                                                           "recursiveChild");
 
+        return;
+    },
+
+    /**
+     * Refresh the remote datasource, re-loading its contents
+     * from the URI.
+     *
+     * @param aBlocking If <code>true</code>, the call will block
+     * until the datasource has completely reloaded.
+     */
+    Refresh: function(aBlocking)
+    {
+        if (DEBUG) {
+            dump("Refresh() called with args: \n\t" + aBlocking + "\n\n");
+        }
+        return;
+    },
+
+    /**
+     * Request that a data source write it's contents out to 
+     * permanent storage, if applicable.
+     */
+    Flush: function()
+    {
+        if (DEBUG) {
+            dump("Flush() called\n\n");
+        }
         return;
     },
 
@@ -216,7 +278,7 @@ nsLDAPDataSource.prototype = {
 
     /**
      * Find a child of that is related to the source by the given arc
-     * arc and truth value
+     * and truth value
      *
      * @return NS_RDF_NO_VALUE if there is no target accessable from the
      * source via the specified property.
@@ -231,31 +293,68 @@ nsLDAPDataSource.prototype = {
              "\n\t" + aProperty.Value + "\n\t" + aTruthValue + "\n\n");
         }
 
+        // We don't handle negative assertions.
+        // XXX Should we? Can we?
+        if (!aTruthValue) {
+            Components.returnCode = NS_RDF_NO_VALUE;
+            return null;
+        }
+
         var delegate;
         var enumerator;
 
-        if (aProperty.EqualsNode(this.kNC_child)) {
+        if (aProperty.EqualsNode(this.kNC_child)
+            || aProperty.EqualsNode(this.kNC_recursiveChild)) {
+            // Find a child or recursiveChild. Get the messagelist delegate
+            // (flat for child, recursive for recursiveChild) for aSource and
+            // return the first element of the list, if available.
+            var listType = (aProperty.EqualsNode(this.kNC_child) ?
+                            "flat.messagelist.ldap" :
+                            "recursive.messagelist.ldap");
             try {
-                delegate = aSource.GetDelegate("messagelist.ldap",
+                delegate = aSource.GetDelegate(listType,
                                        Components.interfaces.nsISupportsArray);
-            } catch (e) {
+            }
+            catch (e) {
             }
             if (delegate != null) {
-                if (delegate.Count() == 1) {
-                    return delegate.QueryElementAt(0,
-                                             Components.interfaces.nsIRDFNode);
+                try {
+                    var target = delegate.QueryElementAt(0,
+                                       Components.interfaces.nsIRDFNode);
+                    return target;
+                }
+                catch (e) {
                 }
             }
         }
+        else if (aProperty.EqualsNode(this.kNC_DN)) {
+            // Find the DN arc. Get the message delegate for aSource
+            // and return the resource for the dn property of the message,
+            // if available.
+            try {
+                delegate = aSource.GetDelegate("message.ldap",
+                                       Components.interfaces.nsILDAPMessage);
+            }
+            catch (e) {
+            }
+            if (delegate != null) {
+                return this.mRdfSvc.GetResource(delegate.dn);
+            }
+        }
         else {
+            // Find a different arc. See if we're looking for an LDAP attribute
+            // arc. If so, get the message delegate for aSource, if we find one
+            // get the attribute array for the specified LDAP attribute and
+            // return the first value if it isn't empty.
             var refStart = aProperty.Value.indexOf("#");
-            if ( aProperty.Value.slice(0, refStart + 1) == 
-                 LDAPATTR_NAMESPACE_URI) {
+            if (aProperty.Value.slice(0, refStart + 1) == 
+                LDAPATTR_NAMESPACE_URI) {
 
                 try {
                     delegate = aSource.GetDelegate("message.ldap",
                             Components.interfaces.nsILDAPMessage);
-                } catch (e) {
+                }
+                catch (e) {
                 }
                 if (delegate != null) {
                     var attributeName = aProperty.Value.slice(refStart + 1);
@@ -267,6 +366,8 @@ nsLDAPDataSource.prototype = {
                 }
             }
         }
+
+        // Found nothing.
         Components.returnCode = NS_RDF_NO_VALUE;
         return null;
     },
@@ -289,25 +390,59 @@ nsLDAPDataSource.prototype = {
              "\n\t" + aProperty.Value + "\n\t" + aTruthValue + "\n\n");
         }
         
+        // We don't handle negative assertions.
+        // XXX Should we? Can we?
+        if (!aTruthValue) {
+            return new ArrayEnumerator(new Array());
+        }
+
         var delegate;
 
-        if (aProperty.EqualsNode(this.kNC_child)) {
+        if (aProperty.EqualsNode(this.kNC_child)
+            || aProperty.EqualsNode(this.kNC_recursiveChild)) {
+            // Find children or recursiveChildren. Get the messagelist delegate
+            // (flat for child, recursive for recursiveChild) for aSource and
+            // return an enumerator for the list, if available.
+            var listType = (aProperty.EqualsNode(this.kNC_child) ?
+                            "flat.messagelist.ldap" :
+                            "recursive.messagelist.ldap");
             try {
-                delegate = aSource.GetDelegate("messagelist.ldap",
+                delegate = aSource.GetDelegate(listType,
                                        Components.interfaces.nsISupportsArray);
-            } catch (e) {
+            }
+            catch (e) {
             }
             if (delegate != null) {
                 return new nsISupportsArrayEnumerator(delegate);
             }
-        } else {
+        }
+        else if (aProperty.EqualsNode(this.kNC_DN)) {
+            // Find the DN arc. Get the message delegate for aSource
+            // and return the resource for the dn property of the message,
+            // if available.
+            try {
+                delegate = aSource.GetDelegate("message.ldap",
+                                       Components.interfaces.nsILDAPMessage);
+            }
+            catch (e) {
+            }
+            if (delegate != null) {
+                return this.mRdfSvc.GetResource(delegate.dn);
+            }
+        }
+        else {
+            // Find a different arc. See if we're looking for an LDAP attribute
+            // arc. If so, get the message delegate for aSource, if we find one
+            // get the attribute array for the specified LDAP attribute and
+            // an enumerator for the array.
             var refStart = aProperty.Value.indexOf("#");
-            if ( aProperty.Value.slice(0, refStart + 1) == 
+            if (aProperty.Value.slice(0, refStart + 1) == 
                  LDAPATTR_NAMESPACE_URI) {
                 try {
                     delegate = aSource.GetDelegate("message.ldap",
-                            Components.interfaces.nsILDAPMessage);
-                } catch (e) {
+                                       Components.interfaces.nsILDAPMessage);
+                }
+                catch (e) {
                 }
                 if (delegate != null) {
                     var attributeName = aProperty.Value.slice(refStart + 1);
@@ -317,6 +452,7 @@ nsLDAPDataSource.prototype = {
             }
         }
 
+        // Found nothing, return enumerator for empty array.
         return new ArrayEnumerator(new Array());
     },
 
@@ -403,35 +539,43 @@ nsLDAPDataSource.prototype = {
      *                      in boolean        aTruthValue);
      */
     HasAssertion: function(aSource, aProperty, aTarget, aTruthValue) {
-        // the datasource doesn't currently use any sort of containers
-        //
+        // The datasource doesn't currently use any sort of standard
+        // RDF containers.
         if (aProperty.EqualsNode(this.kRDF_instanceOf)) {
             return false;
         }
 
+        if (DEBUG) {
+            dump("HasAssertion() called with args: \n\t" + aSource.Value +
+             "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\t" +
+             aTruthValue + "\n\n");
+        }
+
+        // We don't handle negative assertions.
+        // XXX Should we? Can we?
         if (!aTruthValue) {
             return false;
         }
 
-        var target = this.getSpecifiedNode(aTarget);
-
-        // spew debugging info
-        //
-        if (DEBUG) {
-            dump("HasAssertion() called with args: \n\t" + aSource.Value +
-             "\n\t" + aProperty.Value + "\n\t" + target.Value + "\n\t" +
-             aTruthValue + "\n\n");
-        }
-
         var delegate;
 
-        if (aProperty.EqualsNode(this.kNC_child)) {
+        if (aProperty.EqualsNode(this.kNC_child)
+            || aProperty.EqualsNode(this.kNC_recursiveChild)) {
+            // Find out if aTarget is in the children or recursiveChildren of
+            // aSource. Get the messagelist delegate (flat for child, recursive
+            // for recursiveChild) for aSource.
+            var listType = (aProperty.EqualsNode(this.kNC_child) ?
+                            "flat.messagelist.ldap" :
+                            "recursive.messagelist.ldap");
             try {
-               delegate = aSource.GetDelegate("messagelist.ldap",
-                       Components.interfaces.nsISupportsArray);
-            } catch (e) {
+                delegate = aSource.GetDelegate(listType,
+                                       Components.interfaces.nsISupportsArray);
+            }
+            catch (e) {
             }
             if (delegate != null) {
+                // We have a delegate message list, loop through it and return
+                // true if the target is in the list.
                 var enumerator = delegate.Enumerate();
                 var done = false;
                 try {
@@ -443,7 +587,7 @@ nsLDAPDataSource.prototype = {
                 while(!done) {
                     var resource = enumerator.currentItem().QueryInterface(
                             Components.interfaces.nsIRDFResource);
-                    if (resource.Value == target.Value) {
+                    if (resource.Value == aTarget.Value) {
                         return true;
                     }
                     try {
@@ -455,14 +599,33 @@ nsLDAPDataSource.prototype = {
                 }
             }
         }
+        else if (aProperty.EqualsNode(this.kNC_DN)) {
+            // Find the DN arc. Get the message delegate for aSource
+            // and return the resource for the dn property of the message,
+            // if available.
+            try {
+                delegate = aSource.GetDelegate("message.ldap",
+                                       Components.interfaces.nsILDAPMessage);
+            }
+            catch (e) {
+            }
+            if (delegate != null) {
+                return (delegate.dn == aTarget.Value);
+            }
+        }
         else {
+            // Find a different arc. See if we're looking for an LDAP attribute
+            // arc. If so, get the message delegate for aSource, if we find one
+            // get the attribute array for the specified LDAP attribute and
+            // an enumerator for the array.
             var refStart = aProperty.Value.indexOf("#");
             if (aProperty.Value.slice(0, refStart + 1) == 
                 LDAPATTR_NAMESPACE_URI) {
                 try {
                     delegate = aSource.GetDelegate("message.ldap",
                             Components.interfaces.nsILDAPMessage);
-                } catch (e) {
+                }
+                catch (e) {
                 }
                 if (delegate != null) {
                     var attributeName = aProperty.Value.slice(refStart + 1);
@@ -471,7 +634,7 @@ nsLDAPDataSource.prototype = {
                     var attributes = new ArrayEnumerator(attributeArray);
                     while (attributes.hasMoreElements()) {
                         var attribute = attributes.getNext();
-                        if (attribute.Value == target.Value) {
+                        if (attribute.Value == aTarget.Value) {
                             return true;
                         }
                     }
@@ -496,21 +659,10 @@ nsLDAPDataSource.prototype = {
             dump("AddObserver() called\n\n");
         }
 
-        var eventQSvc = Components.
-                classes["@mozilla.org/event-queue-service;1"].
-                getService(Components.interfaces.nsIEventQueueService);
-        var uiQueue = eventQSvc.
-                getSpecialEventQueue(Components.interfaces.
-                nsIEventQueueService.UI_THREAD_EVENT_QUEUE);
-        var proxyMgr = Components.
-                classes["@mozilla.org/xpcomproxy;1"].
-                getService(Components.interfaces.nsIProxyObjectManager);
-
-        var observer = proxyMgr.getProxyForObject(uiQueue, 
-                Components.interfaces.nsIRDFObserver, aObserver, 5); 
-        // 5 == PROXY_ALWAYS | PROXY_SYNC
-
-        this.mObserverList.push(observer);
+        // We need to proxy our observers on the main (UI) thread, because
+        // the RDF code wants to run on the main thread.
+        this.mObserverList.push(getProxyOnUIThread(aObserver,
+                Components.interfaces.nsIRDFObserver));
     },
 
     /**
@@ -605,48 +757,58 @@ nsLDAPDataSource.prototype = {
 
         var delegate;
 
-        if (aArc.EqualsNode(this.kNC_child)) {
+        if (aArc.EqualsNode(this.kNC_child)
+            || aArc.EqualsNode(this.kNC_recursiveChild)) {
+            // Find children or recursiveChildren. Get the messagelist delegate
+            // (flat for child, recursive for recursiveChild) for aSource and
+            // return true if we have one.
+            var listType = (aArc.EqualsNode(this.kNC_child) ?
+                            "flat.messagelist.ldap" :
+                            "recursive.messagelist.ldap");
             try {
-                delegate = aSource.GetDelegate("messagelist.ldap",
-                        Components.interfaces.nsISupportsArray);
-            } catch (e) {
+                delegate = aSource.GetDelegate(listType,
+                       Components.interfaces.nsISupportsArray);
+            }
+            catch (e) {
             }
             if (delegate != null) {
                 return true;
             }
         }
-        else {
-            var refStart = aArc.Value.indexOf("#");
-            if (aArc.Value.slice(0, refStart + 1) == LDAPATTR_NAMESPACE_URI) {
-                try {
-                    delegate = aSource.GetDelegate("message.ldap",
-                            Components.interfaces.nsILDAPMessage);
-                } catch (e) {
-                }
-                if (delegate != null) {
-                    var attributeName = aArc.Value.slice(refStart + 1);
-                    var attributeArray = this.getAttributeArray(delegate, 
-                                                                attributeName);
-                    if (attributeArray.length > 0) {
-                        return true;
-                    }
-                }
+        else if (aArc.EqualsNode(this.kNC_DN)) {
+            // Find the DN arc. Get the message delegate for aSource
+            // and return true if we have a delegate and its dn
+            // attribute is non-null.
+            try {
+                delegate = aSource.GetDelegate("message.ldap",
+                        Components.interfaces.nsILDAPMessage);
             }
+            catch (e) {
+            }
+            return (delegate != null);
         }
 
-        return false;
-    },
-
-    /**
-     * nsIRDFRemoteDataSource
-     */
-
-    // from nsIRDFRemoteDataSource.  right now this is just a dump()
-    // to see if it ever even gets used.
-    //
-    get loaded() {
-        dump("getter for loaded called\n"); 
-        return false;
+		// Find a different arc. See if we're looking for an LDAP attribute
+		// arc. If so, get the message delegate for aSource, if we find one
+		// get the attribute array for the specified LDAP attribute and
+		// return true if it contains at least one value.
+		var refStart = aArc.Value.indexOf("#");
+		if (aArc.Value.slice(0, refStart + 1) == LDAPATTR_NAMESPACE_URI) {
+			try {
+				delegate = aSource.GetDelegate("message.ldap",
+						Components.interfaces.nsILDAPMessage);
+			}
+			catch (e) {
+			}
+			if (delegate != null) {
+				var attributeName = aArc.Value.slice(refStart + 1);
+				var attributeArray = this.getAttributeArray(delegate, 
+															attributeName);
+				if (attributeArray.length > 0) {
+					return true;
+				}
+			}
+		}
     },
 
     /**
@@ -656,15 +818,43 @@ nsLDAPDataSource.prototype = {
     onAssert: function(aDataSource, aSource, aProperty, aTarget)
     {
         if (DEBUG) {
-            var target = this.getSpecifiedNode(aTarget);
             dump("OnAssert() called with args: \n\t" + aSource.Value + 
-             "\n\t" + aProperty.Value + "\n\t" + target.Value + "\n\n");
+             "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\n");
         }
 
         var iter = new ArrayEnumerator(this.mObserverList);
         var nextObserver;
         while ((nextObserver = iter.getNext()) != null) {
             nextObserver.onAssert(this, aSource, aProperty, aTarget);
+        }
+    },
+
+    onUnassert: function(aDataSource, aSource, aProperty, aTarget)
+    {
+        if (DEBUG) {
+            dump("onUnassert() called with args: \n\t" + aSource.Value + 
+             "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\n");
+        }
+
+        var iter = new ArrayEnumerator(this.mObserverList);
+        var nextObserver;
+        while ((nextObserver = iter.getNext()) != null) {
+            nextObserver.onUnassert(this, aSource, aProperty, aTarget);
+        }
+    },
+
+    onChange: function(aDataSource, aSource, aProperty, aOldTarget, aNewTarget)
+    {
+        if (DEBUG) {
+            dump("onChange() called with args: \n\t" + aSource.Value + 
+             "\n\t" + aProperty.Value + "\n\t" + aOldTarget.Value +
+             "\n\t" + aNewTarget.Value + "\n\n");
+        }
+
+        var iter = new ArrayEnumerator(this.mObserverList);
+        var nextObserver;
+        while ((nextObserver = iter.getNext()) != null) {
+            nextObserver.onChange(this, aSource, aProperty, aOldTarget, aNewTarget);
         }
     },
 
@@ -694,53 +884,24 @@ nsLDAPDataSource.prototype = {
         }
     },
 
-    getSpecifiedNode: function(aNode) {
-        // figure out what kind of nsIRDFNode aTarget is
-        //
-        var node;
-        try {
-            node = aNode.QueryInterface(Components.interfaces.nsIRDFResource);
-        }
-        catch (e) {
-        }
-        if (node == null) {
-            try {
-                node = aNode.QueryInterface(
-                    Components.interfaces.nsIRDFLiteral);
-            }
-            catch (e) {
-            }
-        }
-        if (node == null) {
-            try {
-                node = aNode.QueryInterface(Components.interfaces.nsIRDFDate);
-            }
-            catch (e) {
-            }
-        }
-        if (node == null) {
-            try {
-                node = aNode.QueryInterface(Components.interfaces.nsIRDFInt);
-            }
-            catch (e) {
-            }
-        }
-        return node;
-    },
-    
+    /**
+     * Fills an array with the RDF nodes for the values of an attribute
+     * out of a nsLDAPMessage.
+     */
     getAttributeArray: function(aMessage, aAttributeName) {
         var resultArray = new Array();
-        var attributesCount = {};
-        var attributes = aMessage.getAttributes(attributesCount);
-        for (var i = 0; i < attributesCount.value; i++) {
-            if (attributes[i] == aAttributeName) {
-                var valuesCount = {};
-                var values =  aMessage.getValues(attributes[i], valuesCount);
-                for (var j = 0; j < valuesCount.value; j++) {
-                    var attributeValue = this.mRdfSvc.GetLiteral(values[j]);
-                    resultArray.push(attributeValue);
-                }
+        var valuesCount = {};
+        try {
+            var values =  aMessage.getValues(aAttributeName, valuesCount);
+            for (var j = 0; j < valuesCount.value; j++) {
+                var attributeValue = this.mRdfSvc.GetLiteral(values[j]);
+                resultArray.push(attributeValue);
             }
+        }
+        catch (e) {
+            // Error or the attribute was not there.
+            // XXX Do we need to do something about the real errors?
+            // XXX Just returning empty array for now.
         }
         return resultArray;
     }
@@ -749,9 +910,11 @@ nsLDAPDataSource.prototype = {
 // the nsILDAPMessage associated with a given resource
 //
 const NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID = 
-    '@mozilla.org/rdf/delegate-factory;1?key=message.ldap&scheme=ldap'
-const NS_LDAPMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID = 
-    '@mozilla.org/rdf/delegate-factory;1?key=messagelist.ldap&scheme=ldap'
+    '@mozilla.org/rdf/delegate-factory;1?key='+"message.ldap"+'&scheme=ldap'
+const NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID = 
+    '@mozilla.org/rdf/delegate-factory;1?key=flat.messagelist.ldap&scheme=ldap'
+const NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID = 
+    '@mozilla.org/rdf/delegate-factory;1?key=recursive.messagelist.ldap&scheme=ldap'
 const NS_LDAPMESSAGERDFDELEGATEFACTORY_CID = 
     Components.ID('{4b6fb566-1dd2-11b2-a1a9-889a3f852b0b}');
 
@@ -760,8 +923,10 @@ function nsLDAPMessageRDFDelegateFactory() {}
 nsLDAPMessageRDFDelegateFactory.prototype = 
 {
     mRdfSvc: {},
+    mLDAPSvc: {},
     mLDAPDataSource: {},
     kNC_child: {},
+    kNC_recursiveChild: {},
 
     mConnection: {},        // connection to the LDAP server
     mOperation: {},         // current LDAP operation
@@ -780,13 +945,18 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             this.mRdfSvc = Components.
                     classes["@mozilla.org/rdf/rdf-service;1"].
                     getService(Components.interfaces.nsIRDFService);
+            this.mLDAPSvc = Components.
+                    classes["@mozilla.org/network/ldap-service;1"].
+                    getService(Components.interfaces.nsILDAPService);
             this.mLDAPDataSource = this.mRdfSvc.GetDataSource("rdf:ldap").
                     QueryInterface(Components.interfaces.nsIRDFObserver);
 
             // get some RDF Resources that we'll need
             //
-            this.kNC_child = this.mRdfSvc.GetResource( NC_NAMESPACE_URI + 
+            this.kNC_child = this.mRdfSvc.GetResource(NC_NAMESPACE_URI + 
                                                        "child");
+            this.kNC_recursiveChild = this.mRdfSvc.GetResource(NC_NAMESPACE_URI + 
+                                                       "recursiveChild");
         }
     },
 
@@ -840,9 +1010,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     //
                     if (aMessage.type != aMessage.RES_BIND) {
                         dump("bind failed\n");
-                        if (aKey == "messagelist.ldap") {
-                            delete callerObject.mInProgressHash[queryURL.spec];
-                        }
+                        delete callerObject.mInProgressHash[queryURL.spec];
                         return;
                     }
 
@@ -859,8 +1027,9 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     // XXX err handling (also for url. accessors)
                     // XXX constipate this
                     // XXX real timeout
-                    searchOp.searchExt(url.dn, url.scope, url.filter, 0,
-                                       new Array(), 0, -1);
+                    searchOp.searchExt(queryURL.dn, queryURL.scope,
+                                       queryURL.filter, 0, new Array(),
+                                       0, -1);
                 }
 
             getTargetsBoundCallback.prototype.onLDAPInit = 
@@ -910,6 +1079,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                                " of type " + aMessage.type + "\n\n");
                     }
 
+                    var listHash = caller.mMessagesListHash;
                     if (aMessage.type == aMessage.RES_SEARCH_ENTRY) {
                         if (DEBUG) {
                             dump("getTargetsSearchCallback() called with " + 
@@ -917,12 +1087,18 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                                  aOuter.Value + "\n\n");
                         }
 
-                        // XXX (pvdb) Should get this out of nsILDAPMessage
-                        var newURL = "ldap://" + url.host;
-                        newURL += (url.port == "" ? "" : ":" + url.port);
-                        newURL += ("/" + aMessage.dn + "??base");
+                        // Create a resource for the message we just got.
+                        // This is a single entry for which we'll cache the
+                        // nsILDAPMessage. If we got this as a result of a
+                        // "list" query we'll also add it to the result array.
+                        var newURL = Components.classes["@mozilla.org/network/ldap-url;1"]
+                              .createInstance(Components.interfaces.nsILDAPURL);
+                        newURL.spec = queryURL.spec;
+                        newURL.dn = aMessage.dn;
+                        newURL.scope = SCOPE_BASE;
+                        newURL.filter = "(objectClass=*)";
                         var newResource = 
-                            caller.mRdfSvc.GetResource(newURL);
+                            caller.mRdfSvc.GetResource(newURL.spec);
 
                         // Add the LDAP message for the new resource in our
                         // messages hashlist. We do this before adding it to
@@ -932,29 +1108,11 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                         // If we wouldn't do this here, we'd start another
                         // query for this resource.
                         var messageHash = caller.mMessagesHash;
-                        if (!messageHash.hasOwnProperty(newURL)) {
-                            messageHash[newURL] = aMessage;
+                        if (!messageHash.hasOwnProperty(newURL.spec)) {
+                            messageHash[newURL.spec] = aMessage;
                         }
 
-                        if (aKey == "messagelist.ldap") {
-                            // Add the LDAP message to the result array for
-                            // the query resource and onAssert the result
-                            // as a child of the query resource.
-                            var listHash = caller.mMessagesListHash;
-                            if (!listHash.hasOwnProperty(aOuter.Value)) {
-                                // No entry for the query resource in the
-                                // results hashlist, let's create one.
-                                listHash[aOuter.Value] = Components.classes
-                                    ["@mozilla.org/supports-array;1"].
-                                    createInstance(
-                                       Components.interfaces.nsISupportsArray);
-                            }
-                            listHash[aOuter.Value].AppendElement(
-                                newResource);
-                            caller.mLDAPDataSource.onAssert(
-                                caller.mLDAPDataSource, aOuter,
-                                caller.kNC_child, newResource);
-                        } else if (aKey == "message.ldap") {
+                        if (queryType == MESSAGE) {
                             // XXX - we need to onAssert this resource. However,
                             // we need to know somehow what the caller wanted
                             // to use this delegate for, so that we can limit
@@ -963,9 +1121,54 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                             // "questions" coming in while the LDAP server
                             // hasn't responded yet.
                         }
+                        else {
+                            // Add the LDAP message to the result array for
+                            // the query resource and onAssert the result
+                            // as a child of the query resource.
+                            var queryResource = 
+                                caller.mRdfSvc.GetResource(queryURL.spec);
+                            if (!listHash.hasOwnProperty(queryURL.spec)) {
+                                // No entry for the query resource in the
+                                // results hashlist, let's create one.
+                                listHash[queryURL.spec] = Components.classes
+                                    ["@mozilla.org/supports-array;1"].
+                                    createInstance(
+                                       Components.interfaces.nsISupportsArray);
+                            }
+                            listHash[queryURL.spec].AppendElement(newResource);
+                            if (queryType == FLAT_LIST) {
+                                caller.mLDAPDataSource.onAssert(
+                                    caller.mLDAPDataSource, aOuter,
+                                    caller.kNC_child, newResource);
+                            }
+                            else if (queryType == RECURSIVE_LIST) {
+                                caller.mLDAPDataSource.onAssert(
+                                    caller.mLDAPDataSource, queryResource,
+                                    caller.kNC_child, newResource);
+                                caller.mLDAPDataSource.onAssert(
+                                    caller.mLDAPDataSource, aOuter,
+                                    caller.kNC_recursiveChild, newResource);
+                            }
+                        }
                     }
                     else if (aMessage.type == aMessage.RES_SEARCH_RESULT) {
-                        delete caller.mInProgressHash[aOuter.Value];
+                        // We got all the results for the query.
+                        // If we were looking for a list, let's check if we
+                        // have an entry for the query resource in the result's
+                        // hashlist. If we don't, add an empty array to help
+                        // performance, otherwise we'll keep requerying for this
+                        // query resource.
+                        if (queryType == FLAT_LIST || queryType == RECURSIVE_LIST) {
+                            if (!listHash.hasOwnProperty(queryURL.spec)) {
+                                // No entry for the query resource in the
+                                // results hashlist, let's create an empty one.
+                                listHash[queryURL.spec] = Components.classes
+                                    ["@mozilla.org/supports-array;1"].
+                                    createInstance(
+                                       Components.interfaces.nsISupportsArray);
+                            }
+                        }
+                        delete caller.mInProgressHash[queryURL.spec];
                     }
                 }
 
@@ -984,38 +1187,97 @@ nsLDAPMessageRDFDelegateFactory.prototype =
         }
 
         var caller = this;
+        var queryURL;
+        var queryType;
 
-        if (aKey == "messagelist.ldap") {
-            if (this.mMessagesListHash.hasOwnProperty(aOuter.Value)) {
-                return (this.mMessagesListHash[aOuter.Value].
-                            QueryInterface(aIID));
-            }
-        } else if (aKey == "message.ldap") {
-            if (this.mMessagesHash.hasOwnProperty(aOuter.Value)) {
-                return (this.mMessagesHash[aOuter.Value].QueryInterface(aIID));
-            }
+        if (aKey == "message.ldap") {
+            queryType = MESSAGE;
+        }
+        else if (aKey == "flat.messagelist.ldap") {
+            queryType = FLAT_LIST;
+        }
+        else if (aKey == "recursive.messagelist.ldap") {
+            queryType = RECURSIVE_LIST;
         }
 
-        if (!((aKey == "messagelist.ldap") &&
-              (this.mInProgressHash.hasOwnProperty(aOuter.Value)))) {
-            this.Init();
-            var url = Components.classes["@mozilla.org/network/ldap-url;1"]
-                      .createInstance(Components.interfaces.nsILDAPURL);
-            url.spec = aOuter.Value;
+        switch (queryType) {
+            case MESSAGE:
+	            if (this.mMessagesHash.hasOwnProperty(aOuter.Value)) {
+	                return (this.mMessagesHash[aOuter.Value].QueryInterface(aIID));
+	            }
+	            break;
+            case FLAT_LIST:
+	            if (this.mMessagesListHash.hasOwnProperty(aOuter.Value)) {
+	                return (this.mMessagesListHash[aOuter.Value].QueryInterface(aIID));
+	            }
+	            break;
+            case RECURSIVE_LIST:
+	            queryURL = Components.classes["@mozilla.org/network/ldap-url;1"]
+	                  .createInstance(Components.interfaces.nsILDAPURL);
+	            queryURL.spec = aOuter.Value;
+	            if (queryURL.scope == SCOPE_BASE) {
+	                // Retarget the URL, asking for recursive children on
+	                // a base URL should descend, so we do a one-level search.
+	                queryURL.scope = SCOPE_ONELEVEL;
+	            }
+	            if (this.mMessagesListHash.hasOwnProperty(queryURL.spec)) {
+	                return (this.mMessagesListHash[queryURL.spec].QueryInterface(aIID));
+	            }
+	            break;
+        }
 
-            // make sure that this if this URL is for a messagelist, it 
-            // represents something other than a base search
-            //
-            if ((aKey == "messagelist.ldap") && (url.scope == url.SCOPE_BASE)) {
-                throw Components.results.NS_ERROR_FAILURE;
+        if (queryURL == null) {
+            queryURL = Components.classes["@mozilla.org/network/ldap-url;1"]
+                  .createInstance(Components.interfaces.nsILDAPURL);
+            queryURL.spec = aOuter.Value;
+        }
+
+        // make sure that this if this URL is for a messagelist, it 
+        // represents something other than a base search
+        //
+        if ((queryType == FLAT_LIST) && (queryURL.scope == SCOPE_BASE)) {
+            if (DEBUG) {
+                dump("Early return, asking for a list of children for an " +
+                     "URL with a BASE scope\n\n");
             }
+            throw Components.results.NS_ERROR_FAILURE;
+        }
+
+        if (!this.mInProgressHash.hasOwnProperty(queryURL.spec)) {
+            this.Init();
+
+            // XXX - not sure what this should be
+            var key = queryURL.host + ":" + queryURL.port;
+
+            // Get the LDAP service and request a connection to the server from
+            // the service
+            var server;
+            try {
+                server = this.mLDAPSvc.getServer(key);
+            }
+            catch (e) {
+            }
+            if (!server) {
+                // Create a server object and let the service know about it
+                // XXX - not sure if I initialize enough here
+                server = Components.classes
+                        ["@mozilla.org/network/ldap-server;1"].
+                        createInstance(Components.interfaces.nsILDAPServer);
+                server.key = key;
+                server.url = queryURL;
+                this.mLDAPSvc.addServer(server);
+            }
+
+            // Mark this URL as being in progress, to avoid requerying for the
+            // same URL
+            this.mInProgressHash[queryURL.spec] = 1;
 
             // get a connection object
             //
             var connection = Components.classes
                     ["@mozilla.org/network/ldap-connection;1"].
                     createInstance(Components.interfaces.nsILDAPConnection);
-            connection.init(url.host, url.port, null,
+            connection.init(queryURL.host, queryURL.port, null,
                             generateGetTargetsBoundCallback())
 
             // XXXdmose - in this case, we almost certainly shouldn't be
@@ -1023,13 +1285,14 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             // something reasonable, since this is actually a success 
             // condition
             //
-            dump ("falling through!\n");
+            debug("falling through!\n");
         }
 
         throw Components.results.NS_ERROR_FAILURE;
     }
-    
+
 }
+
 
 // the nsILDAPURL associated with a given resource
 //
@@ -1091,10 +1354,9 @@ var MessageDelegateFactory = null;
 var nsLDAPDataSourceModule = {
 
     registerSelf: function (compMgr, fileSpec, location, type) {
-        if (DEBUG) {
-            dump("*** Registering LDAP datasource components" +
-                 " (all right -- a JavaScript module!)\n");
-        }
+        debug("*** Registering LDAP datasource components" +
+              " (all right -- a JavaScript module!)\n");
+
         compMgr.registerComponentWithType(
                 NS_LDAPDATASOURCE_CID, 
                 'LDAP RDF DataSource', 
@@ -1111,8 +1373,15 @@ var nsLDAPDataSourceModule = {
 
         compMgr.registerComponentWithType(
                 NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
-                'LDAP MessageList RDF Delegate', 
-                NS_LDAPMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
+                'LDAP Flat MessageList RDF Delegate', 
+                NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
+                fileSpec, location, true, true, 
+                type);
+
+        compMgr.registerComponentWithType(
+                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
+                'LDAP Recursive MessageList RDF Delegate', 
+                NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
                 fileSpec, location, true, true, 
                 type);
 
@@ -1120,13 +1389,6 @@ var nsLDAPDataSourceModule = {
                 NS_LDAPURLRDFDELEGATEFACTORY_CID, 
                 'LDAP URL RDF Delegate', 
                 NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, true, true, 
-                type);
-
-        compMgr.registerComponentWithType(
-                NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CID, 
-                'LDAP Connection RDF Delegate', 
-                NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CONTRACTID, 
                 fileSpec, location, true, true, 
                 type);
     },
@@ -1142,8 +1404,6 @@ var nsLDAPDataSourceModule = {
             return this.nsLDAPMessageRDFDelegateFactoryFactory;
         else if (cid.equals(NS_LDAPURLRDFDELEGATEFACTORY_CID))
             return this.nsLDAPURLRDFDelegateFactoryFactory;
-        else if (cid.equals(NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CID))
-            return this.nsLDAPConnectionRDFDelegateFactoryFactory;
 
         throw Components.results.NS_ERROR_NO_INTERFACE;
     },
@@ -1180,18 +1440,6 @@ var nsLDAPDataSourceModule = {
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
       
             return (new nsLDAPURLRDFDelegateFactory()).QueryInterface(iid);
-        }
-    },
-
-    // probably don't need this; use nsLDAPService instead
-    //
-    nsLDAPConnectionRDFDelegateFactoryFactory: {
-        createInstance: function(outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-      
-            return 
-                (new nsLDAPConnectionRDFDelegateFactory()).QueryInterface(iid);
         }
     },
 
