@@ -27,9 +27,11 @@
 #include "ns4xPlugin.h"
 #include "nsPluginInstancePeer.h"
 
+#include "nsIPlugin.h"
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
 #include "nsIHTTPHeader.h"
+#include "nsIObserverService.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -46,7 +48,6 @@
 #include "nsIHTTPChannel.h"
 #include "nsIStreamAsFile.h"
 #include "nsIFileStream.h" // for nsIRandomAccessStore
-#include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
@@ -159,26 +160,20 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 void DisplayNoDefaultPluginDialog(const char *mimeType);
 
 /**
-
  * Used in DisplayNoDefaultPlugindialog to prevent showing the dialog twice
  * for the same mimetype.
-
  */
 
 static nsHashtable *mimeTypesSeen = nsnull;
 
 /**
-
  * placeholder value for mimeTypesSeen hashtable
-
  */
 
 static const char *hashValue = "value";
 
 /**
-
  * Default number of entries in the mimeTypesSeen hashtable
-
  */ 
 #define NS_MIME_TYPES_HASH_NUM (20)
 
@@ -293,10 +288,14 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   return;
 }
 
-nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url, PRBool aDefaultPlugin)
+nsActivePlugin::nsActivePlugin(nsCOMPtr<nsIPlugin> aPlugin,
+                               nsIPluginInstance* aInstance, 
+                               char * url,
+                               PRBool aDefaultPlugin)
 {
   mNext = nsnull;
   mPeer = nsnull;
+  mPlugin = aPlugin;
 
   mURL = PL_strdup(url);
   mInstance = aInstance;
@@ -312,6 +311,7 @@ nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url, PRBool 
 
 nsActivePlugin::~nsActivePlugin()
 {
+  mPlugin = nsnull;
   if(mInstance != nsnull)
   {
     mInstance->Destroy();
@@ -377,6 +377,19 @@ PRInt32 nsActivePluginList::add(nsActivePlugin * plugin)
   return mCount;
 }
 
+PRBool nsActivePluginList::IsLastInstance(nsActivePlugin * plugin)
+{
+  if(!plugin)
+    return PR_FALSE;
+
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
+  {
+    if((p->mPlugin.get() == plugin->mPlugin.get()) && (p != plugin))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
 {
   if(mFirst == nsnull)
@@ -395,7 +408,19 @@ PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
       if((prev != nsnull) && (prev->mNext == nsnull))
         mLast = prev;
 
-      delete p;
+      // see if this is going to be the last instance of a plugin
+      if(IsLastInstance(p))
+      {
+        nsIPlugin *nsiplugin = p->mPlugin.get();
+        
+        delete p; // plugin instance is destroyed here
+        
+        if(nsiplugin)
+          nsiplugin->Shutdown();
+      }
+      else
+        delete p;
+
       mCount--;
       return PR_TRUE;
     }
@@ -458,7 +483,14 @@ nsActivePlugin * nsActivePluginList::find(nsIPluginInstance* instance)
   for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(p->mInstance == instance)
+    {
+#ifdef NS_DEBUG
+      PRBool doCache = PR_TRUE;
+      p->mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
+      NS_ASSERTION(!p->mStopped || doCache, "This plugin is not supposed to be cached!");
+#endif
       return p;
+    }
   }
   return nsnull;
 }
@@ -485,7 +517,14 @@ nsActivePlugin * nsActivePluginList::find(char * mimetype)
       continue;
 
     if(PL_strcasecmp(mt, mimetype) == 0)
-      return p;
+    {
+#ifdef NS_DEBUG
+      PRBool doCache = PR_TRUE;
+      p->mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
+      NS_ASSERTION(!p->mStopped || doCache, "This plugin is not supposed to be cached!");
+#endif
+       return p;
+    }
   }
   return nsnull;
 }
@@ -495,7 +534,14 @@ nsActivePlugin * nsActivePluginList::findStopped(char * url)
   for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(!PL_strcmp(url, p->mURL) && p->mStopped)
-      return p;
+    {
+#ifdef NS_DEBUG
+      PRBool doCache = PR_TRUE;
+      p->mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
+      NS_ASSERTION(doCache, "This plugin is not supposed to be cached!");
+#endif
+       return p;
+    }
   }
   return nsnull;
 }
@@ -526,6 +572,16 @@ nsActivePlugin * nsActivePluginList::findOldestStopped()
       res = p;
     }
   }
+
+#ifdef NS_DEBUG
+  if(res)
+  {
+    PRBool doCache = PR_TRUE;
+    res->mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
+    NS_ASSERTION(doCache, "This plugin is not supposed to be cached!");
+  }
+#endif
+
   return res;
 }
 
@@ -1613,7 +1669,12 @@ nsPluginHostImpl::nsPluginHostImpl()
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
   mDontShowBadPluginMessage = PR_FALSE;
+  mIsDestroyed = PR_FALSE;
   mUnloadedLibraries = nsnull;
+
+  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (obsService)
+    obsService->AddObserver(this, NS_LITERAL_STRING("quit-application"));
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
@@ -1638,12 +1699,13 @@ printf("killing plugin host\n");
   CleanUnloadedLibraries();
 }
 
-NS_IMPL_ISUPPORTS5(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS6(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
                    nsIFileUtilities,
-                   nsICookieStorage);
+                   nsICookieStorage,
+                   nsIObserver);
 
 NS_METHOD
 nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -2282,23 +2344,18 @@ NS_IMETHODIMP nsPluginHostImpl::Init(void)
 
 NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 {
-  nsPluginTag *plug = mPlugins;
+  if (mIsDestroyed)
+    return NS_OK;
 
+  mIsDestroyed = PR_TRUE;
+
+  // at this point nsIPlugin::Shutdown calls will be performed if needed
   mActivePluginList.shut();
-
-  while (nsnull != plug)
-  {
-    if (nsnull != plug->mEntryPoint)
-      plug->mEntryPoint->Shutdown();
-
-    plug = plug->mNext;
-  }
 
   return NS_OK;
 }
 
 /* Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embeded case) */
-
 NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType, 
                                                          nsIURI* aURL,
                                                          nsIPluginInstanceOwner *aOwner)
@@ -2577,7 +2634,8 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
   return NS_ERROR_FAILURE;
 }
 
-void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, 
+void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
+                                               nsIPluginInstance* aInstance,
                                                nsIURI* aURL,
                                                PRBool aDefaultPlugin)
 
@@ -2593,7 +2651,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
   	
   (void)aURL->GetSpec(&url);
 
-  nsActivePlugin * plugin = new nsActivePlugin(aInstance, url, aDefaultPlugin);
+  nsActivePlugin * plugin = new nsActivePlugin(aPlugin, aInstance, url, aDefaultPlugin);
 
   if(plugin == nsnull)
     return;
@@ -2632,42 +2690,47 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
 }
 
 NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
-													nsIURI *aURL,
-													nsIPluginInstanceOwner *aOwner)
+                                                    nsIURI *aURL,
+                                                    nsIPluginInstanceOwner *aOwner)
 {
-	nsresult result = NS_ERROR_FAILURE;
-       nsIPluginInstance* instance = NULL;
-	nsIPlugin* plugin = NULL;
-	const char* mimetype;
-       nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
-       char buf[255];  // todo: need to use a const
+  nsresult result = NS_ERROR_FAILURE;
+  nsIPluginInstance* instance = NULL;
+  nsCOMPtr<nsIPlugin> plugin;
+  const char* mimetype;
+  nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
+  char buf[255];  // todo: need to use a const
 		
-	if(!aURL)
-		return NS_ERROR_FAILURE;
+  if(!aURL)
+    return NS_ERROR_FAILURE;
 
 	// if don't have a mimetype, check by file extension
-	if(!aMimeType)
-	{
-		char* extension;
-			
-    char* filename;
-		aURL->GetPath(&filename);
-		extension = PL_strrchr(filename, '.');
-		if(extension)
-			++extension;
-		else
-			return NS_ERROR_FAILURE;
+  if(!aMimeType)
+  {
+    char* extension;
 
-		if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
-			return NS_ERROR_FAILURE;
-        nsCRT::free(filename);
+    char* filename;
+    aURL->GetPath(&filename);
+    extension = PL_strrchr(filename, '.');
+    if(extension)
+      ++extension;
+    else
+      return NS_ERROR_FAILURE;
+
+    if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
+    {
+      nsCRT::free(filename);
+      return NS_ERROR_FAILURE;
+    }
+    nsCRT::free(filename);
 	}
-	else
-		mimetype = aMimeType;
+  else
+    mimetype = aMimeType;
 
     strContractID.AppendWithConversion(mimetype);
     strContractID.ToCString(buf, 255);     // todo: need to use a const
-  
+
+    GetPluginFactory(mimetype, getter_AddRefs(plugin));
+
     result = nsComponentManager::CreateInstance(buf,
                                                 nsnull,
                                                 nsIPluginInstance::GetIID(),
@@ -2675,25 +2738,28 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 
 
     // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
-    if (NS_FAILED(result)) {
-      result = GetPluginFactory(mimetype, &plugin);
-      if(!NS_FAILED(result)){
+    if (NS_FAILED(result)) 
+    {
+      if(plugin)
         result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
-        NS_RELEASE(plugin);
-      }
-      if (NS_FAILED(result)) {
-          NS_WITH_SERVICE(nsIPlugin, plugin, "@mozilla.org/blackwood/pluglet-engine;1",&result);
-	  if (NS_SUCCEEDED(result)) {
-	      result = plugin->CreatePluginInstance(NULL, kIPluginInstanceIID, aMimeType,(void **)&instance);
-	  }
+
+      if (NS_FAILED(result)) 
+      {
+        NS_WITH_SERVICE(nsIPlugin, bwPlugin, "@mozilla.org/blackwood/pluglet-engine;1",&result);
+        if (NS_SUCCEEDED(result)) 
+        {
+          result = bwPlugin->CreatePluginInstance(NULL,
+                                                  kIPluginInstanceIID,
+                                                  aMimeType,
+                                                  (void **)&instance);
+        }
       }
     }
 
     // neither an XPCOM or legacy plugin could be instantiated, 
     // so return the failure
-    if (NS_FAILED(result)){
+    if (NS_FAILED(result))
       return result;
-    }
 
     // it is adreffed here
     aOwner->SetInstance(instance);
@@ -2718,7 +2784,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
     NS_RELEASE(pi);
 
     // we should addref here
-    AddInstanceToActiveList(instance, aURL);
+    AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE);
 
     //release what was addreffed in Create(Plugin)Instance
     NS_RELEASE(instance);
@@ -2731,7 +2797,7 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
 {
   nsresult result = NS_ERROR_FAILURE;
   nsIPluginInstance* instance = NULL;
-  nsIPlugin* plugin = NULL;
+  nsCOMPtr<nsIPlugin> plugin = NULL;
   const char* mimetype;
   nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
   char buf[255];  // todo: need to use a const
@@ -2744,17 +2810,15 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   strContractID.AppendWithConversion("*");
   strContractID.ToCString(buf, 255);     // todo: need to use a const
   
+  GetPluginFactory("*", getter_AddRefs(plugin));
+
   result = nsComponentManager::CreateInstance(buf, nsnull, nsIPluginInstance::GetIID(), (void**)&instance);
 
   // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
   if (NS_FAILED(result)) 
   {
-    result = GetPluginFactory("*", &plugin);
-    if(!NS_FAILED(result))
-    {
+    if(plugin)
       result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
-      NS_RELEASE(plugin);
-    }
   }
 
   // neither an XPCOM or legacy plugin could be instantiated, so return the failure
@@ -2808,7 +2872,7 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   NS_RELEASE(pi);
 
   // we should addref here
-  AddInstanceToActiveList(instance, aURL, PR_TRUE);
+  AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE);
 
   //release what was addreffed in Create(Plugin)Instance
   NS_RELEASE(instance);
@@ -4160,9 +4224,19 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   return rv;
 }
 
+NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
+                                        const PRUnichar *aTopic,
+                                        const PRUnichar *someData)
+{
+  Destroy();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
 {
   nsresult rv = NS_OK;
+
+  NS_ASSERTION(PR_FALSE, "Plugin performed illegal operation");
 
   if(mDontShowBadPluginMessage)
     return rv;
