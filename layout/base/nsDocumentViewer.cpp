@@ -325,7 +325,6 @@ class DocumentViewerImpl : public nsIDocumentViewer,
   friend class nsPrintEngine;
 
 public:
-  DocumentViewerImpl();
   DocumentViewerImpl(nsIPresContext* aPresContext);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -421,9 +420,9 @@ protected:
 
   nsCOMPtr<nsIContentViewer> mPreviousViewer;
 
-  PRBool  mEnableRendering;
-  PRBool  mStopped;
-  PRBool  mLoaded;
+  PRPackedBool  mEnableRendering;
+  PRPackedBool  mStopped;
+  PRPackedBool  mLoaded;
   PRInt16 mNumURLStarts;
   PRInt16 mDestroyRefCount;     // a second "refcount" for the document viewer's "destroy"
 
@@ -472,7 +471,7 @@ static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 {
-  *aResult = new DocumentViewerImpl();
+  *aResult = new DocumentViewerImpl(nsnull);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -480,15 +479,6 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
   NS_ADDREF(*aResult);
 
   return NS_OK;
-}
-
-// Note: operator new zeros our memory
-DocumentViewerImpl::DocumentViewerImpl()
-  : mIsSticky(PR_TRUE)
-{
-  PrepareToStartLoad();
-
-  mParentWidget = nsnull;
 }
 
 void DocumentViewerImpl::PrepareToStartLoad()
@@ -519,10 +509,13 @@ void DocumentViewerImpl::PrepareToStartLoad()
 #endif // NS_PRINTING
 }
 
+// Note: operator new zeros our memory, so no need to init things to null.
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
-  : mPresContext(aPresContext), mAllowPlugins(PR_TRUE), mIsSticky(PR_TRUE)
+  : mPresContext(aPresContext),
+    mAllowPlugins(PR_TRUE),
+    mIsSticky(PR_TRUE),
+    mHintCharsetSource(kCharsetUninitialized)
 {
-  mHintCharsetSource = kCharsetUninitialized;
   PrepareToStartLoad();
 }
 
