@@ -63,6 +63,7 @@ XP_BEGIN_PROTOS
 #define NEVER_BUTTON 2
 
 static const char *pref_Crypto = "wallet.crypto";
+static const char *pref_AutoCompleteOverride = "wallet.crypto.autocompleteoverride";
 
 extern void
 WLLT_ChangePassword(PRBool* status);
