@@ -130,26 +130,6 @@ function WriteOutput( aText, aReplace, aTextColor,aToStatus, aToOutPut )
 
 //=============================================================================
 
-function RestoreWindow()
-{
-
-  if (changed) {
-    window.moveTo(origLeft,origTop);
-    window.resizeTo(origWidth,origHeight);
-    window.locationbar.visible = lb;
-    window.menubar.visible = mb;
-    window.personalbar.visible = pb;
-    window.scrollbars.visible = sb;
-    window.statusbar.visible = stb;
-    window.toolbar.visible = tb;
-    outputWindow.moveTo(origLeft,origTop);
-    outputWindow.resizeTo(origWidth,origHeight);
-    changed = false;
-  }
-}
-
-//=============================================================================
-
 function  placeWindows(aOutputWindow,aTestWindow)
 {
   // save old values, get rid of chrome and move and resize the windows
@@ -174,13 +154,6 @@ function  placeWindows(aOutputWindow,aTestWindow)
   aOutputWindow.scrollbars.visible = false;
   aOutputWindow.statusbar.visible = false;
   aOutputWindow.toolbar.visible = false;
-  aTestWindow.locationbar.visible = false;
-  aTestWindow.menubar.visible = false;
-  aTestWindow.personalbar.visible = false;
-  aTestWindow.scrollbars.visible = false;
-  aTestWindow.statusbar.visible = false;
-  aTestWindow.toolbar.visible = false;
-
 
   top = window.screen.availTop;
   left = window.screen.availLeft;
@@ -383,25 +356,25 @@ var loadingFlag;
       <tr>
         <td colspan="4">
           <input id="ar" type="radio" name="dirTypes" value="runDirList" checked>
-          Run All Regression
+         All Regression
         </td>
       </tr>
       <tr>
         <td colspan="4">
           <input id="tr" type="radio" name="dirTypes" value="runDirList" >
-          Run Table Regression
+          Table Regression
         </td>
       </tr>
       <tr>
         <td colspan="4">
           <input id="br" type="radio" name="dirTypes" value="runDirList" >
-          Run Block Regression
+          Block Regression
         </td>
       </tr>
       <tr>
         <td colspan="4">
           <input id="fcr" type="radio" name="dirTypes" value="runDirList" >
-          Run Form Controls Regression
+          Form Controls Regression
         </td>
       </tr>
     </table>
@@ -413,11 +386,11 @@ var loadingFlag;
       <table width=800>
       <tr>
         <td>
-          Run Baseline 
+          Generate Baseline 
           <input id="rb" type="radio" name="testType" value="runbaseline" checked >
         </td>
         <td>
-          Run Verify and Compare
+          Verify and Compare
           <input id="rv" type="radio" name="testType" value="runverify" >
         </td>
       </tr>
@@ -431,10 +404,7 @@ var loadingFlag;
 
       <tr>
         <td>
-          <input type=button value="Run Tests" onclick='runTests()'>
-        </td>
-        <td>
-          <input type=button value="RestoreBars" onclick='RestoreWindow()'>
+          <input type=button value="Execute" onclick='runTests()'>
         </td>
       </tr>
       </table>
