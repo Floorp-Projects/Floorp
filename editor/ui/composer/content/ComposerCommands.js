@@ -577,9 +577,9 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
   gComposerCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
 
-  gComposerCommandManager.registerCommand("cmd_editHTML",   nsEditHTMLCommand);
+  gComposerCommandManager.registerCommand("cmd_editHTML",    nsEditHTMLCommand);
+  gComposerCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
   gComposerCommandManager.registerCommand("cmd_preferences", nsPreferencesCommand);
-
 
   gComposerCommandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
   gComposerCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);

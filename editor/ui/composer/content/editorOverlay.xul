@@ -107,12 +107,6 @@
 
     <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
 
-    <!-- view menu -->
-   	<command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
-   	<command id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');"     checked="true"/>
-   	<command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
-  	<command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
-
     <!-- format menu -->
     <command id="cmd_listProperties"  oncommand="goDoCommand('cmd_listProperties')"/>
     <command id="cmd_pageProperties"  oncommand="goDoCommand('cmd_pageProperties')"/>
@@ -120,7 +114,6 @@
 
     <command id="cmd_link"            oncommand="goDoCommand('cmd_link')"/>
     <command id="cmd_anchor"          oncommand="goDoCommand('cmd_anchor')"/>
-    <command id="cmd_insertChars"     oncommand="goDoCommand('cmd_insertChars')"/>
     <command id="cmd_image"           oncommand="goDoCommand('cmd_image')"/>
     <command id="cmd_hline"           oncommand="goDoCommand('cmd_hline')"/>
     <command id="cmd_table"           oncommand="goDoCommand('cmd_table')"/>
@@ -210,8 +203,14 @@
 
 
   <broadcasterset id="broadcasterset">
+    <!-- Broadcasters/commands with no other home -->
+    <!-- view menu -->
+   	<command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
+   	<command id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');"     checked="true"/>
+   	<command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
+  	<command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
+
     <!-- Obsolete; these will go away -->
-  
     <command id="Editor:Font:Face" face=""/>
     <command id="Editor:Font:Size" fontsize=""/>
   </broadcasterset>
