@@ -34,9 +34,8 @@
 #include "nsIMessage.h"
 #include "nsMsgDBCID.h"
 #include "nsIMsgMailNewsUrl.h"
-#include "rosetta.h"
 
-#include "allxpstr.h"
+//#include "allxpstr.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"

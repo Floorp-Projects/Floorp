@@ -644,7 +644,6 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
   if (m_responseCode != 250) 
   {
-	HG10349
 	buffer = "HELO ";
 	buffer += GetUserDomainName();
 	buffer += CRLF;
@@ -688,13 +687,13 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 			m_authMethod = SMTP_AUTH_LOGIN;	/* old style */
 	}
 #ifdef UNREADY_CODE
-	HG40702
-
-	HG30626
-
-	HG16713
 	{
-		HG92990
+        if (CD_AUTH_LOGIN_METHOD) { 
+            CD_NEXT_STATE = SMTP_SEND_AUTH_LOGIN_USERNAME; 
+            CD_NEXT_STATE_AFTER_RESPONSE = SMTP_AUTH_LOGIN_RESPONSE;
+        } else {
+            CD_NEXT_STATE = SMTP_SEND_HELO_RESPONSE;
+        } 
 	}
 #endif
 
@@ -708,8 +707,6 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	return (status);
   }
 }
-
-HG76227
 
 PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 length)
 {
@@ -1278,7 +1275,6 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
     PRInt32 status = 0; 
 	m_continuationResponse = -1;  /* init */
 	//nsISmtpUrl * smtpUrl = nsnull;
-	HG77067
 
 	if (aURL)
 	{
@@ -1398,9 +1394,6 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 			case SMTP_FINISH_CONNECT:
 	            SetFlag(SMTP_PAUSE_FOR_READ);
 		        break;
-#ifdef UNREADY_CODE
-	   HG26788
-#endif	   
 			case SMTP_LOGIN_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
@@ -1433,10 +1426,7 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				else
 					status = AuthLoginResponse(inputStream, length);
 				break;
-#ifdef UNREADY_CODE
-       HG12690
-#endif
-			 case SMTP_SEND_AUTH_LOGIN_USERNAME:
+            case SMTP_SEND_AUTH_LOGIN_USERNAME:
 				 status = AuthLoginUsername();
 				 break;
 

@@ -24,8 +24,6 @@
 #define nsNNTPProtocol_h___
 
 #include "nsMsgProtocol.h"
-#include "rosetta.h"
-#include HG40855
 
 #include "nsIOutputStream.h"
 #include "nsIBufferInputStream.h"
@@ -72,7 +70,6 @@ NNTP_CONNECTIONS_ARE_AVAILABLE,
 #endif
 NNTP_CONNECT,
 NNTP_CONNECT_WAIT,
-HG07711
 NNTP_LOGIN_RESPONSE,
 NNTP_SEND_MODE_READER,
 NNTP_SEND_MODE_READER_RESPONSE,

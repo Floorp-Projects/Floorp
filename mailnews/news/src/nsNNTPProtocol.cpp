@@ -46,9 +46,6 @@
 
 #include "nsCRT.h"
 
-#include "rosetta.h"
-#include HG40855
-
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
@@ -186,7 +183,6 @@ char *stateLabels[] = {
 #endif
 "NNTP_CONNECT",
 "NNTP_CONNECT_WAIT",
-HG25430
 "NNTP_LOGIN_RESPONSE",
 "NNTP_SEND_MODE_READER",
 "NNTP_SEND_MODE_READER_RESPONSE",
@@ -768,14 +764,14 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		}
 		if (userName)
 		{
-		    char *mungedUsername = HG64643(userName);
+		    char *mungedUsername = XP_STRDUP(userName);
             cd->newsgroup->SetUsername(mungedUsername);
 			PR_FREEIF(mungedUsername);
 			PR_FREEIF(userName);
 		}
 		if (password)
 		{
-		    char *mungedPassword = HG64643(password);
+		    char *mungedPassword = XP_STRDUP(password);
             cd->newsgroup->SetPassword(mungedPassword);
 
 			PR_FREEIF(mungedPassword);
@@ -1083,7 +1079,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 		return status;
 
     ClearFlag(NNTP_PAUSE_FOR_READ);  /* don't pause if we got a line */
-	HG43574
+
     /* almost correct */
     if(status > 1)
 	{
@@ -1178,8 +1174,6 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	PR_FREEIF(line);
     return(0);  /* everything ok */
 }
-
-HG43072
 
 /* interpret the server response after the connect
  *
@@ -1518,8 +1512,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	if ('.' != line[0])
 	{
 #if 0
-		char *urlScheme;
-		HG56946
+		char *urlScheme = "news:";
 		char *url = PR_smprintf ("%s//%s/%s", urlScheme, m_hostName, line);
 		if (url)
 			MSG_AddSubscribedNewsgroup (cd->pane, url);
@@ -2456,7 +2449,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 
 #ifdef CACHE_NEWSGRP_PASSWORD
     if (NS_SUCCEEDED(m_newsgroup->GetUsername(&username)) {
-	  munged_username = HG64643 (username);
+	  munged_username = XP_STRDUP (username);
       m_newsgroup->SetUsername(munged_username);
 	  PR_FreeIF(munged_username);
 	}
@@ -2528,7 +2521,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		{
             m_newsgroup->GetPassword(&password);
 #ifdef UNREADY_CODE
-            password = HG63218 (password);
+            password = XP_STRDUP(password);
 #endif
             m_newsgroup->SetPassword(NULL);
 		}
@@ -2541,7 +2534,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 #ifdef CACHE_NEWSGRP_PASSWORD
 			if (cd->pane)
             m_newsgroup->GetPassword(&password);
-            password = HG63218 (password);
+            password = XP_STRDUP(password);
 #else
             NET_SACopy(&password, last_password);
 #endif
@@ -2605,7 +2598,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
         rv = m_newsgroup->GetPassword(&garbage_password);
         if (!NS_SUCCEEDED(rv)) {
           PR_Free(garbage_password);
-          munged_password = HG64643(password);
+          munged_password = XP_STRDUP(password);
           m_newsgroup->SetPassword(munged_password);
 		  PR_FREEIF(munged_password);
 		}
@@ -4588,7 +4581,6 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 
 			// mscott: I've removed the states involving connections on the assumption
 			// that core netlib will now be managing that information.
-			HG42871
 
             case NNTP_LOGIN_RESPONSE:
 				if (inputStream == nsnull)

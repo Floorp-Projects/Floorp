@@ -26,8 +26,6 @@
 #include "nsMsgProtocol.h"
 #include "nsIStreamListener.h"
 #include "nsXPIDLString.h"
-#include "rosetta.h"
-#include HG40855
 #include "nsISmtpUrl.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"

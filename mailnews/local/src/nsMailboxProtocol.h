@@ -27,8 +27,6 @@
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIChannel.h"
-#include "rosetta.h"
-#include HG40855
 
 #include "nsIOutputStream.h"
 #include "nsIMailboxUrl.h"

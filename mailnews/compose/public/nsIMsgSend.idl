@@ -39,7 +39,6 @@
 
 %{C++
 #include "nsIURL.h"
-#include "rosetta.h"
 #include "rosetta_mailnews.h"
 %}
 
@@ -137,8 +136,6 @@ typedef struct nsMsgAttachedFile
   PRUint32    null_count;
   PRUint32    max_line_length;
   
-  HG68452
-
 } nsMsgAttachedFile;
 %}
 

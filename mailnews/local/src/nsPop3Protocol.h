@@ -32,7 +32,6 @@
 #include "nsMsgProtocol.h"
 #include "MailNewsTypes.h"
 #include "nsIMsgStatusFeedback.h"
-#include "rosetta.h"
 
 #include "prerror.h"
 #include "plhash.h"

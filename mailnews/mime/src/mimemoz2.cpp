@@ -35,7 +35,6 @@
 #include "edt.h"
 #include "mimerosetta.h"
 #include "proto.h"
-#include "secrng.h"
 #include "prprf.h"
 #include "intl_csi.h"
 #include "mimei.h"      /* for moved MimeDisplayData struct */
