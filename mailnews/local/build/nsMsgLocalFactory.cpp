@@ -77,8 +77,8 @@ nsMsgLocalFactory::nsMsgLocalFactory(const nsCID &aClass, const char* aClassName
 nsMsgLocalFactory::~nsMsgLocalFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-  PL_strfree(mClassName);
-  PL_strfree(mProgID);
+	PL_strfree(mClassName);
+	PL_strfree(mProgID);
 }   
 
 nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)   
@@ -246,7 +246,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, nsnull, 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
+								  "component://netscape/messenger/mailboxservice", 
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
+								  "component://netscape/messenger/messageservice;type=mailbox", 
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
@@ -258,7 +264,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 								  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, 
+								  "component://netscape/messenger/popservice",
 								  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
