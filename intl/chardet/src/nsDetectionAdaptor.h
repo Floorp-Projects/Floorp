@@ -66,8 +66,17 @@ class nsMyObserver : public nsICharsetDetectionObserver
  private:
      nsCOMPtr<nsIWebShellServices> mWebShellSvc;
      PRBool mNotifyByReload;
-     nsCOMPtr<nsIDocument> mWeakRefDocument;
-     nsCOMPtr<nsIParser> mWeakRefParser;
+
+     //The adaptor is owned by parser as filter, and adaptor owns detector, 
+     //which in turn owns observer. Parser also live within the lifespan of 
+     //document. The ownership tree is like:
+     //  document->parser->adaptor->detector->observer
+     //We do not want to own Document & Parser to avoid ownership loop. That 
+     //will cause memory leakage. 
+     //If in future this chain got changed, ie. parser outlives document, or 
+     //detector outlives parser, we might want to change weak reference here. 
+     nsIDocument* mWeakRefDocument;
+     nsIParser* mWeakRefParser;
      nsAutoString mCharset;
      nsCAutoString mCommand;
 };
