@@ -19,6 +19,7 @@ nsIRadioButton.h
 nsIRadioGroup.h
 nsIMouseListener.h
 nsIEventListener.h
+nsIMenuListener.h
 nsIToolkit.h
 nsWidgetsCID.h
 nsITabWidget.h
