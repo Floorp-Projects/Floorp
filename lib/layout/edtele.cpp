@@ -2718,6 +2718,90 @@ void CEditTableElement::FixupColumnsAndRows()
     }
 }
 
+void CEditTableElement::NormalizeCellsPerRow()
+{
+    CEditTableCellElement *pFirstCell = GetFirstCell();
+    CEditBuffer *pBuffer = GetEditBuffer();
+    if( !pFirstCell || !pBuffer )
+        return;
+
+    int32 iRows = CountRows();
+    int32 iArraySize = iRows * sizeof(int32);
+    int32 *pCellsPerRow = (int32*)XP_ALLOC(iArraySize);
+    if( !pCellsPerRow )
+        return;
+
+    XP_MEMSET( pCellsPerRow, 0, iArraySize );
+
+    CEditTableCellElement *pCell = pFirstCell;
+    intn iRow = 0;
+    intn iPrevRow = 0;
+    int32 iCellsInRow = 0;
+
+    while( pCell )
+    {
+        intn iColSpan = pCell->GetColSpan();
+        intn iRowSpan = pCell->GetRowSpan();
+
+        pCellsPerRow[iRow] += iColSpan;
+
+        // Fixup subsequent rows because of rowspan
+        if( iRowSpan > 1 )
+        {
+            for( intn j = 1; j < iRowSpan; j++ )
+            {
+                // We may overrun our array if table is "bad"
+                //   because of a ROWSPAN value that exceeds actual
+                //   number of rows. Just skip attempts to access a value too high
+                //   since there is no row to use the "ExtraColumns" anyway.
+                if( iRow+j < iRows )
+                    pCellsPerRow[iRow+j] += iColSpan;
+                else
+                    // Fixup bad cell????
+                    ;//pCell->SetRowSpan(iRows-1);
+            }
+        }
+        pCell = pCell->GetNextCellInTable(&iRow);
+    }
+
+    XP_ASSERT((iRow+1) == iRows); // Safety check
+
+    // Find the maximum cells per row
+    intn iTotalRows = pCellsPerRow[0];
+    intn i;
+
+    for( i = 1; i < iRows; i++ )
+    {
+        if( pCellsPerRow[i] > iTotalRows )
+            iTotalRows = pCellsPerRow[i];
+    }
+
+    pBuffer->SetFillNewCellWithSpace();
+    CEditTableRowElement *pRow = GetFirstRow();
+
+    // Now go through rows and add cells as needed
+    for( i = 0; i < iRows; i++ )
+    {
+        XP_ASSERT(pRow);
+        if( !pRow )
+            break;
+        
+        intn iExtraCells = iTotalRows - pCellsPerRow[i];
+        for( intn i = 0; i < iExtraCells; i++ )
+        {
+            CEditTableCellElement *pNewCell = new CEditTableCellElement();
+            if( pNewCell )
+            {
+                // What could we set this to to make CountColumns() work?
+                //pNewCell->SetX(????);
+                pNewCell->InsertAsLastChild(pRow);
+                pNewCell->FinishedLoad(pBuffer);
+            }
+        }
+        pRow = pRow->GetNextRow();
+    }
+    pBuffer->ClearFillNewCellWithSpace();
+}
 
 void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, 
                                    CEditTableElement* pSourceTable, intn iStartColumn, 
@@ -2748,42 +2832,49 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
     CEditBuffer *pBuffer = GetEditBuffer();
     XP_ASSERT(pBuffer);
     CEditTableCellElement *pCellForInsertPoint = NULL;
-    if( pSourceTable )
-        pCellForInsertPoint = pSourceTable->GetFirstCell();
+    int32 iCurrentColumns = GetColumns();
+    int32 iTotalColumns = iCurrentColumns;
+    // Set to the total to simplify test padding the rows near end of function
+    int32 iSourceColumns = iTotalColumns;
 
-    if( pSourceTable && iStartColumn > 0 )
+    if( pSourceTable )
     {
+        iSourceColumns = pSourceTable->CountColumns();
+        CEditTableRowElement *pSourceRow;
         // If inserted rows will require new columns,
         //  figure that out now and add the necessary columns
-        int32 iTotalColumns = iStartColumn + pSourceTable->CountColumns();
-        if( iTotalColumns > GetColumns() )
-        {
-            CEditTableRowElement *pTableRow = GetFirstRow();
-            while( pTableRow )
-            {
-                pTableRow->PadRowWithEmptyCells(iTotalColumns);
-                pTableRow = (CEditTableRowElement*)pTableRow->GetNextSibling();
-            }
-        }
+        // Figure the total number of columns in table after inserting
+        iTotalColumns = max(iCurrentColumns, iStartColumn + pSourceTable->CountColumns());
 
-        // Set flag to autoinsert space into new cells according to pref
-        pBuffer->SetFillNewCellWithSpace();
-        //Simplest way to handle this is to add blank cells to the source data
-        CEditTableRowElement* pSourceRow = pSourceTable->GetFirstRow();
-        while(pSourceRow)
+        if( iStartColumn > 0 )
         {
-            for( intn i = 0; i < iStartColumn; i++ )
+            // Set flag to autoinsert space into 
+            //  the blank new cells we will insert here
+            pBuffer->SetFillNewCellWithSpace();
+
+            //Simplest way to handle offset insert column
+            //  is to add blank cells to the source data
+            pSourceRow = pSourceTable->GetFirstRow();
+            while(pSourceRow)
             {
-                CEditTableCellElement *pNewCell = new CEditTableCellElement();
-                if( pNewCell )
+                for( intn i = 0; i < iStartColumn; i++ )
                 {
-                    pNewCell->InsertAsFirstChild(pSourceRow);
-                    pNewCell->FinishedLoad(pBuffer);
+                    CEditTableCellElement *pNewCell = new CEditTableCellElement();
+                    if( pNewCell )
+                    {
+                        // Fake the X value so CountColumns will work
+                        pNewCell->SetX(iStartColumn - i);
+                        pNewCell->InsertAsFirstChild(pSourceRow);
+                        pNewCell->FinishedLoad(pBuffer);
+                    }
                 }
+                pSourceRow = (CEditTableRowElement*)pSourceRow->GetNextSibling();
             }
-            pSourceRow = (CEditTableRowElement*)pSourceRow->GetNextSibling();
+            // Clear this so we don't touch empty cells
+            //  from the paste source
+            pBuffer->ClearFillNewCellWithSpace();
         }
-        pBuffer->ClearFillNewCellWithSpace();
+        iSourceColumns += iStartColumn;
     }
 
     CEditTableCellElement *pCell = GetFirstCellInRow(Y, FALSE );
@@ -2819,32 +2910,43 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
         pCell = GetNextCellInRow();
     }
 
+    XP_ASSERT(iColumns == iCurrentColumns);
+
     // Now insert the new rows (including iColumns new cells in each)
     for ( intn row = 0; row < number; row++ )
     {
         CEditTableRowElement* pNewRow;
-        if ( pSourceTable ) {
+        if ( pSourceTable )
+        {
             pNewRow = pSourceTable->GetFirstRow();
             pNewRow->Unlink();
         }
-        else {
+        else 
+        {
             pNewRow = new CEditTableRowElement(iColumns);
             if( !pNewRow )
                 break;
-
-            pBuffer->SetFillNewCellWithSpace();
-            // Set insert point to first cell in inserted rows
-            if( !pCellForInsertPoint )
-                pCellForInsertPoint = pNewRow->GetFirstCell();
         }
+        // Set insert point to first cell in inserted rows
+        if( !pCellForInsertPoint )
+            pCellForInsertPoint = pNewRow->GetFirstCell();
+
         if( Y == iNewY )
             pNewRow->InsertBefore(pCurrentRow);
-        else 
+        else
+        { 
             pNewRow->InsertAfter(pCurrentRow);
+            pCurrentRow = pNewRow;
+        }
 
         pNewRow->FinishedLoad(pBuffer);
     }
-    pBuffer->ClearFillNewCellWithSpace();
+
+//    if( (iSourceColumns < iTotalColumns) ||
+//        (iCurrentColumns < iTotalColumns) )
+
+    // Do this all the time?
+    NormalizeCellsPerRow();
 
     if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
         *ppCellForInsertPoint = pCellForInsertPoint;
@@ -2954,7 +3056,8 @@ void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number,
                 if( pNextRow )
                 {
                     // Fill in rest of row with empty cells
-                    pNextRow->PadRowWithEmptyCells(iTotalColumns);
+                    // DOESN'T WORK WITH ROW NOT ALREADY LAYED OUT
+                    //pNextRow->PadRowWithEmptyCells(iTotalColumns);
                     // Be sure any empty cells have required empty text elements
                     pNextRow->FinishedLoad(pBuffer);
                 }
@@ -2963,6 +3066,7 @@ void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number,
             }
         }
     }
+    NormalizeCellsPerRow();
 
 INSERT_COLUMNS_END:
     if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
@@ -3072,7 +3176,6 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
         pSourceCell->Unlink();
         pSourceCell->InsertAfter(pReplaceCell);
         // then delete the replace cell
-        pReplaceCell->Unlink();
         delete pReplaceCell;
 
         // Use size data from the cell we replaced
@@ -4525,6 +4628,8 @@ intn CEditTableRowElement::AppendRow( CEditTableRowElement *pAppendRow, XP_Bool 
     return iColumnsAppended;
 }
 
+// This only works for table rows already layed out 
+//  (has gone through CEditBuffer::FixupTableData() )
 void CEditTableRowElement::PadRowWithEmptyCells( intn iColumns )
 {
     CEditTableElement *pTable = (CEditTableElement*)GetParent();
@@ -5055,6 +5160,16 @@ CEditTableCellElement::CEditTableCellElement(IStreamIn *pStreamIn, CEditBuffer *
         EDT_FreeTableCellData(pData);
     }
     PA_FreeTag( pTag );
+}
+
+// We should never call Unlink for a table cell we are about 
+//   to delete - it will get unlinked automatically.
+// But in case someone does, we must unselect the cell here
+//  else it will fail to find the EditBuffer in the destructor
+void CEditTableCellElement::Unlink(){
+    if( IsSelected() && GetEditBuffer() )
+        GetEditBuffer()->SelectCell(FALSE, NULL, this);
+    CEditElement::Unlink();
 }
 
 CEditTableCellElement::~CEditTableCellElement(){
@@ -6092,7 +6207,12 @@ void CEditTableCellElement::SwitchLinkage(CEditTableRowElement *pParentRow)
 // Switches back to saved parent and next pointers
 void CEditTableCellElement::RestoreLinkage()
 {
-    Unlink();
+    // Important! Can't call our CEditTableCellElement::Unlink()
+    //  because it will remove cell from selection list
+    //  and the main purpose for using this is to
+    //  restore selected cells temporarily moved
+    //  for copying to clipboard
+    CEditElement::Unlink();
     SetParent(m_pSaveParent);
     SetNextSibling(m_pSaveNext);
     CEditElement *pParent = GetParent();

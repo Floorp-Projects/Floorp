@@ -1023,6 +1023,11 @@ public:
     //    compensating for COLSPAN and ROWSPAN
     //    Uses m_ColumnLayoutData and m_RowLayoutData
     void FixupColumnsAndRows();
+    
+    // Add empty cells to each row so table looks rectangular
+    // (each row has same number of "virtual" cells,
+    //  compensating for effects of COLSPAN and ROWSPAN
+    void NormalizeCellsPerRow();
 
 private:
     ED_Color m_backgroundColor;
@@ -1175,12 +1180,12 @@ public:
     CEditTableCellElement(CEditElement *pParent, PA_Tag *pTag, int16 csid);
     CEditTableCellElement(IStreamIn *pStreamIn, CEditBuffer *pBuffer);
     virtual ~CEditTableCellElement();
-
     virtual XP_Bool IsTableCell();
     static CEditTableCellElement* Cast(CEditElement* pElement) {
         return pElement && pElement->IsTableCell() ? (CEditTableCellElement*) pElement : 0; }
     virtual EEditElementType GetElementType();
     virtual ED_Alignment GetDefaultAlignment();
+    void Unlink();
 
     XP_Bool IsTableData();
 
@@ -1267,6 +1272,8 @@ public:
 
     int32 GetX() { return m_X; }
     int32 GetY() { return m_Y; }
+    void  SetX(int32 x) { m_X = x; }
+    void  SetY(int32 y) { m_Y = y; }
     intn  GetRow() { return m_iRow; }
     int32 GetWidth() { return m_iWidthPixels; }
     int32 GetHeight() { return m_iHeightPixels; }

@@ -1055,7 +1055,13 @@ CDeleteTableRowCommand::CDeleteTableRowCommand(CEditBuffer* pBuffer, intn rows, 
             pBuffer->m_pCellForInsertPoint = 0;
             pTable->DeleteRows(Y, rows, &pBuffer->m_pCellForInsertPoint);
             pTable->FinishedLoad(pBuffer);
-            // Move to a safe location so Relayout() doesn't assert
+            if( pBuffer->m_pCellForInsertPoint == NULL )
+            {
+                // Move to a safe location so Relayout() doesn't assert
+                CEditElement *pLeaf = pTable->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
+                if( pLeaf )
+                    pBuffer->SetInsertPoint(pLeaf->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
+            }
             pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
         }
     }
@@ -1129,7 +1135,13 @@ CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* pBuffer, intn 
             // We don't save the table to undo any more
             pTable->DeleteColumns(X, columns, &pBuffer->m_pCellForInsertPoint );
             pTable->FinishedLoad(pBuffer);
-            // Move to a safe location so Relayout() doesn't assert
+            if( pBuffer->m_pCellForInsertPoint == NULL )
+            {
+                // Move to a safe location so Relayout() doesn't assert
+                CEditElement *pLeaf = pTable->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
+                if( pLeaf )
+                    pBuffer->SetInsertPoint(pLeaf->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
+            }
             pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
         }
     }
@@ -1205,7 +1217,13 @@ CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* pBuffer, intn colu
             pBuffer->m_pCellForInsertPoint = 0;
             pTableRow->DeleteCells(X, columns, &pBuffer->m_pCellForInsertPoint);
             pTable->FinishedLoad(pBuffer);
-            // Move to a safe location so Relayout() doesn't assert
+            if( pBuffer->m_pCellForInsertPoint == NULL )
+            {
+                // Move to a safe location so Relayout() doesn't assert
+                CEditElement *pLeaf = pTable->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
+                if( pLeaf )
+                    pBuffer->SetInsertPoint(pLeaf->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
+            }
             pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
         }
     }
