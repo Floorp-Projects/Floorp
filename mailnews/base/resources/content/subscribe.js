@@ -29,6 +29,13 @@ function SetUpServerMenu()
     serverMenu.selectedItem = menuitems[0];
 }
 
+var MySubscribeListener = {
+	OnStopPopulating: function() {
+		dump("root subscribe tree at: "+ gServerURI +"\n");
+		gSubscribeTree.setAttribute('ref',gServerURI);
+	}
+};
+
 function SetUpTree()
 {
 	dump("SetUpTree()\n");
@@ -38,10 +45,10 @@ function SetUpTree()
 
 	try {
 		subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
-		subscribableServer.populateSubscribeDatasource(null /* eventual, a nsIMsgWindow */);
 
-		dump("root subscribe tree at: "+ gServerURI +"\n");
-		gSubscribeTree.setAttribute('ref',gServerURI);
+		subscribableServer.subscribeListener = MySubscribeListener;
+
+		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */);
 	}
 	catch (ex) {
 		dump("failed to populate subscribe ds: " + ex + "\n");

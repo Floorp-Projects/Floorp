@@ -75,6 +75,7 @@ private:
 	nsAdapterEnumerator *mGroupsEnumerator;
 	PRBool mHostInfoLoaded;
 	PRBool mHostInfoHasChanged;
+	nsCOMPtr <nsISubscribeListener> mSubscribeListener;
 };
 
 #endif

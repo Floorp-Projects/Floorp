@@ -36,7 +36,6 @@
 #include "nsRDFCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsNNTPProtocol.h"
-#include "nsISubscribableServer.h"
 
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
@@ -783,7 +782,17 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
 	nsresult rv;
 	rv = AddSubscribedNewsgroups();
-	return rv;
+	if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISubscribeListener> listener;
+	rv = GetSubscribeListener(getter_AddRefs(listener));
+	if (NS_FAILED(rv)) return rv;
+	if (!listener) return NS_ERROR_FAILURE;
+	
+	rv = listener->OnStopPopulating();
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -848,4 +857,23 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
         if (NS_FAILED(rv)) return rv;
 
         return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
+{
+	if (!aListener) return NS_ERROR_NULL_POINTER;
+	mSubscribeListener = aListener;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
+{
+	if (!aListener) return NS_ERROR_NULL_POINTER;
+	if (mSubscribeListener) {
+			*aListener = mSubscribeListener;
+			NS_ADDREF(*aListener);
+	}
+	return NS_OK;
 }

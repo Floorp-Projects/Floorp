@@ -24,7 +24,14 @@
 
 interface nsIMsgWindow;
 
+[scriptable, uuid(f337b84a-1dd1-11b2-97c7-fb8b2e3f2280)]
+interface nsISubscribeListener : nsISupports {
+	void OnStopPopulating();
+};
+
 [scriptable, uuid(6f9d2e82-1dd2-11b2-bbed-bbea41ca33a7)]
 interface nsISubscribableServer : nsISupports {
 	void populateSubscribeDatasource(in nsIMsgWindow aMsgWindow);
+	attribute nsISubscribeListener subscribeListener;
 };
+
