@@ -2001,6 +2001,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_BUTTON2DBLCLK:
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
           break;
+        case WM_CONTEXTMENU:
+          result = DispatchMouseEvent( NS_CONTEXTMENU, mp1, mp2);
+          break;
     
         case WM_CHORD:
           result = DispatchMouseEvent( 0, mp1, mp2);
