@@ -25,33 +25,28 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "pratom.h"
+
 #include "nsIAppShellService.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsITextServicesDocument.h"
 #include "nsTextServicesCID.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIPresShell.h"
-#include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
 #include "nsIContent.h"
 #include "nsIURL.h"
-#include "nsIIOService.h"
 #include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#include "nsFileSpec.h"
 #include "nsIFactory.h"
-#include "pratom.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+
+#include "nsISound.h"
+#include "nsWidgetsCID.h"   // ugh! progID, please
 
 #include "nsFindComponent.h"
 
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 
 #ifdef DEBUG
 #define DEBUG_FIND
@@ -418,10 +413,6 @@ nsFindComponent::Context::SetupDocForSearch(nsITextServicesDocument *aDoc, PRInt
 NS_IMETHODIMP
 nsFindComponent::Context::DoFind(PRBool *aDidFind)
 {
-#ifdef DEBUG_FIND
-  printf("Doing find\n");
-#endif
-
   if (!aDidFind)
     return NS_ERROR_NULL_POINTER;
   
@@ -548,7 +539,8 @@ nsFindComponent::Context::DoFind(PRBool *aDidFind)
                       blockIndex = 0;
                   }
               }
-          } else
+          }
+          else
           {
               // already wrapped.  This means no matches were found.
               done = PR_TRUE;
@@ -894,19 +886,21 @@ nsFindComponent::FindNext(nsISupports *aContext, PRBool *aDidFind)
 			
 		// For now, just record request to console.
 		Context *context = (Context*)aContext;
-#ifdef DEBUG_FIND
-		printf( "nsFindComponent::FindNext\n\tkey=%s\n\tcaseSensitive=%d\tsearchBackward=%d\n",
-			      (const char *)nsAutoCString( context->mSearchString ),
-			      context->mCaseSensitive, context->mSearchBackwards);
-#endif
 		context->DoFind(aDidFind);
-
 
 		// Record this for out-of-the-blue FindNext calls.
 		mLastSearchString    = context->mSearchString;
 		mLastCaseSensitive   = context->mCaseSensitive;
 		mLastSearchBackwards = context->mSearchBackwards;
 		mLastWrapSearch      = context->mWrapSearch;
+
+    if (!*aDidFind)
+    {
+      static NS_DEFINE_IID(kSoundCID,       NS_SOUND_CID);
+      nsCOMPtr<nsISound> sound = do_CreateInstance(kSoundCID);
+      if (sound)
+        sound->Beep();    
+    }
 
     return rv;
 }
