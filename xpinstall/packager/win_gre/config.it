@@ -109,7 +109,8 @@ GRE Cleanup Orphans Message=Cleaning up orphaned GREs (Gecko Runtime Environment
 ; installation of the product. If so, then prompt the user that cleanup
 ; of destination folder is highly recommended, or instability of product
 ; can occurr.
-Cleanup On Upgrade=FALSE
+[Cleanup On Upgrade]
+Cleanup=FALSE
 
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
