@@ -388,9 +388,11 @@ function delayedStartup()
     bt.ref = btf;
     document.getElementById("bookmarks-chevron").ref = btf;
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
+    bt.controllers.appendController(BookmarksMenuController);
   }
+  var bm = document.getElementById("bookmarks-menu");
+  bm.controllers.appendController(BookmarksMenuController);
   window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);
-  controllers.appendController(BookmarksMenuController);
 
   // called when we go into full screen, even if it is 
   // initiated by a web page script
