@@ -39,7 +39,7 @@
 
 SYSTEM_INFO=`uname -a`
 OS_ARCH=`uname -s`
-if [ $OS_ARCH = "Windows_NT" ]
+if [ $OS_ARCH = "Windows_NT" ] || [ $OS_ARCH = "OS/2" ]
 then
 	NULL_DEVICE=nul
 else
@@ -225,7 +225,7 @@ printf "\nNSPR Test Results - $OBJDIR\n\n"
 printf "BEGIN\t\t\t`date`\n"
 printf "NSPR_TEST_LOGFILE\t${LOGFILE}\n\n"
 printf "Test\t\t\tResult\n\n"
-if [ $OS_PLATFORM = "Windows_95" ] || [ $OS_PLATFORM = "Windows_98" ] || [ $OS_PLATFORM = "Windows_NT" ] ; then
+if [ $OS_PLATFORM = "Windows_95" ] || [ $OS_PLATFORM = "Windows_98" ] || [ $OS_PLATFORM = "Windows_NT" ] || [ $OS_PLATFORM = "OS/2" ] ; then
 	for prog in $TESTS
 	do
 		printf "$prog"

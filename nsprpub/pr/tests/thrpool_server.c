@@ -54,6 +54,13 @@
 #include <pthread.h>
 #endif
 
+/* for getcwd */
+#if defined(XP_UNIX) || defined (XP_OS2_EMX) || defined(XP_BEOS)
+#include <unistd.h>
+#elif defined(XP_PC)
+#include <direct.h>
+#endif
+
 #ifdef WIN32
 #include <process.h>
 #endif
