@@ -28,11 +28,12 @@
 #include "nsIDOMPlugin.h"
 
 class nsIDOMNavigator;
+class nsIDocShell;
 struct nsIPluginHost;
 
 class PluginArrayImpl : public nsIScriptObjectOwner, public nsIDOMPluginArray {
 public:
-  PluginArrayImpl(nsIDOMNavigator* navigator);
+  PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocShell);
   virtual ~PluginArrayImpl();
 
   NS_DECL_ISUPPORTS
@@ -48,12 +49,16 @@ public:
 private:
   nsresult GetPlugins();
 
+public:
+  void SetDocShell(nsIDocShell* aDocShell);
+
 protected:
   void *mScriptObject;
   nsIDOMNavigator* mNavigator;
   nsIPluginHost* mPluginHost;
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;
+  nsIDocShell* mDocShell; // weak reference
 };
 
 class PluginElementImpl : public nsIScriptObjectOwner, public nsIDOMPlugin {
