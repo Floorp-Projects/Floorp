@@ -435,7 +435,6 @@ protected:
     nsCOMPtr<nsIURI>           mCurrentURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
     nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
-    nsCOMPtr<nsIScriptContext> mScriptContext;
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsIWebBrowserFind> mFind;

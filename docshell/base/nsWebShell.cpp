@@ -188,15 +188,6 @@ nsWebShell::~nsWebShell()
   mContentViewer=nsnull;
   mDeviceContext=nsnull;
 
-  if (mScriptGlobal) {
-    mScriptGlobal->SetDocShell(nsnull);
-    mScriptGlobal = nsnull;
-  }
-  if (mScriptContext) {
-    mScriptContext->SetOwner(nsnull);
-    mScriptContext = nsnull;
-  }
-
   InitFrameData();
 
 #ifdef DEBUG

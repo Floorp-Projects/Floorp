@@ -3405,10 +3405,6 @@ nsDocShell::Destroy()
         mScriptGlobal->SetGlobalObjectOwner(nsnull);
         mScriptGlobal = nsnull;
     }
-    if (mScriptContext) {
-        mScriptContext->SetOwner(nsnull);
-        mScriptContext = nsnull;
-    }
 
     mSessionHistory = nsnull;
     SetTreeOwner(nsnull);
@@ -6959,7 +6955,7 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
 NS_IMETHODIMP
 nsDocShell::EnsureScriptEnvironment()
 {
-    if (mScriptContext)
+    if (mScriptGlobal)
         return NS_OK;
 
     if (mIsBeingDestroyed) {
@@ -6979,8 +6975,12 @@ nsDocShell::EnsureScriptEnvironment()
         SetGlobalObjectOwner(NS_STATIC_CAST
                              (nsIScriptGlobalObjectOwner *, this));
 
-    factory->NewScriptContext(mScriptGlobal, getter_AddRefs(mScriptContext));
-    NS_ENSURE_TRUE(mScriptContext, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIScriptContext> context;
+    factory->NewScriptContext(mScriptGlobal, getter_AddRefs(context));
+    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+
+    // Note that mScriptGlobal has taken a reference to the script
+    // context, so we don't have to.
 
     return NS_OK;
 }
