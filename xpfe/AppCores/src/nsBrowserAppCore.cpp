@@ -609,7 +609,8 @@ nsBrowserAppCore::LoadInitialPage(void)
   else {
     //Load the BrowserInit Page for now. This s'd be replaced by code
     //that will look for Prefs and load the default home page
-    rv = LoadUrl(nsString("resource:/res/samples/BrowserInitPage.html"));
+		// XXX This code breaks window.open. Commenting out for now. - DWH
+    // rv = LoadUrl(nsString("resource:/res/samples/BrowserInitPage.html"));
     return rv;
   }
 
