@@ -180,7 +180,6 @@ nsEventStateManager::nsEventStateManager()
     mGestureDownRefPoint(0,0),
     mGestureDownFrame(nsnull),
     mCurrentFocusFrame(nsnull),
-    mLastFocusedWith(eEventFocusedByUnknown),
     mCurrentTabIndex(0),
     mPresContext(nsnull),
     mLClickCount(0),
@@ -2976,7 +2975,6 @@ NS_IMETHODIMP
 nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
                                      EFocusedWithType aFocusedWith)
 {
-  mLastFocusedWith = aFocusedWith;
   if (!aFocusContent) {
     SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
     return NS_OK;
@@ -2997,6 +2995,24 @@ nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
         if (inputElement) {
           inputElement->Select();
         }
+      }
+    }
+  }
+  else {
+    nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(mPresContext->PresShell()));
+    nsCOMPtr<nsISelection> selection;
+    if (selCon) {
+      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                           getter_AddRefs(selection));
+      nsCOMPtr<nsIDOMNode> focusNode(do_QueryInterface(aFocusContent));
+      NS_ASSERTION(focusNode, "No focus node for non-docroot content");
+      // Move caret to focus only if focus not already contained in selection
+      PRBool isFocusInSelection = PR_FALSE;
+      if (selection) {
+        selection->ContainsNode(focusNode, PR_TRUE, &isFocusInSelection);
+      }
+      if (!isFocusInSelection) {
+        MoveCaretToFocus();
       }
     }
   }
@@ -3111,8 +3127,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
   // Tab from the selection if it exists, but not if we're in chrome or an explicit starting
   // point was given.
-  if (!aStart && itemType != nsIDocShellTreeItem::typeChrome &&
-      mLastFocusedWith != eEventFocusedByMouse) {
+  if (!aStart && itemType != nsIDocShellTreeItem::typeChrome) {
     // We're going to tab from the selection position
     nsCOMPtr<nsIDOMHTMLAreaElement> areaElement(do_QueryInterface(mCurrentFocus));
     if (!areaElement) {
