@@ -318,8 +318,6 @@ include $(DEPTH)/config/rules.mk
 INCLUDES	+= -I$(OBJDIR) -I.. -I../DtWidgets -I$(DEPTH)/modules/libreg/include \
 		-I$(DEPTH)/dist/public/security
 
-INCLUDES	+= -I$(DEPTH)/dist/public/XfeComboBox
-
 ifdef MOZ_MAIL_NEWS
 INCLUDES	+= -I$(DEPTH)/lib/libmsg  -I$(DEPTH)/dist/public/ldap
 endif
