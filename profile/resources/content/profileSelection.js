@@ -19,8 +19,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <ben@netscape.com>
+ *   Ben Goodger (03/01/00)
  *   Seth Spitzer (28/10/99)
+ *   Dan Veditz <dveditz@netscape.com>
  */
 
 var selected    = null;
@@ -30,13 +31,7 @@ if (profile)
   profile       = profile.QueryInterface(Components.interfaces.nsIProfile);
 var unset       = true;
 
-var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
-RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-
 var Registry;
-var REGISTRY_NAMESPACE_URI = 'urn:mozilla-registry:'
-var REGISTRY_VALUE_PREFIX = REGISTRY_NAMESPACE_URI + 'value:';
-var kRegistry_Subkeys = RDF.GetResource(REGISTRY_NAMESPACE_URI + 'subkeys');
 
 function StartUp()
 {
@@ -45,15 +40,13 @@ function StartUp()
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
 
-  Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
-  Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
-  Registry.openDefaultRegistry();
-  Registry = Registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
-  
+  Registry = Components.classes['component://netscape/registry'].createInstance();
+  Registry = Registry.QueryInterface(Components.interfaces.nsIRegistry);
+  Registry.openWellKnownRegistry(Registry.ApplicationRegistry);
+
   loadElements();
   highlightCurrentProfile();
   DoEnabling();
-  document.getElementById("profiles").focus();
 }
 
 // select the last opened profile in the profile list
@@ -106,44 +99,33 @@ function Profile ( aName, aDir, aMigrated )
 // purpose  : load profiles into tree
 function loadElements()
 {
-  var profileSRC = RDF.GetResource( "urn:mozilla-registry:key:/Profiles" );
-  var profileProperty = RDF.GetResource( "urn:mozilla-registry:subkeys" );
-  var profiles = Registry.GetTargets( profileSRC, profileProperty, true );
-  if( profiles )
-    profiles = profiles.QueryInterface( Components.interfaces.nsISimpleEnumerator );
-  while( profiles.HasMoreElements() )
-  {
-    var currProfile = profiles.GetNext().QueryInterface( Components.interfaces.nsIRDFResource );
-    // begin BAD BAD BAD BAD BAD BAD HACK {{
-    var profileName = currProfile.Value.substring( currProfile.Value.lastIndexOf("/") + 1 );
-    // }} end BAD BAD BAD BAD BAD BAD HACK
-    var arcs = Registry.ArcLabelsOut( currProfile )
-    if( arcs ) 
-      arcs = arcs.QueryInterface( Components.interfaces.nsISimpleEnumerator );
-    while( arcs.HasMoreElements() ) 
+  try {
+    var profileRoot = Registry.getKey(Registry.Common, "Profiles");
+    var regEnum = Registry.enumerateSubtrees( profileRoot );
+
+    // the registry class is old and uses sucky nsIEnumerator instead
+    // of nsISimpleEnumerator. We'll rely on a blank profile name to
+    // throw us out of the while loop for now.
+    regEnum.first();
+    while (true)
     {
-      var property = arcs.GetNext().QueryInterface( Components.interfaces.nsIRDFResource );
-      if( property == kRegistry_Subkeys )
-        continue;
-      var propstr = property.Value.substring( REGISTRY_VALUE_PREFIX.length );
-      var target = Registry.GetTarget( currProfile, property, true );
-      var literal = target.QueryInterface( Components.interfaces.nsIRDFLiteral );
-      if( literal ) 
-        var targetstr = literal.Value;
-      else {
-        literal = target.QueryInterface( Components.interfaces.nsIRDFInt )
-        if( literal ) 
-          var targetstr = literal.Value;
-      }
-      if( propstr == "migrated" )
-        var migrated = targetstr;
-      else if( propstr == "directory" )
-        var directory = targetstr;
+      var node = regEnum.currentItem();
+      node = node.QueryInterface(Components.interfaces.nsIRegistryNode);
+
+      if ( node.name == "" )
+        break;
+
+      var migrated = Registry.getString( node.key, "migrated" );
+      var directory = Registry.getString( node.key, "directory" );
+
+      AddItem( "profilekids", new Profile( node.name, directory, migrated ) );
+
+      regEnum.next();
     }
-    var profile = new Profile( profileName, directory, migrated );
-    AddItem( "profilekids", profile );
-  }  
+  }
+  catch (e) {}
 }
+
 
 // function : <profileSelection.js>::onStart();
 // purpose  : starts mozilla given the selected profile (user choice: "Start Mozilla")
