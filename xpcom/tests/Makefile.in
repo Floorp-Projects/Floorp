@@ -107,4 +107,11 @@ LIBS		= \
 
 SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
+EXPORT_RESOURCE = \
+	$(srcdir)/test.properties \
+	$(NULL)
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+
 include $(topsrcdir)/config/rules.mk
