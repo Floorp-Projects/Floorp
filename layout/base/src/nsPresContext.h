@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corporation 
+ * 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
+ *
  */
 #ifndef nsPresContext_h___
 #define nsPresContext_h___
@@ -116,6 +129,8 @@ public:
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
+  NS_IMETHOD GetDefaultDirection(PRUint8* aDirection);
+  NS_IMETHOD SetDefaultDirection(PRUint8 aDirection);
 
 protected:
   nsPresContext();
@@ -153,6 +168,7 @@ protected:
   nsWidgetRendering     mWidgetRenderingMode;
   nsCOMPtr<nsIURI>      mBaseURL;
   PRBool                mStopped;
+  PRUint8               mDefaultDirection;
 
 #ifdef DEBUG
   PRBool                mInitialized;

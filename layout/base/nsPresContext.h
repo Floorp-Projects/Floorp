@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corporation 
+ * 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
+ *
  */
 #ifndef nsIPresContext_h___
 #define nsIPresContext_h___
@@ -292,6 +305,8 @@ public:
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const = 0;
 
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
+  NS_IMETHOD GetDefaultDirection(PRUint8* aDirection) = 0;
+  NS_IMETHOD SetDefaultDirection(PRUint8 aDirection) = 0;
 };
 
 // Bit values for StartLoadImage's aImageStatus
