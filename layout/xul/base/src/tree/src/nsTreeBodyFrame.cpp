@@ -103,7 +103,7 @@
 // Delay (ms) for opening spring-loaded folders.
 static const PRUint32 kOpenDelay = 1000;
 // Delay (ms) for triggering the tree scrolling.
-static const PRUint32 kLazyScrollDelay = 400;
+static const PRUint32 kLazyScrollDelay = 150;
 // Delay (ms) for scrolling the tree.
 static const PRUint32 kScrollDelay = 100;
 
