@@ -63,7 +63,13 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconshared_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxuloutliner_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxulgrid_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifdef MOZ_GRID2
+SHARED_LIBRARY_LIBS += $(DIST)/lib/libgkxulgrid_s.$(LIB_SUFFIX) \
+        $(NULL)
+endif
 
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS += \
