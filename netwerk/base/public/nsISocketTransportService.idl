@@ -56,9 +56,22 @@ interface nsISocketTransportService : nsISupports
      */
     boolean reuseTransport(in nsIChannel i_Transport);
 
-    void init();
+    void init	 ();
     void shutdown();
-    void wakeup(in nsIChannel i_Transport);
+    void wakeup  (in nsIChannel i_Transport);
+
+	/**
+	 * Total number of nsSocketTransport objects currently alive
+	 */
+	readonly attribute unsigned long totalTransportCount;
+	/**
+	 * A number of nsSocketTransport objects with I/O operation currently in-progress
+	 */
+	readonly attribute unsigned long inUseTransportCount;
+	/**
+	 * A number of nsSocketTransport objects connected (this may include keep-alive idle connections)
+	 */
+	readonly attribute unsigned long connectedTransportCount;
 };
 
 %{C++

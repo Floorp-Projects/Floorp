@@ -117,141 +117,143 @@ class nsSocketTransportService;
 class nsIInterfaceRequestor;
 
 class nsSocketTransport : public nsISocketTransport,
-                          public nsIChannel, 
-                          public nsIDNSListener,
-                          public nsIPipeObserver
+public nsIChannel, 
+public nsIDNSListener,
+public nsIPipeObserver
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISOCKETTRANSPORT
-  NS_DECL_NSIREQUEST
-  NS_DECL_NSICHANNEL
-  NS_DECL_NSIPIPEOBSERVER
-  NS_DECL_NSIDNSLISTENER
-
-  // nsSocketTransport methods:
-  nsSocketTransport();
-  virtual ~nsSocketTransport();
-
-  nsresult Init(nsSocketTransportService* aService,
-                const char* aHost, 
-                PRInt32 aPort,
-                const char* aSocketType,
-                const char* aPrintHost, // This host is used for status mesg
-                PRUint32 bufferSegmentSize,
-                PRUint32 bufferMaxSize);
-
-  nsresult Process(PRInt16 aSelectFlags);
-
-  nsresult CheckForTimeout (PRIntervalTime aCurrentTime);
-
-  // Close this socket either right away or once done with the transaction. 
-  nsresult CloseConnection(PRBool bNow=PR_TRUE);
-
-  // Access methods used by the socket transport service...
-  PRFileDesc* GetSocket(void)      { return mSocketFD;    }
-  PRInt16     GetSelectFlags(void) { return mSelectFlags; }
-  PRCList*    GetListNode(void)    { return &mListLink;   }
-
-  static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
-
-  PRBool CanBeReused(void) { return 
-    (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
-
+    NS_DECL_ISUPPORTS
+        NS_DECL_NSISOCKETTRANSPORT
+        NS_DECL_NSIREQUEST
+        NS_DECL_NSICHANNEL
+        NS_DECL_NSIPIPEOBSERVER
+        NS_DECL_NSIDNSLISTENER
+        
+        // nsSocketTransport methods:
+        nsSocketTransport();
+    virtual ~nsSocketTransport();
+    
+    nsresult Init(nsSocketTransportService* aService,
+        const char* aHost, 
+        PRInt32 aPort,
+        const char* aSocketType,
+        const char* aPrintHost, // This host is used for status mesg
+        PRUint32 bufferSegmentSize,
+        PRUint32 bufferMaxSize);
+    
+    nsresult Process(PRInt16 aSelectFlags);
+    
+    nsresult CheckForTimeout (PRIntervalTime aCurrentTime);
+    
+    // Close this socket either right away or once done with the transaction. 
+    nsresult CloseConnection(PRBool bNow=PR_TRUE);
+    
+    // Access methods used by the socket transport service...
+    PRFileDesc* GetSocket(void)      { return mSocketFD;    }
+    PRInt16     GetSelectFlags(void) { return mSelectFlags; }
+    PRCList*    GetListNode(void)    { return &mListLink;   }
+    
+    static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
+    
+    PRBool CanBeReused(void) { return 
+        (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
+    
 protected:
-  nsresult doConnection(PRInt16 aSelectFlags);
-  nsresult doResolveHost(void);
-  nsresult doRead(PRInt16 aSelectFlags);
-  nsresult doWrite(PRInt16 aSelectFlags);
-
-  nsresult doWriteFromBuffer(PRUint32 *aCount);
-  nsresult doWriteFromStream(PRUint32 *aCount);
-
-  nsresult fireStatus(PRUint32 aCode);
-  nsresult GetSocketErrorString(PRUint32 iCode, PRUnichar** oString) const;
-
+    nsresult doConnection(PRInt16 aSelectFlags);
+    nsresult doResolveHost(void);
+    nsresult doRead(PRInt16 aSelectFlags);
+    nsresult doWrite(PRInt16 aSelectFlags);
+    
+    nsresult doWriteFromBuffer(PRUint32 *aCount);
+    nsresult doWriteFromStream(PRUint32 *aCount);
+    
+    nsresult fireStatus(PRUint32 aCode);
+    nsresult GetSocketErrorString(PRUint32 iCode, PRUnichar** oString) const;
+    
 private:
-  PRIntervalTime mSocketTimeout;
-  PRIntervalTime mSocketConnectTimeout;
-
-  // Access methods for manipulating the ReadWriteInfo...
-  inline void SetReadType(nsSocketReadWriteInfo aType) {
-    mReadWriteState = (mReadWriteState & ~eSocketRead_Type_Mask) | aType; 
-  }
-  inline PRUint32 GetReadType(void) {
-    return mReadWriteState & eSocketRead_Type_Mask;
-  }
-  inline void SetWriteType(nsSocketReadWriteInfo aType) {
-    mReadWriteState = (mReadWriteState & ~eSocketWrite_Type_Mask) | aType; 
-  }
-  inline PRUint32 GetWriteType(void) {
-    return mReadWriteState & eSocketWrite_Type_Mask;
-  }
-  inline void SetFlag(nsSocketReadWriteInfo aFlag) { 
-    mReadWriteState |= aFlag;
-  }
-  inline PRUint32 GetFlag(nsSocketReadWriteInfo aFlag) {
-    return mReadWriteState & aFlag;
-  }
-
-  inline void ClearFlag(nsSocketReadWriteInfo aFlag) {
-    mReadWriteState &= ~aFlag;
-  } 
-
+    PRIntervalTime mSocketTimeout;
+    PRIntervalTime mSocketConnectTimeout;
+    
+    // Access methods for manipulating the ReadWriteInfo...
+    inline void SetReadType(nsSocketReadWriteInfo aType) {
+        mReadWriteState = (mReadWriteState & ~eSocketRead_Type_Mask) | aType; 
+    }
+    inline PRUint32 GetReadType(void) {
+        return mReadWriteState & eSocketRead_Type_Mask;
+    }
+    inline void SetWriteType(nsSocketReadWriteInfo aType) {
+        mReadWriteState = (mReadWriteState & ~eSocketWrite_Type_Mask) | aType; 
+    }
+    inline PRUint32 GetWriteType(void) {
+        return mReadWriteState & eSocketWrite_Type_Mask;
+    }
+    inline void SetFlag(nsSocketReadWriteInfo aFlag) { 
+        mReadWriteState |= aFlag;
+    }
+    inline PRUint32 GetFlag(nsSocketReadWriteInfo aFlag) {
+        return mReadWriteState & aFlag;
+    }
+    
+    inline void ClearFlag(nsSocketReadWriteInfo aFlag) {
+        mReadWriteState &= ~aFlag;
+    } 
+    
 protected:
-
-  nsresult                          mCancelStatus;
-  PRBool                            mCloseConnectionOnceDone;
-  nsSocketState                     mCurrentState;
-  nsCOMPtr<nsIRequest>              mDNSRequest;
-  nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
-  nsCOMPtr<nsIProgressEventSink>    mEventSink;
-  char*                             mHostName;
-  PRIntervalTime                    mLastActiveTime;
-  PRCList                           mListLink;
-  PRUint32                          mLoadAttributes;
-  PRMonitor*                        mMonitor;
-  PRNetAddr                         mNetAddress;
-  nsCOMPtr<nsISupports>             mOpenContext;
-  nsCOMPtr<nsIStreamObserver>       mOpenObserver;
-  nsSocketOperation                 mOperation;
-  nsCOMPtr<nsISupports>             mOwner;
-  nsCOMPtr<nsISupports>             mSecurityInfo;
-  PRInt32                           mPort;
-  char*                             mPrintHost; // not the proxy
-  nsCOMPtr<nsISupports>             mReadContext;
-  nsCOMPtr<nsIStreamListener>       mReadListener;
-  nsCOMPtr<nsIBufferInputStream>    mReadPipeIn;
-  nsCOMPtr<nsIBufferOutputStream>   mReadPipeOut;
-  PRUint32                          mReadWriteState;
-  PRInt16                           mSelectFlags;
-  nsSocketTransportService*         mService;
-  PRFileDesc*                       mSocketFD;
-  char*                             mSocketType;
-  PRUint32                          mReadOffset;
-  PRUint32                          mWriteOffset;
-  nsresult                          mStatus;
-  PRInt32                           mSuspendCount;
-  PRInt32                           mWriteCount;
-  nsCOMPtr<nsISupports>             mWriteContext;
-  PRInt32							mBytesExpected;
-  PRUint32                          mReuseCount;
-  PRUint32                          mLastReuseCount;
-
-  // The following four members are used when AsyncWrite(...) is called
-  // with an nsIInputStream which does not also support the
-  // nsIBufferedInputStream interface...
-  //
-  nsCOMPtr<nsIInputStream>          mWriteFromStream;
-  char *                            mWriteBuffer;
-  PRUint32                          mWriteBufferIndex;
-  PRUint32                          mWriteBufferLength;
-
-  nsCOMPtr<nsIStreamObserver>       mWriteObserver;
-  nsCOMPtr<nsIBufferInputStream>    mWritePipeIn;
-  nsCOMPtr<nsIBufferOutputStream>   mWritePipeOut;
-  PRUint32                          mBufferSegmentSize;
-  PRUint32                          mBufferMaxSize;
+    
+    nsresult                        mCancelStatus;
+    PRBool                          mCloseConnectionOnceDone;
+    nsSocketState                   mCurrentState;
+    nsCOMPtr<nsIRequest>            mDNSRequest;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>  mEventSink;
+    char*                           mHostName;
+    PRIntervalTime                  mLastActiveTime;
+    PRCList                         mListLink;
+    PRUint32                        mLoadAttributes;
+    PRMonitor*                      mMonitor;
+    PRNetAddr                       mNetAddress;
+    nsCOMPtr<nsISupports>           mOpenContext;
+    nsCOMPtr<nsIStreamObserver>     mOpenObserver;
+    nsSocketOperation               mOperation;
+    nsCOMPtr<nsISupports>           mOwner;
+    nsCOMPtr<nsISupports>           mSecurityInfo;
+    PRInt32                         mPort;
+    char*                           mPrintHost; // not the proxy
+    nsCOMPtr<nsISupports>           mReadContext;
+    nsCOMPtr<nsIStreamListener>     mReadListener;
+    nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;
+    nsCOMPtr<nsIBufferOutputStream> mReadPipeOut;
+    PRUint32                        mReadWriteState;
+    PRInt16                         mSelectFlags;
+    nsSocketTransportService*       mService;
+    PRFileDesc*                     mSocketFD;
+    char*                           mSocketType;
+    PRUint32                        mReadOffset;
+    PRUint32                        mWriteOffset;
+    nsresult                        mStatus;
+    PRInt32                         mSuspendCount;
+    PRInt32                         mWriteCount;
+    nsCOMPtr<nsISupports>           mWriteContext;
+    PRInt32				            mBytesExpected;
+    PRUint32                        mReuseCount;
+    PRUint32                        mLastReuseCount;
+    
+    // The following four members are used when AsyncWrite(...) is called
+    // with an nsIInputStream which does not also support the
+    // nsIBufferedInputStream interface...
+    //
+    nsCOMPtr<nsIInputStream>        mWriteFromStream;
+    char *                          mWriteBuffer;
+    PRUint32                        mWriteBufferIndex;
+    PRUint32                        mWriteBufferLength;
+    
+    nsCOMPtr<nsIStreamObserver>     mWriteObserver;
+    nsCOMPtr<nsIBufferInputStream>  mWritePipeIn;
+    nsCOMPtr<nsIBufferOutputStream> mWritePipeOut;
+    PRUint32                        mBufferSegmentSize;
+    PRUint32                        mBufferMaxSize;
+    
+    PRBool                          mWasConnected;
 };
 
 

@@ -50,45 +50,48 @@
 class nsSocketTransport;
 
 class nsSocketTransportService : public nsISocketTransportService,
-                                 public nsIRunnable
+public nsIRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISOCKETTRANSPORTSERVICE
-  NS_DECL_NSIRUNNABLE
-
-  // nsSocketTransportService methods:
-  nsSocketTransportService();
-  virtual ~nsSocketTransportService();
-
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-  nsresult AddToWorkQ(nsSocketTransport* aTransport);
-
-  // XXX: Should these use intervals or Milliseconds?
-  nsresult GetSocketTimeoutInterval(PRIntervalTime* aResult);
-  nsresult SetSocketTimeoutInterval(PRIntervalTime  aTime);
-
-  // The following methods are called by the transport thread...
-  nsresult ProcessWorkQ(void);
-
-  nsresult AddToSelectList(nsSocketTransport* aTransport);
-  nsresult RemoveFromSelectList(nsSocketTransport* aTransport);
-
+    NS_DECL_ISUPPORTS
+        NS_DECL_NSISOCKETTRANSPORTSERVICE
+        NS_DECL_NSIRUNNABLE
+        
+        // nsSocketTransportService methods:
+        nsSocketTransportService();
+    virtual ~nsSocketTransportService();
+    
+    static NS_METHOD
+        Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    
+    nsresult AddToWorkQ(nsSocketTransport* aTransport);
+    
+    // XXX: Should these use intervals or Milliseconds?
+    nsresult GetSocketTimeoutInterval(PRIntervalTime* aResult);
+    nsresult SetSocketTimeoutInterval(PRIntervalTime  aTime);
+    
+    // The following methods are called by the transport thread...
+    nsresult ProcessWorkQ(void);
+    
+    nsresult AddToSelectList(nsSocketTransport* aTransport);
+    nsresult RemoveFromSelectList(nsSocketTransport* aTransport);
+    
+    PRInt32   mConnectedTransports;
+    PRInt32   mTotalTransports;
+    
 protected:
-  nsIThread*            mThread;
+    nsIThread*            mThread;
 #ifdef USE_POLLABLE_EVENT
-  PRFileDesc*           mThreadEvent;
+    PRFileDesc*           mThreadEvent;
 #endif /* USE_POLLABLE_EVENT */
-  PRLock*               mThreadLock;
-  PRBool                mThreadRunning;
-
-  PRCList               mWorkQ;
-
-  PRInt32               mSelectFDSetCount;
-  PRPollDesc*           mSelectFDSet;
-  nsSocketTransport**   mActiveTransportList;
+    PRLock*               mThreadLock;
+    PRBool                mThreadRunning;
+    
+    PRCList               mWorkQ;
+    
+    PRInt32               mSelectFDSetCount;
+    PRPollDesc*           mSelectFDSet;
+    nsSocketTransport**   mActiveTransportList;
 };
 
 
