@@ -574,7 +574,17 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         case nsMsgSearchAttrib::Subject:
           {
             msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
-            err = pTerm->MatchRfc2047String (matchString, charset, charsetOverride, &result);
+
+            if (msgFlags & MSG_FLAG_HAS_RE)
+            { 
+              // Make sure we pass along the "Re: " part of the subject if this is a reply.
+              nsXPIDLCString reString;
+              reString.Assign("Re: ");
+              reString.Append(matchString);
+              err = pTerm->MatchRfc2047String(reString, charset, charsetOverride, &result);
+            }
+            else
+              err = pTerm->MatchRfc2047String (matchString, charset, charsetOverride, &result);
           }
           break;
         case nsMsgSearchAttrib::ToOrCC:
