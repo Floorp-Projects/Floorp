@@ -35,6 +35,7 @@
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
 #include "nsForwardReference.h"
+#include "nsXPIDLString.h"
 #include "nsXULAttributes.h"
 #include "nsIXULPopupListener.h"
 #include "nsIHTMLContentContainer.h"
@@ -56,6 +57,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPrincipal.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFNode.h"
@@ -71,6 +73,7 @@
 #include "nsStyleConsts.h"
 #include "nsIStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
 #include "nsIStyleContext.h"
@@ -86,6 +89,7 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "nsHTMLValue.h"
+#include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
 
 #include "nsIControllers.h"
 
@@ -135,84 +139,84 @@ static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
 
 struct XULBroadcastListener
 {
-	nsVoidArray* mAttributeList;
-	nsIDOMElement* mListener;
+    nsVoidArray* mAttributeList;
+    nsIDOMElement* mListener;
 
-	XULBroadcastListener(const nsString& aAttribute, nsIDOMElement* aListener)
-	: mAttributeList(nsnull)
-	{
-    mListener = aListener; // WEAK REFERENCE
-    if (aAttribute != "*") {
-      mAttributeList = new nsVoidArray();
-      mAttributeList->AppendElement((void*)(new nsString(aAttribute)));
-    }
-
-    // For the "*" case we leave the attribute list nulled out, and this means
-    // we're observing all attribute changes.
-	}
-
-  ~XULBroadcastListener()
-  {
-    // Release all the attribute strings.
-    if (mAttributeList) {
-      PRInt32 count = mAttributeList->Count();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsString* str = (nsString*)(mAttributeList->ElementAt(i));
-        delete str;
-      }
-
-      delete mAttributeList;
-    }
-  }
-
-  PRBool IsEmpty()
-  {
-    if (ObservingEverything())
-      return PR_FALSE;
-
-    PRInt32 count = mAttributeList->Count();
-    return (count == 0);
-  }
-
-  void RemoveAttribute(const nsString& aString)
-  {
-    if (ObservingEverything())
-      return;
-
-    if (mAttributeList) {
-      PRInt32 count = mAttributeList->Count();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsString* str = (nsString*)(mAttributeList->ElementAt(i));
-        if (*str == aString) {
-          mAttributeList->RemoveElementAt(i);
-          delete str;
-          break;
+    XULBroadcastListener(const nsString& aAttribute, nsIDOMElement* aListener)
+    : mAttributeList(nsnull)
+    {
+        mListener = aListener; // WEAK REFERENCE
+        if (aAttribute != "*") {
+            mAttributeList = new nsVoidArray();
+            mAttributeList->AppendElement((void*)(new nsString(aAttribute)));
         }
-      }
-    }
-  }
 
-  PRBool ObservingEverything()
-  {
-    return (mAttributeList == nsnull);
-  }
-
-  PRBool ObservingAttribute(const nsString& aString)
-  {
-    if (ObservingEverything())
-      return PR_TRUE;
-
-    if (mAttributeList) {
-      PRInt32 count = mAttributeList->Count();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsString* str = (nsString*)(mAttributeList->ElementAt(i));
-        if (*str == aString)
-          return PR_TRUE;
-      }
+        // For the "*" case we leave the attribute list nulled out, and this means
+        // we're observing all attribute changes.
     }
 
-    return PR_FALSE;
-  }
+    ~XULBroadcastListener()
+    {
+        // Release all the attribute strings.
+        if (mAttributeList) {
+            PRInt32 count = mAttributeList->Count();
+            for (PRInt32 i = 0; i < count; i++) {
+                nsString* str = (nsString*)(mAttributeList->ElementAt(i));
+                delete str;
+            }
+
+            delete mAttributeList;
+        }
+    }
+
+    PRBool IsEmpty()
+    {
+        if (ObservingEverything())
+            return PR_FALSE;
+
+        PRInt32 count = mAttributeList->Count();
+        return (count == 0);
+    }
+
+    void RemoveAttribute(const nsString& aString)
+    {
+        if (ObservingEverything())
+            return;
+
+        if (mAttributeList) {
+            PRInt32 count = mAttributeList->Count();
+            for (PRInt32 i = 0; i < count; i++) {
+                nsString* str = (nsString*)(mAttributeList->ElementAt(i));
+                if (*str == aString) {
+                    mAttributeList->RemoveElementAt(i);
+                    delete str;
+                    break;
+                }
+            }
+        }
+    }
+
+    PRBool ObservingEverything()
+    {
+        return (mAttributeList == nsnull);
+    }
+
+    PRBool ObservingAttribute(const nsString& aString)
+    {
+        if (ObservingEverything())
+            return PR_TRUE;
+
+        if (mAttributeList) {
+            PRInt32 count = mAttributeList->Count();
+            for (PRInt32 i = 0; i < count; i++) {
+                nsString* str = (nsString*)(mAttributeList->ElementAt(i));
+                if (*str == aString)
+                    return PR_TRUE;
+            }
+        }
+
+        return PR_FALSE;
+    }
 };
 
 //----------------------------------------------------------------------
@@ -1575,15 +1579,14 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         // Release the named reference to the script object so it can
         // be garbage collected.
         if (mScriptObject) {
-            nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-            if (nsnull != owner) {
-                nsIScriptContext *context;
-                if (NS_OK == owner->GetScriptContext(&context)) {
+            nsCOMPtr<nsIScriptContextOwner> owner =
+                dont_AddRef( mDocument->GetScriptContextOwner() );
+            if (owner) {
+                nsCOMPtr<nsIScriptContext> context;
+                if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
                     context->RemoveReference((void*) &mScriptObject, mScriptObject);
 
-                    NS_RELEASE(context);
                 }
-                NS_RELEASE(owner);
             }
         }
     }
@@ -1593,10 +1596,11 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     if (mDocument) {
         // Add a named reference to the script object.
         if (mScriptObject) {
-            nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-            if (nsnull != owner) {
-                nsIScriptContext *context;
-                if (NS_OK == owner->GetScriptContext(&context)) {
+            nsCOMPtr<nsIScriptContextOwner> owner =
+                dont_AddRef( mDocument->GetScriptContextOwner() );
+            if (owner) {
+                nsCOMPtr<nsIScriptContext> context;
+                if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
                     nsAutoString tag;
                     Tag()->ToString(tag);
 
@@ -1609,10 +1613,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
                     if (p != buf)
                         nsCRT::free(p);
-
-                    NS_RELEASE(context);
                 }
-                NS_RELEASE(owner);
             }
         }
     }
@@ -2014,8 +2015,8 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
         rv = EnsureSlots();
         if (NS_FAILED(rv)) return rv;
 
-		// Since EnsureSlots() may have triggered mSlots->mAttributes construction,
-		// we need to check _again_ before creating attributes.
+        // Since EnsureSlots() may have triggered mSlots->mAttributes construction,
+        // we need to check _again_ before creating attributes.
         if (! Attributes()) {
             rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &(mSlots->mAttributes));
             if (NS_FAILED(rv)) return rv;
@@ -2562,13 +2563,15 @@ nsXULElement::HandleDOMEvent(nsIPresContext& aPresContext,
   
     // Node capturing stage
     if (NS_EVENT_FLAG_BUBBLE != aFlags) {
-      if(mParent) {
-        // Pass off to our parent.
-        mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      } else if (mDocument != nsnull)
+        if (mParent) {
+            // Pass off to our parent.
+            mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                    NS_EVENT_FLAG_CAPTURE, aEventStatus);
+        }
+        else if (mDocument != nsnull) {
             ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                             NS_EVENT_FLAG_CAPTURE, aEventStatus);
+        }
     }
     
 
@@ -2660,7 +2663,7 @@ nsXULElement::GetRangeList(nsVoidArray*& aResult) const
 NS_IMETHODIMP
 nsXULElement::DoCommand()
 {
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2721,7 +2724,7 @@ nsXULElement::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElemen
 
     return NS_OK; 
 }
-	
+
 
 NS_IMETHODIMP
 nsXULElement::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
@@ -2732,7 +2735,7 @@ nsXULElement::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anEle
         for (PRInt32 i = 0; i < count; i++) {
             XULBroadcastListener* xulListener =
                 NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
-		
+
             if (xulListener->mListener == anElement) {
                 if (xulListener->ObservingEverything() || attr == "*") { 
                     // Do the removal.
@@ -3322,102 +3325,104 @@ nsXULElement::IsFocusableContent()
 NS_IMETHODIMP 
 nsXULElement::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
-  nsresult rv = NS_OK;
-  aSheet = nsnull;
-  if (mDocument) {
-    nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(mDocument);
-    if (container) {
-      nsCOMPtr<nsIHTMLStyleSheet> htmlStyleSheet;
-      rv = container->GetAttributeStyleSheet(getter_AddRefs(htmlStyleSheet));
-      if (NS_FAILED(rv))
-        return rv;
-      nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(htmlStyleSheet);
-      aSheet = styleSheet;
-      NS_IF_ADDREF(aSheet);
+    nsresult rv = NS_OK;
+    aSheet = nsnull;
+    if (mDocument) {
+        nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(mDocument);
+        if (container) {
+            nsCOMPtr<nsIHTMLStyleSheet> htmlStyleSheet;
+            rv = container->GetAttributeStyleSheet(getter_AddRefs(htmlStyleSheet));
+            if (NS_FAILED(rv))
+                return rv;
+            nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(htmlStyleSheet);
+            aSheet = styleSheet;
+            NS_IF_ADDREF(aSheet);
+        }
     }
-  }
-  return rv;
+    return rv;
 }
 
 NS_IMETHODIMP 
 nsXULElement::GetStrength(PRInt32& aStrength) const
 {
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  if (Tag() == kTreeColAtom) {
-    // Should only get called if we had a width attribute set. Retrieve it.
-    nsAutoString widthVal;
-    GetAttribute("width", widthVal);
-    if (widthVal != "") {
-      PRInt32 intVal;
-      float floatVal;
-      nsHTMLUnit unit = eHTMLUnit_Null;
-      if (ParseNumericValue(widthVal, intVal, floatVal, unit)) {
-        // Success. Update the width for the style context.
-        nsStylePosition* position = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
-        switch (unit) {
-          case eHTMLUnit_Percent:
-            position->mWidth.mUnit = eStyleUnit_Percent;
-            position->mWidth.mValue.mFloat = floatVal;
-            break;
+    if (Tag() == kTreeColAtom) {
+        // Should only get called if we had a width attribute set. Retrieve it.
+        nsAutoString widthVal;
+        GetAttribute("width", widthVal);
+        if (widthVal != "") {
+            PRInt32 intVal;
+            float floatVal;
+            nsHTMLUnit unit = eHTMLUnit_Null;
+            if (ParseNumericValue(widthVal, intVal, floatVal, unit)) {
+                // Success. Update the width for the style context.
+                nsStylePosition* position = (nsStylePosition*)
+                aContext->GetMutableStyleData(eStyleStruct_Position);
+                switch (unit) {
+                  case eHTMLUnit_Percent:
+                    position->mWidth.mUnit = eStyleUnit_Percent;
+                    position->mWidth.mValue.mFloat = floatVal;
+                    break;
 
-          case eHTMLUnit_Pixel:
-            float p2t;
-            aPresContext->GetScaledPixelsToTwips(&p2t);
-            position->mWidth.mUnit = eStyleUnit_Coord;
-            position->mWidth.mValue.mInt = NSIntPixelsToTwips(intVal, p2t);
-            break;
+                  case eHTMLUnit_Pixel:
+                    float p2t;
+                    aPresContext->GetScaledPixelsToTwips(&p2t);
+                    position->mWidth.mUnit = eStyleUnit_Coord;
+                    position->mWidth.mValue.mInt = NSIntPixelsToTwips(intVal, p2t);
+                    break;
 
-          case eHTMLUnit_Proportional:
-            position->mWidth.mUnit = eStyleUnit_Proportional;
-            position->mWidth.mValue.mInt = intVal;
-            break;
-          default:
-            break;
+                  case eHTMLUnit_Proportional:
+                    position->mWidth.mUnit = eStyleUnit_Proportional;
+                    position->mWidth.mValue.mInt = intVal;
+                    break;
+                  default:
+                    break;
+                }
+            }
         }
-      }
     }
-  }
-      
-  return NS_OK;
+        
+    return NS_OK;
 }
 
 PRBool
 nsXULElement::ParseNumericValue(const nsString& aString,
-                                  PRInt32& aIntValue,
-                                  float& aFloatValue,
-                                  nsHTMLUnit& aValueUnit)
+                                PRInt32& aIntValue,
+                                float& aFloatValue,
+                                nsHTMLUnit& aValueUnit)
 {
-  nsAutoString tmp(aString);
-  tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-  PRInt32 ec, val = tmp.ToInteger(&ec);
-  if (NS_OK == ec) {
-    if (val < 0) val = 0;
-    if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
-      if (val > 100) val = 100;
-      aFloatValue = (float(val)/100.0f);
-      aValueUnit = eHTMLUnit_Percent;
-	  } else if (tmp.Last() == '*') {
-      aIntValue = val;
-      aValueUnit = eHTMLUnit_Proportional;
-    } else {
-      aIntValue = val;
-      aValueUnit = eHTMLUnit_Pixel;
+    nsAutoString tmp(aString);
+    tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+    PRInt32 ec, val = tmp.ToInteger(&ec);
+    if (NS_OK == ec) {
+        if (val < 0) val = 0;
+        if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+            if (val > 100) val = 100;
+            aFloatValue = (float(val)/100.0f);
+            aValueUnit = eHTMLUnit_Percent;
+        }
+        else if (tmp.Last() == '*') {
+            aIntValue = val;
+            aValueUnit = eHTMLUnit_Proportional;
+        }
+        else {
+            aIntValue = val;
+            aValueUnit = eHTMLUnit_Pixel;
+        }
+        return PR_TRUE;
     }
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+    return PR_FALSE;
 }
 
 
@@ -3580,3 +3585,63 @@ nsXULPrototypeElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsStri
     return NS_CONTENT_ATTR_NOT_THERE;
 }
 
+
+nsXULPrototypeScript::nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion)
+    : nsXULPrototypeNode(eType_Script, aLineNo),
+      mSrcLoading(PR_FALSE),
+      mSrcLoadWaiters(nsnull),
+      mScriptRuntime(nsnull),
+      mScriptObject(nsnull),
+      mLangVersion(aVersion)
+{
+    MOZ_COUNT_CTOR(nsXULPrototypeScript);
+}
+
+
+nsXULPrototypeScript::~nsXULPrototypeScript()
+{
+    if (mScriptRuntime)
+        JS_RemoveRootRT(mScriptRuntime, &mScriptObject);
+    MOZ_COUNT_DTOR(nsXULPrototypeScript);
+}
+
+
+nsresult
+nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
+                              nsIURI* aURI, PRInt32 aLineNo,
+                              nsIDocument* aDocument)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIScriptContextOwner> owner =
+        dont_AddRef( aDocument->GetScriptContextOwner() );
+
+    NS_ASSERTION(owner != nsnull, "document has no script context owner");
+    if (!owner) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsCOMPtr<nsIScriptContext> context;
+    rv = owner->GetScriptContext(getter_AddRefs(context));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mScriptRuntime) {
+        JSContext *cx = (JSContext*) context->GetNativeContext();
+        if (!cx)
+            return NS_ERROR_UNEXPECTED;
+        if (!JS_AddNamedRoot(cx, &mScriptObject, "mScriptObject"))
+            return NS_ERROR_OUT_OF_MEMORY;
+        mScriptRuntime = JS_GetRuntime(cx);
+    }
+
+    nsCOMPtr<nsIPrincipal> principal =
+        dont_AddRef(aDocument->GetDocumentPrincipal());
+
+    nsXPIDLCString urlspec;
+    aURI->GetSpec(getter_Copies(urlspec));
+
+    rv = context->CompileScript(aText, aTextLength, nsnull,
+                                principal, urlspec, aLineNo, mLangVersion,
+                                (void**) &mScriptObject);
+    return rv;
+}

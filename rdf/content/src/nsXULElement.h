@@ -158,23 +158,26 @@ public:
     nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aValue);
 };
 
+struct JSRuntime;
+struct JSObject;
+class nsXULDocument;
+
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion)
-        : nsXULPrototypeNode(eType_Script, aLineNo), mVersion(aVersion)
-    {
-        MOZ_COUNT_CTOR(nsXULPrototypeScript);
-    }
+    nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion);
+    virtual ~nsXULPrototypeScript();
 
-    virtual ~nsXULPrototypeScript()
-    {
-        MOZ_COUNT_DTOR(nsXULPrototypeScript);
-    }
+    nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
+                     nsIURI* aURI, PRInt32 aLineNo,
+                     nsIDocument* aDocument);
 
     nsCOMPtr<nsIURI>         mSrcURI;
-    nsString                 mInlineScript;
-    const char*              mVersion;
+    PRBool                   mSrcLoading;
+    nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
+    JSRuntime*               mScriptRuntime;    // XXX use service, save space?
+    JSObject*                mScriptObject;
+    const char*              mLangVersion;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode

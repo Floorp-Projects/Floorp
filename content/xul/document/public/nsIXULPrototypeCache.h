@@ -50,9 +50,6 @@ public:
     NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result) = 0;
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
 
-    NS_IMETHOD GetScript(nsIURI* aURI, nsString& aScript, const char** aVersion) = 0;
-    NS_IMETHOD PutScript(nsIURI* aURI, const nsString& aScript, const char* aVersion) = 0;
-
     /**
      * Flush the cache; remove all XUL prototype documents, style
      * sheets, and scripts.
