@@ -676,7 +676,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   unsigned readWidth, readHeight, destX, destY;
 
   if ((aY>=(int)surfaceHeight) || (aX>=(int)surfaceWidth) ||
-      (aY+aHeight<0) || (aX+aWidth<0)) {
+      (aY+aHeight<=0) || (aX+aWidth<=0)) {
     // This should never happen if the layout engine is sane,
     // as it means we're trying to draw an image which is outside
     // the drawing surface.  Bulletproof gfx for now...
