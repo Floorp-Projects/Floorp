@@ -55,7 +55,6 @@ toolbarbutton.bookmark-item {
 
 .bookmark-item:hover,
 .bookmark-item:hover:active {
-  text-decoration: underline;
   color: black !important;
 }
 
