@@ -42,11 +42,11 @@ public:
 	DECLARE_MESSAGE_MAP()
 private:
 
-/*
+
 	BOOL m_bATLInited;
 private:
 	BOOL InitATL();
-*/
+
 };
 
 

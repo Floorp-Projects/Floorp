@@ -124,6 +124,11 @@ BOOL CBrowseDlg::OnInitDialog()
 		HTREEITEM hParent = m_tcTests.InsertItem(pTestSet->szName, IL_CLOSEDFOLDER, IL_CLOSEDFOLDER);
 		m_tcTests.SetItemData(hParent, (DWORD) pTestSet);
 
+		if (pTestSet->pfnPopulator)
+		{
+			pTestSet->pfnPopulator(pTestSet);
+		}
+
 		for (int j = 0; j < pTestSet->nTests; j++)
 		{
 			Test *pTest = &pTestSet->aTests[j];

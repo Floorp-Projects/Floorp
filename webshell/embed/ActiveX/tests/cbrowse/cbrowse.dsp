@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /FR /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
@@ -134,6 +134,10 @@ SOURCE=.\StdAfx.cpp
 
 SOURCE=.\Tests.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\TestScriptHelper.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -145,6 +149,10 @@ SOURCE=..\..\ActiveScriptSite.h
 # Begin Source File
 
 SOURCE=.\cbrowse.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Cbrowse_i.h
 # End Source File
 # Begin Source File
 
@@ -173,6 +181,10 @@ SOURCE=.\StdAfx.h
 # Begin Source File
 
 SOURCE=.\Tests.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TestScriptHelper.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -218,6 +230,10 @@ SOURCE=.\Cbrowse.rgs
 # Begin Source File
 
 SOURCE=.\ReadMe.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\TestScriptHelper.rgs
 # End Source File
 # End Target
 # End Project

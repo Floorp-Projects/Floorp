@@ -5,6 +5,18 @@
 // produce the type library (Cbrowse.tlb) and marshalling code.
 import "oaidl.idl";
 import "ocidl.idl";
+	[
+		object,
+		uuid(95AF1AB1-FA66-11D2-A284-000000000000),
+		dual,
+		helpstring("DITestScriptHelper Interface"),
+		pointer_default(unique)
+	]
+	interface DITestScriptHelper : IDispatch
+	{
+		[id(1), helpstring("method OutputString")] HRESULT OutputString(BSTR bstrMessage);
+		[propget, id(2), helpstring("property WebBrowser")] HRESULT WebBrowser([out, retval] LPDISPATCH *pVal);
+	};
 [
 	uuid(5B209213-F756-11D2-A27F-000000000000),
 	version(1.0),
@@ -14,6 +26,14 @@ library CbrowseLib
 {
 	importlib("stdole32.tlb");
 	importlib("stdole2.tlb");
+	[
+		uuid(95AF1AB2-FA66-11D2-A284-000000000000),
+		helpstring("TestScriptHelper Class")
+	]
+	coclass TestScriptHelper
+	{
+		[default] interface DITestScriptHelper;
+	};
 };
 
 	

@@ -19,7 +19,9 @@
 #include "stdafx.h"
 
 #include "resource.h"
+#include "Cbrowse.h"
 #include "CBrowseDlg.h"
+#include "TestScriptHelper.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -321,18 +323,39 @@ TestResult __cdecl tstNavigate2(BrowserInfo &cInfo)
 
 TestResult __cdecl tstScriptTest(BrowserInfo &cInfo)
 {
+	CTestScriptHelperInstance *pHelper = NULL;
+	CTestScriptHelperInstance::CreateInstance(&pHelper);
+
+
+	pHelper->m_pBrowserInfo = &cInfo;
+
 	CActiveScriptSiteInstance *pSite = NULL;
 	CActiveScriptSiteInstance::CreateInstance(&pSite);
-	
-	if (pSite)
-	{
-		pSite->AddRef();
-		pSite->AttachVBScript();
-		pSite->ParseScriptText(_T("i=1"));
-		pSite->PlayScript();
-		pSite->Release();
-	}
+
+	TCHAR *szTestScript = _T("OutputString \"Navigation test\"\n"
+		                     "WebBrowser.Navigate \"http://www.yahoo.com\"\n");
+
+
+	pSite->AddRef();
+	pSite->AttachVBScript();
+	pSite->AddNamedObject(_T("BrowserInfo"), pHelper, TRUE);
+	pSite->ParseScriptText(szTestScript);
+	pSite->PlayScript();
+	pSite->Release();
+
 	return trPassed;
+}
+
+Test aScripts[] =
+{
+	{ _T("Script test"), _T("Test that the scripting engine is sane"), tstScriptTest }
+};
+
+
+void __cdecl ScriptSetPopulator(TestSet *pTestSet)
+{
+	pTestSet->nTests = 1;
+	pTestSet->aTests = aScripts;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -363,18 +386,13 @@ Test aOther[] =
 	{ _T("Print Page"), _T("Print the test URL page"), NULL }
 };
 
-Test aScripts[] =
-{
-	{ _T("Script test"), _T("Test that the scripting engine is sane"), tstScriptTest }
-};
-
 TestSet aTestSets[] =
 {
-	{ _T("Basic"), _T("Basic sanity tests"), 5, aBasic },
-	{ _T("Browsing"), _T("Browsing and navigation tests"), 1, aBrowsing },
-	{ _T("DHTML"), _T("Test the DOM"), 3, aDHTML },
-	{ _T("Other"), _T("Other tests"), 1, aOther },
-	{ _T("Scripts"), _T("Script tests"), 1, aScripts }
+	{ _T("Basic"), _T("Basic sanity tests"), 5, aBasic, NULL },
+	{ _T("Browsing"), _T("Browsing and navigation tests"), 1, aBrowsing , NULL},
+	{ _T("DHTML"), _T("Test the DOM"), 3, aDHTML, NULL },
+	{ _T("Other"), _T("Other tests"), 1, aOther, NULL },
+	{ _T("Scripts"), _T("Script tests"), 0, NULL, ScriptSetPopulator }
 };
 
 int nTestSets = sizeof(aTestSets) / sizeof(aTestSets[0]);

@@ -56,15 +56,17 @@ struct Test
 	TestResult nLastResult;
 };
 
+struct TestSet;
+typedef void (__cdecl *SetPopulatorProc)(TestSet *pTestSet);
+
 struct TestSet
 {
 	TCHAR *szName;
 	TCHAR *szDesc;
 	int    nTests;
 	Test  *aTests;
+	SetPopulatorProc pfnPopulator;
 };
-
-
 
 extern TestSet aTestSets[];
 extern int nTestSets;
