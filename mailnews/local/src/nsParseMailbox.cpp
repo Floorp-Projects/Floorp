@@ -1370,7 +1370,7 @@ int nsParseMailMessageState::FinalizeHeaders()
           PRTime resultTime;
           PRStatus timeStatus = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
           if (PR_SUCCESS == timeStatus)
-            m_newMsgHdr->SetDate(nsTime(resultTime));
+            m_newMsgHdr->SetDate(resultTime);
         }
         if (priority)
           m_newMsgHdr->SetPriorityString(priority->value);
