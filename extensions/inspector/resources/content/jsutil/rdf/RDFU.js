@@ -83,7 +83,7 @@ var RDFU = {
   {
   	try {
       var res = gRDF.GetResource(aResName);
-      seq = this.makeSeq(aDS, res);
+      var seq = this.makeSeq(aDS, res);
     } catch (ex) { 
       alert("Unable to find sequence:" + ex); 
     }
