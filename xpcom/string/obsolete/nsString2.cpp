@@ -2281,6 +2281,12 @@ nsAutoString::nsAutoString() : nsString() {
   AddNullTerminator(*this);
 }
 
+nsAutoString::nsAutoString(const PRUnichar* aString) : nsString() {
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  AddNullTerminator(*this);
+  Append(aString);
+}
+
 /**
  * Copy construct from uni-string
  * @param   aString is a ptr to a unistr

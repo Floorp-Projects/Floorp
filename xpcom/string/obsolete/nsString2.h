@@ -908,7 +908,8 @@ public:
     nsAutoString();
     nsAutoString(const nsAutoString& aString);
     nsAutoString(const nsString& aString);
-    nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
+    nsAutoString(const PRUnichar* aString);
+    nsAutoString(const PRUnichar* aString,PRInt32 aLength);
     nsAutoString(PRUnichar aChar);
     nsAutoString(const CBufDescriptor& aBuffer);    
 
