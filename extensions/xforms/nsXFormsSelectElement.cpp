@@ -342,6 +342,8 @@ nsXFormsSelectElement::Refresh()
       childNode = do_QueryElementAt(childContent, j);
       mSelect->AppendChild(childNode, getter_AddRefs(nodeReturn));
     }
+    // Deselect all of the options.  We'll resync with our bound node below.
+    mSelect->SetSelectedIndex(-1);
   }
 
   nsCOMPtr<nsIDOMNode> modelNode;
