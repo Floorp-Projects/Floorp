@@ -156,24 +156,26 @@ void CParserContext::SetMimeType(const nsString& aMimeType){
 
   Here are the new rules for DTD handling; comments welcome:
 
-       - strict dtd's enable strict-mode (and naturally our strict DTD):
-            - example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
-            - example: <!DOCTYPE \"ISO/IEC 15445:1999//DTD HTML//EN\">
+       XHTML and XML documents are always strict-mode:
+            example:  <!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">
 
-       - XHTML and XML documents are always strict:
-            - example:  <!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">
+       HTML strict dtd's enable strict-mode:
+            example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+            example: <!DOCTYPE \"ISO/IEC 15445:1999//DTD HTML//EN\">
 
-       - transitional, frameset, etc. without URI enables compatibility-mode:
-            - example: <!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">
+       HTML 4.0 (or greater) transitional, frameset, (etc), without URI enables compatibility-mode:
+            example: <!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">
 
-          - unless the URI points to the strict.dtd, then we use strict:
-            -  example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+       HTML 4.0 (or greater) transitional, frameset, (etc), with a URI that points to the strict.dtd will become strict:
+            example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" 
+            "http://www.w3.org/TR/REC-html40/strict.dtd">
 
-       - doctypes with systemID's or internal subset are handled in strict:
-            - example: <!DOCTYPE HTML PUBLIC PublicID SystemID>
-            - example: <!DOCTYPE HTML (PUBLIC PublicID SystemID? | SYSTEM SystemID) [ Internal-SS ]>
+       doctypes with systemID's or internal subset are handled in strict-mode:
+            example: <!DOCTYPE HTML PUBLIC PublicID SystemID>
+            example: <!DOCTYPE HTML SYSTEM SystemID>
+            example: <!DOCTYPE HTML (PUBLIC PublicID SystemID? | SYSTEM SystemID) [ Internal-SS ]>
 
-       - all other doctypes are handled in compatibility-mode
+       All other doctypes (<4.0), and documents without a doctype are handled in compatibility-mode.
 
 *****************************************************************************************************/
  
@@ -212,7 +214,7 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
         if(0<=theSubIndex) {
           mDocType=eXHTMLText;
           mParseMode=eParseMode_strict;
-          theMajorVersion=1;
+          return mParseMode;
         }
         else {
           theSubIndex=theBuffer.Find("ISO/IEC 15445:",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
@@ -250,12 +252,16 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
 
       theStartPos=theBuffer.FindCharInSet("123456789",theStartPos);
       if(0<=theStartPos) {
-        theBuffer.Mid(theNum,theStartPos-1,3);
+        PRInt32 theTerminal=theBuffer.FindCharInSet(" />",theStartPos+1);
+        if(theTerminal) {
+          theBuffer.Mid(theNum,theStartPos,theTerminal-theStartPos);
+        }
+        else theBuffer.Mid(theNum,theStartPos,3);
         theMajorVersion=theNum.ToInteger(&theErr);
       }
 
       //now see what the
-      theStartPos+=3;
+      theStartPos+=theNum.Length();
       theCount=theEnd-theStartPos;
       if((theBuffer.Find("TRANSITIONAL",PR_TRUE,theStartPos,theCount)>kNotFound)||
          (theBuffer.Find("LOOSE",PR_TRUE,theStartPos,theCount)>kNotFound)       ||
@@ -276,23 +282,23 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
         mDocType=eHTML4Text;
       }
 
-      if(eXHTMLText!=mDocType) {
-        if (0==theErr){
-          switch(theMajorVersion) {
-            case 0: case 1: case 2: case 3:
-              if(mDocType!=eXHTMLText){
-                mParseMode=eParseMode_quirks; //be as backward compatible as possible
-                mDocType=eHTML3Text;
-              }
-              break;
-    
-            default:
-              if(5<theMajorVersion) {
-                mParseMode=eParseMode_noquirks;
-              }
-              break;
-          } //switch
-        }
+      if (0==theErr){
+        switch(theMajorVersion) {
+          case 0: case 1: case 2: case 3:
+            if(mDocType!=eXHTMLText){
+              mParseMode=eParseMode_quirks; //be as backward compatible as possible
+              mDocType=eHTML3Text;
+            }
+            break;
+  
+          default:
+              //XXX hack -- someday, the next line of code will be criticized 
+              //for it's lack of vision...
+            if(theMajorVersion>20) {
+              mParseMode=eParseMode_noquirks;
+            }
+            break;
+        } //switch
       }
  
     } //if
