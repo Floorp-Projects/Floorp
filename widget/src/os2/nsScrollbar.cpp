@@ -357,4 +357,7 @@ NS_METHOD nsScrollbar::GetBounds(nsRect &aRect)
   return nsWindow::GetBounds(aRect);
 }
 
-
+PRBool nsScrollbar::OnPaint()
+{
+   return PR_FALSE;
+}

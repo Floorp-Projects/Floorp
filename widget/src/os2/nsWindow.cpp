@@ -47,6 +47,7 @@
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
+#include "nsIRenderingContextOS2.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
@@ -2229,9 +2230,32 @@ PRBool nsWindow::OnReposition( PSWP pSwp)
    return result;
 }
 
+// Realize-palette.  I reckon only top-level windows get the message, so
+// there's code in frame to broadcast it to children.
 PRBool nsWindow::OnRealizePalette()
 {
-   return PR_FALSE;
+   PRBool rc = PR_FALSE;
+
+#ifdef COLOR_256
+   // Get palette info from device 
+   nsPaletteInfo palInfo;
+   mContext->GetPaletteInfo( palInfo);
+
+   if( mPS && palInfo.isPaletteDevice && palInfo.palette)
+   {
+      // An onscreen nsDrawingSurface has been created for the window,
+      // and we have a palette.  So realize it.
+      ULONG cclr;
+      long palrc = WinRealizePalette( mWnd, mPS, &cclr);
+      if( palrc && palrc != PAL_ERROR)
+         // Colours have changed, redraw.
+         WinInvalidateRect( mWnd, 0, FALSE);
+
+      rc = PR_TRUE;
+   }
+#endif
+
+   return rc;
 }
 
 PRBool nsWindow::OnPresParamChanged( MPARAM mp1, MPARAM mp2)
@@ -2324,7 +2348,89 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnPaint()
 {
-   return PR_FALSE;
+   PRBool rc = PR_FALSE;
+
+   if( mContext && (mEventCallback || mEventListener))
+   {
+      // Get rect to redraw and validate window
+      RECTL rcl = { 0 };
+
+      HPS hPS = WinBeginPaint(mWnd, NULLHANDLE, &rcl); 
+     
+      // XXX What is this check doing? If it's trying to check for an empty
+      // paint rect then use the IsRectEmpty() function...
+      if (rcl.xLeft || rcl.xRight || rcl.yTop || rcl.yBottom)
+      {
+          // call the event callback 
+          if (mEventCallback) 
+          {
+     
+              nsPaintEvent event;
+     
+              InitEvent(event, NS_PAINT);
+     
+              // build XP rect from in-ex window rect
+              nsRect rect;
+              rect.x = rcl.xLeft;
+              rect.y = GetClientHeight() - rcl.yTop;
+              rect.width = rcl.xRight - rcl.xLeft;
+              rect.height = rcl.yTop - rcl.yBottom;
+              event.rect = &rect;
+              event.eventStructType = NS_PAINT_EVENT;
+     
+#ifdef NS_DEBUG
+          debug_DumpPaintEvent(stdout,
+                               this,
+                               &event,
+                               nsCAutoString("noname"),
+                               (PRInt32) mWnd);
+#endif // NS_DEBUG
+
+              nsresult  res;
+             
+              static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+             
+              if( NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
+                                                       NS_GET_IID(nsIRenderingContext),
+                                                       (void **)&event.renderingContext) )
+              {
+                 nsIRenderingContextOS2 *winrc;
+
+                 if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextOS2), (void **)&winrc))
+                 {
+                    nsDrawingSurface surf;
+                   
+                    //i know all of this seems a little backwards. i'll fix it, i swear. MMP
+                   
+                    if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
+                    {
+                      event.renderingContext->Init(mContext, surf);
+#ifdef COLOR_256
+                      nsPaletteInfo palInfo;
+                      mContext->GetPaletteInfo(palInfo);
+                      if (palInfo.isPaletteDevice && palInfo.palette)
+                      {
+                          ULONG cclr;
+                          ::WinRealizePalette(mWnd, hPS, &cclr);
+                      }
+#endif
+                      rc = DispatchWindowEvent(&event);
+                      event.renderingContext->DestroyDrawingSurface(surf);
+                    }
+
+                    NS_RELEASE(winrc);
+                 }
+              }
+     
+              NS_RELEASE(event.renderingContext);
+              NS_RELEASE(event.widget);
+          }
+      }
+     
+      WinEndPaint( hPS );
+   }
+
+   return rc;
 }
 
 

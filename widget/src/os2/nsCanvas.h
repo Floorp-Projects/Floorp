@@ -40,30 +40,13 @@
 class nsCanvas : public nsWindow
 {
  public:
-   nsCanvas();
+   nsCanvas() {};
 
  protected:
-   // So we can do the right thing for 'top-level borderless' widgets (popups)
-   virtual void RealDoCreate( HWND hwndP, nsWindow *aParent,
-                              const nsRect &aRect,
-                              EVENT_CALLBACK aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
-                              nsWidgetInitData *aInitData,
-                              HWND hwndOwner);
-
-   virtual BOOL   SetWindowPos( HWND hwndInsertBehind, long x, long y,
-                                long cx, long cy, unsigned long flags);
-
-   virtual PRBool OnReposition( PSWP pSwp);
-   virtual PRBool OnPaint();
    virtual PRBool OnKey( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnRealizePalette();
    virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
    virtual PCSZ  WindowClass();
    virtual ULONG WindowStyle();
-
-   BOOL mIsTLB;
 };
 
 #endif
