@@ -49,7 +49,7 @@ def FindCOMComponents(py_module):
             comps.append(object)
     return comps
 
-def register_self(compMgr, location, registryLocation, componentType):
+def register_self(klass, compMgr, location, registryLocation, componentType):
     pcl = PythonComponentLoader
     from xpcom import _xpcom
     svc = _xpcom.GetGlobalServiceManager().GetService("@mozilla.org/categorymanager;1", components.interfaces.nsICategoryManager)
