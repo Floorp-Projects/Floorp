@@ -2256,6 +2256,8 @@ SECU_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
 	return rv;
     }
     SECU_PrintExtensions(out, c->extensions, "Signed Extensions", level+1);
+
+    SECU_PrintFingerprints(out, &c->derCert, "Fingerprint", level);
     
     PORT_FreeArena(arena, PR_FALSE);
     return 0;
@@ -2312,6 +2314,35 @@ SECU_PrintPrivateKey(FILE *out, SECItem *der, char *m, int level)
     SECU_PrintAsHex(out, &key.encryptedData, "Encrypted Data", level+1);
 
     PORT_FreeArena(arena, PR_TRUE);
+    return 0;
+}
+
+int
+SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m, int level)
+{
+    char fingerprint[20];
+    char *fpStr = NULL;
+    SECItem fpItem;
+    /* print MD5 fingerprint */
+    memset(fingerprint, 0, sizeof fingerprint);
+    MD5_HashBuf(fingerprint, derCert->data, derCert->len);
+    fpItem.data = fingerprint;
+    fpItem.len = MD5_LENGTH;
+    fpStr = CERT_Hexify(&fpItem, 1);
+    SECU_Indent(out, level);  fprintf(out, "%s (MD5):\n", m);
+    SECU_Indent(out, level+1); fprintf(out, "%s\n", fpStr);
+    PORT_Free(fpStr);
+    fpStr = NULL;
+    /* print SHA1 fingerprint */
+    memset(fingerprint, 0, sizeof fingerprint);
+    SHA1_HashBuf(fingerprint, derCert->data, derCert->len);
+    fpItem.data = fingerprint;
+    fpItem.len = SHA1_LENGTH;
+    fpStr = CERT_Hexify(&fpItem, 1);
+    SECU_Indent(out, level);  fprintf(out, "%s (SHA1):\n", m);
+    SECU_Indent(out, level+1); fprintf(out, "%s\n", fpStr);
+    PORT_Free(fpStr);
+	fprintf(out, "\n");
     return 0;
 }
 
