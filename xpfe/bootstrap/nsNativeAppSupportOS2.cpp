@@ -2460,10 +2460,10 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
                  profileCount > 1 ) {
                 // Turn off turbo mode and quit the application.
                 SetIsServerMode( PR_FALSE );
-                nsCOMPtr<nsIAppStartup> appShell
+                nsCOMPtr<nsIAppStartup> appStartup
                     (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
                 if ( NS_SUCCEEDED( rv ) ) {
-                    appShell->Quit(nsIAppShellService::eAttemptQuit);
+                    appStartup->Quit(nsIAppStartup::eAttemptQuit);
                 }
                 return NS_OK;
             }
