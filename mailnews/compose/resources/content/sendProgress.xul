@@ -82,12 +82,10 @@ Contributor(s):
       </rows>
     </grid>
     
-    <!-- remove the cancel button until we finish the backend code
     <hbox id="CancelButton">
       <spring flex="1"/>
       <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
       <spring flex="1"/>
     </hbox>
-    -->
 
 </window>

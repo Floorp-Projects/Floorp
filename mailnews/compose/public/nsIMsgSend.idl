@@ -47,7 +47,8 @@ class nsFileSpec;
 class nsOutputFileStream;
 %}
 
-interface	nsIURI;
+interface nsIURI;
+interface nsIRequest;
 interface nsIMsgDBHdr;
 interface nsIMsgHdr;
 interface nsIDocShell;
@@ -232,6 +233,8 @@ interface nsIMsgSend : nsISupports
     [noscript] nsIMsgProgress getProgress();
     
     [noscript] nsOutputFileStream getOutputStream();
+
+	[noscript] attribute nsIRequest runningRequest;
 
     [noscript] attribute nsresult status;
 

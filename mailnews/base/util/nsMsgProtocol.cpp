@@ -877,6 +877,17 @@ nsMsgAsyncWriteProtocol::nsMsgAsyncWriteProtocol(nsIURI * aURL) : nsMsgProtocol(
 nsMsgAsyncWriteProtocol::~nsMsgAsyncWriteProtocol()
 {}
 
+NS_IMETHODIMP nsMsgAsyncWriteProtocol::Cancel(nsresult status)
+{
+	if (m_request)
+    m_request->Cancel(status);
+
+  if (m_WriteRequest)
+    m_WriteRequest->Cancel(status);
+
+  return NS_OK;
+}
+
 nsresult nsMsgAsyncWriteProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
 {
   // convert the file spec into a nsIFile....

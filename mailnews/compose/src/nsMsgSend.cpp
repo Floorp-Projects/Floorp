@@ -74,6 +74,7 @@
 #include "nsISmtpUrl.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
+#include "nsILoadGroup.h"
 
 
 // use these macros to define a class IID for our component. Our object currently 
@@ -2780,7 +2781,7 @@ SendDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliver
     				aExitCode = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
     				break;
     			default:
-    				if (! NS_IS_MSG_ERROR(aExitCode))
+    				if (aExitCode != NS_ERROR_ABORT && !NS_IS_MSG_ERROR(aExitCode))
     					aExitCode = NS_ERROR_SEND_FAILED;
     				break;
     		}
@@ -2790,11 +2791,13 @@ SendDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliver
     else if (deliveryType == nsNewsDelivery)
     {
   	  if (NS_FAILED(aExitCode))
-  		  if (! NS_IS_MSG_ERROR(aExitCode))
+  		  if (aExitCode != NS_ERROR_ABORT && !NS_IS_MSG_ERROR(aExitCode))
   			  aExitCode = NS_ERROR_SEND_FAILED;
       
       msgSend->DeliverAsNewsExit(aUrl, aExitCode);
     }
+
+    msgSend->SetRunningRequest(nsnull);
   }
 
   return aExitCode;
@@ -3025,7 +3028,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
                                       uriListener, nsnull, msgStatus,
-                                      callbacks, nsnull);
+                                      callbacks, nsnull, getter_AddRefs(mRunningRequest));
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....
@@ -3081,7 +3084,8 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
 	if (!msgWindow) return NS_ERROR_FAILURE;
 
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewspostUrl(), uriListener, msgWindow, nsnull);
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewspostUrl(),
+                                  uriListener, msgWindow, nsnull);
 	if (NS_FAILED(rv)) return rv;
   }
 
@@ -4223,6 +4227,13 @@ nsresult nsMsgComposeAndSend::Abort()
         rv = ma->Abort();
     }
   }
+
+  /* stop the current running url */
+  if (mRunningRequest)
+  {
+    mRunningRequest->Cancel(NS_ERROR_ABORT);
+    mRunningRequest = nsnull;
+  }
   
   mAbortInProcess = PR_FALSE;
   return NS_OK;
@@ -4273,6 +4284,21 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetOutputStream(nsOutputFileStream * *_retval
 {
   NS_ENSURE_ARG(_retval);
   *_retval = mOutputFile;
+  return NS_OK;
+}
+
+
+/* [noscript] attribute nsIURI runningURL; */
+NS_IMETHODIMP nsMsgComposeAndSend::GetRunningRequest(nsIRequest **request)
+{
+  NS_ENSURE_ARG(request);
+  *request = mRunningRequest;
+  NS_IF_ADDREF(*request);
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgComposeAndSend::SetRunningRequest(nsIRequest *request)
+{
+  mRunningRequest = request;
   return NS_OK;
 }
 

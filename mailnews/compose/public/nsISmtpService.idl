@@ -30,6 +30,7 @@ interface nsIMsgIdentity;
 interface nsIInterfaceRequestor;
 interface nsIFileSpec;
 interface nsIMsgStatusFeedback;
+interface nsIRequest;
 
 [scriptable, uuid(FBAF0F10-CA9B-11d2-8063-006008128C4E)]
 interface nsISmtpService : nsISupports {
@@ -58,7 +59,8 @@ interface nsISmtpService : nsISupports {
                        in nsISmtpServer aServer,
 					   in nsIMsgStatusFeedback aStatusListener, 
                        in nsIInterfaceRequestor aNotificationCallbacks,
-                       out nsIURI aURL);
+                       out nsIURI aURL,
+					   out nsIRequest aRequest);
 
   /**
    * A copy of the array of SMTP servers, as stored in the preferences

@@ -71,7 +71,7 @@ NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                    nsIInterfaceRequestor* aNotificationCallbacks,
                    nsIURI ** aUrl);
 
-nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer);
+nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest ** aRequest);
 
 nsSmtpService::nsSmtpService() :
     mSmtpServersLoaded(PR_FALSE)
@@ -96,7 +96,8 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         nsISmtpServer * aServer,
                                         nsIMsgStatusFeedback *aStatusFeedback,
                                         nsIInterfaceRequestor* aNotificationCallbacks,
-                                        nsIURI ** aURL)
+                                        nsIURI ** aURL,
+                                        nsIRequest ** aRequest)
 {
 	nsIURI * urlToRun = nsnull;
 	nsresult rv = NS_OK;
@@ -134,7 +135,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
         nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
         if (NS_SUCCEEDED(rv))
             smtpUrl->SetSmtpServer(smtpServer);
-        rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
+        rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull, aRequest);
       }
 
       if (aURL) // does the caller want a handle on the url?
@@ -218,7 +219,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 	 return rv;
 }
 
-nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer)
+nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest ** aRequest)
 {
 	// for now, assume the url is a news url and load it....
 	nsCOMPtr <nsISmtpUrl> smtpUrl;
@@ -232,13 +233,14 @@ nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer)
 	smtpUrl = do_QueryInterface(aUrl);
   if (smtpUrl)
   {
-		// almost there...now create a nntp protocol instance to run the url in...
+		// almost there...now create a smtp protocol instance to run the url in...
 		smtpProtocol = new nsSmtpProtocol(aUrl);
 		if (smtpProtocol == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
 		
 		NS_ADDREF(smtpProtocol);
 		rv = smtpProtocol->LoadUrl(aUrl, aConsumer); // protocol will get destroyed when url is completed...
+    smtpProtocol->QueryInterface(NS_GET_IID(nsIRequest), (void **) aRequest);
 		NS_RELEASE(smtpProtocol);
 	}
 

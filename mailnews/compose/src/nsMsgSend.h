@@ -292,6 +292,7 @@ public:
   nsCOMPtr<nsIMsgProgress>        mSendProgress;
   nsCOMPtr<nsIMsgSendListener>    mListener;
 
+  nsCOMPtr<nsIRequest>      mRunningRequest;
   PRBool                    mSendMailAlso;
   nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller
 
