@@ -38,6 +38,7 @@
 #include "mimevcrd.h"
 #include "nsEscape.h"
 #include "nsIURI.h"
+#include "nsMsgI18N.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
@@ -49,8 +50,6 @@
 
 // String bundles...
 nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
-
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);
@@ -215,58 +214,18 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
     return -1;
 
   // us-ascii is a subset of utf-8
-  if ((!nsCRT::strcasecmp(from_charset, "us-ascii") && !nsCRT::strcasecmp(to_charset, "utf-8")) ||
-      (!nsCRT::strcasecmp(from_charset, "utf-8") && !nsCRT::strcasecmp(to_charset, "us-ascii")))
+  if ((!nsCRT::strcasecmp(from_charset, "us-ascii") && !nsCRT::strcasecmp(to_charset, "UTF-8")) ||
+      (!nsCRT::strcasecmp(from_charset, "UTF-8") && !nsCRT::strcasecmp(to_charset, "us-ascii")))
     return -1;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset(from_charset);
-    nsIUnicodeDecoder* decoder = nsnull;
-    PRUnichar *unichars;
-    PRInt32 unicharLength;
-
-    // convert to unicode
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
-      PRInt32 srcLen = inLength;
-      res = decoder->GetMaxLength(inBuffer, srcLen, &unicharLength);
-      // temporary buffer to hold unicode string
-      unichars = new PRUnichar[unicharLength];
-      if (unichars == nsnull) {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      else {
-        res = decoder->Convert(inBuffer, &srcLen, unichars, &unicharLength);
-
-        // convert from unicode
-        nsIUnicodeEncoder* encoder = nsnull;
-        aCharset.SetString(to_charset);
-        res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
-        if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-          res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-          // allocale an output buffer
-          dstPtr = (char *) PR_Malloc(dstLength + 1);
-          if (dstPtr == nsnull) {
-            res = NS_ERROR_OUT_OF_MEMORY;
-          }
-          else {
-            res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-          }
-          NS_IF_RELEASE(encoder);
-        }
-        delete [] unichars;
-      }
-      NS_IF_RELEASE(decoder);
+  nsString outString;
+  res = ConvertToUnicode(nsAutoString(from_charset), inBuffer, outString);
+  if (NS_SUCCEEDED(res)) {
+    res = ConvertFromUnicode(nsAutoString(to_charset), outString, outBuffer);
+    if (NS_SUCCEEDED(res)) {
+      *outLength = nsCRT::strlen(*outBuffer);
     }
-  }
-
-  // set the outputs
-  if (NS_SUCCEEDED(res) && nsnull != dstPtr) {
-    dstPtr[dstLength] = '\0';
-    *outBuffer = dstPtr;
-    *outLength = dstLength;
   }
 
   return NS_SUCCEEDED(res) ? 0 : -1;

@@ -265,6 +265,13 @@ void DIR_SetFileName(char** filename, const char* leafName);
 static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
 
 
+// This can now use nsTextFormater. 
+// e.g.
+// #include "nsTextFormater.h"
+// nsString aString(""); 
+// nsAutoString fmt("%s"); 
+// PRUnichar *uniBuffer = nsTextFormater::smprintf(fmt.GetUnicode(), aBuffer); // this converts UTF-8 to UCS-2 
+// Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
 PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer, PRInt32* uniLength)
 {
@@ -308,6 +315,11 @@ PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
 	return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
+// This can now use ToNewUTF8String (or this function itself can be substitued by that).
+// e.g.
+// nsAutoString aStr(uniBuffer);
+// *aBuffer = aStr.ToNewUTF8String();
+// Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
 PRInt32 INTL_ConvertFromUnicode(const void* uniBuffer, const PRInt32 uniLength, char** aBuffer)
 {
 	nsresult res;

@@ -143,34 +143,6 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted);
 
-/**
- * Convert an input string with a charset into unicode.
- *
- * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
- * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
- *
- * @param from_charset [IN] A charset name in C string.
- * @param inCstring    [IN] Input buffer (in C string) to convert.
- * @param uniBuffer    [OUT] Output unicode buffer is set. Allocated buffer should be freed by PR_FREE.
- * @param uniLength    [OUT] Output unicode buffer character length is set.
- * @return             0 is success, otherwise error.
- */
-PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
-                               void** uniBuffer, PRInt32* uniLength);
-
-/**
- * Conver an unicode buffer to a given charset.
- *
- *
- * @param to_charset   [IN] A charset name in C string.
- * @param uniBuffer    [IN] Input unicode buffer to convert.
- * @param uniLength    [IN] Input unicode buffer character length.
- * @param outCstring   [OUT] Output buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
- * @return             0 is success, otherwise error.
- */
-PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
-                                 char** outCstring);
-
 
 /**
  * Get a next character position in an UTF-8 string.

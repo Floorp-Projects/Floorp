@@ -25,6 +25,7 @@
 #include "nscore.h"
 #include "nsMimeConverter.h"
 #include "comi18n.h"
+#include "nsMsgI18N.h"
 #include "prmem.h"
 #include "plstr.h"
 
@@ -53,15 +54,13 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
                                            nsString& decodedString)
 {
   char charsetCstr[kMAX_CSNAME+1];
-  char *encodedCstr;
-  char *decodedCstr;
+  char *encodedCstr = nsnull;
+  char *decodedCstr = nsnull;
   nsresult res = NS_OK;
 
   (void) charset.ToCString(charsetCstr, kMAX_CSNAME+1);
   encodedCstr = header.ToNewCString();
   if (nsnull != encodedCstr) {
-    PRUnichar *unichars;
-    PRInt32 unicharLength;
     // apply MIME decode.
     decodedCstr = MIME_DecodeMimePartIIStr((const char *) encodedCstr, charsetCstr);
     if (nsnull == decodedCstr) {
@@ -71,24 +70,13 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
       }
       else {
         // no MIME encoded, convert default charset to unicode
-        res = MIME_ConvertToUnicode(charsetCstr, (const char *) encodedCstr, 
-                                    (void **) &unichars, &unicharLength);      
-        if (NS_SUCCEEDED(res)) {
-          decodedString.SetString(unichars, unicharLength);
-          PR_Free(unichars);
-        }
+        res = ConvertToUnicode(charset, (const char *) encodedCstr, decodedString);
       }
     }
     else {
       // convert MIME charset to unicode
-      res = MIME_ConvertToUnicode(charsetCstr, (const char *) decodedCstr, 
-                                  (void **) &unichars, &unicharLength);      
-      if (NS_SUCCEEDED(res)) {
-        charset.SetString(charsetCstr);
-        decodedString.SetString(unichars, unicharLength);
-        PR_Free(unichars);
-      }
-      PR_Free(decodedCstr);
+      res = ConvertToUnicode(nsAutoString(charsetCstr), (const char *) decodedCstr, decodedString);
+      PR_FREEIF(decodedCstr);
     }
 	nsAllocator::Free(encodedCstr);
   }

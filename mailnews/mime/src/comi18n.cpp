@@ -53,7 +53,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 extern "C"  char * MIME_StripContinuations(char *original);
 /* These are needed by other libmime functions */
 extern "C" PRInt16 INTL_DefaultWinCharSetID(char a) { return a; }
-extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "iso-8859-1"; }
+extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "ISO-8859-1"; }
 extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
 
 
@@ -276,16 +276,16 @@ const char kMsgHeaderQEncoding[] = "Q";
 static const char * intl_message_header_encoding(const char* charset)
 {
   //TODO: make this overridable.
-  if (!nsCRT::strcasecmp(charset, "iso-2022-jp") || 
-      !nsCRT::strcasecmp(charset, "iso-2022-kr") ||
-      !nsCRT::strcasecmp(charset, "hz-gb-2312") ||
-      !nsCRT::strcasecmp(charset, "shift_jis") ||
-      !nsCRT::strcasecmp(charset, "euc-jp") ||
-      !nsCRT::strcasecmp(charset, "big5") ||
-      !nsCRT::strcasecmp(charset, "gb2312") ||
-      !nsCRT::strcasecmp(charset, "euc-kr") ||
-      !nsCRT::strcasecmp(charset, "utf-7") ||
-      !nsCRT::strcasecmp(charset, "utf-8")) {
+  if (!nsCRT::strcasecmp(charset, "ISO-2022-JP") || 
+      !nsCRT::strcasecmp(charset, "ISO-2022-KR") ||
+      !nsCRT::strcasecmp(charset, "HZ-GB-2312") ||
+      !nsCRT::strcasecmp(charset, "Shift_JIS") ||
+      !nsCRT::strcasecmp(charset, "EUC-JP") ||
+      !nsCRT::strcasecmp(charset, "Big5") ||
+      !nsCRT::strcasecmp(charset, "GB2312") ||
+      !nsCRT::strcasecmp(charset, "EUC-KR") ||
+      !nsCRT::strcasecmp(charset, "UTF-7") ||
+      !nsCRT::strcasecmp(charset, "UTF-8")) {
     return kMsgHeaderBEncoding;
   }
 
@@ -294,7 +294,7 @@ static const char * intl_message_header_encoding(const char* charset)
 
 static PRBool stateful_encoding(const char* charset)
 {
-  if (!nsCRT::strcasecmp(charset, "iso-2022-jp"))
+  if (!nsCRT::strcasecmp(charset, "ISO-2022-JP"))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -772,9 +772,9 @@ convert_and_encode:
             return NULL; //error
         }
         nsresult rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, 
-                                             !nsCRT::strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
+                                             !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset, 
                                              u, &buf1);
-        nsAllocator::Free(u);
+        nsTextFormater::smprintf_free(u);
         if (NS_FAILED(rv) || NULL == buf1) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
@@ -985,12 +985,51 @@ char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLe
   /* If we are sending JIS then check the pref setting and
    * decide if we should convert hankaku (1byte) to zenkaku (2byte) kana.
    */
-  if (!nsCRT::strcasecmp(charset, "iso-2022-jp")) {
+  if (!nsCRT::strcasecmp(charset, "ISO-2022-JP")) {
     ;
   }
 
   /* MIME Part2 encode */
   buf = utf8_mime_encode_mail_address(charset, subject, maxLineLen);
+
+#if 0 // fix for 18105, need more testing
+  /* The input buffer may be too large, try to divide it into chunks. */
+  if (NULL == buf) {
+    PRUnichar *ucs2 = NULL;
+    nsAutoString fmt("%s");
+    ucs2 = nsTextFormater::smprintf(fmt.GetUnicode(), subject);  /* convert from UTF-8 so we can chunk up safely */
+    if (NULL == ucs2)
+      return NULL;
+
+    int ucs2Len = nsCRT::strlen(ucs2);
+    int chunkLen = ( maxLineLen - nsCRT::strlen(charset) - 7 ) * 3 / 4; /* how many characters we can convert from the src */
+    nsAutoString chunk;
+
+    for (int index = 0; index < ucs2Len; index += chunkLen) {
+
+      /* set string, chunk length or remaining buffer length */
+      chunk.SetString(&ucs2[index], chunkLen <= (ucs2Len - index) ? chunkLen : (ucs2Len - index));
+      char *utf8 = chunk.ToNewUTF8String();  /* convert to UTF-8, again */
+      if (NULL == utf8) {
+        nsTextFormater::smprintf_free(ucs2);
+        PR_FREEIF(buf);
+        return NULL;
+      }
+
+      char * encoded_chunk = utf8_mime_encode_mail_address(charset, utf8, maxLineLen);
+      nsAllocator::Free(utf8);
+      if (NULL == encoded_chunk) {
+        PR_FREEIF(buf);
+        return NULL;
+      }
+
+      buf = PR_sprintf_append(buf, "%s%s", (0 == index) ? "" : "\r\n\t", encoded_chunk);
+      PR_Free(encoded_chunk);
+    }
+
+    nsTextFormater::smprintf_free(ucs2);
+  }
+#endif //0
 
   return buf;
 }
@@ -1159,7 +1198,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
             break;                          /* exit the loop because there are no charset info */
     *q++ = '\0';
     if (charset)
-      PL_strcpy(charset, nsCRT::strcasecmp(p, "us-ascii") ? p : "iso-8859-1");
+      PL_strcpy(charset, nsCRT::strcasecmp(p, "us-ascii") ? p : "ISO-8859-1");
 
     if (*(q+1) == '?' &&
         (*q == 'Q' || *q == 'q' || *q == 'B' || *q == 'b'))
@@ -1210,79 +1249,6 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
-                                      void** uniBuffer, PRInt32* uniLength)
-{
-  nsresult res;
-
-  if (nsnull == from_charset || '\0' == *from_charset|| nsnull == aBuffer) {
-    return -1;
-  }
-	
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset(from_charset);
-    nsIUnicodeDecoder* decoder = nsnull;
-    PRUnichar *unichars;
-    PRInt32 unicharLength;
-
-    // convert to unicode
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
-      PRInt32 srcLen = aLength;
-      res = decoder->GetMaxLength(aBuffer, srcLen, &unicharLength);
-      // allocale an output buffer
-      unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
-      if (unichars != nsnull) {
-        res = decoder->Convert(aBuffer, &srcLen, unichars, &unicharLength);
-        *uniBuffer = (void *) unichars;
-        *uniLength = unicharLength;
-      }
-      else {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_IF_RELEASE(decoder);
-    }
-  }  
-  return NS_SUCCEEDED(res) ? 0 : -1;
-}
-
-static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
-                                        char** aBuffer)
-{
-  nsresult res;
-
-  if (nsnull == to_charset || '\0' == *to_charset|| nsnull == uniBuffer) {
-    return -1;
-  }
-
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset(to_charset);
-    nsIUnicodeEncoder* encoder = nsnull;
-
-    // convert from unicode
-    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
-    if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-      const PRUnichar *unichars = (const PRUnichar *) uniBuffer;
-      PRInt32 unicharLength = uniLength;
-      PRInt32 dstLength;
-      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-      // allocale an output buffer
-      *aBuffer = (char *) PR_Malloc(dstLength + 1);
-      if (*aBuffer != nsnull) {
-        res = encoder->Convert(unichars, &unicharLength, *aBuffer, &dstLength);
-        (*aBuffer)[dstLength] = '\0';
-      }
-      else {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_IF_RELEASE(encoder);
-    }
-  }
-  return NS_SUCCEEDED(res) ? 0 : -1;
-}
-////////////////////////////////////////////////////////////////////////////////
 
 MimeCharsetConverterClass::MimeCharsetConverterClass()
 {
@@ -1311,19 +1277,24 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   NS_ASSERTION(NULL == mEncoder, "No reinitialization allowed.");
 
   mInputCharset.SetString(from_charset);     // remember input charset for a hint
+  if (mInputCharset.IsEmpty()) {
+    mInputCharset.SetString("ISO-8859-1");
+  }
   mOutputCharset.SetString(to_charset);      // remember output charset
+  if (mOutputCharset.IsEmpty()) {
+    mOutputCharset.SetString("UTF-8");
+  }
   mAutoDetect = autoDetect;
   mMaxNumCharsDetect = maxNumCharsDetect;
 
   // Resolve charset alias
   NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
-  if (NS_SUCCEEDED(res) && (nsnull != calias)) {
-    nsString aAlias;
-    aAlias.SetString(from_charset);
+  if (NS_SUCCEEDED(res)) {
+    nsString aAlias(mInputCharset);
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mInputCharset);
     }
-    aAlias.SetString(to_charset);
+    aAlias = mOutputCharset;
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mOutputCharset);
     }
@@ -1335,7 +1306,7 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     PL_strcpy(detector_progid, NS_STRCDETECTOR_PROGID_BASE);
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
-    if (nsnull != prefs && NS_SUCCEEDED(res)) {
+    if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(prefs->CopyCharPref("mail.charset.detector", &detector_name))) {
         PL_strcat(detector_progid, detector_name);
         PR_FREEIF(detector_name);
@@ -1361,7 +1332,7 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   // Set up charset converters.
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
-  if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
+  if (NS_SUCCEEDED(res)) {
     // create a decoder (conv to unicode), ok if failed if we do auto detection
     res = ccm->GetUnicodeDecoder(&mInputCharset, &mDecoder);
     if (NS_SUCCEEDED(res) || mAutoDetect) {
@@ -1420,7 +1391,7 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
       }
       else {
         NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
-        if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
+        if (NS_SUCCEEDED(res)) {
           NS_IF_RELEASE(mDecoderDetected);
           mDecoderDetected = nsnull;
           res = ccm->GetUnicodeDecoder(&aCharsetDetected, &mDecoderDetected);
@@ -1437,20 +1408,6 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
 
   // Decoders are not available, do fallback
   if (NULL == mDecoder && NULL == mDecoderDetected) {
-    // if the input charset is empty and the out charset is utf-8
-    // then assume latin1 to avoid generating a wrong utf-8
-    if (!mInputCharset.Length() &&
-         mOutputCharset.EqualsIgnoreCase("utf-8")) {
-      nsAutoString tempStr("");
-      tempStr.Append(inBuffer, inLength);
-      *outBuffer = tempStr.ToNewUTF8String();
-      if (NULL != *outBuffer) {
-        *outLength = nsCRT::strlen(*outBuffer);
-        return 0;
-      }
-      return -1;
-    }
-    // otherwise, duplicate the input
     *outBuffer = (char *) PR_Malloc(inLength+1);
     if (NULL != *outBuffer) {
       nsCRT::memcpy(*outBuffer, inBuffer, inLength);
@@ -1532,8 +1489,8 @@ PRBool MimeCharsetConverterClass::NeedCharsetConversion(const nsString& from_cha
   else if (from_charset.EqualsIgnoreCase(to_charset)) {
     return PR_FALSE;
   }
-  else if ((from_charset.EqualsIgnoreCase("us-ascii") && to_charset.EqualsIgnoreCase("utf-8")) ||
-      (from_charset.EqualsIgnoreCase("utf-8") && to_charset.EqualsIgnoreCase("us-ascii"))) {
+  else if ((from_charset.EqualsIgnoreCase("us-ascii") && to_charset.EqualsIgnoreCase("UTF-8")) ||
+      (from_charset.EqualsIgnoreCase("UTF-8") && to_charset.EqualsIgnoreCase("us-ascii"))) {
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -1575,15 +1532,8 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted)
 {
-//  char srcCharset[kMAX_CSNAME+1], dstCharset[kMAX_CSNAME+1];
   MimeCharsetConverterClass aMimeCharsetConverterClass;
   PRInt32 res;
-
-  // commenting out per Naoki's instructions.
-//  srcCharset[0] = '\0';
-//  dstCharset[0] = '\0';
-//  PL_strcpy(srcCharset, nsCRT::strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
-//  PL_strcpy(dstCharset, nsCRT::strcasecmp(from_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
 
   res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, autoDetection, -1);
 
@@ -1592,26 +1542,6 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
   }
 
   return res;
-}
-
-PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
-                               void** uniBuffer, PRInt32* uniLength)
-{
-  char charset[kMAX_CSNAME+1];
-  // Since we don't have a converter for us-ascii and the manager does not map, 
-  // so we do the mapping here.
-  PL_strcpy(charset, nsCRT::strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
-  return INTL_ConvertToUnicode(charset, inCstring, nsCRT::strlen(inCstring), uniBuffer, uniLength);
-}
-
-PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
-                                 char** outCstring)
-{
-  char charset[kMAX_CSNAME+1];
-  // Since we don't have a converter for us-ascii and the manager does not map, 
-  // so we do the mapping here.
-  PL_strcpy(charset, nsCRT::strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
-  return INTL_ConvertFromUnicode(charset, uniBuffer, uniLength, outCstring);
 }
 
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)

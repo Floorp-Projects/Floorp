@@ -27,6 +27,10 @@
 #include "msgCore.h"
 
 
+#ifndef kMAX_CSNAME
+#define kMAX_CSNAME 64
+#endif
+
 NS_MSG_BASE char      *nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
 NS_MSG_BASE PRBool    nsMsgI18Nstateful_charset(const char *charset);
 NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *string, const PRUint32 size);
