@@ -3731,14 +3731,10 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
 #else
   
   newFrame = (nsIFrame *)isupports;
-  nsFrameState state;
-  newFrame->GetFrameState(&state);
-  if (state & NS_FRAME_IS_BIDI) {
   newFrame->GetRect(testRect);
   if (testRect.IsEmpty()) { // this must be a non-renderable frame creatd at the end of the line by Bidi reordering
     lineJump = PR_TRUE;
     aPos->mAmount = eSelectNoAmount;
-  }
   }
   PRBool newLineIsRTL = PR_FALSE;
   if (lineJump) {
