@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="test3.css" type="text/css"?>
+
+<!--
+file:/home/rginda/src/mozilla_DEV/mozilla/extensions/irc/xul/tests/test3.xul
+-->
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical" onload="onLoad();" onunload="onUnload();">
+
+<html:script src="resource:///irc/js/lib/utils.js"/>
+<html:script src="resource:///irc/js/lib/connection-xpcom.js"/>
+<html:script src="resource:///irc/js/lib/events.js"/>
+<html:script src="resource:///irc/js/lib/irc.js"/>
+
+<html:script src="../lib/listbox.js"/>
+
+<html:script src="../../js/lib/irc-debug.js"/>
+<html:script src="test3-static.js"/>
+<html:script src="test3-handlers.js"/>
+
+<toolbox>
+  <menubar>
+    <menu value="File">
+      <menupopup>
+        <menuitem value="New" oncommand="dump('foo\n');"/>
+      </menupopup>
+    </menu>
+  </menubar>
+</toolbox>
+
+<toolbox id="views-tbox">
+  <toolbar id="views-tbar">
+  </toolbar>
+</toolbox>
+
+<box id="outer-box" align="horizontal" flex="1">
+  <html:div id="quickList" class="quick-list" flex="2">
+    hello
+  </html:div>
+  <splitter id="main-splitter" align="vertical"/>
+  <box align="vertical" flex="1">
+    <html:div id="output" class="output-window" flex="1">
+      hello
+    </html:div>
+    <html:textarea id="input" class="input-window" flex="0"/>
+  </box>
+</box>
+
+</window>
