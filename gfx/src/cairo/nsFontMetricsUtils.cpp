@@ -16,9 +16,10 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code Christopher Blizzard
- * <blizzard@mozilla.org>.  Portions created by the Initial Developer
- * are Copyright (C) 2002 the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is
+ * Christopher Blizzard <blizzard@mozilla.org>.  
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *

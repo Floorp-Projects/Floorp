@@ -14,7 +14,7 @@
  *
  * The Original Code is a COM aware array class.
  *
- * The Initial Developer of the Original Code
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corp.
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
