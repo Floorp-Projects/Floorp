@@ -56,7 +56,7 @@ public:
   static PRInt32 EntityToUnicode(const nsCString& aEntity);
 
 /**
- * Translate an entity string into it's unicode value. This call
+ * Translate a unicode value into an entity string. This call
  * returns null if the entity cannot be mapped. 
  * Note that the string returned DOES NOT have the leading "&" nor 
  * the trailing ";" in it.
