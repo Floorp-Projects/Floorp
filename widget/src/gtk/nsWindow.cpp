@@ -55,6 +55,12 @@
 
 #include <unistd.h>
 
+#ifdef NEED_USLEEP_PROTOTYPE
+extern "C" int usleep(unsigned int);
+#endif
+#if defined(__QNX__)
+#define usleep(s)	sleep(s)
+#endif
 
 #undef DEBUG_DND_XLATE
 #define MODAL_TIMERS_BROKEN

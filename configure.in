@@ -750,6 +750,7 @@ alpha*-*-osf*)
 	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
 	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     fi
+    AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     ;;
 
 *-qnx*) 
@@ -795,7 +796,6 @@ alpha*-*-osf*)
 dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
-    HAVE_DEV_ZERO=1
     TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
     if test -z "$GNU_CC"; then
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -1886,7 +1886,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove)
+AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove usleep)
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
