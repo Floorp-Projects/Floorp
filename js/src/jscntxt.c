@@ -378,12 +378,12 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     char *last;
     JSBool warning;
 
-    fp = cx->fp;
+    if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
+        return JS_TRUE;
 
-    /* Walk stack until we find a frame that is associated with
-       some script rather than a native frame. */
-    while (fp && (!fp->script || !fp->pc))
-        fp = fp->down;
+    /* Find the top-most active script frame, for best line number blame. */
+    for (fp = cx->fp; fp && (!fp->script || !fp->pc); fp = fp->down)
+        continue;
 
     reportp = &report;
     memset(reportp, 0, sizeof (struct JSErrorReport));
@@ -577,6 +577,9 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     JSErrorReport report;
     char *message;
     JSBool warning;
+
+    if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
+        return JS_TRUE;
 
     report.messageArgs = NULL;
     report.ucmessage = NULL;

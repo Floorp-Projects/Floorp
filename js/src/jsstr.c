@@ -2618,7 +2618,7 @@ js_strlen(const jschar *s)
     const jschar *t;
 
     for (t = s; *t != 0; t++)
-        ;
+        continue;
     return (size_t)(t - s);
 }
 

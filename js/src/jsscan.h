@@ -124,11 +124,11 @@ struct JSToken {
     JSTokenPos          pos;            /* token position in file */
     jschar              *ptr;           /* beginning of token in line buffer */
     union {
-	struct {
-	    JSOp        op;             /* operator, for minimal parser */
-	    JSAtom      *atom;          /* atom table entry */
-	} s;
-	jsdouble        dval;           /* floating point number */
+        struct {
+            JSOp        op;             /* operator, for minimal parser */
+            JSAtom      *atom;          /* atom table entry */
+        } s;
+        jsdouble        dval;           /* floating point number */
     } u;
 };
 
@@ -143,7 +143,7 @@ typedef struct JSTokenBuf {
 } JSTokenBuf;
 
 #define JS_LINE_LIMIT   256             /* logical line buffer size limit --
-					   physical line length is unlimited */
+                                           physical line length is unlimited */
 #define NTOKENS         4               /* 1 current + 2 lookahead, rounded */
 #define NTOKENS_MASK    (NTOKENS-1)     /* to power of 2 to avoid divmod by 3 */
 
@@ -180,8 +180,8 @@ struct JSTokenStream {
 #define TSF_DIRTYLINE   0x80            /* stuff other than whitespace since start of line */
 
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
-#define LINE_SEPARATOR  (0x2028)
-#define PARA_SEPARATOR  (0x2029)
+#define LINE_SEPARATOR  0x2028
+#define PARA_SEPARATOR  0x2029
 
 /*
  * Create a new token stream, either from an input buffer or from a file.
@@ -193,7 +193,7 @@ struct JSTokenStream {
  */
 extern JSTokenStream *
 js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
-		  const char *filename, uintN lineno, JSPrincipals *principals);
+                  const char *filename, uintN lineno, JSPrincipals *principals);
 
 extern JS_FRIEND_API(JSTokenStream *)
 js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length);
@@ -217,6 +217,10 @@ js_InitScanner(JSContext *cx);
 extern JS_FRIEND_API(void)
 js_MapKeywords(void (*mapfun)(const char *));
 
+/*
+ * Report a compile-time error by its number, using ts or cg to show context.
+ * Return true for a warning, false for an error.
+ */
 extern JSBool
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
                             JSCodeGenerator *cg, uintN flags,

@@ -686,13 +686,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                      * distinguished by the SPROP_IS_DUPLICATE flag, and not
                      * mapped by an entry in scope.
                      */
-                    if (JS_HAS_STRICT_OPTION(cx)) {
-                        ok = js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                         JSREPORT_WARNING |
-                                                         JSREPORT_STRICT,
-                                                         JSMSG_DUPLICATE_FORMAL,
-                                                         ATOM_BYTES(argAtom));
-                    }
+                    ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                     JSREPORT_WARNING |
+                                                     JSREPORT_STRICT,
+                                                     JSMSG_DUPLICATE_FORMAL,
+                                                     ATOM_BYTES(argAtom));
 
                     dupflag = SPROP_IS_DUPLICATE;
                 }
@@ -1693,8 +1691,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PopStatement(tc);
 
         /* Deprecate after parsing, in case of WERROR option. */
-        if (JS_HAS_STRICT_OPTION(cx) &&
-            !js_ReportCompileErrorNumber(cx, ts, NULL,
+        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
                                          JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_DEPRECATED_USAGE,
                                          js_with_statement_str)) {
@@ -1979,13 +1976,11 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 } else {
                     currentGetter = js_GetArgument;
                     currentSetter = js_SetArgument;
-                    if (JS_HAS_STRICT_OPTION(cx)) {
-                        ok = js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                         JSREPORT_WARNING |
-                                                         JSREPORT_STRICT,
-                                                         JSMSG_VAR_HIDES_ARG,
-                                                         ATOM_BYTES(atom));
-                    }
+                    ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                     JSREPORT_WARNING |
+                                                     JSREPORT_STRICT,
+                                                     JSMSG_VAR_HIDES_ARG,
+                                                     ATOM_BYTES(atom));
                 }
             } else {
                 if (fun) {
@@ -2136,7 +2131,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     op = CURRENT_TOKEN(ts).t_op;
     for (pn2 = pn; pn2->pn_type == TOK_RP; pn2 = pn2->pn_kid)
-        ;
+        continue;
     switch (pn2->pn_type) {
       case TOK_NAME:
         pn2->pn_op = JSOP_SETNAME;
@@ -2817,8 +2812,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                         pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                     break;
                   case TOK_RC:
-                    if (JS_HAS_STRICT_OPTION(cx) &&
-                        !js_ReportCompileErrorNumber(cx, ts, NULL,
+                    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
                                                      JSREPORT_WARNING |
                                                      JSREPORT_STRICT,
                                                      JSMSG_TRAILING_COMMA)) {

@@ -2082,7 +2082,7 @@ js_DateGetSeconds(JSContext *cx, JSObject* obj)
     return (int) SecFromTime(*date);
 }
 
-extern JS_FRIEND_API(void)
+JS_FRIEND_API(void)
 js_DateSetYear(JSContext *cx, JSObject *obj, int year)
 {
     jsdouble local;
@@ -2103,7 +2103,7 @@ js_DateSetYear(JSContext *cx, JSObject *obj, int year)
     *date = UTC(local);
 }
 
-extern JS_FRIEND_API(void)
+JS_FRIEND_API(void)
 js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
 {
     jsdouble local;
@@ -2124,7 +2124,7 @@ js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
     *date = UTC(local);
 }
 
-extern JS_FRIEND_API(void)
+JS_FRIEND_API(void)
 js_DateSetDate(JSContext *cx, JSObject *obj, int date)
 {
     jsdouble local;
@@ -2144,7 +2144,7 @@ js_DateSetDate(JSContext *cx, JSObject *obj, int date)
     *datep = UTC(local);
 }
 
-extern JS_FRIEND_API(void)
+JS_FRIEND_API(void)
 js_DateSetHours(JSContext *cx, JSObject *obj, int hours)
 {
     jsdouble local;
@@ -2164,7 +2164,7 @@ js_DateSetHours(JSContext *cx, JSObject *obj, int hours)
     *date = UTC(local);
 }
 
-extern JS_FRIEND_API(void)
+JS_FRIEND_API(void)
 js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes)
 {
     jsdouble local;
@@ -2184,7 +2184,7 @@ js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes)
     *date = UTC(local);
 }
 
-extern JS_FRIEND_API(void)
+JS_FRIEND_API(void)
 js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
 {
     jsdouble local;
@@ -2204,7 +2204,7 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
     *date = UTC(local);
 }
 
-extern JS_FRIEND_API(jsdouble)
+JS_FRIEND_API(jsdouble)
 js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
