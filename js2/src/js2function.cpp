@@ -110,6 +110,7 @@ namespace MetaData {
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
             DEFINE_ROOTKEEPER(rk, fnInst);
             fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
+            fnInst->fWrap->length = 0;
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             meta->createDynamicProperty(fnInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
             return thatValue;
@@ -148,6 +149,7 @@ namespace MetaData {
         FunctionInstance *fnInst = new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass);
         DEFINE_ROOTKEEPER(rk, fnInst);
         fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
+        fnInst->fWrap->length = 0;
         fnInst->fWrap->bCon->emitOp(eReturnVoid, 0);
 
         meta->initBuiltinClass(meta->functionClass, NULL, Function_Constructor, Function_Constructor);

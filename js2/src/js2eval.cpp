@@ -394,6 +394,14 @@ namespace MetaData {
         if (obj->kind == ClassKind)    // therefore, not an E3 object, so just return
             return engine->typeofString(x);     // the 'typeof' string
 
+        if (hint == NoHint) {
+            if ((obj->kind == SimpleInstanceKind)
+                    && ((checked_cast<SimpleInstance *>(obj))->type == dateClass))
+                hint = StringHint;
+            else
+                hint = NumberHint;
+        }
+
         if (hint == StringHint) {
             js2val result;
             if (invokeFunctionOnObject(x, engine->toString_StringAtom, result)) {

@@ -329,8 +329,8 @@
         {
             b = pop();
             a = pop();
-            a = meta->toPrimitive(a, NumberHint);
-            b = meta->toPrimitive(b, NumberHint);
+            a = meta->toPrimitive(a, NoHint);
+            b = meta->toPrimitive(b, NoHint);
             if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
                 astr = meta->toString(a);
                 bstr = meta->toString(b);
@@ -697,8 +697,11 @@
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) < *JS2VAL_TO_STRING(b));
-            else
-                rval = meta->toFloat64(a) < meta->toFloat64(b);
+            else {
+                float64 x = meta->toFloat64(a);
+                float64 y = meta->toFloat64(b);                
+                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x < y));
+            }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
@@ -712,8 +715,11 @@
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) <= *JS2VAL_TO_STRING(b));
-            else
-                rval = meta->toFloat64(a) <= meta->toFloat64(b);
+            else {
+                float64 x = meta->toFloat64(a);
+                float64 y = meta->toFloat64(b);                
+                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x <= y));
+            }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
@@ -727,8 +733,11 @@
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) > *JS2VAL_TO_STRING(b));
-            else
-                rval = meta->toFloat64(a) > meta->toFloat64(b);
+            else {
+                float64 x = meta->toFloat64(a);
+                float64 y = meta->toFloat64(b);                
+                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x > y));
+            }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
@@ -742,8 +751,11 @@
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) >= *JS2VAL_TO_STRING(b));
-            else
-                rval = meta->toFloat64(a) >= meta->toFloat64(b);
+            else {
+                float64 x = meta->toFloat64(a);
+                float64 y = meta->toFloat64(b);                
+                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x >= y));
+            }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;

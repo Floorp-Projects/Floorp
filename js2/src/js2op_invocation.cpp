@@ -73,7 +73,7 @@
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }
-                    uint32 length = getLength(meta, obj);
+                    uint32 length = fWrap->length;
                     if (fWrap->code) {  // native code, pass pointer to argument base
                         while (argCount < length) {
                             push(JS2VAL_UNDEFINED);
@@ -127,7 +127,7 @@
                     }
                 }
                 // XXX ok to not use getLength(meta, fObj) ?
-                uint32 length = (fWrap->compileFrame->slots) ? fWrap->compileFrame->slots->size() : 0;
+                uint32 length = fWrap->length;
                 if (fWrap->code) {  // native code
                     uint16 argc = argCount;
                     while (argCount < length) {

@@ -108,6 +108,7 @@ namespace MetaData {
                 }
                 if (prototype)
                     createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
+                result->fWrap->length = pCount;
                 pb = fnDef->parameters;
                 while (pb) {
                     // XXX define a static binding for each parameter
@@ -429,7 +430,8 @@ namespace MetaData {
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
                                         ((g->tgtID == -1) && (si != end)); si++) {
                             // only some non-label statements will do
-                            switch ((*si)->getKind()) {
+                            StmtNode *s = *si;
+                            switch (s->getKind()) {
                             case StmtNode::block:
                                 g->blockCount++;
                                 break;
@@ -1006,7 +1008,6 @@ namespace MetaData {
 
                 bCon->setLabel(loopTop);                
                 
-                targetList.push_back(p);
                 bCon->emitOp(eForValue, p->pos);
 
                 Reference *v = NULL;
@@ -3699,6 +3700,7 @@ static const uint8 urlCharType[256] =
     {
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code, env);
+        fInst->fWrap->length = length;
         createDynamicProperty(glob, &world.identifiers[name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
     }
@@ -3852,11 +3854,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString, env);
+        fInst->fWrap->length = 0;
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
         // and 'valueOf'
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_valueOf, env);
+        fInst->fWrap->length = 0;
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->valueOf_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
 
@@ -4438,6 +4442,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), builtinClass->construct, env);
+        fInst->fWrap->length = 0;
         ASSERT(JS2VAL_IS_OBJECT(builtinClass->prototype));
         createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
     
@@ -4447,12 +4452,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 /*
                 SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
                 callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
+                callInst->fWrap->length = pf->length;
                 Multiname *mn = new Multiname(&world.identifiers[pf->name], publicNamespace);
                 InstanceMember *m = new InstanceMethod(mn, callInst, true, false);
                 defineInstanceMember(builtinClass, &cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
 */
                 FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                 fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
+                fInst->fWrap->length = pf->length;
                 createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers[pf->name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
                 createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                 pf++;
@@ -4478,6 +4485,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 while (pf->name) {
                     FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
+                    callInst->fWrap->length = pf->length;
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
                     defineLocalMember(env, &world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
                     createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);

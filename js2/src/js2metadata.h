@@ -805,9 +805,9 @@ class ParameterFrame;
 class FunctionWrapper {
 public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, Environment *env) 
-        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)) { }
+        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)), length(0) { }
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
-        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)) { }
+        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)), length(0) { }
 
     virtual ~FunctionWrapper()  { if (bCon) delete bCon; }
 
@@ -816,6 +816,7 @@ public:
     bool                unchecked;          // true if the function is untyped, non-method, normal
     ParameterFrame      *compileFrame;
     Environment         *env;
+    uint32              length;
 };
 
 
