@@ -67,7 +67,6 @@ public:
 	BOOL FillGlobalWidgetArray(CString file);
 	BOOL FillGlobalWidgetArray();
 	void CreateNewCache();
-	void CreateNewCache(CString CPath);
 	BOOL IsLastNode(NODE* treeNode);
 	BOOL IsFirstNode(NODE* treeNode);
 	CString GetGlobalOptions(CString theName);

@@ -963,7 +963,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						"Information", MB_OK);
 					exit(-30);
 				}
-
+					
 				// Write out the current cache
 				if (!IsSameCache)
 					theApp.CreateNewCache();
@@ -974,20 +974,6 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
 				IsSameCache = FALSE;
 			}
-			else if (strcmp(pcmd, "FillArray") == 0)
-			{
-				//Just FillGlobalWidgetArray from specified cache
- 				CString arrayDir = replaceVars(parms, NULL);
- 				CString ArrayPath = arrayDir + "\\" + CacheFile;
- 				theApp.FillGlobalWidgetArray(ArrayPath);
- 				IsSameCache = FALSE;
-			}
-			else if (strcmp(pcmd, "CreateCache") == 0)
-			{
-				CString cdir = replaceVars(parms, NULL);
-				CString cpath = cdir + "\\" + CacheFile;
-				theApp.CreateNewCache(cpath);
-			}	
 			else if (strcmp(pcmd, "WriteCache") ==0)
 			{
 				WIDGET *w = findWidget(parms);
