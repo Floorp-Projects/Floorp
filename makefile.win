@@ -13,6 +13,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+NECKO=1
+
 #//------------------------------------------------------------------------
 #//
 #// Toplevel windows Makefile to build the mozilla tree
