@@ -91,7 +91,8 @@ while (my $row = $sth->fetchrow_arrayref()) {
   #
   # Insert a new build info signifying that the build has started
   #
-  $dbh->do("INSERT INTO tbox_build (machine_id, build_time, status_time, status, log) VALUES (?, current_timestamp(), current_timestamp(), ?, ?)", undef, $machine_id, $status, $log);
+  my $timestamp = Tinderbox3::DB::sql_current_timestamp();
+  $dbh->do("INSERT INTO tbox_build (machine_id, build_time, status_time, status, log) VALUES (?, $timestamp, $timestamp, ?, ?)", undef, $machine_id, $status, $log);
 }
 
 #
