@@ -578,7 +578,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 				else
 					URDFUtilities::SetupForegroundTextColor ( TopNode(), gNavCenter->viewFGColor, 
 																kThemeListViewTextColor );
-				DrawTextString(str, &mTextDrawingStuff.mTextFontInfo, 0, localRect);
+				DrawTextString(str, mTextDrawingStuff, 0, localRect);
 			}
 		} // else a normal item
 	} // if node valid
@@ -1433,33 +1433,42 @@ CHyperTreeFlexTable :: CalcToolTipText( const STableCell& inCell,
 
 	outStuff = GetTextStyle(inCell.row);
 
-	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
-	Assert_(header != NULL);
-	CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(inCell.col - 1);
-	
-	HT_Resource node = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
-	void* data;
-	if ( HT_GetTemplateData(node, info.token, info.tokenType, &data) && data ) {
-		switch (info.tokenType) {
-			case HT_COLUMN_STRING:
-				if ( ! HT_IsSeparator(node) ) {
-					const char* str = static_cast<char*>(data);
-					if ( str ) {
-						outText[0] = strlen(str);
- 						strcpy ( (char*) &outText[1], str );
- 					}
- 					else
- 						outText[0] = 0;
- 				}
- 				else
- 					outText[0] = 0;
-				break;
-				
-			default:
-				outText[0] = 0;		// don't display tooltip for other data types
+	if ( inCell.row <= mRows ) {
+		CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
+		Assert_(header != NULL);
+		CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(inCell.col - 1);
+		
+		HT_Resource node = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
+		void* data;
+		if ( HT_GetTemplateData(node, info.token, info.tokenType, &data) && data ) {
+			switch (info.tokenType) {
+				case HT_COLUMN_STRING:
+					if ( ! HT_IsSeparator(node) ) {
+						const char* str = static_cast<char*>(data);
+						if ( str ) {
+							outText[0] = strlen(str);
+	 						strcpy ( (char*) &outText[1], str );
+	 					}
+	 					else
+	 						outText[0] = 0;
+	 				}
+	 				else
+	 					outText[0] = 0;
+					break;
+					
+				default:
+					outText[0] = 0;		// don't display tooltip for other data types
 
-		} // case of column data type
-	} // if data is valid
+			} // case of column data type
+		} // if data is valid
+	} // if row has data
+	else {
+		// supply a useful message when the mouse is over some part of the table that
+		// isn't a real row. I'd like to make it display only if the pane is editable,
+		// but this is not possible to determine given the current HT APIs =(.
+		outTruncationOnly = false;					// always show this message
+		::GetIndString ( outText, 10506, 16);
+	} // else row is empty
 
 } // CalcToolTipText
 
