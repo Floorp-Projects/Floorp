@@ -66,6 +66,11 @@ LINCS =                   \
 
 LCFLAGS = -D_IMPL_NS_COM -DWIN32_LEAN_AND_MEAN
 
+!ifdef GC_LEAK_DETECTOR
+LCFLAGS = $(LCFLAGS) -DGC_LEAK_DETECTOR
+!endif
+
+
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
