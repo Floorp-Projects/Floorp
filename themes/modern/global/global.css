@@ -141,48 +141,48 @@
 /** 
  * XUL <progressmeter> 
  **/
-  progressmeter[mode="undetermined"]
-    {
-      background-image    : url(chrome://global/skin/progressmeter-busy.gif);
-    }
- 
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar {
-      visibility: collapse;
+  
+  progressmeter {
+    margin              : 0px;
+    border              : none;
+    padding             : 2px 0px 2px 0px;
+    min-width           : 128px;
   }
 
-  .progress-text 
-    {
-      font-weight         : normal !important;
-    }
+  .progressmeter-progressbar {
+    min-height			   : 9px;
+    height             : 9px;
+    border-left: 1px solid #293342;
+    border-right: 1px solid #293342;
+  }
+
+  .progress-bar {
+    min-width: 0px;
+    background: url("chrome://global/skin/progress-filler.gif") repeat-x;
+  }
+
+  .progress-remainder {
+    min-width: 0px;
+    background: url("chrome://global/skin/progress-bg.gif") repeat-x;
+  }
+
+  progressmeter > box > stack > box {
+    border: 1px solid transparent
+  }
+
+  progressmeter[mode="undetermined"] > box > stack > box {
+    background: url("chrome://global/skin/progressmeter-busy.gif") repeat-x;
+  }
+
+  .progress-text {
+    visibility: collapse;
+    font-size: 1px !important;
+  }
   
-  progressmeter 
-    {
-      min-width           : 128px;
-      margin              : 1px 4px 1px 4px;
-      border			  : 0px;
-      height			  : 11px;
-    }
-
-  progressmeter > .progressmeter-internal-box 
-    {
-    	height			  : 9px;
-    }
-
-/* progress indicators */
-  .progress-bar 
-    {
-	  background	      : url(chrome://global/skin/progress-filler.gif) repeat-x;
-      //border-right        : 1px outset #6699cc;
-    }
+/* statusbar type */
   
-  .progress-remainder 
-    {
-	  background	      : url(chrome://global/skin/progress-bg.gif) repeat-x;
-    }
-
   .progressmeter-statusbar 
     {
-      //border              : 1px solid #999999;
       margin              : 0px 4px 0px 4px;
     }
 
@@ -190,17 +190,6 @@
     {
       border              : 0px;
       padding             : 0px;
-    }
-    
-  .progressmeter-progressbar[statusbar="true"] > .progress-bar
-    {
-      //background-color    : #999999;
-      border-right        : none;
-    }
-   
-  .progressmeter-progressbar[statusbar="true"] > .progress-remainder
-    {
-      //background-color    : #CCCCCC;
     }
     
 /** XUL <scrollbar> element **/
