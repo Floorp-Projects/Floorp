@@ -706,16 +706,50 @@ GetEntityTerminator(nsString& aSource,PRUnichar& aChar,PRInt32 aStartOffset=0) {
 
 // Temporary factory code to create content objects
 
+/**
+ * This method retrieves the value of an attribute and returns
+ * it as a string. Whitespace in the end and beginning are stripped from
+ * the string. 
+ */
 void
 HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
                                      PRInt32 aIndex,
                                      nsString& aResult)
 {
   // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex); 
-  aResult.Truncate();
-  aResult.Append(value);
-  aResult.Trim("\b\r\t\n",PR_TRUE,PR_TRUE,PR_TRUE);
+  const nsString& value = aNode.GetValueAt(aIndex);
+  nsAString::const_iterator iter, end_iter;
+  value.BeginReading(iter);
+  value.EndReading(end_iter);
+  PRUnichar the_char;
+
+  // Skip whitespace in the beginning
+  while ((iter != end_iter) &&
+         (((the_char = *iter) == '\n') ||
+          (the_char == '\t') ||
+          (the_char == '\r') ||
+          (the_char == '\b')))
+    ++iter;
+
+  if (iter == end_iter) {
+    // Nothing left
+    aResult.Truncate();
+    return;
+  }
+
+  --end_iter; // To make it point to a char
+
+  // There has to be a char between the whitespace,
+  // otherwise iter would be equal to end_iter, so
+  // we can just go until we find that char.
+  while (((the_char = *end_iter)== '\n') ||
+         (the_char == '\t') ||
+         (the_char == '\r') ||
+         (the_char == '\b'))
+    --end_iter;
+
+  // end_iter should point to the char after the last to copy
+  aResult = Substring(iter, ++end_iter);
 }
 
 nsresult
