@@ -313,8 +313,15 @@ nsStorageStream::Seek(PRInt32 aPosition)
     mWriteCursor = mSegmentedBuffer->GetSegment(mLastSegmentNum);
     NS_ASSERTION(mWriteCursor, "null mWriteCursor");
     mSegmentEnd = mWriteCursor + mSegmentSize;
+
+    // Adjust write cursor for current segment offset.  This test is necessary
+    // because SegNum may reference the next-to-be-allocated segment, in which
+    // case we need to be pointing at the end of the last segment.
     PRInt32 segmentOffset = SegOffset(aPosition);
-    mWriteCursor += segmentOffset;
+    if (segmentOffset == 0 && (SegNum(aPosition) > (PRUint32) mLastSegmentNum))
+        mWriteCursor = mSegmentEnd;
+    else
+        mWriteCursor += segmentOffset;
     
     PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
            ("nsStorageStream [%x] Seek mWriteCursor=%x mSegmentEnd=%x\n",
