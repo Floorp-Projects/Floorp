@@ -222,10 +222,12 @@ function updateWinReg()
 // main
 var srDest;
 var err;
+var err2;
 var fProgram;
 var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
+var fileMozCtlx;
 
 $Ren8dot3List$
 
@@ -254,6 +256,10 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if( err == SUCCESS )
   {
+    fileMozCtlx = getFolder(fProgram, "mozctlx.dll");
+    err2        = File.windowsRegisterServer(fileMozCtlx);
+    logComment("windowsRegisterServer() returned: " + err2);
+
     updateWinReg();
     createShortcuts();
     // we don't want to fail on errors for the above two
