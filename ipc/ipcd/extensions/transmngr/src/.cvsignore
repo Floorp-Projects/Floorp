@@ -1,4 +1,4 @@
 Makefile
 tmTransactionService.obj
-transmngr_s.lib
-transmngr_s.pdb
+transmgr_s.lib
+transmgr_s.pdb

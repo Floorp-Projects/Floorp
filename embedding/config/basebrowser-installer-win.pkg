@@ -130,7 +130,7 @@ components\profile.xpt
 ; profile sharing - optional
 mozipcd.exe
 ipc\modules\lockmodule.dll
-ipc\modules\transmngr.dll
+ipc\modules\transmgr.dll
 components\ipcdc.dll
 
 ; session history

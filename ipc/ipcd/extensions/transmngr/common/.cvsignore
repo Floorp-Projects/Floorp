@@ -1,5 +1,5 @@
 Makefile
 tmTransaction.obj
 tmVector.obj
-transmngrcom_s.pdb
-transmngrcom_s.lib
+transmgrcom_s.pdb
+transmgrcom_s.lib

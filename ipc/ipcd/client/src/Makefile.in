@@ -80,8 +80,8 @@ LOCAL_INCLUDES = \
 SHARED_LIBRARY_LIBS = \
 			$(DIST)/lib/$(LIB_PREFIX)ipcdshared_s.$(LIB_SUFFIX) \
 			$(DIST)/lib/$(LIB_PREFIX)ipcdlock_s.$(LIB_SUFFIX) \
-			$(DIST)/lib/$(LIB_PREFIX)transmngr_s.$(LIB_SUFFIX) \
-			$(DIST)/lib/$(LIB_PREFIX)transmngrcom_s.$(LIB_SUFFIX) \
+			$(DIST)/lib/$(LIB_PREFIX)transmgr_s.$(LIB_SUFFIX) \
+			$(DIST)/lib/$(LIB_PREFIX)transmgrcom_s.$(LIB_SUFFIX) \
 			$(NULL)
 
 EXTRA_DSO_LDOPTS = \
