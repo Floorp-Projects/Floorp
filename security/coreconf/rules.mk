@@ -273,7 +273,7 @@ EXTRA_SHARED_LIBS := $(filter-out -L%,$(EXTRA_SHARED_LIBS))
 EXTRA_SHARED_LIBS := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_SHARED_LIBS))
 endif
 
-$(PROGRAM): $(BUILT_SRCS) $(OBJS) $(EXTRA_LIBS)
+$(PROGRAM): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),WINNT)
 	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS))
@@ -288,7 +288,7 @@ endif
 get_objs:
 	@echo $(OBJS)
 
-$(LIBRARY): $(BUILT_SRCS) $(OBJS)
+$(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(OS_ARCH), WINNT)
@@ -300,7 +300,7 @@ endif
 
 
 ifeq ($(OS_ARCH),OS2)
-$(IMPORT_LIBRARY): $(BUILT_SRCS) $(SHARED_LIBRARY)
+$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	rm -f $@
 	$(IMPLIB) $@ $(patsubst %.lib,%.dll.def,$@)
 	$(RANLIB) $@
@@ -314,7 +314,7 @@ SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(addprefix $(dir)/,$(shell $
 endif
 endif
 
-$(SHARED_LIBRARY): $(BUILT_SRCS) $(OBJS) $(MAPFILE)
+$(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
