@@ -56,11 +56,12 @@ class InterfaceRegistry {
         }
     }
     
-    private static void registerInterfaces(Class cl) {
+    public static void registerInterfaces(Class cl) {
         try {
             Object iidStr = cl.getField(IID_STRING).get(cl);
             if (iidStr instanceof String) {
                 IID iid = new IID((String)iidStr);
+	        ProxyFactory.registerInterfaceForIID(cl,iid);
                 String[] methodNames = Utilities.getInterfaceMethodNames((String)iidStr);
                 if (methodNames != null) {
                     Method[] rmethods = new Method[methodNames.length];
