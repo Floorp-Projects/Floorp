@@ -57,7 +57,6 @@ public:
   virtual const nsIID& GetIID();
 
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
-  PRBool IsComboBox();
 
 protected:
 
@@ -67,6 +66,7 @@ protected:
                               const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+  PRBool mIsComboBox;
 };
 
 class nsSelect : public nsInput 
@@ -92,7 +92,7 @@ public:
 
   PRBool IsMultiple() { return mMultiple; }
 
-  PRBool  IsComboBox();
+  PRBool  GetMultiple() const { return mMultiple; }
 
   virtual void Reset();
 
@@ -126,9 +126,9 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
-  PRBool GetText(nsString& aString) const;
+  PRBool GetContent(nsString& aString) const;
 
-  void SetText(nsString& aString);
+  void SetContent(const nsString& aValue);
 
 protected:
   virtual ~nsOption();
@@ -136,13 +136,13 @@ protected:
   virtual void GetType(nsString& aResult) const;
 
   PRBool mSelected;
-  nsString* mText;
+  nsString* mContent;
 };
 
 
 nsSelectFrame::nsSelectFrame(nsIContent* aContent,
                              nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aParentFrame)
+  : nsInputFrame(aContent, aParentFrame), mIsComboBox(PR_FALSE)
 {
 }
 
@@ -150,17 +150,11 @@ nsSelectFrame::~nsSelectFrame()
 {
 }
 
-PRBool
-nsSelectFrame::IsComboBox()
-{
-  nsSelect* content = (nsSelect *) mContent;
-  return content->IsComboBox();
-}
 
 const nsIID&
 nsSelectFrame::GetIID()
 {
-  if (IsComboBox()) {
+  if (mIsComboBox) {
     return kComboBoxIID;
   }
   else {
@@ -174,7 +168,7 @@ nsSelectFrame::GetCID()
   static NS_DEFINE_IID(kComboCID, NS_COMBOBOX_CID);
   static NS_DEFINE_IID(kListCID, NS_LISTBOX_CID);
 
-  if (IsComboBox()) {
+  if (mIsComboBox) {
     return kComboCID;
   }
   else {
@@ -201,7 +195,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   for (int i = 0; i < numChildren; i++) {
     nsOption* option = (nsOption*) select->ChildAt(i);  // YYY this had better be an option 
     nsString text;
-    if (PR_FALSE == option->GetText(text)) {
+    if (PR_FALSE == option->GetContent(text)) {
       continue;
     }
     nsSize textSize;
@@ -223,18 +217,27 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     calcSize.height += 100;
   }
 
-  PRBool isCombo = IsComboBox();
+  // here it is determined whether we are a combo box
+  PRInt32 sizeAttr = select->GetSize();
+  if (!select->GetMultiple() && ((1 == sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
+    mIsComboBox = PR_TRUE;
+  }
   // account for vertical scrollbar, if present
-  aDesiredLayoutSize.width = ((numRows < select->ChildCount()) || isCombo) 
-    ? calcSize.width + 350 : calcSize.width + 100;
+  if (heightExplicit) {
+    aDesiredLayoutSize.width = calcSize.width;
+  }
+  else {
+    aDesiredLayoutSize.width = ((numRows < select->ChildCount()) || mIsComboBox) 
+      ? calcSize.width + gScrollBarWidth : calcSize.width + 100; // XXX why the 100 padding
+  }
   aDesiredLayoutSize.height = calcSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = 
-    (isCombo && !heightExplicit) ? aDesiredLayoutSize.height + (rowHeight * numChildren) + 100 
-                                 : aDesiredLayoutSize.height;
+    (mIsComboBox && !heightExplicit) ? aDesiredLayoutSize.height + (rowHeight * numChildren) + 100 
+                                     : aDesiredLayoutSize.height;
 
   NS_RELEASE(select);
 }
@@ -257,7 +260,7 @@ nsSelectFrame::GetWidgetInitData()
 NS_METHOD
 nsSelectFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
-  nscoord height = (IsComboBox()) ? mWidgetSize.height : aHeight;
+  nscoord height = (mIsComboBox) ? mWidgetSize.height : aHeight;
   return nsInputFrame::SizeTo(aWidth, height);
 }
 
@@ -274,18 +277,13 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
   nsresult stat = view->QueryInterface(kListWidgetIID, (void **) &list);
   NS_ASSERTION((NS_OK == stat), "invalid widget");
 
-  PRBool isCombo = IsComboBox();
   PRInt32 numChildren = select->ChildCount();
   for (int i = 0; i < numChildren; i++) {
     nsOption* option = (nsOption*) select->ChildAt(i);  // YYY this had better be an option
     nsString text;
-    if (PR_TRUE != option->GetText(text)) {
+    if (PR_TRUE != option->GetContent(text)) {
       text = " ";
     }
-//    if (isCombo) {
-//      printf("\n ** text = %s", text.ToNewCString());
-//      list->AddItemAt(text, 1);
-//    }
     list->AddItemAt(text, i);
   }
 
@@ -349,25 +347,10 @@ nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
   }
 }
 
-PRBool
-nsSelect::IsComboBox()
-{
-//  PRBool  multiple;
-//  PRInt32 size;
-
-//  GetAttribute(nsHTMLAtoms::size, size);
-//  GetAttribute(nsHTMLAtoms::multiple, multiple);
-
-  PRBool result = (!mMultiple && (mSize <= 1)) ? PR_TRUE : PR_FALSE;
-  return result;
-}
 
 PRInt32 
 nsSelect::GetMaxNumValues()
 {
-//  PRBool isMultiple;
-//  GetAttribute(nsHTMLAtoms::multiple, isMultiple);
-
   if (mMultiple) {
     return ChildCount();
   }
@@ -463,14 +446,14 @@ nsSelect::Reset()
 nsOption::nsOption(nsIAtom* aTag)
   : nsInput(aTag, nsnull) 
 {
-  mText     = nsnull;
+  mContent  = nsnull;
   mSelected = PR_FALSE;
 }
 
 nsOption::~nsOption()
 {
-  if (nsnull != mText) {
-    delete mText;
+  if (nsnull != mContent) {
+    delete mContent;
   }
 }
 
@@ -524,25 +507,24 @@ nsOption::GetMaxNumValues()
   return 1;
 } 
 
-PRBool nsOption::GetText(nsString& aString) const
+PRBool nsOption::GetContent(nsString& aString) const
 {
-  if (nsnull == mText) {
+  if (nsnull == mContent) {
+    aString.SetLength(0);
     return PR_FALSE;
   } 
   else {
-    aString = *mText;
+    aString = *mContent;
     return PR_TRUE;
   }
 }
 
-void nsOption::SetText(nsString& aString)
+void nsOption::SetContent(const nsString& aString)
 {
-  if (nsnull == mText) {
-    mText = new nsString(aString);
+  if (nsnull == mContent) {
+    mContent = new nsString();
   }
-  else {
-    *mText = aString;
-  }
+  *mContent = aString;
 }
 
 PRBool
@@ -561,8 +543,8 @@ nsOption::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     aNumValues = 1;
     return PR_TRUE;
   }
-  else if (nsnull != mText) {
-    aValues[0] = *mText;
+  else if (nsnull != mContent) {
+    aValues[0] = *mContent;
     aNumValues = 1;
     return PR_TRUE;
   }
@@ -645,7 +627,7 @@ void HACK(nsSelect* aSel, PRInt32 aIndex)
     NS_NewHTMLOption((nsIHTMLContent**)&option, atom);
     sprintf(&buf[0], "option %d", i);
     nsString label(&buf[0]);
-    option->SetText(label);
+    option->SetContent(label);
     aSel->AppendChild(option);
   }
 }

@@ -469,7 +469,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
                              PRBool& aHeightExplicit, nscoord& aRowHeight) 
 {
   nscoord charWidth   = 0;
-  PRInt32 numRows     = 1;
+  PRInt32 numRows     = ATTR_NOTSET;
   aWidthExplicit      = PR_FALSE;
   aHeightExplicit     = PR_FALSE;
 
@@ -570,6 +570,9 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   }
 
   NS_RELEASE(content);
+  if (ATTR_NOTSET == numRows) {
+    numRows = aBounds.height / aRowHeight;
+  }
   return numRows;
 }
 

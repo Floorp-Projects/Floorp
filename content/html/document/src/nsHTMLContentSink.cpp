@@ -594,20 +594,29 @@ PRBool HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
   mContainerStack[mStackPos] = nsnull;
 
 
+  nsIHTMLContent* parent = nsnull;
+
   switch (aNode.GetNodeType()) {
   case eHTMLTag_option:
     ProcessCloseOPTIONTag(aNode);
+
+    eHTMLTags parentType;
+    parent = GetCurrentContainer(&parentType);
+    container->Compact();
+
+    if(parent) {
+      parent->AppendChild(container);
+    }
     break;
 
   case eHTMLTag_select:
-    ProcessCloseSELECTTag(aNode);
-    break;
+    ProcessCloseSELECTTag(aNode); // add fall through
 
   default:
     if (nsnull != container) {
       // Now that this container is complete, append it to it's parent
       eHTMLTags parentType;
-      nsIHTMLContent* parent = GetCurrentContainer(&parentType);
+      parent = GetCurrentContainer(&parentType);
       container->Compact();
 
       if(parent) {
@@ -1225,7 +1234,7 @@ HTMLContentSink::ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
     if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
       // Add remaining attributes from the tag
       //rv = AddAttributes(aNode, mCurrentOption);
-	    *aInstancePtrResult = mCurrentSelect;
+	    *aInstancePtrResult = mCurrentOption;
     }
     NS_RELEASE(atom);
   }
