@@ -524,6 +524,7 @@ RunApps(void)
 	OSErr 				err = noErr;
 	int 				i;
 	Ptr					appSigStr, docStr;	
+	StringPtr			relAppPath;
 	OSType 				appSig = 0x00000000;
 	FSSpec 				app, doc;
 	ProcessSerialNumber	psn;
@@ -536,10 +537,14 @@ RunApps(void)
 	{	
 		// convert str to ulong
 		HLock(gControls->cfg->apps[i].targetApp);
+#if 0
 		appSigStr = *(gControls->cfg->apps[i].targetApp);
 		UNIFY_CHAR_CODE(appSig, *(appSigStr), *(appSigStr+1), *(appSigStr+2), *(appSigStr+3));
-		HUnlock(gControls->cfg->apps[i].targetApp);
 		err =  FindAppUsingSig(appSig, &app, &running, &psn);
+#endif
+		relAppPath = CToPascal(*(gControls->cfg->apps[i].targetApp));
+		err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, relAppPath, &app);
+		HUnlock(gControls->cfg->apps[i].targetApp);
 		if (err != noErr)
 			continue;
 		
@@ -581,6 +586,9 @@ RunApps(void)
 			
 		}
 		HUnlock(gControls->cfg->apps[i].targetDoc);
+		
+		if (relAppPath)
+			DisposePtr((Ptr) relAppPath);
 	}
 	
 	return;
