@@ -26,6 +26,7 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "libi18n.h"
 #include "nsIMailboxUrl.h"
+#include "nsCRT.h"
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgMailboxParser)
@@ -88,7 +89,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 		nsString		author;
 		nsString		subject;
 
-		m_mailDB->PrePopulate();
+//		m_mailDB->PrePopulate();
 		m_mailDB->ListAllKeys(keys);
 		for (PRUint32 index = 0; index < keys.GetSize(); index++)
 		{
@@ -144,14 +145,14 @@ nsMsgMailboxParser::~nsMsgMailboxParser()
 void nsMsgMailboxParser::UpdateStatusText ()
 {
 #ifdef WE_HAVE_PROGRESS
-	char *leafName = XP_STRRCHR (m_mailboxName, '/');
+	char *leafName = PL_strrchr (m_mailboxName, '/');
 	if (!leafName)
 		leafName = m_mailboxName;
 	else
 		leafName++;
 	NET_UnEscape(leafName);
 	char *upgrading = XP_GetString (MK_MSG_REPARSE_FOLDER);
-	int progressLength = XP_STRLEN(upgrading) + XP_STRLEN(leafName) + 1;
+	int progressLength = nsCRT::strlen(upgrading) + nsCRT::strlen(leafName) + 1;
 	char *progress = new char [progressLength];
 	PR_snprintf (progress, progressLength, upgrading, leafName); 
 	FE_Progress (m_context, progress);
@@ -462,7 +463,7 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 
   if (buf_size < 29) return PR_FALSE;
   if (*buf != 'F') return PR_FALSE;
-  if (XP_STRNCMP(buf, "From ", 5)) return PR_FALSE;
+  if (nsCRT::strncmp(buf, "From ", 5)) return PR_FALSE;
 
   end = buf + buf_size;
   date = buf + 5;
@@ -527,7 +528,7 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 
   if (buf_size < 5) return PR_FALSE;
   if (*buf != 'F') return PR_FALSE;
-  if (XP_STRNCMP(buf, "From ", 5)) return PR_FALSE;
+  if (nsCRT::strncmp(buf, "From ", 5)) return PR_FALSE;
 
 #endif /* !STRICT_ENVELOPE */
 
@@ -573,7 +574,7 @@ void nsParseMailMessageState::GetAggregateHeader (nsVoidArray &list, struct mess
 	{
 		header = (struct message_header*) list.ElementAt(i);
 		length += (header->length + 1); //+ for ","
-		NS_ASSERTION(header->length == (PRInt32)XP_STRLEN(header->value), "header corrupted");
+		NS_ASSERTION(header->length == (PRInt32)nsCRT::strlen(header->value), "header corrupted");
 	}
 
 	if (length > 0)
@@ -587,9 +588,9 @@ void nsParseMailMessageState::GetAggregateHeader (nsVoidArray &list, struct mess
 			for (i = 0; i < size; i++)
 			{
 				header = (struct message_header*) list.ElementAt(i);
-				XP_STRCAT (value, header->value);
+				PL_strcat (value, header->value);
 				if (i + 1 < size)
-					XP_STRCAT (value, ",");
+					PL_strcat (value, ",");
 			}
 			outHeader->length = length;
 			outHeader->value = value;
@@ -630,7 +631,7 @@ int nsParseMailMessageState::ParseHeaders ()
   char *buf_end = buf + m_headers.GetSize();
   while (buf < buf_end)
 	{
-	  char *colon = XP_STRCHR (buf, ':');
+	  char *colon = PL_strchr (buf, ':');
 	  char *end;
 	  char *value = 0;
 	  struct message_header *header = 0;
@@ -814,17 +815,17 @@ msg_condense_mime2_string(char *sourceStr)
 	int16 string_csid = CS_DEFAULT;
 	int16 win_csid = CS_DEFAULT;
 
-	char *returnVal = XP_STRDUP(sourceStr);
+	char *returnVal = nsCRT::strdup(sourceStr);
 	if (!returnVal) 
 		return NULL;
 	
 	// If sourceStr has a MIME-2 encoded word in it, get the charset
 	// name/ID from the first encoded word. (No, we're not multilingual.)
-	char *p = XP_STRSTR(returnVal, "=?");
+	char *p = PL_strstr(returnVal, "=?");
 	if (p)
 	{
 		p += 2;
-		char *q = XP_STRCHR(p, '?');
+		char *q = PL_strchr(p, '?');
 		if (q) *q = '\0';
 		string_csid = INTL_CharSetNameToID(p);
 		win_csid = INTL_DocToWinCharSetID(string_csid);
@@ -871,7 +872,7 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 		return 0;
 	}
 
-	NS_ASSERTION (header->length == (short) XP_STRLEN (header->value), "subject corrupt while parsing message");
+	NS_ASSERTION (header->length == (short) nsCRT::strlen(header->value), "subject corrupt while parsing message");
 
 	key = (char *) header->value;  /* #### const evilness */
 
@@ -912,7 +913,7 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 	if (!header || header->length == 0)
 		return NS_OK;
 
-	NS_ASSERTION (header->length == (short) XP_STRLEN (header->value), "invalid message_header");
+	NS_ASSERTION (header->length == (short) nsCRT::strlen (header->value), "invalid message_header");
 	NS_ASSERTION (ret_name != NULL, "null ret_name");
 
 	if (m_rfc822AddressParser)
@@ -1057,12 +1058,12 @@ int nsParseMailMessageState::FinalizeHeaders()
 				 group in the summary list, and only being able to sort on the first
 				 group rather than the whole list.  It's worth it. */
 				char *s;
-				NS_ASSERTION (recipient->length == (PRUint16) XP_STRLEN (recipient->value), "invalid recipient");
-				s = XP_STRCHR (recipient->value, ',');
+				NS_ASSERTION (recipient->length == (PRUint16) nsCRT::strlen(recipient->value), "invalid recipient");
+				s = PL_strchr(recipient->value, ',');
 				if (s)
 				{
 					*s = 0;
-					recipient->length = XP_STRLEN (recipient->value);
+					recipient->length = nsCRT::strlen(recipient->value);
 				}
 				m_newMsgHdr->SetRecipients(recipient->value, FALSE);
 			}
@@ -1123,7 +1124,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 							   md5_bin[8], md5_bin[9], md5_bin[10],md5_bin[11],
 							   md5_bin[12],md5_bin[13],md5_bin[14],md5_bin[15]);
 					md5_header.value = md5_data;
-					md5_header.length = XP_STRLEN (md5_data);
+					md5_header.length = nsCRT::strlen(md5_data);
 					id = &md5_header;
 				}
 
@@ -1213,7 +1214,7 @@ int nsParseMailMessageState::FinalizeHeaders()
   NS_ASSERTION(stringP, "bad null param");
   if (!stringP) return PR_FALSE;
   s = *stringP;
-  L = lengthP ? *lengthP : XP_STRLEN(s);
+  L = lengthP ? *lengthP : nsCRT::strlen(s);
 
   s_end = s + L;
   last = s;
@@ -1278,7 +1279,7 @@ nsParseNewMailState::Init(MSG_Master *master, nsFileSpec &folder)
 {
     nsresult rv;
 //	SetMaster(master);
-	m_mailboxName = PL_strdup(folder);
+	m_mailboxName = nsCRT::strdup(folder);
 
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
@@ -2172,13 +2173,13 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 		return res;
 	if (m_out_file && m_writeToOutFile)
 	{
-		if (!XP_STRNCMP(line, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN)) 
+		if (!nsCRT::strncmp(line, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN)) 
 			m_wroteXMozillaStatus = TRUE;
 
 		m_lastBodyLineEmpty = (m_state == MBOX_PARSE_BODY && (EMPTY_MESSAGE_LINE(line)));
 
 		// make sure we mangle naked From lines
-		if (line[0] == 'F' && !XP_STRNCMP (line, "From ", 5))
+		if (line[0] == 'F' && !nsCRT::strncmp(line, "From ", 5))
 		{
 			res = XP_FileWrite (">", 1, m_out_file);
 			if (res < 1)
