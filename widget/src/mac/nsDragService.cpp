@@ -41,6 +41,8 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsILocalFileMac.h"
+
 
 #if !TARGET_CARBON
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -344,13 +346,23 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
       } // else we try one last ditch effort to find our data
 
 	  if ( dataFound ) {
-        // the DOM only wants LF, so convert from MacOS line endings to DOM line
-        // endings.
-        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize) );
+        nsCOMPtr<nsISupports> genericDataWrapper;
+	    if ( strcmp(flavorStr, kFileMime) == 0 ) {
+	      // we have a HFSFlavor struct in |dataBuff|. Create an nsLocalFileMac object.
+	      HFSFlavor* fileData = NS_REINTERPRET_CAST(HFSFlavor*, dataBuff);
+	      NS_ASSERTION ( sizeof(HFSFlavor) == dataSize, "Ooops, we realy don't have a HFSFlavor" );
+	      nsCOMPtr<nsILocalFileMac> file;
+	      if ( NS_SUCCEEDED(NS_NewLocalFileWithFSSpec(&fileData->fileSpec, getter_AddRefs(file))) )
+	        genericDataWrapper = do_QueryInterface(file);
+	    }
+	    else {
+          // we probably have some form of text. The DOM only wants LF, so convert k
+          // from MacOS line endings to DOM line endings.
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize) );            
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
+        }
         
         // put it into the transferable.
-        nsCOMPtr<nsISupports> genericDataWrapper;
-        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
         #ifdef NS_DEBUG
          if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
@@ -367,8 +379,6 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
   
   return errCode;
 }
-
-
 
 
 //

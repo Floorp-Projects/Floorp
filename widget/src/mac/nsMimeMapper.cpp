@@ -85,6 +85,9 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
   if ( !format ) {
     if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = 'TEXT';
+    if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
+      format = flavorTypeHFS;
+
     else if ( inAddIfNotPresent ) {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
       // upper two bytes.
@@ -117,6 +120,7 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
   switch ( inMacType ) {
   
     case 'TEXT': outMimeStr = kTextMime; break;
+    case flavorTypeHFS: outMimeStr = kFileMime; break;
     
     // This flavor is the old 4.x Composer flavor for HTML. The actual data is a binary
     // data structure which we do NOT want to deal with in any way shape or form. I am

@@ -87,7 +87,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
     format = CF_UNICODETEXT;
   } else if (mimeStr.Equals(kJPEGImageMime)) {
     format = CF_DIB;
-  } else if (mimeStr.Equals(kDropFilesMime)) {
+  } else if (mimeStr.Equals(kFileMime)) {
     format = CF_HDROP;
   } else {
     format = ::RegisterClipboardFormat(aMimeStr);
