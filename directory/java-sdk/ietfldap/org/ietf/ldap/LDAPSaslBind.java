@@ -29,8 +29,7 @@ import org.ietf.ldap.util.*;
 import java.io.*;
 import java.net.*;
 import javax.security.auth.callback.CallbackHandler;
-//import javax.security.sasl.*;
-import com.sun.security.sasl.preview.*;
+import javax.security.sasl.*;
 
 /**
  * Authenticates to a server using SASL
@@ -121,7 +120,8 @@ public class LDAPSaslBind implements LDAPBindHandler, Serializable {
      * @param ldapurls urls which may be selected to connect and bind to
      * @param ldc an active connection to a server, which will have
      * the new authentication state on return from the method
-     * @exception LDAPReferralException Failed to authenticate to the LDAP server
+     * @exception LDAPReferralException Failed to authenticate to the LDAP
+     * server
      */
     public void bind( String[] ldapurls,
                       LDAPConnection conn ) throws LDAPReferralException {
@@ -163,7 +163,6 @@ public class LDAPSaslBind implements LDAPBindHandler, Serializable {
             argNames[2] = "java.lang.String";
             argNames[3] = "java.lang.String";
             argNames[4] = "java.util.Map";
-//            argNames[4] = "java.util.Hashtable";
             argNames[5] = CALLBACK_HANDLER;
 
             // Get a mechanism driver
@@ -214,8 +213,10 @@ public class LDAPSaslBind implements LDAPBindHandler, Serializable {
                         b = new byte[0];
                     }
                     outVals = evaluateChallenge( b );
-                    System.out.println( "SaslClient.evaluateChallenge returned [" + ((outVals != null) ? new String( outVals ) : "null") + "] for [" +
-                                        new String( b ) + "]" );
+                    ldc.printDebug( "SaslClient.evaluateChallenge returned [" +
+                                    ((outVals != null) ?
+                                     new String( outVals ) : "null") +
+                                    "] for [" + new String( b ) + "]" );
 
                     if ( resultCode == LDAPException.SUCCESS ) {
                         // we're done; don't expect to send another BIND
@@ -241,7 +242,7 @@ public class LDAPSaslBind implements LDAPBindHandler, Serializable {
                                              LDAPException.OTHER );
                 } else if ( resultCode == LDAPException.SUCCESS ) {
                     // Has a security layer been negotiated?
-                    String qop = getNegotiatedProperty( QOP );
+                    String qop = (String)getNegotiatedProperty( QOP );
                     if ( (qop != null) &&
                          (qop.equalsIgnoreCase("auth-int") ||
                           qop.equalsIgnoreCase("auth-conf")) ) {
@@ -353,15 +354,16 @@ public class LDAPSaslBind implements LDAPBindHandler, Serializable {
         }
     }
 
-    private String getNegotiatedProperty( String propName )
+    private Object getNegotiatedProperty( String propName )
         throws LDAPException {
         try {
             if ( !_useReflection ) {
-                return ((SaslClient)_saslClient).getNegotiatedProperty( propName );
+                return ((SaslClient)_saslClient).getNegotiatedProperty(
+                    propName );
             } else {
                 Object[] args = { propName };
                 String[] argNames = { "String" };
-                return (String)DynamicInvoker.invokeMethod(
+                return DynamicInvoker.invokeMethod(
                     _saslClient,
                     _saslClient.getClass().getName(),
                     "getNegotiatedProperty",
