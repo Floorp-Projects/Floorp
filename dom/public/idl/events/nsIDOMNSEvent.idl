@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a90977dd-a80b-49bb-8169-cc90e3d1da98)]
+[scriptable, uuid(e565d518-4510-407f-a3d9-3b4107549c6d)]
 interface nsIDOMNSEvent : nsISupports
 {
   const long MOUSEDOWN    = 0x00000001;
@@ -100,4 +100,6 @@ interface nsIDOMNSEvent : nsISupports
 
   void                      preventBubble();
   void                      preventCapture();
+
+  readonly attribute boolean isTrusted;
 };

@@ -284,13 +284,6 @@ nsDOMEvent::HasOriginalTarget(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::IsTrustedEvent(PRBool* aResult)
-{
-  *aResult = mEventIsTrusted;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMEvent::SetTrusted(PRBool aTrusted)
 {
   mEventIsTrusted = aTrusted;
@@ -361,6 +354,14 @@ nsDOMEvent::PreventCapture()
   if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
     mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetIsTrusted(PRBool *aIsTrusted)
+{
+  *aIsTrusted = mEventIsTrusted;
+
   return NS_OK;
 }
 

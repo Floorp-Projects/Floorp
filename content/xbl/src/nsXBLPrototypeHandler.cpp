@@ -63,6 +63,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIDOMWindowInternal.h"
@@ -228,13 +229,14 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // XUL handlers and commands shouldn't be triggered by non-trusted
   // events.
   if (isXULKey || isXBLCommand) {
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
-    if (privateEvent) {
-      PRBool trustedEvent;
-      privateEvent->IsTrustedEvent(&trustedEvent);
-      if (!trustedEvent)
-        return NS_OK;
+    nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
+    PRBool trustedEvent = PR_FALSE;
+    if (domNSEvent) {
+      domNSEvent->GetIsTrusted(&trustedEvent);
     }
+
+    if (!trustedEvent)
+      return NS_OK;
   }
     
   PRBool isReceiverCommandElement = PR_FALSE;

@@ -46,7 +46,6 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
-#include "nsIPrivateDOMEvent.h"                                                 
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -142,15 +141,15 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
-  if (aKeyEvent) {
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-    if (privateEvent) {
-      PRBool trustedEvent;
-      privateEvent->IsTrustedEvent(&trustedEvent);
-      if (!trustedEvent)
-        return NS_OK;
-    }
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  PRBool trustedEvent = PR_FALSE;
+
+  if (domNSEvent) {
+    domNSEvent->GetIsTrusted(&trustedEvent);
   }
+
+  if (!trustedEvent)
+    return NS_OK;
 
   if (mAccessKey && mAccessKeyFocuses)
   {
@@ -202,15 +201,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   //handlers shouldn't be triggered by non-trusted events.
-  if (aKeyEvent) {
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-    if (privateEvent) {
-      PRBool trustedEvent;
-      privateEvent->IsTrustedEvent(&trustedEvent);
-      if (!trustedEvent)
-        return NS_OK;
-    }
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  PRBool trustedEvent = PR_FALSE;
+  if (domNSEvent) {
+    domNSEvent->GetIsTrusted(&trustedEvent);
   }
+
+  if (!trustedEvent)
+    return NS_OK;
 
   nsresult retVal = NS_OK;  // default is to not consume event
   
@@ -322,15 +320,15 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
-  if (aKeyEvent) {
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-    if (privateEvent) {
-      PRBool trustedEvent;
-      privateEvent->IsTrustedEvent(&trustedEvent);
-      if (!trustedEvent)
-        return NS_OK;
-    }
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  PRBool trustedEvent = PR_FALSE;
+
+  if (domNSEvent) {
+    domNSEvent->GetIsTrusted(&trustedEvent);
   }
+
+  if (!trustedEvent)
+    return NS_OK;
 
   if (mAccessKey && mAccessKeyFocuses)
   {
