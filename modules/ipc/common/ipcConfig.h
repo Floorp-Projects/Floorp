@@ -67,7 +67,7 @@
 //
 #define IPC_PORT                0
 #define IPC_SOCKET_TYPE         "ipc"
-#define IPC_DEFAULT_SOCKET_PATH "/tmp/sock"
+#define IPC_DEFAULT_SOCKET_PATH "/tmp/.mozilla-ipc/ipcd"
 #define IPC_DAEMON_APP_NAME     "mozipcd"
 #define IPC_PATH_SEP_CHAR       '/'
 #endif

@@ -129,12 +129,35 @@ IPC_GetModuleByID(const nsID &id)
 }
 
 void
-IPC_InitModuleReg(const char *modulesDir)
+IPC_InitModuleReg(const char *exePath)
 {
+    //
+    // register built-in modules
+    //
     ipcModule *module = IPC_GetCommandModule();
     AddModule(module->ID(), module, NULL);
 
-    if (modulesDir) {
+    //
+    // register plug-in modules
+    //
+    if (exePath && *exePath) {
+        static const char relModDir[] = "ipc/modules";
+
+        char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
+        if (p == NULL) {
+            LOG(("unexpected exe path\n"));
+            return;
+        }
+
+        int baseLen = p - exePath;
+        int finalLen = baseLen + 1 + sizeof(relModDir);
+
+        // build full path to ipc modules
+        char *modulesDir = (char*) malloc(finalLen);
+        memcpy(modulesDir, exePath, baseLen);
+        modulesDir[baseLen] = IPC_PATH_SEP_CHAR;
+        memcpy(modulesDir + baseLen + 1, relModDir, sizeof(relModDir));
+
         LOG(("loading libraries in %s\n", modulesDir));
         // 
         // scan directory for IPC modules

@@ -40,22 +40,38 @@
 #include <unistd.h>
 
 #include "private/pprio.h"
+#include "plstr.h"
+#include "nsReadableUtils.h"
+#include "nsMemory.h"
 
-#include "ipcSocketProvider.h"
+#include "ipcSocketProviderUnix.h"
 #include "ipcLog.h"
 
 static PRDescIdentity ipcIOLayerIdentity;
 static PRIOMethods    ipcIOLayerMethods;
+static char          *ipcIOSocketPath;
 
 static PRStatus PR_CALLBACK
-ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr, PRIntervalTime timeout)
+ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* a, PRIntervalTime timeout)
 { 
     if (!fd || !fd->lower)
         return PR_FAILURE;
 
     PRStatus status;
 
-    status = fd->lower->methods->connect(fd->lower, addr, timeout);
+    if (ipcIOSocketPath == NULL || ipcIOSocketPath[0] == '\0') {
+        NS_ERROR("not initialized");
+        return PR_FAILURE;
+    }
+
+    //
+    // ignore passed in address.
+    //
+    PRNetAddr addr;
+    addr.local.family = PR_AF_LOCAL;
+    PL_strncpyz(addr.local.path, ipcIOSocketPath, sizeof(addr.local.path));
+
+    status = fd->lower->methods->connect(fd->lower, &addr, timeout);
     if (status != PR_SUCCESS)
         return status;
 
@@ -72,12 +88,12 @@ ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr, PRIntervalTime timeout)
 
     struct stat st;
     if (fstat(unix_fd, &st) == -1) {
-        LOG(("ipcIOLayerConnect: stat failed\n"));
+        NS_ERROR("stat failed");
         return PR_FAILURE;
     }
 
     if (st.st_uid != getuid() && st.st_uid != geteuid()) {
-        LOG(("ipcIOLayerConnect: uid check failed\n"));
+        NS_ERROR("userid check failed");
         return PR_FAILURE;
     }
 
@@ -93,12 +109,12 @@ static void InitIPCMethods()
 }
 
 NS_IMETHODIMP
-ipcSocketProvider::NewSocket(const char *host,
-                             PRInt32 port,
-                             const char *proxyHost,
-                             PRInt32 proxyPort,
-                             PRFileDesc **fd,
-                             nsISupports **securityInfo)
+ipcSocketProviderUnix::NewSocket(const char *host,
+                                 PRInt32 port,
+                                 const char *proxyHost,
+                                 PRInt32 proxyPort,
+                                 PRFileDesc **fd,
+                                 nsISupports **securityInfo)
 {
     static PRBool firstTime = PR_TRUE;
     if (firstTime) {
@@ -129,15 +145,24 @@ loser:
 }
 
 NS_IMETHODIMP
-ipcSocketProvider::AddToSocket(const char *host,
-                               PRInt32 port,
-                               const char *proxyHost,
-                               PRInt32 proxyPort,
-                               PRFileDesc *fd,
-                               nsISupports **securityInfo)
+ipcSocketProviderUnix::AddToSocket(const char *host,
+                                   PRInt32 port,
+                                   const char *proxyHost,
+                                   PRInt32 proxyPort,
+                                   PRFileDesc *fd,
+                                   nsISupports **securityInfo)
 {
     NS_NOTREACHED("unexpected");
     return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(ipcSocketProvider, nsISocketProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS1(ipcSocketProviderUnix, nsISocketProvider)
+
+
+void
+ipcSocketProviderUnix::SetSocketPath(const nsACString &socketPath)
+{
+    if (ipcIOSocketPath)
+        nsMemory::Free(ipcIOSocketPath);
+    ipcIOSocketPath = ToNewCString(socketPath);
+}

@@ -56,6 +56,10 @@
 #include "ipcTransport.h"
 #include "ipcm.h"
 
+#ifdef XP_UNIX
+#include "ipcSocketProviderUnix.h"
+#endif
+
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 //-----------------------------------------------------------------------------
@@ -76,6 +80,10 @@ ipcTransport::Init(const nsACString &appName,
     mAppName = appName;
     mSocketPath = socketPath;
     mObserver = obs;
+
+#ifdef XP_UNIX
+    ipcSocketProviderUnix::SetSocketPath(socketPath);
+#endif
 
     LOG(("ipcTransport::Init [app-name=%s]\n", mAppName.get()));
 
@@ -237,6 +245,7 @@ ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
             LOG(("  failed to spawn daemon [rv=%x]\n", rv));
             return;
         }
+        mSpawnedDaemon = PR_TRUE;
 
         //
         // re-initialize connection after timeout
@@ -247,8 +256,10 @@ ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
             return;
         }
 
-        // use a simple exponential growth algorithm n*2^(n-1)
-        PRUint32 ms = 1000 * (1 << (mConnectionAttemptCount - 1));
+        // use a simple exponential growth algorithm 2^(n-1)
+        PRUint32 ms = 500 * (1 << (mConnectionAttemptCount - 1));
+        if (ms > 10000)
+            ms = 10000;
 
         LOG(("  waiting %u milliseconds\n", ms));
 
@@ -283,24 +294,15 @@ ipcTransport::CreateTransport()
                                     1024,
                                     1024*16,
                                     getter_AddRefs(mTransport));
-    if (NS_FAILED(rv)) return rv;
-
-#ifndef IPC_USE_INET
-    nsCOMPtr<nsISocketTransport> st(do_QueryInterface(mTransport, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    PRNetAddr addr;
-    addr.local.family = PR_AF_LOCAL;
-    PL_strncpyz(addr.local.path, mSocketPath.get(), sizeof(addr.local.path));
-
-    rv = st->SetAddress(&addr);
-#endif
     return rv;
 }
 
 nsresult
 ipcTransport::SpawnDaemon()
 {
+    if (mSpawnedDaemon)
+        return NS_OK;
+
     LOG(("ipcTransport::SpawnDaemon\n"));
 
     nsresult rv;

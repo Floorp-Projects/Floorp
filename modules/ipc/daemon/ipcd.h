@@ -64,7 +64,7 @@ class ipcMessage;
 //   msg    - the message received.  this function does not modify |msg|,
 //            and ownership stays with the caller.
 //
-IPC_API int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
+IPC_API PRStatus IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
 
 //
 // IPC_SendMsg
@@ -75,15 +75,13 @@ IPC_API int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
 //   msg    - the message to be sent.  this function subsumes
 //            ownership of the message.  the caller must not attempt
 //            to access |msg| after this function returns.
-// return:
-//   0        - on success
 //
-IPC_API int IPC_SendMsg(ipcClient *client, ipcMessage *msg);
+IPC_API PRStatus IPC_SendMsg(ipcClient *client, ipcMessage *msg);
 
 //
 // returns the client ID dynamically generated for the given client.
 //
-IPC_API int IPC_GetClientID(ipcClient *client);
+IPC_API PRUint32 IPC_GetClientID(ipcClient *client);
 
 //
 // returns the client name (NULL if the client did not specify a name).
@@ -93,7 +91,7 @@ IPC_API const char *IPC_GetClientName(ipcClient *client);
 //
 // client lookup functions
 //
-IPC_API ipcClient *IPC_GetClientByID(int id);
+IPC_API ipcClient *IPC_GetClientByID(PRUint32 id);
 IPC_API ipcClient *IPC_GetClientByName(const char *name);
 
 //
@@ -113,7 +111,7 @@ IPC_API void IPC_EnumerateClientTargets(ipcClient *client, ipcClientTargetEnumFu
 //
 // return array of all clients, length equal to |count|.
 //
-IPC_API ipcClient *IPC_GetClients(int *count);
+IPC_API ipcClient *IPC_GetClients(PRUintn *count);
 
 //
 // returns the ipcModule object registered under the given module ID.
