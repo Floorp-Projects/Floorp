@@ -801,7 +801,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
     if (textLength == 1) {
       const PRUnichar NBSP = 160;
       const nsTextFragment *textFrag;
-      nsresult rv = textContent->GetText(&textFrag);
+      textContent->GetText(&textFrag);
       PRUnichar theChar = textFrag->CharAt(0);
       if (theChar == NBSP)
         return NS_ERROR_FAILURE;
