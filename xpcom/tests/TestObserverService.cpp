@@ -48,6 +48,7 @@ public:
         : mName( name ) {
         NS_INIT_REFCNT();
     }
+    virtual ~TestObserver() {}
     NS_DECL_ISUPPORTS
     NS_DECL_IOBSERVER
     nsString mName;

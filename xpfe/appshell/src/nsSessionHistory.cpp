@@ -703,7 +703,7 @@ public:
 
 protected:
 
-   ~nsSessionHistory();
+   virtual ~nsSessionHistory();
 
 private:
   PRInt32       mHistoryLength;

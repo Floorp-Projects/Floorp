@@ -58,7 +58,7 @@ public:
 	// nsAddrDatabase methods:
 
 	nsAddrDatabase();
-	~nsAddrDatabase();
+	virtual ~nsAddrDatabase();
 
 	nsIMdbFactory	*GetMDBFactory();
 	nsIMdbEnv		*GetEnv() {return m_mdbEnv;}
