@@ -170,14 +170,6 @@ public:
   // --------------------------------------------------------------------------
   // Additional methods 
 
-  // helper to get the presentation data of a frame. If we happen to
-  // be surrounded by non-MathML helper frames needed for our support,
-  // we walk up the frame hierarchy until we reach a MathML frame
-  // or the <root> math element.
-  static void
-  GetPresentationDataFrom(nsIFrame*           aFrame,
-                          nsPresentationData& aPresentationData);
-
   // helper to get the preferred size that a container frame should use to fire
   // the stretch on its stretchy child frames.
   virtual void

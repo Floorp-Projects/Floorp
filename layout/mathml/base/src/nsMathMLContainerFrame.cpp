@@ -775,41 +775,6 @@ CompressWhitespace(nsIContent* aContent)
   }
 }
 
-/* static */ void
-nsMathMLContainerFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
-                                                nsPresentationData& aPresentationData)
-{
-  nsIFrame* frame = aFrame;
-  while (frame) {
-    nsIMathMLFrame* mathMLFrame;
-    frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-    	nsPresentationData presentationData;
-      mathMLFrame->GetPresentationData(presentationData);
-      aPresentationData.mstyle = presentationData.mstyle;
-      aPresentationData.scriptLevel = presentationData.scriptLevel;
-      if (NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags)) {
-        aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      break;
-    }
-    // stop if we reach the root <math> tag
-    nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
-    content->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsMathMLAtoms::math) {
-      const nsStyleDisplay* display;
-      frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-      if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
-        aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      break;
-    }
-    frame->GetParent(&frame);
-  }
-}
-
 // This method is called in a top-down manner, as we descend the frame tree
 // during its construction
 NS_IMETHODIMP

@@ -286,13 +286,12 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
   // now, inherit the scriptlevel and displaystyle from our parent
-  nsMathMLContainerFrame::GetPresentationDataFrom(aParent, mPresentationData);
+  GetPresentationDataFrom(aParent, mPresentationData);
 
   // see if the displaystyle attribute is there and let it override what we inherited
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsMathMLContainerFrame::GetAttribute(mContent, nsnull,
-               nsMathMLAtoms::displaystyle_, value)) {
+      GetAttribute(mContent, nsnull, nsMathMLAtoms::displaystyle_, value)) {
     if (value.Equals(NS_LITERAL_STRING("true"))) {
       mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
     }
@@ -351,8 +350,7 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   PRBool alignAttribute = PR_FALSE;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsMathMLContainerFrame::GetAttribute(mContent, nsnull,
-                   nsMathMLAtoms::align_, value)) {
+      GetAttribute(mContent, nsnull, nsMathMLAtoms::align_, value)) {
     if (value.Equals(NS_LITERAL_STRING("top"))) {
       aDesiredSize.ascent = 0;
       aDesiredSize.descent = aDesiredSize.height;
@@ -444,7 +442,7 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
 
   // now, inherit the scriptlevel and displaystyle from our parent
-  nsMathMLContainerFrame::GetPresentationDataFrom(aParent, mPresentationData);
+  GetPresentationDataFrom(aParent, mPresentationData);
 
   return rv;
 }
