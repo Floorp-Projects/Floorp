@@ -82,7 +82,7 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorbase
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-OBJS = $(OBJS) .\$(OBJDIR)\nsTimer.obj
+OBJS = $(OBJS) .\$(OBJDIR)\nsTimer.obj .\$(OBJDIR)\nsCaretProperties.obj
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -23,9 +23,13 @@ LIBRARY_NAME=gmbase
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
-CPPSRCS=nsTimer.cpp 
-
-CPP_OBJS=.\$(OBJDIR)\nsTimer.obj 
+CPPSRCS=	nsTimer.cpp 						\
+					nsCaretProperties.cpp		\
+					$(NULL)
+					
+CPP_OBJS=	.\$(OBJDIR)\nsTimer.obj 						\
+					.\$(OBJDIR)\nsCaretProperties.obj 	\
+					$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
 
@@ -38,3 +42,4 @@ include <$(DEPTH)\config\rules.mak>
 
 libs:: $(OBJS)
 	$(MAKE_INSTALL) $(OBJDIR)\nsTimer.obj ..\$(OBJDIR)
+	$(MAKE_INSTALL) $(OBJDIR)\nsCaretProperties.obj ..\$(OBJDIR)
