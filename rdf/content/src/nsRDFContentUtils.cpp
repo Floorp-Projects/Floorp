@@ -190,21 +190,17 @@ ConvertAttributeValueToResource(nsIContent* aElement, nsString& aValue, nsIRDFRe
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(doc != nsnull, "element is not in any document");
-    if (doc) {
-        nsIURL* docURL = nsnull;
-        doc->GetBaseURL(docURL);
-        if (docURL) {
-            const char* url;
-            docURL->GetSpec(&url);
-            rdf_PossiblyMakeAbsolute(url, aValue);
-            NS_RELEASE(docURL);
-        }
-    }
+    if (! doc)
+        return NS_ERROR_FAILURE;
+
+    nsAutoString uri;
+    rv = nsRDFContentUtils::MakeElementURI(doc, aValue, uri);
+    if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = rdf->GetUnicodeResource(aValue.GetUnicode(), aResult);
+    rv = rdf->GetUnicodeResource(uri.GetUnicode(), aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
     if (NS_FAILED(rv)) return rv;
 
@@ -402,5 +398,62 @@ nsRDFContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
     }
 
     aResult.Append(aTag->GetUnicode());
+    return NS_OK;
+}
+
+
+nsresult
+nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsString& aURI)
+{
+    if (aElementID.Find(':') > 0) {
+        // Assume it's absolute already. Use as is.
+        aURI = aElementID;
+    }
+    else {
+        nsresult rv;
+
+        nsCOMPtr<nsIURL> docURL;
+        rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
+        if (NS_FAILED(rv)) return rv;
+
+        const char* spec;
+        docURL->GetSpec(&spec);
+        if (! spec)
+            return NS_ERROR_FAILURE;
+
+        aURI = spec;
+        if (aElementID.First() != PRUnichar('#')) {
+            aURI += '#';
+        }
+        aURI += aElementID;
+    }
+
+    return NS_OK;
+}
+
+
+
+nsresult
+nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIURL> docURL;
+    rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
+    if (NS_FAILED(rv)) return rv;
+
+    const char* spec;
+    docURL->GetSpec(&spec);
+    if (! spec)
+        return NS_ERROR_FAILURE;
+
+    if (aURI.Find(spec) == 0) {
+        PRInt32 len = PL_strlen(spec);
+        aURI.Right(aElementID, aURI.Length() - (len + 1)); // XXX assume '#'
+    }
+    else {
+        aElementID = aURI;
+    }
+
     return NS_OK;
 }

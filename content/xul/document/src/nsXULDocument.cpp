@@ -2909,11 +2909,9 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 
     nsresult rv;
 
-    nsAutoString uri(aId);
-    const char* documentURL;
-    mDocumentURL->GetSpec(&documentURL);
-
-    rdf_PossiblyMakeAbsolute(documentURL, uri);
+    nsAutoString uri;
+    rv = nsRDFContentUtils::MakeElementURI(this, aId, uri);
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> resource;
     if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(resource)))) {
@@ -3114,14 +3112,15 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     nsAutoString idValue;
     nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(aPopupElement);
     domRoot->GetAttribute("id", idValue);
-    const char* url;
-    mDocumentURL->GetSpec(&url);
-    rdf_PossiblyMakeAbsolute(url, idValue);
+
+    nsAutoString uri;
+    rv = nsRDFContentUtils::MakeElementURI(this, idValue, uri);
+    if (NS_FAILED(rv)) return rv;
 
     // Use the absolute URL to retrieve a resource from the RDF
     // service that corresponds to the root content.
     nsCOMPtr<nsIRDFResource> rootResource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(idValue.GetUnicode(), 
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), 
                                                        getter_AddRefs(rootResource)))) {
       NS_ERROR("Uh-oh. Couldn't obtain the resource for the popup doc root.");
       return rv;

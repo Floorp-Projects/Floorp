@@ -30,6 +30,7 @@
 
 class nsIAtom;
 class nsIContent;
+class nsIDocument;
 class nsIDOMNodeList;
 class nsIRDFNode;
 class nsString;
@@ -69,6 +70,12 @@ public:
 
     static nsresult
     GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsString& aResult);
+
+    static nsresult
+    MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsString& aURI);
+
+    static nsresult
+    MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID);
 };
 
 

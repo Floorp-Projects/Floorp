@@ -48,6 +48,10 @@ REQUIRES = dom js netlib rdf raptor xpcom
 # a first-class XPCOM interface.
 INCLUDES += -I$(srcdir)/../../base/src
 
+# XXX This is a dependency on nsRDFContentUtils.h. This'll go away once
+# XUL gets to live in it's own DLL like a big boy.
+INCLUDES += -I$(srcdir)/../../content/src
+
 MKSHLIB :=
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
