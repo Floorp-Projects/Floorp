@@ -3673,7 +3673,7 @@ nsMsgLocalMailFolder::GetUidlFromFolder(nsLocalFolderScanState *aState,
   PRUint32 messageOffset;
   PRBool more = PR_FALSE;
   PRUint32 size = 0, len = 0;
-  char *accountKey = nsnull;
+  const char *accountKey = nsnull;
 
   aMsgDBHdr->GetMessageOffset(&messageOffset);
   rv = aState->m_seekableStream->Seek(PR_SEEK_SET, messageOffset);
