@@ -602,7 +602,7 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 
   if (NS_FAILED(rv)) {
     PR_PL(("NS_ERROR_FAILURE - CheckForPrinters for Printers failed"));
-    return CleanupOnFailure(rv, PR_FALSE);
+    return CleanupOnFailure(rv, PR_TRUE);
   }
 
   mPrt->mPrintSettings->SetIsCancelled(PR_FALSE);
@@ -1092,7 +1092,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
     rv = NS_ERROR_FAILURE;
   }
   if (NS_FAILED(rv)) {
-    ShowPrintErrorDialog(rv, PR_TRUE);
+    ShowPrintErrorDialog(rv, PR_FALSE);
     CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
