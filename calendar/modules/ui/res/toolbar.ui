@@ -46,7 +46,7 @@
 
 <!-- This is the ToolBar Definition -->
 <toolbar backgroundcolor="#C0C0C0" name="ToolBar" layout="xbox" hgap="3" vgap="3" weightmajor="0" weightminor="0" icons="mini" dockable="true" floatable="true" tooltips="true"> 
-	<xpbutton command="LoadUrl?resource://res/ui/demo/julian4.cal" weightmajor="0" halign="center" valign="bottom" weightminor="0" label="Portal" miniimage="images/intray_mini.gif" fullimage="resource://res/ui/images/intray_full.gif" fullhoverimage="resource://res/ui/images/intray_hover_full.gif" fullpressedimage="resource://res/ui/images/intray_pressed_full.gif"/>
+	<xpbutton command="LoadUrl?resource://res/ui/demo/julian4.cal?target=content" weightmajor="0" halign="center" valign="bottom" weightminor="0" label="Portal" miniimage="images/intray_mini.gif" fullimage="resource://res/ui/images/intray_full.gif" fullhoverimage="resource://res/ui/images/intray_hover_full.gif" fullpressedimage="resource://res/ui/images/intray_pressed_full.gif"/>
 	<xpbutton label="Agenda" halign="center" valign="bottom" enable="True" weightmajor="0" weightminor="0" miniimage="resource://res/ui/images/agenda_mini.gif" fullimage="resource://res/ui/images/agenda_full.gif" fullhoverimage="resource://res/ui/images/agenda_hover_full.gif" fullpressedimage="resource://res/ui/images/agenda_pressed_full.gif"/>
 	<!--<xpbutton halign="center" valign="bottom" weightmajor="0" weightminor="0" label="Tasks" miniimage="tasks_mini.gif" fullimage="resource://res/ui/images/tasks_full.gif" fullhoverimage="resource://res/ui/images/tasks_hover_full.gif" fullpressedimage="resource://res/ui/images/tasks_pressed_full.gif"/>-->
 	<object class="separator" weightmajor="0" weightminor="0"/>
