@@ -43,6 +43,7 @@ XP_DIST_LIBS	= \
 		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		-lxpcom \
+		-lneckoutil_s \
 		$(OJI_LIBS) \
 		$(NULL)
 
