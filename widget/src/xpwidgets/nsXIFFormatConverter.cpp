@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "nsXIFConverter.h"
 #include "nsIDataFlavor.h"
 #include "nsWidgetsCID.h"
 #include "nsISupportsArray.h"
