@@ -10237,8 +10237,10 @@ void CEditBuffer::FinishedLoad2()
                                     && !GetCommandLog()->InReload();
 
 #if ENDER
+    XP_Bool isEmbedded = FALSE;
 	if (m_pImportedStream)//ENDER
 	{
+        isEmbedded = TRUE;
 		PasteText( m_pImportedStream, FALSE, FALSE, TRUE ,TRUE);
 		XP_FREE(m_pImportedStream);
 		m_pImportedStream=NULL;
@@ -10254,6 +10256,15 @@ void CEditBuffer::FinishedLoad2()
     }
     else
         RefreshLayout();
+
+#if ENDER
+    // Embedded htmlareas shouldn't show a caret to start with,
+    // but FE_SetNewDocumentProperties turned the cursor on six times!
+    if (isEmbedded)
+    {
+        FE_DestroyCaret(m_pContext);
+    }
+#endif //ENDER
 
     // Add GENERATOR meta-data. This tells us who most recently edited the doucment.
  	char generatorValue[300];
