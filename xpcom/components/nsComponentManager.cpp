@@ -3045,7 +3045,7 @@ private:
         PLDHashTableEnumeratorImpl    *impl;
     };
 
-    static PLDHashOperator Enumerator(PLDHashTable *table,
+    static PLDHashOperator PR_CALLBACK Enumerator(PLDHashTable *table,
                                       PLDHashEntryHdr *hdr, PRUint32 number,
                                       void *data);
 };
