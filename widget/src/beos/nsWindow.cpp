@@ -1105,7 +1105,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 	if(mView && mView->LockLooper())
 	{
    		if(PR_TRUE == aIsSynchronous)
-			mView->Draw(mView->Bounds());
+			OnPaint(mBounds);
 		else 
 			mView->Invalidate();
   		mView->UnlockLooper();

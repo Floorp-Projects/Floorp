@@ -21,7 +21,6 @@
 #include "nsIAppShell.h"
 #include "nsWindow.h"
 #include "nsSwitchToUIThread.h"
-#include "nsTimer.h"
 #include "plevent.h"
 
 #include <stdlib.h>
@@ -173,13 +172,9 @@ nsresult nsAppShell::Run()
 	{
 		switch(code)
 		{
-			case WM_TIMER :
-				{
-				TimerImpl *tobj = (TimerImpl *)id.data;
-				tobj->FireTimeout();
-				if(! id.sync)
-					NS_RELEASE(tobj);
-				}
+			case 'WMti' :
+				extern void nsTimerExpired(void *);	// hack: this is in gfx
+				nsTimerExpired(id.data);
 				break;
 
 			case WM_CALLMETHOD :

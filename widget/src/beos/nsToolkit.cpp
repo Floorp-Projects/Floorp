@@ -21,7 +21,6 @@
 #include "prmon.h"
 #include "prtime.h"
 #include "nsITimer.h"
-#include "nsTimer.h"
 #include "nsGUIEvent.h"
 #include "nsSwitchToUIThread.h"
 #include "plevent.h"
@@ -97,13 +96,9 @@ void nsToolkit::RunPump(void* arg)
 	{
 		switch(code)
 		{
-			case WM_TIMER :
-				{
-				TimerImpl *tobj = (TimerImpl *)id.data;
-				tobj->FireTimeout();
-				if(! id.sync)
-					NS_RELEASE(tobj);
-				}
+			case 'WMti' :
+				extern void nsTimerExpired(void *);	// hack: this is in gfx
+				nsTimerExpired(id.data);
 				break;
 
 			case WM_CALLMETHOD :
