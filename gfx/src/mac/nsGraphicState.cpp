@@ -24,6 +24,7 @@
 #include "nsDrawingSurfaceMac.h"
 #include "nsRegionMac.h"
 #include "nsIFontMetrics.h"
+#include "nsCarbonHelpers.h"
 
 nsGraphicStatePool sGraphicStatePool;
 
@@ -135,15 +136,10 @@ void nsGraphicState::Init(GrafPtr aPort)
 
 	// init from grafPort (usually an offscreen port)
 	RgnHandle	rgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
-#if TARGET_CARBON
 	if ( rgn ) {
 		Rect bounds;
 		::RectRgn(rgn, ::GetPortBounds(aPort, &bounds));
 	}
-#else
-	if (rgn)
-	  ::RectRgn(rgn, &aPort->portRect);
-#endif
 
   mMainRegion					= rgn;
   mClipRegion					= DuplicateRgn(rgn);
