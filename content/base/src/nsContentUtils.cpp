@@ -1244,6 +1244,8 @@ IsCharInSet(const char* aSet,
 /**
  * This method strips leading/trailing chars, in given set, from string.
  */
+
+// static
 const nsDependentSubstring
 nsContentUtils::TrimCharsInSet(const char* aSet,
                                const nsAString& aValue)
@@ -1273,6 +1275,44 @@ nsContentUtils::TrimCharsInSet(const char* aSet,
 
   // valueEnd should point to the char after the last to copy
   return Substring(valueCurrent, valueEnd);
+}
+
+/**
+ * This method strips leading and trailing whitespace from a string.
+ */
+
+// static
+const nsDependentSubstring
+nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
+{
+  nsAString::const_iterator start, end;
+
+  aStr.BeginReading(start);
+  aStr.EndReading(end);
+
+  // Skip whitespace charaters in the beginning
+  while (start != end && nsString::IsSpace(*start)) {
+    ++start;
+  }
+
+  if (aTrimTrailing) {
+    // Skip whitespace characters in the end.
+    while (end != start) {
+      --end;
+
+      if (!nsString::IsSpace(*end)) {
+        // Step back to the last non-whitespace character.
+        ++end;
+
+        break;
+      }
+    }
+  }
+
+  // Return a substring for the string w/o leading and/or trailing
+  // whitespace
+
+  return Substring(start, end);
 }
 
 void

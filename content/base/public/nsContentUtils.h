@@ -198,6 +198,9 @@ public:
   static const nsDependentSubstring TrimCharsInSet(const char* aSet,
                                                    const nsAString& aValue);
 
+  static const nsDependentSubstring TrimWhitespace(const nsAString& aStr,
+                                                   PRBool aTrimTrailing = PR_TRUE);
+
   static void Shutdown();
   
   /**

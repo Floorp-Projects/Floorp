@@ -80,7 +80,6 @@ public:
   nsresult ParseEventString(const nsAString &aValue);
 
 protected:
-
   // WEAK reference to outer object.
   nsIDOMHTMLScriptElement *mOuter;
 
@@ -359,6 +358,8 @@ public:
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
+  PRBool IsOnloadEventForWindow();
+
   PRUint32 mLineNumber;
   PRPackedBool mIsEvaluated;
   PRPackedBool mEvaluating;
@@ -440,6 +441,62 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
+// Helper method for checking if the script element has a "for"
+// attribute with a value that matches "\s*window\s*", and an "event"
+// attribute that matches "\s*onload([ \(].*)?", both case
+// insensitive. This is how IE seems to filter out a window's onload
+// handler from a <script for=... event=...> element.
+
+PRBool
+nsHTMLScriptElement::IsOnloadEventForWindow()
+{
+  nsAutoString str;
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for, str);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const nsAString& for_str = nsContentUtils::TrimWhitespace(str);
+
+  if (!for_str.Equals(NS_LITERAL_STRING("window"),
+                      nsCaseInsensitiveStringComparator())) {
+    return PR_FALSE;
+  }
+
+  // We found for="window", now check for event="onload".
+
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, str);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const nsAString& event_str = nsContentUtils::TrimWhitespace(str, PR_FALSE);
+
+  if (event_str.Length() < 6) {
+    // String too short, can't be "onload".
+
+    return PR_FALSE;
+  }
+
+  if (!Substring(event_str, 0, 6).Equals(NS_LITERAL_STRING("onload"),
+                                         nsCaseInsensitiveStringComparator())) {
+    // It ain't "onload.*".
+
+    return PR_FALSE;
+  }
+
+  nsAutoString::const_iterator start, end;
+  event_str.BeginReading(start);
+  event_str.EndReading(end);
+
+  start.advance(6); // advance past "onload"
+
+  if (start != end && *start != '(' && *start != ' ') {
+    // We got onload followed by something other than space or
+    // '('. Not good enough.
+
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP 
 nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue, PRBool aNotify)
@@ -456,10 +513,11 @@ nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   if (aNotify && aName == nsHTMLAtoms::src) {
     MaybeProcessScript();
-  } else if ((aName == nsHTMLAtoms::_for &&
-              HasAttr(kNameSpaceID_None, nsHTMLAtoms::_event)) ||
-             (aName == nsHTMLAtoms::_event &&
-              HasAttr(kNameSpaceID_None, nsHTMLAtoms::_for))) {
+  } else if (((aName == nsHTMLAtoms::_for &&
+               HasAttr(kNameSpaceID_None, nsHTMLAtoms::_event)) ||
+              (aName == nsHTMLAtoms::_event &&
+               HasAttr(kNameSpaceID_None, nsHTMLAtoms::_for))) &&
+             !IsOnloadEventForWindow()) {
     // If the script has NOT been executed yet then create a script
     // event handler if necessary...
     if (!mIsEvaluated && !mScriptEventHandler) {
