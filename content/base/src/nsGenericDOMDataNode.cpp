@@ -165,13 +165,13 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
   nsIContent *parent = GetParent();
   if (parent) {
     PRInt32 pos = parent->IndexOf(this);
-    if (pos > 0) {
+    if (pos > -1) {
       sibling = parent->GetChildAt(pos + 1);
     }
   }
   else if (mDocument) {
     PRInt32 pos = mDocument->IndexOf(this);
-    if (pos > 0) {
+    if (pos > -1) {
       sibling = mDocument->GetChildAt(pos + 1);
     }
   }
