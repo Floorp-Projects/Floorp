@@ -48,7 +48,6 @@
 #ifndef WM_GETOBJECT
 #define WM_GETOBJECT 0x03d
 #endif
-
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleEventListener.h"
@@ -58,9 +57,15 @@
 
 #include "nsString.h"
 
+struct FlagBits {
+  PRUint8 mIsLastSibling: 1;
+};
+
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 
-class Accessible : public SimpleDOMNode, public IAccessible
+class Accessible : public SimpleDOMNode, 
+                   public IAccessible,
+                   public IEnumVARIANT
 {
   public: // construction, destruction
     Accessible(nsIAccessible*, nsIDOMNode*, HWND aWin = 0);
@@ -161,6 +166,21 @@ class Accessible : public SimpleDOMNode, public IAccessible
         /* [optional][in] */ VARIANT varChild,
         /* [in] */ BSTR szValue);
 
+  public:   // IEnumVariantMethods
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Next( 
+        /* [in] */ ULONG celt,
+        /* [length_is][size_is][out] */ VARIANT __RPC_FAR *rgVar,
+        /* [out] */ ULONG __RPC_FAR *pCeltFetched);
+  
+    virtual HRESULT STDMETHODCALLTYPE Skip( 
+        /* [in] */ ULONG celt);
+  
+    virtual HRESULT STDMETHODCALLTYPE Reset( void);
+  
+    virtual HRESULT STDMETHODCALLTYPE Clone( 
+        /* [out] */ IEnumVARIANT __RPC_FAR *__RPC_FAR *ppEnum);
+
+        
   //   ======  Methods for IDispatch - for VisualBasic bindings (not implemented) ======
 
   STDMETHODIMP GetTypeInfoCount(UINT *p);
@@ -179,13 +199,27 @@ class Accessible : public SimpleDOMNode, public IAccessible
   static STDMETHODIMP NotifyWinEvent(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 
 protected:
-  nsCOMPtr<nsIAccessible> mAccessible;
+  nsCOMPtr<nsIAccessible> mXPAccessible;
+  IAccessible *mCachedFirstChild;
+  IAccessible *mCachedNextSibling;
 
-  nsCOMPtr<nsIAccessible> mCachedChild;
-  LONG mCachedIndex;
+  long mCachedChildCount;
+  // mEnumVARIANTPosition not the current accessible's position, but a "cursor" of 
+  // where we are in the current list of children, with respect to
+  // nsIEnumVariant::Reset(), Skip() and Next().
+  long mEnumVARIANTPosition;  
+  FlagBits mFlagBits;
 
   virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
-  IAccessible *Accessible::NewAccessible(nsIAccessible *aNSAcc, nsIDOMNode *aNode, HWND aWnd);
+  IAccessible *NewAccessible(nsIAccessible *aNSAcc, nsIDOMNode *aNode, HWND aWnd);
+
+  // Most IAccessible methods are not optimized to use the cache
+  // when CHILDID_SELF is mot used in the VARIANT struct.
+  // For this reason, a child number of CHILDID_SELF is recommended, 
+  // rather than using the child number you need in the VARIANT
+  // This is what most assistive tech tends to do, so it shouldn't be a problem.
+  void CacheMSAAChildren();
+  IAccessible *GetCachedChild(long aChildNum);
 
 private:
   /// the accessible library and cached methods

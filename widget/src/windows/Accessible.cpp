@@ -82,17 +82,17 @@ CComModule _Module;
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-Accessible::Accessible(nsIAccessible* aAcc, nsIDOMNode* aNode, HWND aWnd): SimpleDOMNode(aAcc, aNode, aWnd)
+Accessible::Accessible(nsIAccessible* aXPAccessible, nsIDOMNode* aNode, HWND aWnd): 
+                       SimpleDOMNode(aXPAccessible, aNode, aWnd), mCachedChildCount(-1), 
+                       mCachedFirstChild(nsnull), mCachedNextSibling(nsnull), mEnumVARIANTPosition(0),
+                       mXPAccessible(aXPAccessible)
 {
-  mAccessible = aAcc;  // The nsIAccessible we're proxying from
+  // So we know when mCachedNextSibling is uninitialized vs. null
+  mFlagBits.mIsLastSibling = PR_FALSE;
 
+  // Inherited from SimpleDOMNode
   mWnd = aWnd;  // The window handle, for NotifyWinEvent, or getting the accessible parent thru the window parent
   m_cRef = 0;   // for reference counting, so we know when to delete ourselves
-
-  // mCachedIndex and mCachedChild allows fast order(N) indexing of children when moving forward through the 
-  // list 1 at a time,rather than going back to the first child each time, it can just get the next sibling
-  mCachedIndex = 0;
-  mCachedChild = NULL;   
 
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", ++gAccessibles);
@@ -106,7 +106,13 @@ Accessible::Accessible(nsIAccessible* aAcc, nsIDOMNode* aNode, HWND aWnd): Simpl
 Accessible::~Accessible()
 {
   m_cRef = 0;
-  mAccessible = mCachedChild = nsnull;
+  mXPAccessible = nsnull;
+  if (mCachedNextSibling) {
+    mCachedNextSibling->Release();
+  }
+  if (mCachedFirstChild) {
+    mCachedFirstChild->Release();
+  }
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", --gAccessibles);
 #endif
@@ -122,7 +128,12 @@ STDMETHODIMP Accessible::QueryInterface(REFIID iid, void** ppv)
 
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = NS_STATIC_CAST(IAccessible*, this);
- 
+  else if (IID_IEnumVARIANT == iid) {
+    CacheMSAAChildren();
+    if (mCachedChildCount > 0)  // Don't support this interface for leaf elements
+      *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
+  }
+
   if (NULL == *ppv)
     return SimpleDOMNode::QueryInterface(iid,ppv);
     
@@ -147,8 +158,6 @@ HINSTANCE Accessible::gmAccLib = 0;
 HINSTANCE Accessible::gmUserLib = 0;
 LPFNACCESSIBLEOBJECTFROMWINDOW Accessible::gmAccessibleObjectFromWindow = 0;
 LPFNLRESULTFROMOBJECT Accessible::gmLresultFromObject = 0;
-
-
 LPFNNOTIFYWINEVENT Accessible::gmNotifyWinEvent = 0;
 
 
@@ -158,83 +167,76 @@ LPFNNOTIFYWINEVENT Accessible::gmNotifyWinEvent = 0;
 //-----------------------------------------------------
 
 
-STDMETHODIMP Accessible::AccessibleObjectFromWindow(
-  HWND hwnd,
-  DWORD dwObjectID,
-  REFIID riid,
-  void **ppvObject)
+STDMETHODIMP Accessible::AccessibleObjectFromWindow(HWND hwnd,
+                                                    DWORD dwObjectID,
+                                                    REFIID riid,
+                                                    void **ppvObject)
 {
-
   // open the dll dynamically
-    if (!gmAccLib) 
-       gmAccLib =::LoadLibrary("OLEACC.DLL");  
+  if (!gmAccLib) 
+    gmAccLib =::LoadLibrary("OLEACC.DLL");  
 
-    if (gmAccLib) {
-      if (!gmAccessibleObjectFromWindow)
-       gmAccessibleObjectFromWindow = (LPFNACCESSIBLEOBJECTFROMWINDOW)GetProcAddress(gmAccLib,"AccessibleObjectFromWindow");
+  if (gmAccLib) {
+    if (!gmAccessibleObjectFromWindow)
+      gmAccessibleObjectFromWindow = (LPFNACCESSIBLEOBJECTFROMWINDOW)GetProcAddress(gmAccLib,"AccessibleObjectFromWindow");
 
-      if (gmAccessibleObjectFromWindow)
-        return gmAccessibleObjectFromWindow(hwnd, dwObjectID, riid, ppvObject);
-    }
-    
+    if (gmAccessibleObjectFromWindow)
+      return gmAccessibleObjectFromWindow(hwnd, dwObjectID, riid, ppvObject);
+  }
 
-    return E_FAIL;
+  return E_FAIL;
 }
 
-STDMETHODIMP Accessible::NotifyWinEvent(
-  DWORD event,
-  HWND hwnd,
-  LONG idObjectType,
-  LONG idObject)
+STDMETHODIMP Accessible::NotifyWinEvent(DWORD event,
+                                        HWND hwnd,
+                                        LONG idObjectType,
+                                        LONG idObject)
 {
-
   // open the dll dynamically
-    if (!gmUserLib) 
-       gmUserLib =::LoadLibrary("USER32.DLL");  
+  if (!gmUserLib) 
+    gmUserLib =::LoadLibrary("USER32.DLL");  
 
-    if (gmUserLib) {
-      if (!gmNotifyWinEvent)
-       gmNotifyWinEvent = (LPFNNOTIFYWINEVENT)GetProcAddress(gmUserLib,"NotifyWinEvent");
+  if (gmUserLib) {
+    if (!gmNotifyWinEvent)
+      gmNotifyWinEvent = (LPFNNOTIFYWINEVENT)GetProcAddress(gmUserLib,"NotifyWinEvent");
 
-      if (gmNotifyWinEvent)
-         return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
-    }
+    if (gmNotifyWinEvent)
+      return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
+  }
     
-    return E_FAIL;
+  return E_FAIL;
 }
 
-
-
-STDMETHODIMP_(LRESULT) Accessible::LresultFromObject(
-  REFIID riid,
-  WPARAM wParam,
-  LPUNKNOWN pAcc)
+STDMETHODIMP_(LRESULT) Accessible::LresultFromObject(REFIID riid,
+                                                     WPARAM wParam,
+                                                     LPUNKNOWN pAcc)
 {
-    // open the dll dynamically
-    if (!gmAccLib) 
-       gmAccLib =::LoadLibrary("OLEACC.DLL");  
+  // open the dll dynamically
+  if (!gmAccLib) 
+    gmAccLib =::LoadLibrary("OLEACC.DLL");  
 
-    if (gmAccLib) {
-      if (!gmAccessibleObjectFromWindow)
-       gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
+  if (gmAccLib) {
+    if (!gmAccessibleObjectFromWindow)
+      gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
 
-      if (gmLresultFromObject)
-         return gmLresultFromObject(riid,wParam,pAcc);
-    }
+    if (gmLresultFromObject)
+      return gmLresultFromObject(riid,wParam,pAcc);
+  }
 
-    return 0;
+  return 0;
 }
 
 
 STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
-  nsCOMPtr<nsIAccessible> parent(nsnull);
-  mAccessible->GetAccParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIAccessible> xpParentAccessible;
+  mXPAccessible->GetAccParent(getter_AddRefs(xpParentAccessible));
 
-  if (parent) {
-    IAccessible* a = NewAccessible(parent, nsnull, mWnd);
-    a->AddRef();
-    *ppdispParent = a;
+  if (xpParentAccessible) {
+    IAccessible* msaaParentAccessible = 
+      NewAccessible(xpParentAccessible, nsnull, mWnd);
+    msaaParentAccessible->AddRef();
+    *ppdispParent = msaaParentAccessible;
     return S_OK;
   }
 
@@ -246,10 +248,10 @@ STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispPa
     void* ptr = nsnull;
     HRESULT result = AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr);
     if (SUCCEEDED(result)) {
-      IAccessible* a = (IAccessible*)ptr;
+      IAccessible* msaaParentAccessible = (IAccessible*)ptr;
       // got one? return it.
-      if (a) {
-        *ppdispParent = a;
+      if (msaaParentAccessible) {
+        *ppdispParent = msaaParentAccessible;
         return NS_OK;
       }
     }
@@ -261,9 +263,10 @@ STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispPa
 
 STDMETHODIMP Accessible::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
-  PRInt32 count = 0;
-  mAccessible->GetAccChildCount(&count);
-  *pcountChildren = count;
+  CacheMSAAChildren();
+  
+  *pcountChildren = mCachedChildCount;
+
   return S_OK;
 }
 
@@ -271,27 +274,22 @@ STDMETHODIMP Accessible::get_accChild(
       /* [in] */ VARIANT varChild,
       /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
 {
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
+  *ppdispChild = NULL;
 
-  if (a) 
-  {
-    // if its us return us
-    if (a == mAccessible) {
-      *ppdispChild = this;
-      AddRef();
-      return S_OK;
-    }
-      
-    // create a new one.
-    IAccessible* ia = NewAccessible(a, nsnull, mWnd);
-    ia->AddRef();
-    *ppdispChild = ia;
+  if (varChild.vt != VT_I4)
+    return E_FAIL;
+
+  if (varChild.lVal == CHILDID_SELF) {
+    *ppdispChild = this;
+    AddRef();
     return S_OK;
   }
 
-  *ppdispChild = NULL;
-  return E_FAIL;
+  CacheMSAAChildren();
+
+  *ppdispChild = GetCachedChild(varChild.lVal - 1); // already addrefed
+
+  return (*ppdispChild)? S_OK: E_FAIL;
 }
 
 STDMETHODIMP Accessible::get_accName( 
@@ -299,15 +297,14 @@ STDMETHODIMP Accessible::get_accName(
       /* [retval][out] */ BSTR __RPC_FAR *pszName)
 {
   *pszName = NULL;
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
-  if (a) {
-     nsAutoString name;
-     nsresult rv = a->GetAccName(name);
-     if (NS_FAILED(rv))
-        return S_FALSE;
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+  if (xpAccessible) {
+    nsAutoString name;
+    if (NS_FAILED(xpAccessible->GetAccName(name)))
+      return S_FALSE;
 
-     *pszName = ::SysAllocString(name.get());
+    *pszName = ::SysAllocString(name.get());
   }
 
   return S_OK;
@@ -319,15 +316,14 @@ STDMETHODIMP Accessible::get_accValue(
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
   *pszValue = NULL;
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
-  if (a) {
-     nsAutoString value;
-     nsresult rv = a->GetAccValue(value);
-     if (NS_FAILED(rv))
-        return S_FALSE;
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+  if (xpAccessible) {
+    nsAutoString value;
+    if (NS_FAILED(xpAccessible->GetAccValue(value)))
+      return S_FALSE;
 
-     *pszValue = ::SysAllocString(value.get());
+    *pszValue = ::SysAllocString(value.get());
   }
 
   return S_OK;
@@ -339,13 +335,12 @@ STDMETHODIMP Accessible::get_accDescription(
       /* [retval][out] */ BSTR __RPC_FAR *pszDescription)
 {
   *pszDescription = NULL;
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
-  if (a) {
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+  if (xpAccessible) {
      nsAutoString description;
-     nsresult rv = a->GetAccDescription(description);
-     if (NS_FAILED(rv))
-        return S_FALSE;
+     if (NS_FAILED(xpAccessible->GetAccDescription(description)))
+       return S_FALSE;
 
      *pszDescription = ::SysAllocString(description.get());
   }
@@ -357,45 +352,43 @@ STDMETHODIMP Accessible::get_accRole(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarRole)
 {
-   VariantInit(pvarRole);
-   pvarRole->vt = VT_I4;
+  VariantInit(pvarRole);
+  pvarRole->vt = VT_I4;
 
-   nsCOMPtr<nsIAccessible> a;
-   GetNSAccessibleFor(varChild,a);
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
 
-   if (!a)
-     return E_FAIL;
+  if (!xpAccessible)
+    return E_FAIL;
 
-   PRUint32 role = 0;
-   nsresult rv = a->GetAccRole(&role);
-   if (NS_FAILED(rv))
-     return E_FAIL;
+  PRUint32 role = 0;
+  if (NS_FAILED(xpAccessible->GetAccRole(&role)))
+    return E_FAIL;
 
-   pvarRole->lVal = role;
-   return S_OK;
+  pvarRole->lVal = role;
+  return S_OK;
 }
 
 STDMETHODIMP Accessible::get_accState( 
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarState)
 {
-   VariantInit(pvarState);
-   pvarState->vt = VT_I4;
-   pvarState->lVal = 0;
+  VariantInit(pvarState);
+  pvarState->vt = VT_I4;
+  pvarState->lVal = 0;
 
-   nsCOMPtr<nsIAccessible> a;
-   GetNSAccessibleFor(varChild,a);
-   if (!a)
-     return E_FAIL;
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+  if (!xpAccessible)
+    return E_FAIL;
 
-   PRUint32 state;
-   nsresult rv = a->GetAccState(&state);
-   if (NS_FAILED(rv))
-     return E_FAIL;
+  PRUint32 state;
+  if (NS_FAILED(xpAccessible->GetAccState(&state)))
+    return E_FAIL;
 
-   pvarState->lVal = state;
+  pvarState->lVal = state;
 
-   return S_OK;
+  return S_OK;
 }
 
 
@@ -414,7 +407,7 @@ STDMETHODIMP Accessible::get_accHelpTopic(
 {
   *pszHelpFile = NULL;
   *pidTopic = 0;
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 STDMETHODIMP Accessible::get_accKeyboardShortcut( 
@@ -422,11 +415,11 @@ STDMETHODIMP Accessible::get_accKeyboardShortcut(
       /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut)
 {
   *pszKeyboardShortcut = NULL;
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
-  if (a) {
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+  if (xpAccessible) {
     nsAutoString shortcut;
-    nsresult rv = a->GetAccKeyboardShortcut(shortcut);
+    nsresult rv = xpAccessible->GetAccKeyboardShortcut(shortcut);
     if (NS_FAILED(rv))
       return S_FALSE;
 
@@ -443,9 +436,9 @@ STDMETHODIMP Accessible::get_accFocus(
   VariantInit(pvarChild);
 
   nsCOMPtr<nsIAccessible> focusedAccessible;
-  if (NS_SUCCEEDED(mAccessible->GetAccFocused(getter_AddRefs(focusedAccessible)))) {
+  if (NS_SUCCEEDED(mXPAccessible->GetAccFocused(getter_AddRefs(focusedAccessible)))) {
     pvarChild->vt = VT_DISPATCH;
-    pvarChild->pdispVal = NewAccessible(focusedAccessible, nsnull, mWnd);
+    pvarChild->pdispVal = NS_STATIC_CAST(IDispatch*, NewAccessible(focusedAccessible, nsnull, mWnd));
     pvarChild->pdispVal->AddRef();
     return S_OK;
   }
@@ -453,6 +446,7 @@ STDMETHODIMP Accessible::get_accFocus(
   pvarChild->vt = VT_EMPTY;
   return E_FAIL;
 }
+
 /**
   * This method is called when a client wants to know which children of a node
   *  are selected. Currently we only handle this for HTML selects, which are the
@@ -494,7 +488,7 @@ STDMETHODIMP Accessible::get_accSelection(
   VariantInit(pvarChildren);
   pvarChildren->vt = VT_EMPTY;
   
-  nsCOMPtr<nsIAccessibleSelectable> select(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleSelectable> select(do_QueryInterface(mXPAccessible));
   if (select) {  // do we have an nsIAccessibleSelectable?
     // we have an accessible that can have children selected
     nsCOMPtr<nsISupportsArray> selectedOptions;
@@ -538,15 +532,14 @@ STDMETHODIMP Accessible::get_accDefaultAction(
       /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction)
 {
   *pszDefaultAction = NULL;
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
-  if (a) {
-     nsAutoString defaultAction;
-     nsresult rv = a->GetAccActionName(0,defaultAction);
-     if (NS_FAILED(rv))
-        return S_FALSE;
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+  if (xpAccessible) {
+    nsAutoString defaultAction;
+    if (NS_FAILED(xpAccessible->GetAccActionName(0, defaultAction)))
+      return S_FALSE;
 
-     *pszDefaultAction = ::SysAllocString(defaultAction.get());
+    *pszDefaultAction = ::SysAllocString(defaultAction.get());
   }
 
   return S_OK;
@@ -557,17 +550,19 @@ STDMETHODIMP Accessible::accSelect(
       /* [optional][in] */ VARIANT varChild)
 {
   // currently only handle focus and selection
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+
   if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
   {
     if (flagsSelect & SELFLAG_TAKEFOCUS)
-      mAccessible->AccTakeFocus();
+      xpAccessible->AccTakeFocus();
 
     if (flagsSelect & SELFLAG_TAKESELECTION)
-      mAccessible->AccTakeSelection();
+      xpAccessible->AccTakeSelection();
 
     if (flagsSelect & SELFLAG_REMOVESELECTION)
-      mAccessible->AccRemoveSelection();
-
+      xpAccessible->AccRemoveSelection();
 
     return S_OK;
   }
@@ -582,21 +577,51 @@ STDMETHODIMP Accessible::accLocation(
       /* [out] */ long __RPC_FAR *pcyHeight,
       /* [optional][in] */ VARIANT varChild)
 {
-  nsCOMPtr<nsIAccessible> a;
-  GetNSAccessibleFor(varChild,a);
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
 
-  if (a) {
-    PRInt32 x,y,w,h;
-    a->AccGetBounds(&x,&y,&w,&h);
+  if (xpAccessible) {
+    PRInt32 x, y, width, height;
+    if (NS_FAILED(xpAccessible->AccGetBounds(&x, &y, &width, &height)))
+      return E_FAIL;
 
     *pxLeft = x;
     *pyTop = y;
-    *pcxWidth = w;
-    *pcyHeight = h;
+    *pcxWidth = width;
+    *pcyHeight = height;
     return S_OK;
   }
 
   return E_FAIL;  
+}
+
+IAccessible *
+Accessible::GetCachedChild(long aChildNum)
+{
+  // aChildNum of -1 just counts up the children
+  // and stores the value in mCachedChildCount
+  VARIANT varStart, varResult;
+  VariantInit(&varStart);
+  varStart.lVal = CHILDID_SELF;
+  varStart.vt = VT_I4;
+
+  accNavigate(NAVDIR_FIRSTCHILD, varStart, &varResult);
+  for (long index = 0; varResult.vt == VT_DISPATCH; ++index) {
+    IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, varResult.pdispVal);
+    if (aChildNum == index)
+      return msaaAccessible;
+    msaaAccessible->accNavigate(NAVDIR_NEXT, varStart, &varResult);
+    msaaAccessible->Release();
+  }
+  if (mCachedChildCount < 0)
+    mCachedChildCount = index;
+  return nsnull;
+}
+
+void Accessible::CacheMSAAChildren()
+{
+  if (mCachedChildCount < 0)
+    GetCachedChild(-1); // This caches the children and sets mCachedChildCount
 }
 
 STDMETHODIMP Accessible::accNavigate( 
@@ -604,47 +629,91 @@ STDMETHODIMP Accessible::accNavigate(
       /* [optional][in] */ VARIANT varStart,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
 {
+  nsCOMPtr<nsIAccessible> xpAccessibleStart, xpAccessibleResult;
+  GetNSAccessibleFor(varStart, xpAccessibleStart);
+  PRBool isNavigatingFromSelf = (xpAccessibleStart == mXPAccessible);
   VariantInit(pvarEndUpAt);
 
-  nsCOMPtr<nsIAccessible> acc;
+  IAccessible* msaaAccessible = nsnull;
 
   switch(navDir) {
     case NAVDIR_DOWN: 
-      mAccessible->AccNavigateDown(getter_AddRefs(acc));
+      xpAccessibleStart->AccNavigateDown(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
-      mAccessible->GetAccFirstChild(getter_AddRefs(acc));
+      if (mCachedChildCount == -1 || xpAccessibleStart != mXPAccessible) {
+        xpAccessibleStart->GetAccFirstChild(getter_AddRefs(xpAccessibleResult));
+      }
+      else if (mCachedFirstChild) {
+        msaaAccessible = mCachedFirstChild;
+      }
       break;
     case NAVDIR_LASTCHILD:
-      mAccessible->GetAccLastChild(getter_AddRefs(acc));
+      xpAccessibleStart->GetAccLastChild(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_LEFT:
-      mAccessible->AccNavigateLeft(getter_AddRefs(acc));
+      xpAccessibleStart->AccNavigateLeft(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_NEXT:
-      mAccessible->GetAccNextSibling(getter_AddRefs(acc));
+      if (isNavigatingFromSelf && mCachedNextSibling) {
+        msaaAccessible = mCachedNextSibling;
+      }
+      else if (!mFlagBits.mIsLastSibling) {
+        xpAccessibleStart->GetAccNextSibling(getter_AddRefs(xpAccessibleResult));
+        if (!xpAccessibleResult && isNavigatingFromSelf)
+          mFlagBits.mIsLastSibling = PR_TRUE;
+      }
       break;
     case NAVDIR_PREVIOUS:
-      mAccessible->GetAccPreviousSibling(getter_AddRefs(acc));
+      xpAccessibleStart->GetAccPreviousSibling(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_RIGHT:
-      mAccessible->AccNavigateRight(getter_AddRefs(acc));
+      xpAccessibleStart->AccNavigateRight(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_UP:
-      mAccessible->AccNavigateUp(getter_AddRefs(acc));
+      xpAccessibleStart->AccNavigateUp(getter_AddRefs(xpAccessibleResult));
       break;
   }
 
-  if (acc) {
-     IAccessible* a = NewAccessible(acc, nsnull, mWnd);
-     a->AddRef();
-     pvarEndUpAt->vt = VT_DISPATCH;
-     pvarEndUpAt->pdispVal = a;
-     return NS_OK;
-  } else {
-     pvarEndUpAt->vt = VT_EMPTY;
-     return E_FAIL;
+  if (xpAccessibleResult) {
+    msaaAccessible = NewAccessible(xpAccessibleResult, nsnull, mWnd);
+    if (isNavigatingFromSelf) {
+      if (navDir == NAVDIR_NEXT) {
+        if (mCachedNextSibling)
+          mCachedNextSibling->Release();
+        mCachedNextSibling = msaaAccessible;
+        msaaAccessible->AddRef(); // addref for the caching
+      }
+      if (navDir == NAVDIR_FIRSTCHILD) {
+        if (mCachedFirstChild)
+          mCachedFirstChild->Release();
+        mCachedFirstChild = msaaAccessible;
+        msaaAccessible->AddRef(); // addref for the caching
+      }
+    }
+  } 
+  else if (!msaaAccessible) {
+    if (isNavigatingFromSelf) {
+      if (navDir == NAVDIR_NEXT) {
+        if (mCachedNextSibling)
+          mCachedNextSibling->Release();
+        mCachedNextSibling = nsnull;
+      }
+      if (navDir == NAVDIR_FIRSTCHILD) {
+        if (mCachedFirstChild)
+          mCachedFirstChild->Release();
+        mCachedFirstChild = nsnull;
+        mCachedChildCount = 0;
+      }
+    }
+    pvarEndUpAt->vt = VT_EMPTY;
+    return E_FAIL;
   }
+
+  pvarEndUpAt->pdispVal = NS_STATIC_CAST(IDispatch*, msaaAccessible);
+  msaaAccessible->AddRef(); //  addref for the getter
+  pvarEndUpAt->vt = VT_DISPATCH;
+  return NS_OK;
 }
 
 STDMETHODIMP Accessible::accHitTest( 
@@ -655,23 +724,22 @@ STDMETHODIMP Accessible::accHitTest(
   VariantInit(pvarChild);
 
   // convert to window coords
-  nsCOMPtr<nsIAccessible> a;
+  nsCOMPtr<nsIAccessible> xpAccessible;
 
   xLeft = xLeft;
   yTop = yTop;
 
-  mAccessible->AccGetAt(xLeft,yTop, getter_AddRefs(a));
+  mXPAccessible->AccGetAt(xLeft, yTop, getter_AddRefs(xpAccessible));
 
   // if we got a child
-  if (a) 
-  {
+  if (xpAccessible) {
     // if the child is us
-    if (a == mAccessible) {
+    if (xpAccessible == mXPAccessible) {
       pvarChild->vt = VT_I4;
       pvarChild->lVal = CHILDID_SELF;
     } else { // its not create an Accessible for it.
       pvarChild->vt = VT_DISPATCH;
-      pvarChild->pdispVal = NewAccessible(a, nsnull, mWnd);
+      pvarChild->pdispVal = NS_STATIC_CAST(IDispatch*, NewAccessible(xpAccessible, nsnull, mWnd));
       pvarChild->pdispVal->AddRef();
     }
   } else {
@@ -686,7 +754,13 @@ STDMETHODIMP Accessible::accHitTest(
 STDMETHODIMP Accessible::accDoDefaultAction( 
       /* [optional][in] */ VARIANT varChild)
 {
-  return NS_SUCCEEDED(mAccessible->AccDoAction(0))? NS_OK: DISP_E_MEMBERNOTFOUND;
+  nsCOMPtr<nsIAccessible> xpAccessible;
+  GetNSAccessibleFor(varChild, xpAccessible);
+
+  if (!xpAccessible || FAILED(xpAccessible->AccDoAction(0))) {
+    return E_FAIL;
+  }
+  return S_OK;
 }
 
 STDMETHODIMP Accessible::put_accName( 
@@ -703,6 +777,81 @@ STDMETHODIMP Accessible::put_accValue(
   return E_NOTIMPL;
 }
 
+
+STDMETHODIMP
+Accessible::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR* aNumElementsFetched)
+{
+  CacheMSAAChildren();
+  *aNumElementsFetched = 0;
+
+  if (aNumElementsRequested <= 0 || !pvar ||
+      mEnumVARIANTPosition >= mCachedChildCount) {
+    return E_FAIL;
+  }
+
+  VARIANT varStart;
+  VariantInit(&varStart);
+  varStart.lVal = CHILDID_SELF;
+  varStart.vt = VT_I4;
+
+  accNavigate(NAVDIR_FIRSTCHILD, varStart, &pvar[0]);
+
+  for (long childIndex = 0; pvar[*aNumElementsFetched].vt == VT_DISPATCH; ++childIndex) {
+    IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, pvar[*aNumElementsFetched].pdispVal);
+    if (childIndex >= mEnumVARIANTPosition) {
+      if ((*aNumElementsFetched)++ >= aNumElementsRequested)
+        break;
+    }
+    else {  
+      msaaAccessible->Release(); // this accessible will not be received by the caller
+    }
+    msaaAccessible->accNavigate(NAVDIR_NEXT, varStart, &pvar[*aNumElementsFetched] );
+  }
+  mEnumVARIANTPosition = childIndex;
+
+  return NOERROR;
+}
+
+STDMETHODIMP
+Accessible::Skip(ULONG aNumElements)
+{
+  CacheMSAAChildren();
+
+  mEnumVARIANTPosition += aNumElements;
+
+  if (mEnumVARIANTPosition > mCachedChildCount)
+  {
+    mEnumVARIANTPosition = mCachedChildCount;
+    return S_FALSE;
+  }
+  return NOERROR;
+}
+
+STDMETHODIMP 
+Accessible::Reset(void)
+{
+  mEnumVARIANTPosition = 0;
+  return NOERROR;
+}
+
+STDMETHODIMP
+Accessible::Clone(IEnumVARIANT FAR* FAR* ppenum)
+{
+  *ppenum = nsnull;
+  CacheMSAAChildren();
+
+  IAccessible *msaaAccessible = new Accessible(mXPAccessible, mDOMNode, mWnd);
+  if (!msaaAccessible)
+    return E_FAIL;
+  msaaAccessible->AddRef();
+  QueryInterface(IID_IEnumVARIANT, (void**)ppenum);
+  if (*ppenum)
+    (*ppenum)->Skip(mEnumVARIANTPosition); // QI addrefed
+  msaaAccessible->Release();
+
+  return NOERROR;
+}
+        
 
 // For IDispatch support
 STDMETHODIMP 
@@ -766,44 +915,28 @@ IAccessible *Accessible::NewAccessible(nsIAccessible *aNSAcc, nsIDOMNode *aNode,
 }
 
 
-void Accessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
+void Accessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aXPAccessible)
 {
-  // if its us real easy
+  aXPAccessible = nsnull;
+
+  // if its us real easy - this seems to always be the case
   if (varChild.lVal == CHILDID_SELF) {
-    aAcc = mAccessible;
-  } else if (mCachedChild && varChild.lVal == mCachedIndex+1) {
-    // if the cachedIndex is not self and the if its the one right
-    // before the one we want to get. Then just ask it for its next.
-    nsCOMPtr<nsIAccessible> next;
-    mCachedChild->GetAccNextSibling(getter_AddRefs(next));
-    if (next) {
-      mCachedIndex++;
-      mCachedChild = next;
+    aXPAccessible = mXPAccessible;
+  } 
+  else {
+    // XXX aaronl
+    // I can't find anything that uses VARIANT with a child num
+    // so let's not worry about optimizing this.
+    NS_NOTREACHED("MSAA VARIANT with child number being used");
+    nsCOMPtr<nsIAccessible> xpAccessible;
+    mXPAccessible->GetAccFirstChild(getter_AddRefs(xpAccessible));
+    for (PRInt32 index = 0; xpAccessible; index ++) {
+      aXPAccessible = xpAccessible;
+      if (varChild.lVal == index)
+        break;
+      aXPAccessible->GetAccNextSibling(getter_AddRefs(xpAccessible));
     }
-
-    aAcc = next;
-    return;
-
-  } else {
-    // if the cachedindex is not the one right before we have to start at the begining
-    nsCOMPtr<nsIAccessible> a;
-    mAccessible->GetAccFirstChild(getter_AddRefs(mCachedChild));
-    mCachedIndex = 1;
-    while(mCachedChild) 
-    {
-      if (varChild.lVal == mCachedIndex)
-      {
-         aAcc = mCachedChild;
-         return;
-      }
-
-      mCachedChild->GetAccNextSibling(getter_AddRefs(a));
-      mCachedChild = a;
-      mCachedIndex++;
-    }
-
-    aAcc = nsnull;
-  }  
+  }
 }
 
 
@@ -850,7 +983,7 @@ DocAccessible::~DocAccessible()
 
 STDMETHODIMP DocAccessible::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mXPAccessible));
   if (accDoc) {
     nsAutoString URL;
     if (NS_SUCCEEDED(accDoc->GetURL(URL))) {
@@ -863,7 +996,7 @@ STDMETHODIMP DocAccessible::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 
 STDMETHODIMP DocAccessible::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
 {
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mXPAccessible));
   if (accDoc) {
     nsAutoString title;
     if (NS_SUCCEEDED(accDoc->GetTitle(title))) { // getter_Copies(pszTitle)))) {
@@ -876,7 +1009,7 @@ STDMETHODIMP DocAccessible::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
 
 STDMETHODIMP DocAccessible::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
 {
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mXPAccessible));
   if (accDoc) {
     nsAutoString mimeType;
     if (NS_SUCCEEDED(accDoc->GetMimeType(mimeType))) {
@@ -889,7 +1022,7 @@ STDMETHODIMP DocAccessible::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
 
 STDMETHODIMP DocAccessible::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
 {
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mXPAccessible));
   if (accDoc) {
     nsAutoString docType;
     if (NS_SUCCEEDED(accDoc->GetDocType(docType))) {
@@ -903,7 +1036,7 @@ STDMETHODIMP DocAccessible::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
 STDMETHODIMP DocAccessible::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
   /* [out] */ BSTR __RPC_FAR *aNameSpaceURI)
 {
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mXPAccessible));
   if (accDoc) {
     *aNameSpaceURI = NULL;
     nsAutoString nameSpaceURI;
@@ -959,14 +1092,14 @@ RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAc
   mListCount = 0;
   mNextPos = 0;
 
-  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mXPAccessible));
   if (r)
     r->AddAccessibleEventListener(this);
 }
 
 RootAccessible::~RootAccessible()
 {
-  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
+  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mXPAccessible));
   if (r) 
     r->RemoveAccessibleEventListener();
 
@@ -982,7 +1115,7 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
 
   aAcc = nsnull;
   if (varChild.lVal == UNIQUE_ID_CARET) {
-    nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+    nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mXPAccessible));
     if (accDoc) { 
       nsCOMPtr<nsIAccessibleCaret> accessibleCaret;
       accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
@@ -1020,6 +1153,7 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
       return NS_OK;
   }
 #endif
+
   PRInt32 childID, worldID = OBJID_CLIENT;
   PRUint32 role;
 
