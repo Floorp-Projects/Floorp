@@ -36,6 +36,11 @@
 #include "nsIHTTPChannel.h"
 #include "nsIErrorService.h"
 #include "nsNetUtil.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* gGopherLog = nsnull;
+#endif
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
@@ -43,68 +48,35 @@ static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsGopherHandler::nsGopherHandler() : mProxyPort(-1) {
+nsGopherHandler::nsGopherHandler() {
     NS_INIT_REFCNT();
     nsresult rv;
+
+#ifdef PR_LOGGING
+    if (!gGopherLog)
+        gGopherLog = PR_NewLogModule("nsGopherProtocol");
+#endif
+
     mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
     if (!mProxySvc)
         NS_WARNING("Failed to get proxy service!\n");
 }
 
 nsGopherHandler::~nsGopherHandler() {
+    PR_LOG(gGopherLog, PR_LOG_ALWAYS, ("~nsGopherHandler() called"));
 }
 
-NS_IMPL_ISUPPORTS2(nsGopherHandler, nsIProtocolHandler, nsIProxy);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsGopherHandler, nsIProtocolHandler);
 
 NS_METHOD
 nsGopherHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
-    nsGopherHandler* ph = new nsGopherHandler();
-    if (!ph)
+    nsGopherHandler* gh = new nsGopherHandler();
+    if (!gh)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(ph);
-    nsresult rv = ph->QueryInterface(aIID, aResult);
-    NS_RELEASE(ph);
+    NS_ADDREF(gh);
+    nsresult rv = gh->QueryInterface(aIID, aResult);
+    NS_RELEASE(gh);
     return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIProxy methods:
-NS_IMETHODIMP
-nsGopherHandler::GetProxyHost(char **aProxyHost) {
-    *aProxyHost = mProxyHost.ToNewCString();
-    if (!*aProxyHost) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGopherHandler::SetProxyHost(const char * aProxyHost) {
-    mProxyHost = aProxyHost;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGopherHandler::GetProxyPort(PRInt32 *aProxyPort) {
-    *aProxyPort = mProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGopherHandler::SetProxyPort(PRInt32 aProxyPort) {
-    mProxyPort = aProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGopherHandler::GetProxyType(char **aProxyType) {
-    *aProxyType = mProxyType.ToNewCString();
-    if (!*aProxyType) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGopherHandler::SetProxyType(const char * aProxyType) {
-    mProxyType = aProxyType;
-    return NS_OK;
 }
     
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +103,6 @@ nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // All gopher URLs are absolute by definition
     NS_ASSERTION(!aBaseURI, "base url passed into gopher protocol handler");
 
-    // I probably need an nsIGopherURL
     nsCOMPtr<nsIStandardURL> url;
     rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
                                             NS_GET_IID(nsIStandardURL),
@@ -147,8 +118,7 @@ nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
-    nsresult rv;
-    
+    nsresult rv;    
     nsGopherChannel* channel;
     rv = nsGopherChannel::Create(nsnull, NS_GET_IID(nsIChannel),
                                  (void**)&channel);
@@ -156,7 +126,6 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     
     rv = channel->Init(url);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
         return rv;
     }
 
@@ -167,14 +136,12 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     if (mProxySvc &&
         NS_SUCCEEDED(mProxySvc->GetProxyEnabled(&useProxy)) && useProxy) {
 
-        rv = mProxySvc->ExamineForProxy(url, this);
+        rv = mProxySvc->ExamineForProxy(url, channel);
         if (NS_FAILED(rv)) return rv;
+    }
 
-        if (mProxyHost.IsEmpty() || mProxyType.Equals("socks")) {
-            *result = channel;
-            return NS_OK;
-        }
-
+    useProxy = PR_FALSE;
+    if (NS_SUCCEEDED(channel->GetUsingProxy(&useProxy)) && useProxy) {
         nsCOMPtr<nsIChannel> proxyChannel;
         // if an gopher proxy is enabled, push things off to HTTP.
         
@@ -182,7 +149,8 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
             do_GetService(kHTTPHandlerCID, &rv);
         if (NS_FAILED(rv)) return rv;
         
-        // rjc says: the dummy URI (for the HTTP layer) needs to be a syntactically valid URI
+        // rjc says: the dummy URI (for the HTTP layer) needs to be a
+        // syntactically valid URI
 
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), "http://example.com");
@@ -198,25 +166,35 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         rv = url->GetSpec(getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
         
-        rv = httpChannel->SetProxyRequestURI((const char*)spec);
+        rv = httpChannel->SetProxyRequestURI(spec.get());
         if (NS_FAILED(rv)) return rv;
         
         nsCOMPtr<nsIProxy> proxyHTTP = do_QueryInterface(httpChannel, &rv);
         if (NS_FAILED(rv)) return rv;
-        
-        rv = proxyHTTP->SetProxyHost(mProxyHost);
+
+        nsXPIDLCString proxyHost;
+        rv = channel->GetProxyHost(getter_Copies(proxyHost));
         if (NS_FAILED(rv)) return rv;
         
-        rv = proxyHTTP->SetProxyPort(mProxyPort);
+        rv = proxyHTTP->SetProxyHost(proxyHost);
         if (NS_FAILED(rv)) return rv;
         
-        rv = proxyHTTP->SetProxyType(mProxyType);
+        PRInt32 proxyPort;
+        rv = channel->GetProxyPort(&proxyPort);
         if (NS_FAILED(rv)) return rv;
 
-        *result = proxyChannel;
-        NS_ADDREF(*result);
-    } else {
-        *result = channel;
+        rv = proxyHTTP->SetProxyPort(proxyPort);
+        if (NS_FAILED(rv)) return rv;
+        
+        nsXPIDLCString proxyType;
+        rv = channel->GetProxyType(getter_Copies(proxyType));
+
+        if (NS_SUCCEEDED(rv))
+            proxyHTTP->SetProxyType(proxyType);
+
+        rv = channel->SetProxyChannel(proxyChannel);
     }
-    return NS_OK;
+    
+    *result = channel;
+    return rv;
 }

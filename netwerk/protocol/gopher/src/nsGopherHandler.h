@@ -25,7 +25,6 @@
 
 #include "nsIProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
-#include "nsIProxy.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
@@ -37,12 +36,10 @@
 { 0x44588c1f, 0x2ce8, 0x4ad8, \
    {0x9b, 0x16, 0xdf, 0xb9, 0xd9, 0xd5, 0x13, 0xa7} }
 
-class nsGopherHandler : public nsIProtocolHandler, public nsIProxy
-{
+class nsGopherHandler : public nsIProtocolHandler {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
-    NS_DECL_NSIPROXY
 
     // nsGopherHandler methods:
     nsGopherHandler();
@@ -51,13 +48,8 @@ public:
     // Define a Create method to be used with a factory:
     static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID,
                             void* *aResult);
-
 protected:
-    nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
-
-    nsCAutoString                           mProxyHost;
-    PRInt32                                 mProxyPort;
-    nsCAutoString                           mProxyType;
+    nsCOMPtr<nsIProtocolProxyService> mProxySvc;
 };
 
 #endif /* nsGopherHandler_h___ */
