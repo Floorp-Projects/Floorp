@@ -753,7 +753,7 @@ HandleTreeWindowEvent(nsGUIEvent *aEvent)
 	  if (NS_OK == pTree->QueryInterface(kIWidgetIID, (void**)&widget))
 	  {
 	      nsRect r;
-		  aEvent->widget->GetBounds(r);
+		  aEvent->widget->GetClientBounds(r);
 		  widget->Resize(0, 0, r.width, r.height, PR_TRUE);
 		  NS_IF_RELEASE(widget);
 	  }
@@ -779,13 +779,16 @@ nsBrowserWindow::DoTreeView()
 	nsRect r;
 	
 	mWindow->GetClientBounds(r);
-
+	
     pTreeWindow->Create((nsIWidget*)NULL, r, HandleTreeWindowEvent,
 		                 nsnull, mAppShell, nsnull, &initData);
   
+	pTreeWindow->SetTitle("Tree Widget Tester");
 
 	// Create and place a tree view.
-	r = nsRect(0,0,300,300);
+	pTreeWindow->GetClientBounds(r);
+
+	r = nsRect(0,0,r.width,r.height);
 
 	rv = nsRepository::CreateInstance(kCTreeViewCID, nsnull, kITreeViewIID,
 									(void**)&mTreeView);
