@@ -2308,7 +2308,9 @@ ET_SetPluginWindow(MWContext *cx, void *instance);
 
 NS_DEFINE_IID(kPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 NS_DEFINE_IID(kLiveConnectPluginIID, NS_ILIVECONNECTPLUGIN_IID);
+#ifdef OJI
 NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
+#endif
 
 #if defined(XP_MAC) && !defined(powerc)
 #pragma pointers_in_D0
