@@ -159,19 +159,6 @@ NS_IMPL_ISUPPORTS1(nsMsgCompose, nsMsgCompose)
 //
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-nsresult
-TranslateLineEndings(nsString &aString)
-{
-  // First, do sanity checking...if aString doesn't have
-  // any CR's, then there is no reason to call this rest
-  // of this 
-  if (aString.FindChar(CR) < 0)
-    return NS_OK;
-
-  DoLineEndingConJobUnicode(aString);
-  return NS_OK;
-}
-
 nsresult 
 GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
 {
@@ -232,10 +219,6 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   nsCOMPtr<nsIDOMNode> nodeInserted;
 
   aEditorShell->GetEditor(getter_AddRefs(editor));
-
-  TranslateLineEndings(aPrefix);
-  TranslateLineEndings(aBuf);
-  TranslateLineEndings(aSignature);
 
   if (editor)
     editor->EnableUndo(PR_FALSE);
@@ -3139,7 +3122,6 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
   //Then add the new one if needed
   nsAutoString aSignature;
   ProcessSignature(identity, &aSignature);
-  TranslateLineEndings(aSignature);
 
   if (!aSignature.IsEmpty())
   {

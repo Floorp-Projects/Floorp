@@ -132,10 +132,6 @@ char        *GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
 // File calls...
 nsresult ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed = PR_FALSE);
 
-// Conversion...
-void        DoLineEndingConJob(char *aBuf, PRUint32 aLen);
-void        DoLineEndingConJobUnicode(nsString& aInString);
-
 // Check if we should use format=flowed 
 PRBool UseFormatFlowed(const char *charset);
 
