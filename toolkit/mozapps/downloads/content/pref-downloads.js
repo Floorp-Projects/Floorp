@@ -108,7 +108,7 @@ function Startup()
     var downloadDir = pref.getComplexValue(downloadDirPref, nsILocalFile);  
     
     var desktop = getDownloadsFolder("Desktop");
-    var downloads = getDownloadsFolder("Documents");
+    var downloads = getDownloadsFolder("Downloads");
     
     // Check to see if the user-entered download dir is actually one of our
     // enumerated values (Desktop, My Downloads) and if so select that
@@ -218,7 +218,7 @@ function updateSaveToFolder()
 
     switch (parseInt(data.downloadFolderList.value)) {
     case 1:
-      targetFolder = fileLocator.get(parent.hPrefWindow.getSpecialFolderKey("Documents"), 
+      targetFolder = fileLocator.get(parent.hPrefWindow.getSpecialFolderKey("Downloads"), 
                                      Components.interfaces.nsIFile);
       targetFolder.append(description);
       break;
@@ -265,7 +265,7 @@ function folderListCommand(aEvent)
   var selectedIndex = folderList.selectedIndex;
 
   if (selectedIndex == 1) {
-    var downloads = getDownloadsFolder("Documents");
+    var downloads = getDownloadsFolder("Downloads");
     if (!downloads.exists())
       downloads.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
   }
@@ -314,16 +314,21 @@ function showFolder()
 
 function getSpecialFolderKey(aFolderType) 
 {
+  if (aFolderType == "Desktop")
+    return "Desk";
+
+  if (aFolderType != "Downloads")
+    throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
+
 #ifdef XP_WIN
-  return aFolderType == "Desktop" ? "DeskP" : "Pers";
-#endif
+  return "Pers";
+#else
 #ifdef XP_MACOSX
-  return aFolderType == "Desktop" ? "UsrDsk" : "UsrDocs";
-#endif
-#ifdef XP_OS2
-  return aFolderType == "Desktop" ? "Desk" : "Home";
-#endif
+  return "UsrDocs";
+#else
   return "Home";
+#endif
+#endif
 }
 
 function getDownloadsFolder(aFolder)
