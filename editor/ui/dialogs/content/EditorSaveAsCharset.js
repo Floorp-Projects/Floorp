@@ -18,12 +18,11 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- * Frank Tang ftang@netscape.com
+ * Frank Tang  ftang@netscape.com
+ * J.M  Betak  jbetak@netscape.com
  */
 
 
-var charsetList = new Array();
-var charsetDict = new Array();
 var charset="";
 var titleWasEdited = false;
 var charsetWasChanged = false;
@@ -34,7 +33,6 @@ var dialog;
 
 //Cancel() is in EdDialogCommon.js
 
-// dialog initialization code
 function Startup()
 {
   if (!InitEditorShell())
@@ -47,14 +45,13 @@ function Startup()
   dialog.TitleInput    = document.getElementById("TitleInput");
   dialog.charsetTree   = document.getElementById('CharsetTree'); 
   dialog.exportToText  = document.getElementById('ExportToText');
-  //dialog.charsetRoot = document.getElementById('CharsetRoot'); 
 
   contenttypeElement = GetHTTPEquivMetaElement("content-type");
-  if(!contenttypeElement && (editorShell.contentsMIMEType != 'text/plain'))
+  if(!contenttypeElement && (editorShell.contentsMIMEType != 'text/plain')) 
   {
     contenttypeElement = CreateHTTPEquivMetaElement("content-type");
-    if( ! contenttypeElement )
-    {
+    if( ! contenttypeElement ) 
+	{
       window.close();
       return;
     }
@@ -79,143 +76,98 @@ function Startup()
   SetWindowLocation();
 }
 
-function InitDialog() {
   
+function InitDialog() 
+{
   dialog.TitleInput.value = editorShell.GetDocumentTitle();
   charset = editorShell.GetDocumentCharacterSet();
 }
 
+
 function onOK()
 {
-
   editorShell.BeginBatchChanges();
 
-   if(charsetWasChanged) 
-   {
-      SetMetaElementContent(contenttypeElement, "text/html; charset=" + charset, insertNewContentType);     
-      editorShell.SetDocumentCharacterSet(charset);
-   }
-
-   editorShell.EndBatchChanges();
-
-  if(titleWasEdited) {
-    window.opener.newTitle = dialog.TitleInput.value.trimString();
+  if(charsetWasChanged) 
+  {
+     SetMetaElementContent(contenttypeElement, "text/html; charset=" + charset, insertNewContentType);     
+     editorShell.SetDocumentCharacterSet(charset);
   }
 
-   window.opener.ok = true;
-   window.opener.exportToText = dialog.exportToText.checked;
-   SaveWindowLocation();
-   return true;
- }
+  editorShell.EndBatchChanges();
 
+  if(titleWasEdited) 
+    window.opener.newTitle = dialog.TitleInput.value.trimString();
+
+  window.opener.ok = true;
+  window.opener.exportToText = dialog.exportToText.checked;
+  SaveWindowLocation();
+  return true;
+}
+
+
+function readRDFString(aDS,aRes,aProp) 
+{
+  var n = aDS.GetTarget(aRes, aProp, true);
+  if (n)
+    return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  else
+    return "";
+}
+
+      
 function LoadAvailableCharSets()
 {
-  try {
-    var ccm	= Components.classes['@mozilla.org/charset-converter-manager;1'];
+  try 
+  {                                  
+    var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+    var kNC_Root = rdf.GetResource("NC:DecodersRoot");
+    var kNC_name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+    var rdfDataSource = rdf.GetDataSource("rdf:charset-menu");
+    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
 
-    if (ccm) {
-      ccm = ccm.getService();
-      ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-      var charsetList = ccm.GetDecoderList();
-      charsetList = charsetList.QueryInterface(Components.interfaces.nsISupportsArray);
-    }
-  } catch(ex)
-  {
-    dump("failed to get charset mgr\n");
-  }
-  if (charsetList) 
-  {
-    var j=0;
-    var atom;
-    var str;
-    var tit;
-    var visible;
+    rdfContainer.Init(rdfDataSource, kNC_Root);
 
-    for (var i = 0; i < charsetList.Count(); i++) 
-    {
-      atom = charsetList.GetElementAt(i);
-      atom = atom.QueryInterface(Components.interfaces.nsIAtom);
-  
-      if (atom) {
-        str = atom.GetUnicode();
-        try {
-          tit = ccm.GetCharsetTitle(atom);
-        } catch (ex) {
-          tit = str; //don't ignore charset detectors without a title
-        }
-      
-        try {                                  
-          visible = ccm.GetCharsetData(atom,'.notForBrowser');
-          visible = false;
-        } catch (ex) {
-          visible = true;
-          charsetDict[j] = new Array(2);
-          charsetDict[j][0]  = tit;  
-          charsetDict[j][1]  = str;
-          j++;
-          //dump('Getting invisible for:' + str + ' failed!\n');
-        }
-      } //atom
-  
-    } //for
+    var availableCharsets = rdfContainer.GetElements();
+    var charsetNode;
+    var selectedItem;
+    var item;
 
     ClearTreelist(dialog.charsetTree);
-    charsetDict.sort();
-    var selItem;
-    if (charsetDict) 
-    {
-      for (i = 0; i < charsetDict.length; i++) 
-      {
-        try {  //let's beef up our error handling for charsets without label / title
 
-//dump("add " + charsetDict[i][0] + charsetDict[i][1] + "\n");
-          var item = AppendStringToTreelist(dialog.charsetTree, charsetDict[i][0]);
-          if(item) {
-             var row= item.firstChild;
-             if(row) {
-                var cell= row.firstChild;
-                if(cell) {
-                   cell.setAttribute("value", charsetDict[i][1]);
-                }
-             }
-             if(charset == charsetDict[i][1] ) 
-             {
-               selItem = item;
-//dump("hit default " + charset + "\n");
-             }
-          }
-        } //try
-        catch (ex) {
-          dump("*** Failed to add charset: " + tit + ex + "\n");
-        } //catch
-
-      } //for
-    } // if
-    if(selItem) {
-        try {
-        dialog.charsetTree.selectItem(selItem);
-        dialog.charsetTree.ensureElementIsVisible(selItem);
-        } catch (ex) {
-          dump("*** Failed to select and ensure : " + ex + "\n");
-        }
+    for (var i = 0; i < rdfContainer.GetCount(); i++) 
+	{
+      charsetNode = availableCharsets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      item = AppendStringToTreelist(dialog.charsetTree, readRDFString(rdfDataSource, charsetNode, kNC_name));
+      item.firstChild.firstChild.setAttribute("value", charsetNode.Value);
+      if(charset == charsetNode.Value) 
+        selectedItem = item;
     }
-  } // if
+
+    if(selectedItem) 
+	{
+      dialog.charsetTree.selectItem(selectedItem);
+      dialog.charsetTree.ensureElementIsVisible(selectedItem);
+    }
+  }
+  catch(e) {}
 }
+
 
 function SelectCharset()
 {
-  if(initDone) {
-    try {
+  if(initDone) 
+  {
+    try 
+	{
       charset = GetSelectedTreelistAttribute(dialog.charsetTree, "value");
-      //dump("charset = " + charset + "\n");
-      if(charset != "") {
+      if(charset != "")
          charsetWasChanged = true;
-      }
-    } catch(ex) {
-      dump("failed to get selected data" + ex + "\n");
     }
+    catch(e) {}
   }
 }
+
 
 function TitleChanged()
 {
