@@ -193,9 +193,9 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = do_GetService(kHTTPHandlerCID, &rv);
         if (NS_FAILED(rv)) return rv;
         
-        // Some dummy URI for the HTTP layer.
+        // rjc says: the dummy URI (for the HTTP layer) needs to be a syntactically valid URI
         nsCOMPtr<nsIURI> uri;
-        rv = NS_NewURI(getter_AddRefs(uri), "http://");
+        rv = NS_NewURI(getter_AddRefs(uri), "http://test.com/");
         if (NS_FAILED(rv)) return rv;
         
         rv = httpHandler->NewChannel(uri, getter_AddRefs(proxyChannel));
