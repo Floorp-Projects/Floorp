@@ -486,7 +486,7 @@
   <binding id="outlinercol">
     <content>
       <xul:box class="outlinercol-box" flex="1" autostretch="never">
-        <xul:image class="outliner-image" inherits="src"/>
+        <xul:image class="outliner-icon" inherits="src"/>
         <xul:text class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
         <xul:image class="outlinercol-sortdirection"/>
       </xul:box>
@@ -499,7 +499,7 @@
   <binding id="outlinercol-image">
     <content>
       <xul:box class="outlinercol-image-box" flex="1" autostretch="never">
-        <xul:image class="outlinercol-image" inherits="src"/>
+        <xul:image class="outlinercol-icon" inherits="src"/>
       </xul:box>
     </content>
     <handlers>
