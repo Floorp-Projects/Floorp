@@ -193,7 +193,9 @@ public class IdFunction extends ScriptableObject implements Function
 
     protected Object toStringForScript(Context cx) {
         StringBuffer sb = new StringBuffer();
-        sb.append("function() { [native code for ");
+        sb.append("function ");
+        sb.append(methodName);
+        sb.append("() { [native code for ");
         if (master instanceof Scriptable) {
             Scriptable smaster = (Scriptable)master;
             sb.append(smaster.getClassName());
