@@ -99,7 +99,10 @@ public:
   NS_IMETHOD CloseForm();
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset();
-  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) { return NS_OK; }
+  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) {
+    *aReturn = PR_TRUE;
+    return NS_OK;
+  }
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap();
