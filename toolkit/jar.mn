@@ -9,7 +9,7 @@ toolkit.jar:
 *        content/global/customizeToolbar.xul                (content/customizeToolbar.xul)
 *        content/global/customizeToolbar.js                 (content/customizeToolbar.js)
          content/global/customizeToolbar.css                (content/customizeToolbar.css)
-+        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
+*+        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
          content/global/widgets/autocomplete.xml            (content/widgets/autocomplete.xml)
          content/global/widgets/browser.xml                 (content/widgets/browser.xml)
          content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
