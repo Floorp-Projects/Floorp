@@ -52,10 +52,10 @@
               content="rdf:http://home.netscape.com/NC-rdf#content"
               link="rdf:http://home.netscape.com/NC-rdf#link"
               haslink="rdf:http://home.netscape.com/NC-rdf#haslink"
-              open="rdf:http://home.netscape.com/NC-rdf#open"
-              persist="open">
+              open="rdf:http://home.netscape.com/NC-rdf#open">
               <treerow>
-                <treecell indent="true" 
+                <treecell class="treecell-indent treecell-panel"
+                  haslink="rdf:http://home.netscape.com/NC-rdf#haslink"
                   value="rdf:http://home.netscape.com/NC-rdf#title"/>
               </treerow>
             </treeitem>
@@ -93,7 +93,7 @@
               customize="rdf:http://home.netscape.com/NC-rdf#customize"
               content="rdf:http://home.netscape.com/NC-rdf#content">
               <treerow>
-                <treecell
+                <treecell class="treecell-indent treecell-panel"
                   value="rdf:http://home.netscape.com/NC-rdf#title" />
               </treerow>
             </treeitem>
