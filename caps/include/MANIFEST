@@ -13,3 +13,8 @@ nsLoadZig.h
 admin.h
 nsCaps.h
 nsCapsEnums.h
+nsCCapsManager.h
+nsCCapsManagerFactory.h
+nsCCertPrincipal.h
+nsCCodebasePrincipal.h
+nsCCodeSourcePrincipal.h
