@@ -1170,6 +1170,7 @@ function SearchBarPopupShowing(aEvent)
   var searchBar = document.getElementById("search-bar");
   var searchMode = searchBar.searchMode;
 
+  var popup = document.getElementById("SearchBarPopup");
   var node = popup.firstChild;
   while (node) {
     node.setAttribute("checked", node.id == searchMode);
