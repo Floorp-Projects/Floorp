@@ -275,7 +275,7 @@ static const struct mechanismList mechanisms[] = {
      {CKM_RC2_CBC,		{1, 128, CKF_EN_DE_WR_UN},	PR_FALSE},
      {CKM_RC2_MAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
      {CKM_RC2_MAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_FALSE},
-     {CKM_RC2_CBC_PAD,		{1, 128, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_RC2_CBC_PAD,		{1, 128, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- RC4 Operations --------------------------- */
      {CKM_RC4_KEY_GEN,		{1, 256, CKF_GENERATE},		PR_FALSE},
      {CKM_RC4,			{1, 256, CKF_EN_DE_WR_UN},	PR_FALSE},
@@ -285,7 +285,7 @@ static const struct mechanismList mechanisms[] = {
      {CKM_DES_CBC,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
      {CKM_DES_MAC,		{ 8,  8, CKF_SN_VR},		PR_FALSE},
      {CKM_DES_MAC_GENERAL,	{ 8,  8, CKF_SN_VR},		PR_FALSE},
-     {CKM_DES_CBC_PAD,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_DES_CBC_PAD,		{ 8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
      {CKM_DES2_KEY_GEN,		{24, 24, CKF_GENERATE},		PR_FALSE},
      {CKM_DES3_KEY_GEN,		{24, 24, CKF_GENERATE},		PR_TRUE },
      {CKM_DES3_ECB,		{24, 24, CKF_EN_DE_WR_UN},	PR_TRUE },
@@ -299,14 +299,14 @@ static const struct mechanismList mechanisms[] = {
      {CKM_CDMF_CBC,		{8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
      {CKM_CDMF_MAC,		{8,  8, CKF_SN_VR},		PR_FALSE},
      {CKM_CDMF_MAC_GENERAL,	{8,  8, CKF_SN_VR},		PR_FALSE},
-     {CKM_CDMF_CBC_PAD,		{8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_CDMF_CBC_PAD,		{8,  8, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- AES Operations --------------------------- */
      {CKM_AES_KEY_GEN,		{16, 32, CKF_GENERATE},		PR_FALSE},
      {CKM_AES_ECB,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
      {CKM_AES_CBC,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
      {CKM_AES_MAC,		{16, 32, CKF_SN_VR},		PR_FALSE},
      {CKM_AES_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_FALSE},
-     {CKM_AES_CBC_PAD,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_AES_CBC_PAD,		{16, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
@@ -326,19 +326,19 @@ static const struct mechanismList mechanisms[] = {
      {CKM_CAST_CBC,		{1,  8, CKF_EN_DE_WR_UN},	PR_FALSE}, 
      {CKM_CAST_MAC,		{1,  8, CKF_SN_VR},		PR_FALSE}, 
      {CKM_CAST_MAC_GENERAL,	{1,  8, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_CAST_CBC_PAD,		{1,  8, CKF_EN_DE_WR_UN},	PR_FALSE}, 
+     {CKM_CAST_CBC_PAD,		{1,  8, CKF_EN_DE_WR_UN},	PR_TRUE}, 
      {CKM_CAST3_KEY_GEN,	{1, 16, CKF_GENERATE},		PR_FALSE}, 
      {CKM_CAST3_ECB,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
      {CKM_CAST3_CBC,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
      {CKM_CAST3_MAC,		{1, 16, CKF_SN_VR},		PR_FALSE}, 
      {CKM_CAST3_MAC_GENERAL,	{1, 16, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_CAST3_CBC_PAD,	{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
+     {CKM_CAST3_CBC_PAD,	{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
      {CKM_CAST5_KEY_GEN,	{1, 16, CKF_GENERATE},		PR_FALSE}, 
      {CKM_CAST5_ECB,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
      {CKM_CAST5_CBC,		{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
      {CKM_CAST5_MAC,		{1, 16, CKF_SN_VR},		PR_FALSE}, 
      {CKM_CAST5_MAC_GENERAL,	{1, 16, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_CAST5_CBC_PAD,	{1, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
+     {CKM_CAST5_CBC_PAD,	{1, 16, CKF_EN_DE_WR_UN},	PR_TRUE}, 
 #endif
 #if NSS_SOFTOKEN_DOES_RC5
      /* ------------------------- RC5 Operations --------------------------- */
@@ -347,7 +347,7 @@ static const struct mechanismList mechanisms[] = {
      {CKM_RC5_CBC,		{1, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
      {CKM_RC5_MAC,		{1, 32, CKF_SN_VR},  		PR_FALSE},
      {CKM_RC5_MAC_GENERAL,	{1, 32, CKF_SN_VR},  		PR_FALSE},
-     {CKM_RC5_CBC_PAD,		{1, 32, CKF_EN_DE_WR_UN}, 	PR_FALSE},
+     {CKM_RC5_CBC_PAD,		{1, 32, CKF_EN_DE_WR_UN}, 	PR_TRUE},
 #endif
 #ifdef NSS_SOFTOKEN_DOES_IDEA
      /* ------------------------- IDEA Operations -------------------------- */
@@ -356,7 +356,7 @@ static const struct mechanismList mechanisms[] = {
      {CKM_IDEA_CBC,		{16, 16, CKF_EN_DE_WR_UN},	PR_FALSE}, 
      {CKM_IDEA_MAC,		{16, 16, CKF_SN_VR},		PR_FALSE}, 
      {CKM_IDEA_MAC_GENERAL,	{16, 16, CKF_SN_VR},		PR_FALSE}, 
-     {CKM_IDEA_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN}, 	PR_FALSE}, 
+     {CKM_IDEA_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN}, 	PR_TRUE}, 
 #endif
      /* --------------------- Secret Key Operations ------------------------ */
      {CKM_GENERIC_SECRET_KEY_GEN,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
@@ -2167,10 +2167,29 @@ PK11_SlotInit(char *configdir,pk11_token_parameters *params, int moduleIndex)
 	return CKR_HOST_MEMORY;
     }
 
+    slot->optimizeSpace = params->optimizeSpace;
+    if (slot->optimizeSpace) {
+	slot->tokObjHashSize = SPACE_TOKEN_OBJECT_HASH_SIZE;
+	slot->sessHashSize = SPACE_SESSION_HASH_SIZE;
+	slot->numSessionLocks = 1;
+    } else {
+	slot->tokObjHashSize = TIME_TOKEN_OBJECT_HASH_SIZE;
+	slot->sessHashSize = TIME_SESSION_HASH_SIZE;
+	slot->numSessionLocks = slot->sessHashSize/BUCKETS_PER_SESSION_LOCK;
+    }
+    slot->sessionLockMask = slot->numSessionLocks-1;
+
 #ifdef PKCS11_USE_THREADS
     slot->slotLock = PZ_NewLock(nssILockSession);
-    if (slot->slotLock == NULL) return CKR_HOST_MEMORY;
-    for (i=0; i < NUMBER_OF_SESSION_LOCKS; i++) {
+    if (slot->slotLock == NULL) {
+	return CKR_HOST_MEMORY;
+    }
+    slot->sessionLock = (PZLock **)
+			PORT_ZAlloc(slot->numSessionLocks * sizeof(PZLock *));
+    if (slot->sessionLock == NULL) {
+	return CKR_HOST_MEMORY;
+    }
+    for (i=0; i < slot->numSessionLocks; i++) {
         slot->sessionLock[i] = PZ_NewLock(nssILockSession);
         if (slot->sessionLock[i] == NULL) return CKR_HOST_MEMORY;
     }
@@ -2178,16 +2197,25 @@ PK11_SlotInit(char *configdir,pk11_token_parameters *params, int moduleIndex)
     if (slot->objectLock == NULL) return CKR_HOST_MEMORY;
 #else
     slot->slotLock = NULL;
-    for (i=0; i < NUMBER_OF_SESSION_LOCKS; i++) {
+    slot->sessionLock = (PZLock **)
+			PORT_ZAlloc(slot->numSessionLocks * sizeof(PZLock *));
+    if (slot->sessionLock == NULL) {
+	return CKR_HOST_MEMORY;
+    }
+    for (i=0; i < slot->numSessionLocks; i++) {
         slot->sessionLock[i] = NULL;
     }
     slot->objectLock = NULL;
 #endif
-    for(i=0; i < SESSION_HASH_SIZE; i++) {
-	slot->head[i] = NULL;
+    slot->head = (PK11Session **)
+		PORT_ZAlloc(slot->sessHashSize*sizeof(PK11Session *));
+    if (slot->head == NULL) {
+	return CKR_HOST_MEMORY;
     }
-    for(i=0; i < TOKEN_OBJECT_HASH_SIZE; i++) {
-	slot->tokObjects[i] = NULL;
+    slot->tokObjects = (PK11Object **)
+		PORT_ZAlloc(slot->tokObjHashSize*sizeof(PK11Object *));
+    if (slot->tokObjects == NULL) {
+	return CKR_HOST_MEMORY;
     }
     slot->tokenHashTable = PL_NewHashTable(64,pk11_HashNumber,PL_CompareValues,
 					SECITEM_HashCompare, NULL, 0);
@@ -2264,32 +2292,51 @@ pk11_DestroySlotData(PK11Slot *slot)
 	PZ_DestroyLock(slot->slotLock);
 	slot->slotLock = NULL;
     }
-    for (i=0; i < NUMBER_OF_SESSION_LOCKS; i++) {
-        if (slot->sessionLock[i]) {
-            PZ_DestroyLock(slot->sessionLock[i]);
-            slot->sessionLock[i] = NULL;
-        }
+    if (slot->sessionLock) {
+	for (i=0; i < slot->numSessionLocks; i++) {
+	    if (slot->sessionLock[i]) {
+		PZ_DestroyLock(slot->sessionLock[i]);
+		slot->sessionLock[i] = NULL;
+	    }
+	}
     }
     if (slot->objectLock) {
 	PZ_DestroyLock(slot->objectLock);
 	slot->objectLock = NULL;
     }
 #endif
-
-    PL_HashTableEnumerateEntries(slot->tokenHashTable,pk11_freeHashItem,NULL);
-    PL_HashTableDestroy(slot->tokenHashTable);
-
-    for(i=0; i < TOKEN_OBJECT_HASH_SIZE; i++) {
-	PK11Object *object = slot->tokObjects[i];
-	slot->tokObjects[i] = NULL;
-	if (object) pk11_FreeObject(object);
+    if (slot->sessionLock) {
+	PORT_Free(slot->sessionLock);
+	slot->sessionLock = NULL;
     }
 
-    for(i=0; i < SESSION_HASH_SIZE; i++) {
-	PK11Session *session = slot->head[i];
-	slot->head[i] = NULL;
-	if (session) pk11_FreeSession(session);
+    if (slot->tokenHashTable) {
+	PL_HashTableEnumerateEntries(slot->tokenHashTable,
+							pk11_freeHashItem,NULL);
+	PL_HashTableDestroy(slot->tokenHashTable);
+	slot->tokenHashTable = NULL;
     }
+
+    if (slot->tokObjects) {
+	for(i=0; i < slot->tokObjHashSize; i++) {
+	    PK11Object *object = slot->tokObjects[i];
+	    slot->tokObjects[i] = NULL;
+	    if (object) pk11_FreeObject(object);
+	}
+	PORT_Free(slot->tokObjects);
+	slot->tokObjects = NULL;
+    }
+    slot->tokObjHashSize = 0;
+    if (slot->head) {
+	for(i=0; i < slot->sessHashSize; i++) {
+	    PK11Session *session = slot->head[i];
+	    slot->head[i] = NULL;
+	    if (session) pk11_FreeSession(session);
+	}
+	PORT_Free(slot->head);
+	slot->head = NULL;
+    }
+    slot->sessHashSize = 0;
     pk11_DBShutdown(slot->certDB,slot->keyDB);
 
     PORT_Free(slot);
@@ -2717,7 +2764,7 @@ CK_RV NSC_InitToken(CK_SLOT_ID slotID,CK_CHAR_PTR pPin,
     /* first, delete all our loaded key and cert objects from our 
      * internal list. */
     PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
-    for (i=0; i < TOKEN_OBJECT_HASH_SIZE; i++) {
+    for (i=0; i < slot->tokObjHashSize; i++) {
 	do {
 	    object = slot->tokObjects[i];
 	    /* hand deque */
@@ -2939,11 +2986,11 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
                         | (slot->index << 24);
         } while (sessionID == CK_INVALID_HANDLE);
         PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,sessionID));)
-        pk11queue_find(sameID, sessionID, slot->head, SESSION_HASH_SIZE);
+        pk11queue_find(sameID, sessionID, slot->head, slot->sessHashSize);
         if (sameID == NULL) {
             session->handle = sessionID;
             pk11_update_state(slot, session);
-            pk11queue_add(session, sessionID, slot->head, SESSION_HASH_SIZE);
+            pk11queue_add(session, sessionID, slot->head,slot->sessHashSize);
         } else {
             slot->sessionIDConflict++;  /* for debugging */
         }
@@ -2970,9 +3017,9 @@ CK_RV NSC_CloseSession(CK_SESSION_HANDLE hSession)
 
     /* lock */
     PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,hSession));)
-    if (pk11queue_is_queued(session,hSession,slot->head,SESSION_HASH_SIZE)) {
+    if (pk11queue_is_queued(session,hSession,slot->head,slot->sessHashSize)) {
 	sessionFound = PR_TRUE;
-	pk11queue_delete(session,hSession,slot->head,SESSION_HASH_SIZE);
+	pk11queue_delete(session,hSession,slot->head,slot->sessHashSize);
 	session->refCount--; /* can't go to zero while we hold the reference */
 	PORT_Assert(session->refCount > 0);
     }
@@ -3022,7 +3069,7 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
      * completes, some of those new sessions may or may not be closed by
      * NSC_CloseAllSessions... but any session running when this code starts
      * will guarrenteed be close, and no session will be partially closed */
-    for (i=0; i < SESSION_HASH_SIZE; i++) {
+    for (i=0; i < slot->sessHashSize; i++) {
 	do {
 	    PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,i));)
 	    session = slot->head[i];
@@ -4222,8 +4269,9 @@ CK_RV NSC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     
     /* build list of found objects in the session */
     if (!tokenOnly) {
-	crv = pk11_searchObjectList(search, slot->tokObjects,
-			slot->objectLock, pTemplate, ulCount, isLoggedIn);
+	crv = pk11_searchObjectList(search, slot->tokObjects, 
+				slot->tokObjHashSize, slot->objectLock, 
+					pTemplate, ulCount, isLoggedIn);
     }
     if (crv != CKR_OK) {
 	goto loser;

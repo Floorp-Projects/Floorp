@@ -41,11 +41,7 @@
 #define _DEBUG_STRING ""
 #endif
 
-#if defined(MOZ_CLIENT)
-#define _CLIENT_STRING " for Clients"
-#else
 #define _CLIENT_STRING ""
-#endif
 
 /*
  * Version information for the 'ident' and 'what commands
