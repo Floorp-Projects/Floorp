@@ -292,6 +292,7 @@ nsXPCWrappedNativeClass::LookupMemberByID(jsid id) const
     return NULL;
 }
 
+#if 0
 static JSBool
 isConstructorID(JSContext *cx, jsid id)
 {
@@ -306,6 +307,7 @@ isConstructorID(JSContext *cx, jsid id)
     }
     return JS_FALSE;
 }
+#endif
 
 const char*
 nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) const

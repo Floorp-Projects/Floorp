@@ -31,7 +31,7 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME=xpconnect
 MODULE=xpconnect
 
-CFLAGS	+= -DJSFILE -DJS_THREADSAFE
+DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
 CPPSRCS=		\
 	nsXPConnect.cpp		\
