@@ -39,6 +39,8 @@ struct nsRect;
 struct nsReflowMetrics;
 struct nsStyleStruct;
 
+struct PRLogModuleInfo;
+
 // IID for the nsIFrame interface {12B193D0-9F70-11d1-8500-00A02468FAB6}
 #define NS_IFRAME_IID         \
 { 0x12b193d0, 0x9f70, 0x11d1, \
@@ -506,9 +508,34 @@ public:
   NS_IMETHOD  ListTag(FILE* out = stdout) const = 0;
   NS_IMETHOD  VerifyTree() const = 0;
 
+  /**
+   * See if tree verification is enabled. To enable tree verification add
+   * "frameverifytree:1" to your NSPR_LOG_MODULES environment variable
+   * (any non-zero debug level will work). Or, call SetVerifyTreeEnable
+   * with PR_TRUE.
+   */
+  static NS_LAYOUT PRBool GetVerifyTreeEnable();
+
+  /**
+   * Set the verify-tree enable flag.
+   */
+  static NS_LAYOUT void SetVerifyTreeEnable(PRBool aEnabled);
+
+  /**
+   * The frame class and related classes share an nspr log module
+   * for logging frame activity.
+   *
+   * Note: the log module is created during library initialization which
+   * means that you cannot perform logging before then.
+   */
+  static NS_LAYOUT PRLogModuleInfo* GetLogModuleInfo();
+
   // Show frame borders when rendering
   static NS_LAYOUT void ShowFrameBorders(PRBool aEnable);
   static NS_LAYOUT PRBool GetShowFrameBorders();
+
+protected:
+  static NS_LAYOUT PRLogModuleInfo* gLogModule;
 };
 
 #endif /* nsIFrame_h___ */
