@@ -94,6 +94,7 @@ if (!$args{trust}) {
   $args{tests} = "Tp,Ts,Txul" if !defined($args{tests});
   $args{cvsroot} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot' if !defined($args{cvsroot});
   $args{cvs_co_date} = "" if !defined($args{cvs_co_date});
+  $args{branch} = "" if !defined($args{branch});
   $args{clobber} = 0 if !defined($args{clobber});
   $args{distribute} = "build_zip" if !defined($args{distribute});
   $args{raw_zip_name} = "mozilla" if !defined($args{distribute});
@@ -391,7 +392,7 @@ sub _kill_command {
   $this->print_log("Killing $pid\n");
   kill('INT', $pid);
   foreach my $child_pid (@{$children_of->{$pid}}) {
-    $this->_kill_command($child_pid);
+    $this->_kill_command($child_pid, $children_of);
   }
 }
 
@@ -401,7 +402,7 @@ sub kill_command {
   my ($pid) = @_;
   # Get the ps -aux table and pass it to _kill_command
   my %children_of;
-  open PS_AUX, "ps aux|";
+  open PS_AUX, "ps -eo 'pid,ppid,command'|";
   while (<PS_AUX>) {
     print;
     if (/\s*(\d+)\s*(\d+)/) {
@@ -455,28 +456,31 @@ sub do_command {
         $this->kill_command($pid);
         $please_send_status = 202;
       }
-      sleep(3);
-      next;
     }
     $last_read_time = time;
 
     $this->print_log($grep_sub ? &$grep_sub($buffer) : $buffer);
 
     {
-      # Send status and check whether we need to kill every 3 minutes
+      # Send status every so often (this also gives us back new commands)
       my $current_time = time;
       my $elapsed = $current_time - $this->{LAST_STATUS_SEND};
       if ($elapsed > $this->{CONFIG}{statusinterval}) {
         my $log_out = $this->{LOG_OUT};
         flush $log_out;
         my $success = $this->build_status(1);
-        if ($success) {
-          if ($this->eat_command("kick")) {
-            $this->kill_command($pid);
-            $please_send_status = 301;
-          }
-        }
       }
+      # If we tried to kill before and we're not dead, or if the kick command
+      # is around, we kill again
+      if ($please_send_status == 301 || $this->eat_command("kick")) {
+        $this->kill_command($pid);
+        $please_send_status = 301;
+      }
+    }
+    # If nothing was actually read, we sleep to give the cpu a chance
+    if (!$rv) {
+      sleep(3);
+      next;
     }
   }
   close $handle;
@@ -768,6 +772,7 @@ sub get_config {
   $client->get_field($content_ref, "cvs_co_date");
   $client->get_field($content_ref, "cvsroot");
   $client->get_field($content_ref, "clobber");
+  $client->get_field($content_ref, "branch");
   if ($config->{usepatches}) {
     $build_vars->{PATCHES} = [];
     while (${$content_ref} =~ /<patch[^>]+id\s*=\s*['"](\d+)['"]/g) {
@@ -799,15 +804,40 @@ sub do_action {
   #
   $build_vars->{SHOULD_BUILD} = 0;
 
+  my $co_params = "";
+  if ($config->{cvs_co_date} && $config->{cvs_co_date} ne "off") {
+    $co_params .= " -D '$config->{cvs_co_date}'";
+  }
+  if ($config->{branch}) {
+    $co_params .= " -r $config->{branch}";
+  }
   #
   # Checkout client.mk if necessary
   #
   my $please_checkout = 0;
   if (! -f "mozilla/client.mk") {
-    $client->do_command("cvs -d$config->{cvsroot} co mozilla/client.mk", $init_tree_status, undef, $max_cvs_idle_time);
+    $client->do_command("cvs -d$config->{cvsroot} co$co_params mozilla/client.mk", $init_tree_status, undef, $max_cvs_idle_time);
     $please_checkout = 1;
   }
   if (-f "mozilla/client.mk") {
+    #
+    # If this is a branch, and client.mk is not the right entry type,
+    # *update* client.mk (make sure branch is correct)
+    #
+    if (open ENTRIES, "mozilla/CVS/Entries") {
+      while (<ENTRIES>) {
+        next if /^D/;
+        chomp;
+        my @line = split /\//;
+        if ($line[1] eq "client.mk" && substr($line[5], 1) ne $config->{branch}) {
+          $client->do_command("rm -rf mozilla/*");
+          $client->do_command("cvs -d$config->{cvsroot} co$co_params mozilla/client.mk");
+          $please_checkout = 1;
+          last;
+        }
+      }
+      close ENTRIES;
+    }
     chdir("mozilla");
   } else {
     die "Must be just above the mozilla/ directory!";
@@ -819,6 +849,7 @@ sub do_action {
   # First read .mozconfig
   my $please_clobber = 0;
   my $mozconfig = $client->read_mozconfig();
+  $mozconfig ||= "";
   print "@@@ mozconfig:\n$mozconfig\n@@@ network .mozconfig:\n$build_vars->{MOZCONFIG}\n";
   if ($build_vars->{MOZCONFIG}) {
     if ($mozconfig ne $build_vars->{MOZCONFIG}) {
@@ -1039,6 +1070,9 @@ sub do_action {
     $client->print_log("Skipping build because no changes were made\n");
   }
 
+  if (!$build_vars->{SHOULD_BUILD}) {
+    $err = 304;
+  }
   return $err;
 }
 
@@ -1111,6 +1145,7 @@ sub do_action {
   } else {
     $client->print_log("Skipping distribution because no build was done\n");
   }
+
   return $err;
 }
 
