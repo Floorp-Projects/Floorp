@@ -42,7 +42,8 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
                                            PRBool aComputeMaxElementSize)
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
-    mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull)
+    mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull),
+    mMaxElementSize(0, 0)
 {
   mStyleSpacing = nsnull;
 }
