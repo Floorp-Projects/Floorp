@@ -805,6 +805,11 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   //then QI for the real object rather than casting... MMP
 
   aContext = new nsDeviceContextWin();
+  if(nsnull != aContext){
+    NS_ADDREF(aContext);
+  } else {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   ((nsDeviceContextWin *)aContext)->mSpec = aDevice;
   NS_ADDREF(aDevice);
