@@ -768,7 +768,10 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         // For XSL, we need to wait till after the transform
         // to set the root content object.  Hence, the following
         // ifndef.
-#ifndef MOZ_XSL
+#ifdef MOZ_XSL
+				if (!mXSLTransformMediator)
+					mDocument->SetRootContent(mDocElement);		  
+#else
         mDocument->SetRootContent(mDocElement);
 #endif
       }
@@ -1157,7 +1160,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
 
   // Set the parser as the stream listener and start the URL load
   nsCOMPtr<nsIStreamListener> sl;
-  rv = mParser->QueryInterface(kIStreamListenerIID, (void**)getter_AddRefs(sl));
+  rv = parser->QueryInterface(kIStreamListenerIID, (void**)getter_AddRefs(sl));
   if (NS_FAILED(rv)) return rv;
 
   rv = NS_OpenURI(sl, nsnull, aUrl);
