@@ -74,7 +74,7 @@ treechildren::-moz-tree-row {
   background-color: #fff;
 }
 
-treechildren::-moz-tree-row(odd) {
+tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd) {
  background-color: #f0f0f0;
 }
 

@@ -81,7 +81,6 @@ progressmeter {
 /* :::::: download progress meter :::::::: */
 
 #progress, #progress0 {
-	  align: center !important;
 	  vertical-align: baseline !important;
           -moz-appearance: progressbar;
            border-left: 1px solid #cccccc;

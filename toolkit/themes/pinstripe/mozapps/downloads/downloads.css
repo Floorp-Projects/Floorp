@@ -23,7 +23,6 @@
  min-width: 32px;
  height: 26px;
  margin: 2px;
-  -moz-user-focus: ignore;
 } 
 
 #cleanUpButton {
