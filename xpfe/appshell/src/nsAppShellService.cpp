@@ -29,6 +29,7 @@
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
+#include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
 #include "nsWidgetsCID.h"
@@ -48,6 +49,7 @@ static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
+static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
 
 
 
@@ -162,6 +164,27 @@ nsAppShellService::DispatchNativeEvent(void * aEvent)
 NS_IMETHODIMP
 nsAppShellService::Shutdown(void)
 {
+  //mAppShell->Exit();
+  while (mWindowList->Count() > 0) {
+    nsISupports * winSupports = mWindowList->ElementAt(0);
+    nsCOMPtr<nsIWidget> window(do_QueryInterface(winSupports));
+    if (window) {
+      mWindowList->RemoveElementAt(0);
+      CloseTopLevelWindow(window);
+    } else {
+      nsCOMPtr<nsIWebShellWindow> webShellWin(do_QueryInterface(winSupports));
+      if (webShellWin) {
+        nsIWidget * win;
+        webShellWin->GetWidget(win);
+        CloseTopLevelWindow(win);
+      }
+      //nsCOMPtr<nsIWebShellContainer> wsc(do_QueryInterface(winSupports));
+      //if (wsc) {
+      //
+      //}
+      break;
+    }
+  }
   return NS_OK;
 }
 
@@ -255,11 +278,18 @@ nsAppShellService::RegisterTopLevelWindow(nsIWidget* aWindow)
     rv = NS_ERROR_NULL_POINTER;
   else {
     nsWebShellWindow* window = (nsWebShellWindow *) data;
+    nsIWebShellWindow * webShellWin;
+    rv = window->QueryInterface(kIWebShellWindowIID, (void **) &webShellWin);
+    if (NS_SUCCEEDED(rv)) {
+      mWindowList->AppendElement(webShellWin);
+    }
+      
 //    nsCOMPtr<nsIWebShellContainer> wsc(window); DRaM
-    nsIWebShellContainer* wsc;
+    /*nsIWebShellContainer* wsc;
     rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
     if (NS_SUCCEEDED(rv))
       mWindowList->AppendElement(wsc);
+      */
   }
   return rv;
 }
