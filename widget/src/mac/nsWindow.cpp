@@ -212,6 +212,8 @@ Rect		bounds;
 		bounds.bottom = aRect.y+aRect.height;
 		bounds.right = aRect.x+aRect.width;
 		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
+		if (bounds.top <= 0)
+			bounds.top = LMGetMBarHeight()+20;
 		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
 		
 
@@ -227,7 +229,7 @@ Rect		bounds;
 		}
 		
 	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,0,0,bounds.right,bounds.bottom);
+	SetRectRgn(mWindowRegion,0,0,mWindowPtr->portRect.right,mWindowPtr->portRect.bottom);
 	
   InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
 }
