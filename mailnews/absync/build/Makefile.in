@@ -60,6 +60,7 @@ SHARED_LIBRARY_LIBS = \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
