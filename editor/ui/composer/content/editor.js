@@ -883,6 +883,9 @@ function EditorSelectColor(colorType)
   // Save the type we are really requesting
   colorType = gColorObj.Type;
 
+  // Avoid the JS warning
+  gColorObj.NoDefault = false;
+
   // Launch the ColorPicker dialog
   // TODO: Figure out how to position this under the color buttons on the toolbar
   window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", gColorObj);

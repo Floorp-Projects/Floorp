@@ -457,7 +457,8 @@ function GetColorAndUpdate(ColorWellID)
       SetCheckbox('CellColorCheckbox');
       break;
   }
-
+  // Avoid the JS warning
+  colorObj.NoDefault = false;
   window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", colorObj);
 
   // User canceled the dialog
