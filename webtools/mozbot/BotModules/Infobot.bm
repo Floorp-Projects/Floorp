@@ -106,6 +106,7 @@ sub unload {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
+    return 10 unless $event->{level} >= 10; # make this module a very low priority
     if ($message =~ /^\s*status[?\s]*$/osi) {
         my $sum = $self->countFactoids();
         my $questions = $self->{'questions'} == 1 ? "$self->{'questions'} question" : "$self->{'questions'} questions";
@@ -131,6 +132,7 @@ sub Told {
 sub Baffled {
     my $self = shift;
     my ($event, $message) = @_;
+    return 10 unless $event->{level} >= 10; # make this module a very low priority
     if (not $self->DoFactoidCheck($event, $message, 2)) {
         return $self->SUPER::Heard(@_);
     }
@@ -140,6 +142,7 @@ sub Baffled {
 sub Heard {
     my $self = shift;
     my ($event, $message) = @_;
+    return 10 unless $event->{level} >= 10; # make this module a very low priority
     if (not $self->DoFactoidCheck($event, $message, 0)) {
         return $self->SUPER::Heard(@_);
     }
@@ -240,7 +243,7 @@ sub DoFactoidCheck {
                                  'is', # am => is
                      $event->{'from'}, # subject
                           $direct || $self->{'ridiculouslyEagerToHelp'});
-    } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.+?) $/six) {
+    } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.*?[^?\s]) \s* $/six) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
                           defined($1), # replace existing answer?
