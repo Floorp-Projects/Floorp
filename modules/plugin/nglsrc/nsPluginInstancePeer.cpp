@@ -27,6 +27,11 @@
 #include "nsFileSpec.h"
 #include "nsCOMPtr.h"
 
+#include "nsIDocument.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptObjectOwner.h"
+
 #ifdef XP_PC
 #include "windows.h"
 #include "winbase.h"
@@ -749,6 +754,35 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: SetWindowSize(PRUint32 width, PRUint32
 {
 printf("instance peer setwindowsize called\n");
   return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
+{
+	*outJSWindow = NULL;
+	nsresult rv = NS_ERROR_FAILURE;
+	nsIDocument* document = nsnull;
+	if (mOwner->GetDocument(&document) == NS_OK) {
+		nsIScriptContextOwner* contextOwner = document->GetScriptContextOwner();
+		if (nsnull != contextOwner) {
+			nsIScriptGlobalObject *global = nsnull;
+			contextOwner->GetScriptGlobalObject(&global);
+			nsIScriptContext* context = nsnull;
+			contextOwner->GetScriptContext(&context);
+			if (nsnull != global && nsnull != context) {
+				static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+				nsIScriptObjectOwner* window = nsnull;
+				if (global->QueryInterface(kIScriptObjectOwnerIID, (void **)&window) == NS_OK) {
+					rv = window->GetScriptObject(context, (void**)outJSWindow);
+					NS_RELEASE(window);
+				}
+			}
+			NS_IF_RELEASE(global);
+			NS_IF_RELEASE(context);
+			NS_RELEASE(contextOwner);
+		}
+		NS_RELEASE(document);	
+	}
+	return rv;
 }
 
 nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstanceOwner *aOwner,

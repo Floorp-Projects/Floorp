@@ -58,6 +58,9 @@ public:
   NS_IMETHOD
   SetWindowSize(PRUint32 width, PRUint32 height);
 
+  NS_IMETHOD
+  GetJSWindow(JSObject* *outJSWindow);
+
   // nsIWindowlessPluginInstancePeer
 
   // (Corresponds to NPN_InvalidateRect.)
