@@ -148,7 +148,7 @@ out:
 }
 
 static int
-usage()
+usage(void)
 {
     fprintf(stderr, "usage: js [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
