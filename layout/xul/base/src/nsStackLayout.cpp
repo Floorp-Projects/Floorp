@@ -76,16 +76,16 @@ nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSi
    while (child) 
    {  
       // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      child->IsCollapsed(aBoxLayoutState, isCollapsed);
+     // PRBool isCollapsed = PR_FALSE;
+     // child->IsCollapsed(aBoxLayoutState, isCollapsed);
 
-      if (!isCollapsed)
-      {
+     // if (!isCollapsed)
+     // {
         nsSize pref(0,0);
         child->GetPrefSize(aBoxLayoutState, pref);
         AddMargin(child, pref);
         AddLargestSize(aSize, pref);
-      }
+     // }
 
       child->GetNextBox(&child);
    }
@@ -112,16 +112,16 @@ nsStackLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
    while (child) 
    {  
        // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
+      //PRBool isCollapsed = PR_FALSE;
+      //aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
 
-      if (!isCollapsed)
-      {
+      //if (!isCollapsed)
+      //{
         nsSize min(0,0);
         child->GetMinSize(aBoxLayoutState, min);        
         AddMargin(child, min);
         AddLargestSize(aSize, min);
-      }
+      //}
 
       child->GetNextBox(&child);
    }
@@ -150,18 +150,18 @@ nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
    while (child) 
    {  
       // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
+      //PRBool isCollapsed = PR_FALSE;
+      //aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
 
-      if (!isCollapsed)
-      {
+      //if (!isCollapsed)
+      //{
         // if completely redefined don't even ask our child for its size.
         nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
         child->GetMaxSize(aBoxLayoutState, max);
 
         AddMargin(child, max);
         AddSmallestSize(aSize, max);
-      }
+      //}
 
       child->GetNextBox(&child);
       
@@ -189,11 +189,11 @@ nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoor
    while (child) 
    {  
       // ignore collapsed children
-      PRBool isCollapsed = PR_FALSE;
-      aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
+      //PRBool isCollapsed = PR_FALSE;
+      //aBox->IsCollapsed(aBoxLayoutState, isCollapsed);
 
-      if (!isCollapsed)
-      {
+      //if (!isCollapsed)
+      //{
         // if completely redefined don't even ask our child for its size.
         nscoord ascent = 0;
         child->GetAscent(aBoxLayoutState, ascent);
@@ -203,7 +203,7 @@ nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoor
 
         if (ascent > aAscent)
             aAscent = ascent;
-      }
+      //}
 
       child->GetNextBox(&child);
 
