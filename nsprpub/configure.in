@@ -1491,6 +1491,7 @@ mips-sony-newsos*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(OPENBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
+    AC_DEFINE(HAVE_SOCKLEN_T)
     CFLAGS="$CFLAGS -ansi -Wall"
     CXXFLAGS="$CXXFLAGS -ansi -Wall"
     DLL_SUFFIX=so.1.0
@@ -1498,12 +1499,8 @@ mips-sony-newsos*)
     MDCPUCFG_H=_openbsd.cfg
     PR_MD_CSRCS=openbsd.c
     USE_NSPR_THREADS=1
-    case "$OS_TEST" in
-    alpha|mips|pmax)
-        DSO_LDOPTS=-shared ;;
-    *)
-        DSO_LDOPTS=-Bshareable ;;
-    esac
+    DSO_LDOPTS='-shared -fPIC'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     ;;
 
 *-openvms*)
@@ -2203,13 +2200,19 @@ if test -n "$USE_PTHREADS"; then
 	        _PTHREAD_LDFLAGS="-pthread"
 	    fi
 	    ;;
-    *-openbsd*|*-bsdi*)
+    *-bsdi*)
 	    AC_DEFINE(_THREAD_SAFE)
 	    dnl -pthread links in -lc_r, so don't specify it explicitly.
 	    if test "$ac_cv_have_dash_pthread" = "yes"; then
 	        _PTHREAD_LDFLAGS=
 	    fi
 	    ;;
+    *-openbsd*)
+        AC_DEFINE(_THREAD_SAFE)
+        if test "$ac_cv_have_dash_pthread" = "yes"; then
+            _PTHREAD_LDFLAGS=-pthread
+        fi
+        ;;
     *-linux*)
         AC_DEFINE(_REENTRANT)
         ;;
