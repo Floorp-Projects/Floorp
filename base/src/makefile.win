@@ -40,6 +40,7 @@ CPPSRCS =				\
 	nsVoidArray.cpp			\
 	nsFileSpec.cpp \
 	nsFileStream.cpp \
+	nsStringStream.cpp \
 	nsEscape.cpp				\
     nsIFileStream.cpp \
     nsSpecialSystemDirectory.cpp \
@@ -64,6 +65,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsFileStream.obj \
 	.\$(OBJDIR)\nsEscape.obj			\
     .\$(OBJDIR)\nsIFileStream.obj       \
+    .\$(OBJDIR)\nsIStringStream.obj       \
     .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
 	$(NULL)
 
