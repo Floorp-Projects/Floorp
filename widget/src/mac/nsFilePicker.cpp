@@ -630,7 +630,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
   nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
   NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
   
-  NS_ADDREF(*aFileURL = file);
+  NS_ADDREF(*aFileURL = fileURL);
   return NS_OK;
 }
 
