@@ -164,6 +164,8 @@ private:
     void             ClearActiveEntries(void);
     void             DoomActiveEntries(void);
 
+    PRBool           IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
+
     static
     PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
                                                          PLDHashEntryHdr * hdr,
