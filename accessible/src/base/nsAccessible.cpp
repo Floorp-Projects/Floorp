@@ -980,6 +980,24 @@ nsresult nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAS
   return NS_OK;
 }
 
+nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent, nsAString *aFlatString)
+{
+  nsAutoString textEquivalent;
+
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService("@mozilla.org/accessibilityService;1");
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAccessible> accessible;
+  accService->GetAccessibleInWeakShell(domNode, mWeakShell, getter_AddRefs(accessible));
+  if (accessible) {
+    accessible->GetName(textEquivalent);
+  }
+
+  textEquivalent.CompressWhitespace();
+  return AppendStringWithSpaces(aFlatString, textEquivalent);
+}
+
 /*
  * AppendFlatStringFromContentNode and AppendFlatStringFromSubtree
  *
@@ -1041,32 +1059,23 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     }
     return NS_OK; // Not HTML and not XUL -- we don't handle it yet
   }
+
   if (aContent->Tag() == nsAccessibilityAtoms::img) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIAccessible> accessible;
-    accService->GetAccessibleInWeakShell(domNode, mWeakShell, getter_AddRefs(accessible));
-    if (accessible) {
-      accessible->GetName(textEquivalent);
+    return AppendNameFromAccessibleFor(aContent, aFlatString);
+  }
+
+  if (aContent->Tag() == nsAccessibilityAtoms::input) {
+    nsAutoString inputType;
+    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, inputType);
+    if (inputType.LowerCaseEqualsLiteral("button") ||
+        inputType.LowerCaseEqualsLiteral("submit") ||
+        inputType.LowerCaseEqualsLiteral("reset") ||
+        inputType.LowerCaseEqualsLiteral("image")) {
+      return AppendNameFromAccessibleFor(aContent, aFlatString);
     }
   }
-  else if (aContent->Tag() == nsAccessibilityAtoms::input) {
-    // Treat separately from image, because we will never use link-based repair
-    if (NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttr(kNameSpaceID_None,
-                                                       nsAccessibilityAtoms::alt,
-                                                       textEquivalent) &&
-        NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttr(kNameSpaceID_None,
-                                                       nsAccessibilityAtoms::title,
-                                                       textEquivalent) &&
-        NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttr(kNameSpaceID_None,
-                                                       nsAccessibilityAtoms::src,
-                                                       textEquivalent)) {
-      aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, textEquivalent);
-    }
-  }
-  else if (aContent->Tag() == nsAccessibilityAtoms::object && !aContent->GetChildCount()) {
+
+  if (aContent->Tag() == nsAccessibilityAtoms::object && !aContent->GetChildCount()) {
     // If object has no alternative content children, try title
     aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, textEquivalent);
   }
