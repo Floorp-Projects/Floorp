@@ -131,15 +131,11 @@ PRBool nsMacEventHandler::HandleMenuCommand(
   long         aMenuResult)
 {
 	// get the focused widget
-	nsWindow* focusedWidget = nsnull;
+	nsWindow* focusedWidget = mTopLevelWidget;
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
-	if (focusedWidget == nsnull)
-		focusedWidget = mTopLevelWidget;
-
-
 	// nsEvent
 	nsMenuEvent menuEvent;
 	menuEvent.eventStructType = NS_MENU_EVENT;
@@ -274,14 +270,11 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	// get the focused widget
-	nsWindow* focusedWidget;
+	nsWindow* focusedWidget = mTopLevelWidget;
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
-	if (focusedWidget == nsnull)
-		focusedWidget = mTopLevelWidget;
-
 	// nsEvent
 	nsKeyEvent	keyEvent;
 	keyEvent.eventStructType = NS_KEY_EVENT;
