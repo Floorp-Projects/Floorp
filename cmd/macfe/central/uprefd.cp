@@ -1470,6 +1470,7 @@ void CPrefs::ReadPreference(short index)
 						case BufferSize:
 							value = value * BUFFER_SCALE;		// was in K, now in bytes
 							break;
+#ifdef MOZ_MAILNEWS
 						case MailHeaderDisplay:
 							switch (value) {					// see msgprefs.cpp
 								case SHOW_ALL_HEADERS:
@@ -1483,6 +1484,7 @@ void CPrefs::ReadPreference(short index)
 									break;
 							}
 							break;
+#endif
 					}
 					SetLong(value, prefLoc[index].prefID);
 				}
@@ -2023,10 +2025,12 @@ Boolean CPrefs::SetLong(Int32 value, PrefEnum id)
 		case AskMozPassword:
 			ConstrainTo(-1, 1, value);	// See secnav.h, SECNAV_SetPasswordPrefs
 			break;
+#ifdef MOZ_MAILNEWS
 		case SortMailBy:
 		case SortNewsBy:
 			ConstrainTo(MAIL_SORT_BY_DATE, MAIL_SORT_BY_SENDER, value);	// See secnav.h, SECNAV_SetPasswordPrefs
 			break;
+#endif
 		default:
 			break;
 	}
