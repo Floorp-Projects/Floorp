@@ -327,6 +327,7 @@ webshell/src/Makefile
 webshell/tests/Makefile
 webshell/tests/viewer/Makefile
 webshell/tests/viewer/public/Makefile
+webshell/embed/Makefile
 widget/Makefile
 widget/public/Makefile
 widget/src/Makefile
