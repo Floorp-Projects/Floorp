@@ -25,7 +25,6 @@
 // Use this trick temporarily, to minimize delta to nsBrowserAppCore.cpp.
 #define nsBrowserAppCore nsBrowserInstance
 
-#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -46,6 +45,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
+#include "nsIBrowserWindow.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
@@ -172,6 +172,7 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
+   Close();
   NS_IF_RELEASE(mSHistory);
 }
 
