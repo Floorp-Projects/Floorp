@@ -30,7 +30,7 @@
 <!ENTITY file.saveas.keybinding         "s">
 <!ENTITY menuitem.import.label          "Import Bookmarks...">
 <!ENTITY menuitem.export.label          "Export Bookmarks...">
-<!ENTITY menuitem.find.label            "Find...">
+<!ENTITY menuitem.find.label            "Find in Bookmarks...">
 <!ENTITY menuitem.find.accesskey        "F">
 <!ENTITY edit.find.keybinding           "f">
 <!ENTITY menuitem.properties.label      "Properties...">
