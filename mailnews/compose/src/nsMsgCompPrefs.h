@@ -24,19 +24,23 @@
 
 class nsMsgCompPrefs {
 public:
-	nsMsgCompPrefs(void * identiy = nsnull);
+	nsMsgCompPrefs();
 	virtual ~nsMsgCompPrefs();
 
 	const char * GetOrganization() {return m_organization;}
 	const char * GetUserFullName() {return m_userFullName;}
 	const char * GetUserEmail() {return m_userEmail;}
 	const char * GetReplyTo() {return m_replyTo;}
+	const PRBool GetUseHtml() {return m_useHTML;}
+	const PRInt32 GetWrapColumn() {return m_wrapColumn;}
 
 private:
-	char * m_organization;
-	char * m_userFullName;
-	char * m_userEmail;
-	char * m_replyTo;
+	char *	m_organization;
+	char *	m_userFullName;
+	char *	m_userEmail;
+	char *	m_replyTo;
+	PRBool	m_useHTML;
+	PRInt32	m_wrapColumn;
 };
 
 

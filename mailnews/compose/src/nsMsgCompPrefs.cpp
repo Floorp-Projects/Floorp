@@ -15,29 +15,32 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsComPtr.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgCompPrefs.h"
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
-
-nsMsgCompPrefs::nsMsgCompPrefs(void * identiy /*= nsnull*/)
+nsMsgCompPrefs::nsMsgCompPrefs()
 {
 	nsresult res;
 
 	m_organization = nsnull;
 	m_userFullName = nsnull;
 	m_userEmail = nsnull;
+	m_replyTo = nsnull;
+	m_useHTML = PR_TRUE;
+	m_wrapColumn = 72;
 
 	// get the current identity from the mail session....
 	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &res); 
-	if (NS_SUCCEEDED(res) && mailSession) {
-		nsIMsgIdentity * identity = nsnull;
-		res = mailSession->GetCurrentIdentity(&identity);
-		// now release the mail service because we are done with it
-		if (NS_SUCCEEDED(res) && identity) {
+	if (NS_SUCCEEDED(res) && mailSession)
+	{
+		nsCOMPtr<nsIMsgIdentity> identity;
+		res = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+		if (NS_SUCCEEDED(res) && identity)
+		{
 			char * aString = nsnull;
 
 			identity->GetOrganization(&aString);
@@ -47,24 +50,23 @@ nsMsgCompPrefs::nsMsgCompPrefs(void * identiy /*= nsnull*/)
 			identity->GetFullName(&aString);
 			if (aString)
 				m_userFullName = PL_strdup(aString);
-
+				
 			identity->GetEmail(&aString);
 			if (aString)
 				m_userEmail = PL_strdup(aString);
-			else
-				NS_ASSERTION(0, "no email address defined for this user....");
 
 			identity->GetReplyTo(&aString);
 			if (aString)
-				m_replyTo= PL_strdup(aString);
+				m_replyTo = PL_strdup(aString);
 
-
-			// release the identity
-			NS_IF_RELEASE(identity);
-		} // if we have an identity
+			identity->GetUseHtml(&m_useHTML);
+			identity->GetWrapColumn(&m_wrapColumn);
+		}
 		else
-			NS_ASSERTION(0, "no current identity found for this user....");
+			NS_ASSERTION(0, "no current identity found for this user (a)....");
 	}
+	else
+		NS_ASSERTION(0, "no current identity found for this user (b)....");
 }
 
 nsMsgCompPrefs::~nsMsgCompPrefs()
