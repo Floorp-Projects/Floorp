@@ -46,7 +46,7 @@ class A
 {
   var prop:String;
 
-  prototype function A()
+  constructor function A()
   {
     prop = cnA;
     objX = objY;
@@ -56,7 +56,7 @@ class A
 
 class B
 {
-  prototype function B()
+  constructor function B()
   {
     // objA is defined below, but BEFORE any instances of B are made -
     objX = objA;
@@ -68,7 +68,7 @@ class C
 {
   var prop:String;
 
-  prototype function C()
+  constructor function C()
   {
     prop = cnC;
   }
@@ -85,7 +85,7 @@ class CC extends C
 {
   var objX:Object;
 
-  prototype function CC()
+  constructor function CC()
   {
     objX = this;
   }
@@ -94,7 +94,7 @@ class CC extends C
 
 class D
 {
-  prototype function D()
+  constructor function D()
   {
   }
 
@@ -107,7 +107,7 @@ class D
 
 class E
 {
-  prototype function E (obj:C)
+  constructor function E (obj:C)
   {
     objX= obj;
   }
