@@ -205,59 +205,48 @@
   </tr>
   <tr>
     <th class="row-label"><span class="code">char</span></th>
-<!-- 'x'            -->    <td>-</td>
-<!-- char c         -->    <td>-</td>
+    <td colspan="2">.</td>
 <!-- "foo"          -->    <td><span class="code">[]</span></td>
 <!-- char* cp       -->    <td><span class="code">[]</span></td>
-<!-- nsACString& cs -->    <td><a href="#faq_how_to_extract_a_character">how to extract a character</a></td>
+<!-- nsACString& cs -->    <td><a href="#faq_how_to_extract_a_character">extract a character</a></td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">PRUnichar</span></th>
 <!-- 'x'            -->    <td><span class="code">PRUnichar('x')</span></td>
 <!-- char c         -->    <td><span class="code">PRUnichar(c)</span></td>
-<!-- "foo"          -->    <td></td>
-<!-- char* cp       -->    <td></td>
-<!-- nsACString& cs -->    <td></td>
+    <td colspan="3"><a href="#faq_how_to_convert_encoding">convert encoding</a>, <a href="#faq_how_to_extract_a_character">extract a character</a></td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">char*</span></th>
-<!-- 'x'            -->    <td></td>
-<!-- char c         -->    <td></td>
-<!-- "foo"          -->    <td></td>
-<!-- char* cp       -->    <td></td>
-<!-- nsACString& cs -->    <td><a href="#faq_how_to_get_a_pointer">how to get a pointer</a></td>
+<!-- 'x'            -->    <td><span class="code">&amp;</span></td>
+<!-- char c         -->    <td><span class="code">&amp;</span></td>
+<!-- "foo"          -->    <td><span class="code">&amp;</span></td>
+<!-- char* cp       -->    <td>.</td>
+<!-- nsACString& cs -->    <td><a href="#faq_how_to_get_a_pointer">get a pointer</a></td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">PRUnichar*</span></th>
-<!-- 'x'            -->    <td></td>
-<!-- char c         -->    <td></td>
-<!-- "foo"          -->    <td></td>
-<!-- char* cp       -->    <td></td>
-<!-- nsACString& cs -->    <td></td>
+    <td colspan="5"><a href="#faq_how_to_convert_encoding">convert encoding</a>, <a href="#faq_how_to_get_a_pointer">get a pointer</a></td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">nsACString</span></th>
-<!-- 'x'            -->    <td></td>
-<!-- char c         -->    <td></td>
-<!-- "foo"          -->    <td></td>
-<!-- char* cp       -->    <td></td>
-<!-- nsACString& cs -->    <td></td>
+<!-- 'x'            -->    <td><span class="code">NS_LITERAL_CSTRING("x")</span></td>
+<!-- char c         -->    <td><a href="#faq_how_to_make_a_string">make a string</a></td>
+<!-- "foo"          -->    <td><span class="code">NS_LITERAL_CSTRING("foo")</td>
+<!-- char* cp       -->    <td><a href="#faq_how_to_make_a_string">make a string</a></td>
+<!-- nsACString& cs -->    <td>.</td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">nsAString</span></th>
-<!-- 'x'            -->    <td></td>
-<!-- char c         -->    <td></td>
-<!-- "foo"          -->    <td></td>
-<!-- char* cp       -->    <td></td>
-<!-- nsACString& cs -->    <td></td>
+<!-- 'x'            -->    <td><span class="code">NS_LITERAL_STRING("x")</span></td>
+<!-- char c         -->    <td><a href="#faq_how_to_convert_encoding">convert encoding</a></td>
+<!-- "foo"          -->    <td><span class="code">NS_LITERAL_STRING("foo")</span></td>
+    <td colspan="2"><a href="#faq_how_to_convert_encoding">convert encoding</a></td>
   </tr>
   <tr>
     <th class="row-label">to call <span class="code">printf</span></th>
-<!-- 'x'            -->    <td></td>
-<!-- char c         -->    <td></td>
-<!-- "foo"          -->    <td></td>
-<!-- char* cp       -->    <td></td>
-<!-- nsACString& cs -->    <td></td>
+    <td colspan="4">.</td>
+<!-- nsACString& cs -->    <td><a href="#faq_how_to_call_printf">call <span class="code">printf</span></a></td>
   </tr>
 </table>
 
@@ -281,8 +270,8 @@
   <tr>
     <th class="row-label"><span class="code">PRUnichar</span></th>
 <!-- PRUnichar w    -->    <td></td>
-<!-- PRUnichar* wp  -->    <td></td>
-<!-- nsAString& s   -->    <td></td>
+<!-- PRUnichar* wp  -->    <td><span class="code">[]</span></td>
+<!-- nsAString& s   -->    <td><a href="#faq_how_to_extract_a_character">extract a character</a></td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">char*</span></th>
@@ -292,9 +281,9 @@
   </tr>
   <tr>
     <th class="row-label"><span class="code">PRUnichar*</span></th>
-<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar w    -->    <td><span class="code">&amp;</span></td>
 <!-- PRUnichar* wp  -->    <td></td>
-<!-- nsAString& s   -->    <td></td>
+<!-- nsAString& s   -->    <td><a href="#faq_how_to_get_a_pointer">get a pointer</a></td>
   </tr>
   <tr>
     <th class="row-label"><span class="code">nsACString</span></th>
@@ -306,13 +295,13 @@
     <th class="row-label"><span class="code">nsAString</span></th>
 <!-- PRUnichar w    -->    <td></td>
 <!-- PRUnichar* wp  -->    <td></td>
-<!-- nsAString& s   -->    <td><a href="#faq_how_to_get_a_pointer">how to get a pointer</td>
+<!-- nsAString& s   -->    <td></td>
   </tr>
   <tr>
     <th class="row-label">to call <span class="code">printf</span></th>
 <!-- PRUnichar w    -->    <td></td>
 <!-- PRUnichar* wp  -->    <td></td>
-<!-- nsAString& s   -->    <td></td>
+<!-- nsAString& s   -->    <td><a href="#faq_how_to_call_printf">call <span class="code">printf</span></a></td>
   </tr>
 </table>
 
@@ -409,6 +398,8 @@ void func( const nsAString&amp; aString, const nsACString&amp; aCString )
     <dd>
 <div class="source-code">
 <pre>
+  /* How do I get a particular character out of a string? */
+
 PRUnichar Get5thCharacterOf( const nsAString& aString )
   {
     if ( aString.Length() >= 5 )
@@ -424,7 +415,28 @@ PRUnichar Get5thCharacterOf( const nsAString& aString )
 </pre>
 </div>
     </dd>
+    <dd>
+      Using iterators isn't as bad as the example above makes it feel.
+      The typical use is for advancing through a string, examining many characters.
+    </dd>
 
+
+
+<!-- how to convert encoding -->
+    <dt>
+      <a name="faq_how_to_convert_encoding">How do I convert from one encoding to another?</a>
+    </dt>
+    <dd>
+    </dd>
+
+
+
+<!-- how to make a string -->
+    <dt>
+      <a name="faq_how_to_make_a_string">How do I create a string?</a>
+    </dt>
+    <dd>
+    </dd>
 
 
 <!-- how to return a string -->
@@ -486,35 +498,43 @@ foo::GetShortName( nsAString&amp; aResult ) const
 
 
     <dt>
-      If I have a <span class="code">PRUnichar *aKey</span> [or other representation of a wide] string,
-        what can I use (easily :)
-        to convert it
-        to a <span class="code">printf()</span> printable string?
-      Just for debugging...
+      <a name="faq_how_to_call_printf">How do I <span class="code">printf</span> a string, e.g., for debugging.</a>
     </dt>
     <dd>
+      If your string is already narrow, you just have to worry about <a href="#faq_how_to_get_a_pointer">making it flat, and then getting a pointer</a>.
+    </dd>
+    <dd>
+      If your string happens to be wide,
+        you'll need to convert it before you can <span class="code">printf</span> something reasonable.
       If it's just for debugging,
         you probably wouldn't care if something odd was printed in the case of a UCS2 character that didn't have
         an ASCII equivalent.
       The simplest thing in this case is to make a temporary conversion using <span class="code">NS_ConvertUCS2toUTF8</span>.
+      The result is conveniently flat already, so getting the pointer is simple.
       Remember not to hold onto the pointer you get out of this beyond the lifetime of temporary.
     </dd>
     <dd>
 <div class="source-code">
 <pre>
-const PRUnichar* aKey;
-
-printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aKey<span class="notice">).get()</span>);       // GOOD
-  // the simplest way to get a |printf|-able |const char*| out of a string
-
-  // works just as well with an formal wide string type...
-const nsAString&amp aString = ...;  // perhaps it's a parameter
-printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aString<span class="notice">).get()</span>);
+  /* How do I |printf| a string? */
 
 
-  // But don't hold onto the pointer longer than the lifetime of the temporary!
-const char* cstring = NS_ConvertUCS2toUTF8(aKey).get(); <span class="warning">// BAD!</span>
-printf("%s\n", cstring);                                <span class="warning">// |cstring| is dangling</span>
+void PrintSomeStrings( const nsAString& aString, const PRUnichar* aKey, const nsACString& aCString )
+  {
+      // |printf|ing a narrow string is easy
+    printf("%s\n", <span class="notice">PromiseFlatCString(</span>aCString<span class="notice">).get()</span>);     // GOOD
+
+      // the simplest way to get a |printf|-able |const char*| out of a string
+    printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aKey<span class="notice">).get()</span>);       // GOOD
+
+      // works just as well with an formal wide string type...
+    printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aString<span class="notice">).get()</span>);
+
+
+      // But don't hold onto the pointer longer than the lifetime of the temporary!
+    <span class="warning">const char* cstring = NS_ConvertUCS2toUTF8(aKey).get(); // BAD! |cstring| is dangling
+    printf("%s\n", cstring);</span>
+  }
 </pre>
 </div>
     </dd>
