@@ -825,8 +825,9 @@ nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint32 
     if (mDlg && !mCancelled && TimeToUpdate(now))
     {
         if (mContentLength < 1) {
-            nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+            nsCOMPtr<nsIChannel> channel = do_QueryInterface(request,&rv);
             NS_ASSERTION(channel, "should have a channel");
+            if (NS_FAILED(rv)) return rv;
             rv = channel->GetContentLength(&mContentLength);
             if (NS_FAILED(rv)) return rv;
         }
