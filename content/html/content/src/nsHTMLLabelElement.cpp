@@ -54,6 +54,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
+#include "nsIEventStateManager.h"
 
 
 class nsHTMLLabelElement : public nsGenericHTMLContainerFormElement,
@@ -343,6 +344,28 @@ nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return rv;
 }
 
+static PRBool
+EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
+              nsIContent *aChild, nsIContent *aStop)
+{
+  nsCOMPtr<nsIEventStateManager> esm;
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+  nsCOMPtr<nsIContent> c;
+  esm->GetEventTargetContent(aEvent, getter_AddRefs(c));
+  while (c) {
+    if (c == aChild) {
+      return PR_TRUE;
+    }
+    if (c == aStop) {
+      break;
+    }
+    nsIContent *parent;
+    c->GetParent(parent);
+    c = dont_AddRef(parent);
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
@@ -365,7 +388,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_OK;
 
   nsCOMPtr<nsIContent> content = GetForContent();
-  if (content) {
+  if (content && !EventTargetIn(aPresContext, aEvent, content, this)) {
     mHandlingEvent = PR_TRUE;
     switch (aEvent->message) {
       case NS_MOUSE_LEFT_CLICK:
@@ -380,7 +403,9 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
         //    do something sensible, we might send more events through
         //    like this.)  See bug 7554, bug 49897, and bug 96813.
         // XXX The event should probably have its target modified.  See
-        // bug 146066.
+        // bug 146066.  (But what if |aDOMEvent| is null and it gets
+        // created later?  If we forced the existence of an event and
+        // modified its target, we could replace |mHandlingEvent|.)
         rv = content->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                      aFlags, aEventStatus);
         break;
