@@ -2826,6 +2826,9 @@ void DlgSequenceNext()
            * appropriate Windows registry keys */
           SetTurboArgs();
 
+          if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+            SetSetupState(SETUP_STATE_UNPACK_XPCOM);
+
           /* POST_DOWNLOAD process file manipulation functions */
           ProcessFileOpsForAll(T_POST_DOWNLOAD);
           /* PRE_XPCOM process file manipulation functions */
@@ -2841,6 +2844,9 @@ void DlgSequenceNext()
             bDone = TRUE;
             break;
           }
+
+          if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+            SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
 
           /* POST_XPCOM process file manipulation functions */
           ProcessFileOpsForAll(T_POST_XPCOM);
@@ -2885,6 +2891,8 @@ void DlgSequenceNext()
             ProcessFileOpsForAll(T_POST_LAUNCHAPP);
             /* DEPEND_REBOOT process file manipulation functions */
             ProcessFileOpsForAll(T_DEPEND_REBOOT);
+
+            UnsetSetupState(); // clear setup state
             ClearWinRegUninstallFileDeletion();
             if(!gbIgnoreProgramFolderX)
               ProcessProgramFolderShowCmd();
