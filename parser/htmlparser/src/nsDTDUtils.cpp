@@ -1299,10 +1299,7 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
 #ifdef DEBUG_TRACK_NODES 
 
 static nsCParserNode* gAllNodes[100];
-static nsCParserNode* gLooseNodes[100];
-
 static int gAllNodeCount=0;
-static int gLooseNodeCount=0;
 
 int FindNode(nsCParserNode *aNode) {
   int theIndex=0;
@@ -1319,7 +1316,7 @@ void AddNode(nsCParserNode *aNode) {
     gAllNodes[gAllNodeCount++]=aNode;
   }
   else {
-    int x=10; //you tried to recycle a node twice!
+    //you tried to recycle a node twice!
   }
 }
 
