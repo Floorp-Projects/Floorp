@@ -310,7 +310,7 @@ public:
 
   MOZ_DECL_CTOR_COUNTER(nsCSSValue::Image)
 
-  struct nsCSSValue::Image : public nsCSSValue::URL {
+  struct Image : public URL {
     // Not making the constructor and destructor inline because that would
     // force us to include imgIRequest.h, which leads to REQUIRES hell, since
     // this header is included all over.
