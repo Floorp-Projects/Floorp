@@ -40,6 +40,8 @@
 #define nsJSProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 
 #define NS_JSPROTOCOLHANDLER_CID                     \
 { /* bfc310d2-38a0-11d3-8cd3-0060b0fc14a3 */         \
@@ -67,6 +69,13 @@ public:
     nsresult Init();
 
 protected:
+
+    nsresult EnsureUTF8Spec(const nsAFlatCString &aSpec, const char *aCharset, 
+                            nsACString &aUTF8Spec);
+
+    nsCOMPtr<nsICharsetConverterManager2> mCharsetConverterManager;
+    nsCOMPtr<nsIAtom> mCharsetAtom;
+    nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
 };
 
 #endif /* nsJSProtocolHandler_h___ */

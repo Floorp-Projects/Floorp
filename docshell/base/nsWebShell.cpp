@@ -575,11 +575,27 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
       // Fall through, this seems like the most reasonable action
     case eLinkVerb_Replace:
       {
+        // get a charset of the document and use is as originCharset
+        nsAutoString docCharset;
+        nsCOMPtr<nsIPresShell> presShell;
+        nsDocShell::GetPresShell(getter_AddRefs(presShell));
+        if (presShell)
+        {
+          nsCOMPtr<nsIDocument> doc;
+          presShell->GetDocument(getter_AddRefs(doc));
+          if (doc &&
+              NS_FAILED(doc->GetDocumentCharacterSet(docCharset)))
+            docCharset.Truncate();
+        }
+
         // for now, just hack the verb to be view-link-clicked
         // and down in the load document code we'll detect this and
         // set the correct uri loader command
         nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), nsDependentString(aURLSpec), nsnull);
+        NS_NewURI(getter_AddRefs(uri), nsDependentString(aURLSpec), 
+                  docCharset.IsEmpty()
+                  ? nsnull
+                  : NS_LossyConvertUCS2toASCII(docCharset).get());
 
         // No URI object? This may indicate the URLspec is for an
         // unrecognized protocol. Embedders might still be interested

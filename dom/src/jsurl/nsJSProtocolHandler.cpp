@@ -768,6 +768,57 @@ nsJSProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
+nsresult 
+nsJSProtocolHandler::EnsureUTF8Spec(const nsAFlatCString &aSpec, const char *aCharset, 
+                                    nsACString &aUTF8Spec)
+{
+  aUTF8Spec.Truncate();
+
+  // assume UTF-8 if the spec contains unescaped non ASCII
+  if (!nsCRT::IsAscii(aSpec.get())) 
+    return NS_OK;
+  
+  nsCAutoString unescapedSpec; 
+  NS_UnescapeURL(aSpec.get(), aSpec.Length(), 
+                 esc_OnlyNonASCII, unescapedSpec);
+
+  if (IsASCII(unescapedSpec))
+    return NS_OK;
+  
+  nsresult rv;
+  if (!mCharsetConverterManager) {
+    mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  nsCOMPtr<nsIAtom> charsetAtom;
+  rv = mCharsetConverterManager->GetCharsetAtom2(aCharset, getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mCharsetAtom != charsetAtom) {
+    rv = mCharsetConverterManager->GetUnicodeDecoder(charsetAtom, 
+                                                     getter_AddRefs(mUnicodeDecoder));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mCharsetAtom = charsetAtom;
+  }
+
+  PRInt32 srcLen = unescapedSpec.Length();
+  PRInt32 dstLen;
+  rv = mUnicodeDecoder->GetMaxLength(unescapedSpec.get(), srcLen, &dstLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUnichar *ustr = (PRUnichar *) nsMemory::Alloc(dstLen * sizeof(PRUnichar));
+  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = mUnicodeDecoder->Convert(unescapedSpec.get(), &srcLen, ustr, &dstLen);
+  if (NS_SUCCEEDED(rv)) {
+    NS_ConvertUCS2toUTF8 rawUTF8Spec(ustr, dstLen);
+    NS_EscapeURL(rawUTF8Spec, esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
+  }
+  nsMemory::Free(ustr);
+
+  return rv;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
 
@@ -815,26 +866,17 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
     if (NS_FAILED(rv))
         return rv;
 
-    if (IsASCII(aSpec))
-        rv = url->SetSpec(aSpec);
+    if (!aCharset || !nsCRT::strcasecmp("UTF-8", aCharset))
+      rv = url->SetSpec(aSpec);
     else {
-        // need special encoding for unicode characters...
-        // XXXdarin iterate over the UTF-8 chars instead
-        NS_ConvertUTF8toUCS2 ucsSpec(aSpec);
-        nsCAutoString encSpec;
-
-        char buf[6+1]; // space for \uXXXX plus a NUL at the end
-        for (const PRUnichar *uch = ucsSpec.get(); *uch; ++uch) {
-            if (*uch > 0x7F) {
-                PR_snprintf(buf, sizeof(buf), "\\u%.4x", *uch);
-                encSpec.Append(buf);
-            }
-            else {
-                // it's ASCII so we're safe...
-                encSpec.Append(char(*uch));
-            }
-        }
-        rv = url->SetSpec(encSpec);
+      nsCAutoString utf8Spec;
+      rv = EnsureUTF8Spec(PromiseFlatCString(aSpec), aCharset, utf8Spec);
+      if (NS_SUCCEEDED(rv)) {
+        if (utf8Spec.IsEmpty())
+          rv = url->SetSpec(aSpec);
+        else
+          rv = url->SetSpec(utf8Spec);
+      }
     }
 
     if (NS_FAILED(rv)) {

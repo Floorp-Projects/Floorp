@@ -2806,8 +2806,13 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     nsCOMPtr<nsIURI> absURI;
-    if (NS_SUCCEEDED(rv))
-      rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, nsnull, aBaseURL);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString docCharset;
+      if (NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset)))
+        rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, NS_LossyConvertUCS2toASCII(docCharset).get(), aBaseURL);
+      else
+        rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, nsnull, aBaseURL);
+    }
     if (NS_SUCCEEDED(rv))
       proceed = securityManager->CheckLoadURI(aBaseURL, absURI, nsIScriptSecurityManager::STANDARD);
 
