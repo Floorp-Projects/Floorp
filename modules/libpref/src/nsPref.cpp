@@ -254,25 +254,29 @@ void nsPref::useDefaultPrefFile()
 //----------------------------------------------------------------------------------------
 {
     nsFileSpec prefsFile("default_prefs.js"); // in default working directory.
-    nsIFileLocator* locator = nsnull;
-    nsresult rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-    if (NS_SUCCEEDED(rv) && locator) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_SUCCEEDED(rv) && locator)
+    {
 	    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &prefsFile);
 	    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: File locator cannot locate prefs file.");
-	    nsServiceManager::ReleaseService(kFileLocatorCID, locator);
     }
-    if (prefsFile.Exists()) {
-      rv = StartUpWith(&prefsFile);
+    if (prefsFile.Exists())
+    {
+        rv = StartUpWith(&prefsFile);
     }
-    else {
+    else
+    {
       // no prefs file.  make a stub of one
       nsOutputFileStream stream(prefsFile);
-      if (stream.is_open()) {
+      if (stream.is_open())
+      {
         stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
         stream.close();
       }
       
-      if (prefsFile.Exists()) {
+      if (prefsFile.Exists())
+      {
         rv = StartUpWith(&prefsFile);
 
         // sspitzer:  eventually this code should be moved into the profile manager
@@ -1190,4 +1194,74 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
     }
     PR_Free(valueArray);
     return PREF_NOERROR;
+}
+
+//----------------------------------------------------------------------------------------
+extern "C" JSBool pref_InitInitialObjects()
+// Initialize default preference JavaScript buffers from
+// appropriate TEXT resources
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv))
+    	return JS_TRUE;
+    nsFileSpec componentsDir;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &componentsDir);
+    if (NS_FAILED(rv))
+    	return JS_TRUE;
+	static const char* specialFiles[] = {
+		"initpref.js"
+#ifdef XP_MAC
+	,	"macprefs.js"
+#elif defined(XP_PC)
+	,	"winpref.js"
+#elif defined(XP_UNIX)
+	,	"unixpref.js"
+#endif
+	};
+    JSBool worked = (JSBool)(pref_OpenFileSpec(
+    	componentsDir + specialFiles[0],
+    	PR_FALSE,
+    	PR_FALSE,
+    	PR_FALSE,
+    	PR_FALSE) == PREF_NOERROR);
+    // Parse all the random files that happen to be in the components directory.
+	for (nsDirectoryIterator i(componentsDir); i.Exists(); i++)
+	{
+		const char* leafName = i.Spec().GetLeafName();
+		PRBool shouldParse = PR_TRUE;
+		// Skip non-js files
+		if (strstr(leafName, ".js") + strlen(".js") != leafName + strlen(leafName))
+			shouldParse = PR_FALSE;
+		// Skip files in the special list.
+		if (shouldParse)
+		{
+			for (int j = 0; j < sizeof(specialFiles) / sizeof(char*); j++)
+				if (strcmp(leafName, specialFiles[j]) == 0)
+					shouldParse = PR_FALSE;
+		}
+		if (shouldParse)
+		{
+		    worked = (JSBool)(pref_OpenFileSpec(
+		    	i.Spec(),
+		    	PR_FALSE,
+		    	PR_FALSE,
+		    	PR_FALSE,
+		    	PR_FALSE) == PREF_NOERROR);
+		}
+		nsCRT::free((char*)leafName);
+	}
+	// Finally, parse any other special files (platform-specific ones).
+	for (int k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
+	{
+	    worked = (JSBool)(pref_OpenFileSpec(
+    		componentsDir + specialFiles[k],
+	    	PR_FALSE,
+	    	PR_FALSE,
+	    	PR_FALSE,
+	    	PR_FALSE) == PREF_NOERROR);
+	}
+	NS_ASSERTION(worked, "Config file was not read");
+    return JS_TRUE;
 }
