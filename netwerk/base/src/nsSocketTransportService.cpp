@@ -30,7 +30,14 @@
 #include "nsProxiedService.h"
 #include "nsString.h"
 #include "nsNetCID.h"
+#include "prlog.h"
 #include "nsProtocolProxyService.h"
+
+#if defined(PR_LOGGING)
+static PRLogModuleInfo *gSocketTransportServiceLog = nsnull;
+#endif
+
+#define LOG(args) PR_LOG(gSocketTransportServiceLog, PR_LOG_DEBUG, args)
 
 #ifdef DEBUG
 // in debug builds this will be valid while the socket transport service is active.
@@ -44,6 +51,12 @@ nsSocketTransportService::nsSocketTransportService ()   :
     mConnectedTransports (0),
     mTotalTransports (0)
 {
+#if defined(PR_LOGGING)
+  if (!gSocketTransportServiceLog)
+    gSocketTransportServiceLog = PR_NewLogModule("nsSocketTransportService");
+#endif
+  LOG(("nsSocketTransportService::nsSocketTransportService"));
+    
   NS_INIT_REFCNT();
 
   PR_INIT_CLIST(&mWorkQ);
@@ -63,6 +76,7 @@ nsSocketTransportService::nsSocketTransportService ()   :
 
 nsSocketTransportService::~nsSocketTransportService()
 {
+  LOG(("nsSocketTransportService::~nsSocketTransportService"));
   //
   // It is impossible for the nsSocketTransportService to be deleted while
   // the transport thread is running because it holds a reference to the
@@ -180,6 +194,8 @@ nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
   nsresult rv = NS_OK;
   PRCList* qp;
 
+  NS_ASSERTION(mThreadRunning, "adding transport after service is shut down");
+
   {
     nsAutoLock lock(mThreadLock);
     //
@@ -190,6 +206,8 @@ nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
       NS_ADDREF(aTransport);
       bFireEvent = PR_CLIST_IS_EMPTY(&mWorkQ);
       PR_APPEND_LINK(qp, &mWorkQ);
+      LOG(("nsSocketTransportService::AddToWorkQ:  Adding transport %p.",
+           aTransport));
     }
   }
   //
@@ -232,6 +250,9 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
 
     transport = nsSocketTransport::GetInstance(qp);
     PR_REMOVE_AND_INIT_LINK(qp);
+
+    LOG(("nsSocketTransportService::ProcessWorkQ:  Processing transport %p.",
+         transport));
     //
     // Make sure that the transport is not already on the select list.
     // It will be added (if necessary) after Process() is called...
@@ -659,6 +680,8 @@ nsSocketTransportService::Shutdown(void)
   nsresult rv = NS_OK;
   int i;
   
+  LOG(("nsSocketTransportService::Shutdown BEGIN"));
+
   if (mThread) {
     // Cancel all remaining transports.
     for (i=0; i<mSelectFDSetCount; i++) {
@@ -691,8 +714,11 @@ nsSocketTransportService::Shutdown(void)
       NS_IF_RELEASE(mActiveTransportList[i]);
 
   } else {
+    NS_NOTREACHED("Should have thread when shutting down.");
     rv = NS_ERROR_FAILURE;
   }
+
+  LOG(("nsSocketTransportService::Shutdown END"));
 
   return rv;
 }
