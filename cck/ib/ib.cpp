@@ -742,12 +742,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 		fclose(f);
 	}
 
-	dlg->SetWindowText("         Replacing XPI Files");
+	dlg->SetWindowText("         Customization is in Progress \n         |||");
 
 	// Put all the extracted files back into their new XPI homes
 	ReplaceXPIFiles();
 
-	dlg->SetWindowText("         Copying default files into the configuration");
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||");
 
 	// Copy remaining default installer files into config
 	// preserving any existing files that we created already
@@ -798,19 +798,19 @@ int StartIB(CString parms, WIDGET *curWidget)
 	}
 
 	// Didn't work...
-	dlg->SetWindowText("         Checking for neccessary components to install");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||");
 
 	invisible();
 	
-	dlg->SetWindowText("         Checking for Third Party Software");
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||");
 
 	AddThirdParty();
 
-	dlg->SetWindowText("         Replacing config.ini");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||");
 
 	ReplaceINIFile();
 
-	dlg->SetWindowText("         Creating Desktop Shortcut for Help");
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||");
 
 	SetCurrentDirectory(olddir);
 	CString TargetDir = GetGlobal("Root");
@@ -818,7 +818,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString MozBrowser = GetBrowser();
 	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
 
-	dlg->SetWindowText("         Customization is Complete");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||");
 	newprog.DestroyWindow();
 	return TRUE;
 
