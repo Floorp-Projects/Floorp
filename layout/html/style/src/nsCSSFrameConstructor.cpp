@@ -7805,13 +7805,15 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // real parent frame; if not, then the frame hasn't been built yet
   // and we just bail.
   //
-  // XXX By passing null for the child content, below, we'll get the
-  // unfiltered insertion point. What we really ought to do here is
-  // ensure that there is really aren't any filtered insertion points;
-  // if not, we'll need to fall back onto multiple ContentInserted()
-  // calls.
+  // XXX By passing the first appended child below, we'll potentially
+  // botch the insertion of subsequent elements. What we really ought
+  // to do here is determine if there are filtered insertion points
+  // for aContainer; if so, we'll need to fall back onto multiple
+  // ContentInserted() calls.
+  nsCOMPtr<nsIContent> firstAppendedChild;
+  aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(firstAppendedChild));
   nsIFrame* insertionPoint;
-  GetInsertionPoint(shell, parentFrame, nsnull, &insertionPoint);
+  GetInsertionPoint(shell, parentFrame, firstAppendedChild, &insertionPoint);
   if (! insertionPoint)
     return NS_OK; // Don't build the frames.
 
