@@ -4574,6 +4574,18 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
 	goto loser;
     }
     epki->arena = arena;
+
+    pk = PK11_FindKeyByAnyCert(cert, wincx);
+    if(pk == NULL) {
+	rv = SECFailure;
+	goto loser;
+    }
+
+    /* if we didn't specify a slot, use the slot the private key was in */
+    if (!slot) {
+	slot = pk->pkcs11Slot;
+    }
+
     algid = SEC_PKCS5CreateAlgorithmID(algTag, NULL, iteration);
     if(algid == NULL) {
 	rv = SECFailure;
@@ -4585,6 +4597,15 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
     pbeMech.mechanism = mechanism;
     pbeMech.pParameter = pbe_param->data;
     pbeMech.ulParameterLen = pbe_param->len;
+
+    /* if we specified a different slot, and the private key slot can do the
+     * pbe key gen, generate the key in the private key slot so we don't have 
+     * to move it later */
+    if (slot != pk->pkcs11Slot) {
+	if (PK11_DoesMechanism(pk->pkcs11Slot,mechanism)) {
+	    slot = pk->pkcs11Slot;
+	}
+    }
     key = PK11_RawPBEKeyGen(slot, mechanism, pbe_param, pwitem, 
 							PR_FALSE, wincx);
 
@@ -4603,11 +4624,6 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
     crypto_param.data = (unsigned char *)cryptoMech.pParameter;
     crypto_param.len = cryptoMech.ulParameterLen;
 
-    pk = PK11_FindKeyByAnyCert(cert, wincx);
-    if(pk == NULL) {
-	rv = SECFailure;
-	goto loser;
-    }
 
     encryptBufLen = pk11_private_key_encrypt_buffer_length(pk); 
     if(encryptBufLen == -1) {
@@ -4620,6 +4636,20 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
     if(!encryptedKey.data) {
 	rv = SECFailure;
 	goto loser;
+    }
+
+    /* If the key isn't in the private key slot, move it */
+    if (key->slot != pk->pkcs11Slot) {
+	PK11SymKey *newkey = pk11_CopyToSlot(pk->pkcs11Slot,
+						key->type, CKA_WRAP, key);
+	if (newkey == NULL) {
+	    rv= SECFailure;
+	    goto loser;
+	}
+
+	/* free the old key and use the new key */
+	PK11_FreeSymKey(key);
+	key = newkey;
     }
 	
     /* we are extracting an encrypted privateKey structure.
