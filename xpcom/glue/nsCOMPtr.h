@@ -262,8 +262,14 @@
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
 #endif
 
-#if defined(_MSC_VER) && (_MSC_VER<1100)
-  #define NSCAP_NO_EXPLICIT
+#if defined(_MSC_VER)
+  #if (_MSC_VER<1100)
+		  // before 5.0, VC++ couldn't handle explicit
+    #define NSCAP_NO_EXPLICIT
+  #elif (_MSC_VER==1100)
+      // VC++5.0 has an internal compiler error (sometimes) without this
+    #define NSCAP_NO_MEMBER_USING_DECLARATIONS
+  #endif
 #endif
 
 #if defined(IRIX)
@@ -278,7 +284,9 @@
 #endif
 
 #if defined(AIX)
+  #define NSCAP_NO_EXPLICIT
   #define NSCAP_NO_NEW_CASTS
+  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
 #endif
 
 #ifdef NSCAP_NO_EXPLICIT
@@ -328,14 +336,14 @@ class nsDerivedSafe : public T
       using T::AddRef;
       using T::Release;
 #else
-      nsrefcnt AddRef();
-      nsrefcnt Release();
+      NS_IMETHOD_(nsrefcnt) AddRef(void);
+      NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
       void operator delete( void* );                    // NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 
-      nsDerivedSafe& operator=( const nsDerivedSafe& ); // NOT TO BE IMPLEMENTED
+      nsDerivedSafe<T>& operator=( const nsDerivedSafe<T>& ); // NOT TO BE IMPLEMENTED
         // you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
   };
 
@@ -546,7 +554,7 @@ class nsCOMPtr : private nsCOMPtr_base
         }
 
       nsCOMPtr<T>&
-      operator=( const nsCOMPtr& rhs )
+      operator=( const nsCOMPtr<T>& rhs )
         {
           assign_with_AddRef(rhs.mRawPtr);
           return *this;
