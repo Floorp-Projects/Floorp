@@ -462,6 +462,7 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
   nsresult rv;
   nsWebShellWindow* window;
 
+  aResult = nsnull;
   window = new nsWebShellWindow();
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -505,6 +506,7 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
   nsresult rv;
   nsWebShellWindow* window;
 
+  aResult = nsnull;
   window = new nsWebShellWindow();
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -530,7 +532,13 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
    settings or get information out of the dialog before dismissal, use
    event handlers.  This wrapper method is desirable because of the
    complications creeping in to the modal window story: there's a lot of setup.
-   See the code.
+   See the code..
+
+   Note that the window created is returned in aResult.  By the time this function
+   exits, that window has been partially destroyed.  We return it anyway, in the
+   hopes that it may be queried for results, somehow.  This may be a mistake.
+   It is returned addrefed (by the QueryInterface to nsIWebShellWindow in
+   CreateDialogWindow).
 */
 NS_IMETHODIMP
 nsAppShellService::RunModalDialog(
