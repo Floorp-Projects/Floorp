@@ -290,6 +290,7 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_SETTHREADAFFINITYMASK   _PR_MD_SETTHREADAFFINITYMASK
 #define _MD_GETTHREADAFFINITYMASK   _PR_MD_GETTHREADAFFINITYMASK
 #define _MD_EXIT_THREAD             _PR_MD_EXIT_THREAD
+#define _MD_EXIT                    _PR_MD_EXIT
 #define _MD_SUSPEND_THREAD          _PR_MD_SUSPEND_THREAD
 #define _MD_RESUME_THREAD           _PR_MD_RESUME_THREAD
 #define _MD_SUSPEND_CPU             _PR_MD_SUSPEND_CPU
