@@ -1236,14 +1236,24 @@ mime_get_main_object(MimeObject* obj)
     }
     else
     {
-      // We don't care about a signed/smime object; Go inside to the 
-      // thing that we signed or smime'ed
-      //
-      cobj = (MimeContainer*) obj;
-      if (cobj->nchildren > 0)
-        obj = cobj->children[0];
+      if (mime_subclass_p(obj->clazz, (MimeObjectClass*)&mimeContainerClass))
+      {
+        // We don't care about a signed/smime object; Go inside to the 
+        // thing that we signed or smime'ed
+        //
+        cobj = (MimeContainer*) obj;
+        if (cobj->nchildren > 0)
+          obj = cobj->children[0];
+        else
+          obj = nsnull;
+      }
       else
-        obj = nsnull;
+      {
+        // we received a message with a child object that looks like a signed
+        // object, but it is not a subclass of mimeContainer, so let's
+        // return the given child object.
+        return obj;
+      }
     }
   }
   return nsnull;
