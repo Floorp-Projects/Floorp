@@ -385,6 +385,8 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
 
 class nsICSSDeclaration : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_DECLARATION_IID);
+
   NS_IMETHOD GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
   NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
 
