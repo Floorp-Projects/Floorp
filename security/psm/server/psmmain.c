@@ -414,7 +414,8 @@ psm_catch_signals(void)
 }
 #endif
 
-#if defined(XP_PC) && !defined(DEBUG)
+/*#if defined(XP_PC) && !defined(DEBUG)*/
+#if 0
 int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                    LPSTR lpszLine, int nShow)
 #elif defined(XP_MAC)
@@ -432,7 +433,8 @@ void RunMacPSM(void *arg)
 int psm_main(int argc, char ** argv)
 #endif
 {
-#if (defined(XP_PC) && !defined(DEBUG)) || (defined(XP_MAC))
+    /*#if (defined(XP_PC) && !defined(DEBUG)) || (defined(XP_MAC))*/
+#ifdef XP_MAC
     /* substitute argc and argv for NSPR */
     int argc = 0;
     char *argv[] = {"", NULL};
