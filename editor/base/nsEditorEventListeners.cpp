@@ -92,8 +92,6 @@ nsTextEditorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
 
 //#define HAVE_EVENT_CHARCODE				// on when we have the charCode in the event
 
-#ifndef HAVE_EVENT_CHARCODE
-
 nsresult
 nsTextEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
 {
@@ -121,8 +119,6 @@ nsTextEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, 
   return NS_ERROR_FAILURE;
 }
 
-#endif /* HAVE_EVENT_CHARCODE */
-
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
@@ -148,11 +144,29 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         break;
 
       case nsIDOMEvent::VK_RETURN:
+      //case nsIDOMEvent::VK_ENTER:			// why does this not exist?
         // Need to implement creation of either <P> or <BR> nodes.
-        // Enter key?
         mEditor->InsertBreak();
         break;
-        
+      
+      case nsIDOMEvent::VK_LEFT:
+      case nsIDOMEvent::VK_RIGHT:
+      case nsIDOMEvent::VK_UP:
+      case nsIDOMEvent::VK_DOWN:
+      	// these have already been handled in nsRangeList. Why are we getting them
+      	// again here (Mac)? In switch to avoid putting in bogus chars.
+      	break;
+      
+      case nsIDOMEvent::VK_HOME:
+      case nsIDOMEvent::VK_END:
+      case nsIDOMEvent::VK_PAGE_UP:
+      case nsIDOMEvent::VK_PAGE_DOWN:
+      	// who handles these?
+#if DEBUG
+		printf("Key not handled");
+#endif
+      	break;
+      	
       default:
         {
           nsAutoString  key;
