@@ -25,7 +25,6 @@
 #include "xupfonts.h"
 #include "felocale.h"
 
-
 //---------------------------------------------------------------
 class UTF8TextAndFontListTracer : public UTF8ToXmStringConverter
 {
@@ -45,7 +44,16 @@ private:
 	int fLastNumberOfFonts;
 };
 //---------------------------------------------------------------
-fe_Font UnicodePseudoFontFactory::make( Display *dpy, XmFontList defFontList)
+class UnicodePseudoFontFactory
+{
+public:
+	static fe_Font  makeByFontList(Display* dpy, XmFontList defFontList);
+	static fe_Font  makeByFontStruct(Display* dpy, XFontStruct *xfstruc);
+	static fe_Font  makeByFontSet(Display* dpy, XFontSet  xfset);
+	static fe_Font  makeByNameSize(Display* dpy, const char* fam, int pt);
+};
+//---------------------------------------------------------------
+fe_Font UnicodePseudoFontFactory::makeByFontList( Display *dpy, XmFontList defFontList)
 {
 	fe_Font ret = NULL;
 	XmFontContext context;
@@ -63,10 +71,10 @@ fe_Font UnicodePseudoFontFactory::make( Display *dpy, XmFontList defFontList)
 		{
 			font = XmFontListEntryGetFont(entry, &type);
 			if(XmFONT_IS_FONT == type)
-				ret = UnicodePseudoFontFactory::make(dpy, 
+				ret = UnicodePseudoFontFactory::makeByFontStruct(dpy, 
                                          (XFontStruct*) font);
 			else
-				ret = UnicodePseudoFontFactory::make(dpy, 
+				ret = UnicodePseudoFontFactory::makeByFontSet(dpy, 
                                          (XFontSet) font);
 		}
 		free(tag);
@@ -74,16 +82,18 @@ fe_Font UnicodePseudoFontFactory::make( Display *dpy, XmFontList defFontList)
 	XmFontListFreeFontContext(context);
 	return ret;
 }
-fe_Font UnicodePseudoFontFactory::make( Display *dpy, XFontSet xfset)
+//---------------------------------------------------------------
+fe_Font UnicodePseudoFontFactory::makeByFontSet( Display *dpy, XFontSet xfset)
 {
 	char **fnl;
 	XFontStruct ** fsl;
 	if(XFontsOfFontSet(xfset, &fsl, &fnl)>0)
-		return UnicodePseudoFontFactory::make(dpy, fsl[0]);
+		return UnicodePseudoFontFactory::makeByFontStruct(dpy, fsl[0]);
 	else
-		return UnicodePseudoFontFactory::make(dpy, "", 120);
+		return UnicodePseudoFontFactory::makeByNameSize(dpy, "helvetica", 120);
 }
-fe_Font UnicodePseudoFontFactory::make( Display *dpy, XFontStruct* xfstruct)
+//---------------------------------------------------------------
+fe_Font UnicodePseudoFontFactory::makeByFontStruct( Display *dpy, XFontStruct* xfstruct)
 {
 	Atom fmlAtom;
 	char fam[32];
@@ -98,23 +108,24 @@ fe_Font UnicodePseudoFontFactory::make( Display *dpy, XFontStruct* xfstruct)
 	} 
 	else
 	{
-		PR_snprintf(fam, 31, "");
+		PR_snprintf(fam, 31, "helvetica");
 	}
 
 	if(! XGetFontProperty( xfstruct, XA_POINT_SIZE, (unsigned long*)&ptSize))
 	    ptSize = 120;	
-	return UnicodePseudoFontFactory::make(dpy, fam, ptSize);
+	return UnicodePseudoFontFactory::makeByNameSize(dpy, fam, ptSize);
 }
 extern "C" {
-extern int fe_UnicodePointToPixelSize(Display *dpy, int ptSize);
+ extern	int fe_UnicodePointToPixelSize(Display *, int) ; 
 };
-fe_Font UnicodePseudoFontFactory::make( Display *dpy, const char* family, int ptSize)
+//---------------------------------------------------------------
+fe_Font UnicodePseudoFontFactory::makeByNameSize( Display *dpy, const char* family, int ptSize)
 {
-	return (fe_Font) fe_LoadUnicodeFont(
+	int pixelSize  = fe_UnicodePointToPixelSize(dpy, ptSize) ; 
+	return (fe_Font) fe_LoadUnicodeFontByPixelSize(
 		NULL,
 		(char*)family,
-		0,
-		2,
+		pixelSize,
 		0,
 		CS_UTF8,
 		0,
@@ -122,6 +133,20 @@ fe_Font UnicodePseudoFontFactory::make( Display *dpy, const char* family, int pt
 		dpy
 	);
 }
+//---------------------------------------------------------------
+// To Do: we should make a array to return different font depend on 
+// passed in parameter.
+fe_Font UnicodeFontSingleton::gUFont = NULL;
+fe_Font UnicodeFontSingleton::Instance(Display *dpy, char* family, int pt) 
+{
+    if(NULL == UnicodeFontSingleton::gUFont)
+    {
+	gUFont = UnicodePseudoFontFactory::makeByNameSize(dpy, family, pt);
+    }
+    return gUFont;
+}
+
+
 //---------------------------------------------------------------
 UTF8ToXmStringConverter* UTF8ToXmStringConverterFactory::make(
 	FontListNotifier* inNotifier,

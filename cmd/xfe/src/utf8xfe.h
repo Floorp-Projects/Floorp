@@ -43,13 +43,13 @@ public:
 		FontListNotifier* inNotifier, fe_Font inUFont);
 };
 
-class UnicodePseudoFontFactory
+class UnicodeFontSingleton 
 {
 public:
-	static fe_Font  make(Display* dpy, XmFontList defFontList);
-	static fe_Font  make(Display* dpy, XFontStruct *xfstruc);
-	static fe_Font  make(Display* dpy, XFontSet  xfset);
-	static fe_Font  make(Display* dpy, const char* fam, int pt);
+	static	fe_Font Instance(Display *dpy, char* family, int pt);
+private:
+	static  fe_Font gUFont;
 };
+
 
 #endif /* __utfxfe_h__ */

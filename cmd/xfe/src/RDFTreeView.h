@@ -32,6 +32,7 @@
 #include "IconGroup.h"
 #include "htrdf.h"
 #include "NavCenterView.h"
+#include "utf8xfe.h"
 
 //////////////////////////////////////////////////////////////////////////
 class XFE_ColumnData
@@ -90,6 +91,8 @@ public:
 protected:
     // The XmL tree widget
     Widget                  _tree;
+    UTF8ToXmStringConverter *_tree_utf8_converter;
+    FontListNotifier        *_tree_fontlist_notifier;
 
 	virtual Widget	getTreeParent	();
 	virtual void	doAttachments	();

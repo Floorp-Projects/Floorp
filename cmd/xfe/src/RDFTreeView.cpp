@@ -123,6 +123,54 @@ public:
 
 //  End of Commands
 /////////////////////////////////////////////////////////////////////
+//  FontList Management
+//  
+//  Since loading all the necessary fonts for Unicode is expensive,
+//  we only load when we need them, which mean it will be load 
+//  when the conversion hit the range the font cover. 
+//  Howerver, in the case of list or tree, we want to use the same font
+//  in the same tree, so... we need to use this font tracer to 
+//  notify the tree when it is necessary to change the font
+//  The converter will call this tracer when it find out it is necessary 
+//  to change font. It serve as a callback to the converter.
+
+ 
+ // TreeFontListNotifier - adaptor class to set font list for the tree widget
+ class TreeFontListNotifier : public FontListNotifier {
+ public:
+         TreeFontListNotifier(Widget inTree) { _tree = inTree;};
+         virtual ~TreeFontListNotifier() {};
+         virtual void notifyFontListChanged(XmFontList inFontList);
+ private:
+         Widget _tree;
+  
+ };
+ void TreeFontListNotifier::notifyFontListChanged(XmFontList inFontList)
+ {
+         // Set all the rows and columns
+         XtVaSetValues(_tree,
+             XmNcellDefaults, True,
+             XmNcellFontList, inFontList,
+             NULL);
+         XtVaSetValues(_tree,
+             XmNrowType, XmCONTENT,
+             XmNcolumnType, XmCONTENT,
+             XmNcellFontList, inFontList,
+             NULL);
+/* 
+         XtVaSetValues(_tree,
+             XmNrow, 0,
+             XmNcolumn, 0,
+             XmNrowType, XmHEADING,
+             XmNcolumnType, XmCONTENT,
+             XmNcellType, XmICON_CELL,
+             XmNcellFontList, inFontList,
+             NULL);
+*/
+ }
+ 
+//  End of TreeFontListNotifier
+/////////////////////////////////////////////////////////////////////
 //  Start of XFE_RDFTreeView definitions
 
 static XFE_CommandList* my_commands = 0;
@@ -191,6 +239,16 @@ XFE_RDFTreeView::createTree()
 				  XmNcellDefaults, True,
 				  XmNcellAlignment, XmALIGNMENT_LEFT,
 				  NULL);
+
+
+	_tree_fontlist_notifier = new TreeFontListNotifier( _tree );
+	// fix me ftang: we should pass a default font list to server as a  
+	// template instead of hardcoded "helvetica" 12
+	_tree_utf8_converter = UTF8ToXmStringConverterFactory::make(
+		_tree_fontlist_notifier,
+		UnicodeFontSingleton::Instance( XtDisplay(_tree), 
+										"helvetica", 
+										12) );
 
 	init_pixmaps();
 	
@@ -387,34 +445,58 @@ void
 XFE_RDFTreeView::edit_cell(XtPointer callData)
 {
 	XP_ASSERT(_tree);
-	if(!_tree)
+	if(!_tree) 
 		return;
 
 	XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct*)callData;
     HT_Resource node = HT_GetNthItem (_ht_view, cbs->row);
 
-	if (node && cbs->reason == XmCR_EDIT_COMPLETE)
-    {
-        XmLGridColumn column = XmLGridGetColumn(_tree, XmCONTENT,
-                                                cbs->column);
+	if(! node)
+			return;
+	Widget inlineedit;
+	XtVaGetValues(_tree, XmNtextWidget, &inlineedit, NULL); 
+
+	XP_ASSERT(inlineedit);	
 
         XFE_ColumnData *column_data = getColumnData(cbs->column);
 
-        XmLGridRow row = XmLGridGetRow(_tree, XmCONTENT, cbs->row);
-        XmString cell_string;
+	switch (cbs->reason)
+	{
+		case XmCR_EDIT_CANCEL:
+            initCell(node, cbs->row, cbs->column);
+			break;
+		case XmCR_EDIT_COMPLETE:
+			{
+			char* utf8,*widgetText;
+			widgetText = XmTextGetString(inlineedit);
 
-        XtVaGetValues(_tree,
-                      XmNcolumnPtr, column,
-                      XmNrowPtr, row,
-                      XmNcellString, &cell_string,
-                      NULL);
-        char *text;
-        XmStringGetLtoR(cell_string, XmSTRING_DEFAULT_CHARSET, &text);
-        HT_SetNodeData (node, column_data->token, column_data->token_type,
-                        text);
-    }
+			utf8 = (char*) INTL_ConvertLineWithoutAutoDetect(
+						INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel),
+						CS_UTF8,
+						(unsigned char*)widgetText, XP_STRLEN(widgetText));
+			XtFree(widgetText);
+
+			HT_SetNodeData (node, column_data->token, column_data->token_type, utf8);
+            initCell(node, cbs->row, cbs->column);
+			}
+			break;
+		case XmCR_EDIT_BEGIN:
+		case XmCR_EDIT_INSERT:
+			{
+			void* utf8;
+			char* widgetText;
+	       	HT_GetNodeData (node, column_data->token, column_data->token_type, &utf8);
+			widgetText = (char*) INTL_ConvertLineWithoutAutoDetect(
+						CS_UTF8,
+						INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel),
+						(unsigned char*)utf8, XP_STRLEN((char*)utf8));
+			XmTextSetString(inlineedit, widgetText );
+
+			XP_FREE(widgetText);
+			}
+			break;
+	}
 }
-
 void
 XFE_RDFTreeView::select_cb(Widget,
                        XtPointer clientData,
@@ -663,6 +745,16 @@ XFE_RDFTreeView::fill_tree()
 void
 XFE_RDFTreeView::destroy_tree()
 {
+	if(_tree_utf8_converter)
+	{
+		delete _tree_utf8_converter;
+		_tree_utf8_converter = NULL;
+	}
+	if(_tree_fontlist_notifier)
+	{
+		delete _tree_fontlist_notifier;
+		_tree_fontlist_notifier = NULL;
+	}
 }
 
 void
@@ -676,7 +768,6 @@ void
 XFE_RDFTreeView::add_row(HT_Resource node)
 {
     int row = HT_GetNodeIndex(_ht_view, node);
-    char *name = HT_GetNodeName(node);
     int  depth = HT_GetItemIndentation(node);
     Boolean expands =    HT_IsContainer(node);
     Boolean isExpanded = HT_IsContainerOpen(node);
@@ -737,12 +828,14 @@ XFE_RDFTreeView::initCell(HT_Resource node, int row, int column)
         
     // Set the label.
     //
-    XmString xmstr = NULL;
-    int16 charset = INTL_DefaultWinCharSetID(m_contextData);
+    char buffer[1024];
 
     if (column == 0)
     {
-        xmstr = XFE_RDFUtils::formatItem(node);
+        if(HT_IsSeparator(node))
+            sprintf(buffer, "-------------------------");
+        else
+            sprintf(buffer, "%s", (char*)HT_GetNodeName(node));
     }
     else
     {
@@ -750,7 +843,6 @@ XFE_RDFTreeView::initCell(HT_Resource node, int row, int column)
         if (HT_GetNodeData(node, column_data->token, column_data->token_type,
                            &data) && data) 
         {
-            char buffer[1024];
             
             switch (column_data->token_type)
             {
@@ -763,19 +855,18 @@ XFE_RDFTreeView::initCell(HT_Resource node, int row, int column)
                 strcpy(buffer, (char*)data);
                 break;
             }
-            XmFontList font_list;
-            xmstr = fe_ConvertToXmString ((unsigned char *) buffer, charset, 
-                                          NULL, XmFONT_IS_FONT, &font_list);
         }
+	else
+		strcpy(buffer, "");
     }
+	XmString xmstr = _tree_utf8_converter->convertToXmString(buffer);
     XtVaSetValues(_tree,
                   XmNrow,            row,
                   XmNcolumn,         column,
                   XmNcellString,     xmstr,
                   XmNcellEditable,   is_editable,
                   NULL);
-    if (xmstr)
-        XmStringFree(xmstr);
+    XmStringFree(xmstr);
 }
 
 void
@@ -805,10 +896,16 @@ XFE_RDFTreeView::add_column(int index, char *name, uint32 width,
 
   setColumnData(index, token, token_type);
 
-  XmLGridSetStringsPos(_tree, 
-                       XmHEADING, 0,
-                       XmCONTENT, index, 
-                       name);
+
+  XmString xmstr = _tree_utf8_converter->convertToXmString(name);
+  XtVaSetValues( _tree,
+                XmNrow, 0,
+                XmNcolumn, index,
+                XmNrowType, XmHEADING,
+                XmNcellString, xmstr,
+				NULL);
+				
+  XmStringFree(xmstr);
 }
 
 void

@@ -23,6 +23,7 @@
 
 
 #include "RDFChromeTreeView.h"
+#include "RDFUtils.h"
 #include "Command.h"
 #include "xfe2_extern.h"
 #include "xpgetstr.h"
@@ -115,7 +116,6 @@ XFE_RDFChromeTreeView::createControlToolbar()
 
 	XP_ASSERT( XfeIsAlive(getBaseWidget()) );
 
-    void * data= NULL;
 
 	// Control Tool Bar
 	_controlToolBar = 
@@ -422,12 +422,7 @@ XFE_RDFChromeTreeView::updateRoot()
     char * label = HT_GetViewName(_ht_view);
 
     if (_viewLabel) {
-    // XXX  Aurora NEED TO LOCALIZE  XXX
-    XmString xmstr = XmStringCreateLocalized(label);
-
-    XtVaSetValues(_viewLabel,XmNlabelString,xmstr,NULL);
-        
-    XmStringFree(xmstr);
+    XFE_RDFUtils::setLabelString(_viewLabel, label);
     // Set the HT properties
     setHTTitlebarProperties(_ht_view);
     setHTControlbarProperties(_ht_view);
@@ -633,28 +628,12 @@ XFE_RDFChromeTreeView::setHTControlbarProperties(HT_View view)
    }
 
 #endif
-    /* Get the charset info ready to set labels strings for buttons */
-
-    MWContext * context = getContext();
-    INTL_CharSetInfo charSetInfo =
-            LO_GetDocumentCharacterSetInfo(context);
-    XmString str= NULL;
-    XmFontList    font_list;
-
    /* controlStripCloseText */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->controlStripCloseText, HT_COLUMN_STRING, &data);
    if (data)
    {
-       str = fe_ConvertToXmString((unsigned char *) data,
-                                   INTL_GetCSIWinCSID(charSetInfo) ,
-                                   NULL, XmFONT_IS_FONT, &font_list);
-       XtVaSetValues(_closeControl, XmNlabelString, str, NULL);     
-
+       XFE_RDFUtils::setLabelString(_closeControl, (char*) data);
    }
-
-
-
-
 }
 
 

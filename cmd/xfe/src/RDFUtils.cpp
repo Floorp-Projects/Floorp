@@ -49,6 +49,7 @@
 #include <Xfe/BmButton.h>	// For XfeIsBmButton()
 #include <Xfe/BmCascade.h>	// For XfeIsBmCascade()
 
+#include "utf8xfe.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -327,15 +328,14 @@ XFE_RDFUtils::utf8ToXmStringAndFontList(char* utf8str,
 	XmFontList* pFontList)
 {
 
-    fe_Font fe_font;
+    fe_Font uFont;
     XmFontList dontFreeFontList;
 
     // need to perform mid truncation here 
     // need to replace with UTF8 to XmString conversion and get FontList here
 
-    fe_font = fe_LoadUnicodeFont(NULL, "", 0, 2, 0,0,0, 0,dpy);
-
-    *pXmStr = fe_ConvertToXmString((unsigned char*) utf8str, CS_UTF8, fe_font, 
+    uFont =  UnicodeFontSingleton::Instance(dpy, "helvetica", 120);
+    *pXmStr = fe_ConvertToXmString((unsigned char*) utf8str, CS_UTF8,  uFont,
 	XmFONT_IS_FONT, &dontFreeFontList);
     *pFontList = XmFontListCopy(dontFreeFontList);
 }
@@ -362,20 +362,26 @@ XFE_RDFUtils::formatItem(HT_Resource entry)
 XFE_RDFUtils::setItemLabelString(Widget			item,
 								 HT_Resource	entry)
 {
-    XP_ASSERT( XfeIsAlive(item) );
- 
    XP_ASSERT( entry != NULL );
+
+    char *name = HT_GetNodeName(entry);
+    setLabelString(item, name);
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void 
+XFE_RDFUtils::setLabelString(Widget			item,
+	char* utf8text
+) 
+{
+    XP_ASSERT( XfeIsAlive(item) );
 
     XP_ASSERT( XmIsLabel(item) || 
                XmIsLabelGadget(item) ||
                XfeIsLabel(item) );
-
-
     // Create am XmString from the entry
     XmString xmname;
     XmFontList fontlist = NULL;
-    XFE_RDFUtils::entryToXmStringAndFontList(entry, XtDisplay(item), &xmname, &fontlist);
-	
+    XFE_RDFUtils::utf8ToXmStringAndFontList(utf8text, XtDisplay(item), &xmname, &fontlist);
     if (xmname != NULL)
     {
         XtVaSetValues(item,XmNlabelString,xmname,XmNfontList, fontlist, NULL);

@@ -108,7 +108,8 @@ public:
 	// Set the XmNlabelString for a widget
 	static void		setItemLabelString		(Widget			item,
 											 HT_Resource	entry);
-
+	static void		setLabelString			(Widget			item,
+											 char*			utf8text);
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
