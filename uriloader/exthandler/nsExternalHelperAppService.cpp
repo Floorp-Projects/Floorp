@@ -2325,6 +2325,18 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
   return info->GetMIMEType(aContentType);
 }
 
+NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(const char* aMIMEType, const char* aFileExt, char** _retval)
+{
+  NS_ENSURE_ARG_POINTER(aMIMEType);
+
+  nsCOMPtr<nsIMIMEInfo> mi;
+  nsresult rv = GetFromTypeAndExtension(aMIMEType, aFileExt, getter_AddRefs(mi));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mi->GetPrimaryExtension(_retval);
+}
+
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aContentType) 
 {
   NS_PRECONDITION(aContentType, "Null out param!");

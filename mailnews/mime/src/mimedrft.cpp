@@ -1892,19 +1892,15 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
-      nsCOMPtr<nsIMIMEInfo> mimeInfo = nsnull;
-      rv = mimeFinder->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeInfo));
-      if (NS_SUCCEEDED(rv) && mimeInfo) 
-      {
-        nsXPIDLCString fileExtension;
+      nsXPIDLCString fileExtension;
+      rv = mimeFinder->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExtension));
 
-        if ( (NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(getter_Copies(fileExtension)))) && fileExtension)
-        {
-          newAttachName.Append(".");
-          newAttachName.Append(fileExtension);
-          extensionAdded = PR_TRUE;
-        }
-      }        
+      if (NS_SUCCEEDED(rv) && !fileExtension.IsEmpty())
+      {
+        newAttachName.Append(".");
+        newAttachName.Append(fileExtension);
+        extensionAdded = PR_TRUE;
+      }
     }
 
     if (!extensionAdded)
