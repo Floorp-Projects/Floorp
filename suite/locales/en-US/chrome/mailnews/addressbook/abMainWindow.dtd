@@ -42,7 +42,6 @@ Rights Reserved.
 <!ENTITY searchCmd.label					".Search..."> 
 <!ENTITY htmlDomainCmd.label				".HTML Domains...">  
 <!ENTITY abPropsCmd.label					"Properties">  
-<!ENTITY prefsCmd.label						".Preferences">
 
 <!-- View Menu -->
 <!ENTITY showMenu.label						".Show"> 

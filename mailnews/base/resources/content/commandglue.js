@@ -218,18 +218,6 @@ function SortColumn(node, sortKey)
 
 }
 
-var prefwindow = null;
-
-function MsgPreferences()
-{
-    if (!prefwindow) {
-        prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
-    }
-
-    prefwindow.showWindow("navigator.js", window, "chrome://pref/content/pref-mailnews.xul");
-}
-
-
 function GetSelectedFolderResource()
 {
 	var folderTree = GetFolderTree();

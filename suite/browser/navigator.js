@@ -18,7 +18,6 @@
 
   var appCore = null;
   var useOldAppCore = false; // Set this to true to use the old browser app core.
-  var prefwindow = null;
   var appCoreName = "";
   var defaultStatus = "default status text";
   var explicitURL = false;
@@ -368,12 +367,13 @@ function UpdateBookmarksLastVisitedDate(event)
 
   function tryToSetContentWindow() {
     if ( window.content ) {
+		var pref = 0;
         dump("Setting content window\n");
         appCore.setContentWindow( window.content );
         // Have browser app core load appropriate initial page.
 
         if ( !explicitURL ) {
-            var pref = Components.classes['component://netscape/preferences'];
+            pref = Components.classes['component://netscape/preferences'];
     
             // if all else fails, use trusty "about:blank" as the start page
             var startpage = "about:blank";  
@@ -1106,15 +1106,6 @@ function OpenSearch(tabName, searchStr)
     }
   }
   
-  function DoPreferences()
-  {
-    if (!prefwindow)
-    {
-    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
-	}
-    prefwindow.showWindow("navigator.js", window, "chrome://pref/content/pref-appearance.xul");
-  }
-
   function BrowserViewSource()
   {
     window.openDialog( "chrome://navigator/content/viewSource.xul", null, "all,dialog=no", window.content.location );

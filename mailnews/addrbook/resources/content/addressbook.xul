@@ -121,7 +121,7 @@ Rights Reserved.
 			<menuitem value="&htmlDomainCmd.label;" oncommand="AbHTMLDomain();"/>
 			<menuitem value="&abPropsCmd.label;" oncommand="AbEditCard();"/>
 			<menuseparator/>
-			<menuitem value="&prefsCmd.label;" oncommand="MsgPreferences();"/>
+			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://addressbook/content/pref-addressing.xul')"/>
 		  </menupopup>
 		</menu>
 	    

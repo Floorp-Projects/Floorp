@@ -58,7 +58,6 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY filtersCmd.label "Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
-<!ENTITY prefsCmd.label "Preferences...">
 <!ENTITY accountManagerCmd.label "Account Setup...">
 <!ENTITY accountWizardCmd.label "New Account Wizard...">
 

@@ -49,10 +49,10 @@ Contributor(s): ______________________________________. -->
   <html:script language="javascript" src="chrome://navigator/content/navigator.js"/>
 
 		<!-- keys are appended from the overlay -->
-  <keyset id="defaultBrowserKeySet"/>
+  <keyset id="keyset"/>
   
-  <broadcasterset id="browserbroadcasterset">
-	</broadcasterset>  
+  <broadcasterset id="broadcasterset">
+  </broadcasterset>  
   <!-- it's the whole navigator.xul menubar! hidden windows need to
        have a menubar for situations where they're the only window remaining
        on a platform that wants to leave the app running, like the Mac.
@@ -91,7 +91,7 @@ Contributor(s): ______________________________________. -->
 		  <menuseparator /> 
 		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserReload();"/> 
 		  <menuseparator /> 
-		  <menuitem value="&preferences.label;" oncommand="DoPreferences();"/>
+		  <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-appearance.xul')"/>
 	  </menupopup>
     </menu> 
 

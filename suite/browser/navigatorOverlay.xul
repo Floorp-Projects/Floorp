@@ -22,10 +22,11 @@ Contributor(s): ______________________________________. -->
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd" >
 
 <overlay id="navigatorOverlay"
-        xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<keyset id="defaultBrowserKeySet">
+<keyset id="keyset">
   <!-- key id="newmessagekb" disabled="false" command="true" key="m" onkeypress="NewMessage()" / -->
 
     <key id="newBrowserKb"   	disabled="false" command="true" key="&browserCmd.commandkey;" observes="Browser:NewWindow" />
@@ -47,7 +48,7 @@ Contributor(s): ______________________________________. -->
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
   </keyset>
 
-<broadcasterset id="browserbroadcasterset">
+<broadcasterset id="broadcasterset">
 <!-- Broadcaster nodes -->
   <broadcaster id="Browser:NewWindow"    	value="&browserCmd.label;"                  		         oncommand="BrowserNewWindow()"/>
   <broadcaster id="Browser:NewMail"         value="&newMailCmd.label;"                          		 oncommand="MsgNewMessage();"/>

@@ -22,11 +22,12 @@
 <!ENTITY deleteCmd.key						"D">  
 <!ENTITY selectAllCmd.label					"Select All">  
 <!ENTITY selectAllCmd.key					"A">  
+<!ENTITY preferencesCmd.label					"Preferences...">
 
 <!ENTITY viewMenu.label					"View"> 
 
 <!ENTITY helpMenu.label					"Help"> 
-<!ENTITY helpContentCmd.label				".Help Contents">  
+<!ENTITY helpContentCmd.label				"Help Contents">  
 <!ENTITY referenceLibraryCmd.label			".Reference Library">  
 <!ENTITY releaseNotesCmd.label				".Release Notes">  
 <!ENTITY productInfoCmd.label				".Product Information and Support">  

@@ -1,3 +1,5 @@
+var goPrefWindow = 0;
+
 function goPageSetup()
 {
 }
@@ -30,3 +32,12 @@ function goEditCardDialog(abURI, card, okCallback)
 					  {abURI:abURI, card:card, okCallback:okCallback});
 }
 
+
+function goPreferences(id, pane)
+{
+	if (!top.goPrefWindow)
+		top.goPrefWindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+	
+	if ( top.goPrefWindow )
+		top.goPrefWindow.showWindow(id, window, pane);
+}

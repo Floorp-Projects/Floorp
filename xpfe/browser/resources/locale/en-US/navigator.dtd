@@ -70,7 +70,6 @@
 <!ENTITY walletSamplesCmd.label "Samples">
 <!ENTITY walletChangePasswordCmd.label "Change Password ...">
 <!ENTITY selectAllCmd.label "Select All">
-<!ENTITY preferences.label "Preferences...">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
 <!ENTITY sidebarCmd.label "Sidebar">

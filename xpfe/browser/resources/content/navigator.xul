@@ -128,10 +128,10 @@ Contributor(s): ______________________________________. -->
   
   	
 	<!-- keys are appended from the overlay -->
-  <keyset id="defaultBrowserKeySet"/>
+  <keyset id="keyset"/>
   
-  <broadcasterset id="browserbroadcasterset">
-	</broadcasterset>
+  <broadcasterset id="broadcasterset">
+  </broadcasterset>
 	
   <!-- HELLO!! IS ANYONE READING THIS?  In case you are reading this,
        note that this menubar is copied verbatim in hiddenWindow.xul.
@@ -170,7 +170,7 @@ Contributor(s): ______________________________________. -->
 		  <menuseparator /> 
 		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserSelectAll();"/> 
 		  <menuseparator /> 
-		  <menuitem value="&preferences.label;" oncommand="DoPreferences();"/>
+		  <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-appearance.xul')"/>
 	  </menupopup>
     </menu> 
 
