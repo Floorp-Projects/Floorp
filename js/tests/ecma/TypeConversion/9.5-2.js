@@ -43,6 +43,8 @@
                             Infinity    returns 0
                             -Infinity   returns 0
                             ToInt32(ToUint32(x)) == ToInt32(x) for all values of x
+                            Numbers greater than 2^31 (see step 5 above)
+                            (note http://bugzilla.mozilla.org/show_bug.cgi?id=120083)
 
     Author:             christine@netscape.com
     Date:               17 july 1997
@@ -137,6 +139,20 @@ function getTestCases() {
     array[item++] = new TestCase( SECTION,   "-4294967295 << 0",    ToInt32(-4294967295),   -4294967295 << 0 );
     array[item++] = new TestCase( SECTION,   "-4294967296 << 0",    ToInt32(-4294967296),   -4294967296 << 0 );
     array[item++] = new TestCase( SECTION,   "-4294967297 << 0",    ToInt32(-4294967297),   -4294967297 << 0 );
+
+    /*
+     * Numbers between 2^31 and 2^32 will have a negative ToInt32 per ECMA (see step 5 of introduction)
+     * (These are by stevechapel@earthlink.net; cf. http://bugzilla.mozilla.org/show_bug.cgi?id=120083)
+     */
+    array[item++] = new TestCase( SECTION,   "2147483648.25 << 0",  ToInt32(2147483648.25),   2147483648.25 << 0 );
+    array[item++] = new TestCase( SECTION,   "2147483648.5 << 0",   ToInt32(2147483648.5),    2147483648.5 << 0 );
+    array[item++] = new TestCase( SECTION,   "2147483648.75 << 0",  ToInt32(2147483648.75),   2147483648.75 << 0 );
+    array[item++] = new TestCase( SECTION,   "4294967295.25 << 0",  ToInt32(4294967295.25),   4294967295.25 << 0 );
+    array[item++] = new TestCase( SECTION,   "4294967295.5 << 0",   ToInt32(4294967295.5),    4294967295.5 << 0 );
+    array[item++] = new TestCase( SECTION,   "4294967295.75 << 0",  ToInt32(4294967295.75),   4294967295.75 << 0 );
+    array[item++] = new TestCase( SECTION,   "3000000000.25 << 0",  ToInt32(3000000000.25),   3000000000.25 << 0 );
+    array[item++] = new TestCase( SECTION,   "3000000000.5 << 0",   ToInt32(3000000000.5),    3000000000.5 << 0 );
+    array[item++] = new TestCase( SECTION,   "3000000000.75 << 0",  ToInt32(3000000000.75),   3000000000.75 << 0 );
 
     return ( array );
 }
