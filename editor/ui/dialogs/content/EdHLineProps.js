@@ -103,7 +103,7 @@ function InitDialog()
     gDialog.alignGroup.selectedItem = gDialog.leftAlign;
   }
 
-  gDialog.shading.checked = globalElement.hasAttribute("noshade");
+  gDialog.shading.checked = !globalElement.hasAttribute("noshade");
 }
 
 function onSaveDefault()
