@@ -23,7 +23,7 @@ VPATH           = @srcdir@
 EXPORTS =			\
 	singsign.h		\
 	wallet.h		\
-        $(NULL)			
+	$(NULL)			
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
