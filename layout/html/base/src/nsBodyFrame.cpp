@@ -116,11 +116,15 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                 ("enter nsBodyFrame::Reflow: maxSize=%d,%d reason=%d",
+                  aReflowState.maxSize.width,
+                  aReflowState.maxSize.height,
+                  aReflowState.reason));
+
   const nsHTMLReflowState* rsp = &aReflowState;
   nsHTMLReflowState resizeReflowState(aReflowState);
   resizeReflowState.spaceManager = mSpaceManager;
-
-  NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
@@ -496,13 +500,21 @@ nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
   }
   else {
     if (aReflowState.HaveConstrainedWidth()) {
-      result.width -= aBorderPadding.left + aBorderPadding.right;
+      result.width = aReflowState.minWidth +
+        aBorderPadding.left + aBorderPadding.right;
     }
     if (aReflowState.HaveConstrainedHeight()) {
       result.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
   }
 
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     (": nsBodyFrame: columnAvailSpace=%d,%d [%s,%s]\n",
+                      result.width, result.height,
+                      aReflowState.HaveConstrainedWidth()
+                      ? "constrained" : "not-constrained",
+                      aReflowState.HaveConstrainedHeight()
+                      ? "constrained" : "not-constrained"));
   return result;
 }
 
