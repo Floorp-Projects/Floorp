@@ -58,6 +58,10 @@ EXPORTS = \
 
 	  
 CXXFLAGS        += -I../public -I../src
+ifeq ($(CCC),CC)
+  CXXFLAGS += -library=iostream
+endif
+
 
 DSO_LDOPTS            += \
 	$(XPCOM_LIBS) \

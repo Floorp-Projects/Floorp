@@ -45,5 +45,8 @@ DSO_LDOPTS            += \
 	$(NULL)
 
 CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public
+ifeq ($(CCC),CC)
+  CXXFLAGS += -library=iostream
+endif
 
 include $(topsrcdir)/config/rules.mk
