@@ -34,12 +34,14 @@
 #include "es2mcf.h"
 #include "mcff2mcf.h"
 #include "nlcstore.h"
+#include "autoupdt.h"
 #include "ht.h"
 
 
 /* external routines */
 extern	MWContext	*FE_GetRDFContext(void);
 extern	char		*gDefaultNavcntr;
+extern	RDF		gNCDB;
 
 
 /* globals */
@@ -64,8 +66,34 @@ void
 rdf_complete(NET_StreamClass *stream)
 {
   RDFFile f = (RDFFile)stream->data_object;
-  if ((f->resourceCount == 0) && (strcmp(f->url, gNavCntrUrl) == 0)) {
-    parseNextRDFXMLBlob(stream, gDefaultNavcntr, strlen(gDefaultNavcntr));
+  if (strcmp(f->url, gNavCntrUrl) == 0) {
+    if (f->resourceCount == 0) {
+       parseNextRDFXMLBlob(stream, gDefaultNavcntr, strlen(gDefaultNavcntr));
+    } else {
+       RDF_Resource browser = RDF_GetResource(NULL, "netscape:browser", 1);
+       RDF_Resource updateFrom = RDF_GetResource(NULL, "updateURL", 1);
+       char* uf = RDF_GetSlotValue(gNCDB, browser, updateFrom,
+                                   RDF_STRING_TYPE, false, true);
+       RDF_Resource fileSize = RDF_GetResource(NULL, "fileSize", 1);
+       char* fs = RDF_GetSlotValue(gNCDB, browser, fileSize,
+                                   RDF_STRING_TYPE, false, true);
+       uint32 fSize;
+       if (fs == NULL) {
+       fSize = 3000;
+        } else {
+         sscanf("%lu", fs, &fSize);
+         freeMem(fs);
+       }
+       if (uf != NULL)  {
+          checkForAutoUpdate((void *)FE_GetRDFContext(),
+                          uf,
+                          fSize, /* File size */
+                          3000,  /* byte range */
+                          10000  /* Interval in msecs */
+                          );
+          freeMem(uf);
+       }
+    } 
   }
   if (f) {
     freeMem(f->line);
