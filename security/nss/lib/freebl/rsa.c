@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.11 2000/09/12 20:32:43 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.12 2000/09/13 18:44:11 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -264,8 +264,6 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
-    /* clear the output buffer */
-    memset(output, 0, key->modulus.len);
     MP_DIGITS(&n) = 0;
     MP_DIGITS(&e) = 0;
     MP_DIGITS(&m) = 0;
@@ -332,8 +330,6 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
-    /* clear the output buffer */
-    memset(output, 0, key->modulus.len);
     MP_DIGITS(&p)    = 0;
     MP_DIGITS(&q)    = 0;
     MP_DIGITS(&d_p)  = 0;
