@@ -71,11 +71,14 @@ ArenaStrDup(const char* str, PLArenaPool* aArena)
 nsHostEntry::nsHostEntry(const char* aHost)
 {
   mHost = ArenaStrDup(aHost, gHostArena);
+  mPermissions[0] = mPermissions[1] = 0;
 }
 
 nsHostEntry::nsHostEntry(const nsHostEntry& toCopy)
 {
-  mHost = ArenaStrDup(toCopy.mHost, gHostArena);
+  // nsTHashtable shouldn't allow us to end up here, since we
+  // set ALLOW_MEMMOVE to true.
+  NS_NOTREACHED("nsHostEntry copy constructor is forbidden!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
