@@ -1326,8 +1326,8 @@ wallet_ReadFromList(
 
 PRBool
 wallet_ReadFromList(
-  nsAutoString item1,
-  nsAutoString& item2,
+  nsString item1,
+  nsString& item2,
   nsVoidArray*& itemList,
   nsVoidArray*& list,
   PRBool obscure)
