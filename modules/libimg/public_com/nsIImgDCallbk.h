@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef nsIImgDCallbk_h___
+#define nsIImgDCallbk_h___
 
 #include "dllcompat.h" // for TimeoutCallbackFunction
 #include "nsISupports.h"
@@ -27,7 +29,6 @@
 class nsIImgDCallbk : public nsISupports
 {
 public:
-
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMGDCALLBK_IID)
 
   NS_IMETHOD ImgDCBFlushImage()=0;
@@ -51,9 +52,6 @@ public:
   NS_IMETHOD ImgDCBHaveImageFrame()=0;
   NS_IMETHOD ImgDCBHaveImageAll()=0;
   NS_IMETHOD ImgDCBError()=0;
-
-private:
-   void *ilContainer;
-
 };
 
+#endif /* nsIImgDCallbk_h___ */

@@ -15,10 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-/* -*- Mode: C; tab-width: 4 -*-
- *
- */
+#ifndef nsImgDCallbk_h___
+#define nsImgDCallbk_h___
 
 // XXX This file needs to move to libimg/src - dp
 
@@ -30,10 +28,14 @@
 class ImgDCallbk : public nsIImgDCallbk
 {
 public:
-  NS_DECL_ISUPPORTS
-  ImgDCallbk(il_container *aContainer) { NS_INIT_ISUPPORTS(); ilContainer=aContainer; };
-  virtual ~ImgDCallbk(){if(ilContainer) delete ilContainer;};
+  ImgDCallbk(il_container *aContainer) {
+    NS_INIT_ISUPPORTS();
+    ilContainer = aContainer;
+  };
 
+  virtual ~ImgDCallbk();
+
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD ImgDCBFlushImage();
   NS_IMETHOD ImgDCBImageSize();
@@ -44,30 +46,36 @@ public:
   NS_IMETHOD_(NI_ColorSpace *) ImgDCBCreateGreyScaleColorSpace();
 
   NS_IMETHOD_(void*) ImgDCBSetTimeout(TimeoutCallbackFunction func,
-                               void* closure, uint32 msecs);
+                                      void* closure, uint32 msecs);
   NS_IMETHOD ImgDCBClearTimeout(void *timer_id);
 
 
   /* callbacks from the decoder */
   NS_IMETHOD ImgDCBHaveHdr(int destwidth, int destheight);
   NS_IMETHOD ImgDCBHaveRow(uint8*, uint8*,
-                            int, int, int, int,
-                            uint8 , int);
+                           int, int, int, int,
+                           uint8 , int);
 
   NS_IMETHOD ImgDCBHaveImageFrame();
   NS_IMETHOD ImgDCBHaveImageAll();
   NS_IMETHOD ImgDCBError();
 
   NS_IMETHODIMP CreateInstance(const nsCID &aClass,
-                             il_container* ic,
-                             const nsIID &aIID,
-                             void **ppv) ;
+                               il_container* ic,
+                               const nsIID &aIID,
+                               void **ppv) ;
 
-  il_container *GetContainer() {return ilContainer; };
-  il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic; };
+  il_container *GetContainer() {
+    return ilContainer;
+  };
+
+  il_container *SetContainer(il_container *ic) {
+    ilContainer=ic;
+    return ic;
+  };
 
 private:
   il_container* ilContainer;
 }; 
 
-/*-------------------------------*/    
+#endif /* nsImgDCallbk_h___ */
