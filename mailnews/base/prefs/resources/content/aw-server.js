@@ -41,20 +41,6 @@ var gPrefsBundle;
 var gOnMailServersPage;
 var gOnNewsServerPage;
 
-function hostnameIsIllegal(hostname)
-{
-  // XXX TODO do a complete check.
-  // this only checks for illegal characters in the hostname
-  // but hostnames like "...." and "_" and ".111" will get by
-  // my test.  
-  var validChars = hostname.match(/[A-Za-z0-9.-]/g);
-  if (!validChars || (validChars.length != hostname.length)) {
-    return true;
-  }
-
-  return false;
-}
-
 function serverPageValidate() 
 {
   var smtpserver = document.getElementById("smtphostname");

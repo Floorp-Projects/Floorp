@@ -53,12 +53,14 @@ function onLoad()
 
     // Get the default smtp server preference to check if we need to lock the
     // advance button on the panel. 
-    var defaultSmtpServerKey = gPrefBranch.getCharPref("mail.smtp.defaultserver");
-    var prefString = "mail.smtpserver."+ defaultSmtpServerKey + ".advanced.disable"; 
+    if (defaultSmtpServer) {
+      var defaultSmtpServerKey = gPrefBranch.getCharPref("mail.smtp.defaultserver");
+      var prefString = "mail.smtpserver."+ defaultSmtpServerKey + ".advanced.disable"; 
 
-    var advButton = document.getElementById("smtp.advancedbutton");
-    if (gPrefBranch.prefIsLocked(prefString)) {
-      advButton.setAttribute("disabled", "true");
+      var advButton = document.getElementById("smtp.advancedbutton");
+      if (gPrefBranch.prefIsLocked(prefString)) {
+        advButton.setAttribute("disabled", "true");
+      }
     }
 }
 
@@ -71,6 +73,13 @@ function onSave()
     catch (ex) {
         defaultSmtpServer = null;
     }
+
+    //if we have a null defaultSmtpServer and if the hostname field has valid 
+    //values then we create a server and make it as the default.
+    if ((defaultSmtpServer == null) && (!hostnameIsIllegal(gSmtpHostname.value))) {
+      defaultSmtpServer = smtpService.createSmtpServer();
+    }
+   
     saveSmtpSettings(defaultSmtpServer);
 }
 
@@ -86,6 +95,18 @@ function onExitAdvancedDialog(deleteSmtpServers,replaceWithDefault)
 
 function onAdvanced(event)
 {
+    if (smtpService.defaultServer && hostnameIsIllegal(gSmtpHostname.value)) {
+      var alertTitle = window.parent.gBrandBundle.getString("brandShortName");
+      var alertMsg = window.parent.gPrefsBundle.getString("enterValidHostname");
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+      if (promptService)
+        promptService.alert(window, alertTitle, alertMsg);
+      else
+        window.alert(alertMsg);
+
+      return false;
+    }
+
     // fix for bug #60647
     // when the user presses "Advanced..." we save any changes
     // they made so that the changes will show up in the advanced dialog

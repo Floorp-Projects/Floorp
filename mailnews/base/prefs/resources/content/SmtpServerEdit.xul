@@ -37,7 +37,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad();"
         ondialogaccept="return onAccept();">
-
+<stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
+<stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+<script type="application/x-javascript" src="amUtils.js"/>
 <script type="application/x-javascript" src="SmtpServerEdit.js"/>
 <vbox id="smtpServerEditor"/>
 </dialog>

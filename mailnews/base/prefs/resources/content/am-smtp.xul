@@ -8,7 +8,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="onLoad();">
-
+  <script type="application/x-javascript" src="amUtils.js"/>
   <script type="application/x-javascript" src="am-smtp.js"/>
 
   <dialogheader title="&smtpServer.label;"/>

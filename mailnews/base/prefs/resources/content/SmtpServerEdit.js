@@ -62,6 +62,21 @@ function initializeDialog(server)
 
 function onAccept()
 {
+    if (hostnameIsIllegal(gSmtpHostname.value)) {
+      var prefsBundle = document.getElementById("bundle_prefs");
+      var brandBundle = document.getElementById("bundle_brand");
+      var alertTitle = brandBundle.getString("brandShortName");
+      var alertMsg = prefsBundle.getString("enterValidHostname");
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+      if (promptService)
+        promptService.alert(window, alertTitle, alertMsg);
+      else
+        window.alert(alertMsg);
+
+      window.arguments[0].result = false;
+      return false;
+    }
+
     // if we didn't have an SMTP server to initialize with,
     // we must be creating one.
     try {

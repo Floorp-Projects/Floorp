@@ -33,6 +33,7 @@ Rights Reserved.
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/AccountWizard.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/ispUtils.js"/>

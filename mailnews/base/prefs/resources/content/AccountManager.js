@@ -40,7 +40,7 @@
  *   on values set in the previous step.
  */
 
-
+var gSmtpHostNameIsIllegal = false;
 var accountArray;
 var gGenericAttributeTypes;
 var accounttree;
@@ -51,12 +51,14 @@ var currentPageId;
 var pendingServerId;
 var pendingPageId;
 var gPrefsBundle;
+var gBrandBundle;
 
 // services used
 var RDF;
 var accountManager;
 var smtpService;
 var nsPrefBranch;
+var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
 // widgets
 var duplicateButton;
@@ -94,6 +96,7 @@ function updateElementWithKeys(account, element, type) {
 // perform initialization here
 function onLoad() {
   gPrefsBundle = document.getElementById("bundle_prefs");
+  gBrandBundle = document.getElementById("bundle_brand");
 
   var selectedServer;
   var selectPage = null;
@@ -239,6 +242,11 @@ function onAccept() {
   if (!checkUserServerChanges(true))
     return false;
 
+  if (gSmtpHostNameIsIllegal) {
+    gSmtpHostNameIsIllegal = false;
+    return false;
+  }
+
   onSave();
     // hack hack - save the prefs file NOW in case we crash
     try {
@@ -255,6 +263,24 @@ function onAccept() {
 // if so check if the new names already exists for an account.
 //
 function checkUserServerChanges(showAlert) {
+
+  if (smtpService.defaultServer) {
+    try {
+      var smtpHostName = top.frames["contentFrame"].document.getElementById("smtp.hostname");
+      if (hostnameIsIllegal(smtpHostName.value)) {
+        var alertTitle = gBrandBundle.getString("brandShortName");
+        var alertMsg = gPrefsBundle.getString("enterValidHostname");
+
+        if (gPromptService)
+          gPromptService.alert(window, alertTitle, alertMsg);
+        else
+          window.alert(alertMsg);
+       gSmtpHostNameIsIllegal = true;
+      }
+    }
+    catch (ex) {}
+  }
+
   var accountValues = getValueArrayFor(currentServerId);
   if (!accountValues) 
     return true;
@@ -678,6 +704,11 @@ function showPage(serverId, pageId) {
 
   // check if user/host names have been changed
   checkUserServerChanges(false);
+
+  if (gSmtpHostNameIsIllegal) {
+    gSmtpHostNameIsIllegal = false;
+    return false;
+  }
 
   // save the previous page
   savePage(currentServerId);

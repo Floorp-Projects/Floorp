@@ -49,7 +49,7 @@ var gSmtpAuthMethod;
 var gSmtpTrySSL;
 var gSmtpPrefBranch;
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-
+var gSmtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
 var gSavedUsername="";
 
 function initSmtpSettings(server) {
@@ -86,7 +86,8 @@ function initSmtpSettings(server) {
 
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
-    onLockPreference();
+    if (gSmtpService.defaultServer)
+      onLockPreference();
 }
 
 // Disables xul elements that have associated preferences locked.
