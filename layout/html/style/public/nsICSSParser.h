@@ -58,7 +58,6 @@ public:
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint) = 0;
 
-  NS_IMETHOD ProcessImport(const nsString& aURLSpec) = 0;
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved
