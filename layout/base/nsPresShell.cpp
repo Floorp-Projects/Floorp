@@ -4466,7 +4466,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       // new one during its execution.
       nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
       mReflowCommands.RemoveElementAt(0);
-      ReflowCommandRemoved(rc);
 
       // Dispatch the reflow command
       nsSize          maxSize;
@@ -4474,6 +4473,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       if (aInterruptible) beforeReflow = PR_Now();
       rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx); // dispatch the reflow command
       if (aInterruptible) afterReflow = PR_Now();
+      ReflowCommandRemoved(rc);
       NS_RELEASE(rc);
       VERIFY_STYLE_TREE;
 
