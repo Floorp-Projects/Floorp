@@ -24,6 +24,9 @@
 var helpBrowser;
 var helpWindow;
 var helpSearchPanel;
+var emptySearch;
+var emptySearchText
+var emptySearchLink
 var helpTocPanel;
 var helpIndexPanel;
 var helpGlossaryPanel;
@@ -39,9 +42,12 @@ var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Compon
 var RDF_ROOT = RDF.GetResource("urn:root");
 var NC_PANELLIST = RDF.GetResource(NC + "panellist");
 var NC_PANELID = RDF.GetResource(NC + "panelid");
+var NC_EMPTY_SEARCH_TEXT = RDF.GetResource(NC + "emptysearchtext");
+var NC_EMPTY_SEARCH_LINK = RDF.GetResource(NC + "emptysearchlink");
 var NC_DATASOURCES = RDF.GetResource(NC + "datasources");
 var NC_SUBHEADINGS = RDF.GetResource(NC + "subheadings");
 var NC_NAME = RDF.GetResource(NC + "name");
+var NC_CHILD = RDF.GetResource(NC + "child");
 var NC_LINK = RDF.GetResource(NC + "link");
 var NC_TITLE = RDF.GetResource(NC + "title");
 var NC_BASE = RDF.GetResource(NC + "base"); 
@@ -112,7 +118,7 @@ function init() {
   // hook up UI through progress listener
   var interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-  webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  webProgress.addProgressListener(window.XULBrowserWindow);
 }
 
 function normalizeURI(uri) {
@@ -174,6 +180,8 @@ function loadHelpRDF() {
         datasources = normalizeLinks(helpBaseURI, datasources);
         // cache additional datsources to augment search datasources.
         if (panelID == "search") {
+	       emptySearchText = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_TEXT, null) || "No search items found." ;        
+	       emptySearchLink = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_LINK, null) || "about:blank";        
           searchDatasources = datasources;
           datasources = "rdf:null"; // but don't try to display them yet!
         }  
@@ -234,7 +242,7 @@ function getLink(ID) {
   // We have one possible source for an ID for each datasource in the composite datasource.
   // The first ID which matches is returned.
   var tocTree = document.getElementById("help-toc-tree");
-    var tocDS = tocTree.database;
+    tocDS = tocTree.database;
     if (tocDS == null)
       return null;
     var tocDatasources = tocTree.getAttribute("datasources");
@@ -251,6 +259,8 @@ function getLink(ID) {
           link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
           if (link) 
             return link.Value;
+          else  
+            return null;
         }  
       }
     }
@@ -519,7 +529,7 @@ function doFind() {
     }
 
   }
-
+ emptySearch = true; 	
   // search TOC
   var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
   var tree = document.getElementById("help-toc-tree");
@@ -539,7 +549,9 @@ function doFind() {
   if (!sourceDS) // If the glossary has never been displayed this will be null (sigh!).
     sourceDS = loadCompositeDS(tree.datasources);
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
-
+  
+  if (emptySearch)
+		assertSearchEmpty(resultsDS);
   // Add the datasource to the search tree
   searchTree.database.AddDataSource(resultsDS);
   searchTree.builder.rebuild();
@@ -610,10 +622,27 @@ function doFindOnSeq(resultsDS, sourceDS, resource, level) {
              RDF.GetResource("http://home.netscape.com/NC-rdf#link"),
              link,
              true);
+  		emptySearch = false; 	
+             
     }
     // process any nested rdf:seq elements.
     doFindOnDatasource(resultsDS, sourceDS, target, level+1);       
     }  
+}
+function assertSearchEmpty(resultsDS) {
+	var resSearchEmpty = RDF.GetResource("urn:emptySearch");
+	resultsDS.Assert(RDF_ROOT,
+			 NC_CHILD,
+			 resSearchEmpty,
+			 true);
+	resultsDS.Assert(resSearchEmpty,
+			 NC_NAME,
+			 RDF.GetLiteral(emptySearchText),
+			 true);
+	resultsDS.Assert(resSearchEmpty,
+			 NC_LINK,
+			 RDF.GetLiteral(emptySearchLink),
+			 true);
 }
 
 function isMatch(text) {
