@@ -2461,10 +2461,10 @@ lo_ProcessInputTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 
 #if defined(SingleSignon)
 				/* check for data from previous signon form */
-				if (state->top_state) { /* null-check probably not needed */
-				    SI_RestoreOldSignonData
-					(context, form_element,
-					context->hist.cur_doc_ptr->address);
+                /* Check for NULL; history doesn't make sense for print context. */
+				if (state->top_state && context->hist.cur_doc_ptr) {
+                    SI_RestoreOldSignonData(context, form_element, 
+                                            context->hist.cur_doc_ptr->address);
 				}
 #endif
 				attr = lo_PopFont(state, tag->type);
