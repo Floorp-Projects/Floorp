@@ -33,6 +33,7 @@ EXPORTS =                               \
         nsIWebShell.h                   \
 		nsIWebShellServices.h			\
         nsIClipboardCommands.h          \
+        nsIUrlDispatcher.h    \
         nsweb.h                         \
         $(NULL)
 
