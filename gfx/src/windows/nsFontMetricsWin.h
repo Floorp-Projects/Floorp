@@ -29,6 +29,27 @@
 #include "nsCRT.h"
 #include "nsDeviceContextWin.h"
 
+#define FONT_SWITCHING
+#ifdef FONT_SWITCHING
+
+#ifdef FONT_HAS_GLYPH
+#undef FONT_HAS_GLYPH
+#endif
+#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
+
+#ifdef ADD_GLYPH
+#undef ADD_GLYPH
+#endif
+#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
+
+typedef struct nsFontWin
+{
+  HFONT   font;
+  PRUint8 map[8192]; // XXX save memory by sharing these among fonts -- erik
+} nsFontWin;
+
+#endif /* FONT_SWITCHING */
+
 class nsFontMetricsWin : public nsIFontMetrics
 {
 public:
@@ -56,7 +77,25 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+#ifdef FONT_SWITCHING
+
+  nsFontWin*  FindGlobalFont(HDC aDC, PRUnichar aChar);
+  nsFontWin*  FindLocalFont(HDC aDC, PRUnichar aChar);
+  nsFontWin*  LoadFont(HDC aDC, nsString* aName);
+
+  nsFontWin           *mLoadedFonts;
+  PRUint16            mLoadedFontsAlloc;
+  PRUint16            mLoadedFontsCount;
+
+  nsString            *mFonts;
+  PRUint16            mFontsAlloc;
+  PRUint16            mFontsCount;
+  PRUint16            mFontsIndex;
+
+#endif /* FONT_SWITCHING */
+
 protected:
+  void FillLogFont(LOGFONT* aLogFont);
   void RealizeFont();
 
   nsDeviceContextWin  *mDeviceContext;
