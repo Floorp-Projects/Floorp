@@ -394,7 +394,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- start nsTextEditor::SetTextProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
 
   nsresult result=NS_ERROR_NOT_INITIALIZED;
@@ -510,7 +510,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- end nsTextEditor::SetTextProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
   return result;
 }
@@ -729,7 +729,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- start nsTextEditor::RemoveTextProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
 
   nsresult result;
@@ -818,7 +818,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- end nsTextEditor::RemoveTextProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
   return result;
 }
@@ -1484,7 +1484,6 @@ NS_IMETHODIMP nsTextEditor::ApplyStyleSheet(const nsString& aURL)
   return nsEditor::ApplyStyleSheet(aURL);
 }
 
-NS_IMETHODIMP nsTextEditor::OutputToString(nsString& aOutputString,
                                            const nsString& aFormatType,
                                            PRUint32 aFlags)
 {
@@ -1501,19 +1500,19 @@ NS_IMETHODIMP nsTextEditor::OutputToString(nsString& aOutputString,
   else
   { // default processing
     nsCOMPtr<nsITextEncoder> encoder;
-    char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+    char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
     if (! progid)
       return NS_ERROR_OUT_OF_MEMORY;
     strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
     char* type = aFormatType.ToNewCString();
     strcat(progid, type);
-    delete[] type;
+    nsCRT::free(type);
     rv = nsComponentManager::CreateInstance(progid,
                                             nsnull,
                                             nsIDocumentEncoder::GetIID(),
                                             getter_AddRefs(encoder));
 
-    delete[] progid;
+    nsCRT::free(progid);
     if (NS_FAILED(rv))
     {
       printf("Couldn't get progid %s\n", progid);
@@ -1576,20 +1575,20 @@ NS_IMETHODIMP nsTextEditor::OutputToStream(nsIOutputStream* aOutputStream,
 {
   nsresult rv;
   nsCOMPtr<nsITextEncoder> encoder;
-  char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+  char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
   if (! progid)
       return NS_ERROR_OUT_OF_MEMORY;
 
   strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
   char* type = aFormatType.ToNewCString();
   strcat(progid, type);
-  delete[] type;
+  nsCRT::free(type);
   rv = nsComponentManager::CreateInstance(progid,
                                           nsnull,
                                           nsIDocumentEncoder::GetIID(),
                                           getter_AddRefs(encoder));
 
-  delete[] progid;
+  nsCRT::free(progid);
   if (NS_FAILED(rv))
   {
     printf("Couldn't get progid %s\n", progid);

@@ -365,7 +365,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 	    errorMsg += "\"\n";
 	    char  *errorMsgCString = errorMsg.ToNewCString();
 	       NS_WARNING(errorMsgCString);
-	       delete [] errorMsgCString;
+	       nsCRT::free(errorMsgCString);
 #endif
 	  }
 
@@ -869,7 +869,7 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
 
   char* cstr = str.ToNewCString();
   printf("Attaching to WebShellWindow[%s]\n", cstr);
-  delete[] cstr;
+  nsCRT::free(cstr);
 #endif
 
   nsCOMPtr<nsIWebShellContainer> webShellContainer;
@@ -2906,7 +2906,7 @@ void nsEditorShell::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, co
   if (imgElement) {
     char * str = aResName.ToNewCString();
     imgElement->SetSrc(str);
-    delete [] str;
+    nsCRT::free(str);
   }
 
 }
@@ -2923,7 +2923,7 @@ nsEditorShell::ExecuteScript(nsIScriptContext * aContext, const nsString& aScrip
 #ifdef APP_DEBUG
     char* script_str = aScript.ToNewCString();
     printf("Executing [%s]\n", script_str);
-    delete[] script_str;
+    nsCRT::free(script_str);
 #endif
 
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);

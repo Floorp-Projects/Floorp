@@ -377,7 +377,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             if (buf)
             {
               puts(buf);
-              delete[] buf;
+              nsCRT::free(buf);
             }
           }
         }
@@ -781,7 +781,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
                 nsString *tag = styles.StringAt(i);
                 char *tagCString = tag->ToNewCString();
                 printf("%s ", tagCString);
-                delete [] tagCString;
+                nsCRT::free(tagCString);
               }
               printf("\n");
             }
@@ -1418,7 +1418,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                 dragSession->SetCanDrop(PR_TRUE);
               }
 
-              delete [] whichFlavor;
+              nsCRT::free(whichFlavor);
               // XXX This is where image support might go
               //void * data;
               //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);

@@ -629,7 +629,7 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
 #ifdef DEBUG_buster
     char *password = mPasswordText.ToNewCString();
     printf("mPasswordText is %s\n", password);
-    delete [] password;
+    nsCRT::free(password);
 #endif
   }
   return NS_OK;
@@ -989,7 +989,7 @@ nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aO
 #ifdef DEBUG_jfrancis
     char *password = mPasswordText.ToNewCString();
     printf("mPasswordText is %s\n", password);
-    delete [] password;
+    nsCRT::free(password);
 #endif
 
   // change the output to '*' only
