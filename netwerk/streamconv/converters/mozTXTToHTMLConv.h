@@ -42,6 +42,7 @@
 
 #include "mozITXTToHTMLConv.h"
 #include "nsString.h"
+#include "nsTimer.h"
 
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
@@ -64,17 +65,24 @@ public:
 /**
   see mozITXTToHTMLConv::ScanTXT
  */
-  static nsAutoString ScanTXT(const nsAutoString& text, PRUint32 whattodo);
+  nsAutoString ScanTXT(const nsAutoString& text, PRUint32 whattodo);
 
 /**
   see mozITXTToHTMLConv::ScanHTML
  */
-  static nsAutoString ScanHTML(const nsAutoString& text, PRUint32 whattodo);
+  nsAutoString ScanHTML(const nsAutoString& text, PRUint32 whattodo);
 
 /**
   see mozITXTToHTMLConv::CiteLevelTXT
  */
-  static PRInt32 CiteLevelTXT(const nsAutoString& line,PRUint32& logLineStart);
+  PRInt32 CiteLevelTXT(const nsAutoString& line,PRUint32& logLineStart);
+
+
+  // Timing!
+  MOZ_TIMER_DECLARE(mScanTXTTimer)
+  MOZ_TIMER_DECLARE(mGlyphHitTimer)
+  MOZ_TIMER_DECLARE(mRightTimer)
+  MOZ_TIMER_DECLARE(mTotalMimeTime)
 
 ///////////////////////////////////////////////////////////////////
 protected:
@@ -85,7 +93,7 @@ protected:
   @param start (in): offset of text specifying the start of the new object
   @return a new (local) object containing the substring
 */
-  static nsAutoString Right(const nsAutoString& text, PRUint32 start);
+  nsAutoString Right(const nsAutoString& text, PRUint32 start);
 
   enum LIMTYPE
   {
@@ -106,15 +114,15 @@ protected:
   @param after (in): limitation after rep
   @return true, if rep is found and limitation spec is met or rep is empty
 */
-  static PRBool ItMatchesDelimited(const nsAutoString& text,
-       const nsAutoString& rep, LIMTYPE before, LIMTYPE after);
+  PRBool ItMatchesDelimited(const nsAutoString& text,
+       const char* rep, LIMTYPE before, LIMTYPE after);
 
 /**
   @param see ItMatchesDelimited
   @return Number of ItMatchesDelimited in text
 */
-  static PRUint32 NumberOfMatches(const nsAutoString& text,
-       const nsAutoString& rep, LIMTYPE before, LIMTYPE after);
+  PRUint32 NumberOfMatches(const nsAutoString& text,
+       const char* rep, LIMTYPE before, LIMTYPE after);
 
 /**
   Currently only changes "<", ">" and "&". All others stay as they are.<p>
@@ -123,19 +131,19 @@ protected:
   @param ch (in)
   @return ch in its HTML representation
 */
-  static nsAutoString EscapeChar(const PRUnichar ch);
+  nsAutoString EscapeChar(const PRUnichar ch);
 
 /**
   See EscapeChar
 */
-  static nsAutoString EscapeStr(const nsAutoString& aString);
+  nsAutoString EscapeStr(const nsAutoString& aString);
 
 /**
   Currently only reverts "<", ">" and "&". All others stay as they are.<p>
   @param aString (in) HTML string
   @return aString in its plain text representation
 */
-  static nsAutoString UnescapeStr(const nsAutoString& aString);
+  nsAutoString UnescapeStr(const nsAutoString& aString);
 
 /**
   Completes<ul>
@@ -148,7 +156,7 @@ protected:
   @param pos (in): position of "@" (case 1) or first "." (case 2 and 3)
   @return Completed URL at success and empty string at failure
  */
-  static nsAutoString CompleteAbbreviatedURL(const nsAutoString& text,
+  nsAutoString CompleteAbbreviatedURL(const nsAutoString& text,
        const PRUint32 pos);
 
 /**
@@ -173,7 +181,7 @@ protected:
   @param replaceAfter (out): Number of chars of URL after pos
   @return URL found
 */
-  static PRBool FindURL(const nsAutoString& text, const PRUint32 pos,
+  PRBool FindURL(const nsAutoString& text, const PRUint32 pos,
        const PRUint32 whathasbeendone, nsAutoString& outputHTML,
        PRInt32& replaceBefore, PRInt32& replaceAfter);
 
@@ -194,9 +202,9 @@ protected:
   @param open (in/out): Number of currently open tags of type tagHTML
   @return Conversion succeeded
 */
-  static PRBool StructPhraseHit(const nsAutoString& text, PRBool col0,
-       const nsAutoString tagTXT,
-       const nsAutoString tagHTML, const nsAutoString attributeHTML,
+  PRBool StructPhraseHit(const nsAutoString& text, PRBool col0,
+       const char* tagTXT,
+       const char* tagHTML, const char* attributeHTML,
        nsAutoString& outputHTML, PRUint32& openTags);
 
 /**
@@ -205,9 +213,9 @@ protected:
   @param tagHTML (in): see StructPhraseHit
   @param outputHTML (out), glyphTextLen (out): see GlyphHit
 */
-  static PRBool SmilyHit(const nsAutoString& text, PRBool col0,
-       const nsAutoString tagTXT, const nsAutoString tagHTML,
-       nsAutoString& outputHTML, PRInt32& glyphTextLen);
+  PRBool SmilyHit(const nsAutoString& text, PRBool col0,
+                  const char* tagTXT, const char* tagHTML,
+                  nsAutoString& outputHTML, PRInt32& glyphTextLen);
 
 /**
   Checks, if we can replace some chars at the start of line with prettier HTML
@@ -224,7 +232,7 @@ protected:
   @param glyphTextLen (out): Length of original text to replace
   @return see StructPhraseHit
 */
-  static PRBool GlyphHit(const nsAutoString& text, PRBool col0,
+  PRBool GlyphHit(const nsAutoString& text, PRBool col0,
        nsAutoString& outputHTML, PRInt32& glyphTextLen);
 
 //////////////////////////////////////////////////////////
@@ -261,7 +269,7 @@ private:
  *             similar) starts
  * @return |check|-conform start has been found
  */
-  static PRBool FindURLStart(const nsAutoString& text, const PRUint32 pos,
+  PRBool FindURLStart(const nsAutoString& text, const PRUint32 pos,
        const modetype check, PRUint32& start);
 
 /**
@@ -271,7 +279,7 @@ private:
  * @param end (out): Similar to |start| param of FindURLStart
  * @return |check|-conform end has been found
  */
-  static PRBool FindURLEnd(const nsAutoString& text, const PRUint32 pos,
+  PRBool FindURLEnd(const nsAutoString& text, const PRUint32 pos,
        const modetype check, const PRUint32 start, PRUint32& end);
 
 /**
@@ -284,7 +292,7 @@ private:
  *             Should be placed between the <a> and </a> tags.
  * @param replaceBefore(out), replaceAfter (out): see FindURL
  */
-  static void CalculateURLBoundaries(const nsAutoString& text,
+  void CalculateURLBoundaries(const nsAutoString& text,
        const PRUint32 pos, const PRUint32 whathasbeendone,
        const modetype check, const PRUint32 start, const PRUint32 end,
        nsAutoString& txtURL, nsAutoString& desc,
@@ -295,7 +303,7 @@ private:
  * @param outputHTML (out): see FindURL
  * @return A valid URL could be found (and creation of HTML successful)
  */
-  static PRBool CheckURLAndCreateHTML(
+  PRBool CheckURLAndCreateHTML(
        const nsAutoString& txtURL, const nsAutoString& desc,
        nsAutoString& outputHTML);
 };
