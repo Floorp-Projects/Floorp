@@ -357,81 +357,6 @@ function SaveAsTemplate(uri, folder)
 	}
 }
 
-// XXXdmose The following junkmail code (down to, but not including,
-// JunkSelectedMessages) is here as temporary infrastructure glue.  It will
-// be replaced by code that use nsIMsgFilterPlugin directly soon.
-//
-const kUnknownToSpam = 0;
-const kUnknownToNoSpam = 1;
-const kNoSpamToSpam = 2;
-const kSpamToNoSpam = 3;
-
-var gJunkmailComponent;
-function getJunkmailComponent()
-{
-    if (!gJunkmailComponent) {
-        gJunkmailComponent = Components.classes['@mozilla.org/messenger/filter-plugin;1?name=junkmail']
-                .getService(Components.interfaces.nsISupports).wrappedJSObject;
-        gJunkmailComponent.initComponent();
-    }
-}
-
-function mark(aMessage, aSpam, aNextFunction)
-{
-    // Pffft, jumping through hoops here.
-    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
-    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
-    var action;
-    if (aSpam) {
-        action = kUnknownToSpam;
-        if (aMessage.getStringProperty("score") == "100") {
-            // Marking a spam message as spam does nothing
-            return;
-        }
-        if (aMessage.getStringProperty("score") == "0") {
-            // Marking a non-spam message as spam
-            action = kNoSpamToSpam;
-        }
-    }
-    else {
-        action = kUnknownToNoSpam;
-        if (aMessage.getStringProperty("score") == "0") {
-            // Marking a non-spam message as non-spam does nothing
-            return;
-        }
-        if (aMessage.getStringProperty("score") == "100") {
-            // Marking a spam message as non-spam
-            action = kSpamToNoSpam;
-        }
-    }
-    gJunkmailComponent.mark(messageURL, action, aNextFunction);
-}
-
-function JunkSelectedMessages(setAsJunk)
-{
-    gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
-                      : nsMsgViewCommandType.unjunk);
-
-    getJunkmailComponent();
-    var messages = GetSelectedMessages();
-
-    // start the batch of messages
-    //
-    gJunkmailComponent.batchUpdate = true;
-
-    // mark each one
-    //
-    for ( var msg in messages ) {
-        var message = messenger.messageServiceFromURI(messages[msg])
-            .messageURIToMsgHdr(messages[msg]);
-        mark(message, setAsJunk, null);
-    }
-
-    // end the batch (tell the component to write out its data)
-    //
-    gJunkmailComponent.batchUpdate = false;
-}
-
 function MarkSelectedMessagesRead(markRead)
 {
   gDBView.doCommand(markRead ? nsMsgViewCommandType.markMessagesRead : nsMsgViewCommandType.markMessagesUnread);
@@ -500,4 +425,208 @@ function ViewPageSource(messages)
 function doHelpButton() 
 {
     openHelp("mail-offline-items");
+}
+
+// XXX The following junkmail code might be going away or changing
+
+var gJunkmailComponent;
+
+function getJunkmailComponent()
+{
+    if (!gJunkmailComponent) {
+        gJunkmailComponent = Components.classes['@mozilla.org/messenger/filter-plugin;1?name=junkmail']
+                .getService(Components.interfaces.nsISupports).wrappedJSObject;
+        gJunkmailComponent.initComponent();
+    }
+}
+
+function analyze(aMessage, aNextFunction)
+{
+    function callback(aScore) {
+    }
+
+    callback.prototype = 
+        {
+            onMessageScored: function processNext(aScore)
+            {
+                if (aMessage) {
+                    //if (aScore == -1) debugger;
+                    if (aScore == 0) {
+                        aMessage.setStringProperty("score", "0");
+                    }
+                    else if (aScore == 1) {
+                        aMessage.setStringProperty("score", "100");
+                    }
+                }
+                aNextFunction();
+            }
+        };
+
+
+    // XXX TODO jumping through hoops here.
+    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
+    gJunkmailComponent.calculate(messageURL, new callback);
+}
+
+function analyzeFolder()
+{
+    function processNext()
+    {
+        if (messages.hasMoreElements()) {
+            // XXX TODO jumping through hoops here.
+            var message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            while (!message.isRead) {
+                if (!messages.hasMoreElements()) {
+                    gJunkmailComponent.batchUpdate = false;
+                    return;
+                }
+                message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            }
+            analyze(message, processNext);
+        }
+        else {
+            gJunkmailComponent.batchUpdate = false;
+        }
+    }
+
+    getJunkmailComponent();
+    var folder = GetFirstSelectedMsgFolder();
+    var messages = folder.getMessages(msgWindow);
+    gJunkmailComponent.batchUpdate = true;
+    processNext();
+}
+
+function analyzeMessages()
+{
+    function processNext()
+    {
+        if (counter < messages.length) {
+            // XXX TODO jumping through hoops here.
+            var messageUri = messages[counter];
+            var message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+
+            ++counter;
+            while (!message.isRead) {
+                if (counter == messages.length) {
+                    gJunkmailComponent.mBatchUpdate = false;
+                    return;
+                }
+                messageUri = messages[counter];
+                message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+                ++counter;
+            }
+            analyze(message, processNext);
+        }
+        else {
+            gJunkmailComponent.batchUpdate = false;
+        }
+    }
+
+    getJunkmailComponent();
+    var messages = GetSelectedMessages();
+    var counter = 0;
+    gJunkmailComponent.batchUpdate = true;
+    processNext();
+}
+
+function writeHash()
+{
+    getJunkmailComponent();
+    gJunkmailComponent.mTable.writeHash();
+}
+
+function mark(aMessage, aSpam, aNextFunction)
+{
+    // XXX TODO jumping through hoops here.
+    var score = aMessage.getStringProperty("score");
+
+    var action;
+    if (aSpam) {
+        if (score == "100") {
+            // Marking a spam message as spam does nothing
+            return;
+        }
+
+        if (score == "0") {
+            // Marking a non-spam message as spam
+            action = Components.interfaces.nsIMsgFilterPlugin.hamToSpam;
+        }
+        else 
+            action = Components.interfaces.nsIMsgFilterPlugin.unknownToSpam;
+
+    }
+    else {
+        if (score == "0") {
+            // Marking a non-spam message as non-spam does nothing
+            return;
+        }
+
+        if (score == "100") {
+            // Marking a spam message as non-spam
+            action = Components.interfaces.nsIMsgFilterPlugin.spamToHam;
+        }
+        else
+            action = Components.interfaces.nsIMsgFilterPlugin.unknownToHam;
+    }
+
+    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
+    gJunkmailComponent.mark(messageURL, action, aNextFunction);
+}
+
+function JunkSelectedMessages(setAsJunk)
+{
+    getJunkmailComponent();
+    var messages = GetSelectedMessages();
+
+    // start the batch of messages
+    //
+    gJunkmailComponent.batchUpdate = true;
+
+    // mark each one
+    //
+    for ( var msg in messages ) {
+        var message = messenger.messageServiceFromURI(messages[msg])
+            .messageURIToMsgHdr(messages[msg]);
+        mark(message, setAsJunk, null);
+    }
+
+    // end the batch (tell the component to write out its data)
+    //
+    gJunkmailComponent.batchUpdate = false;
+
+    // this actually sets the score on the selected messages
+    // so we need to call it after we call mark()
+    gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
+                      : nsMsgViewCommandType.unjunk);
+}
+
+// temporary
+function markFolderAsJunk(aSpam)
+{
+    function processNext()
+    {
+        if (messages.hasMoreElements()) {
+            // Pffft, jumping through hoops here.
+            var message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            mark(message, aSpam, processNext);
+
+            // now set the score
+            // XXX TODO invalidate the row
+            if (aSpam)
+              message.setStringProperty("score","100");
+            else
+              message.setStringProperty("score","0");
+        }
+        else {
+            gJunkmailComponent.batchUpdate = false;
+        }
+    }
+
+    getJunkmailComponent();
+    var folder = GetFirstSelectedMsgFolder();
+    var messages = folder.getMessages(msgWindow);
+    gJunkmailComponent.batchUpdate = true;
+    processNext();
 }
