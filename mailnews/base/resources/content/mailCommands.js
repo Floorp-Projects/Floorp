@@ -213,7 +213,7 @@ function ComposeMessage(type, format, folder, messageArray)
 			var messageUri = messageArray[i];
 
       var hdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
-      var hintForIdentity = hdr.recipients + hdr.ccList;
+      var hintForIdentity = (type == msgComposeType.Template) ? hdr.author : hdr.recipients + hdr.ccList;
 
       if (server)
         identity = getIdentityForServer(server, hintForIdentity);
