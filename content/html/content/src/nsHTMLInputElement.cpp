@@ -534,7 +534,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         nsHTMLValue newValue(value.GetPixelValue(), eHTMLUnit_Integer);
         SetHTMLAttribute(nsHTMLAtoms::size, newValue, PR_FALSE);
       }
-      else if (value.GetUnit() == eHTMLUnit_Integer) {
+      else if (value.GetUnit() == eHTMLUnit_Integer &&
+               mType != NS_FORM_INPUT_TEXT &&
+               mType != NS_FORM_INPUT_PASSWORD) {
         nsHTMLValue newValue(value.GetIntValue(), eHTMLUnit_Pixel);
         SetHTMLAttribute(nsHTMLAtoms::size, newValue, PR_FALSE);
       }
