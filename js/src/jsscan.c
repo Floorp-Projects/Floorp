@@ -101,7 +101,7 @@ static struct keyword {
     {js_this_str,       TOK_PRIMARY,            JSOP_THIS,  JSVERSION_DEFAULT},
     {js_true_str,       TOK_PRIMARY,            JSOP_TRUE,  JSVERSION_DEFAULT},
     {js_typeof_str,     TOK_UNARYOP,            JSOP_TYPEOF,JSVERSION_DEFAULT},
-    {"var",             TOK_VAR,                JSOP_DEFVAR,JSVERSION_DEFAULT},
+    {js_var_str,        TOK_VAR,                JSOP_DEFVAR,JSVERSION_DEFAULT},
     {js_void_str,       TOK_UNARYOP,            JSOP_VOID,  JSVERSION_DEFAULT},
     {"while",           TOK_WHILE,              JSOP_NOP,   JSVERSION_DEFAULT},
     {"with",            TOK_WITH,               JSOP_NOP,   JSVERSION_DEFAULT},
@@ -748,6 +748,7 @@ GrowStringBuffer(JSStringBuffer *sb, size_t newlength)
 static void
 FreeStringBuffer(JSStringBuffer *sb)
 {
+    JS_ASSERT(STRING_BUFFER_OK(sb));
     if (sb->base)
         free(sb->base);
 }
@@ -756,9 +757,9 @@ void
 js_InitStringBuffer(JSStringBuffer *sb)
 {
     sb->base = sb->limit = sb->ptr = NULL;
+    sb->data = NULL;
     sb->grow = GrowStringBuffer;
     sb->free = FreeStringBuffer;
-    sb->data = NULL;
 }
 
 void
@@ -991,11 +992,10 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 #define TOKENBUF_LENGTH()   PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar)
 #define TOKENBUF_BASE()     (ts->tokenbuf.base)
 #define TOKENBUF_CHAR(i)    (ts->tokenbuf.base[i])
-#define TOKENBUF_TO_ATOM()  (js_AtomizeChars(cx,                              \
-                                             TOKENBUF_BASE(),                 \
-                                             TOKENBUF_LENGTH(),               \
-                                             0))
-
+#define TOKENBUF_TO_ATOM()  js_AtomizeChars(cx,                               \
+                                            TOKENBUF_BASE(),                  \
+                                            TOKENBUF_LENGTH(),                \
+                                            0)
 #define ADD_TO_TOKENBUF(c)  FastAppendChar(&ts->tokenbuf, (jschar) (c))
 
     /* If there was a fatal error, keep returning TOK_ERROR. */
@@ -1115,7 +1115,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
                 }
 
                 /*
-                 * XML attribute values are double-quoted when pretty-printed
+                 * XML attribute values are double-quoted when pretty-printed,
                  * so escape " if it is expressed directly in a single-quoted
                  * attribute value.
                  */
@@ -1395,19 +1395,16 @@ retry:
     }
 
     switch (c) {
-      case '\n':
-        tt = TOK_EOL;
-        break;
-
-      case ';': tt = TOK_SEMI; break;
-      case '[': tt = TOK_LB; break;
-      case ']': tt = TOK_RB; break;
-      case '{': tt = TOK_LC; break;
-      case '}': tt = TOK_RC; break;
-      case '(': tt = TOK_LP; break;
-      case ')': tt = TOK_RP; break;
-      case ',': tt = TOK_COMMA; break;
-      case '?': tt = TOK_HOOK; break;
+      case '\n': tt = TOK_EOL; break;
+      case ';':  tt = TOK_SEMI; break;
+      case '[':  tt = TOK_LB; break;
+      case ']':  tt = TOK_RB; break;
+      case '{':  tt = TOK_LC; break;
+      case '}':  tt = TOK_RC; break;
+      case '(':  tt = TOK_LP; break;
+      case ')':  tt = TOK_RP; break;
+      case ',':  tt = TOK_COMMA; break;
+      case '?':  tt = TOK_HOOK; break;
 
       case '.':
 #if JS_HAS_XML_SUPPORT
@@ -1719,6 +1716,7 @@ skipline:
             UngetChar(ts, c);
             goto retry;
         }
+
         if (MatchChar(ts, '*')) {
             while ((c = GetChar(ts)) != EOF &&
                    !(c == '*' && MatchChar(ts, '/'))) {

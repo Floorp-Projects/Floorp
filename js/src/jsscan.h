@@ -113,7 +113,7 @@ typedef enum JSTokenType {
     TOK_XMLTAGC = 64,                   /* XML start or end tag close (>) */
     TOK_XMLNAME = 65,                   /* XML start-tag non-final fragment */
     TOK_XMLATTR = 66,                   /* XML quoted attribute value */
-    TOK_XMLSPACE = 67,                  /* XML whitespace within a tag */
+    TOK_XMLSPACE = 67,                  /* XML whitespace */
     TOK_XMLTEXT = 68,                   /* XML text */
     TOK_XMLCOMMENT = 69,                /* XML comment */
     TOK_XMLCDATA = 70,                  /* XML CDATA section */
