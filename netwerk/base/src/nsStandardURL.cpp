@@ -277,10 +277,10 @@ nsSegmentEncoder::InitUnicodeEncoder()
 nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
     : mDefaultPort(-1)
     , mPort(-1)
-    , mURLType(URLTYPE_STANDARD)
     , mHostA(nsnull)
     , mHostEncoding(eEncoding_ASCII)
     , mSpecEncoding(eEncoding_Unknown)
+    , mURLType(URLTYPE_STANDARD)
     , mMutable(PR_TRUE)
     , mSupportsFileURL(aSupportsFileURL)
 {
@@ -1472,7 +1472,6 @@ nsStandardURL::Clone(nsIURI **result)
     if (!clone)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // XXX a copy-on-write string would be very nice here
     clone->mSpec = mSpec;
     clone->mDefaultPort = mDefaultPort;
     clone->mPort = mPort;
@@ -2370,8 +2369,10 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
 {
     nsresult rv;
     
-    rv = stream->Read32(&mURLType);
+    PRUint32 urlType;
+    rv = stream->Read32(&urlType);
     if (NS_FAILED(rv)) return rv;
+    mURLType = urlType;
     switch (mURLType) {
       case URLTYPE_STANDARD:
         mParser = net_GetStdURLParser();

@@ -229,21 +229,21 @@ private:
     URLSegment mRef;
 
     nsCString              mOriginCharset;
-    PRUint32               mURLType;
     nsCOMPtr<nsIURLParser> mParser;
     nsCOMPtr<nsIFile>      mFile;  // cached result for nsIFileURL::GetFile
     char                  *mHostA; // cached result for nsIURI::GetHostA
 
-    enum nsEncodingType {
+    enum {
         eEncoding_Unknown,
         eEncoding_ASCII,
         eEncoding_UTF8
     };
-    nsEncodingType mHostEncoding;
-    nsEncodingType mSpecEncoding;
 
-    PRPackedBool mMutable;         // nsIStandardURL::mutable
-    PRPackedBool mSupportsFileURL; // QI to nsIFileURL?
+    PRUint32 mHostEncoding    : 2; // eEncoding_xxx
+    PRUint32 mSpecEncoding    : 2; // eEncoding_xxx
+    PRUint32 mURLType         : 2; // nsIStandardURL::URLTYPE_xxx
+    PRUint32 mMutable         : 1; // nsIStandardURL::mutable
+    PRUint32 mSupportsFileURL : 1; // QI to nsIFileURL?
 
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
