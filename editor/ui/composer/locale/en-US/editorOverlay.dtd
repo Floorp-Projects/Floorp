@@ -259,6 +259,8 @@
 <!ENTITY copy.accesskey "c">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY paste.accesskey "p">
+<!ENTITY deleteCmd.label "Delete">
+<!ENTITY delete.accesskey "d">
 <!ENTITY clearCmd.label "Clear">
 <!ENTITY clear.accesskey "l">
 <!ENTITY selectAllCmd.label "Select All">
