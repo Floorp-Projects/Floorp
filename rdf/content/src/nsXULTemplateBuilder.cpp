@@ -415,10 +415,10 @@ RDFGenericBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
     // Create the xul:rootwidget element, and indicate that children should
     // be recursively generated on demand
     nsCOMPtr<nsIContent> widget;
-    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
-                                             rootAtom,
-                                             aResource,
-                                             getter_AddRefs(widget))))
+    if (NS_FAILED(rv = CreateElement(kNameSpaceID_XUL,
+                                     rootAtom,
+                                     aResource,
+                                     getter_AddRefs(widget))))
         return rv;
 
     if (NS_FAILED(rv = widget->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
@@ -602,6 +602,39 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     }
     NS_IF_RELEASE(tempArray);
 
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
+                                     nsIAtom* aTag,
+                                     nsIRDFResource* aResource,
+                                     nsIContent** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> result;
+    rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new RDFElement");
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString uri;
+    rv = aResource->GetValue( getter_Copies(uri) );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+    rv = result->SetDocument(doc, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
@@ -856,7 +889,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 			nsCOMPtr<nsIContent>	treeGrandchild;
 			if ((tag.get() == containmentAtom.get()) && (nameSpaceID == kNameSpaceID_XUL))
 			{
-				if (NS_FAILED(rv = CreateResourceElement(nameSpaceID,
+				if (NS_FAILED(rv = CreateElement(nameSpaceID,
 					containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
 					continue;
 				if (NS_FAILED(rv = SetAllAttributesOnElement(treeGrandchild, aValue)))
@@ -1443,10 +1476,10 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
         }
 
         nsCOMPtr<nsIContent> newElement;
-        if (NS_FAILED(rv = CreateResourceElement(elementNameSpaceID,
-                                                 elementNameAtom,
-                                                 newResource,
-                                                 getter_AddRefs(newElement)))) {
+        if (NS_FAILED(rv = CreateElement(elementNameSpaceID,
+                                         elementNameAtom,
+                                         newResource,
+                                         getter_AddRefs(newElement)))) {
             NS_ERROR("unable to create new element");
             return rv;
         }
@@ -2037,39 +2070,6 @@ RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aR
 
     return nsRDFContentUtils::GetElementResource(element, aResource);
 }
-
-nsresult
-RDFGenericBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
-                                             nsIAtom* aTag,
-                                             nsIRDFResource* aResource,
-                                             nsIContent** aResult)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIContent> result;
-    rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new RDFElement");
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString uri;
-    rv = aResource->GetValue( getter_Copies(uri) );
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
-    rv = result->SetDocument(doc, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
-    if (NS_FAILED(rv)) return rv;
-
-    *aResult = result;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
 
 
 nsresult

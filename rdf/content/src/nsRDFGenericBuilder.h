@@ -61,6 +61,10 @@ public:
     NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
     NS_IMETHOD SetRootContent(nsIContent* aElement);
     NS_IMETHOD CreateContents(nsIContent* aElement);
+    NS_IMETHOD CreateElement(PRInt32 aNameSpaceID,
+                             nsIAtom* aTag,
+                             nsIRDFResource* aResource,
+                             nsIContent** aResult);
 
     NS_IMETHOD SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResource *res);
     NS_IMETHOD FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
@@ -136,12 +140,6 @@ public:
 
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
-
-    nsresult
-    CreateResourceElement(PRInt32 aNameSpaceID,
-                          nsIAtom* aTag,
-                          nsIRDFResource* aResource,
-                          nsIContent** aResult);
 
     nsresult
     GetResource(PRInt32 aNameSpaceID,

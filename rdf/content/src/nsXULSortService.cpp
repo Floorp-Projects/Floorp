@@ -114,7 +114,6 @@ static NS_DEFINE_IID(kICollationFactoryIID,   NS_ICOLLATIONFACTORY_IID);
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
@@ -291,10 +290,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		                           kINameSpaceManagerIID,
 		                           (void**) &mgr)))
 		{
-
-// XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
-static const char kXULNameSpaceURI[]
-    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 static const char kRDFNameSpaceURI[]
     = RDF_NAMESPACE_URI;
@@ -1196,7 +1191,6 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 			// figure out where to insert the node when a sort order is being imposed
 			PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
 		        nsCOMPtr<nsIContent>	child;
-			nsresult		rv;
 
 			if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 			for (childIndex=0; childIndex<numChildren; childIndex++)

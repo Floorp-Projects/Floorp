@@ -30,6 +30,7 @@
 
 #include "nsISupports.h"
 
+class nsIAtom;
 class nsIContent;
 class nsIRDFCompositeDataSource;
 class nsIRDFDocument;
@@ -65,6 +66,16 @@ public:
      * Construct the contents for a container element.
      */
     NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
+
+    /** 
+     * Construct an element. This is exposed as a public method,
+     * because the document implementation may need to call it to
+     * support the DOM's document.createElement() method.
+     */
+    NS_IMETHOD CreateElement(PRInt32 aNameSpaceID,
+                             nsIAtom* aTag,
+                             nsIRDFResource* aResource,
+                             nsIContent** aResult) = 0;
 };
 
 extern nsresult NS_NewRDFHTMLBuilder(nsIRDFContentModelBuilder** aResult);

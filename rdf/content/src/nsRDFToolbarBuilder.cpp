@@ -229,10 +229,10 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Create the <xul:titledbutton> element
     nsCOMPtr<nsIContent> toolbarItem;
-    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
-                                             kTitledButtonAtom,
-                                             aValue,
-                                             getter_AddRefs(toolbarItem))))
+    if (NS_FAILED(rv = CreateElement(kNameSpaceID_XUL,
+                                     kTitledButtonAtom,
+                                     aValue,
+                                     getter_AddRefs(toolbarItem))))
         return rv;
 
     // Add the <xul:titledbutton> to the <xul:toolbar> element.

@@ -78,6 +78,12 @@ public:
     NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
     NS_IMETHOD SetRootContent(nsIContent* aElement);
     NS_IMETHOD CreateContents(nsIContent* aElement);
+    NS_IMETHOD CreateElement(PRInt32 aNameSpaceID,
+                             nsIAtom* aTagName,
+                             nsIRDFResource* aResource,
+                             nsIContent** aResult);
+
+    // nsIRDFObserver interface
     NS_IMETHOD OnAssert(nsIContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
     NS_IMETHOD OnUnassert(nsIContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
@@ -91,11 +97,6 @@ public:
                           nsIRDFLiteral* value);
 
     PRBool IsTreeProperty(nsIRDFResource* aProperty);
-
-    nsresult CreateResourceElement(PRInt32 aNameSpaceID,
-                                   nsIAtom* aTag,
-                                   nsIRDFResource* aResource,
-                                   nsIContent** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ RDFHTMLBuilderImpl::AddTreeChild(nsIContent* parent,
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
 
-    if (NS_FAILED(rv = CreateResourceElement(nameSpaceID, tag, value, &child)))
+    if (NS_FAILED(rv = CreateElement(nameSpaceID, tag, value, &child)))
         goto done;
 
     if (NS_FAILED(rv = value->GetValue( getter_Copies(p) )))
@@ -195,7 +196,7 @@ RDFHTMLBuilderImpl::AddLeafChild(nsIContent* parent,
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
 
-    if (NS_FAILED(rv = CreateResourceElement(nameSpaceID, tag, property, &child)))
+    if (NS_FAILED(rv = CreateElement(nameSpaceID, tag, property, &child)))
         goto done;
 
     if (NS_FAILED(rv = parent->AppendChildTo(child, PR_TRUE)))
@@ -294,7 +295,7 @@ RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
         goto done;
 
     // PR_TRUE indicates that children should be recursively generated on demand
-    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_None, tag, aResource, &body)))
+    if (NS_FAILED(rv = CreateElement(kNameSpaceID_None, tag, aResource, &body)))
         goto done;
 
     if (NS_FAILED(rv = root->AppendChildTo(body, PR_FALSE)))
@@ -322,6 +323,32 @@ RDFHTMLBuilderImpl::CreateContents(nsIContent* aElement)
     NS_NOTYETIMPLEMENTED("Adapt the implementation from RDFTreeBuilderImpl");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+NS_IMETHODIMP
+RDFHTMLBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
+                                  nsIAtom* aTag,
+                                  nsIRDFResource* aResource,
+                                  nsIContent** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> result;
+    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
+        return rv;
+
+    nsXPIDLCString uri;
+    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
+        return rv;
+
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE)))
+        return rv;
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
 
 
 NS_IMETHODIMP
@@ -396,34 +423,6 @@ RDFHTMLBuilderImpl::IsTreeProperty(nsIRDFResource* aProperty)
 #endif
     return PR_FALSE;
 }
-
-
-
-nsresult
-RDFHTMLBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
-                                          nsIAtom* aTag,
-                                          nsIRDFResource* aResource,
-                                          nsIContent** aResult)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIContent> result;
-    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
-        return rv;
-
-    nsXPIDLCString uri;
-    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
-        return rv;
-
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE)))
-        return rv;
-
-    *aResult = result;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////
 

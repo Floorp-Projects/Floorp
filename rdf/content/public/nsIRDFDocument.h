@@ -23,6 +23,8 @@
   setting the root resource of the document content model, a factory
   method for constructing the children of a node, etc.
 
+  XXX This should really be called nsIXULDocument.
+
  */
 
 #ifndef nsIRDFDocument_h___
@@ -60,26 +62,43 @@ public:
    */
   NS_IMETHOD SetRootResource(nsIRDFResource* aResource) = 0;
 
-  // XXX the following two methods should probably accept strings as
-  // parameters so you can mess with them via JS. Also, should they
-  // take a "notify" parameter that would control whether any viewers
-  // of the content model should be informed that the content model is
-  // invalid?
-
   NS_IMETHOD SplitProperty(nsIRDFResource* aResource,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aTag) = 0;
 
+  // The resource-to-element map is a one-to-many mapping of RDF
+  // resources to content elements.
+
+  /**
+   * Add an entry to the resource-to-element map.
+   */
   NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
 
+  /**
+   * Remove an entry from the resource-to-element map.
+   */
   NS_IMETHOD RemoveElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
 
+  /**
+   * Get the elements for a particular resource in the resource-to-element
+   * map. The nsISupportsArray will be truncated and filled in with
+   * nsIContent pointers.
+   */
   NS_IMETHOD GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements) = 0;
 
+  /**
+   * Create the contents for an element.
+   */
   NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 
+  /**
+   * Add a content model builder to the document.
+   */
   NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 
+  /**
+   * Get the RDF datasource that represents the document.
+   */
   NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource) = 0;
 
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
