@@ -800,6 +800,13 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   }
 #endif
 
+  // Assign mPeer now and mark this instance as started before calling NPP_New 
+  // because the plugin may call other NPAPI functions, like NPN_GetURLNotify,
+  // that assume these are set before returning. If the plugin returns failure,
+  // we'll clear them out below.
+  mPeer = peer;
+  mStarted = PR_TRUE;
+
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewProc(fCallbacks->newp,
                                           (char *)mimetype,
                                           &fNPP,
@@ -813,13 +820,13 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
   this, &fNPP, mimetype, mode, count, error));
 
-  if(error != NPERR_NO_ERROR)
+  if(error != NPERR_NO_ERROR) {
+    // since the plugin returned failure, these should not be set
+    mPeer = nsnull;
+    mStarted = PR_FALSE;
+
     return NS_ERROR_FAILURE;
-  
-  // assign  mPeer only if there was no error
-  mPeer = peer;
-  
-  mStarted = PR_TRUE;
+  }
   
   return NS_OK;
 }
