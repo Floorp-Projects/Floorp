@@ -47,8 +47,8 @@
 		034768E0FF38A50411DB9C8B = {
 			isa = PBXFrameworkReference;
 			name = NSBrowserView.framework;
-			path = build;
-			refType = 2;
+			path = /Users/vidur/Library/Frameworks;
+			refType = 0;
 		};
 //030
 //031
