@@ -5410,102 +5410,40 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     if (!aBookmarksFile || !aDataSource || !aRoot)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
-    nsCOMPtr<nsIFile> bookmarksFile (do_CreateInstance("@mozilla.org/file/local;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    {
-        nsCOMPtr<nsILocalFile> localBookmarksFile 
-           (do_QueryInterface(bookmarksFile, &rv));
-        localBookmarksFile->SetFollowLinks(PR_TRUE);
-        nsCOMPtr<nsILocalFile> originalBookmarksFile(do_QueryInterface(aBookmarksFile, &rv));
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = localBookmarksFile->InitWithFile(originalBookmarksFile);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-    // Unix ignores followSymlinks, so we have to normalize.
-    rv = bookmarksFile->Normalize();
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIFile> tempFile;
-    rv = bookmarksFile->Clone(getter_AddRefs(tempFile));
-    NS_ENSURE_SUCCESS(rv, rv);
+    // get a safe output stream, so we don't clobber the bookmarks file unless
+    // all the writes succeeded.
+    nsCOMPtr<nsIOutputStream> out;
+    nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
+                                                  aBookmarksFile,
+                                                  -1,
+                                                  /*octal*/ 0600);
+    if (NS_FAILED(rv)) return rv;
 
-    rv = tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, /*octal*/ 0600);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // We need a buffered output stream for performance.
+    // See bug 202477.
+    nsCOMPtr<nsIOutputStream> strm;
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(strm), out, 4096);
+    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFile> bookmarkParentDir;
-    nsAutoString bookmarkLeafName;
-    do {
-        nsCOMPtr<nsIOutputStream> out;
-        rv = NS_NewLocalFileOutputStream(getter_AddRefs(out),
-                                         tempFile,
-                                         PR_WRONLY,
-                                         /*octal*/ 0600,
-                                         0);
-        if (NS_FAILED(rv))
-            break;
+    PRUint32 dummy;
+    strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
 
-        // We need a buffered output stream for performance.
-        // See bug 202477.
-        nsCOMPtr<nsIOutputStream> strm;
-        rv = NS_NewBufferedOutputStream(getter_AddRefs(strm),
-                                        out,
-                                        4096);
-        if (NS_FAILED(rv))
-            break;
+    nsCOMArray<nsIRDFResource> parentArray;
+    rv = WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
 
-        PRUint32 dummy;
-        rv = strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
+    // All went ok. Maybe except for problems in Write(), but the stream detects
+    // that for us
+    nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm);
+    NS_ASSERTION(safeStream, "expected a safe output stream!");
+    if (NS_SUCCEEDED(rv) && safeStream)
+        rv = safeStream->Finish();
 
-        nsCOMArray<nsIRDFResource> parentArray;
-        rv |= WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
-
-        rv |= strm->Close();
-        rv |= out->Close();
-
-        if (NS_FAILED(rv))
-            break;
-
-        PRBool equals;
-        rv = tempFile->Equals(bookmarksFile, &equals);
-        if (NS_FAILED(rv))
-            break;
-        if (equals) {
-            // There was no old bookmarks file, so having written the new file,
-            // we're done.
-            mDirty = PR_FALSE;
-            return NS_OK;
-        }
-
-        // If we wrote to the file successfully (i.e. if the disk wasn't full) 
-        // then move the temp file to the bookmarks file so it takes its place. 
-        rv = bookmarksFile->GetParent(getter_AddRefs(bookmarkParentDir));
-        if (NS_FAILED(rv))
-            break;
-
-        rv = bookmarksFile->GetLeafName(bookmarkLeafName);
-    } while (0);
     if (NS_FAILED(rv)) {
-        tempFile->Remove(PR_FALSE);
+        NS_WARNING("failed to save bookmarks file! possible dataloss");
         return rv;
     }
-
-    PRUint32 oldPermissions = 0600;
-    rv = bookmarksFile->GetPermissions(&oldPermissions);
-    if (NS_FAILED(rv))
-        oldPermissions = 0600;
-
-    rv = tempFile->MoveTo(bookmarkParentDir, bookmarkLeafName);
-    if (NS_FAILED(rv))
-    {
-#ifdef DESTROY_THE_ONLY_COMPLETE_BOOKMARKS_FILE
-        tempFile->Remove(PR_FALSE);
-#endif
-        return rv;
-    }
-    bookmarksFile->SetPermissions(oldPermissions);
 
     mDirty = PR_FALSE;
-
     return NS_OK;
 }
 
