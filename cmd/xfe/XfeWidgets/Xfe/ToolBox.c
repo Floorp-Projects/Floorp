@@ -55,14 +55,6 @@
 #define IS_OUR_TAB(w,child) \
 (XfeIsTab(child) && (_XfeParent(child) == w))
 
-#define _XfeSwap(_x,_y,_t)						\
-{												\
-	_t __tmp__ = _x;							\
-												\
-	_x = _y;									\
-	_y = __tmp__;								\
-}
-
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Core class methods													*/
