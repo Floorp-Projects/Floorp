@@ -23,3 +23,4 @@ nsresult
 NS_NewLayoutHistoryState(nsILayoutHistoryState** aState);
 
 #endif /* _nsILayoutHistoryState_h */
+
