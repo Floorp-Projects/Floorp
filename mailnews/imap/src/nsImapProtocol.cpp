@@ -254,6 +254,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, P
 		m_fetchMsgListMonitor = PR_NewMonitor();
 		m_fetchBodyListMonitor = PR_NewMonitor();
 
+		SetFlag(IMAP_FIRST_PASS_IN_THREAD);
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
                                    PR_UNJOINABLE_THREAD, 0);
@@ -578,6 +579,16 @@ nsImapProtocol::ImapThreadMainLoop()
     // ****** please implement PR_LOG 'ing ******
     while (ImapThreadIsRunning())
     {
+		// if we are making our first pass through this loop and
+		// we already have a url to process then jump right in and
+		// process the current url. Don't try to wait for the monitor
+		// the first time because it may have already been signaled.
+		if (TestFlag(IMAP_FIRST_PASS_IN_THREAD) && m_runningUrl)
+		{
+			ProcessCurrentURL();
+			ClearFlag(IMAP_FIRST_PASS_IN_THREAD);
+		}
+
         PR_EnterMonitor(m_urlReadyToRunMonitor);
 
         PR_Wait(m_urlReadyToRunMonitor, PR_INTERVAL_NO_TIMEOUT);

@@ -46,6 +46,7 @@ class nsIMsgIncomingServer;
 // of creating PRBools for everything....
 
 #define IMAP_RECEIVED_GREETING		0x00000001  /* should we pause for the next read */
+#define IMAP_FIRST_PASS_IN_THREAD   0x00000002  /* entering thread for the first time? */
 
 class nsImapProtocol : public nsIImapProtocol
 {

@@ -21,19 +21,30 @@
 #include "nsImapCore.h"
 #include "nsMsgFolder.h"
 #include "nsIImapMailfolderSink.h"
+#include "nsIImapMessageSink.h"
+#include "nsIImapExtensionSink.h"
+#include "nsIImapMiscellaneousSink.h"
 #include "nsIDBChangeListener.h"
 #include "nsICopyMessageListener.h"
+#include "nsIImapService.h"
+#include "nsIUrlListener.h"
 
 /* fa32d000-f6a0-11d2-af8d-001083002da8 */
 #define NS_IMAPRESOURCE_CID \
 { 0xfa32d000, 0xf6a0, 0x11d2, \
     { 0xaf, 0x8d, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
 
+class nsParseMailMessageState;
+
 class nsImapMailFolder : public nsMsgFolder, 
                          public nsIMsgImapMailFolder,
                          public nsIImapMailFolderSink,
+                         public nsIImapMessageSink,
+                         public nsIImapExtensionSink,
+                         public nsIImapMiscellaneousSink,
                          public nsIDBChangeListener,
-                         public nsICopyMessageListener
+                         public nsICopyMessageListener,
+                         public nsIUrlListener
 {
 public:
 	nsImapMailFolder();
@@ -126,6 +137,33 @@ public:
     
     NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
     
+    // nsIImapMessageSink methods
+    NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
+                                   StreamInfo* aStreamInfo);
+
+    NS_IMETHOD ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
+                                   msg_line_info* aMsgLineInfo);
+    
+    NS_IMETHOD NormalEndMsgWriteStream(nsIImapProtocol* aProtocol);
+    
+    NS_IMETHOD AbortMsgWriteStream(nsIImapProtocol* aProtocol);
+    
+    // message move/copy related methods
+    NS_IMETHOD OnlineCopyReport(nsIImapProtocol* aProtocol,
+                                ImapOnlineCopyState* aCopyState);
+    NS_IMETHOD BeginMessageUpload(nsIImapProtocol* aProtocol);
+    NS_IMETHOD UploadMessageFile(nsIImapProtocol* aProtocol,
+                                 UploadMessageInfo* aMsgInfo);
+
+    // message flags operation
+    NS_IMETHOD NotifyMessageFlags(nsIImapProtocol* aProtocol,
+                                  FlagsKeyStruct* aKeyStruct);
+
+    NS_IMETHOD NotifyMessageDeleted(nsIImapProtocol* aProtocol,
+                                    delete_message_struct* aStruct);
+    NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
+                                    MessageSizeInfo* sizeInfo);
+
 	//nsIDBChangeListener
 	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
                          nsIDBChangeListener * aInstigator);
@@ -140,18 +178,94 @@ public:
 	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
 	NS_IMETHOD EndCopy(PRBool copySucceeded);
 
+    // nsIUrlListener methods
+	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+
+    // nsIImapExtensionSink methods
+    NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
+                                    PRBool aBool);
+    NS_IMETHOD SetMailServerUrls(nsIImapProtocol* aProtocol,
+                                 const char* hostName);
+    NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
+                                 const char* hostName);
+    NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
+                                 nsIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
+                               nsIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
+                                   nsIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
+                                         nsIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
+                                 FolderQueryInfo* aInfo);
+    
+    // nsIImapMiscellaneousSink methods
+	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
+                               const char* searchHitLine);
+	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
+                                   GenericInfo* aInfo);
+	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
+                                                 GenericInfo* aInfo);
+    NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
+                                        PRBool* aBool);
+	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
+	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
+	// ****
+	NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol);
+	NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
+                                   GenericInfo* aInfo);
+	NS_IMETHOD GetPasswordForUser(nsIImapProtocol* aProtocol,
+                                  const char* userName);
+	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
+                                     nsMsgBiffState biffState);
+	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
+                                    uid_validity_info* aInfo);
+	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
+                                     PRUint32 uidValidity);
+	NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
+                       const char* aString);
+	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
+                                 const char* aString);
+	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
+                              const char* statusMsg);
+	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
+                               ProgressInfo* aInfo);
+	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
+	NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
+                                const char* hostName);
+	NS_IMETHOD CommitCapabilityForHost(nsIImapProtocol* aProtocol,
+                                       const char* hostName);
+	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
+                               msg_line_info* aInfo);
+	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
+                             TunnelInfo *aInfo);
+
 protected:
     // Helper methods
+	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
+                       &keysToFetch, nsImapFlagAndUidState *flagState);
+	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
+                          &keysToFetch, nsImapFlagAndUidState *flagState);
+	void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const
+                                     nsMsgKeyArray &keysToFetch, 
+                                     mailbox_spec *boxSpec);
+	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe);
     nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	//Creates a subfolder with the name 'name' and adds it to the list of
     //children. Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
-    nsNativeFileSpec mPathName;
-	nsIMsgDatabase* mMailDatabase;
-    PRBool mInitialized;
-    PRBool mHaveReadNameFromDB;
+    nsNativeFileSpec m_pathName;
+	nsIMsgDatabase* m_mailDatabase;
+    PRBool m_initialized;
+    PRBool m_haveReadNameFromDB;
+	nsParseMailMessageState *m_msgParser;
+	nsMsgKey			m_curMsgUid;
+	PRInt32			m_nextMessageByteLength;
+    PLEventQueue* m_eventQueue;
+    PRBool m_urlRunning;
 };
 
 #endif
