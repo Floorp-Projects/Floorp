@@ -15,8 +15,9 @@ Message2=This is welcome message 3 from the config.ini file. This is additional 
 [Setup Type0]
 Description Short=Typical Install
 Description Long=Click continue to install the following component:                                                     <#buildID> Mozilla optimized build
-C0=Component1
+C0=Component0
 C1=Component1
+C2=Component2
 
 [Setup Type1]
 Description Short=Custom Install
@@ -34,14 +35,14 @@ Description Long=The "core file" with xpinstall, xpcom, nspr20, etc.
 Archive=install.xpi
 URL0=http://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 URL1=http://dolfin.mcom.com/nsinstall/mac/xpiengine/debug/
-Install Size=<#xpiengine_size>
+Install Size=<#install_size>
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
 Description Short= Browser component
 Description Long=Apprunner & Editor (<#buildID>)
 Archive=browser.xpi
-Install Size=<#core_size>
+Install Size=<#browser_size>
 URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 
 [Component2]
