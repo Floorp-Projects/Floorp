@@ -191,7 +191,7 @@
      <rdf:li>
        <rdf:Description ID="Certificates"
          nc:name="Certificates"
-	 nc:link="using_certs_help.html#certificates:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#using_certificates"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer"
@@ -200,12 +200,12 @@
      </rdf:li><rdf:li>
        <rdf:Description ID="Cookie_Manager"
          nc:name="Cookie Manager"
-	 nc:link="using_priv_help.html#Cookie_Manager:usingIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_cookie_manager"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies"
          nc:name="cookies"
-	 nc:link="using_priv_help.html#cookies:aboutIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_cookie_manager"/>
      </rdf:li><rdf:li>
        <rdf:Description ID="copy web pages"
          nc:name="copy"
@@ -214,7 +214,7 @@
      <rdf:li>
        <rdf:Description ID="CRLs"
          nc:name="CRLs"
-	 nc:link="using_certs_help.html#CRLs:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#how_validation_works"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Customizing Fonts"
@@ -254,17 +254,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Certificates:certificate_authority"
          nc:name="certificate authority"
-	 nc:link="using_certs_help.html#certificates:certificate_authorityIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_certificates_that_identify_certificate_authorities"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:getting"
          nc:name="getting certificates"
-	 nc:link="using_certs_help.html#certificates:gettingIDX"/>
+	 nc:link="using_certs_help.xhtml#getting_your_own_certificate"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:managing"
          nc:name="Managing Certificates"
-	 nc:link="using_certs_help.html#certificates:managingIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_certificates"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:preferences"
@@ -279,22 +279,22 @@
      <rdf:li>
        <rdf:Description ID="Certificates:using"
          nc:name="Using Certificates"
-	 nc:link="using_certs_help.html#certificates:usingIDX"/>
+	 nc:link="using_certs_help.xhtml#using_certificates"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:validation"
          nc:name="certificate validation"
-	 nc:link="using_certs_help.html#certificates:validationIDX"/>
+	 nc:link="using_certs_help.xhtml#controlling_validation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:web_site"
          nc:name="website identity"
-	 nc:link="using_certs_help.html#certificates:web_siteIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_certificates_that_identify_websites"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates:your_own"
          nc:name="Your own identity"
-	 nc:link="using_certs_help.html#certificates:your_ownIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_certificates_that_identify_you"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -419,12 +419,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Cookie_Manager:cookies_stored_by"
          nc:name="stored cookies"
-	 nc:link="using_priv_help.html#Cookie_Manager:cookies_stored_byIDX"/>
+	 nc:link="using_priv_help.xhtml#stored_cookies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Cookie_Manager:using"
          nc:name="using cookies"
-	 nc:link="using_priv_help.html#Cookie_Manager:usingIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_cookie_manager"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -434,7 +434,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cookies:about"
          nc:name="about cookies"
-	 nc:link="using_priv_help.html#cookies:aboutIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_cookie_manager"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:email_and"
@@ -449,32 +449,32 @@
      <rdf:li>
        <rdf:Description ID="cookies:managing_per_site"
          nc:name="managing cookies per site"
-	 nc:link="using_priv_help.html#cookies:managing_per_siteIDX"/>
+	 nc:link="using_priv_help.xhtml#managing_cookies_site-by-site"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:notification_icon"
          nc:name="notification icon"
-	 nc:link="using_priv_help.html#cookies:notification_iconIDX"/>
+	 nc:link="using_priv_help.xhtml#cookie_notification"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:preferences"
          nc:name="cookie preferences"
-	 nc:link="using_priv_help.html#cookies:preferencesIDX"/>
+	 nc:link="using_priv_help.xhtml#cookies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:privacy_levels_for"
          nc:name="privacy levels"
-	 nc:link="using_priv_help.html#cookies:privacy_levels_forIDX"/>
+	 nc:link="using_priv_help.xhtml#setting_privacy_levels"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:removing"
          nc:name="removing cookies"
-	 nc:link="using_priv_help.html#cookies:removingIDX"/>
+	 nc:link="using_priv_help.xhtml#removing_cookies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:viewing"
          nc:name="viewing cookies"
-	 nc:link="using_priv_help.html#cookies:viewingIDX"/>
+	 nc:link="using_priv_help.xhtml#viewing_cookies"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -484,7 +484,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="CRLs:about"
          nc:name="about CRLs"
-	 nc:link="using_certs_help.html#CRLs:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#how_validation_works"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="CRLs:auto_upates_for"
@@ -499,7 +499,7 @@
      <rdf:li>
        <rdf:Description ID="CRLs:Next_Update_date"
          nc:name="Next Update date"
-	 nc:link="using_certs_help.html#CRLs:Next_Update_dateIDX"/>
+	 nc:link="using_certs_help.xhtml#about_the_next_update_date"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="CRLs:preferences"
@@ -514,12 +514,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="default_browser_preferences"
          nc:name="default browser preferences"
-	 nc:link="cs_nav_prefs_navigator.html#default_browser_preferencesIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#navigator"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="device_manager"
          nc:name="Device Manager"
-	 nc:link="using_certs_help.html#Device_Manager:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#about_security_devices_and_modules"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="DOM_Inspector"
@@ -539,7 +539,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Download_Manager:preferences"
          nc:name="downoad manager preferences"
-	 nc:link="cs_nav_prefs_navigator.html#Download_Manager:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#downloads"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -583,7 +583,7 @@
      <rdf:li>
        <rdf:Description ID="encryption:of_stored_sensitive_information"
          nc:name="storing sensitive information"
-	 nc:link="using_priv_help.html#encryption:of_stored_sensitive_informationIDX"/>
+	 nc:link="using_priv_help.xhtml#encrypting_stored_sensitive_information"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="encryption:settings_for_email"
@@ -593,7 +593,7 @@
      <rdf:li>
        <rdf:Description ID="encryption:status_of_web_page"
          nc:name="security of a web page"
-	 nc:link="using_certs_help.html#encryption:status_of_web_pageIDX"/>
+	 nc:link="using_certs_help.html#checking_security_for_a_web_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="encryption:technologies"
@@ -628,7 +628,7 @@
      <rdf:li>
        <rdf:Description ID="FIPS_mode"
          nc:name="FIPS mode"
-	 nc:link="using_certs_help.html#FIPS_modeIDX"/>
+	 nc:link="using_certs_help.xhtml#enable_fips_mode"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="font_changing_in_composer"
@@ -638,7 +638,7 @@
      <rdf:li>
        <rdf:Description ID="Form_Manager"
          nc:name="Form Manager"
-	 nc:link="using_priv_help.html#Form_Manager:usingIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_form_manager"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -648,27 +648,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Form_Manager:encrypting_stored_information"
          nc:name="encrypting stored information"
-	 nc:link="using_priv_help.html#Form_Manager:encrypting_stored_informationIDX"/>
+	 nc:link="using_priv_help.xhtml#encrypting_stored_sensitive_information"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Form_Manager:preferences"
          nc:name="form manager preferences"
-	 nc:link="using_priv_help.html#Form_Manager:preferencesIDX"/>
+	 nc:link="using_priv_help.xhtml#forms"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Form_Manager:settings"
          nc:name="form manager settings"
-	 nc:link="using_priv_help.html#Form_Manager:settingsIDX"/>
+	 nc:link="using_priv_help.xhtml#form_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Form_Manager:using"
          nc:name="using the form manager"
-	 nc:link="using_priv_help.html#Form_Manager:usingIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_form_manager"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="forms"
          nc:name="forms"
-	 nc:link="using_priv_help.html#forms:encrypting_stored_informationIDX"/>
+	 nc:link="using_priv_help.xhtml#encrypting_stored_sensitive_information"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -678,27 +678,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="forms:encrypting_stored_information"
          nc:name="encrypting stored information"
-	 nc:link="using_priv_help.html#forms:encrypting_stored_informationIDX"/>
+	 nc:link="using_priv_help.xhtml#encrypting_stored_sensitive_information"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="forms:filling_out_automatically"
          nc:name="filling out automatically"
-	 nc:link="using_priv_help.html#forms:filling_out_automaticallyIDX"/>
+	 nc:link="using_priv_help.xhtml#filling_out_forms_automatically"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="forms:preferences"
          nc:name="form preferences"
-	 nc:link="using_priv_help.html#forms:preferencesIDX"/>
+	 nc:link="using_priv_help.xhtml#forms"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="forms:saving_data"
          nc:name="saving data from forms"
-	 nc:link="using_priv_help.html#forms:saving_dataIDX"/>
+	 nc:link="using_priv_help.xhtml#saving_form_data"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="forms:storing_data_from"
          nc:name="storing data from forms"
-	 nc:link="using_priv_help.html#forms:storing_data_fromIDX"/>
+	 nc:link="using_priv_help.xhtml#managing_stored_form_data"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -723,7 +723,7 @@
      <rdf:li>
        <rdf:Description ID="home_page"
          nc:name="home page"
-	 nc:link="cs_nav_prefs_navigator.html#home_pageIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#navigator"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="HTML"
@@ -801,12 +801,12 @@
      <rdf:li>
        <rdf:Description ID="images:managing"
          nc:name="managing images"
-	 nc:link="using_priv_help.html#images:managingIDX"/>
+	 nc:link="using_priv_help.xhtml#managing_images"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="images:preferences"
          nc:name="image preferences"
-	 nc:link="using_priv_help.html#images:preferencesIDX"/>
+	 nc:link="using_priv_help.xhtml#images"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="images:set_as_wallpaper"
@@ -960,7 +960,7 @@
      <rdf:li>
        <rdf:Description ID="lock_icon"
          nc:name="lock icon"
-	 nc:link="using_certs_help.html#lock_iconIDX"/>
+	 nc:link="using_certs_help.xhtml#checking_security_for_a_web_page"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1255,7 +1255,7 @@
      <rdf:li>
        <rdf:Description ID="master_password:forgetting"
          nc:name="Forgetting your master password"
-	 nc:link="using_priv_help.html#master_password:forgettingIDX"/>
+	 nc:link="using_priv_help.xhtml#what_to_do_if_you_forget_your_master_password"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="master_password:preferences"
@@ -1315,7 +1315,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:helper_applications"
          nc:name="helper applications"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:helper_applicationsIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#helper_applications"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:home_page"
@@ -1335,7 +1335,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:preferences"
          nc:name="Navigator Preferences"
-	 nc:link="cs_nav_prefs_navigator.html#Navigator:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#navigator_preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:set_as_wallpaper"
@@ -1375,7 +1375,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="OSCP"
          nc:name="OSCP"
-	 nc:link="using_certs_help.html#OCSP:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#how_validation_works"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Offline"
@@ -1409,7 +1409,7 @@
      <rdf:li>
        <rdf:Description ID="password_manager"
          nc:name="Password Manager"
-	 nc:link="using_priv_help.html#Password_Manager:usingIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_password_manager"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="plugins"
@@ -1474,12 +1474,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="password_manager:encrypting_stored_passwords"
          nc:name="Encrypting Stored Passwords"
-	 nc:link="using_priv_help.html#Password_Manager:encrypting_stored_passwordsIDX"/>
+	 nc:link="using_priv_help.xhtml#encrypting_stored_sensitive_information"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="password_manager:master_password"
          nc:name="Master Password"
-	 nc:link="using_priv_help.html#Password_Manager:master_password_andIDX"/>
+	 nc:link="using_priv_help.xhtml#setting_a_master_password"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="password_manager:preferences"
@@ -1499,7 +1499,7 @@
      <rdf:li>
        <rdf:Description ID="passwords:remembering_automatically"
          nc:name="Remembering Automatically"
-	 nc:link="using_priv_help.html#passwords:remembering_automaticallyIDX"/>
+	 nc:link="using_priv_help.xhtml#using_the_password_manager"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="passwords:timeout_for_master_password"
@@ -1564,17 +1564,17 @@
      <rdf:li>
        <rdf:Description ID="preferences:cookies"
          nc:name="cookies preferences"
-	 nc:link="using_priv_help.html#preferences:cookiesIDX"/>
+	 nc:link="using_priv_help.xhtml#cookies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:default_browser"
          nc:name="default browser preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:default_browserIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#navigator"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:Downloads"
          nc:name="Downloads preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:DownloadsIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#downloads"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:fonts"
@@ -1584,27 +1584,27 @@
      <rdf:li>
        <rdf:Description ID="preferences:forms"
          nc:name="form preferences"
-	 nc:link="using_priv_help.html#preferences:formsIDX"/>
+	 nc:link="using_priv_help.xhtml#forms"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:helper_applications"
          nc:name="helper application preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:helper_applicationsIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#helper_applications"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:history"
          nc:name="history preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:historyIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#history"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:images"
          nc:name="image preferences"
-	 nc:link="using_priv_help.html#preferences:imagesIDX"/>
+	 nc:link="using_priv_help.xhtml#images"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:internet_search"
          nc:name="internet search preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:internet_searchIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#internet_search"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:JavaScript"
@@ -1619,12 +1619,12 @@
      <rdf:li>
        <rdf:Description ID="preferences:languages"
          nc:name="languages preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:languagesIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#languages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:Navigator"
          nc:name="Navigator preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:NavigatorIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#navigator_preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:passwords"
@@ -1654,7 +1654,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:smart_browsing"
          nc:name="smart browsing preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:smart_browsingIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#smart_browsing"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:SSL"
@@ -1664,7 +1664,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:Tabbed_Browsing"
          nc:name="Tabbed Browsing preferences"
-	 nc:link="cs_nav_prefs_navigator.html#preferences:Tabbed_BrowsingIDX"/>
+	 nc:link="cs_nav_prefs_navigator.xhtml#tabbed_browsing"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:themes"
@@ -1699,7 +1699,7 @@
      <rdf:li>
        <rdf:Description ID="privacy:P3P_levels"
          nc:name="P3P levels"
-	 nc:link="using_priv_help.html#privacy:P3P_levelsIDX"/>
+	 nc:link="using_priv_help.xhtml#setting_privacy_levels"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:P3P_standard_and"
@@ -1719,7 +1719,7 @@
      <rdf:li>
        <rdf:Description ID="privacy:settings"
          nc:name="privacy settings"
-	 nc:link="using_priv_help.html#privacy:settingsIDX"/>
+	 nc:link="using_priv_help.xhtml#privacy_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:viewing_site_policy"
@@ -1836,7 +1836,7 @@
      <rdf:li>
        <rdf:Description ID="security_devices"
          nc:name="security devices"
-	 nc:link="using_certs_help.html#security_devices:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#about_security_devices_and_modules"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="server_certificate_problems"
@@ -1850,7 +1850,7 @@
      <rdf:li>
        <rdf:Description ID="security_modules"
          nc:name="security modules"
-	 nc:link="using_certs_help.html#security_devices:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#about_security_devices_and_modules"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="search"
@@ -1875,7 +1875,7 @@
      <rdf:li>
        <rdf:Description ID="smart_cards"
          nc:name="smart cards"
-	 nc:link="using_certs_help.html#smart_cards:managingIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_smart_cards_and_other_security_devices"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="SSL"
@@ -1950,7 +1950,7 @@
      <rdf:li>
        <rdf:Description ID="security:checking_for_a_web_page"
          nc:name="checking security for a web page"
-	 nc:link="using_certs_help.html#security:checking_for_a_web_pageIDX"/>
+	 nc:link="using_certs_help.xhtml#checking_security_for_a_web_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security:checking_for_received_messages"
@@ -1970,7 +1970,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="security_devices:managing"
          nc:name="Managing security devices"
-	 nc:link="using_certs_help.html#security_devices:managingIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_smart_cards_and_other_security_devices"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1980,7 +1980,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="security_modules:managing"
          nc:name="Managing security modules"
-	 nc:link="using_certs_help.html#security_modules:managingIDX"/>
+	 nc:link="using_certs_help.xhtml#managing_smart_cards_and_other_security_devices"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2179,7 +2179,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="validation"
          nc:name="validation"
-	 nc:link="using_certs_help.html#validation:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#how_validation_works"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2189,7 +2189,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="validation:about"
          nc:name="about validation"
-	 nc:link="using_certs_help.html#validation:aboutIDX"/>
+	 nc:link="using_certs_help.xhtml#how_validation_works"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="validation:auto_updating_CRLs"

@@ -1,542 +1,731 @@
-<html>
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <title>Using Certificates</title>
-
-<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
-
+<link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
+  type="text/css"></link>
 </head>
-
 <body>
 
-<hr>
-<a NAME="certificates:usingIDX"></a>
-<a NAME="using_certs_first"></a>
-<a NAME="certificates:aboutIDX"></a>
-<a NAME="identificationSDX"></a>
-<a NAME="ID_cardSDX"></a>
-<a NAME="identitySDX"></a>
-<a NAME="digital_IDSDX"></a>
-<h1>Using Certificates</h1>
+<h1 id="using_certificates">Using Certificates</h1>
 
-<p>A certificate is the digital equivalent of an ID card. Just as you may have several ID cards for different purposes, such as a driver's license, an employee ID card, or a credit card, you can have several different certificates that identify you for different purposes.</p> 
+<p>A certificate is the digital equivalent of an ID card. Just as you may have
+  several ID cards for different purposes, such as a driver&apos;s license, an
+  employee ID card, or a credit card, you can have several different
+  certificates that identify you for different purposes.</p>
 
-<P>This section describes how to perform operations related to certificates.</p>
+<p>This section describes how to perform operations related to
+  certificates.</p>
 
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissection">
-<p>In this section:</p>
-<p><a href="#using_certs_get">Getting Your Own Certificate</a></p>
-<p><a href="#using_certs_info">Checking Security for a Web Page</a></p>
-<p><a href="#using_certs_manage">Managing Certificates</a></p>
-<p><a href="#using_certs_devices">Managing Smart Cards and Other Security Devices</a></p>
-<p><a href="#using_certs_ssl">Managing SSL Warnings and Settings</a></p>
-<p><a href="#using_certs_validation">Controlling Validation</a></p>
-<p><a href="#using_certs_settings">Certificate Settings</a></p>
-</td>
-</tr>
-</table>
-
-
-<p>&nbsp;</p>
-<hr>
-<a NAME="certificates:gettingIDX"></a>
-<a NAME="using_certs_get"></a>
-<h1>Getting Your Own Certificate</h1>
-
-<P>Much like a credit card or a driver's license, a certificate is a form of identification you can use to identify yourself over the Internet and other networks. Like other commonly used personal IDs, a certificate is typically issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <b>certificate authority (CA).</b> 
-
-<p>You can obtain certificates that identify you from public CAs, from system administrators or special CAs within your organization, or from web sites offering specialized services that require a means of identification more reliable that your name and password. 
-
-<p>Just as the requirements for a driver's license vary depending on the type of vehicle you want to drive, the requirements for obtaining a certificate vary depending on what you want to use it for. In some cases getting a certificate may be as easy as going to a web site, entering some personal information, and automatically downloading the certificate into your browser. In other cases you may have to go through more complicated procedures. 
-
-<p>You can obtain a certificate today by visiting the URL for a certificate authority and following the on-screen instructions. For a list of certificate authorities, see the online document <a href="https://certs.netscape.com/" TARGET="_blank">Client Certificates</a>. </p>
-
-<p>Once you obtain a certificate, it is automatically stored in a <a href="glossary.xhtml#security_device">security device</a>. Your browser comes with its own built-in Software Security Device. A security device can also be a piece of hardware, such as a smart card.</p>
-
-<p>Like a driver's license or a credit card, a certificate is a valuable form of identification that can be abused if it falls into the wrong hands. Once you've obtained a certificate that identifies you, you should protect it in two ways: by backing it up and by setting your <a href="glossary.xhtml#master_password">master password</a>. 
-
-<p>When you first obtain a certificate, you may be prompted to back it up. If you haven't yet created a master password, you will be asked to create one.
-
-<p>For detailed information about backing up a certificate and setting your master password, see <a href="certs_help.xhtml#your_certificates">Your Certificates</a>.
-
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-<p>&nbsp;</p>
-<hr><a NAME="security:checking_for_a_web_pageIDX"></a>
-<a NAME="using_certs_info"></a>
-<a NAME="lock_iconSDX"></a>
-<a NAME="lock_iconIDX"></a>
-<a NAME="broken_lock_iconSDX"></a>
-<a NAME="open_lock_iconSDX"></a>
-<a NAME="encryption_status_of_web_pageSDX"></a>
-<a NAME="encryption:status_of_web_pageIDX"></a>
-<h1>Checking Security for a Web Page</h1>
-
-<p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you whether the entire contents of the page was protected by <a href="glossary.xhtml#encryption">encryption</a> while it was being received by your computer:</p>
-
-
-<table summary="lock icons"> <tr><td>&nbsp;</td><td><img alt="closed lock icon"src="chrome://communicator/skin/icons/lock-secure.gif">&nbsp;</td><td>A closed lock means that the page was protected by encryption when it was received.</td></tr>
-	<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-	<tr><td>&nbsp;</td><td><img alt="open lock icon" src="chrome://communicator/skin/icons/lock-insecure.gif">&nbsp;</td><td>An open lock means the page was not protected by encryption when it was received. </td></tr>
-	<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-	<tr><td>&nbsp;</td><td><img alt="broken lock icon"src="chrome://communicator/skin/icons/lock-broken.gif">&nbsp;</td><td>A broken lock means that some or all of the elements within the page were not protected by encryption when the page was received, even though the outermost HTML page was encrypted.</td></tr>
-</table>
-
-<p>For more details about the encryption status of the page when it was received, click the lock icon (or open the View menu, choose Page Info, and click the Security tab).
-
-<p>The Security tab for Page Info provides two kinds of information:
+<div class="contentsBox">In this section:
 <ul>
-	<li>The top half describes whether the web site displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)</li>
-	<li>The bottom half describes whether the contents of the page you are viewing is protected by encryption while in transit over the network.</li>
+  <li><a href="#getting_your_own_certificate">Getting Your Own
+    Certificate</a></li>
+  <li><a href="#checking_security_for_a_web_page">Checking Security for a Web
+    Page</a></li>
+  <li><a href="#managing_certificates">Managing Certificates</a></li>
+  <li><a href="#managing_smart_cards_and_other_security_devices">Managing Smart
+    Cards and Other Security Devices</a></li>
+  <li><a href="#managing_ssl_warnings_and_settings">Managing SSL Warnings and
+    Settings</a></li>
+  <li><a href="#controlling_validation">Controlling Validation</a></li>
 </ul>
-<p><b>Important:</b> The lock icon describes only the encryption status of the page while it was being received by your computer. To be notified before you send or receive information without encryption, select the appropriate SSL warning options. See <a href="ssl_help.xhtml">Privacy &amp; Security Preferences - SSL</a> for details.
+</div>
 
+<h1 id="getting_your_own_certificate">Getting Your Own Certificate</h1>
 
+<p>Much like a credit card or a driver&apos;s license, a certificate is a form
+  of identification you can use to identify yourself over the Internet and
+  other networks. Like other commonly used personal IDs, a certificate is
+  typically issued by an organization with recognized authority to issue such
+  identification. An organization that issues certificates is called a
+  <strong>certificate authority (CA).</strong></p>
 
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
+<p>You can obtain certificates that identify you from public CAs, from system
+  administrators or special CAs within your organization, or from websites
+  offering specialized services that require a means of identification more
+  reliable that your name and password.</p>
 
+<p>Just as the requirements for a driver&apos;s license vary depending on the
+  type of vehicle you want to drive, the requirements for obtaining a
+  certificate vary depending on what you want to use it for. In some cases
+  getting a certificate may be as easy as going to a website, entering some
+  personal information, and automatically downloading the certificate into your
+  browser. In other cases you may have to go through more complicated
+  procedures.</p>
 
-<p>&nbsp;</p>
-<hr>
-<a NAME="using_certs_manage"></a><a NAME="certificates:managingIDX"></a>
-<h1>Managing Certificates</h1>
+<p>You can obtain a certificate today by visiting the URL for a certificate
+  authority and following the on-screen instructions. For a list of certificate
+  authorities, see the online document
+  <a href="https://certs.netscape.com/" target="_blank">Client
+  Certificates</a>.</p>
 
-<p>You can use the Certificate Manager to manage the certificates you have available. Certificates may be stored on your computer's hard disk or on <a href="glossary.xhtml#smart_card">smart cards</a> or other security devices attached to your computer.</p>
+<p>Once you obtain a certificate, it is automatically stored in a
+  <a href="glossary.xhtml#security_device">security device</a>. Your browser
+  comes with its own built-in Software Security Device. A security device can
+  also be a piece of hardware, such as a smart card.</p>
 
-<p>To open the Certificate Manager:
+<p>Like a driver&apos;s license or a credit card, a certificate is a valuable
+  form of identification that can be abused if it falls into the wrong hands.
+  Once you&apos;ve obtained a certificate that identifies you, you should
+  protect it in two ways: by backing it up and by setting your
+  <a href="glossary.xhtml#master_password">master password</a>.</p>
 
-<ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>In the Manage Certificates section, click Manage Certificates. You see the Certificate Manager.
-</ol>
+<p>When you first obtain a certificate, you may be prompted to back it up. If
+  you haven&apos;t yet created a master password, you will be asked to create
+  one.</p>
 
-<p><table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissection">
-<p>In this section:</p>
-<p><a HREF="#using_certs_my">Managing Certificates that Identify You</a></p>
-<p><a HREF="#using_certs_others">Managing Certificates that Identify Others</a></p>
-<p><a HREF="#using_certs_sites">Managing Certificates that Identify Web Sites</a></p>
-<p><a HREF="#using_certs_cas">Managing Certificates that Identify Certificate Authorities</a></p>
-</td>
-</tr>
+<p>For detailed information about backing up a certificate and setting your
+  master password, see <a href="certs_help.xhtml#your_certificates">Your
+  Certificates</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h1 id="checking_security_for_a_web_page">Checking Security for a Web Page</h1>
+
+<p>When you&apos;re viewing any web page, the lock icon near the lower-right
+  corner of the window informs you whether the entire contents of the page was
+  protected by <a href="glossary.xhtml#encryption">encryption</a> while it was
+  being received by your computer:</p>
+
+<table summary="lock icons">
+  <tr>
+    <td><img alt="closed lock icon"
+      src="chrome://communicator/skin/icons/lock-secure.gif"></img></td>
+    <td>A closed lock means that the page was protected by encryption when it
+      was received.</td>
+  </tr>
+  <tr>
+    <td><img alt="open lock icon"
+      src="chrome://communicator/skin/icons/lock-insecure.gif"></img></td>
+    <td>An open lock means the page was not protected by encryption when it was
+      received.</td>
+  </tr>
+  <tr>
+    <td><img alt="broken lock icon"
+      src="chrome://communicator/skin/icons/lock-broken.gif"></img></td>
+    <td>A broken lock means that some or all of the elements within the page
+      were not protected by encryption when the page was received, even though
+      the outermost HTML page was encrypted.</td>
+  </tr>
 </table>
 
-<p>&nbsp;</p>
-<a NAME="using_certs_my"></a><a NAME="certificates:your_ownIDX"></a>
-<H2>Managing Certificates that Identify You</H2>
+<p>For more details about the encryption status of the page when it was
+  received, click the lock icon (or open the View menu, choose Page Info, and
+  click the Security tab).</p>
 
+<p>The Security tab for Page Info provides two kinds of information:</p>
 
-<p>When you first open the Certificate Manager, you'll notice that it has several tabs across the top of its window. The first tab is called Your Certificates, and it displays the certificates your browser has available that identify you. Your certificates are listed under the names of the organizations that issued them. 
-
-<p>To perform an action on one or more certificates, click the entry for the certificate (or Control-click to select more than one), then click the View, Backup, or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window.
-
-<p>The following buttons under Your Certificates don't require a certificate to be selected. You use them to perform these actions:
 <ul>
-	<li><b>Import.</b> Click this button if you want to import a certificate that you've previously backed up or transferred from one machine to another.
-
-	<li><b>Backup All.</b> Click this button to back up all your own certificates stored in the <a href="glossary.xhtml#software_security_device">Software Security Device</a>. 
-
+  <li>The top half describes whether the website displaying the page has been
+    verified. (For information on certificate verification, see
+    <a href="#controlling_validation">Controlling Validation</a>.)</li>
+  <li>The bottom half describes whether the contents of the page you are
+    viewing is protected by encryption while in transit over the network.</li>
 </ul>
 
-<p><b>Certificates on smart cards cannot be backed up.</b> Whether you select some of your certificates and click Backup, or click Backup All, the resulting backup file will not include any certificates stored on smart cards or other external security devices. You can only back up certificates that are stored on the built-in Software Security Device.
+<p><strong>Important:</strong> The lock icon describes only the encryption
+  status of the page while it was being received by your computer. To be
+  notified before you send or receive information without encryption, select
+  the appropriate SSL warning options. See <a href="ssl_help.xhtml">Privacy
+  &amp; Security Preferences - SSL</a> for details.</p>
 
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
 
-<p>For more details about any of these tasks, see <a href="certs_help.xhtml#your_certificates">Your Certificates</a>.
+<h1 id="managing_certificates">Managing Certificates</h1>
 
+<p>You can use the Certificate Manager to manage the certificates you have
+  available. Certificates may be stored on your computer&apos;s hard disk or on
+  <a href="glossary.xhtml#smart_card">smart cards</a> or other security devices
+  attached to your computer.</p>
 
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
+<p>To open the Certificate Manager:</p>
 
-<p>&nbsp;</p>
-<a NAME="using_certs_others"></a><a NAME="certificates:other peopleIDX"></a>
-<H2>Managing Certificates that Identify Others</H2>
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click Certificates. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+  <li>In the Manage Certificates section, click Manage Certificates. You see
+    the Certificate Manager.</li>
+</ol>
 
-<p><p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.xhtml#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
+<div class="contentsBox">In this section:
+<ul>
+  <li><a href="#managing_certificates_that_identify_you">Managing Certificates
+    that Identify You</a></li>
+  <li><a href="#managing_certificates_that_identify_others">Managing
+    Certificates that Identify Others</a></li>
+  <li><a href="#managing_certificates_that_identify_websites">Managing
+    Certificates that Identify Websites</a></li>
+  <li><a href=
+    "#managing_certificates_that_identify_certificate_authorities">Managing
+    Certificates that Identify Certificate Authorities</a></li>
+</ul>
+</div>
 
-<p>Every time you send a digitally signed message, your encryption certificate is automatically included with the message. This certificate allows the message recipients to send you encrypted messages. 
+<h2 id="managing_certificates_that_identify_you">Managing Certificates that
+Identify You</h2>
 
-<p>One of the easiest ways to obtain someone else's encryption certificate is for that person to send you a digitally signed message. Certificate Manager automatically stores other people's certificates whenever they are received in this way.
+<p>When you first open the Certificate Manager, you&apos;ll notice that it has
+  several tabs across the top of its window. The first tab is called Your
+  Certificates, and it displays the certificates your browser has available
+  that identify you. Your certificates are listed under the names of the
+  organizations that issued them.</p>
 
-<p>To view all the certificates identifying other people that are available to the Certificate Manager, click the Other People's tab at the top of the Certificate Manager window. You can send encrypted messages to anyone for whom a valid certificate is listed. Certificates are listed under the names of the organizations that issued them. 
+<p>To perform an action on one or more certificates, click the entry for the
+  certificate (or Control-click to select more than one), then click the View,
+  Backup, or Delete button. Each of these buttons brings up another window that
+  allows you to perform the action. Click the Help button in any window to
+  obtain more information about using that window.</p>
 
-<p>To perform an action on one or more certificates, click the entry for the certificate (or Control-click to select more than one), then click the View or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window. 
-
-<p>For more details, see <a href="certs_help.xhtml#other_peoples_certificates">Other People&apos;s Certificates</a>.
-
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-
- 
-<p>&nbsp;</p>
-<a NAME="using_certs_sites"></a><a NAME="certificates:web_siteIDX"></a>
-<H2>Managing Certificates that Identify Web Sites</H2>
-
-<p>Some web sites use certificates to identify themselves. Such identification is required before the web site can encrypt information transferred between the site and your computer (or vice versa), so that no one can read the data while in transit. 
-
-<p>If the URL for a web site begins with <tt>https://</tt>, the web site has a certificate. If you visit such a web site and its certificate was issued by a CA that the Certificate Manager doesn't know about or doesn't trust, you will be asked whether you want to accept the web site's certificate. When you accept a new web site certificate, the Certificate Manager adds it to its list of web site certificates.
-
-<p>To view all the web site certificates available to your browser, click the Web Sites tab at the top of the Certificate Manager window. 
-
-<p>To perform an action on one or more web site certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the corresponding action. 
-
-<p>The Edit button allows you to specify whether your browser will trust the selected web site certificates in the future.
-
-<p>For more details, see <a href="certs_help.xhtml#web_site_certificates">Web Site Certificates</a>.
-
-
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-<p>&nbsp;</p>
-<a NAME="using_certs_cas"></a><a NAME="certificates:certificate_authorityIDX"></a>
-<H2>Managing Certificates that Identify Certificate Authorities</H2>
-
-<p>Like other commonly used forms of ID, a certificate is issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <a href="glossary.xhtml#certificate_authority">certificate authority (CA)</a>. A certificate that identifies a CA is called a CA certificate.
-
-<p> Certificate Manager typically has many CA certificates on file. These CA certificates permit Certificate Manager to recognize and work with certificates issued by the corresponding CAs. However, the presence of a CA certificate in this list does <i>not</i> guarantee that the certificates it issues can be trusted. You or your system administrator must make decisions about what kinds of certificates to trust depending on your security needs.  
-
-<p>To view all the CA certificates available to your browser, click the Authorities tab at the top of the Certificate Manager window. 
-
-<p>To perform an action on one or more CA certificates, click the entry for the certificate (or Control-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window.
-
-<p>The Edit button allows you to view and control the trust settings for each certificate. Trust settings for a CA certificate let you to specify which kinds of certificates issued by that CA you are willing to trust.
-
-<p>For more details, see <a href="certs_help.xhtml#authorities">Authorities</a>.
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-
-<p>&nbsp;</p>
-<hr>
-<a NAME="using_certs_devices"></a>
-<a NAME="smart_cards:managingIDX"></a>
-<a NAME="Device_Manager:usingIDX"></a>
-<a NAME="security_devices:managingIDX"></a>
-<a NAME="security_modules:managingIDX"></a>
-<a NAME="tokensSDX"></a>
-<h1>Managing Smart Cards and Other Security Devices</h1>
-
-<p>A smart card is a small device, typically about the size of a credit card, that contains a microprocessor and is capable of storing information about your identity (such as your <a href="glossary.xhtml#private_key">private keys</a> and <a href="glossary.xhtml#certificate">certificates</a>) and performing cryptographic operations. 
-
-<p>To use a smart card, you typically need to have a smart card reader (a piece of hardware) attached to your computer, as well as software on your computer that controls the reader. 
-
-<p>A smart card is just one kind of security device. A security device (sometimes called a token) is a hardware or software device that provides cryptographic services and stores information about your identity. Use the Device Manager to work with smart cards and other security devices. 
-</p>
-
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissection">
-<p>In this section:</p>
-<p><a href="#using_certs_devices_about">About Security Devices and Modules</a></p>
-<p><a href="#using_certs_devices_devices">Using Security Devices</a></p>
-<p><a href="#using_certs_devices_modules">Using Security Modules</a></p>
-<p><a href="#using_certs_devices_fips">Enable FIPS Mode</a></p>
-</td>
-</tr>
-</table>
-
-
-<p>&nbsp;</p>
-<a NAME="PKCS#11_and smart_cardsSDX"></a>
-<a NAME="PKCS_#11_and smart_cardsSDX"></a>
-<a NAME="PKCS_#11IDX"></a>
-<a NAME="using_certs_devices_about"></a><a NAME="security_modules:aboutIDX"></a>
-<a NAME="Device_Manager:aboutIDX"></a>
-<a NAME="security_devices:aboutIDX"></a>
-<h2>About Security Devices and Modules</h2>
-
-<p>The Device Manager displays a window that lists the available security devices. You can use the Device Manager to manage any security devices, including smart cards, that support the Public Key Cryptography Standard (PKCS) #11.
-
-<p>A <a href="glossary.xhtml#pkcs_11_module">PKCS #11 module</a> (sometimes called a security module) controls one or more security devices in much the same way that a software driver controls an external device such as a printer or modem. If you are installing a smart card, you must install the PKCS #11 module for the smart card on your computer as well as connecting the smart card reader.
-
-<p>By default, the Device Manager controls two internal PKCS #11 modules that manage three security devices:
+<p>The following buttons under Your Certificates don&apos;t require a
+  certificate to be selected. You use them to perform these actions:</p>
 
 <ul>
-	<li><b>Mozilla Internal PKCS #11 Module:</b> Controls two security devices:</li>
-	<ul>
-		<li><b>Generic Crypto Services:</b> A special security device that performs all cryptographic operations required by the Mozilla Internal PKCS #11 Module.
-		<li><b>Software Security Device:L</b> Stores your certificates and keys that aren't stored on external security devices, including any CA certificates that you may have installed in addition to those that come with the browser.
-	</ul>
-	<li><b>Builtin Roots Module:</b> Controls a special security device called the Builtin Object Token. This security device stores the default <a href="glossary.xhtml#ca_certificate">CA certificates</a> that come with the browser.
-
+  <li><strong>Import.</strong> Click this button if you want to import a
+    certificate that you&apos;ve previously backed up or transferred from one
+    machine to another.</li>
+  <li><strong>Backup All.</strong> Click this button to back up all your own
+    certificates stored in the
+    <a href="glossary.xhtml#software_security_device">Software Security
+    Device</a>.</li>
 </ul>
 
+<p><strong>Certificates on smart cards cannot be backed up.</strong> Whether
+  you select some of your certificates and click Backup, or click Backup All,
+  the resulting backup file will not include any certificates stored on smart
+  cards or other external security devices. You can only back up certificates
+  that are stored on the built-in Software Security Device.</p>
 
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
+<p>For more details about any of these tasks, see
+  <a href="certs_help.xhtml#your_certificates">Your Certificates</a>.</p>
 
-<p>&nbsp;</p>
-<a NAME="using_certs_devices_devices"></a>
-<h2>Using Security Devices</h2>
+<p>[<a href="#using_certificates">Return to beginning of
+section</a>]</p>
 
-<p>The Device Manager allows you to perform operations on security devices. To open the Device Manager, follow these steps: 
+<h2 id="managing_certificates_that_identify_others">Managing Certificates that
+  Identify Others</h2>
 
-<ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>In the Certificates panel, click Manage Security Devices.
-</ol>
+<p>When you compose a mail message, you can choose to attach your digital
+  signature to it. A <a href="glossary.xhtml#digital_signature">digital
+  signature</a> allows recipients of the message to verify that the message
+  really comes from you and hasn&apos;t been tampered with since you sent
+  it.</p>
 
+<p>Every time you send a digitally signed message, your encryption certificate
+  is automatically included with the message. This certificate allows the
+  message recipients to send you encrypted messages.</p>
 
-<p>The Device Manager lists each available PKCS #11 module in boldface, and the security devices managed by each module below its name. 
+<p>One of the easiest ways to obtain someone else&apos;s encryption certificate
+  is for that person to send you a digitally signed message. Certificate
+  Manager automatically stores other people&apos;s certificates whenever they
+  are received in this way.</p>
 
-<p>When you select a security device, information about it appears in the middle of the Device Manager window, and some of the buttons on the right side of the window become available. For example, if you select the Software Security Device, you can perform these actions:
+<p>To view all the certificates identifying other people that are available to
+  the Certificate Manager, click the Other People&apos;s tab at the top of the
+  Certificate Manager window. You can send encrypted messages to anyone for
+  whom a valid certificate is listed. Certificates are listed under the names
+  of the organizations that issued them.</p>
 
+<p>To perform an action on one or more certificates, click the entry for the
+  certificate (or Control-click to select more than one), then click the View
+  or Delete button. Each of these buttons brings up another window that allows
+  you to perform the action. Click the Help button in any window to obtain more
+  information about using that window.</p>
+
+<p>For more details, see
+  <a href="certs_help.xhtml#other_peoples_certificates">Other People&apos;s
+  Certificates</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h2 id="managing_certificates_that_identify_websites">Managing Certificates
+  that Identify Websites</h2>
+
+<p>Some websites use certificates to identify themselves. Such identification
+  is required before the website can encrypt information transferred between
+  the site and your computer (or vice versa), so that no one can read the data
+  while in transit.</p>
+
+<p>If the URL for a website begins with <tt>https://</tt>, the website has a
+  certificate. If you visit such a website and its certificate was issued by a
+  CA that the Certificate Manager doesn&apos;t know about or doesn&apos;t
+  trust, you will be asked whether you want to accept the website&apos;s
+  certificate. When you accept a new website certificate, the Certificate
+  Manager adds it to its list of website certificates.</p>
+
+<p>To view all the website certificates available to your browser, click the
+  Websites tab at the top of the Certificate Manager window.</p>
+
+<p>To perform an action on one or more website certificates, click the entry
+for the certificate (or Shift-click to select more than one), then click the
+View, Edit, or Delete button. Each of these buttons brings up another window
+that allows you to perform the corresponding action.</p>
+
+<p>The Edit button allows you to specify whether your browser will trust the
+selected website certificates in the future.</p>
+
+<p>For more details, see
+  <a href="certs_help.xhtml#web_site_certificates">Website
+  Certificates</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h2 id="managing_certificates_that_identify_certificate_authorities">Managing
+  Certificates that Identify Certificate Authorities</h2>
+
+<p>Like other commonly used forms of ID, a certificate is issued by an
+  organization with recognized authority to issue such identification. An
+  organization that issues certificates is called a
+  <a href="glossary.xhtml#certificate_authority">certificate authority
+  (CA)</a>. A certificate that identifies a CA is called a CA certificate.</p>
+
+<p>Certificate Manager typically has many CA certificates on file. These CA
+  certificates permit Certificate Manager to recognize and work with
+  certificates issued by the corresponding CAs. However, the presence of a CA
+  certificate in this list does <em>not</em> guarantee that the certificates it
+  issues can be trusted. You or your system administrator must make decisions
+  about what kinds of certificates to trust depending on your security
+  needs.</p>
+
+<p>To view all the CA certificates available to your browser, click the
+  Authorities tab at the top of the Certificate Manager window.</p>
+
+<p>To perform an action on one or more CA certificates, click the entry for the
+  certificate (or Control-click to select more than one), then click the View,
+  Edit, or Delete button. Each of these buttons brings up another window that
+  allows you to perform the action. Click the Help button in any window to
+  obtain more information about using that window.</p>
+
+<p>The Edit button allows you to view and control the trust settings for each
+  certificate. Trust settings for a CA certificate let you to specify which
+  kinds of certificates issued by that CA you are willing to trust.</p>
+
+<p>For more details, see
+  <a href="certs_help.xhtml#authorities">Authorities</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h1 id="managing_smart_cards_and_other_security_devices">Managing Smart Cards
+  and Other Security Devices</h1>
+
+<p>A smart card is a small device, typically about the size of a credit card,
+  that contains a microprocessor and is capable of storing information about
+  your identity (such as your <a href="glossary.xhtml#private_key">private
+  keys</a> and <a href="glossary.xhtml#certificate">certificates</a>) and
+  performing cryptographic operations.</p>
+
+<p>To use a smart card, you typically need to have a smart card reader (a piece
+  of hardware) attached to your computer, as well as software on your computer
+  that controls the reader.</p>
+
+<p>A smart card is just one kind of security device. A security device
+  (sometimes called a token) is a hardware or software device that provides
+  cryptographic services and stores information about your identity. Use the
+  Device Manager to work with smart cards and other security devices.</p>
+
+<div class="contentsBox">In this section:
 <ul>
-	<li>Click Login or Logout to log in or out of the Software Security Device. If you are logging in, you will be asked to supply the master password for the device. You must be logged into a security device before your browser software can use it to provide cryptographic services.
-	<li>Click Change Password to change the master password for the device.
-</ul> 
-
-
-<p>You can perform these actions on most security devices. However, you cannot perform them on the Builtin Object Token or Generic Crypto Services, which are special devices that must normally be available at all times. 
-
-<p>For more details, see <a href="certs_help.xhtml#device_manager">Device Manager</a>.
-
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-<p>&nbsp;</p>
-<a NAME="using_certs_devices_modules"></a>
-<h2>Using Security Modules</h2>
-
-
-<p>If you want to use a smart card or other external security device, you must first install the module software on your computer and, if necessary, connect any associated hardware. Follow the instructions that come with the hardware.
-
-<p>After a new module is installed on your computer, follow these steps to load it:
-
-<ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>In the Certificates panel, click Manage Security Devices.
-	<li>Click Load.
-	<li>In the Load PKCS #11 Module dialog box, click the Browse button, locate the module file, and click Open. 
-	<li>Fill in the Module Name field with the name of the module and click OK. 
-</ol>
-
-<p>The new module will then show up in the list of modules with the name you assigned to it. 
-
-<p>To unload a PKCS #11 module, select its name and click Unload.
-
-
-<p>&nbsp;</p>
-<a NAME="using_certs_devices_fips"></a><a NAME="FIPS_modeIDX"></a>
-<h2>Enable FIPS Mode</h2>
-
-<p>Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US government standard for implementations of cryptographic modules&mdash;that is, hardware or software that encrypts and decrypts data or performs other cryptographic operations (such as creating or verifying digital signatures). Many products sold to the US government must comply with one or more of the FIPS standards.
-
-<p>To enable FIPS mode for the browser, you use the Device Manager:
-
-<ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>In the Certificates panel, click Manage Devices.
-	<li>Click the Enable FIPS button. When FIPS is enabled, the name NSS Internal PKCS #11 Module changes to NSS Internal FIPS PKCS #11 Module and the Enable FIPS button changes to Disable FIPS. 
-</ol>
-<p>To disable FIPS-mode, click Disable FIPS.</P>
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-<p>&nbsp;</p>
-<hr>
-<a NAME="using_certs_ssl"></a>
-<h1>Managing SSL Warnings and Settings</h1>
-
-<p>The Secure Sockets Layer (SSL) protocol allows your computer to exchange information with other computers on the Internet in encrypted form&mdash;that is, the information is scrambled while in transit so that no one else can make sense of it. SSL is also used to identify computers on the Internet by means of <a href="glossary.xhtml#certificate">certificates</a>.
-
-<p>The Transport Layer Security (TLS) protocol is a new standard based on SSL. By default, the browser supports both SSL and TLS. This approach works for most people, because it guarantees that the browser will work with virtually all other existing software on the Internet that supports any version of SSL or TLS. 
-
-<p>However, in some circumstances system administrators or other knowledgeable persons may wish to adjust the SSL settings to fine-tune them for special security needs or to account for bugs in some older software products.
-
-<p>You shouldn't adjust the SSL settings for your browser unless you know what you're doing or have the assistance of someone else who does. If you do need to adjust them for some reason, follow these steps:
-
-<ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, select SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-</ol>
-
-<p>For more details, see <a href="ssl_help.xhtml">SSL Settings</a>.
-
-
-</p>
-
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
-
-<p>&nbsp;</p>
-<hr>
-<a NAME="using_certs_validation"></a>
-<a NAME="certificates:validationIDX"></a>
-<a NAME="validation,_of_certificates:aboutIDX"></a>
-
-<h1>Controlling Validation</h1>
-
-<p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may expire or become invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
-
-<p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.xhtml#public-key_cryptography">public-key cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
-
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissection">
-<p>In this section:</p>
-<p><a href="#How_Certificate_Validation_Works">How Validation Works</a></p>
-<p><a href="#Managing_CRLs">Managing CRLs</a></p>
-<p><a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a></p>
-<p><a href="#validation_help.xhtml">Validation Settings</a></p>
-</td>
-</tr>
-</table>
-<p>
-
-<p>&nbsp;</p>
-<a name="How_Certificate_Validation_Works"></a>
-<a NAME="OCSP:aboutIDX"></a>
-<a NAME="CRLs:aboutIDX"></a>
-<a NAME="validation:aboutIDX"></a>
-<h2>How Validation Works</h2>
-
-<p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
-
-<p>If the CA certificate is not itself present, the <a href="glossary.xhtml#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified is currently marked as trusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
-
-<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate may be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
-
-<p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks any certificate issued by the same CA against the list as part of the verification process. 
-
-<p>The reliability of CRLs depends on the frequency with which they are both updated by a server and checked by a client. You can configure your <a href="validation_help.xhtml#automatic_crl_update_preferences">Automatic CRL Update Preferences</a> so that a CRL will be updated automatically at regular intervals with the version currently on the server.
-
-<p>Another way to combat the threat of compromised certificates is to use a special server that supports the Online Certificate Status Protocol (OCSP). Such a server can answer client queries about individual certificates (see <a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a>, below). 
-
-<p>The server, called an OCSP responder, receives an updated CRL periodically from the CA that issues the certificates to be verified. You can configure Certificate Manager to submit a status request for a certificate to the OCSP responder, and the OCSP responder confirms whether the certificate is valid.  
-
-
-<p>&nbsp;</p>
-<a name="Managing_CRLs"></a><h2>Managing CRLs</h2>
-
-<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.xhtml#certificate_authority">certificate authority (CA)</a> might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
-</p>
-
-<p>This section describes how to import and manage CRLs. <p>For background information, see <a href="#How_Certificate_Validation_Works">How Validation Works</a>. 
-
-<p>For detailed descriptions of CRL settings that you can control, see <a href="validation_help.xhtml">Validation Settings</a>.</p>
-
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissection">
-<p>In this section:</p>
-<p><a href="#next_update">About the "Next Update" Date</a></p>
-<p><a href="#Importing_CRLs">Importing CRLs</a></p>
-<p><a href="#view_manage_CRLs">Viewing and Managing CRLs</a></p>
-</td>
-</tr>
-</table>
- 
-
-<p>&nbsp;</p>
-<a NAME="CRLs:Next_Update_dateIDX"></a>
-<a name ="next_update"></a><h3>About the "Next Update" Date</h3>
-
-<p>The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding CAs. If a certificate is listed as revoked, the browser won't accept it as evidence of identity.
-
-<p>A CA typically publishes an updated CRL at regular intervals. Every CRL includes a date, specified in the Next Update field, by which the CA will publish the next update of that CRL. In general, if the date in the Next Update field is earlier than the current date, you should obtain the most recent version of the CRL. To view CRL information and set up automatic CRL updating, see <a href="#view_manage_CRLs">Viewing and Managing CRLs</a>.
-
-<p>CAs are required to produce a new CRL by the Next Update date. However, the absence of the most recent CRL does not by itself invalidate a certificate. For this reason, if the most recent CRL is not available, a certificate may be validated even though the most recent CRL shows it as expired. Automatic CRL updating can help to avoid this situation.
-
-
-
-<p>&nbsp;</p>
-<a name="Importing_CRLs"></a><h3>Importing CRLs</h3>
-
-<p> You can import the latest CRL from a CA into your browser. To import a CRL, follow these steps:
-<ol>
-	<li>Go to the URL specified by the CA or by your system administrator and click the link for the CRL that you want to import. 
-
-	<p>The Import Status dialog box appears.	
-
-	<li>Confirm that the CRL was imported successfully and that it's the one you wanted. In most cases you should also click Yes, which enables automatic updating of the CRL you just imported.
-	<li>The next step depends on whether you click Yes or No in the Import Status dialog box:
-<ul>
-	<p><b>Yes:</b> The Automatic CRL Update Preferences dialog box appears. In this case, go on to step 4.
-
-	<p><b>No:</b> The Import Status dialog box closes. If you change your mind and decide to enable automatic updates after all, see <a href="#view_manage_CRLs">Viewing and Managing CRLs</a>.</p>
+  <li><a href="#about_security_devices_and_modules">About Security Devices and
+    Modules</a></li>
+  <li><a href="#using_security_devices">Using Security Devices</a></li>
+  <li><a href="#using_security_modules">Using Security Modules</a></li>
+  <li><a href="#enable_fips_mode">Enable FIPS Mode</a></li>
 </ul>
-	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.
-	<li>Decide how you want to schedule the automatic updates:</li>
-	<ul>
-		<li><b>Update __ days before Next Update date:</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
-		<li><b>Update every __ days:</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
-	</ul>
-	<li>Click OK to confirm your choices.
-</ol>
+</div>
 
+<h2 id="about_security_devices_and_modules">About Security Devices and
+  Modules</h2>
 
-<p>&nbsp;</p>
-<a name="view_manage_CRLs"></a><h3>Viewing and Managing CRLs</h3>
+<p>The Device Manager displays a window that lists the available security
+  devices. You can use the Device Manager to manage any security devices,
+  including smart cards, that support the Public Key Cryptography Standard
+  (PKCS) #11.</p>
 
-<p>You can view and manage CRLs available to the browser through the browser's Validation preferences:
+<p>A <a href="glossary.xhtml#pkcs_11_module">PKCS #11 module</a> (sometimes
+  called a security module) controls one or more security devices in much the
+  same way that a software driver controls an external device such as a printer
+  or modem. If you are installing a smart card, you must install the PKCS #11
+  module for the smart card on your computer as well as connecting the smart
+  card reader.</p>
+
+<p>By default, the Device Manager controls two internal PKCS #11 modules that
+  manage three security devices:</p>
+
+<ul>
+  <li><strong>&brandShortName; Internal PKCS #11 Module:</strong> Controls two
+    security devices:
+    <ul>
+      <li><strong>Generic Crypto Services:</strong> A special security device
+        that performs all cryptographic operations required by the
+	&brandShortName; Internal PKCS #11 Module.</li>
+      <li><strong>Software Security Device:L</strong> Stores your certificates
+        and keys that aren&apos;t stored on external security devices,
+	including any CA certificates that you may have installed in addition
+	to those that come with the browser.</li>
+    </ul>
+  </li>
+  <li><strong>Builtin Roots Module:</strong> Controls a special security device
+    called the Builtin Object Token. This security device stores the default
+    <a href="glossary.xhtml#ca_certificate">CA certificates</a> that come with
+    the browser.</li>
+</ul>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h2 id="using_security_devices">Using Security Devices</h2>
+
+<p>The Device Manager allows you to perform operations on security devices. To
+  open the Device Manager, follow these steps:</p>
 
 <ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click Validation. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>Click Manage CRLs in the Validation panel to see a list of the CRLs available to Certificate Manager.
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click Certificates. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+  <li>In the Certificates panel, click Manage Security Devices.</li>
 </ol>
 
-<p>To delete or update a CRL, select it and click the appropriate button.
+<p>The Device Manager lists each available PKCS #11 module in boldface, and the
+  security devices managed by each module below its name.</p>
 
-<p>To set up automatic updates for a CRL, select the CRL and click Settings. The Automatic CRL Update Preferences dialog box appears:
+<p>When you select a security device, information about it appears in the
+  middle of the Device Manager window, and some of the buttons on the right
+  side of the window become available. For example, if you select the Software
+  Security Device, you can perform these actions:</p>
+
+<ul>
+  <li>Click Login or Logout to log in or out of the Software Security Device.
+    If you are logging in, you will be asked to supply the master password for
+    the device. You must be logged into a security device before your browser
+    software can use it to provide cryptographic services.</li>
+  <li>Click Change Password to change the master password for the device.</li>
+</ul>
+
+<p>You can perform these actions on most security devices. However, you cannot
+  perform them on the Builtin Object Token or Generic Crypto Services, which
+  are special devices that must normally be available at all times.</p>
+
+<p>For more details, see <a href="certs_help.xhtml#device_manager">Device
+  Manager</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h2 id="using_security_modules">Using Security Modules</h2>
+
+<p>If you want to use a smart card or other external security device, you must
+  first install the module software on your computer and, if necessary, connect
+  any associated hardware. Follow the instructions that come with the
+  hardware.</p>
+
+<p>After a new module is installed on your computer, follow these steps to load
+  it:</p>
+
 <ol>
-	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.</li>
-	<li>Decide how you want to schedule the automatic updates:</li>
-	<ul>
-		<li><b>Update __ days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
-		<li><b>Update every __ days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.</li>
-	</ul>
-	<li>Click OK to confirm your choices.</li>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click Certificates. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+  <li>In the Certificates panel, click Manage Security Devices.</li>
+  <li>Click Load.</li>
+  <li>In the Load PKCS #11 Module dialog box, click the Browse button, locate
+    the module file, and click Open.</li>
+  <li>Fill in the Module Name field with the name of the module and click
+    OK.</li>
 </ol>
 
+<p>The new module will then show up in the list of modules with the name you
+  assigned to it.</p>
 
-<p>&nbsp;</p>
-<a name="Configuring_Certificate_Manager_for_OCSP"></a><h2>Configuring OCSP</h2>
+<p>To unload a PKCS #11 module, select its name and click Unload.</p>
 
+<h2 id="enable_fips_mode">Enable FIPS Mode</h2>
 
-<p>The settings that control OCSP are part of Validation preferences. To view Validation preferences, follow these steps:
+<p>Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a
+  US government standard for implementations of cryptographic
+  modules&mdash;that is, hardware or software that encrypts and decrypts data
+  or performs other cryptographic operations (such as creating or verifying
+  digital signatures). Many products sold to the US government must comply with
+  one or more of the FIPS standards.</p>
+
+<p>To enable FIPS mode for the browser, you use the Device Manager:</p>
 
 <ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click Validation. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click Certificates. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+  <li>In the Certificates panel, click Manage Devices.</li>
+  <li>Click the Enable FIPS button. When FIPS is enabled, the name NSS Internal
+    PKCS #11 Module changes to NSS Internal FIPS PKCS #11 Module and the Enable
+    FIPS button changes to Disable FIPS.</li>
 </ol>
 
-<p>For information about the OCSP options available, see <a href="validation_help.xhtml#ocsp">OCSP</a>.
+<p>To disable FIPS-mode, click Disable FIPS.</p>
 
-<p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
-</p>
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
 
+<h1 id="managing_ssl_warnings_and_settings">Managing SSL Warnings and
+Settings</h1>
+
+<p>The Secure Sockets Layer (SSL) protocol allows your computer to exchange
+  information with other computers on the Internet in encrypted form&mdash;that
+  is, the information is scrambled while in transit so that no one else can
+  make sense of it. SSL is also used to identify computers on the Internet by
+  means of <a href="glossary.xhtml#certificate">certificates</a>.</p>
+
+<p>The Transport Layer Security (TLS) protocol is a new standard based on SSL.
+  By default, the browser supports both SSL and TLS. This approach works for
+  most people, because it guarantees that the browser will work with virtually
+  all other existing software on the Internet that supports any version of SSL
+  or TLS.</p>
+
+<p>However, in some circumstances system administrators or other knowledgeable
+  persons may wish to adjust the SSL settings to fine-tune them for special
+  security needs or to account for bugs in some older software products.</p>
+
+<p>You shouldn&apos;t adjust the SSL settings for your browser unless you know
+  what you&apos;re doing or have the assistance of someone else who does. If
+  you do need to adjust them for some reason, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, select SSL. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+</ol>
+
+<p>For more details, see <a href="ssl_help.xhtml">SSL Settings</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<h1 id="controlling_validation">Controlling Validation</h1>
+
+<p>As discussed above under <a href="#using_certs_get">Get Your Own
+  Certificate</a>, a certificate is a form of identification, much like a
+  driver&apos;s license, that you can use to identify yourself over the
+  Internet and other networks. However, also like a driver&apos;s license, a
+  certificate may expire or become invalid for some other reason. Therefore,
+  your browser software needs to confirm the validity of any given certificate
+  in some way before trusting it for identification purposes.</p>
+
+<p>This section describes how Certificate Manager validates certificates and
+  how to control that process. To understand the process, you should have some
+  familiarity with <a href="glossary.xhtml#public-key_cryptography">public-key
+  cryptography</a>. If you are not familiar with the use of certificates, you
+  should check with your system administrator before attempting to change any
+  of your browser&apos;s certificate validation settings.</p>
+
+<div class="contentsBox">In this section:
+<ul>
+  <li><a href="#how_validation_works">How Validation Works</a></li>
+  <li><a href="#managing_crls">Managing CRLs</a></li>
+  <li><a href="#configuring_ocsp">Configuring OCSP</a></li>
+  <li><a href="validation_help.xhtml">Validation Settings</a></li>
+</ul>
+</div>
+
+<h2 id="how_validation_works">How Validation Works</h2>
+
+<p>Whenever you use or view a certificate stored by Certificate Manager, it
+  takes several steps to verify the certificate. At a minimum, it confirms that
+  the CA&apos;s digital signature on the certificate was created by a CA whose
+  own certificate is (1) present in the Certificate Manager&apos;s list of
+  available CA certificates and (2) marked as trusted for issuing the kind of
+  certificate being verified.</p>
+
+<p>If the CA certificate is not itself present, the
+  <a href="glossary.xhtml#certificate_chain">certificate chain</a> for the CA
+  certificate must include a higher-level CA certificate that is present and
+  correctly trusted. Certificate Manager also confirms that the certificate
+  being verified is currently marked as trusted in the certificate store. If
+  any one of these checks fails, Certificate Manager marks the certificate as
+  unverified and won&apos;t recognize the identity it certifies.</p>
+
+<p>A certificate can pass all these tests and still be compromised in some way;
+  for example, the certificate may be revoked because an unauthorized person
+  has gained access to the certificate&apos;s private key. A compromised
+  certificate can allow an unauthorized person (or website) to pretend to be
+  the certificate owner.</p>
+
+<p>One way to combat this threat is for Certificate Manager to check a
+  certificate revocation list (CRL) as part of the verification process (see
+  <a href="#managing_crls">Managing CRLs</a>, below). Typically, you download a
+  CRL to your browser by clicking a link. If a CRL is present, Certificate
+  Manager checks any certificate issued by the same CA against the list as part
+  of the verification process.</p>
+
+<p>The reliability of CRLs depends on the frequency with which they are both
+  updated by a server and checked by a client. You can configure your
+  <a href="validation_help.xhtml#automatic_crl_update_preferences">Automatic
+  CRL Update Preferences</a> so that a CRL will be updated automatically at
+  regular intervals with the version currently on the server.</p>
+
+<p>Another way to combat the threat of compromised certificates is to use a
+  special server that supports the Online Certificate Status Protocol (OCSP).
+  Such a server can answer client queries about individual certificates (see
+  <a href="#configuring_ocsp">Configuring OCSP</a>, below).</p>
+
+<p>The server, called an OCSP responder, receives an updated CRL periodically
+  from the CA that issues the certificates to be verified. You can configure
+  Certificate Manager to submit a status request for a certificate to the OCSP
+  responder, and the OCSP responder confirms whether the certificate is
+  valid.</p>
+
+<h2 id="managing_crls">Managing CRLs</h2>
+
+<p>A certificate revocation list (CRL) is list of revoked certificates. A
+  <a href="glossary.xhtml#certificate_authority">certificate authority (CA)</a>
+  might revoke a certificate, for example, if it has been compromised in some
+  way&mdash;much the way a credit card company might revoke your credit card if
+  you report that it&apos;s been stolen.</p>
+
+<p>This section describes how to import and manage CRLs.</p>
+
+<p>For background information, see
+  <a href="#how_validation_works">How Validation Works</a>.</p>
+
+<p>For detailed descriptions of CRL settings that you can control, see
+  <a href="validation_help.xhtml">Validation Settings</a>.</p>
+
+<div class="contentsBox">In this section:
+<ul>
+  <li><a href="#about_the_next_update_date">About the &quot;Next Update&quot;
+    Date</a></li>
+  <li><a href="#importing_crls">Importing CRLs</a></li>
+  <li><a href="#viewing_and_managing_crls">Viewing and Managing CRLs</a></li>
+</ul>
+</div>
+
+<h3 id="about_the_next_update_date">About the &quot;Next Update&quot; Date</h3>
+
+<p>The browser uses the CRLs it has available to check the validity of
+  certificates issued by the corresponding CAs. If a certificate is listed as
+  revoked, the browser won&apos;t accept it as evidence of identity.</p>
+
+<p>A CA typically publishes an updated CRL at regular intervals. Every CRL
+  includes a date, specified in the Next Update field, by which the CA will
+  publish the next update of that CRL. In general, if the date in the Next
+  Update field is earlier than the current date, you should obtain the most
+  recent version of the CRL. To view CRL information and set up automatic CRL
+  updating, see <a href="#viewing_and_managing_crls">Viewing and Managing
+  CRLs</a>.</p>
+
+<p>CAs are required to produce a new CRL by the Next Update date. However, the
+  absence of the most recent CRL does not by itself invalidate a certificate.
+  For this reason, if the most recent CRL is not available, a certificate may
+  be validated even though the most recent CRL shows it as expired. Automatic
+  CRL updating can help to avoid this situation.</p>
+
+<h3 id="importing_crls">Importing CRLs</h3>
+
+<p>You can import the latest CRL from a CA into your browser. To import a CRL,
+  follow these steps:</p>
+
+<ol>
+  <li>Go to the URL specified by the CA or by your system administrator and
+    click the link for the CRL that you want to import.
+    
+    <p>The Import Status dialog box appears.</p>
+
+  </li>
+  <li>Confirm that the CRL was imported successfully and that it&apos;s the one
+    you wanted. In most cases you should also click Yes, which enables
+    automatic updating of the CRL you just imported.</li>
+  <li>The next step depends on whether you click Yes or No in the Import Status
+    dialog box: 
+    <ul>
+      <li><strong>Yes:</strong> The Automatic CRL Update Preferences dialog box
+        appears. In this case, go on to step 4.</li>
+      <li><strong>No:</strong> The Import Status dialog box closes. If you
+        change your mind and decide to enable automatic updates after all, see
+	<a href="#viewing_and_managing_crls">Viewing and Managing
+	CRLs</a>.</li>
+    </ul>
+  </li>
+  <li>Select the option labeled &quot;Enable Automatic Update for this
+    CRL&quot;.</li>
+  <li>Decide how you want to schedule the automatic updates:
+    <ul>
+      <li><strong>Update __ days before Next Update date:</strong> Select this
+        option if you want to base the update frequency on the frequency with
+	which the CRL publisher publishes a new version of the CRL.</li>
+      <li><strong>Update every __ days:</strong> Select this option if you want
+        to specify an update interval unrelated to the CRL&apos;s Next Update
+	date.</li>
+    </ul>
+  </li>
+  <li>Click OK to confirm your choices.</li>
+</ol>
+
+<h3 id="viewing_and_managing_crls">Viewing and Managing CRLs</h3>
+
+<p>You can view and manage CRLs available to the browser through the
+  browser&apos;s Validation preferences:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click Validation. (If no
+  subcategories are visible, double-click Privacy &amp; Security to expand the
+  list.)</li>
+  <li>Click Manage CRLs in the Validation panel to see a list of the CRLs
+    available to Certificate Manager.</li>
+</ol>
+
+<p>To delete or update a CRL, select it and click the appropriate button.</p>
+
+<p>To set up automatic updates for a CRL, select the CRL and click Settings.
+  The Automatic CRL Update Preferences dialog box appears:</p>
+
+<ol>
+  <li>Select the option labeled &quot;Enable Automatic Update for this
+    CRL&quot;.</li>
+  <li>Decide how you want to schedule the automatic updates:
+    <ul>
+      <li><strong>Update __ days before Next Update date.</strong> Select this
+        option if you want to base the update frequency on the frequency with
+	which the CRL publisher publishes a new version of the CRL.</li>
+      <li><strong>Update every __ days.</strong> Select this option if you want
+        to specify an update interval unrelated to the CRL&apos;s Next Update
+	date.</li>
+    </ul>
+  </li>
+  <li>Click OK to confirm your choices.</li>
+</ol>
+
+<h2 id="configuring_ocsp">Configuring OCSP</h2>
+
+<p>The settings that control OCSP are part of Validation preferences. To view
+  Validation preferences, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click Validation. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+</ol>
+
+<p>For information about the OCSP options available, see
+  <a href="validation_help.xhtml#ocsp">OCSP</a>.</p>
+
+<p>[<a href="#using_certificates">Return to beginning of section</a>]</p>
+
+<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
 </body>
 </html>
-
-
-
