@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsISupports.h"
+#include "nsISupports.idl"
 
 [object, uid(791eafa0-b9e6-11d1-8031-006008159b5a)]
 interface nsISupportsArray : nsISupports {
