@@ -965,6 +965,12 @@ nsExtensionInstaller.prototype = {
     zipReader.init(sourceXPI);
     zipReader.open();
 
+    var manifestFile = getFile(this._extDirKey, [DIR_EXTENSIONS,
+                                                 this._extensionID,
+                                                 FILE_CHROMEREG_MANIFEST]);
+    if (manifestFile.exists())
+      manifestFile.remove(false);
+
     var entries = zipReader.findEntries("*");
     while (entries.hasMoreElements()) {
       var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
@@ -1011,15 +1017,22 @@ nsExtensionInstaller.prototype = {
   
   _registerChromeForExtension: function nsExtensionInstaller__registerChromeForExtension ()
   {
+    var manifestFile = getFile(this._extDirKey, [DIR_EXTENSIONS,
+                                                 this._extensionID,
+                                                 FILE_CHROMEREG_MANIFEST]);
+
+    // If the extension is aware of the new flat chrome manifests and included
+    // one, just use it instead of generating one from the
+    // install.rdf/contents.rdf data.
+    if (manifestFile.exists())
+      return;
+
     try {
       // Enumerate the metadata datasource files collection and register chrome
       // for each file, calling _registerChrome for each.
       var chromeDir = getDir(this._extDirKey, 
                              [DIR_EXTENSIONS, this._extensionID, DIR_CHROME]);
     
-      var manifestFile = getDirNoCreate(this._extDirKey, [DIR_EXTENSIONS,
-                                                          this._extensionID,
-                                                          FILE_CHROMEREG_MANIFEST]);
 
       // even if an extension doesn't have any chrome, we still want an empty
       // manifest file so that we don't try to upgrade from the "old-style"
