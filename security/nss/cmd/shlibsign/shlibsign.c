@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.5 2003/02/07 23:21:53 wtc%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.6 2003/02/07 23:41:15 wtc%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -132,7 +132,7 @@ writeItem(PRFileDesc *fd, SECItem *item, char *file)
 int
 main (int argc, char **argv)
 {
-    int		 retval = 0;  /* 0 - test succeeded.  -1 - test failed */
+    int		 retval = 1;  /* 0 - test succeeded.  1 - test failed */
     SECStatus	 rv;
     PLOptState	*optstate;
     char	*program_name;
@@ -170,7 +170,7 @@ main (int argc, char **argv)
     optstate = PL_CreateOptState (argc, argv, "d:i:o:v");
     if (optstate == NULL) {
 	SECU_PrintError (program_name, "PL_CreateOptState failed");
-	return -1;
+	return 1;
     }
 
     while (PL_GetNextOpt (optstate) == PL_OPT_OK) {
@@ -178,11 +178,11 @@ main (int argc, char **argv)
 #ifdef notdef
 	  case '?':
 	    short_usage (program_name);
-	    return retval;
+	    return 0;
 
 	  case 'H':
 	    long_usage (program_name);
-	    return retval;
+	    return 0;
 #endif
 
 	  case 'd':
@@ -205,7 +205,7 @@ main (int argc, char **argv)
 
     if (input_file == NULL) {
 	usage(program_name);
-	return -1;
+	return 1;
     }
 
     /*
@@ -219,7 +219,6 @@ main (int argc, char **argv)
     }
     if (rv != SECSuccess) {
 	lperror("NSS_Init failed");
-	retval = -1;
 	goto prdone;
     }
     
@@ -387,14 +386,16 @@ main (int argc, char **argv)
 
 #ifdef USES_LINKS
     if (link_file) {
+	(void)unlink(link_file);
 	ret = symlink(output_file, link_file);
 	if (ret < 0) {
-	   perror(output_file);
+	   perror(link_file);
 	   goto loser;
 	}
     }
 #endif
 
+    retval = 0;
 
 loser:
     NSS_Shutdown();
