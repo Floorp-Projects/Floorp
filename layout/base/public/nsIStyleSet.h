@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #ifndef nsStyleSet_h___
 #define nsStyleSet_h___
@@ -81,6 +82,8 @@ public:
   virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
   
   virtual nsresult GetRuleTree(nsIRuleNode** aResult) = 0;
+
+  virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument) = 0;
 
   // ClearCachedStyleData is used to invalidate portions of both the style context tree
   // and rule tree without destroying the actual nodes in the two trees.  |aRule| provides
