@@ -38,7 +38,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.7 $
+ *  npupp.h $Revision: 3.8 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1161,6 +1161,61 @@ typedef NPError (* NP_LOADDS NPP_MainEntryUPP)(NPNetscapeFuncs*, NPPluginFuncs*,
 		((NPP_MainEntryUPP) (FUNC))
 #define CallNPP_MainEntryProc(FUNC,  netscapeFunc, pluginFunc, shutdownUPP)		\
 		(*(FUNC))((netscapeFunc), (pluginFunc), (shutdownUPP))
+
+#endif
+
+
+/*
+ * Mac version(s) of NP_GetMIMEDescription(const char *)
+ * These can be called to retreive MIME information from the plugin dynamically
+ *
+ * Note: For compatibility with Quicktime, BPSupportedMIMEtypes is another way
+ *       to get mime info from the plugin only on OSX and may not be supported 
+ *       in furture version--use NP_GetMIMEDescription instead
+ */
+
+enum
+{
+ kBPSupportedMIMETypesStructVers_1    = 1
+};
+
+typedef struct _BPSupportedMIMETypes
+{
+ SInt32    structVersion;      // struct version
+ Handle    typeStrings;        // STR# formated handle, allocated by plug-in
+ Handle    infoStrings;        // STR# formated handle, allocated by plug-in
+} BPSupportedMIMETypes;
+OSErr BP_GetSupportedMIMETypes(BPSupportedMIMETypes *mimeInfo, UInt32 flags);
+
+#if _NPUPP_USE_UPP_
+
+#define NP_GETMIMEDESCRIPTION_NAME "NP_GetSupportedMIMETypesRD"
+typedef UniversalProcPtr NP_GetMIMEDescriptionUPP;
+enum {
+	uppNP_GetMIMEDescEntryProc = kThinkCStackBased
+		| RESULT_SIZE(SIZE_CODE(sizeof(const char *)))
+};
+#define NewNP_GetMIMEDescEntryProc(FUNC)		\
+		(NP_GetMIMEDescriptionUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNP_GetMIMEDescEntryProc, GetCurrentArchitecture())
+#define CallNP_GetMIMEDescEntryProc(FUNC)		\
+		(const char *)CallUniversalProc((UniversalProcPtr)(FUNC), (ProcInfoType)uppNP_GetMIMEDescEntryProc)
+
+
+#else  // !_NPUPP_USE_UPP_
+
+ // NP_GetMIMEDescription
+#define NP_GETMIMEDESCRIPTION_NAME "NP_GetSupportedMIMETypes"
+typedef const char* (* NP_LOADDS NP_GetMIMEDescriptionUPP)();
+#define NewNP_GetMIMEDescEntryProc(FUNC)		\
+		((NP_GetMIMEDescriptionUPP) (FUNC))
+#define CallNP_GetMIMEDescEntryProc(FUNC)		\
+		(*(FUNC))()
+// BP_GetSupportedMIMETypes
+typedef OSErr (* NP_LOADDS BP_GetSupportedMIMETypesUPP)(BPSupportedMIMETypes*, UInt32);
+#define NewBP_GetSupportedMIMETypesEntryProc(FUNC)		\
+		((BP_GetSupportedMIMETypesUPP) (FUNC))
+#define CallBP_GetMIMEDescEntryProc(FUNC,  mimeInfo, flags)		\
+		(*(FUNC))((mimeInfo), (flags))
 
 #endif
 #endif /* MAC */
