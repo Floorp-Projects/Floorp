@@ -137,49 +137,49 @@
                    label="&view.header.name.label;"
                    class="sortDirectionIndicator" width="3*" flex="3"
                    resource="http://home.netscape.com/NC-rdf#Name"
-                   persist="width sortActive sortDirection"/>
+                   persist="width sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="Progress" type="progressmeter"
                    label="&view.header.progress.label;"
                    class="sortDirectionIndicator" width="3*" flex="3"
                    resource="http://home.netscape.com/NC-rdf#ProgressPercent"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="ProgressPercent" hidden="true"
                    label="&view.header.progresstext.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    resource="http://home.netscape.com/NC-rdf#ProgressPercent"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeRemaining"
                    label="&view.header.timeremaining.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    resource="http://home.netscape.com/NC-rdf#TimeRemaining"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="Transferred"
                    label="&view.header.transferred.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    resource="http://home.netscape.com/NC-rdf#Transferred"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="TransferRate"
                    label="&view.header.transferrate.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    resource="http://home.netscape.com/NC-rdf#TransferRate"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeElapsed" hidden="true"
                    label="&view.header.timeelapsed.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    resource="http://home.netscape.com/NC-rdf#TimeElapsed"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="Source" hidden="true"
                    label="&view.header.source.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    resource="http://home.netscape.com/NC-rdf#URL"
-                   persist="width hidden sortActive sortDirection"/>
+                   persist="width hidden sortActive sortDirection ordinal"/>
     </treecols>
     <template>
       <rule>
