@@ -57,8 +57,8 @@ public:
   //--------------------------------------------------------------------
   // Interface nsICharsetConverterInfo [declaration]
 
-  NS_IMETHOD GetCharsetSrc(nsString ** aCharset);
-  NS_IMETHOD GetCharsetDest(nsString ** aCharset);
+  NS_IMETHOD GetCharsetSrc(char ** aCharset);
+  NS_IMETHOD GetCharsetDest(char ** aCharset);
 };
 
 

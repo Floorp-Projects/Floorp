@@ -21,5 +21,6 @@
  
 #include "nsConverterCID.h"
 #include "nsUCVJACID.h"
+#include "nsUCvLatinCID.h"
 
 #endif /* __REGISTRYHACK1_H__ */

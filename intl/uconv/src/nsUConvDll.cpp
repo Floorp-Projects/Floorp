@@ -19,11 +19,7 @@
 
 #include "nsRepository.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsCharsetConverterManager.h"
-#include "nsAscii2Unicode.h"
-#include "nsConverterCID.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -59,32 +55,12 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID,
     return res;
   }
 
-
-  // the Ascii2Unicode converter
-  if (aCID.Equals(kAscii2UnicodeCID)) {
-    nsAscii2UnicodeFactory *factory = new nsAscii2UnicodeFactory();
-    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
-
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
-    }
-
-    return res;
-  }
-
   return NS_NOINTERFACE;
 }
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 {
   nsresult res;
-
-  if (NS_FAILED(res)) return res;
-
-  res = nsRepository::RegisterFactory(kAscii2UnicodeCID, path, 
-      PR_TRUE, PR_TRUE);
-  if (NS_FAILED(res)) return res;
 
   res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, path, 
       PR_TRUE, PR_TRUE);
@@ -94,9 +70,6 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
 {
   nsresult res;
-
-  res = nsRepository::UnregisterFactory(kAscii2UnicodeCID, path);
-  if (NS_FAILED(res)) return res;
 
   res = nsRepository::UnregisterFactory(kCharsetConverterManagerCID, path);
   return res;

@@ -17,11 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-  mDecSize           = 2;
+  mDecSize           = 4;
   mDecArray          = new ConverterInfo [mDecSize];
 
-  mDecArray[0].mCID  = &kAscii2UnicodeCID;
+  mDecArray[0].mCID  = &kLatin1ToUnicodeCID;
   mDecArray[1].mCID  = &kSJIS2UnicodeCID;
+  mDecArray[2].mCID  = &kISO88597ToUnicodeCID;
+  mDecArray[3].mCID  = &kCP1253ToUnicodeCID;
 
   mEncSize           = 0;
   mEncArray          = NULL;

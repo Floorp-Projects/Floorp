@@ -18,6 +18,7 @@
 DEPTH=..\..
 
 DIRS=public src  \
+     ucvlatin \
      ucvja \
      tests
 

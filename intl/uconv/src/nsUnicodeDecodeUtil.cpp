@@ -40,32 +40,35 @@ nsUnicodeDecodeUtil::~nsUnicodeDecodeUtil()
 }
 
 #ifdef NO_OPTIMIZATION_FOR_1TABLE
-NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertBy1Table(
-    PRUnichar  *aDest,
-    PRInt32   aDestOffset,
-    PRInt32   *aDestLength,
-    const char *aSrc,
-    PRInt32   aSrcOffset,
-    PRInt32   *aSrcLength,
-    uShiftTable *aShiftTable,
-    uMappingTable   *aMappingTable
+NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
+    PRUnichar      *aDest,
+    PRInt32         aDestOffset,
+    PRInt32        *aDestLength,
+    const char     *aSrc,
+    PRInt32         aSrcOffset,
+    PRInt32        *aSrcLength,
+    PRInt32         aBehavior,
+    uShiftTable    *aShiftTable,
+    uMappingTable  *aMappingTable
 )
 {
    uRange range = {0x00, 0xff};
-   return ConvertByNTable(aDest, aDestOffset, aDestLength, aSrc, aSrcOffset, aSrcLength,
-	   1, &range,
-	   aShiftTable, aMappingTable);
+   return Convert(aDest, aDestOffset, aDestLength, 
+                  aSrc, aSrcOffset, aSrcLength,
+	          aBehavior, 1, &range,
+	          aShiftTable, aMappingTable);
 }
 #else
-NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertBy1Table(
-    PRUnichar  *aDest,
-    PRInt32   aDestOffset,
-    PRInt32   *aDestLength,
-    const char *aSrc,
-    PRInt32   aSrcOffset,
-    PRInt32   *aSrcLength,
-    uShiftTable *aShiftTable,
-    uMappingTable   *aMappingTable
+NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
+    PRUnichar      *aDest,
+    PRInt32         aDestOffset,
+    PRInt32        *aDestLength,
+    const char     *aSrc,
+    PRInt32         aSrcOffset,
+    PRInt32        *aSrcLength,
+    PRInt32         aBehavior,
+    uShiftTable    *aShiftTable,
+    uMappingTable  *aMappingTable
 )
 {
   PRUint32 ubuflen = *aDestLength;
@@ -83,18 +86,20 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertBy1Table(
       if(uScan(aShiftTable,	(PRInt32*) 0, src, &med, srclen, &scanlen))	{
           uMapCode((uTable*) aMappingTable,med, dest);
           if(*dest == NOMAPPING) {
-            //------
-            //    Fallback handling  - need to change
-            //------
-			// ERROR_ILLEGAL_INPUT
+            if(nsIUnicodeDecoder::kOnError_Signal == aBehavior)
+            {
+              *aSrcLength -= srclen;
+              *aDestLength = validlen;
+              return NS_ERROR_ILLEGAL_INPUT;
+            }
             if(scanlen == 0)
               scanlen = 1;
       	  }
       }	else {
-		  *aSrcLength -= srclen;
+          *aSrcLength -= srclen;
           *aDestLength = validlen;
-		  return NS_PARTIAL_MORE_INPUT;
-	  }
+          return NS_PARTIAL_MORE_INPUT;
+      }
   }
   *aSrcLength -= srclen;
   *aDestLength = validlen;
@@ -105,17 +110,18 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertBy1Table(
 }
 #endif
 
-NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertByNTable(
-    PRUnichar  *aDest,
-    PRInt32   aDestOffset,
-    PRInt32   *aDestLength,
-    const char *aSrc,
-    PRInt32   aSrcOffset,
-    PRInt32   *aSrcLength,
-    PRUint16   numberOfTable,
-    uRange     *aRangeArray,
-    uShiftTable *aShiftTableArray,
-    uMappingTable   *aMappingTableArray
+NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
+    PRUnichar      *aDest,
+    PRInt32         aDestOffset,
+    PRInt32        *aDestLength,
+    const char     *aSrc,
+    PRInt32         aSrcOffset,
+    PRInt32        *aSrcLength,
+    PRInt32         aBehavior,
+    PRUint16        numberOfTable,
+    uRange         *aRangeArray,
+    uShiftTable    *aShiftTableArray,
+    uMappingTable  *aMappingTableArray
 )
 {
   PRUint32 ubuflen = *aDestLength;
@@ -147,13 +153,15 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertByNTable(
         }
       }
       if(i == numberOfTable) {
-        //------
-        //    Fallback handling  - need to change
-        //------
-		// ERROR_ILLEGAL_INPUT
-        if(scanlen == 0)
-          scanlen = 1;
-        *dest= NOMAPPING;
+         if(nsIUnicodeDecoder::kOnError_Signal == aBehavior)
+         {
+           *aSrcLength -= srclen;
+           *aDestLength = validlen;
+           return NS_ERROR_ILLEGAL_INPUT;
+         }
+         if(scanlen == 0)
+            scanlen = 1;
+         *dest= NOMAPPING;
       }
   }
   *aSrcLength -= srclen;
@@ -164,3 +172,54 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::ConvertByNTable(
     return NS_OK;
 }
 
+
+NS_IMETHODIMP nsUnicodeDecodeUtil::Init1ByteFastTable(
+   uMappingTable   *aMappingTable,
+   PRUnichar       *aFastTable
+)
+{
+   static PRInt16 g1ByteShiftTable[] = {
+           0, u1ByteCharset, 
+           ShiftCell(0, 0,0,0,0,0,0,0),
+   };
+   static char dmy[256];
+   static PRBool init=PR_FALSE;
+   if(! init)
+   {
+      for(int i= 0;i < 256; i++)
+         dmy[i] = (char) dmy;
+      init = PR_TRUE;
+   }
+   PRInt32 dm1 = 256;
+   PRInt32 dm2 = 256;
+   return Convert(aFastTable, 0, &dm1, dmy, 0, &dm2,  
+                  nsIUnicodeDecoder::kOnError_Recover,
+                  (uShiftTable*) &g1ByteShiftTable, aMappingTable);
+}
+
+NS_IMETHODIMP nsUnicodeDecodeUtil::Convert(
+   PRUnichar       *aDest,
+   PRInt32          aDestOffset,
+   PRInt32         *aDestLength,
+   const char      *aSrc,
+   PRInt32          aSrcOffset,
+   PRInt32         *aSrcLength,
+   const PRUnichar *aFastTable
+)
+{
+   PRUnichar *pD = aDest + aDestOffset;
+   unsigned char *pS = (unsigned char*) (aSrc + aSrcOffset);	
+   PRInt32 srclen = *aSrcLength;
+   PRInt32 destlen = *aDestLength;
+
+   for( ; ((srclen > 0) && ( destlen > 0)); srclen--, destlen--)
+     *pD++ = aFastTable[*pS++];
+
+   *aSrcLength -= srclen;
+   *aDestLength -= destlen;
+
+   if(srclen > 0)
+	return NS_PARTIAL_MORE_OUTPUT;
+   else 
+        return NS_OK;
+}

@@ -72,6 +72,7 @@ struct ConverterInfo
  * XXX What happens in a multithreaded environment?!
  * XXX Make this a service; use the service manager; etc.
  * XXX Have a clear and consistent extensibility model.
+ * XXX Charset names are case-insensitive!
  * 
  * @created         17/Nov/1998
  * @author  Catalin Rotaru [CATA]
@@ -209,8 +210,7 @@ nsresult nsCharsetConverterManager::CreateMapping()
 // slots.
 nsresult nsCharsetConverterManager::CreateConvertersList()
 {
-
-#include "registryhack2.h"
+  #include "registryhack2.h"
 
   return NS_OK;
 }
@@ -225,7 +225,9 @@ nsresult nsCharsetConverterManager::GatherConvertersInfo()
     info = GetICharsetConverterInfo(mEncArray, i, &mEncSize);
     if (info == NULL) continue;
 
-    info->GetCharsetDest(&str);
+    char *charset;
+    info->GetCharsetDest(&charset);
+    str = new nsString(charset);
     GetCharsetName(str,&mEncArray[i].mCharset);
     delete str;
 
@@ -236,7 +238,9 @@ nsresult nsCharsetConverterManager::GatherConvertersInfo()
     info = GetICharsetConverterInfo(mDecArray, i, &mDecSize);
     if (info == NULL) continue;
 
-    info->GetCharsetSrc(&str);
+    char *charset;
+    info->GetCharsetSrc(&charset);
+    str = new nsString(charset);
     GetCharsetName(str,&mDecArray[i].mCharset);
     delete str;
 
