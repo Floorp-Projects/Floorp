@@ -18,4 +18,9 @@
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+
+  <!-- Version Information.  State that we work only with major version of this
+       package. -->
+  <RDF:Description about="urn:mozilla:locale:US:messenger-region"
+	chrome:localeVersion="0.9.3"/>
 </RDF:RDF>

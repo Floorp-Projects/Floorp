@@ -10,7 +10,8 @@
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:editor-region"
         chrome:author="mozilla.org"
-        chrome:name="editor-region">
+        chrome:name="editor-region"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 
 </RDF:RDF>

@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:content-packs"
         chrome:displayName="Content Pack Switching"
         chrome:author="mozilla.org"
-        chrome:name="content-packs">
+        chrome:name="content-packs"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 
   <!-- overlay information -->

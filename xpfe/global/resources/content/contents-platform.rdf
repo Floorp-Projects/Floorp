@@ -11,6 +11,7 @@
   <RDF:Description about="urn:mozilla:package:global-platform"
         chrome:displayName="Platform Specific"
         chrome:author="mozilla.org"
-        chrome:name="global-platform">
+        chrome:name="global-platform"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 </RDF:RDF>

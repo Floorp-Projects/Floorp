@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:wallet"
         chrome:displayName="Form Manager"
         chrome:author="mozilla.org"
-        chrome:name="wallet">
+        chrome:name="wallet"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 
   <!-- overlay information -->

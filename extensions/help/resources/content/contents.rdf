@@ -9,7 +9,8 @@
   <RDF:Description about="urn:mozilla:package:help"
         chrome:displayName="Mozilla Help Viewer"
         chrome:author="netscape.com"
-        chrome:name="help">
+        chrome:name="help"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description> 
 
   <!-- Declare overlay points used in this package -->
