@@ -30,6 +30,7 @@ nsMsgAccount.h
 nsMsgAccountManager.h
 nsMsgRDFDataSource.h
 nsMsgBiffManager.h
+nsMsgPurgeService.h
 nsCopyMessageStreamListener.h
 nsMsgCopyService.h
 nsMsgStatusFeedback.h

@@ -419,4 +419,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   attribute nsIDBFolderInfo dBTransferInfo;
 
+  string getStringProperty(in string propertyName);
+  void setStringProperty(in string propertyName, in string propertyValue);
+
 };

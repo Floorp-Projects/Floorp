@@ -1816,6 +1816,13 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
+  nsXPIDLCString junkFolderURI;  
+  mSpamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
+  nsCOMPtr<nsIMsgFolder> junkFolder;
+  rv = GetExistingFolder(junkFolderURI.get(), getter_AddRefs(junkFolder));
+  if (NS_SUCCEEDED(rv) && junkFolder)  //remove the MSG_FOLDER_FLAG_JUNK on old junk folder
+    junkFolder->SetFlag(~MSG_FOLDER_FLAG_JUNK);
+
   rv = mSpamSettings->Clone(aSpamSettings);
   NS_ENSURE_SUCCESS(rv,rv);
   
@@ -1849,6 +1856,13 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = SetCharValue("spamActionTargetFolder", spamActionTargetFolder.get());
   NS_ENSURE_SUCCESS(rv,rv);
+
+  junkFolder = nsnull; 
+  junkFolderURI.Assign("");
+  mSpamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
+  rv = GetExistingFolder(junkFolderURI.get(), getter_AddRefs(junkFolder)); 
+  if (NS_SUCCEEDED(rv) && junkFolder)  //set MSG_FOLDER_FLAG_JUNK on new junk folder
+    junkFolder->SetFlag(MSG_FOLDER_FLAG_JUNK);
   
   PRBool useWhiteList;
   rv = mSpamSettings->GetUseWhiteList(&useWhiteList);

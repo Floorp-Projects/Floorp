@@ -1620,3 +1620,58 @@ nsMsgDBFolder::SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgDBFolder::GetStringProperty(const char *propertyName, char **propertyValue)
+{
+  NS_ENSURE_ARG_POINTER(propertyName);
+  NS_ENSURE_ARG_POINTER(propertyValue);
+  nsCOMPtr <nsIFileSpec> dbPath;
+  nsresult rv = GetFolderCacheKey(getter_AddRefs(dbPath));
+  if (dbPath)
+  {
+    nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+    rv = GetFolderCacheElemFromFileSpec(dbPath, getter_AddRefs(cacheElement));
+    if (cacheElement)  //try to get from cache
+      rv = cacheElement->GetStringProperty(propertyName, propertyValue);
+    if (NS_FAILED(rv))  //if failed, then try to get from db
+    {
+      nsCOMPtr<nsIDBFolderInfo> folderInfo;
+      nsCOMPtr<nsIMsgDatabase> db; 
+      PRBool exists;
+      rv = dbPath->Exists(&exists);
+      if (NS_FAILED(rv) || !exists)
+        return NS_MSG_ERROR_FOLDER_MISSING;
+      rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+      if (NS_SUCCEEDED(rv))
+        rv = folderInfo->GetCharPtrProperty(propertyName, propertyValue);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::SetStringProperty(const char *propertyName, const char *propertyValue)
+{
+  NS_ENSURE_ARG_POINTER(propertyName);
+  NS_ENSURE_ARG_POINTER(propertyValue);
+
+  nsCOMPtr <nsIFileSpec> dbPath;
+  GetFolderCacheKey(getter_AddRefs(dbPath));
+  if (dbPath)
+  {
+    nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+    GetFolderCacheElemFromFileSpec(dbPath, getter_AddRefs(cacheElement));
+    if (cacheElement)  //try to set in the cache
+      cacheElement->SetStringProperty(propertyName, propertyValue);
+  }  
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  nsCOMPtr<nsIMsgDatabase> db; 
+  nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  if(NS_SUCCEEDED(rv))
+  {
+    folderInfo->SetCharPtrProperty(propertyName, propertyValue);
+    db->Commit(nsMsgDBCommitType::kLargeCommit);  //commiting the db also commits the cache
+  }
+  return NS_OK;
+}

@@ -72,6 +72,7 @@
 #include "nsMsgAccountManagerDS.h"
 
 #include "nsMsgBiffManager.h"
+#include "nsMsgPurgeService.h"
 #include "nsStatusBarBiffManager.h"
 
 #include "nsCopyMessageStreamListener.h"
@@ -131,6 +132,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDelegateFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgBiffManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgPurgeService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStatusBarBiffManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCopyMessageStreamListener)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCopyService)
@@ -252,6 +254,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Messenger Biff Manager", NS_MSGBIFFMANAGER_CID,
       NS_MSGBIFFMANAGER_CONTRACTID,
       nsMsgBiffManagerConstructor,
+    },
+    { "Messenger Purge Service", NS_MSGPURGESERVICE_CID,
+      NS_MSGPURGESERVICE_CONTRACTID,
+      nsMsgPurgeServiceConstructor,
     },
     { "Status Bar Biff Manager", NS_STATUSBARBIFFMANAGER_CID,
       NS_STATUSBARBIFFMANAGER_CONTRACTID,

@@ -61,6 +61,8 @@
 #include "nsMsgMimeCID.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsISpamSettings.h"
+
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -533,27 +535,26 @@ PRBool WeAreOffline()
   return offline;
 }
 
-PRBool IsValidFolderURI(const char *aFolderURI)
+nsresult GetExistingFolder(const char *aFolderURI, nsIMsgFolder **aFolder)
 {
   nsresult rv;
   nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRDFResource> resource;
   rv = rdf->GetResource(aFolderURI, getter_AddRefs(resource));
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIMsgFolder> thisFolder;
   thisFolder = do_QueryInterface(resource, &rv);
-  if (NS_FAILED(rv) || !thisFolder)
-    return PR_FALSE;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Parent doesn't exist means that this folder doesn't exist.
   nsCOMPtr<nsIFolder> parentFolder;
   rv = thisFolder->GetParent(getter_AddRefs(parentFolder));
-  return (NS_SUCCEEDED(rv) && parentFolder);
+  if (NS_SUCCEEDED(rv) && parentFolder)
+    NS_ADDREF(*aFolder = thisFolder);
+  return rv;
 }
 
 PRBool IsAFromSpaceLine(char *start, const char *end)
@@ -620,7 +621,7 @@ nsresult CreateServicesForPasswordManager()
   }
   return NS_OK;
 }
-
+  
 nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aHdr);

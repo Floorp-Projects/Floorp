@@ -67,6 +67,7 @@
 #include "nsNetCID.h"
 #include "nsISmtpService.h"
 #include "nsIMsgBiffManager.h"
+#include "nsIMsgPurgeService.h"
 #include "nsIObserverService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIEventQueueService.h"
@@ -215,6 +216,11 @@ nsresult nsMsgAccountManager::Shutdown()
   nsCOMPtr<nsIMsgBiffManager> biffService = do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && biffService)
     biffService->Shutdown();
+
+  //shutdown removes nsIIncomingServer listener from purge service, so do it after accounts have been unloaded
+  nsCOMPtr<nsIMsgPurgeService> purgeService = do_GetService(NS_MSGPURGESERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && purgeService)
+    purgeService->Shutdown();
   
   if (m_prefs) {
     nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
@@ -1314,6 +1320,13 @@ nsMsgAccountManager::LoadAccounts()
 
   if (NS_SUCCEEDED(rv))
     biffService->Init();
+
+  //Ensure purge service has started
+  nsCOMPtr<nsIMsgPurgeService> purgeService = 
+           do_GetService(NS_MSGPURGESERVICE_CONTRACTID, &rv);
+
+  if (NS_SUCCEEDED(rv))
+    purgeService->Init();
   
   // Ensure messenger OS integration service has started
   // note, you can't expect the integrationService to be there
@@ -1403,6 +1416,8 @@ nsMsgAccountManager::LoadAccounts()
       }
     }
   }
+
+  m_accountsLoaded = PR_TRUE;  //It is ok to return null accounts like when we create new profile
   
   if (!accountList || !accountList[0]) {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1410,8 +1425,6 @@ nsMsgAccountManager::LoadAccounts()
 #endif
     return NS_OK;
   }
-
-  m_accountsLoaded = PR_TRUE;
   
     /* parse accountList and run loadAccount on each string, comma-separated */
 #ifdef DEBUG_ACCOUNTMANAGER

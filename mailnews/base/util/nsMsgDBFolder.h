@@ -119,6 +119,9 @@ public:
   NS_IMETHOD MatchOrChangeFilterDestination(nsIMsgFolder *oldFolder, PRBool caseInsensitive, PRBool *changed);
   NS_IMETHOD GetDBTransferInfo(nsIDBFolderInfo **aTransferInfo);
   NS_IMETHOD SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo);
+  NS_IMETHOD GetStringProperty(const char *propertyName, char **propertyValue);
+  NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
+
 
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);

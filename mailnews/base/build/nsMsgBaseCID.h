@@ -181,6 +181,17 @@
 
 
 //
+// nsMsgPurgeService
+//
+#define NS_MSGPURGESERVICE_CONTRACTID \
+  "@mozilla.org/messenger/purgeService;1"
+
+/* a687b474-afd8-418f-8ad9-f362202ae9a9 */
+#define NS_MSGPURGESERVICE_CID							\
+{ 0xa687b474, 0xafd8, 0x418f,							\
+    { 0x8a, 0xd9, 0xf3, 0x62, 0x20, 0x2a, 0xe9, 0xa9 } }
+
+//
 // nsStatusBarBiffManager
 //
 #define NS_STATUSBARBIFFMANAGER_CONTRACTID \
