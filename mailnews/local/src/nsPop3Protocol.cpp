@@ -462,12 +462,17 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
         ir = do_QueryInterface(docshell);
     }
 
-    if (isSecure) {
-	    rv = OpenNetworkSocket(aURL, "ssl-forcehandshake", ir);
-    }
-    else {
-	    rv = OpenNetworkSocket(aURL, nsnull, ir);
-    }
+    PRInt32 port = 0;
+    nsXPIDLCString hostName;
+    aURL->GetPort(&port);
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+    if (server)
+      server->GetRealHostName(getter_Copies(hostName));
+
+    if (isSecure)
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", ir);
+    else
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, ir);
 
 	if(NS_FAILED(rv))
 		return rv;
@@ -555,8 +560,8 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
         nsXPIDLCString userName;
         PRUnichar *passwordPromptString =nsnull;
         
-        server->GetHostName(getter_Copies(hostName));
-        server->GetUsername(getter_Copies(userName));
+        server->GetRealHostName(getter_Copies(hostName));
+        server->GetRealUsername(getter_Copies(userName));
         nsXPIDLString passwordTemplate;
         // if the last prompt got us a bad password then show a special dialog
         if (TestFlag(POP3_PASSWORD_FAILED))
@@ -695,17 +700,19 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     
   nsCOMPtr<nsIFileSpec> mailDirectory;
     
-	nsXPIDLCString host;
-	aURL->GetHost(getter_Copies(host));
+  nsXPIDLCString hostName;
+  nsXPIDLCString userName;
 
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
   if (server)
 	{
     rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
 		server->SetServerBusy(PR_TRUE); // the server is now busy
+    server->GetHostName(getter_Copies(hostName));
+    server->GetUsername(getter_Copies(userName));
 	}
 
-    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
+  m_pop3ConData->uidlinfo = net_pop3_load_state(hostName, userName, mailDirectory);
 	m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NoMail;
 
 	const char* uidl = PL_strcasestr(queryPart, "uidl=");

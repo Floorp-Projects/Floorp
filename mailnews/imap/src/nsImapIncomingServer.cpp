@@ -225,9 +225,9 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
   }
   else
   {
-    rv = GetUsername(getter_Copies(username));
+    rv = GetRealUsername(getter_Copies(username));
     if (NS_FAILED(rv)) return rv;
-    rv = GetHostName(getter_Copies(hostName));
+    rv = GetRealHostName(getter_Copies(hostName));
     if (NS_FAILED(rv)) return rv;
     if ((const char*)username && (const char *) hostName &&
         PL_strcmp((const char*)username, "")!=0) {
@@ -2219,8 +2219,8 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
     nsXPIDLCString userName;
     PRBool okayValue;
 
-    GetHostName(getter_Copies(hostName));
-    GetUsername(getter_Copies(userName));
+    GetRealHostName(getter_Copies(hostName));
+    GetRealUsername(getter_Copies(userName));
 
     passwordText = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
     nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
@@ -2411,7 +2411,7 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 			nsXPIDLCString userName;
       PRBool requiresPassword = PR_TRUE;
 
-			GetUsername(getter_Copies(userName));
+      GetRealUsername(getter_Copies(userName));
       m_logonRedirector->RequiresPassword(userName, &requiresPassword);
       if (requiresPassword)
       {
@@ -2469,7 +2469,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 	{
 		nsXPIDLCString userName;
 
-		GetUsername(getter_Copies(userName));
+		GetRealUsername(getter_Copies(userName));
 		m_logonRedirector->Logoff(userName);
 	}
 
@@ -3437,4 +3437,27 @@ nsImapIncomingServer::GetNewMessagesAllFolders(nsIMsgFolder *aRootFolder, nsIMsg
   }
 
   return retval;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *newName)
+{
+  nsresult rv;
+  // 1. Do common things in the base class.
+  rv = nsMsgIncomingServer::OnUserOrHostNameChanged(oldName, newName);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // 2. Reset 'HaveWeEverDiscoveredFolders' flag so the new folder list can be
+  //    reloaded (ie, DiscoverMailboxList() will be invoked in nsImapProtocol).
+  nsCOMPtr<nsIImapHostSessionList> hostSessionList = do_GetService(kCImapHostSessionList, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsXPIDLCString serverKey;
+  rv = GetKey(getter_Copies(serverKey));
+  NS_ENSURE_SUCCESS(rv, rv);
+  hostSessionList->SetHaveWeEverDiscoveredFoldersForHost(serverKey.get(), PR_FALSE);
+
+  // 3. Make all the existing folders 'unverified' so that they can be
+  //    removed from the folder pane after users log into the new server.
+  ResetFoldersToUnverified(nsnull);
+  return NS_OK;
 }

@@ -94,6 +94,8 @@ protected:
   nsresult CreateRootFolder();
   nsresult StorePassword();  // stuff the password in the single signon database
 
+  nsresult InternalSetHostName(const char *aHostname, const char *prefName);
+
   nsresult getProtocolInfo(nsIMsgProtocolInfo **aResult);
   nsCOMPtr<nsIFileSpec> mFilterFile;
   nsCOMPtr<nsIMsgFilterList> mFilterList;

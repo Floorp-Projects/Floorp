@@ -59,8 +59,9 @@ Contributors:
       </row>
       <row autostretch="never">
             <text class="label" value="&serverName.label;"/>
-            <!-- XXX: when #14295 is fixed, remove disabled="true" -->
-            <textbox wsm_persist="true" disabled="true" size="25" id="server.hostName"/>
+            <textbox wsm_persist="true" size="25" id="server.realHostName"
+                  pref="true" preftype="string" prefattribute="value"
+                  prefstring="mail.server.%serverkey%.realhostname"/>
       </row>
       <row autostretch="never">
         <hbox iscontrolcontainer="true" autostretch="never">
@@ -68,9 +69,10 @@ Contributors:
                   value="&userName.label;"/>
         </hbox>
         <hbox iscontrolcontainer="true" autostretch="never">
-            <!-- XXX: when #14295 is fixed, remove disabled="true" -->
-            <textbox hidable="true" hidefor="nntp" wsm_persist="true" disabled="true"
-                     size="25" id="server.username"/>
+            <textbox hidable="true" hidefor="nntp" wsm_persist="true"
+                     size="25" id="server.realUsername"
+                     pref="true" preftype="string" prefattribute="value"
+                     prefstring="mail.server.%serverkey%.realusername"/>
         </hbox>
       </row>
       <row>

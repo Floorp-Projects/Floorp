@@ -279,7 +279,7 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 		// load up required server information
 		// we store the username unescaped in the server
 		// so there is no need to unescape it
-		rv = aServer->GetUsername(getter_Copies(userName));
+    rv = aServer->GetRealUsername(getter_Copies(userName));
 
 		// find out if the server is busy or not...if the server is busy, we are 
 		// *NOT* going to run the url

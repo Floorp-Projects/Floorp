@@ -1913,3 +1913,84 @@ nsNntpIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *newName)
+{
+  nsresult rv;
+  // 1. Do common things in the base class.
+  rv = nsMsgIncomingServer::OnUserOrHostNameChanged(oldName, newName);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // 2. Remove file hostinfo.dat so that the new subscribe 
+  //    list will be reloaded from the new server.
+  nsCOMPtr <nsIFileSpec> hostInfoFile;
+  rv = GetLocalPath(getter_AddRefs(hostInfoFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = hostInfoFile->AppendRelativeUnixPath(HOSTINFO_FILE_NAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  hostInfoFile->Delete(PR_FALSE);
+
+  // 3.Unsubscribe and then subscribe the existing groups to clean up the article numbers
+  //   in the rc file (this is because the old and new servers may maintain different 
+  //   numbers for the same articles if both servers handle the same groups).
+  nsCOMPtr<nsIFolder> rootFolder;
+  nsCOMPtr<nsIEnumerator> subFolders;
+
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsStringArray groupList;
+  nsXPIDLString folderName;
+  nsCOMPtr<nsISupports> aItem;
+  nsCOMPtr <nsIMsgFolder> newsgroupFolder;
+
+  // Prepare the group list
+  while (subFolders->IsDone() != NS_OK)
+  {
+    rv = subFolders->CurrentItem(getter_AddRefs(aItem));
+    NS_ENSURE_SUCCESS(rv,rv);
+    newsgroupFolder = do_QueryInterface(aItem, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = newsgroupFolder->GetName(getter_Copies(folderName));
+    NS_ENSURE_SUCCESS(rv,rv);
+    groupList.AppendString(folderName);
+    if (! NS_SUCCEEDED(subFolders->Next()))
+      break;
+  }
+
+  // If nothing subscribed then we're done.
+  if (groupList.Count() == 0)
+    return NS_OK;
+
+  // Now unsubscribe & subscribe.
+  int i, cnt=groupList.Count();
+  nsAutoString groupStr;
+  nsCAutoString cname;
+  for (i=0; i<cnt; i++)
+  {
+    // unsubscribe.
+    groupList.StringAt(i, groupStr);
+    rv = Unsubscribe(groupStr.get());
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  for (i=0; i<cnt; i++)
+  {
+    // subscribe.
+    groupList.StringAt(i, groupStr);
+    cname.AssignWithConversion(groupStr.get());
+    rv = SubscribeToNewsgroup(cname.get());
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  groupList.Clear();
+  
+  // Force updating the rc file.
+  rv = CommitSubscribeChanges();
+  return rv;
+}

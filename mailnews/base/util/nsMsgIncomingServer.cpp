@@ -72,6 +72,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
+#include "nsIMsgAccountManager.h"
+
 #ifdef DEBUG_sspitzer
 #define DEBUG_MSGINCOMING_SERVER
 #endif /* DEBUG_sspitzer */
@@ -1018,12 +1020,14 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
     
 }
          
-// if the user has a : appended, then
+// If the hostname contains ':' (like hostname:1431)
+// then parse and set the port number.
 nsresult
-nsMsgIncomingServer::SetHostName(const char *aHostname)
+nsMsgIncomingServer::InternalSetHostName(const char *aHostname, const char *prefName)
 {
     nsresult rv;
-    if (PL_strchr(aHostname, ':')) {
+  if (PL_strchr(aHostname, ':'))
+  {
 	nsCAutoString newHostname(aHostname);
 	PRInt32 colonPos = newHostname.FindChar(':');
 
@@ -1036,11 +1040,68 @@ nsMsgIncomingServer::SetHostName(const char *aHostname)
         PRInt32 port = portString.ToInteger(&err);
         if (!err) SetPort(port);
 
-	rv = SetCharValue("hostname", (const char*)newHostname);
-    } else {
-        rv = SetCharValue("hostname", aHostname);
+    rv = SetCharValue(prefName, (const char*)newHostname);
     }
+  else
+    rv = SetCharValue(prefName, aHostname);
     return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *newName)
+{
+  nsresult rv;
+
+  // 1. Reset password so that users are prompted for new password for the new user/host.
+  ForgetPassword();
+
+  // 2. Let the derived class close all cached connection to the old host.
+  CloseCachedConnections();
+
+  // 3. Notify any listeners for account server changes.
+  nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = accountManager->NotifyServerChanged(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // 4. Lastly, replace all occurrences of old name in the acct name with the new one.
+  nsXPIDLString acctName;
+  rv = GetPrettyName(getter_Copies(acctName));
+  if (NS_SUCCEEDED(rv) && acctName)
+  {
+    nsAutoString newAcctName, oldVal, newVal;
+    oldVal.AssignWithConversion(oldName);
+    newVal.AssignWithConversion(newName);
+    newAcctName.Assign(acctName);
+    newAcctName.ReplaceSubstring(oldVal, newVal);
+    SetPrettyName(newAcctName.get());
+  }
+
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::SetHostName(const char *aHostname)
+{
+  return (InternalSetHostName(aHostname, "hostname"));
+}
+
+// SetRealHostName() is called only when the server name is changed from the
+// UI (Account Settings page).  No one should call it in any circumstances.
+NS_IMETHODIMP
+nsMsgIncomingServer::SetRealHostName(const char *aHostname)
+{
+  nsXPIDLCString oldName;
+  nsresult rv = GetRealHostName(getter_Copies(oldName));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = InternalSetHostName(aHostname, "realhostname");
+
+  // A few things to take care of if we're changing the hostname.
+  if (nsCRT::strcasecmp(aHostname, oldName.get()))
+    rv = OnUserOrHostNameChanged(oldName.get(), aHostname);
+
+  return rv;
 }
 
 nsresult
@@ -1054,6 +1115,51 @@ nsMsgIncomingServer::GetHostName(char **aResult)
         rv = GetCharValue("hostname", aResult);
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetRealHostName(char **aResult)
+{
+  // If 'realhostname' is set (was changed) then use it, otherwise use 'hostname'
+  nsresult rv;
+  rv = GetCharValue("realhostname", aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!*aResult || (nsCRT::strlen(*aResult) == 0))
+    return(GetHostName(aResult));
+
+  if (PL_strchr(*aResult, ':'))
+  {
+    SetRealHostName(*aResult);
+    rv = GetCharValue("realhostname", aResult);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetRealUsername(char **aResult)
+{
+  // If 'realuserName' is set (was changed) then use it, otherwise use 'userName'
+  nsresult rv;
+  rv = GetCharValue("realuserName", aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!*aResult || (nsCRT::strlen(*aResult) == 0))
+    return(GetUsername(aResult));
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetRealUsername(const char *aUsername)
+{
+  // Need to take care of few things if we're changing the username.
+  nsXPIDLCString oldName;
+  nsresult rv = GetRealUsername(getter_Copies(oldName));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetCharValue("realuserName", aUsername);
+  if (nsCRT::strcasecmp(aUsername, oldName.get()))
+    rv = OnUserOrHostNameChanged(oldName.get(), aUsername);
+
+  return rv;
 }
 
 #define BIFF_PREF_NAME "check_new_mail"

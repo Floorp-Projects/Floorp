@@ -187,6 +187,8 @@ private:
   nsresult getPrefService();
   nsIPref *m_prefs;
 
+  nsresult InternalFindServer(const char* username, const char* hostname, const char* type, PRBool useRealSetting, nsIMsgIncomingServer** aResult);
+
   //
   // root folder listener stuff
   //

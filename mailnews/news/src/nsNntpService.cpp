@@ -619,7 +619,7 @@ nsNntpService::FindServerWithNewsgroup(nsCString &host, nsCString &groupName)
 	if (serverInfo.server) {
 		nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverInfo.server);
 		nsXPIDLCString thisHostname;
-  		rv = server->GetHostName(getter_Copies(thisHostname));
+      rv = server->GetRealHostName(getter_Copies(thisHostname));
         NS_ENSURE_SUCCESS(rv,rv);
 
 		host = (const char *)thisHostname;
@@ -742,7 +742,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
     rv = accountManager->FindServer("","","nntp", getter_AddRefs(server));
     if (NS_SUCCEEDED(rv) && server) {
         nsXPIDLCString newsHostName;
-        rv = server->GetHostName(getter_Copies(newsHostName));
+        rv = server->GetRealHostName(getter_Copies(newsHostName));
         if (NS_SUCCEEDED(rv)) {
             host = (const char *)newsHostName;
         }

@@ -622,7 +622,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       if (NS_SUCCEEDED(rv) && aURL)
       {
         aURL->GetPort(&port);
-        aURL->GetHost(getter_Copies(hostName));
+        server->GetRealHostName(getter_Copies(hostName));
 
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
         PRBool isSecure = PR_FALSE;
@@ -1848,7 +1848,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
               PRUint32 messageSize = GetMessageSize(messageIdString, bMessageIdsAreUids);
               // We need to check the format_out bits to see if we are allowed to leave out parts,
               // or if we are required to get the whole thing.  Some instances where we are allowed
-              // to do it by parts:  when viewing a message, or its source
+              // to do it by parts:  when viewing a message, replying to a message, or viewing its source
               // Some times when we're NOT allowed:  when forwarding a message, saving it, moving it, etc.
               // need to set a flag in the url, I guess, equiv to allow_content_changed.
               PRBool allowedToBreakApart = PR_TRUE; // (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : PR_FALSE;
@@ -6579,7 +6579,7 @@ PRBool nsImapProtocol::TryToLogon()
 		password = nsCRT::strdup(m_logonCookie);
 	else
 		rv = server->GetPassword(&password);
-    rv = server->GetUsername(&userName);
+    rv = server->GetRealUsername(&userName);
 
   }
       

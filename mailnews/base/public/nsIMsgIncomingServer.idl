@@ -78,6 +78,11 @@ interface nsIMsgIncomingServer : nsISupports {
    */
   attribute string hostName;
   
+  /**
+   * real hostname of the server (if server name is changed it's stored here)
+   */
+  attribute string realHostName;
+  
   /* port of the server */
   attribute long port;
 
@@ -85,6 +90,11 @@ interface nsIMsgIncomingServer : nsISupports {
    * userid to log into the server
    */
   attribute string username;
+
+  /**
+   * real username of the server (if username is changed it's stored here)
+   */
+  attribute string realUsername;
 
   /**
    * protocol type, i.e. "pop3", "imap", "nntp", "none", etc
@@ -98,6 +108,9 @@ interface nsIMsgIncomingServer : nsISupports {
    * used to construct URIs
    */
   readonly attribute string localStoreType;
+
+  // Perform specific tasks (reset flags, remove files, etc) for account user/server name changes.
+  void OnUserOrHostNameChanged(in string oldName, in string newName);
   
   /* should we remember the password? */
   attribute boolean rememberPassword;

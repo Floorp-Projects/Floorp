@@ -201,6 +201,10 @@ function findFirstTreeItem(tree) {
 }
 
 function onOk() {
+  // Check if user/host have been modified.
+  if (!checkUserServerChanges(true))
+    return false;
+
   onSave();
     // hack hack - save the prefs file NOW in case we crash
     try {
@@ -212,8 +216,95 @@ function onOk() {
   return true;
 }
 
-function onSave() {
+// Check if the user and/or host names have been changed and
+// if so check if the new names already exists for an account.
+//
+function checkUserServerChanges(showAlert) {
+  var accountValues = getValueArrayFor(currentServerId);
+  var pageElements = getPageFormElements();
 
+  if (pageElements == null) return true;
+
+  // Get the new username, hostname and type from the page
+  var newUser, newHost, newType, oldUser, oldHost;
+  var uIndx, hIndx;
+  for (var i=0; i<pageElements.length; i++) {
+    if (pageElements[i].id) {
+      var vals = pageElements[i].id.split(".");
+      var type = vals[0];
+      var slot = vals[1];
+      //dump("In checkUserServerChanges() ***: accountValues[" + type + "][" + slot + "] = " + getFormElementValue(pageElements[i]) + "/" + accountValues[type][slot] + "\n");
+
+      if (slot == "realHostName") {
+        oldHost = accountValues[type][slot];
+        newHost = getFormElementValue(pageElements[i]);
+        hIndx = i;
+      }
+      else
+      if (slot == "realUsername") {
+        oldUser = accountValues[type][slot];
+        newUser = getFormElementValue(pageElements[i]);
+        uIndx = i;
+      }
+      else
+      if (slot == "type")
+        newType = getFormElementValue(pageElements[i]);
+    }
+  }
+
+  // There is no username defined for news so reset it.
+  if (newType == "nntp")
+    oldUser = newUser = "";
+
+  //dump("In checkUserServerChanges() *** Username = " + newUser + "/" + oldUser + "\n");
+  //dump("In checkUserServerChanges() *** Hostname = " + newHost + "/" + oldHost + "\n");
+  //dump("In checkUserServerChanges() *** Type     = " + newType + "\n");
+
+  // If something is changed then check if the new user/host already exists.
+  if ( (oldUser != newUser) || (oldHost != newHost) ) {
+    var newServer = accountManager.findRealServer(newUser, newHost, newType);
+    if (newServer) {
+      if (showAlert) {
+        var alertText = gPrefsBundle.getString("modifiedAccountExists");
+        window.alert(alertText);
+      }
+      // Restore the old values before return
+      if (newType != "nntp")
+        setFormElementValue(pageElements[uIndx], oldUser);
+      setFormElementValue(pageElements[hIndx], oldHost);
+      return false;
+    }
+
+    //dump("In checkUserServerChanges() Ah, Server not found !!!" + "\n");
+    // If username is changed remind users to change Your Name and Email Address.
+    // If serve name is changed and has defined filters then remind users to edit rules.
+    if (showAlert) {
+      var account = getAccountFromServerId(currentServerId);
+      var filterList;
+      if (account && (newType != "nntp")) {
+        var server = account.incomingServer;
+        filterList = server.filterList;
+      }
+      var userChangeText, serverChangeText;
+      if ( (oldHost != newHost) && (filterList != undefined) && filterList.filterCount )
+        serverChangeText = gPrefsBundle.getString("serverNameChanged");
+      if (oldUser != newUser)
+        userChangeText = gPrefsBundle.getString("userNameChanged");
+
+      if ( (serverChangeText != undefined) && (userChangeText != undefined) )
+        serverChangeText = serverChangeText + "\n\n" + userChangeText;
+      else
+      if (userChangeText != undefined)
+        serverChangeText = userChangeText;
+
+      if (serverChangeText != undefined)
+        window.alert(serverChangeText);
+    }
+  }
+  return true;
+}
+
+function onSave() {
   if (pendingPageId) {
     dump("ERROR: " + pendingPageId + " hasn't loaded yet! Not saving.\n");
     return;
@@ -475,6 +566,8 @@ function showPage(serverId, pageId) {
       serverId == currentServerId)
     return;
 
+  // check if user/host names have been changed
+  checkUserServerChanges(false);
 
   // save the previous page
   savePage(currentServerId);

@@ -87,6 +87,7 @@ public:
     NS_IMETHOD PerformBiff();
     NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
     NS_IMETHOD GetFilterList(nsIMsgFilterList **aResult);
+    NS_IMETHOD OnUserOrHostNameChanged(const char *oldName, const char *newName);
 
     // for nsMsgLineBuffer
     virtual PRInt32 HandleLine(char *line, PRUint32 line_size);

@@ -665,7 +665,7 @@ function AccountExists(userName,hostName,serverType)
   var accountExists = false;
   var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
   try {
-        var server = accountManager.FindServer(userName,hostName,serverType);
+        var server = accountManager.findRealServer(userName,hostName,serverType);
         if (server) {
                 accountExists = true;
         }

@@ -105,6 +105,7 @@ typedef struct _findServerEntry {
   const char *hostname;
   const char *username;
   const char *type;
+  PRBool useRealSetting;
   nsIMsgIncomingServer *server;
 } findServerEntry;
 
@@ -1690,10 +1691,11 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerChanged(nsIMsgIncomingServer *ser
 	return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMsgAccountManager::FindServer(const char* username,
+nsresult
+nsMsgAccountManager::InternalFindServer(const char* username,
                                 const char* hostname,
                                 const char* type,
+                                PRBool useRealSetting,
                                 nsIMsgIncomingServer** aResult)
 {
   nsresult rv;
@@ -1703,7 +1705,11 @@ nsMsgAccountManager::FindServer(const char* username,
   printf("FindServer(%s,%s,%s,??)\n", username,hostname,type);
 #endif
  
-  if ((!nsCRT::strcmp((hostname?hostname:""),(const char *)m_lastFindServerHostName)) &&
+  // If 'useRealSetting' is set then we want to scan all existing accounts
+  // to make sure there's no duplicate including those whose host and/or
+  // user names have been changed.
+  if (!useRealSetting &&
+      (!nsCRT::strcmp((hostname?hostname:""),(const char *)m_lastFindServerHostName)) &&
       (!nsCRT::strcmp((username?username:""),(const char *)m_lastFindServerUserName)) &&
       (!nsCRT::strcmp((type?type:""),(const char *)m_lastFindServerType)) &&
       m_lastFindServerResult) {
@@ -1733,6 +1739,7 @@ nsMsgAccountManager::FindServer(const char* username,
   serverInfo.username = username ? username : "";
   // type might be blank, pass "" instead
   serverInfo.type = type ? type : "";
+  serverInfo.useRealSetting = useRealSetting;
 
   serverInfo.server = *aResult = nsnull;
   
@@ -1749,6 +1756,26 @@ nsMsgAccountManager::FindServer(const char* username,
   
   return NS_OK;
 
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::FindServer(const char* username,
+                                const char* hostname,
+                                const char* type,
+                                nsIMsgIncomingServer** aResult)
+{
+  return(InternalFindServer(username, hostname, type, PR_FALSE, aResult));
+}
+
+// Interface called by UI js only (always return true).
+NS_IMETHODIMP
+nsMsgAccountManager::FindRealServer(const char* username,
+                                const char* hostname,
+                                const char* type,
+                                nsIMsgIncomingServer** aResult)
+{
+  InternalFindServer(username, hostname, type, PR_TRUE, aResult);
+  return NS_OK;
 }
 
 PRBool
@@ -1820,10 +1847,16 @@ nsMsgAccountManager::findServer(nsISupports *aElement, void *data)
   findServerEntry *entry = (findServerEntry*) data;
   
   nsXPIDLCString thisHostname;
+  if (entry->useRealSetting)
+    rv = server->GetRealHostName(getter_Copies(thisHostname));
+  else
   rv = server->GetHostName(getter_Copies(thisHostname));
   if (NS_FAILED(rv)) return PR_TRUE;
 
   nsXPIDLCString thisUsername;
+  if (entry->useRealSetting)
+    rv = server->GetRealUsername(getter_Copies(thisUsername));
+  else
   rv = server->GetUsername(getter_Copies(thisUsername));
   if (NS_FAILED(rv)) return PR_TRUE;
  

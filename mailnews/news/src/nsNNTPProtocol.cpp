@@ -534,12 +534,18 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) opening connection to %s on port %d",this, hostName.get(), port));
     // call base class to set up the transport
 
-    if (isSecure) {
-	    rv = OpenNetworkSocket(m_url, "ssl-forcehandshake", ir);
-    }
-    else {
-	    rv = OpenNetworkSocket(m_url, nsnull, ir);
-    }
+    PRInt32 port = 0;
+    nsXPIDLCString hostName;
+    m_url->GetPort(&port);
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_nntpServer);
+    if (server)
+      server->GetRealHostName(getter_Copies(hostName));
+
+    if (isSecure)
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", ir);
+    else
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, ir);
+
 	NS_ENSURE_SUCCESS(rv,rv);
 	m_nextState = NNTP_LOGIN_RESPONSE;
   }
