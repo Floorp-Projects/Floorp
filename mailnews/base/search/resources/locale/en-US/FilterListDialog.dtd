@@ -6,11 +6,11 @@
 <!ENTITY editButton.label "Edit...">
 <!ENTITY editButton.accesskey "E">
 <!ENTITY deleteButton.label "Delete">
-<!ENTITY deleteButton.accesskey "D">
+<!ENTITY deleteButton.accesskey "t">
 <!ENTITY reorderUpButton.label "Move Up">
-<!ENTITY reorderUpButton.accesskey "M">
+<!ENTITY reorderUpButton.accesskey "U">
 <!ENTITY reorderDownButton.label "Move Down">
-<!ENTITY reorderDownButton.accesskey "o">
+<!ENTITY reorderDownButton.accesskey "D">
 <!ENTITY filterHeader.label "Enabled filters are run automatically in the order shown below.">
 <!ENTITY filtersForPrefix.label "Filters for:">
 <!ENTITY filtersForPrefix.accesskey "F">
@@ -21,7 +21,7 @@
 <!ENTITY stopFilters.label "Stop">
 <!ENTITY stopFilters.accesskey "S">
 <!ENTITY folderPickerPrefix.label "Run selected filter(s) on:">
-<!ENTITY folderPickerPrefix.accesskey "i">
+<!ENTITY folderPickerPrefix.accesskey "c">
 <!ENTITY choosethis.label "choose this folder">
 <!ENTITY choosethisnewsserver.label "choose this news server">
 <!ENTITY helpButton.label "Help">
