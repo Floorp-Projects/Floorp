@@ -56,7 +56,11 @@ nsGetImapRoot(const char* hostname, nsFileSpec &result)
     if (server)
 		rv = server->GetLocalPath(&localPath);
 
+    nsFilePath dirPath(localPath, PR_TRUE);
+    nsFileSpec dirSpec(dirPath); // recursive create the parent directory
+
     result = localPath;
+    result.CreateDirectory();
     return rv;
 }
 
