@@ -1111,12 +1111,12 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
     result = NS_STATIC_CAST(UserAutoComplete*, aPreviousResult);
 
     if (result->mArray.Count()) {
-      for (PRUint32 i = result->mArray.Count(); i > 0; --i) {
-        nsDependentString match(NS_STATIC_CAST(PRUnichar*, result->mArray.ElementAt(i - 1)));
+      for (PRInt32 i = result->mArray.Count() - 1; i >= 0; --i) {
+        nsDependentString match(NS_STATIC_CAST(PRUnichar*, result->mArray.ElementAt(i)));
         if (aSearchString.Length() >= match.Length() ||
             !StringBeginsWith(match, aSearchString)) {
-          nsMemory::Free(result->mArray.ElementAt(i - 1));
-          result->mArray.RemoveElementAt(i - 1);
+          nsMemory::Free(result->mArray.ElementAt(i));
+          result->mArray.RemoveElementAt(i);
         }
       }
     }
