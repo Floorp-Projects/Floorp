@@ -80,7 +80,7 @@ endif
 
 all export libs install:: $(TARGETS)
 
-$(PACKAGE): $(DIST)/bin/apprunner
+$(PACKAGE): $(DIST)/bin/mozilla-bin
 ifneq ($(NSPR_DIR),$(DIST)/bin)
 	@chmod 755 $(NSPR_DIR)/*
 	@cp -p $(NSPR_DIR)/* $(DIST)/bin/.
