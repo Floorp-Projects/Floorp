@@ -1906,15 +1906,12 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	}
 
     // Get current profile, make the new one a sibling...
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &newProfDir);
-
-	if (NS_FAILED(rv))
-	{
+	nsIFileSpec* newSpec = NS_LocateFileOrDirectory(
+        nsSpecialFileSpec::App_UserProfileDirectory50);
+	if (!newSpec)
 	     return NS_ERROR_FAILURE;
-	}
-
-	nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-
+    newSpec->GetFileSpec(&newProfDir);
+	NS_RELEASE(newSpec);
 	newProfDir.SetLeafName(profileName);
 
 
