@@ -48,6 +48,7 @@ CPPSRCS =				\
 	nsWBRPart.cpp			\
 	nsDOMIterator.cpp		\
 	nsDOMAttributes.cpp		\
+	nsLineLayout.cpp		\
 	$(NULL)
 EXPORTS =				\
 	nsGlobalVariables.h		\
