@@ -4679,8 +4679,14 @@ PresShell::UnsuppressAndInvalidate()
         cv->Show();
         // Calling |Show| may destroy us.  Not sure why yet, but it's
         // a smoketest blocker.
-        if (mIsDestroying)
+        if (mIsDestroying) {
+          if (focusController) {
+            // Unsuppress focus now that we're exiting this code,
+            // otherwise we're stuck in focus suppression, which hoses most of Mozilla
+            focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
+          }
           return;
+        }
       }
     }
   }
