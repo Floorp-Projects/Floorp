@@ -100,7 +100,7 @@ xml.cgi #51
 ));
 our $warnings;
 my $verbose = $::ENV{VERBOSE};
-$perlapp='/usr/bonsaitools/bin/perl';
+$perlapp=$^X;
 foreach $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
         next if (!$file); # skip null entries
