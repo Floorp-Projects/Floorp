@@ -270,7 +270,8 @@ protected:
 
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
-	PRFileDesc* m_tempMessageFile;
+	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
+	nsFileSpec m_tempMessageFile;
 };
 
 #endif

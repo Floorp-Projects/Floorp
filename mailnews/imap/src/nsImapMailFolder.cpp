@@ -69,7 +69,7 @@ nsImapMailFolder::nsImapMailFolder() :
     m_initialized(PR_FALSE),m_haveDiscoverAllFolders(PR_FALSE),
     m_haveReadNameFromDB(PR_FALSE), m_msgParser(nsnull), 
     m_curMsgUid(0), m_nextMessageByteLength(0),
-    m_urlRunning(PR_FALSE)
+    m_urlRunning(PR_FALSE), m_tempMessageFile(MESSAGE_PATH)
 {
 	m_pathName = nsnull;
 
@@ -880,13 +880,14 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
             rv = aMsgFolder->GetName(&aName);
             if (NS_SUCCEEDED(rv) && PL_strcmp("Trash", aName) == 0)
             {
-                PR_FREEIF(aName);
+                delete [] aName;
                 trashFolder = aMsgFolder;
                 break;
             }
             else
             {
-                PR_FREEIF(aName);
+				if (aName);
+					delete [] aName;
             }
         }
         rv = aEnumerator->Next();
@@ -932,7 +933,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
                     nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
                     if (message)
                     {
-                        nsMsgKey key;
                         nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
                         nsCOMPtr<nsIDBMessage>
                             dbMessage(do_QueryInterface(message, &rv));
@@ -1608,8 +1608,11 @@ nsImapMailFolder::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
 	// create a temp file to write the message into. We need to do this because
 	// we don't have pluggable converters yet. We want to let mkfile do the work of 
 	// converting the message from RFC-822 to HTML before displaying it...
-	PR_Delete(MESSAGE_PATH);
-	m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+	m_tempMessageFile.Delete(PR_FALSE);
+	nsISupports * supports;
+	NS_NewIOFileStream(&supports, m_tempMessageFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+	m_tempMessageStream = do_QueryInterface(supports);
+	NS_IF_RELEASE(supports);
     return NS_OK;
 }
 
@@ -1617,9 +1620,10 @@ NS_IMETHODIMP
 nsImapMailFolder::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
                                       msg_line_info* aMsgLineInfo)
 {
-   if (m_tempMessageFile)                                                      
-         PR_Write(m_tempMessageFile,(void *) aMsgLineInfo->adoptedMessageLine, 
-			 PL_strlen(aMsgLineInfo->adoptedMessageLine));
+	PRUint32 count = 0;
+	if (m_tempMessageStream)
+	   m_tempMessageStream->Write(aMsgLineInfo->adoptedMessageLine, 
+								  PL_strlen(aMsgLineInfo->adoptedMessageLine), &count);
                                                                                                                                                   
      return NS_OK;                                                               
 }
@@ -1628,12 +1632,10 @@ NS_IMETHODIMP
 nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 {
 	nsresult res = NS_OK;
-	if (m_tempMessageFile)
+	if (m_tempMessageStream)
 	{
 		nsCOMPtr<nsIWebShell> webShell;
-
-		PR_Close(m_tempMessageFile);
-		m_tempMessageFile = nsnull;
+		m_tempMessageStream->Close();
 		res = aProtocol->GetDisplayStream(getter_AddRefs(webShell));
 		if (NS_SUCCEEDED(res) && webShell)
 		{
