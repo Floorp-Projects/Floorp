@@ -228,8 +228,12 @@ nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
     nsresult rv;
     nsIRDFResource* resource;
     nsIRDFLiteral* literal;
-    
-    if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+
+    if (! aNode) {
+        aResult.Truncate();
+        rv = NS_OK;
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
         nsXPIDLCString p;
         if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(p) ))) {
             aResult = p;
