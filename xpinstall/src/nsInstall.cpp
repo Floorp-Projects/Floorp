@@ -1720,34 +1720,16 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     PRInt32 result;
     nsFileSpec *extractHereSpec;
 
-    nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-        
-    if (aSuggestedName == nsnull || aSuggestedName->Exists() )
+    NS_ASSERTION(aSuggestedName != nsnull, "Can't extract to no name!");
+    if(aSuggestedName == nsnull)
     {
-        nsString tempfileName = "xpinstall";
-         
-        // Get the extention of the file in the jar.
-        
-        result = aJarfile.RFind(".");
-        if (result != -1)
-        {            
-            // We found an extention.  Add it to the tempfileName string
-            nsString extention;
-            aJarfile.Right(extention, (aJarfile.Length() - result) );        
-            tempfileName += extention;
-        }
-         
-        tempFile += tempfileName;
-         
-        // Create a temporary file to extract to.
-        tempFile.MakeUnique();
-        
-        extractHereSpec = new nsFileSpec(tempFile);
+      return nsInstall::INVALID_ARGUMENTS;
     }
     else
     {
         // extract to the final destination.
         extractHereSpec = new nsFileSpec(*aSuggestedName);
+        extractHereSpec->MakeUnique();
     }
 
     // We will overwrite what is in the way.  is this something that we want to do?  
