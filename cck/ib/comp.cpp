@@ -18,54 +18,25 @@ extern CString nscpxpiPath;
 
 extern COMPONENT Components[100];
 extern int numComponents;
-extern CString compString;
 
 extern "C" __declspec(dllexport)
-int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CString iniSrcPath,int invisibleCount)
+int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int invisibleCount)
 {
-	CString configcompString[50];
-	compNum=0;
-
-	configcompString[0]="Marker Recommended Start";
-	configcompString[1]="Marker Full Start";
-	configcompString[2]="Marker Custom Start";
-	configcompString[3]="XPCOM";
-	configcompString[4]="Navigator";
-	configcompString[5]="Java";
-	configcompString[6]="MailNews";
-	configcompString[7]="Instant Messenger";
-	configcompString[8]="QFA";
-	configcompString[9]="PSM";
-	configcompString[10]="Spell Checker";
-	configcompString[11]="AOL Art";
-	configcompString[12]="Net2Phone";
-	configcompString[13]="Flash";
-	configcompString[14]="Uninstaller";
-	configcompString[15]="AOD";
-	configcompString[16]="RealPlayer";
-	configcompString[17]="Winamp";
-	configcompString[18]="US English Profile Defaults";
-	configcompString[19]="HP Printer Plugin";
-	configcompString[20]="Classic Skin";
-	configcompString[21]="En US lang pack";
-	configcompString[22]="US region pack";
-	configcompString[23]="Marker Recommended End";
-	configcompString[24]="Marker Full End";
-	configcompString[25]="Marker Custom End";
-	configcompString[26]=" ";
-
-	int arrayindex=compNum;
-	compString = configcompString[compNum];
-	CString invNum = compString;
+	*compNum = 0;
+	int invNum = *compNum;
+	CString componentstr;
 
 	// Get all the component info from each component section
-	CString component;
+	char component[MAX_SIZE];
 	char archive[MAX_SIZE];
 	char name[MAX_SIZE];
 	char desc[MAX_SIZE];
 	char attr[MAX_SIZE];
+	char tempcomponentstr[MAX_SIZE];
 	
-	component.Format("Component %s", compString);
+	componentstr.Format("C%d", *compNum);
+	strcpy(tempcomponentstr, componentstr);
+	GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, MAX_SIZE, iniSrcPath);
 
 	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	while (*archive)
@@ -77,33 +48,36 @@ int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CStri
 		GetPrivateProfileString(component, "Attributes", "", 
 			attr, MAX_SIZE, iniSrcPath);
 
-		comps[compNum].archive  = CString(archive);
-		comps[compNum].compname = component;
-		comps[compNum].name 	 = CString(name);
-		comps[compNum].desc 	 = CString(desc);
-		comps[compNum].selected = (strstr(attr, "SELECTED") != NULL);
-		comps[compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
-		comps[compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
-		comps[compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
-		comps[compNum].disabled = (strstr(attr, "DISABLED") != NULL);
-		comps[compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
+		comps[*compNum].archive  = CString(archive);
+		comps[*compNum].compname = component;
+		comps[*compNum].name 	 = CString(name);
+		comps[*compNum].desc 	 = CString(desc);
+		comps[*compNum].selected = (strstr(attr, "SELECTED") != NULL);
+		comps[*compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
+		comps[*compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
+		comps[*compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
+		comps[*compNum].disabled = (strstr(attr, "DISABLED") != NULL);
+        comps[*compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
+
 		
-		if (!(comps[compNum].selected && comps[compNum].invisible && invisibleCount))
+		if (!(comps[*compNum].selected && comps[*compNum].invisible && invisibleCount))
 		{
-			compNum++;
-			compString = configcompString[compNum];
-			arrayindex++;
-			invNum = configcompString[arrayindex];
-			component.Format("Component %s", invNum);
+			(*compNum)++;
+			invNum++;
+			componentstr.Format("C%d", invNum);
+			strcpy(tempcomponentstr, componentstr);
+			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, MAX_SIZE, iniSrcPath);
 		}
 		else
 		{
-			arrayindex++;
-			invNum=configcompString[arrayindex];
-			component.Format("Component %s", invNum);
+			invNum++;
+			componentstr.Format("C%d", invNum);
+			strcpy(tempcomponentstr, componentstr);
+			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, MAX_SIZE, iniSrcPath);
 		}
 		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	}
+
 
 	return TRUE;
 }
@@ -122,7 +96,7 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		nscpxpiPath = rootPath + "NSCPXPI";
 	iniSrcPath		= nscpxpiPath + "\\config.ini";
 
-	BuildComponentList(Components, compString, numComponents, iniSrcPath, 1);
+	BuildComponentList(Components, &numComponents, iniSrcPath, 1);
 	
 	int i;
 	CString WidgetValue("");

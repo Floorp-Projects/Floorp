@@ -43,7 +43,8 @@ BOOL prefDoesntExist = TRUE;
 COMPONENT Components[100];
 int		numComponents;
 int		componentOrder;
-CString	compString=" ";
+CString componentstr;
+char tempcomponentstr[MAX_SIZE];
 
 int findXPI(CString xpiname, CString filename)
 {
@@ -609,7 +610,7 @@ void init_components()
 {
 	int i;
 	WIDGET *w = findWidget("SelectedComponents");
-	BuildComponentList(Components, compString, numComponents, iniSrcPath,0);
+	BuildComponentList(Components, &numComponents, iniSrcPath,0);
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
 	{
@@ -673,7 +674,7 @@ void AddThirdParty()
 	CString tpComp2		= GetGlobal("CustomComponent23");
 	CString tpCompSize1	= GetGlobal("ComponentSize");
 	CString tpCompSize2	= GetGlobal("ModuleSize");
-	CString componentName;
+	char *componentName;
 	CString cName;
 	CString compSDesc	= "Description Short=";
 	CString compLDesc	= "Description Long=";
@@ -736,7 +737,9 @@ void AddThirdParty()
 
 	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath1.IsEmpty()))
 	{
-		componentName.Format("Component %s", (compString));
+		componentstr.Format("C%d", (numComponents));
+        strcpy(tempcomponentstr, componentstr);
+        GetPrivateProfileString("Setup Type2", tempcomponentstr, "", componentName, MAX_SIZE, iniSrcPath);
 		cName.Format("C%d", componentOrder);
 		componentOrder++;
 
@@ -752,7 +755,9 @@ void AddThirdParty()
 	firstSix = tpCompPath2.Left(6);
 	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath2.IsEmpty()))
 	{
-		componentName.Format("Component %s", (compString));
+		componentstr.Format("C%d", (numComponents));
+        strcpy(tempcomponentstr, componentstr);
+		GetPrivateProfileString("Setup Type2", tempcomponentstr, "", componentName, MAX_SIZE, iniSrcPath);
 		cName.Format("C%d", componentOrder);
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);

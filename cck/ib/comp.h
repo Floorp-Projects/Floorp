@@ -13,4 +13,4 @@ typedef struct s_component {
 	} COMPONENT;
 
 extern "C" __declspec(dllexport) 
-int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CString iniSrcPath,int invisibleCount);
+int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int invisibleCount);
