@@ -400,13 +400,9 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
   nsCOMPtr<nsISupportsArray> nodes;
   rv = NS_NewISupportsArray(getter_AddRefs(nodes));
   if (NS_FAILED(rv)) return rv;
-  
-  nsISimpleEnumerator* enumerator =
-    new nsArrayEnumerator(nodes);
-  if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
 
-  *_retval = enumerator;
-  NS_ADDREF(*_retval);
+  rv = NS_NewArrayEnumerator(_retval, nodes);
+  if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_amds
   nsXPIDLCString source_value;
@@ -623,14 +619,9 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   else
       rv = getAccountArcs(getter_AddRefs(arcs));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsArrayEnumerator* enumerator =
-    new nsArrayEnumerator(arcs);
 
-  NS_ENSURE_TRUE(enumerator, NS_ERROR_OUT_OF_MEMORY);
-  
-  *_retval = enumerator;
-  NS_ADDREF(*_retval);
+  rv = NS_NewArrayEnumerator(_retval, arcs);
+  if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_amds_
   printf("GetArcLabelsOut(%s): Adding child, settings, and name arclabels\n", value);

@@ -439,15 +439,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
   if(!*targets)
   {
 	  //create empty cursor
-	  nsCOMPtr<nsISupportsArray> assertions;
-      NS_NewISupportsArray(getter_AddRefs(assertions));
-	  nsArrayEnumerator* cursor = 
-		  new nsArrayEnumerator(assertions);
-	  if(cursor == nsnull)
-		  return NS_ERROR_OUT_OF_MEMORY;
-	  NS_ADDREF(cursor);
-	  *targets = cursor;
-	  rv = NS_OK;
+	  rv = NS_NewEmptyEnumerator(targets);
   }
 
   return rv;

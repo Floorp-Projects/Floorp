@@ -339,13 +339,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 				NS_IF_RELEASE(messageEnumerator);
 			}
 		}
-		nsArrayEnumerator* cursor =
-			new nsArrayEnumerator(arcs);
-		if (cursor == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		NS_ADDREF(cursor);
-		*labels = cursor;
-		return NS_OK;
+		return NS_NewArrayEnumerator(labels, arcs);
 	}
 	if(mDataSource)
 		return mDataSource->ArcLabelsOut(source, labels);

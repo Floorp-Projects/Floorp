@@ -210,16 +210,7 @@ nsMsgRDFDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval
   if(NS_FAILED(rv))
 	  return rv;
 
-  nsArrayEnumerator* arrayEnumerator =
-    new nsArrayEnumerator(arcs);
-  
-  if (arrayEnumerator == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(arrayEnumerator);
-  *_retval = arrayEnumerator;
-
-  return NS_OK;
+  return NS_NewArrayEnumerator(_retval, arcs);
 }
 
 

@@ -447,13 +447,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		if(NS_FAILED(rv))
 			return rv;
 
-	  nsArrayEnumerator* cursor = 
-		  new nsArrayEnumerator(assertions);
-	  if(cursor == nsnull)
-		  return NS_ERROR_OUT_OF_MEMORY;
-	  NS_ADDREF(cursor);
-	  *targets = cursor;
-	  rv = NS_OK;
+    rv = NS_NewArrayEnumerator(targets, assertions);
 	}
 	return rv;
 }
