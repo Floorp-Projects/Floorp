@@ -238,6 +238,9 @@ pref("print.save_print_settings", true);
 
 pref("print.whileInPrintPreview", true);
 
+// Cache old Presentation when going into Print Preview
+pref("print.always_cache_old_pres", false);
+
 // Enables you to specify the gap from the edge of the paper to the margin
 // this is used by both Printing and Print Preview
 pref("print.print_edge_top", 0); // 1/100 of an inch
