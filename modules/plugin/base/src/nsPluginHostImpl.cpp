@@ -194,7 +194,8 @@
 // 0.02 added caching of CanUnload to fix bug 105935
 // 0.03 changed name, description and mime desc from string to bytes, bug 108246
 // 0.04 added new mime entry point on Mac, bug 113464
-static const char *kPluginInfoVersion = "0.04";
+// 0.05 added new entry point check for the default plugin, bug 132430
+static const char *kPluginInfoVersion = "0.05";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
@@ -3879,7 +3880,6 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
           }
         }
 #endif
-        this->PostStartupMessageForType(aMimeType, aOwner);
         result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
 
 #ifdef XP_WIN
@@ -4387,50 +4387,6 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
   }
 
   return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsPluginHostImpl::PostStartupMessageForType(const char* aMimeType, 
-                                            nsIPluginInstanceOwner* aOwner)
-{
-  nsresult rv;
-  NS_ASSERTION(aOwner && aMimeType, 
-               "PostStartupMessageForType: invalid arguments");
-
-  PRUnichar *messageUni = nsnull;
-  nsAutoString msg;
-  nsCOMPtr<nsIStringBundle> regionalBundle;
-  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID,
-                                                         &rv));
-  if (!strings) {
-    return rv;
-  }
-  rv = strings->CreateBundle(PLUGIN_REGIONAL_URL, 
-                             getter_AddRefs(regionalBundle));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = regionalBundle->GetStringFromName(NS_LITERAL_STRING("pluginStartupMessage").get(), 
-                                         &messageUni);
-  if (NS_FAILED(rv)){
-    return rv;
-  }
-  msg = messageUni;
-  nsMemory::Free((void *)messageUni);
-
-  msg.Append(PRUnichar(' '));
-  msg.AppendWithConversion(aMimeType, PL_strlen(aMimeType));
-#ifdef PLUGIN_LOGGING
-  PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_ALWAYS,
-        ("nsPluginHostImpl::PostStartupMessageForType(aMimeType=%s)\n", 
-         aMimeType));
-
-  PR_LogFlush();
-#endif
-
-  rv = aOwner->ShowStatus(msg.get());
-  
-  return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////
