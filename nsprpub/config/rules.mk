@@ -352,14 +352,6 @@ endif	# WINNT
 endif	# AIX 4.1
 endif   # USE_AUTOCONF
 
-$(PURE_LIBRARY):
-	rm -f $@
-ifneq ($(OS_ARCH), WINNT)
-	$(AR) $(OBJS)
-endif
-	$(RANLIB) $@
-
-
 $(RESOBJ): $(RESNAME)
 	$(RC) -F$(OBJ_SUFFIX) $< $@
 
