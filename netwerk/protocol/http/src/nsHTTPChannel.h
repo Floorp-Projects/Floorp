@@ -105,13 +105,14 @@ protected:
     nsCString                   mContentType;
     nsCString                   mCharset;
     nsIInputStream*             mPostStream;
-	// Auth related stuff-
-	/* 
-		If this is true then we have already tried 
-		prehost as a response to the server challenge. 
-		And so we need to throw a dialog box!
-	*/
-	PRBool 						mAuthTriedWithPrehost;
+    nsCOMPtr<nsISupports>       mOwner;
+    // Auth related stuff-
+    /* 
+       If this is true then we have already tried 
+       prehost as a response to the server challenge. 
+       And so we need to throw a dialog box!
+    */
+    PRBool 						mAuthTriedWithPrehost;
 };
 
 #endif /* _nsHTTPChannel_h_ */

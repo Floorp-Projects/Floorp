@@ -335,15 +335,17 @@ nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+nsHTTPChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aPrincipal = nsnull;
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+nsHTTPChannel::SetOwner(nsISupports * aOwner)
 {
+    mOwner = aOwner;
     return NS_OK;
 }
 

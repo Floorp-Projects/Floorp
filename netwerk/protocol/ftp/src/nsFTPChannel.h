@@ -84,7 +84,7 @@ protected:
     PRInt32                 mAmount;
     nsILoadGroup*           mLoadGroup;
     nsString2               mContentType;
-
+    nsCOMPtr<nsISupports>   mOwner;
 };
 
 #define NS_FTP_SEGMENT_SIZE   (4*1024)

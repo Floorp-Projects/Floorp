@@ -23,7 +23,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
-#include "nsIPrincipal.h"
 #include "plbase64.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIPipe.h"
@@ -374,14 +373,17 @@ nsDataChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+nsDataChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aPrincipal = nsnull;
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDataChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+nsDataChannel::SetOwner(nsISupports * aOwner)
 {
+    mOwner = aOwner;
     return NS_OK;
 }
+

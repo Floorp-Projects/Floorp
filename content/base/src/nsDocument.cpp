@@ -647,6 +647,7 @@ nsDocument::nsDocument()
   mWordBreaker = nsnull;
   mModCount = 0;
   mFileSpec = nsnull;
+  mPrincipal = nsnull;
   Init();/* XXX */
 }
 
@@ -892,7 +893,10 @@ nsDocument::Reset(nsIURI *aURL)
 
 #ifdef NECKO
   (void)aChannel->GetURI(&mDocumentURL);
-  aChannel->GetPrincipal(&mPrincipal);
+  nsCOMPtr<nsISupports> owner;
+  aChannel->GetOwner(getter_AddRefs(owner));
+  if (owner)
+    owner->QueryInterface(nsIPrincipal::GetIID(), (void**)&mPrincipal);
 //  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
   mDocumentLoadGroup = aLoadGroup;
   NS_ADDREF(mDocumentLoadGroup);

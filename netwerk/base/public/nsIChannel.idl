@@ -24,7 +24,6 @@ interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsILoadGroup;
-interface nsIPrincipal;
 
 typedef unsigned long nsLoadFlags;
 
@@ -118,18 +117,18 @@ interface nsIChannel : nsIRequest
      */
     readonly attribute string ContentType;
 
-	/**
-	 * Returns the length of the data assiciated with the channel if available.
-	 * If the length is unknown then -1 is returned.
-	 */
-	readonly attribute long ContentLength;
+    /**
+     * Returns the length of the data assiciated with the channel if available.
+     * If the length is unknown then -1 is returned.
+     */
+    readonly attribute long ContentLength;
 
     /**
-     * Accesses the principal corresponding to the entity that is 
-	 * responsible for this channel. Used by security code to grant
-	 * or diminish privileges to mobile code loaded from this channel. 
+     * Accesses the owner corresponding to the entity that is 
+     * responsible for this channel. Used by security code to grant
+     * or diminish privileges to mobile code loaded from this channel. 
      */
-    attribute nsIPrincipal Principal;
+    attribute nsISupports Owner;
 
     /**
      * Returns the load group in which the channel is a currently a member.

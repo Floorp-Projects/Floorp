@@ -237,6 +237,7 @@ protected:
 
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;
+  nsCOMPtr<nsISupports>     mOwner;
 };
 
 

@@ -42,7 +42,6 @@
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 #include "prlog.h"
-#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
@@ -79,7 +78,7 @@ nsFileChannel::nsFileChannel()
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
       mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
       mLoadAttributes(LOAD_NORMAL),
-      mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull), mPrincipal(nsnull),
+      mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull),
       mRealListener(nsnull)
 {
     NS_INIT_REFCNT();
@@ -182,7 +181,6 @@ nsFileChannel::~nsFileChannel()
     if (mMonitor)
         nsAutoMonitor::DestroyMonitor(mMonitor);
     NS_IF_RELEASE(mLoadGroup);
-    NS_IF_RELEASE(mPrincipal);
 }
 
 NS_IMETHODIMP
@@ -580,19 +578,17 @@ nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+nsFileChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aPrincipal = mPrincipal;
-    NS_IF_ADDREF(*aPrincipal);
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+nsFileChannel::SetOwner(nsISupports * aOwner)
 {
-    NS_IF_RELEASE(mPrincipal);
-    mPrincipal = aPrincipal;
-    NS_IF_ADDREF(mPrincipal);
+    mOwner = aOwner;
     return NS_OK;
 }
 

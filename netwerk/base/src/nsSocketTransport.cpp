@@ -1749,15 +1749,18 @@ nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetPrincipal(nsIPrincipal * *aPrincipal)
+nsSocketTransport::GetOwner(nsISupports * *aOwner)
 {
-  *aPrincipal = nsnull;
-  return NS_OK;
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetPrincipal(nsIPrincipal * aPrincipal)
+nsSocketTransport::SetOwner(nsISupports * aOwner)
 {
-  return NS_OK;
+    mOwner = aOwner;
+    return NS_OK;
 }
+
 
