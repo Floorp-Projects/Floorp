@@ -509,7 +509,7 @@ sub find_languages {
            'slow down Bugzilla. Best used for smaller installations of ' .
            'Bugzilla.',
    type => 'b',
-   default => 0
+   default => 1
   },
 
   {
