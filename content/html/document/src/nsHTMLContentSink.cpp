@@ -826,22 +826,15 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
                   &rv);
 
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString tmpName;
-    aNodeInfo->GetName(tmpName);
+    nsAutoString tag;
+    aNodeInfo->GetName(tag);
     // Find tag in tag table
     PRInt32 id; 
-    rv = parserService->HTMLStringTagToId(tmpName, &id);
-    if (eHTMLTag_userdefined == nsHTMLTag(id)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
 
-    // Create atom for tag and then create content object
-    nsAutoString tag;
-    rv = parserService->HTMLIdToStringTag(id, tag);
+    rv = parserService->HTMLStringTagToId(tag, &id);
     nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.GetUnicode())));
     nsCOMPtr<nsINodeInfo> newName;
     aNodeInfo->NameChanged(atom, *getter_AddRefs(newName));
-
     rv = MakeContentObject(nsHTMLTag(id), newName, nsnull, nsnull, aResult);
   }
 

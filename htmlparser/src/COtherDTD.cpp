@@ -903,7 +903,10 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   if(theParent) {
     CElement *theChild=gElementTable->mElements[eHTMLTags(aChild)];
     if(aChild) {
-      return theParent->CanContain(theChild,mBodyContext);
+      if(eHTMLTag_userdefined == aChild)//bug #67007, dont strip userdefined tags
+        return PR_TRUE;                 
+      else
+        return theParent->CanContain(theChild,mBodyContext);
     }
   }
   return PR_FALSE;
