@@ -91,7 +91,7 @@ as well.
 <table>
 <tr>
 <td align=right><b>E-mail address:</b></td>
-<td><input size=35 name=login></td>
+<td><input size=35 name=login>}.Param('emailsuffix').q{</td>
 </tr>
 <tr>
 <td align=right><b>Real name:</b></td>
