@@ -2662,9 +2662,6 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 {
    NS_ENSURE_ARG(aDocShellItem);
 
-   // Size the chrome if we are being opened as chrome
-   PRBool sizeChrome = (aChromeFlags & nsIWebBrowserChrome::openAsChrome) != 0;
-
    // Use the current window's sizes as our default
    PRInt32 chromeX = 0, chromeY = 0, chromeCX = 0, chromeCY = 0;
    PRInt32 contentCX = 0, contentCY = 0;
@@ -2677,11 +2674,8 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
       &chromeCY);
 
    // if we are content, we may need the content sizes
-   if(!sizeChrome)
-      {
-      nsCOMPtr<nsIBaseWindow> currentDocShellAsWin(do_QueryInterface(mDocShell));
-      currentDocShellAsWin->GetSize(&contentCX, &contentCY);
-      }
+   nsCOMPtr<nsIBaseWindow> currentDocShellAsWin(do_QueryInterface(mDocShell));
+   currentDocShellAsWin->GetSize(&contentCX, &contentCY);
 
    PRBool present = PR_FALSE;
    PRBool positionSpecified = PR_FALSE;
@@ -2707,15 +2701,11 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    present = PR_FALSE;
 
+   PRBool sizeChrome = PR_FALSE;
+
    PRBool sizeSpecified = PR_FALSE;
 
-   if((temp = WinHasOption(aFeatures, "width", &present)) || present)
-      {
-      chromeCX = temp;
-      sizeChrome = PR_TRUE;
-      sizeSpecified = PR_TRUE;
-      }
-   else if((temp = WinHasOption(aFeatures, "outerWidth", &present)) || present)
+   if((temp = WinHasOption(aFeatures, "outerWidth", &present)) || present)
       {
       chromeCX = temp;
       sizeChrome = PR_TRUE;
@@ -2724,13 +2714,7 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    present = PR_FALSE;
 
-   if((temp = WinHasOption(aFeatures, "height", &present)) || present)
-      {
-      chromeCY = temp;
-      sizeChrome = PR_TRUE;
-      sizeSpecified = PR_TRUE;
-      }
-   else if((temp = WinHasOption(aFeatures, "outerHeight", &present)) || present)
+   if((temp = WinHasOption(aFeatures, "outerHeight", &present)) || present)
       {
       chromeCY = temp;
       sizeChrome = PR_TRUE;
@@ -2740,12 +2724,23 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
    // We haven't switched to chrome sizing so we need to get the content area
    if(!sizeChrome)
       {
-      if((temp = WinHasOption(aFeatures, "innerWidth", &present)) || present)
+      if((temp = WinHasOption(aFeatures, "width", &present)) || present)
          {
          contentCX = temp;
          sizeSpecified = PR_TRUE;
          }
-      if((temp = WinHasOption(aFeatures, "innerHeight", &present)) || present)
+      else if((temp = WinHasOption(aFeatures, "innerWidth", &present)) || present)
+         {
+         contentCX = temp;
+         sizeSpecified = PR_TRUE;
+         }
+
+      if((temp = WinHasOption(aFeatures, "height", &present)) || present)
+         {
+         contentCY = temp;
+         sizeSpecified = PR_TRUE;
+         }
+      else if((temp = WinHasOption(aFeatures, "innerHeight", &present)) || present)
          {
          contentCY = temp;
          sizeSpecified = PR_TRUE;
