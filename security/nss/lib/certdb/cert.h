@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.33 2002/12/24 02:25:33 wtc%netscape.com Exp $
+ * $Id: cert.h,v 1.34 2003/03/24 19:08:56 relyea%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1060,6 +1060,9 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype);
 
 PRBool
 CERT_IsCADERCert(SECItem *derCert, unsigned int *rettype);
+
+PRBool
+CERT_IsRootDERCert(SECItem *derCert);
 
 SECStatus
 CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.50 2003/01/31 02:49:13 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.51 2003/03/24 19:08:58 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1859,6 +1859,21 @@ CERT_IsCADERCert(SECItem *derCert, unsigned int *type) {
     isCA = CERT_IsCACert(cert,type);
     CERT_DestroyCertificate (cert);
     return isCA;
+}
+
+PRBool
+CERT_IsRootDERCert(SECItem *derCert)
+{
+    CERTCertificate *cert;
+    PRBool isRoot;
+
+    /* This is okay -- only looks at extensions */
+    cert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
+    if (cert == NULL) return PR_FALSE;
+
+    isRoot = cert->isRoot;
+    CERT_DestroyCertificate (cert);
+    return isRoot;
 }
 
 

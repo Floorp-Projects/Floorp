@@ -141,6 +141,7 @@ struct SEC_PKCS12DecoderContextStr {
     PRInt32     filesize;     /* actual data size */
     PRInt32     allocated;    /* total buffer size allocated */
     PRInt32     currentpos;   /* position counter */
+    SECPKCS12TargetTokenCAs tokenCAs;
 };
 
 
@@ -264,6 +265,8 @@ sec_pkcs12_decoder_init_new_safe_bag(sec_PKCS12SafeContentsContext
     safeContentsCtx->currentSafeBag->swapUnicodeBytes = 
 				safeContentsCtx->p12dcx->swapUnicodeBytes;
     safeContentsCtx->currentSafeBag->arena = safeContentsCtx->p12dcx->arena;
+    safeContentsCtx->currentSafeBag->tokenCAs = 
+				safeContentsCtx->p12dcx->tokenCAs;
 
     PORT_ArenaUnmark(p12dcx->arena, mark);
     return SECSuccess;
@@ -1194,6 +1197,7 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
     p12dcx->slot = (slot ? PK11_ReferenceSlot(slot) 
 						: PK11_GetInternalKeySlot());
     p12dcx->wincx = wincx;
+    p12dcx->tokenCAs = SECPKCS12TargetTokenNoCAs;
 #ifdef IS_LITTLE_ENDIAN
     p12dcx->swapUnicodeBytes = PR_TRUE;
 #else
@@ -1230,6 +1234,18 @@ loser:
     PORT_FreeArena(arena, PR_TRUE);
     return NULL;
 }
+
+SECStatus
+SEC_PKCS12DecoderSetTargetTokenCAs(SEC_PKCS12DecoderContext *p12dcx,
+		SECPKCS12TargetTokenCAs tokenCAs)
+{
+    if (!p12dcx || p12dcx->error) {
+	return SECFailure;
+    }
+    p12dcx->tokenCAs = tokenCAs;
+    return SECSuccess;
+}
+
 
 /* SEC_PKCS12DecoderUpdate 
  *	Streaming update sending more data to the decoder.  If 
@@ -2310,6 +2326,7 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
 {
     SECItem *derCert, *nickName;
     char *nickData = NULL;
+    PRBool isIntermediateCA;
     SECStatus rv;
 
     if(!cert) {
@@ -2329,6 +2346,9 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
 	nickData = (char *)nickName->data;
     }
 
+    isIntermediateCA = CERT_IsCADERCert(derCert, NULL) && 
+						!CERT_IsRootDERCert(derCert);
+
     if(keyExists) {
 	CERTCertificate *newCert;
 
@@ -2344,12 +2364,18 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
 	rv = PK11_ImportCertForKeyToSlot(cert->slot, newCert, nickData, 
 					 PR_TRUE, wincx);
 	CERT_DestroyCertificate(newCert);
-    } else {
+    } else if ((cert->tokenCAs == SECPKCS12TargetTokenNoCAs) || 
+     ((cert->tokenCAs == SECPKCS12TargetTokenIntermediateCAs) && 
+							!isIntermediateCA)) {
 	SECItem *certList[2];
 	certList[0] = derCert;
 	certList[1] = NULL;
+	
 	rv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageUserCertImport,
-			      1, certList, NULL, PR_TRUE, PR_FALSE, nickData);
+			     1, certList, NULL, PR_TRUE, PR_FALSE, nickData);
+    } else {
+	rv = PK11_ImportDERCert(cert->slot, derCert, CK_INVALID_HANDLE,
+							nickData, PR_FALSE);
     }
 
     cert->installed = PR_TRUE;
@@ -2901,6 +2927,7 @@ sec_pkcs12_decoder_convert_old_key(SEC_PKCS12DecoderContext *p12dcx,
     keyBag->slot = p12dcx->slot;
     keyBag->arena = p12dcx->arena;
     keyBag->pwitem = p12dcx->pwitem;
+    keyBag->tokenCAs = p12dcx->tokenCAs;
     keyBag->oldBagType = PR_TRUE;
 
     keyTag = (isEspvk) ? SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID :
@@ -3025,6 +3052,7 @@ sec_pkcs12_decoder_create_cert(SEC_PKCS12DecoderContext *p12dcx,
     certBag->pwitem = p12dcx->pwitem;
     certBag->swapUnicodeBytes = p12dcx->swapUnicodeBytes;
     certBag->arena = p12dcx->arena;
+    certBag->tokenCAs = p12dcx->tokenCAs;
 
     oid = SECOID_FindOIDByTag(SEC_OID_PKCS9_X509_CERT);
     certBag->safeBagContent.certBag = 
@@ -3257,6 +3285,7 @@ sec_PKCS12ConvertOldSafeToNew(PRArenaPool *arena, PK11SlotInfo *slot,
     p12dcx->error = PR_FALSE;
     p12dcx->swapUnicodeBytes = swapUnicode; 
     p12dcx->pwitem = pwitem;
+    p12dcx->tokenCAs = SECPKCS12TargetTokenNoCAs;
     
     if(sec_pkcs12_decoder_convert_old_safe_to_bags(p12dcx, safe, baggage) 
 				!= SECSuccess) {

@@ -741,6 +741,7 @@ PK11_TokenRefresh;
 ;+};
 ;+NSS_3.8 { 	# NSS 3.8 release
 ;+    global:
+CERT_IsRootDERCert;
 HASH_GetHashObjectByOidTag;
 HASH_GetHashTypeByOidTag;
 PK11_GetDefaultArray;
