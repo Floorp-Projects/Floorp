@@ -9,4 +9,5 @@ nsIID.h
 nsIPtr.h
 nsISupportsUtils.h
 nsTraceRefcnt.h
+nsWeakReference.h
 nscore.h
