@@ -23,6 +23,8 @@
 #define nsScrollPortFrame_h___
 
 #include "nsBoxFrame.h"
+#include "nsIStatefulFrame.h"
+
 
 /**
  * The scroll frame creates and manages the scrolling view
@@ -33,7 +35,8 @@
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsScrollPortFrame : nsBoxFrame {
+class nsScrollPortFrame : nsBoxFrame,
+                          public nsIStatefulFrame {
 public:
   friend nsresult NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -98,6 +101,12 @@ public:
   NS_IMETHOD GetMargin(nsMargin& aMargin);
 
   virtual nsresult GetContentOf(nsIContent** aContent);
+
+  //nsIStatefulFrame
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+
 
 protected:
   nsScrollPortFrame(nsIPresShell* aShell);

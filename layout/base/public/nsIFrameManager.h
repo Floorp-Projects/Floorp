@@ -24,6 +24,7 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
+#include "nsIStatefulFrame.h"
 
 class nsIAtom;
 class nsIContent;
@@ -165,6 +166,15 @@ public:
   NS_IMETHOD RestoreFrameState(nsIPresContext* aPresContext,
                                nsIFrame* aFrame,
                                nsILayoutHistoryState* aState) = 0;
+  // Add/restore state for one frame (special, global type, like scroll position)
+  NS_IMETHOD CaptureFrameStateFor(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame,
+                               nsILayoutHistoryState* aState,
+                               nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
+  NS_IMETHOD RestoreFrameStateFor(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame,
+                               nsILayoutHistoryState* aState,
+                               nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
 
   /**
    * Gets a property value for a given frame.

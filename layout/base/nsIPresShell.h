@@ -369,7 +369,7 @@ public:
    * Get and set the history state for the current document 
    */
 
-  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
+  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState) = 0;
 

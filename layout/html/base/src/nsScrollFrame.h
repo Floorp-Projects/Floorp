@@ -24,6 +24,7 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsIStatefulFrame.h"
 
 /**
  * The scroll frame creates and manages the scrolling view
@@ -35,7 +36,9 @@
  * or remove the scrolled frame
  */
 class nsScrollFrame : public nsHTMLContainerFrame,
-                      public nsIScrollableFrame {
+                      public nsIScrollableFrame,
+                      public nsIStatefulFrame
+{
 public:
   friend nsresult NS_NewScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -129,6 +132,11 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
+
+  //nsIStatefulFrame
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
   nsScrollFrame();
