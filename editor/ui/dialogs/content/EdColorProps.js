@@ -86,7 +86,6 @@ function Startup()
   dialog.VisitedLinkText = document.getElementById("VisitedLinkText");
   dialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
   dialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
-  dialog.BackgroundImageCheckbox = document.getElementById("BackgroundImageCheckbox");
   dialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
 
   BodyElement = editorShell.editorDocument.body;
@@ -171,15 +170,6 @@ function InitDialog()
 
   // Get image from document
   dialog.BackgroundImage = globalElement.getAttribute(backgroundStr);
- 
-  if (dialog.BackgroundImage)
-    dialog.BackgroundImageCheckbox.checked = true;
-  else 
-  {
-    // See if we saved an image from previous dialog usage
-    dialog.BackgroundImage = lastSetBackgroundImage;
-  }
-
   if (dialog.BackgroundImage)
   {
     dialog.BackgroundImageInput.value = dialog.BackgroundImage;
@@ -268,21 +258,6 @@ function UseDefaultColors()
   SetColor("backgroundCW", defaultBackgroundColor);
 }
 
-
-function onBackgroundImageCheckbox()
-{
-  // First make a string with just background color
-  var styleValue = colorStyle+dialog.backgroundColor+";";
-  if (dialog.BackgroundImageCheckbox.checked && ValidateImage())
-  {
-    // Append image style
-    styleValue += backImageStyle+dialog.BackgroundImage+");";
-  }
-dump(styleValue+"=style value when setting image\n")
-  // Set style on preview (removes image if not checked or not valid)
-  dialog.ColorPreview.setAttribute(styleStr, styleValue);
-}
-
 function chooseFile()
 {
   // Get a local file, converted into URL format
@@ -291,8 +266,17 @@ function chooseFile()
   {
     dialog.BackgroundImage = fileName;
     dialog.BackgroundImageInput.value = fileName;
-    dialog.BackgroundImageCheckbox.checked = true;
     dialog.ColorPreview.setAttribute(backgroundStr, fileName);
+    // First make a string with just background color
+    var styleValue = colorStyle+dialog.backgroundColor+";";
+    if (ValidateImage())
+    {
+      // Append image style
+      styleValue += backImageStyle+dialog.BackgroundImage+");";
+    }
+dump(styleValue+"=style value when setting image\n")
+    // Set style on preview (removes image if not checked or not valid)
+    dialog.ColorPreview.setAttribute(styleStr, styleValue);
   }
   
   // Put focus into the input field
@@ -315,9 +299,6 @@ function ValidateImage()
   SetTextfieldFocus(dialog.BackgroundImageInput);
   ShowInputErrorMessage(GetString("MissingImageError"));
 
-  // Don't allow checkbox if bad or no image
-  dialog.BackgroundImageCheckbox.checked = false;
-  // TODO: Do fancy enabling/disabling instead?
   return false;
 }
 
@@ -340,15 +321,13 @@ function ValidateData()
     globalElement.setAttribute(alinkStr,   dialog.activeLinkColor);
     globalElement.setAttribute(bgcolorStr, dialog.backgroundColor);
   }
-  if (dialog.BackgroundImageCheckbox.checked)
+
+  if (ValidateImage())
   {
-    if (!ValidateImage())
-      return false;
-
     globalElement.setAttribute(backgroundStr, dialog.BackgroundImage);
-
   } else {
     globalElement.removeAttribute(backgroundStr);
+    return false;
   }
   
   return true;

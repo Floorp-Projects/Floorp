@@ -26,8 +26,8 @@
 <!ENTITY size.label "Size">
 <!ENTITY numRowsEditField.label "Rows:">
 <!ENTITY numColumnsEditField.label "Columns:">
-<!ENTITY widthEditField.label "Table width:">
-<!ENTITY heightEditField.label "Table height:">
+<!ENTITY widthEditField.label "Width:">
+<!ENTITY heightEditField.label "Height:">
 <!ENTITY heightEditField.tooltip "Type a number, then choose pixels or a percentage of the window or parent cell">
 <!ENTITY borderEditField.label "Border:">
 <!ENTITY borderEditField.tooltip "Type a number for the table's border, or type zero (0) for no border">

@@ -131,17 +131,18 @@
     </box>
   <spring class="spacer"/>
   </titledbox>
-  <checkbox id="BackgroundImageCheckbox" value="&backgroundImage.label;" oncommand="onBackgroundImageCheckbox()"
-       tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" />
+  <spring class="spacer"/>
+  <text class="label" id="BackgroundImageCheckbox" value="&backgroundImage.label;"/>
   <grid>
     <columns><column/><column/></columns>
     <rows>
       <row style="margin-bottom: 5px">
-        <textfield id="BackgroundImageInput"/>
+        <textfield id="BackgroundImageInput"
+         tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" />
         <button class="dialog" id="ChooseFile" flex="1" />
       </row>
       <row autostretch="never" valign="middle">
-        <html class="label wrap" flex="1">&saveImageMsg.label;</html>
+        <spring/>
         <button class="dialog" id="AdvancedEditButton" flex="1"/>
       </row>
     </rows>
