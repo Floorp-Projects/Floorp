@@ -670,6 +670,45 @@ function SendMailToNode(emailAddressNode)
   }
 }
 
+// CopyEmailAddress takes the email address title button, extracts
+// the email address we stored in there and copies it to the clipboard
+function CopyEmailAddress(emailAddressNode)
+{
+  if (emailAddressNode)
+  {
+    var emailAddress = emailAddressNode.getAttribute("emailAddress");
+    if (emailAddress)
+    {
+      // This code stolen from nsContextMenu.js.
+      // Get clipboard.
+      var iid = Components.interfaces[ "nsIClipboard" ];
+      var clipboard = Components.classes[ "@mozilla.org/widget/clipboard;1" ].getService( iid );
+
+      // Create tranferable that will transfer the text.
+      iid = Components.interfaces[ "nsITransferable" ];
+      var transferable = Components.classes[ "@mozilla.org/widget/transferable;1" ].createInstance( iid );
+
+      if ( clipboard && transferable )
+      {
+        transferable.addDataFlavor( "text/unicode" );
+        // Create wrapper for text.
+        iid = Components.interfaces[ "nsISupportsWString" ];
+        var data = Components.classes[ "@mozilla.org/supports-wstring;1" ].createInstance( iid );
+
+        if ( data )
+        {
+          data.data = emailAddress;
+          transferable.setTransferData( "text/unicode", data, emailAddress.length * 2 );
+          // Put on clipboard.
+          clipboard.setData( transferable,
+                             null,
+                             Components.interfaces.nsIClipboard.kGlobalClipboard );
+        }
+      }
+    }
+  }
+}
+
 // createnewAttachmentInfo --> constructor method for creating new attachment object which goes into the
 // data attachment array.
 function createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded)

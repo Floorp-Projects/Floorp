@@ -474,7 +474,9 @@ Rights Reserved.
 <!ENTITY AddToAddressBook.label "Add to Address Book...">
 <!ENTITY AddToAddressBook.accesskey "b">
 <!ENTITY SendMailTo.label "Compose Mail To">
-<!ENTITY SendMailTo.accesskey "">
+<!ENTITY SendMailTo.accesskey "s">
+<!ENTITY CopyEmailAddress.label "Copy Email Address">
+<!ENTITY CopyEmailAddress.accesskey "c">
 
 <!-- Print Engine -->
 <!ENTITY printEngine.title "Printing...">
