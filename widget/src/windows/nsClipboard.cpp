@@ -756,6 +756,8 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
 void
 nsClipboard :: ResolveShortcut ( const char* inFileName, char** outURL )
 {
+// IUniformResourceLocator isn't supported by VC5 (bless its little heart)
+#if _MSC_VER >= 1200
   HRESULT result;
 
   IUniformResourceLocator* urlLink = nsnull;
@@ -789,7 +791,7 @@ nsClipboard :: ResolveShortcut ( const char* inFileName, char** outURL )
     }
     urlLink->Release();
   }
-
+#endif
 } // ResolveShortcut
 
 
