@@ -125,6 +125,10 @@ public:
   virtual nsresult CreateMenuBar(PRInt32 aWidth);
   virtual nsresult CreateToolBar(PRInt32 aWidth);
   virtual nsresult CreateStatusBar(PRInt32 aWidth);
+ 
+  // XXX: This method is temporary until javascript event handlers come
+  // through the content model.
+  void ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript);
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
   void Back();
   void Forward();
