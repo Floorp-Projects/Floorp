@@ -500,6 +500,24 @@ NOFRAMES {
 
 /* Pseudo-element style */
 
+:SCROLLBAR-LOOK {
+  background-color: #c0c0c0;
+  //border-color: inherit;
+  //border: 2px outset #c0c0c0;
+}
+
+:SCROLLBAR-ARROW-LOOK {
+  background-color: #c0c0c0;
+  border-color: inherit;
+  border: 2px outset #c0c0c0;
+}
+
+:SCROLLBAR-THUMB-LOOK {
+  background-color: #c0c0c0;
+  border-color: inherit;
+  border: 2px outset #c0c0c0;
+}
+
 :SCROLLED-CONTENT {
   background: inherit;
   padding: inherit;
