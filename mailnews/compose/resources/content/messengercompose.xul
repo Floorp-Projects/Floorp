@@ -63,7 +63,7 @@ Rights Reserved.
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
 		<menuitem value="&saveAsCmd.label;" onaction="SaveAsDraft()"/>
 		<menuitem value="&saveAsTemplateCmd.label;" onaction="SaveAsTemplate()"/>
-		<menu  id="attachMenu" name="&attachMenu.label;">
+      		<menu value="&attachMenu.label;">
 			<menupopup>
 			<menuitem value="&attachFileCmd.label;" onaction="AttachFile()"/>
 			<menuitem value="&attachPageCmd.label;" onaction="AttachPage()"/>
