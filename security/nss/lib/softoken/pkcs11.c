@@ -1040,7 +1040,6 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
     CK_BBOOL derive = CK_FALSE;
     CK_BBOOL verify = CK_TRUE;
     CK_ATTRIBUTE_TYPE pubKeyAttr = CKA_VALUE;
-    PK11Attribute *attribute;
     CK_RV crv;
 
     switch (key_type) {
