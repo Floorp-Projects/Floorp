@@ -285,11 +285,13 @@ sub ImportXMLProject($$)
     my ($codewarrior_ide_name) = Moz::CodeWarriorLib::getCodeWarriorIDEName();
     my $ascript = <<EOS;
     tell application "$codewarrior_ide_name"
+      with timeout of 30 seconds
         make new (project document) as ("$project_path") with data ("$xml_path")
+      end timeout
     end tell
 EOS
-	print $ascript."\n";
-    MacPerl::DoAppleScript($ascript) or die($^E);
+    print $ascript."\n";
+    MacPerl::DoAppleScript($ascript) or die "Error: ImportXMLProject AppleScript failed $^E\n";
 }
 
 
