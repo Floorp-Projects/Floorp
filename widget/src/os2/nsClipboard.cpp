@@ -146,15 +146,20 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
         pDataMem = pTempBuf;
       }
 
-      // DOM wants LF only, so convert from CRLF
-      nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks( aFlavor, &pDataMem,   // pDataMem could be reallocated !!
-                                                          NS_REINTERPRET_CAST(PRInt32*, &NumOfBytes) );  // yuck
     }
     else                           // All other text/.. flavors are in unicode
     {
       PRUint32 NumOfChars = UniStrlen( NS_STATIC_CAST(UniChar*, pDataMem) );
       NumOfBytes = NumOfChars * sizeof(UniChar);
+      pTempBuf = nsMemory::Alloc(NumOfBytes);
+      memcpy(pTempBuf, pDataMem, NumOfBytes);
+      pDataMem = pTempBuf;
     }
+
+    // DOM wants LF only, so convert from CRLF
+    nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks( aFlavor, &pDataMem,   // pDataMem could be reallocated !!
+                                                        NS_REINTERPRET_CAST(PRInt32*, &NumOfBytes) );  // yuck
+
   }
   else                             // Assume rest of flavors are binary data
   {
