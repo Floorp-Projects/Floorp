@@ -4467,9 +4467,26 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
         continue;
 
       if (gScaleBitmapFontsWithDevScale && (gDevScale > 1.0f)) {
+        /* Add a font size which is exactly scaled as the scaling factor ... */
         if (!NodeAddSize(stretch, pixels, points, gDevScale, resX, resY, name, familyName, weightName, 
-                    slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
+                         slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
           continue;
+
+        /* ... and offer a range of scaled fonts with integer scaling factors
+         * (we're taking half steps between integers, too - to avoid too big
+         * steps between font sizes) */
+        float minScaler = PR_MAX(gDevScale / 2.0f, 1.5f),
+              maxScaler = gDevScale * 2.f,
+              scaler;
+        for( scaler = minScaler ; scaler <= maxScaler ; scaler += 0.5f )
+        {
+          if (!NodeAddSize(stretch, pixels, points, scaler, resX, resY, name, familyName, weightName, 
+                           slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
+            break;
+        }
+        if (scaler <= maxScaler) {
+          continue; /* |NodeAddSize| returned an error in the loop above... */
+        }
       }
     }
   }
