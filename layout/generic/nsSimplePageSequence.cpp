@@ -773,15 +773,19 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::DoPageEnd(nsIPresContext*  aPresContext)
 {
+	nsresult rv = NS_OK;
+	
   if (mPrintThisPage) {
     nsCOMPtr<nsIDeviceContext> dc;
     aPresContext->GetDeviceContext(getter_AddRefs(dc));
     NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
 
-    PRINT_DEBUG_MSG1("***************** End Page (DoPageEnd) *****************\n");
-    nsresult rv = dc->EndPage();
-    if (NS_FAILED(rv)) {
-      return rv;
+    if(mSkipPageEnd){
+	    PRINT_DEBUG_MSG1("***************** End Page (DoPageEnd) *****************\n");
+      nsresult rv = dc->EndPage();
+	    if (NS_FAILED(rv)) {
+	      return rv;
+      }
     }
   }
 
@@ -791,7 +795,12 @@ nsSimplePageSequenceFrame::DoPageEnd(nsIPresContext*  aPresContext)
   }
 
   mPageNum++;
-  return mCurrentPageFrame->GetNextSibling(&mCurrentPageFrame);
+  
+  if( nsnull != mCurrentPageFrame){
+    rv = mCurrentPageFrame->GetNextSibling(&mCurrentPageFrame);
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
