@@ -76,6 +76,8 @@
     
    
 <!-- Javascript DTD To Variable -->
+<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+
 <script type="application/x-javascript">
    var DTD_noEmailMessage           = "&ab-selectAddressesDialogNoEmailMessage.label;";
    var DTD_toPrefix                 = "&ab-selectAddressesDialogPrefixTo.label;";

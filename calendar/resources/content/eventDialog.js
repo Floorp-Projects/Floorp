@@ -1473,7 +1473,33 @@ function launchBrowser()
       UrlToGoTo = "http://"+UrlToGoTo;
 
    //launch the browser to that URL
-   window.open( UrlToGoTo, "calendar-opened-window" );
+   var navWindow;
+
+     // if not, get the most recently used browser window
+       try {
+         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+           .getService(Components.interfaces.nsIWindowMediator);
+         navWindow = wm.getMostRecentWindow("navigator:browser");
+       }
+       catch (ex) { }
+     
+     if (navWindow) {
+       if ("delayedOpenTab" in navWindow)
+         navWindow.delayedOpenTab(UrlToGoTo);
+       else if ("loadURI" in navWindow)
+         navWindow.loadURI(UrlToGoTo);
+       else
+         navWindow._content.location.href = UrlToGoTo;
+     }
+     // if all else fails, open a new window
+     else {
+       var ass = Components.classes["@mozilla.org/appshell/appShellService;1"].getService(Components.interfaces.nsIAppShellService);
+       w = ass.hiddenDOMWindow;
+
+       w.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", UrlToGoTo );
+     }
+   //window.open(UrlToGoTo, "_blank", "chrome,menubar,toolbar,resizable,dialog=no");
+   //window.open( UrlToGoTo, "calendar-opened-window" );
    launch = true;
 }
 
