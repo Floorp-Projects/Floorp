@@ -39,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIDocShellTreeItem.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -834,15 +835,16 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
 
     if ((NS_OK == rv) && (nsnull != cont))
     {
-      nsCOMPtr<nsIWebShell> ws(do_QueryInterface(cont));
+      nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
 
-      if (NS_OK == rv)
+      if (docShellItem)
       {
-        nsCOMPtr<nsIWebShell> rootWebShell;
+        nsCOMPtr<nsIDocShellTreeItem> root;
 
-        ws->GetRootWebShell(*getter_AddRefs(rootWebShell));
+        docShellItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
 
-        if (nsnull != rootWebShell)
+        nsCOMPtr<nsIWebShell> rootWebShell(do_QueryInterface(root));
+        if (rootWebShell)
         {
           nsCOMPtr<nsIWebShellContainer> rootContainer;
 

@@ -33,6 +33,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIWebShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
 #include "nsIPresContext.h"
@@ -1568,13 +1569,13 @@ nsXMLContentSink::StartLayout()
     NS_RELEASE(url);
   }
   PRBool topLevelFrameset = PR_FALSE;
-  if (mWebShell) {
-    nsIWebShell* rootWebShell;
-    mWebShell->GetRootWebShell(rootWebShell);
-    if (mWebShell == rootWebShell) {
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  if (docShellAsItem) {
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if(docShellAsItem.get() == root.get()) {
       topLevelFrameset = PR_TRUE;
     }
-    NS_IF_RELEASE(rootWebShell);
   }
 
   if ((nsnull != ref) || topLevelFrameset) {

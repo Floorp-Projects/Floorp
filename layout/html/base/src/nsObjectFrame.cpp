@@ -50,6 +50,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDocShellTreeItem.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -1733,50 +1734,40 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
 
   if (nsnull != mContext)
   {
-    nsISupports *cont;
+    nsCOMPtr<nsISupports> cont;
 
-    rv = mContext->GetContainer(&cont);
+    rv = mContext->GetContainer(getter_AddRefs(cont));
 
     if ((NS_OK == rv) && (nsnull != cont))
     {
-      nsIWebShell *ws;
-
-      rv = cont->QueryInterface(nsIWebShell::GetIID(), (void **)&ws);
-
-      if (NS_OK == rv)
+      nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
+      if (docShellItem)
       {
-        nsIWebShell *rootWebShell;
+        nsCOMPtr<nsIDocShellTreeItem> root;
 
-        ws->GetRootWebShell(rootWebShell);
+        docShellItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
 
-        if (nsnull != rootWebShell)
+        nsCOMPtr<nsIWebShell> rootWebShell(do_QueryInterface(root));
+
+        if (rootWebShell)
         {
-          nsIWebShellContainer *rootContainer;
+          nsCOMPtr<nsIWebShellContainer> rootContainer;
 
-          rv = rootWebShell->GetContainer(rootContainer);
+          rv = rootWebShell->GetContainer(*getter_AddRefs(rootContainer));
 
           if (nsnull != rootContainer)
           {
-            nsIBrowserWindow *browserWindow;
+            nsCOMPtr<nsIBrowserWindow> browserWindow(do_QueryInterface(rootContainer));
 
-            if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow))
+            if (rootContainer)
             {
               nsAutoString  msg = nsAutoString(aStatusMsg);
 
               rv = browserWindow->SetStatus(msg.GetUnicode());
-              NS_RELEASE(browserWindow);
             }
-
-            NS_RELEASE(rootContainer);
           }
-
-          NS_RELEASE(rootWebShell);
         }
-
-        NS_RELEASE(ws);
       }
-
-      NS_RELEASE(cont);
     }
   }
 
