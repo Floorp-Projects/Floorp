@@ -3477,10 +3477,25 @@ case "$target_os" in
 esac
 
 MOZ_ARG_DISABLE_BOOL(activex,
-[  --disable-activex     Disable building of ActiveX (win32 only)],
+[  --disable-activex       Disable building of ActiveX control (win32 only)],
     MOZ_NO_ACTIVEX_SUPPORT=1,
     MOZ_NO_ACTIVEX_SUPPORT= )
 AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
+
+MOZ_ACTIVEX_SCRIPTING_SUPPORT=
+MOZ_ARG_ENABLE_BOOL(activex-scripting,
+[  --enable-activex-scripting
+                          Enable building of ActiveX scripting and plugin support (win32 only)],
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1,
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=)
+AC_SUBST(MOZ_ACTIVEX_SCRIPTING_SUPPORT)
+
+
+if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";
+then
+    AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
+fi
+
 
 dnl ========================================================
 dnl build the tests by default

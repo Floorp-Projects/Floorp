@@ -64,6 +64,9 @@ bin\res\cmessage.txt
 bin\regxpcom.exe
 bin\xpicleanup.exe
 
+; ActiveX plugin
+bin\plugins\npmozax.dll
+
 ; LDAP components need to be in the browser for AutoConfig
 bin\nsldap32v50.dll
 bin\nsldappr32v50.dll
