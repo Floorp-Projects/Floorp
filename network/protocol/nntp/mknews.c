@@ -58,7 +58,6 @@
 #include "prtime.h"
 #include "prlog.h"
 
-#include "xp_error.h"
 #include "secnav.h"
 #include "prefapi.h"	
 
@@ -672,7 +671,7 @@ net_news_response (ActiveEntry * ce)
     if(ce->status < 0)
 	  {
         ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, 
-													  SOCKET_ERRNO);
+													  PR_GetOSError());
 
         /* return TCP error
          */
@@ -869,7 +868,7 @@ PRIVATE int net_nntp_send_list_extensions_response (ActiveEntry *ce)
 			return ce->status;  /* no line yet */
 		if (ce->status < 0)
 		{
-			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 			/* return TCP error */
 			return MK_TCP_READ_ERROR;
 		}
@@ -942,7 +941,7 @@ PRIVATE int net_nntp_send_list_searches_response (ActiveEntry *ce)
 		return ce->status;  /* no line yet */
 	if (ce->status < 0)
 	{
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -997,7 +996,7 @@ PRIVATE int net_send_list_search_headers_response (ActiveEntry *ce)
 		return ce->status;  /* no line yet */
 	if (ce->status < 0)
 	{
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -1055,7 +1054,7 @@ PRIVATE int nntp_get_properties_response (ActiveEntry *ce)
 		return ce->status;  /* no line yet */
 	if (ce->status < 0)
 	{
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -1133,7 +1132,7 @@ PRIVATE int net_send_list_subscriptions_response (ActiveEntry *ce)
 		return ce->status;  /* no line yet */
 	if (ce->status < 0)
 	{
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -2103,7 +2102,7 @@ net_process_newgroups (ActiveEntry *ce)
 
     if(ce->status<0)
       {
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
         /* return TCP error
          */
@@ -2235,7 +2234,7 @@ net_read_news_list (ActiveEntry *ce)
 
     if(ce->status<0)
 	  {
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
         /* return TCP error
          */
@@ -2511,7 +2510,7 @@ net_read_xover (ActiveEntry *ce)
 	if(ce->status<0) 
 	  {
         ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR,
-													  SOCKET_ERRNO);
+													  PR_GetOSError());
 
         /* return TCP error
          */
@@ -2741,7 +2740,7 @@ net_read_news_group_body (ActiveEntry *ce)
 
   if(ce->status < 0)
 	{
-	  ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+	  ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
 	  /* return TCP error
 	   */
@@ -3677,7 +3676,8 @@ PRIVATE int net_nntp_search_results (ActiveEntry *ce)
 		return ce->status;  /* no line yet */
 	if (ce->status < 0)
 	{
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR,
+                                                       PR_GetOSError());
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}

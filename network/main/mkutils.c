@@ -45,7 +45,6 @@
 #include "mktcp.h"
 #include "netutils.h"
 
-#include "xp_error.h"
 #include "xpgetstr.h"
 
 #include "mimeenc.h"

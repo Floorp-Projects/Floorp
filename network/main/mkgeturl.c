@@ -98,7 +98,6 @@
 #endif /* NSPR20 */
 
 #include "sslerr.h"
-#include "xp_error.h"
 #include "merrors.h"
 #include "prefetch.h"
 
@@ -3231,7 +3230,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 				}
 				else if(tmpEntry->status < 0
 							&& !tmpEntry->URL_s->use_local_copy
-							&& XP_GetError() != SSL_ERROR_BAD_CERTIFICATE
+							&& PR_GetError() != SSL_ERROR_BAD_CERTIFICATE
 						&& (tmpEntry->status == MK_CONNECTION_REFUSED
 			    			|| tmpEntry->status == MK_CONNECTION_TIMED_OUT
 			    			|| tmpEntry->status == MK_UNABLE_TO_CREATE_SOCKET
@@ -3319,7 +3318,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 					 * window may be active, but it should get
 					 * the same error
 					 */
-					if(SOCKET_ERRNO == XP_ERRNO_ENETDOWN)
+					if(PR_GetOSError() == XP_ERRNO_ENETDOWN)
 					{
 						NET_SilentInterruptWindow(tmpEntry->window_id);
 					}

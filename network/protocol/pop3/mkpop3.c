@@ -54,7 +54,6 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
 #include "secnav.h"
 #include "ssl.h"
 
-#include "xp_error.h"
 #include "xpgetstr.h"
 
 #include "prefapi.h"
@@ -748,7 +747,7 @@ net_pop3_send_command(ActiveEntry *ce, const char * command)
 
 	if(status < 0)
 	  {
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, PR_GetOSError());
 		cd->next_state = POP3_ERROR_DONE;
 		return(MK_TCP_WRITE_ERROR);
 	  }
@@ -812,7 +811,7 @@ net_pop3_auth_response(ActiveEntry *ce)
     }
     else if (ce->status < 0) 
 	{
-        int rv = SOCKET_ERRNO;
+        int rv = PR_GetOSError();
 
 		TRACEMSG(("TCP Error: %d", rv));
 

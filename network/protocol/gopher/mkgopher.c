@@ -58,10 +58,6 @@
 #include "mkparse.h"        /* NET_ParseURL() */
 #include "remoturl.h"       /* NET_RemoteHostLoad */
 
-
-#include "xp_error.h"
-
-
 /* for XP_GetString() */
 #include "xpgetstr.h"
 extern int XP_HTML_GOPHER_INDEX;
@@ -199,7 +195,7 @@ net_parse_menu (ActiveEntry * cur_entry)
       }
     else if(CE_STATUS < 0)
       {
-        NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
         /* return TCP error
          */
@@ -462,7 +458,7 @@ net_parse_cso (ActiveEntry * cur_entry)
      */
     if(CE_STATUS < 0)
       {
-        NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
         /* return TCP error
          */

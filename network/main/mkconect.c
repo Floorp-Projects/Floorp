@@ -86,8 +86,6 @@
 
 #endif /* XP_UNIX */
 
-#include "xp_error.h"
-
 /* for XP_GetString() */
 #include "xpgetstr.h"
 extern int MK_CONNECTION_REFUSED;

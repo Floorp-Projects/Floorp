@@ -25,8 +25,6 @@
 #include "merrors.h"
 #include "ssl.h"
 
-#include "xp_error.h"
-
 extern int MK_HTTP_TYPE_CONFLICT;
 extern int XP_ERRNO_EWOULDBLOCK;
 

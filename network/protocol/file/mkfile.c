@@ -50,7 +50,6 @@ IL_Type(const char *buf, int32 len);
 #include "errno.h"
 #endif
 
-#include "xp_error.h"
 #include "prefapi.h"
 
 /* for XP_GetString() */
