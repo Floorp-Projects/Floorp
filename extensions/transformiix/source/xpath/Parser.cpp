@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: Parser.cpp,v 1.3 2000/05/16 09:34:01 kvisco%ziplink.net Exp $
+ * $Id: Parser.cpp,v 1.4 2000/07/23 07:25:29 kvisco%ziplink.net Exp $
  */
 
 /**
  * Test App for Expressions
- * @version $Revision: 1.3 $ $Date: 2000/05/16 09:34:01 $
+ * @version $Revision: 1.4 $ $Date: 2000/07/23 07:25:29 $
 **/
 
 #include <iostream.h>
@@ -48,7 +48,11 @@ void main(int argc, char** argv) {
     //String pattern("@*|node()");
     //String pattern("FSContext/UserList/User[@id=/FSContext/SessionData/@userref]/@priv = 'admin'");
 
-    String pattern("10/3");
+    //String pattern("10/3");
+	//String pattern("*[1]foo|*[1]/bar|*[1]/baz");
+    
+    //-- Current Test
+    String pattern("(4+5)-(9+9)");
 
     cout <<"Lexically Analyzing: "<<pattern<<endl;
     cout<<endl;
@@ -166,6 +170,8 @@ void main(int argc, char** argv) {
         expr->toString(resultString);
         cout << "result: "<<resultString <<endl;
     }
+
+    cout << endl << "----------------------" << endl << endl;
 
     NumberExpr numberExpr( -24.0 );
     resultString.clear();
