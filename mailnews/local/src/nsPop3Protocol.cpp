@@ -748,17 +748,24 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
 
     PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 
-    if(line && *line == '+')
-	{
+    if(pauseForMoreData || !line)
+    {
+        m_pop3ConData->pause_for_read = PR_TRUE; /* pause */
+        PR_FREEIF(line);
+        return(line_length);
+    }
+
+    if(*line == '+')
+    {
         m_pop3ConData->command_succeeded = PR_TRUE;
         if(PL_strlen(line) > 4)
 			m_commandResponse = line+4;
         else
 			m_commandResponse = line;
-        } 
-    m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-    m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
-    
+         
+        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
+        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+    }
 	PR_FREEIF(line);
     return(1);  /* everything ok */
 }
@@ -1028,7 +1035,7 @@ PRInt32 nsPop3Protocol::SendPassword()
     }
     else if (NS_FAILED(rv) || !password || !(* (const char *) password))
     {
-        return Error(POP3_PASSWORD_UNDEFINED);
+      return Error(POP3_PASSWORD_UNDEFINED);
     }
 
     nsCAutoString cmd;
@@ -1069,12 +1076,9 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
            
            But if we're just checking for new mail (biff) then don't bother
            prompting the user for a password: just fail silently. */
-        if (m_pop3ConData->only_check_for_new_mail)
-            return MK_POP3_PASSWORD_UNDEFINED;
-        else       
-            Error(POP3_PASSWORD_FAILURE);
+        Error(POP3_PASSWORD_FAILURE);
         
-	SetFlag(POP3_PASSWORD_FAILED);
+        SetFlag(POP3_PASSWORD_FAILED);
 
         // libmsg event sink
         if (m_nsIPop3Sink) 
@@ -2515,9 +2519,13 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
             Pop3MsgInfo* info = m_pop3ConData->msg_info +
                 m_pop3ConData->last_accessed_msg; 
             if (info && info->uidl && (m_pop3ConData->only_uidl == NULL) &&
-                m_pop3ConData->newuidl && m_pop3ConData->newuidl->nentries > 0) { 
+                m_pop3ConData->newuidl) 
+            {   // check if newuidl has more than zero entries
+              if (m_pop3ConData->newuidl->nentries > 0)
+              {
                 PRBool val = PL_HashTableRemove (m_pop3ConData->newuidl, info->uidl);
                 PR_ASSERT(val);
+              }
             }
         }
     }
@@ -2594,9 +2602,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             PRBool okayValue;
 			GetPassword(getter_Copies(password), &okayValue);
 			const char * pwd = (const char *) password;
-            if ((m_pop3ConData->only_check_for_new_mail /* ||
-                 MSG_Biff_Master_NikiCallingGetNewMail() */) && 
-                (!password || m_username.IsEmpty())) 
+            if (!password || m_username.IsEmpty()) 
             {
                 status = MK_POP3_PASSWORD_UNDEFINED;
                 m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_Unknown;
@@ -2677,16 +2683,31 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 #endif 
            if (m_username.IsEmpty() || !pwd || !*pwd)
             {
-                // net_pop3_block = PR_FALSE;
                 m_pop3ConData->next_state = POP3_ERROR_DONE;
                 m_pop3ConData->pause_for_read = PR_FALSE;
-                break;
             }
+           else
+           {
+              //we are already connected so just go on and send the username
+              PRBool prefBool = PR_FALSE; 
+              m_pop3ConData->pause_for_read = PR_FALSE;
+              m_pop3Server->GetAuthLogin(&prefBool);
             
-            m_pop3ConData->next_state = POP3_START_CONNECT;
-            m_pop3ConData->pause_for_read = PR_FALSE;
-            break;
-			  }
+              if (prefBool) 
+              {
+                if (m_pop3ConData->capability_flags & POP3_AUTH_LOGIN_UNDEFINED)
+                  m_pop3ConData->next_state = POP3_SEND_AUTH;
+                else if (m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
+                  m_pop3ConData->next_state = POP3_AUTH_LOGIN;
+                else
+                  m_pop3ConData->next_state = POP3_SEND_USERNAME;
+              }
+              else
+                m_pop3ConData->next_state = POP3_SEND_USERNAME;
+           }
+           break;
+           }
+           
         
         case POP3_START_CONNECT:
         {
