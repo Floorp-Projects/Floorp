@@ -550,6 +550,9 @@ HasFinalReturn(JSParseNode *pn)
       case TOK_RETURN:
         return ENDS_IN_RETURN;
 
+      case TOK_COLON:
+        return HasFinalReturn(pn->pn_expr);
+
 #if JS_HAS_EXCEPTIONS
       case TOK_THROW:
         return ENDS_IN_RETURN;
