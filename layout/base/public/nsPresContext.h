@@ -78,8 +78,8 @@ class nsIRenderingContext;
 #endif
 
 #define NS_IPRESCONTEXT_IID   \
-{ 0x2820eeff, 0x7e66, 0x43df, \
-  {0xae, 0x19, 0xee, 0xf6, 0x09, 0xc1, 0xcf, 0xfe} }
+{ 0xa394329f, 0x3b10, 0x49ac, \
+  {0x8f, 0xf2, 0xeb, 0x0b, 0x66, 0x93, 0x82, 0x38} }
 
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
@@ -174,13 +174,6 @@ public:
    * Clear style data from the root frame downwards, and reflow.
    */
   virtual void ClearStyleDataAndReflow() = 0;
-
-   /**
-    * Resolve a new style context for a content node and return the URL
-    * for its XBL binding, or null if it has no binding specified in CSS.
-    */
-  virtual nsresult GetXBLBindingURL(nsIContent* aContent,
-                                    nsIURI** aResult) = 0;
 
   void* AllocateFromShell(size_t aSize)
   {

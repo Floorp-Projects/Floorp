@@ -856,18 +856,6 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
   mImageAnimationMode = aMode;
 }
 
-nsresult
-nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult)
-{
-  nsRefPtr<nsStyleContext> sc;
-  sc = StyleSet()->ResolveStyleFor(aContent, nsnull);
-  NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
-
-  *aResult = sc->GetStyleDisplay()->mBinding;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 {

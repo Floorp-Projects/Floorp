@@ -176,7 +176,9 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIScriptGlobalObject.h"
-
+#include "nsStyleSet.h"
+#include "nsStyleContext.h"
+#include "nsAutoPtr.h"
 
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
@@ -4883,12 +4885,11 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   shell->GetPresContext(getter_AddRefs(pctx));
   NS_ENSURE_TRUE(pctx, NS_ERROR_UNEXPECTED);
 
-  // XXX this is a hack so that we don't take a performance hit by using
-  // the DOM computed style API.  We can get rid of this hack if we merge
-  // the jsdom library with layout.
+  nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(content,
+                                                                  nsnull);
+  NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIURI> bindingURL;
-  pctx->GetXBLBindingURL(content, getter_AddRefs(bindingURL));
+  nsIURI *bindingURL = sc->GetStyleDisplay()->mBinding;
   if (!bindingURL) {
     // No binding, nothing left to do here.
     return NS_OK;
