@@ -257,6 +257,7 @@ public:
 
     nsresult GetPassword(char ** aPassword);
 
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg);
 	NS_IMETHOD Cancel();  // handle stop button
 
 private:

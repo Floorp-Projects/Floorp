@@ -584,6 +584,20 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
 	return rv;
 }
 
+// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
+NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg)
+{
+	nsresult rv = nsMsgProtocol::OnStopRequest(aChannel, aContext, aStatus, aMsg);
+	// turn off the server busy flag on stop request - we know we're done, right?
+	if (m_pop3Server)
+	{
+		nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+		if (server)
+			server->SetServerBusy(PR_FALSE); // the server is now busy
+	}
+	return rv;
+}
+
 NS_IMETHODIMP nsPop3Protocol::Cancel()  // handle stop button
 {
 	return nsMsgProtocol::Cancel();
