@@ -658,38 +658,27 @@ public class TokenStream {
         return result;
     }
 
-    /* helper functions... these might be better inlined.
-     * These are needed because the java.lang.Character.isWhatever
-     * functions accept unicode, and we want to limit
-     * identifiers to ASCII.
-     */
     protected static boolean isJSIdentifier(String s) {
         int length = s.length();
 
-        if (length == 0 || !isJSIdentifierStart(s.charAt(0)))
+        if (length == 0 || !Character.isJavaIdentifierStart(s.charAt(0)))
             return false;
 
         for (int i=1; i<length; i++) {
-            if (!isJSIdentifierPart(s.charAt(i)))
+			char c = s.charAt(i);
+            if (!Character.isJavaIdentifierPart(c))
+				if (c == '\\')
+					if (! ((i + 5) < length)
+							&& (s.charAt(i + 1) == 'u')
+							&& isXDigit(s.charAt(i + 2))
+							&& isXDigit(s.charAt(i + 3))
+							&& isXDigit(s.charAt(i + 4))
+							&& isXDigit(s.charAt(i + 5)))
+					
                 return false;
         }
 
         return true;
-    }
-
-    protected static boolean isJSIdentifierStart(int c) {
-        return ((c >= 'a' && c <= 'z')
-                || (c >= 'A' && c <= 'Z')
-                || c == '_'
-                || c == '$');
-    }
-
-    protected static boolean isJSIdentifierPart(int c) {
-        return ((c >= 'a' && c <= 'z')
-                || (c >= 'A' && c <= 'Z')
-                || (c >= '0' && c <= '9')
-                || c == '_'
-                || c == '$');
     }
 
     private static boolean isAlpha(int c) {
@@ -711,11 +700,18 @@ public class TokenStream {
      * \v, I think.)  note that code in in.read() implicitly accepts
      * '\r' == \u000D as well.
      */
-    static boolean isJSSpace(int c) {
-        return (c == '\u0009' || c == '\u000B'
-                || c == '\u000C' || c == '\u0020');
+    public static boolean isJSSpace(int c) {
+        return (c == '\u0020' || c == '\u0009'
+                || c == '\u000C' || c == '\u000B'
+				|| c == '\u00A0' 
+				|| Character.getType((char)c) == Character.SPACE_SEPARATOR);
     }
 
+    public static boolean isJSLineTerminator(int c) {
+        return (c == '\n' || c == '\r'
+                || c == 0x2028 || c == 0x2029);
+    }
+	
     public int getToken() throws IOException {
         int c;
         tokenno++;
@@ -739,11 +735,30 @@ public class TokenStream {
             return EOF;
 
         // identifier/keyword/instanceof?
-        if (isJSIdentifierStart(c)) {
+		// watch out for starting with a <backslash>
+		boolean isUnicodeEscapeStart = false;
+		if (c == '\\') {
+			c = in.read();
+			if (c == 'u')
+				isUnicodeEscapeStart = true;
+			else
+				c = '\\';
+			// always unread the 'u' or whatever, we need 
+			// to start the string below at the <backslash>.
+			in.unread();
+		}
+        if (isUnicodeEscapeStart ||
+					Character.isJavaIdentifierStart((char)c)) {
             in.startString();
-            do {
+
+			boolean containsEscape = isUnicodeEscapeStart;			
+			do {
                 c = in.read();
-            } while (isJSIdentifierPart(c));
+				if (c == '\\') {
+					c = in.read();
+					containsEscape = (c == 'u');
+				}					
+            } while (Character.isJavaIdentifierPart((char)c));
             in.unread();
 
             int result;
@@ -751,11 +766,52 @@ public class TokenStream {
             String str = in.getString();
             // OPT we shouldn't have to make a string (object!) to
             // check if it's a keyword.
-
-            // Return the corresponding token if it's a keyword
-            if ((result = stringToKeyword(str)) != EOF) {
-                return result;
-            }
+			
+			// strictly speaking we should probably push-back
+			// all the bad characters if the <backslash>uXXXX  
+			// sequence is malformed. But since there isn't a  
+			// correct context(is there?) for a bad Unicode  
+			// escape sequence after an identifier, we can report
+			// an error here.
+			if (containsEscape) {
+				char ca[] = str.toCharArray();
+				StringBuffer x = new StringBuffer();
+				int escStart = str.indexOf("\\u");
+				int start = 0;
+				while (escStart != -1) {
+					x.append(ca, start, escStart);
+					boolean goodEscape = false;
+					if ((escStart + 5) < ca.length) {
+						if (isXDigit(ca[escStart + 2])) {
+							int val = Character.digit(ca[escStart + 2], 16);
+							if (isXDigit(ca[escStart + 3])) {
+								val = (val << 4) | Character.digit(ca[escStart + 3], 16);
+								if (isXDigit(ca[escStart + 4])) {
+									val = (val << 4) | Character.digit(ca[escStart + 4], 16);
+									if (isXDigit(ca[escStart + 5])) {
+										val = (val << 4) | Character.digit(ca[escStart + 5], 16);
+										x.append((char)val);
+										start = escStart + 6;
+										goodEscape = true;
+									}
+								}
+							}
+						}
+					}
+					if (!goodEscape) {
+						reportSyntaxError("msg.invalid.escape", null);
+						return ERROR;
+					}
+					escStart = str.indexOf("\\u", start);
+				}
+				x.append(ca, start, ca.length - start);
+				str = x.toString();
+			}
+			else
+				// Return the corresponding token if it's a keyword
+				if ((result = stringToKeyword(str)) != EOF) {
+				    return result;
+				}
 
             this.string = str;
             return NAME;
@@ -949,54 +1005,54 @@ public class TokenStream {
                             }
                             c = val;
                         } else if (c == 'u') {
-                            /*
-                             * Get 4 hex digits; if the u escape is not
-                             * followed by 4 hex digits, use 'u' + the literal
-                             * character sequence that follows.  Do some manual
-                             * match (OK because we're in a string) to avoid
-                             * multi-char match on the underlying stream.
-                             */
-                            int c1, c2, c3, c4;
+							/*
+							 * Get 4 hex digits; if the u escape is not
+							 * followed by 4 hex digits, use 'u' + the literal
+							 * character sequence that follows.  Do some manual
+							 * match (OK because we're in a string) to avoid
+							 * multi-char match on the underlying stream.
+							 */
+							    int c1, c2, c3, c4;
 
-                            c1 = in.read();
-                            if (!isXDigit(c1)) {
-                                in.unread();
-                                c = 'u';
-                            } else {
-                                val = Character.digit((char) c1, 16);
-                                c2 = in.read();
-                                if (!isXDigit(c2)) {
-                                    in.unread();
-                                    stringBuf.append('u');
-                                    c = c1;
-                                } else {
-                                    val = 16 * val
-                                        + Character.digit((char) c2, 16);
-                                    c3 = in.read();
-                                    if (!isXDigit(c3)) {
-                                        in.unread();
-                                        stringBuf.append('u');
-                                        stringBuf.append((char)c1);
-                                        c = c2;
-                                    } else {
-                                        val = 16 * val
-                                            + Character.digit((char) c3, 16);
-                                        c4 = in.read();
-                                        if (!isXDigit(c4)) {
-                                            in.unread();
-                                            stringBuf.append('u');
-                                            stringBuf.append((char)c1);
-                                            stringBuf.append((char)c2);
-                                            c = c3;
-                                        } else {
-                                            // got 4 hex digits! Woo Hoo!
-                                            val = 16 * val
-                                                + Character.digit((char) c4, 16);
-                                            c = val;
-                                        }
-                                    }
-                                }
-                            }
+							    c1 = in.read();
+							    if (!isXDigit(c1)) {
+							        in.unread();
+							        c = 'u';
+							    } else {
+							        val = Character.digit((char) c1, 16);
+							        c2 = in.read();
+							        if (!isXDigit(c2)) {
+							            in.unread();
+							            stringBuf.append('u');
+							            c = c1;
+							        } else {
+							            val = 16 * val
+							                + Character.digit((char) c2, 16);
+							            c3 = in.read();
+							            if (!isXDigit(c3)) {
+							                in.unread();
+							                stringBuf.append('u');
+							                stringBuf.append((char)c1);
+							                c = c2;
+							            } else {
+							                val = 16 * val
+							                    + Character.digit((char) c3, 16);
+							                c4 = in.read();
+							                if (!isXDigit(c4)) {
+							                    in.unread();
+							                    stringBuf.append('u');
+							                    stringBuf.append((char)c1);
+							                    stringBuf.append((char)c2);
+							                    c = c3;
+							                } else {
+							                    // got 4 hex digits! Woo Hoo!
+							                    val = 16 * val
+							                        + Character.digit((char) c4, 16);
+							                    c = val;
+							                }
+							            }
+							        }
+							    }
                         } else if (c == 'x') {
                             /* Get 2 hex digits, defaulting to 'x' + literal
                              * sequence, as above.

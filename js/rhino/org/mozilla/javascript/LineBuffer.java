@@ -69,33 +69,42 @@ final class LineBuffer {
     }
 
     int read() throws IOException {
-        if (end == offset && !fill())
-            return -1;
+		for(;;) {
+			if (end == offset && !fill())
+			    return -1;
 
-        // Do only a bitmask + branch per character, at the cost of
-        // three branches per low-bits-only character.
-        if ((buffer[offset] & '\ufff0') == 0) {
-            if (buffer[offset] == '\r') {
-                // if the next character is a newline, skip past it.
-                if ((offset + 1) < end) {
-                    if (buffer[offset + 1] == '\n')
-                        offset++;
-                } else {
-                    // set a flag for fill(), in case the first char of the
-                    // next fill is a newline.
-                    lastWasCR = true;
-                }
-            }
-            else if (buffer[offset] != '\n') {
-                return (int) buffer[offset++];
-            }
-            offset++;
-            prevStart = lineStart;
-            lineStart = offset;
-            lineno++;
-            return '\n';
-        }
-
+			// Do only a bitmask + branch per character, at the cost of
+			// three branches per low-bits-only character.
+			if ((buffer[offset] & '\ufff0') == 0) {
+			    if (buffer[offset] == '\r') {
+			        // if the next character is a newline, skip past it.
+			        if ((offset + 1) < end) {
+			            if (buffer[offset + 1] == '\n')
+			                offset++;
+			        } else {
+			            // set a flag for fill(), in case the first char of the
+			            // next fill is a newline.
+			            lastWasCR = true;
+			        }
+			    }
+			    else if (buffer[offset] != '\n') {
+			        return (int) buffer[offset++];
+			    }
+			    offset++;
+			    prevStart = lineStart;
+			    lineStart = offset;
+			    lineno++;
+			    return '\n';
+			}
+			if ((buffer[offset] >= 128) 
+				&& Character.getType(buffer[offset]) == Character.FORMAT) {
+				hadCFSinceStringStart = true;
+				offset++;
+			}
+			else
+				break;
+		}
+		
         return (int) buffer[offset++];
     }
 
@@ -214,14 +223,21 @@ final class LineBuffer {
             // (which we want to include) is at the end of the last one, so
             // we just go to StringBuffer mode.
             stringSoFar = new StringBuffer();
+			
             stringSoFar.append(otherBuffer, otherEnd - 1, 1);
 
             stringStart = -1; // Set sentinel value.
+			hadCFSinceStringStart = ((otherBuffer[otherEnd - 1] >= 128) 
+					&& Character.getType(otherBuffer[otherEnd - 1])
+													== Character.FORMAT);
         } else {
             // Support restarting strings
             stringSoFar = null;
             stringStart = offset - 1;
+			hadCFSinceStringStart = ((buffer[stringStart] >= 128) 
+					&& Character.getType(buffer[stringStart]) == Character.FORMAT);
         }
+		
     }
 
     // Get a string consisting of the characters seen since the last
@@ -255,6 +271,23 @@ final class LineBuffer {
         
         stringStart = -1;
         stringSoFar = null;
+		
+		if (true) { //hadCFSinceStringStart) {
+			char c[] = result.toCharArray();
+			StringBuffer x = null;
+			for (int i = 0; i < c.length; i++) {
+				if (Character.getType(c[i]) == Character.FORMAT) {
+					if (x == null) {
+						x = new StringBuffer();
+						x.append(c, 0, i);
+					}
+				}
+				else
+					if (x != null) x.append(c[i]);
+			}
+			if (x != null) result = x.toString();	
+		}
+		
         return result;
     }            
 
@@ -362,6 +395,8 @@ final class LineBuffer {
 
     private int stringStart = -1;
     private StringBuffer stringSoFar = null;
+	private boolean hadCFSinceStringStart = false;
+
 }
 
 
