@@ -365,6 +365,13 @@ public:
   NS_IMETHOD
   SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, PRBool aScriptable);
 
+  NS_IMETHOD
+  ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen, 
+              char **outPostData, PRUint32 *outPostDataLen);
+  
+  NS_IMETHOD
+  CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName);
+
   /* Called by GetURL and PostURL */
 
   NS_IMETHOD

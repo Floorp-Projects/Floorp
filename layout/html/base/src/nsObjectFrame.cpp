@@ -2261,20 +2261,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 
   // deal with post data, either in a file or raw data, and any headers
   if (aPostData) {
-    const char * dataToPost = (const char *)aPostData;  // default to raw data
-    nsXPIDLCString filename;
 
-    if (isFile) {
-      // convert file:///c:/ to c: if needed
-      nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-      if (NS_SUCCEEDED(NS_InitFileFromURLSpec(aFile,dataToPost)) &&
-          NS_SUCCEEDED(aFile->GetPath(getter_Copies(filename))))
-          dataToPost = filename;
-    }
-
-    rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), dataToPost, aPostDataLen, isFile);
+    rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), (const char *)aPostData, aPostDataLen, isFile);
 
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin post data stream");
+    if (NS_FAILED(rv)) return rv;
 
     if (aHeadersData) {
       rv = NS_NewPluginPostDataStream(getter_AddRefs(headersDataStream), 
@@ -2284,6 +2275,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
                                       PR_TRUE);  // last arg says we are headers, no /r/n/r/n fixup!
 
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin header data stream");
+      if (NS_FAILED(rv)) return rv;
     }
   }
 

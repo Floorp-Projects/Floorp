@@ -2799,14 +2799,30 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
    return NS_ERROR_ILLEGAL_VALUE;
   
   rv = pluginInst->QueryInterface(kIPluginInstanceIID, (void **)&instance);
-  
+
   if (NS_SUCCEEDED(rv))
   {
-      nsPluginInstancePeerImpl *peer;
+      char *dataToPost;
+      if (isFile) {
+        rv = CreateTmpFileToPost(postData, &dataToPost);
+        if (NS_FAILED(rv) || !dataToPost) return rv;
+
+      } else {
+        PRUint32 newDataToPostLen;
+        ParsePostBufferToFixHeaders(postData, postDataLen, &dataToPost, &newDataToPostLen);
+        if (!dataToPost) 
+          return NS_ERROR_UNEXPECTED;
+
+        // we use nsIStringInputStream::adoptDataa() 
+        // in NS_NewPluginPostDataStream to set the stream
+        // all new data alloced in  ParsePostBufferToFixHeaders()
+        // well be nsMemory::Free()d on destroy the stream 
+        postDataLen = newDataToPostLen;
+      }
 
       if (nsnull != target)
         {
-          
+          nsPluginInstancePeerImpl *peer;          
           rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
           
           if (NS_SUCCEEDED(rv))
@@ -2827,8 +2843,8 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
                     else if (0 == PL_strcmp(target, "_current"))
                       target = "_self";
                   }
-                  
-                  rv = owner->GetURL(url, target, (void*)postData, postDataLen,
+
+                  rv = owner->GetURL(url, target, (void*)dataToPost, postDataLen,
                                      (void*) postHeaders, postHeadersLength, isFile);
                 }
               
@@ -2840,9 +2856,13 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
       // NS_OpenURI()!
       if (streamListener != nsnull)
         rv = NewPluginURLStream(string, instance, streamListener,
-                                postData, isFile, postDataLen,
+                                (const char*)dataToPost, isFile, postDataLen,
                                 postHeaders, postHeadersLength);
+
       NS_RELEASE(instance);
+      if (isFile) {
+        nsCRT::free(dataToPost);
+      }
   }
   
   return rv;
@@ -5287,8 +5307,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   nsCOMPtr<nsIURI> url;
   nsAutoString absUrl;
   nsresult rv;
-  char *newPostData = nsnull;
-  PRUint32 newPostDataLen = 0;
 
   if (aURL.Length() <= 0)
     return NS_OK;
@@ -5372,21 +5390,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
         if (aPostData) {
           
           nsCOMPtr<nsIInputStream> postDataStream;
-          const char * dataToPost = aPostData;
-          nsXPIDLCString filename;
-
-          if (aIsFile) {
-            // convert file:///c:/ to c:            
-            nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-            if (NS_SUCCEEDED(NS_InitFileFromURLSpec(aFile,dataToPost)))
-              if (NS_SUCCEEDED(aFile->GetPath(getter_Copies(filename)))) {
-                // tell the listener about it so it will delete the file later
-                listenerPeer->SetLocalFile(filename);
-                dataToPost = filename;
-              }
-          }
-          
-          rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), dataToPost, 
+          rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), (const char*)aPostData, 
                                           aPostDataLen, aIsFile);
 
           if (!postDataStream) 
@@ -5407,12 +5411,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
           uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
-
-          if (newPostData)
-          {
-            delete [] (char *)newPostData;
-            newPostData = nsnull;
-          }
         }
 
         if (aHeadersData) 
@@ -5777,24 +5775,6 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP 
-nsPluginHostImpl::SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, 
-                                        PRBool aScriptable)
-{
-  nsActivePlugin * p = mActivePluginList.find(aPluginInstance.get());
-  if(p == nsnull)
-    return NS_ERROR_FAILURE;
-
-  p->mXPConnected = aScriptable;
-  if(p->mPluginTag)
-    p->mPluginTag->mXPConnected = aScriptable;
-
-  return NS_OK;
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
 {
@@ -5876,5 +5856,248 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
   nsMemory::Free((void *)title);
   nsMemory::Free((void *)message);
   nsMemory::Free((void *)checkboxMessage);
+  return rv;
+}
+
+// nsPIPluginHost interface
+
+////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP 
+nsPluginHostImpl::SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, 
+                                        PRBool aScriptable)
+{
+  nsActivePlugin * p = mActivePluginList.find(aPluginInstance.get());
+  if(p == nsnull)
+    return NS_ERROR_FAILURE;
+
+  p->mXPConnected = aScriptable;
+  if(p->mPluginTag)
+    p->mPluginTag->mXPConnected = aScriptable;
+
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsPluginHostImpl::ParsePostBufferToFixHeaders(
+                            const char *inPostData, PRUint32 inPostDataLen, 
+                            char **outPostData, PRUint32 *outPostDataLen)
+{
+  if (!inPostData || !outPostData || !outPostDataLen)
+    return NS_ERROR_NULL_POINTER;
+  
+  *outPostData = 0;
+  *outPostDataLen = 0;
+
+  const char CR = '\r';
+  const char LF = '\n';
+  const char CRLFCRLF[] = {CR,LF,CR,LF,'\0'}; // C string"\r\n\r\n" 
+  const char ContentLenHeader[] = "Content-length";
+
+  nsAutoVoidArray singleLF;
+  const char *pSCntlh = 0;// pointer to start of ContentLenHeader in inPostData
+  const char *pSod = 0;   // pointer to start of data in inPostData
+  const char *pEoh = 0;   // pointer to end of headers in inPostData
+  const char *pEod = inPostData + inPostDataLen; // pointer to end of inPostData
+  if (*inPostData == LF) {
+    // from 4.x spec http://developer.netscape.com/docs/manuals/communicator/plugin/pgfn2.htm#1007754
+    // If no custom headers are required, simply add a blank
+    // line ('\n') to the beginning of the file or buffer.
+    // so *inPostData == '\n' is valid
+    pSod = inPostData + 1;
+  } else {       
+    const char *s = inPostData; //tmp pointer to sourse inPostData
+    while (s < pEod) {
+      if (!pSCntlh && 
+          (*s == 'C' || *s == 'c') && 
+          (s + sizeof(ContentLenHeader) - 1 < pEod) &&
+          (!PL_strncasecmp(s, ContentLenHeader, sizeof(ContentLenHeader) - 1)))
+      {
+        // lets assume this is ContentLenHeader for now
+        const char *p = pSCntlh = s;
+        p += sizeof(ContentLenHeader) - 1;
+        // search for first CR or LF == end of ContentLenHeader
+        for (; p < pEod; p++) {
+          if (*p == CR || *p == LF) {
+            // got delimiter, 
+            // one more check; if previous char is a digit 
+            // most likely pSCntlh points to the start of ContentLenHeader
+            if (*(p-1) >= '0' && *(p-1) <= '9') {
+              s = p;
+            }
+            break; //for loop
+          }
+        }
+        if (pSCntlh == s) { // curret ptr is the same 
+          pSCntlh = 0; // that was not ContentLenHeader
+          break; // there is nothing to parse, break *WHILE LOOP* here
+        }
+      }
+
+      if (*s == CR) {
+        if (pSCntlh && // only if ContentLenHeader is found we are looking for end of headers
+            ((s + sizeof(CRLFCRLF)-1) <= pEod) &&
+            !memcmp(s, CRLFCRLF, sizeof(CRLFCRLF)-1))
+        {
+          s += sizeof(CRLFCRLF)-1;
+          pEoh = pSod = s; // data stars here
+          break;
+        }
+      } else if (*s == LF) {
+        if (*(s-1) != CR) {
+          singleLF.AppendElement((void*)s);
+        }
+        if (pSCntlh && (s+1 < pEod) && (*(s+1) == LF)) {
+          s++;
+          singleLF.AppendElement((void*)s);
+          s++;
+          pEoh = pSod = s; // data stars here
+          break;
+        }
+      }
+      s++;
+    }
+  }
+
+  // deal with output buffer
+  if (!pSod) { // lets assume whole buffer is a data
+    pSod = inPostData;
+  }
+
+  PRUint32 newBufferLen = 0;
+  PRUint32 dataLen = pEod - pSod;
+  PRUint32 headersLen = pEoh ? pSod - inPostData : 0;
+  
+  char *p; // tmp ptr into new output buf
+  if (headersLen) { // we got a headers
+    // this function does not make any assumption on correctness 
+    // of ContentLenHeader value in this case.
+
+    newBufferLen = dataLen + newBufferLen;
+    // in case there were single LFs in headers
+    // reserve an extra space for CR will be added before each single LF
+    int cntSingleLF = singleLF.Count();
+    newBufferLen += cntSingleLF;
+
+    if (!(*outPostData = p = (char*)nsMemory::Alloc(newBufferLen)))
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // deal with single LF
+    const char *s = inPostData;
+    if (cntSingleLF) {
+      for (int i=0; i<cntSingleLF; i++) {
+        const char *plf = (const char*) singleLF.ElementAt(i); // ptr to single LF in headers
+        int n = plf - s; // bytes to copy
+        if (n) { // for '\n\n' there is nothing to memcpy
+          memcpy(p, s, n);
+          p += n;
+        }
+        *p++ = CR;
+        s = plf;
+        *p++ = *s++;
+      }
+    }
+    // are we done with headers?
+    headersLen = pEoh - s;
+    if (headersLen) { // not yet
+      memcpy(p, s, headersLen); // copy the rest
+      p += headersLen;
+    }
+  } else  if (dataLen) { // no ContentLenHeader is found but there is a data
+    // make new output buffer big enough
+    // to keep ContentLenHeader+value followed by data
+    PRUint32 l = sizeof(ContentLenHeader) + sizeof(CRLFCRLF) + 32;
+    newBufferLen = dataLen + l;
+    if (!(*outPostData = p = (char*)nsMemory::Alloc(newBufferLen)))
+      return NS_ERROR_OUT_OF_MEMORY;
+    headersLen = PR_snprintf(p, l,"%s: %ld%s", ContentLenHeader, dataLen, CRLFCRLF);
+    if (headersLen == l) { // if PR_snprintf has ate all extra space consider this as an error
+      nsMemory::Free(p);
+      *outPostData = 0;
+      return NS_ERROR_FAILURE;
+    }
+    p += headersLen;
+  }
+  // at this point we've done with headers.
+  // there is a possibility that input buffer has only headers info in it
+  // which already parsed and copied into output buffer.
+  // copy the data
+  if (dataLen) {
+    memcpy(p, pSod, dataLen);
+  }
+
+  *outPostDataLen = newBufferLen;
+  
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName) 
+{
+  *pTmpFileName = 0;
+  nsresult rv;
+  PRInt64 fileSize;
+  nsXPIDLCString filename;
+  // stat file == get size & convert file:///c:/ to c: if needed
+  nsCOMPtr<nsILocalFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_FAILED(rv) || 
+    (NS_FAILED(rv = NS_InitFileFromURLSpec(file, postDataURL)) && NS_FAILED(rv = file->InitWithPath(postDataURL))) ||
+    NS_FAILED(rv = file->GetFileSize(&fileSize)) ||
+    NS_FAILED(rv = file->GetPath(getter_Copies(filename)))
+    )
+    return rv;
+  if (!LL_IS_ZERO(fileSize)) {
+    nsCOMPtr<nsIInputStream> inStream;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), file);
+    if (NS_FAILED(rv)) return rv;
+    
+    // Create a temporary file to write the http Content-length: %ld\r\n\" header 
+    // and "\r\n" == end of headers for post data to
+    nsCOMPtr<nsIFile> tempFile;
+    nsresult rv;
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempFile));
+    if (tempFile) {
+      tempFile->Append("pluginpost");
+      // mode is 0600 so that it's not world-readable
+      rv = tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    }
+    nsCOMPtr<nsIOutputStream> outStream;
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream),
+        tempFile,
+        (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
+        0600); // 600 so others can't read our form data
+    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Post data file couldn't be created!");
+    if (NS_FAILED(rv)) return rv;
+    
+    char p[128];
+    sprintf(p, "Content-length: %ld\r\n\r\n",fileSize);
+    PRUint32 bw = 0,  br= 0;
+    rv = outStream->Write(p, bw = PL_strlen(p), &br) ||
+      bw != br ? NS_ERROR_FAILURE : NS_OK;
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write Post data into tmp file!");
+    if (NS_FAILED(rv)) return rv;
+    
+    PRInt32 size = 1;
+    char buf[1024];
+    while (1) {
+      // Read() mallocs if buffer is null
+      rv = inStream->Read(buf, 1024, &br);
+      if (NS_FAILED(rv) || (PRInt32)br <= 0) break;
+      bw = br;
+      rv = outStream->Write(buf, bw, &br);
+      if (NS_FAILED(rv) || (bw != br)) break;
+    }
+    inStream->Close();
+    outStream->Close();
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLCString tempFileName;
+      tempFile->GetPath(getter_Copies(tempFileName));
+      *pTmpFileName = PL_strdup(tempFileName);
+    }
+  }
   return rv;
 }
