@@ -1012,6 +1012,7 @@ nsBrowserWindow::DoSelectAll()
 
 static nsString* gTitleSuffix = nsnull;
 
+#if XXX
 static nsString*
 GetTitleSuffix(void)
 {
@@ -1042,12 +1043,15 @@ GetTitleSuffix(void)
 
   return suffix;
 }
+#endif
 
 // Note: operator new zeros our memory
 nsBrowserWindow::nsBrowserWindow()
 {
   if (!gTitleSuffix) {
-    //gTitleSuffix = GetTitleSuffix();
+#if XXX
+    gTitleSuffix = GetTitleSuffix();
+#endif
     gTitleSuffix = new nsString(" - Raptor");
   }
   AddBrowser(this);
@@ -1114,10 +1118,10 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 
 nsresult
 nsBrowserWindow::Init(nsIAppShell* aAppShell,
-		      nsIPref* aPrefs,
-		      const nsRect& aBounds,
-		      PRUint32 aChromeMask,
-		      PRBool aAllowPlugins)
+                      nsIPref* aPrefs,
+                      const nsRect& aBounds,
+                      PRUint32 aChromeMask,
+                      PRBool aAllowPlugins)
 {
   mChromeMask = aChromeMask;
   mAppShell = aAppShell;
@@ -1127,8 +1131,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
-					     (void**)&mWindow);
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
+                                                   kIWidgetIID,
+                                                   (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
   }
@@ -1142,15 +1147,15 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-				    kIWebShellIID,
-				    (void**)&mWebShell);
+                                          kIWebShellIID,
+                                          (void**)&mWebShell);
   if (NS_OK != rv) {
     return rv;
   }
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-		       r.x, r.y, r.width, r.height,
-		       nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
+                       r.x, r.y, r.width, r.height,
+                       nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
@@ -1205,8 +1210,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
-                                             (void**)&mWindow);
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
+                                                   kIWidgetIID,
+                                                   (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
   }
@@ -1217,8 +1223,8 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                    kIWebShellIID,
-                                    (void**)&mWebShell);
+                                          kIWebShellIID,
+                                          (void**)&mWebShell);
   if (NS_OK != rv) {
     return rv;
   }
@@ -1268,6 +1274,24 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   NS_RELEASE(docv);
 
   return NS_OK;
+}
+
+void
+nsBrowserWindow::SetWebCrawler(nsWebCrawler* aCrawler)
+{
+  if (mWebCrawler) {
+    if (mWebShell) {
+      mWebShell->SetDocLoaderObserver(nsnull);
+    }
+    NS_RELEASE(mWebCrawler);
+  }
+  if (aCrawler) {
+    mWebCrawler = aCrawler;
+    if (mWebShell) {
+      mWebShell->SetDocLoaderObserver(aCrawler);
+    }
+    NS_ADDREF(aCrawler);
+  }
 }
 
 // XXX This sort of thing should be in a resource
@@ -1639,25 +1663,30 @@ nsBrowserWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
+nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                             nsLoadType aReason)
 {
-  if (mStatus) {
-    nsAutoString url("Connecting to ");
-    url.Append(aURL);
-    PRUint32 size;
-    mStatus->SetText(url,size);
+  if (aShell == mWebShell) {
+    if (mStatus) {
+      nsAutoString url("Connecting to ");
+      url.Append(aURL);
+      PRUint32 size;
+      mStatus->SetText(url,size);
+      mLoadStartTime = PR_Now();
+    }
   }
-  mLoadStartTime = PR_Now();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
-  if (mThrobber) {
-    mThrobber->Start();
-    PRUint32 size;
-    mLocation->SetText(aURL,size);
+  if (aShell == mWebShell) {
+    if (mThrobber) {
+      mThrobber->Start();
+      PRUint32 size;
+      mLocation->SetText(aURL,size);
+    }
   }
   return NS_OK;
 }
@@ -1676,30 +1705,29 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
                             const PRUnichar* aURL,
                             PRInt32 aStatus)
 {
-  PRTime endLoadTime = PR_Now();
-  if (mShowLoadTimes) {
-    nsAutoString msg(aURL);
-    printf("Loading ");
-    fputs(msg, stdout);
-    PRTime delta;
-    LL_SUB(delta, endLoadTime, mLoadStartTime);
-    double usecs;
-    LL_L2D(usecs, delta);
-    printf(" took %g milliseconds\n", usecs / 1000.0);
-  }
-  if (mThrobber) {
-    mThrobber->Stop();
-  }
-  if (nsnull != mStatus) {
-    nsAutoString msg(aURL);
-    PRUint32 size;
+  if (aShell == mWebShell) {
+    PRTime endLoadTime = PR_Now();
+    if (mShowLoadTimes) {
+      nsAutoString msg(aURL);
+      printf("Loading ");
+      fputs(msg, stdout);
+      PRTime delta;
+      LL_SUB(delta, endLoadTime, mLoadStartTime);
+      double usecs;
+      LL_L2D(usecs, delta);
+      printf(" took %g milliseconds\n", usecs / 1000.0);
+    }
+    if (mThrobber) {
+      mThrobber->Stop();
+    }
+    if (nsnull != mStatus) {
+      nsAutoString msg(aURL);
+      PRUint32 size;
 
-    msg.Append(" done.");
+      msg.Append(" done.");
 
-    mStatus->SetText(msg, size);
-  }
-  if (nsnull != mApp) {
-    mApp->EndLoadURL(aShell, aURL, aStatus);
+      mStatus->SetText(msg, size);
+    }
   }
   return NS_OK;
 }
@@ -2480,6 +2508,7 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
     else {
       fputs("null pres shell\n", out);
     }
+
     // dump the views of the sub documents
     PRInt32 i, n;
     aWebShell->GetChildCount(n);
@@ -2488,6 +2517,7 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
       aWebShell->ChildAt(i, child);
       if (nsnull != child) {
 	      DumpViewsRecurse(child, out);
+        NS_RELEASE(child);
       }
     }
   }
