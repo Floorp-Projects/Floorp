@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsFilePicker.h"
+#include "nsLocalFile.h"
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -168,7 +169,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
     char *filters = aFilters[i].ToNewCString();
     printf("%20s %s\n", foo, filters);
 
-    menu_item = gtk_menu_item_new_with_label(nsAutoCString(aTitles[i]));
+    menu_item = gtk_menu_item_new_with_label(nsCAutoString(aTitles[i]));
 
     gtk_object_set_data(GTK_OBJECT(menu_item), "filters", filters);
 
@@ -186,19 +187,19 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetFile(nsIFileSpec **aFile)
+NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(*aFile);
   if (mWidget) {
     gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
 
-    nsCOMPtr<nsIFileSpec> fileSpec(do_CreateInstance("component://netscape/filespec"));
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
     
-    NS_ENSURE_TRUE(fileSpec, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-    fileSpec->SetNativePath(fn);
+    file->InitWithPath(fn);
 
-    *aFile = fileSpec;
+    file->QueryInterface(NS_GET_IID(nsIFile), (void**)aFile);
     NS_ADDREF(*aFile);
   }
   return NS_OK;
@@ -223,7 +224,7 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
 {
   if (mWidget) {
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
-                                    (const gchar*)nsAutoCString(aString));
+                                    (const gchar*)nsCAutoString(aString));
   }
   return NS_OK;
 }
@@ -238,7 +239,7 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFileSpec *aDirectory)
+NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -249,7 +250,7 @@ NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFileSpec *aDirectory)
 // Get the display directory
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsIFileSpec **aDirectory)
+NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
 {
   *aDirectory = mDisplayDirectory;
   NS_IF_ADDREF(*aDirectory);
@@ -268,7 +269,7 @@ NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
                                          const PRUnichar *aTitle,
                                          PRInt16 aMode)
 {
-  mWidget = gtk_file_selection_new((const gchar *)nsAutoCString(aTitle));
+  mWidget = gtk_file_selection_new((const gchar *)nsCAutoString(aTitle));
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
