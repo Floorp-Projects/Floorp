@@ -184,6 +184,7 @@ public:
 	NS_IMETHOD_(nsrefcnt) Release();
 
 	ChildWindow();
+	virtual ~ChildWindow() {};
 
 };
 
