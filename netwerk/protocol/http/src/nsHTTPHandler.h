@@ -133,7 +133,7 @@ protected:
     // None
 private:
     nsHTTPHandler(void);
-    ~nsHTTPHandler();
+    virtual ~nsHTTPHandler();
 
 	// This is the array of connections that the handler thread maintains to 
     // verify unique requests. 
