@@ -59,7 +59,7 @@ CSRCS  += nsinstall.c
 PLSRCS	= nfspwd.pl
 endif
 
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -110,7 +110,7 @@ include $(topsrcdir)/config/rules.mk
 
 PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
 
-ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifeq (,$(CROSS_COMPILE)$(filter-out OS2 WINNT,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
 PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)
