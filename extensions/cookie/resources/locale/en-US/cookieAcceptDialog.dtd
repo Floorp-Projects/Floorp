@@ -9,11 +9,11 @@
 
 <!ENTITY     button.allow.label             "Allow">
 <!ENTITY     button.allow.accesskey         "A">
+<!ENTITY     button.session.label           "Allow for Session">
+<!ENTITY     button.session.accesskey       "S">
 <!ENTITY     button.deny.label              "Deny">
 <!ENTITY     button.deny.accesskey          "D">
 
 <!ENTITY     dialog.title                   "Confirm">
 <!ENTITY     dialog.remember.label          "Use my choice for all cookies from this site">
 <!ENTITY     dialog.remember.accesskey      "U">
-<!ENTITY     dialog.acceptSession.label     "Accept for the current session only">
-<!ENTITY     dialog.acceptSession.accesskey "S">

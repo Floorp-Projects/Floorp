@@ -49,12 +49,16 @@ var detailsAccessKey = "";
 
 function onload()
 {
-  doSetOKCancel(cookieAccept, cookieDeny);
+  doSetOKCancel(cookieAcceptNormal, cookieDeny, cookieAcceptSession);
 
   var dialog = document.documentElement;
 
+  document.getElementById("Button2").collapsed = false;
+  
   document.getElementById("ok").label = dialog.getAttribute("acceptLabel");
   document.getElementById("ok").accessKey = dialog.getAttribute("acceptKey");
+  document.getElementById("Button2").label = dialog.getAttribute("extra1Label");
+  document.getElementById("Button2").accessKey = dialog.getAttribute("extra1Key");
   document.getElementById("cancel").label = dialog.getAttribute("cancelLabel");
   document.getElementById("cancel").accessKey = dialog.getAttribute("cancelKey");
 
@@ -164,13 +168,19 @@ function showhideinfo()
   sizeToContent();
 }
 
-function cookieAccept()
+function cookieAcceptNormal()
 {
-  // the cookie was accepted, now check whether it should be session-only and return accordingly
-  if (document.getElementById('acceptSession').checked)
-    params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_SESSION_COOKIE); 
-  else
-    params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_COOKIE); 
+  // accept the cookie normally
+  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_COOKIE); 
+  // And remember that when needed
+  params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
+  window.close();
+}
+
+function cookieAcceptSession()
+{
+  // accept for the session only
+  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_SESSION_COOKIE);
   // And remember that when needed
   params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
   window.close();
