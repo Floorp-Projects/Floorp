@@ -50,6 +50,11 @@ interface nsIProfile : nsISupports {
 
     attribute wstring currentProfile;
 
+    const unsigned long SHUTDOWN_PERSIST      = 0x00000001;
+    const unsigned long SHUTDOWN_CLEANSE      = 0x00000002;
+    
+    void shutDownCurrentProfile(in unsigned long shutDownType);
+
     void createNewProfile(in wstring profileName, 
                           in wstring nativeProfileDir, 
                           in wstring langcode,

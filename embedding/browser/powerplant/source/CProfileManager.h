@@ -41,6 +41,8 @@ class CProfileManager : public LAttachment
     virtual void        DoManageProfilesDialog();
     virtual Boolean     DoNewProfileDialog(char *outName, UInt32 bufSize);
     
+    virtual void        DoLogout();
+    
   protected:
   
     // LAttachment

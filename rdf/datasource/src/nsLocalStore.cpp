@@ -42,13 +42,16 @@
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
-
+#include "nsIObserverService.h"
+#include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////
 
 class LocalStoreImpl : public nsILocalStore,
                        public nsIRDFDataSource,
-                       public nsIRDFRemoteDataSource
+                       public nsIRDFRemoteDataSource,
+                       public nsIObserver,
+                       public nsSupportsWeakReference
 {
 protected:
     nsCOMPtr<nsIRDFDataSource> mInner;
@@ -198,6 +201,9 @@ public:
 	NS_IMETHOD Init(const char *uri);
 	NS_IMETHOD Flush();
 	NS_IMETHOD Refresh(PRBool sync);
+	
+	// nsIObserver
+	NS_DECL_NSIOBSERVER
 };
 
 nsWeakPtr LocalStoreImpl::gRDF;
@@ -250,6 +256,13 @@ NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 	printf("\n\nRDF: NS_NewLocalStore::Refresh() failed.\n\n");
 #endif
         }
+        
+        // Register as an observer of profile changes
+        NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv) && svc) {
+            svc->AddObserver(impl, NS_LITERAL_STRING("profile-before-change").get());
+            svc->AddObserver(impl, NS_LITERAL_STRING("profile-do-change").get());
+        }
     }
 
     NS_RELEASE(impl);
@@ -280,6 +293,12 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource *, this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
+        *aResult = NS_STATIC_CAST(nsIObserver *, this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
+        *aResult = NS_STATIC_CAST(nsISupportsWeakReference *, this);
     }
     else {
         *aResult = nsnull;
@@ -393,7 +412,8 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     if (NS_FAILED(rv)) return rv;
 
     // for later
-    gRDF = getter_AddRefs(NS_GetWeakReference(rdf));
+    if (!gRDF)
+        gRDF = getter_AddRefs(NS_GetWeakReference(rdf));
 
     rv = rdf->RegisterDataSource(this, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register local store");
@@ -453,4 +473,31 @@ LocalStoreImpl::DoCommand(nsISupportsArray* aSources,
 {
     // no-op
     return NS_OK;
+}
+
+NS_IMETHODIMP
+LocalStoreImpl::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    nsresult rv = NS_OK;
+
+    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+            
+        nsCOMPtr<nsIRDFService> rdf = do_QueryReferent(gRDF);
+        if (rdf)
+            rdf->UnregisterDataSource(this);
+        mInner = nsnull;
+
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+            nsCOMPtr<nsIFile> aFile;
+            rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
+            if (NS_SUCCEEDED(rv))
+                rv = aFile->Delete(PR_FALSE);
+        }
+    }
+    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
+        rv = Init();
+        if (NS_SUCCEEDED(rv))
+            rv = Refresh(PR_TRUE);
+    }
+    return rv;
 }

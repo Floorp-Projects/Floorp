@@ -28,6 +28,7 @@
 #include "nsISearchService.h"
 #include "nsIRDFDataSource.h"
 #include "nsIStreamListener.h"
+#include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIRDFService.h"
 #include "nsITimer.h"
@@ -40,6 +41,7 @@
 class InternetSearchDataSource : public nsIInternetSearchService,
 				                 public nsIRDFDataSource,
                                  public nsIStreamListener,
+                                 public nsIObserver,
          			             public nsSupportsWeakReference
 {
 private:
@@ -158,6 +160,7 @@ public:
 	NS_DECL_NSISTREAMOBSERVER
 	NS_DECL_NSISTREAMLISTENER
 	NS_DECL_NSIRDFDATASOURCE
+	NS_DECL_NSIOBSERVER
 
 	InternetSearchDataSource(void);
 	virtual		~InternetSearchDataSource(void);

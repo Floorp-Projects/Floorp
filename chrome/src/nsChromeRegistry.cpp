@@ -80,7 +80,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
 #include "nsIObserverService.h"
-#include "nsIProfileChangeStatus.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kAllPackagesName[] = "all-packages.rdf";
@@ -336,8 +335,10 @@ nsChromeRegistry::Init()
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-  if (observerService)
-    observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+  if (observerService) {
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+  }
 
   CheckForNewChrome();
   
@@ -3058,9 +3059,23 @@ nsChromeRegistry::GetProviderCount(const nsCString& aProviderType, nsIRDFDataSou
 NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
+  
+  if (!nsCRT::strcmp(NS_LITERAL_STRING("profile-before-change").get(), aTopic)) {
+
+    mChromeDataSource = nsnull;
+    mProfileInitialized = PR_FALSE;
     
-  if (!nsCRT::strcmp(PROFILE_DO_CHANGE_TOPIC, aTopic))
-    rv = LoadProfileDataSource();
+    if (!nsCRT::strcmp(NS_LITERAL_STRING("shutdown-cleanse").get(), someData)) {
+      nsCOMPtr<nsIFile> userChromeDir;  
+      rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR, getter_AddRefs(userChromeDir));
+      if (NS_SUCCEEDED(rv) && userChromeDir)
+        rv = userChromeDir->Delete(PR_TRUE);
+    }
+  }  
+  else if (!nsCRT::strcmp(NS_LITERAL_STRING("profile-do-change").get(), aTopic)) {
+    if (!mProfileInitialized)
+      rv = LoadProfileDataSource();
+  }
 
   return rv;
 }

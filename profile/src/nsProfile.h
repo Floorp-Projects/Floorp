@@ -65,12 +65,15 @@ private:
 	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
     nsresult AddLevelOfIndirection(nsIFile *aDir);
     nsresult DefineLocaleDefaultsDir();
+    nsresult UndefineFileLocations();
 
     PRBool mAutomigrate;
     PRBool mOutofDiskSpace;
     PRBool mDiskSpaceErrorQuitCalled;
     PRBool mProfileChangeVetoed;
 
+    PRBool mCurrentProfileAvailable;
+    
 public:
     nsProfile();
     virtual ~nsProfile();

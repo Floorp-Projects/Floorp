@@ -307,6 +307,33 @@ void CProfileManager::DoManageProfilesDialog()
   	}  
 }
 
+
+void CProfileManager::DoLogout()
+{
+    enum { iPersist = 1, iCancel, iCleanse };
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    ThrowIfNil_(profileService);
+    
+    nsXPIDLString currentProfile;
+    Str255 pStr;
+    profileService->GetCurrentProfile(getter_Copies(currentProfile));
+   	CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(currentProfile.get()), pStr);
+    ::ParamText(pStr, "\p", "\p", "\p");
+    
+    DialogItemIndex item = UModalAlerts::StopAlert(alrt_ConfirmLogout);
+    if (item == iCancel)
+      return;
+
+    rv = profileService->ShutDownCurrentProfile(item == iPersist ? nsIProfile::SHUTDOWN_PERSIST : nsIProfile::SHUTDOWN_CLEANSE);
+    if (NS_SUCCEEDED(rv)) {
+        // Just put this up modally until they pick a new profile
+        DoManageProfilesDialog();
+    }
+}
+
+
 /*
     The following three methods have nothing to do with profile management per se.
     They use the registry to store a flag which allows the user to choose whether
@@ -415,9 +442,18 @@ void CProfileManager::ExecuteSelf(MessageT inMessage, void *ioParam)
 			*status->usesMark = false;
 			mExecuteHost = false; // we handled it
 		}
+		else if (status->command == cmd_Logout) {
+			*status->enabled = true;
+			*status->usesMark = false;
+			mExecuteHost = false; // we handled it
+		}
 	}
 	else if (inMessage == cmd_ManageProfiles) {
 	    DoManageProfilesDialog();
+	    mExecuteHost = false; // we handled it
+	}
+	else if (inMessage == cmd_Logout) {
+	    DoLogout();
 	    mExecuteHost = false; // we handled it
 	}
 }

@@ -52,7 +52,6 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIObserverService.h"
-#include "nsIProfileChangeStatus.h"
 
 #if defined(DEBUG_dp) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_HTTP_STARTUP_CATEGORY 1
@@ -838,7 +837,7 @@ nsHTTPHandler::Init()
     
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
-      observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+      observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
       
     return NS_OK;
 }
@@ -1595,7 +1594,7 @@ nsHTTPHandler::GetServerCapabilities (
 NS_IMETHODIMP
 nsHTTPHandler::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-    if (!nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC)) {
+    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
         nsAuthEngine *authEngine;
         nsresult rv = GetAuthEngine(&authEngine);
         if (NS_SUCCEEDED(rv) && authEngine)

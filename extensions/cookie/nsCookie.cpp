@@ -54,6 +54,9 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define MAX_HOST_NAME_LEN 64
 #endif
 
+static const char *kCookiesFileName = "cookies.txt";
+static const char *kCookiesPermFileName = "cookperm.txt";
+
 #define image_behaviorPref "network.image.imageBehavior"
 #define image_warningPref "network.image.warnAboutImages"
 #define cookie_behaviorPref "network.cookie.cookieBehavior"
@@ -495,6 +498,28 @@ COOKIE_RemoveAllCookies()
         delete cookie_cookieList;
         cookie_cookieList = nsnull;
     }
+}
+
+PUBLIC void
+COOKIE_DeletePersistentUserData(void)
+{
+  nsresult res;
+  
+  nsCOMPtr<nsIFile> cookiesFile;
+  res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookiesFile));
+  if (NS_SUCCEEDED(res)) {
+    res = cookiesFile->Append(kCookiesFileName);
+    if (NS_SUCCEEDED(res))
+        (void) cookiesFile->Delete(PR_FALSE);
+  }
+
+  nsCOMPtr<nsIFile> cookiesPermFile;
+  res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookiesPermFile));
+  if (NS_SUCCEEDED(res)) {
+    res = cookiesPermFile->Append(kCookiesPermFileName);
+    if (NS_SUCCEEDED(res))
+        (void) cookiesPermFile->Delete(PR_FALSE);
+  }
 }
 
 PRIVATE void
@@ -1883,7 +1908,7 @@ permission_Save() {
   if (NS_FAILED(rval)) {
     return;
   }
-  nsOutputFileStream strm(dirSpec + "cookperm.txt");
+  nsOutputFileStream strm(dirSpec + kCookiesPermFileName);
   if (!strm.is_open()) {
     return;
   }
@@ -1949,7 +1974,7 @@ permission_Load() {
   if (NS_FAILED(rv)) {
     return;
   }
-  nsInputFileStream strm(dirSpec + "cookperm.txt");
+  nsInputFileStream strm(dirSpec + kCookiesPermFileName);
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
     for (PRInt32 type=0; type<NUMBER_OF_PERMISSIONS; type++) {
@@ -2056,7 +2081,7 @@ cookie_Save() {
   if (NS_FAILED(rv)) {
     return;
   }
-  nsOutputFileStream strm(dirSpec + "cookies.txt");
+  nsOutputFileStream strm(dirSpec + kCookiesFileName);
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
     return;
@@ -2128,7 +2153,7 @@ cookie_Load() {
   if (NS_FAILED(rv)) {
     return;
   }
-  nsInputFileStream strm(dirSpec + "cookies.txt");
+  nsInputFileStream strm(dirSpec + kCookiesFileName);
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
     return;

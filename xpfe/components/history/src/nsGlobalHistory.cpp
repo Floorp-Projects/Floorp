@@ -60,7 +60,6 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPref.h"
-#include "nsIProfileChangeStatus.h"
 #include "nsIObserverService.h"
 
 PRInt32 nsGlobalHistory::gRefCnt;
@@ -2019,8 +2018,8 @@ nsGlobalHistory::Init()
   NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ASSERTION(observerService, "failed to get observer service");
   if (observerService) {
-    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
-    observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
   }
   
   rv = OpenDB();
@@ -2891,9 +2890,16 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
     }
 
   }
-  else if (aTopicString.Equals(PROFILE_BEFORE_CHANGE_TOPIC))
-    rv = CloseDB();
-  else if (aTopicString.Equals(PROFILE_DO_CHANGE_TOPIC))
+  else if (aTopicString.Equals(NS_LITERAL_STRING("profile-before-change"))) {
+    rv = CloseDB();    
+    if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+      nsCOMPtr <nsIFile> historyFile;
+      rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
+      if (NS_SUCCEEDED(rv))
+        rv = historyFile->Delete(PR_FALSE);
+    }
+  }
+  else if (aTopicString.Equals(NS_LITERAL_STRING("profile-do-change")))
     rv = OpenDB();
 
   return NS_OK;

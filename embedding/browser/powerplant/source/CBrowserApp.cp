@@ -225,16 +225,17 @@ CBrowserApp::StartUp()
     nsresult rv;
 
 #if USE_PROFILES
-    CProfileManager *profileMgr = new CProfileManager;
-    profileMgr->StartUp();
-    AddAttachment(profileMgr);
 
     // Register for profile changes    
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     ThrowIfNil_(observerService);
-    observerService->AddObserver(this, PROFILE_APPROVE_CHANGE_TOPIC);
-    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
-    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+
+    CProfileManager *profileMgr = new CProfileManager;
+    profileMgr->StartUp();
+    AddAttachment(profileMgr);
 
 #else
     
@@ -258,7 +259,6 @@ CBrowserApp::StartUp()
 
 #endif
 
-    InitializePrefs();
 
 	ObeyCommand(PP_PowerPlant::cmd_New, nil);	// EXAMPLE, create a new window
 }
@@ -628,7 +628,7 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const PRUnichar *aTopi
 
     nsresult rv = NS_OK;
     
-    if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0)
+    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()))
     {
         // Ask the user if they want to
         DialogItemIndex item = UModalAlerts::StopAlert(alrt_ConfirmProfileSwitch);
@@ -639,7 +639,7 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const PRUnichar *aTopi
             status->VetoChange();
         }
     }
-    else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0)
+    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()))
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -654,16 +654,28 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const PRUnichar *aTopi
         	    delete browserWindow;
         	}
         }
+        
+        // Clear the cache(s) The cache mgr does not do this itself since an
+        // application may be using a global cache for all profiles so it would
+        // not know whether to respond to a profile change.
+
         NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
-          cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
+        {
+            if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
+                cacheMgr->RemoveAll();
+            else
+                cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
+        }
     }
-    else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0)
+    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()))
     {
-        InitializePrefs(); // In case we have just switched to a newly created profile.
-        
-        // Make a new default window
-        ObeyCommand(PP_PowerPlant::cmd_New, nil);
+        InitializePrefs();
+
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("switch").get())) {
+            // Make a new default window
+            ObeyCommand(PP_PowerPlant::cmd_New, nil);
+        }
     }
     return rv;
 }

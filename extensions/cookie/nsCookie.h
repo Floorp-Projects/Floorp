@@ -48,6 +48,7 @@ extern void COOKIE_SetCookieString(char * cur_url, nsIPrompt *aPrompter, char * 
 extern int COOKIE_ReadCookies();
 extern void COOKIE_RegisterCookiePrefCallbacks(void);
 extern void COOKIE_RemoveAllCookies(void);
+extern void COOKIE_DeletePersistentUserData(void);
 extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, nsIPrompt *aPRompter, char * set_cookie_header, char * server_date);
 extern void COOKIE_GetCookieListForViewer (nsString& aCookieList);
 extern void COOKIE_GetPermissionListForViewer (nsString& aPermissionList, PRInt32 type);

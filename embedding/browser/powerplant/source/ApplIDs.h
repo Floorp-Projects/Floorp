@@ -63,7 +63,8 @@ enum {
 
 // Alerts
 enum {
-    alrt_ConfirmProfileSwitch = 1500
+    alrt_ConfirmProfileSwitch   = 1500,
+    alrt_ConfirmLogout          = 1501
 };
 
 // MENUs
@@ -131,7 +132,8 @@ enum {
     cmd_PrefillForm             = 'PFFm',
     
     
-    cmd_ManageProfiles          = 'MPrf'
+    cmd_ManageProfiles          = 'MPrf',
+    cmd_Logout                  = 'LOut'
 };
 
 #endif // __ApplIDs__

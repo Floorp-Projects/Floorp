@@ -63,6 +63,8 @@
 #include "nsIBookmarksService.h"
 #include "nsIHTTPHeader.h"
 #include "nsIStringBundle.h"
+#include "nsIObserverService.h"
+#include "nsIURL.h"
 
 #ifdef	XP_MAC
 #include <Files.h>
@@ -830,6 +832,7 @@ NS_INTERFACE_MAP_BEGIN(InternetSearchDataSource)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIInternetSearchService)
    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -875,6 +878,13 @@ InternetSearchDataSource::Init()
 	// we now build up the list of engines immediately, 
 	// but still defer loading in of the contents until needed
 	DeferredInit();
+	
+	// Register as a profile change obsevrer
+  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (observerService) {
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+  }
 
 	return(rv);
 }
@@ -1200,17 +1210,20 @@ InternetSearchDataSource::GetCategoryList()
 
 	// get search.rdf
 		
-	  nsCOMPtr<nsIFile> searchFile;
-    nsXPIDLCString filePath;
+  nsCOMPtr<nsIFile> searchFile;
+  nsXPIDLCString searchFileURLSpec;
 
-    rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
-    if (NS_FAILED(rv)) return rv;
-    rv = searchFile->GetPath(getter_Copies(filePath));
-    if (NS_FAILED(rv)) return rv;
-    nsFileSpec fileSpec(filePath);
-	  nsFileURL	 fileURL(fileSpec);
-	if (NS_FAILED(rv = remoteCategoryDataSource->Init(fileURL.GetURLString())))	return(rv);
-
+  rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIFileURL> searchFileURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+  rv = searchFileURL->SetFile(searchFile);
+  if (NS_FAILED(rv)) return rv;
+  rv = searchFileURL->GetSpec(getter_Copies(searchFileURLSpec));
+  if (NS_FAILED(rv)) return rv;
+	rv = remoteCategoryDataSource->Init(searchFileURLSpec);
+  if (NS_FAILED(rv)) return rv;
+    
 	// synchronous read
 	rv = remoteCategoryDataSource->Refresh(PR_TRUE);
 	if (NS_FAILED(rv))	return(rv);
@@ -5720,4 +5733,33 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 	}
 
 	return(NS_OK);
+}
+
+NS_IMETHODIMP
+InternetSearchDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    nsresult rv = NS_OK;
+
+    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get()))
+    {
+        // The profile is about to change.
+        categoryDataSource = nsnull;
+
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
+        {
+            // Delete search.rdf
+            nsCOMPtr<nsIFile> searchFile;
+            rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
+            if (NS_SUCCEEDED(rv))
+                rv = searchFile->Delete(PR_FALSE);
+        }
+    }
+    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get()))
+    {
+        // The profile has aleady changed.
+        if (!categoryDataSource)
+          GetCategoryList();
+    }
+
+    return rv;
 }
