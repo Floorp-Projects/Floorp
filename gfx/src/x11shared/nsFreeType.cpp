@@ -1025,7 +1025,8 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   if ((image_width<=0) || (image_height<=0)) {
     // if we do not have any pixels then no point in trying to draw
     // eg: the space char has 0 height
-    return 0;
+    NS_ASSERTION(width>=0, "Negative width");
+    return width;
   }
   Display *dpy = GDK_DISPLAY();
   Drawable win = GDK_WINDOW_XWINDOW(aSurface->GetDrawable());
