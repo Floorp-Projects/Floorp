@@ -38,6 +38,7 @@ class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsIViewManager;
 class nsIPresContext;
+class nsVoidArray;
 
 /**
  * Frame-based listbox.
@@ -94,6 +95,7 @@ public:
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual void Reset(PRBool aDoSelect = PR_TRUE);
   virtual void Reset(nsIPresContext* aPresContext);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual PRInt32 GetMaxNumValues();
@@ -220,7 +222,6 @@ protected:
   PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
 
   // onChange detection
-  nsresult InitSelectionCache(PRInt32 aLength);
   nsresult SelectionChanged(nsIContent* aContent);
   
   // Data Members
@@ -236,12 +237,14 @@ protected:
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
-  PRBool*      mSelectionCache;
-  PRInt32      mSelectionCacheLength;
+
+  nsVoidArray  * mSelectionCache;
+  PRInt32        mSelectionCacheLength;
 
   PRBool       mIsAllContentHere;
   PRBool       mIsAllFramesHere;
   PRBool       mHasBeenInitialized;
+  PRBool       mWasRestored;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 

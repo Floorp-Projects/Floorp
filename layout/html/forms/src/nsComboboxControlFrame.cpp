@@ -1361,7 +1361,10 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 
     return NS_ERROR_FAILURE;
   }
-
+  if (mPresState) {
+    mListControlFrame->SetPresState(mPresState);
+    mPresState = do_QueryInterface(nsnull);
+  }
   return NS_OK;
 }
 
@@ -1506,14 +1509,16 @@ nsComboboxControlFrame::SelectionChanged()
 NS_IMETHODIMP
 nsComboboxControlFrame::DoneAddingContent(PRBool aIsDone)
 {
-
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
-  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                              (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && listFrame) {
-    rv = listFrame->DoneAddingContent(aIsDone);
-    NS_RELEASE(listFrame);
+  nsresult rv = NS_ERROR_FAILURE;
+  if (dropdownFrame != nsnull) {
+    rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
+                                                (void**)&listFrame);
+    if (NS_SUCCEEDED(rv) && listFrame) {
+      rv = listFrame->DoneAddingContent(aIsDone);
+      NS_RELEASE(listFrame);
+    }
   }
   return rv;
 }
@@ -1663,9 +1668,9 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
     // create content used for display
   //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
-  nsIAtom* tag = NS_NewAtom("input");
-  NS_NewHTMLInputElement(&mDisplayContent, tag);
-  //NS_ADDREF(mDisplayContent);
+
+  NS_NewHTMLInputElement(&mDisplayContent, nsHTMLAtoms::input);
+
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
 
     //XXX: Do not use nsHTMLAtoms::id use nsHTMLAtoms::kClass instead. There will end up being multiple
@@ -1676,12 +1681,10 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   aChildList.AppendElement(mDisplayContent);
 
   // create button which drops the list down
-  NS_NewHTMLInputElement(&mButtonContent, tag);
+  NS_NewHTMLInputElement(&mButtonContent, nsHTMLAtoms::input);
   //NS_ADDREF(mButtonContent);
   mButtonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
   aChildList.AppendElement(mButtonContent);
-
-  NS_RELEASE(tag);
 
   return NS_OK;
 }

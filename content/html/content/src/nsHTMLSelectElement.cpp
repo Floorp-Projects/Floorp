@@ -559,7 +559,7 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 
       // Set the index as selected and add it to the array
       nsCOMPtr<nsISupportsPRInt32> thisVal;
-      nsresult res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+      res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
 	                     nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
       if (NS_SUCCEEDED(res) && thisVal) {
         res = thisVal->SetData(aIndex);
