@@ -1811,7 +1811,33 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   }
 
   // Draw all the other sides
-
+  if (!aDirtyRect.Contains(outerRect)) {
+    // Border leaks out of the dirty rectangle - lets clip it but with care
+    if (innerRect.y < aDirtyRect.y) {
+      aSkipSides |= (1 << NS_SIDE_TOP);
+      innerRect.height -= aDirtyRect.y - innerRect.y;
+      innerRect.y = aDirtyRect.y;
+      outerRect.height -= innerRect.y - outerRect.y;
+      outerRect.y = innerRect.y;
+    }
+    if (innerRect.YMost() > aDirtyRect.YMost()) {
+      aSkipSides |= (1 << NS_SIDE_BOTTOM);
+      innerRect.height = aDirtyRect.YMost() - innerRect.y;
+      outerRect.height = aDirtyRect.YMost() - outerRect.y;
+    }
+    if (innerRect.x < aDirtyRect.x) {
+      aSkipSides |= (1 << NS_SIDE_LEFT);
+      innerRect.width -= aDirtyRect.x - innerRect.x;
+      innerRect.x = aDirtyRect.x;
+      outerRect.width -= innerRect.x - outerRect.x;
+      outerRect.x = innerRect.x;
+    }
+    if (innerRect.XMost() > aDirtyRect.XMost()) {
+      aSkipSides |= (1 << NS_SIDE_RIGHT);
+      innerRect.width = aDirtyRect.XMost() - innerRect.x;
+      outerRect.width = aDirtyRect.XMost() - outerRect.x;
+    }
+  }
   /* Get our conversion values */
   nscoord twipsPerPixel;
   float p2t;
