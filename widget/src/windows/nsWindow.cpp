@@ -431,7 +431,7 @@ void nsWindow::Create(nsIWidget *aParent,
     if (NULL == mToolkit) {
         if (NULL != aToolkit) {
             mToolkit = (nsToolkit*)aToolkit;
-            mToolkit->AddRef();
+            NS_ADDREF(mToolkit);
         }
         else {
             if (NULL != aParent) {
@@ -441,7 +441,7 @@ void nsWindow::Create(nsIWidget *aParent,
             // Create a default toolkit with the current thread
             else {
                 mToolkit = new nsToolkit();
-                mToolkit->AddRef();
+                NS_ADDREF(mToolkit);
                 mToolkit->Init(PR_GetCurrentThread());
             }
         }
@@ -474,7 +474,7 @@ void nsWindow::Create(nsIWidget *aParent,
     // keep a reference to the toolkit object
     if (aContext) {
         mContext = aContext;
-        mContext->AddRef();
+        NS_ADDREF(mContext);
     }
     else {
       nsresult  res;
@@ -539,11 +539,11 @@ void nsWindow::Create(nsNativeWidget aParent,
     if (NULL == mToolkit) {
         if (NULL != aToolkit) {
             mToolkit = (nsToolkit*)aToolkit;
-            mToolkit->AddRef();
+            NS_ADDREF(mToolkit);
         }
         else {
             mToolkit = new nsToolkit();
-            mToolkit->AddRef();
+            NS_ADDREF(mToolkit);
             mToolkit->Init(PR_GetCurrentThread());
         }
 
@@ -575,7 +575,7 @@ void nsWindow::Create(nsNativeWidget aParent,
     // keep a reference to the toolkit object
     if (aContext) {
         mContext = aContext;
-        mContext->AddRef();
+        NS_ADDREF(mContext);
     }
     else {
       nsresult  res;
@@ -667,7 +667,7 @@ nsIWidget* nsWindow::GetParent(void)
         HWND parent = ::GetParent(mWnd);
         if (parent) {
             widget = (nsIWidget*)((nsWindow *)::GetWindowLong(mWnd, GWL_USERDATA));
-            widget->AddRef();
+            NS_ADDREF(widget);
         }
     }
 
@@ -686,7 +686,7 @@ nsIEnumerator* nsWindow::GetChildren()
         mChildren->Reset();
 
         Enumerator * children = new Enumerator();
-        children->AddRef();
+        NS_ADDREF(children);
         nsISupports   * next = mChildren->Next();
         if (next) {
           nsIWidget *widget;
@@ -1161,11 +1161,8 @@ nsRect  bounds;
 //-------------------------------------------------------------------------
 nsIToolkit* nsWindow::GetToolkit()
 {
-    if (NULL != mToolkit) {
-        mToolkit->AddRef();
-    }
-
-    return mToolkit;
+  NS_IF_ADDREF(mToolkit);
+  return mToolkit;
 }
 
 
@@ -1211,12 +1208,9 @@ void nsWindow::SetColorMap(nsColorMap *aColorMap)
 //
 //-------------------------------------------------------------------------
 nsIDeviceContext* nsWindow::GetDeviceContext() 
-{ 
-    if (mContext) {
-        mContext->AddRef();
-    }
-
-    return mContext; 
+{
+  NS_IF_ADDREF(mContext);
+  return mContext; 
 }
 
 //-------------------------------------------------------------------------
@@ -1708,38 +1702,21 @@ void nsWindow::SubclassWindow(BOOL bState)
 void nsWindow::OnDestroy()
 {
     SubclassWindow(FALSE);
-
-    if (mBrush)
-      ::DeleteObject(mBrush);
-
-    // disconnect from the parent
-    /* 
-    nsIWidget *parent = GetParent();
-    if (parent) {
-        parent->RemoveChild(this);
-    }*/
-
     mWnd = 0;
 
-    // release children (I don't think we need this but...)
-    if (mChildren) {
-        NS_RELEASE(mChildren);
-        mChildren = NULL;
+    // free GDI objects
+    if (mBrush) {
+      ::DeleteObject(mBrush);
     }
 
-    // get the pixels to twips info before the device context is released
-    if (mContext) {
-        NS_RELEASE(mContext);
-        mContext = 0;
-    }
+    // release references to children, device context, and toolkit
+    NS_IF_RELEASE(mChildren);
+    NS_IF_RELEASE(mContext);
+    NS_IF_RELEASE(mToolkit);
 
-    if (NULL != mToolkit) {
-        NS_RELEASE(mToolkit);
-        mToolkit = NULL;
-    }
-
+    // dispatch the event
     if (!mIsDestroying) {
-      // Dispatching of the event may cause the reference count to drop to 0
+      // dispatching of the event may cause the reference count to drop to 0
       // and result in this object being destroyed. To avoid that, add a reference
       // and then release it after dispatching the event
       AddRef();
@@ -1989,8 +1966,8 @@ nsWindow::Enumerator::Enumerator()
 {
     mRefCnt = 1;
     mArraySize = INITIAL_SIZE;
-    mChildrens = (nsIWidget**)new DWORD[mArraySize];
-    memset(mChildrens, 0, sizeof(DWORD) * mArraySize);
+    mChildrens = (nsIWidget**) new(nsIWidget*[mArraySize]);
+    memset(mChildrens, 0, sizeof(nsIWidget*) * mArraySize);
     mCurrentPosition = 0;
 }
 
@@ -2002,13 +1979,18 @@ nsWindow::Enumerator::Enumerator()
 //-------------------------------------------------------------------------
 nsWindow::Enumerator::~Enumerator()
 {   
-    if (mChildrens) {
-        //for (int i = 0; mChildrens[i] && i < mArraySize; i++) {
-        //    NS_RELEASE(mChildrens[i]);
-        //}
-
-        delete[] mChildrens;
+  if (mChildrens) {
+    // XXX We add ref'd when adding the child widget, so we should release
+    // the reference now, but if we do we'll crash because of the way the
+    // view hierarchy is being destroyed...
+#if 0
+    for (int i = 0; (i < mArraySize) && (nsnull != mChildrens[i]); i++) {
+      NS_RELEASE(mChildrens[i]);
     }
+#endif
+
+    delete[] mChildrens;
+  }
 }
 
 //
@@ -2024,7 +2006,7 @@ NS_IMPL_ISUPPORTS(nsWindow::Enumerator, NS_IENUMERATOR_IID);
 nsISupports* nsWindow::Enumerator::Next()
 {
     if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) {
-        mChildrens[mCurrentPosition]->AddRef();
+        NS_ADDREF(mChildrens[mCurrentPosition]);
         return mChildrens[mCurrentPosition++];
     }
 
@@ -2058,7 +2040,7 @@ void nsWindow::Enumerator::Append(nsIWidget* aWidget)
             GrowArray();
         }
         mChildrens[pos] = aWidget;
-        aWidget->AddRef();
+        NS_ADDREF(aWidget);
     }
 }
 
@@ -2088,9 +2070,11 @@ void nsWindow::Enumerator::Remove(nsIWidget* aWidget)
 void nsWindow::Enumerator::GrowArray()
 {
     mArraySize <<= 1;
-    nsIWidget **newArray = (nsIWidget**)new DWORD[mArraySize];
-    memset(newArray, 0, sizeof(DWORD) * mArraySize);
-    memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(DWORD));
+    nsIWidget **newArray = (nsIWidget**) new(nsIWidget*[mArraySize]);
+    // XXX We really only need to zero out the new part of the space...
+    memset(newArray, 0, sizeof(nsIWidget*) * mArraySize);
+    memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(nsIWidget*));
+    delete[] mChildrens;
     mChildrens = newArray;
 }
 
