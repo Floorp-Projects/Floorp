@@ -57,7 +57,9 @@ endif
  
 ifdef ENABLE_TESTS
 ifeq (,$(filter WINNT Darwin Linux,$(OS_ARCH)))
+ifneq ($(OS_ARCH),BeOS)
 DIRS		+= tools/sdk
+endif
 endif
 endif
 
