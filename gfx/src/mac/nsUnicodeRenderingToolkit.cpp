@@ -152,7 +152,16 @@ PRBool nsUnicodeRenderingToolkit :: TECFallbackGetWidth(
 	ScriptCode fallbackScript;
 	nsUnicodeFallbackCache* cache = GetTECFallbackCache();
 	
-	if( cache->Get(*aCharPt, fallbackScript))
+	if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
+	{
+		// If we are encountering our PUA characters for User-Defined characters, we better
+		// just drop the high-byte and return the width for the low-byte.
+		*buf = (*aCharPt & 0x00FF);
+		GetScriptTextWidth (buf,1,oWidth);
+
+		return PR_TRUE;
+	}
+	else if( cache->Get(*aCharPt, fallbackScript))
 	{
 		if(BAD_SCRIPT == fallbackScript)
 			return PR_FALSE;
@@ -220,7 +229,16 @@ PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
 	
 	// since we always call TECFallbackGetWidth before TECFallbackDrawChar
 	// we could assume that we can always get the script code from cache.
-	if( cache->Get(*aCharPt, fallbackScript))
+	if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
+	{
+		// If we are encountering our PUA characters for User-Defined characters, we better
+		// just drop the high-byte and draw the text for the low-byte.
+		*buf = (*aCharPt & 0x00FF);
+		DrawScriptText (buf,1,x,y,oWidth);
+
+		return PR_TRUE;
+	}
+	else if( cache->Get(*aCharPt, fallbackScript))
 	{
 		if(BAD_SCRIPT == fallbackScript)
 			return PR_FALSE;

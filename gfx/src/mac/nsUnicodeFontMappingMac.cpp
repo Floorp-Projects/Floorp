@@ -271,7 +271,7 @@ void nsUnicodeFontMappingMac::InitByLangGroup(const nsString& aLangGroup)
 
 void nsUnicodeFontMappingMac::InitDefaultScriptFonts()
 {
-	for(PRInt32 i = 0 ; i < 32; i++)
+	for(PRInt32 i = 0 ; i < smPseudoTotalScripts; i++)
 	{
 		// copy from global mapping
 	   if(BAD_FONT_NUM == mScriptFallbackFontIDs[i])
@@ -293,7 +293,7 @@ nsUnicodeFontMappingMac::nsUnicodeFontMappingMac(
 	PRInt32 i;
 	for(i = kUnicodeBlockFixedScriptMax ; i < kUnicodeBlockSize; i++)
 	   mPrivBlockToScript[i - kUnicodeBlockFixedScriptMax] = BAD_SCRIPT;
-	for(i = 0 ; i < 32; i++)
+	for(i = 0 ; i < smPseudoTotalScripts; i++)
 	   mScriptFallbackFontIDs[i] = BAD_FONT_NUM;
 	   
 	InitByFontFamily(aFont, aDeviceContext);
@@ -331,7 +331,7 @@ PRBool nsUnicodeFontMappingMac::Equals(const nsUnicodeFontMappingMac& aMap)
 {
 	PRUint32 i;
 	if(&aMap != this) {
-		for( i=0; i < 32; i++)
+		for( i=0; i < smPseudoTotalScripts; i++)
 		{
 			if(mScriptFallbackFontIDs[i] != aMap.mScriptFallbackFontIDs[i])
 				return PR_FALSE;
@@ -465,7 +465,8 @@ static nsUnicodeBlock GetBlockUFXXX(PRUnichar aChar)
   }
 
   // The rest is rarely used, we don't care the performance below.
-  if(aChar < 0xf900)             return kOthers;
+  if((0xf780 <= aChar) && (aChar <= 0xf7ff)) return kUserDefinedEncoding;
+  else if(aChar < 0xf900)        return kOthers;
   else if(aChar < 0xfb00)        return kCJKIdeographs;
   else if(aChar < 0xfb10)        return kLatin;
   else if(aChar < 0xfb18)        return kArmenian;
