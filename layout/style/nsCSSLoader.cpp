@@ -713,6 +713,11 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   if (NS_FAILED(result))
     channel = nsnull;
   
+  nsCOMPtr<nsIURI> channelURI;
+  if (channel) {
+    channel->GetURI(getter_AddRefs(channelURI));
+  }
+  
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_OUTDENT();
   NS_TIMELINE_MARK_CHANNEL("SheetLoadData::OnStreamComplete(%s)", channel);
@@ -744,11 +749,8 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     if (mLoader->mCompatMode == eCompatibility_NavQuirks || validType) {
       if (!validType) {
         nsCAutoString spec;
-        if (channel) {
-          nsCOMPtr<nsIURI> uri;
-          channel->GetURI(getter_AddRefs(uri));
-          if (uri)
-            uri->GetSpec(spec);
+        if (channelURI) {
+          channelURI->GetSpec(spec);
         }
 
         const nsAFlatString& specUCS2 = NS_ConvertUTF8toUCS2(spec);
@@ -763,11 +765,8 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       aDataStream = nsnull;
       
       nsCAutoString spec;
-      if (channel) {
-        nsCOMPtr<nsIURI> uri;
-        channel->GetURI(getter_AddRefs(uri));
-        if (uri)
-          uri->GetSpec(spec);
+      if (channelURI) {
+        channelURI->GetSpec(spec);
       }
 
       const nsAFlatString& specUCS2 = NS_ConvertUTF8toUCS2(spec);
@@ -785,9 +784,11 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     mLoader->SheetComplete(this, PR_FALSE);
     return NS_OK;
   }
-    
+
   PRBool completed;
-  return mLoader->ParseSheet(aDataStream, this, completed);
+  return mLoader->ParseSheet(aDataStream, this,
+                             channelURI ? channelURI : mURI,
+                             completed);
 }
 
 #ifdef MOZ_XUL
@@ -1035,16 +1036,8 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 
   if (!*aSheet) {
     aSheetState = eSheetNeedsParser;
-    nsCOMPtr<nsIURI> sheetURI = aURI;
-    // Need to create one now
-    if (!sheetURI) {
-      // Inline style.  Use the document's base URL so that @import in
-      // the inline sheet picks up the right base.
-      NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
-      aLinkingContent->GetBaseURL(getter_AddRefs(sheetURI));
-    }
-
-    rv = NS_NewCSSStyleSheet(aSheet, sheetURI);
+    rv = NS_NewCSSStyleSheet(aSheet); // Don't init the sheet here, but in
+                                      // ParseSheet once we know the final URI
     NS_ENSURE_SUCCESS(rv, rv);
     
     (*aSheet)->SetDefaultNameSpaceID(aDefaultNameSpaceID);
@@ -1244,7 +1237,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     LOG(("  Synchronous load"));
     NS_ASSERTION(aSheetState == eSheetNeedsParser,
                  "Sync loads can't reuse existing async loads");
-    
+
     // Just load it
     nsCOMPtr<nsIInputStream> stream;
     rv = NS_OpenURI(getter_AddRefs(stream), aLoadData->mURI);
@@ -1278,7 +1271,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     }
 
     PRBool completed;
-    rv = ParseSheet(converterStream, aLoadData, completed);
+    rv = ParseSheet(converterStream, aLoadData, aLoadData->mURI, completed);
     NS_ASSERTION(completed, "sync load did not complete");
     return rv;
   }
@@ -1396,16 +1389,23 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
 nsresult
 CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
                           SheetLoadData* aLoadData,
+                          nsIURI* aSheetURI,
                           PRBool& aCompleted)
 {
   LOG(("CSSLoaderImpl::ParseSheet"));
   NS_PRECONDITION(aStream, "Must have data to parse");
   NS_PRECONDITION(aLoadData, "Must have load data");
+  NS_PRECONDITION(aSheetURI, "Must have sheet URI");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
 
   aCompleted = PR_FALSE;
+
+  // Init the sheet with the correct URI so that the relative URIs in
+  // it will be resolved properly.
+  nsresult rv = aLoadData->mSheet->Init(aSheetURI);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "If this is failing, something has gone terribly wrong");
   
-  nsresult rv;
   nsCOMPtr<nsICSSParser> parser;
   rv = GetParserFor(aLoadData->mSheet, getter_AddRefs(parser));
   if (NS_FAILED(rv)) {
@@ -1419,11 +1419,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   nsCOMPtr<nsICSSStyleSheet> dummySheet;
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
-  nsCOMPtr<nsIURI> uri = aLoadData->mURI;
-  if (!uri) {
-    aLoadData->mSheet->GetURL(*getter_AddRefs(uri));
-  }
-  rv = parser->Parse(aStream, uri, *getter_AddRefs(dummySheet));
+  rv = parser->Parse(aStream, aSheetURI, *getter_AddRefs(dummySheet));
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
 
@@ -1611,9 +1607,12 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsCOMPtr<nsIURI> baseURI;
+  aElement->GetBaseURL(getter_AddRefs(baseURI));  
+
   NS_ADDREF(data);
   // Parse completion releases the load data
-  return ParseSheet(aStream, data, aCompleted);
+  return ParseSheet(aStream, data, baseURI, aCompleted);
 }        
 
 NS_IMETHODIMP
