@@ -768,6 +768,16 @@ namespace MetaData {
         return result;
     }    
 
+    bool JS2ArrayClass::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
+    {
+        if ((*multiname->name == *meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+            *result = false;
+            return true;
+        }
+        else
+            return JS2Class::Delete(meta, base, multiname, env, result);
+    }
+
     bool JS2ArrayClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
 	{
 		const String *indexStr = meta->toString(indexVal);
