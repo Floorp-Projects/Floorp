@@ -1350,7 +1350,14 @@ function serv_ping (e)
 {
 
     /* non-queued send, so we can calcualte lag */
-    this.connection.sendData ("PONG :" + e.meat + "\n");
+    if (e.meat)
+    {
+        this.connection.sendData ("PONG :" + e.meat + "\n");
+    }
+    else
+    {
+        this.connection.sendData ("PONG :" + e.params[e.params.length - 1] + "\n");
+    }
     this.connection.sendData ("PING :LAGTIMER\n");
     this.lastPing = this.lastPingSent = new Date();
 
