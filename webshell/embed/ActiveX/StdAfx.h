@@ -15,13 +15,18 @@
 #define _WIN32_WINNT 0x0400
 #define _ATL_APARTMENT_THREADED
 
-
+// ATL headers
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
 //something, but do not change the name of _Module
 extern CComModule _Module;
 #include <atlcom.h>
 #include <atlctl.h>
+
+// STL headers
+#include <vector>
+
+// Mozilla headers
 
 #ifdef USE_NGPREF
 #include "nsIPref.h"
@@ -50,10 +55,13 @@ extern CComModule _Module;
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 
+// Mozilla control headers
+#include "resource.h"
+
 #include "BrowserDiagnostics.h"
 #include "MozillaControl.h"
-#include "WebShellContainer.h"
 #include "MozillaBrowser.h"
+#include "WebShellContainer.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

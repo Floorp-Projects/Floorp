@@ -1,7 +1,8 @@
 #ifndef WEBSHELLCONTAINER_H
 #define WEBSHELLCONTAINER_H
 
-class CMozillaBrowser;
+// This is the class that handles the XPCOM side of things, callback
+// interfaces into the web shell and so forth.
 
 class CWebShellContainer :
 		public nsIWebShellContainer,
@@ -9,13 +10,17 @@ class CWebShellContainer :
 {
 public:
 	CWebShellContainer(CMozillaBrowser *pOwner);
+
 protected:
 	virtual ~CWebShellContainer();
 
 // Protected members
 protected:
 	nsString m_sTitle;
+	
 	CMozillaBrowser *m_pOwner;
+	CDWebBrowserEvents1 *m_pEvents1;
+	CDWebBrowserEvents2 *m_pEvents2;
 
 public:
 	// nsISupports

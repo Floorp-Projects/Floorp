@@ -63,7 +63,7 @@ LLIBS = $(MYLIBS)               \
  shell32.lib                    \
  -SUBSYSTEM:windows
 
-LCFLAGS = /D "WIN32" /GX 
+LCFLAGS = /D "WIN32" /GX /FR
 LFLAGS = /DLL
 
 include <$(DEPTH)\config\rules.mak>
