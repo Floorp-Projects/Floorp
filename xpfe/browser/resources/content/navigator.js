@@ -113,7 +113,10 @@ function isDocumentFrame(aFocusedWindow)
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-  var url = getWebNavigation().currentURI.spec;
+  // XXX This somehow causes a big leak, back to the old way
+  //     till we figure out why. See bug 61886.
+  // var url = getWebNavigation().currentURI.spec;
+  var url = _content.location.href;
   if (url) {
     try {
       // if the URL is bookmarked, update its "Last Visited" date
@@ -129,7 +132,10 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function UpdateInternetSearchResults(event)
 {
-  var url = getWebNavigation().currentURI.spec;
+  // XXX This somehow causes a big leak, back to the old way
+  //     till we figure out why. See bug 61886.
+  // var url = getWebNavigation().currentURI.spec;
+  var url = _content.location.href;
   if (url) {
     try {
       var search = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
@@ -519,7 +525,10 @@ function Translate()
 
   // if we're already viewing a translated page, then just get the
   // last argument (which we expect to always be "AlisTargetURI")
-  var targetURI = getWebNavigation().currentURI.spec;
+  // XXX This somehow causes a big leak, back to the old way
+  //     till we figure out why. See bug 61886.
+  // var targetURI = getWebNavigation().currentURI.spec;
+  var targetURI = _content.location.href;
   var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
 
   if (targetURIIndex >= 0)
@@ -630,7 +639,10 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   var defaultSearchURL = null;
   var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL");
   var otherSearchURL = bundle.GetStringFromName("otherSearchURL");
-  var url = getWebNavigation().currentURI.spec;
+  // XXX This somehow causes a big leak, back to the old way
+  //     till we figure out why. See bug 61886.
+  // var url = getWebNavigation().currentURI.spec;
+  var url = _content.location.href;
 
   try {
     searchMode = pref.GetIntPref("browser.search.powermode");
@@ -1474,7 +1486,10 @@ try {
 function postURLToNativeWidget()
 {
   if (urlWidgetService) {
-    var url = getWebNavigation().currentURI.spec;
+    // XXX This somehow causes a big leak, back to the old way
+    //     till we figure out why. See bug 61886.
+    // var url = getWebNavigation().currentURI.spec;
+    var url = _content.location.href;
     try {
       urlWidgetService.SetURLToHiddenControl(url, window);
     } catch (exception) {
