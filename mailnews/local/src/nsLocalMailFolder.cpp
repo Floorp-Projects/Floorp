@@ -1135,7 +1135,7 @@ nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 
 NS_IMETHODIMP
 nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
-                                     nsITransactionManager *txnMgr, 
+                                     nsIMsgWindow *msgWindow, 
                                      PRBool deleteStorage)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -1150,13 +1150,20 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                           &rv);
           if (NS_SUCCEEDED(rv))
               return copyService->CopyMessages(this, messages, trashFolder,
-                                        PR_TRUE, nsnull, txnMgr);
+                                        PR_TRUE, nsnull, msgWindow);
       }
       return rv;
   }
   else
   {
-      if (txnMgr) SetTransactionManager(txnMgr);
+	  nsCOMPtr <nsITransactionManager> txnMgr;
+
+	  if (msgWindow)
+	  {
+		  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+
+		  if (txnMgr) SetTransactionManager(txnMgr);
+	  }
   	
       rv = GetDatabase();
       if(NS_SUCCEEDED(rv))
@@ -1173,7 +1180,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
               {
                 message = do_QueryInterface(msgSupport, &rv);
                 if(message)
-                  DeleteMessage(message, txnMgr, PR_TRUE);
+                  DeleteMessage(message, msgWindow, PR_TRUE);
               }
           }
       }
@@ -1270,12 +1277,19 @@ nsMsgLocalMailFolder::ClearCopyState()
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    messages, PRBool isMove,
-                                   nsITransactionManager* txnMgr,
+                                   nsIMsgWindow *msgWindow,
                                    nsIMsgCopyServiceListener* listener)
 {
   if (!srcFolder || !messages)
     return NS_ERROR_NULL_POINTER;
-  if (txnMgr) SetTransactionManager(txnMgr);
+  nsCOMPtr <nsITransactionManager> txnMgr;
+
+  if (msgWindow)
+  {
+	  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+
+	if (txnMgr) SetTransactionManager(txnMgr);
+  }
 
 	nsresult rv;
   nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
@@ -1339,7 +1353,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
                                       msgToReplace, PRBool isDraftOrTemplate,
-                                      nsITransactionManager* txnMgr,
+                                      nsIMsgWindow *msgWindow,
                                       nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
@@ -1400,7 +1414,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
 
   if (msgToReplace)
   {
-    rv = DeleteMessage(msgToReplace, txnMgr, PR_TRUE);
+    rv = DeleteMessage(msgToReplace, msgWindow, PR_TRUE);
   }
 
 done:
@@ -1419,7 +1433,7 @@ done:
 }
 
 nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
-                                             nsITransactionManager *txnMgr,
+                                             nsIMsgWindow *msgWindow,
                                              PRBool deleteStorage)
 {
 	nsresult rv = NS_OK;

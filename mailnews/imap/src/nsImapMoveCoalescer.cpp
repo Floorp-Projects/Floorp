@@ -104,7 +104,16 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 
 				nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface((nsIMsgImapMailFolder *) m_sourceFolder, &rv);
 				nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));
-				rv = imapService->OnlineMessageCopy(eventQueue,
+
+	  nsCOMPtr<nsISupportsArray> messages;
+      NS_NewISupportsArray(getter_AddRefs(messages));
+//				rv = destFolder->CopyMessages(m_sourceFolder,
+  //                             nsISupportsArray* messages,
+    //                           PR_TRUE, nsnull,
+      //                         nsIMsgCopyServiceListener* listener)
+
+
+							   rv = imapService->OnlineMessageCopy(eventQueue,
 												m_sourceFolder, messageIds.GetBuffer(),
 												destFolder, PR_TRUE, PR_TRUE,
 												urlListener, nsnull, nsnull);

@@ -1160,10 +1160,8 @@ void nsImapServerResponseParser::msg_fetch()
 	if (ContinueParse())
 	{
 		if (CurrentResponseUID() && fCurrentLineContainedFlagInfo && fFlagState)
-		{
 			fFlagState->AddUidFlagPair(CurrentResponseUID(), fSavedFlagInfo);
-			fCurrentLineContainedFlagInfo = PR_FALSE;	// do not fire if in PostProcessEndOfLine
-		}
+
 		fCurrentLineContainedFlagInfo = PR_FALSE;	// do not fire if in PostProcessEndOfLine
 			
 		fNextToken = GetNextToken();	// eat the ')' ending token

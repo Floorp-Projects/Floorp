@@ -995,7 +995,7 @@ nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCStri
 }
 
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
-                                               nsITransactionManager *txnMgr,
+                                               nsIMsgWindow *msgWindow,
                                                PRBool deleteStorage)
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -1017,7 +1017,14 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     }
     else
     {
-        SetTransactionManager(txnMgr);
+	  if (msgWindow)
+	  {
+		  nsCOMPtr <nsITransactionManager> txnMgr;
+
+		  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+
+		if (txnMgr) SetTransactionManager(txnMgr);
+	  }
         
         nsCOMPtr<nsIMsgFolder> rootFolder;
         rv = GetRootFolder(getter_AddRefs(rootFolder));
@@ -2937,7 +2944,7 @@ nsresult
 nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                                 nsISupportsArray* messages,
                                 PRBool isMove,
-                                nsITransactionManager* txnMsg,
+                                nsIMsgWindow *msgWindow,
                                 nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
@@ -2988,7 +2995,7 @@ NS_IMETHODIMP
 nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                nsISupportsArray* messages,
                                PRBool isMove,
-                               nsITransactionManager* txnMgr,
+                               nsIMsgWindow *msgWindow,
                                nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_OK;
@@ -3002,7 +3009,13 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     nsCOMPtr<nsISupports> srcSupport;
     nsCOMPtr<nsISupports> copySupport;
 
-    SetTransactionManager(txnMgr);
+	if (msgWindow)
+	{
+		nsCOMPtr <nsITransactionManager> txnMgr;
+
+		msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+		if (txnMgr) SetTransactionManager(txnMgr);
+	}
 
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
 
@@ -3013,7 +3026,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if (NS_FAILED(rv)) goto done;
     if (!protocolType.EqualsIgnoreCase("imap"))
     {
-        rv = CopyMessagesWithStream(srcFolder, messages, isMove, txnMgr, listener);
+        rv = CopyMessagesWithStream(srcFolder, messages, isMove, msgWindow, listener);
         goto done;
     }
     rv = srcFolder->GetHostname(&hostname1);
@@ -3027,7 +3040,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if (PL_strcmp(hostname1, hostname2) || // *** different server or account
         PL_strcmp(username1, username2))   // do stream base copy
     {
-        rv = CopyMessagesWithStream(srcFolder, messages, isMove, txnMgr, listener);
+        rv = CopyMessagesWithStream(srcFolder, messages, isMove, msgWindow, listener);
         goto done;
     }
 
@@ -3082,7 +3095,7 @@ NS_IMETHODIMP
 nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMessage* msgToReplace,
                                   PRBool isDraftOrTemplate,
-                                  nsITransactionManager* txnMgr,
+                                  nsIMsgWindow *msgWindow,
                                   nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;

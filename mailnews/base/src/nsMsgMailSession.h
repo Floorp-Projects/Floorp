@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIMsgWindow.h"
 #include "nsISupportsArray.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +55,7 @@ protected:
 	nsCOMPtr<nsISupportsArray> mListeners; 
 	nsCOMPtr<nsISupportsArray> mWindows;
 	// stick this here temporarily
-	nsCOMPtr <nsIMsgStatusFeedback> m_temporaryMsgStatusFeedback;
+	nsCOMPtr <nsIMsgWindow> m_temporaryMsgWindow;
 
 };
 

@@ -92,7 +92,7 @@ public:
 
   nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                                nsIMessage *aMsgToReplace, PRBool aIsDraft,
-                               nsITransactionManager *txnMgr,
+                               nsIMsgWindow *msgWindow,
                                nsMsgComposeAndSend   *aMsgSendObj);
 
   nsresult	GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);

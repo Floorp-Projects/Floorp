@@ -25,13 +25,12 @@
 #include "nsIMsgCopyServiceListener.idl"
 
 %{ C++
-#include "nsITransactionManager.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeyArray.h"
 %}
 
 interface nsIMessage;
-interface nsITransactionManager;
+interface nsIMsgWindow;
 interface nsIMsgDatabase;
 interface nsMsgKeyArray;
 
@@ -137,15 +136,15 @@ interface nsIMsgFolder : nsIFolder {
 	void getExpansionArray(in nsISupportsArray expansionArray);
 
 	void deleteMessages(in nsISupportsArray message,
-                      in nsITransactionManager txnMgr,
+                      in nsIMsgWindow msgWindow,
                       in boolean deleteStorage);
 
   void copyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
-                    in boolean isMove, in nsITransactionManager txnMgr,
+                    in boolean isMove, in nsIMsgWindow msgWindow,
                     in nsIMsgCopyServiceListener listener);
 
   void copyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
-                       in boolean isDraft, in nsITransactionManager txnMgr,
+                       in boolean isDraft, in nsIMsgWindow msgWindow,
                        in nsIMsgCopyServiceListener listener);
 
   void acquireSemaphore (in nsISupports semHolder);

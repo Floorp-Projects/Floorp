@@ -33,7 +33,7 @@ nsMsgStatusFeedback::nsMsgStatusFeedback()
 	m_meteorsSpinning = PR_FALSE;
 	m_lastPercent = 0;
 	LL_I2L(m_lastProgressTime, 0);
-
+	mWebShell = nsnull;
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()

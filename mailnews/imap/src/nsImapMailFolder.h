@@ -142,16 +142,16 @@ public:
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
-                              nsITransactionManager *txnMgr, PRBool
+                              nsIMsgWindow *msgWindow, PRBool
                               deleteStorage);
     NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
                             nsISupportsArray* messages,
-                            PRBool isMove, nsITransactionManager* txnMgr,
+                            PRBool isMove, nsIMsgWindow *msgWindow,
                             nsIMsgCopyServiceListener* listener);
     NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
                                nsIMessage* msgToReplace,
                                PRBool isDraftOrTemplate,
-                               nsITransactionManager* txnMgr,
+                               nsIMsgWindow *msgWindow,
                                nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
@@ -294,7 +294,7 @@ protected:
     nsresult CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                            nsISupportsArray* messages,
                            PRBool isMove,
-                           nsITransactionManager* txnMgr,
+                           nsIMsgWindow *msgWindow,
                            nsIMsgCopyServiceListener* listener);
     nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
                                PRBool isMove);

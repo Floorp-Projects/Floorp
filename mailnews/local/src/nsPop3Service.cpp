@@ -32,6 +32,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgWindow.h"
 
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
@@ -173,9 +174,9 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 				// the mailbox service...this is just a temp work around to get things going...
 				NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
 				if (NS_FAILED(rv)) return rv;
-				nsCOMPtr<nsIMsgStatusFeedback> status;
-				session->GetTemporaryMsgStatusFeedback(getter_AddRefs(status));
-				mailnewsurl->SetStatusFeedback(status);
+				nsCOMPtr<nsIMsgWindow> window;
+				session->GetTemporaryMsgWindow(getter_AddRefs(window));
+				mailnewsurl->SetMsgWindow(window);
 			}
 		}
 

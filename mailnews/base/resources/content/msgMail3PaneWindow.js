@@ -99,9 +99,9 @@ function OnLoadMessenger()
     verifyAccounts();
     
     loadStartPage();
-	messenger.SetWindow(window, statusFeedback);
-
 	InitMsgWindow();
+
+	messenger.SetWindow(window, msgWindow);
 
 	AddDataSources();
 	InitPanes();
@@ -386,5 +386,11 @@ function ClearMessagePane()
 
 }
 
+function StopUrls()
+{
+	dump("sorry, stop doesn't work yet.\n");
+	var windowData = folderDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
+
+}
 
 

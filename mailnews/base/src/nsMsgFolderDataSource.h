@@ -132,10 +132,10 @@ protected:
   nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
   
   nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
-							  nsISupportsArray *arguments, nsITransactionManager *txnMgr);
+							  nsISupportsArray *arguments, nsIMsgWindow *msgWindow);
 
   nsresult DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
-						  nsITransactionManager *txnMgr, PRBool isMove);
+						  nsIMsgWindow *msgWindow, PRBool isMove);
 
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);

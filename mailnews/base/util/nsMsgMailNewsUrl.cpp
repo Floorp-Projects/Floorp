@@ -193,6 +193,35 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeed
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgWindow(nsIMsgWindow **aMsgWindow)
+{
+	nsresult rv = NS_OK;
+	// note: it is okay to return a null msg window and not return an error
+	// it's possible the url really doesn't have msg window
+	if (!m_msgWindow)
+	{
+//		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+
+//		if(NS_SUCCEEDED(rv))
+//		mailSession->GetTemporaryMsgStatusFeedback(getter_AddRefs(m_statusFeedback));
+	}
+	if (aMsgWindow)
+	{
+		*aMsgWindow = m_msgWindow;
+		NS_IF_ADDREF(*aMsgWindow);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
+{
+	if (aMsgWindow)
+		m_msgWindow = do_QueryInterface(aMsgWindow);
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback)
 {
 	nsresult rv = NS_OK;
@@ -203,7 +232,12 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFee
 		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 
 		if(NS_SUCCEEDED(rv))
-			mailSession->GetTemporaryMsgStatusFeedback(getter_AddRefs(m_statusFeedback));
+		{
+			nsCOMPtr<nsIMsgWindow> msgWindow;
+			mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
+			if (msgWindow)
+				msgWindow->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+		}
 	}
 	if (aMsgFeedback)
 	{
@@ -214,6 +248,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFee
 		rv = NS_ERROR_NULL_POINTER;
 	return rv;
 }
+
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUpdatingFolder(PRBool *aResult)
 {

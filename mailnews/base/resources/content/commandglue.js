@@ -41,7 +41,7 @@ var gBeforeFolderLoadTime;
 function OpenURL(url)
 {
   dump("\n\nOpenURL from XUL\n\n\n");
-  messenger.SetWindow(window, statusFeedback);
+  messenger.SetWindow(window, msgWindow);
   messenger.OpenURL(url);
 }
 
@@ -123,7 +123,7 @@ function ComposeMessage(type, format)
 		var nodeList = tree.selectedItems;
 		var appCore = FindMessenger();
 		if (appCore)
-			appCore.SetWindow(window, statusFeedback);
+			appCore.SetWindow(window, msgWindow);
 			
 		var object = null;
 	

@@ -217,7 +217,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 nsresult 
 nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                   nsIMessage *aMsgToReplace, PRBool aIsDraft,
-                  nsITransactionManager *txnMgr,
+                  nsIMsgWindow *msgWindow,
                   nsMsgComposeAndSend   *aMsgSendObj)
 {
   nsresult rv = NS_OK;
@@ -240,7 +240,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
     rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace,
-                                      aIsDraft, mCopyListener, txnMgr);
+                                      aIsDraft, mCopyListener, msgWindow);
 	}
 
 	return rv;

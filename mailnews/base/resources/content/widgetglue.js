@@ -695,7 +695,7 @@ function MsgFirstUnreadMessage() {}
 function MsgFirstFlaggedMessage() {}
 
 function MsgStop() {
-	dump("sorry, stop doesn't work yet.\n");
+	StopUrls();
 }
 
 function MsgNextMessage()

@@ -114,8 +114,8 @@ public:
   NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **result, PRUint32 resultsize, PRUint32 *numFolders);
   NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray);
   // NS_IMETHOD DeleteMessages(nsISupportsArray *message, nsITransactionManager *txnMgr, PRBool deleteStorage);
-  NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray *messages, PRBool isMove, nsITransactionManager *txnMgr, nsIMsgCopyServiceListener *listener);
-  NS_IMETHOD CopyFileMessage(nsIFileSpec *fileSpec, nsIMessage *msgToReplace, PRBool isDraft, nsITransactionManager *txnMgr, nsIMsgCopyServiceListener *listener);
+  NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray *messages, PRBool isMove, nsIMsgWindow *window, nsIMsgCopyServiceListener *listener);
+  NS_IMETHOD CopyFileMessage(nsIFileSpec *fileSpec, nsIMessage *msgToReplace, PRBool isDraft, nsIMsgWindow *window, nsIMsgCopyServiceListener *listener);
   NS_IMETHOD AcquireSemaphore(nsISupports *semHolder);
   NS_IMETHOD ReleaseSemaphore(nsISupports *semHolder);
   NS_IMETHOD TestSemaphore(nsISupports *semHolder, PRBool *_retval);

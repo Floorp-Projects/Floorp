@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgFolder.h"
 #include "nsIMessage.h"
+#include "nsIMsgWindow.h"
 
 typedef enum _nsCopyRequestType
 {
@@ -55,13 +56,14 @@ public:
     nsresult Init(nsCopyRequestType type, nsISupports* aSupport,
                   nsIMsgFolder* dstFolder,
                   PRBool bVal, nsIMsgCopyServiceListener* listener,
-                  nsITransactionManager* txnMgr);
+                  nsIMsgWindow *msgWindow);
     nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
 
     nsCOMPtr<nsISupports> m_srcSupport; // ui source folder or file spec
     nsCOMPtr<nsIMsgFolder> m_dstFolder;
-    nsCOMPtr<nsITransactionManager> m_txnMgr;
+    nsCOMPtr<nsIMsgWindow> m_msgWindow;
     nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
+	nsCOMPtr<nsITransactionManager> m_txnMgr;
     nsCopyRequestType m_requestType;
     PRBool m_isMoveOrDraftOrTemplate;
     PRBool m_processed;
@@ -76,25 +78,7 @@ public:
 	
 	NS_DECL_ISUPPORTS 
 
-	// nsIMsgCopyService interface
-	NS_IMETHOD CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
-							nsISupportsArray* messages,
-							nsIMsgFolder* dstFolder,
-							PRBool isMove,
-                            nsIMsgCopyServiceListener* listener,
-							nsITransactionManager* txnMgr);
-
-	NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
-                               nsIMsgFolder* dstFolder,
-                               nsIMessage* msgToReplace,
-                               PRBool isDraftOrTemplate,
-                               nsIMsgCopyServiceListener* listener,
-                               nsITransactionManager* txnMgr);
-
-	NS_IMETHOD NotifyCompletion(nsISupports* aSupport, /* store src folder */
-								nsIMsgFolder* dstFolder,
-                                nsresult result);
-
+	NS_DECL_NSIMSGCOPYSERVICE
 
 private:
 

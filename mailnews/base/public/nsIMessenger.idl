@@ -21,7 +21,7 @@
 #include "domstubs.idl"
 #include "xulstubs.idl"
 #include "nsIRDFCompositeDataSource.idl"
-#include "nsIMsgStatusFeedback.idl"
+#include "nsIMsgWindow.idl"
 
 %{C++
 #include "nsIDOMWindow.h"
@@ -38,7 +38,7 @@ interface nsIMessenger : nsISupports {
 
     void GetNewMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
 	void Open3PaneWindow();
-    void SetWindow(in nsIDOMWindow ptr, in nsIMsgStatusFeedback statusFeedback);
+    void SetWindow(in nsIDOMWindow ptr, in nsIMsgWindow msgWindow);
     void DoPrint();
     void DoPrintPreview();
     void DeleteMessages(in nsIDOMXULElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);

@@ -270,7 +270,7 @@ nsMessenger::GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *fol
 
 
 NS_IMETHODIMP    
-nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgStatusFeedback *aStatusFeedback)
+nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 {
 	if(!aWin)
 		return NS_ERROR_NULL_POINTER;
@@ -312,14 +312,18 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgStatusFeedback *aStatusFeedback
 #endif
 	if (mWebShell)
 	{
-		if (aStatusFeedback)
+		if (aMsgWindow)
 		{
+			nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
+
+			aMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
 			m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
-			aStatusFeedback->SetWebShell(mWebShell, mWindow);
+			if (aStatusFeedback)
+				aStatusFeedback->SetWebShell(mWebShell, mWindow);
 			mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
             NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
             if(NS_SUCCEEDED(rv))
-	            mailSession->SetTemporaryMsgStatusFeedback(aStatusFeedback);
+	            mailSession->SetTemporaryMsgWindow(aMsgWindow);
 		}
 	}
     NS_RELEASE(rootWebShell);

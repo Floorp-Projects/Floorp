@@ -23,6 +23,7 @@ interface nsIFileSpec;
 interface nsIUrlListener;
 interface nsIMsgStatusFeedback;
 interface nsIMsgIncomingServer;
+interface nsIMsgWindow;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -50,6 +51,9 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	// the ownership model for msg feedback
 	void SetStatusFeedback(in nsIMsgStatusFeedback aMsgFeedback);
 	void GetStatusFeedback(out nsIMsgStatusFeedback aMsgFeedback); 
+
+	void SetMsgWindow(in nsIMsgWindow aMsgWindow);
+	void GetMsgWindow(out nsIMsgWindow aMsgWindow);
 
 	attribute boolean updatingFolder;
 };

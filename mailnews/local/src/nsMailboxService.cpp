@@ -242,9 +242,9 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 			// the mailbox service...this is just a temp work around to get things going...
 			NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
 			if (NS_FAILED(rv)) return rv;
-			nsCOMPtr<nsIMsgStatusFeedback> status;
-			session->GetTemporaryMsgStatusFeedback(getter_AddRefs(status));
-			url->SetStatusFeedback(status);
+			nsCOMPtr<nsIMsgWindow> window;
+			session->GetTemporaryMsgWindow(getter_AddRefs(window));
+			url->SetMsgWindow(window);
 
 		} // if we got a url
 	} // if we got a url

@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsIUrlListener.h"
 #include "nsIUrlListenerManager.h"
+#include "nsIMsgWindow.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailNewsUrl.h"
@@ -54,6 +55,7 @@ protected:
 
 	nsCOMPtr<nsIURL> m_baseURL;
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
+	nsCOMPtr<nsIMsgWindow> m_msgWindow;
 	char		*m_errorMessage;
 	PRBool		m_runningUrl;
 	PRBool		m_updatingFolder;

@@ -567,15 +567,12 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsITransactionManager> transactionManager;
   nsCOMPtr<nsISupports> supports;
   // XXX need to handle batching of command applied to all sources
 
   PRUint32 cnt = 0;
   PRUint32 i = 0;
 
-  rv = GetTransactionManager(aSources, getter_AddRefs(transactionManager));
-  if (NS_FAILED(rv)) return rv;
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
 
@@ -586,7 +583,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     {
       if ((aCommand == kNC_Delete))
       {
-        rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
+        rv = DoDeleteFromFolder(folder, aArguments, mWindow);
       }
       else if((aCommand == kNC_NewFolder)) 
       {
@@ -598,11 +595,11 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if((aCommand == kNC_Copy))
       {
-        rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_FALSE);
+        rv = DoCopyToFolder(folder, aArguments, mWindow, PR_FALSE);
       }
       else if((aCommand == kNC_Move))
       {
-        rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_TRUE);
+        rv = DoCopyToFolder(folder, aArguments, mWindow, PR_TRUE);
       }
       else if((aCommand == kNC_MarkAllMessagesRead))
       {
@@ -1061,7 +1058,7 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
 }
 
 nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
-											   nsITransactionManager *txnMgr, PRBool isMove)
+											   nsIMsgWindow *msgWindow, PRBool isMove)
 {
 	nsresult rv;
 	PRUint32 itemCount;
@@ -1100,7 +1097,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 	if(NS_SUCCEEDED(rv))
 	{
 		copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
-                              nsnull, txnMgr);
+                              nsnull, msgWindow);
 
 	}
 	return NS_OK;
@@ -1108,7 +1105,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 
 nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
     nsIMsgFolder *folder, nsISupportsArray *arguments, 
-    nsITransactionManager* txnMgr)
+    nsIMsgWindow *msgWindow)
 {
 	nsresult rv = NS_OK;
 	PRUint32 itemCount;
@@ -1139,7 +1136,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	rv = messageArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray, txnMgr, PR_FALSE);
+		rv = folder->DeleteMessages(messageArray, msgWindow, PR_FALSE);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

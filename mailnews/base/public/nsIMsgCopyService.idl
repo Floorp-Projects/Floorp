@@ -29,6 +29,7 @@ interface nsIMessage;
 %}
 
 interface nsITransactionManager;
+interface nsIMsgWindow;
 
 [scriptable, uuid(bce41600-28df-11d3-abf7-00805f8ac968)]
 interface nsIMsgCopyService : nsISupports {
@@ -41,7 +42,7 @@ interface nsIMsgCopyService : nsISupports {
 					  in nsIMsgFolder dstFolder,
 					  in boolean isMove,
                       in nsIMsgCopyServiceListener listener,
-					  in nsITransactionManager txnMgr);
+					  in nsIMsgWindow msgWindow);
 
     /**
      *
@@ -51,7 +52,7 @@ interface nsIMsgCopyService : nsISupports {
                          in nsIMessage msgToReplace,
                          in boolean isDraftOrTemplate,
                          in nsIMsgCopyServiceListener listener,
-                         in nsITransactionManager txnMgr);
+                         in nsIMsgWindow msgWindow);
 
     /**
      * Notify the message copy service that the destination folder has finished

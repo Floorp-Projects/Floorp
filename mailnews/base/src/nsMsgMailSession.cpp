@@ -168,19 +168,19 @@ nsresult nsMsgMailSession::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
   return rv;
 }
 
-nsresult nsMsgMailSession::GetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback* *aMsgStatusFeedback)
+nsresult nsMsgMailSession::GetTemporaryMsgWindow(nsIMsgWindow* *aMsgWindow)
 {
-  if (!aMsgStatusFeedback) return NS_ERROR_NULL_POINTER;
+  if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
   
-  *aMsgStatusFeedback = m_temporaryMsgStatusFeedback;
-  NS_IF_ADDREF(*aMsgStatusFeedback);
+  *aMsgWindow = m_temporaryMsgWindow;
+  NS_IF_ADDREF(*aMsgWindow);
   return NS_OK;
 }
 
 
-nsresult nsMsgMailSession::SetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback* aMsgStatusFeedback)
+nsresult nsMsgMailSession::SetTemporaryMsgWindow(nsIMsgWindow* aMsgWindow)
 {
-  m_temporaryMsgStatusFeedback = do_QueryInterface(aMsgStatusFeedback);
+  m_temporaryMsgWindow = do_QueryInterface(aMsgWindow);
   return NS_OK;
 }
 

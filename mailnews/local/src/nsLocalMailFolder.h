@@ -34,6 +34,7 @@
 #include "nsMsgTxn.h"
 #include "nsIMsgMessageService.h"
 #include "nsIMsgParseMailMsgState.h"
+#include "nsITransactionManager.h"
 
 #define FOUR_K 4096
 
@@ -114,14 +115,14 @@ public:
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsITransactionManager *txnMgr, PRBool
+                            nsIMsgWindow *msgWindow, PRBool
                             deleteStorage);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
-                          PRBool isMove, nsITransactionManager* txnMgr,
+                          PRBool isMove, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage* msgToReplace,
                              PRBool isDraftOrTemplate, 
-                             nsITransactionManager* txnMgr,
+                             nsIMsgWindow *msgWindow,
                              nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages();
@@ -149,7 +150,7 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
-	nsresult DeleteMessage(nsIMessage *message, nsITransactionManager *txnMgr,
+	nsresult DeleteMessage(nsIMessage *message, nsIMsgWindow *msgWindow,
                          PRBool deleteStorage);
   // copy message helper
 	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
