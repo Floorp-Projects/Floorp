@@ -991,6 +991,11 @@ NS_IMETHODIMP nsTextEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   	    
   	  replacing = (dialogResult == nsFileDlgResults_Replace);
   	}
+  	else
+  	{
+   		NS_ASSERTION(0, "Failed to get file widget");
+  		return rv;
+  	}
   }
 
   nsAutoString  charsetStr("ISO-8859-1");
@@ -999,6 +1004,7 @@ NS_IMETHODIMP nsTextEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   if (NS_FAILED(rv))
   {
     // show some error dialog?
+    NS_WARNING("Saving file failed");
   }
   
   return rv;

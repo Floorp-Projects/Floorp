@@ -28,6 +28,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
+#include "nsIDiskDocument.h"
 #include "nsVector.h"
 #include "nsIServiceManager.h"
 #include "nsEditFactory.h"
@@ -682,6 +683,13 @@ nsEditor::Do(nsITransaction *aTxn)
     }
     selection->EndBatchChanges();
   }
+  
+  PRBool  isTransientTransaction;
+  if (NS_SUCCEEDED(result) &&
+      NS_SUCCEEDED(aTxn->GetIsTransient(&isTransientTransaction) &&
+      !isTransientTransaction))		// don't count transient transactions
+    result = IncDocModCount(+1);
+    
   return result;
 }
 
@@ -706,6 +714,10 @@ nsEditor::Undo(PRUint32 aCount)
     }
     selection->EndBatchChanges();
   }
+
+  if (NS_SUCCEEDED(result))
+    result = IncDocModCount(-1);		// all undoable transactions are non-transient
+
   return result;
 }
 
@@ -2564,6 +2576,41 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
 
 //END nsEditor static utility methods
 
+
+NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
+{
+  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  
+	nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+	if (diskDoc)
+    diskDoc->IncrementModCount(inNumMods);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
+{
+  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  
+	nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+	if (diskDoc)
+	  diskDoc->GetModCount(&outModCount);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsEditor::ResetDocModCount()
+{
+  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  
+	nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+	if (diskDoc)
+    diskDoc->ResetModCount();
+
+  return NS_OK;
+}
 
 
 void nsEditor::HACKForceRedraw()
