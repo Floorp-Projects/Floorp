@@ -82,6 +82,7 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
   NS_INIT_REFCNT();
   mDocument = 0;
   mSelection = 0;
+  mAddHeader = PR_FALSE;
 }
 
 nsTextEncoder::~nsTextEncoder()
@@ -208,7 +209,8 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
 
         if (mMimeType == "text/html")
           rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString,
-                                             PR_FALSE, mAddHeader);
+                                             PR_FALSE,
+                                             mSelection ? PR_FALSE : mAddHeader );
 
         else  // default to text/plain
           rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString,
@@ -272,7 +274,8 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
 
         if (mMimeType == "text/html")
           rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset,
-                                             PR_FALSE, mAddHeader);
+                                             PR_FALSE,
+                                             mSelection ? PR_FALSE : mAddHeader);
 
         else
           rv = NS_New_HTMLToTXT_SinkStream(&sink, aStream, charset,

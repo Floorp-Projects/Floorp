@@ -77,7 +77,7 @@ class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner
 {
 public:
   nsDOMSelection(nsRangeList *aList);
-  ~nsDOMSelection();
+  virtual ~nsDOMSelection();
   
   NS_DECL_ISUPPORTS
 
@@ -1168,7 +1168,7 @@ nsDOMSelection::nsDOMSelection(nsRangeList *aList)
 {
   mRangeList = aList;
   mFixupState = PR_FALSE;
-  nsresult result = NS_NewISupportsArray(getter_AddRefs(mRangeArray));
+  NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mScriptObject = nsnull;
   NS_INIT_REFCNT();
 }
@@ -1461,7 +1461,7 @@ nsDOMSelection::RemoveItem(nsIDOMRange *aItem)
   {
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(i));
     nsCOMPtr<nsISupports> isupp;
-    nsresult result = aItem->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),getter_AddRefs(isupp));
+    aItem->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),getter_AddRefs(isupp));
     if (isupp.get() == indexIsupports.get())
     {
       mRangeArray->RemoveElementAt(i);
@@ -1890,7 +1890,6 @@ nsDOMSelection::GetIsCollapsed(PRBool* aIsCollapsed)
                              
   return (range->GetIsCollapsed(aIsCollapsed));
 }
-
 
 NS_IMETHODIMP
 nsDOMSelection::GetRangeCount(PRInt32* aRangeCount)
@@ -2474,10 +2473,69 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 }
 
 NS_IMETHODIMP
-nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes)
+nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!aYes)
+    return NS_ERROR_NULL_POINTER;
+  *aYes = PR_FALSE;
+
+  // Iterate over the ranges in the selection checking for the content:
+  if (!mRangeArray)
+    return NS_OK;
+
+  PRUint32 cnt;
+  nsresult rv = mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv))
+    return rv;
+  for (PRUint32 i=0; i < cnt; ++i)
+  {
+    nsISupports* element = mRangeArray->ElementAt(i);
+    nsCOMPtr<nsIDOMRange>	range = do_QueryInterface(element);
+    if (!range)
+      return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
+    if (content)
+    {
+      if (IsNodeIntersectsRange(content, range))
+      {
+        // If recursive, then we're done -- IsNodeIntersectsRange does the right thing
+        if (aRecursive)
+        {
+          *aYes = PR_TRUE;
+          return NS_OK;
+        }
+
+        // else not recursive -- node itself must be contained,
+        // so we need to do more checking
+        PRBool nodeStartsBeforeRange, nodeEndsAfterRange;
+        if (NS_SUCCEEDED(CompareNodeToRange(content, range,
+                                            &nodeStartsBeforeRange,
+                                            &nodeEndsAfterRange)))
+        {
+#ifdef DEBUG_ContainsNode
+          nsAutoString name, value;
+          aNode->GetNodeName(name);
+          aNode->GetNodeValue(value);
+          printf("%s [%s]: %d, %d\n", name.ToNewCString(), value.ToNewCString(),
+                 nodeStartsBeforeRange, nodeEndsAfterRange);
+#endif
+          PRUint16 nodeType;
+          aNode->GetNodeType(&nodeType);
+          if ((!nodeStartsBeforeRange && !nodeEndsAfterRange)
+              || (nodeType == nsIDOMNode::TEXT_NODE
+                  && (!nodeStartsBeforeRange || !nodeEndsAfterRange)))
+          {
+            *aYes = PR_TRUE;
+            return NS_OK;
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsDOMSelection::ScrollIntoView()
