@@ -84,6 +84,8 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
    if(HandleInCurrentDocShell(aContentType, aCommand, aWindowTarget))
       {
       //XXX Start Load here....
+      //XXX mDocShell->SetCurrentURI(nsIChannel::GetURI()));
+
       }
    else
       return mParentContentListener->DoContent(aContentType, aCommand, 
@@ -150,3 +152,14 @@ void nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
 {
    mParentContentListener = aParentListener;
 }  
+
+void nsDSURIContentListener::GetPresContext(nsIPresContext** aPresContext)
+{
+   *aPresContext = mPresContext;
+   NS_IF_ADDREF(*aPresContext);
+}
+
+void nsDSURIContentListener::SetPresContext(nsIPresContext* aPresContext)
+{
+   mPresContext = aPresContext;
+}
