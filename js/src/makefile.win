@@ -82,7 +82,6 @@ OBJS =					\
 	.\$(OBJDIR)\jsscript.obj	\
 	.\$(OBJDIR)\jsstr.obj		\
 	.\$(OBJDIR)\jsxdrapi.obj	\
-	.\$(OBJDIR)\jsfile.obj		\
 	$(NULL)
 
 #//------------------------------------------------------------------------
