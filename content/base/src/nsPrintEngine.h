@@ -259,6 +259,7 @@ public:
                                nsCOMPtr<nsIViewManager>& aVM, 
                                nsCOMPtr<nsIWidget>& aW);
 
+  void SetDialogParent(nsIDOMWindowInternal* aDOMWin) { mDialogParentWin = aDOMWin; }
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
 
   // These calls also update the DocViewer
@@ -329,6 +330,7 @@ protected:
   nsPrintData*            mOldPrtPreview;
 
   nsCOMPtr<nsIDocument>   mDocument;
+  nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
 
   PRBool                      mIsCachingPresentation;
   CachedPresentationObj*      mCachedPresObj;
