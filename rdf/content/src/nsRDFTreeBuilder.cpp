@@ -231,6 +231,8 @@ NS_NewRDFTreeBuilder(nsIRDFContentModelBuilder** result)
 
 RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
 {
+    NS_INIT_REFCNT();
+
     if (nsnull == kIdAtom) {
         kIdAtom           = NS_NewAtom("ID");
         kOpenAtom         = NS_NewAtom("OPEN");
