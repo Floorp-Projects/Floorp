@@ -469,7 +469,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
 #if TARGET_CARBON
 
   // wow, it sure is nice being able to use core foundation ;)
-  CFStringRef str = CFStringCreateWithCharacters(NULL, title.GetUnicode(), title.Length());
+  CFStringRef str = CFStringCreateWithCharacters(NULL, (const UniChar*)title.GetUnicode(), title.Length());
   SetControlTitleWithCFString(theControl, str);
   CFRelease(str);
 
