@@ -30,6 +30,7 @@ CPPSRCS =				\
 	nsJSEventListener.cpp		\
 	nsJSDOMEventListener.cpp		\
 	nsJSEvent.cpp			\
+	nsJSUIEvent.cpp			\
 	$(NULL)
 
 MODULE=dom

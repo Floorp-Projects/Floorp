@@ -28,10 +28,11 @@ CPPSRCS =				\
 	nsJSEventListener.cpp		\
 	nsJSDOMEventListener.cpp		\
 	nsJSEvent.cpp			\
+	nsJSUIEvent.cpp			\
 	$(NULL)
 
 CPP_OBJS= \
-	.\$(OBJDIR)\nsJSEventListener.obj .\$(OBJDIR)\nsJSDOMEventListener.obj .\$(OBJDIR)\nsJSEvent.obj
+	.\$(OBJDIR)\nsJSEventListener.obj .\$(OBJDIR)\nsJSDOMEventListener.obj .\$(OBJDIR)\nsJSEvent.obj .\$(OBJDIR)\nsJSUIEvent.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
 

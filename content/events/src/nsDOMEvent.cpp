@@ -28,7 +28,8 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
-static NS_DEFINE_IID(kIDOMNSEventIID, NS_IDOMNSEVENT_IID);
+static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
+static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
 static char* mEventNames[] = {
@@ -75,8 +76,13 @@ nsresult nsDOMEvent::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNSEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMNSEvent*)this);
+  if (aIID.Equals(kIDOMUIEventIID)) {
+    *aInstancePtrResult = (void*) ((nsIDOMUIEvent*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMNSUIEventIID)) {
+    *aInstancePtrResult = (void*) ((nsIDOMNSUIEvent*)this);
     AddRef();
     return NS_OK;
   }
@@ -99,35 +105,6 @@ NS_METHOD nsDOMEvent::GetType(nsString& aType)
   }
   
   return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsDOMEvent::GetText(nsString& aText)
-{
-	if (mEvent->message == NS_TEXT_EVENT) {
-		aText = *mText;
-		return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsDOMEvent::GetCommitText(PRBool* aCommitText)
-{
-	if (mEvent->message == NS_TEXT_EVENT) {
-		*aCommitText = mCommitText;
-		return NS_OK;
-	}
-	
-	return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsDOMEvent::SetCommitText(PRBool aCommitText)
-{	
-	return NS_ERROR_FAILURE;
-}
-NS_METHOD nsDOMEvent::SetType(const nsString& aType)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
@@ -158,34 +135,73 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
+NS_IMETHODIMP
+nsDOMEvent::GetCurrentNode(nsIDOMNode** aCurrentNode)
 {
-  if (mTarget != aTarget) {
-    NS_IF_RELEASE(mTarget);
-    NS_IF_ADDREF(aTarget);
-    mTarget = aTarget;
-  }
+  *aCurrentNode = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
+{
+  *aEventPhase = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::PreventBubble()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::PreventCapture()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::PreventDefault()
+{
+  return NS_OK;
+}
+
+NS_METHOD nsDOMEvent::GetText(nsString& aText)
+{
+	if (mEvent->message == NS_TEXT_EVENT) {
+		aText = *mText;
+		return NS_OK;
+	}
+
+	return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsDOMEvent::GetCommitText(PRBool* aCommitText)
+{
+	if (mEvent->message == NS_TEXT_EVENT) {
+		*aCommitText = mCommitText;
+		return NS_OK;
+	}
+	
+	return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsDOMEvent::SetCommitText(PRBool aCommitText)
+{	
+	return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsDOMEvent::SetScreenX(PRInt32 aScreenX)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aScreenX = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsDOMEvent::SetScreenY(PRInt32 aScreenY)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aScreenY = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
@@ -196,11 +212,6 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetClientX(PRInt32 aClientX)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
   float t2p;
@@ -209,20 +220,10 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetClientY(PRInt32 aClientY)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_METHOD nsDOMEvent::GetAltKey(PRBool* aIsDown)
 {
   *aIsDown = ((nsInputEvent*)mEvent)->isAlt;
   return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetAltKey(PRBool aAltKey)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsDOMEvent::GetCtrlKey(PRBool* aIsDown)
@@ -231,30 +232,15 @@ NS_METHOD nsDOMEvent::GetCtrlKey(PRBool* aIsDown)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetCtrlKey(PRBool aCtrlKey)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_METHOD nsDOMEvent::GetShiftKey(PRBool* aIsDown)
 {
   *aIsDown = ((nsInputEvent*)mEvent)->isShift;
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetShiftKey(PRBool aShiftKey)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_METHOD nsDOMEvent::GetMetaKey(PRBool* aIsDown)
 {
   return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetMetaKey(PRBool aMetaKey)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
@@ -270,14 +256,9 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 #endif
     break;
   default:
-    return NS_ERROR_FAILURE;
+    break;
   }
   return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetCharCode(PRUint32 aCharCode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
@@ -289,14 +270,9 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
     *aKeyCode = ((nsKeyEvent*)mEvent)->keyCode;
     break;
   default:
-    return NS_ERROR_FAILURE;
+    break;
   }
   return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetKeyCode(PRUint32 aKeyCode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
@@ -321,65 +297,34 @@ NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
     *aButton = 3;
     break;
   default:
-    return NS_ERROR_FAILURE;
+    break;
   }
   return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetButton(PRUint32 aButton)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsDOMEvent::GetCancelBubble(PRBool* aCancelBubble)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsDOMEvent::SetCancelBubble(PRBool aCancelBubble)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsDOMEvent::SetLayerX(PRInt32 aLayerX)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aLayerX = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsDOMEvent::SetLayerY(PRInt32 aLayerY)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aLayerY = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
 {
-  return GetClientX(aPageX);
-}
-
-NS_METHOD nsDOMEvent::SetPageX(PRInt32 aPageX)
-{
-  return SetClientX(aPageX);
+  *aPageX = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
 {
-  return GetClientY(aPageY);
-}
-
-NS_METHOD nsDOMEvent::SetPageY(PRInt32 aPageY)
-{
-  return SetClientY(aPageY);
+  *aPageY = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
@@ -390,18 +335,7 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
   case NS_MOUSE_EVENT:
     return GetButton(aWhich);
   }
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsDOMEvent::SetWhich(PRUint32 aWhich)
-{
-  switch (mEvent->eventStructType) {
-  case NS_KEY_EVENT:
-    return SetKeyCode(aWhich);
-  case NS_MOUSE_EVENT:
-    return SetButton(aWhich);
-  }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
@@ -465,7 +399,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_PAINT:
     return mEventNames[eDOMEvents_paint];
   case NS_TEXT_EVENT:
-	return mEventNames[eDOMEvents_text];
+	  return mEventNames[eDOMEvents_text];
   default:
     break;
   }
@@ -490,7 +424,7 @@ nsDOMEvent::GetRc(nsIDOMRenderingContext** aRc)
   return NS_OK;
 }
 
-nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 
+nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 
 {
   nsDOMEvent* it = new nsDOMEvent(&aPresContext, aEvent);
   if (nsnull == it) {
@@ -498,4 +432,9 @@ nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresC
   }
   
   return it->QueryInterface(kIDOMEventIID, (void **) aInstancePtrResult);
+}
+
+nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 
+{
+  return NS_ERROR_FAILURE;
 }

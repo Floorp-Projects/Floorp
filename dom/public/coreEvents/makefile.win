@@ -22,6 +22,7 @@ DEFINES=-D_IMPL_NS_DOM
 
 EXPORTS =				\
 	nsIDOMEvent.h			\
+	nsIDOMUIEvent.h			\
 	nsIDOMEventListener.h		\
 	nsIDOMEventCapturer.h		\
 	nsIDOMEventReceiver.h		\
@@ -33,7 +34,7 @@ EXPORTS =				\
 	nsIDOMMouseMotionListener.h	\
 	nsIDOMPaintListener.h		\
 	nsIDOMDragListener.h		\
-	nsIDOMNSEvent.h			\
+	nsIDOMNSUIEvent.h			\
 	nsIDOMEventTarget.h		\
 	nsIDOMTextListener.h		\
 	nsIDOMCompositionListener.h	\

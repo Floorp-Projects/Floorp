@@ -34,7 +34,7 @@
 #include "nsCOMPtr.h"
 #include "nsRange.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMEvent.h"
+#include "nsIDOMUIEvent.h"
 
 #include "nsIDOMSelectionListener.h"
 #include "nsIContentIterator.h"
@@ -764,7 +764,7 @@ if (!aGuiEvent)
     if (keyEvent->isControl)
       amount = eSelectWord;
     switch (keyEvent->keyCode){
-      case nsIDOMEvent::VK_LEFT  : 
+      case nsIDOMUIEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
 #ifdef DEBUG_NAVIGATION
         printf("debug vk left\n");
@@ -789,7 +789,7 @@ if (!aGuiEvent)
           }
         }
         break;
-      case nsIDOMEvent::VK_RIGHT : 
+      case nsIDOMUIEvent::VK_RIGHT : 
         //we need to look for the previous PAINTED location to move the cursor to.
 #ifdef DEBUG_NAVIGATION
         printf("debug vk left\n");
@@ -814,12 +814,12 @@ if (!aGuiEvent)
           }
         }
        break;
-      case nsIDOMEvent::VK_UP : 
+      case nsIDOMUIEvent::VK_UP : 
 #ifdef DEBUG_NAVIGATION
         printf("debug vk up\n");
 #endif
         break;
-      case nsIDOMEvent::VK_DOWN : 
+      case nsIDOMUIEvent::VK_DOWN : 
 #ifdef DEBUG_NAVIGATION
         printf("debug vk down\n");
 #endif

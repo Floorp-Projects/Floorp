@@ -29,6 +29,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIStringStream.h"
+#include "nsIDOMUIEvent.h"
 
 // for testing only
 #include "nsIHTMLEditor.h"
@@ -150,34 +151,41 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
   PRUint32 keyCode;
   PRBool   isShift;
   PRBool   ctrlKey;
-  
-  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
-      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey))
+
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aKeyEvent);
+  if (!uiEvent) {
+    //non-key event passed to keydown.  bad things.
+    return NS_OK;
+  }
+
+  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey))
       ) {
     PRBool keyProcessed;
     ProcessShortCutKeys(aKeyEvent, keyProcessed);
     if (PR_FALSE==keyProcessed)
     {
       switch(keyCode) {
-      case nsIDOMEvent::VK_BACK:
+      case nsIDOMUIEvent::VK_BACK:
         mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
         break;
 
-      case nsIDOMEvent::VK_DELETE:
+      case nsIDOMUIEvent::VK_DELETE:
         mEditor->DeleteSelection(nsIEditor::eDeleteRight);
         break;
 
-      case nsIDOMEvent::VK_RETURN:
-      //case nsIDOMEvent::VK_ENTER:			// why does this not exist?
+      case nsIDOMUIEvent::VK_RETURN:
+      //case nsIDOMUIEvent::VK_ENTER:			// why does this not exist?
         // Need to implement creation of either <P> or <BR> nodes.
         mEditor->InsertBreak();
         break;
       
-      case nsIDOMEvent::VK_LEFT:
-      case nsIDOMEvent::VK_RIGHT:
-      case nsIDOMEvent::VK_UP:
-      case nsIDOMEvent::VK_DOWN:
+      case nsIDOMUIEvent::VK_LEFT:
+      case nsIDOMUIEvent::VK_RIGHT:
+      case nsIDOMUIEvent::VK_UP:
+      case nsIDOMUIEvent::VK_DOWN:
       	// these have already been handled in nsRangeList. Why are we getting them
       	// again here (Mac)? In switch to avoid putting in bogus chars.
 
@@ -185,16 +193,16 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         return NS_OK;
       	break;
       
-      case nsIDOMEvent::VK_HOME:
-      case nsIDOMEvent::VK_END:
+      case nsIDOMUIEvent::VK_HOME:
+      case nsIDOMUIEvent::VK_END:
       	// who handles these?
 #if DEBUG
 		printf("Key not handled\n");
 #endif
         break;
 
-      case nsIDOMEvent::VK_PAGE_UP:
-      case nsIDOMEvent::VK_PAGE_DOWN:
+      case nsIDOMUIEvent::VK_PAGE_UP:
+      case nsIDOMUIEvent::VK_PAGE_DOWN:
         //return NS_OK to allow page scrolling.
         return NS_OK;
       	break;
@@ -205,7 +213,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 #ifdef HAVE_EVENT_CHARCODE
           PRUint32     character;
           // do we convert to Unicode here, or has this already been done? (sfraser)
-          if (NS_SUCCEEDED(aKeyEvent->GetCharCode(&character)))
+          if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
           {
             key += character;
             if (0!=character)
@@ -263,18 +271,25 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   PRBool isShift;
   PRBool ctrlKey;
   PRBool altKey;
-  
-  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
-      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
-      NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey))
+
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aKeyEvent);
+  if (!uiEvent) {
+    //non-key event passed in.  bad things.
+    return NS_OK;
+  }
+
+  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
+      NS_SUCCEEDED(uiEvent->GetAltKey(&altKey))
       ) 
   {
     // XXX: please please please get these mappings from an external source!
     switch (keyCode)
     {
       // XXX: hard-coded select all
-      case nsIDOMEvent::VK_A:
+      case nsIDOMUIEvent::VK_A:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -284,7 +299,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded cut
-      case nsIDOMEvent::VK_X:
+      case nsIDOMUIEvent::VK_X:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -294,7 +309,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded copy
-      case nsIDOMEvent::VK_C:
+      case nsIDOMUIEvent::VK_C:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -313,7 +328,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      case nsIDOMEvent::VK_OPEN_BRACKET:
+      case nsIDOMUIEvent::VK_OPEN_BRACKET:
         // hard coded "Decrease wrap size"
         if (PR_TRUE==altKey)
         {
@@ -334,7 +349,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      case nsIDOMEvent::VK_CLOSE_BRACKET:
+      case nsIDOMUIEvent::VK_CLOSE_BRACKET:
         // hard coded "Increase wrap size"
         if (PR_TRUE==altKey)
         {
@@ -356,7 +371,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded paste
-      case nsIDOMEvent::VK_V:
+      case nsIDOMUIEvent::VK_V:
         if (PR_TRUE==ctrlKey)
         {
           printf("control-v\n");
@@ -367,7 +382,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded undo
-      case nsIDOMEvent::VK_Z:
+      case nsIDOMUIEvent::VK_Z:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -377,7 +392,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded redo
-      case nsIDOMEvent::VK_Y:
+      case nsIDOMUIEvent::VK_Y:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -387,7 +402,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- italics
-      case nsIDOMEvent::VK_I:
+      case nsIDOMUIEvent::VK_I:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -425,7 +440,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- bold
-      case nsIDOMEvent::VK_B:
+      case nsIDOMUIEvent::VK_B:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -448,7 +463,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- underline
-      case nsIDOMEvent::VK_U:
+      case nsIDOMUIEvent::VK_U:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -472,7 +487,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font color red
-      case nsIDOMEvent::VK_1:
+      case nsIDOMUIEvent::VK_1:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -497,7 +512,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- remove font color
-      case nsIDOMEvent::VK_2:
+      case nsIDOMUIEvent::VK_2:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -521,7 +536,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font size +2
-      case nsIDOMEvent::VK_3:
+      case nsIDOMUIEvent::VK_3:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -540,7 +555,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font size -2
-      case nsIDOMEvent::VK_4:
+      case nsIDOMUIEvent::VK_4:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -559,7 +574,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font face helvetica
-      case nsIDOMEvent::VK_5:
+      case nsIDOMUIEvent::VK_5:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -578,7 +593,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font face times
-      case nsIDOMEvent::VK_6:
+      case nsIDOMUIEvent::VK_6:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -597,7 +612,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- transform block H1
-      case nsIDOMEvent::VK_7:
+      case nsIDOMUIEvent::VK_7:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -616,7 +631,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- transform block H2
-      case nsIDOMEvent::VK_8:
+      case nsIDOMUIEvent::VK_8:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -635,7 +650,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- normal
-      case nsIDOMEvent::VK_9:
+      case nsIDOMUIEvent::VK_9:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -651,7 +666,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- GetParagraphStyle
-      case nsIDOMEvent::VK_0:
+      case nsIDOMUIEvent::VK_0:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -683,7 +698,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- block blockquote (indent)
-      case nsIDOMEvent::VK_COMMA:
+      case nsIDOMUIEvent::VK_COMMA:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -702,7 +717,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- un-BlockQuote
-      case nsIDOMEvent::VK_PERIOD:
+      case nsIDOMUIEvent::VK_PERIOD:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -723,7 +738,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
 #ifdef NS_DEBUG
       // hard-coded Text Editor Unit Test
-      case nsIDOMEvent::VK_T:
+      case nsIDOMUIEvent::VK_T:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -813,10 +828,17 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!aMouseEvent)
     return NS_OK;   // NS_OK means "we didn't process the event".  Go figure.
 
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aMouseEvent);
+  if (!uiEvent) {
+    //non-ui event passed in.  bad things.
+    return NS_OK;
+  }
+
   // We only do anything special for middle-mouse click (paste);
   // ignore all other events.
   PRUint32 button = 0;
-  aMouseEvent->GetButton(&button);
+  uiEvent->GetButton(&button);
   if (button != 2)
     return NS_OK;
 
@@ -956,11 +978,17 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 	nsString				composedText;
 	nsresult				result;
 
-	aTextEvent->GetText(composedText);
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aTextEvent);
+  if (!uiEvent) {
+    //non-ui event passed in.  bad things.
+    return NS_OK;
+  }
+
+	uiEvent->GetText(composedText);
 	result = mEditor->SetCompositionString(composedText);
 	return result;
 }
-
 
 /*
  * nsTextEditorDragListener implementation

@@ -113,6 +113,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   case NS_GOTFOCUS:
     //XXX Do we need window related focus change stuff here?
     break;
+  case NS_LOSTFOCUS:
+    //XXX Do we need window related focus change stuff here?
+    break;
   }
   return NS_OK;
 }
