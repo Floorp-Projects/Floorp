@@ -66,8 +66,8 @@ nsInterfaceRecord::GetInfo(nsInterfaceInfo **result)
 }
 
 nsresult
-nsInterfaceRecord::GetIID(nsIID **iid) {
-    NS_PRECONDITION(iid, "bad param");
+nsInterfaceRecord::GetIID(nsIID **in_iid) {
+    NS_PRECONDITION(in_iid, "bad param");
 
     nsIAllocator* allocator;
     if(this->interfaceDescriptor != NULL &&
@@ -77,19 +77,19 @@ nsInterfaceRecord::GetIID(nsIID **iid) {
         NS_RELEASE(allocator);
         if(p) {
             memcpy(p, &(this->iid), sizeof(nsIID));
-            *iid = p;
+            *in_iid = p;
             return NS_OK;
         }
     }
 
-    *iid = NULL;
+    *in_iid = NULL;
     return NS_ERROR_FAILURE;
 }
 
 nsresult
-nsInterfaceRecord::GetName(char **name)
+nsInterfaceRecord::GetName(char **in_name)
 {
-    NS_PRECONDITION(name, "bad param");
+    NS_PRECONDITION(in_name, "bad param");
 
     nsIAllocator* allocator;
     if(NULL != (allocator = nsInterfaceInfoManager::GetAllocator())) {
@@ -98,11 +98,11 @@ nsInterfaceRecord::GetName(char **name)
         NS_RELEASE(allocator);
         if(p) {
             memcpy(p, this->name, len);
-            *name = p;
+            *in_name = p;
             return NS_OK;
         }
     }
     
-    *name = NULL;
+    *in_name = NULL;
     return NS_ERROR_FAILURE;
 }
