@@ -20,6 +20,7 @@
 
 #include "nslayout.h"
 #include "nsIStyleSheet.h"
+#include "nscolor.h"
 
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}
 #define NS_IHTML_STYLE_SHEET_IID     \
@@ -27,7 +28,9 @@
 
 class nsIHTMLStyleSheet : public nsIStyleSheet {
 public:
-  // no methods for now
+  NS_IMETHOD SetLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD SetActiveLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
 };
 
 extern NS_HTML nsresult

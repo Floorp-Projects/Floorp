@@ -24,10 +24,57 @@
 #include "nsIHTMLContent.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
+#include "nsIStyleContext.h"
+#include "nsHTMLAtoms.h"
+#include "nsIPresContext.h"
+#include "nsILinkHandler.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
+static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
+
+
+class HTMLAnchorRule : public nsIStyleRule {
+public:
+  NS_DECL_ISUPPORTS
+
+  virtual PRBool Equals(const nsIStyleRule* aRule) const;
+  virtual PRUint32 HashValue(void) const;
+
+  virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nscolor mColor;
+};
+
+NS_IMPL_ISUPPORTS(HTMLAnchorRule, kIStyleRuleIID);
+
+PRBool HTMLAnchorRule::Equals(const nsIStyleRule* aRule) const
+{
+  return PRBool(this == aRule);
+}
+
+PRUint32 HTMLAnchorRule::HashValue(void) const
+{
+  return (PRUint32)(mColor);
+}
+
+void HTMLAnchorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
+
+  if (nsnull != styleColor) {
+    styleColor->mColor = mColor;
+  }
+}
+
+void HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
+{
+}
+
 
 
 class HTMLStyleSheetImpl : public nsIHTMLStyleSheet {
@@ -54,6 +101,10 @@ public:
 
   virtual nsIURL* GetURL(void);
 
+  NS_IMETHOD SetLinkColor(nscolor aColor);
+  NS_IMETHOD SetActiveLinkColor(nscolor aColor);
+  NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -70,7 +121,10 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIURL* mURL;
+  nsIURL*         mURL;
+  HTMLAnchorRule* mLinkRule;
+  HTMLAnchorRule* mVisitedRule;
+  HTMLAnchorRule* mActiveRule;
 };
 
 
@@ -112,7 +166,10 @@ void HTMLStyleSheetImpl::operator delete(void* ptr)
 
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL)
   : nsIHTMLStyleSheet(),
-    mURL(aURL)
+    mURL(aURL),
+    mLinkRule(nsnull),
+    mVisitedRule(nsnull),
+    mActiveRule(nsnull)
 {
   NS_INIT_REFCNT();
   NS_ADDREF(mURL);
@@ -121,6 +178,9 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL)
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
 {
   NS_RELEASE(mURL);
+  NS_IF_RELEASE(mLinkRule);
+  NS_IF_RELEASE(mVisitedRule);
+  NS_IF_RELEASE(mActiveRule);
 }
 
 NS_IMPL_ADDREF(HTMLStyleSheetImpl)
@@ -171,8 +231,63 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   if (aContent != parentContent) {  // if not a pseudo frame...
     nsIHTMLContent* htmlContent;
-    // just get the one and only style rule from the content
     if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+      // if we have anchor colors, check if this is an anchor with an href
+      if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
+        nsIAtom*  tag = htmlContent->GetTag();
+        if (tag == nsHTMLAtoms::a) {
+          // test link state
+          nsILinkHandler* linkHandler;
+
+          if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
+              (nsnull != linkHandler)) {
+            nsAutoString base, href;  // XXX base??
+            nsContentAttr attrState = htmlContent->GetAttribute("href", href);
+
+            if (eContentAttr_HasValue == attrState) {
+              nsIURL* docURL = nsnull;
+              nsIDocument* doc = nsnull;
+              aContent->GetDocument(doc);
+              if (nsnull != doc) {
+                docURL = doc->GetDocumentURL();
+                NS_RELEASE(doc);
+              }
+
+              nsAutoString absURLSpec;
+              nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+              NS_IF_RELEASE(docURL);
+
+              nsLinkState  state;
+              if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+                switch (state) {
+                  case eLinkState_Unvisited:
+                    if (nsnull != mLinkRule) {
+                      aResults->AppendElement(mLinkRule);
+                      matchCount++;
+                    }
+                    break;
+                  case eLinkState_Visited:
+                    if (nsnull != mVisitedRule) {
+                      aResults->AppendElement(mVisitedRule);
+                      matchCount++;
+                    }
+                    break;
+                  case eLinkState_Active:
+                    if (nsnull != mActiveRule) {
+                      aResults->AppendElement(mActiveRule);
+                      matchCount++;
+                    }
+                    break;
+                }
+              }
+            }
+            NS_RELEASE(linkHandler);
+          }
+        }
+        NS_IF_RELEASE(tag);
+      }
+
+      // just get the one and only style rule from the content
       nsIStyleRule* rule = htmlContent->GetStyleRule();
 
       if (nsnull != rule) {
@@ -203,6 +318,46 @@ nsIURL* HTMLStyleSheetImpl::GetURL(void)
 {
   NS_ADDREF(mURL);
   return mURL;
+}
+
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
+{
+  if (nsnull == mLinkRule) {
+    mLinkRule = new HTMLAnchorRule();
+    if (nsnull == mLinkRule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mLinkRule);
+  }
+  mLinkRule->mColor = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
+{
+  if (nsnull == mActiveRule) {
+    mActiveRule = new HTMLAnchorRule();
+    if (nsnull == mActiveRule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mActiveRule);
+  }
+  mActiveRule->mColor = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
+{
+  if (nsnull == mVisitedRule) {
+    mVisitedRule = new HTMLAnchorRule();
+    if (nsnull == mVisitedRule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mVisitedRule);
+  }
+  mVisitedRule->mColor = aColor;
+  return NS_OK;
 }
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
