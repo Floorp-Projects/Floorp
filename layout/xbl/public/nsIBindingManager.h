@@ -37,6 +37,7 @@
 
 class nsIContent;
 class nsIXBLBinding;
+class nsIXBLBindingAttachedHandler;
 class nsIXBLDocumentInfo;
 class nsIAtom;
 class nsIStreamListener;
@@ -64,6 +65,7 @@ public:
   NS_IMETHOD LoadBindingDocument(nsIDocument* aDocument, const nsAReadableString& aURL) = 0;
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding)=0;
+  NS_IMETHOD AddHandlerToAttachedQueue(nsIXBLBindingAttachedHandler* aHandler)=0;
   NS_IMETHOD ClearAttachedQueue()=0;
   NS_IMETHOD ProcessAttachedQueue()=0;
 

@@ -1201,7 +1201,11 @@ nsXBLBinding::GetID(nsCString& aResult)
 NS_IMETHODIMP
 nsXBLBinding::InheritsStyle(PRBool* aResult)
 {
-  *aResult = mInheritStyle;
+  if (mContent)
+    *aResult = mInheritStyle;
+  else if (mNextBinding)
+    return mNextBinding->InheritsStyle(aResult);
+
   return NS_OK;
 }
 
