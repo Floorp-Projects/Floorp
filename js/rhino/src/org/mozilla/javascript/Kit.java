@@ -117,6 +117,54 @@ public class Kit
         return array;
     }
 
+    /**
+     * Add <i>listener</i> to <i>bag</i> of listeners.
+     * The function does not modify <i>bag</i> and return a new collection
+     * containing <i>listener</i> and all listeners from <i>bag</i>.
+     * Bag without listeners always represented as the null value.
+     * <p>
+     * Usage example:
+     * <pre>
+     *     private volatile Object changeListeners;
+     *
+     *     public void addMyListener(PropertyChangeListener l)
+     *     {
+     *         synchronized (this) {
+     *             changeListeners = Kit.addListener(changeListeners, l);
+     *         }
+     *     }
+     *
+     *     public void removeTextListener(PropertyChangeListener l)
+     *     {
+     *         synchronized (this) {
+     *             changeListeners = Kit.removeListener(changeListeners, l);
+     *         }
+     *     }
+     *
+     *     public void fireChangeEvent(Object oldValue, Object newValue)
+     *     {
+     *     // Get immune local copy
+     *         Object listeners = changeListeners;
+     *         if (listeners != null) {
+     *             PropertyChangeEvent e = new PropertyChangeEvent(
+     *                 this, "someProperty" oldValue, newValue);
+     *             for (int i = 0; ; ++i) {
+     *                 Object l = Kit.getListener(listeners, i);
+     *                 if (l == null)
+     *                     break;
+     *                 ((PropertyChangeListener)l).propertyChange(e);
+     *             }
+     *         }
+     *     }
+     * </pre>
+     *
+     * @param listener Listener to add to <i>bag</i>
+     * @param bag Current collection of listeners.
+     * @return A new bag containing all listeners from <i>bag</i> and
+     *          <i>listener</i>.
+     * @see #removeListener(Object bag, Object listener)
+     * @see #getListener(Object bag, int index)
+     */
     public static Object addListener(Object bag, Object listener)
     {
         if (listener == null) throw new IllegalArgumentException();
@@ -140,6 +188,22 @@ public class Kit
         return bag;
     }
 
+    /**
+     * Remove <i>listener</i> from <i>bag</i> of listeners.
+     * The function does not modify <i>bag</i> and return a new collection
+     * containing all listeners from <i>bag</i> except <i>listener</i>.
+     * If <i>bag</i> does not contain <i>listener</i>, the function returns
+     * <i>bag</i>.
+     * <p>
+     * For usage example, see {@link addListener(Object bag, Object listener)}.
+     *
+     * @param listener Listener to remove from <i>bag</i>
+     * @param bag Current collection of listeners.
+     * @return A new bag containing all listeners from <i>bag</i> except
+     *          <i>listener</i>.
+     * @see #addListener(Object bag, Object listener)
+     * @see #getListener(Object bag, int index)
+     */
     public static Object removeListener(Object bag, Object listener)
     {
         if (listener == null) throw new IllegalArgumentException();
@@ -176,6 +240,18 @@ public class Kit
         return bag;
     }
 
+    /**
+     * Get listener at <i>index</i> position in <i>bag</i> or null if
+     * <i>index</i> equals to number of listeners in <i>bag</i>.
+     * <p>
+     * For usage example, see {@link addListener(Object bag, Object listener)}.
+     *
+     * @param bag Current collection of listeners.
+     * @param index Index of the listener to access.
+     * @return Listener at the given index or null.
+     * @see #addListener(Object bag, Object listener)
+     * @see #removeListener(Object bag, Object listener)
+     */
     public static Object getListener(Object bag, int index)
     {
         if (index == 0) {
