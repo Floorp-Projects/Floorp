@@ -52,45 +52,43 @@ nsMsgFilterDelegateFactory::~nsMsgFilterDelegateFactory()
 /* void CreateDelegate (in nsIRDFResource aOuter, in string aKey, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult aResult); */
 NS_IMETHODIMP nsMsgFilterDelegateFactory::CreateDelegate(nsIRDFResource *aOuter, const char *aKey, const nsIID & aIID, void * *aResult)
 {
+    nsresult rv;
+    *aResult = nsnull;
+    
     // if it's a folder, then we return a filter list..
     // otherwise make sure it's in the form
     // mailbox://userid@server/foldername#filter4
-
-#ifdef DEBUG_alecf
-    nsXPIDLCString outerValue;
-    aOuter->GetValue(getter_Copies(outerValue));
-    printf("nsMsgFilterDelegateFactory::CreateDelegate(%s, %s, ..)\n",
-           outerValue, aKey);
-#endif
     
-    *aResult = nsnull;
-    
-    nsresult rv;
-    if (aIID.Equals(NS_GET_IID(nsIMsgFilterList))) {
-        nsIMsgFilterList *filterList;
-        rv = getFilterListDelegate(aOuter, &filterList);
-#ifdef DEBUG_alecf
-        if (NS_SUCCEEDED(rv))
-            printf("  creating nsIMsgFilterList delegate\n");
-#endif
-        if (NS_SUCCEEDED(rv))
-            *aResult = (void *)filterList;
 
-    } else if (aIID.Equals(NS_GET_IID(nsIMsgFilter))) {
-        nsIMsgFilter *filter;
-        rv = getFilterDelegate(aOuter, &filter);
-#ifdef DEBUG_alecf
+    nsXPIDLCString uri;
+    aOuter->GetValueConst(getter_Shares(uri));
+
+    // if it has '#filter' then it's a filter, otherwise we'll assume
+    // that it's a folder.
+    nsCAutoString uriStr(uri);
+
+    nsCOMPtr<nsISupports> resultSupports;
+    
+    if (uriStr.Find("#filter") != -1) {
+        nsCOMPtr<nsIMsgFilter> filter;
+        rv = getFilterDelegate(aOuter, getter_AddRefs(filter));
         if (NS_SUCCEEDED(rv))
-            printf("  creating nsIMsgFilter delegate\n");
-#endif
+            resultSupports = filter;
+        
+    }
+    else {
+        // probably a folder, get the filter list
+        nsCOMPtr<nsIMsgFilterList> filterList;
+        rv = getFilterListDelegate(aOuter, getter_AddRefs(filterList));
         if (NS_SUCCEEDED(rv))
-            *aResult = (void *)filter;
+            resultSupports = filterList;
+        
     }
 
-    if (!*aResult)
-        return NS_ERROR_FAILURE;
-    
-    return NS_OK;
+    if (resultSupports)
+        return resultSupports->QueryInterface(aIID, aResult);
+
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -103,7 +101,8 @@ nsMsgFilterDelegateFactory::getFilterListDelegate(nsIRDFResource *aOuter,
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIMsgFilterList> filterList;
-    folder->GetFilterList(getter_AddRefs(filterList));
+    rv = folder->GetFilterList(getter_AddRefs(filterList));
+    NS_ENSURE_SUCCESS(rv, rv);
     
     *aResult = filterList;
     NS_ADDREF(*aResult);
@@ -132,10 +131,6 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
     if (!filterTag)
         return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_alecf
-    printf("nsMsgFilterDelegateFactory: found #: %s\n", filterTag);
-#endif
-
     PRInt32 filterNumber = getFilterNumber(filterTag);
 
     nsCOMPtr<nsIMsgFilterList> filterList;
@@ -143,10 +138,6 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
 
         // now that we have the filter list and index, retrieve the filter.
 
-#ifdef DEBUG_alecf
-    printf("Retrieving filter #%d\n" , filterNumber);
-#endif
-        
     nsCOMPtr<nsIMsgFilter> filter;
     rv = filterList->GetFilterAt(filterNumber, getter_AddRefs(filter));
     if (NS_FAILED(rv)) return rv;
