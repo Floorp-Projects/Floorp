@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prenv.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgBiffManager.h"
@@ -39,6 +40,8 @@
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIFileLocator.h" 
+#include "nsFileLocations.h" 
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -65,6 +68,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID); 
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -82,6 +86,13 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #define PREF_PREMIGRATION_MAIL_DIRECTORY "premigration.mail.directory"
 #define PREF_PREMIGRATION_NEWS_DIRECTORY "premigration.news.directory"
 #define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
+
+// TODO:  these need to be put into a string bundle
+#define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
+#define LOCAL_MAIL_FAKE_USER_NAME "nobody"
+#define NEW_MAIL_DIR_NAME	"Mail"
+#define NEW_NEWS_DIR_NAME	"News"
+#define NEW_IMAPMAIL_DIR_NAME	"ImapMail"
 
 #define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
 #define PREF_MAIL_ROOT_POP3	"mail.root.pop3"
@@ -239,9 +250,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
     } \
   }
 
-// TODO:  this needs to be put into a string bundle
-#define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
-#define LOCAL_MAIL_FAKE_USER_NAME "nobody"
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -1224,6 +1232,50 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_ACCOUNTMANAGER
 	printf("FAIL:  don't proceed with migration.\n");
 #endif
+	// because we are failing to migrate, the mail.root.* prefs
+	// will not be set.  we set them here.
+	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+        if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
+
+        nsCOMPtr <nsIFileSpec> spec;
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(spec));
+        if (NS_FAILED(rv) || !spec) return NS_ERROR_FAILURE; 
+
+	// both "none" and "pop3" are rooted at <profile>/Mail
+	rv = spec->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
+	if (NS_FAILED(rv)) return rv;
+        NS_ASSERTION(m_prefs,"m_prefs is null");
+  	if (!m_prefs) return NS_ERROR_FAILURE;
+
+  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_NONE, spec, PR_FALSE /* set default */);
+	if (NS_FAILED(rv)) return rv;
+  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_POP3, spec, PR_FALSE /* set default */);
+	if (NS_FAILED(rv)) return rv;
+ 
+	// "nntp" is rooted at <profile>/News
+	rv = spec->SetLeafName(NEW_NEWS_DIR_NAME);
+	if (NS_FAILED(rv)) return rv;
+  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_NNTP, spec, PR_FALSE /* set default */);
+	if (NS_FAILED(rv)) return rv;
+
+	// root the newsrc files to <profile>/News, except on UNIX
+	// on UNIX, set it to ~.
+	// this may change
+#ifdef XP_UNIX
+	char *unixHomeDirectory = PR_GetEnv("HOME");
+	rv = m_prefs->SetCharPref(PREF_MAIL_NEWSRC_ROOT, unixHomeDirectory);
+        if (NS_FAILED(rv)) return rv;
+#else
+	rv = m_prefs->SetFilePref(PREF_MAIL_NEWSRC_ROOT, spec, PR_FALSE /* set default */);
+        if (NS_FAILED(rv)) return rv;
+#endif	/* XP_UNIX */
+
+	// "imap" is rooted at <profile>/ImapMail
+	rv = spec->SetLeafName(NEW_IMAPMAIL_DIR_NAME);
+	if (NS_FAILED(rv)) return rv;
+  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_IMAP, spec, PR_FALSE /* set default */);
+	if (NS_FAILED(rv)) return rv;
+	
 	return rv;
     }
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1526,7 +1578,7 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
     dir = profileDir;
 
     // we want <profile>/Mail, not <profile>
-    dir += "Mail";
+    dir += NEW_MAIL_DIR_NAME;
 
     // create <profile>/Mail if it doesn't exist
     if (!dir.Exists()) {
@@ -1637,7 +1689,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     dir = profileDir;
     
     // we wan't <profile>/Mail, not <profile>
-    dir += "Mail";
+    dir += NEW_MAIL_DIR_NAME;
 
     // create <profile>/Mail if it doesn't exist
     if (!dir.Exists()) {
@@ -1816,7 +1868,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     dir = profileDir;
   
     // we want <profile>/ImapMail, not <profile>
-    dir += "ImapMail";
+    dir += NEW_IMAPMAIL_DIR_NAME;
     if (!dir.Exists()) {
       dir.CreateDir();
     }
@@ -1925,7 +1977,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
       newsHostsDir = profileDir;
       
       // we want <profile>/News, not <profile>
-      newsHostsDir += "News";
+      newsHostsDir += NEW_NEWS_DIR_NAME;
       
       // create <profile>/News if it doesn't exist
       if (!newsHostsDir.Exists()) {
