@@ -285,8 +285,7 @@ HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 	if (!IsValid())
 	{
 		RECT& rc = *(RECT*)di.prcBounds;
-		Rectangle(di.hdcDraw, rc.left, rc.top, rc.right, rc.bottom);
-		DrawText(di.hdcDraw, mStartupErrorMessage.c_str(), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		DrawText(di.hdcDraw, mStartupErrorMessage.c_str(), -1, &rc, DT_TOP | DT_LEFT | DT_WORDBREAK);
 	}
 
 	return S_OK;
@@ -704,15 +703,19 @@ HRESULT CMozillaBrowser::CheckBinDirPath()
 	memset(szBinDirPath, 0, sizeof(szBinDirPath));
 	if (mSystemRegKey.QueryValue(szBinDirPath, c_szMozillaBinDirPathValue, &dwBinDirPath) == ERROR_SUCCESS)
 	{
+		// Bin directory is already set
 		return S_OK;
 	}
 
-	// TODO store string in resource
+	// Find out if the user wants to find the directory
+	TCHAR szMsg[1024];
+	::LoadString(_Module.m_hInstResource, IDS_LOCATEMOZILLA, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+	TCHAR szMsgTitle[1024];
+	::LoadString(_Module.m_hInstResource, IDS_LOCATEMOZILLATITLE, szMsgTitle, sizeof(szMsgTitle) / sizeof(szMsgTitle[0]));
+
 	UINT nAnswer = ::MessageBox(NULL,
-		_T("The browser control does not know where the Mozilla is installed "
-		   "and may not function correctly.\n"
- 		   "Do you want to locate Mozilla now?"),
-		_T(""), MB_ICONQUESTION | MB_YESNO);
+		szMsg,
+		szMsgTitle, MB_ICONQUESTION | MB_YESNO);
 	
 	if (nAnswer == IDNO)
 	{
@@ -801,7 +804,9 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	{
 		NG_ASSERT(0);
 		NG_TRACE(_T("Could not create preference object rv=%08x\n"), (int) rv);
-		mStartupErrorMessage = _T("Error - could not create preference object");
+		TCHAR szMsg[1024];
+		::LoadString(_Module.m_hInstResource, IDS_CANNOTCREATEPREFS, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+		mStartupErrorMessage = szMsg;
 		return E_FAIL;
 	}
 
