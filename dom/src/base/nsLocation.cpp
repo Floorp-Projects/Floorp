@@ -68,6 +68,7 @@
 #include "nsCRT.h"
 #include "nsIProtocolHandler.h"
 #include "nsReadableUtils.h"
+#include "nsITextToSubURI.h"
 
 static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
@@ -332,26 +333,41 @@ LocationImpl::GetHash(nsAString& aHash)
   aHash.SetLength(0);
 
   nsCOMPtr<nsIURI> uri;
-  nsresult result = NS_OK;
-
-  result = GetURI(getter_AddRefs(uri));
+  nsresult rv = GetURI(getter_AddRefs(uri));
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
   if (url) {
     nsCAutoString ref;
+    nsAutoString unicodeRef;
 
-    result = url->GetRef(ref);
-    // XXX danger... this may result in non-ASCII octets!
-    NS_UnescapeURL(ref);
+    rv = url->GetRef(ref);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsITextToSubURI> textToSubURI(
+          do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
 
-    if (NS_SUCCEEDED(result) && !ref.IsEmpty()) {
+      if (NS_SUCCEEDED(rv)) {
+        nsCAutoString charset;
+        url->GetOriginCharset(charset);
+        
+        rv = textToSubURI->UnEscapeURIForUI(charset, ref, unicodeRef);
+      }
+      
+      if (NS_FAILED(rv)) {
+        // Oh, well.  No intl here!
+        NS_UnescapeURL(ref);
+        CopyASCIItoUCS2(ref, unicodeRef);
+        rv = NS_OK;
+      }
+    }
+
+    if (NS_SUCCEEDED(rv) && !unicodeRef.IsEmpty()) {
       aHash.Assign(PRUnichar('#'));
-      AppendASCIItoUTF16(ref, aHash);
+      aHash.Append(unicodeRef);
     }
   }
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
