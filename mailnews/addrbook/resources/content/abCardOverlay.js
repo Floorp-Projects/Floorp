@@ -85,7 +85,7 @@ function OnLoadNewCard()
     if ("displayName" in window.arguments[0]) {
       editCard.card.displayName = window.arguments[0].displayName;
       // if we've got a display name, don't generate
-      // a display name (and over right the current display name)
+      // a display name (and stomp on the existing display name)
       // when the user types a first or last name
       if (editCard.card.displayName.length)
         editCard.generateDisplayName = false;
@@ -193,6 +193,12 @@ function NotifySaveListeners()
 {
   for ( var i = 0; i < gOnSaveListeners.length; i++ )
     gOnSaveListeners[i]();
+
+  if (gOnSaveListeners.length) {
+    // the save listeners might have tweaked the card
+    // in which case we need to commit it.
+    editCard.card.editCardToDatabase(editCard.abURI);
+  }
 }
 
 function InitEditCard()
