@@ -97,6 +97,10 @@ static void DumpAddressMap()
 	mme.address = map->l_addr;
 	write(mfd, &mme, sizeof(mme));
 	write(mfd, map->l_name, mme.nameLen);
+#if 0
+	write(1, map->l_name, mme.nameLen);
+	write(1, "\n", 1);
+#endif
       }
       map = map->l_next;
     }

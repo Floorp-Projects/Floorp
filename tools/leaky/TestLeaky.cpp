@@ -38,10 +38,70 @@ void s4()
     cp = cp;
 }
 
+// Test that mutually recrusive methods don't foul up the graph output
+void s6(int recurse);
+
+void s5(int recurse)
+{
+    malloc(100);
+    if (recurse > 0) {
+      s6(recurse - 1);
+    }
+}
+
+void s6(int recurse)
+{
+    malloc(100);
+    if (recurse > 0) {
+      s5(recurse - 1);
+    }
+}
+
+// Test that two pathways through the same node don't cause replicated
+// descdendants (A -> B -> C, X -> B -> D shouldn't produce a graph
+// that shows A -> B -> D!)
+
+void C()
+{
+  malloc(10);
+}
+
+void D()
+{
+  malloc(10);
+}
+
+void B(int way)
+{
+  malloc(10);
+  if (way) {
+    C();
+    C();
+    C();
+  } else {
+    D();
+  }
+}
+
+void A()
+{
+  malloc(10);
+  B(1);
+}
+
+void X()
+{
+  malloc(10);
+  B(0);
+}
+
 int main()
 {
   s1(1, 2);
   s2();
   s3();
   s4();
+  s5(10);
+  A();
+  X();
 }

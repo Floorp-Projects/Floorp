@@ -31,23 +31,23 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
     bfd_init ();
   }
 
-  bfd* bfd = bfd_openr(aFileName, NULL);
-  if (NULL == bfd) {
+  bfd* lib = bfd_openr(aFileName, NULL);
+  if (NULL == lib) {
     return;
   }
   char **matching;
-  if (!bfd_check_format_matches(bfd, bfd_object, &matching)) {
-    bfd_close(bfd);
+  if (!bfd_check_format_matches(lib, bfd_object, &matching)) {
+    bfd_close(lib);
     return;
   }
 
   asymbol* store;
-  store = bfd_make_empty_symbol(bfd);
+  store = bfd_make_empty_symbol(lib);
 
   // read mini symbols
   PTR minisyms;
   unsigned int size;
-  long symcount = bfd_read_minisymbols(bfd, kDynamic, &minisyms, &size);
+  long symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
 
   int initialSymbols = usefulSymbols;
   if (NULL == externalSymbols) {
@@ -55,17 +55,17 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
     numExternalSymbols = 10000;
   }
   Symbol* sp = externalSymbols + usefulSymbols;
-  Symbol* last = externalSymbols + numExternalSymbols;
+  Symbol* lastSymbol = externalSymbols + numExternalSymbols;
 
   // Scan symbols
   bfd_byte* from = (bfd_byte *) minisyms;
   bfd_byte* fromend = from + symcount * size;
   for (; from < fromend; from += size) {
     asymbol *sym;
-    sym = bfd_minisymbol_to_symbol(bfd, kDynamic, (const PTR) from, store);
+    sym = bfd_minisymbol_to_symbol(lib, kDynamic, (const PTR) from, store);
 
     symbol_info syminfo;
-    bfd_get_symbol_info (bfd, sym, &syminfo);
+    bfd_get_symbol_info (lib, sym, &syminfo);
 
 //    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
       const char* nm = bfd_asymbol_name(sym);
@@ -74,11 +74,11 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 //	sp->name = dnm ? dnm : strdup(nm);
 	sp->Init(nm, syminfo.value + aBaseAddress);
 	sp++;
-	if (sp >= last) {
+	if (sp >= lastSymbol) {
 	  long n = numExternalSymbols + 10000;
 	  externalSymbols = (Symbol*)
 	    realloc(externalSymbols, (size_t) (sizeof(Symbol) * n));
-	  last = externalSymbols + n;
+	  lastSymbol = externalSymbols + n;
 	  sp = externalSymbols + numExternalSymbols;
 	  numExternalSymbols = n;
 	}
@@ -87,7 +87,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   }
 
 
-  bfd_close(bfd);
+  bfd_close(lib);
 
   int interesting = sp - externalSymbols;
   if (!quiet) {
