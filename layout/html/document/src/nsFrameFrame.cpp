@@ -131,7 +131,6 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
   NS_IMETHOD  VerifyTree() const;
-  PRBool HasBorder();
   PRBool IsInline();
 
 protected:
@@ -231,22 +230,6 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
   return nsHTMLFrameOuterFrameSuper::Init(aPresContext, aContent, aParent,
                                           aContext, aPrevInFlow);
 }
-
-
-PRBool
-nsHTMLFrameOuterFrame::HasBorder()
-{
-  if (IsInline()) {
-    nsIFrame* firstChild = mFrames.FirstChild();
-    if (nsnull != firstChild) {
-      if (eFrameborder_No != ((nsHTMLFrameInnerFrame*)firstChild)->GetFrameBorder(eCompatibility_Standard)) {
-        return PR_TRUE;
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
 
 PRIntn
 nsHTMLFrameOuterFrame::GetSkipSides() const
@@ -365,11 +348,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
   nsPoint offset(0,0);
-  nsMargin border(0,0,0,0);
-  if (IsInline() && HasBorder()) {
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    spacing->CalcBorderFor(this, border);
+  nsMargin border = aReflowState.mComputedBorderPadding;
+  if (IsInline()) {
     offset.x = border.left;
     offset.y = border.top;
     // XXX Don't subtract the border!!! The size we are given does not include our
@@ -393,7 +373,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   // For unknown reasons, the maxElementSize for the InnerFrame is used, but the
   // maxElementSize for the OuterFrame is ignored, add in border here to prevent
   // a table from shrinking inside the iframe's border when resized.
-  if (IsInline() && HasBorder()) {
+  if (IsInline()) {
     if (kidMetrics.maxElementSize) {
       kidMetrics.maxElementSize->width += border.left + border.right;
       kidMetrics.maxElementSize->height += border.top + border.bottom;
@@ -497,43 +477,42 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
 
 PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStandardMode)
 {
-  nsIHTMLContent* content = nsnull;
-  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+  PRInt32 returnValue = -1;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
+  if (NS_SUCCEEDED(rv) && content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::scrolling, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        PRInt32 returnValue;
         PRInt32 intValue;
         intValue = value.GetIntValue();
         if (!aStandardMode) {
           if ((NS_STYLE_FRAME_ON == intValue) || (NS_STYLE_FRAME_SCROLL == intValue)) {
-            intValue = NS_STYLE_FRAME_YES;
+            returnValue = NS_STYLE_OVERFLOW_SCROLL;
           } else if ((NS_STYLE_FRAME_OFF == intValue) || (NS_STYLE_FRAME_NOSCROLL == intValue)) {
-            intValue = NS_STYLE_FRAME_NO;
+            returnValue = NS_STYLE_OVERFLOW_HIDDEN;
+          }
+        } else {
+          if (NS_STYLE_FRAME_YES == intValue) {
+            returnValue = NS_STYLE_OVERFLOW_SCROLL;
+          } else if (NS_STYLE_FRAME_NO == intValue) {
+            returnValue = NS_STYLE_OVERFLOW_HIDDEN;
+          } else if (NS_STYLE_FRAME_AUTO == intValue) {
+            returnValue = NS_STYLE_OVERFLOW_AUTO;
           }
         }
-        if (NS_STYLE_FRAME_YES == intValue) {
-          returnValue = NS_STYLE_OVERFLOW_SCROLL;
-        } else if (NS_STYLE_FRAME_NO == intValue) {
-          returnValue = NS_STYLE_OVERFLOW_HIDDEN;
-        } else if (NS_STYLE_FRAME_AUTO == intValue) {
-          returnValue = NS_STYLE_OVERFLOW_AUTO;
-        }
-        NS_RELEASE(content);
-        return returnValue;
       }      
     }
-    NS_RELEASE(content);
   }
-  return -1;
+  return returnValue;
 }
 
 nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
 {
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+  nsFrameborder rv = eFrameborder_Notset;
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &res);
+  if (NS_SUCCEEDED(res) && content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
@@ -541,34 +520,33 @@ nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
         intValue = value.GetIntValue();
         if (!aStandardMode) {
           if (NS_STYLE_FRAME_YES == intValue) {
-            intValue = NS_STYLE_FRAME_0;
+            rv = eFrameborder_Yes;
           } 
           else if (NS_STYLE_FRAME_NO == intValue) {
-            intValue = NS_STYLE_FRAME_1;
+            rv = eFrameborder_No;
+          }
+        } else {
+          if (NS_STYLE_FRAME_0 == intValue) {
+            rv = eFrameborder_No;
+          } 
+          else if (NS_STYLE_FRAME_1 == intValue) {
+            rv = eFrameborder_Yes;
           }
         }
-        if (NS_STYLE_FRAME_0 == intValue) {
-          NS_RELEASE(content);
-          return eFrameborder_No;
-        } 
-        else if (NS_STYLE_FRAME_1 == intValue) {
-          NS_RELEASE(content);
-          return eFrameborder_Yes;
-        }
-      }      
+      }
     }
-    NS_RELEASE(content);
   }
   // XXX if we get here, check for nsIDOMFRAMESETElement interface
-  return eFrameborder_Notset;
+  return rv;
 }
 
 
 PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent)
 {
   PRInt32 marginWidth = -1;
-  nsIHTMLContent* content = nsnull;
-  if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**) &content))) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
+  if (NS_SUCCEEDED(rv) && content) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
@@ -579,7 +557,6 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
         marginWidth = 0;
       }
     }
-    NS_RELEASE(content);
   }
   return marginWidth;
 }
@@ -587,8 +564,9 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
 PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent)
 {
   PRInt32 marginHeight = -1;
-  nsIHTMLContent* content = nsnull;
-  if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**) &content))) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
+  if (NS_SUCCEEDED(rv) && content) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
@@ -599,7 +577,6 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
         marginHeight = 0;
       }
     }
-    NS_RELEASE(content);
   }
   return marginHeight;
 }
