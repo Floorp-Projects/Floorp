@@ -47,7 +47,6 @@ install::
 	$(MAKE_INSTALL) pref-offline.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
 	$(MAKE_INSTALL) pref-policies.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
 	$(MAKE_INSTALL) pref-proxies.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
-	$(MAKE_INSTALL) pref-proxy-manual.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
 	$(MAKE_INSTALL) pref-publish.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
 	$(MAKE_INSTALL) pref-search.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
 	$(MAKE_INSTALL) pref-smart_browsing.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale\pref
