@@ -282,7 +282,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 			m_newMsgHdr = NULL;
 		}
 		else
-			XP_ASSERT(FALSE);	// should have a DB, no?
+			NS_ASSERTION(FALSE, "no database while parsing local folder");	// should have a DB, no?
 	}
 	else if (m_mailDB)
 	{
@@ -883,7 +883,7 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 		return 0;
 	}
 
-	XP_ASSERT (header->length == (short) XP_STRLEN (header->value));
+	NS_ASSERTION (header->length == (short) XP_STRLEN (header->value), "subject corrupt while parsing message");
 
 	key = (char *) header->value;  /* #### const evilness */
 
