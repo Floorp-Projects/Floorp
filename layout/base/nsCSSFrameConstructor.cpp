@@ -4007,8 +4007,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
     nsCOMPtr<nsIAtom> tag;
     aContainer->GetTag(*getter_AddRefs(tag));
-    if (tag == nsXULAtoms::treechildren ||
-      tag == nsXULAtoms::treeitem) {
+    if (tag.get() == nsXULAtoms::treechildren ||
+        tag.get() == nsXULAtoms::treeitem) {
       // Convert to a tree row group frame.
       nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
       if (treeRowGroup->IsLazy() && !treeRowGroup->IsFull()) {
@@ -4257,7 +4257,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
       nsCOMPtr<nsIAtom> tag;
       aContainer->GetTag(*getter_AddRefs(tag));
-      if (tag == nsXULAtoms::treechildren ||
+      if (tag.get() == nsXULAtoms::treechildren ||
         tag == nsXULAtoms::treeitem) {
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
