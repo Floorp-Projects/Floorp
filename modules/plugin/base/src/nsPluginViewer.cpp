@@ -254,6 +254,19 @@ PluginViewerImpl::~PluginViewerImpl()
   if (mOwner) mOwner->CancelTimer();
 #endif
 
+  if(mOwner) {
+    nsIPluginInstance * inst;
+    mOwner->GetInstance(inst);
+
+    if(inst) {
+      nsCOMPtr<nsIPluginHost> host = do_GetService(kCPluginManagerCID);
+      if(host)
+        host->StopPluginInstance(inst);
+      
+      NS_RELEASE(inst);
+    }
+  }
+
   NS_IF_RELEASE(mOwner);
   if (nsnull != mWindow) {
     mWindow->Destroy();
@@ -913,26 +926,7 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
     CancelTimer();
   }
 
-  if (nsnull != mInstance)
-  {
-    PRBool doCache = PR_TRUE;
-    
-    // determine if the plugin wants to be cached
-    mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, 
-                        (void *) &doCache);
-    mInstance->Stop();
-    if (!doCache) {
-      // if not, destroy the instance
-      mInstance->Destroy();
-    }
-    else {
-      nsCOMPtr<nsIPluginHost> host;
-      host = do_GetService(kCPluginManagerCID);
-      if(host)
-        host->StopPluginInstance(mInstance);
-    }
-    NS_IF_RELEASE(mInstance);
-  }
+  NS_IF_RELEASE(mInstance);
 
   mWindow = nsnull;
   mViewer = nsnull;
