@@ -113,12 +113,12 @@ menuitem[hidden="true"] {
 }
 
 menupopup {
-  behavior: url("resource:/chrome/xulBindings.xml#popups");
+  /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
   display: none;
 }
 
 popup {
-  behavior: url("resource:/chrome/xulBindings.xml#popups");
+  /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
   display: none;
 }
 
