@@ -2306,6 +2306,22 @@ nsStandardURL::Init(PRUint32 urlType,
         return NS_OK;
     }
 
+    if (baseURI) {
+        PRUint32 start, end;
+        // pull out the scheme and where it ends
+        nsresult rv = ExtractURLScheme(spec, &start, &end, nsnull);
+        if (NS_SUCCEEDED(rv) && spec.Length() > end+1) {
+            nsACString::const_iterator slash;
+            spec.BeginReading(slash);
+            slash.advance(end);
+            // then check if // follows
+            // if it follows, aSpec is really absolute ... 
+            // ignore aBaseURI in this case
+            if (*slash == '/' && *(++slash) == '/')
+                baseURI = nsnull;
+        }
+    }
+
     if (!baseURI)
         return SetSpec(spec);
 

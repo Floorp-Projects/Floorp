@@ -727,11 +727,7 @@ nsIOService::NewURI(const nsACString &aSpec, const char *aCharset, nsIURI *aBase
     nsCAutoString scheme;
 
     rv = ExtractScheme(aSpec, scheme);
-    if (NS_SUCCEEDED(rv)) {
-        // then aSpec is absolute... ignore aBaseURI in this case
-        aBaseURI = nsnull;
-    }
-    else {
+    if (NS_FAILED(rv)) {
         // then aSpec is relative
         if (!aBaseURI)
             return NS_ERROR_MALFORMED_URI;
