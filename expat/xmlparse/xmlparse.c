@@ -922,7 +922,7 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
       eventEndPtr = eventPtr;
       if (blocked) {
         parseEndPtr = eventEndPtr;
-        parseEndByteIndex -= len - (eventPtr - s); // This is how much we've red thus far
+        parseEndByteIndex -= len - (eventPtr - s); /* This is how much we've red thus far*/
         XmlUpdatePosition(encoding, positionPtr, eventEndPtr, &position);
       }
       return 0;
