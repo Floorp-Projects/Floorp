@@ -309,7 +309,7 @@ struct URL_Struct_ {
                                  * proxying
                                  */
     char  * window_target;      /* named window support */
-#idef XP_MAC
+#ifdef XP_MAC
     Chrome * window_chrome;     /* pointer to a Chrome structure that
                                  * if non-null specifies the characteristics
                                  * of the target window named in 
