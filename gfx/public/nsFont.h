@@ -70,7 +70,11 @@ struct NS_GFX nsFont {
   nsString name;
 
   // The style of font (normal, italic, oblique)
-  PRUint8 style;
+  unsigned int style : 7;
+
+  // Force this font to not be considered a 'generic' font, even if
+  // the name is the same as a CSS generic font family.
+  unsigned int systemFont : 1;
 
   // The variant of the font (normal, small-caps)
   PRUint8 variant : 7;

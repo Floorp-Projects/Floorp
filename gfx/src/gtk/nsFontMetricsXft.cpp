@@ -1041,7 +1041,7 @@ nsFontMetricsXft::SetupFCPattern(void)
 
     // If there's a generic add a pref for the generic if there's one
     // set.
-    if (mGenericFont) {
+    if (mGenericFont && !mFont->systemFont) {
         nsCString name;
         name += "font.name.";
         name += mGenericFont->get();
@@ -1076,12 +1076,12 @@ nsFontMetricsXft::SetupFCPattern(void)
     }
 
     // Add the generic if there is one.
-    if (mGenericFont)
+    if (mGenericFont && !mFont->systemFont)
         AddFFRE(mPattern, mGenericFont, PR_FALSE);
 
     if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
         // generic font
-        if (mGenericFont) {
+        if (mGenericFont && !mFont->systemFont) {
             printf("\tadding generic family: %s\n", mGenericFont->get());
         }
 

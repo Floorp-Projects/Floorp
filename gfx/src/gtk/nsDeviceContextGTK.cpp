@@ -953,12 +953,20 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
   PangoFontDescription *desc;
   desc = pango_font_description_from_string(fontname);
 
+  // Even if this font family happens to have the same name as a CSS
+  // generic font family, we don't want to use the user's pref for that
+  // CSS family.
+
+  aFont->systemFont = PR_TRUE;
+
   g_free(fontname);
 
   aFont->name.Truncate();
 #ifdef MOZ_ENABLE_XFT
   if (NS_IsXftEnabled()) {
+    aFont->name.Assign(PRUnichar('"'));
     aFont->name.AppendWithConversion(pango_font_description_get_family(desc));
+    aFont->name.Assign(PRUnichar('"'));
   }
 #endif /* MOZ_ENABLE_XFT */
 
