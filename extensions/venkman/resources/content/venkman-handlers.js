@@ -357,9 +357,8 @@ function con_iframe (e)
         return false;
     }
 
-    var idx = parseInt(e.inputData);
-    
-    if (idx < 0)
+    var idx = parseInt(e.inputData);    
+    if (isNaN(idx))
         idx = getCurrentFrameIndex();
 
     setCurrentFrameByIndex(idx);
