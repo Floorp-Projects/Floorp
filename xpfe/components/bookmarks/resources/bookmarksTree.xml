@@ -638,11 +638,14 @@
         {
           var selection = this.mOuter.getTreeSelection();
           this.mOuter._selection = selection;
-          this.mOuter._target    = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE);
+          var selectionLength = selection.length;
+          this.mOuter._target = selectionLength
+            ? this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE)
+            : null;
           this.mOuter.onCommandUpdate();
           const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
           var displayValue;
-          if (kStatusBar && selection.length == 1) {
+          if (kStatusBar && selectionLength == 1) {
             var protocol = selection.protocol[0];
             if (selection.isContainer[0] && protocol != "find" && protocol != "file") {
               RDFC.Init(this.mOuter.db, selection.item[0]);
