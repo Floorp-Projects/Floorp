@@ -48,7 +48,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= profile
 
-#PREF_JS_EXPORTS = $(srcdir)/profile/xulrunner.js
+PREF_JS_EXPORTS = $(srcdir)/xulrunner.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = xulrunner$(BIN_SUFFIX)
