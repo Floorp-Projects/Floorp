@@ -655,7 +655,7 @@ nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 }
 
 NS_METHOD
-nsTableOuterFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                          nsIFrame*        aParent,
                                          nsIStyleContext* aStyleContext,
                                          nsIFrame*&       aContinuingFrame)
@@ -672,7 +672,7 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
 }
 
 void
-nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
+nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext&    aPresContext,
                                           nsIFrame*          aParent,
                                           nsIStyleContext*   aStyleContext,
                                           nsTableOuterFrame* aContFrame)
@@ -696,7 +696,7 @@ nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
   aContFrame->SetFirstContentOffset(nextOffset);
   aContFrame->SetLastContentOffset(nextOffset);
   aContFrame->SetLastContentIsComplete(PR_TRUE);
-  aContFrame->SetStyleContext(aPresContext, aStyleContext);
+  aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
 NS_METHOD nsTableOuterFrame::VerifyTree() const
@@ -837,7 +837,7 @@ nsresult nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext,
     nsIStyleContextPtr  kidSC;
 
     prevInnerTable->GetStyleContext(aPresContext, kidSC.AssignRef());
-    prevInnerTable->CreateContinuingFrame(aPresContext, this, kidSC,
+    prevInnerTable->CreateContinuingFrame(*aPresContext, this, kidSC,
                       (nsIFrame*&)aTableFrame);
     if (nsnull == aTableFrame) {
       return NS_ERROR_OUT_OF_MEMORY;

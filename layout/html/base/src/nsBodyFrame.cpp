@@ -266,7 +266,7 @@ NS_METHOD nsBodyFrame::ContentDeleted(nsIPresShell*   aShell,
 }
 
 NS_METHOD
-nsBodyFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame)
@@ -301,7 +301,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
     NS_ASSERTION(prevBody->ChildIsPseudoFrame(prevColumn),
                  "bad previous column");
 
-    prevColumn->CreateContinuingFrame(aPresContext, this, styleContext,
+    prevColumn->CreateContinuingFrame(*aPresContext, this, styleContext,
                                       mFirstChild);
     mChildCount = 1;
   }

@@ -60,7 +60,7 @@ public:
                     nsReflowStatus&      aStatus);
 
   /** @see nsContainerFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
@@ -98,7 +98,7 @@ protected:
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::PrepareContinuingFrame
     */
-  void PrepareContinuingFrame(nsIPresContext*    aPresContext,
+  void PrepareContinuingFrame(nsIPresContext&    aPresContext,
                               nsIFrame*          aParent,
                               nsIStyleContext* aStyleContext,
                               nsTableOuterFrame* aContFrame);

@@ -78,7 +78,7 @@ nsContainerFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 }
 
 void
-nsContainerFrame::PrepareContinuingFrame(nsIPresContext*   aPresContext,
+nsContainerFrame::PrepareContinuingFrame(nsIPresContext&   aPresContext,
                                          nsIFrame*         aParent,
                                          nsIStyleContext*  aStyleContext,
                                          nsContainerFrame* aContFrame)
@@ -94,17 +94,17 @@ nsContainerFrame::PrepareContinuingFrame(nsIPresContext*   aPresContext,
   aContFrame->mLastContentOffset = nextOffset;
   aContFrame->mLastContentIsComplete = PR_TRUE;
 
-  aContFrame->SetStyleContext(aPresContext, aStyleContext);
+  aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
 NS_METHOD
-nsContainerFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsContainerFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                         nsIFrame*        aParent,
                                         nsIStyleContext* aStyleContext,
                                         nsIFrame*&       aContinuingFrame)
 {
-  nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
-  nsresult rv = contentDelegate->CreateFrame(aPresContext, mContent, aParent,
+  nsIContentDelegate* contentDelegate = mContent->GetDelegate(&aPresContext);
+  nsresult rv = contentDelegate->CreateFrame(&aPresContext, mContent, aParent,
                                              aStyleContext, aContinuingFrame);
   NS_RELEASE(contentDelegate);
   if (NS_OK == rv) {

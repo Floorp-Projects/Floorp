@@ -864,7 +864,7 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
 }
 
 NS_METHOD
-nsTableRowFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                        nsIFrame*        aParent,
                                        nsIStyleContext* aStyleContext,
                                        nsIFrame*&       aContinuingFrame)

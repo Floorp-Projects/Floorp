@@ -113,7 +113,7 @@ public:
    * set the content offsets, mLastContentOffset, and append the continuing
    * frame to the flow.
    */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
@@ -205,7 +205,7 @@ protected:
    * and style context.  Subclasses should invoke this method after
    * construction of a continuing frame.
    */
-  void PrepareContinuingFrame(nsIPresContext*   aPresContext,
+  void PrepareContinuingFrame(nsIPresContext&   aPresContext,
                               nsIFrame*         aParent,
                               nsIStyleContext*  aStyleContext,
                               nsContainerFrame* aContFrame);

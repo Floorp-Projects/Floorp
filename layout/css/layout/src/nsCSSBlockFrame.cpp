@@ -113,7 +113,7 @@ public:
   NS_IMETHOD PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
   NS_IMETHOD LastChild(nsIFrame*& aLastChild) const;
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
@@ -938,7 +938,7 @@ nsCSSBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 }
 
 NS_IMETHODIMP
-nsCSSBlockFrame::CreateContinuingFrame(nsIPresContext*  aCX,
+nsCSSBlockFrame::CreateContinuingFrame(nsIPresContext&  aCX,
                                        nsIFrame*        aParent,
                                        nsIStyleContext* aStyleContext,
                                        nsIFrame*&       aContinuingFrame)

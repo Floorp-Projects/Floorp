@@ -177,7 +177,7 @@ public:
   NS_IMETHOD  GetReflowMetrics(nsIPresContext&  aPresContext,
                                nsReflowMetrics& aMetrics);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
-  NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext&  aPresContext,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,
                                     nsIFrame*&       aContinuingFrame);

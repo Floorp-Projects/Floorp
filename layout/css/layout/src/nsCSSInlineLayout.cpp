@@ -430,7 +430,7 @@ nsCSSInlineLayout::MaybeCreateNextInFlow(nsIFrame*  aFrame,
     aFrame->GetNextSibling(nextFrame);
     nsIStyleContext* kidSC;
     aFrame->GetStyleContext(mLineLayout.mPresContext, kidSC);
-    aFrame->CreateContinuingFrame(mLineLayout.mPresContext, mContainerFrame,
+    aFrame->CreateContinuingFrame(*mLineLayout.mPresContext, mContainerFrame,
                                   kidSC, nextInFlow);
     NS_RELEASE(kidSC);
     if (nsnull == nextInFlow) {

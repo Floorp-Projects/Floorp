@@ -70,14 +70,14 @@ nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
  * @return  the continuing frame or null if unsuccessful
  */
 NS_METHOD
-nsSplittableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsSplittableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                          nsIFrame*        aParent,
                                          nsIStyleContext* aStyleContext,
                                          nsIFrame*&       aContinuingFrame)
 {
-  nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
+  nsIContentDelegate* contentDelegate = mContent->GetDelegate(&aPresContext);
 
-  nsresult rv = contentDelegate->CreateFrame(aPresContext, mContent, aParent,
+  nsresult rv = contentDelegate->CreateFrame(&aPresContext, mContent, aParent,
                                              aStyleContext, aContinuingFrame);
   NS_RELEASE(contentDelegate);
   if (NS_OK != rv) {
@@ -91,8 +91,8 @@ nsSplittableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
 
   // Resolve style for the continuing frame and set its style context.
   nsIStyleContext* styleContext =
-    aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContinuingFrame->SetStyleContext(aPresContext,styleContext);
+    aPresContext.ResolveStyleContextFor(mContent, aParent);
+  aContinuingFrame->SetStyleContext(&aPresContext,styleContext);
   NS_RELEASE(styleContext);
 
   return rv;

@@ -367,7 +367,7 @@ if (gsDebug) printf("\n\nREFLOWMAPPED FOR ROW GROUP FRAME\n");
         nsIFrame* continuingFrame;
         nsIStyleContext* kidSC;
         kidFrame->GetStyleContext(aPresContext, kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+        kidFrame->CreateContinuingFrame(*aPresContext, this, kidSC,
                                         continuingFrame);
         NS_RELEASE(kidSC);
 
@@ -607,7 +607,7 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
         nsIFrame* continuingFrame;
         nsIStyleContext* kidSC;
         kidFrame->GetStyleContext(aPresContext, kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+        kidFrame->CreateContinuingFrame(*aPresContext, this, kidSC,
                                         continuingFrame);
         NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
@@ -768,7 +768,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
                                         kidFrame);
       NS_RELEASE(kidDel);
     } else {
-      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidSC,
+      kidPrevInFlow->CreateContinuingFrame(*aPresContext, this, kidSC,
                                            kidFrame);
     }
 
@@ -1169,7 +1169,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
 }
 
 NS_METHOD
-nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                             nsIFrame*        aParent,
                                             nsIStyleContext* aStyleContext,
                                             nsIFrame*&       aContinuingFrame)
