@@ -30,7 +30,6 @@
   #     The keys used in this template are
   #     tweakparams, editcomponents, creategroups, editkeywords, confirm,
   #     editbugs, editusers. 
-  # use_votes: boolean. True if we are using votes.
   #%]
 
 [%# Migration note: this whole file corresponds to the old %commandmenu% 
@@ -52,7 +51,7 @@
         
         <a href="reports.cgi">Reports</a> 
        
-        [% IF user.login AND use_votes %]
+        [% IF user.login && Param('usevotes') %]
           | <a href="votes.cgi?action=show_user">My Votes</a>
         [% END %]      
       </td>

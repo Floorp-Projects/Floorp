@@ -93,7 +93,7 @@ function normal_keypress_handler( aEvent ) {
   [%- IF mybugsurl %]
       <text class="text-link" onclick="load_relative_url('[% mybugsurl FILTER html %]')" value="my bugs"/>
   [%- END %]
-  [%- IF anyvotesallowed %]
+  [%- IF Param('usevotes') %]
       <text class="text-link" onclick="load_relative_url('votes.cgi?action=show_user')" value="my votes"/>
   [%- END %]
 

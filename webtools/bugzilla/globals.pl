@@ -469,7 +469,6 @@ sub GenerateVersionTable {
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
     SendSQL("select product, description, votesperuser, disallownew$mpart from products ORDER BY product");
-    $::anyvotesallowed = 0;
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
@@ -480,9 +479,6 @@ sub GenerateVersionTable {
             $::milestoneurl{$p} = $u;
         }
         $::prodmaxvotes{$p} = $votesperuser;
-        if ($votesperuser > 0) {
-            $::anyvotesallowed = 1;
-        }
     }
             
     my $cols = LearnAboutColumns("bugs");
@@ -551,7 +547,6 @@ sub GenerateVersionTable {
     print FID GenerateCode('%::proddesc');
     print FID GenerateCode('@::enterable_products');
     print FID GenerateCode('%::prodmaxvotes');
-    print FID GenerateCode('$::anyvotesallowed');
 
     if ($dotargetmilestone) {
         # reading target milestones in from the database - matthew@zeroknowledge.com
@@ -1763,8 +1758,6 @@ $::vars =
     
     # User Agent - useful for detecting in templates
     'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
-    
-    'use_votes' => $::anyvotesallowed,
   };
 
 1;

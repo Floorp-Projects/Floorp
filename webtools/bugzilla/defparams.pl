@@ -400,6 +400,11 @@ DefParam("usedependencies",
          "b",
          1);
 
+DefParam("usevotes",
+         "Do you wish to allow users to vote for bugs? Note that in order for this to be effective, you will have to change the maximum votes allowed in a product to be non-zero in <a href=\"editproducts.cgi\">the product edit page</a>.",
+         "b",
+         1);
+
 DefParam("usebugaliases",
          "Do you wish to use bug aliases, which allow you to assign bugs 
           an easy-to-remember name by which you can refer to them?",

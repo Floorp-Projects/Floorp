@@ -23,7 +23,6 @@ require "CGI.pl";
 
 # Shut up "Used Only Once" errors
 use vars qw(
-  $anyvotesallowed
   $template
   $vars
 );
@@ -31,15 +30,11 @@ use vars qw(
 ConnectToDatabase();
 quietly_check_login();
 
-# Needed for $::anyvotesallowed
-GetVersionTable();
-
 ###############################################################################
 # Main Body Execution
 ###############################################################################
 
 $vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
-$vars->{'anyvotesallowed'} = $::anyvotesallowed;
 
 if (defined $::COOKIE{'Bugzilla_login'}) {
     SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .

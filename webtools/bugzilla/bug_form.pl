@@ -157,7 +157,8 @@ sub show_bug {
     $bug{'milestoneurl'} = $::milestoneurl{$bug{'product'}} || 
                            "notargetmilestone.html";
 
-    $vars->{'use_votes'} = $::prodmaxvotes{$bug{'product'}};
+    $vars->{'use_votes'} = Param('usevotes')
+                           && $::prodmaxvotes{$bug{'product'}} > 0;
 
     # Add additional, calculated fields to the bug hash
     if (@::legal_keywords) {
