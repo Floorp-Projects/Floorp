@@ -194,6 +194,7 @@ nsInputTextFrame::EnterPressed(nsIPresContext& aPresContext)
       nsIFormControl* control;
       mContent->QueryInterface(kIFormControlIID, (void**)&control);
       formMan->OnSubmit(&aPresContext, this, control);
+      NS_IF_RELEASE(control);
     }
   }
   NS_RELEASE(formMan);

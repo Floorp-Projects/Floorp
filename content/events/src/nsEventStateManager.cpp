@@ -19,6 +19,8 @@
 #include "nsISupports.h"
 #include "nsIEventStateManager.h"
 #include "nsEventStateManager.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -26,6 +28,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsEventStateManager::nsEventStateManager() {
   mEventTarget = nsnull;
   mLastMouseOverContent = nsnull;
+  mActiveLink = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -75,6 +78,56 @@ NS_METHOD nsEventStateManager::SetLastMouseOverContent(nsIContent *aContent)
   
   mLastMouseOverContent = aContent;
   NS_IF_ADDREF(mLastMouseOverContent);
+  return NS_OK;
+}
+
+NS_METHOD nsEventStateManager::GetActiveLink(nsIContent **aLink)
+{
+  NS_PRECONDITION(nsnull != aLink, "null ptr");
+  if (nsnull == aLink) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aLink = mActiveLink;
+  NS_IF_ADDREF(mActiveLink);
+  return NS_OK;
+}
+
+NS_METHOD nsEventStateManager::SetActiveLink(nsIContent *aLink)
+{
+  nsIDocument *mDocument;
+
+  //XXX this should just be able to call ContentChanged for the link once
+  //either nsFrame::ContentChanged does something or we have a separate
+  //link class
+  if (nsnull != mActiveLink) {
+    if (NS_OK == mActiveLink->GetDocument(mDocument)) {
+      nsIContent *mKid;
+      for (int i = 0; i < mActiveLink->ChildCount(); i++) {
+        mKid = mActiveLink->ChildAt(i);
+        mDocument->ContentChanged(mKid, nsnull);
+        NS_RELEASE(mKid);
+      }
+    }
+    NS_RELEASE(mDocument);
+  }
+
+  NS_IF_RELEASE(mActiveLink);
+
+  mActiveLink = aLink;
+  NS_IF_ADDREF(mActiveLink);
+
+  if (nsnull != mActiveLink) {
+    if (NS_OK == mActiveLink->GetDocument(mDocument)) {
+      nsIContent *mKid;
+      for (int i = 0; i < mActiveLink->ChildCount(); i++) {
+        mKid = mActiveLink->ChildAt(i);
+        mDocument->ContentChanged(mKid, nsnull);
+        NS_RELEASE(mKid);
+      }
+    }
+    NS_RELEASE(mDocument);
+  }
+
   return NS_OK;
 }
 

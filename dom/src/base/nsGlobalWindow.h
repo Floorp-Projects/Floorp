@@ -35,6 +35,7 @@ class nsIEventListenerManager;
 class nsIDOMDocument;
 class nsIPresContext;
 class nsIDOMEvent;
+class nsIBrowserWindow;
 
 #include "jsapi.h"
 
@@ -55,11 +56,13 @@ public:
 
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
+  NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
 
   NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
+  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);
   NS_IMETHOD    Dump(const nsString& aStr);
   NS_IMETHOD    Alert(const nsString& aStr);
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
@@ -67,6 +70,8 @@ public:
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, 
                            PRInt32* aReturn);
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, 
+                            PRInt32* aReturn);
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, 
                             PRInt32* aReturn);
 
   // nsIDOMEventCapturer interface
@@ -106,11 +111,15 @@ protected:
   void          ClearAllTimeouts();
   void          DropTimeout(nsTimeoutImpl *aTimeout);
   void          HoldTimeout(nsTimeoutImpl *aTimeout);
+  nsresult      GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser);
+  nsresult      CheckWindowName(JSContext *cx, nsString& aName);
+  int32         WinHasOption(char *options, char *name);
 
   nsIScriptContext *mContext;
   void *mScriptObject;
   nsIDOMDocument *mDocument;
   nsIDOMNavigator *mNavigator;
+  nsIWebShell *mWebShell;
   
   nsTimeoutImpl *mTimeouts;
   nsTimeoutImpl **mTimeoutInsertionPoint;

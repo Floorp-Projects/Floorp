@@ -28,6 +28,7 @@
 class nsIPref;
 class nsWebCrawler;
 class nsBrowserWindow;
+class nsIBrowserWindow;
 
 class nsViewerApp : public nsINetContainerApplication,
                     public nsDispatchListener
@@ -59,6 +60,7 @@ public:
   NS_IMETHOD Initialize(int argc, char** argv);
   NS_IMETHOD ProcessArguments(int argc, char** argv);
   NS_IMETHOD OpenWindow();
+  NS_IMETHOD OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
   NS_IMETHOD CreateRobot(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateSiteWalker(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateJSConsole(nsBrowserWindow* aWindow);

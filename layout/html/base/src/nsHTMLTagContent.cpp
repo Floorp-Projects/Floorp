@@ -35,9 +35,11 @@
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsIEventListenerManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIScriptEventListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsDOMEvent.h"
 #include "nsDOMEventsIIDs.h"
 #include "jsapi.h"
 
@@ -1081,17 +1083,45 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if (NS_OK == ret && nsEventStatus_eIgnore == aEventStatus) {
     switch (aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      if (mTag == nsHTMLAtoms::a) {
+        nsIEventStateManager *mStateManager;
+        if (NS_OK == aPresContext.GetEventStateManager(&mStateManager)) {
+          mStateManager->SetActiveLink(this);
+          NS_RELEASE(mStateManager);
+        }
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+      }
+      break;
+
     case NS_MOUSE_LEFT_BUTTON_UP:
       if (mTag == nsHTMLAtoms::a) {
-        nsAutoString base, href, target;
-        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-        GetAttribute(nsString("href"), href);
-        GetAttribute(nsString("target"), target);
-        if (target.Length() == 0) {
-          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+        nsIEventStateManager *mStateManager;
+        nsIContent *mActiveLink;
+        if (NS_OK == aPresContext.GetEventStateManager(&mStateManager)) {
+          mStateManager->GetActiveLink(&mActiveLink);
+          NS_RELEASE(mStateManager);
         }
-        TriggerLink(aPresContext, base, href, target, PR_TRUE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+
+        if (mActiveLink == this) {
+          nsEventStatus mStatus;
+          nsMouseEvent mEvent;
+          mEvent.eventStructType = NS_MOUSE_EVENT;
+          mEvent.message = NS_MOUSE_LEFT_CLICK;
+          HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+
+          if (mStatus != nsEventStatus_eConsumeNoDefault) {
+            nsAutoString base, href, target;
+            GetAttribute(nsString(NS_HTML_BASE_HREF), base);
+            GetAttribute(nsString("href"), href);
+            GetAttribute(nsString("target"), target);
+            if (target.Length() == 0) {
+              GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+            }
+            TriggerLink(aPresContext, base, href, target, PR_TRUE);
+            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          }
+        }
       }
       break;
 
@@ -1099,9 +1129,8 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
       // XXX Bring up a contextual menu provided by the application
       break;
 
-    //case NS_MOUSE_ENTER:
+    case NS_MOUSE_ENTER:
     //mouse enter doesn't work yet.  Use move until then.
-    case NS_MOUSE_MOVE:
       if (mTag == nsHTMLAtoms::a) {
         nsAutoString base, href, target;
         GetAttribute(nsString(NS_HTML_BASE_HREF), base);

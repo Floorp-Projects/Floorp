@@ -95,20 +95,6 @@ NS_METHOD nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
                                             nsGUIEvent* aEvent,
                                             nsEventStatus& aEventStatus)
 {
-  // This masks out selection on the down click
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    nsIAtom* tag = mContent->GetTag();
-    if (nsHTMLAtoms::a == tag) {
-      nsString href;
-      mContent->GetAttribute(nsString("href"), href);
-      if (href.Length() > 0) {
-        NS_RELEASE(tag);
-        return NS_OK;
-      }
-    }
-    NS_RELEASE(tag);
-  }
-
   return nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 

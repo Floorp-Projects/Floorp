@@ -467,6 +467,7 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
       mContent->QueryInterface(kIFormControlIID, (void**)&control);
       formMan->OnSubmit(aPresContext, this, control);
       //NS_RELEASE(this);
+      NS_IF_RELEASE(control);
     }
     else if (kButton_Browse == butType) {
       ((nsInputFileFrame *)mContentParent)->MouseClicked(aPresContext);

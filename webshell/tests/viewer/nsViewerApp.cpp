@@ -380,6 +380,25 @@ nsViewerApp::OpenWindow()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsViewerApp::OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
+{
+  // Create browser window
+  nsBrowserWindow* bw = nsnull;
+  nsresult rv = NSRepository::CreateInstance(kBrowserWindowCID, nsnull,
+                                             kIBrowserWindowIID,
+                                             (void**) &bw);
+  bw->SetApp(this);
+  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
+  bw->Show();
+  bw->LoadURL(aURL);
+
+  aNewWindow = bw;
+  NS_ADDREF(bw);
+
+  return NS_OK;
+}
+
 //----------------------------------------
 
 // nsINetContainerApplication implementation

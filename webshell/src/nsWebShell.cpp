@@ -35,6 +35,7 @@
 #include "nsplugin.h"
 #include "nsPluginsCID.h"
 #include "nsIPref.h"
+#include "nsIBrowserWindow.h"
 
 #include "prlog.h"
 
@@ -219,6 +220,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
@@ -277,7 +279,10 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
 
-  NS_IF_RELEASE(mScriptGlobal);
+  if (nsnull != mScriptGlobal) {
+    mScriptGlobal->SetWebShell(nsnull);
+    NS_RELEASE(mScriptGlobal);
+  }
   NS_IF_RELEASE(mScriptContext);
 
   // Release references on our children
@@ -1116,6 +1121,22 @@ fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOv
     fputs("'\n", stdout);
     mOverURL = aURLSpec;
     mOverTarget = aTargetSpec;
+
+    nsIWebShell *mRootWebShell;
+    GetRootWebShell(mRootWebShell);
+    if (nsnull != mRootWebShell) {
+      nsIWebShellContainer *mRootContainer;
+      mRootWebShell->GetContainer(mRootContainer);
+      if (nsnull != mRootContainer) {
+        nsIBrowserWindow *mBrowser;
+        if (NS_OK == mRootContainer->QueryInterface(kIBrowserWindowIID, (void**)&mBrowser)) {
+          mBrowser->SetStatus(mOverURL);
+          NS_RELEASE(mBrowser);
+        }
+        NS_RELEASE(mRootContainer);
+      }
+      NS_RELEASE(mRootWebShell);
+    }
   }
   return NS_OK;
 }
@@ -1154,7 +1175,10 @@ nsWebShell::GetScriptContext(nsIScriptContext** aContext)
     if (NS_OK != res) {
       return res;
     }
+    mScriptGlobal->SetWebShell(this);
+  }
 
+  if (nsnull == mScriptContext) {
     res = NS_CreateContext(mScriptGlobal, &mScriptContext);
     if (NS_OK != res) {
       return res;
@@ -1178,6 +1202,7 @@ nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
     if (NS_OK != res) {
       return res;
     }
+    mScriptGlobal->SetWebShell(this);
   }
 
   *aGlobal = mScriptGlobal;

@@ -424,6 +424,7 @@ void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
     }
     handler->OnLinkClick(aFrame, absURLSpec, target, postData);
     NS_IF_RELEASE(postData);
+    NS_RELEASE(handler);
 
 DebugPrint("url", absURLSpec);
 DebugPrint("data", data);

@@ -41,12 +41,16 @@ public:
 
   NS_IMETHOD GetLastMouseOverContent(nsIContent **aContent);
   NS_IMETHOD SetLastMouseOverContent(nsIContent *aContent);
+
+  NS_IMETHOD GetActiveLink(nsIContent **aLink);
+  NS_IMETHOD SetActiveLink(nsIContent *aLink);
 protected:
 
   PRUint32 mRefCnt : 31;
 
   nsISupports* mEventTarget;
   nsIContent* mLastMouseOverContent;
+  nsIContent *mActiveLink;
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

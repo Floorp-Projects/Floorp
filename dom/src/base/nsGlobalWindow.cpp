@@ -37,6 +37,10 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIScriptEventListener.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIBrowserWindow.h"
+#include "nsIWebShell.h"
+#include "nsIScriptContextOwner.h"
+#include "nsCRT.h"
 
 #include "jsapi.h"
 
@@ -58,6 +62,8 @@ static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -202,6 +208,13 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   }
 }
 
+NS_IMETHODIMP_(void)       
+GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
+{
+  //mWebShell isn't refcnt'd here.  WebShell calls SetWebShell(nsnull) when deleted.
+  mWebShell = aWebShell;
+}
+
 NS_IMETHODIMP    
 GlobalWindowImpl::GetWindow(nsIDOMWindow** aWindow)
 {
@@ -239,6 +252,15 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 
   *aNavigator = mNavigator;
   NS_IF_ADDREF(mNavigator);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetOpener(nsIDOMWindow** aOpener)
+{
+  *aOpener = nsnull;
+  NS_IF_ADDREF(*aOpener);
 
   return NS_OK;
 }
@@ -685,6 +707,226 @@ GlobalWindowImpl::SetInterval(JSContext *cx,
   return SetTimeoutOrInterval(cx, argv, argc, aReturn, PR_TRUE);
 }
 
+NS_IMETHODIMP    
+GlobalWindowImpl::Open(JSContext *cx,
+                       jsval *argv, 
+                       PRUint32 argc, 
+                       PRInt32* aReturn)
+{
+  PRUint32 mChrome = 0;
+  nsString mURL, mName;
+  JSString* str;
+  char *url_string;
+  *aReturn = JSVAL_NULL;
+
+  if (argc > 0) {
+    JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
+    if (nsnull == mJSStrURL) {
+      return NS_ERROR_FAILURE;
+    }
+    mURL.SetString(JS_GetStringChars(mJSStrURL));
+  }
+  
+  /* Sanity-check the optional window_name argument. */
+  if (argc > 1) {
+    JSString *mJSStrName = JS_ValueToString(cx, argv[1]);
+    if (nsnull == mJSStrName) {
+      return NS_ERROR_FAILURE;
+    }
+    mName.SetString(JS_GetStringChars(mJSStrName));
+
+    if (NS_OK != CheckWindowName(cx, mName)) {
+      return NS_ERROR_FAILURE;
+    }
+  } 
+  else {
+    mName.SetString("");
+  }
+
+  char *options;
+  
+  if (argc > 2) {
+    if (!(str = JS_ValueToString(cx, argv[2]))) {
+      return NS_ERROR_FAILURE;
+    }
+    options = JS_GetStringBytes(str);
+
+    mChrome |= WinHasOption(options, "toolbar") ? NS_CHROME_TOOL_BAR_ON : 0;
+    mChrome |= WinHasOption(options, "location") ? NS_CHROME_LOCATION_BAR_ON : 0;
+    mChrome |= (WinHasOption(options, "directories") | WinHasOption(options, "personalbar"))
+      ? NS_CHROME_PERSONAL_TOOLBAR_ON : 0;
+    mChrome |= WinHasOption(options, "status") ? NS_CHROME_STATUS_BAR_ON : 0;
+    mChrome |= WinHasOption(options, "menubar") ? NS_CHROME_MENU_BAR_ON : 0;
+    mChrome |= WinHasOption(options, "scrollbars") ? NS_CHROME_SCROLLBARS_ON : 0;
+    mChrome |= WinHasOption(options, "resizable") ? NS_CHROME_WINDOW_RESIZE_ON : 0;
+    mChrome |= NS_CHROME_WINDOW_CLOSE_ON;
+    /* width, height
+    mChrome->w_hint                 =
+        WinHasOption(options, "innerWidth") | WinHasOption(options, "width");
+    mChrome->h_hint                 =
+        WinHasOption(options, "innerHeight") | WinHasOption(options, "height");
+    mChrome->outw_hint              = WinHasOption(options, "outerWidth");
+    mChrome->outh_hint              = WinHasOption(options, "outerHeight");
+    mChrome->l_hint                 =
+        WinHasOption(options, "left") | WinHasOption(options, "screenX");
+    mChrome->t_hint                 =
+        WinHasOption(options, "top") | WinHasOption(options, "screenY");
+    */
+    /*z-ordering, history, dependent
+    mChrome->topmost         = WinHasOption(options, "alwaysRaised");
+    mChrome->bottommost              = WinHasOption(options, "alwaysLowered");
+    mChrome->z_lock          = WinHasOption(options, "z-lock");
+    mChrome->is_modal            = WinHasOption(options, "modal");
+    mChrome->hide_title_bar  = !(WinHasOption(options, "titlebar"));
+    mChrome->dependent              = WinHasOption(options, "dependent");
+    mChrome->copy_history           = FALSE;
+    */
+
+    /* Allow disabling of commands only if there is no menubar */
+    /*if (!mChrome & NS_CHROME_MENU_BAR_ON) {
+        mChrome->disable_commands = !WinHasOption(options, "hotkeys");
+        if (XP_STRCASESTR(options,"hotkeys")==NULL)
+            mChrome->disable_commands = FALSE;
+    }*/
+    /* If titlebar condition not specified, default to shown */
+    /*if (XP_STRCASESTR(options,"titlebar")==0)*/
+    mChrome |= NS_CHROME_TITLEBAR_ON;
+
+    /* XXX Add security check on z-ordering, modal, hide title, disable hotkeys */
+
+    /* XXX Add security check for sizing and positioning.  
+     * See mozilla/lib/libmocha/lm_win.c for current constraints */
+
+  } 
+  else {
+      /* Make a fully mChromed window, but don't copy history. */
+    mChrome = (PRUint32)~0;
+  }
+
+  nsIBrowserWindow *mNewWindow, *mBrowser;
+  void *mNewScriptObject = nsnull;
+  
+  /* XXX check for existing window of same name.  If exists, set url and 
+   * update chrome */
+  
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->OpenWindow(mURL, mChrome, mNewWindow);
+    NS_RELEASE(mBrowser);
+
+    /*XXX Get win obj */
+    nsIWebShell *mNewWebShell;
+    nsIScriptGlobalObject *mNewGlobalObject;
+    nsIScriptContextOwner *mNewContextOwner;
+
+    if (NS_OK != mNewWindow->GetWebShell(mNewWebShell)) {
+      NS_RELEASE(mNewWindow);
+      return NS_ERROR_FAILURE;
+    }
+    
+    if (NS_OK != mNewWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mNewContextOwner)) {
+      NS_RELEASE(mNewWebShell);
+      return NS_ERROR_FAILURE;
+    }
+
+    if (NS_OK != mNewContextOwner->GetScriptGlobalObject(&mNewGlobalObject)) {
+      NS_RELEASE(mNewContextOwner);
+      return NS_ERROR_FAILURE;
+    }
+    
+    NS_RELEASE(mNewWindow);
+    NS_RELEASE(mNewWebShell);
+    
+    nsIScriptContext *mNewContext;
+    if (NS_OK != mNewContextOwner->GetScriptContext(&mNewContext)) {
+      NS_RELEASE(mNewContextOwner);
+      return NS_ERROR_FAILURE;
+    }
+
+    nsIScriptObjectOwner *mNewObjectOwner;
+    if (NS_OK == mNewGlobalObject->QueryInterface(kIScriptObjectOwnerIID, (void**)&mNewObjectOwner)) {
+      mNewObjectOwner->GetScriptObject(mNewContext, &mNewScriptObject);
+    }
+
+    NS_RELEASE(mNewGlobalObject);
+    NS_RELEASE(mNewObjectOwner);
+    NS_RELEASE(mNewContextOwner);
+
+    /* Set opener in private data, too? */
+    /*Need the tiny id
+    if (!JS_DefinePropertyWithTinyId(cx, (JSObject*)mNewScriptObject, 
+                                     "opener", WIN_OPENER, 
+                                     OBJECT_TO_JSVAL(mScriptObject),
+                                     nsnull, nsnull, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    } 
+    */
+  }
+
+  *aReturn = OBJECT_TO_JSVAL((JSObject*)mNewScriptObject);
+
+  return NS_OK;
+}
+
+nsresult GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
+{
+  PRInt32 index;
+  PRUnichar mChar;
+
+  for (index = 0; index < aName.Length(); index++) {
+    mChar = aName.CharAt(index);
+    if (!nsString::IsAlpha(mChar) && !nsString::IsDigit(mChar) && mChar != '_') {
+      JS_ReportError(cx,
+        "illegal character '%c' ('\\%o') in window name %s",
+        mChar, mChar, aName);
+      return NS_ERROR_FAILURE;
+    }
+  }
+  return NS_OK;
+}
+
+int32 GlobalWindowImpl::WinHasOption(char *options, char *name)
+{
+  char *comma, *equal;
+  int32 found = 0;
+
+  for (;;) {
+    comma = strchr(options, ',');
+    if (comma) *comma = '\0';
+    equal = strchr(options, '=');
+    if (equal) *equal = '\0';
+    if (nsCRT::strcasecmp(options, name) == 0) {
+      if (!equal || nsCRT::strcasecmp(equal + 1, "yes") == 0)
+        found = 1;
+      else
+        found = atoi(equal + 1);
+    }
+    if (equal) *equal = '=';
+    if (comma) *comma = ',';
+    if (found || !comma)
+      break;
+    options = comma + 1;
+  }
+  return found;
+}
+
+nsresult GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
+{
+  nsresult ret;
+  
+  nsIWebShell *mRootWebShell;
+  mWebShell->GetRootWebShell(mRootWebShell);
+  if (nsnull != mRootWebShell) {
+    nsIWebShellContainer *mRootContainer;
+    mRootWebShell->GetContainer(mRootContainer);
+    if (nsnull != mRootContainer) {
+      ret = mRootContainer->QueryInterface(kIBrowserWindowIID, (void**)&aBrowser);
+      NS_RELEASE(mRootContainer);
+    }
+    NS_RELEASE(mRootWebShell);
+  }
+  return ret;
+}
+
 PRBool    GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
@@ -921,8 +1163,6 @@ NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
 
   return global->QueryInterface(kIScriptGlobalObjectIID, (void **)aResult);
 }
-
-
 
 //
 //  Navigator class implementation 
