@@ -39,7 +39,7 @@ HBITMAP         hbmpBoxUnChecked;
 
 HANDLE          hAccelTable;
 
-HWND            hDlg;
+HWND            hDlgCurrent;
 HWND            hDlgMessage;
 HWND            hWndMain;
 
@@ -66,6 +66,7 @@ DWORD           dwScreenY;
 ULONG           ulOSType;
 
 DWORD           dwTempSetupType;
+DWORD           gdwUpgradeValue;
 
 BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;
@@ -153,7 +154,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   while(GetMessage(&msg, NULL, 0, 0))
   {
-    if((!IsDialogMessage(hDlg, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
+    if((!IsDialogMessage(hDlgCurrent, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
     {
       TranslateMessage(&msg);
       DispatchMessage(&msg);

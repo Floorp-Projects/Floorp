@@ -127,8 +127,9 @@ LRESULT CALLBACK DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
     case WM_INITDIALOG:
       NS_LoadString(hInst, IDS_DLG_REMOVE_FILE_TITLE, szBuf, MAX_BUF);
       SetWindowText(hDlg, szBuf);
-      if(gszSharedFilename != NULL)
-        SetDlgItemText(hDlg, IDC_STATIC_SHARED_FILENAME, gszSharedFilename);
+
+      if((LPSTR)lParam != NULL)
+        SetDlgItemText(hDlg, IDC_STATIC_SHARED_FILENAME, (LPSTR)lParam);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -139,33 +140,19 @@ LRESULT CALLBACK DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
       switch(LOWORD(wParam))
       {
         case ID_NO:
-          gdwWhatToDo = WTD_NO;
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
+          EndDialog(hDlg, WTD_NO);
           break;
 
         case ID_NO_TO_ALL:
-          gdwWhatToDo = WTD_NO_TO_ALL;
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
+          EndDialog(hDlg, WTD_NO_TO_ALL);
           break;
 
         case ID_YES:
-          gdwWhatToDo = WTD_YES;
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
+          EndDialog(hDlg, WTD_YES);
           break;
 
         case ID_YES_TO_ALL:
-          gdwWhatToDo = WTD_YES_TO_ALL;
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
-          break;
-
-        case IDCANCEL:
-          gdwWhatToDo = WTD_CANCEL;
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
+          EndDialog(hDlg, WTD_YES_TO_ALL);
           break;
 
         default:

@@ -38,11 +38,12 @@ LRESULT CALLBACK  DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG l
 LRESULT CALLBACK  DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  NewListBoxWndProc( HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK  DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 
 void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
 void              AskCancelDlg(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
-void              InstantiateDialog(DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
+HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
 void              DlgSequenceNext(void);
 void              DlgSequencePrev(void);
 void              PaintGradientShade(HWND hWnd, HDC hdc);

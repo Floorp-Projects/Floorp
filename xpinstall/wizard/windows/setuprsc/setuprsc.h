@@ -45,11 +45,14 @@
 #define DLG_BROWSE_DIR                  503
 #define IDC_STATUS                      1001
 #define IDC_STATUS1                     1001
+#define ID_DELETE                       1001
 #define IDC_GAUGE                       1002
 #define IDC_GAUGE_FILE                  1002
+#define ID_IGNORE                       1002
 #define IDC_STATUS2                     1003
 #define IDC_STATUS0                     1004
 #define IDC_STATUS3                     1005
+#define ID_YES_TO_ALL                   1005
 #define IDC_GAUGE_ARCHIVE               1006
 #define IDC_EDIT_DESTINATION            1009
 #define IDC_BUTTON_BROWSE               1010
@@ -111,6 +114,7 @@
 #define DLG_SITE_SELECTOR               10207
 #define DLG_ADVANCED_SETTINGS           10207
 #define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
+#define DLG_UPGRADE                     10209
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
 #define IDB_BOX_CHECKED_DISABLED        10307
@@ -134,6 +138,7 @@
 #define IDS_STR_SELECTED_COMPONENTS     11021
 #define IDS_STR_DESTINATION_DIRECTORY   11022
 #define IDS_STR_PROGRAM_FOLDER          11023
+#define IDS_STR_DELETING_DESTINATION_DIR 11024
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
