@@ -46,6 +46,7 @@
         onload="Startup()" onunload="Shutdown()"
         contenttitlesetting="true"
         title="&mainWindow.title;"
+        titledefault="&mainWindow.title;"
         windowtype="navigator:browser"
         width="610" height="450"
         screenX="4" screenY="4"
