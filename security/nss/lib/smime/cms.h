@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.17 2003/03/11 03:38:53 jpierre%netscape.com Exp $
+ * $Id: cms.h,v 1.18 2003/11/26 23:50:02 wchang0222%aol.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -562,9 +562,6 @@ NSS_CMSSignedData_ContainsCertsOrCrls(NSSCMSSignedData *sigd);
 extern SECStatus
 NSS_CMSSignedData_AddSignerInfo(NSSCMSSignedData *sigd,
 				NSSCMSSignerInfo *signerinfo);
-
-extern SECItem *
-NSS_CMSSignedData_GetDigestByAlgTag(NSSCMSSignedData *sigd, SECOidTag algtag);
 
 extern SECStatus
 NSS_CMSSignedData_SetDigests(NSSCMSSignedData *sigd,

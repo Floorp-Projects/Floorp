@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.19 2003/11/26 22:02:38 nelsonb%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.20 2003/11/26 23:50:02 wchang0222%aol.com Exp $
  */
 
 #include "cmslocal.h"
@@ -599,7 +599,7 @@ NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i,
     algiddata = NSS_CMSSignerInfo_GetDigestAlg(signerinfo);
     if (!algiddata)
     	return SECFailure;  /* error code is set */
-    digest = NSS_CMSSignedData_GetDigestByAlgTag(sigd, algiddata->offset);
+    digest = NSS_CMSSignedData_GetDigestValue(sigd, algiddata->offset);
     if (!digest) {
 	PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
     	return SECFailure;
@@ -769,15 +769,6 @@ loser:
     return SECFailure;
 }
 
-SECItem *
-NSS_CMSSignedData_GetDigestByAlgTag(NSSCMSSignedData *sigd, SECOidTag algtag)
-{
-    int idx;
-
-    idx = NSS_CMSAlgArray_GetIndexByAlgTag(sigd->digestAlgorithms, algtag);
-    return sigd->digests[idx];
-}
-
 /*
  * NSS_CMSSignedData_SetDigests - set a signedData's digests member
  *
@@ -917,6 +908,7 @@ loser:
     return SECFailure;
 }
 
+/* XXX This function doesn't set the error code on failure. */
 SECItem *
 NSS_CMSSignedData_GetDigestValue(NSSCMSSignedData *sigd, SECOidTag digestalgtag)
 {
