@@ -402,7 +402,7 @@ nsRDFDocumentContentSink::OpenObject(const nsIParserNode& aNode)
             return rv;
         }
 
-        mRootElement = static_cast<nsIContent*>(rdfElement);
+        mRootElement = NS_STATIC_CAST(nsIContent*,rdfElement);
         mDocument->SetRootContent(mRootElement);
 
         // don't release the rdfElement since we're keeping

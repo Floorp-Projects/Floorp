@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 #include "gtklayout.h"
 #include "resources.h"
+#include "nscore.h"
 
 #include "stdio.h"
 
@@ -32,61 +33,61 @@ void gtk_ifactory_cb (gpointer callback_data,
 
 GtkItemFactoryEntry menu_items[] =
 {
-  { "/_File",            NULL,	gtk_ifactory_cb,	0,	"<Branch>" },
-  { "/File/_New Window", NULL,	gtk_ifactory_cb,	0	},
-  { "/File/_Open...",	 NULL,	gtk_ifactory_cb,	0 },
-  { "/File/_Samples",	 NULL,	gtk_ifactory_cb,	0,	"<Branch>" },
-  { "/File/Samples/demo #0",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #1",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #2",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #3",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #4",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #5",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #6",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #7",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #8",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #9",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/demo #10",	 NULL,	gtk_ifactory_cb,	0, },
-  { "/File/Samples/Top 100 Sites",	 NULL,	gtk_ifactory_cb,	0, },
+  { "/_File",            nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0,	"<Branch>" },
+  { "/File/_New Window", nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0	},
+  { "/File/_Open...",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/File/_Samples",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0,	"<Branch>" },
+  { "/File/Samples/demo #0",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #1",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #2",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #3",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #4",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #5",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #6",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #7",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #8",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #9",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/demo #10",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
+  { "/File/Samples/Top 100 Sites",	 nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, },
 
-  { "/_Edit", NULL,	gtk_ifactory_cb,	0,	"<Branch>"	},
-  { "/Edit/Cut",	"T",	gtk_ifactory_cb,	0 },
-  { "/Edit/Copy",	"C",	gtk_ifactory_cb,	0 },
-  { "/Edit/Paste",	"P",	gtk_ifactory_cb,	0 },
-  { "/Edit/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Edit/Select All",	"A",	gtk_ifactory_cb,	0 },
-  { "/Edit/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Edit/Find in Page",	"F",	gtk_ifactory_cb,	0 },
+  { "/_Edit", nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0,	"<Branch>"	},
+  { "/Edit/Cut",	"T",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Edit/Copy",	"C",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Edit/Paste",	"P",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Edit/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Edit/Select All",	"A",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Edit/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Edit/Find in Page",	"F",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
 
-  { "/_Debug", NULL,	gtk_ifactory_cb,	0,	"<Branch>"	},
-  { "/Debug/Visual Debugging",	"V",	gtk_ifactory_cb,	0 },
-  { "/Debug/Reflow Test",	"R",	gtk_ifactory_cb,	0 },
-  { "/Debug/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Debug/Dump Content",	"C",	gtk_ifactory_cb,	0 },
-  { "/Debug/Dump Frames",	"F",	gtk_ifactory_cb,	0 },
-  { "/Debug/Dump Views",	"V",	gtk_ifactory_cb,	0 },
-  { "/Debug/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Debug/Dump Style Sheets",	"S",	gtk_ifactory_cb,	0 },
-  { "/Debug/Dump Style Contexts",	"T",	gtk_ifactory_cb,	0 },
-  { "/Debug/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Debug/Show Content Size",	"z",	gtk_ifactory_cb,	0 },
-  { "/Debug/Show Frame Size",	"a",	gtk_ifactory_cb,	0 },
-  { "/Debug/Show Style Size",	"y",	gtk_ifactory_cb,	0 },
-  { "/Debug/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Debug/Debug Save",	"v",	gtk_ifactory_cb,	0 },
-  { "/Debug/Debug Toggle Selection",	"q",	gtk_ifactory_cb,	0 },
-  { "/Debug/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Debug/Debug Debug Robot",	"R",	gtk_ifactory_cb,	0 },
-  { "/Debug/sep1",	NULL,	gtk_ifactory_cb,	0, "<Separator>" },
-  { "/Debug/Show Content Quality",	".",	gtk_ifactory_cb,	0 },
+  { "/_Debug", nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0,	"<Branch>"	},
+  { "/Debug/Visual Debugging",	"V",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Reflow Test",	"R",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Debug/Dump Content",	"C",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Dump Frames",	"F",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Dump Views",	"V",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Debug/Dump Style Sheets",	"S",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Dump Style Contexts",	"T",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Debug/Show Content Size",	"z",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Show Frame Size",	"a",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Show Style Size",	"y",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Debug/Debug Save",	"v",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/Debug Toggle Selection",	"q",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Debug/Debug Debug Robot",	"R",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
+  { "/Debug/sep1",	nsnull,	(GtkItemFactoryCallback)gtk_ifactory_cb,	0, "<Separator>" },
+  { "/Debug/Show Content Quality",	".",	(GtkItemFactoryCallback)gtk_ifactory_cb,	0 },
 };
 
 void CreateViewerMenus(GtkWidget *aParent, gpointer aCallback) 
 {
   GtkItemFactory *item_factory;
   int nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
-  item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", NULL);
-  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, NULL);
+  item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", nsnull);
+  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, nsnull);
 /*
   gtk_box_pack_start (GTK_BOX (aParent),
 	gtk_item_factory_get_widget (item_factory,

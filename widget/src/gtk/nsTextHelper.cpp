@@ -95,7 +95,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
     if (GTK_IS_ENTRY(mWidget)) {
       gtk_entry_set_text(GTK_ENTRY(mWidget), buf);
     } else if (GTK_IS_TEXT(mWidget)) {
-      gtk_text_insert(GTK_TEXT(mWidget), NULL, NULL, NULL, buf, aActualSize);
+      gtk_text_insert(GTK_TEXT(mWidget), nsnull, nsnull, nsnull, buf, aActualSize);
     }
 
     NS_FREE_STR_BUF(buf);

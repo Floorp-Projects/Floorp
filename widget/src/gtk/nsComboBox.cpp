@@ -44,7 +44,7 @@ nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
   mMultiSelect = PR_FALSE;
   mBackground  = NS_RGB(124, 124, 124);
 
-  mItems = NULL;
+  mItems = nsnull;
   mNumItems = 0;
 }
 

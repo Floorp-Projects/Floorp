@@ -145,7 +145,7 @@ nsRDFResourceManager::GetNode(const nsString& uri, nsIRDFNode*& resource)
 
     ResourceHashKey key(atom);
 
-    resource = static_cast<nsIRDFNode*>(mResources.Get(&key));
+    resource = NS_STATIC_CAST(nsIRDFNode*,mResources.Get(&key));
     if (! resource) {
         resource = new RDFNodeImpl(this, atom);
         if (resource)

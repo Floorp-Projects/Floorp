@@ -72,7 +72,7 @@ public:
     MultiCursor(nsVoidArray& dataSources);
     virtual ~MultiCursor(void);
 
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD HasMoreElements(PRBool& result);
     NS_IMETHOD GetNext(nsIRDFNode*& next, PRBool& tv);

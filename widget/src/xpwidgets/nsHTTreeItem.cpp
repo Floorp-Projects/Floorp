@@ -88,7 +88,7 @@ void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& style
 nsIImage* nsHTTreeItem::GetTriggerImage() const
 {
 	// cast away const because we can't use mutable
-	nsHTTreeItem* self = const_cast<nsHTTreeItem*>(this);
+	nsHTTreeItem* self = NS_CONST_CAST(nsHTTreeItem*,this);
 
 	// TODO: Really read in these properties
 	nsString openTriggerURL("http://www.shadowland.org/client/images/overlay.gif");
@@ -114,7 +114,7 @@ nsIImage* nsHTTreeItem::GetTriggerImage() const
 nsIImage* nsHTTreeItem::GetIconImage() const
 {
 	// cast away const because we can't use mutable
-	nsHTTreeItem* self = const_cast<nsHTTreeItem*>(this);
+	nsHTTreeItem* self = NS_CONST_CAST(nsHTTreeItem*,this);
 
 	nsString openIconURL("http://www.shadowland.org/CLIENT/IMAGES/OpenRead.gif");
 	nsString closedIconURL("http://www.shadowland.org/CLIENT/IMAGES/ClosedRead.gif");
@@ -136,7 +136,7 @@ nsIImage* nsHTTreeItem::GetIconImage() const
 nsIImage* nsHTTreeItem::GetBackgroundImage() const
 {
 	// cast away const because we can't use mutable
-	nsHTTreeItem* self = const_cast<nsHTTreeItem*>(this);
+	nsHTTreeItem* self = NS_CONST_CAST(nsHTTreeItem*,this);
 
 	nsString bgURL("http://www.shadowland.org/images/chalk.jpg");
 	if (mBackgroundRequest == nsnull)

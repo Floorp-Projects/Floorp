@@ -178,8 +178,8 @@ static void set_icon (GdkWindow * w)
   att.y = 0;
   att.visual = gdk_rgb_get_visual ();
   att.colormap = gdk_rgb_get_cmap ();
-  ic_win = gdk_window_new (NULL, &att, GDK_WA_VISUAL | GDK_WA_COLORMAP);
-  gdk_window_set_icon (w, ic_win, NULL, NULL);
+  ic_win = gdk_window_new (nsnull, &att, GDK_WA_VISUAL | GDK_WA_COLORMAP);
+  gdk_window_set_icon (w, ic_win, nsnull, nsnull);
   pmap = gdk_pixmap_create_from_xpm_d(w, &mask, 0, mozilla_icon_xpm);
   gdk_window_set_back_pixmap (ic_win, pmap, FALSE);
   gdk_window_clear (ic_win);

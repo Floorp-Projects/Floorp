@@ -169,7 +169,7 @@ PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
   PRBool result = PR_FALSE;
-  char *text = NULL;
+  char *text = nsnull;
 
   gtk_clist_get_text(GTK_CLIST(mCList),aPosition,0,&text);
   if (text) {
@@ -333,7 +333,7 @@ NS_METHOD nsListBox::Deselect()
 NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
 {
   // to handle scrolling
-  mWidget = gtk_scrolled_window_new (NULL, NULL);
+  mWidget = gtk_scrolled_window_new (nsnull, nsnull);
   gtk_widget_set_name(mWidget, "nsListBox");
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mWidget),
                                   GTK_POLICY_AUTOMATIC,

@@ -227,7 +227,7 @@ void nsHTTreeDataModel::GetTitleBarText(nsString& text) const
 nsIImage* nsHTTreeDataModel::GetTitleBGImage() const
 {
 	// cast away const because we can't use mutable
-	nsHTTreeDataModel* self = const_cast<nsHTTreeDataModel*>(this);
+	nsHTTreeDataModel* self = NS_CONST_CAST(nsHTTreeDataModel*,this);
 
 	nsString url("http://www.shadowland.org/images/ancient_glyphs.jpg");
 	if (mTitleBGRequest == nsnull)
@@ -238,7 +238,7 @@ nsIImage* nsHTTreeDataModel::GetTitleBGImage() const
 nsIImage* nsHTTreeDataModel::GetControlStripBGImage() const
 {
 	// cast away const because we can't use mutable
-	nsHTTreeDataModel* self = const_cast<nsHTTreeDataModel*>(this);
+	nsHTTreeDataModel* self = NS_CONST_CAST(nsHTTreeDataModel*,this);
 
 	nsString url("http://www.shadowland.org/images/minute_bumps.jpg");
 	if (mControlStripBGRequest == nsnull)
@@ -249,7 +249,7 @@ nsIImage* nsHTTreeDataModel::GetControlStripBGImage() const
 nsIImage* nsHTTreeDataModel::GetColumnHeaderBGImage() const
 {
 	// cast away const because we can't use mutable
-	nsHTTreeDataModel* self = const_cast<nsHTTreeDataModel*>(this);
+	nsHTTreeDataModel* self = NS_CONST_CAST(nsHTTreeDataModel*,this);
 
 	nsString url("http://www.shadowland.org/images/tapestry.jpg");
 	if (mColumnHeaderBGRequest == nsnull)
