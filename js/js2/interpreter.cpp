@@ -234,7 +234,7 @@ static JSValue less_Default(const JSValue& r1, const JSValue& r2)
     JSValue rv = r2.toPrimitive(JSValue::Number);
     if (lv.isString() && rv.isString()) {
         // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
-        return JSValue(rv.string->compare(*lv.string));
+        return JSValue(double(lv.string->compare(*rv.string) < 0));
     }
     else {
         lv = lv.toNumber();
