@@ -68,6 +68,14 @@ public:
   virtual void MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext) = 0;
 
+  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const = 0;
+
+  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,
+                                          const nsString& aValue,
+                                          nsHTMLValue& aResult) = 0;
+
   /**
    * Translate this piece of content to html. Note that this only
    * translates this content object, not any children it might
