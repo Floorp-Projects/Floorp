@@ -98,6 +98,7 @@ LIBS := \
 	$(NULL)
 
 CFLAGS += $(TOOLKIT_CFLAGS)
+CXXFLAGS += $(TOOLKIT_CXXFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
