@@ -215,6 +215,37 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
+      // XXX: hard-coded cut
+      case nsIDOMEvent::VK_X:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+            mEditor->Cut();
+        }
+        break;
+
+      // XXX: hard-coded copy
+      case nsIDOMEvent::VK_C:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+            mEditor->Copy();
+        }
+        break;
+
+      // XXX: hard-coded paste
+      case nsIDOMEvent::VK_V:
+        if (PR_TRUE==ctrlKey)
+        {
+          printf("control-v\n");
+          aProcessed=PR_TRUE;
+          if (mEditor)
+            mEditor->Paste();
+        }
+        break;
+
       // XXX: hard-coded undo
       case nsIDOMEvent::VK_Z:
         if (PR_TRUE==ctrlKey)

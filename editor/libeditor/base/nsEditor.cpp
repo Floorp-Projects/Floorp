@@ -40,6 +40,7 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsICaret.h"
+#include "nsISelectionMgr.h"
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -779,17 +780,71 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::Cut()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  printf("nsEditor::Cut\n");
+  nsresult res = Copy();
+  if (NS_SUCCEEDED(res))
+    res = DeleteSelection(eLTR);
+  return res;
 }
 
 NS_IMETHODIMP nsEditor::Copy()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  printf("nsEditor::Copy\n");
+
+  // Get the nsSelectionMgr:
+  // XXX BWEEP BWEEP TEMPORARY!
+  // The selection mgr needs to be a service.
+  // See http://bugzilla.mozilla.org/show_bug.cgi?id=3509.
+  // In the meantime, so I'm not blocked on writing the rest of the code,
+  // nsSelectionMgr uses the egregious hack of a global variable:
+#define EXTERNAL_SELECTION_MGR 1
+#ifdef EXTERNAL_SELECTION_MGR
+  extern nsISelectionMgr* theSelectionMgr;
+  nsISelectionMgr* selectionMgr = theSelectionMgr;
+#else /* EXTERNAL_SELECTION_MGR */
+  nsISelectionMgr* selectionMgr = 0;
+#endif /* EXTERNAL_SELECTION_MGR */
+  if (!selectionMgr)
+  {
+    printf("Can't get selection mgr!\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  //NS_ADD_REF(theSelectionMgr);
+  return mPresShell->DoCopy(selectionMgr);
 }
 
 NS_IMETHODIMP nsEditor::Paste()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  printf("nsEditor::Paste\n");
+
+  // Get the nsSelectionMgr:
+  // XXX BWEEP BWEEP TEMPORARY!
+  // The selection mgr needs to be a service.
+  // See http://bugzilla.mozilla.org/show_bug.cgi?id=3509.
+  // In the meantime, so I'm not blocked on writing the rest of the code,
+  // nsSelectionMgr uses the egregious hack of a global variable:
+#ifdef EXTERNAL_SELECTION_MGR
+  extern nsISelectionMgr* theSelectionMgr;
+  nsISelectionMgr* selectionMgr = theSelectionMgr;
+#else /* EXTERNAL_SELECTION_MGR */
+  nsISelectionMgr* selectionMgr = 0;
+#endif /* EXTERNAL_SELECTION_MGR */
+  if (!selectionMgr)
+  {
+    printf("Can't get selection mgr!\n");
+    return NS_ERROR_FAILURE;
+  }
+  //NS_ADD_REF(theSelectionMgr);
+
+  nsString stuffToPaste;
+  // Now we have the selection mgr.  Get its contents as text (for now):
+  selectionMgr->PasteTextBlocking(&stuffToPaste);
+
+  printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
+
+  // Now let InsertText handle the hard stuff:
+  return InsertText(stuffToPaste);
 }
 
 nsString & nsIEditor::GetTextNodeTag()
