@@ -379,8 +379,8 @@ initializeJSCookieFilterStuff()
     /* create our "global" object.  We make the message object a child of this */
     filter_obj = JS_NewObject(filter_context, &global_class, NULL, NULL);
     
+    /* MLM - don't do JS_InitStandardClasses() twice */
     if (!filter_obj
-            || !JS_InitStandardClasses(filter_context, filter_obj)
             || !JS_DefineFunctions(filter_context, filter_obj, filter_methods))
             {
                 destroyJSCookieFilterStuff();
