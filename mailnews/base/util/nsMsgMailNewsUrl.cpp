@@ -532,7 +532,35 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result) 
 {
-  return m_baseURL->Resolve(relativePath, result);
+  // only resolve anchor urls....i.e. urls which start with '#' against the mailnews url...
+  // everything else shouldn't be resolved against mailnews urls.
+  nsresult rv = NS_OK;
+
+  if (relativePath && relativePath[0] == '#') // an anchor
+    return m_baseURL->Resolve(relativePath, result);
+  else
+  {
+    // if relativePath is a complete url with it's own scheme then allow it...
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 startPos;
+    PRUint32 endPos;
+    nsXPIDLCString scheme;
+
+    rv = ioService->ExtractScheme(relativePath, &startPos, &endPos, getter_Copies(scheme));
+    // if we have a fully qualified scheme then pass the relative path back as the result
+    if (NS_SUCCEEDED(rv) && scheme.get9())
+    {
+      *result = nsCRT::strdup(relativePath);
+    }
+    else
+    {
+      *result = nsnull;
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(char * *aDirectory)
