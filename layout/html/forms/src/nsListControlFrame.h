@@ -53,12 +53,10 @@
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsIStatefulFrame.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMKeyListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsIPresState.h"
-#include "nsCWeakReference.h"
 #include "nsIContent.h"
+#include "nsAutoPtr.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLOptionsCollection;
@@ -69,102 +67,9 @@ class nsIPresContext;
 class nsVoidArray;
 class nsIScrollableView;
 
-class nsListControlFrame;
 class nsSelectUpdateTimer;
 class nsVoidArray;
-
-#define NS_ILIST_EVENT_LISTENER_IID \
-{/* 45BC6821-6EFB-11d4-B1EE-000064657374*/ \
-0x45bc6821, 0x6efb, 0x11d4, \
-{0xb1, 0xee, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
-
-/******************************************************************************
- * nsIListEventListener
- * Standard interface for event listeners that are attached to nsListControls
- ******************************************************************************/
- 
-class nsIListEventListener : public nsISupports
-{
-public:
- 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILIST_EVENT_LISTENER_IID)
- 
-  /** SetFrame sets the frame we send event messages to, when necessary
-   *  @param aFrame -- the frame, can be null, not ref counted (guaranteed to outlive us!)
-   */
-  NS_IMETHOD SetFrame(nsListControlFrame *aFrame)=0;
-
-};
-/******************************************************************************
- * nsListEventListener
- * This class is responsible for propagating events to the nsListControlFrame
- * becuase it isn't ref-counted
- ******************************************************************************/
-
-class nsListEventListener; // forward declaration for factory
-
-/* factory for ender key listener */
-nsresult NS_NewListEventListener(nsIListEventListener ** aInstancePtrResult);
-
-class nsListEventListener : public nsIListEventListener,
-                            public nsIDOMKeyListener, 
-                            public nsIDOMMouseListener,
-                            public nsIDOMMouseMotionListener
-
-{
-public:
-
-  /** the default destructor */
-  virtual ~nsListEventListener();
-
-  /** interfaces for addref and release and queryinterface*/
-  NS_DECL_ISUPPORTS
-
-  /** nsIDOMKeyListener interfaces 
-    * @see nsIDOMKeyListener
-    */
-  NS_IMETHOD SetFrame(nsListControlFrame *aFrame);
-
-  /** nsIDOMKeyListener interfaces 
-    * @see nsIDOMKeyListener
-    */
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-  /* END interfaces from nsIDOMKeyListener*/
-
-  /** nsIDOMMouseListener interfaces 
-    * @see nsIDOMMouseListener
-    */
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
-  /* END interfaces from nsIDOMMouseListener*/
-
-  //nsIDOMEventMotionListener
-  /** nsIDOMEventMotionListener interfaces 
-    * @see nsIDOMEventMotionListener
-    */
-  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
-  /* END interfaces from nsIDOMMouseListener*/
-  
-  friend nsresult NS_NewListEventListener(nsIListEventListener ** aInstancePtrResult);
-
-protected:
-  /** the default constructor.  Protected, use the factory to create an instance.
-    * @see NS_NewEnderEventListener
-    */
-  nsListEventListener();
-
-protected:
-  nsCWeakReference<nsListControlFrame> mFrame;
-  nsCOMPtr<nsIContent>      mContent; // ref counted
-};
+class nsListEventListener;
 
 /**
  * Frame-based listbox.
@@ -174,9 +79,6 @@ class nsListControlFrame : public nsGfxScrollFrame,
                            public nsIFormControlFrame, 
                            public nsIListControlFrame,
                            public nsIStatefulFrame,
-                           public nsIDOMMouseListener,
-                           public nsIDOMMouseMotionListener,
-                           public nsIDOMKeyListener,
                            public nsISelectControlFrame
 {
 public:
@@ -295,23 +197,16 @@ public:
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
-  //nsIDOMEventListener
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
+  // mouse event listeners
+  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  nsresult MouseUp(nsIDOMEvent* aMouseEvent);
 
-  //nsIDOMEventMotionListener
-  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
+  // mouse motion listeners
+  nsresult MouseMove(nsIDOMEvent* aMouseEvent);
+  nsresult DragMove(nsIDOMEvent* aMouseEvent);
 
-  //nsIDOMKeyListener
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent)    { return NS_OK; }
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+  // key listeners
+  nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
   // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
@@ -320,10 +215,6 @@ public:
   static nsIContent* GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
 
   static void ComboboxFocusSet();
-
-  // Weak Reference
-  nsCWeakReferent *WeakReferent()
-    { return &mWeakReferent; }
 
   // Helper
   void SetPassId(PRInt16 aId)  { mPassId = aId; }
@@ -405,8 +296,7 @@ protected:
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
-  nsCOMPtr<nsIListEventListener> mEventListener;           // ref counted
-  nsCWeakReferent mWeakReferent; // so this obj can be used as a weak ptr
+  nsRefPtr<nsListEventListener> mEventListener;
 
   // XXX temprary only until full system mouse capture works
   PRPackedBool mIsScrollbarVisible;

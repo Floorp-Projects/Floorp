@@ -66,7 +66,6 @@
 #include "nsIGenericFactory.h"
 #include "nsIPipe.h"
 #include "nsStreamUtils.h"
-#include "nsCWeakReference.h"
 #include "nsWeakReference.h"
 #include "nsTextFormatter.h"
 #include "nsIStorageStream.h"
@@ -139,8 +138,6 @@ void XXXNeverCalled()
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(nsnull, nsnull);
     NS_NewGenericModule2(nsnull, nsnull);
-    nsCWeakProxy(0, 0);
-    nsCWeakReferent(0);
     NS_GetWeakReference(nsnull);
     nsCOMPtr<nsISupports> dummyFoo(do_GetInterface(nsnull));
     NS_NewByteArrayInputStream(nsnull, nsnull, 0);
