@@ -83,7 +83,7 @@
 <!ENTITY pkcs12.setpassword.message  "The certificate backup password you set here protects the backup file that you are about to create.  You must set this password to proceed with the backup.">
 <!ENTITY pkcs12.setpassword.label1 "Certificate backup password:">
 <!ENTITY pkcs12.setpassword.label2 "Certificate backup password (again):">
-<!ENTITY pkcs12.setpassword.reminder "Important: If you forget your portable security password, you will not be able to restore this backup later.  Please record it in a safe location.">
+<!ENTITY pkcs12.setpassword.reminder "Important: If you forget your certificate backup password, you will not be able to restore this backup later.  Please record it in a safe location.">
 
 <!ENTITY pkcs12.getpassword.title  "Password Entry Dialog">
 <!ENTITY pkcs12.getpassword.message "Please enter the password that was used to encrypt this certificate backup.">
