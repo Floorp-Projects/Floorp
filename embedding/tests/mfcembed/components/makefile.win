@@ -19,6 +19,18 @@
 # Contributor(s):
 
 DEPTH=..\..\..\..
+REQUIRES = \
+	xpcom \
+	string \
+	dom \
+	webBrowser_core \
+	windowwatcher \
+	exthandler \
+	helperAppDlg \
+	uriloader \
+	necko \
+	mimetype \
+	$(NULL)
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=mfcEmbedComponents

@@ -20,6 +20,25 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+REQUIRES = \
+	xpcom \
+	string \
+	necko \
+	webBrowser_core \
+	widget \
+	docshell \
+	dom \
+	uriloader \
+	embed_base \
+	webshell \
+	shistory \
+	pref \
+	profile \
+	find \
+	gfx \
+	windowwatcher \
+	layout \
+	$(NULL)
 
 DIRS=components \
      $(NULL)
