@@ -33,9 +33,17 @@ class NewsGroupDB;
 #ifdef HAVE_DBVIEW
 class MessageDBView;
 #endif
-class msg_NewsArtSet;
+
 
 #include "nsNNTPNewsgroupList.h"
+#include "nsINNTPArticleList.h"
+#include "nsNNTPArticleSet.h"
+
+#include "msgCore.h"
+
+#include "plstr.h"
+#include "prmem.h"
+#include "prprf.h"
 
 #ifdef HAVE_NEWSDB
 #include "newsdb.h"
@@ -45,11 +53,13 @@ class msg_NewsArtSet;
 #include "msgdbvw.h"
 #endif
 
-#include "newsset.h"
+
 #ifdef HAVE_PANES
 #include "msgpane.h"
 #endif
 
+/* temporary hack until MessageKey is defined */
+typedef PRUint32 MessageKey;
 
 extern "C"
 {
@@ -59,21 +69,24 @@ extern "C"
 	extern int MK_NO_NEW_DISC_MSGS;
 }
 
+extern PRInt32 net_NewsChunkSize;
 
 // This class should ultimately be part of a news group listing
 // state machine - either by inheritance or delegation.
 // Currently, a folder pane owns one and libnet news group listing
 // related messages get passed to this object.
-class nsNNTPNewsgroupList : public nsIMsgNewsArticleList
+class nsNNTPNewsgroupList : public nsINNTPArticleList
 #ifdef HAVE_CHANGELISTENER
 /* ,public ChangeListener */
 #endif
 {
 public:
   nsNNTPNewsgroupList();
-    ~nsNNTPNewsgroupList();
+  virtual  ~nsNNTPNewsgroupList();
 
   NS_DECL_ISUPPORTS
+
+  NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
   
   // nsIMsgNewsArticleList
   NS_IMETHOD GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
@@ -93,9 +106,12 @@ public:
   NS_IMETHOD ResetXOVER();
   NS_IMETHOD ProcessNonXOVER(char *line);
   NS_IMETHOD FinishXOVER(int status);
-  
+
+#ifdef HAVE_MASTER
   MSG_Master		*GetMaster() {return m_master;}
   void			SetMaster(MSG_Master *master) {m_master = master;}
+#endif
+  
 #ifdef HAVE_DBVIEW
   void			SetView(MessageDBView *view);
 #endif
@@ -110,8 +126,8 @@ public:
 #ifdef HAVE_CHANGELISTENER
   virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
 #endif
-  void			SetGetOldMessages(XP_Bool getOldMessages) {m_getOldMessages = getOldMessages;}
-  XP_Bool			GetGetOldMessages() {return m_getOldMessages;}
+  void			SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
+  PRBool			GetGetOldMessages() {return m_getOldMessages;}
   
 protected:
 #ifdef HAVE_NEWSDB
@@ -123,15 +139,17 @@ protected:
 #ifdef HAVE_PANES
   MSG_Pane		*m_pane;
 #endif
-  XP_Bool			m_startedUpdate;
-  XP_Bool			m_getOldMessages;
-  XP_Bool			m_promptedAlready;
-  XP_Bool			m_downloadAll;
+  PRBool			m_startedUpdate;
+  PRBool			m_getOldMessages;
+  PRBool			m_promptedAlready;
+  PRBool			m_downloadAll;
   PRInt32			m_maxArticles;
   char			*m_groupName;
   nsIMsgNewsHost	*m_host;
   char			*m_url;			// url we're retrieving
+#ifdef HAVE_MASTER
   MSG_Master		*m_master;
+#endif
   
   MessageKey		m_lastProcessedNumber;
   MessageKey		m_firstMsgNumber;
@@ -140,7 +158,8 @@ protected:
   PRInt32			m_lastMsgToDownload;
   
   struct MSG_NewsKnown	m_knownArts;
-  msg_NewsArtSet	*m_set;
+  nsNNTPArticleSet	*m_set;
+
 };
 
 
@@ -150,13 +169,18 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList()
       NS_INIT_REFCNT();
 }
 
+#if 0
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
 }
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, (NS_INNTPNEWSGROUPLIST_IID));
+#endif
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, NS_INNTPNEWSGROUPLIST_IID);
-                  
-nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName, MSG_Pane *pane);
+nsresult
+nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
+#ifdef HAVE_PANES
+, MSG_Pane *pane);
+#endif
 {
 #ifdef HAVE_NEWSDB
 	m_newsDB = NULL;
@@ -177,21 +201,27 @@ nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName, M
 #endif
     m_finishingXover = PR_FALSE;
 
-	m_startedUpdate = FALSE;
+	m_startedUpdate = PR_FALSE;
 	memset(&m_knownArts, 0, sizeof(m_knownArts));
 	m_knownArts.group_name = m_groupName;
+#ifdef HAVE_URLPARSER
 	char* host_and_port = NET_ParseURL(url, GET_HOST_PART);
+#ifdef HAVE_MASTER
 	m_host = m_master->FindHost(host_and_port,
 								(url[0] == 's' || url[0] == 'S'),
 								-1);
-	FREEIF(host_and_port);
+#endif
+    PR_FREEIF(host_and_port);
+#endif
 	m_knownArts.host = m_host;
-	m_getOldMessages = FALSE;
-	m_promptedAlready = FALSE;
-	m_downloadAll = FALSE;
+	m_getOldMessages = PR_FALSE;
+	m_promptedAlready = PR_FALSE;
+	m_downloadAll = PR_FALSE;
 	m_maxArticles = 0;
 	m_firstMsgToDownload = 0;
 	m_lastMsgToDownload = 0;
+
+    return NS_MSG_SUCCESS;
 }
 
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
@@ -211,14 +241,14 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 	delete m_knownArts.set;
 }
 
+#ifdef HAVE_DBVIEW
 void nsNNTPNewsgroupList::SetView(MessageDBView *view) 
 {
-#ifdef HAVE_DBVIEW
 	m_msgDBView = view;
 	if (view)
 		view->Add(this);
-#endif
 }
+#endif
 
 #ifdef HAVE_CHANGELISTENER
 void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
@@ -234,7 +264,8 @@ void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 }
 #endif
 
-int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
+nsresult
+nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 							 const char* group_name,
 							 PRInt32 first_possible,
 							 PRInt32 last_possible,
@@ -243,11 +274,11 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 							 PRInt32* last)
 {
 	int status = 0;
-	XP_Bool emptyGroup_p = FALSE;
-	MsgERR		err;
+	PRBool emptyGroup_p = PR_FALSE;
+    nsresult result;
 
 	PR_ASSERT(first && last);
-	if (!first || !last) return -1;
+	if (!first || !last) return NS_MSG_FAILURE;
 
 	*first = 0;
 	*last = 0;
@@ -276,11 +307,11 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 				newsGroupInfo->GetKnownArtsSet(knownArtsString);
 				if (last_possible < newsGroupInfo->GetHighWater())
 					newsGroupInfo->SetHighWater(last_possible, TRUE);
-				m_knownArts.set = msg_NewsArtSet::Create(knownArtsString);
+				m_knownArts.set = nsNNTPArticleSet::Create(knownArtsString);
 			}
 			else
 			{
-				m_knownArts.set = msg_NewsArtSet::Create();
+				m_knownArts.set = nsNNTPArticleSet::Create();
 				m_knownArts.set->AddRange(m_newsDB->GetLowWaterArticleNum(), m_newsDB->GetHighwaterArticleNum());
 			}
 #ifdef HAVE_PANES
@@ -316,7 +347,7 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 	{
 	/* We're displaying some other group.  Clear out that display, and set up
 	   everything to return the proper first chunk. */
-    		PR_ASSERT(FALSE);	// ### dmb todo - need nwo way of doing this
+    		PR_ASSERT(PR_FALSE);	// ### dmb todo - need nwo way of doing this
 		if (emptyGroup_p)
 		  return 0;
 	}
@@ -338,9 +369,9 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 	if (m_getOldMessages || !m_knownArts.set->IsMember(last_possible)) 
 	{
 #ifdef HAVE_PANES
-		XP_Bool notifyMaxExceededOn = (m_pane && !m_finishingXover && m_pane->GetPrefs() && m_pane->GetPrefs()->GetNewsNotifyOn());
+		PRBool notifyMaxExceededOn = (m_pane && !m_finishingXover && m_pane->GetPrefs() && m_pane->GetPrefs()->GetNewsNotifyOn());
 #else
-        XP_Bool notifyMaxExceededOn = FALSE;
+        PRBool notifyMaxExceededOn = PR_FALSE;
 #endif
 		// if the preference to notify when downloading more than x headers is not on,
 		// and we're downloading new headers, set maxextra to a very large number.
@@ -356,22 +387,28 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 			if (!m_getOldMessages && !m_promptedAlready && notifyMaxExceededOn)
 			{
 #ifdef HAVE_PANES
-				MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, FALSE);
-				XP_Bool result = FE_NewsDownloadPrompt(m_pane->GetContext(),
+				MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE);
+				PRBool result = FE_NewsDownloadPrompt(m_pane->GetContext(),
 													*last - *first + 1,
 													&m_downloadAll, newsFolder);
+#else
+                PRBool result = PR_FALSE;
 #endif
 				if (result)
 				{
 					m_maxArticles = 0;
 
+#ifdef HAVE_PREFS
 					PREF_GetIntPref("news.max_articles", &m_maxArticles);
-					NET_SetNumberOfNewsArticlesInListing(m_maxArticles);
+#endif
+                    net_NewsChunkSize = m_maxArticles;
 					maxextra = m_maxArticles;
 					if (!m_downloadAll)
 					{
-						XP_Bool markOldRead = FALSE;
+						PRBool markOldRead = PR_FALSE;
+#ifdef HAVE_PREFS
 						PREF_GetBoolPref("news.mark_old_read", &markOldRead);
+#endif
 						if (markOldRead && m_set)
 							m_set->AddRange(*first, *last - maxextra); 
 						*first = *last - maxextra + 1;
@@ -396,7 +433,8 @@ int nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 	return 0;
 }
 
-int nsNNTPNewsgroupList::AddToKnownArticles(nsIMsgNewsHost* host,
+nsresult
+nsNNTPNewsgroupList::AddToKnownArticles(nsIMsgNewsHost* host,
 					   const char* group_name,
 					   PRInt32 first, PRInt32 last)
 {
@@ -407,10 +445,10 @@ int nsNNTPNewsgroupList::AddToKnownArticles(nsIMsgNewsHost* host,
 	  !m_knownArts.set) 
 	{
 		m_knownArts.host = host;
-		FREEIF(m_knownArts.group_name);
+		PR_FREEIF(m_knownArts.group_name);
 		m_knownArts.group_name = PL_strdup(group_name);
 		delete m_knownArts.set;
-		m_knownArts.set = msg_NewsArtSet::Create();
+		m_knownArts.set = nsNNTPArticleSet::Create();
 
 		if (!m_knownArts.group_name || !m_knownArts.set) {
 		  return MK_OUT_OF_MEMORY;
@@ -440,8 +478,6 @@ int nsNNTPNewsgroupList::AddToKnownArticles(nsIMsgNewsHost* host,
 
 
 
-nsIM
-
 nsresult
 nsNNTPNewsgroupList::InitXOVER(PRUint32 first_msg, PRUint32 last_msg)
 {
@@ -450,7 +486,7 @@ nsNNTPNewsgroupList::InitXOVER(PRUint32 first_msg, PRUint32 last_msg)
 
 	// Tell the FE to show the GetNewMessages progress dialog
 #ifdef HAVE_PANES
-	FE_PaneChanged (m_pane, FALSE, MSG_PanePastPasswordCheck, 0);
+	FE_PaneChanged (m_pane, PR_FALSE, MSG_PanePastPasswordCheck, 0);
 #endif
 	/* Consistency checks, not that I know what to do if it fails (it will
 	 probably handle it OK...) */
@@ -476,13 +512,14 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 {
 	int status = 0;
 	char *next;
-	PRUint32 message_number;
+	PRUint32 message_number=0;
 	//  PRInt32 lines;
-	XP_Bool read_p = FALSE;
+	PRBool read_p = PR_FALSE;
 
 	PR_ASSERT (line);
 	if (!line)
-		return -1;
+      return NS_MSG_FAILURE;
+    
 #ifdef HAVE_DBVIEW
 	if (m_msgDBView != NULL)
 	{
@@ -571,7 +608,7 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 }
 
 nsresult
-nsNNTPNewsgroupList::XOVERReset()
+nsNNTPNewsgroupList::ResetXOVER()
 {
 	m_lastMsgNumber = m_firstMsgNumber;
 	m_lastProcessedNumber = m_lastMsgNumber;
@@ -658,7 +695,7 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 #ifdef HAVE_PANES
 		m_pane->EndingUpdate(MSG_NotifyNone, 0, 0);
 #endif
-		m_startedUpdate = FALSE;
+		m_startedUpdate = PR_FALSE;
 
 		if (m_lastMsgNumber > 0)
 		{
@@ -679,10 +716,10 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 			}
 #endif
 		}
-		MSG_FolderInfoNews *newsFolder = NULL;
+		nsIMsgNewsgroup *newsFolder = NULL;
 #ifdef HAVE_PANES
-		newsFolder = (m_pane) ? savePane->GetMaster()->FindNewsFolder(m_host, m_groupName, FALSE) : 0;
-		FE_PaneChanged(m_pane, FALSE, MSG_PaneNotifyFolderLoaded, (PRUint32)newsFolder);
+		newsFolder = (m_pane) ? savePane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE) : 0;
+		FE_PaneChanged(m_pane, PR_FALSE, MSG_PaneNotifyFolderLoaded, (PRUint32)newsFolder);
 #endif
 	}
 	return 0;

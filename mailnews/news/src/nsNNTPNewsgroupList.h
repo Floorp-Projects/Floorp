@@ -28,8 +28,7 @@
 #include "nsIMsgNewsHost.h"
 #include "nsINNTPNewsgroupList.h"
 
-/* XXX - whenever this gets renamed... */
-#include "newsset.h"
+#include "nsNNTPArticleSet.h"
 
 /* The below is all stuff that we remember for netlib about which
    articles we've already seen in the current newsgroup. */
@@ -37,7 +36,7 @@
 typedef struct MSG_NewsKnown {
 	nsIMsgNewsHost* host;
 	char* group_name;
-	msg_NewsArtSet* set; /* Set of articles we've already gotten
+	nsNNTPArticleSet* set; /* Set of articles we've already gotten
 								  from the newsserver (if it's marked
 								  "read", then we've already gotten it).
 								  If an article is marked "read", it
