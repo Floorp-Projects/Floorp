@@ -72,6 +72,7 @@ function Startup()
 
   // See if we have a single selected image
   imageElement = editorShell.GetSelectedElement("img");
+
   if (imageElement)
   {
     // Get the parent link if it exists -- more efficient than GetSelectedElement()
@@ -153,8 +154,7 @@ function Startup()
   {
     if (!imageElement)
     {
-      // Don't think we can ever get here!
-
+      // We get here if selection is exactly around a link node
       // Check if selection has some text - use that first
       selectedText = GetSelectionAsText();
       if (selectedText.length == 0) 
@@ -165,7 +165,8 @@ function Startup()
         {
           for(i=0; i < children.length; i++) 
           {
-            if (children.item(i) == "IMG")
+            var nodeName = children.item(i).nodeName.toLowerCase();
+            if (nodeName == "img")
             {
               imageElement = children.item(i);
               break;
@@ -235,6 +236,8 @@ function chooseFile()
   fileName = GetLocalFileURL("html");
   if (fileName) {
     dialog.hrefInput.value = fileName;
+    // Call this to do OK button enabling
+    ChangeText();
   }
   // Put focus into the input field
   SetTextfieldFocus(dialog.hrefInput);
