@@ -217,25 +217,27 @@ static void readEvalPrint(FILE *in, World &world)
  */
 class Tracer : public Context::Listener {
     typedef InstructionStream::difference_type InstructionOffset;
-    void listen(Context* context, InterpretStage /*stage*/)
+    void listen(Context* context, Context::Event event)
     {
-        ICodeModule *iCode = context->getICode();
-        JSValues &registers = context->getRegisters();
-        InstructionIterator pc = context->getPC();
-        
-        
-        InstructionOffset offset = (pc - iCode->its_iCode->begin());
-        printFormat(stdOut, "trace [%02u:%04u]: ",
-                    iCode->mID, offset);
+        if (event & Context::EV_STEP) {
+            ICodeModule *iCode = context->getICode();
+            JSValues &registers = context->getRegisters();
+            InstructionIterator pc = context->getPC();
+            
+            
+            InstructionOffset offset = (pc - iCode->its_iCode->begin());
+            printFormat(stdOut, "trace [%02u:%04u]: ",
+                        iCode->mID, offset);
 
-        Instruction* i = *pc;
-        stdOut << *i;
-        if (i->op() != BRANCH && i->count() > 0) {
-            stdOut << " [";
-            i->printOperands(stdOut, registers);
-            stdOut << "]\n";
-        } else {
-            stdOut << '\n';
+            Instruction* i = *pc;
+            stdOut << *i;
+            if (i->op() != BRANCH && i->count() > 0) {
+                stdOut << " [";
+                i->printOperands(stdOut, registers);
+                stdOut << "]\n";
+            } else {
+                stdOut << '\n';
+            }
         }
     }
 };
