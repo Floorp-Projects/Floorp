@@ -331,6 +331,7 @@ function onInputKeyUp (e)
             break;
 
         case 9: /* tab */
+            e.preventDefault();
             onTabCompleteRequest(e);
             break;       
             
@@ -496,6 +497,10 @@ function onWindowKeyPress (e)
                 w.scrollTo (w.pageXOffset, newOfs);
             else
                 w.scrollTo (w.pageXOffset, (w.innerHeight + w.pageYOffset));
+            break;
+
+        case 9: /* tab */
+            e.preventDefault();
             break;
             
         default:
