@@ -409,7 +409,7 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 };
 
-[scriptable, uuid(9dec6a34-beb2-4796-9e39-ba8b45b95777)]
+[scriptable, uuid(9156b694-3c27-4e73-9990-f8d8a1634129)]
 interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
 {
            /* Non-DOM 2 extensions */
