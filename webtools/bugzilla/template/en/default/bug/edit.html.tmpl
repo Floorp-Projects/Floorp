@@ -116,7 +116,7 @@
       </td>
       <td rowspan="4" valign="top"> 
       [% IF bug.cc %]
-        <select name="cc" multiple size="5">
+        <select name="cc" multiple="multiple" size="5">
         [% FOREACH c = bug.cc %]
           <option value="[% c FILTER html %]">[% c FILTER html %]</option>
         [% END %]
@@ -288,9 +288,9 @@
       </th>
       <td>
         [% bug.votes %]&nbsp;&nbsp;&nbsp;
-        <a href="votes.cgi?action=show_bug&bug_id=[% bug.bug_id %]">Show 
+        <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">Show 
         votes for this bug</a>&nbsp;&nbsp;&nbsp;
-        <a href="votes.cgi?action=show_user&bug_id=[% bug.bug_id %]">Vote 
+        <a href="votes.cgi?action=show_user&amp;bug_id=[% bug.bug_id %]">Vote 
         for this bug</a>
       </td>
     </tr>
@@ -317,8 +317,8 @@
     [% FOREACH group = groups %]
       &nbsp;&nbsp;&nbsp;&nbsp;
       <input type="checkbox" name="bit-[% group.bit %]" value="1" 
-        [% " checked='checked'" IF group.ison %]
-        [% " disabled='disabled'" IF NOT group.ingroup %]>
+        [% " checked=\"checked\"" IF group.ison %]
+        [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
       [% group.description %]
       <br>
     [% END %]
@@ -357,7 +357,7 @@
 [%# *** Knob *** %]
 
   <br>
-  <input type="radio" name="knob" value="none" checked>
+  <input type="radio" name="knob" value="none" checked="checked">
   Leave as <b>[% bug.bug_status FILTER html %]&nbsp;
               [% bug.resolution FILTER html %]</b>
   <br>
@@ -410,7 +410,7 @@
       [% knum = knum + 1 %]
 
       <input type="radio" name="knob" value="reassign"> 
-      <a href="bug_status.html#assigned_to">Reassign</A> bug to
+      <a href="bug_status.html#assigned_to">Reassign</a> bug to
       <input name="assigned_to" size="32" 
              onchange="if ((this.value != '[% bug.assigned_to_email FILTER js %]') && 
                             (this.value != '')) {

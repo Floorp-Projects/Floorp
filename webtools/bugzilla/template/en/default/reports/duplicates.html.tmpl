@@ -59,8 +59,8 @@
 <h3><a name="params">Change Parameters</a></h3>
 
 <form method="get" action="duplicates.cgi">
-  <input type="hidden" name="sortby" value="[% sortby %]" />
-  <input type="hidden" name="reverse" value="[% reverse %]" />
+  <input type="hidden" name="sortby" value="[% sortby %]">
+  <input type="hidden" name="reverse" value="[% reverse %]">
   <input type="hidden" name="bug_id" value="[% bug_ids_string %]">
   <table>
     <tr>
@@ -68,20 +68,20 @@
           work with:</td>
       <td>
         <input type="radio" name="sortvisible" id="entirelist" value="0" 
-          [% "checked" IF NOT sortvisible %] />         
+          [% "checked" IF NOT sortvisible %]>         
         <label for="entirelist">
           entire list
         </label>
-        <br />        
+        <br>        
         <input type="radio" name="sortvisible" id="visiblelist" value="1" 
-          [% "checked" IF sortvisible %] /> 
+          [% "checked" IF sortvisible %]> 
         <label for="visiblelist">
           currently visible list
         </label>
       </td>
       <td rowspan="4" valign="top">Restrict to products:</td>
       <td rowspan="4" valign="top">
-        <select name="product" size="5" multiple>
+        <select name="product" size="5" multiple="multiple">
           [% FOREACH p = products %]
             <option name="[% p %]"
             [% " selected" IF product == p %]>[% p %]</option>
@@ -93,14 +93,14 @@
     <tr>
       <td>Max rows:</td>
       <td>
-        <input size="4" name="maxrows" value="[% maxrows %]" />
+        <input size="4" name="maxrows" value="[% maxrows %]">
       </td>
     </tr>
 
     <tr>
       <td>Change column is change in the last:</td>
       <td>
-        <input size="4" name="changedsince" value="[% changedsince %]" /> days
+        <input size="4" name="changedsince" value="[% changedsince %]"> days
       </td>
     </tr>
 
@@ -112,13 +112,13 @@
       </td>
       <td>
         <input type="checkbox" name="openonly" id="openonly" value="1" 
-          [% "checked" IF openonly %] />      
+          [% "checked" IF openonly %]>      
       </td>
     </tr>
 
   </table>
 
-  <input type="submit" value="Change" /> 
+  <input type="submit" value="Change"> 
 </form>
 
 <form method="post" action="buglist.cgi">
@@ -128,7 +128,7 @@
   (Note: the order may not be the same.)
 </form>
 
-<hr />
+<hr>
 
 <b>
   <a name="explanation">What are "Most Frequently Reported Bugs"?</a>

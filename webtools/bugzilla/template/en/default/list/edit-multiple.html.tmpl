@@ -28,11 +28,11 @@
           item.checked = value;
       }
   }
-  document.write(' <input type="button" value="Uncheck All" onclick="SetCheckboxes(false);">');
-  document.write(' <input type="button" value="Check All" onclick="SetCheckboxes(true);">');
+  document.write(' <input type="button" name="uncheck_all" value="Uncheck All" onclick="SetCheckboxes(false);">');
+  document.write(' <input type="button" name="check_all" value="Check All" onclick="SetCheckboxes(true);">');
 </script>
 
-<hr />
+<hr>
 
 <p><font size="-1">
   To change multiple bugs:
@@ -162,24 +162,24 @@
 
 <input type="hidden" name="multiupdate" value="Y">
 
-<label for="comment"><b>Additional Comments:</b></label><br />
-<textarea id="comment" name="comment" rows="5" cols="80" wrap="hard"></textarea><br />
+<label for="comment"><b>Additional Comments:</b></label><br>
+<textarea id="comment" name="comment" rows="5" cols="80" wrap="hard"></textarea><br>
 
 [% IF groups.size > 0 %]
 
-  <b>Groupset:</b><br />
+  <b>Groupset:</b><br>
   <table border="1">
     <tr>
-      <th>Don't<br />change<br />this group<br />restriction</td>
-      <th>Remove<br />bugs<br />from this<br />group</td>
-      <th>Add<br />bugs<br />to this<br />group</td>
+      <th>Don&apos;t<br>change<br>this group<br>restriction</td>
+      <th>Remove<br>bugs<br>from this<br>group</td>
+      <th>Add<br>bugs<br>to this<br>group</td>
       <th>Group Name:</td>
     </tr>
 
     [% FOREACH group = groups %]
     <tr>
       <td align="center">
-        <input type="radio" name="bit-[% group.bit %]" value="-1" checked>
+        <input type="radio" name="bit-[% group.bit %]" value="-1" checked="checked">
       </td>
       <td align="center">
         <input type="radio" name="bit-[% group.bit %]" value="0">
@@ -208,7 +208,7 @@
 
   [% IF foundinactive %]
     <font size="-1">(Note: Bugs may not be added to <strike>inactive 
-    groups</strike>, only removed.)</font><br />
+    groups</strike>, only removed.)</font><br>
   [% END %]
 
 [% END %]
@@ -216,33 +216,33 @@
 
 
 [% knum = 0 %]
-<input id="knob-none" type="radio" name="knob" value="none" CHECKED>
-<label for="knob-none">Do nothing else</label><br />
+<input id="knob-none" type="radio" name="knob" value="none" checked="checked">
+<label for="knob-none">Do nothing else</label><br>
 
 [% IF bugstatuses.size == 1 && bugstatuses.0 == unconfirmedstate %]
   [% knum = knum + 1 %]
   <input id="knob-confirm" type="radio" name="knob" value="confirm">
   <label for="knob-confirm">
     Confirm bugs (change status to <b>NEW</b>)
-  </label><br />
+  </label><br>
 [% END %]
 
 [% knum = knum + 1 %]
 <input id="knob-accept" type="radio" name="knob" value="accept">
 <label for="knob-accept">
   Accept bugs (change status to <b>ASSIGNED</b>)
-</label><br />
+</label><br>
 
 [%# If all the bugs being changed are open, allow the user to close them. %]
 [% IF !bugstatuses.containsany(closedstates) %]
   [% knum = knum + 1 %]
   <input id="knob-clearresolution" type="radio" name="knob" value="clearresolution">
-  <label for="knob-clearresolution">Clear the resolution</label><br />
+  <label for="knob-clearresolution">Clear the resolution</label><br>
 
   [% knum = knum + 1 %]
   <input id="knob-resolve" type="radio" name="knob" value="resolve">
   <label for="knob-resolve">
-    Resolve bugs, changing <A HREF="bug_status.html">resolution</A> to
+    Resolve bugs, changing <a href="bug_status.html">resolution</a> to
   </label>
   <select name="resolution" onchange="document.forms.changeform.knob[[% knum %]].checked=true">
     [% FOREACH resolution = resolutions %]
@@ -251,7 +251,7 @@
         [% resolution FILTER html %]
       </option>
     [% END %]
-  </select><br />
+  </select><br>
 
 [% END %]
 
@@ -259,30 +259,30 @@
 [% IF !bugstatuses.containsany(openstates) %]
   [% knum = knum + 1 %]
   <input id="knob-reopen" type="radio" name="knob" value="reopen">
-  <label for="knob-reopen">Reopen bugs</label><br />
+  <label for="knob-reopen">Reopen bugs</label><br>
 [% END %]
 
 [% IF bugstatuses.size == 1 %]
   [% IF bugstatuses.contains('RESOLVED') %]
     [% knum = knum + 1 %]
     <input id="knob-verify" type="radio" name="knob" value="verify">
-    <label for="knob-verify">Mark bugs as <b>VERIFIED</b></label><br />
+    <label for="knob-verify">Mark bugs as <b>VERIFIED</b></label><br>
   [% ELSIF bugstatuses.contains('VERIFIED') %]
     [% knum = knum + 1 %]
     <input id="knob-close" type="radio" name="knob" value="close">
-    <label for="knob-close">Mark bugs as <b>CLOSED</b></label><br />
+    <label for="knob-close">Mark bugs as <b>CLOSED</b></label><br>
   [% END %]
 [% END %]
 
 [% knum = knum + 1 %]
 <input id="knob-reassign" type="radio" name="knob" value="reassign">
 <label for="knob-reassign"><a href="bug_status.html#assigned_to">
-  Reassign</A> bugs to
+  Reassign</a> bugs to
 </label>
 <input name="assigned_to" 
        value="[% user.login FILTER html %]"
        onchange="document.forms.changeform.knob[[% knum %]].checked = true;"
-       size="32"><br />
+       size="32"><br>
 
 [% knum = knum + 1 %]
 <input id="knob-reassignbycomponent" 
@@ -291,7 +291,7 @@
        value="reassignbycomponent">
 <label for="knob-reassignbycomponent">
   Reassign bugs to owner of selected component
-</label><br />
+</label><br>
 
 <input type="submit" value="Commit">
 
@@ -306,7 +306,7 @@
 
 [% BLOCK selectmenu %]
   <select id="[% menuname %]" name="[% menuname %]">
-    <option value="[% dontchange FILTER html %]" selected>
+    <option value="[% dontchange FILTER html %]" selected="selected">
       [% dontchange FILTER html %]
     </option>
     [% FOREACH menuitem = menuitems %]

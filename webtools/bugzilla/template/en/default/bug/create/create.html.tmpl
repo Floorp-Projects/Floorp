@@ -26,7 +26,7 @@
 %]
 
 <form method="post" action="post_bug.cgi">
-<input type="hidden" name="product" value="[% product FILTER html %]" />
+<input type="hidden" name="product" value="[% product FILTER html %]">
 
 <table cellspacing="2" cellpadding="0" border="0">
 
@@ -105,7 +105,7 @@
     [% sel = { description => 'Priority', name => 'priority' } %]
     [% INCLUDE select %]
   [% ELSE %]
-    <input type="hidden" name="priority" value="[% default.priority %]" />
+    <input type="hidden" name="priority" value="[% default.priority %]">
   [% END %]
 
   [% sel = { description => 'Severity', name => 'bug_severity' } %]
@@ -125,7 +125,7 @@
     <td colspan="2"></td>
   </tr>
 [% ELSE %]
-  <input type="hidden" name="bug_status" value="[% default.bug_status %]" />  
+  <input type="hidden" name="bug_status" value="[% default.bug_status %]">  
 [% END %]
 
   <tr>
@@ -136,7 +136,7 @@
     </td>
     <td colspan="3">
       <input name="assigned_to" size="32" 
-             value="[% assigned_to FILTER html %]" />
+             value="[% assigned_to FILTER html %]">
       (Leave blank to assign to default component owner)
     </td>
   </tr>
@@ -144,7 +144,7 @@
   <tr>
     <td align="right"><strong>Cc:</strong></td>
     <td colspan="3">
-      <input name="cc" size="45" value="[% cc FILTER html %]" />
+      <input name="cc" size="45" value="[% cc FILTER html %]">
     </td>
   </tr>
   
@@ -157,14 +157,14 @@
     <td align="right"<strong>URL:</strong></td>
     <td colspan="3">
       <input name="bug_file_loc" size="60" 
-             value="[% bug_file_loc FILTER html %]" />
+             value="[% bug_file_loc FILTER html %]">
     </td>
   </tr>
   
   <tr>
     <td align="right"><strong>Summary:</strong></td>
     <td colspan="3">
-      <input name="short_desc" size="60" value="[% short_desc FILTER html %]" />
+      <input name="short_desc" size="60" value="[% short_desc FILTER html %]">
     </td>
   </tr>
   
@@ -195,7 +195,7 @@
       [% FOREACH g = group %]
         &nbsp;&nbsp;&nbsp;&nbsp;
         <input type="checkbox" name="bit-[% g.bit %]" value="1"
-          [% " checked=\"checked\"" IF g.checked %] />[% g.description %]<br />
+          [% " checked=\"checked\"" IF g.checked %]>[% g.description %]<br>
       [% END %]
       <br>
     [% END %]
@@ -211,7 +211,7 @@
                return false; } return true;">
       &nbsp;&nbsp;&nbsp;&nbsp;
       <input type="submit" name="maketemplate" 
-             value="Remember values as bookmarkable template" />
+             value="Remember values as bookmarkable template">
     </td>
   </tr>
 

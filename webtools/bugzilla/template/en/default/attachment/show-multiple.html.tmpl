@@ -73,15 +73,15 @@
       </td>
 
       <td valign="top">
-        <a href="attachment.cgi?id=[% a.attachid %]&action=edit">Edit</a> 
+        <a href="attachment.cgi?id=[% a.attachid %]&amp;action=edit">Edit</a> 
       </td>
     </tr>
   </table>
 
   [% IF a.isviewable %]
-    <iframe src="attachment.cgi?id=[% a.attachid %]&action=view" width="75%" height="350">
+    <iframe src="attachment.cgi?id=[% a.attachid %]&amp;action=view" width="75%" height="350">
       <b>You cannot view the attachment on this page because your browser does not support IFRAMEs.
-      <a href="attachment.cgi?id=[% a.attachid %]&action=view">View the attachment on a separate page</a>.</b>
+      <a href="attachment.cgi?id=[% a.attachid %]&amp;action=view">View the attachment on a separate page</a>.</b>
     </iframe>
   [% ELSE %]
     <p><b>

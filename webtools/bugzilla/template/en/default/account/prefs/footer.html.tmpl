@@ -39,7 +39,7 @@
     </td>
   </tr>    
     
-  <input type="hidden" name="numqueries" value="[% queries.size %]" />
+  <input type="hidden" name="numqueries" value="[% queries.size %]">
   [% IF queries.size %]
     [% FOREACH query = queries %]
       <tr>
@@ -56,7 +56,7 @@
       </tr>
 
       <input type="hidden" name="name-[% loop.index %]" 
-             value="[% query.name FILTER html %]" />
+             value="[% query.name FILTER html %]">
     [% END %]
 
   [% ELSE %]

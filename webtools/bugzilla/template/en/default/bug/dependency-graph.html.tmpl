@@ -38,7 +38,7 @@
  
 [% IF NOT multiple_bugs AND NOT doall %]
   [% title = "$title for bug $bug_id"
-     h1 = "$h1 for bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>" 
+     h1 = "$h1 for bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>" 
    %]
 [% END %]
 
@@ -54,7 +54,7 @@
   <img src="[% image_url %]" usemap="#imagemap"> 
 [% ELSE %]
   <a href="[% map_url %]">
-    <img src="[% image_url %]" ismap> 
+    <img src="[% image_url %]" ismap="ismap"> 
   </a>
 [% END %]
 

@@ -38,7 +38,7 @@
   <tr>
     <td>
       <h2>
-        <a title="[% description FILTER html %]" href="attachment.cgi?id=[% attachid %]&action=edit">Attachment #[% attachid %]</a> 
+        <a title="[% description FILTER html %]" href="attachment.cgi?id=[% attachid %]&amp;action=edit">Attachment #[% attachid %]</a> 
         to <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a> Created
       </h2>
 
@@ -49,7 +49,7 @@
           <b>Note:</b> Bugzilla automatically detected the content type
           <em>[% contenttype %]</em> for this attachment.  If this is 
           incorrect, correct the value by 
-          <a href="attachment.cgi?id=[% attachid %]&action=edit">editing the attachment</a>.
+          <a href="attachment.cgi?id=[% attachid %]&amp;action=edit">editing the attachment</a>.
         </p>
       [% END %]
     </td>
@@ -60,7 +60,7 @@
 </table>
 
 <p>
-<a href="attachment.cgi?bugid=[% bugid %]&action=enter">Create Another Attachment to Bug #[% bugid %]</a>
+<a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Create Another Attachment to Bug #[% bugid %]</a>
 </p>
 
 [% PROCESS global/footer.html.tmpl %]

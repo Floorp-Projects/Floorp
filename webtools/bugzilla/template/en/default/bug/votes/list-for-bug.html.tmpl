@@ -29,7 +29,7 @@
   
 [% PROCESS global/header.html.tmpl
            title = "Show Votes"
-           h2 = "Bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>"
+           h2 = "Bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
  %]
  
 <table cellspacing="4">
@@ -41,7 +41,7 @@
   [% FOREACH user = users %]      
     <tr>
       <td>
-        <a href="votes.cgi?action=show_user&user=[% user.name %]">
+        <a href="votes.cgi?action=show_user&amp;user=[% user.name %]">
           [% user.name %]
         </a>
       </td>

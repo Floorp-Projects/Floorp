@@ -44,7 +44,7 @@
 [%# *** Column Headers *** %]
 
 <table border>
-  <tr BGCOLOR="#CCCCCC">
+  <tr bgcolor="#CCCCCC">
     [% FOREACH column = [ { name => "id", description => "Bug #" },
                           { name => "count", description => "Dupe<br>Count" },
                           { name => "delta", 
@@ -111,7 +111,7 @@
     <td>
       <center>
         [% "<strike>" IF bug.resolution != "" %]
-        <A HREF="show_bug.cgi?id=[% bug.id %]">[% bug.id %]</a>
+        <a href="show_bug.cgi?id=[% bug.id %]">[% bug.id %]</a>
         [% "</strike>" IF bug.resolution != "" %]
       </center>
     </td>

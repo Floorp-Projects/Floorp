@@ -83,7 +83,7 @@
         [% IF attachments.size %]
           [% FOREACH attachment = attachments %]
             <input type="checkbox" name="obsolete" value="[% attachment.id %]">
-            <a href="attachment.cgi?id=[% attachment.id %]&action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
+            <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
           [% END %]
         [% ELSE %]
             [no attachments can be made obsolete]

@@ -368,7 +368,7 @@ function selectProduct(f) {
           [%# Can't use the select block here because of onChange and the fact that
               'component' is a toolkit reserved word - we use 'component_' instead. %]
           <td align="left">
-            <select name="product" multiple size="5" onChange="selectProduct(this.form);">
+            <select name="product" multiple="multiple" size="5" onchange="selectProduct(this.form);">
             [% FOREACH p = product %]
               <option value="[% p FILTER html %]"
                 [% " selected" IF lsearch(default.product, p) != -1 %]>
@@ -378,7 +378,7 @@ function selectProduct(f) {
           </td>
 
           <td align="left">
-            <select name="component" multiple size="5">
+            <select name="component" multiple="multiple" size="5">
             [% FOREACH c = component_ %]
               <option value="[% c FILTER html %]"
                 [% " selected" IF lsearch(default.component, c) != -1 %]>
@@ -618,13 +618,13 @@ function selectProduct(f) {
 
 <dl>
   <dt>Only bugs changed in the last </dt>
-  <dd><input name=changedin size=3 value="[% default.changedin.0 FILTER html %]"> days</dd>
+  <dd><input name="changedin" size="3" value="[% default.changedin.0 FILTER html %]"> days</dd>
 </dl>
 
 <dl>
   <dt>Only bugs where any of the fields</dt>
   <dd>
-    <select name="chfield" multiple size="4">
+    <select name="chfield" multiple="multiple" size="4">
     [% FOREACH field = chfield %]
       <option value="[% field FILTER html %]"
         [% " selected" IF lsearch(default.chfield, field) != -1 %]>
@@ -659,7 +659,7 @@ function selectProduct(f) {
 
 [% BLOCK select %]
   <td align="left">
-    <select name="[% sel.name %]" multiple size="[% sel.size %]">
+    <select name="[% sel.name %]" multiple="multiple" size="[% sel.size %]">
     [% FOREACH name = ${sel.name} %]
       <option value="[% name FILTER html %]"
         [% " selected" IF lsearch(default.${sel.name}, name) != -1 %]>
