@@ -48,7 +48,6 @@
   if ( reuseWindow && [NSApp mainWindow] ) {
     controller = [[NSApp mainWindow] windowController];
     [controller loadURLString:[self directParameter]];
-    [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
   }
   else
     controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
