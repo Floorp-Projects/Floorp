@@ -121,6 +121,7 @@ void WriteToOutputFile(const char *pLine)
 void QAOutput(const char *pLine, int displayMethod)
 {
 	// note: default displayMethod = 1 in .h file
+	// displayMethod 0 = mfc dialog; 1 = output log file; 2 = both
 //#if 0
    CString strLine = pLine;
 
@@ -270,8 +271,8 @@ void onStateChangeString(char *theStateType, char *theDocType,
 	totalMsg += theDocType;
 	totalMsg += ", ";
 	totalMsg += stringMsg;
-	totalMsg += ", status = ";
-	totalMsg.AppendInt(status);
+	totalMsg += ", status (hex) = ";
+	totalMsg.AppendInt(status, 16);
 	QAOutput(totalMsg.get(), displayMode);
 }
 

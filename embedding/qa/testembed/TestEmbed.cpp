@@ -240,10 +240,6 @@ void CTestEmbedApp::ShowDebugConsole()
 //
 BOOL CTestEmbedApp::InitInstance()
 {
-
-	// CQaUtils *myUtils = new CQaUtils();
-	// myUtils->QAOutput("****************************************************\r\n");
-	
 	QAOutput("****************************************************\r\n");
 
     ParseCmdLine();
@@ -265,13 +261,11 @@ BOOL CTestEmbedApp::InitInstance()
     rv = NS_InitEmbedding(nsnull, provider);
     if(NS_FAILED(rv))
     {
-		//myUtils->QAOutput("TestEmbed didn't start up.");
 		QAOutput("TestEmbed didn't start up.");
         ASSERT(FALSE);
         return FALSE;
     }
 	else
-		//myUtils->QAOutput("TestEmbed started up.");
 		QAOutput("TestEmbed started up.");
 
     rv = OverrideComponents();
@@ -293,8 +287,6 @@ BOOL CTestEmbedApp::InitInstance()
 	{
         ASSERT(FALSE);
         rv = NS_TermEmbedding();
-
-		//myUtils->RvTestResult(rv, "TestEmbed shutdown");
 		RvTestResult(rv, "TestEmbed shutdown");
 		return FALSE;
 	}
@@ -311,7 +303,6 @@ BOOL CTestEmbedApp::InitInstance()
 	{
         ASSERT(FALSE);
         rv = NS_TermEmbedding();
-		//myUtils->RvTestResult(rv, "TestEmbed shutdown");
 		RvTestResult(rv, "TestEmbed shutdown");
 		return FALSE;
 	}
@@ -460,8 +451,6 @@ void CTestEmbedApp::OnEditPreferences()
         // Save these changes to disk now
         nsresult rv;
 
-		//NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-
 		nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID,&rv));
 
         if (NS_SUCCEEDED(rv)) 
@@ -483,8 +472,6 @@ BOOL CTestEmbedApp::InitializeProfiles()
         return FALSE;
 
 	nsresult rv;
-
-    //NS_WITH_SERVICE(nsIObserverService, observerService, "@mozilla.org/observer-service;1", &rv);
 
     nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
 	if (NS_SUCCEEDED(rv)) 
@@ -520,7 +507,6 @@ BOOL CTestEmbedApp::CreateHiddenWindow()
 nsresult CTestEmbedApp::InitializePrefs()
 {
    nsresult rv;
-   //NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 
    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID,&rv));
 
