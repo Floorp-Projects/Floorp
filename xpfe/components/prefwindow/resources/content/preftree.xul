@@ -132,11 +132,6 @@
       <treechildren id="advancedChildren">
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cache.xul" label="&cache.label;"/> 
           </treerow>
         </treeitem>

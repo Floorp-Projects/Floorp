@@ -30,7 +30,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress"];
+    var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP", "advancedMailFTPAddress"];
     
     function Startup() {
       ftpCheck();
@@ -134,6 +134,8 @@
     <vbox align="start" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                 prefstring="security.enable_java"/>
+      <checkbox id="javascriptEnabled" label="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
+                prefstring="javascript.enabled"/>
     </vbox>
     <vbox>
       <separator/>
