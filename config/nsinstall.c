@@ -419,7 +419,7 @@ main(int argc, char **argv)
     /* The stat() function in OS/2 Visual Age C++ doesn't like a path with
        a trailing backslash.  */
     if (todir[strlen(todir)-1] == '/')
-      todir[strlen(todir)-1] = '/0';
+      todir[strlen(todir)-1] = '\0';
 #endif
     if ((stat(todir, &sb) < 0 || !S_ISDIR(sb.st_mode)) &&
 	mkdirs(todir, 0777) < 0) {
