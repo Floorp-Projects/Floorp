@@ -64,6 +64,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsGUIEvent.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsIWeakReference.h"
 
 // nsXULWindow
 
@@ -165,17 +166,18 @@ protected:
 };
 
 // nsContentShellInfo
+// Used (in an nsVoidArray) to map shell IDs to nsIDocShellTreeItems.
 
 class nsContentShellInfo
 {
 public:
    nsContentShellInfo(const nsAString& aID,
-                      nsIDocShellTreeItem* aContentShell);
+                      nsIWeakReference* aContentShell);
    ~nsContentShellInfo();
 
 public:
-   nsAutoString                  id;   // The identifier of the content shell
-   nsCOMPtr<nsIDocShellTreeItem> child; // content shell
+   nsAutoString id; // The identifier of the content shell
+   nsWeakPtr child; // content shell (weak reference to nsIDocShellTreeItem)
 };
 
 // nsEventQueueStack

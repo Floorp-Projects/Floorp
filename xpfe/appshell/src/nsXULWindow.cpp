@@ -342,8 +342,9 @@ NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID,
   for (PRInt32 i = 0; i < count; i++) {
     nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
     if (shellInfo->id.Equals(aID)) {
-      *aDocShellTreeItem = shellInfo->child;
-      NS_IF_ADDREF(*aDocShellTreeItem);
+      *aDocShellTreeItem = nsnull;
+      if (shellInfo->child)
+        CallQueryReferent(shellInfo->child.get(), aDocShellTreeItem);
       return NS_OK;
     }
   }
@@ -1599,19 +1600,20 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 
   PRInt32 count = mContentShells.Count();
   PRInt32 i;
+  nsWeakPtr contentShellWeak = do_GetWeakReference(aContentShell);
   for (i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
     if (info->id.Equals(aID)) {
       // We already exist. Do a replace.
-      info->child = aContentShell;
+      info->child = contentShellWeak;
       shellInfo = info;
     }
-    else if (info->child == aContentShell)
+    else if (info->child == contentShellWeak)
       info->child = nsnull;
   }
 
   if (!shellInfo) {
-    shellInfo = new nsContentShellInfo(newID, aContentShell);
+    shellInfo = new nsContentShellInfo(newID, contentShellWeak);
     mContentShells.AppendElement((void*)shellInfo);
   }
     
@@ -2070,7 +2072,7 @@ NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowser
 //*****************************************************************************   
 
 nsContentShellInfo::nsContentShellInfo(const nsAString& aID,
-                                       nsIDocShellTreeItem* aContentShell)
+                                       nsIWeakReference* aContentShell)
   : id(aID),
     child(aContentShell)
 {
