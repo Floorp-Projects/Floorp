@@ -289,7 +289,9 @@ the PtRealizeWidget functions */
       EnableDamage( mWidget, PR_FALSE );
       err=PtRealizeWidget(mWidget);
       if (err == -1)
+	  {
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p>\n", this));
+      }
 
       EnableDamage( mWidget, PR_TRUE );
 
@@ -305,8 +307,9 @@ the PtRealizeWidget functions */
       QueueWidgetDamage();
     }
     else
+    {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show mUpdateArea is empty this=<%p>\n", this));
-   
+    }
   }
   else
   {
@@ -414,8 +417,10 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
     EnableDamage( mWidget, PR_TRUE );
   }
   else
+  {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move - mWidget is NULL!\n" ));
-
+  }
+  
   return NS_OK;
 }
 
@@ -451,7 +456,9 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       Invalidate( aRepaint );
     }
     else
+	{
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize - mWidget is NULL!\n" ));
+	}
   }
 
   return NS_OK;
@@ -557,8 +564,10 @@ NS_METHOD nsWidget::Enable(PRBool bState)
     PtSetResources( mWidget, 1, &arg );
   }
   else
+  {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Enable - mWidget is NULL!\n" ));
-
+  }
+  
   return NS_OK;
 }
 
@@ -571,10 +580,15 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 NS_METHOD nsWidget::SetFocus(void)
 {
   if (mWidget)
-    PtContainerGiveFocus( mWidget, NULL );
+  {
+    if (!PtIsFocused(mWidget))
+      PtContainerGiveFocus( mWidget, NULL );
+  }
   else
+  {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetFocus - mWidget is NULL!\n" ));
-
+  }
+  
   return NS_OK;
 }
 
@@ -609,6 +623,7 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetFont aFont.name=<%s>\n",str));
    delete [] str;  
   }
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetFont aFont.size=<%d>\n",aFont.size));
 
 }
@@ -712,8 +727,10 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
     PtSetResources( mWidget, 1, &arg );
   }
   else
+  {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetCursor - mWidget is NULL!\n" ));
-
+  }
+  
   mCursor = aCursor;
 
   }
@@ -759,8 +776,9 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
         }
       }
       else
+	  {
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Not Relealized skipping Damage Queue\n"));
-
+	  }
     }
 
   return NS_OK;
@@ -987,14 +1005,19 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
   case NS_NATIVE_WIDGET:
   case NS_NATIVE_PLUGIN_PORT:
     if( !mWidget )
+    {    
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetNativeData(mWidget) - mWidget is NULL!\n" ));
+    }
     return (void *)mWidget;
+
   case NS_NATIVE_DISPLAY:
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetNativeData(NS_NATIVE_DISPLAY) - Not Implemented.\n" ));
     return nsnull;
+	
   case NS_NATIVE_GRAPHIC:
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetNativeData(NS_NATIVE_GRAPHIC) - Not Implemented.\n" ));
     return nsnull;
+
   default:
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetNativeData() - ERROR Bad ID.\n" ));
     break;
@@ -1075,13 +1098,20 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
+
   if (aParent)
+  {
      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget (%p) nsIWidget parent\n", this));
+  }
   else if (aNativeParent)
+  {
      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget (%p) native parent\n",this));
+  }
   else if(aAppShell)
+  {
      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::CreateWidget (%p) nsAppShell parent\n",this));
-			
+  }
+  			
   PtWidget_t *parentWidget = nsnull;
 
 #if 1
@@ -2229,8 +2259,8 @@ int nsWidget::WorkProc( void *data )
           extent.lr.x = extent.ul.x + temp_rect.width - 1;
           extent.lr.y = extent.ul.y + temp_rect.height - 1;
 		
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n", dqe->widget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next);
-          PtDamageExtent( dqe->widget, &extent));
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n", dqe->widget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
+          PtDamageExtent( dqe->widget, &extent);
         }
   
         dqe->inst->mUpdateArea->FreeRects(regionRectSet);
