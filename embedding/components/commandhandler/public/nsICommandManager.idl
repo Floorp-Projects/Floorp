@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *      Simon Fraser <sfraser@netscape.com>
+ *      Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,6 +41,8 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 #include "nsICommandParams.idl"
+
+interface nsIDOMWindow;
 
 /*
  * nsICommandManager is an interface used to executing user-level commands,
@@ -78,16 +81,20 @@ interface nsICommandManager : nsISupports
 
   /*
    * Ask the command manager if the specified command is supported.
+   * If aTargetWindow is null, the focused window is used.
    *
    */
-  boolean     isCommandSupported(in string aCommandName);
+  boolean     isCommandSupported(in string aCommandName,
+                                 in nsIDOMWindow aTargetWindow);
 
   /*
    * Ask the command manager if the specified command is currently.
    * enabled.
+   * If aTargetWindow is null, the focused window is used.
    */
-  boolean     isCommandEnabled(in string aCommandName);
-  
+  boolean     isCommandEnabled(in string aCommandName,
+                               in nsIDOMWindow aTargetWindow);
+
   /*
    * Get the state of the specified commands.
    *
@@ -97,20 +104,28 @@ interface nsICommandManager : nsISupports
    * and, in return will be set to indicate whether the command is enabled
    * (equivalent to calling isCommandEnabled).
    *
-   * aCommandName is te name of the command that needs the state
+   * aCommandName is the name of the command that needs the state
+   * aTargetWindow is the source of command controller 
+   *      (null means use focus controller)
    * On output: aCommandParams: values set by the caller filled in with
    * state from the command.
    */
-  void        getCommandState(in string aCommandName, in nsICommandParams aCommandParams);
+  void        getCommandState(in string aCommandName,
+                              in nsIDOMWindow aTargetWindow,
+                  /* inout */ in nsICommandParams aCommandParams);
     
   /*
    * Execute the specified command.
+   * The command will be executed in aTargetWindow if it is specified.
+   * If aTargetWindow is null, it will go to the focused window.
    *
    * param: aCommandParams, a list of name-value pairs of command parameters,
    * may be null for parameter-less commands.
    *
    */
-  void        doCommand(in string aCommandName, in nsICommandParams aCommandParams);
+  void        doCommand(in string aCommandName,
+                        in nsICommandParams aCommandParams,
+                        in nsIDOMWindow aTargetWindow);
 
 };
 
