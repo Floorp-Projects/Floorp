@@ -23,17 +23,10 @@
 
 #cleanUpButton {
   margin: 0px;
-  -moz-user-focus: ignore;
   list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanup.png");
 }
 
-#optionsButton {
-  margin: 0px;
-  -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadOptions.png");
-}
-
-#cleanUpButton .button-icon, #optionsButton .button-icon {
+#cleanUpButton .button-icon {
   margin: 0px 5px 0px 0px !important;
 }
 
