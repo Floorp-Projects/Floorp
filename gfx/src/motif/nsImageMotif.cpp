@@ -232,35 +232,6 @@ void nsImageMotif::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBl
 {
 }
 
-//------------------------------------------------------------
-
-// lets build an alpha mask from this image
-PRBool nsImageMotif::SetAlphaMask(nsIImage *aTheMask)
-{
-PRInt32   num;
-PRUint8   *srcbits;
-
-  if (aTheMask && 
-       (((nsImageMotif*)aTheMask)->mNumBytesPixel == 1)) {
-    mLocation.x = 0;
-    mLocation.y = 0;
-    mAlphaDepth = 8;
-    mAlphaWidth = aTheMask->GetWidth();
-    mAlphaHeight = aTheMask->GetWidth();
-    num = mAlphaWidth*mAlphaHeight;
-    mARowBytes = aTheMask->GetLineStride();
-    mAlphaBits = new unsigned char[mARowBytes * mAlphaHeight];
-
-    srcbits = aTheMask->GetBits();
-    memcpy(mAlphaBits,srcbits,num);
-
-    return(PR_TRUE);
-  }
-
-  return(PR_FALSE);
-}
-
-
 void nsImageMotif::AllocConvertedBits(PRUint32 aSize)
 {
   if (nsnull == mConvertedBits)

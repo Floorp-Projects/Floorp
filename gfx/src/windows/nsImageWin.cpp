@@ -64,14 +64,14 @@ nsImageWin :: ~nsImageWin()
 NS_IMPL_ISUPPORTS(nsImageWin, kIImageIID);
 
 /** ----------------------------------------------------------------
-  * Initialize the nsImageWin object
-  * @update dc - 11/20/98
-  * @param aWidth - Width of the image
-  * @param aHeight - Height of the image
-  * @param aDepth - Depth of the image
-  * @param aMaskRequirements - A mask used to specify if alpha is needed.
-  * @result NS_OK if the image was initied ok
-  */
+ * Initialize the nsImageWin object
+ * @update dc - 11/20/98
+ * @param aWidth - Width of the image
+ * @param aHeight - Height of the image
+ * @param aDepth - Depth of the image
+ * @param aMaskRequirements - A mask used to specify if alpha is needed.
+ * @result NS_OK if the image was initied ok
+ */
 nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
 	mHBitmap = nsnull;
@@ -282,6 +282,7 @@ void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
 {
 HDC TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
 
+
   if ((TheHDC != NULL) && (mSizeImage > 0)){
     mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
                                 256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
@@ -451,6 +452,7 @@ HDC   TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
           oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
           ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
                        mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+
         }else if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight)){
           oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
           ::MaskBlt(TheHDC, aX, aY, aWidth, aHeight,
@@ -477,35 +479,6 @@ HDC   TheHDC = ((nsDrawingSurfaceWin *)aSurface)->mDC;
   }
 
   return NS_OK;
-}
-
-
-/** ----------------------------------------------------------------
- * Set an alpha mask to this image
- * @update dc - 11/20/98
- * @param aTheMask - The nsIImage used for the mask
- * @return TRUE if successful
- */
-PRBool nsImageWin::SetAlphaMask(nsIImage *aTheMask)
-{
-PRInt32   num;
-PRUint8   *srcBits;
-
-  if (aTheMask && (((nsImageWin*)aTheMask)->mNumBytesPixel == 1)){
-    mLocation.x = 0;
-    mLocation.y = 0;
-    mAlphaDepth = 8;
-    mAlphaWidth = aTheMask->GetWidth();
-    mAlphaHeight = aTheMask->GetHeight();
-    num = mAlphaWidth*mAlphaHeight;
-    mARowBytes = aTheMask->GetLineStride();
-    mAlphaBits = new unsigned char[mARowBytes * mAlphaHeight];
-    srcBits = aTheMask->GetBits();
-    memcpy(mAlphaBits,srcBits,num); 
-    return(PR_TRUE);
-  }
-
-  return(PR_FALSE);
 }
 
 /** ----------------------------------------------------------------

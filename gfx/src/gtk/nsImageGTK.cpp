@@ -406,34 +406,6 @@ void nsImageGTK::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlen
 
 //------------------------------------------------------------
 
-// lets build an alpha mask from this image
-PRBool nsImageGTK::SetAlphaMask(nsIImage *aTheMask)
-{
-  PRInt32   num;
-  PRUint8   *srcbits;
-
-  if (aTheMask &&
-       (((nsImageGTK*)aTheMask)->mNumBytesPixel == 1)) {
-    mLocation.x = 0;
-    mLocation.y = 0;
-    mAlphaDepth = 8;
-    mAlphaWidth = aTheMask->GetWidth();
-    mAlphaHeight = aTheMask->GetWidth();
-    num = mAlphaWidth*mAlphaHeight;
-    mAlphaRowBytes = aTheMask->GetLineStride();
-    mAlphaBits = new unsigned char[mAlphaRowBytes * mAlphaHeight];
-
-    srcbits = aTheMask->GetBits();
-    memcpy(mAlphaBits,srcbits,num);
-
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-//------------------------------------------------------------
-
 nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
 {
   return NS_OK;

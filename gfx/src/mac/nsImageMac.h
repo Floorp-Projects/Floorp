@@ -50,8 +50,6 @@ public:
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
   virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
-  virtual PRInt32     GetAlphaXLoc() {return 0;}
-  virtual PRInt32     GetAlphaYLoc() {return 0;}
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
   virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   virtual nsIImage*   DuplicateImage() {return(nsnull);}
@@ -76,7 +74,6 @@ public:
    * @return the number of bytes in this span
    */
   PRInt32  					CalcBytesSpan(PRUint32  aWidth,PRUint32	aDepth);
-  PRBool  					SetAlphaMask(nsIImage *aTheMask);
   virtual void  		SetAlphaLevel(PRInt32 aAlphaLevel) {}
   virtual PRInt32 	GetAlphaLevel() {return(0);}
   virtual void  		MoveAlphaMask(PRInt32 aX, PRInt32 aY) {}

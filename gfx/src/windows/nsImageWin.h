@@ -48,8 +48,6 @@ public:
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
   virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
-  virtual PRInt32     GetAlphaXLoc() {return mLocation.x;}
-  virtual PRInt32     GetAlphaYLoc() {return mLocation.y;}
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
 
   /** 
@@ -59,10 +57,10 @@ public:
   PRIntn      GetSizeHeader(){return sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPaletteColors;}
 
   /** 
-    * Return the image size of the Device Independent Bitmap(DIB).
-    * @update dc - 10/29/98
-    * @return size of image in bytes
-    */
+   * Return the image size of the Device Independent Bitmap(DIB).
+   * @update dc - 10/29/98
+   * @return size of image in bytes
+   */
   PRIntn      GetSizeImage(){ return mSizeImage; }
 
   /** 
@@ -72,27 +70,20 @@ public:
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
 
-  /** 
-   * Set an alpha mask to this image
-   * @param aTheMask - The nsIImage used for the mask
-   * @return TRUE if successful
-   */
-  PRBool  SetAlphaMask(nsIImage *aTheMask);
-
   virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
 
   /** 
-    * Get the alpha level assigned.
-    * @update dc - 10/29/98
-    * @return The alpha level from 0 to 1
-    */
+   * Get the alpha level assigned.
+   * @update dc - 10/29/98
+   * @return The alpha level from 0 to 1
+   */
   virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
 
   /** 
-    * Get the DIB specific informations for this bitmap.
-    * @update dc - 10/29/98
-    * @return VOID
-    */
+   * Get the DIB specific informations for this bitmap.
+   * @update dc - 10/29/98
+   * @return VOID
+   */
   void* GetBitInfo() {return mBHead;}
 
   static PRBool gIsWinNT;
@@ -136,7 +127,7 @@ private:
   PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
-  nsPoint             mLocation;          // alpha mask location
+  //nsPoint             mLocation;          // alpha mask location
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   HBITMAP             mHBitmap;           // the GDI bitmaps
