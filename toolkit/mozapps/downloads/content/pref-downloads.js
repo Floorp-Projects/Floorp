@@ -178,6 +178,12 @@ function uninit()
   gHelperApps.destroy();
 }
 
+// WARNING WARNING WARNING
+// This is a Options OK Callback
+// When this function is called the Downloads panel's document object 
+// MAY NOT BE AVAILABLE. As a result referring to any item in it in this
+// function will probably cause the Options window not to close when OK
+// is pressed. 
 function updateSaveToFolder()
 {
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
@@ -200,8 +206,10 @@ function updateSaveToFolder()
   // user chooses to have all files auto-download to a specific folder.
   if (data.askOnSave.value == "true") {
     var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-    var bundle = document.getElementById("strings");
-    var description = bundle.getString("myDownloads");
+    
+    var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+    bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
+    var description = bundle.GetStringFromName("myDownloads");
     var targetFolder = null;
 
     switch (parseInt(data.downloadFolderList.value)) {

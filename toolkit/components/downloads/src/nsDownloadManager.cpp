@@ -1112,7 +1112,7 @@ nsDownloadManager::OpenDownloadManager(PRBool aShouldFocus, nsIDownload* aDownlo
     rv = ww->OpenWindow(aParent,
                         DOWNLOAD_MANAGER_FE_URL,
                         "_blank",
-                        "chrome,all,dialog=no,resizable",
+                        "chrome,dialog=no,resizable",
                         params,
                         getter_AddRefs(newWindow));
   }
