@@ -60,6 +60,7 @@
 #include "nsIIOService.h"
 #include "nsAppShellCIDs.h"
 #include "nsMsgRDFUtils.h"
+#include "nsMsgFolderFlags.h"
 
 #include "nsICopyMsgStreamListener.h"
 #include "nsICopyMessageListener.h"
@@ -76,6 +77,9 @@
 #include "nsMsgCompCID.h"
 #include "nsIMsgSendLaterListener.h"
 #include "nsIMsgDraft.h"
+
+#include "nsIMsgCopyService.h"
+#include "nsIMsgCopyServiceListener.h"
 
 #include "nsMsgStatusFeedback.h"
 
@@ -99,10 +103,29 @@ static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
 #define DEBUG_MESSENGER
 #endif
+
+class nsSaveAsListener : public nsIUrlListener, 
+                         public nsIMsgCopyServiceListener
+{
+public:
+    nsSaveAsListener(nsIFileSpec* fileSpec);
+    virtual ~nsSaveAsListener();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIURLLISTENER
+
+    NS_DECL_NSIMSGCOPYSERVICELISTENER
+
+protected:
+    nsCOMPtr<nsIFileSpec> m_fileSpec;
+};
+
 
 class nsMessenger : public nsIMessenger
 {
@@ -406,6 +429,7 @@ nsMessenger::OpenURL(const char * url)
 	return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsMessenger::SaveAs(const char* url, PRBool asFile)
 {
@@ -417,21 +441,46 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
       rv = GetMessageServiceFromURI(url, &messageService);
       if (NS_SUCCEEDED(rv) && messageService)
       {
+        nsCOMPtr<nsIFileSpec> aSpec;
         if (asFile)
         {
           nsCOMPtr<nsIFileSpecWithUI>
             fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
           if (!fileSpec) return NS_ERROR_FAILURE;
           rv = fileSpec->ChooseOutputFile("Save Message", "",
-                                  nsIFileSpecWithUI::eAllMailOutputFilters);
-          if (NS_SUCCEEDED(rv))
+                                nsIFileSpecWithUI::eAllMailOutputFilters);
+          aSpec = do_QueryInterface(fileSpec, &rv);
+        }
+        else
+        {
+          nsFileSpec tmpFileSpec("msgTemp.eml");
+          rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(aSpec));
+        }
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr<nsIUrlListener> urlListener;
+          if (!asFile && aSpec)
           {
-            nsCOMPtr<nsIFileSpec> aSpec = do_QueryInterface(fileSpec, &rv);
-            if (NS_SUCCEEDED(rv))
-              messageService->SaveMessageToDisk(url, aSpec, PR_FALSE,
-                                                nsnull, nsnull);
+            nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
+            if (aListener)
+            {
+              rv = aListener->QueryInterface(
+                nsCOMTypeInfo<nsIUrlListener>::GetIID(),
+                getter_AddRefs(urlListener));
+              if (NS_FAILED(rv))
+              {
+                delete aListener;
+                return rv;
+              }
+              NS_ADDREF(aListener); // nsUrlListenerManager uses nsVoidArray
+                                    // to keep trach of all listeners we have
+                                    // to manually add refs ourself
+            }
           }
-        }                                
+          if (NS_SUCCEEDED(rv))
+            messageService->SaveMessageToDisk(url, aSpec, PR_FALSE,
+                                              urlListener, nsnull);
+        }
       }
     }
 	return rv;
@@ -1237,4 +1286,133 @@ NS_IMETHODIMP nsMessenger::DoPrintPreview()
   printf("nsMessenger::DoPrintPreview() not implemented yet\n");
 #endif
   return rv;  
+}
+
+nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec)
+{
+    NS_INIT_REFCNT();
+    if (aSpec)
+      m_fileSpec = do_QueryInterface(aSpec);
+}
+
+nsSaveAsListener::~nsSaveAsListener()
+{
+}
+
+// 
+// nsISupports
+//
+NS_IMPL_ISUPPORTS2(nsSaveAsListener, nsIUrlListener, nsIMsgCopyServiceListener)
+
+// 
+// nsIUrlListener
+// 
+NS_IMETHODIMP
+nsSaveAsListener::OnStartRunningUrl(nsIURI* url)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
+{
+  nsresult rv = exitCode;
+  if (m_fileSpec)
+  {
+    m_fileSpec->Flush();
+    m_fileSpec->CloseStream();
+    if (NS_FAILED(rv)) goto done;
+
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID,
+                    &rv);
+    if (NS_FAILED(rv)) goto done;
+    
+    nsCOMPtr<nsIMsgIdentity> identity;
+    rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsIMsgAccountManager> accountManager;
+    rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
+    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsISupportsArray> servers;
+    rv = accountManager->GetServersForIdentity(identity,
+                                               getter_AddRefs(servers));
+    if (NS_FAILED(rv)) goto done;
+    PRUint32 cnt = 0;
+    rv = servers->Count(&cnt);
+    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsISupports> serverSupport =
+      getter_AddRefs(servers->ElementAt(0));
+    if (serverSupport)
+    {
+      nsCOMPtr<nsIMsgIncomingServer> aServer =
+        do_QueryInterface(serverSupport, &rv);
+      if (NS_FAILED(rv)) goto done;
+      nsCOMPtr<nsIFolder> aFolder;
+      rv = aServer->GetRootFolder(getter_AddRefs(aFolder));
+      if (NS_FAILED(rv)) goto done;
+      nsCOMPtr<nsIMsgFolder> rootFolder = do_QueryInterface(aFolder, &rv);
+      if (NS_FAILED(rv)) goto done;
+      nsCOMPtr<nsIMsgFolder> templateFolder;
+      PRUint32 numFolders = 0;
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES,
+                                          getter_AddRefs(templateFolder),
+                                          1, &numFolders);
+      if (NS_FAILED(rv)) goto done;
+      NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,
+                      &rv);
+      if (NS_FAILED(rv)) goto done;
+      rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull,
+                                        PR_TRUE, this, nsnull);
+    }
+  }
+
+done:
+  if (NS_FAILED(rv))
+  {
+    if (m_fileSpec)
+    {
+      nsFileSpec realSpec;
+      m_fileSpec->GetFileSpec(&realSpec);
+      realSpec.Delete(PR_FALSE);
+      Release(); // no more work to be done; kill ourself
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSaveAsListener::OnStartCopy(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSaveAsListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSaveAsListener::SetMessageKey(PRUint32 aKey)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSaveAsListener::GetMessageId(nsCString* aMessageId)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSaveAsListener::OnStopCopy(nsresult aStatus)
+{
+  if (m_fileSpec)
+  {
+    nsFileSpec realSpec;
+    m_fileSpec->GetFileSpec(&realSpec);
+    realSpec.Delete(PR_FALSE);
+  }
+  Release(); // all done kill ourself
+  return aStatus;
 }
