@@ -792,6 +792,8 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
            PRUint32 maxSize)
 {
     nsresult rv;
+    NS_ASSERTION(segmentSize > 0, "need to supply segmentSize for buffer");
+    NS_ASSERTION(maxSize > 0, "need to supply maxSize for buffer");
     const nsCID* cid = &kAllocatorCID;
 #ifdef PAGE_MANAGER
     // Take the page manager out altogether because some unices don't
