@@ -954,6 +954,16 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
      * If you change these, change them in gtk/nsWidget, too. */
     return NS_ERROR_FAILURE;
 
+  // if we're not the toplevel window pass up the cursor request to
+  // the toplevel window to handle it.
+  if (!mMozArea) {
+    // find the toplevel mozarea for this widget
+    GtkWidget *top_mozarea = GetMozArea();
+    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
+    return mozAreaWindow->SetCursor(aCursor);
+  }
+
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     GdkCursor *newCursor = 0;
