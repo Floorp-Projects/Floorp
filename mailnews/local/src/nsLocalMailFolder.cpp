@@ -34,7 +34,9 @@
 #include "msgCore.h"    // precompiled header...
 
 #include "nsLocalMailFolder.h"	 
+#include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgFolderFlags.h"
+#include "nsMsgMessageFlags.h"
 #include "prprf.h"
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
@@ -681,6 +683,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
           
           // first create the folders on disk (as empty files)
           rv = localMailServer->CreateDefaultMailboxes(spec);
+          NS_ENSURE_SUCCESS(rv, rv);
           if (NS_FAILED(rv)) return rv;
           createdDefaultMailboxes = PR_TRUE;
       }
@@ -2053,15 +2056,36 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
 
     // *** jt - hard code status line for now; come back later
 
+    nsresult rv;
+    nsCOMPtr <nsIMessage> curSourceMessage; 
+    nsCOMPtr<nsISupports> aSupport =
+        getter_AddRefs(mCopyState->m_messages->ElementAt(mCopyState->m_curCopyIndex));
+    curSourceMessage = do_QueryInterface(aSupport, &rv);
+
+  	char statusStrBuf[50];
+    if (curSourceMessage)
+    {
+			PRUint32 dbFlags = 0;
+      curSourceMessage->GetFlags(&dbFlags);
+
+			PR_snprintf(statusStrBuf, sizeof(statusStrBuf), X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, dbFlags & ~MSG_FLAG_RUNTIME_ONLY & 0x0000FFFF);
+      // need to carry the new flag over to the new header.
+      if (dbFlags & MSG_FLAG_NEW)
+      {
+      }
+    }
+    else
+    {
+      strcpy(statusStrBuf, "X-Mozilla-Status: 0001" MSG_LINEBREAK);
+    }
     *(mCopyState->m_fileStream) << result.GetBuffer();
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
           result.GetBuffer(), result.Length());
-    result = "X-Mozilla-Status: 0001" MSG_LINEBREAK;
-    *(mCopyState->m_fileStream) << result.GetBuffer();
+    *(mCopyState->m_fileStream) << statusStrBuf;
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
-          result.GetBuffer(), result.Length());
+        statusStrBuf, nsCRT::strlen(statusStrBuf));
     result = "X-Mozilla-Status2: 00000000" MSG_LINEBREAK;
     *(mCopyState->m_fileStream) << result.GetBuffer();
     if (mCopyState->m_parseMsgState)
@@ -2073,6 +2097,9 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
   {
     mCopyState->m_fromLineSeen = PR_FALSE;
   }
+
+  mCopyState->m_curCopyIndex++;
+
 	return NS_OK;
 }
 
@@ -2292,8 +2319,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       mCopyState->m_listener->SetMessageKey((PRUint32) mCopyState->m_curDstKey);
     }
 
-  mCopyState->m_curCopyIndex++;
-
   if (mCopyState->m_curCopyIndex < mCopyState->m_totalMsgCount)
   { // CopyMessages() goes here; CopyFileMessage() never gets in here because
     // curCopyIndex will always be less than the mCopyState->m_totalMsgCount
@@ -2308,19 +2333,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   { // both CopyMessages() & CopyFileMessage() go here if they have
     // done copying operation; notify completion to copy service
     nsresult result;
-	if(!mCopyState->m_isMove)
-	{
-		NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
-						kMsgCopyServiceCID, &result); 
+	  if(!mCopyState->m_isMove)
+	  {
+		  NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
+						  kMsgCopyServiceCID, &result); 
 
-		if (NS_SUCCEEDED(result))
-		  copyService->NotifyCompletion(mCopyState->m_srcSupport, this, rv);
+		  if (NS_SUCCEEDED(result))
+		    copyService->NotifyCompletion(mCopyState->m_srcSupport, this, rv);
 
-		if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
-		  mTxnMgr->Do(mCopyState->m_undoMsgTxn);
+		  if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
+		    mTxnMgr->Do(mCopyState->m_undoMsgTxn);
     
-		ClearCopyState();
-	}
+
+      nsCOMPtr<nsIMsgFolder> srcFolder;
+      srcFolder = do_QueryInterface(mCopyState->m_srcSupport, &rv);
+      if (srcFolder)
+        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+		  ClearCopyState();
+	  }
   }
 
 	return rv;
@@ -2486,8 +2516,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
       streamListener(do_QueryInterface(copyStreamListener));
 		if(!streamListener)
 			return NS_ERROR_NO_INTERFACE;
-		// since we're doing all the copies at once, advance curCopyIndex.
-		mCopyState->m_curCopyIndex = mCopyState->m_totalMsgCount;
+		mCopyState->m_curCopyIndex = 0; 
 		mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
                                             nsnull, &url);
 	}
