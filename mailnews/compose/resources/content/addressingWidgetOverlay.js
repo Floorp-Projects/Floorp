@@ -1172,9 +1172,11 @@ AutomatedAutoCompleteHandler.prototype =
     // loop through the results looking for the non default case (default case is the address book with only one match, the default domain)
     var sessionIndex; 
 
+    var searchResultsForSession;
+
     for (sessionIndex in this.searchResults)
     {
-      var searchResultsForSession = this.searchResults[sessionIndex];
+      searchResultsForSession = this.searchResults[sessionIndex];
       if (searchResultsForSession && searchResultsForSession.defaultItemIndex > -1)
       {
         addressToAdd = searchResultsForSession.items.QueryElementAt(searchResultsForSession.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
@@ -1187,7 +1189,7 @@ AutomatedAutoCompleteHandler.prototype =
     {
       for (sessionIndex in this.searchResults)
       {
-        var searchResultsForSession = this.searchResults[sessionIndex];
+        searchResultsForSession = this.searchResults[sessionIndex];
         if (searchResultsForSession && searchResultsForSession.defaultItemIndex == -1)
         {
           addressToAdd = searchResultsForSession.items.QueryElementAt(0, Components.interfaces.nsIAutoCompleteItem).value;
