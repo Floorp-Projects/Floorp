@@ -85,6 +85,7 @@ NS_METHOD RootFrame::Reflow(nsIPresContext*      aPresContext,
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
+
   aStatus = NS_FRAME_COMPLETE;
 
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -133,9 +134,9 @@ NS_METHOD RootFrame::Reflow(nsIPresContext*      aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  #ifdef NS_DEBUG
-    PostReflowCheck(aStatus);
-  #endif
+#ifdef NS_DEBUG
+  PostReflowCheck(aStatus);
+#endif
   NS_FRAME_TRACE_REFLOW_OUT("RootFrame::Reflow", aStatus);
   return NS_OK;
 }
@@ -233,25 +234,32 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
     mLastContentOffset = mFirstContentOffset;
 
   } else {
-    // Create a frame for our one and only content child
-    if (mContent->ChildCount() > 0) {
-      nsIContent* child = mContent->ChildAt(0);
-
+    // Create a frame for the body child
+    PRInt32 i, n;
+    n = mContent->ChildCount();
+    for (i = 0; i < n; i++) {
+      nsIContent* child = mContent->ChildAt(i);
       if (nsnull != child) {
-        // Create a frame
-        nsIContentDelegate* cd = child->GetDelegate(aPresContext);
-        if (nsnull != cd) {
-          nsIStyleContext* kidStyleContext =
-            aPresContext->ResolveStyleContextFor(child, this);
-          nsresult rv = cd->CreateFrame(aPresContext, child, this,
-                                        kidStyleContext, mFirstChild);
-          NS_RELEASE(kidStyleContext);
-          if (NS_OK == rv) {
-            mChildCount = 1;
-            mLastContentOffset = mFirstContentOffset;
+        nsIAtom* tag;
+        tag = child->GetTag();
+        if (nsHTMLAtoms::body == tag) {
+          // Create a frame
+          nsIContentDelegate* cd = child->GetDelegate(aPresContext);
+          if (nsnull != cd) {
+            nsIStyleContext* kidStyleContext =
+              aPresContext->ResolveStyleContextFor(child, this);
+            nsresult rv = cd->CreateFrame(aPresContext, child, this,
+                                          kidStyleContext, mFirstChild);
+            NS_RELEASE(kidStyleContext);
+            if (NS_OK == rv) {
+              mChildCount = 1;
+              mFirstContentOffset = i;
+              mLastContentOffset = i;
+            }
+            NS_RELEASE(cd);
           }
-          NS_RELEASE(cd);
         }
+        NS_IF_RELEASE(tag);
         NS_RELEASE(child);
       }
     }
@@ -267,10 +275,10 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
                                    nsReflowStatus&      aStatus)
 {
   NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::Reflow");
-
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
+
   aStatus = NS_FRAME_COMPLETE;
 
   // XXX Incremental reflow code doesn't handle page mode at all...
@@ -359,12 +367,11 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
             NS_RELEASE(kidSC);
   
             // Add it to our child list
-  #ifdef NS_DEBUG
+#ifdef NS_DEBUG
             nsIFrame* kidNextSibling;
-  
             kidFrame->GetNextSibling(kidNextSibling);
             NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
-  #endif
+#endif
             kidFrame->SetNextSibling(continuingPage);
             mChildCount++;
           }
@@ -412,11 +419,10 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
       }
     }
   }
-
+  PropagateContentOffsets();
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
 #endif
-
   NS_FRAME_TRACE_REFLOW_OUT("RootContentFrame::Reflow", aStatus);
   return NS_OK;
 }
@@ -442,9 +448,6 @@ class RootPart : public nsHTMLContainer {
 public:
   RootPart(nsIDocument* aDoc);
 
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-
   virtual nsresult CreateFrame(nsIPresContext* aPresContext,
                                nsIFrame* aParentFrame,
                                nsIStyleContext* aStyleContext,
@@ -463,20 +466,6 @@ RootPart::RootPart(nsIDocument* aDoc)
 
 RootPart::~RootPart()
 {
-}
-
-nsrefcnt RootPart::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt RootPart::Release(void)
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
 }
 
 nsresult
