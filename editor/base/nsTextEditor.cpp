@@ -1273,7 +1273,12 @@ NS_IMETHODIMP nsTextEditor::Save()
     mJSEditorLog->Save();
 #endif // ENABLE_JS_EDITOR_LOG
 
-  return SaveDocument(PR_FALSE, PR_FALSE);
+  nsresult rv = SaveDocument(PR_FALSE, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
+   
+  rv = DoAfterDocumentSave();
+  return rv;
 }
 
 NS_IMETHODIMP nsTextEditor::SaveAs(PRBool aSavingCopy)
@@ -1453,9 +1458,6 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
   nsresult res;
-
-  if (! aWrapColumn)
-    return NS_ERROR_NULL_POINTER;
 
   mWrapColumn = aWrapColumn;
 
