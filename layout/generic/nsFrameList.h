@@ -51,6 +51,9 @@ public:
 
   nsFrameList(nsIFrame* aHead) {
     mFirstChild = aHead;
+#ifdef DEBUG
+    CheckForLoops();
+#endif
   }
 
   ~nsFrameList() {
@@ -60,6 +63,9 @@ public:
 
   void SetFrames(nsIFrame* aFrameList) {
     mFirstChild = aFrameList;
+#ifdef DEBUG
+    CheckForLoops();
+#endif
   }
 
   void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
@@ -156,6 +162,10 @@ private:
   PRBool DoReplaceFrame(nsIFrame* aParent,
                         nsIFrame* aOldFrame,
                         nsIFrame* aNewFrame);
+
+#ifdef DEBUG
+  void CheckForLoops();
+#endif
   
 protected:
   nsIFrame* mFirstChild;
