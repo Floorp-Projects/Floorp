@@ -23,7 +23,7 @@ DIRS = java
 
 include $(DEPTH)/config/config.mk
 
-OBJS = $(wildcard $(DEPTH)/$(OBJDIR)/Package/*$(OBJ_SUFFIX))
+OBJS = $(wildcard $(DIST)/modules/Package/*$(OBJ_SUFFIX))
 LDFLAGS += $(EF_LIBS) $(NSPR_LIBS)
 
 include $(DEPTH)/config/rules.mk
