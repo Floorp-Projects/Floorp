@@ -107,7 +107,7 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
   char *utf8String;
 
   // Encoder needs utf-8 string.
-  if (MIME_ConvertString(mailCharset, "utf-8", header, &utf8String) != 0)
+  if (MIME_ConvertString(mailCharset, "UTF-8", header, &utf8String) != 0)
     return NS_ERROR_FAILURE;
 
   return EncodeMimePartIIStr_UTF8((const char *) utf8String, mailCharset, encodedWordSize, encodedString);
