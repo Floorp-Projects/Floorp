@@ -197,9 +197,6 @@ nsComboboxControlFrame::InitTextStr(PRBool aUpdate)
   nsIFrame* dropdownFrame = GetDropdownFrame();
   nsresult result = dropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
  
-   // Reset the list, so we can ask it for it's selected item.
-  fcFrame->Reset();
-
    // Update the selected text string
   mListControlFrame->GetSelectedItem(mTextStr);
 
