@@ -1903,7 +1903,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
         }
       }
     }
-    ReconstructStyleData();
+    ReconstructFrames();
   }
   return NS_OK;
 }
@@ -2071,7 +2071,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       // this is harsh, but without it the new colors don't appear on the current page
       // Fortunately, it only happens when the prefs change, a rare event.
       // XXX - determine why the normal PresContext::RemapStyleAndReflow doesn't cut it
-      ReconstructStyleData();
+      ReconstructFrames();
     }
 
     return result;
@@ -5375,13 +5375,18 @@ NS_IMETHODIMP
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
 {
-  return ReconstructStyleData();
+  return ReconstructFrames();
 }
 
 NS_IMETHODIMP 
 PresShell::StyleSheetRemoved(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet)
 {
+  // XXXdwh We'd like to be able to use ReconstructStyleData in all the
+  // other style sheet added/changed calls, but it doesn't
+  // quite work because of HTML tables.
+  // See bug 115787 for a testcase and example.  Track this bug
+  // to follow progress on using ReconstructStyleData everywhere.
   return ReconstructStyleData();
 }
 
@@ -5436,7 +5441,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
     return rv;
   }
   // XXX For now reconstruct everything
-  return ReconstructStyleData();
+  return ReconstructFrames();
 }
 
 NS_IMETHODIMP
@@ -5453,7 +5458,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
     return rv;
   }
   // XXX For now reconstruct everything
-  return ReconstructStyleData();
+  return ReconstructFrames();
 }
 
 NS_IMETHODIMP
@@ -5642,7 +5647,13 @@ NS_IMETHODIMP
 PresShell::BidiStyleChangeReflow()
 {
   // Have the root frame's style context remap its style
-  return ReconstructStyleData();
+  nsIFrame* rootFrame;
+  mFrameManager->GetRootFrame(&rootFrame);
+  if (rootFrame) {
+    mStyleSet->ClearStyleData(mPresContext, nsnull, nsnull);
+    ReconstructFrames();
+  }
+  return NS_OK;
 }
 #endif // IBMBIDI
 
