@@ -276,6 +276,29 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
       focusController->GetControllerForCommand(command, getter_AddRefs(controller));
     else GetController(aReceiver, getter_AddRefs(controller)); // We're attached to the receiver possibly.
 
+    nsAutoString type;
+    GetEventType (type);
+
+    // 32 is for the space key, there must be a better way to do this
+    if (type == NS_LITERAL_STRING("keypress") &&
+        mDetail == 32 &&
+        mDetail2 == 1) {
+      // get the focused element so that we can pageDown only at
+      // certain times.
+      nsCOMPtr<nsIDOMElement> focusedElement;
+      focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+      
+      if (focusedElement) {
+        nsAutoString tagName;
+        focusedElement->GetTagName(tagName);
+        
+        // if the focused element is a link then we do want space to
+        // scroll down.
+        if (tagName != NS_LITERAL_STRING("A"))
+          return NS_OK;
+      }
+    }
+    
     if (controller)
       controller->DoCommand(command);
 
