@@ -257,10 +257,10 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD GetContentID(PRUint32* aID);
   NS_IMETHOD SetContentID(PRUint32 aID);
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){
+  NS_IMETHOD RangeAdd(nsIDOMRange* aRange){
     return mInner.RangeAdd(aRange);
   }
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){
+  NS_IMETHOD RangeRemove(nsIDOMRange* aRange){
     return mInner.RangeRemove(aRange);
   }
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {

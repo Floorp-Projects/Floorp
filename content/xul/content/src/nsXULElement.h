@@ -429,8 +429,8 @@ public:
     NS_IMETHOD GetContentID(PRUint32* aID);
     NS_IMETHOD SetContentID(PRUint32 aID);
 
-    NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
-    NS_IMETHOD RangeRemove(nsIDOMRange& aRange); 
+    NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
+    NS_IMETHOD RangeRemove(nsIDOMRange* aRange); 
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);

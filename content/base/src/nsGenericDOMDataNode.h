@@ -216,8 +216,8 @@ struct nsGenericDOMDataNode {
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
                           nsEventStatus* aEventStatus);
-  nsresult RangeAdd(nsIDOMRange& aRange);
-  nsresult RangeRemove(nsIDOMRange& aRange);
+  nsresult RangeAdd(nsIDOMRange* aRange);
+  nsresult RangeRemove(nsIDOMRange* aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
   nsresult SetFocus(nsIPresContext *aPresContext);
   nsresult RemoveFocus(nsIPresContext *aPresContext);
@@ -552,10 +552,10 @@ struct nsGenericDOMDataNode {
                             nsEventStatus* aEventStatus);                  \
   NS_IMETHOD GetContentID(PRUint32* aID);                                  \
   NS_IMETHOD SetContentID(PRUint32 aID);                                   \
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \
+  NS_IMETHOD RangeAdd(nsIDOMRange* aRange){                                \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){                             \
+  NS_IMETHOD RangeRemove(nsIDOMRange* aRange){                             \
     return _g.RangeRemove(aRange);                                         \
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \

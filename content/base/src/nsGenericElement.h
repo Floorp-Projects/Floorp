@@ -274,8 +274,8 @@ public:
   // NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   // NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
+  NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
+  NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,

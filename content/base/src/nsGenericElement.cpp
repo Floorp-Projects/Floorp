@@ -2072,7 +2072,7 @@ nsGenericElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
 }
 
 nsresult
-nsGenericElement::RangeAdd(nsIDOMRange& aRange)
+nsGenericElement::RangeAdd(nsIDOMRange* aRange)
 {
   if (!mDOMSlots)
     GetDOMSlots();
@@ -2087,7 +2087,7 @@ nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 
   // Make sure we don't add a range that is already
   // in the list!
-  PRInt32 i = mDOMSlots->mRangeList->IndexOf(&aRange);
+  PRInt32 i = mDOMSlots->mRangeList->IndexOf(aRange);
   if (i >= 0) {
     // Range is already in the list, so there
     // is nothing to do!
@@ -2095,7 +2095,7 @@ nsGenericElement::RangeAdd(nsIDOMRange& aRange)
   }
 
   // dont need to addref - this call is made by the range object itself
-  PRBool rv = mDOMSlots->mRangeList->AppendElement(&aRange);
+  PRBool rv = mDOMSlots->mRangeList->AppendElement(aRange);
   if (rv)
     return NS_OK;
 
@@ -2104,11 +2104,11 @@ nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 
 
 nsresult
-nsGenericElement::RangeRemove(nsIDOMRange& aRange)
+nsGenericElement::RangeRemove(nsIDOMRange* aRange)
 {
   if (mDOMSlots && mDOMSlots->mRangeList) {
     // dont need to release - this call is made by the range object itself
-    PRBool rv = mDOMSlots->mRangeList->RemoveElement(&aRange);
+    PRBool rv = mDOMSlots->mRangeList->RemoveElement(aRange);
     if (rv) {
       if (mDOMSlots->mRangeList->Count() == 0) {
         delete mDOMSlots->mRangeList;

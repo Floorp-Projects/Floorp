@@ -3499,7 +3499,7 @@ nsXULElement::SetContentID(PRUint32 aID)
 }
 
 NS_IMETHODIMP
-nsXULElement::RangeAdd(nsIDOMRange& aRange)
+nsXULElement::RangeAdd(nsIDOMRange* aRange)
 {
     // rdf content does not yet support DOM ranges
     return NS_OK;
@@ -3507,7 +3507,7 @@ nsXULElement::RangeAdd(nsIDOMRange& aRange)
 
 
 NS_IMETHODIMP
-nsXULElement::RangeRemove(nsIDOMRange& aRange)
+nsXULElement::RangeRemove(nsIDOMRange* aRange)
 {
     // rdf content does not yet support DOM ranges
     return NS_OK;

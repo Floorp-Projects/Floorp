@@ -176,10 +176,10 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){
+  NS_IMETHOD RangeAdd(nsIDOMRange* aRange){
     return mInner.RangeAdd(aRange);
   }
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){
+  NS_IMETHOD RangeRemove(nsIDOMRange* aRange){
     return mInner.RangeRemove(aRange);
   }
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
