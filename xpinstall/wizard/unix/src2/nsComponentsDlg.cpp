@@ -178,6 +178,7 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
         currComp = new nsComponent();
         if (!currComp) return E_MEM;
 
+        currComp->SetIndex(i);
         currComp->SetDescShort(currDescShort);
         currComp->SetDescLong(currDescLong);
         currComp->SetArchive(currArchive);
