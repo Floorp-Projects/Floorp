@@ -788,16 +788,16 @@ nsSchemaLoader::ProcessSchemaElement(nsIWebServiceErrorHandler* aErrorHandler,
   NS_ENSURE_ARG(aElement);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsresult rv = NS_OK;
-
-  nsSchema* schemaInst = new nsSchema(this, aElement);
-  nsCOMPtr<nsISchema> schema = schemaInst;
-  if (!schema) {
+  nsRefPtr<nsSchema> schemaInst = new nsSchema(this, aElement);
+  if (!schemaInst) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsresult rv = schemaInst->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoString targetNamespace;
-  schema->GetTargetNamespace(targetNamespace);
+  schemaInst->GetTargetNamespace(targetNamespace);
   nsStringKey key(targetNamespace);
   nsCOMPtr<nsISupports> old = getter_AddRefs(mSchemas.Get(&key));
   nsCOMPtr<nsISchema> os = do_QueryInterface(old);
@@ -808,9 +808,6 @@ nsSchemaLoader::ProcessSchemaElement(nsIWebServiceErrorHandler* aErrorHandler,
     
     return NS_OK;
   }
-
-  rv = schemaInst->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsChildElementIterator iterator(aElement, 
                                   kSchemaNamespaces, kSchemaNamespacesLength);
@@ -897,9 +894,9 @@ nsSchemaLoader::ProcessSchemaElement(nsIWebServiceErrorHandler* aErrorHandler,
     return rv;
   }
 
-  mSchemas.Put(&key, schema);
+  mSchemas.Put(&key, schemaInst);
 
-  *_retval = schema;
+  *_retval = schemaInst;
   NS_ADDREF(*_retval);
 
   return NS_OK;
@@ -1175,7 +1172,7 @@ nsSchemaLoader::ProcessElement(nsIWebServiceErrorHandler* aErrorHandler,
     nsCOMPtr<nsISchemaType> schemaType;
     nsAutoString typeStr;
     aElement->GetAttribute(NS_LITERAL_STRING("type"), typeStr);
-    if (typeStr.Length() > 0) {
+    if (!typeStr.IsEmpty()) {
       rv = GetNewOrUsedType(aSchema, aElement, typeStr, 
                             getter_AddRefs(schemaType));
       if (NS_FAILED(rv)) {
