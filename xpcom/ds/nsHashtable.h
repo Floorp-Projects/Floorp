@@ -47,7 +47,13 @@ class nsStringKey;
 
 class NS_COM nsHashKey {
   protected:
-    nsHashKey(void);
+    nsHashKey(void) {
+#ifdef DEBUG
+        mKeyType = UnknownKey;
+#endif
+        MOZ_COUNT_CTOR(nsHashKey);
+    }
+
 
   public:
     virtual ~nsHashKey(void);
