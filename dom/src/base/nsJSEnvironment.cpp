@@ -691,7 +691,8 @@ nsJSContext::ExecuteScript(void* aScriptObject,
 {
   if (!mScriptsEnabled) {
     *aIsUndefined = PR_TRUE;
-    aRetValue->Truncate();
+    if (aRetValue)
+      aRetValue->Truncate();
     return NS_OK;
   }
 
