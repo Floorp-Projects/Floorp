@@ -2038,7 +2038,8 @@ nsAutoString2::nsAutoString2(eCharSize aCharSize) : nsString2(aCharSize){
  * @param   aCString is a ptr to a 1-byte cstr
  */
 nsAutoString2::nsAutoString2(nsStr& aStr,const char* aCString) : nsString2((eCharSize)aStr.mMultibyte) {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aStr.mMultibyte)-1,0,aStr.mMultibyte,PR_FALSE);
+  eCharSize theSize=(eCharSize)aStr.mMultibyte;
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>theCharSize)-1,0,theCharSize,PR_FALSE);
   mAgent=0;
   AddNullTerminator(*this);
   Assign(aCString);
