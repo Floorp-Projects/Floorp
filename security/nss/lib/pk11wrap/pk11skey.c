@@ -4541,6 +4541,7 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
     PK11SymKey *key = NULL;
     SECStatus rv = SECSuccess;
     CK_MECHANISM pbeMech, cryptoMech;
+    CK_ULONG encBufLenPtr;
     CK_RV crv;
     SECItem encryptedKey = {siBuffer,NULL,0};
     int encryptBufLen;
@@ -4598,6 +4599,7 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
 	goto loser;
     }
     encryptedKey.len = (unsigned int)encryptBufLen;
+    encBufLenPtr = (CK_ULONG) encryptBufLen;
     encryptedKey.data = (unsigned char *)PORT_ZAlloc(encryptedKey.len);
     if(!encryptedKey.data) {
 	rv = SECFailure;
@@ -4612,8 +4614,9 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
     PK11_EnterSlotMonitor(pk->pkcs11Slot);
     crv = PK11_GETTAB(pk->pkcs11Slot)->C_WrapKey(pk->pkcs11Slot->session, 
     		&cryptoMech, key->objectID, pk->pkcs11ID, encryptedKey.data, 
-		(CK_ULONG_PTR)(&encryptedKey.len)); 
+		&encBufLenPtr); 
     PK11_ExitSlotMonitor(pk->pkcs11Slot);
+    encryptedKey.len = (unsigned int) encBufLenPtr;
     if(crv != CKR_OK) {
 	rv = SECFailure;
 	goto loser;
