@@ -24,44 +24,64 @@
 #include "nsDiskModule.h"
 #include "nsMemModule.h"
 #include "nsCacheTrace.h"
+#include "prlog.h"
 
-#define CM nsCacheManager::GetInstance()
+#define CACHEMGR nsCacheManager::GetInstance()
+
+void
+Cache_Init(void)
+{
+    /* Most of the initilization gets done in the constructor for the 
+     * nsCacheManager class. */ 
+}
+
+void 
+Cache_Shutdown(void)
+{
+    /* todo- Should the destructor for nsCacheManager object be forced here?*/
+}
 
 /* CacheManager functions */
 PRBool
 CacheManager_Contains(const char* i_url)
 {
-    return CM->Entries();
+    return CACHEMGR->Contains(i_url);
 }
 
-PRUint32 
+PRInt16 
 CacheManager_Entries()
 {
-    return CM->Entries();
+    return CACHEMGR->Entries();
 }
 
 void*
 CacheManager_GetObject(const char* i_url)
 {
-    return CM->GetObject(i_url);
+    return CACHEMGR->GetObj(i_url);
 }
 
 PRBool
 CacheManager_IsOffline(void)
 {
-    return CM->IsOffline();
+    return CACHEMGR->IsOffline();
 }
 
 void
 CacheManager_Offline(PRBool bSet)
 {
-    CM->Offline(bSet);
+    CACHEMGR->Offline(bSet);
+}
+
+PRBool
+CacheManager_Remove(const char* i_url)
+{
+    return CACHEMGR->Remove(i_url);
 }
 
 PRUint32
 CacheManager_WorstCaseTime(void)
 {
-    return CM->WorstCaseTime();
+    return CACHEMGR->WorstCaseTime();
 }
 
 /* CacheObject functions */
@@ -78,6 +98,30 @@ CacheObject_GetAddress(const void* pThis)
 }
 
 const char*
+CacheObject_GetCharset(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->Charset() : 0;
+}
+
+const char*
+CacheObject_GetContentEncoding(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->ContentEncoding() : 0;
+}
+
+PRUint32
+CacheObject_GetContentLength(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->ContentLength() : 0;
+}
+
+const char*
+CacheObject_GetContentType(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->ContentType() : 0;
+}
+
+const char*
 CacheObject_GetEtag(const void* pThis)
 {
     return pThis ? ((nsCacheObject*)pThis)->Etag() : 0;
@@ -89,6 +133,12 @@ CacheObject_GetExpires(const void* pThis)
     return pThis ? ((nsCacheObject*)pThis)->Expires() : 0;
 }
 
+const char*      
+CacheObject_GetFilename(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->Filename() : 0;
+}
+    
 PRIntervalTime
 CacheObject_GetLastAccessed(const void* pThis)
 {
@@ -99,6 +149,30 @@ PRIntervalTime
 CacheObject_GetLastModified(const void* pThis)
 {
     return pThis ? ((nsCacheObject*)pThis)->LastModified() : 0;
+}
+
+PRInt16 
+CacheObject_GetModule(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->Module() : -1;
+}
+
+const char*
+CacheObject_GetPageServicesURL(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->PageServicesURL() : 0;
+}
+
+const char*
+CacheObject_GetPostData(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->PostData() : 0;
+}
+
+PRUint32
+CacheObject_GetPostDataLen(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->PostDataLen() : 0;
 }
 
 PRUint32
@@ -119,53 +193,125 @@ CacheObject_IsExpired(const void* pThis)
     return pThis ? ((nsCacheObject*)pThis)->IsExpired() : PR_FALSE;
 }
 
+PRBool
+CacheObject_IsPartial(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->IsPartial() : PR_FALSE;
+}
+
+PRUint32
+CacheObject_Read(const void* pThis, char* o_Buffer, PRUint32 i_Len)
+{
+    return pThis ? ((nsCacheObject*)pThis)->Read(o_Buffer, i_Len) : 0;
+}
+
 void
 CacheObject_SetAddress(void* pThis, const char* i_Address)
 {
     if (pThis)
-    {
         ((nsCacheObject*)pThis)->Address(i_Address);
-    }
+}
+
+void
+CacheObject_SetCharset(void* pThis, const char* i_Charset)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->Charset(i_Charset);
+}
+
+void
+CacheObject_SetContentEncoding(void* pThis, const char* i_Encoding)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->ContentEncoding(i_Encoding);
+}
+
+void
+CacheObject_SetContentLength(void* pThis, PRUint32 i_ContentLen)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->ContentLength(i_ContentLen);
+}
+
+void
+CacheObject_SetContentType(void* pThis, const char* i_ContentType)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->ContentType(i_ContentType);
 }
 
 void
 CacheObject_SetEtag(void* pThis, const char* i_Etag)
 {
     if (pThis)
-    {
         ((nsCacheObject*)pThis)->Etag(i_Etag);
-    }
-    
 }
 
 void
 CacheObject_SetExpires(void *pThis, const PRIntervalTime i_Time)
 {
     if (pThis)
-    {
         ((nsCacheObject*)pThis)->Expires(i_Time);
-    }
-    
+}
+
+void
+CacheObject_SetFilename(void* pThis, const char* i_Filename)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->Filename(i_Filename);
 }
 
 void
 CacheObject_SetLastModified(void* pThis, const PRIntervalTime i_Time)
 {
     if (pThis)
-    {
-        ((nsCacheObject*)pThis)->LastModified(i_Time);
-    }
-    
+        ((nsCacheObject*)pThis)->LastModified(i_Time);   
+}
+
+void
+CacheObject_SetModule(void* pThis, const PRInt16 i_Module)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->Module(i_Module);
+}
+
+void
+CacheObject_SetPageServicesURL(void* pThis, const char* i_Url)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->PageServicesURL(i_Url);
+}
+
+void
+CacheObject_SetPostData(void* pThis, const char* i_PostData, const PRUint32 i_Len)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->PostData(i_PostData, i_Len);
 }
 
 void
 CacheObject_SetSize(void* pThis, const PRUint32 i_Size)
 {
     if (pThis)
-    {
         ((nsCacheObject*)pThis)->Size(i_Size);
+}
+
+PRBool
+CacheObject_Synch(void* pThis)
+{
+    if (pThis)
+    {
+        nsCacheObject* pObj = (nsCacheObject*) pThis;
+        PRBool bStatus = CACHEMGR->GetModule(pObj->Module())->AddObject(pObj);
+        return bStatus;
     }
-    
+    return PR_FALSE;
+}
+
+PRUint32
+CacheObject_Write(void* pThis, const char* i_buffer, const PRUint32 i_length)
+{
+    return i_length;
 }
 
 void
@@ -176,32 +322,43 @@ CacheObject_Destroy(void* pThis)
         ((nsCacheObject*)pThis)->~nsCacheObject();
         pThis = 0;
     }
-    
 }
 
 /* CachePref functions */
 PRUint32
-CachePref_DiskCacheSize(void)
+CachePref_GetDiskCacheSize(void)
 {
-    return nsCachePref::DiskCacheSize();
+    return nsCachePref::GetInstance()->DiskCacheSize();
 }
 
 PRBool
 CachePref_GetDiskCacheSSL(void)
 {
-    return nsCachePref::DiskCacheSSL();
+    return nsCachePref::GetInstance()->DiskCacheSSL();
 }
 
 PRUint32
-CachePref_MemCacheSize(void)
+CachePref_GetMemCacheSize(void)
 {
-    return nsCachePref::MemCacheSize();
+    return nsCachePref::GetInstance()->MemCacheSize();
+}
+
+void
+CachePref_SetDiskCacheSize(const PRUint32 i_Size)
+{
+    nsCachePref::GetInstance()->DiskCacheSize(i_Size);
 }
 
 void
 CachePref_SetDiskCacheSSL(PRBool bSet)
 {
-    nsCachePref::DiskCacheSSL(bSet);
+    nsCachePref::GetInstance()->DiskCacheSSL(bSet);
+}
+
+void
+CachePref_SetMemCacheSize(const PRUint32 i_Size)
+{
+    nsCachePref::GetInstance()->MemCacheSize(i_Size);
 }
 
 /* CacheTrace functions */
@@ -218,115 +375,119 @@ CacheTrace_IsEnabled(void)
 }
 
 /* DiskModule functions */
-#define DM nsCacheManager::GetInstance()->GetDiskModule()
+#define DISKMOD nsCacheManager::GetInstance()->GetDiskModule()
 
 PRBool
 DiskModule_AddObject(void* pObject)
 {
-    return DM->AddObject((nsCacheObject*)pObject);
+    return DISKMOD->AddObject((nsCacheObject*)pObject);
 }
 
 PRBool
 DiskModule_Contains(const char* i_url)
 {
-    return DM->Contains(i_url);
+    return DISKMOD->Contains(i_url);
 }
 
 PRUint32
 DiskModule_Entries(void)
 {
-    return DM->Entries();
+    return DISKMOD->Entries();
 }
 
 PRUint32
 DiskModule_GetSize(void)
 {
-    return DM->Size();
+    return DISKMOD->Size();
 }
 
 PRUint32
 DiskModule_GetSizeInUse(void)
 {
-    return DM->SizeInUse(); 
+    return DISKMOD->SizeInUse(); 
 }
 
 PRBool
 DiskModule_IsEnabled(void)
 {
-    return DM->IsEnabled();
+    return DISKMOD->IsEnabled();
 }
 
 PRBool
 DiskModule_Remove(const char* i_url)
 {
-    return DM->Remove(i_url);
+    return DISKMOD->Remove(i_url);
 }
 
 PRBool
 DiskModule_RemoveAll(void)
 {
-    return DM->RemoveAll();
+    return DISKMOD->RemoveAll();
 }
 
 void
 DiskModule_SetSize(PRUint32 i_Size)
 {
-    DM->Size(i_Size);
+    DISKMOD->SetSize(i_Size);
 }
 
 /* MemModule functions */
-#define MM nsCacheManager::GetInstance()->GetMemModule()
+#define MEMMOD nsCacheManager::GetInstance()->GetMemModule()
 
 PRBool
 MemModule_AddObject(void* pObject)
 {
-    return MM->AddObject((nsCacheObject*)pObject);
+    return MEMMOD->AddObject((nsCacheObject*)pObject);
 }
 
 PRBool
 MemModule_Contains(const char* i_url)
 {
-    return MM->Contains(i_url);
+    return MEMMOD->Contains(i_url);
 }
 
 PRUint32
 MemModule_Entries(void)
 {
-    return MM->Entries();
+    return MEMMOD->Entries();
 }
 
 PRUint32
 MemModule_GetSize(void)
 {
-    return MM->Size();
+    return MEMMOD->Size();
 }
 
 PRUint32
 MemModule_GetSizeInUse(void)
 {
-    return MM->SizeInUse() ;
+    return MEMMOD->SizeInUse() ;
 }
 
 PRBool
 MemModule_IsEnabled(void)
 {
-    return MM->IsEnabled();
+    return MEMMOD->IsEnabled();
 }
 
 PRBool
 MemModule_Remove(const char* i_url)
 {
-    return MM->Remove(i_url);
+    return MEMMOD->Remove(i_url);
 }
 
 PRBool
 MemModule_RemoveAll(void)
 {
-    return MM->RemoveAll();
+    return MEMMOD->RemoveAll();
 }
 
 void
 MemModule_SetSize(PRUint32 i_Size)
 {
-    MM->Size(i_Size);
+    MEMMOD->SetSize(i_Size);
 }
+
+#undef MEMMOD
+#undef DISKMOD
+#undef CACHEMGR

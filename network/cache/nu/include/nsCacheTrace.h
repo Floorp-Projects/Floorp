@@ -35,28 +35,16 @@ class nsCacheTrace
 {
 
 public:
+		nsCacheTrace(void);
     static void Enable(PRBool bEnable);
     static PRBool IsEnabled(void);
-	static void	Trace(const char* msg);
-	static void	Traceln(const char* msg);
-	static void Use(char* buffer);
-	static char* m_TraceBuffer;
+    static void	Trace(const char* msg);
+    static void	Traceln(const char* msg);
+    static void Use(char* buffer);
+    static char* m_TraceBuffer;
 private:
-	nsCacheTrace();
-    static PRBool m_bEnabled;
+    PRBool m_bEnabled;
 };
-
-inline
-void nsCacheTrace::Enable(PRBool bEnable)
-{
-    m_bEnabled = bEnable;
-}
-
-inline
-PRBool nsCacheTrace::IsEnabled(void)
-{
-    return m_bEnabled;
-}
 
 inline void nsCacheTrace::Trace(const char* msg) 
 {

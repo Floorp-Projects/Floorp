@@ -19,7 +19,7 @@
 #ifndef _nsMemCacheObject_h_
 #define _nsMemCacheObject_h_
 
-#include <prtypes.h>
+#include "prtypes.h"
 
 #include "nsCacheObject.h"
 
@@ -29,45 +29,45 @@ public:
 
     nsMemCacheObject(void);
     nsMemCacheObject(nsCacheObject* io_pObject);
-	nsMemCacheObject(const char* i_url); 
-	~nsMemCacheObject();
+    nsMemCacheObject(const char* i_url); 
+    ~nsMemCacheObject();
 
     void*               Data(void) const;
     
     void                Next(nsMemCacheObject* pObject);
     void                Next(nsCacheObject* io_pObject);
-	
+    
     nsMemCacheObject*   Next(void) const;
     
     nsCacheObject*      ThisObject(void) const;
-	
+    
 private:
-	nsMemCacheObject* m_pNextObject;
+    nsMemCacheObject* m_pNextObject;
     nsCacheObject*  m_pObject;
-	void* m_pData;
+    void* m_pData;
 
-	nsMemCacheObject& operator=(const nsMemCacheObject& mco);	
-	nsMemCacheObject(const nsMemCacheObject&);
+    nsMemCacheObject& operator=(const nsMemCacheObject& mco);
+    nsMemCacheObject(const nsMemCacheObject&);
 
 };
 
 inline nsMemCacheObject::nsMemCacheObject(void):
-	m_pObject(new nsCacheObject()), 
-	m_pNextObject(0),
+    m_pObject(new nsCacheObject()), 
+    m_pNextObject(0),
     m_pData(0)
 {
 }
 
 inline nsMemCacheObject::nsMemCacheObject(nsCacheObject* io_pObject):
-	m_pObject(io_pObject),
-	m_pNextObject(0),
+    m_pObject(io_pObject),
+    m_pNextObject(0),
     m_pData(0)
 {
 }
 
 inline nsMemCacheObject::nsMemCacheObject(const char* i_url):
-	m_pObject(new nsCacheObject(i_url)), 
-	m_pNextObject(0),
+    m_pObject(new nsCacheObject(i_url)), 
+    m_pNextObject(0),
     m_pData(0)
 {
 }

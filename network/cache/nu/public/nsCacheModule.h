@@ -28,8 +28,9 @@
 //#include <nsISupports.h>
 #include "nsCacheObject.h"
 #include "nsEnumeration.h"
+#include "nsMonitorable.h"
 
-/* Why the hell is forward decl. not working? */
+/* Why in the world is forward decl. not working? */
 //class nsCacheObject;
 
 /*
@@ -39,7 +40,7 @@ static const NS_CACHEMODULE_ID =
 */
 
 class nsCacheIterator;
-class nsCacheModule /*: public nsISupports */
+class nsCacheModule : public nsMonitorable /*: public nsISupports */
 {
 
 public:
@@ -61,6 +62,7 @@ public:
     const PRUint32      Entries(void) const;
 
     nsEnumeration*      Enumeration(void) const;
+    /* Enumerations wiht a function pointer - TODO */
 
     //TODO move to own interface for both Garbage Collection and Revalidation
     virtual
@@ -77,8 +79,11 @@ public:
     /* Cant do additions, deletions, validations, expirations */
     PRBool              IsReadOnly(void) const; 
 
-    nsCacheModule*      Next(void) const;
-    void                Next(nsCacheModule*);
+    nsCacheModule*      NextModule(void) const;
+    void                NextModule(nsCacheModule*);
+
+    virtual 
+        PRUint32        Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len);
 
     virtual
         PRBool          Remove(const char* i_url) = 0;
@@ -93,13 +98,21 @@ public:
         PRBool          Revalidate(void) = 0;
 
     const PRUint32      Size(void) const;
-    void                Size(const PRUint32 i_size);
+
+    virtual
+        void            SetSize(const PRUint32 i_size);
 
     PRUint32            SizeInUse(void) const;
 
     const char*         Trace(void) const;
 
+    virtual
+        PRUint32        Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len);
+
 protected:
+
+    virtual
+        PRBool          ReduceSizeTo(const PRUint32 i_NewSize);
 
     PRUint32            m_Entries;
     PRUint32            m_Size;
@@ -112,7 +125,6 @@ protected:
 private:
     nsCacheModule(const nsCacheModule& cm);
     nsCacheModule& operator=(const nsCacheModule& cm);
-
 };
 
 inline void nsCacheModule::Enable(PRBool i_Enable)
@@ -128,6 +140,7 @@ inline const PRUint32 nsCacheModule::Entries() const
 inline 
 nsEnumeration* nsCacheModule::Enumeration(void) const
 {
+    MonitorLocker ml((nsMonitorable*)this);
     if (!m_pEnumeration)
     {
         PR_ASSERT(m_pIterator);
@@ -148,13 +161,21 @@ inline PRBool nsCacheModule::IsReadOnly(void) const
     return PR_FALSE;
 }
 
-inline nsCacheModule* nsCacheModule::Next(void) const 
+inline nsCacheModule* nsCacheModule::NextModule(void) const 
 {
     return m_pNext;
 }
 
-inline void nsCacheModule::Next(nsCacheModule* pNext) 
+inline void nsCacheModule::NextModule(nsCacheModule* pNext) 
 {
+    /* No overwriting */
+    PR_ASSERT(m_pNext == 0);
+    if (m_pNext)
+    {
+        /* ERROR */
+        delete m_pNext; //Worst case. 
+
+    }
     m_pNext = pNext;
 }
 
@@ -163,7 +184,7 @@ inline const PRUint32 nsCacheModule::Size() const
     return m_Size;
 }
 
-inline void nsCacheModule::Size(const PRUint32 size)
+inline void nsCacheModule::SetSize(const PRUint32 size)
 {
     m_Size = size;
 }

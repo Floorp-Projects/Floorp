@@ -20,7 +20,7 @@
 #define nsCachePref_h__
 
 //#include "nsISupports.h"
-#include <prtypes.h>
+#include "prtypes.h"
 
 class nsCachePref //: public nsISupports
 {
@@ -38,24 +38,27 @@ public:
         ALWAYS
     } r;
 
-    static const PRUint32   BkgSleepTime(void);
+    const PRUint32   BkgSleepTime(void);
     
-    static const char*      DiskCacheDBFilename(void); /* like Fat.db */
-    static const char*      DiskCacheFolder(void);   /* Cache dir */
+    const char*      DiskCacheDBFilename(void); /* like Fat.db */
+    const char*      DiskCacheFolder(void);   /* Cache dir */
 
-    static PRBool           DiskCacheSSL(void);
-    static void             DiskCacheSSL(PRBool bSet);
+    PRBool           DiskCacheSSL(void);
+    void             DiskCacheSSL(PRBool bSet);
 
-    static PRUint32         DiskCacheSize(void);
-    static PRUint32         MemCacheSize(void);
+    PRUint32         DiskCacheSize(void);
+    void             DiskCacheSize(const PRUint32 i_Size);
 
-    static nsCachePref::Refresh
+    PRUint32         MemCacheSize(void);
+    void             MemCacheSize(const PRUint32 i_Size);
+
+    nsCachePref::Refresh
                             Frequency(void);
 
     /* Revalidating in background, makes IMS calls in the bkg thread to 
        update cache entries. TODO, this should be at a bigger time period
        than the cache cleanup routine */
-    static PRBool           RevalidateInBkg(void);
+    PRBool           RevalidateInBkg(void);
 
 /*
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 

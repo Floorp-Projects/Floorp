@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include <prlog.h>
+#include "prlog.h"
 #include "nsCacheBkgThd.h"
 #include "nsCacheManager.h"
 #include "nsCacheModule.h"
@@ -60,7 +60,7 @@ void nsCacheBkgThd::Run(void)
     PR_ASSERT(pCM);
     if (pCM->IsOffline())
         return; /* Dont update entries if offline */
-    PRUint32 i = pCM->Entries();
+    PRInt16 i = pCM->Entries();
     while (i>0)
     {
         nsCacheModule* pModule = pCM->GetModule(--i);
@@ -69,7 +69,7 @@ void nsCacheBkgThd::Run(void)
         if (!pModule->IsReadOnly())
         {
             pModule->GarbageCollect();
-            if (nsCachePref::RevalidateInBkg())
+            if (nsCachePref::GetInstance()->RevalidateInBkg())
             {
                 pModule->Revalidate();
             }

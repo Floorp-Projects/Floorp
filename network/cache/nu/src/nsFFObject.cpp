@@ -17,7 +17,7 @@
  */
 
 #include "nsFFObject.h"
-#include <prlog.h>
+#include "prlog.h"
 
 nsFFObject::nsFFObject(PRUint32 i_ID, PRUint32 i_Offset, PRUint32 i_Size):
     m_ID(i_ID), 

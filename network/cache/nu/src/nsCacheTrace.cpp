@@ -25,7 +25,20 @@
 
 #include "nsCacheTrace.h"
 
-nsCacheTrace::nsCacheTrace()
+static nsCacheTrace TheTrace;
+
+nsCacheTrace::nsCacheTrace():m_bEnabled(PR_FALSE)
 {
 
 }
+
+void nsCacheTrace::Enable(PRBool bEnable)
+{
+    TheTrace.m_bEnabled = bEnable;
+}
+
+PRBool nsCacheTrace::IsEnabled(void)
+{
+    return TheTrace.m_bEnabled;
+}
+

@@ -1,7 +1,7 @@
 /* A class to time excursion events */
 /* declare an object of this class within the scope to be timed. */
-#include <prtypes.h>
-#include <prinrval.h>
+#include "prtypes.h"
+#include "prinrval.h"
 
 class nsTimeIt
 {

@@ -58,5 +58,10 @@ void nsIterator::Next(void)
     ++m_Index;
 }
 
+inline
+void* nsIterator::CurrentItem(void) const
+{
+    return 0;
+}
 #endif // nsIterator_h__
 

@@ -23,6 +23,8 @@ LIBRARY_NAME=cachelib
 
 MISCDEP = 		    \
     $(LIBNSPR)  	    \
+    $(DIST)/lib/dbm32.lib \
+    $(DIST)/lib/libplc21.lib \
     $(DIST)/lib/xpcom32.lib \
     $(NULL)
 
@@ -36,13 +38,18 @@ CPPSRCS	= nsCacheObject.cpp 	\
 		  nsCacheTrace.cpp 		\
 		  nsCachePref.cpp 		\
 		  nsMemCacheObject.cpp	\
+		  nsBkgThread.cpp		\
+		  nsCacheBkgThd.cpp		\
+		  CacheStubs.cpp		\
 	 	  $(NULL)
 
 REQUIRES = dbm nspr pref xpcom 
 
 LLIBS =				 \
- 	$(DIST)/lib/xpcom32.lib  \
-	$(LIBNSPR)		 \
+    $(DIST)/lib/dbm32.lib 		\
+    $(DIST)/lib/libplc21.lib 	\
+ 	$(DIST)/lib/xpcom32.lib  	\
+	$(LIBNSPR)		 			\
 	$(NULL)
 
 include $(DEPTH)/config/rules.mk

@@ -19,8 +19,8 @@
 #ifndef nsFlatFile_h__
 #define nsFlatFile_h__
 
-#include <prtypes.h>
-#include <prio.h>
+#include "prtypes.h"
+#include "prio.h"
 
 //#include "nsISupports.h"
 

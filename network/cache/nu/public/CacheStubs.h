@@ -27,45 +27,76 @@
 #ifndef CacheStubs_h__
 #define CacheStubs_h__
 
-#include <prtypes.h>
-#include <prinrval.h>
+#include "prtypes.h"
+#include "prinrval.h"
+
+#define MEM_MODULE_ID 0
+#define DISK_MODULE_ID 1
 
 PR_BEGIN_EXTERN_C
  
+    /* General mapped functions which resolve to a bunch of internal calls. */
+    extern void             Cache_Init(void);
+    extern void             Cache_Shutdown(void);
+
     /* Cache Manager stub functions
        Does not include some functions not required in the current 
        design like AddModule etc... If you need to these functions, try
        accessing them directly thru the C++ api or let me know. 
        Check nsCacheManager.h for details on these functions.*/
     extern PRBool           CacheManager_Contains(const char* i_url);
-    extern PRUint32         CacheManager_Entries(void);
+    extern PRInt16          CacheManager_Entries(void);
     extern void*            CacheManager_GetObject(const char* i_url);
     extern PRBool           CacheManager_IsOffline(void);
     extern void             CacheManager_Offline(PRBool bSet);
+    extern PRBool           CacheManager_Remove(const char* i_url);
     extern PRUint32         CacheManager_WorstCaseTime(void);
 
     /* Cache Object- check nsCacheObject.h for details on these functions */
     extern void*            CacheObject_Create(const char* i_url);
+    extern void             CacheObject_Destroy(void* pThis);
     extern const char*      CacheObject_GetAddress(const void* pThis);
+    extern const char*      CacheObject_GetCharset(void* pThis);
+    extern const char*      CacheObject_GetContentEncoding(void* pThis);
+    extern PRUint32         CacheObject_GetContentLength(void* pThis);
+    extern const char*      CacheObject_GetContentType(void* pThis);
     extern const char*      CacheObject_GetEtag(const void* pThis);
     extern PRIntervalTime   CacheObject_GetExpires(const void* pThis);
+    extern const char*      CacheObject_GetFilename(const void* pThis);
     extern PRIntervalTime   CacheObject_GetLastAccessed(const void* pThis);
     extern PRIntervalTime   CacheObject_GetLastModified(const void* pThis);
+    extern PRInt16          CacheObject_GetModule(const void* pThis);
+    extern const char*      CacheObject_GetPageServicesURL(void* pThis);
+    extern const char*      CacheObject_GetPostData(const void* pThis);
+    extern PRUint32         CacheObject_GetPostDataLen(const void* pThis);
     extern PRUint32         CacheObject_GetSize(const void* pThis);
     extern PRUint32         CacheObject_Hits(const void* pThis);
     extern PRBool           CacheObject_IsExpired(const void* pThis);
+    extern PRBool           CacheObject_IsPartial(const void* pThis);
+    extern PRUint32         CacheObject_Read(const void* pThis, char* o_Destination, PRUint32 i_Len);
     extern void             CacheObject_SetAddress(void* pThis, const char* i_Address);
+    extern void             CacheObject_SetCharset(void* pThis, const char* i_CharSet);
+    extern void             CacheObject_SetContentEncoding(void* pThis, const char* i_Encoding);
+    extern void             CacheObject_SetContentLength(void* pThis, PRUint32 i_Len);
+    extern void             CacheObject_SetContentType(void* pThis, const char* i_Type);
     extern void             CacheObject_SetEtag(void* pThis, const char* i_Etag);
     extern void             CacheObject_SetExpires(void *pThis, const PRIntervalTime i_Time);
+    extern void             CacheObject_SetFilename(void *pThis, const char* i_Filename);
     extern void             CacheObject_SetLastModified(void* pThis, const PRIntervalTime i_Time);
+    extern void             CacheObject_SetModule(void* pThis, const PRInt16 i_Module);
+    extern void             CacheObject_SetPageServicesURL(void* pThis, const char* i_Url);
+    extern void             CacheObject_SetPostData(void* pThis, const char* i_PostData, const PRUint32 i_Len);
     extern void             CacheObject_SetSize(void* pThis, const PRUint32 i_Size);
-    extern void             CacheObject_Destroy(void* pThis);
+    extern PRBool           CacheObject_Synch(void* pThis);
+    extern PRUint32         CacheObject_Write(void* pThis, const char* i_buffer, const PRUint32 i_length);
 
     /* Cache Prefs- check nsCachePref.h for details on these functions */
-    extern PRUint32         CachePref_DiskCacheSize(void);
+    extern PRUint32         CachePref_GetDiskCacheSize(void);
     extern PRBool           CachePref_GetDiskCacheSSL(void);
-    extern PRUint32         CachePref_MemCacheSize(void);
+    extern PRUint32         CachePref_GetMemCacheSize(void);
+    extern void             CachePref_SetDiskCacheSize(const PRUint32 i_Size);
     extern void             CachePref_SetDiskCacheSSL(PRBool bSet);
+    extern void             CachePref_SetMemCacheSize(const PRUint32 i_Size);
     
     /* Cache Trace- Check nsCacheTrace.h for details on these functions */
     extern void             CacheTrace_Enable(PRBool bEnable);

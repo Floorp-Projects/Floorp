@@ -17,9 +17,9 @@
  */
 
 #include "nsFlatFile.h"
-#include <plstr.h>
-#include <prmem.h>
-#include <memory.h>
+#include "plstr.h"
+#include "prmem.h"
+#include "memory.h"
 
 static const PRUint32 kFLAT_FILE_VERSION = 1;
 static const PRUint32 kMAGIC_NUMBER = 3739142906; // Facede de //TODO

@@ -31,7 +31,7 @@
 
 //#include "nsHash.h" // TODO - replace with nsHashtable when the XPCOM_BRANCH merges
 
-//#include <nsHashtable.h>
+//#include "nsHashtable.h"
 /*
 // {5D51B250-E6C2-11d1-AFE5-006097BFC036}
 static const NS_MEMMODULE_IID = 
@@ -42,7 +42,7 @@ class nsMemModule : public nsCacheModule
 {
 
 public:
-    nsMemModule(const PRUint32 size=nsCachePref::MemCacheSize());
+    nsMemModule(const PRUint32 size=nsCachePref::GetInstance()->MemCacheSize());
     ~nsMemModule();
 
 /*
@@ -62,10 +62,18 @@ public:
     nsCacheObject*  GetObject(const PRUint32 i_index) const;
     nsCacheObject*  GetObject(const char* i_url) const;
 
+    PRUint32        Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len);
+
+    PRBool          ReduceSizeTo(const PRUint32 i_NewSize);
+
     PRBool          Remove(const char* i_url);
     PRBool          Remove(const PRUint32 i_index);
+
+//    PRBool          RemoveAll(void);
     
     PRBool          Revalidate(void);
+
+    PRUint32        Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len);
 
     // Start of nsMemModule specific stuff...
     // Here is a sample implementation using linked list
