@@ -1,10 +1,8 @@
 <?xml version="1.0"?>
 
-<!--
 <!DOCTYPE window SYSTEM "chrome://xmlterm/locale/xmltermOverlay.dtd" >
--->
 
-<!-- This is the overlay that addes "XMLterm" to the (global) task menu. -->
+<!-- This is the overlay that adds "XMLterm" to the (global) task menu. -->
 
 <overlay id="XMLtermTaskMenuID"
     xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -13,16 +11,16 @@
 <html:script language="JavaScript" src="chrome://xmlterm/content/xmltermOverlay.js"/>
 
 <keyset id="keyset">
-  <key id="key_xmlterm" xulkey="true" key="7"
+  <key id="key_xmlterm" xulkey="true" key="&xmltermCmd.commandkey;"
        observes="Tasks:xmlterm"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">
-  <broadcaster id="Tasks:xmlterm" value="XMLterm" oncommand="toXMLterm();"/>
+  <broadcaster id="Tasks:xmlterm" value="&xmltermCmd.label;" oncommand="toXMLterm();"/>
 </broadcasterset>
 
 <menupopup id="taskPopup">
-	<menuitem accesskey="x" key="key_xmlterm"
+	<menuitem accesskey="&xmltermCmd.accesskey;" key="key_xmlterm"
         position="6"
         observes="Tasks:xmlterm"/>
 </menupopup>
