@@ -1,3 +1,25 @@
+box {
+  display: block;
+}
+
+box[debug] box {
+  border: 5px solid blue;
+  margin: 1px;
+  padding: 1px;
+}
+
+box[debug] box[align="vertical"] {
+   border: 5px solid red;
+}
+
+spring {
+   display: block;
+}
+
+box[debug] spring {
+   background-color: green;
+}
+
 toolbar {
     display:block;
     background-color: #CCCCCC;
