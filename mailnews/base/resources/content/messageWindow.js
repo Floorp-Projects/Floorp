@@ -296,7 +296,7 @@ function OnLoadMessageWindow()
     if (window.arguments[1])
       gCurrentFolderUri = window.arguments[1];
     else
-      gCurrentFolderUri = folder ? folder.folderURL : null;
+      gCurrentFolderUri = folder ? folder.URI : null;
 
     if (window.arguments[2])
       originalView = window.arguments[2];
