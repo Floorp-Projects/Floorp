@@ -110,6 +110,7 @@ public:
   NS_IMETHOD  GetScrollbarVisibility(nsIPresContext* aPresContext,
                                      PRBool *aVerticalVisible,
                                      PRBool *aHorizontalVisible) const;
+  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult) { return NS_OK; };
 
   NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
                                     PRBool aVerticalVisible,

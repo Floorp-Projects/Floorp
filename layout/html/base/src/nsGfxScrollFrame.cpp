@@ -282,6 +282,12 @@ nsGfxScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxScrollFrame::GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult)
+{
+  *aResult = mInner->GetScrollableView(aContext);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const
