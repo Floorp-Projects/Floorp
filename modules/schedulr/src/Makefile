@@ -17,12 +17,12 @@
 
 DEPTH		= ../../..
 
-MODULE		= schedulr 
-LIBRARY_NAME	= sched 
+MODULE		= schedulr
+LIBRARY_NAME	= sched
 
 REQUIRES	= nspr util
 
-LOCAL_INCLUDES  = -I$(PUBLIC)/schedulr
+LOCAL_INCLUDES	= -I$(PUBLIC)/schedulr
 
 # all code is platform specific right now
 CSRCS		= schedulr.c
