@@ -169,7 +169,8 @@ NS_IMETHODIMP nsMsgThread::GetNumUnreadChildren (PRUint32 *result)
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread)
+NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread, 
+										nsIDBChangeAnnouncer *announcer)
 {
 	nsresult ret = NS_OK;
     nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
@@ -193,12 +194,6 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 		inReplyTo->GetMessageKey(&parentKey);
 		child->SetThreadParent(parentKey);
 	}
-	if (inReplyTo)
-	{
-		nsMsgKey parentKey;
-		inReplyTo->GetMessageKey(&parentKey);
-		child->SetThreadParent(parentKey);
-	}
 	// check if this header is a parent of one of the messages in this thread
 
 	PRUint32 numChildren;
@@ -214,11 +209,15 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 		ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
 		if (NS_SUCCEEDED(ret) && curHdr)
 		{
-			// ### check if this is the thead root key!
 			if (hdr->IsParentOf(curHdr))
 			{
+				nsMsgKey oldThreadParent;
+				curHdr->GetThreadParent(&oldThreadParent);
 				curHdr->GetMessageKey(&msgKey);
 				curHdr->SetThreadParent(newHdrKey);
+				// OK, this is a reparenting - need to send notification
+				if (announcer)
+					announcer->NotifyParentChangedAll(msgKey, oldThreadParent, newHdrKey, nsnull);
 #ifdef DEBUG_bienvenu1
 				if (newHdrKey != m_threadKey)
 					printf("adding second level child\n");
@@ -349,7 +348,7 @@ nsresult nsMsgThread::RemoveChild(nsMsgKey msgKey)
 	return ret;
 }
 
-NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child)
+NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child, nsIDBChangeAnnouncer *announcer)
 {
 	PRUint32 flags;
 	nsMsgKey key;
@@ -362,7 +361,7 @@ NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child)
 	child->GetMessageKey(&key);
 
 	child->GetThreadParent(&threadParent);
-	ReparentChildrenOf(key, threadParent);
+	ReparentChildrenOf(key, threadParent, announcer);
 
 	if (!(flags & MSG_FLAG_READ))
 		ChangeUnreadChildCount(-1);
@@ -370,7 +369,7 @@ NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child)
 	return RemoveChild(key);
 }
 
-nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent)
+nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeAnnouncer *announcer)
 {
 	nsresult rv = NS_OK;
 
@@ -391,7 +390,14 @@ nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent)
 			if (threadParent == oldParent)
 			{
 				curHdr->SetThreadParent(newParent);
-				// need to send some sort of notification here.
+				if (announcer)
+				{
+					nsMsgKey curKey;
+
+					curHdr->GetMessageKey(&curKey);
+					announcer->NotifyParentChangedAll(curKey, oldParent, newParent, nsnull);
+				}
+				// need to send some sort of reparenting notification here.
 			}
 		}
 	}

@@ -25,6 +25,7 @@ interface nsIMsgDBHdr;
 #include "nsIMsgHdr.h"
 %}
 
+interface nsIDBChangeAnnouncer;
 
 [scriptable, uuid(df64af90-e2da-11d2-8d6c-00805f8a6617)]
 interface nsIMsgThread : nsISupports {
@@ -34,13 +35,13 @@ interface nsIMsgThread : nsISupports {
   readonly attribute unsigned long numChildren;
   readonly attribute unsigned long numUnreadChildren;
 
-  void AddChild(in nsIMsgDBHdr child, in nsIMsgDBHdr inReplyTo, in boolean threadInThread);
+  void AddChild(in nsIMsgDBHdr child, in nsIMsgDBHdr inReplyTo, in boolean threadInThread, in nsIDBChangeAnnouncer announcer);
   nsIMsgDBHdr GetChildAt(in long index);
   nsIMsgDBHdr GetChild(in nsMsgKey msgKey);
   nsIMsgDBHdr GetChildHdrAt(in long index);
   nsIMsgDBHdr GetRootHdr(out long index);
   void RemoveChildAt(in long index);
-  void RemoveChildHdr(in nsIMsgDBHdr child);
+  void RemoveChildHdr(in nsIMsgDBHdr child, in nsIDBChangeAnnouncer announcer);
 
   void MarkChildRead(in boolean bRead);
 

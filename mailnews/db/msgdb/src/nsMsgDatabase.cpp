@@ -1047,7 +1047,10 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	nsCOMPtr <nsIMsgThread> thread ;
 	ret = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
 	if (NS_SUCCEEDED(ret))
-		ret = thread->RemoveChildHdr(msgHdr);
+	{
+		nsCOMPtr <nsIDBChangeAnnouncer> announcer = do_QueryInterface(this);
+		ret = thread->RemoveChildHdr(msgHdr, announcer);
+	}
 	else
 	{
 //		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
@@ -2418,7 +2421,9 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *inReplyTo, PRBool threadInThread)
 {
 	// don't worry about real threading yet.
-	return thread->AddChild(newHdr, inReplyTo, threadInThread);
+	nsCOMPtr <nsIDBChangeAnnouncer> announcer = do_QueryInterface(this);
+
+	return thread->AddChild(newHdr, inReplyTo, threadInThread, announcer);
 }
 
 nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsString2 &reference)

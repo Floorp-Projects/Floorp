@@ -46,12 +46,12 @@ public:
 	NS_IMETHOD		GetSubject(char **result);
 	NS_IMETHOD		GetNumChildren(PRUint32 *result);
 	NS_IMETHOD		GetNumUnreadChildren (PRUint32 *result);
-	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread);
+	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread, nsIDBChangeAnnouncer *announcer);
 	NS_IMETHOD		GetChildAt(PRInt32 index, nsIMsgDBHdr **result);
 	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result);
 	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result);
 	NS_IMETHOD 		RemoveChildAt(PRInt32 index);
-	NS_IMETHOD		RemoveChildHdr(nsIMsgDBHdr *child);
+	NS_IMETHOD		RemoveChildHdr(nsIMsgDBHdr *child, nsIDBChangeAnnouncer *announcer);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);
 	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsIEnumerator* *result);
 	NS_IMETHOD		GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result);
@@ -72,7 +72,7 @@ protected:
 	nsresult			SetThreadRootKey(nsMsgKey threadRootKey);
 	nsresult			GetChildHdrForKey(nsMsgKey desiredKey, 
 												nsIMsgDBHdr **result, PRInt32 *resultIndex); 
-	nsresult			ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent);
+	nsresult			ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeAnnouncer *announcer);
 
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
