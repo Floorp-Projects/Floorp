@@ -403,10 +403,6 @@ alpha*-*-linux*)
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-    if test -z "$MKSHLIB_FORCE_ALL"; then
-	MKSHLIB_FORCE_ALL='-Bforcearchive'
-	MKSHLIB_UNFORCE_ALL=''
-    fi
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
     fi
