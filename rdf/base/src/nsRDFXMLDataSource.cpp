@@ -1076,7 +1076,12 @@ RDFXMLDataSourceImpl::OnStopRequest(nsIChannel *channel,
         NotifyError(status, errorMsg);
     }
 
-    return mParser->OnStopRequest(channel, ctxt, status, errorMsg);
+    nsresult rv;
+    rv = mParser->OnStopRequest(channel, ctxt, status, errorMsg);
+
+    mParser = nsnull; // release the parser
+
+    return rv;
 }
 
 //----------------------------------------------------------------------
