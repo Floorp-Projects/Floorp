@@ -94,6 +94,10 @@ pref("network.hosts.pop_server",            "mail");
 
 pref("general.config.obscure_value", 0); // for MCD .cfg files
 
+pref("xpinstall.dialog.confirm", "chrome://communicator/content/xpinstall/institems.xul");
+pref("xpinstall.dialog.progress", "chrome://communicator/content/xpinstall/xpistatus.xul");
+pref("xpinstall.dialog.progress.type", "");
+
 /////////////////////////////////////////////////////////////////
 // End seamonkey suite all.js pref overrides
 ///////////////////////////////////////////////////////////////// 
