@@ -22,17 +22,12 @@
 #include "nsRepository.h"
 
 // These are temporary
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_MAC)
 #include <strstream.h>
 #endif
 
 #ifdef XP_PC
 #include <strstrea.h>
-#endif
-
-#ifdef XP_MAC
-#include <sstream>
-#include <string>
 #endif
 
 // XIF convertor stuff
@@ -284,14 +279,7 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromS
 
   rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 
-  ostrstream* copyStream;
-
-#ifdef XP_MAC
-  copyStream = new stringstream;
-#else
-  copyStream = new ostrstream;
-#endif
-
+  ostrstream* copyStream = new ostrstream;
 
   ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
   if (NS_OK == rv) {
