@@ -56,8 +56,9 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
   nscoord maxY = aY0;
   PRIntn pass2Kids = 0;
   PRIntn kidCount = aChildCount;
+  nscoord* ascents = aAscents;
   while (--kidCount >= 0) {
-    nscoord kidAscent = *aAscents++;
+    nscoord kidAscent = *ascents++;
 
     const nsStyleText* textStyle;
     kid->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
@@ -70,10 +71,17 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     nscoord kidYTop = 0;
 
     PRBool isPass2Kid = PR_FALSE;
-    nscoord fontHeight, fontAscent, fontDescent;
+    nscoord fontParam;
     switch (verticalAlignUnit) {
       case eStyleUnit_Coord:
-        kidYTop = aMaxAscent + textStyle->mVerticalAlign.GetCoordValue();
+        // According to the spec, a positive value "raises" the box by
+        // the given distance while a negative value "lowers" the box
+        // by the given distance. Since Y coordinates increase towards
+        // the bottom of the screen we reverse the sign. All of the
+        // raising and lowering is done relative to the baseline, so
+        // we start our adjustments there.
+        kidYTop = aMaxAscent - kidAscent;               // get baseline first
+        kidYTop -= textStyle->mVerticalAlign.GetCoordValue();
         break;
 
       case eStyleUnit_Percent:
@@ -95,17 +103,15 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_SUB:
-            // Move baseline by 1/2 the ascent of the child.
-            // NOTE: CSSx doesn't seem to specify what subscripting does
-            // so we are using ebina's logic
-            kidYTop = aMaxAscent + (kidAscent/2) - kidAscent;
+            // Align the child's baseline on the superscript baseline
+            fm->GetSubscriptOffset(fontParam);
+            kidYTop = aMaxAscent + fontParam - kidAscent;
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_SUPER:
-            // Move baseline by 1/2 the ascent of the child
-            // NOTE: CSSx doesn't seem to specify what superscripting does
-            // so we are using ebina's logic
-            kidYTop = aMaxAscent - (kidAscent/2) - kidAscent;
+            // Align the child's baseline on the subscript baseline
+            fm->GetSuperscriptOffset(fontParam);
+            kidYTop = aMaxAscent - fontParam - kidAscent;
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
@@ -114,22 +120,20 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-            // XXX spec says use the 'x' height but our font api
-            // doesn't give us that information.
-            fm->GetHeight(fontHeight);
-            kidYTop = aMaxAscent - (fontHeight / 2) - kidRect.height/2;
+            // Align the midpoint of the box with 1/2 the parent's x-height
+            fm->GetXHeight(fontParam);
+            kidYTop = aMaxAscent - (fontParam / 2) - (kidRect.height/2);
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
-            fm->GetMaxDescent(fontDescent);
-            kidYTop = aMaxAscent + fontDescent - kidRect.height;
+            fm->GetMaxDescent(fontParam);
+            kidYTop = aMaxAscent + fontParam - kidRect.height;
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
-            fm->GetMaxAscent(fontAscent);
-            kidYTop = aMaxAscent - fontAscent;
+            fm->GetMaxAscent(fontParam);
+            kidYTop = aMaxAscent - fontParam;
             break;
-
         }
         break;
       
@@ -137,6 +141,11 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
         // Align the kid's baseline at the max baseline
         kidYTop = aMaxAscent - kidAscent;
         break;
+    }
+
+    /* XXX or grow the box - which is it? */
+    if (kidYTop < 0) {
+      kidYTop = 0;
     }
 
     // Place kid and update min and max Y values
@@ -162,14 +171,24 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     // Position all of the bottom aligned children
     kidCount = aChildCount;
     kid = aFirstChild;
+    ascents = aAscents;
     while (--kidCount >= 0) {
+      nscoord kidAscent = *ascents++;
+
       // Get kid's vertical align style data
       const nsStyleText* textStyle;
       kid->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
       nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 
       if (eStyleUnit_Percent == verticalAlignUnit) {
-        nscoord kidYTop = aMaxAscent +
+        // According to the spec, a positive value "raises" the box by
+        // the given distance while a negative value "lowers" the box
+        // by the given distance. Since Y coordinates increase towards
+        // the bottom of the screen we reverse the sign. All of the
+        // raising and lowering is done relative to the baseline, so
+        // we start our adjustments there.
+        nscoord kidYTop = aMaxAscent - kidAscent;       // get baseline first
+        kidYTop -=
           nscoord(textStyle->mVerticalAlign.GetPercentValue() * lineHeight);
         kid->GetRect(kidRect);
         kid->MoveTo(kidRect.x, aY0 + kidYTop);
