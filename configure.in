@@ -3118,14 +3118,7 @@ dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
-MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help pref transformiix venkman inspector irc"
-
-dnl universalchardet is only built on win32 (bug XXXXXX)
-case "$target_os" in
-msvc*|mksnt*|mingw*|cygwin*)
-    MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT universalchardet"
-    ;;
-esac
+MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help pref transformiix venkman inspector irc universalchardet"
 
 dnl Check if Thai Rendering Extension needs to be enabled
 if test -n "$SUNCTL"; then
