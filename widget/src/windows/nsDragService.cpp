@@ -64,6 +64,8 @@ nsDragService::~nsDragService()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
 {
+  nsBaseDragService::InvokeDragSession ( aDOMNode, anArrayTransferables, aRegion, aActionType );
+  
   nsresult rv;
   PRUint32 numItemsToDrag = 0;
   rv = anArrayTransferables->Count(&numItemsToDrag);

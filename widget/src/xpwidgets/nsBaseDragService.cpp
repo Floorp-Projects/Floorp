@@ -108,21 +108,31 @@ NS_IMETHODIMP nsBaseDragService::GetTargetSize (nsSize * aDragTargetSize)
 //-------------------------------------------------------------------------
 
 NS_IMETHODIMP nsBaseDragService::GetNumDropItems (PRUint32 * aNumItems)
-
 {
-
   *aNumItems = 0;
-
   return NS_ERROR_FAILURE;
-
 }
 
+
+//
+// GetSourceDocument
+//
+// Returns the DOM document where the drag was initiated. This will be
+// nsnull if the drag began outside of our application.
+//
+NS_IMETHODIMP
+nsBaseDragService :: GetSourceDocument ( nsIDOMDocument** aSourceDocument )
+{
+  *aSourceDocument = mSourceDocument.get();
+  NS_IF_ADDREF ( *aSourceDocument );
+  
+  return NS_OK;
+}
 
 
 //-------------------------------------------------------------------------
 
 NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
-
 {
   return NS_ERROR_FAILURE;
 }
@@ -133,10 +143,16 @@ NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor, 
   return NS_ERROR_FAILURE;
 }
 
+
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
 {
-  return NS_ERROR_FAILURE;
+  // stash the document of the dom node. if one isn't provided, warn.
+  NS_WARN_IF_FALSE ( aDOMNode, "No node provided to InvokeDragSession, you should provide one" );
+  if ( aDOMNode )
+    aDOMNode->GetOwnerDocument ( getter_AddRefs(mSourceDocument) );
+
+  return NS_OK;
 }
 
 
@@ -175,6 +191,8 @@ NS_IMETHODIMP nsBaseDragService::EndDragSession ()
     return NS_ERROR_FAILURE;
   }
   mDoingDrag = PR_FALSE;
+  mSourceDocument = nsnull;     // release the source document we've been holding
+  
   return NS_OK;
 }
 

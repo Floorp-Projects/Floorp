@@ -111,6 +111,8 @@ nsresult nsDragService::InvokeDragSession( nsIDOMNode       *aDOMNode,
                                            nsIRegion        *aRegion,
                                            PRUint32          aActionType)
 {
+   nsBaseDragService::InvokeDragSession ( aDOMNode, aTransArray, aRegion, aActionType );
+  
    // This is horribly multidimensional -- we have an array of dragitems, fine.
    // But -- each dragitem may be a file list, which itself is several dragitems.
    PDRAGITEM pDragItems = 0;
