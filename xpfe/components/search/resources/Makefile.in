@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 CHROME_DIR	= communicator
 CHROME_CONTENT_DIR = content/search
 CHROME_L10N_DIR = locale/search
-CHROME_SKIN_DIR = skin/search
 
 CHROME_CONTENT	= \
                 default.htm \
@@ -47,17 +46,6 @@ CHROME_CONTENT	= \
                 internet.xul \
                 internetresults.js \
                 internetresults.xul \
-		$(NULL)
-
-CHROME_SKIN	= \
-                search.css \
-                search-editor.css \
-                findresults.css \
-                icons.css \
-                internet.css \
-                internetresults.css \
-                category.gif \
-                result.gif \
 		$(NULL)
 
 EXPORT_RESOURCE_LOCALE	= \

@@ -519,7 +519,6 @@ sub MakeResourceAliases()
 
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_locale_chrome_dir", 0);
 	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_content_chrome_dir", 0);
-	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",							"$xpinstall_skin_chrome_dir", 0);
 
 	# profile lives inside of the top level communicator dist dir
 
@@ -528,7 +527,6 @@ sub MakeResourceAliases()
 	my($profile_skin_chrome_dir) = "$communicator_skin_chrome_dir" . "profile";
 
 	_InstallResources(":mozilla:profile:resources:content:MANIFEST",					"$profile_content_chrome_dir", 0);
-	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",						"$profile_skin_chrome_dir", 0);
 	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_locale_chrome_dir", 0);
 	_InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST",		"$profile_content_chrome_dir", 0);
 	_InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST", "$profile_locale_chrome_dir", 0);
@@ -556,7 +554,6 @@ sub MakeResourceAliases()
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 
 	_InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",				"$navigator_content_chrome_dir");
-	_InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",					"$navigator_skin_chrome_dir");
 	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",			"$navigator_locale_chrome_dir", 0);
 
 	#NECKO
@@ -567,17 +564,12 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",		"$global_content_chrome_dir");
 	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_NAV",			"$navigator_content_chrome_dir");
 	_InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",			"$global_locale_chrome_dir");
-	_InstallResources(":mozilla:extensions:psm-glue:res:skin:MANIFEST",					"$navigator_skin_chrome_dir");
 
 	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_content_chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_content_chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",					"$global_skin_chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",				"$chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",			"$chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",			"$global_locale_chrome_dir", 0);
 	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",		"$global_locale_chrome_dir", 0);
-
-	_InstallResources(":mozilla:xpfe:communicator:resources:skin:MANIFEST", "$communicator_skin_chrome_dir");
 
 	_InstallResources(":mozilla:docshell:base:MANIFEST",								"$global_locale_chrome_dir", 0);
 
@@ -663,7 +655,6 @@ sub MakeResourceAliases()
 		my($bookmarks_skin_chrome_dir) = "$communicator_skin_chrome_dir"."bookmarks:";
 
 		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",	"$bookmarks_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-skin",		"$bookmarks_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST", "$bookmarks_locale_chrome_dir");
 	}
 	{
@@ -672,7 +663,6 @@ sub MakeResourceAliases()
 		my($directory_skin_chrome_dir) = "$communicator_skin_chrome_dir"."directory:";
 
 		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",			"$directory_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-skin",				"$directory_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:directory:locale:en-US:MANIFEST",				"$directory_locale_chrome_dir");
 	}
 	{
@@ -681,7 +671,6 @@ sub MakeResourceAliases()
 		my($regviewer_skin_chrome_dir) = "$communicator_skin_chrome_dir"."regviewer:";
 
 		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",			"$regviewer_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-skin",				"$regviewer_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:regviewer:locale:en-US:MANIFEST",				"$regviewer_locale_chrome_dir");
 	}
 	{
@@ -690,7 +679,6 @@ sub MakeResourceAliases()
 		my($history_skin_chrome_dir) = "$communicator_skin_chrome_dir"."history:";
 
 		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",	"$history_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",		"$history_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:history:resources:locale:en-US:MANIFEST",		"$history_locale_chrome_dir");
 	}
 	{
@@ -699,7 +687,6 @@ sub MakeResourceAliases()
 		my($related_skin_chrome_dir) = "$communicator_skin_chrome_dir"."related:";
 
 		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",	"$related_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",		"$related_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:related:resources:locale:en-US:MANIFEST",		"$related_locale_chrome_dir");
 	}
 	{
@@ -708,7 +695,6 @@ sub MakeResourceAliases()
 		my($search_skin_chrome_dir) = "$communicator_skin_chrome_dir"."search:";
 
 		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",		"$search_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",		"$search_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:search:resources:locale:en-US:MANIFEST",		"$search_locale_chrome_dir");
 
 		# Make copies (not aliases) of the various search files
@@ -720,7 +706,6 @@ sub MakeResourceAliases()
 		my($sidebar_skin_chrome_dir) = "$communicator_skin_chrome_dir"."sidebar:";
 
 		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",	"$sidebar_content_chrome_dir");
-		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-skin",		"$sidebar_skin_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:en-US:MANIFEST",		"$sidebar_locale_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",					"${dist_dir}Components");
 	}
@@ -744,18 +729,15 @@ sub MakeResourceAliases()
 		my($pref_skin_chrome_dir) = "$communicator_skin_chrome_dir"."pref:";
 
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",		"$pref_content_chrome_dir", 0);
-		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",			"$pref_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_locale_chrome_dir", 0);
 	}
 
 	_InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST",		"$global_content_chrome_dir", 0);
-	_InstallResources(":mozilla:xpfe:components:console:resources:skin:MANIFEST",			"$global_skin_chrome_dir", 0);
 	_InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",	"$global_locale_chrome_dir", 0);
 	_InstallResources(":mozilla:xpfe:components:console:MANIFEST",					"${dist_dir}Components");
 
 
 	# XXX autocomplete needs to move somewhere
-	_InstallResources(":mozilla:xpfe:components:autocomplete:resources:skin:MANIFEST",		"$chrome_dir");
 
 	{
 		my($wallet_content_chrome_dir) = "$communicator_content_chrome_dir"."wallet:";
@@ -773,9 +755,6 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",			"$wallet_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",				"$wallet_locale_chrome_dir", 0);
 
-		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_SKIN",			"$wallet_skin_chrome_dir", 0);
-		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_SKIN",			"$wallet_skin_chrome_dir", 0);
-		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",			"$wallet_skin_chrome_dir", 0);
 	}
 	{
 		my($security_content_chrome_dir) = "$communicator_content_chrome_dir"."security:";
