@@ -16,7 +16,6 @@
     (production :identifier ($identifier) identifier-identifier)
     (production :identifier (get) identifier-get)
     (production :identifier (set) identifier-set)
-    (production :identifier (operator) identifier-operator)
     (production :identifier (exclude) identifier-exclude)
     (production :identifier (include) identifier-include)
     
@@ -540,7 +539,7 @@
     (production :function-name (:identifier) function-name-function)
     (production :function-name (get :no-line-break :identifier) function-name-getter)
     (production :function-name (set :no-line-break :identifier) function-name-setter)
-    (production :function-name (operator :no-line-break $string) function-name-operator)
+    (production :function-name ($string) function-name-string)
     
     (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
     
