@@ -65,6 +65,9 @@
 
 #if defined(__GNUC__) && defined(__i386)
 #  define DebugBreak() { asm("int $3"); }
+#elif defined(__APPLE__)
+#  include "MacTypes.h"
+#  define DebugBreak() { Debugger(); }
 #else
 #  define DebugBreak()
 #endif
