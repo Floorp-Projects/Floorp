@@ -169,7 +169,7 @@ PR_STATIC_CALLBACK(PRBool)
 AppendCapability(nsHashKey *aKey, void* aData, void* aStr)
 {
     nsAutoString name( ((nsStringKey*)aKey)->GetString() );
-    char value = (char)aData + '0';
+    char value = (char)((unsigned int)aData) + '0';
     nsString* capStr = (nsString*)aStr;
     
     capStr->Append(' ');
