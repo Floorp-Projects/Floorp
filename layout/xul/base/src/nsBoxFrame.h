@@ -41,7 +41,8 @@ public:
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
-                     const nsSize& size);
+                     const nsSize& size,
+                     nsIFrame* incrementalChild);
 
 
     NS_IMETHOD  Init(nsIPresContext&  aPresContext,
@@ -99,8 +100,8 @@ protected:
 private: 
 
  
- 
 }; // class nsBoxFrame
+
 
 #endif
 
