@@ -721,11 +721,22 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 	    {
         // Create an absolute URL
         rv = NS_NewURI(&fullURL, src, baseURL);
+        if ( rv != NS_OK )
+          // Failed to create URI, maybe because we didn't
+          // reconize the protocol handler ==> treat like
+          // no 'src' was specified in the embed tag
+          fullURL = baseURL;
 	    }
 	    else if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
 	    {
         // Create an absolute URL
         rv = NS_NewURI(&fullURL, src, baseURL);
+        if ( rv != NS_OK )
+          // Failed to create URI, maybe because we didn't
+          // reconize the protocol handler ==> treat like
+          // no 'data' was specified in the object tag
+          fullURL = baseURL;
+
 	    } else {// we didn't find a src or data param, so just set the url to the base
 		  fullURL = baseURL;
 		  NS_IF_ADDREF(fullURL);
