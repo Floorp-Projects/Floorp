@@ -32,7 +32,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME	= nsP3PModule
 
-REQUIRES     = p3p xpcom windowwatcher
+REQUIRES     = xpcom string docshell necko dom layout rdf widget xmlextras cookie pref intl uriloader htmlparser windowwatcher
 
 CPPSRCS      =                      \
 		nsP3PModule.cpp             \
