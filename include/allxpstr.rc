@@ -4743,7 +4743,9 @@ ResDef(XP_ERRNO_ENETRESET       ,ENETRESET          ,"Network dropped connection
 ResDef(XP_ERRNO_ECONNABORTED    ,ECONNABORTED       ,"Connection aborted")
 ResDef(XP_ERRNO_ECONNRESET      ,ECONNRESET         ,"Connection reset by peer")
 ResDef(XP_ERRNO_ENOTCONN        ,ENOTCONN           ,"Socket is not connected")
+#ifdef EHOSTDOWN
 ResDef(XP_ERRNO_EHOSTDOWN       ,EHOSTDOWN          ,"Host is down")
+#endif
 ResDef(XP_ERRNO_EHOSTUNREACH    ,EHOSTUNREACH       ,"No route to host")
 END_STR(mcom_include_xp_error_i_strings)
 #endif
