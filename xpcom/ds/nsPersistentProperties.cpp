@@ -94,7 +94,7 @@ NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
 {
   PRInt32  c;
-  nsresult ret = NS_ERROR_NOT_IMPLEMENTED;
+  nsresult ret = NS_ERROR_FAILURE;
 
   nsAutoString uesc;
   uesc.AssignWithConversion("UTF-8");
