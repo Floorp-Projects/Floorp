@@ -223,9 +223,8 @@ public:
     * Get a hint that tells the style system what to do when 
     * an attribute on this node changes.
     */
-    NS_IMETHOD GetStyleHintForAttributeChange(
-      const nsIAtom* aAttribute,
-      PRInt32 *aHint) const;
+    NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                        PRInt32& aHint) const;
 
     // nsIXMLContent
     NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
@@ -2867,15 +2866,10 @@ RDFElementImpl::GetInlineStyleRules(nsISupportsArray* aRules)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetStyleHintForAttributeChange(const nsIAtom* aAttribute, PRInt32 *aHint) const
+RDFElementImpl::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
+                                         PRInt32& aHint) const
 {
-  *aHint = NS_STYLE_HINT_CONTENT;
-  if (mNameSpaceID == kNameSpaceID_XUL)
-  {
-      // We are a XUL tag and need to specify a style hint.
-      *aHint = NS_STYLE_HINT_CONTENT;
-  }
-
+  aHint = NS_STYLE_HINT_CONTENT;  // we never map attribtes to style
   return NS_OK;
 }
 
