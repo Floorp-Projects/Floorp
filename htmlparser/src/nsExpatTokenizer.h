@@ -89,12 +89,12 @@ protected:
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-    static void HandleExternalEntityRef(XML_Parser parser,
+    static int HandleExternalEntityRef(XML_Parser parser,
       const XML_Char *openEntityNames,
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-    static void HandleUnknownEncoding(void *encodingHandlerData,
+    static int HandleUnknownEncoding(void *encodingHandlerData,
       const XML_Char *name,
       XML_Encoding *info);
   

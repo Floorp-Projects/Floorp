@@ -42,7 +42,7 @@ class nsIDTDDebug;
 class nsIParserNode;
 class CITokenHandler;
 class nsParser;
-
+class nsHTMLTokenizer;
 
 
 class CWellFormedDTD : public nsIDTD {
@@ -233,7 +233,7 @@ protected:
     nsIContentSink*     mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
-    nsITokenizer*       mTokenizer;
+    nsHTMLTokenizer*    mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);
