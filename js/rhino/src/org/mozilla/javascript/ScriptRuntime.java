@@ -907,20 +907,47 @@ public class ScriptRuntime {
         return errorObject;
     }
 
-    public static Object getProp(Object obj, String id, Scriptable scope) {
+    public static Object getProp(Object obj, String id, Scriptable scope)
+    {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, id);
         }
-        Scriptable start;
+        Scriptable sobj;
         if (obj instanceof Scriptable) {
-            start = (Scriptable) obj;
+            sobj = (Scriptable)obj;
         } else {
-            start = toObject(scope, obj);
+            sobj = toObject(scope, obj);
         }
-        Object result = ScriptableObject.getProperty(start, id);
+        return getProp(sobj, id);
+    }
+
+    public static Object setProp(Object obj, String id, Object value,
+                                 Scriptable scope)
+    {
+        if (obj == null || obj == Undefined.instance) {
+            throw undefWriteError(obj, id, value);
+        }
+        Scriptable sobj;
+        if (obj instanceof Scriptable) {
+            sobj = (Scriptable)obj;
+        } else {
+            sobj = toObject(scope, obj);
+        }
+        return setProp(sobj, id, value);
+    }
+
+    static Object getProp(Scriptable obj, String id)
+    {
+        Object result = ScriptableObject.getProperty(obj, id);
         if (result != Scriptable.NOT_FOUND)
             return result;
         return Undefined.instance;
+    }
+
+    static Object setProp(Scriptable obj, String id, Object value)
+    {
+        ScriptableObject.putProperty(obj, id, value);
+        return value;
     }
 
     public static Object getTopLevelProp(Scriptable scope, String id) {
@@ -941,8 +968,6 @@ public class ScriptRuntime {
             throw cx.reportRuntimeError1("msg.not.ctor", constructorName);
         }
     }
-
-/***********************************************************************/
 
     public static Scriptable getProto(Object obj, Scriptable scope) {
         Scriptable s;
@@ -976,22 +1001,6 @@ public class ScriptRuntime {
             throw typeError0("msg.null.to.object");
         }
         return s.getParentScope();
-    }
-
-    public static Object setProp(Object obj, String id, Object value,
-                                 Scriptable scope)
-    {
-        if (obj == null || obj == Undefined.instance) {
-            throw undefWriteError(obj, id, value);
-        }
-        Scriptable start;
-        if (obj instanceof Scriptable) {
-            start = (Scriptable)obj;
-        } else {
-            start = toObject(scope, obj);
-        }
-        ScriptableObject.putProperty(start, id, value);
-        return value;
     }
 
     /**
@@ -1132,7 +1141,7 @@ public class ScriptRuntime {
         }
         Scriptable start = toObject(scope, obj);
         if (s != null) {
-            return getStrIdElem(start, s);
+            return getProp(start, s);
         }
         else {
             return getElem(start, index);
@@ -1146,13 +1155,6 @@ public class ScriptRuntime {
      */
     public static Object getElem(Scriptable obj, int index) {
         Object result = ScriptableObject.getProperty(obj, index);
-        if (result != Scriptable.NOT_FOUND)
-            return result;
-        return Undefined.instance;
-    }
-
-    static Object getStrIdElem(Scriptable obj, String id) {
-        Object result = ScriptableObject.getProperty(obj, id);
         if (result != Scriptable.NOT_FOUND)
             return result;
         return Undefined.instance;
@@ -1188,7 +1190,7 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (s != null) {
-            return setStrIdElem(start, s, value, scope);
+            return setProp(start, s, value, scope);
         }
         else {
             return setElem(start, index, value);
@@ -1201,13 +1203,6 @@ public class ScriptRuntime {
      */
     public static Object setElem(Scriptable obj, int index, Object value) {
         ScriptableObject.putProperty(obj, index, value);
-        return value;
-    }
-
-    static Object setStrIdElem(Scriptable obj, String id, Object value,
-                               Scriptable scope)
-    {
-        ScriptableObject.putProperty(obj, id, value);
         return value;
     }
 

@@ -438,7 +438,7 @@ public class NativeArray extends IdScriptable {
     private static Object getElem(Scriptable target, long index) {
         if (index > Integer.MAX_VALUE) {
             String id = Long.toString(index);
-            return ScriptRuntime.getStrIdElem(target, id);
+            return ScriptRuntime.getProp(target, id);
         } else {
             return ScriptRuntime.getElem(target, (int)index);
         }
@@ -447,7 +447,7 @@ public class NativeArray extends IdScriptable {
     private static void setElem(Scriptable target, long index, Object value) {
         if (index > Integer.MAX_VALUE) {
             String id = Long.toString(index);
-            ScriptRuntime.setStrIdElem(target, id, value, target);
+            ScriptRuntime.setProp(target, id, value);
         } else {
             ScriptRuntime.setElem(target, (int)index, value);
         }
@@ -831,7 +831,7 @@ public class NativeArray extends IdScriptable {
 
         length += args.length;
         Double lengthObj = new Double(length);
-        ScriptRuntime.setProp(thisObj, "length", lengthObj, thisObj);
+        ScriptRuntime.setProp(thisObj, "length", lengthObj);
 
         /*
          * If JS1.2, follow Perl4 by returning the last thing pushed.
@@ -865,7 +865,7 @@ public class NativeArray extends IdScriptable {
         }
         // necessary to match js even when length < 0; js pop will give a
         // length property to any target it is called on.
-        ScriptRuntime.setProp(thisObj, "length", new Double(length), thisObj);
+        ScriptRuntime.setProp(thisObj, "length", new Double(length));
 
         return result;
     }
@@ -897,7 +897,7 @@ public class NativeArray extends IdScriptable {
         } else {
             result = Context.getUndefinedValue();
         }
-        ScriptRuntime.setProp(thisObj, "length", new Double(length), thisObj);
+        ScriptRuntime.setProp(thisObj, "length", new Double(length));
         return result;
     }
 
@@ -924,8 +924,7 @@ public class NativeArray extends IdScriptable {
 
             /* Follow Perl by returning the new array length. */
             length += args.length;
-            ScriptRuntime.setProp(thisObj, "length",
-                                  new Double(length), thisObj);
+            ScriptRuntime.setProp(thisObj, "length", new Double(length));
         }
         return new Long((long)length);
     }
@@ -1017,7 +1016,7 @@ public class NativeArray extends IdScriptable {
 
         /* Update length in case we deleted elements from the end. */
         ScriptRuntime.setProp(thisObj, "length",
-                              new Double(length + delta), thisObj);
+                              new Double(length + delta));
         return result;
     }
 

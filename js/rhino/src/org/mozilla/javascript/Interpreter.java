@@ -3269,7 +3269,7 @@ switch (op) {
                 result = ScriptRuntime.getElem(obj, index);
             } else {
                 String s = ScriptRuntime.toString(val);
-                result = ScriptRuntime.getStrIdElem(obj, s);
+                result = ScriptRuntime.getProp(obj, s);
             }
         }
         --stackTop;
@@ -3303,7 +3303,7 @@ switch (op) {
                 result = ScriptRuntime.setElem(obj, index, rhs);
             } else {
                 String s = ScriptRuntime.toString(val);
-                result = ScriptRuntime.setStrIdElem(obj, s, rhs, scope);
+                result = ScriptRuntime.setProp(obj, s, rhs);
             }
         }
         stackTop -= 2;
