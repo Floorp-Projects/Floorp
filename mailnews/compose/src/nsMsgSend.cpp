@@ -1375,7 +1375,7 @@ mime_make_attachment_stream (int /*format_out*/, void * /*closure*/,
 {
   NET_StreamClass *stream;
 
-  TRACEMSG(("Setting up attachment stream. Have URL: %s\n", url->address));
+  //  TRACEMSG(("Setting up attachment stream. Have URL: %s\n", url->address));
 
   stream = PR_NEW (NET_StreamClass);
   if (stream == NULL)
@@ -1392,7 +1392,7 @@ mime_make_attachment_stream (int /*format_out*/, void * /*closure*/,
   stream->data_object    = url->fe_data;
   stream->window_id      = context;
 */
-  TRACEMSG(("Returning stream from mime_make_attachment_stream"));
+  //  TRACEMSG(("Returning stream from mime_make_attachment_stream"));
 
   return stream;
 }
