@@ -10,22 +10,22 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *           
- * The Original Code is mozilla.org code. 
+ * The Original Code is mozilla.org code.  
  *  
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.  
  *   
- * Contributor(s):     
+ * Contributor(s): rickg@netscape.com
  */          
-    
-//#define ENABLE_CRC       
-//#define RICKG_DEBUG      
- 
       
+//#define ENABLE_CRC           
+//#define RICKG_DEBUG          
+    
+        
 #include "nsDebug.h"  
-#include "nsIDTDDebug.h"  
+#include "nsIDTDDebug.h"    
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"     
@@ -56,8 +56,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOTHERHTML_DTD_IID); 
   
-static const  char* kNullToken = "Error: Null token given";
-static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static char*        kVerificationDir = "c:/temp";
  
 
@@ -153,8 +151,12 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   mTokenRecycler=0;
   mParserCommand=eViewNormal;
 
+#if 0 //set this to 1 if you want strictDTD to be based on the environment setting.
   char* theEnvString = PR_GetEnv("ENABLE_STRICT"); 
   mEnableStrict=PRBool(theEnvString!=0);
+else
+  mEnableStrict=PR_TRUE;
+#endif
 
   if(!gElementTable) {
     gElementTable = new CElementTable();
@@ -391,7 +393,7 @@ PRBool COtherDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  * NOTE: Parsing always assumes that the end result will involve
  *       storing the result in the main content model.
  * @update  gess6/24/98
- * @param   
+ * @param    
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
 eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
@@ -407,11 +409,19 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
       }
     }
     else {
-      if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
-        result=(eDTDMode_strict==aParserContext.mDTDMode) ? ePrimaryDetect : eValidDetect;
-      }
-      else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
+      if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
         result=eValidDetect;
+      }
+      else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+        switch(aParserContext.mDTDMode) {
+          case eDTDMode_strict:
+          case eDTDMode_transitional:
+            result=ePrimaryDetect;
+            break;
+          default:
+            result=eValidDetect;
+            break;
+        }
       }
       else {
         //otherwise, look into the buffer to see if you recognize anything...
@@ -421,14 +431,21 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
           if(0==aParserContext.mMimeType.Length()) {
             aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
             if(!theBufHasXML) {
-              result=(eDTDMode_strict==aParserContext.mDTDMode) ? ePrimaryDetect : eValidDetect;
+              switch(aParserContext.mDTDMode) {
+                case eDTDMode_strict:
+                case eDTDMode_transitional:
+                  result=ePrimaryDetect;
+                  break;
+                default:
+                  result=eValidDetect;
+                  break;
+              }
             }
             else result=eValidDetect;
           }
         }
       }
     } 
-    return result;
   } 
   return result; 
 }
@@ -462,6 +479,7 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
     mTokenRecycler=0;
 
     mDocType=aParserContext.mDocType;
+    mBodyContext->mTransitional=PRBool(aParserContext.mDTDMode==eDTDMode_transitional);
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
     }
@@ -609,11 +627,8 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-//    eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
-//    PRBool          execSkipContent=PR_FALSE;
 
     theToken->mUseCount=0;  //assume every token coming into this system needs recycling.
-
 
     mParser=(nsParser*)aParser;
 
@@ -624,6 +639,9 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       case eToken_newline:
       case eToken_doctypeDecl:
         result=HandleStartToken(theToken); break;
+
+      case eToken_entity:
+        result=HandleEntityToken(theToken); break;
 
       case eToken_end:
         result=HandleEndToken(theToken); break;
@@ -675,6 +693,35 @@ nsresult COtherDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         }//if
       }
       break;
+
+    case eHTMLTag_meta:
+      {
+          //we should only enable user-defined entities in debug builds...
+
+        PRInt32 theCount=aNode.GetAttributeCount();
+        const nsString* theNamePtr=0;
+        const nsString* theValuePtr=0;
+
+        if(theCount) {
+          PRInt32 theIndex=0;
+          for(theIndex=0;theIndex<theCount;theIndex++){
+            const nsString& theKey=aNode.GetKeyAt(theIndex);
+            if(theKey.EqualsWithConversion("ENTITY",PR_TRUE)) {
+              const nsString& theName=aNode.GetValueAt(theIndex);
+              theNamePtr=&theName;
+            }
+            else if(theKey.EqualsWithConversion("VALUE",PR_TRUE)) {
+              //store the named enity with the context...
+              const nsString& theValue=aNode.GetValueAt(theIndex);
+              theValuePtr=&theValue;
+            }
+          }
+        }
+        if(theNamePtr && theValuePtr) {
+          mBodyContext->RegisterEntity(*theNamePtr,*theValuePtr);
+        }
+      }
+      break; 
 
     default:
       break;
@@ -755,9 +802,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */      
-nsresult COtherDTD::HandleStartToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
- 
+nsresult COtherDTD::HandleStartToken(CToken* aToken) {  
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(aToken);
   #endif
@@ -781,15 +826,15 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       PRBool theTagWasHandled=PR_FALSE; 
  
       switch(theChildTag) {       
-          
+            
         case eHTMLTag_html:  
-          if(!HasOpenContainer(theChildTag)) { 
+          if(!mBodyContext->HasOpenContainer(theChildTag)){
             mSink->OpenHTML(*theNode);
             mBodyContext->Push(theNode,0);
           }
           theTagWasHandled=PR_TRUE;  
           break;      
-              
+                
         default:    
           CElement* theElement=gElementTable->mElements[theParent];
           if(theElement) {
@@ -798,7 +843,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
           }    
           break;   
       }//switch         
-      
+       
       if(theTagWasHandled) {
         DidHandleStartTag(*theNode,theChildTag);  
       }
@@ -823,9 +868,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */ 
-nsresult COtherDTD::HandleEndToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
- 
+nsresult COtherDTD::HandleEndToken(CToken* aToken) { 
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
  
@@ -840,7 +883,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       break;   
         
     case eHTMLTag_script:    
-      mHasOpenScript=PR_FALSE;       
+      mHasOpenScript=PR_FALSE;        
       
     default: 
       PRInt32 theCount=mBodyContext->GetCount();
@@ -899,6 +942,38 @@ nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt3
   return result; 
 } 
 
+/**
+ *  This method gets called when an entity token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
+  nsresult  result=NS_OK;
+
+  nsString& theStr=aToken->GetStringValueXXX();
+  PRUnichar theChar=theStr.CharAt(0);
+  if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
+
+    //before we just toss this away as a bogus entity, let's check...
+    CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
+    CToken *theToken=0;
+    if(theEntity) {
+      theToken=new CTextToken(theEntity->mValue);
+    }
+    else {
+      //if you're here we have a bogus entity.
+      //convert it into a text token.
+      nsAutoString temp; temp.AssignWithConversion("&");
+      temp.Append(theStr);
+      theToken=new CTextToken(temp);
+    }
+    result=HandleStartToken(theToken);
+  }
+  return result;
+} 
             
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
@@ -914,9 +989,14 @@ nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt3
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
-  PRBool result=PR_FALSE;
- //result=gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
-  return result;
+  CElement *theParent=gElementTable->mElements[eHTMLTags(aParent)];
+  if(theParent) {
+    CElement *theChild=gElementTable->mElements[eHTMLTags(aChild)];
+    if(aChild) {
+      return theParent->CanContain(theChild,mBodyContext);
+    }
+  }
+  return PR_FALSE;
 } 
 
 /** 
@@ -938,10 +1018,47 @@ NS_IMETHODIMP COtherDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32
   return NS_OK;
 }
  
+/**
+ *  This method is called to determine whether or not
+ *  the given childtag is a block element.
+ *
+ *  @update  gess 6June2000
+ *  @param   aChildID -- tag id of child 
+ *  @param   aParentID -- tag id of parent (or eHTMLTag_unknown)
+ *  @return  PR_TRUE if this tag is a block tag
+ */
+PRBool COtherDTD::IsBlockElement(PRInt32 aChildID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+
+  if(gElementTable) {
+    CElement *theElement=gElementTable->GetElement((eHTMLTags)aChildID);
+    result = (theElement) ? theElement->IsBlockElement((eHTMLTags)aParentID) : PR_FALSE;
+  }
+  return result;
+}
+
+/**
+ *  This method is called to determine whether or not
+ *  the given childtag is an inline element.
+ *
+ *  @update  gess 6June2000
+ *  @param   aChildID -- tag id of child 
+ *  @param   aParentID -- tag id of parent (or eHTMLTag_unknown)
+ *  @return  PR_TRUE if this tag is an inline element
+ */
+PRBool COtherDTD::IsInlineElement(PRInt32 aChildID,PRInt32 aParentID) const {
+  PRBool result=PR_FALSE;
+
+  if(gElementTable) {
+    CElement *theElement=gElementTable->GetElement((eHTMLTags)aChildID);
+    result = (theElement) ? theElement->IsInlineElement((eHTMLTags)aParentID) : PR_FALSE;
+  }
+  return result;
+}
      
 /**
  *  This method gets called to determine whether a given 
- *  tag is itself a container
+ *  tag is itself a container 
  *   
  *  @update  gess 4/8/98
  *  @param   aTag -- tag to test as a container
@@ -949,155 +1066,6 @@ NS_IMETHODIMP COtherDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32
  */
 PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
   return gElementTable->mElements[eHTMLTags(aTag)]->IsContainer();
-}
-
-/**
- *  This method allows the caller to determine if a given container
- *  is currently open
- *  
- *  @update  gess 11/9/98 
- *  @param   
- *  @return  
- */
-PRBool COtherDTD::HasOpenContainer(eHTMLTags aContainer) const {
-  PRBool result=PR_FALSE;
-
-  switch(aContainer) {
-    case eHTMLTag_form:
-      result=mHasOpenForm; break;
-    case eHTMLTag_map: 
-      result=mHasOpenMap; break; 
-    default:
-      result=mBodyContext->HasOpenContainer(aContainer);
-      break;
-  }
-  return result;
-}
-
-/**
- *  This method allows the caller to determine if a any member
- *  in a set of tags is currently open
- *  
- *  @update  gess 11/9/98
- *  @param   
- *  @return  
- */
-PRBool COtherDTD::HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const {
-
-  int theIndex; 
-  int theTopIndex=mBodyContext->GetCount()-1;
-
-  for(theIndex=theTopIndex;theIndex>0;theIndex--){
-    if(FindTagInSet((*mBodyContext)[theIndex],aTagSet,aCount))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @param   aTag  -- id of tag to be closed
- * @param   aClosedByStartTag -- ONLY TRUE if the container is being closed by opening of another container.
- * @return  TRUE if ok, FALSE if error
- */
-nsresult
-COtherDTD::CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aClosedByStartTag){
-  nsresult   result=NS_OK;
-  eHTMLTags nodeType=(eHTMLTags)aNode->GetNodeType();
-
-#ifdef ENABLE_CRC
-  #define K_CLOSEOP 200
-  CRCStruct theStruct(nodeType,K_CLOSEOP);
-  mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
-#endif
- 
-  switch(nodeType) {
-
-    case eHTMLTag_html:
-//      result=CloseHTML(aNode); break;
-
-    case eHTMLTag_map:
-//      result=CloseMap(aNode);
-      break;
-
-    case eHTMLTag_form:
-//      result=CloseForm(aNode); 
-      break;
-
-    case eHTMLTag_frameset:
-//      result=CloseFrameset(aNode); 
-      break;
-
-    case eHTMLTag_title:
-    default:
-
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseContainer(), this=%p\n", this));
-
-      result=(mSink) ? mSink->CloseContainer(*aNode) : NS_OK; 
-
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseContainer(), this=%p\n", this));
-      START_TIMER();
-
-      break;
-  }
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   anIndex
- * @param   aTag
- * @param   aClosedByStartTag -- if TRUE, then we're closing something because a start tag caused it
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aClosedByStartTag){
-  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
-  nsresult result=NS_OK;
-  
-
-  if((anIndex<mBodyContext->GetCount()) && (anIndex>=0)) {
-
-    while(mBodyContext->GetCount()>anIndex) {
-
-//      eHTMLTags     theTag=mBodyContext->Last();
-      nsEntryStack  *theChildStyleStack=0;      
-      nsCParserNode *theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyleStack);
-
-      if(theNode) {
-        result=CloseContainer(theNode,aTarget,aClosedByStartTag);
-        
-      }//if anode
-      RecycleNode(theNode);
-    }
-
-  } //if
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aTag --
- * @param   aClosedByStartTag -- ONLY TRUE if the container is being closed by opening of another container.
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
-  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
-
-  nsresult result=NS_OK;
-  return result;
 }
 
  

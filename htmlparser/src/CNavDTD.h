@@ -389,6 +389,9 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
     NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
+    virtual PRBool IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    virtual PRBool IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+
     /**
      * The following set of methods are used to partially construct 
      * the content model (via the sink) according to the type of token.

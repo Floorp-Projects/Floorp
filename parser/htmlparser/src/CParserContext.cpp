@@ -63,6 +63,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mCopyUnused=aCopyUnused; 
   mParserCommand=aCommand;
   mChannel=0;
+  mValidator=0;
 } 
 
 /**

@@ -149,6 +149,12 @@ class nsIParserNode : public nsISupports {
     virtual PRBool  GetGenericState(void) const =0;
     virtual void    SetGenericState(PRBool aState) =0;
 
+    /** Retrieve a string containing the tag and its attributes in "source" form
+     * @update	rickg 06June2000
+     * @return  void
+     */
+    virtual void GetSource(nsString& aString)=0;
+
 };
 
 #endif

@@ -352,4 +352,31 @@ CToken* nsCParserNode::PopAttributeToken() {
   return result;
 }
 
+/** Retrieve a string containing the tag and its attributes in "source" form
+ * @update	rickg 06June2000
+ * @return  void
+ */
+void nsCParserNode::GetSource(nsString& aString) {
+  aString.Truncate();
+
+  eHTMLTags theTag=(eHTMLTags)mToken->GetTypeID();
+  aString.AppendWithConversion("<");
+  const char* theTagName=nsHTMLTags::GetCStringValue(theTag);
+  if(theTagName) {
+    aString.AppendWithConversion(theTagName);
+  }
+  if(mAttributes) {
+    nsAutoString  theAttrStr;
+    int           index=0;
+    for(index=0;index<mAttributes->GetSize();index++) {
+      CAttributeToken *theToken=(CAttributeToken*)mAttributes->ObjectAt(index);
+      if(theToken) {
+        theToken->AppendSource(theAttrStr);
+        aString.AppendWithConversion(" "); //this will get removed...
+      }
+    }
+    aString.Append(theAttrStr);
+  }
+  aString.AppendWithConversion(">");
+}
 

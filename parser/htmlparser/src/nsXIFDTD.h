@@ -262,6 +262,9 @@ class nsXIFDTD : public nsIDTD {
 
     NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
+    virtual PRBool  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    virtual PRBool  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+
     /**
      * Set this to TRUE if you want the DTD to verify its
      * context stack.

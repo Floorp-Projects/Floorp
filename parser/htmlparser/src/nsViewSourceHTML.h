@@ -51,7 +51,6 @@ class nsParser;
 class nsITokenizer;
 class nsCParserNode;
 
-
 class CViewSourceHTML: public nsIDTD {
             
   public:
@@ -224,6 +223,9 @@ class CViewSourceHTML: public nsIDTD {
 
     NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
+    virtual PRBool  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    virtual PRBool  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+
     /**
      *  This method gets called to determine whether a given 
      *  tag is itself a container
@@ -241,7 +243,11 @@ class CViewSourceHTML: public nsIDTD {
 private:
     nsresult WriteTag(nsString &anXMLName,CToken* aTag,PRInt32 attrCount,PRBool aNewlineRequired);
     nsresult WriteTag(nsString &anXMLName,nsString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTagWithError(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired);
+    void     AddContainmentError(eHTMLTags aChild,eHTMLTags aParent,PRInt32 aLineNumber);
+
     nsresult WriteAttributes(PRInt32 attrCount);
+    nsresult GenerateSummary();
 
 protected:
 
@@ -260,10 +266,18 @@ protected:
     nsAutoString        mKey;
     nsAutoString        mValue;
     nsAutoString        mPopupTag;
+    nsAutoString        mSummaryTag;
+
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     eParserDocType      mDocType;
     nsAutoString        mMimeType;  
+    PRInt32             mErrorCount;
+    PRInt32             mTagCount;
+
+    nsIDTD              *mValidator;
+    nsString            mTags;
+    nsString            mErrors;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

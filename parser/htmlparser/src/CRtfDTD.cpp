@@ -974,11 +974,6 @@ nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode)
  ***************************************************************/
 
 
-/************************************************************************
-  And now for the main class -- nsRTFTokenizer...
- ************************************************************************/
-
-
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -1013,6 +1008,7 @@ nsresult nsRTFTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 nsRTFTokenizer::nsRTFTokenizer() : mTokenDeque(0) {
+  NS_INIT_REFCNT();
 }
  
 /**

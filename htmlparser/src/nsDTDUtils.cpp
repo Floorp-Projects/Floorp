@@ -16,13 +16,13 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
- */
- 
- 
-#include "nsDTDUtils.h"
+ */ 
+       
+  
+#include "nsDTDUtils.h" 
 #include "CNavDTD.h" 
 #include "nsIParserNode.h" 
 #include "nsParserNode.h" 
@@ -371,8 +371,9 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   mTableStates=0;
   mHadBody=PR_FALSE; 
   mHadFrameset=PR_TRUE;
-  mHadDocTypeDecl=PR_FALSE;
+  mTransitional=PR_FALSE;
   ResetCounters();
+  mHadDocTypeDecl=PR_FALSE;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -471,7 +472,7 @@ CNamedEntity*  nsDTDContext::RegisterEntity(const nsString& aName,const nsString
 class CAbacus {
 public:
 
-  enum eNumFormat {eUnknown,eAlpha,eDecimal,eRoman,eSpoken,eHex,eBinary,eFootnote,eUserSeries};
+  enum eNumFormat {eUnknown,eAlpha,eDecimal,eRoman,eSpelled,eHex,eBinary,eFootnote,eUserSeries};
 
   CAbacus(PRInt32 aDefaultValue=0,eNumFormat aFormat=eDecimal) {
     mUserSeries=0;
@@ -504,7 +505,7 @@ public:
 		  case	eHex:			    HexString(aValue,aString);      break;
 		  case	eBinary:		  BinaryString(aValue,aString);   break;
 		  case	eAlpha:		    AlphaString(aValue,aString);    break;
-		  case	eSpoken:		  SpokenString(aValue,aString);    break;
+		  case	eSpelled:		  SpelledString(aValue,aString);  break;
 		  case	eRoman:		    RomanString(aValue,aString);    break;
 		  case	eFootnote:	  FootnoteString(aValue,aString); break;
 		  case	eUserSeries:	SeriesString(aValue,aString,aCharSet,anOffset,aBase);
@@ -536,7 +537,7 @@ public:
     }
   }
 
-  static void SpokenString(PRInt32 aValue,nsString& aString) {
+  static void SpelledString(PRInt32 aValue,nsString& aString) {
 
     static	char	ones[][12]=   {"zero","one ","two ","three ","four ","five ","six ","seven ","eight ","nine ","ten "};
     static	char	teens[][12]=	{"ten ","eleven ","twelve ","thirteen ","fourteen ","fifteen ","sixteen ","seventeen ","eighteen ","nineteen "};
@@ -696,7 +697,7 @@ void nsDTDContext::ResetCounters(void) {
     name="group"
     value="nnn"
     noincr="?"
-    format="alpha|dec|footnote|hex|roman|spoken"
+    format="alpha|dec|footnote|hex|roman|spelled|talk"
 
   returns the newly incremented value for the (determined) group.
  **********************************************************/
@@ -737,7 +738,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsStr
         case 'D': case 'd': theNumFormat=CAbacus::eDecimal; break;
         case 'H': case 'h': theNumFormat=CAbacus::eHex;     break;
         case 'R': case 'r': theNumFormat=CAbacus::eRoman;   break;
-        case 'S': case 's': theNumFormat=CAbacus::eSpoken;  break;
+        case 'S': case 's': theNumFormat=CAbacus::eSpelled; break;
         default:
           theNumFormat=CAbacus::eDecimal;
           break;

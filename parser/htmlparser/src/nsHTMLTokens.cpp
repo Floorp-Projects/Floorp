@@ -615,7 +615,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       }
       //theTermStrPos=theBuffer.Find(aTerminalString,PR_TRUE,theCurrOffset);
       if(theTermStrPos>kNotFound) {
-        if(aMode!=eDTDMode_strict && !theLastIteration) {
+        if((aMode!=eDTDMode_strict) && (aMode!=eDTDMode_transitional) && !theLastIteration) {
           if(!aIgnoreComments) {
             theCurrOffset=theBuffer.Find("<!--",PR_TRUE,theCurrOffset,5);
             if(theStartCommentPos==kNotFound && theCurrOffset>kNotFound) {
@@ -944,6 +944,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
   if(NS_OK==result) {
      //Read up to the closing '>', unless you already did!  (such as <!>).
     if(kGreaterThan!=aChar) {
+      aString.AppendWithConversion("<!- ");
       result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
     }
   }
@@ -960,19 +961,18 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
  *  @return  error result
  */
 nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  nsresult result=(aMode==eDTDMode_strict) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
+  nsresult result=PR_TRUE;
+  
+  switch(aMode) {
+    case eDTDMode_strict:
+      ConsumeStrictComment(aChar,aScanner,mTextValue);
+      break;
+    case eDTDMode_transitional:
+    default:
+      ConsumeComment(aChar,aScanner,mTextValue);
+      break;
+  } //switch
 
-#if 0
-  if(NS_OK==result) {
-      //ok then, all is well so strip off the delimiters...
-    nsAutoString theLeft("");
-    mTextValue.Left(theLeft,2);
-    if(theLeft=="<!")
-      mTextValue.Cut(0,2);
-    if('>'==mTextValue.Last())
-      mTextValue.Truncate(mTextValue.Length()-1);
-  }
-#endif
   return result;
 }
 
@@ -1220,29 +1220,28 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
 /*
  *  
  *  
- *  @update  gess 3/25/98
+ *  @update  rickg  6June2000
  *  @param   anOutputString will recieve the result
  *  @return  nada
  */
 void CAttributeToken::GetSource(nsString& anOutputString){
-  anOutputString=mTextKey;
-  anOutputString.AppendWithConversion("=");
-  anOutputString+=mTextValue;
-  anOutputString.AppendWithConversion(";");
+  anOutputString.Truncate();
+  AppendSource(anOutputString);
 }
 
 /*
  *  
  *  
- *  @update  harishd 03/23/00
+ *  @update  rickg  6June2000
  *  @param   result appended to the output string.
  *  @return  nada
  */
 void CAttributeToken::AppendSource(nsString& anOutputString){
   anOutputString+=mTextKey;
-  anOutputString.AppendWithConversion("=");
+  if(mTextValue.Length() || mHasEqualWithoutValue) 
+    anOutputString.AppendWithConversion("=");
   anOutputString+=mTextValue;
-  anOutputString.AppendWithConversion(";");
+  // anOutputString.AppendWithConversion(";");
 }
 
 /*

@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): rickg@netscape.com
  */
 
 /************************************************************************
@@ -29,11 +29,9 @@
  *
  *
  ************************************************************************/
+
 #ifndef _COTHERELEMENTS_
 #define _COTHERELEMENTS_
-
-#undef  TRANSITIONAL
-
 
 /************************************************************************
   This union is a bitfield which describes the group membership
@@ -75,7 +73,7 @@ union CGroupMembers {
 inline PRBool ContainsGroup(CGroupMembers& aGroupSet,CGroupMembers& aGroup) {
   PRBool result=PR_FALSE;
   if(aGroup.mAllBits) {
-    result=PRBool(aGroupSet.mAllBits & aGroup.mAllBits);
+    result=(aGroupSet.mAllBits & aGroup.mAllBits) ? PR_TRUE : PR_FALSE;
   }
   return result;
 }
@@ -104,7 +102,7 @@ public:
   struct CFlags {
     PRUint32  mOmitEndTag:1;
     PRUint32  mIsContainer:1;
-    PRUint32  mPropagateDepth:4;
+    PRUint32  mIsSinkContainer:1;
     PRUint32  mDeprecated:1;
     PRUint32  mOmitWS:1;
   };
@@ -139,6 +137,7 @@ public:
 
   static void Initialize(CElement& anElement,eHTMLTags aTag){
     anElement.mProperties.mIsContainer=0;
+    anElement.mProperties.mIsSinkContainer=0;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=0;;
     anElement.mContainsGroups.mAllBits=0;
@@ -146,6 +145,7 @@ public:
 
   static void InitializeLeaf(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup,CGroupMembers& aContainsGroups) {
     anElement.mProperties.mIsContainer=PR_FALSE;
+    anElement.mProperties.mIsSinkContainer=PR_FALSE;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
     anElement.mContainsGroups.mAllBits=aContainsGroups.mAllBits;
@@ -153,6 +153,7 @@ public:
 
   static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup,CGroupMembers& aContainsGroups) {
     anElement.mProperties.mIsContainer=PR_TRUE;
+    anElement.mProperties.mIsSinkContainer=PR_TRUE;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
     anElement.mContainsGroups.mAllBits=aContainsGroups.mAllBits;
@@ -176,7 +177,19 @@ public:
   virtual PRBool    CanBeClosedByStartTag(CElement* anElement,nsDTDContext* aContext);
   virtual PRBool    CanBeClosedByEndTag(CElement* anElement,nsDTDContext* aContext);
 
-  virtual PRBool    IsContainer(void)     {return mProperties.mIsContainer;}
+    //this tells us whether this tag is a block tag within the given parent
+  virtual PRBool    IsBlockElement(eHTMLTags aParentID);
+
+  //this tells us whether this tag is an inline tag within the given parent
+  //NOTE: aParentID is currently ignored, but shouldn't be.
+  virtual PRBool    IsInlineElement(eHTMLTags aParentID);
+
+    //this tells us whether the tag is a container as defined by HTML
+    //NOTE: aParentID is currently ignored, but shouldn't be.
+  virtual PRBool    IsContainer(void) {return mProperties.mIsContainer;  }
+
+  //this tells us whether the tag should be opened as a container in the sink (script doesn't, for example).
+  virtual PRBool    IsSinkContainer(void) { return mProperties.mIsSinkContainer; }
 
   virtual eHTMLTags GetSkipTarget(void)   {return eHTMLTag_unknown;}
   
@@ -919,6 +932,7 @@ public:
 
   CCounterElement(eHTMLTags aTag=eHTMLTag_counter) : CInlineElement(aTag) {
     CInlineElement::Initialize(*this,aTag);
+    mProperties.mIsSinkContainer=PR_FALSE;
   }
 
   /**********************************************************
@@ -935,23 +949,21 @@ public:
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
-  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
-    OpenContext(aNode,aTag,aContext,aSink);
+  virtual nsresult OpenContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+    CElement::OpenContext(aNode,aTag,aContext,aSink);
     
-    nsresult result=OpenContainer(aNode,aTag,aContext,aSink);
-    if(NS_SUCCEEDED(result)) {
-      PRInt32   theCount=aContext->GetCount();
-      eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
+    nsresult result=NS_OK;
+    PRInt32   theCount=aContext->GetCount();
+    eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
 
-      nsCParserNode *theNode=(nsCParserNode*)aNode;
-      nsAutoString  theNumber;
-      PRInt32   theCounter=aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
+    nsCParserNode *theNode=(nsCParserNode*)aNode;
+    nsAutoString  theNumber;
+    PRInt32   theCounter=aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
 
-      CTextToken theToken(theNumber);
-      PRInt32 theLineNumber=0;
-      nsCParserNode theNewNode(&theToken,theLineNumber);
-      result=aSink->AddLeaf(theNewNode);
-    }
+    CTextToken theToken(theNumber);
+    PRInt32 theLineNumber=0;
+    nsCParserNode theNewNode(&theToken,theLineNumber);
+    result=aSink->AddLeaf(theNewNode);
     return result;
   }
 
@@ -1269,11 +1281,13 @@ public:
 
   static void Initialize(CElement& anElement,eHTMLTags aTag){
     CTextContainer::Initialize(anElement,aTag);
+    anElement.mProperties.mIsSinkContainer=PR_FALSE;
   }
 
   CScriptElement() : CTextContainer(eHTMLTag_script) {
     mGroup.mBits.mHeadMisc=1;
     mGroup.mBits.mBlock=1;
+    mProperties.mIsSinkContainer=PR_FALSE;
   }
 
   /**********************************************************
@@ -1791,19 +1805,22 @@ public:
 
   CBodyElement(eHTMLTags aTag=eHTMLTag_body) : CElement(aTag) {    
     CGroupMembers theGroups=CBlockElement::GetBlockGroupMembers();
-#ifdef  TRANSITIONAL
-    theGroups.mBits.mComment=1;
-    theGroups.mBits.mSpecial=1;
-    theGroups.mBits.mPhrase=1;
-    theGroups.mBits.mFontStyle=1;
-    theGroups.mBits.mFormControl=1;
-    theGroups.mBits.mLeaf=1;
-#endif
     CElement::Initialize(*this,aTag,CBodyElement::GetGroup(),theGroups);
     mIncludeKids=gBodyKids;
     mExcludeKids=gBodyExcludeKids;
   }
 
+  virtual PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
+    PRBool result=CElement::CanContain(anElement,aContext);
+    if((!result) && (aContext->mTransitional)) {
+      //let's try so additions that are specific to the body tag,
+      //and only work in transitional mode...
+        
+      CGroupMembers& theFlowGroup=CFlowElement::GetContainedGroups();
+      result=ContainsGroup(theFlowGroup,anElement->mGroup);            
+    }
+    return result;
+  }
 
    //this gets called after each tag is opened in the given context
   virtual nsresult  OpenContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
@@ -1823,26 +1840,15 @@ public:
                                       eHTMLTags aTag,
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-
-    switch(aTag) {
-
-      case eHTMLTag_script:
-        result=OpenContext(aNode,aTag,aContext,aSink);
-        break;
-    
-      default:
-        //for now, let's drop other elements onto the floor.
-        result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
-        if(NS_SUCCEEDED(result)) {
-          nsCParserNode *theNode=(nsCParserNode*)aNode;
-          CStartToken *theToken=(CStartToken*)theNode->mToken;
-          if(theToken->IsEmpty() && (aTag==aContext->Last())){
-            result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
-          }
-        }
-        break;
-    }//switch
+    //for now, let's drop other elements onto the floor.
+    nsresult result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
+    if(NS_SUCCEEDED(result)) {
+      nsCParserNode *theNode=(nsCParserNode*)aNode;
+      CStartToken *theToken=(CStartToken*)theNode->mToken;
+      if(theToken->IsEmpty() && (aTag==aContext->Last())){
+        result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+      }
+    }
 
     return result;
   }
@@ -1902,14 +1908,30 @@ public:
   {
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
+
+    //DebugDumpBlockElements();
+    //DebugDumpInlineElements();
+
     //DebugDumpContainment("all elements");
   }
 
+    //call this to get a ptr to an element prototype...
+  CElement* GetElement(eHTMLTags aTagID) {
+    if(aTagID>eHTMLTag_unknown) {
+      if(aTagID<eHTMLTag_userdefined) {
+        return mElements[aTagID];
+      } 
+    }
+    return 0;
+  }
 
   void InitializeElements();
   void DebugDumpGroups(CElement* aParent);
   void DebugDumpContainment(const char* aTitle);
   void DebugDumpContainment(CElement* aParent);
+
+  void DebugDumpInlineElements(const char* aTitle);
+  void DebugDumpBlockElements(const char* aTitle);
 
   CElement* mElements[150];  //add one here for special handling of a given element
   CElement  mDfltElements[150];
@@ -1953,6 +1975,7 @@ static eHTMLTags kBlockQuoteKids[]={eHTMLTag_script,eHTMLTag_unknown};
 static eHTMLTags kFramesetKids[]={eHTMLTag_noframes,eHTMLTag_unknown};
 static eHTMLTags kObjectKids[]={eHTMLTag_param,eHTMLTag_unknown};
 static eHTMLTags kTBodyKids[]={eHTMLTag_tr,eHTMLTag_unknown};
+static eHTMLTags kUnknownKids[]={eHTMLTag_html,eHTMLTag_unknown};
 
 
 inline CElement* CElement::GetElement(eHTMLTags aTag) {
@@ -2004,6 +2027,8 @@ void CElementTable::InitializeElements() {
   
 
   CElement::Initialize(             mDfltElements[eHTMLTag_caption],    eHTMLTag_caption, CTableElement::GetGroup(), CSpecialElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_tr].mContainsGroups.mBits.mSelf=0;
+
   CElement::Initialize(             mDfltElements[eHTMLTag_center],     eHTMLTag_center, CBlockElement::GetGroup(), CFlowElement::GetContainedGroups());
 
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_cite],       eHTMLTag_cite);
@@ -2169,17 +2194,22 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_tbody].mIncludeKids=kTBodyKids;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_td],         eHTMLTag_td,      CElement::GetEmptyGroup(), CFlowElement::GetContainedGroups());
+  mDfltElements[eHTMLTag_td].mContainsGroups.mBits.mSelf=0;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_textarea],   eHTMLTag_textarea);
   
   CElement::Initialize(             mDfltElements[eHTMLTag_tfoot],      eHTMLTag_tfoot,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
   mDfltElements[eHTMLTag_tfoot].mIncludeKids=kTBodyKids;
+  mDfltElements[eHTMLTag_tfoot].mContainsGroups.mBits.mSelf=0;
 
   CTableRowElement::Initialize(     mDfltElements[eHTMLTag_th],         eHTMLTag_th);
+  mDfltElements[eHTMLTag_th].mContainsGroups.mBits.mSelf=0;
+
   CElement::Initialize(             mDfltElements[eHTMLTag_thead],      eHTMLTag_thead,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
   mDfltElements[eHTMLTag_thead].mIncludeKids=kTBodyKids;
 
   CTableRowElement::Initialize(     mDfltElements[eHTMLTag_tr],         eHTMLTag_tr);
+  mDfltElements[eHTMLTag_tr].mContainsGroups.mBits.mSelf=0;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_title],      eHTMLTag_title);
 
@@ -2199,6 +2229,7 @@ void CElementTable::InitializeElements() {
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_newline],   eHTMLTag_newline);
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_whitespace],eHTMLTag_whitespace);
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_unknown],   eHTMLTag_unknown);
+  mDfltElements[eHTMLTag_unknown].mIncludeKids=kUnknownKids;
 
 
   /************************************************************
@@ -2325,6 +2356,42 @@ void CElementTable::DebugDumpContainment(CElement* anElement){
   }
 }
 
+void CElementTable::DebugDumpInlineElements(const char* aTitle) {
+  PRInt32   theTagID=eHTMLTag_unknown;
+  PRBool    result=PR_FALSE;
+
+  printf("Inline Elements -- %s: \n",aTitle);
+  while(theTagID<=eHTMLTag_userdefined) {
+    CElement *theTag=GetElement((eHTMLTags)theTagID);
+    if(theTag) {
+      result=theTag->IsInlineElement(eHTMLTag_unknown);
+      if(result) {
+        const char* theName=nsHTMLTags::GetCStringValue(theTag->mTag);
+        printf("  %s\n",theName);
+      }
+    }
+    theTagID++;
+  }
+}
+
+void CElementTable::DebugDumpBlockElements(const char* aTitle) {
+  PRInt32   theTagID=eHTMLTag_unknown;
+  PRBool    result=PR_FALSE;
+
+  printf("Block Elements -- %s: \n");
+  while(theTagID<=eHTMLTag_userdefined) {
+    CElement *theTag=GetElement((eHTMLTags)theTagID);
+    if(theTag) {
+      result=theTag->IsBlockElement(eHTMLTag_unknown);
+      if(result) {
+        const char* theName=nsHTMLTags::GetCStringValue(theTag->mTag);
+        printf("  %s\n",theName);
+      }
+    }
+    theTagID++;
+  }
+}
+
 void CElementTable::DebugDumpContainment(const char* aTitle){
 #if 0
   DebugDumpContainment(mElements[eHTMLTag_head]);
@@ -2423,6 +2490,37 @@ PRBool CElement::CanContain(CElement* anElement,nsDTDContext* aContext) {
       }
       else result=mContainsGroups.mBits.mSelf;
     }    
+
+      /***************************************************
+        This is a (cheesy) exception table, that allows
+        us to override containment for transitional 
+        documents. A better implementation would be to
+        create unique classes for each of the tags in 
+        this table, and to override CanContain() there.
+       ***************************************************/
+    
+    if((!result) && (aContext->mTransitional)) {
+      switch(anElement->mTag) {
+        case eHTMLTag_address:
+          if(eHTMLTag_p==anElement->mTag)
+            result=PR_TRUE;
+          break;
+
+        case eHTMLTag_blockquote:
+        case eHTMLTag_form:
+        case eHTMLTag_iframe:
+          result=ContainsGroup(CFlowElement::GetContainedGroups(),anElement->mGroup);            
+          break;
+
+        case eHTMLTag_button:
+          if((eHTMLTag_iframe==anElement->mTag) || (eHTMLTag_isindex==anElement->mTag)) 
+            result=PR_TRUE;
+          break;
+
+        default:
+          break;
+      }
+    }
   }
   return result;
 }
@@ -2452,12 +2550,18 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
   }
   else 
 #endif
+
   {
     if(theElement) {
       if(CanContain(theElement,aContext)) {
     
         if(theElement->IsContainer()) {
-          result=theElement->OpenContainerInContext(aNode,aTag,aContext,aSink);
+          if(theElement->IsSinkContainer()) {
+            result=theElement->OpenContainerInContext(aNode,aTag,aContext,aSink);
+          }
+          else {
+            result=theElement->OpenContext(aNode,aTag,aContext,aSink);
+          }
         }
         else {
           result=aSink->AddLeaf(*aNode); 
@@ -2467,7 +2571,7 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
 
         //Ok, so we have a start token that is misplaced. Before handing this off
         //to a default container (parent), let's check the autoclose condition.
-        if(ListContainsTag(mAutoClose,theElement->mTag)) {
+        if(ListContainsTag(mAutoClose,theElement->mTag) || (aTag==mTag)) {
           if(HasOptionalEndTag(theElement)) {
             //aha! We have a case where this tag is autoclosed by anElement.
             //Let's close this container, then try to open theElement.
@@ -2498,7 +2602,7 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
 
           if(mTag!=aTag) {
             PRInt32 theLastPos=aContext->LastOf(aTag); //see if it's already open...
-            if(-1<theLastPos) {
+            if(-1!=theLastPos) {
               PRInt32 theCount=aContext->GetCount();
               result=HandleEndToken(aNode,aTag,aContext,aSink);
               theElementCanOpen=PRBool(aContext->GetCount()<theCount);
@@ -2530,7 +2634,14 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
   nsresult result=NS_OK;
 
   if(aContext->Last()==aTag) {
-    return CloseContainerInContext(aNode,aTag,aContext,aSink);
+    CElement* theElement=gElementTable->mElements[aTag];
+    if(theElement) {
+      if(theElement->IsSinkContainer()) {
+        CloseContainerInContext(aNode,aTag,aContext,aSink);
+      }
+      else CloseContext(aNode,aTag,aContext,aSink);
+      return result;
+    }
   }
 
   PRInt32   theCount=aContext->GetCount();
@@ -2548,39 +2659,6 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
     }
     return result;
   }
-
-
-/* This junk is intentionally commented out...
-
-  PRInt32 theLastOptionalTag=-1;
-  PRBool   done=PR_FALSE;
-
-  theIndex=0;
-
-  if(!done) {
-    for(theIndex=theCount-1;theIndex>=0;theIndex--) {
-      eHTMLTags theTag=aContext->TagAt(theIndex);
-      CElement* theElement=gElementTable->mElements[theTag];
-      if(HasOptionalEndTag(theElement)){
-        theLastOptionalTag=theIndex;
-      }
-      else break;
-    }
-
-    if(-1<theLastOptionalTag) {
-      PRInt32 theLastInstance=aContext->LastOf(aTag);
-      if(-1<theLastInstance) {
-        if(theLastOptionalTag-1==theLastInstance) {          
-          for(theIndex=theCount-1;theIndex>=theLastInstance;theIndex--){
-            CloseContainerInContext(aNode,aTag,aContext,aSink);
-          }
-        }
-      }
-      //there's nothing to do...
-    }
-    //there's nothing to do...
-  }
-*/
   return result;
 }
 
@@ -2609,6 +2687,22 @@ inline CElement* CElement::GetDefaultContainerFor(CElement* anElement) {
   return result;
 }
 
+
+  //this tells us whether this tag is a block tag within the given parent
+  //NOTE: aParentID is currently ignored, but shouldn't be.
+PRBool CElement::IsBlockElement(eHTMLTags aParentID) {
+  CGroupMembers& theBlockGroup=CBlockElement::GetBlockGroupMembers();
+  PRBool result=ContainsGroup(theBlockGroup,mGroup);
+  return result;
+}
+
+  //this tells us whether this tag is an inline tag within the given parent
+  //NOTE: aParentID is currently ignored, but shouldn't be.
+PRBool CElement::IsInlineElement(eHTMLTags aParentID) {
+  CGroupMembers& theInlineGroup=CInlineElement::GetContainedGroups();
+  PRBool result=ContainsGroup(theInlineGroup,mGroup);
+  return result;
+}
 
 
 #endif
