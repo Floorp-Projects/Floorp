@@ -33,6 +33,7 @@ LIBRARY_NAME	= xpcombase_s
 REQUIRES	= xpcom
 
 CPPSRCS		= \
+		nsAllocator.cpp \
 		nsMemoryImpl.cpp \
 		nsDebug.cpp \
 		nsIInterfaceRequestor.cpp \
