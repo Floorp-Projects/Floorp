@@ -5,7 +5,7 @@ COSES
 
 <set variable="title" value="Internal Error">
 <set variable="response" value="500 Server Error">
-  <include href="template.html.header"/>
+  <include href="template.header"/>
 </set></set>
 
 <![CDATA[
@@ -17,6 +17,6 @@ below:</p>
 <pre>]]><text escape="html" value="(error)"/><![CDATA[</pre>
 ]]>
 
-<include href="template.html.footer"/>
+<include href="template.footer"/>
 
 </text>

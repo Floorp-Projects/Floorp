@@ -1,7 +1,7 @@
 TemplateToolkit
 1
 
-[% INCLUDE template.html.header
+[% INCLUDE template.header
    title = 'User Preferences: Notes'
 %]
 
@@ -11,4 +11,4 @@ TemplateToolkit
 
 [% END %]
 
-[% INCLUDE template.html.footer %]
+[% INCLUDE template.footer %]

@@ -5,7 +5,7 @@ COSES
 
 <set variable="title" value="Access Denied">
 <set variable="response" value="403 Access Denied">
-  <include href="template.html.header"/>
+  <include href="template.header"/>
 </set></set>
 
 <text><![CDATA[
@@ -15,5 +15,5 @@ COSES
   </p>
 ]]></text>
 
-<include href="template.html.footer"/>
+<include href="template.footer"/>
 </text>

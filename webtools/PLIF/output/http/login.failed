@@ -1,7 +1,7 @@
 TemplateToolkit
 1
 
-[% INCLUDE template.html.header
+[% INCLUDE template.header
     title = 'Login'
     response = '401 Authentication Required'
     headers = "WWW-Authenticate: Basic realm=\"$app.name\""
@@ -16,9 +16,9 @@ TemplateToolkit
    contact:</p>
 
    <p>
-    [%- INCLUDE template.html.login.form buttonLabel = 'Get Password' %]
+    [%- INCLUDE template.login.form buttonLabel = 'Get Password' %]
     <input type="hidden" name="loginPendingCommands" value="[% pendingCommands | html %]">
    </p>
   </form>
 
-[% INCLUDE template.html.footer %]
+[% INCLUDE template.footer %]

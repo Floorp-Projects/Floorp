@@ -1,7 +1,7 @@
 TemplateToolkit
 1
 
-[% INCLUDE template.html.header
+[% INCLUDE template.header
    title = 'User Preferences' -%]
 
   <form action="?" method="GET">
@@ -109,4 +109,4 @@ TemplateToolkit
 
   </form>
 
-[% INCLUDE template.html.footer %]
+[% INCLUDE template.footer %]

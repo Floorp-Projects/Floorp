@@ -1,7 +1,7 @@
 TemplateToolkit
 1
 
-[% INCLUDE template.html.header title = 'Details Sent' -%]
+[% INCLUDE template.header title = 'Details Sent' -%]
 
   <p>Your password has been sent.</p>
 
@@ -18,4 +18,4 @@ TemplateToolkit
   <p><a href="?">Return to index.</a></p>
   [% END %]
 
-[% INCLUDE template.html.footer %]
+[% INCLUDE template.footer %]
