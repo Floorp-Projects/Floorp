@@ -78,9 +78,18 @@ function con_ondt ()
 console.onLoad =
 function con_load (e)
 {
+    var ex;
+    
     dd ("Application venkman, 'JavaScript Debugger' loaded.");
 
-    init();
+    try
+    {
+        init();
+    }
+    catch (ex)
+    {
+        window.alert (getMsg (MSN_ERR_STARTUP, formatException(ex)));
+    }
     
 }
 
@@ -118,7 +127,7 @@ function con_icommand (e)
         default:
             var str = "";
             for (var i in ary)
-                str += str ? ", " + ary[i].name : ary[i].name;
+                str += str ? MSG_COMMASP + ary[i].name : ary[i].name;
             display (getMsg (MSN_ERR_AMBIGCOMMAND, [e.command, ary.length, str]),
                      MT_ERROR);
     }
@@ -407,7 +416,8 @@ function con_iprops (e, forceDebuggerScope)
     
     if (!(v instanceof jsdIValue) || v.jsType != jsdIValue.TYPE_OBJECT)
     {
-        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, String(v)]),
+        var str = (v instanceof jsdIValue) ? formatValue(v) : String(v)
+        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, str]),
                  MT_ERROR);
         return false;
     }
@@ -689,7 +699,8 @@ function con_tabcomplete (e)
             d = new Date();
             if ((d - console._lastTabUp) <= console.prefs["input.dtab.time"])
                 display (getMsg (MSN_CMDMATCH,
-                                 [partialCommand, "[" + cmds.join(", ") + "]"]));
+                                 [partialCommand, "[" + cmds.join(MSG_COMMASP) +
+                                  "]"]));
             else
                 console._lastTabUp = d;
             
@@ -708,12 +719,14 @@ function con_tabcomplete (e)
 
 }
 
-console.onUnload =
-function con_unload (e)
+console.onClose =
+function con_close (e)
 {
-    dd ("Application venkman, 'JavaScript Debugger' unloaded.");
+    dd ("Application venkman, 'JavaScript Debugger' closing.");
 
     detachDebugger();
+    
+    return true;
 }
 
 window.onresize =
