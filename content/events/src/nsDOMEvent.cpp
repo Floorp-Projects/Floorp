@@ -337,14 +337,12 @@ NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
-  *aLayerX = 0;
-  return NS_OK;
+  return GetClientX(aLayerX);
 }
 
 NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 {
-  *aLayerY = 0;
-  return NS_OK;
+  return GetClientY(aLayerY);
 }
 
 NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)

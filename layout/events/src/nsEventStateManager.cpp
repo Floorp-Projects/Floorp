@@ -58,6 +58,7 @@ nsEventStateManager::nsEventStateManager() {
   mLastMouseOverFrame = nsnull;
   mLastDragOverFrame = nsnull;
   mCurrentTarget = nsnull;
+  mCurrentTargetContent = nsnull;
   mLastLeftMouseDownContent = nsnull;
   mLastMiddleMouseDownContent = nsnull;
   mLastRightMouseDownContent = nsnull;
@@ -73,6 +74,7 @@ nsEventStateManager::nsEventStateManager() {
 }
 
 nsEventStateManager::~nsEventStateManager() {
+  NS_IF_RELEASE(mCurrentTargetContent);
   NS_IF_RELEASE(mActiveContent);
   NS_IF_RELEASE(mHoverContent);
   NS_IF_RELEASE(mDragOverContent);
@@ -91,9 +93,11 @@ NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent *aEvent,
                                  nsIFrame* aTargetFrame,
-                                 nsEventStatus& aStatus)
+                                 nsEventStatus& aStatus,
+                                 nsIView* aView)
 {
   mCurrentTarget = aTargetFrame;
+  NS_IF_RELEASE(mCurrentTargetContent);
 
   nsFrameState state;
   mCurrentTarget->GetFrameState(&state);
@@ -111,6 +115,20 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
     GenerateMouseEnterExit(aPresContext, aEvent);
     break;
   case NS_GOTFOCUS:
+#if 0
+    nsIViewManager* viewMgr;
+    if (NS_SUCCEEDED(aView->GetViewManager(viewMgr)) && viewMgr) {
+      nsIView* rootView;
+      viewMgr->GetRootView(rootView);
+      if (rootView == aView) {
+        printf("send focus\n");
+      }
+      else {
+        printf("don't send focus\n");
+      }
+      NS_RELEASE(viewMgr);
+    }
+#endif
     //XXX Do we need window related focus change stuff here?
     break;
   case NS_LOSTFOCUS:
@@ -128,6 +146,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
                                  nsIView* aView)
 {
   mCurrentTarget = aTargetFrame;
+  NS_IF_RELEASE(mCurrentTargetContent);  
   nsresult ret = NS_OK;
 
   nsFrameState state;
@@ -251,6 +270,9 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
     mLastMouseOverFrame = nsnull;
   }
   if (aFrame == mCurrentTarget) {
+    if (aFrame) {
+      aFrame->GetContent(&mCurrentTargetContent);
+    }
     mCurrentTarget = nsnull;
   }
   return NS_OK;
@@ -881,7 +903,18 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
 NS_IMETHODIMP
 nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 {
+  if (!mCurrentTarget && mCurrentTargetContent) {
+    nsCOMPtr<nsIPresShell> shell;
+    if (mPresContext) {
+      nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv) && shell){
+        shell->GetPrimaryFrameFor(mCurrentTargetContent, &mCurrentTarget);
+      }
+    }
+  }
+
   *aFrame = mCurrentTarget;
+
   return NS_OK;
 }
 

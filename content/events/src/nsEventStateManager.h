@@ -39,7 +39,8 @@ public:
   NS_IMETHOD PreHandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
-                         nsEventStatus& aStatus);
+                         nsEventStatus& aStatus,
+                         nsIView* aView);
 
   NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent *aEvent,
@@ -70,6 +71,7 @@ protected:
 
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
+  nsIContent* mCurrentTargetContent;
   nsIFrame* mLastMouseOverFrame;
   nsIFrame* mLastDragOverFrame;
 
