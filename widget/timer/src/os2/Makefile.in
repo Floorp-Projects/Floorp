@@ -36,7 +36,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-IS_COMPONENT	= 1
 MODULE		= timer
 LIBRARY_NAME	= timer
 
