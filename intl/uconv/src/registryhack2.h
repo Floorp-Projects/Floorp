@@ -22,6 +22,12 @@
 
   PRInt32 i =0;
 
+
+
+
+
+
+
   mDecArray[i++].mCID  = &kAsciiToUnicodeCID;
   mDecArray[i++].mCID  = &kISO88591ToUnicodeCID;
   mDecArray[i++].mCID  = &kISO88592ToUnicodeCID;
@@ -80,10 +86,18 @@
   mDecArray[i++].mCID  = &kT61ToUnicodeCID;
   mDecArray[i++].mCID  = &kUserDefinedToUnicodeCID;
 
-  mEncSize           = 70;
+  mEncSize           = 72;
   mEncArray          = new ConverterInfo [mEncSize];
 
   i = 0;
+
+
+
+
+
+
+
+
   mEncArray[i++].mCID  = &kUnicodeToAsciiCID;
   mEncArray[i++].mCID  = &kUnicodeToISO88591CID;
   mEncArray[i++].mCID  = &kUnicodeToISO88592CID;
@@ -154,4 +168,6 @@
   mEncArray[i++].mCID  = &kUnicodeToCNS11643p5CID;
   mEncArray[i++].mCID  = &kUnicodeToCNS11643p6CID;
   mEncArray[i++].mCID  = &kUnicodeToCNS11643p7CID;
+  mEncArray[i++].mCID  = &kUnicodeToSymbolCID;
+  mEncArray[i++].mCID  = &kUnicodeToZapfDingbatsCID;
 
