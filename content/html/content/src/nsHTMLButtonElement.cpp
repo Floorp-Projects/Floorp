@@ -30,6 +30,7 @@
 #include "nsIPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
+#include "nsIURL.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
@@ -333,14 +334,16 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-            nsAutoString base, href, target;
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+            nsAutoString href, target;
+            nsIURL* baseURL = nsnull;
+            GetBaseURL(baseURL);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
             if (target.Length() == 0) {
-              GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
+              GetBaseTarget(target);
             }
-            mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_TRUE);
+            mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_TRUE);
+            NS_IF_RELEASE(baseURL);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
@@ -354,14 +357,16 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_ENTER:
       //mouse enter doesn't work yet.  Use move until then.
       {
-        nsAutoString base, href, target;
-        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+        nsAutoString href, target;
+        nsIURL* baseURL = nsnull;
+        GetBaseURL(baseURL);
         GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
         GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
         if (target.Length() == 0) {
-          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
+          GetBaseTarget(target);
         }
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
+        NS_IF_RELEASE(baseURL);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
@@ -370,7 +375,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
       {
         nsAutoString empty;
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, empty, empty, empty, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;

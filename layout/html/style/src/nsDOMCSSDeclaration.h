@@ -24,6 +24,7 @@
 #include "nsIScriptObjectOwner.h"
 
 class nsICSSDeclaration;
+class nsIURL;
 
 class nsDOMCSSDeclaration : public nsIDOMCSS2Properties,
                             public nsIScriptObjectOwner
@@ -47,6 +48,7 @@ public:
   virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
                                         PRInt32 aHint) = 0;
   virtual nsresult GetParent(nsISupports **aParent) = 0;
+  virtual nsresult GetBaseURL(nsIURL** aURL) = 0; // get URL that style URLs are realtive to
 
 protected:
   virtual ~nsDOMCSSDeclaration();
