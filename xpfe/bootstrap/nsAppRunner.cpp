@@ -1514,6 +1514,11 @@ int main(int argc, char* argv[])
   InitializeMacOSXApp(argc, argv);
 #endif
 
+#ifdef _BUILD_STATIC_BIN
+  // Initialize XPCOM's module info table
+  NSGetStaticModuleInfo = apprunner_getModuleInfo;
+#endif
+
   // Handle -help and -version command line arguments.
   // They should% return quick, so we deal with them here.
   if (HandleDumpArguments(argc, argv))
@@ -1565,11 +1570,6 @@ int main(int argc, char* argv[])
   } else if (splash) {
     splash->Show();
   }
-
-#ifdef _BUILD_STATIC_BIN
-  // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = apprunner_getModuleInfo;
-#endif
 
   NS_TIMELINE_MARK("InitXPCom...");
 
