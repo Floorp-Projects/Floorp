@@ -36,14 +36,21 @@
 class nsIDOMImage : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMIMAGE_IID; return iid; }
+
+  NS_IMETHOD    GetLowsrc(nsString& aLowsrc)=0;
+  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc)=0;
 };
 
 
 #define NS_DECL_IDOMIMAGE   \
+  NS_IMETHOD    GetLowsrc(nsString& aLowsrc);  \
+  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);  \
 
 
 
 #define NS_FORWARD_IDOMIMAGE(_to)  \
+  NS_IMETHOD    GetLowsrc(nsString& aLowsrc) { return _to GetLowsrc(aLowsrc); } \
+  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc) { return _to SetLowsrc(aLowsrc); } \
 
 
 #endif // nsIDOMImage_h__

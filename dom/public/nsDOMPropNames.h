@@ -320,7 +320,6 @@
     "htmldocument.close", \
     "htmldocument.cookie", \
     "htmldocument.domain", \
-    "htmldocument.formname", \
     "htmldocument.forms", \
     "htmldocument.getelementbyid", \
     "htmldocument.getelementsbyname", \
@@ -599,6 +598,7 @@
     "htmltitleelement.text", \
     "htmlulistelement.compact", \
     "htmlulistelement.type", \
+    "image.lowsrc", \
     "keyevent.altkey", \
     "keyevent.charcode", \
     "keyevent.ctrlkey", \

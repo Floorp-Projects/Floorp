@@ -63,7 +63,8 @@ enum HTMLImageElement_slots {
   HTMLIMAGEELEMENT_LONGDESC = -9,
   HTMLIMAGEELEMENT_USEMAP = -10,
   HTMLIMAGEELEMENT_VSPACE = -11,
-  HTMLIMAGEELEMENT_WIDTH = -12
+  HTMLIMAGEELEMENT_WIDTH = -12,
+  IMAGE_LOWSRC = -13
 };
 
 /***********************************************************************/
@@ -304,6 +305,32 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case IMAGE_LOWSRC:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_LOWSRC, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsAutoString prop;
+        nsIDOMImage* b;
+        if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetLowsrc(prop);
+          if(NS_SUCCEEDED(result)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, obj, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
@@ -507,6 +534,28 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+      case IMAGE_LOWSRC:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_LOWSRC, PR_TRUE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsAutoString prop;
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+        nsIDOMImage *b;
+        if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+          b->SetLowsrc(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -584,6 +633,7 @@ static JSPropertySpec HTMLImageElementProperties[] =
   {"useMap",    HTMLIMAGEELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"vspace",    HTMLIMAGEELEMENT_VSPACE,    JSPROP_ENUMERATE},
   {"width",    HTMLIMAGEELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {"lowsrc",    IMAGE_LOWSRC,    JSPROP_ENUMERATE},
   {0}
 };
 
