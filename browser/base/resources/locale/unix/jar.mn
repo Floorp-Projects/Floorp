@@ -1,4 +1,0 @@
-en-unix.jar:
-        locale/en-US/navigator-platform/contents.rdf 			(contents-platform.rdf)
-        locale/en-US/navigator-platform/platformNavigationBindings.dtd
-        locale/en-US/navigator-platform/navigator.properties
