@@ -372,29 +372,11 @@ private:
      *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
      *  @return  NS_OK if succeeded else ERROR.
      */
-    static nsresult CreateCompatibleDTDForDocType(nsIDTD**  aDTD, nsString* aDocTypeStr);
-     /**
-     *  Call this method to determine a DTD for a given mime type.
-     *  
-     *  @update  harishd 05/01/00
-     *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
-     *  @param   aMimeType   -- A mimetype for which a DTD is to be selected.
-                                Note: aParseMode might be required.
-     *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
-     *  @return  NS_OK if succeeded else ERROR.
-     */
-    static nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType, 
-                                                   nsDTDMode aParseMode=eDTDMode_unknown);
-     /**
-     *  Call this method to determine a DTD for a given command
-     *  
-     *  @update  harishd 05/01/00
-     *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
-     *  @param   aCommand    -- A command for which a DTD is to be selected.
-     *  @return  NS_OK if succeeded else ERROR.
-     */
-    static nsresult CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand);
-
+    static nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD, 
+                                       nsString* aDocTypeStr,
+                                       eParserCommands aCommand,
+                                       const nsString* aMimeType=nsnull, 
+                                       nsDTDMode aDTDMode=eDTDMode_unknown);
 protected:
     //*********************************************
     // And now, some data members...
