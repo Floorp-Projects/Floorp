@@ -72,9 +72,9 @@ nsSVGPathFrame::nsSVGPathFrame() :
 
 nsSVGPathFrame::~nsSVGPathFrame()
 {
-  if (mPath) {
-    delete mPath;
-  }
+//  if (mPath) {
+//    delete mPath;
+//  }
 }
 
 
