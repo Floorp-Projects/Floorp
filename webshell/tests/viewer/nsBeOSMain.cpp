@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,19 +18,17 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	Chris Seawood <cls@seawood.org>
  */
 #include <signal.h>
 #include <be/app/Application.h>
 
+#include "nsIAppShell.h"
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
-//#include "JSConsole.h"
 #include "nsBrowserWindow.h"
 #include <stdlib.h>
 #include "plevent.h"
-
-//#include "nsTimer.h"
-//#include "nsITimer.h"
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
@@ -43,12 +41,16 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run() 
 {
-  OpenWindow();
+	OpenWindow();
 
-	if(mAppShell)
+	if(mAppShell) {
+		nsIAppShell *theAppShell = mAppShell;
+		NS_ADDREF(theAppShell);
 		mAppShell->Run();
+		NS_RELEASE(theAppShell);
+	}
 
-	return NS_OK;
+	return 0;
 }
 
 //----------------------------------------------------------------------
@@ -65,20 +67,15 @@ nsresult
 nsNativeBrowserWindow::InitNativeWindow()
 {
 	// override to do something special with platform native windows
-  return NS_OK;
+	return NS_OK;
 }
 
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
 	printf("nsNativeBrowserWindow:: CreateMenuBar not implemented\n");
-#if 0
-  HMENU menu = ::LoadMenu(gInstance, "Viewer");
-  HWND hwnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WIDGET);
-  ::SetMenu(hwnd, menu);
-#endif
 
-  return NS_OK;
+	return NS_OK;
 }
 
 nsresult
@@ -102,50 +99,99 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 //----------------------------------------------------------------------
 
-class nsViewerBeOSApp : public BApplication
+class nsBeOSApp : public BApplication
 {
 public:
-  nsViewerBeOSApp(int argc, char **argv) 
-    : BApplication("application/x-vnd.mozilla.viewer") {
+  nsBeOSApp(sem_id sem)
+    : BApplication("application/x-vnd.mozilla.viewer"), init(sem) { }
 
-    if (!viewer_app) {
-      viewer_app = new nsNativeViewerApp();
-    }
+	void ReadyToRun(void) {
+		release_sem(init);
+	}
 
-    if (viewer_app) {
-      NS_ADDREF(viewer_app);
-      viewer_app->Initialize(argc, argv);
-      viewer_app->Run();
-      NS_RELEASE(viewer_app);
-    }
-  }
+	static int32 Main(void *args) {
+		nsBeOSApp *app = new nsBeOSApp((sem_id)args);
+		if (!app)
+			return B_ERROR;
+		return app->Run();
+	}
 
 private:
-  nsViewerApp *viewer_app;
-
+	sem_id init;
 };
 
 //----------------------------------------------------------------------
-
-static nsViewerBeOSApp *beos_app = 0;
+static nsNativeViewerApp *NVApp = 0;
 
 static void beos_signal_handler(int signum) {
-  fprintf(stderr, "beos_signal_handler: %d\n", signum);
-  if (beos_app) {
-    beos_app->Quit();
-  }
+#ifdef DEBUG
+	fprintf(stderr, "beos_signal_handler: %d\n", signum);
+#endif
+
+	// Exit native appshell loop so that viewer will shutdown normally
+	if (NVApp)
+		NVApp->Exit();
 }
+
+static nsresult InitializeBeOSApp(void)
+{
+	nsresult rv = NS_OK;
+
+	sem_id initsem = create_sem(0, "beapp init");
+	if (initsem < B_OK)
+		return NS_ERROR_FAILURE;
+
+	thread_id tid = spawn_thread(nsBeOSApp::Main, "BApplication", 
+					B_NORMAL_PRIORITY, (void *)initsem);
+	if (tid < B_OK || B_OK != resume_thread(tid))
+		rv = NS_ERROR_FAILURE;
+
+	if (B_OK != acquire_sem(initsem))
+		rv = NS_ERROR_FAILURE;
+	if (B_OK != delete_sem(initsem))
+		rv = NS_ERROR_FAILURE;
+
+	return rv;
+}
+
 
 int main(int argc, char **argv)
 {
-  signal(SIGTERM, beos_signal_handler);
+	signal(SIGTERM, beos_signal_handler);
 
-  beos_app = new nsViewerBeOSApp(argc, argv);
+	if (NS_OK != InitializeBeOSApp())
+		return 1;
 
-  if (beos_app)
-    beos_app->Run();
-  else
-    return B_NO_MEMORY;
+	// Init XPCOM
+	nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+	if (NS_SUCCEEDED(rv)) {
 
-  return 0;
+		// Run viewer app
+		NVApp = new nsNativeViewerApp();
+		if (!NVApp) {
+#ifdef DEBUG
+			fprintf(stderr, "Could not allocate mem for nsNativeViewerApp\n");
+#endif
+			// Shutdown XPCOM
+			rv = NS_ShutdownXPCOM(nsnull);
+			return 1;
+		}
+		NVApp->Initialize(argc,argv);
+		NVApp->Run();
+		delete NVApp;
+		NVApp = 0;
+
+		// Shutdown XPCOM
+		rv = NS_ShutdownXPCOM(nsnull);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+	}
+
+	// Delete BApplication
+	if (be_app->Lock())
+		be_app->Quit();
+	delete be_app;
+
+	return 0;
 }
+
