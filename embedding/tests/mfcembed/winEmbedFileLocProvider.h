@@ -31,6 +31,7 @@
 
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
+#include "nsString.h"
 
 class nsIFile;
 
@@ -41,9 +42,9 @@ class nsIFile;
 class winEmbedFileLocProvider : public nsIDirectoryServiceProvider
 {
 public:
-    // productDirName is the name (not path) of the dir
+    // aProductDirName is the name (not path) of the dir
     // in which the application registry and profiles live.
-    winEmbedFileLocProvider(const char* productDirName);
+    winEmbedFileLocProvider(const nsACString& aProductDirName);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDIRECTORYSERVICEPROVIDER
@@ -59,6 +60,6 @@ protected:
     NS_METHOD            GetGreDirectory(nsILocalFile **aLocalFile);   
 
 
-    char                 mProductDirName[256];
+    nsCString              mProductDirName;
     nsCOMPtr<nsILocalFile> mMozBinDirectory;
 };

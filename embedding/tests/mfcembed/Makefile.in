@@ -53,6 +53,7 @@ REQUIRES = \
 	shistory \
 	pref \
 	profile \
+	profdirserviceprovider \
 	find \
 	gfx \
 	windowwatcher \
@@ -67,6 +68,10 @@ REQUIRES = \
 
 ifdef NS_TRACE_MALLOC
 REQUIRES	+= tracemalloc
+endif
+
+ifdef MOZ_PROFILESHARING
+REQUIRES	+= profilesharingsetup
 endif
 
 CPPSRCS		= \
@@ -92,7 +97,7 @@ CPPSRCS		= \
 		StdAfx.cpp       \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= embed_base_s gkgfx mfcEmbedComponents
+EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s gkgfx mfcEmbedComponents
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc

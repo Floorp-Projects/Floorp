@@ -50,7 +50,6 @@
 #include "BrowserFrm.h"
 #include "EditorFrm.h"
 #include "winEmbedFileLocProvider.h"
-#include "ProfileMgr.h"
 #include "BrowserImpl.h"
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
@@ -59,6 +58,15 @@
 #include <io.h>
 #include <fcntl.h>
 
+#ifdef USE_PROFILES
+#include "ProfileMgr.h"
+#else
+#include "nsProfileDirServiceProvider.h"
+#endif
+
+#ifdef MOZ_PROFILESHARING
+#include "nsIProfileSharingSetup.h"
+#endif
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -201,7 +209,9 @@ BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
     //{{AFX_MSG_MAP(CMfcEmbedApp)
     ON_COMMAND(ID_NEW_BROWSER, OnNewBrowser)
     ON_COMMAND(ID_NEW_EDITORWINDOW, OnNewEditor)
+#ifdef USE_PROFILES
     ON_COMMAND(ID_MANAGE_PROFILES, OnManageProfiles)
+#endif
     ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
     ON_COMMAND(ID_EDIT_PREFERENCES, OnEditPreferences)
     // NOTE - the ClassWizard will add and remove mapping macros here.
@@ -209,10 +219,13 @@ BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
     //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-CMfcEmbedApp::CMfcEmbedApp() :
-    m_ProfileMgr(NULL)
+CMfcEmbedApp::CMfcEmbedApp()
 {
     mRefCnt = 1; // Start at one - nothing is going to addref this object
+
+#ifdef USE_PROFILES
+    m_ProfileMgr = NULL;
+#endif
 
     m_strHomePage = "";
 
@@ -396,7 +409,9 @@ BOOL CMfcEmbedApp::InitInstance()
     // http://www.mozilla.org/projects/xpcom/file_locations.html
     // for more info on File Locations
 
-    winEmbedFileLocProvider *provider = new winEmbedFileLocProvider("MfcEmbed");
+    CString strRes;
+    strRes.LoadString(IDS_PROFILES_FOLDER_NAME);
+    winEmbedFileLocProvider *provider = new winEmbedFileLocProvider(nsDependentCString(strRes));
     if(!provider)
     {
         ASSERT(FALSE);
@@ -562,7 +577,15 @@ int CMfcEmbedApp::ExitInstance()
     if (m_pMainWnd)
         m_pMainWnd->DestroyWindow();
 
+#ifdef USE_PROFILES
     delete m_ProfileMgr;
+#else
+    if (m_ProfileDirServiceProvider)
+    {
+        m_ProfileDirServiceProvider->Shutdown();
+        NS_RELEASE(m_ProfileDirServiceProvider);
+    }
+#endif
 
     NS_TermEmbedding();
 
@@ -578,7 +601,9 @@ BOOL CMfcEmbedApp::OnIdle(LONG lCount)
 
 void CMfcEmbedApp::OnManageProfiles()
 {
+#ifdef USE_PROFILES
     m_ProfileMgr->DoManageProfilesDialog(PR_FALSE);
+#endif
 }
 
 void CMfcEmbedApp::OnEditPreferences()
@@ -612,18 +637,57 @@ void CMfcEmbedApp::OnEditPreferences()
 
 BOOL CMfcEmbedApp::InitializeProfiles()
 {
+
+#ifdef MOZ_PROFILESHARING
+    // If we are using profile sharing, get the sharing setup service
+    nsCOMPtr<nsIProfileSharingSetup> sharingSetup =
+        do_GetService("@mozilla.org/embedcomp/profile-sharing-setup;1");
+    if (sharingSetup)
+    {
+        USES_CONVERSION;
+        CString strRes;
+        strRes.LoadString(IDS_PROFILES_NONSHARED_NAME);
+        nsDependentString nonSharedName(T2W(strRes));
+        sharingSetup->EnableSharing(nonSharedName);
+    }
+#endif
+
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService("@mozilla.org/observer-service;1");
+    if (!observerService)
+        return FALSE;
+
+    // Both the profile mgr and standalone nsProfileDirServiceProvider
+    // send this notification.
+    observerService->AddObserver(this, "profile-after-change", PR_TRUE);
+
+#ifdef USE_PROFILES
     m_ProfileMgr = new CProfileMgr;
     if (!m_ProfileMgr)
         return FALSE;
 
-      nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService("@mozilla.org/observer-service;1", &rv);
     observerService->AddObserver(this, "profile-approve-change", PR_TRUE);
     observerService->AddObserver(this, "profile-change-teardown", PR_TRUE);
-    observerService->AddObserver(this, "profile-after-change", PR_TRUE);
 
     m_ProfileMgr->StartUp();
+#else
+    nsresult rv;
+    nsCOMPtr<nsIFile> appDataDir;
+    NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR,
+                                getter_AddRefs(appDataDir));
+    if (!appDataDir)
+        return FALSE;
+    nsCOMPtr<nsProfileDirServiceProvider> profProvider;
+    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(profProvider));
+    if (!profProvider)
+        return FALSE;
+    profProvider->Register();    
+    nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
+    rv = profProvider->SetProfileDir(localAppDataDir);
+    if (NS_FAILED(rv))
+        return FALSE;
+    NS_ADDREF(m_ProfileDirServiceProvider = profProvider);
+#endif
 
     return TRUE;
 }

@@ -52,6 +52,7 @@
 
 class CBrowserFrame;
 class CProfileMgr;
+class nsProfileDirServiceProvider;
 
 class CMfcEmbedApp : public CWinApp,
                      public nsIObserver,
@@ -118,7 +119,12 @@ private:
     nsresult        InitializeWindowCreator();
     
 private:
+
+#ifdef USE_PROFILES
     CProfileMgr     *m_ProfileMgr;
+#else
+    nsProfileDirServiceProvider *m_ProfileDirServiceProvider;
+#endif
 };
 
 

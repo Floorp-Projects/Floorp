@@ -60,10 +60,9 @@
 // winEmbedFileLocProvider::Constructor/Destructor
 //*****************************************************************************   
 
-winEmbedFileLocProvider::winEmbedFileLocProvider(const char* productDirName)
+winEmbedFileLocProvider::winEmbedFileLocProvider(const nsACString& aAppDataDirName)
 {
-    strncpy(mProductDirName, productDirName, sizeof(mProductDirName) - 1);
-    mProductDirName[sizeof(mProductDirName) - 1] = '\0';
+    mProductDirName = aAppDataDirName;
 }
 
 winEmbedFileLocProvider::~winEmbedFileLocProvider()
@@ -326,7 +325,7 @@ NS_METHOD winEmbedFileLocProvider::GetProductDirectory(nsILocalFile **aLocalFile
     }
     if (NS_FAILED(rv)) return rv;
 
-    rv = localDir->AppendRelativeNativePath(nsDependentCString(mProductDirName));
+    rv = localDir->AppendNative(mProductDirName);
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
