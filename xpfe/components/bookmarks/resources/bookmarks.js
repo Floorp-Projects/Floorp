@@ -24,11 +24,15 @@
   Script for the bookmarks properties window
 */
 
-
+function debug(msg)
+{
+  // uncomment for noise
+  //dump(msg);
+}
 
 function TopLevelDrag ( event )
 {
-	dump("TOP LEVEL bookmarks window got a drag\n");
+	debug("TOP LEVEL bookmarks window got a drag\n");
 	return(true);
 }
 
@@ -74,7 +78,7 @@ function BeginDragTree ( event )
 	var id = event.target.parentNode.parentNode.getAttribute("id");
 	genData.data = id;
 	genTextData.data = id;
-	dump("ID: " + id + "\n");
+	debug("ID: " + id + "\n");
 
 	var database = childWithDatabase.database;
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
@@ -89,7 +93,7 @@ function BeginDragTree ( event )
 	if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFResource);
 	if (target)	target = target.Value;
 	if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
-	dump("Type: '" + target + "'\n");
+	debug("Type: '" + target + "'\n");
 
 	if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
 		(target != "http://home.netscape.com/NC-rdf#Bookmark") &&
@@ -221,7 +225,7 @@ function DropOnTree ( event )
 		var sourceID = dataObj.data.substring(0, len.value);
 		if (!sourceID)	continue;
 
-		dump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'\n");
+		debug("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'\n");
 
 		var sourceNode = RDF.GetResource(sourceID, true);
 		if (!sourceNode)	continue;
@@ -265,7 +269,7 @@ function DropOnTree ( event )
 		if (remote)
 		{
 			remote.Flush();
-			dump("Wrote out bookmark changes.\n");
+			debug("Wrote out bookmark changes.\n");
 		}
 	}
 
@@ -281,7 +285,7 @@ function copySelectionToClipboard()
 	var select_list = treeNode.selectedItems;
 	if (!select_list)	return(false);
 	if (select_list.length < 1)    return(false);
-	dump("# of Nodes selected: " + select_list.length + "\n\n");
+	debug("# of Nodes selected: " + select_list.length + "\n\n");
 
 	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
@@ -310,12 +314,12 @@ function copySelectionToClipboard()
 		if (nameNode) nameNode = nameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
 		if (nameNode)	theName = nameNode.Value;
 
-		dump("Node " + nodeIndex + ": " + ID + "    name: " + theName + "\n");
+		debug("Node " + nodeIndex + ": " + ID + "    name: " + theName + "\n");
 		url += "ID:{" + ID + "};";
 		url += "NAME:{" + theName + "};";
 	}
 	if (url == "")	return(false);
-	dump("Copy URL: " + url + "\n\n");
+	debug("Copy URL: " + url + "\n\n");
 
 	// get some useful components
 	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
@@ -369,9 +373,9 @@ function doPaste()
 	if (select_list.length != 1)    return(false);
 	
 	var pasteNodeID = select_list[0].getAttribute("id");
-	dump("Paste onto " + pasteNodeID + "\n");
+	debug("Paste onto " + pasteNodeID + "\n");
 	var isContainerFlag = select_list[0].getAttribute("container") == "true" ? true:false;
-	dump("Container status: " + ((isContainerFlag) ? "true" : "false") + "\n\n");
+	debug("Container status: " + ((isContainerFlag) ? "true" : "false") + "\n\n");
 
 	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
 	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
@@ -423,7 +427,8 @@ function doPaste()
 		if (!pasteContainerRes)	return(false);
 	}
 	RDFC.Init(Bookmarks, pasteContainerRes);
-	dump("Inited RDFC\n");
+
+	debug("Inited RDFC\n");
 
 	if (isContainerFlag == false)
 	{
@@ -431,7 +436,7 @@ function doPaste()
 		if (pasteNodeIndex < 0)	return(false);			// how did that happen?
 	}
 
-	dump("Loop over strings\n");
+	debug("Loop over strings\n");
 
 	var dirty = false;
 
@@ -443,7 +448,7 @@ function doPaste()
 		{
 			theID = theID.substr(4, theID.length-5);
 			theName = theName.substr(6, theName.length-7);
-			dump("Paste  ID: " + theID + "    NAME: " + theName + "\n");
+			debug("Paste  ID: " + theID + "    NAME: " + theName + "\n");
 
 			var IDRes = RDF.GetResource(theID);
 			if (!IDRes)	continue;
@@ -467,12 +472,12 @@ function doPaste()
 			if (isContainerFlag == true)
 			{
 				RDFC.AppendElement(IDRes);
-				dump("Appended node onto end of container\n");
+				debug("Appended node onto end of container\n");
 			}
 			else
 			{
 				RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
-				dump("Pasted at index # " + pasteNodeIndex + "\n");
+				debug("Pasted at index # " + pasteNodeIndex + "\n");
 			}
 			dirty = true;
 		}
@@ -484,7 +489,7 @@ function doPaste()
 		if (remote)
 		{
 			remote.Flush();
-			dump("Wrote out bookmark changes.\n");
+			debug("Wrote out bookmark changes.\n");
 		}
 	}
 
@@ -501,7 +506,7 @@ function doDelete(promptFlag)
 	if (!select_list)	return(false);
 	if (select_list.length < 1)    return(false);
 
-	dump("# of Nodes selected: " + select_list.length + "\n\n");
+	debug("# of Nodes selected: " + select_list.length + "\n\n");
 
 	if (promptFlag == true)
 	{
@@ -534,8 +539,8 @@ function doDelete(promptFlag)
 		if (!parentID)	parentID = node.parentNode.parentNode.getAttribute("id");
 		if (!parentID)	continue;
 
-		dump("Node " + nodeIndex + ": " + ID + "\n");
-		dump("Parent Node " + nodeIndex + ": " + parentID + "\n");
+		debug("Node " + nodeIndex + ": " + ID + "\n");
+		debug("Parent Node " + nodeIndex + ": " + parentID + "\n");
 
 		var IDRes = RDF.GetResource(ID);
 		if (!IDRes)	continue;
@@ -553,7 +558,7 @@ function doDelete(promptFlag)
 		if (remote)
 		{
 			remote.Flush();
-			dump("Wrote out bookmark changes.\n");
+			debug("Wrote out bookmark changes.\n");
 		}
 	}
 
@@ -609,7 +614,7 @@ function BookmarkProperties()
 	}
 	else
 	{
-		dump("nothing selected!\n"); 
+		debug("nothing selected!\n"); 
 	}
 	return(true);
 }
@@ -707,7 +712,7 @@ function doSort(sortColName)
 	}
 	catch(ex)
 	{
-		dump("Exception calling xulSortService.Sort()\n");
+		debug("Exception calling xulSortService.Sort()\n");
 	}
 	return(false);
 }
@@ -719,10 +724,9 @@ function fillContextMenu(name)
     if (!name)    return(false);
     var popupNode = document.getElementById(name);
     if (!popupNode)    return(false);
-
     // remove the menu node (which tosses all of its kids);
     // do this in case any old command nodes are hanging around
-	for (var i = 0; i < popupNode.childNodes.length; i++) 
+	while (popupNode.childNodes.length)
 	{
 	  popupNode.removeChild(popupNode.childNodes[0]);
 	}
@@ -740,11 +744,14 @@ function fillContextMenu(name)
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
     if (!rdf)    return(false);
 
+    var target_item = document.popupNode.parentNode.parentNode;
+    if (target_item.getAttribute('selected') != 'true') {
+      treeNode.selectItem(target_item);
+    }
+
     var select_list = treeNode.selectedItems;
-    if (!select_list)	return(false);
-    if (select_list.length < 1)    return(false);
-    
-    dump("# of Nodes selected: " + select_list.length + "\n\n");
+
+    debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n\n");
 
     // perform intersection of commands over selected nodes
     var cmdArray = new Array();
@@ -816,7 +823,7 @@ function fillContextMenu(name)
         cmdName = cmdNameLiteral.Value;
         if (!cmdName)        break;
 
-        dump("Command #" + cmdIndex + ": id='" + cmdResource.Value + "'  name='" + cmdName + "'\n\n");
+        debug("Command #" + cmdIndex + ": id='" + cmdResource.Value + "'  name='" + cmdName + "'\n\n");
 
         var menuItem = document.createElement("menuitem");
         menuItem.setAttribute("value", cmdName);
@@ -832,7 +839,7 @@ function fillContextMenu(name)
 
 function doContextCmd(cmdName)
 {
-	dump("doContextCmd start: cmd='" + cmdName + "'\n");
+	debug("doContextCmd start: cmd='" + cmdName + "'\n");
 
 	var treeNode = document.getElementById("bookmarksTree");
 	if (!treeNode)    return(false);
@@ -857,7 +864,7 @@ function doContextCmd(cmdName)
 	if (!select_list)		return(false);
 	if (select_list.length < 1)	return(false);
 
-	dump("# of Nodes selected: " + select_list.length + "\n\n");
+	debug("# of Nodes selected: " + select_list.length + "\n\n");
 
 	// set up selection nsISupportsArray
 	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
@@ -915,6 +922,18 @@ function doContextCmd(cmdName)
 	// do the command
 	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
 
-	dump("doContextCmd ends.\n\n");
+	debug("doContextCmd ends.\n\n");
 	return(true);
+}
+
+function dumpAttributes(node) {
+  var attributes = node.attributes
+
+  if (!attributes || attributes.length == 0) {
+    debug("no attributes\n")
+  }
+  for (var ii=0; ii < attributes.length; ii++) {
+    var attr = attributes.item(ii)
+    debug("att "+ii+": "+ attr.name +"="+attr.value+"\n")
+  }
 }
