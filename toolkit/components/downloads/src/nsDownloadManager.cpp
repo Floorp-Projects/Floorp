@@ -1194,8 +1194,9 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       return CancelDownload(path.get());  
     }
   }
-  else if (nsCRT::strcmp(aTopic, "quit-application") == 0 && mCurrDownloads.Count()) {
+  else if (nsCRT::strcmp(aTopic, "quit-application") == 0) {
     gStoppingDownloads = PR_TRUE;
+    if (mCurrDownloads.Count()) {
     mCurrDownloads.Enumerate(CancelAllDownloads, this);
 
     // Download Manager is shutting down! Tell the XPInstallManager to stop
@@ -1204,6 +1205,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     
     // Now go and update the datasource so that we "cancel" all paused downloads. 
     SaveState();
+    }
 
     // Now that active downloads have been canceled, remove all downloads if 
     // the user's retention policy specifies it. 
