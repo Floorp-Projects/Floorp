@@ -209,7 +209,7 @@ sub MainMenu() {
 #                 hidden(-name=>"partitionid") . end_form()));
 #     }
 
-    my $query = Query("select id,name from repositories order by id");
+    my $query = Query("select id,name from repositories order by name");
     my @vals = ();
     my %labels;
     while (my @row = $query->fetchrow()) {
