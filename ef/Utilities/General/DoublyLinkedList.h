@@ -49,11 +49,15 @@ class DoublyLinkedRoot
 	DoublyLinkedNode root;
 
   private:
+#if 0
 	DoublyLinkedRoot(const DoublyLinkedRoot &);			// Copying forbidden
 	void operator=(const DoublyLinkedRoot &);			// Copying forbidden
+#endif
   public:
+	DoublyLinkedRoot(const DoublyLinkedRoot &){ PR_ASSERT(0); }	// Copying forbidden
+	void operator=(const DoublyLinkedRoot &){ PR_ASSERT(0); }	// Copying forbidden
 	DoublyLinkedRoot() {root.next = &root; root.prev = &root;}
-
+	
 	void init() {root.next = &root; root.prev = &root;}
 	bool empty() const {return root.next == &root;}
 

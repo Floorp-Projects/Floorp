@@ -78,15 +78,15 @@ private:
   inline VirtualRegister* link(VirtualRegister* vReg);
   inline VirtualRegister* unlink();
 
+public:
+
 #if DEBUG
   /*
    * Copying a VirtualRegisterPtr is forbidden.
    */
-  VirtualRegisterPtr(const VirtualRegisterPtr& vRegPtr);
-  void operator = (const VirtualRegisterPtr& vRegPtr);
+  VirtualRegisterPtr(const VirtualRegisterPtr& vRegPtr) {PR_ASSERT(0);}
+  void operator = (const VirtualRegisterPtr& vRegPtr) {PR_ASSERT(0);}
 #endif
-
-public:
 
   /*
    * Constructors & destructors.
