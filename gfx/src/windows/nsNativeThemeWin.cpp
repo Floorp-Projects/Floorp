@@ -1348,7 +1348,11 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
+      // XXX HACK We should be able to have a minimum height for the scrollbar
+      // track.  However, this causes problems when uncollapsing a scrollbar
+      // inside a tree.  See bug 201379 for details.
+
+        //      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
       break;
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
