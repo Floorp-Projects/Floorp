@@ -417,8 +417,8 @@ void
 nsXBLBinding::GenerateAnonymousContent()
 {
   // Fetch the content element for this binding.
-  nsCOMPtr<nsIContent> content;
-  GetImmediateChild(nsXBLAtoms::content, getter_AddRefs(content));
+  nsIContent* content =
+    mPrototypeBinding->GetImmediateChild(nsXBLAtoms::content);
 
   if (!content) {
     // We have no anonymous content.
@@ -851,8 +851,8 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     // Only style bindings get their prototypes unhooked.
     if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
-      nsCOMPtr<nsIContent> interfaceElement;
-      GetImmediateChild(nsXBLAtoms::implementation, getter_AddRefs(interfaceElement));
+      nsIContent* interfaceElement =
+        mPrototypeBinding->GetImmediateChild(nsXBLAtoms::implementation);
 
       if (interfaceElement) { 
         nsIScriptGlobalObject *global = aOldDocument->GetScriptGlobalObject();
@@ -1130,25 +1130,6 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
   }
 
   return NS_OK;
-}
-
-void
-nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult) 
-{
-  nsCOMPtr<nsIContent> binding = mPrototypeBinding->GetBindingElement();
-
-  *aResult = nsnull;
-  PRUint32 childCount = binding->GetChildCount();
-
-  for (PRUint32 i = 0; i < childCount; i++) {
-    nsIContent *child = binding->GetChildAt(i);
-
-    if (aTag == child->Tag()) {
-      *aResult = child;
-      NS_ADDREF(*aResult);
-      return;
-    }
-  }
 }
 
 nsresult
