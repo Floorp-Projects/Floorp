@@ -2131,12 +2131,9 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
             if( bSizeTable ||
                 (pElement && EDT_CanSizeObject(pMWContext, pElement, Point.x, Point.y)) )
             {
-                // Flag to override the normal lock when sizing corners
-                // (This is ignored when sizing table elements)
-                BOOL bLock = (uFlags & MK_CONTROL) != 0;
                 XP_Rect rect;
                 EDT_ClearSelection(pMWContext);
-                if( EDT_StartSizing(pMWContext, pElement, Point.x, Point.y, bLock, &rect) )
+                if( EDT_StartSizing(pMWContext, pElement, Point.x, Point.y, (uFlags & MK_CONTROL) != 0, &rect) )
                 {
                     // Force redraw of table or cells that might have been selected
                     //   else we have XOR conflicts and garbage at overlaps
@@ -3285,9 +3282,9 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
         {
             // We are sizing 
             
-            BOOL bLock = !(BOOL)(uFlags & MK_CONTROL);
+            // 4th param = Don't lock aspect ratio if Ctrl is pressed
             XP_Rect new_rect;
-            if( EDT_GetSizingRect(pMWContext, xVal, yVal, bLock, &new_rect) )
+            if( EDT_GetSizingRect(pMWContext, xVal, yVal, (uFlags & MK_CONTROL) != 0, &new_rect) )
             {
                 // Remove last sizing feedback
                 DisplaySelectionFeedback(LO_ELE_SELECTED, m_rectSizing);

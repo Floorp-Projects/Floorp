@@ -1202,7 +1202,7 @@ BOOL CNetscapeEditView::PreTranslateMessage(MSG * pMsg)
         if( pMsg->wParam == VK_CONTROL )
         {
             // Allow pressing control to change cursor
-            UpdateCursor();
+            UpdateCursor(TRUE);
         }
         else if( pMsg->wParam == 187 && (GetKeyState(VK_CONTROL) & 0x8000) )
         {
@@ -1220,19 +1220,19 @@ BOOL CNetscapeEditView::PreTranslateMessage(MSG * pMsg)
     } else if( pMsg->message == WM_KEYUP &&
                pMsg->wParam == VK_CONTROL )
     {
-        UpdateCursor();
+        UpdateCursor(FALSE);
     }
     return CNetscapeView::PreTranslateMessage(pMsg);
 }
 
-void CNetscapeEditView::UpdateCursor()
+void CNetscapeEditView::UpdateCursor(XP_Bool bCtrlPressed)
 {
     POINT pt;
     GetCursorPos(&pt);
     ScreenToClient(&pt);
     // Send mouse_move message using current 
     //   mouse location to trigger changing cursor
-    SendMessage(WM_MOUSEMOVE, 0, MAKELPARAM(pt.x, pt.y));  
+    SendMessage(WM_MOUSEMOVE, bCtrlPressed ? MK_CONTROL : 0, MAKELPARAM(pt.x, pt.y));  
 }
 
 void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
@@ -1275,7 +1275,7 @@ void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
                 {
                     GetContext()->CancelSizing();
                     // Erase inappropriate cursors
-                    UpdateCursor();
+                    UpdateCursor(FALSE);
                 }
 
                 // Call the CGenericView's interrupt function

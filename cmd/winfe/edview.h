@@ -300,7 +300,7 @@ public:
     int BuildEditHistoryMenu(HMENU hMenu, int iStartItem);
     
     // Trigger a mouse-move message to update the cursor
-    void UpdateCursor();
+    void UpdateCursor(BOOL bCtrlPressed);
 
 private:
     BOOL OnLeftKey(BOOL bShift, BOOL bControl);
