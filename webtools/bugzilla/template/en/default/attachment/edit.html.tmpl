@@ -159,13 +159,22 @@
           <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
 
         <b>Flags:</b><br>
-          <input type="checkbox" name="ispatch" value="1"[% " checked" IF ispatch %]>patch
-          <input type="checkbox" name="isobsolete" value="1"[% " checked" IF isobsolete %]>obsolete<br>
+          <input type="checkbox" id="ispatch" name="ispatch" value="1"
+                 [% 'checked="checked"' IF ispatch %]>
+          <label for="ispatch">patch</label>
+          <input type="checkbox" id="isobsolete" name="isobsolete" value="1"
+                 [% 'checked="checked"' IF isobsolete %]>
+          <label for="isobsolete">obsolete</label><br>
 
         [% IF statusdefs.size %]
           <b>Status:</b><br>
             [% FOREACH def = statusdefs %]
-                <input type="checkbox" name="status" value="[% def.id %]"[% " checked" IF statuses.${def.id} %]>[% def.name FILTER html %]<br>
+                <input type="checkbox" id="status-[% def.id %]" name="status"
+                       value="[% def.id %]"
+                       [% 'checked="checked"' IF statuses.${def.id} %]>
+                <label for="status-[% def.id %]">
+                  [% def.name FILTER html %]
+                </label><br>
             [% END %]
         [% END %]
 

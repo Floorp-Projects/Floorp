@@ -63,17 +63,26 @@
       <th>Content Type:</th>
       <td>
         <em>If the attachment is a patch, check the box below.</em><br>
-        <input type="checkbox" name="ispatch" value="1" onchange="setContentTypeDisabledState();"> patch<br><br>
+        <input type="checkbox" id="ispatch" name="ispatch" value="1"
+               onchange="setContentTypeDisabledState();"> 
+        <label for="ispatch">patch</label><br><br>
 
         <em>Otherwise, choose a method for determining the content type.</em><br>
-        <input type="radio" name="contenttypemethod" value="autodetect"> 
-          auto-detect<br>
-        <input type="radio" name="contenttypemethod" value="list"> 
-          select from list: <select name="contenttypeselection" onchange="this.form.contenttypemethod[1].checked = true;">
+        <input type="radio" id="autodetect"
+               name="contenttypemethod" value="autodetect"> 
+          <label for="autodetect">auto-detect</label><br>
+        <input type="radio" id="list"
+               name="contenttypemethod" value="list"> 
+          <label for="list">select from list:</label>
+          <select name="contenttypeselection"
+                  onchange="this.form.contenttypemethod[1].checked = true;">
             [% PROCESS "attachment/content-types.html.tmpl" %]
           </select><br>
-        <input type="radio" name="contenttypemethod" value="manual">
-          enter manually: <input type="text" name="contenttypeentry" size="30" maxlength="200" onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">
+        <input type="radio" id="manual"
+                     name="contenttypemethod" value="manual">
+          <label for="manual">enter manually:</label>
+          <input type="text" name="contenttypeentry" size="30" maxlength="200"
+                 onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">
       </td>
     </tr>
     <tr>
@@ -82,7 +91,8 @@
         <em>(optional) Check each existing attachment made obsolete by your new attachment.</em><br>
         [% IF attachments.size %]
           [% FOREACH attachment = attachments %]
-            <input type="checkbox" name="obsolete" value="[% attachment.id %]">
+            <input type="checkbox" id="[% attachment.id %]"
+                   name="obsolete" value="[% attachment.id %]">
             <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
           [% END %]
         [% ELSE %]
