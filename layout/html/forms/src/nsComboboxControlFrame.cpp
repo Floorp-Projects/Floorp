@@ -1175,6 +1175,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.mOverflowArea.y      = 0;
     aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
     aDesiredSize.mOverflowArea.height = aDesiredSize.height;
+    FinishAndStoreOverflow(&aDesiredSize);
     return NS_OK;
   }
 
@@ -1420,6 +1421,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
         aDesiredSize.mOverflowArea.y      = 0;
         aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
         aDesiredSize.mOverflowArea.height = aDesiredSize.height;
+        FinishAndStoreOverflow(&aDesiredSize);
         return NS_OK;
       }
     } else {
