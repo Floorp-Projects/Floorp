@@ -22,10 +22,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nscore.h" // for NS_COM
-%}
-
 interface nsIFileURL;
 interface nsIFilePath;
 

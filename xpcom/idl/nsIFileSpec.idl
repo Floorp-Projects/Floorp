@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "nscore.h" // for NS_BASE
 
 // Start commenting out the C++ versions of the below in the output header
 #if 0
