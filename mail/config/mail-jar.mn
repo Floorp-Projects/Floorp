@@ -79,7 +79,6 @@ content/communicator/pref/pref.xul,                   comm/content/communicator/
 content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
 content/communicator/pref/pref-applications-edit.xul, comm/content/communicator/pref/pref-applications-edit.xul
 content/communicator/pref/pref-applications-edit.js, comm/content/communicator/pref/pref-applications-edit.js
-content/communicator/downloadmanager, 		      comm/content/communicator/downloadmanager
 
 # dummy contextHelp.js file so we don't get a bunch of errors about this file not being found
 content/help/contextHelp.js,	 		      comm/content/help/contextHelp.js
