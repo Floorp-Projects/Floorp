@@ -78,15 +78,16 @@ public:
                                      nsWidgetInitData *aInitData = nsnull);
     NS_IMETHOD              GetClientData(void*& aClientData);
     NS_IMETHOD              SetClientData(void* aClientData);
-    NS_IMETHOD            Destroy();
+    NS_IMETHOD              Destroy();
     virtual nsIWidget*      GetParent(void);
-    virtual nsIEnumerator*  GetChildren();
+    virtual nsIEnumerator*  GetChildren(void);
+    NS_IMETHOD              Show(PRBool aState);
+    NS_IMETHOD              SetModal(void);
+    NS_IMETHOD              IsVisible(PRBool & aState);
+    NS_IMETHOD              Move(PRUint32 aX, PRUint32 aY);
     virtual void            AddChild(nsIWidget* aChild);
     virtual void            RemoveChild(nsIWidget* aChild);
-    NS_IMETHOD            Show(PRBool bState);
-    NS_IMETHOD            IsVisible(PRBool & aState);
 
-    NS_IMETHOD            Move(PRUint32 aX, PRUint32 aY);
     NS_IMETHOD            Resize(PRUint32 aWidth,
                                    PRUint32 aHeight,
                                    PRBool   aRepaint);

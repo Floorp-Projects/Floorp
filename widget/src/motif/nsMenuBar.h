@@ -26,6 +26,8 @@
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
 
+class nsIDOMNode;
+class nsIWebShell;
 class nsIWidget;
 
 /**
@@ -67,11 +69,15 @@ public:
   NS_IMETHOD Paint();
   NS_IMETHOD SetNativeData(void* aData);
 protected:
-  PRUint32    mNumMenus;
   Widget      mMenu;
-  nsIWidget  *mParent;
+  nsIWidget * mParent;
   PRBool      mIsMenuBarAdded;
+
+  nsIWebShell * mWebShell;
+  nsIDOMNode  * mDOMNode;
+
+  nsVoidArray mMenusVoidArray;
+  PRUint32    mNumMenus;
 };
 
 #endif // nsMenuBar_h__
-
