@@ -35,6 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+//
+// The Mixed Mode procInfos defined in npupp.h assume Think C-
+// style calling conventions.  These conventions are used by
+// Metrowerks with the exception of pointer return types, which
+// in Metrowerks 68K are returned in A0, instead of the standard
+// D0. Thus, since NPN_MemAlloc and NPN_UserAgent return pointers,
+// Mixed Mode will return the values to a 68K plugin in D0, but 
+// a 68K plugin compiled by Metrowerks will expect the result in
+// A0.  The following pragma forces Metrowerks to use D0 instead.
+//
+#ifdef __MWERKS__
+#ifndef powerc
+#pragma pointers_in_D0
+#endif
+#endif
+
+#ifdef __MWERKS__
+#ifndef powerc
+#pragma pointers_in_A0
+#endif
+#endif
+
+
 ////////////////////////////////////////////////////////////
 //
 // Implementation of Netscape entry points (NPN_*)
