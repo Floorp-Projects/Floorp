@@ -56,6 +56,9 @@ nsresult nsNNTPHost::Initialize(const char *username, const char *hostname, PRIn
         m_username = new char [PL_strlen(username) + 1];
         PL_strcpy(m_username, username);
     }
+    else {
+	m_username = nsnull;
+    }
     
 	PR_ASSERT(port);
 	if (port == 0) port = NEWS_PORT;
@@ -89,20 +92,18 @@ nsNNTPHost::CleanUp() {
 	if (m_dirty) WriteNewsrc();
 	if (m_groupTreeDirty) SaveHostInfo();
 	PR_FREEIF(m_optionLines);
-	delete [] m_filename;
-	delete [] m_hostname;
-    delete [] m_username;
+	if (m_filename) delete [] m_filename;
+	if (m_hostname) delete [] m_hostname;
+    	if (m_username) delete [] m_username;
 	PR_FREEIF(m_nameAndPort);
 	PR_FREEIF(m_fullUIName);
 	NS_IF_RELEASE(m_groups);
 	NS_IF_RELEASE(m_newsgrouplists);
-	delete [] m_dbfilename;
+	if (m_dbfilename) delete [] m_dbfilename;
 	delete m_groupTree;
-	if (m_block)
-		delete [] m_block;
+	if (m_block) delete [] m_block;
 #ifdef UNREADY_CODE
-	if (m_groupFile)
-		XP_FileClose (m_groupFile);
+	if (m_groupFile) XP_FileClose (m_groupFile);
 #endif
 	PR_FREEIF(m_groupFilePermissions);
 	if (M_FileOwner == this) M_FileOwner = nsnull;
