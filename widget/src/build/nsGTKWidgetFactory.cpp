@@ -182,7 +182,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
     //}
     else if (mClassID.Equals(kCFileOpen)) {
-      inst = (nsISupports*)(nsWidget *)new nsFileWidget();
+      inst = (nsISupports*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
         inst = (nsISupports*)(nsWidget *)new nsListBox();
