@@ -223,20 +223,19 @@ NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACStrin
 /* boolean encodedInACE (in ACString input); */
 NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
 {
-  nsDependentCString prefix(mACEPrefix, kACEPrefixLen);
-  *_retval = StringBeginsWith(input, prefix,
-                              nsCaseInsensitiveCStringComparator());
-  // also check for the case like "www.xn--ENCODED.com"
-  // in case for this is called for an entire domain name
-  if (!*_retval) {
-      nsReadingIterator<char> begin;
-      nsReadingIterator<char> end;
-      input.BeginReading(begin);
-      input.EndReading(end);
-      *_retval = CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING(".") + prefix, 
-                                               begin, end);
-  }
+  nsACString::const_iterator begin;
+  input.BeginReading(begin);
 
+  const char *data = begin.get();
+  PRUint32 dataLen = begin.size_forward();
+
+  // look for the ACE prefix in the input string.  it may occur
+  // at the beginning of any segment in the domain name.  for
+  // example: "www.xn--ENCODED.com"
+
+  const char *p = PL_strncasestr(data, mACEPrefix, dataLen);
+
+  *_retval = p && (p == data || *(p - 1) == '.');
   return NS_OK;
 }
 
