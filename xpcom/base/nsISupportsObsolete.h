@@ -44,57 +44,6 @@
 
 #define NS_INIT_REFCNT() NS_INIT_ISUPPORTS()
 
-
-#define NS_DECL_ISUPPORTS_EXPORTED                                            \
-public:                                                                       \
-  NS_EXPORT NS_IMETHOD QueryInterface(REFNSIID aIID,                          \
-                            void** aInstancePtr);                             \
-  NS_EXPORT NS_IMETHOD_(nsrefcnt) AddRef(void);                               \
-  NS_EXPORT NS_IMETHOD_(nsrefcnt) Release(void);                              \
-protected:                                                                    \
-  nsrefcnt mRefCnt;                                                           \
-  NS_DECL_OWNINGTHREAD                                                        \
-public:
-
-
-#ifdef NS_DEBUG
-
-/*
- * Adding this debug-only function as per bug #26803.  If you are debugging
- * and this function returns wrong refcounts, fix the objects |AddRef()| and
- * |Release()| to do the right thing.
- *
- * Of course, this function is only available for debug builds.
- */
-
-inline
-nsrefcnt
-NS_DebugGetRefCount( nsISupports* obj )
-    // Warning: don't apply this to an object whose refcount is
-    //  |0| or not yet initialized ... it may be destroyed.
-  {
-    nsrefcnt ref_count = 0;
-
-    if ( obj )
-      {
-          // |AddRef()| and |Release()| are supposed to return
-          //  the new refcount of the object
-        obj->AddRef();
-        ref_count = obj->Release();
-          // Can't use |NS_[ADDREF|RELEASE]| since (a) they _don't_ return
-          //  the refcount, and (b) we don't want to log these guaranteed
-          //  balanced calls.
-
-        NS_ASSERTION(ref_count,
-                     "Oops! Calling |NS_DebugGetRefCount()| probably just "
-                     "destroyed this object.");
-      }
-
-     return ref_count;
-  }
-
-#endif // NS_DEBUG
-
 /**
  * Macro to free an array of pointers to nsISupports (or classes
  * derived from it).  A convenience wrapper around

@@ -43,6 +43,7 @@ CPPSRCS		= \
 		nsCWeakReference.cpp \
 		nsConsoleService.cpp \
 		nsConsoleMessage.cpp \
+		nsDebugImpl.cpp \
 		nsExceptionService.cpp \
 		$(NULL)
 
@@ -59,6 +60,7 @@ EXPORTS		= \
 		nsCom.h \
 		nsComObsolete.h \
 		nsCWeakReference.h \
+		nsDebugImpl.h \
 		nsIID.h \
 		nsISupportsObsolete.h \
 		nsTraceRefcnt.h \
@@ -83,6 +85,7 @@ SDK_XPIDLSRCS   = \
 		nsISupports.idl		   \
 		nsIWeakReference.idl	   \
 		nsIMemory.idl		   \
+		nsIDebug.idl               \
 		nsrootidl.idl		   \
 
 SDK_HEADERS     = \

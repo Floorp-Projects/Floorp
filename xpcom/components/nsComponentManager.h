@@ -140,19 +140,14 @@ public:
 
     nsresult WritePersistentRegistry();
     nsresult ReadPersistentRegistry();
-public:
 
     nsresult Shutdown(void);
 
     nsresult FreeServices();
 
-    friend class nsFactoryEntry;
-    friend class nsServiceManager;
-
-    friend nsresult
+    nsresult
     NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result);
 
-protected:
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
                                      const char *aContractID,
@@ -196,18 +191,15 @@ protected:
     // there was an error
     int AddLoaderType(const char *typeStr);
 
-public:
     int GetLoaderCount() { return mNLoaderData + 1; }
 
     // registers only the files in spec's location by loaders other than the
     // native loader.  This is an optimization method only.
     nsresult AutoRegisterNonNativeComponents(nsIFile* spec);
 
-
-private:
     nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec, PRBool fileIsCompDir=PR_TRUE);
+    nsresult RemoveEntries(nsIFile* file);
 
-protected:
     PLDHashTable        mFactories;
     PLDHashTable        mContractIDs;
     PRMonitor*          mMon;

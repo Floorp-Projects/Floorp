@@ -34,76 +34,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXPCOM.h"
-#include "nsXPCOMPrivate.h"
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsDebug.h"
-#include "nsDebugImpl.h"
+#include "nsIDebug.h"
 
-static nsIDebug* gDebugObject = nsnull;
-
-static NS_METHOD FreeDebugObject(void)
+class nsDebugImpl : public nsIDebug
 {
-    NS_IF_RELEASE(gDebugObject);
-    return NS_OK;
-}
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDEBUG
+    
+    nsDebugImpl();
+    virtual ~nsDebugImpl();
+    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+};
 
-#define ENSURE_DEBUGOBJECT \
-  (gDebugObject ? PR_TRUE : (PRBool)(SetupDebugObject() != nsnull))
 
-static nsIDebug* SetupDebugObject()
-{
-  NS_GetDebug(&gDebugObject);
-  if (gDebugObject)
-    NS_RegisterXPCOMExitRoutine(FreeDebugObject, 0);
-  return gDebugObject;
-}
-
-#ifdef XPCOM_GLUE
-nsresult GlueStartupDebug() 
-{
-  NS_GetDebug(&gDebugObject);
-  if (!gDebugObject) 
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-void GlueShutdownDebug()
-{
-  NS_IF_RELEASE(gDebugObject);
-}
-#endif
-
-NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
-{     
-  if (!ENSURE_DEBUGOBJECT)
-    return;    
-  
-  gDebugObject->Abort(aFile, aLine);
-}     
-
-NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
-{ 
-  if (!ENSURE_DEBUGOBJECT)
-    return;    
-  
-  gDebugObject->Break(aFile, aLine);
-}
-
-NS_COM void nsDebug::Warning(const char* aStr,
-                             const char* aFile, 
-                             PRIntn aLine)
-{ 
-  if (!ENSURE_DEBUGOBJECT)
-    return;    
-  gDebugObject->Warning(aStr, aFile, aLine);
-}
-
-NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
-                               const char* aFile, PRIntn aLine)
-{ 
-  if (!ENSURE_DEBUGOBJECT)
-    return;    
-  gDebugObject->Assertion(aStr, aExpr, aFile, aLine);
-}
+#define NS_DEBUG_CONTRACTID "@mozilla.org/xpcom/debug;1"
+#define NS_DEBUG_CLASSNAME  "nsDebug Interface"
+#define NS_DEBUG_CID                                 \
+{ /* a80b1fb3-aaf6-4852-b678-c27eb7a518af */         \
+  0xa80b1fb3,                                        \
+    0xaaf6,                                          \
+    0x4852,                                          \
+    {0xb6, 0x78, 0xc2, 0x7e, 0xb7, 0xa5, 0x18, 0xaf} \
+}            

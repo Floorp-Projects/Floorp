@@ -51,7 +51,7 @@ class nsIFile;
 class nsILocalFile;
 class nsIDirectoryServiceProvider;
 class nsIMemory;
-
+class nsIDebug;
 
 /**
  * Initialises XPCOM. You must call this method before proceeding 
@@ -192,5 +192,9 @@ extern "C" NS_COM nsresult
 NS_NewNativeLocalFile(const nsACString &path, 
                       PRBool followLinks, 
                       nsILocalFile* *result);
+
+
+extern "C" NS_COM nsresult
+NS_GetDebug(nsIDebug* *result);
 
 #endif

@@ -79,6 +79,8 @@ typedef nsresult (PR_CALLBACK *GetComponentRegistrarFunc)(nsIComponentRegistrar*
 typedef nsresult (PR_CALLBACK *GetMemoryManagerFunc)(nsIMemory* *result);
 typedef nsresult (PR_CALLBACK *NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
 typedef nsresult (PR_CALLBACK *NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
+
+typedef nsresult (PR_CALLBACK *GetDebugFunc)(nsIDebug* *result);
 // PRIVATE
 typedef nsresult (PR_CALLBACK *RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 typedef nsresult (PR_CALLBACK *UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
@@ -98,6 +100,10 @@ typedef struct XPCOMFunctions{
 
     RegisterXPCOMExitRoutineFunc registerExitRoutine;
     UnregisterXPCOMExitRoutineFunc unregisterExitRoutine;
+
+    // Added Post 1.4
+    GetDebugFunc getDebug;
+    
 } XPCOMFunctions;
 
 typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
