@@ -199,6 +199,10 @@ class UGraphicGizmos
 								Boolean			inDoTruncate = false,
 								TruncCode		inTruncWhere = truncMiddle);	
 
+		static int 	    GetUTF8TextWidth(
+								const char* 	inText,
+								int				inTextLength);	
+
 		static Point	CalcStringPosition(
 								const Rect		&inRect,
 								Int16			inStringWidth,

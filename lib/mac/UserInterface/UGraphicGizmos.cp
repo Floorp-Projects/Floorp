@@ -31,6 +31,7 @@
 #include "mfinder.h" // needed for workaround function to bug in Appe's
 					 // ::TruncText and ::TruncString - andrewb 6/20/97
 #include "UPropFontSwitcher.h"
+#include "CDefaultFontFontSwitcher.h"
 #include "UUTF8TextHandler.h"
 
 
@@ -1091,21 +1092,64 @@ void UGraphicGizmos::PlaceUTF8TextInRect(
 	Int16			inVertJustType,
 	const FontInfo*	/*inFontInfo*/,
 	Boolean			inDoTruncate,
-	TruncCode		/*inTruncWhere*/)
+	TruncCode		inTruncWhere)
 //----------------------------------------------------------------------------------------
 {
 	FontInfo 			utf8FontInfo;
-	UFontSwitcher *fs;
+	CDefaultFontFontSwitcher *fs;
 	UMultiFontTextHandler *th;
 	th = UUTF8TextHandler::Instance();
-	fs = UPropFontSwitcher::Instance();
+	fs = new CDefaultFontFontSwitcher(UPropFontSwitcher::Instance() );
 	th->GetFontInfo(fs, &utf8FontInfo);
 	
 	const char* text = inText;
+	char truncatedtext[512];
+	char* cur;
 	short length = inTextLength;
 	if (inDoTruncate)
 	{
-		// ¥¥ Fix ME: Don't know how to do text truncation for UTF8 now.
+		short available = inRect.right - inRect.left;
+		short totalwidth = th->TextWidth( fs, (char*)inText, inTextLength);
+		if( totalwidth > available)
+		{
+			static char utf8ellips[] = "\xe2\x80\xa6";
+			short utf8ellipswidth= th->TextWidth( fs, utf8ellips,3);
+			short needWidth = available - utf8ellipswidth;
+			 // never truncMiddle if less than 20
+			Boolean bMidTruncate = (inTruncWhere == truncMiddle) && (needWidth > 20) ;
+			short beginWidth = bMidTruncate ?  needWidth / 2 : needWidth;
+			short trunclength = 0;
+			short nextChar = 0;
+			for(trunclength = 0;trunclength < inTextLength; trunclength = nextChar)
+			{
+				nextChar = INTL_NextCharIdxInText(CS_UTF8, (unsigned char*)text, trunclength);
+				if(th->TextWidth( fs,  (char*)inText,nextChar) > beginWidth)
+					break;
+			}
+			text = cur = truncatedtext;
+			memcpy(cur, inText, trunclength);
+			cur += trunclength;
+			memcpy(cur,  utf8ellips, 3);				
+			cur += 3;
+			length = trunclength + 3;
+			if (bMidTruncate) 
+			{
+				short endWidth = available - th->TextWidth( fs,  (char*)text, length);
+				short endTrunc = trunclength;
+				while( endTrunc < inTextLength )
+				{
+					if(th->TextWidth( fs,  (char*)inText+endTrunc,inTextLength-endTrunc) <= endWidth)
+					{
+						break;
+					}
+					endTrunc = INTL_NextCharIdxInText(CS_UTF8, (unsigned char*)inText , endTrunc);
+				}
+				memcpy(cur,  inText+ endTrunc, (inTextLength-endTrunc));	
+				cur += (inTextLength-endTrunc);
+				length += (inTextLength-endTrunc);
+			}
+
+		}
 	}
 	Point thePoint = UGraphicGizmos::CalcStringPosition(
 		 	inRect,
@@ -1114,9 +1158,24 @@ void UGraphicGizmos::PlaceUTF8TextInRect(
 		 	inVertJustType,
 		 	&utf8FontInfo);
 	::MoveTo(thePoint.h, thePoint.v);
-	th->DrawText(fs, (char*)text ,length);	
-} // CThreadView::PlaceUTF8TextInRect
+	th->DrawText(fs, (char*)text ,length);
+	fs->RestoreDefaultFont();
+	delete fs;	
+} // UGraphicGizmos::PlaceUTF8TextInRect
 
+//----------------------------------------------------------------------------------------
+int UGraphicGizmos::GetUTF8TextWidth(
+		const char* 	inText,
+		int			inTextLength)	
+//----------------------------------------------------------------------------------------
+{
+	CDefaultFontFontSwitcher *fs;
+	fs = new CDefaultFontFontSwitcher( UPropFontSwitcher::Instance() );
+	int width= UUTF8TextHandler::Instance()->TextWidth( fs, (char*)inText,inTextLength);
+	fs->RestoreDefaultFont();
+	delete fs;
+	return width;
+} // UGraphicGizmos::GetUTF8TextWidth
 
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -1409,6 +1468,9 @@ UGraphicGizmos::DrawPopupArrow(
 		}
 	}
 }	
+
+
+
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	Class CSicn
