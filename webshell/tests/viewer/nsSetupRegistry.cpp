@@ -63,6 +63,7 @@
 #include "nsIGenericFactory.h"
 
 #include "nsSpecialSystemDirectory.h"	// For exe dir
+#include "nspr.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
