@@ -254,8 +254,12 @@ main(int argc, char **argv)
     profile = strdup("default");
     sprintf(profileDir,"%s", "c:\\default");
 #elif defined (XP_UNIX)
-    profile = getenv("LOGNAME");
-    sprintf(profileDir, "%s/.netscape", getenv("HOME"));
+    if (argc > 2) {
+        sprintf(profileDir,"%s", argv[2]);
+    } else {
+        profile = getenv("LOGNAME");
+        sprintf(profileDir, "%s/.netscape", getenv("HOME"));
+    }
 #else
 #error Teach me how to fill in the user profile.
 #endif
