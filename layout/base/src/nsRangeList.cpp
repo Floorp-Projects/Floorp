@@ -1264,10 +1264,11 @@ nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
   
   nsCOMPtr<nsISupports> nsisup(dont_AddRef(mRangeArray->ElementAt(0)));
   nsCOMPtr<nsIDOMRange> range;
-  if (range = do_QueryInterface(nsisup))
+  nsresult rv;
+  range = do_QueryInterface(nsisup,&rv);
+  if (NS_FAILED(rv))
   {
-    *aIsCollapsed = PR_TRUE;
-    return NS_OK;
+    return rv;
   }
                              
   return (range->GetIsCollapsed(aIsCollapsed));
@@ -1524,11 +1525,12 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
       setAnchorFocusRange(i);
       DEBUG_OUT_RANGE(range);
+      ScrollIntoView();
       return NotifySelectionListeners();
     }
 
   }
-
+  
   return NS_OK;
 }
 
