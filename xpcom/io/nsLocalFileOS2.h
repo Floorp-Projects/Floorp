@@ -139,6 +139,9 @@ private:
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const char * newName, PRBool followSymlinks, PRBool move);
 
     nsresult SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal);
+
+    static nsresult ParseURL(const char* inURL, char **outHost, char **outDirectory,
+                             char **outFileBaseName, char **outFileExtension);
 };
 
 #endif
