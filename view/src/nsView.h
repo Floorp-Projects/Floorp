@@ -89,7 +89,8 @@ public:
   NS_IMETHOD  SetDirtyRegion(nsIRegion* aRegion);
   NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
                            nsWidgetInitData *aWidgetInitData = nsnull,
-                           nsNativeWidget aNative = nsnull);
+                           nsNativeWidget aNative = nsnull,
+                           PRBool aEnableDragDrop = PR_TRUE);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget) const;
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;

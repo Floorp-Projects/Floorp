@@ -395,7 +395,8 @@ public:
    */
   NS_IMETHOD CreateWidget(const nsIID &aWindowIID,
                           nsWidgetInitData *aWidgetInitData = nsnull,
-        					        nsNativeWidget aNative = nsnull) = 0;
+        					        nsNativeWidget aNative = nsnull,
+                          PRBool aEnableDragDrop = PR_TRUE) = 0;
 
   /**
    * Set the widget associated with this view.
