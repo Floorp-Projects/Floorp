@@ -79,8 +79,8 @@ interface nsISyncLoadDOMService : nsISupports
                                      in nsIURI aLoaderURI);
 
     /**
-     * Synchronously load the document from the specified channel. The channel
-     * must be possible to open synchronously.
+     * Synchronously load an XML document from the specified
+     * channel. The channel must be possible to open synchronously.
      *
      * @param aChannel   The channel to load the document from.
      * @param aLoaderURI URI of loading document. For security checks
