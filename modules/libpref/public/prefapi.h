@@ -316,13 +316,13 @@ PR_EXTERN(PrefResult) PREF_GetDefaultRectPref(const char *pref_name, PRInt16 *le
 // </font>
 */
 PR_EXTERN(PrefResult) PREF_CopyConfigString(const char *obj_name, char **return_buffer);
-PR_EXTERN(PrefResult) PREF_CopyIndexConfigString(const char *obj_name, int index,
+PR_EXTERN(PrefResult) PREF_CopyIndexConfigString(const char *obj_name, int indx,
 	const char *field, char **return_buffer);
 PR_EXTERN(PrefResult) PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int);
 PR_EXTERN(PrefResult) PREF_GetConfigBool(const char *obj_name, PRBool *return_bool);
 
 /* OLD:: */PR_EXTERN(PrefResult) PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
-	int index, const char *field);
+	int indx, const char *field);
 
 /*
  * Listpref API
@@ -375,8 +375,8 @@ PR_EXTERN(PrefResult) PREF_ClearUserPref(const char *pref_name);
  	char* children;
 	if ( PREF_CreateChildList("mime", &children) == 0 )
 	{	
-		int index = 0;
-		while (char* child = PREF_NextChild(children, &index)) {
+		int indx = 0;
+		while (char* child = PREF_NextChild(children, &indx)) {
 			...
 		}
 		XP_FREE(children);
@@ -386,7 +386,7 @@ PR_EXTERN(PrefResult) PREF_ClearUserPref(const char *pref_name);
  *     "mime.image_jpeg", etc.
  */
 PR_EXTERN(PrefResult) PREF_CreateChildList(const char* parent_node, char **child_list);
-PR_EXTERN(char*) PREF_NextChild(char *child_list, int *index);
+PR_EXTERN(char*) PREF_NextChild(char *child_list, int *indx);
 
 /*  The following function parts of the hierarchy from one root to another.
  *	For example, PREF_CopyPrefsTree("mail","newmail") copies all
