@@ -30,7 +30,7 @@
     {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-class nsStandardURL : public nsIURI
+class nsStandardURL : public nsIURL
 {
 public:
     NS_DECL_AGGREGATED
