@@ -11,8 +11,10 @@
 <tree datasources="rdf:datasource"
   id="dataSourceTree"
   containment="http://home.netscape.com/NC-rdf#child">
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
+  <treecolgroup>
+    <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value" flex="1"/>
+  </treecolgroup>
   <treehead>
     <treeitem>
       <treecell>Name</treecell>
@@ -31,5 +33,6 @@
     <treecell/>
   </treeitem>
   </treebody>
+  <treechildren flex="1"/>
 </tree>
 </window>

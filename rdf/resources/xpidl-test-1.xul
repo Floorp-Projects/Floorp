@@ -32,8 +32,10 @@ function RenamePersonalToolbar()
 <html:button onclick="RenamePersonalToolbar();">Remove Personal Toolbar</html:button>
 
 <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecolgroup>
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL" flex="1"/>
+  </treecolgroup>
   <treehead>
     <treeitem>
       <treecell>Name</treecell>
@@ -43,6 +45,7 @@ function RenamePersonalToolbar()
 
   <treebody id="NC:BookmarksRoot">
   </treebody>
+  <treechildren flex="1"/>
 </tree>
 
 </xul:window>

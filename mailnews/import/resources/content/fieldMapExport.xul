@@ -55,8 +55,10 @@ Rights Reserved.
 			<box align="vertical" style="border: 1px inset white">
 				<html:div style="width:10em; height:200px" flex="1">
 					<tree id="fieldList" style="width:100%; height:100%" onselect="FieldSelectionChanged()">
-						<treecol style="width:100%"/>
-						<treechildren id="fieldBody"/>
+                                                <treecolgroup>
+						  <treecol flex="1"/>
+                                                </treecolgroup>
+						<treechildren id="fieldBody" flex="1"/>
 					</tree>
 				</html:div>
 			</box>

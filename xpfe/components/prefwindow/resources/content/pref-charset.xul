@@ -49,7 +49,10 @@
       <!-- Available Charsets Tree -->
       <tree class="inset" id="available_charsets" flex="1" onselect="SelectAvailableCharset();" 
             datasources="rdf:null" indent="false" multiple="true">
-        <treechildren id="available_charsets_root"/>
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="available_charsets_root" flex="1"/>
       </tree> 
       <separator class="thin"/>
       <box autostretch="never">
@@ -62,7 +65,10 @@
 	    <text class="label" value="&charset.customize.current.label;" crop="right"/>
       <tree class="inset" id="active_charsets" flex="1" onselect="SelectActiveCharset();" datasources="rdf:null"
 	          indent="false" multiple="true">
-        <treechildren id="active_charsets_root"/>
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="active_charsets_root" flex="1"/>
       </tree>
       <separator class="thin"/>
       <box autostretch="never">

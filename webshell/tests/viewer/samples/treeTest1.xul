@@ -31,7 +31,7 @@ A simple static tree view with things that can expand and collapse. Nothing fanc
      </treerow>
   </treehead>
   
-	<treechildren>
+	<treechildren flex="1">
 		<treeitem>
 			<treerow>
 				<treecell></treecell>

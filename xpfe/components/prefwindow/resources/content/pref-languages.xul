@@ -41,15 +41,17 @@
     <box>
       <box orient="vertical" flex="1">
         <tree id="langTree" class="inset" flex="1">
-          <treecol style="width: 10%"/>
-          <treecol />
+          <treecolgroup>
+            <treecol flex="10" width="0"/>
+            <treecol flex="90" width="0"/>
+          </treecolgroup>
           <treehead>
             <treerow>
               <treecell />
               <treecell value="&languageColumnHeader.label;" />
             </treerow>
           </treehead>
-          <treechildren>
+          <treechildren flex="1">
             <treeitem>
               <treerow>
                 <treecell class="propertylist" value="&engOrder.label;"/>
