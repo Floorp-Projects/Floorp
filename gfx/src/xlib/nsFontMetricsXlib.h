@@ -18,68 +18,89 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Tony Tsui <tony@igelaus.com.au>
  */
 
 #ifndef nsFontMetricsXlib_h__
 #define nsFontMetricsXlib_h__
 
+#include "nsICharRepresentable.h"
+#include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsFont.h"
-#include "nsString.h"
-#include "nsUnitConversion.h"
-#include "nsIDeviceContext.h"
+
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContextXlib.h"
 #include "nsDrawingSurfaceXlib.h"
+#include "nsFont.h"
+#include "nsRenderingContextXlib.h"
+#include "nsString.h"
+#include "nsUnitConversion.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 
+// Remove this eventually after I remove all usage from implementation file. TonyT
 #define FONT_SWITCHING
-#ifdef FONT_SWITCHING
 
-#ifdef ADD_GLYPH
-#undef ADD_GLYPH
-#endif
-#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
-
-#ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
-#endif
-#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
+#define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
 
 typedef struct nsFontCharSetInfo nsFontCharSetInfo;
 
 typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
-             const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf,
-             PRInt32 aDestLen);
+             XFontStruct* aFont, const PRUnichar* aSrcBuf, PRInt32 aSrcLen, 
+	           char* aDestBuf, PRInt32 aDestLen);
 
 struct nsFontCharSet;
+struct nsFontFamily;
+struct nsFontNode;
+struct nsFontStretch;
+
+class nsFontXlibUserDefined;
 class nsFontMetricsXlib;
 
-struct nsFontXlib
+class nsFontXlib
 {
+public:
+  nsFontXlib();
+  virtual ~nsFontXlib();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics);
+  void LoadFont(void);
 
+  inline int SupportsChar(PRUnichar aChar)
+    { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
+    
+
+  virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
+  virtual int DrawString(nsRenderingContextXlib* aContext,
+                         nsDrawingSurfaceXlib*   aSurface,
+			                   nscoord aX, nscoord aY,
+					               const PRUnichar* aString, PRUint32 aLength) = 0;
+
+#ifdef MOZ_MATHML
+  // bounding metrics for a string 
+  // remember returned values are not in app units 
+  // - to emulate GetWidth () above
+  virtual nsresult
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+#endif
+        
   XFontStruct           *mFont;
-  PRUint32*              mMap;
-  nsFontCharSetInfo*     mCharSetInfo;
-  char*                  mName;
+  PRUint32              *mMap;
+  nsFontCharSetInfo     *mCharSetInfo;
+  char                  *mName;
+  nsFontXlibUserDefined *mUserDefinedFont;
   PRUint16               mSize;
-  PRUint16               mActualSize;
   PRInt16                mBaselineAdjust;
 };
 
-struct nsFontStretch;
-struct nsFontFamily;
-typedef struct nsFontSearch nsFontSearch;
-
-#endif /* FONT_SWITCHING */
+//typedef struct nsFontSearch nsFontSearch;
 
 class nsFontMetricsXlib : public nsIFontMetrics
 {
@@ -96,85 +117,78 @@ public:
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
-  NS_IMETHOD  GetNormalLineHeight(nscoord &);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
+  NS_IMETHOD  GetEmHeight(nscoord &aHeight);
+  NS_IMETHOD  GetEmAscent(nscoord &aAscent);
+  NS_IMETHOD  GetEmDescent(nscoord &aDescent);
+  NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
-
-  NS_IMETHOD GetEmHeight(nscoord &);
-  NS_IMETHOD GetEmAscent(nscoord &);
-  NS_IMETHOD GetEmDescent(nscoord &);
-  NS_IMETHOD GetMaxHeight(nscoord &);
   
   virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
 
-#ifdef FONT_SWITCHING
-
   nsFontXlib* FindFont(PRUnichar aChar);
-  void        FindGenericFont(nsFontSearch* aSearch);
-  static int  GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
-                       PRUint32 aLength);
+  nsFontXlib* FindUserDefinedFont(PRUnichar aChar);
+  nsFontXlib* FindLocalFont(PRUnichar aChar);
+  nsFontXlib* FindGenericFont(PRUnichar aChar);
+  nsFontXlib* FindGlobalFont(PRUnichar aChar);
+  nsFontXlib* FindSubstituteFont(PRUnichar aChar);
 
-#ifdef MOZ_MATHML
-  // bounding metrics for a string 
-  // remember returned values are not in app units 
-  // - to emulate GetWidth () above
-  static nsresult
-  GetBoundingMetrics(nsFontXlib*         aFont,
-                     const PRUnichar*   aString,
-                     PRUint32           aLength,
-                     nsBoundingMetrics& aBoundingMetrics);
-#endif
+  nsFontXlib* SearchNode(nsFontNode* aNode, PRUnichar aChar);
+  nsFontXlib* TryAliases(nsCString* aName, PRUnichar aChar); 
+  nsFontXlib* TryFamily(nsCString* aName, PRUnichar aChar);
+  nsFontXlib* TryNode(nsCString* aName, PRUnichar aChar);
 
-  static void DrawString(nsDrawingSurfaceXlib* aSurface, nsFontXlib* aFont,
-                         nscoord aX, nscoord aY, const PRUnichar* aString,
-                         PRUint32 aLength);
-  static void InitFonts(void);
+  nsFontXlib* PickASizeAndLoad(nsFontStretch* aStretch,
+                               nsFontCharSetInfo* aCharSet,
+                               PRUnichar aChar);
 
-  friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
-                               nsFontCharSet* aCharSet);
-  friend void TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet);
-  friend void TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily);
-  friend struct nsFontXlib;
+  static nsresult FamilyExists(const nsString& aFontName);
 
-  nsFontXlib   **mLoadedFonts;
-  PRUint16    mLoadedFontsAlloc;
-  PRUint16    mLoadedFontsCount;
+  nsCAutoString      mDefaultFont;
 
-  nsString    *mFonts;
-  PRUint16    mFontsAlloc;
-  PRUint16    mFontsCount;
-  PRUint16    mFontsIndex;
+  nsCStringArray     mFonts;
+  PRUint16           mFontsAlloc;
+  PRUint16           mFontsCount;
+  PRUint16           mFontsIndex;
+  nsVoidArray        mFontIsGeneric;
 
-  nsString          *mGeneric;
-  int               mTriedAllGenerics;
-  nsCOMPtr<nsIAtom> mLangGroup;
+  nsCString          *mGeneric;
+  PRUint8            mIsUserDefined;
+  nsCOMPtr<nsIAtom>  mLangGroup;
 
-#endif /* FONT_SWITCHING */
+  nsFontXlib         **mLoadedFonts;
+  PRUint16           mLoadedFontsAlloc;
+  PRUint16           mLoadedFontsCount;
 
+  PRUint8            mTriedAllGenerics;
+  nsFontXlib         *mSubstituteFont;
+
+  nsCAutoString      mUserDefined;
+   
 protected:
-  char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
 
-  Display             *mDisplay;
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   XFontStruct         *mFontHandle;
   XFontStruct         *mFontStruct;
+  nsFontXlib          *mWesternFont;
 
-  nscoord             mHeight;
   nscoord             mAscent;
   nscoord             mDescent;
+  
   nscoord             mLeading;
   nscoord             mEmHeight;
   nscoord             mEmAscent;
@@ -192,13 +206,17 @@ protected:
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
 
-#ifdef FONT_SWITCHING
-
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
+};
 
-#endif /* FONT_SWITCHING */
+class nsFontEnumeratorXlib : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorXlib();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 #endif
