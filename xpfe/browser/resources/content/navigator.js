@@ -969,7 +969,7 @@ function BrowserPrint()
 
   function setTextZoomOther() {
     // open dialog and ask for new value
-    var o = { retvals: {zoom: zoomOther}, zoomMin: 1, zoomMax: 5000 };
+    var o = { retvals: {zoom: zoomOther}, zoomMin: 1, zoomMax: 2000 };
     window.openDialog( "chrome://navigator/content/askViewZoom.xul", "", "chrome,modal,titlebar", o);
     if (o.retvals.zoomOK) {
       zoomOther = o.retvals.zoom;
