@@ -137,7 +137,7 @@ $(TINC):
 	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
 
 
-$(OBJDIR)/plvrsion.$(OBJ_SUFFIX): $(TINC)
+$(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
 ifeq ($(OS_ARCH), WINNT)
 ifdef XP_OS2_EMX
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c

@@ -41,7 +41,6 @@ provided "as is" without express or implied warranty.
 #include <errno.h>
 #include "prmem.h"
 #include "prerror.h"
-#include "prerrorinstall.h"
 
 #define	ERRCODE_RANGE	8	/* # of bits to shift table number */
 #define	BITS_PER_CHAR	6	/* # bits to shift per character in name */
@@ -66,7 +65,7 @@ static const char * const * callback_languages = default_languages;
 /* Callback info */
 static struct PRErrorCallbackPrivate *callback_private = 0;
 static PRErrorCallbackLookupFn *callback_lookup = 0;
-static PRErrorCallbackNewtableFn *callback_newtable = 0;
+static PRErrorCallbackNewTableFn *callback_newtable = 0;
 
 
 static const char char_set[] =
@@ -197,7 +196,7 @@ PR_ErrorInstallTable(const struct PRErrorTable *table)
 PR_IMPLEMENT(void)
 PR_ErrorInstallCallback(const char * const * languages,
 		       PRErrorCallbackLookupFn *lookup, 
-		       PRErrorCallbackNewtableFn *newtable,
+		       PRErrorCallbackNewTableFn *newtable,
 		       struct PRErrorCallbackPrivate *cb_private)
 {
     struct PRErrorTableList *et;

@@ -29,6 +29,7 @@
 #include "prwin16.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
 ** Testing layering of I/O
@@ -304,6 +305,7 @@ static void PR_CALLBACK Server(void *arg)
     if (verbosity > quiet)
         PR_fprintf(logFile, "Server shutting down stack\n");
     rv = PR_Shutdown(service, PR_SHUTDOWN_BOTH); PR_ASSERT(PR_SUCCESS == rv);
+    rv = PR_Close(service); PR_ASSERT(PR_SUCCESS == rv);
 
 }  /* Server */
 

@@ -49,7 +49,7 @@
 #ifdef XP_UNIX
 #define EXISTING_FILENAME "/bin/sh"
 #elif defined(WIN32)
-#define EXISTING_FILENAME "c:/boot.ini"
+#define EXISTING_FILENAME "c:/autoexec.bat"
 #elif defined(OS2)
 #define EXISTING_FILENAME "c:/config.sys"
 #elif defined(BEOS)

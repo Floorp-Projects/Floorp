@@ -30,6 +30,7 @@
 #include "prinit.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
  * This release (3.1) is backward compatible with all

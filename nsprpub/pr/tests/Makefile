@@ -459,7 +459,7 @@ else
 endif
 endif
 else
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) -o $@
 endif
 
 endif

@@ -53,6 +53,8 @@ TARGETS	= $(OBJS)
 
 INCLUDES = -I$(DIST)/include/private -I$(DIST)/include
 
+RELEASE_BINS = compile-et.pl prerr.properties
+
 include $(MOD_DEPTH)/config/rules.mk
 
 # An AIX Optimization bug causes PR_dtoa() to produce wrong result.
@@ -63,7 +65,10 @@ $(OBJDIR)/prdtoa.o:
 	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) prdtoa.c
 endif
 
-build_prerr : prerr.et
+#
+# Generate prerr.h, prerr.c, and prerr.properties from prerr.et.
+#
+build_prerr:
 	perl compile-et.pl prerr.et
 
 export:: $(TARGETS)

@@ -57,7 +57,7 @@ release::
 	rm -rf META-INF; mkdir META-INF; cd META-INF; \
 	echo "Manifest-Version: 1.0" > MANIFEST.MF; \
 	echo "" >> MANIFEST.MF; \
-	cd ..; rm -f mdbinary.jar; zip -r mdbinary.jar META-INF lib; \
+	cd ..; rm -f mdbinary.jar; zip -r mdbinary.jar META-INF bin lib; \
 	rm -rf META-INF; \
 	cd include; \
 	rm -rf META-INF; mkdir META-INF; cd META-INF; \

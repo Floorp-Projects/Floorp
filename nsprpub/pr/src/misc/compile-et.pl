@@ -85,7 +85,7 @@ while ($_ = <INPUT>) {
 	}
 	$table_item_count = 0;
 
-	print C "#include \"prerrorplugin.h\"\n";
+	print C "#include \"prerror.h\"\n";
 	print C "static const struct PRErrorMessage text[] = {\n";
     }
     elsif (/^[ \t]*(error_code|ec)[ \t]+([A-Z_0-9]+),[ \t]*$/) {
