@@ -59,12 +59,9 @@ ifdef MOZILLA_SECURITY_BUILD
 	CRYPTODIR=../crypto
 endif
 
-EXTRA_SHARED_LIBRARY_LIBS += \
+EXTRA_LIBS += \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/secutil.lib \
-	$(NULL)
-
-EXTRA_LIBS += \
 	$(DIST)/lib/dbm.lib \
 	$(NULL)
 
