@@ -31,8 +31,12 @@ class nsIXULParentDocument: public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULPARENTDOCUMENT_IID; return iid; }
 
+    // Used for XUL fragment child documents
     NS_IMETHOD GetContentViewerContainer(nsIContentViewerContainer** aContainer) = 0;
     NS_IMETHOD GetCommand(nsString& aCommand) = 0;
+
+    // Used for XUL popup child documents
+    NS_IMETHOD CreatePopupDocument(nsIDOMElement* aPopupElement, nsIDocument** aResult) = 0; 
 };
 
 #endif // nsIXULParentDocument_h__

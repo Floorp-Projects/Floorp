@@ -614,6 +614,7 @@ public:
     // nsIXULParentDocument interface
     NS_IMETHOD    GetContentViewerContainer(nsIContentViewerContainer** aContainer);
     NS_IMETHOD    GetCommand(nsString& aCommand);
+    NS_IMETHOD    CreatePopupDocument(nsIDOMElement* aPopupElement, nsIDocument** aResult); 
 
     // nsIXULChildDocument Interface
     NS_IMETHOD    SetFragmentRoot(nsIRDFResource* aFragmentRoot);
@@ -749,7 +750,7 @@ protected:
     nsString                   mCommand;
     nsIRDFResource*            mFragmentRoot;    // [OWNER] 
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
-	nsIDOMElement*			   mPopup;			  // [OWNER] of this popup element in the doc
+	  nsIDOMElement*			       mPopup;			  // [OWNER] of this popup element in the doc
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -2870,6 +2871,15 @@ NS_IMETHODIMP
 XULDocumentImpl::GetCommand(nsString& aCommand)
 {
     aCommand = mCommand;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+XULDocumentImpl::CreatePopupDocument(nsIDOMElement* aPopupElement, nsIDocument** aResult)
+{
+    *aResult = this;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
