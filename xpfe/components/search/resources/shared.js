@@ -39,6 +39,8 @@ function OpenURL(event,node)
 	return true;
 }
 
+
+
 /* Note: doSort() does NOT support natural order sorting! */
 
 function doSort(sortColName)
@@ -58,21 +60,6 @@ function doSort(sortColName)
 		else	sortDirection = "ascending";
 	}
 
-/*
-	// get RDF Core service
-	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (!rdfCore)
-	{
-		rdfCore = new RDFCore();
-		if (!rdfCore)
-		{
-			return(false);
-		}
-		rdfCore.Init("RDFCore");
-	}
-	// sort!!!
-	rdfCore.doSort(node, sortResource, sortDirection);
-*/
 	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
