@@ -322,6 +322,12 @@ public:
    */
   NS_IMETHOD SetContainingChromeElement(nsIContent* aChromeElement) = 0;
 
+  /**
+   * Get the content viewer for this webshell.
+   */
+  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) = 0;
+
+
   //
   // Document load api's
   //
