@@ -40,81 +40,9 @@
 #include "nsUCvKODll.h"
 
 //----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static const PRUint16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-#ifdef MS_EUCKR
-static const PRUint16 g_EUCKRMappingTable[] = {
-#include "u20ksc.ut"
-};
-
-static const PRUint16 g_EUCKRShiftTable[] =  {
-  0, u2BytesCharset,  
-  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
-};
-
-static const uRange g_EUCKRRanges[] = {
-  { 0x00, 0x7E },
-  { 0x81, 0xFE }
-};
-#else
-
-static const PRUint16 g_EUCKRShiftTable[] =  {
-  0, u2BytesGRCharset,  
-  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
-};
-
-static const uRange g_EUCKRRanges[] = {
-  { 0x00, 0x7E },
-  { 0xA4, 0xA4 },   // 8byte seq. for Hangul syllables not available
-                    // in pre-composed form in KS X 1001
-  { 0xA1, 0xFE }
-};
-#endif
-
-static const PRUint16 g_DecomposedHangulShiftTable[] =  {
-  0, uDecomposedHangulCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-
-
-static const PRUint16 *g_EUCKRShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_DecomposedHangulShiftTable,
-  g_EUCKRShiftTable
-};
-
-static const PRUint16 *g_EUCKRMappingTableSet [] ={
-  g_AsciiMapping,
-  g_HangulNullMapping,
-  g_utKSC5601Mapping
-};
-
-
-//----------------------------------------------------------------------
 // Class nsEUCKRToUnicode [implementation]
 
 nsEUCKRToUnicode::nsEUCKRToUnicode() 
-: nsMultiTableDecoderSupport(3,
-                        (uRange*) &g_EUCKRRanges,
-                        (uShiftTable**) &g_EUCKRShiftTableSet, 
-                        (uMappingTable**) &g_EUCKRMappingTableSet)
+: nsCP949ToUnicode()
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTablesDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsEUCKRToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
 }
