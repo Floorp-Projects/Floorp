@@ -186,6 +186,7 @@
 #include "nsUnicodeToUserDefined.h"
 #include "nsUnicodeToSymbol.h"
 #include "nsUnicodeToZapfDingbat.h"
+#include "nsUnicodeToAdobeEuro.h"
 #include "nsMacArabicToUnicode.h"
 #include "nsMacDevanagariToUnicode.h"
 #include "nsMacFarsiToUnicode.h"
@@ -1280,6 +1281,11 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-zapf-dingbats" , NS_UNICODETOZAPFDINGBATS_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-zapf-dingbats",
     nsUnicodeToZapfDingbatConstructor, 
+  },
+  { 
+    ENCODER_NAME_BASE "x-adobe-euro", NS_UNICODETOADOBEEURO_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-adobe-euro",
+    nsUnicodeToAdobeEuroConstructor, 
   },
   { 
     ENCODER_NAME_BASE "x-mac-arabic" , NS_UNICODETOMACARABIC_CID, 
