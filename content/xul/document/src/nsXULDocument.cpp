@@ -417,6 +417,17 @@ PlaceHolderRequest::~PlaceHolderRequest()
     }
 }
 
+//----------------------------------------------------------------------
+
+struct BroadcasterMapEntry : public PLDHashEntryHdr {
+    nsIDOMElement*   mBroadcaster; // [WEAK]
+    nsCheapVoidArray mListeners;   // [OWNING] of BroadcastListener objects
+};
+
+struct BroadcastListener {
+  nsIDOMElement*    mListener;  // [WEAK] XXXwaterson crash waiting to happen!
+  nsCOMPtr<nsIAtom> mAttribute;
+};
 
 //----------------------------------------------------------------------
 //
@@ -437,7 +448,8 @@ nsXULDocument::nsXULDocument(void)
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
       mNumCapturers(0),
       mState(eState_Master),
-      mCurrentScriptProto(nsnull)
+      mCurrentScriptProto(nsnull),
+      mBroadcasterMap(nsnull)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
@@ -464,6 +476,10 @@ nsXULDocument::~nsXULDocument()
     // In case we failed somewhere early on and the forward observer
     // decls never got resolved.
     DestroyForwardReferences();
+
+    // Destroy our broadcaster map.
+    if (mBroadcasterMap)
+        PL_DHashTableDestroy(mBroadcasterMap);
 
     // Notify observer that we're about to go away
     PRInt32 i;
@@ -1685,6 +1701,170 @@ nsXULDocument::OnResumeContentSink()
     return NS_OK;
 }
 
+static void PR_CALLBACK
+ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
+{
+    BroadcasterMapEntry* entry =
+        NS_STATIC_CAST(BroadcasterMapEntry*, aEntry);
+
+    // N.B. that we need to manually run the dtor because we
+    // constructed the nsCheapVoidArray object in-place.
+    entry->mListeners.~nsCheapVoidArray();
+}
+
+static void
+SynchronizeBroadcastListener(nsIDOMElement* aBroadcaster,
+                             nsIDOMElement* aListener,
+                             const nsAString& aAttr)
+{
+    nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
+    nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
+
+    if (aAttr.Equals(NS_LITERAL_STRING("*"))) {
+        PRInt32 count;
+        broadcaster->GetAttrCount(count);
+        while (--count >= 0) {
+            PRInt32 nameSpaceID;
+            nsCOMPtr<nsIAtom> name;
+            nsCOMPtr<nsIAtom> prefix;
+            broadcaster->GetAttrNameAt(count, nameSpaceID,
+                                       *getter_AddRefs(name),
+                                       *getter_AddRefs(prefix));
+
+            // _Don't_ push the |id| attribute's value!
+            if ((nameSpaceID == kNameSpaceID_None) && (name == nsXULAtoms::id))
+                continue;
+
+            nsAutoString value;
+            broadcaster->GetAttr(nameSpaceID, name, value);
+            listener->SetAttr(nameSpaceID, name, value, PR_TRUE);
+        }
+    }
+    else {
+        // Find out if the attribute is even present at all.
+        nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(aAttr));
+
+        nsAutoString value;
+        nsresult rv = broadcaster->GetAttr(kNameSpaceID_None, name, value);
+
+        if (rv == NS_CONTENT_ATTR_NO_VALUE ||
+            rv == NS_CONTENT_ATTR_HAS_VALUE) {
+            listener->SetAttr(kNameSpaceID_None, name, value, PR_TRUE);
+        }
+        else {
+            listener->UnsetAttr(kNameSpaceID_None, name, PR_TRUE);
+        }
+    }
+}
+
+NS_IMETHODIMP
+nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
+                                       nsIDOMElement* aListener,
+                                       const nsAString& aAttr)
+{
+    static PLDHashTableOps gOps = {
+        PL_DHashAllocTable,
+        PL_DHashFreeTable,
+        PL_DHashGetKeyStub,
+        PL_DHashVoidPtrKeyStub,
+        PL_DHashMatchEntryStub,
+        PL_DHashMoveEntryStub,
+        ClearBroadcasterMapEntry,
+        PL_DHashFinalizeStub,
+        nsnull
+    };
+
+    if (! mBroadcasterMap) {
+        mBroadcasterMap =
+            PL_NewDHashTable(&gOps, nsnull, sizeof(BroadcasterMapEntry),
+                             PL_DHASH_MIN_SIZE);
+
+        if (! mBroadcasterMap)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    BroadcasterMapEntry* entry =
+        NS_STATIC_CAST(BroadcasterMapEntry*,
+                       PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                                            PL_DHASH_LOOKUP));
+
+    if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+        entry =
+            NS_STATIC_CAST(BroadcasterMapEntry*,
+                           PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                                                PL_DHASH_ADD));
+
+        if (! entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        entry->mBroadcaster = aBroadcaster;
+
+        // N.B. placement new to construct the nsCheapVoidArray object
+        // in-place
+        new (&entry->mListeners) nsCheapVoidArray();
+    }
+
+    // Only add the listener if it's not there already!
+    nsCOMPtr<nsIAtom> attr = dont_AddRef(NS_NewAtom(aAttr));
+
+    BroadcastListener* bl;
+    for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
+        bl = NS_STATIC_CAST(BroadcastListener*, entry->mListeners[i]);
+
+        if ((bl->mListener == aListener) && (bl->mAttribute == attr))
+            return NS_OK;
+    }
+
+    bl = new BroadcastListener;
+    if (! bl)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    bl->mListener  = aListener;
+    bl->mAttribute = attr;
+
+    entry->mListeners.AppendElement(bl);
+
+    SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
+                                          nsIDOMElement* aListener,
+                                          const nsAString& aAttr)
+{
+    // If we haven't added any broadcast listeners, then there sure
+    // aren't any to remove.
+    if (! mBroadcasterMap)
+        return NS_OK;
+
+    BroadcasterMapEntry* entry =
+        NS_STATIC_CAST(BroadcasterMapEntry*,
+                       PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                                            PL_DHASH_LOOKUP));
+
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+        nsCOMPtr<nsIAtom> attr = dont_AddRef(NS_NewAtom(aAttr));
+        for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
+            BroadcastListener* bl =
+                NS_STATIC_CAST(BroadcastListener*, entry->mListeners[i]);
+
+            if ((bl->mListener == aListener) && (bl->mAttribute == attr)) {
+                entry->mListeners.RemoveElement(aListener);
+
+                if (entry->mListeners.Count() == 0)
+                    PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                                         PL_DHASH_REMOVE);
+
+                SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr);
+
+                break;
+            }
+        }
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULDocument::ContentChanged(nsIContent* aContent,
@@ -1707,12 +1887,76 @@ nsXULDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2
     return NS_OK;
 }
 
+nsresult
+nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
+                                            nsIDOMElement* aListener,
+                                            nsIAtom* aAttr)
+{
+    // Now we execute the onchange handler in the context of the
+    // observer. We need to find the observer in order to
+    // execute the handler.
+    nsAutoString attrName;
+    aAttr->ToString(attrName);
+
+    nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
+    PRInt32 count;
+    listener->ChildCount(count);
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> child;
+        listener->ChildAt(i, *getter_AddRefs(child));
+
+        nsCOMPtr<nsIAtom> tag;
+        child->GetTag(*getter_AddRefs(tag));
+        if (tag != nsXULAtoms::observes)
+            continue;
+
+        // Is this the element that was listening to us?
+        nsAutoString listeningToID;
+        aBroadcaster->GetAttr(kNameSpaceID_None, nsXULAtoms::element, listeningToID);
+
+        nsAutoString broadcasterID;
+        aBroadcaster->GetAttr(kNameSpaceID_None, nsXULAtoms::id, broadcasterID);
+
+        if (listeningToID != broadcasterID)
+            continue;
+
+        // We are observing the broadcaster, but is this the right
+        // attribute?
+        nsAutoString listeningToAttribute;
+        listener->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute, listeningToAttribute);
+
+        if (!listeningToAttribute.Equals(attrName) &&
+            !listeningToAttribute.Equals(NS_LITERAL_STRING("*"))) {
+            continue;
+        }
+
+        // This is the right observes node. Execute the onchange
+        // event handler
+        nsEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_XUL_BROADCAST;
+
+        PRInt32 j = mPresShells.Count();
+        while (--j >= 0) {
+            nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[j]);
+
+            nsCOMPtr<nsIPresContext> aPresContext;
+            shell->GetPresContext(getter_AddRefs(aPresContext));
+
+            // Handle the DOM event
+            nsEventStatus status = nsEventStatus_eIgnore;
+            listener->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        }
+    }
+
+    return NS_OK;
+}
 NS_IMETHODIMP
 nsXULDocument::AttributeChanged(nsIContent* aElement,
-                                  PRInt32 aNameSpaceID,
-                                  nsIAtom* aAttribute,
-                                  PRInt32 aModType, 
-                                  PRInt32 aHint)
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute,
+                                PRInt32 aModType, 
+                                PRInt32 aHint)
 {
     nsresult rv;
 
@@ -1738,8 +1982,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aModType, aHint);
     }
 
-    // Finally, see if there is anything we need to persist in the
-    // localstore.
+    // See if there is anything we need to persist in the localstore.
     //
     // XXX Namespace handling broken :-(
     nsAutoString persist;
@@ -1754,6 +1997,48 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         if (persist.Find(attr) >= 0) {
             rv = Persist(aElement, kNameSpaceID_None, aAttribute);
             if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    // Synchronize broadcast listeners
+    if (mBroadcasterMap &&
+        (aNameSpaceID == kNameSpaceID_None) &&
+        (aAttribute != nsXULAtoms::id)) {
+        nsCOMPtr<nsIDOMElement> domele = do_QueryInterface(aElement);
+        BroadcasterMapEntry* entry =
+            NS_STATIC_CAST(BroadcasterMapEntry*,
+                           PL_DHashTableOperate(mBroadcasterMap, domele.get(),
+                                                PL_DHASH_LOOKUP));
+
+        if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+            // We've got listeners: push the value.
+            nsAutoString value;
+            rv = aElement->GetAttr(kNameSpaceID_None, aAttribute,
+                                   value);
+
+            for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
+                BroadcastListener* bl =
+                    NS_STATIC_CAST(BroadcastListener*, entry->mListeners[i]);
+
+                if ((bl->mAttribute == aAttribute) ||
+                    (bl->mAttribute == nsXULAtoms::_star)) {
+                    nsCOMPtr<nsIContent> listener
+                        = do_QueryInterface(bl->mListener);
+
+                    if (rv == NS_CONTENT_ATTR_NO_VALUE ||
+                        rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                        listener->SetAttr(kNameSpaceID_None, aAttribute,
+                                          value, PR_TRUE);
+                    }
+                    else {
+                        listener->UnsetAttr(kNameSpaceID_None, aAttribute,
+                                            PR_TRUE);
+                    }
+
+                    ExecuteOnBroadcastHandlerFor(aElement, bl->mListener,
+                                                 aAttribute);
+                }
+            }
         }
     }
 
@@ -2121,7 +2406,7 @@ NS_IMETHODIMP_(PRBool)
 nsXULDocument::EventCaptureRegistration(PRInt32 aCapturerIncrement)
 {
   mNumCapturers += aCapturerIncrement;
-  NS_WARN_IF_FALSE(mNumCapturers >= 0, "Number of capturers has become negative");
+  NS_ASSERTION(mNumCapturers >= 0, "Number of capturers has become negative");
   return (mNumCapturers > 0 ? PR_TRUE : PR_FALSE);
 }
 
@@ -6477,25 +6762,19 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         return NS_ERROR_UNEXPECTED;
 
     // Try to find the broadcaster element in the document.
-    nsCOMPtr<nsIDOMElement> target;
-    rv = aDocument->GetElementById(broadcasterID, getter_AddRefs(target));
+    nsCOMPtr<nsIDOMElement> broadcaster;
+    rv = aDocument->GetElementById(broadcasterID, getter_AddRefs(broadcaster));
     if (NS_FAILED(rv)) return rv;
 
     // If we can't find the broadcaster, then we'll need to defer the
     // hookup. We may need to resolve some of the other overlays
     // first.
-    if (! target) {
+    if (! broadcaster) {
         *aNeedsHookup = PR_TRUE;
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
-    if (! broadcaster) {
-        *aNeedsHookup = PR_FALSE;
-        return NS_OK; // not a XUL element, so we can't subscribe
-    }
-
-    rv = broadcaster->AddBroadcastListener(attribute, listener);
+    rv = aDocument->AddBroadcastListenerFor(broadcaster, listener, attribute);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef PR_LOGGING

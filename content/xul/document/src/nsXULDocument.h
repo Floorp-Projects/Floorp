@@ -86,6 +86,7 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIFocusController.h"
 #include "nsScriptLoader.h"
+#include "pldhash.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -505,6 +506,11 @@ protected:
     nsresult
     AddElementToDocumentPost(nsIContent* aElement);
 
+    nsresult
+    ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
+                                 nsIDOMElement* aListener,
+                                 nsIAtom* aAttr);
+
 protected:
     // pseudo constants
     static PRInt32 gRefCnt;
@@ -861,6 +867,11 @@ protected:
     friend class ParserObserver;
 
     nsSupportsHashtable mContentWrapperHash;
+
+    /**
+     * A map from a broadcaster element to a list of listener elements.
+     */
+    PLDHashTable* mBroadcasterMap;
 
 private:
     // helpers
