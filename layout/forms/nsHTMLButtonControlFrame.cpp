@@ -390,13 +390,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-   // lets see if the button was clicked. -EDV
-  switch (aEvent->message) {
-     case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(aPresContext);
-     break;
-  }
-
+  // mouse clicks are handled by content
   // we don't want our children to get any events. So just pass it to frame.
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
