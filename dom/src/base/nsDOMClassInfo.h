@@ -146,6 +146,7 @@ protected:
   static JSString *sOnpaint_id;
   static JSString *sOnresize_id;
   static JSString *sOnscroll_id;
+  static JSString *sScrollIntoView_id;
 
   static const JSClass *sObjectClass;
 };
@@ -486,12 +487,40 @@ public:
 };
 
 
-// HTMLFormElement helper
+// HTMLElement helper
 
-class nsHTMLFormElementSH : public nsElementSH
+class nsHTMLElementSH : public nsElementSH
 {
 protected:
-  nsHTMLFormElementSH(nsDOMClassInfoID aID) : nsElementSH(aID)
+  nsHTMLElementSH(nsDOMClassInfoID aID) : nsElementSH(aID)
+  {
+  }
+
+  virtual ~nsHTMLElementSH()
+  {
+  }
+
+  static JSBool ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
+                               jsval *argv, jsval *rval);
+
+public:
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  {
+    return new nsHTMLElementSH(aID);
+  }
+};
+
+
+// HTMLFormElement helper
+
+class nsHTMLFormElementSH : public nsHTMLElementSH
+{
+protected:
+  nsHTMLFormElementSH(nsDOMClassInfoID aID) : nsHTMLElementSH(aID)
   {
   }
 
@@ -519,10 +548,10 @@ public:
 
 // HTMLSelectElement helper
 
-class nsHTMLSelectElementSH : public nsElementSH
+class nsHTMLSelectElementSH : public nsHTMLElementSH
 {
 protected:
-  nsHTMLSelectElementSH(nsDOMClassInfoID aID) : nsElementSH(aID)
+  nsHTMLSelectElementSH(nsDOMClassInfoID aID) : nsHTMLElementSH(aID)
   {
   }
 
@@ -550,10 +579,10 @@ public:
 // Base helper for external HTML object (such as a plugin or an
 // applet)
 
-class nsHTMLExternalObjSH : public nsElementSH
+class nsHTMLExternalObjSH : public nsHTMLElementSH
 {
 protected:
-  nsHTMLExternalObjSH(nsDOMClassInfoID aID) : nsElementSH(aID)
+  nsHTMLExternalObjSH(nsDOMClassInfoID aID) : nsHTMLElementSH(aID)
   {
   }
 

@@ -48,4 +48,16 @@ interface nsIDOMNSHTMLElement : nsISupports
   readonly attribute long             offsetHeight;
   readonly attribute nsIDOMElement    offsetParent;
            attribute DOMString        innerHTML;
+
+           attribute long             scrollTop;
+           attribute long             scrollLeft;
+  readonly attribute long             scrollHeight;
+  readonly attribute long             scrollWidth;
+
+  readonly attribute long             clientHeight;
+  readonly attribute long             clientWidth;
+
+  // |top| is optional in JS, scriptability of this method is done in
+  // nsHTMLElementSH
+  [noscript] void           scrollIntoView(in boolean top);
 };
