@@ -45,7 +45,7 @@ nsCacheEntry::nsCacheEntry(nsCString * key)
     PR_INIT_CLIST(&mDescriptorQ);
 
     mLastFetched = mLastValidated = PR_Now();
-    mExpirationTime = 0;
+    mExpirationTime = LL_ZERO;
 }
 
 
@@ -288,6 +288,13 @@ nsCacheEntryHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEn
 {
     nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
     return cacheEntry->mKey;
+}
+
+PLDHashNumber
+nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
+{
+    // XXX write a good hash function!
+    return PLDHashNumber(key);
 }
 
 PRBool

@@ -285,7 +285,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 }
 
 
-nsresult
+static nsresult
 SearchCacheDevices(nsCacheEntry * entry, nsCacheDevice ** result)
 {
     nsresult        rv = NS_OK;
@@ -382,6 +382,13 @@ const void *
 nsCacheClientHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEntry)
 {
     return ((nsCacheClientHashTableEntry *)hashEntry)->clientID;
+}
+
+PLDHashNumber
+nsCacheClientHashTable::HashKey( PLDHashTable *table, const void *key)
+{
+    // XXX write a good hash function!
+    return PLDHashNumber(key);
 }
 
 PRBool
