@@ -41,8 +41,6 @@ function getMsg (msgName)
     
     if (restCount == 1 && arguments[1] instanceof Array)
     {
-        dd ("formatting from array of values, " + arguments[1]);
-        
         return console._bundle.formatStringFromName (msgName, arguments[1], 
                                                      arguments[1].length);
     }
@@ -51,7 +49,7 @@ function getMsg (msgName)
         var subPhrases = new Array();
         for (var i = 1; i < arguments.length; ++i)
             subPhrases.push(arguments[i]);
-        return console._bundle.formatStringFromName (msgName, subPhrases, 
+        return console._bundle.formatStringFromName (msgName, subPhrases,
                                                      subPhrases.length);
     }
 
@@ -59,26 +57,60 @@ function getMsg (msgName)
 }
 
 /* message types, don't localize */
-const MT_STOP  = "STOP";
 const MT_CONT  = "CONT";
 const MT_ERROR = "ERROR";
+const MT_HELLO = "HELLO";
+const MT_HELP  = "HELP";
 const MT_INFO  = "INFO";
+const MT_STOP  = "STOP";
+const MT_USAGE = "USAGE";
 
 /* exception number -> localized message name map, keep in sync with ERR_* from
  * venkman-static.js */
 const exceptionMsgNames = ["err.notimplemented", 
-                           "err.display.arg1",
+                           "err.required.param",
+                           "err.invalid.param",
                            "err.subscript.load"];
 
 /* message values for non-parameterized messages */
-const MSG_STOP_DEBUGGER = getMsg("msg.stop.debugger");
-const MSG_CONT_DEBUGGER = getMsg("msg.cont.debugger");
+const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
 
-const MSG_VAL_UNKNOWN   = getMsg("msg.val.unknown");
-const MSG_VAL_CONSOLE   = getMsg("msg.val.console");
+const MSG_TYPE_NATIVE     = getMsg("msg.type.native");
+const MSG_TYPE_PRIMITIVE  = getMsg("msg.type.primitive");
+const MSG_TYPE_CLASS      = getMsg("msg.type.class");
+const MSG_TYPE_LINE       = getMsg("msg.type.line");
+const MSG_TYPE_PROPERTIES = getMsg("msg.type.properties");
+
+const MSG_TYPE_DOUBLE     = getMsg("msg.type.double");
+const MSG_TYPE_FUNCTION   = getMsg("msg.type.function");
+const MSG_TYPE_INT        = getMsg("msg.type.int");
+const MSG_TYPE_NULL       = getMsg("msg.type.null");
+const MSG_TYPE_OBJECT     = getMsg("msg.type.object");
+const MSG_TYPE_STRING     = getMsg("msg.type.string");
+const MSG_TYPE_UNKNOWN    = getMsg("msg.type.unknown");
+const MSG_TYPE_VOID       = getMsg("msg.type.void");
+
+const MSG_VAL_BREAKPOINT  = getMsg("msg.val.breakpoint");
+const MSG_VAL_DEBUG       = getMsg("msg.val.debug");
+const MSG_VAL_DEBUGGER    = getMsg("msg.val.debugger");
+const MSG_VAL_THROW       = getMsg("msg.val.throw");
+
+const MSG_VAL_CONSOLE     = getMsg("msg.val.console");
+const MSG_VAL_UNKNOWN     = getMsg("msg.val.unknown");
+const MSG_VAL_SCOPE       = getMsg("msg.val.scope");
+
+const MSG_HELLO1          = getMsg("msg.hello.1");
+const MSG_HELLO2          = getMsg("msg.hello.2");
 
 /* message names for parameterized messages */
-const MSN_SUBSCRIPT_LOADED = "msg.subscript.load";
+const MSN_ERR_NO_COMMAND     = "msg.err.nocommand";
+const MSN_ERR_NOTIMPLEMENTED = "msg.err.notimplemented";
+const MSN_ERR_AMBIGCOMMAND   = "msg.err.ambigcommand";
+
+const MSN_NO_PROPERTIES      = "msg.noproperties";
+
+const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
 const MSN_EVAL_THREW       = "msg.eval.threw";
-
+const MSN_STOP             = "msg.stop";
+const MSN_SUBSCRIPT_LOADED = "msg.subscript.load";
