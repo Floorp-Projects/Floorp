@@ -68,17 +68,17 @@
         <treecell indent="true" url="chrome://pref/content/pref-navigator.xul" value="&navigator.label;"/> 
       </treerow>
       <treechildren>
-        <treeitem open="true">
+     <!--   <treeitem open="true">
           <treerow>
             <treecell indent="true" url="chrome://pref/content/pref-languages.xul" value="&languages.label;"/> 
           </treerow>
-        </treeitem>
+        </treeitem>  -->
 
-        <treeitem open="true">
+     <!--   <treeitem open="true">
           <treerow>
             <treecell indent="true" url="chrome://pref/content/pref-applications.xul" value="&applications.label;"/> 
-          </treerow>
-        </treeitem>
+          </treerow>  
+        </treeitem>  -->
 
         <treeitem open="true">
           <treerow>
@@ -164,7 +164,7 @@
       </treerow>
     </treeitem>
 
-    <treeitem container="true" open="true">
+<!-- <treeitem container="true" open="true">
       <treerow>       
         <treecell indent="true" url="chrome://pref/content/pref-offline.xul" value="&offline.label;"/> 
       </treerow>
@@ -176,7 +176,7 @@
           </treerow>
         </treeitem>
       </treechildren>
-    </treeitem>
+    </treeitem>  -->
     
     <treeitem container="true" open="true" id="advancedItem">
       <treerow>
