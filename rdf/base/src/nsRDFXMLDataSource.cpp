@@ -1392,14 +1392,20 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
         if (! hasMore)
             break;
 
-        nsIRDFResource* property;
-        rv = arcs->GetNext((nsISupports**) &property);
+        nsCOMPtr<nsISupports> isupports;
+        rv = arcs->GetNext(getter_AddRefs(isupports));
         if (NS_FAILED(rv)) return rv;
 
-	// have we already seen this resource?  If so, don't write it out again
-	PRInt32 arrayIndex = array->IndexOf(property);
-	if (arrayIndex >=0)	continue;
-	array->AppendElement(property);
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+        NS_ASSERTION(property != nsnull, "not an nsIRDFResource!");
+        if (! property)
+            continue;
+
+        // have we already seen this resource?  If so, don't write it out again
+        if (array->IndexOf(property) >= 0)
+            continue;
+
+        array->AppendElement(property);
 
         if (! IsContainerProperty(property)) {
             // Ignore properties that pertain to containers; we may be
@@ -1407,8 +1413,6 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
             // resource has been assigned non-container properties.
             rv = SerializeProperty(aStream, aResource, property);
         }
-
-        NS_RELEASE(property);
 
         if (NS_FAILED(rv))
             break;
