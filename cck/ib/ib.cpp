@@ -623,6 +623,19 @@ int StartIB(CString parms, WIDGET *curWidget)
 	else
 		nscpxpiPath = rootPath + "NSCPXPI";
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
+//Check for disk space before continuing
+
+	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
+	GetDiskFreeSpaceEx(NULL,&nTotalAvailable, &nTotalBytes, &nTotalFreeBytes);
+    if ((nTotalAvailable.QuadPart) > 17,505,658)
+		;
+	else
+	{
+		AfxMessageBox("You dont have enough Disk space ", MB_OK);
+		return FALSE;
+	}
+//Check for Disk space over
+
 
 	init_components();
 //checking for the autorun CD shell - inorder to create a Core dir or not
