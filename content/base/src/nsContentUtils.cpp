@@ -214,6 +214,7 @@ nsContentUtils::GetParserServiceWeakRef()
   return sParserService;
 }
 
+#ifdef MOZ_XTF
 nsIXTFService*
 nsContentUtils::GetXTFServiceWeakRef()
 {
@@ -226,6 +227,7 @@ nsContentUtils::GetXTFServiceWeakRef()
 
   return sXTFService;
 }
+#endif
 
 template <class OutputIterator>
 struct NormalizeNewlinesCharTraits {
