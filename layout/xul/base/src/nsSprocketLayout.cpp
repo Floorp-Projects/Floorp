@@ -891,7 +891,14 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
             ComputeChildSizes(aBox, aState, containingWidth, aBoxSizes, aComputedBoxSizes);
 
       if (childCurrentRect != aChildActualRect) {
-        aChild->SetBounds(aState, aChildActualRect);
+        // the childRect includes the margin
+        // make sure we remove it before setting 
+        // the bounds.
+        nsMargin margin(0,0,0,0);
+        aChild->GetMargin(margin);
+        nsRect rect(aChildActualRect);
+        rect.Deflate(margin);
+        aChild->SetBounds(aState, rect);
         aChild->Layout(aState);
       }
 
