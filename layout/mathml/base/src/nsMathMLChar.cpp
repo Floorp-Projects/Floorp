@@ -369,7 +369,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     for (PRInt32 i = 0, j = 0; i < length; i++, j++) {
       PRUnichar code = value[i];
       PRUnichar font = PRUnichar('0');
-      // see if we are beginning of a child char
+      // see if we are at the beginning of a child char
       if (code == kSpaceCh) {
         // reset the annotation indicator to be 0 for the next code point
         j = -1;
@@ -396,6 +396,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
         if (NS_FAILED(rv) || !puaValue.Length()) return kNullGlyph;
         code = puaValue[0];
       }
+      // see if an external font is needed for the code point
       if ((i+2 < length) && (value[i+1] == PRUnichar('@')) &&
           (value[i+2] >= PRUnichar('0')) && (value[i+2] <= PRUnichar('9'))) {
         i += 2;
@@ -469,7 +470,7 @@ nsGlyphTable::ChildCountOf(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 PRBool
 nsGlyphTable::Has(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 {
-  return (HasVariantsOf(aPresContext, aChar) || HasPartsOf(aPresContext, aChar));
+  return HasVariantsOf(aPresContext, aChar) || HasPartsOf(aPresContext, aChar);
 }
 
 PRBool
@@ -486,7 +487,7 @@ nsGlyphTable::Has(nsIPresContext* aPresContext, PRUnichar aChar)
 PRBool
 nsGlyphTable::HasVariantsOf(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 {
-  return BigOf(aPresContext, aChar, 1);
+  return BigOf(aPresContext, aChar, 1) != 0;
 }
 
 PRBool
@@ -595,7 +596,7 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
 
 // -----------------------------------------------------------------------------------
 // This is the list of all the applicable glyph tables.
-// We will maintain a single global instance that will only contain the
+// We will maintain a single global instance that will only reveal those
 // glyph tables that are associated to fonts currently installed on the
 // user' system. The class is an XPCOM shutdown observer to allow us to
 // free its allocated data at shutdown
