@@ -636,8 +636,28 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (void)performSearch
 {
-  // XXX go to the user's preferred search engine.
-  [[mBrowserView getBrowserView] loadURI: @"http://dmoz.org/" flags:NSLoadFlagsNone];
+  NSString *searchEngine = nil;
+
+  // Try and get the search engine from the pref service
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService("@mozilla.org/preferences-service;1"));
+  if (prefBranch) {
+    char *buf = nsnull;
+    prefBranch->GetCharPref("search.default_engine", &buf);
+    if (buf) {
+      if (*buf)
+        searchEngine = [NSString stringWithCString:buf];
+      free(buf);
+    }
+  }
+
+  // Get the users preferred search engine from IC
+  if (!searchEngine) {
+    searchEngine = [[CHPreferenceManager sharedInstance] getICStringPref:kICWebSearchPagePrefs];
+      if (!searchEngine || ([searchEngine cStringLength] == 0))
+        searchEngine = @"http://dmoz.org/";
+  }
+
+  [[mBrowserView getBrowserView] loadURI:searchEngine flags:NSLoadFlagsNone];
 }
 
 
