@@ -389,7 +389,7 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
          * (whichever covers fewer slots).
          */
         fp = cx->fp;
-        if (fp && fp->spbase && fp->script) {
+        if (fp && fp->script && fp->spbase) {
 #ifdef DEBUG
             jsuword depthdiff = fp->script->depth * sizeof(jsval);
             JS_ASSERT(JS_UPTRDIFF(fp->sp, fp->spbase) <= depthdiff);
@@ -700,6 +700,7 @@ have_fun:
     frame.annotation = NULL;
     frame.scopeChain = NULL;    /* set below for real, after cx->fp is set */
     frame.pc = NULL;
+    frame.spbase = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.overrides = 0;
@@ -787,7 +788,6 @@ have_fun:
     }
 
     /* Store the current sp in frame before calling fun. */
-    frame.spbase = sp;
     SAVE_SP(&frame);
 
     /* call the hook if present */
@@ -829,8 +829,11 @@ have_fun:
     }
 
 out:
-    if (hook && hookData)
-        hook(cx, &frame, JS_FALSE, &ok, hookData);
+    if (hookData) {
+        hook = cx->runtime->callHook;
+        if (hook)
+            hook(cx, &frame, JS_FALSE, &ok, hookData);
+    }
 #if JS_HAS_CALL_OBJECT
     /* If frame has a call object, sync values and clear back-pointer. */
     if (frame.callobj)
@@ -953,7 +956,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.scopeChain = chain;
     frame.pc = NULL;
     frame.sp = oldfp ? oldfp->sp : NULL;
-    frame.spbase = frame.sp;
+    frame.spbase = NULL;
     frame.sharpDepth = 0;
     frame.constructing = JS_FALSE;
     frame.overrides = 0;
@@ -985,8 +988,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     ok = js_Interpret(cx, result);
 
-    if (hook && hookData)
-        hook(cx, &frame, JS_FALSE, &ok, hookData);
+    if (hookData) {
+        hook = cx->runtime->executeHook;
+        if (hook)
+            hook(cx, &frame, JS_FALSE, &ok, hookData);
+    }
     cx->fp = oldfp;
 
     if (oldfp && oldfp != down) {
@@ -1396,8 +1402,11 @@ js_Interpret(JSContext *cx, jsval *result)
                 JSInlineFrame *ifp = (JSInlineFrame *) fp;
                 void *hookData = ifp->hookData;
 
-                if (hookData)
-                    cx->runtime->callHook(cx, fp, JS_FALSE, &ok, hookData);
+                if (hookData) {
+                    JSInterpreterHook hook = cx->runtime->callHook;
+                    if (hook)
+                        hook(cx, fp, JS_FALSE, &ok, hookData);
+                }
 #if JS_HAS_ARGS_OBJECT
                 if (fp->argsobj)
                     ok &= js_PutArgsObject(cx, fp);
@@ -2599,7 +2608,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
                  !fun->native &&
-                 fun->flags == 0 &&
+                 !(fun->flags & (JSFUN_HEAVYWEIGHT | JSFUN_BOUND_METHOD)) &&
                  argc >= (uintN)(fun->nargs + fun->extra)))
           /* inline_call: */
             {
@@ -3766,9 +3775,11 @@ no_catch:
 
     /*
      * Reset sp before freeing stack slots, because our caller may GC soon.
+     * Clear spbase to indicate that we've popped the 2 * depth operand slots.
      * Restore the previous frame's execution state.
      */
     fp->sp = fp->spbase;
+    fp->spbase = NULL;
     js_FreeRawStack(cx, mark);
     if (currentVersion != originalVersion)
         JS_SetVersion(cx, originalVersion);

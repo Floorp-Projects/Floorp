@@ -1142,12 +1142,18 @@ restart:
                     GC_MARK(cx, fp->varobj, "variables object", NULL);
                 if (fp->script) {
                     js_MarkScript(cx, fp->script, NULL);
-                    depth = fp->script->depth;
-                    if (JS_UPTRDIFF(fp->sp, fp->spbase) < depth * sizeof(jsval))
-                        nslots = fp->sp - fp->spbase;
-                    else
-                        nslots = depth;
-                    GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
+                    if (fp->spbase) {
+                        /*
+                         * Don't mark what has not been pushed yet, or what
+                         * has been popped already.
+                         */
+                        depth = fp->script->depth;
+                        nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
+                                  < depth * sizeof(jsval))
+                                 ? fp->sp - fp->spbase
+                                 : depth;
+                        GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
+                    }
                 }
                 GC_MARK(cx, fp->thisp, "this", NULL);
                 if (fp->argv)
