@@ -350,8 +350,7 @@ extern char *strdup();
 /*
  * Define a portable type for IPv4 style Internet addresses (32 bits):
  */
-#if defined(_IN_ADDR_T) || defined(LINUX) || \
-    defined(aix) || defined(HPUX11) || defined(OSF1)
+#if defined(_IN_ADDR_T) || defined(aix) || defined(HPUX11) || defined(OSF1)
 typedef in_addr_t	nsldapi_in_addr_t;
 #else
 typedef nsldapi_uint_32	nsldapi_in_addr_t;
