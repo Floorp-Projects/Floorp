@@ -138,7 +138,7 @@ int ssl3CipherSuites[] = {
 };
 
 unsigned long __cmp_umuls;
-PRBool verbose = 1;  /* enable verbose mode temporarily for debugging (wtc) */
+PRBool verbose;
 
 static char *progName;
 
