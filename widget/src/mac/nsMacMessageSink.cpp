@@ -27,7 +27,7 @@
 // DispatchOSEventToRaptor
 //
 //-------------------------------------------------------------------------
-void  nsMacMessageSink::DispatchOSEvent(
+NS_EXPORT void  nsMacMessageSink::DispatchOSEvent(
 													EventRecord 	&anEvent,
 													WindowPtr			aWindow)
 {
@@ -46,7 +46,7 @@ void  nsMacMessageSink::DispatchOSEvent(
 // DispatchMenuCommandToRaptor
 //
 //-------------------------------------------------------------------------
-void nsMacMessageSink::DispatchMenuCommand(
+NS_EXPORT void nsMacMessageSink::DispatchMenuCommand(
 													EventRecord 	&anEvent,
 													long					menuResult)
 {
