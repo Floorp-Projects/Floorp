@@ -26,7 +26,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=nsHTMLContentSink.cpp nsHTMLDocument.cpp nsHTMLIFrame.cpp
 
 CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
-    .\$(OBJDIR)\nsHTMLDocument.obj nsHTMLIFrame.obj
+    .\$(OBJDIR)\nsHTMLDocument.obj .\$(OBJDIR)\nsHTMLIFrame.obj
 
 EXPORTS =		\
  nsIHTMLDocument.h	\

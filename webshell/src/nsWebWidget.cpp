@@ -24,6 +24,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
+#include "nsIWebFrame.h"
 #include "nsIWidget.h"
 #include "nsIScrollbar.h"
 #include "nsUnitConversion.h"
@@ -74,12 +75,18 @@ public:
 
   virtual nsRect GetBounds();
   virtual void SetBounds(const nsRect& aBounds);
+  virtual void Move(PRInt32 aX, PRInt32 aY);
   virtual void Show();
   virtual void Hide();
 
   NS_IMETHOD SetContainer(nsISupports* aContainer);
 
   NS_IMETHOD GetContainer(nsISupports** aResult);
+
+  // XXX temp hack
+  virtual void SetRootWebWidget(nsIWebWidget* aWebWidget);
+  virtual nsIWebWidget* GetRootWebWidget();
+  nsIPresContext* GetPresContext();
 
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler);
 
@@ -121,11 +128,15 @@ private:
   nsISupports* mContainer;
   nsIScriptContext* mScriptContext;
   void* mScriptObject;
+
+  static nsIWebWidget* gRootWebWidget;
 };
 
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+
+nsIWebWidget* WebWidgetImpl::gRootWebWidget = nsnull;
 
 // Note: operator new zeros our memory
 WebWidgetImpl::WebWidgetImpl()
@@ -212,7 +223,6 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
                                      nsnull, 
                                      kIViewIID, 
                                      (void **)&mView);
-
   static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
   if ((NS_OK != rv) || (NS_OK != mView->Init(mViewManager, 
                                                 tbounds, 
@@ -229,6 +239,7 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
   if (mWindow) {
     mViewManager->SetRootWindow(mWindow);
   }
+printf("webwidget.mView=%d widget=%d parent=%d \n", mView, mWindow, aNativeParent); 
 
   //set frame rate to 25 fps
   mViewManager->SetFrameRate(25);
@@ -346,6 +357,12 @@ nsRect WebWidgetImpl::GetBounds()
   return zr;
 }
 
+nsIPresContext* WebWidgetImpl::GetPresContext()
+{
+  NS_IF_ADDREF(mPresContext);
+  return mPresContext;
+}
+
 void WebWidgetImpl::SetBounds(const nsRect& aBounds)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
@@ -353,6 +370,14 @@ void WebWidgetImpl::SetBounds(const nsRect& aBounds)
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
+  }
+}
+
+void WebWidgetImpl::Move(PRInt32 aX, PRInt32 aY)
+{
+  NS_PRECONDITION(nsnull != mWindow, "null window");
+  if (nsnull != mWindow) {
+    mWindow->Move(aX, aY);
   }
 }
 
@@ -393,6 +418,8 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
 
 // XXX need to save old document in case of failure? Does caller do that?
 
+static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
+
 NS_IMETHODIMP
 WebWidgetImpl::LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener,
@@ -428,6 +455,18 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
   // Create document
   nsIDocument* doc;
   rv = NS_NewHTMLDocument(&doc);
+
+  // set the root web widget to this if its container is not
+  // an embedded web webwidget
+  nsISupports* parent;
+  rv = GetContainer(&parent);
+  if ((rv == NS_OK) && (nsnull != parent)) {
+    nsISupports* webFrame;
+    rv = parent->QueryInterface(kIWebFrameIID, (void**)&webFrame);
+    if (rv != NS_OK) {
+      SetRootWebWidget(this);
+    }
+  }
 
   // Create style set
   nsIStyleSet* styleSet = nsnull;
@@ -532,6 +571,19 @@ NS_IMETHODIMP WebWidgetImpl::GetContainer(nsISupports** aResult)
   *aResult = mContainer;
   NS_IF_ADDREF(mContainer);
   return NS_OK;
+}
+
+void WebWidgetImpl::SetRootWebWidget(nsIWebWidget* aWebWidget)
+{
+  NS_IF_RELEASE(gRootWebWidget);
+  gRootWebWidget = aWebWidget;
+  NS_IF_ADDREF(gRootWebWidget);
+}
+
+nsIWebWidget* WebWidgetImpl::GetRootWebWidget()
+{
+  NS_IF_ADDREF(gRootWebWidget);
+  return gRootWebWidget;
 }
 
 //----------------------------------------------------------------------

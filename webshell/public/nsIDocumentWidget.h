@@ -38,6 +38,8 @@ public:
 
   virtual void SetBounds(const nsRect& aBounds) = 0;
 
+  virtual void Move(PRInt32 aX, PRInt32 aY) = 0;
+
   virtual void Show() = 0;
 
   virtual void Hide() = 0;
