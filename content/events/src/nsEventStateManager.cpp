@@ -1216,7 +1216,7 @@ nsEventStateManager::KillClickHoldTimer()
 // This fires after the mouse has been down for a certain length of time. 
 //
 void
-sClickHoldCallback(nsITimer *aTimer, void* aESM)
+nsEventStateManager::sClickHoldCallback(nsITimer *aTimer, void* aESM)
 {
   nsEventStateManager* self = NS_STATIC_CAST(nsEventStateManager*, aESM);
   if ( self )
