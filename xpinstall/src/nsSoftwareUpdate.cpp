@@ -456,7 +456,7 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 // Functions used to create new instances of a given object by the
 // generic factory.
 
-static NS_IMETHODIMP      
+static NS_METHOD      
 CreateNewSoftwareUpdate(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 {                                                                  
     if (!aResult) {                                                
@@ -483,10 +483,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion);
 
 
 
-nsresult RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
-                                 nsIFile *aPath,
-                                 const char *registryLocation,
-                                 const char *componentType)
+static NS_METHOD 
+RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
+                        nsIFile *aPath,
+                        const char *registryLocation,
+                        const char *componentType)
 {
 	// get the registry
     nsIRegistry* registry;
@@ -523,19 +524,19 @@ static nsModuleComponentInfo components[] =
 	   NS_SoftwareUpdate_CID,
        NS_IXPINSTALLCOMPONENT_PROGID,
 	   CreateNewSoftwareUpdate,
-	   (NSRegisterSelfProcPtr)RegisterSoftwareUpdate,
+	   RegisterSoftwareUpdate
 	},
 	   
     { "InstallTrigger Component", 
 	   NS_SoftwareUpdateInstallTrigger_CID,
        NS_INSTALLTRIGGERCOMPONENT_PROGID, 
-	   nsInstallTriggerConstructor,
+	   nsInstallTriggerConstructor
 	},
     
 	{ "InstallVersion Component", 
 	   NS_SoftwareUpdateInstallVersion_CID,
-       NS_INSTALLVERSIONCOMPONENT_PROGID, 
-	   nsInstallVersionConstructor,
+       NS_INSTALLVERSIONCOMPONENT_PROGID,
+	   nsInstallVersionConstructor 
 	},
 };
 
