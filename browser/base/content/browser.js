@@ -2942,13 +2942,13 @@ nsContextMenu.prototype = {
 
         goUpdateGlobalEditMenuItems();
 
-        this.showItem( "context-undo", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-sep-undo", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-cut", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-undo", this.onTextInput );
+        this.showItem( "context-sep-undo", this.onTextInput );
+        this.showItem( "context-cut", this.onTextInput );
         this.showItem( "context-copy", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-paste", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-delete", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-sep-paste", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-paste", this.onTextInput );
+        this.showItem( "context-delete", this.onTextInput );
+        this.showItem( "context-sep-paste", this.onTextInput );
         this.showItem( "context-selectall", this.isTextSelected || this.onTextInput );
         this.showItem( "context-sep-selectall", this.isTextSelected );
 
