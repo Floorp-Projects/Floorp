@@ -37,18 +37,7 @@
 #include "nsIFrame.h"
 #include "nsIStatefulFrame.h"
 #include "nsChangeHint.h"
-#include "pldhash.h"
-
-class nsIPresShell;
-class nsStyleSet;
-class nsIContent;
-class nsPlaceholderFrame;
-class nsStyleContext;
-class nsIAtom;
-class nsStyleChangeList;
-class nsILayoutHistoryState;
-
-struct CantRenderReplacedElementEvent;
+#include "nsFrameManagerBase.h"
 
 // Option flags for GetFrameProperty() member function
 #define NS_IFRAME_MGR_REMOVE_PROP   0x0001
@@ -62,11 +51,18 @@ struct CantRenderReplacedElementEvent;
  * they're queued and processed later.
  */
 
-class nsFrameManager
+class nsFrameManager : public nsFrameManagerBase
 {
 public:
   nsFrameManager() NS_HIDDEN;
   ~nsFrameManager() NS_HIDDEN;
+
+  void* operator new(size_t aSize, nsIPresShell* aHost) {
+    NS_ASSERTION(aSize == sizeof(nsFrameManager), "Unexpected subclass");
+    NS_ASSERTION(aSize == sizeof(nsFrameManagerBase),
+                 "Superclass/subclass mismatch");
+    return aHost->FrameManager();
+  }
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -279,29 +275,14 @@ public:
   NS_HIDDEN_(void) DebugVerifyStyleTree(nsIFrame* aFrame);
 #endif
 
-  struct PropertyList;
-
 private:
 
-  class UndisplayedMap;
   friend struct CantRenderReplacedElementEvent;
 
   NS_HIDDEN_(nsIPresShell*) GetPresShell() const { return mPresShell; }
   NS_HIDDEN_(nsIPresContext*) GetPresContext() const {
     return mPresShell->GetPresContext();
   }
-
-  // weak link, because the pres shell owns us
-  nsIPresShell*                   mPresShell;
-  // the pres shell owns the style set
-  nsStyleSet*                     mStyleSet;
-  nsIFrame*                       mRootFrame;
-  PLDHashTable                    mPrimaryFrameMap;
-  PLDHashTable                    mPlaceholderMap;
-  UndisplayedMap*                 mUndisplayedMap;
-  CantRenderReplacedElementEvent* mPostedEvents;
-  PropertyList*                   mPropertyList;
-  PRBool                          mIsDestroyingFrames;
 
   NS_HIDDEN_(nsChangeHint)
     ReResolveStyleContext(nsIPresContext    *aPresContext,

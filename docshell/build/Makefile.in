@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  necko \
 		  gfx \
+		  content \
 		  layout \
 		  webshell \
 		  widget \
