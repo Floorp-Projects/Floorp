@@ -1,11 +1,25 @@
 #! perl -w
 
+# Usage:
+# module-graph.pl [directory [ directory ..] ] > foo.dot
+#
+# Description:
+# Outputs a Graphviz-compatible graph description file for use
+# with the utilities dot, sccmap, and so forth.
+#
+# Reccomendations:
+# View the graphs by creating graphs with dot:
+# > dot -Tpng foo.dot -o foo.png
+#
+
 # Todo:
 # - eliminate arcs implied by transitive dependancies
 #   (i.e. in a -> b -> c; a->c;, eliminate a->c;
 #   (discovered that "tred" will do this, but isn't super-helpful)
 # - group together strongly-connected components, where strongly connected
 #   means there exists a cycle, and all dependancies off the cycle.
+#   in the graph "a -> b <-> c -> d", b and c are strongly connected, and
+#   they depend on d, so b, c, and d should be grouped together.
 
 if ($^O eq "linux") {
   $makecommand = "make";
@@ -31,6 +45,7 @@ while ($#dirs != -1) {
   # pop the curdir
   $curdir = pop @dirs;
 
+  print STDERR "Entering $curdir..                 \r";
   chdir "$curdir";
   $current_dirs = "";
   open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
@@ -56,7 +71,7 @@ while ($#dirs != -1) {
   # now push all child directories onto the list
   @local_dirs = split(/\s+/,$current_dirs);
   for (@local_dirs) {
-    push @dirs,"$curdir\\$_" if $_;
+    push @dirs,"$curdir/$_" if $_;
   }
 
 }
