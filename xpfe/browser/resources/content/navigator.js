@@ -596,6 +596,7 @@ function Startup()
 
     if (uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
+      getBrowser().userTypedValue = uriToLoad;
       if ("arguments" in window && window.arguments.length >= 3) {
         loadURI(uriToLoad, window.arguments[2]);
       } else {
@@ -1271,7 +1272,7 @@ function BrowserCloseWindow()
 function loadURI(uri, referrer)
 {
   try {
-    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, referrer, null, null);
+    getBrowser().loadURI(uri, referrer);
   } catch (e) {
   }
 }
