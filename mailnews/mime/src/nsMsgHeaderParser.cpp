@@ -287,19 +287,14 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
       s += len;
     }
     // convert array of strings
-	if (!charset)
-	{
-    outStrings = (char *)PL_strdup(*names);
-    rv = NS_OK;
-  } else {
-		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
-                            len_all, &outStrings, &outStrLen, NULL) ; 
-	}
-	if (NS_SUCCEEDED(rv))
-	{
-      PR_Free(*names);
-      *names = outStrings;
-    }
+  	if (charset) {
+  		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
+                              len_all, &outStrings, &outStrLen, NULL) ; 
+  	  if (NS_SUCCEEDED(rv)) {
+        PR_Free(*names);
+        *names = outStrings;
+      }
+  	}
   }
   if (nsnull != addresses && nsnull != *addresses) {
     char *s = *addresses;
@@ -310,19 +305,15 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
       s += len;
     }
     // convert array of strings
-	if (!charset)
-	{
-    outStrings = (char *)PL_strdup(*addresses);
-    rv = NS_OK;
-  } else {
-		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
-                            len_all, &outStrings, &outStrLen, NULL);
-	}
-	if (NS_SUCCEEDED(rv))
-	{
-      PR_Free(*addresses);
-      *addresses = outStrings;
-    }
+  	if (charset)
+  	{
+  		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
+                              len_all, &outStrings, &outStrLen, NULL);
+    	if (NS_SUCCEEDED(rv)) {
+          PR_Free(*addresses);
+          *addresses = outStrings;
+      }
+  	}
   }
 
 	return NS_OK;
