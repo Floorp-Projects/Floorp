@@ -382,12 +382,18 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     nsIWidget*  widget;
+
     aView->GetWidget(widget);
     widget->GetClientBounds(wrect);
+
     wrect.x = wrect.y = 0;
+
     NS_RELEASE(widget);
+
     ds = GetDrawingSurface(*localcx, wrect);
-    localcx->SelectOffScreenDrawingSurface(ds);
+
+    if (ds)
+      localcx->SelectOffScreenDrawingSurface(ds);
   }
 
   PRBool  result;
@@ -402,7 +408,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   RenderViews(aView, *localcx, trect, result);
 
-  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
 #ifdef NEW_COMPOSITOR
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
@@ -468,12 +474,18 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     nsIWidget*  widget;
+
     aView->GetWidget(widget);
     widget->GetClientBounds(wrect);
+
     wrect.x = wrect.y = 0;
+
     NS_RELEASE(widget);
+
     ds = GetDrawingSurface(*localcx, wrect);
-    localcx->SelectOffScreenDrawingSurface(ds);
+
+    if (ds)
+      localcx->SelectOffScreenDrawingSurface(ds);
   }
 
   nsRect trect = *rect;
@@ -484,7 +496,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
   RenderViews(aView, *localcx, trect, result);
 
-  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
 #ifdef NEW_COMPOSITOR
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
@@ -1899,6 +1911,7 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
     {
       //destroy existing DS
       aContext.DestroyDrawingSurface(mDrawingSurface);
+      mDrawingSurface = nsnull;
     }
 
     aContext.CreateDrawingSurface(&aBounds, 0, mDrawingSurface);
