@@ -405,10 +405,10 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             char* currProfileName = strtok(cmdResult, " ");
             char* currProfileDirString = strtok(NULL, " ");
 		
-            if (currProfileDirString)
+            if (currProfileDirString) {
                 currProfileDirSpec = currProfileDirString;
-            else
-            {
+			}
+            else {
                 // No directory name provided. Get File Locator
                 NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 				if (NS_FAILED(rv) || !locator)
@@ -425,9 +425,14 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
 #ifdef DEBUG_profile
             printf("profileName & profileDir are: %s\n", cmdResult);
-#endif
-			CreateNewProfile(currProfileName, currProfileDirSpec.GetNativePathCString());
-            *profileDirSet = PR_TRUE;
+#endif /* DEBUG_profile */
+			rv = CreateNewProfile(currProfileName, currProfileDirSpec.GetNativePathCString());
+			if (NS_SUCCEEDED(rv)) {
+				*profileDirSet = PR_TRUE;
+
+				// Need to load new profile prefs.
+				rv = LoadNewProfilePrefs();
+			}
         }
     }
 
@@ -972,15 +977,23 @@ NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
     
     rv = locator->ForgetProfileDir();
     if (NS_FAILED(rv)) {
-	//temporary printf
+#ifdef DEBUG_profile
 	printf("failed to forget the profile dir\n"); 
+#endif /* DEBUG_profile */
 	return rv;
     }
 
-	/*
-	 * Need to load new profile prefs.
-	 */
+	// Need to load new profile prefs.
+	rv = LoadNewProfilePrefs();
+	return rv;
+}
+
+NS_IMETHODIMP nsProfile::LoadNewProfilePrefs()
+{
+	nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
     prefs->ResetPrefs();
     prefs->ReadUserPrefs();
 
