@@ -39,7 +39,7 @@
 [scriptable, uuid(A4186D8B-1DD0-11d3-A303-001083003D0C)] 
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
-	attribute nsFileSpec dbPath;
+	[noscript] attribute nsFileSpec dbPath;
 	[noscript] void open(in nsFileSpec folderName, in boolean create,
 						out nsIAddrDatabase pCardDB, in boolean upgrading);
 	void close(in boolean forceCommit);

@@ -37,7 +37,7 @@ interface nsIAbDirectory : nsISupports {
 
     attribute wstring dirName;
     attribute unsigned long  lastModifiedDate;
-    attribute DIR_Server server;
+    [noscript] attribute DIR_Server server;
 
 	readonly attribute string dirFilePath;
 	readonly attribute nsIEnumerator childNodes;

@@ -52,7 +52,7 @@ interface nsIMsgFilter : nsISupports {
                             out boolean BooleanAND,
                             out string arbitraryHeader);
 
-    attribute nsMsgSearchScopeTerm scope;
+    [noscript] attribute nsMsgSearchScopeTerm scope;
 
     [noscript] void SetAction(in nsMsgRuleActionType type, in voidStar value);
     [noscript] void GetAction(out nsMsgRuleActionType type, out voidStar value);
