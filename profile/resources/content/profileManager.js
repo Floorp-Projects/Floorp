@@ -159,7 +159,13 @@ function SwitchProfileManagerMode()
   if( profileManagerMode == "selection" )
   {
     prattleIndex = 1;                                       // need to switch to manager's index
-    captionLine = bundle.GetStringFromName( "pm_title" );   // get manager's caption
+    
+    try {
+      captionLine = bundle.GetStringFromName( "pm_title" );   // get manager's caption
+    } catch(e) {
+      captionLine = "Manage Profiles Yah";
+    }
+    
     buttonDisplay = "display: inherit;";                    // display the manager's buttons
     var manage = document.getElementById( "manage" );       // hide the manage profiles button...
     var manageParent = manage.parentNode;
@@ -169,7 +175,11 @@ function SwitchProfileManagerMode()
   } 
   else {
     prattleIndex = 0;
-    captionLine = bundle.GetStringFromName( "ps_title" );
+    try {
+      captionLine = bundle.GetStringFromName( "ps_title" );
+    } catch(e) {
+      captionLine = "Select Profile Yah";
+    }
     buttonDisplay = "display: none;";
     profileManagerMode = "selection";
     PersistAndLoadElements( selItems );

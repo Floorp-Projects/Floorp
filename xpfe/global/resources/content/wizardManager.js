@@ -164,7 +164,11 @@ function WM_ProgressUpdate( currentPageNumber )
     }
     var string = "";
     string += (currentPageNumber + 1);
-    string += ( " " + this.bundle.GetStringFromName("oflabel") + " " );
+    try {
+      string += ( " " + this.bundle.GetStringFromName("oflabel") + " " );
+    } catch (e) {
+      string += "of";
+    }
     string += this.GetMapLength();
     var textNode = document.createTextNode ( string );
     div.appendChild ( textNode );

@@ -28,7 +28,6 @@ var currProfile = "";
 var profile     = Components.classes["component://netscape/profile/manager"].createInstance();
 if (profile)
   profile       = profile.QueryInterface(Components.interfaces.nsIProfile);
-var bundle      = null;
 var unset       = true;
 
 function StartUp()
@@ -37,7 +36,7 @@ function StartUp()
   centerWindowOnScreen();
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
-  // bundle = srGetStrBundle("chrome://profile/locale/profileSelection.properties");
+
   loadElements();
   highlightCurrentProfile();
   DoEnabling();
@@ -226,7 +225,19 @@ function SetUpOKCancelButtons()
   doSetOKCancel( onStart, onExit, null, null );
   var okButton = document.getElementById("ok");
   var cancelButton = document.getElementById("cancel");
-  okButton.setAttribute( "value", bundle.GetStringFromName("startButton") );
+  
+  var okButtonString;
+  var cancelButtonString;
+  
+  try {
+    okButtonString = bundle.GetStringFromName("startButton");
+    cancelButtonString = bundle.GetStringFromName("exitButton");
+  } catch (e) {
+    okButtonString = "Start Yah";
+    cancelButtonString = "Exit Yah";
+  }
+  
+  okButton.setAttribute( "value", okButtonString );
   okButton.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
-  cancelButton.setAttribute( "value", bundle.GetStringFromName("exitButton") );
+  cancelButton.setAttribute( "value", cancelButtonString );
 }
