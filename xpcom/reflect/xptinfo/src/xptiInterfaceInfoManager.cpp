@@ -1085,8 +1085,11 @@ xpti_Merger(PLHashEntry *he, PRIntn i, void *arg)
            (destInfo->GetTypelibRecord().GetZipItemIndex() ==
             srcInfo->GetTypelibRecord().GetZipItemIndex()))
         {
-            // This is the exact same item.
-            return HT_ENUMERATE_NEXT;
+            // This is the same item.
+            // But... Let's make sure they didn't change the interface name.
+            // There are wacky developers that do stuff like that!
+            if(0 == PL_strcmp(destInfo->GetTheName(), srcInfo->GetTheName()))
+                return HT_ENUMERATE_NEXT;
         }
         // else...
         
