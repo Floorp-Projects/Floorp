@@ -206,6 +206,8 @@ ImageConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
        * stream functions have not been initialized!
        */
       if (ilErr != 0) {
+        mStatus = MK_IMAGE_LOSSAGE;
+        mInterrupted = PR_TRUE;
         break;
       }
     }
