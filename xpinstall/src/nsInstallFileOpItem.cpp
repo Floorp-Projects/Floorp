@@ -992,7 +992,9 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   #define ARG_SLOTS 256
 
   char *cParams[ARG_SLOTS];
+  char *arguments = nsnull;
   int   argcount = -1;
+
   nsresult rv;
 
   cParams[0] = nsnull;
@@ -1001,9 +1003,12 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
     return nsInstall::INVALID_ARGUMENTS;
 
   nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
-
-  argcount = xpi_PrepareProcessArguments(*mParams, cParams, ARG_SLOTS);
-
+  
+  if (mParams && !mParams->IsEmpty())
+  {
+    arguments = ToNewCString(*mParams);
+    argcount = xpi_PrepareProcessArguments(arguments, cParams, ARG_SLOTS);
+  }
   if (argcount >= 0)
   {
     rv = process->Init(mTarget);
@@ -1014,8 +1019,8 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   else
     rv = nsInstall::UNEXPECTED_ERROR;
 
-  if(cParams[0])
-    Recycle(cParams[0]);
+  if(arguments)
+    Recycle(arguments);
 
   return rv;
 }

@@ -56,14 +56,14 @@ MOZ_DECL_CTOR_COUNTER(nsInstallExecute)
 //
 // Returns the count of the number of command-line arguments actually 
 //   stored into the array aArgs or -1 if it fails.
-PRInt32 xpi_PrepareProcessArguments(const nsString& aArgsString, char **aArgs, PRInt32 aArgsAvailable)
+PRInt32 xpi_PrepareProcessArguments(char *aArgsString, char **aArgs, PRInt32 aArgsAvailable)
 {
    int   argc;
    char *c;
    char *p; // look ahead
    PRBool quoted = PR_FALSE;
 
-   aArgs[0] = ToNewCString(aArgsString);
+   aArgs[0] = aArgsString;
    if (!aArgs[0])
       return -1;
 
@@ -191,9 +191,12 @@ PRInt32 nsInstallExecute::Complete()
 
    nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
 
+   char *arguments = nsnull;
    if (!mArgs.IsEmpty())
-      argcount = xpi_PrepareProcessArguments(mArgs, cArgs, ARG_SLOTS);
-
+   {
+      arguments = ToNewCString(mArgs);
+      argcount = xpi_PrepareProcessArguments(arguments, cArgs, ARG_SLOTS);
+   }
    if (argcount >= 0)
    {
       result = process->Init(mExecutableFile);
@@ -218,12 +221,12 @@ PRInt32 nsInstallExecute::Complete()
       }
       else
          rv = nsInstall::UNEXPECTED_ERROR;
-
-      if(cArgs[0])
-         Recycle(cArgs[0]);
    }
    else
       rv = nsInstall::UNEXPECTED_ERROR;
+
+   if(arguments)
+      Recycle(arguments);
 
    return rv;
 }
