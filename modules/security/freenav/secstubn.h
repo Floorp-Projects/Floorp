@@ -21,6 +21,7 @@
 #include "ntypes.h"
 #include "net.h"
 
+typedef struct CERTCertificateStr CERTCertificate;
 typedef struct _digests DIGESTS;
 typedef struct _zig ZIG;
 typedef struct _zigcontext ZIG_Context;
