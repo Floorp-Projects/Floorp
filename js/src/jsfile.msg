@@ -71,5 +71,14 @@ MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_NUMBER,                32, 2, JSEXN_N
 MSG_DEF(JSFILEMSG_CANNOT_WRITE,                                   33, 1, JSEXN_NONE, "Cannot write to {0}, file mode is different")
 MSG_DEF(JSFILEMSG_CANNOT_READ,                                    34, 1, JSEXN_NONE, "Cannot read from {0}, file mode is different")
 MSG_DEF(JSFILEMSG_CANNOT_FLUSH,                                   35, 1, JSEXN_NONE, "Flush failed on {0}")
+MSG_DEF(JSFILEMSG_OP_FAILED,									  36, 1, JSEXN_NONE, "File operation {0} failed")
+MSG_DEF(JSFILEMSG_FILE_MUST_BE_OPEN,							  37, 1, JSEXN_NONE, "File must be open for {0}")
+MSG_DEF(JSFILEMSG_FILE_MUST_BE_CLOSED,							  38, 1, JSEXN_NONE, "File must be closed for {0}")
+MSG_DEF(JSFILEMSG_NO_RANDOM_ACCESS,								  39, 1, JSEXN_NONE, "File {0} doesn't allow random access")
+MSG_DEF(JSFILEMSG_OBJECT_CREATION_FAILED,						  40, 1, JSEXN_NONE, "Couldn't create {0}")
+MSG_DEF(JSFILEMSG_CANNOT_OPEN_DIR,								  41, 1, JSEXN_NONE, "Couldn't open directory {0}")
+MSG_DEF(JSFILEMSG_CANNOT_REPORT_POSITION,						  42, 1, JSEXN_NONE, "Couldn't report position for {0}")
+MSG_DEF(JSFILEMSG_CANNOT_SET_POSITION,							  43, 1, JSEXN_NONE, "Couldn't set position for {0}")
+MSG_DEF(JSFILEMSG_INIT_FAILED,									  44, 0, JSEXN_NONE, "File class initialization failed")
 
 
