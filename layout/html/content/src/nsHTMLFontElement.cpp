@@ -266,10 +266,18 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     else {
       // size: int, enum , NOTE: this does not count as an explicit size
       // also this has no effect if font is already explicit (quirk mode)
+      //
+      // NOTE: we now do not emulate this quirk - it is too stupid, IE does it right, and it
+      //       messes up other blocks (ie. Headings) when implemented... see bug 25810
+
+#if 0 // removing the quirk...
       nsCompatibility mode;
       aPresContext->GetCompatibilityMode(&mode);
       if ((eCompatibility_Standard == mode) || 
           (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT))) {
+#else
+      if (1){ 
+#endif
         aAttributes->GetAttribute(nsHTMLAtoms::size, value);
         if ((value.GetUnit() == eHTMLUnit_Integer) ||
             (value.GetUnit() == eHTMLUnit_Enumerated)) { 
