@@ -273,6 +273,7 @@ extern void vr_findGlobalRegName()
             if (err == noErr && thePath)
             {
             #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
+                thePath[pathLen] = '\0';
                 globalRegName = XP_STRDUP(*(char**)thePath);
             #else
                 /* Since we're now using NSPR, this HAS to be a unix path! */
