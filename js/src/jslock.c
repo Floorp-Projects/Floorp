@@ -149,7 +149,7 @@ mov 0,%0\n\
 JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
-    return !_check_lock(w,ov,nv);
+    return !_check_lock((atomic_p)w,ov,nv);
 }
 
 #else
