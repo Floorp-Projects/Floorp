@@ -65,9 +65,7 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 // for the memory cache...
-#include "nsINetDataCacheManager.h"
-#include "nsINetDataCache.h"
-#include "nsICachedNetData.h"
+#include "nsICacheEntryDescriptor.h"
 #include "nsImapUrl.h"
 #include "nsFileStream.h"
 
@@ -475,10 +473,8 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
   while (cnt > 0 && !urlRun && keepGoing)
   {
-    nsCOMPtr<nsISupports>
-        aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
-    nsCOMPtr<nsIImapUrl>
-        aImapUrl(do_QueryInterface(aSupport, &rv));
+    nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
+    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
     nsCOMPtr<nsIMsgMailNewsUrl> aMailNewsUrl(do_QueryInterface(aSupport, &rv));
 
     if (aImapUrl)
@@ -487,9 +483,9 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
       if (NS_SUCCEEDED(aImapUrl->GetMockChannel(getter_AddRefs(mockChannel))) && mockChannel)
       {
-          nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
+        nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
         if (!request)
-            return NS_ERROR_FAILURE;
+          return NS_ERROR_FAILURE;
         request->GetStatus(&rv);
         if (!NS_SUCCEEDED(rv))
         {
@@ -500,10 +496,10 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
           if (aMailNewsUrl)
           {
-            nsCOMPtr<nsICachedNetData>  cacheEntry;
+            nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
             res = aMailNewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
             if (NS_SUCCEEDED(res) && cacheEntry)
-              cacheEntry->Delete();
+              cacheEntry->Doom();
           }
         }
       }
@@ -511,14 +507,11 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
       // between the place we set it and here.
       if (NS_SUCCEEDED(rv))
       {
-        nsISupports *aConsumer =
-            (nsISupports*)m_urlConsumers.ElementAt(0);
-
+        nsISupports *aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
         NS_IF_ADDREF(aConsumer);
       
         nsCOMPtr <nsIImapProtocol>  protocolInstance ;
-        rv = CreateImapConnection(nsnull, aImapUrl,
-                                           getter_AddRefs(protocolInstance));
+        rv = CreateImapConnection(nsnull, aImapUrl, getter_AddRefs(protocolInstance));
         if (NS_SUCCEEDED(rv) && protocolInstance)
         {
 		      nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);

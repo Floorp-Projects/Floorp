@@ -46,6 +46,7 @@
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsICacheListener.h"
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
@@ -145,11 +146,14 @@ NEWS_FREE,
 NEWS_FINISHED
 } StatesEnum;
 
-class nsNNTPProtocol : public nsINNTPProtocol, public nsITimerCallback, public nsMsgProtocol
+class nsICacheEntryDescriptor;
+
+class nsNNTPProtocol : public nsINNTPProtocol, public nsITimerCallback, public nsICacheListener, public nsMsgProtocol
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINNTPPROTOCOL
+  NS_DECL_NSICACHELISTENER
 
   // nsITimerCallback interfaces
   NS_IMETHOD_(void) Notify(nsITimer *timer);
@@ -170,7 +174,6 @@ public:
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:
-  nsresult SetupPartExtractor(nsIStreamListener * aConsumer);
 	// over-rides from nsMsgProtocol
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
 									      PRUint32 sourceOffset, PRUint32 length);
@@ -392,21 +395,28 @@ private:
 
 	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	nsresult SetProgressStatus(const PRUnichar *aMessage);
-    nsresult SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total);
-    nsresult MarkCurrentMsgRead(); // marks the message corresponding to the currently running url read.
+  nsresult SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total);
+  nsresult MarkCurrentMsgRead(); // marks the message corresponding to the currently running url read.
 	nsresult InitializeNewsFolderFromUri(const char *uri);
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;
-    nsCOMPtr <nsITimer> mUpdateTimer; 
+  nsCOMPtr <nsITimer> mUpdateTimer; 
 	nsresult AlertError(PRInt32 errorCode, const char *text);
 	PRInt32 mBytesReceived;
-    PRInt32 mBytesReceivedSinceLastStatusUpdate;
-    PRTime m_startTime;
-    PRInt32 mNumGroupsListed;
-    nsMsgKey m_key;
+  PRInt32 mBytesReceivedSinceLastStatusUpdate;
+  PRTime m_startTime;
+  PRInt32 mNumGroupsListed;
+  nsMsgKey m_key;
 
-    nsresult SetCurrentGroup(); /* sets m_currentGroup.  should be called after doing a successful GROUP command */
-    nsresult CleanupNewsgroupList(); /* cleans up m_newsgroupList, and set it to null */
+  nsresult SetCurrentGroup(); /* sets m_currentGroup.  should be called after doing a successful GROUP command */
+  nsresult CleanupNewsgroupList(); /* cleans up m_newsgroupList, and set it to null */
+
+    // cache related helper methods
+  nsresult OpenCacheEntry(); // makes a request to the cache service for a cache entry for a url
+  PRBool ReadFromLocalCache(); // attempts to read the url out of our local (offline) cache....
+  nsresult ReadFromNewsConnection(); // creates a new news connection to read the url 
+  nsresult ReadFromMemCache(nsICacheEntryDescriptor *entry); // attempts to read the url out of our memory cache
+  nsresult SetupPartExtractorListener(nsIStreamListener * aConsumer);
 };
 
 NS_BEGIN_EXTERN_C

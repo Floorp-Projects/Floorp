@@ -59,6 +59,9 @@
 #include "nsIPrompt.h"
 #include "nsIRDFService.h"
 #include "nsNewsDownloader.h"
+#include "nsICacheService.h"
+#include "nsNetCID.h"
+
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
 
@@ -70,6 +73,7 @@ static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
                     
 nsNntpService::nsNntpService()
 {
@@ -361,7 +365,12 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
 
   nsCOMPtr<nsIURI> url;
   nsresult rv = NS_OK;
-  NewURI(aUrl, nsnull, getter_AddRefs(url));
+  nsCAutoString newsUrl;
+  newsUrl = aUrl;
+  newsUrl += "&type=";
+  newsUrl += aContentType;
+
+  NewURI(newsUrl, nsnull, getter_AddRefs(url));
 
   if (NS_SUCCEEDED(rv) && url)
   {
@@ -1537,3 +1546,20 @@ nsNntpService::DownloadNewsgroupsForOffline(nsIMsgWindow *aMsgWindow, nsIUrlList
   return rv;
 }
 
+NS_IMETHODIMP nsNntpService::GetCacheSession(nsICacheSession **result)
+{
+  nsresult rv = NS_OK;
+  if (!mCacheSession)
+  {
+    nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = serv->CreateSession("NNTP-memory-only", nsICache::STORE_IN_MEMORY, nsICache::STREAM_BASED, getter_AddRefs(mCacheSession));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mCacheSession->SetDoomEntriesIfExpired(PR_FALSE);
+  }
+
+  *result = mCacheSession;
+  NS_IF_ADDREF(*result);
+  return rv;
+}

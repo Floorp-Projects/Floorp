@@ -27,13 +27,13 @@
 #include "nsIMailboxSpec.idl"
 
 interface nsIMsgMailNewsUrl;
+interface nsIImapMockChannel;
 
 typedef long ImapOnlineCopyState;
 
 [scriptable, uuid(5f7484b0-68b4-11d3-a53e-0060b0fc04b7)]
-
- interface ImapOnlineCopyStateType
- {
+interface ImapOnlineCopyStateType
+{
    const long kInProgress = 0;
    const long kSuccessfulCopy = 1;
    const long kSuccessfulMove = 2;
@@ -44,34 +44,32 @@ typedef long ImapOnlineCopyState;
    const long kInterruptedState = 7;
    const long kFailedCopy = 8;
    const long kFailedMove = 9;
- };
-
+};
 
 [scriptable, uuid(3b2dd7e0-e72c-11d2-ab7b-00805f8ac968)]
-
 interface nsIImapMailFolderSink : nsISupports {
-    attribute boolean folderNeedsACLListed;
-    attribute boolean folderNeedsSubscribing;
-    attribute boolean folderNeedsAdded;
+  attribute boolean folderNeedsACLListed;
+  attribute boolean folderNeedsSubscribing;
+  attribute boolean folderNeedsAdded;
 	attribute boolean folderVerifiedOnline;
-    string GetOnlineDelimiter();
-    // Tell mail master about the newly selected mailbox
-    void UpdateImapMailboxInfo(in nsIImapProtocol aProtocol,
+  string GetOnlineDelimiter();
+  // Tell mail master about the newly selected mailbox
+  void UpdateImapMailboxInfo(in nsIImapProtocol aProtocol,
+                                   in nsIMailboxSpec aSpec);
+  void UpdateImapMailboxStatus(in nsIImapProtocol aProtocol,
                                      in nsIMailboxSpec aSpec);
-    void UpdateImapMailboxStatus(in nsIImapProtocol aProtocol,
-                                       in nsIMailboxSpec aSpec);
-    void ChildDiscoverySucceeded(in nsIImapProtocol aProtocol) ;
-    void PromptUserForSubscribeUpdatePath(in nsIImapProtocol aProtocol,
-                                                out boolean aBool) ;
-    void SetupHeaderParseStream(in nsIImapProtocol aProtocol, in unsigned long size, in string content_type, in nsIMailboxSpec boxSpec);
+  void ChildDiscoverySucceeded(in nsIImapProtocol aProtocol) ;
+  void PromptUserForSubscribeUpdatePath(in nsIImapProtocol aProtocol,
+                                              out boolean aBool) ;
+  void SetupHeaderParseStream(in nsIImapProtocol aProtocol, in unsigned long size, in string content_type, in nsIMailboxSpec boxSpec);
 
-    void ParseAdoptedHeaderLine(in nsIImapProtocol aProtocol, in string messageLine, in unsigned long msgKey) ;
-    
-    void NormalEndHeaderParseStream(in nsIImapProtocol aProtocol);
-    
-    void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
-    
-    void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState);
+  void ParseAdoptedHeaderLine(in nsIImapProtocol aProtocol, in string messageLine, in unsigned long msgKey) ;
+  
+  void NormalEndHeaderParseStream(in nsIImapProtocol aProtocol);
+  
+  void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
+  
+  void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState);
 	void StartMessage(in nsIMsgMailNewsUrl aUrl);
 	void EndMessage(in nsIMsgMailNewsUrl aUrl, in nsMsgKey uidOfMessage);
 
@@ -82,4 +80,5 @@ interface nsIImapMailFolderSink : nsISupports {
 	// are only released / destroyed from the UI thread.
 	void PrepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
 	void ReleaseUrl();
+  void CloseMockChannel(in nsIImapMockChannel aChannel);
 };

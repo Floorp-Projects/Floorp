@@ -31,6 +31,8 @@
 #include "nsIProtocolHandler.h"
 #include "nsIMsgProtocolInfo.h"
 
+#include "nsICacheSession.h"
+
 class nsIImapHostSessionList; 
 class nsCString;
 class nsIImapUrl;
@@ -110,6 +112,8 @@ protected:
 
     PRBool                mPrintingOperation;  // Flag for printing operations
 
+    // handle to the cache session for imap.....
+    nsCOMPtr<nsICacheSession> mCacheSession;
 };
 
 #endif /* nsImapService_h___ */

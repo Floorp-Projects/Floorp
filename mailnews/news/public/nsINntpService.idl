@@ -32,6 +32,7 @@ interface nsISupportsArray;
 interface nsIFileSpec;
 interface nsIMsgWindow;
 interface nsIMsgFolder;
+interface nsICacheSession;
 
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
@@ -55,5 +56,7 @@ interface nsINntpService : nsISupports {
    * can handle news_message:// and news:// 
    */
   void decomposeNewsURI(in string uri, out nsIMsgFolder folder, out nsMsgKey key);
-};
 
+  // handle to the cache session used by news....
+  readonly attribute nsICacheSession cacheSession;
+};

@@ -40,6 +40,7 @@ interface nsIEventQueue;
 interface nsIMsgFolder;
 interface nsIMsgWindow;
 interface nsIImapIncomingServer;
+interface nsICacheSession;
 
 
 [scriptable, uuid(18236127-FA1D-11d3-98BA-001083010E9B)]
@@ -224,4 +225,6 @@ interface nsIImapService : nsISupports
 
   void playbackAllOfflineOperations(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
   void downloadAllOffineImapFolders(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
+
+  readonly attribute nsICacheSession cacheSession;
 };

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Scott MacGregor <mscott@netscape.com>
  */
 
 #ifndef nsMsgMailNewsUrl_h___
@@ -34,7 +35,8 @@
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
 #include "nsIMsgSearchSession.h"
-#include "nsICachedNetData.h"
+#include "nsICacheEntryDescriptor.h"
+
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
 // several common interfaces (in addition to those provided through nsIURI). 
@@ -64,7 +66,7 @@ protected:
 	nsCOMPtr<nsIMsgWindow> m_msgWindow;
 	nsCOMPtr<nsILoadGroup> m_loadGroup;
   nsCOMPtr<nsIMsgSearchSession> m_searchSession;
-  nsCOMPtr<nsICachedNetData> m_memCacheEntry;
+  nsCOMPtr<nsICacheEntryDescriptor> m_memCacheEntry;
 	char		*m_errorMessage;
 	PRBool	m_runningUrl;
 	PRBool	m_updatingFolder;

@@ -36,6 +36,7 @@
 #include "nsICmdLineHandler.h"
 #include "nsCOMPtr.h"
 #include "nsIContentHandler.h"
+#include "nsICacheSession.h"
 
 class nsIURI;
 class nsIUrlListener;
@@ -46,7 +47,7 @@ class nsNntpService : public nsINntpService,
                       public nsIProtocolHandler,
                       public nsIMsgProtocolInfo,
                       public nsICmdLineHandler,
-					  public nsIContentHandler
+          					  public nsIContentHandler
 {
 public:
 
@@ -87,6 +88,8 @@ protected:
   PRBool            mPrintingOperation; // Flag for printing operations
   PRBool			mOpenAttachmentOperation; // Flag for opening attachments
   PRBool            mCopyingOperation;
+
+  nsCOMPtr<nsICacheSession> mCacheSession; // the cache session used by news
 };
 
 #endif /* nsNntpService_h___ */

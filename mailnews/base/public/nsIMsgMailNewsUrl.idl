@@ -30,7 +30,7 @@ interface nsIMsgIncomingServer;
 interface nsIMsgWindow;
 interface nsILoadGroup;
 interface nsIMsgSearchSession;
-interface nsICachedNetData;
+interface nsICacheEntryDescriptor;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -72,7 +72,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
   attribute boolean msgIsInLocalCache;
   attribute boolean suppressErrorMsgs; // used to avoid displaying biff error messages
 
-  attribute nsICachedNetData memCacheEntry;
+  attribute nsICacheEntryDescriptor memCacheEntry;
 
 	const unsigned long eCopy     = 0;
 	const unsigned long eMove     = 1;
@@ -98,8 +98,8 @@ interface nsIMsgMessageUrl : nsISupports {
 	// used by imap, pop and nntp in order to implement save message to disk
 	attribute nsIFileSpec messageFile;
 	attribute boolean AddDummyEnvelope;	
-    attribute boolean canonicalLineEnding;
-    attribute string originalSpec;
+  attribute boolean canonicalLineEnding;
+  attribute string originalSpec;
 };
 
 //////////////////////////////////////////////////////////////////////////////////

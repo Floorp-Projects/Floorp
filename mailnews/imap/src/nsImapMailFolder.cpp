@@ -70,6 +70,7 @@
 #include "nsImapOfflineSync.h"
 #include "nsIMsgAccountManager.h"
 #include "nsQuickSort.h"
+#include "nsIImapMockChannel.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -3413,6 +3414,13 @@ NS_IMETHODIMP
 nsImapMailFolder::ReleaseUrl()
 {
   mUrlToRelease = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::CloseMockChannel(nsIImapMockChannel * aChannel)
+{
+  aChannel->Close();
   return NS_OK;
 }
 
