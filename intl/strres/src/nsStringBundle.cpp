@@ -396,11 +396,6 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
     res = registry->GetString(key, "name", &name);
     if (NS_FAILED(res)) goto done1;
 
-    // XXX Ok. We have a bug here right now: after this call, the registry 
-    // magic number gets corrupted, so the second file will not 
-    // be created/used. Workaround: use only one file. Hurts extensibility,
-    // but we can't see it until we need it. A work-around would be possible.
-    // But I think we should really fix the original bug...
     res = sbServ->CreateBundle(name, aLocale, &bundle);
     if (NS_FAILED(res)) goto done1;
 
