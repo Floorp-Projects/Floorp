@@ -1032,7 +1032,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, cons
 
   nsCOMPtr<nsIAtom> tagName;
   aBoundElement->GetTag(*getter_AddRefs(tagName)); 
-  if (tagName != kScrollbarAtom) {
+  if (tagName.get() != kScrollbarAtom) {
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, boundDoc, doc);
     
