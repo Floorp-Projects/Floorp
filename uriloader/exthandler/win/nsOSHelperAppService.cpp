@@ -90,6 +90,9 @@ nsOSHelperAppService::~nsOSHelperAppService()
 // we can use this to look up our mime type to see if there is a preferred extension for the mime type.
 static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsString& aFileExtension)
 {
+#ifdef WINCE  // WinCE doesn't support helper applications yet
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
    HKEY hKey;
    nsCAutoString mimeDatabaseKey ("MIME\\Database\\Content Type\\");
 
@@ -105,6 +108,7 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsSt
    }
 
    return NS_OK;
+#endif
 }
 
 // We have a serious problem!! I have this content type and the windows registry only gives me
@@ -113,6 +117,9 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsSt
 // this information in 4.x (it's stored in the windows regsitry). 
 static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsString& aFileExtension)
 {
+#ifdef WINCE   // WinCE doesn't support helper applications yet.
+  return NS_ERROR_FAILURE;
+#else
    nsCAutoString command ("Software\\Netscape\\Netscape Navigator\\Suffixes");
    nsresult rv = NS_OK;
    HKEY hKey;
@@ -140,10 +147,14 @@ static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsString&
      rv = NS_ERROR_FAILURE; // no 4.x extension mapping found!
 
    return rv;
+#endif
 }
 
 static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
 {
+#ifdef WINCE // WinCE doesn't support helper applications yet.  This is only called by functions that support helper apps.
+  return nsnull;
+#else
   LONG err;
   DWORD bufSz;
   LPBYTE pBytes = NULL;
@@ -164,6 +175,7 @@ static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
   }
 
   return( pBytes);
+#endif
 }
 
 /* static */
@@ -205,6 +217,9 @@ PRBool nsOSHelperAppService::GetValueString(HKEY hKey, const PRUnichar* pValueNa
 
 NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
+#ifdef WINCE // WinCE doesn't support helper applications yet.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   // look up the protocol scheme in the windows registry....if we find a match then we have a handler for it...
   *aHandlerExists = PR_FALSE;
   if (aProtocolScheme && *aProtocolScheme)
@@ -220,12 +235,17 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
   }
 
   return NS_OK;
+#endif
 }
 
 // this implementation was pretty much copied verbatime from Tony Robinson's code in nsExternalProtocolWin.cpp
 
 nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 {
+#ifdef WINCE // WinCE doesn't support helper applications yet.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+
   nsresult rv = NS_OK;
 
   // 1. Find the default app for this protocol
@@ -254,6 +274,7 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
   }
 
   return rv;
+#endif
 }
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
@@ -281,6 +302,9 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 /* static */
 nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry( const nsAFlatString& fileType, nsIMIMEInfo *pInfo )
 {
+#ifdef WINCE  // WinCE doesn't support helper applications yet.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
     nsresult rv = NS_OK;
 
     NS_ENSURE_ARG( pInfo );
@@ -310,6 +334,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry( const nsAFlatString& fil
     ::RegCloseKey(fileTypeKey);
 
     return NS_OK;
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,6 +346,9 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry( const nsAFlatString& fil
 /* static */ PRBool
 nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType)
 {
+#ifdef WINCE  // WinCE doesn't support helper applications yet.
+  return FALSE;
+#else
   if (!aType)
     return PR_FALSE;
   nsAutoString fileExtToUse;
@@ -354,10 +382,15 @@ nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType
      ::RegCloseKey(hKey);
   }
   return eq;
+#endif
 }
 
 already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint)
 {
+#ifdef WINCE  // WinCE doesn't support helper applications yet.
+  return nsnull;
+#else
+
   if (aFileExt.IsEmpty())
     return nsnull;
 
@@ -435,6 +468,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
 
   // we failed to find a mime type.
   return nsnull;
+#endif
 }
 
 already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound)
