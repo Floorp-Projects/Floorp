@@ -32,7 +32,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj);
  */
 extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
-                                int hour, int min, int sec);
+				int hour, int min, int sec);
 
 extern JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, JSObject* obj);

@@ -114,11 +114,11 @@ struct JSToken {
     JSTokenPos          pos;            /* token position in file */
     jschar              *ptr;           /* beginning of token in line buffer */
     union {
-        struct {
+	struct {
 	    JSOp        op;             /* operator, for minimal parser */
 	    JSAtom      *atom;          /* atom table entry */
-        } s;
-        jsdouble        dval;           /* floating point number */
+	} s;
+	jsdouble        dval;           /* floating point number */
     } u;
 };
 
@@ -133,7 +133,7 @@ typedef struct JSTokenBuf {
 } JSTokenBuf;
 
 #define JS_LINE_LIMIT   256             /* logical line buffer size limit --
-                                           physical line length is unlimited */
+					   physical line length is unlimited */
 
 struct JSTokenStream {
     JSToken             token;          /* last token scanned */
@@ -227,11 +227,11 @@ js_MapKeywords(void (*mapfun)(const char *));
  */
 extern void
 js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
-                      const char *format, ...);
+		      const char *format, ...);
 
 void
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
-                      const uintN errorNumber, ...);
+		      const uintN errorNumber, ...);
 /*
  * Look ahead one token and return its type.
  */

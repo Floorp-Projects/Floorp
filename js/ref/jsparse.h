@@ -151,34 +151,34 @@ struct JSParseNode {
     JSParseNodeArity    pn_arity;
     union {
 	struct {                        /* TOK_FUNCTION node */
-            JSFunction  *fun;           /* function object private data */
-            JSParseNode *body;          /* TOK_LC list of statements */
+	    JSFunction  *fun;           /* function object private data */
+	    JSParseNode *body;          /* TOK_LC list of statements */
 	    uint32      tryCount;       /* try statement count */
 	} func;
-        struct {                        /* list of next-linked nodes */
+	struct {                        /* list of next-linked nodes */
 	    JSParseNode *head;          /* first node in list */
 	    JSParseNode **tail;         /* ptr to ptr to last node in list */
 	    uint32      count;          /* number of nodes in list */
 	    JSBool      extra;          /* extra comma flag for [1,2,,] */
-        } list;
-        struct {                        /* ternary: if, for(;;), ?: */
-            JSParseNode *kid1;          /* condition, discriminant, etc. */
-            JSParseNode *kid2;          /* then-part, case list, etc. */
-            JSParseNode *kid3;          /* else-part, default case, etc. */
+	} list;
+	struct {                        /* ternary: if, for(;;), ?: */
+	    JSParseNode *kid1;          /* condition, discriminant, etc. */
+	    JSParseNode *kid2;          /* then-part, case list, etc. */
+	    JSParseNode *kid3;          /* else-part, default case, etc. */
 	} ternary;
-        struct {                        /* two kids if binary */
-            JSParseNode *left;
-            JSParseNode *right;
+	struct {                        /* two kids if binary */
+	    JSParseNode *left;
+	    JSParseNode *right;
 	    jsval       val;            /* switch case value */
-        } binary;
-        struct {                        /* one kid if unary */
-            JSParseNode *kid;
-            jsint       num;            /* -1 or arg or local/sharp var num */
-        } unary;
-        struct {                        /* name, labeled statement, etc. */
-            JSAtom      *atom;          /* name or label atom, null if slot */
-            JSParseNode *expr;          /* object or initializer */
-            jsint       slot;           /* -1 or arg or local var slot */
+	} binary;
+	struct {                        /* one kid if unary */
+	    JSParseNode *kid;
+	    jsint       num;            /* -1 or arg or local/sharp var num */
+	} unary;
+	struct {                        /* name, labeled statement, etc. */
+	    JSAtom      *atom;          /* name or label atom, null if slot */
+	    JSParseNode *expr;          /* object or initializer */
+	    jsint       slot;           /* -1 or arg or local var slot */
 	} name;
 	jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
@@ -214,16 +214,16 @@ struct JSParseNode {
 
 #define PN_INIT_LIST(list)                                                    \
     PR_BEGIN_MACRO                                                            \
-    	(list)->pn_head = NULL;                                               \
-    	(list)->pn_tail = &(list)->pn_head;                                   \
-    	(list)->pn_count = 0;                                                 \
+	(list)->pn_head = NULL;                                               \
+	(list)->pn_tail = &(list)->pn_head;                                   \
+	(list)->pn_count = 0;                                                 \
     PR_END_MACRO
 
 #define PN_INIT_LIST_1(list, pn)                                              \
     PR_BEGIN_MACRO                                                            \
-    	(list)->pn_head = (pn);                                               \
-    	(list)->pn_tail = &(pn)->pn_next;                                     \
-    	(list)->pn_count = 1;                                                 \
+	(list)->pn_head = (pn);                                               \
+	(list)->pn_tail = &(pn)->pn_next;                                     \
+	(list)->pn_count = 1;                                                 \
     PR_END_MACRO
 
 #define PN_APPEND(list, pn)                                                   \

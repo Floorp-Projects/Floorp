@@ -261,8 +261,8 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop
 	priv->context = cx;
 	priv->scope = scope;
 	table = PR_NewHashTable(nsyms, js_hash_id,
-			        PR_CompareValues, PR_CompareValues,
-			        &hash_scope_alloc_ops, priv);
+				PR_CompareValues, PR_CompareValues,
+				&hash_scope_alloc_ops, priv);
 	if (table) {
 	    for (sym = list; sym; sym = next) {
 		/* Save next for loop update, before it changes in lookup. */

@@ -194,8 +194,8 @@ typedef JSBool
  */
 typedef JSBool
 (* CRT_CALL JSNewEnumerateOp)(JSContext *cx, JSObject *obj,
-                              JSIterateOp enum_op,
-                              jsval *statep, jsid *idp);
+			      JSIterateOp enum_op,
+			      jsval *statep, jsid *idp);
 
 typedef JSBool
 (* CRT_CALL JSEnumerateOp)(JSContext *cx, JSObject *obj);
@@ -295,7 +295,7 @@ typedef struct JSErrorFormatString {
     const uintN argCount;
 } JSErrorFormatString;
 
-typedef const JSErrorFormatString * 
+typedef const JSErrorFormatString *
 (* CRT_CALL JSErrorCallback)(void *userRef, const char *locale,
 			     const uintN errorNumber);
 

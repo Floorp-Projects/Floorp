@@ -64,7 +64,7 @@ PR_BEGIN_EXTERN_C
  * comparisons under MSVC.
  */
 #define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d) \
-                               && ((d) == (i = (jsint)(d))))
+			       && ((d) == (i = (jsint)(d))))
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject *

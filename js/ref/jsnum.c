@@ -86,10 +86,10 @@ num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     if (!str)
 	return JS_FALSE;
     if (!js_strtod(cx, str->chars, &ep, &d))
-        return JS_FALSE;
+	return JS_FALSE;
     if (ep == str->chars) {
 	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-        return JS_TRUE;
+	return JS_TRUE;
     }
     return js_NewNumberValue(cx, d, rval);
 }
@@ -111,17 +111,17 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	if (!js_ValueToECMAInt32(cx, argv[1], &radix))
 	    return JS_FALSE;
     } else
-        radix = 0;
+	radix = 0;
 
     if (radix != 0 && (radix < 2 || radix > 36)) {
-        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-        return JS_TRUE;
+	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+	return JS_TRUE;
     }
     if (!js_strtointeger(cx, str->chars, &ep, radix, &d))
-        return JS_FALSE;
+	return JS_FALSE;
     if (ep == str->chars) {
 	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-        return JS_TRUE;
+	return JS_TRUE;
     }
     return js_NewNumberValue(cx, d, rval);
 }
@@ -213,9 +213,9 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	if (base < 2 || base > 36) {
 	    char numBuf[12];
-	    sprintf(numBuf, "%d", base);
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                                      JSMSG_BAD_RADIX, numBuf);
+	    PR_snprintf(numBuf, sizeof numBuf, "%ld", (long) base);
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
+	    			 numBuf);
 	    return JS_FALSE;
 	}
 	if (base != 10 && JSDOUBLE_IS_FINITE(d)) {
@@ -477,7 +477,7 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 badstr:
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NAN,
-			   JS_GetStringBytes(str));
+				 JS_GetStringBytes(str));
 
 	}
 	return JS_FALSE;
@@ -495,7 +495,7 @@ js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
     jsdouble d;
 
     if (!js_ValueToNumber(cx, v, &d))
-        return JS_FALSE;
+	return JS_FALSE;
     return js_DoubleToECMAInt32(cx, d, ip);
 }
 
@@ -506,15 +506,15 @@ js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip)
     jsdouble two31 = 2147483648.0;
 
     if (!JSDOUBLE_IS_FINITE(d) || d == 0) {
-        *ip = 0;
-        return JS_TRUE;
+	*ip = 0;
+	return JS_TRUE;
     }
     d = fmod(d, two32);
     d = d >= 0 ? d : d + two32;
     if (d >= two31)
-        *ip = (int32)(d - two32);
+	*ip = (int32)(d - two32);
     else
-        *ip = (int32)d;
+	*ip = (int32)d;
     return JS_TRUE;
 }
 
@@ -524,7 +524,7 @@ js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
     jsdouble d;
 
     if (!js_ValueToNumber(cx, v, &d))
-        return JS_FALSE;
+	return JS_FALSE;
     return js_DoubleToECMAUint32(cx, d, ip);
 }
 
@@ -535,8 +535,8 @@ js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip)
     jsdouble two32 = 4294967296.0;
 
     if (!JSDOUBLE_IS_FINITE(d) || d == 0) {
-        *ip = 0;
-        return JS_TRUE;
+	*ip = 0;
+	return JS_TRUE;
     }
 
     neg = (d < 0);
@@ -561,8 +561,8 @@ js_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
 	str = js_DecompileValueGenerator(cx, v, NULL);
 	if (str) {
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
-                        JSMSG_CANT_CONVERT, JS_GetStringBytes(str));
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_CANT_CONVERT, JS_GetStringBytes(str));
 
 	}
 	return JS_FALSE;
@@ -641,10 +641,10 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 
     istr = cstr;
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
-        istr++;
+	istr++;
     if (!strncmp(istr, "Infinity", 8)) {
-        d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
-        estr = istr + 8;
+	d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
+	estr = istr + 8;
     } else {
 	errno = 0;
 	d = PR_strtod(cstr, &estr);
@@ -677,18 +677,18 @@ static intN GetNextBinaryDigit(struct BinaryDigitReader *bdr)
     intN bit;
 
     if (bdr->digitMask == 0) {
-        uintN c;
+	uintN c;
 
-        if (bdr->digits == bdr->end)
-            return -1;
+	if (bdr->digits == bdr->end)
+	    return -1;
 
-        c = *bdr->digits++;
-        if ('0' <= c && c <= '9')
-            bdr->digit = c - '0';
-        else if ('a' <= c && c <= 'z')
-            bdr->digit = c - 'a' + 10;
-        else bdr->digit = c - 'A' + 10;
-        bdr->digitMask = bdr->base >> 1;
+	c = *bdr->digits++;
+	if ('0' <= c && c <= '9')
+	    bdr->digit = c - '0';
+	else if ('a' <= c && c <= 'z')
+	    bdr->digit = c - 'a' + 10;
+	else bdr->digit = c - 'A' + 10;
+	bdr->digitMask = bdr->base >> 1;
     }
     bit = (bdr->digit & bdr->digitMask) != 0;
     bdr->digitMask >>= 1;
@@ -704,22 +704,22 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
     const jschar *s1 = js_SkipWhiteSpace(s);
 
     if ((negative = (*s1 == '-')) != 0 || *s1 == '+')
-        s1++;
+	s1++;
 
     if (base == 0)
-        /* No base supplied, or some base that evaluated to 0. */
-        if (*s1 == '0')
-            /* It's either hex or octal; only increment char if str isn't '0' */
-            if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
-                s1 += 2;
-                base = 16;
-            } else /* Octal */
-                base = 8;
-        else
-            base = 10; /* Default to decimal. */
+	/* No base supplied, or some base that evaluated to 0. */
+	if (*s1 == '0')
+	    /* It's either hex or octal; only increment char if str isn't '0' */
+	    if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
+		s1 += 2;
+		base = 16;
+	    } else /* Octal */
+		base = 8;
+	else
+	    base = 10; /* Default to decimal. */
     else if (base == 16 && *s1 == '0' && (s1[1] == 'X' || s1[1] == 'x'))
-        /* If base is 16, ignore hex prefix. */
-        s1 += 2;
+	/* If base is 16, ignore hex prefix. */
+	s1 += 2;
 
     /* Done with the preliminaries; find some prefix of the string that's
      * a number in the given base.
@@ -727,24 +727,24 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
     start = s1; /* Mark - if string is empty, we return NaN. */
     value = 0.0;
     while (1) {
-        uintN digit;
-        jschar c = *s1;
-        if ('0' <= c && c <= '9')
-            digit = c - '0';
-        else if ('a' <= c && c <= 'z')
-            digit = c - 'a' + 10;
-        else if ('A' <= c && c <= 'Z')
-            digit = c - 'A' + 10;
-        else
-            break;
-        if (digit >= (uintN)base)
-            break;
-        value = value*base + digit;
-        s1++;
+	uintN digit;
+	jschar c = *s1;
+	if ('0' <= c && c <= '9')
+	    digit = c - '0';
+	else if ('a' <= c && c <= 'z')
+	    digit = c - 'a' + 10;
+	else if ('A' <= c && c <= 'Z')
+	    digit = c - 'A' + 10;
+	else
+	    break;
+	if (digit >= (uintN)base)
+	    break;
+	value = value*base + digit;
+	s1++;
     }
 
     if (value >= 9007199254740992.0)
-        if (base == 10) {
+	if (base == 10) {
 	    /* If we're accumulating a decimal number and the number is >= 2^53, then
 	     * the result from the repeated multiply-add above may be inaccurate.  Call
 	     * PR_strtod to get the correct answer.
@@ -755,15 +755,15 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	    char *estr;
 
 	    if (!cstr)
-	        return JS_FALSE;
+		return JS_FALSE;
 	    for (i = 0; i != length; i++)
-	        cstr[i] = (char)start[i];
+		cstr[i] = (char)start[i];
 	    cstr[length] = 0;
 
 	    errno = 0;
 	    value = PR_strtod(cstr, &estr);
 	    if (errno == ERANGE && value == HUGE_VAL)
-	        value = *cx->runtime->jsPositiveInfinity;
+		value = *cx->runtime->jsPositiveInfinity;
 	    free(cstr);
 
 	} else if (base == 2 || base == 4 || base == 8 || base == 16 || base == 32) {
@@ -788,43 +788,43 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 
 	    /* Skip leading zeros. */
 	    do {
-	        bit = GetNextBinaryDigit(&bdr);
+		bit = GetNextBinaryDigit(&bdr);
 	    } while (bit == 0);
 
 	    if (bit == 1) {
-	        /* Gather the 53 significant bits (including the leading 1) */
-	        value = 1.0;
-	        for (j = 52; j; j--) {
-	            bit = GetNextBinaryDigit(&bdr);
-	            if (bit < 0)
-	                goto done;
-	            value = value*2 + bit;
-	        }
-	        /* bit2 is the 54th bit (the first dropped from the mantissa) */
-	        bit2 = GetNextBinaryDigit(&bdr);
-	        if (bit2 >= 0) {
-	            jsdouble factor = 2.0;
-	            intN sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
-	            intN bit3;
+		/* Gather the 53 significant bits (including the leading 1) */
+		value = 1.0;
+		for (j = 52; j; j--) {
+		    bit = GetNextBinaryDigit(&bdr);
+		    if (bit < 0)
+			goto done;
+		    value = value*2 + bit;
+		}
+		/* bit2 is the 54th bit (the first dropped from the mantissa) */
+		bit2 = GetNextBinaryDigit(&bdr);
+		if (bit2 >= 0) {
+		    jsdouble factor = 2.0;
+		    intN sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
+		    intN bit3;
 
-	            while ((bit3 = GetNextBinaryDigit(&bdr)) >= 0) {
-	                sticky |= bit3;
-	                factor *= 2;
-	            }
-	            value += bit2 & (bit | sticky);
-	            value *= factor;
-	        }
+		    while ((bit3 = GetNextBinaryDigit(&bdr)) >= 0) {
+			sticky |= bit3;
+			factor *= 2;
+		    }
+		    value += bit2 & (bit | sticky);
+		    value *= factor;
+		}
 	      done:;
 	    }
 	}
     /* We don't worry about inaccurate numbers for any other base. */
 
     if (s1 == start) {
-        *dp = 0.0;
-        *ep = s;
+	*dp = 0.0;
+	*ep = s;
     } else {
-        *dp = negative ? -value : value;
-        *ep = s1;
+	*dp = negative ? -value : value;
+	*ep = s1;
     }
     return JS_TRUE;
 }

@@ -174,7 +174,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 extern JSBool
 js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	        jsval *rval);
+		jsval *rval);
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
@@ -277,7 +277,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-             jsval *statep, jsid *idp);
+	     jsval *statep, jsid *idp);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,

@@ -345,8 +345,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSWatchPoint *wp;
 
     if (!OBJ_IS_NATIVE(obj)) {
-	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH, 
-		OBJ_GET_CLASS(cx, obj)->name);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
+			     OBJ_GET_CLASS(cx, obj)->name);
 	return JS_FALSE;
     }
 
@@ -705,7 +705,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     sym = sprop->symbols;
     pd->id = sym ? js_IdToValue(sym_id(sym)) : JSVAL_VOID;
     if (!sym || !js_GetProperty(cx, obj, sym_id(sym), &pd->value))
-        pd->value = OBJ_GET_SLOT(cx, obj, sprop->slot);
+	pd->value = OBJ_GET_SLOT(cx, obj, sprop->slot);
     pd->flags = ((sprop->attrs & JSPROP_ENUMERATE)      ? JSPD_ENUMERATE : 0)
 	      | ((sprop->attrs & JSPROP_READONLY)       ? JSPD_READONLY  : 0)
 	      | ((sprop->attrs & JSPROP_PERMANENT)      ? JSPD_PERMANENT : 0)
@@ -715,10 +715,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 	      | ((sprop->getter == js_GetArgument)      ? JSPD_ARGUMENT  : 0)
 	      | ((sprop->getter == js_GetLocalVariable) ? JSPD_VARIABLE  : 0);
 #if JS_HAS_CALL_OBJECT
-    /* for Call Object 'real' getter isn't passed in to us */    
-    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass && 
-        OBJ_GET_CLASS(cx, obj)->getProperty == sprop->getter)
-        pd->flags |= JSPD_ARGUMENT;
+    /* for Call Object 'real' getter isn't passed in to us */
+    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
+	OBJ_GET_CLASS(cx, obj)->getProperty == sprop->getter)
+	pd->flags |= JSPD_ARGUMENT;
 #endif /* JS_HAS_CALL_OBJECT */
     pd->spare = 0;
     pd->slot = (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))
@@ -747,9 +747,9 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 	return JS_FALSE;
     scope = (JSScope *)obj->map;
     /* have no props, or object's scope has not mutated from that of proto */
-    if (!scope->props || 
-        (OBJ_GET_PROTO(cx,obj) && 
-         scope == (JSScope *)(OBJ_GET_PROTO(cx,obj)->map))) {
+    if (!scope->props ||
+	(OBJ_GET_PROTO(cx,obj) &&
+	 scope == (JSScope *)(OBJ_GET_PROTO(cx,obj)->map))) {
 	pda->length = 0;
 	pda->array = NULL;
 	return JS_TRUE;

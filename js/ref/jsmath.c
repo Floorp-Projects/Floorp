@@ -405,7 +405,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     proto = JS_InitClass(cx, obj, NULL, &math_class, NULL, 0,
-		         NULL, math_methods, NULL, math_static_methods);
+			 NULL, math_methods, NULL, math_static_methods);
     if (!proto)
 	return NULL;
     if (!JS_DefineConstDoubles(cx, proto, math_constants))

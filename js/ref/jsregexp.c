@@ -139,17 +139,17 @@ struct RENode {
     RENode          *next;      /* next in concatenation order */
     void            *kid;       /* first operand */
     union {
-        void        *kid2;      /* second operand */
-        jsint       num;        /* could be a number */
-        jschar      chr;        /* or a character */
-        struct {                /* or a quantifier range */
-            uint16  min;
-            uint16  max;
-        } range;
-        struct {                /* or a Unicode character class */
-            uint16  kidlen;     /* length of string at kid, in jschars */
-            uint16  bmsize;     /* bitmap size, based on max char code */
-        } ucclass;
+	void        *kid2;      /* second operand */
+	jsint       num;        /* could be a number */
+	jschar      chr;        /* or a character */
+	struct {                /* or a quantifier range */
+	    uint16  min;
+	    uint16  max;
+	} range;
+	struct {                /* or a Unicode character class */
+	    uint16  kidlen;     /* length of string at kid, in jschars */
+	    uint16  bmsize;     /* bitmap size, based on max char code */
+	} ucclass;
     } u;
 };
 
@@ -649,18 +649,16 @@ loop:
       case '{':
 	c = *++cp;
 	if (!JS7_ISDEC(c)) {
-	    JS_ReportErrorNumber(state->context, 
-                            js_GetErrorMessage, NULL,
-                            JSMSG_BAD_QUANTIFIER, state->cp);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	min = (uint32)JS7_UNDEC(c);
 	for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 	    min = 10 * min + (uint32)JS7_UNDEC(c);
 	    if (min >> 16) {
-		JS_ReportErrorNumber(state->context, 
-                        js_GetErrorMessage, NULL,
-                        JSMSG_MIN_TOO_BIG, state->cp);
+		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				     JSMSG_MIN_TOO_BIG, state->cp);
 		return NULL;
 	    }
 	}
@@ -671,18 +669,18 @@ loop:
 		for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 		    max = 10 * max + (uint32)JS7_UNDEC(c);
 		    if (max >> 16) {
-			JS_ReportErrorNumber(state->context, 
-                                    js_GetErrorMessage, NULL,
-                                    JSMSG_MAX_TOO_BIG, up);
+			JS_ReportErrorNumber(state->context,
+					     js_GetErrorMessage, NULL,
+					     JSMSG_MAX_TOO_BIG, up);
 			return NULL;
 		    }
 		}
 		if (max == 0)
 		    goto zero_quant;
 		if (min > max) {
-		    JS_ReportErrorNumber(state->context, 
-                                   js_GetErrorMessage, NULL,
-				   JSMSG_OUT_OF_ORDER, up);
+		    JS_ReportErrorNumber(state->context,
+					 js_GetErrorMessage, NULL,
+					 JSMSG_OUT_OF_ORDER, up);
 		    return NULL;
 		}
 	    } else {
@@ -693,17 +691,15 @@ loop:
 	    /* Exactly n times. */
 	    if (min == 0) {
       zero_quant:
-		JS_ReportErrorNumber(state->context, 
-                                        js_GetErrorMessage, NULL,
-                                        JSMSG_ZERO_QUANTIFIER, state->cp);
+		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				     JSMSG_ZERO_QUANTIFIER, state->cp);
 		return NULL;
 	    }
 	    max = min;
 	}
 	if (*cp != '}') {
-	    JS_ReportErrorNumber(state->context, 
-                                        js_GetErrorMessage, NULL,
-                                        JSMSG_UNTERM_QUANTIFIER, state->cp);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_UNTERM_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	cp++;
@@ -720,9 +716,8 @@ loop:
 
       case '*':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportErrorNumber(state->context, 
-                            js_GetErrorMessage, NULL, 
-			    JSMSG_EMPTY_BEFORE_STAR);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_EMPTY_BEFORE_STAR);
 	    return NULL;
 	}
 	cp++;
@@ -731,9 +726,8 @@ loop:
 
       case '+':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportErrorNumber(state->context, 
-                           js_GetErrorMessage, NULL,
-			   JSMSG_EMPTY_BEFORE_PLUS);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_EMPTY_BEFORE_PLUS);
 	    return NULL;
 	}
 	cp++;
@@ -815,9 +809,8 @@ ParseAtom(CompilerState *state)
 	    return NULL;
 	cp = state->cp;
 	if (*cp != ')') {
-	    JS_ReportErrorNumber(state->context, 
-                            js_GetErrorMessage, NULL,
-                            JSMSG_MISSING_PAREN, ocp);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_MISSING_PAREN, ocp);
 	    return NULL;
 	}
 	cp++;
@@ -857,9 +850,8 @@ ParseAtom(CompilerState *state)
 	while ((c = *++cp) != ']') {
 	    if (c == 0) {
       bad_cclass:
-		JS_ReportErrorNumber(state->context, 
-                                js_GetErrorMessage, NULL,
-			        JSMSG_UNTERM_CLASS, ocp);
+		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				     JSMSG_UNTERM_CLASS, ocp);
 		return NULL;
 	    }
 	    if (c == '\\' && cp[1] != 0)
@@ -875,9 +867,8 @@ ParseAtom(CompilerState *state)
 	c = *++cp;
 	switch (c) {
 	  case 0:
-	    JS_ReportErrorNumber(state->context,
-                                    js_GetErrorMessage, NULL, 
-                                    JSMSG_TRAILING_SLASH);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_TRAILING_SLASH);
 	    return NULL;
 
 	  case 'f':
@@ -1055,13 +1046,13 @@ CountFirstChars(RENode *alt)
 	switch (REOP(kid)) {
 	  case REOP_QUANT:
 	    if (kid->u.range.min == 0)
-	    	return -1;
+		return -1;
 	    /* FALL THROUGH */
 	  case REOP_PLUS:
 	  case REOP_ALT:
 	    sublen = CountFirstChars(kid);
 	    if (sublen < 0)
-	    	return sublen;
+		return sublen;
 	    len += sublen;
 	    break;
 	  case REOP_FLAT:
@@ -1072,7 +1063,7 @@ CountFirstChars(RENode *alt)
 	  count_char:
 	    /* Only '\\' and '-' need escaping within a character class. */
 	    if (c == '\\' || c == '-')
-	    	len += 2;
+		len += 2;
 	    else
 		len++;
 	    break;
@@ -1267,8 +1258,8 @@ AnchorRegExp(CompilerState *state, RENode *ren)
 	goto do_first_char;
 
       case REOP_FLAT1:
-      	cp = &ren2->u.chr;
-      	op = REOP_FLAT1;
+	cp = &ren2->u.chr;
+	op = REOP_FLAT1;
 	goto do_first_char;
 
       case REOP_DOTSTAR:
@@ -1538,7 +1529,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 			JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
 			JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4])) {
 			c = (((((JS7_UNHEX(cp[1]) << 4)
-			        + JS7_UNHEX(cp[2])) << 4)
+				+ JS7_UNHEX(cp[2])) << 4)
 			      + JS7_UNHEX(cp[3])) << 4)
 			    + JS7_UNHEX(cp[4]);
 			cp += 5;
@@ -1849,8 +1840,8 @@ EmitRegExp(CompilerState *state, RENode *ren, JSRegExp *re)
 		if (inrange) {
 		    if (lastc > c) {
 			JS_ReportErrorNumber(state->context,
-                                        js_GetErrorMessage, NULL,
-				        JSMSG_BAD_CLASS_RANGE);
+					     js_GetErrorMessage, NULL,
+					     JSMSG_BAD_CLASS_RANGE);
 			return JS_FALSE;
 		    }
 		    inrange = JS_FALSE;
@@ -2010,17 +2001,17 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
 
 #ifdef DEBUG_notme
     {
-        /* print the compiled regexp program bytecode */
-        size_t i;
-        for (i = 0; i < state.progLength; i++) {
-            int b = (int) re->program[i];
-            fprintf(stderr, "%d", b);
-            if ((i > 0 && i % 8 == 0) || i == state.progLength-1)
-                fprintf(stderr, "\n");
-            else
-                fprintf(stderr, ", ");
-        }
-        fprintf(stderr, "\n");
+	/* print the compiled regexp program bytecode */
+	size_t i;
+	for (i = 0; i < state.progLength; i++) {
+	    int b = (int) re->program[i];
+	    fprintf(stderr, "%d", b);
+	    if ((i > 0 && i % 8 == 0) || i == state.progLength-1)
+		fprintf(stderr, "\n");
+	    else
+		fprintf(stderr, ", ");
+	}
+	fprintf(stderr, "\n");
     }
 #endif
 
@@ -2050,10 +2041,10 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
 	      default: {
 		char charBuf[2] = " ";
 		charBuf[0] = (char)*cp;
-		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
-                                                JSMSG_BAD_FLAG, charBuf);
+		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				     JSMSG_BAD_FLAG, charBuf);
 		return NULL;
-		}
+	      }
 	    }
 	}
     }
@@ -2294,7 +2285,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 	    matched = (cp != cpend && *cp != '\n');                           \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  NONDOT_SINGLE_CASES                                                 \
 /* END SINGLE_CASES */
 
@@ -2312,65 +2303,65 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 	    }                                                                 \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_DIGIT:                                                    \
 	    matched = JS_ISDIGIT(*cp);                                        \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_NONDIGIT:                                                 \
 	    matched = !JS_ISDIGIT(*cp);                                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_ALNUM:                                                    \
 	    matched = JS_ISWORD(*cp);                                         \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_NONALNUM:                                                 \
 	    matched = !JS_ISWORD(*cp);                                        \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_SPACE:                                                    \
 	    matched = JS_ISSPACE(*cp);                                        \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_NONSPACE:                                                 \
 	    matched = !JS_ISSPACE(*cp);                                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_FLAT1:                                                    \
 	    c  = *cp;                                                         \
 	    c2 = (jschar)pc[1];                                               \
 	    matched = (c == c2);                                              \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_FLAT1i:                                                   \
 	    c  = *cp;                                                         \
 	    c2 = (jschar)pc[1];                                               \
 	    matched = MATCH_CHARS_IGNORING_CASE(c, c2);                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_UCFLAT1:                                                  \
 	    c  = *cp;                                                         \
 	    c2 = ((pc[1] << 8) | pc[2]);                                      \
 	    matched = (c == c2);                                              \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_UCFLAT1i:                                                 \
 	    c  = *cp;                                                         \
 	    c2 = ((pc[1] << 8) | pc[2]);                                      \
 	    matched = MATCH_CHARS_IGNORING_CASE(c, c2);                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_UCCLASS:                                                  \
 	  case REOP_NUCCLASS:                                                 \
 	    size = (pc[1] << 8) | pc[2];                                      \
@@ -3083,7 +3074,7 @@ JSClass js_RegExpClass = {
 
 static JSBool
 regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	        jsval *rval)
+		jsval *rval)
 {
     JSBool ok;
     JSRegExp *re;
@@ -3098,7 +3089,7 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JS_LOCK_OBJ(cx, obj);
     re = JS_GetPrivate(cx, obj);
     if (!re) {
-    	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
 	goto out;
     }
 
@@ -3197,16 +3188,16 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     re = JS_GetPrivate(cx, obj);
     if (!re)
-    	return JS_TRUE;
+	return JS_TRUE;
     ok = locked = JS_FALSE;
     if (argc == 0) {
 	str = cx->regExpStatics.input;
 	if (!str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                           JSMSG_NO_INPUT,
-			   JS_GetStringBytes(re->source),
-			   (re->flags & JSREG_GLOB) ? "g" : "",
-			   (re->flags & JSREG_FOLD) ? "i" : "");
+				 JSMSG_NO_INPUT,
+				 JS_GetStringBytes(re->source),
+				 (re->flags & JSREG_GLOB) ? "g" : "",
+				 (re->flags & JSREG_FOLD) ? "i" : "");
 	    goto out;
 	}
     } else {
@@ -3263,8 +3254,8 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new RegExp object. */
     if (!cx->fp->constructing) {
-    	obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
-    	if (!obj)
+	obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
+	if (!obj)
 	    return JS_FALSE;
     }
     return regexp_compile(cx, obj, argc, argv, rval);

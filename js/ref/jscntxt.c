@@ -40,14 +40,6 @@
 #include "jsscan.h"
 #include "jsscript.h"
 
-JSInterpreterHooks *js_InterpreterHooks = NULL;
-
-JS_FRIEND_API(void)
-js_SetInterpreterHooks(JSInterpreterHooks *hooks)
-{
-    js_InterpreterHooks = hooks;
-}
-
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize)
 {
@@ -102,11 +94,6 @@ js_DestroyContext(JSContext *cx)
     PR_REMOVE_LINK(&cx->links);
     rtempty = (rt->contextList.next == (PRCList *)&rt->contextList);
     JS_UNLOCK_RUNTIME(rt);
-
-    if (js_InterpreterHooks && js_InterpreterHooks->destroyContext) {
-	/* This is a stub, but in case it removes roots, call it now. */
-        js_InterpreterHooks->destroyContext(cx);
-    }
 
     if (rtempty) {
 	/* Unpin all pinned atoms before final GC. */
@@ -209,21 +196,21 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
  */
 JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-			void *userRef, const uintN errorNumber, char **message,
-			JSErrorReport *reportp, va_list ap)
+			void *userRef, const uintN errorNumber,
+			char **messagep, JSErrorReport *reportp, va_list ap)
 {
     const JSErrorFormatString *fmtData;
     int i;
     int argCount;
 
-    *message = NULL;
+    *messagep = NULL;
     if (callback) {
 	fmtData = (*callback)(userRef, "Mountain View", errorNumber);
-        if (fmtData != NULL) {
-            argCount = fmtData->argCount;
+	if (fmtData != NULL) {
+	    argCount = fmtData->argCount;
 	    if (argCount > 0) {
 		/*
-		 * Gather the arguments into a char * array, the 
+		 * Gather the arguments into a char * array, the
 		 * messageArgs field is supposed to be an array of
 		 * JSString's and we'll convert them later.
 		 */
@@ -233,72 +220,73 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 		for (i = 0; i < argCount; i++)
 		    reportp->messageArgs[i] = (JSString *) va_arg(ap, char *);
 	    }
-            /* 
+	    /*
 	     * Parse the error format, substituting the argument X
 	     * for {X} in the format.
-             */
-            if (argCount > 0) {
-                if (fmtData->format) {
-	            const char *fmt, *arg;
-	            char *out;
-                    int expandedArgs = 0;
-	            int expandedLength 
+	     */
+	    if (argCount > 0) {
+		if (fmtData->format) {
+		    const char *fmt, *arg;
+		    char *out;
+		    int expandedArgs = 0;
+		    int expandedLength
 			= strlen(fmtData->format)
 			  - (3 * argCount); /* exclude the {n} */
 
-	            for (i = 0; i < argCount; i++) {
-	                expandedLength 
+		    for (i = 0; i < argCount; i++) {
+			expandedLength
 			    += strlen((char *)reportp->messageArgs[i]);
-	            }
-	            *message = out = malloc(expandedLength + 1);
-	            if (!out) {
-	                if (reportp->messageArgs) {
+		    }
+		    *messagep = out = malloc(expandedLength + 1);
+		    if (!out) {
+			if (reportp->messageArgs) {
 			    free(reportp->messageArgs);
 			    reportp->messageArgs = NULL;
 			}
 			return JS_FALSE;
-	            }
-	            fmt = fmtData->format;
-	            while (*fmt) {
-	                if (*fmt == '{') {	/* balance} */
-		            if (isdigit(fmt[1])) {
-                                int d = JS7_UNDEC(fmt[1]);
-                                PR_ASSERT(expandedArgs < argCount);
-		                arg = (char *)reportp->messageArgs[d];
-		                strcpy(out, arg);
-		                out += strlen(arg);
-		                fmt += 3;
-                                expandedArgs++;
-                                continue;
-		            }
-	                }
+		    }
+		    fmt = fmtData->format;
+		    while (*fmt) {
+			if (*fmt == '{') {	/* balance} */
+			    if (isdigit(fmt[1])) {
+				int d = JS7_UNDEC(fmt[1]);
+				PR_ASSERT(expandedArgs < argCount);
+				arg = (char *)reportp->messageArgs[d];
+				strcpy(out, arg);
+				out += strlen(arg);
+				fmt += 3;
+				expandedArgs++;
+				continue;
+			    }
+			}
 			*out++ = *fmt++;
-	            }
-                    PR_ASSERT(expandedArgs == argCount);
-	            *out = '\0';
-                }
-                /*
-                 * Now convert all the arguments to JSStrings.
-                 */
-	        for (i = 0; i < argCount; i++) {
-	            reportp->messageArgs[i] =
-	            	JS_NewStringCopyZ(cx, (char *)reportp->messageArgs[i]);
-	        }
-            } else {
-                *message = JS_strdup(cx, fmtData->format);
+		    }
+		    PR_ASSERT(expandedArgs == argCount);
+		    *out = '\0';
+		}
+		/*
+		 * Now convert all the arguments to JSStrings.
+		 */
+		for (i = 0; i < argCount; i++) {
+		    reportp->messageArgs[i] =
+			JS_NewStringCopyZ(cx, (char *)reportp->messageArgs[i]);
+		}
+	    } else {
+		*messagep = JS_strdup(cx, fmtData->format);
 	    }
-            /*
-             * And finally convert the message.
-             */
-            reportp->ucmessage = JS_NewStringCopyZ(cx, *message);
-        }
+	    /*
+	     * And finally convert the message.
+	     */
+	    reportp->ucmessage = JS_NewStringCopyZ(cx, *messagep);
+	}
     }
-    if (*message == NULL) {
-        /* where's the right place for this ??? */
-        const char *defaultErrorMessage 
-                        = "No error message available for error number %d";
-        *message = (char *)malloc(strlen(defaultErrorMessage) + 16);    
-        sprintf(*message, defaultErrorMessage, errorNumber);
+    if (*messagep == NULL) {
+	/* where's the right place for this ??? */
+	const char *defaultErrorMessage
+	    = "No error message available for error number %d";
+	size_t nbytes = strlen(defaultErrorMessage) + 16;
+	*messagep = (char *)malloc(nbytes);
+	PR_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
     return JS_TRUE;
 }
@@ -308,7 +296,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
 			void *userRef, const uintN errorNumber, va_list ap)
 {
     JSStackFrame *fp;
-    JSErrorReport report, *reportp;
+    JSErrorReport report;
     char *message;
 
     report.messageArgs = NULL;
@@ -319,23 +307,20 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     if (fp && fp->script && fp->pc) {
 	report.filename = fp->script->filename;
 	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+    } else {
+	report.filename = NULL;
+	report.lineno = 0;
     }
-    else {
-        report.filename = NULL;
-        report.lineno = 0;
-    }
+
     /* XXX should fetch line somehow */
     report.linebuf = NULL;
     report.tokenptr = NULL;
     report.flags = flags;
-
     report.errorNumber = errorNumber;
 
-    reportp = &report;
-
-    if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber, 
-					&message, reportp, ap))
-        return;
+    if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
+				 &message, &report, ap))
+	return;
 
 #if JS_HAS_ERROR_EXCEPTIONS
     /*
@@ -344,15 +329,15 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
      * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
      * on the error report, and exception-aware hosts should ignore it.
      */
-    js_ErrorToException(cx, reportp, message);
+    js_ErrorToException(cx, &report, message);
 #endif
 
-    js_ReportErrorAgain(cx, message, reportp);
+    js_ReportErrorAgain(cx, message, &report);
 
     if (message)
-    	free(message);
+	free(message);
     if (report.messageArgs)
-    	free(report.messageArgs);
+	free(report.messageArgs);
 }
 
 JS_FRIEND_API(void)
@@ -403,6 +388,6 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
     if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
 	    return &js_ErrorFormatString[errorNumber];
 	else
-            return NULL;
+	    return NULL;
 }
 

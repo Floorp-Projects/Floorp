@@ -202,10 +202,11 @@ OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_SETSP,     117,"setsp",      NULL,         3,  0,  0,  0,  JOF_UINT16)
 
-/* 
- * ECMA-compliant switch statement ops. 
- * "switch" is essentially "nop" and "default" is essentially "pop" + "goto".
+/*
+ * ECMA-compliant switch statement ops.
+ * CONDSWITCH is a decompilable NOP; CASE is ===, POP, jump if true, re-push
+ * lval if false; and DEFAULT is POP lval and GOTO.
  */
-OPDEF(JSOP_CONDSWITCH,118,"switch",     NULL,        -1,  0,  0,  0,  JOF_LOOKUPSWITCH)
+OPDEF(JSOP_CONDSWITCH,118,"condswitch", NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_CASE,      119,"case",       NULL,         3,  1,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_DEFAULT,   120,"default",    NULL,         3,  1,  0,  0,  JOF_JUMP)

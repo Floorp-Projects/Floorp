@@ -74,17 +74,17 @@ struct JSAtomList {
 
 #define ATOM_LIST_SEARCH(_ale,_al,_atom)                                      \
     PR_BEGIN_MACRO                                                            \
-        JSAtomListElement **_alep = &(_al)->list;                             \
-        while ((_ale = *_alep) != NULL) {                                     \
-            if (_ale->atom == (_atom)) {                                      \
-                /* Hit, move atom's element to the front of the list. */      \
-                *_alep = _ale->next;                                          \
-                _ale->next = (_al)->list;                                     \
-                (_al)->list = _ale;                                           \
-                break;                                                        \
-            }                                                                 \
-            _alep = &_ale->next;                                              \
-        }                                                                     \
+	JSAtomListElement **_alep = &(_al)->list;                             \
+	while ((_ale = *_alep) != NULL) {                                     \
+	    if (_ale->atom == (_atom)) {                                      \
+		/* Hit, move atom's element to the front of the list. */      \
+		*_alep = _ale->next;                                          \
+		_ale->next = (_al)->list;                                     \
+		(_al)->list = _ale;                                           \
+		break;                                                        \
+	    }                                                                 \
+	    _alep = &_ale->next;                                              \
+	}                                                                     \
     PR_END_MACRO
 
 struct JSAtomMap {

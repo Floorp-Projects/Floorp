@@ -80,23 +80,23 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report, const char *message)
     newReport = (JSErrorReport *)JS_malloc(cx, sizeof (JSErrorReport));
 
     if (report->filename) {
-        newReport->filename =
-            (const char *)JS_malloc(cx, strlen(report->filename));
-        /* Ack.  Const! */
-        strcpy((char *)newReport->filename, report->filename);
+	newReport->filename =
+	    (const char *)JS_malloc(cx, strlen(report->filename));
+	/* Ack.  Const! */
+	strcpy((char *)newReport->filename, report->filename);
     } else {
-        newReport->filename = NULL;
+	newReport->filename = NULL;
     }
-    
+
     newReport->lineno = report->lineno;
-    
+
     /*
      * We don't need to copy linebuf and tokenptr, because they
      * point into the deflated string cache.  (currently?)
      */
     newReport->linebuf = report->linebuf;
     newReport->tokenptr = report->tokenptr;
-    
+
     /*
      * But we do need to copy uclinebuf, uctokenptr, because they're
      * pointers into internal tokenstream structs, and may go away.
@@ -110,15 +110,15 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report, const char *message)
 
 #if 0
     if (report->uclinebuf) {
-        size_t len = js_strlen(report->uclinebuf);
-        newReport->uclinebuf =
-            (const jschar *)JS_malloc(cx, len);
-        js_strncpy(newReport->uclinebuf, report->uclinebuf, len);
-        newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
-                                                        report->uclinebuf);
+	size_t len = js_strlen(report->uclinebuf);
+	newReport->uclinebuf =
+	    (const jschar *)JS_malloc(cx, len);
+	js_strncpy(newReport->uclinebuf, report->uclinebuf, len);
+	newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
+							report->uclinebuf);
     } else
 #endif
-        newReport->uclinebuf = newReport->uctokenptr = NULL;
+	newReport->uclinebuf = newReport->uctokenptr = NULL;
 
     /* Note that this is before it gets flagged with JSREPORT_EXCEPTION */
     newReport->flags = report->flags;
@@ -131,8 +131,8 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report, const char *message)
      */
 
     newPrivate->errorReport = newReport;
-    
-    return newPrivate; 
+
+    return newPrivate;
 }
 
 /*
@@ -147,10 +147,10 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
 
     PR_ASSERT(privateData->errorReport);
     if (privateData->errorReport->uclinebuf)
-        JS_free(cx, (void *)privateData->errorReport->uclinebuf);
+	JS_free(cx, (void *)privateData->errorReport->uclinebuf);
 
     if (privateData->errorReport->filename)
-        JS_free(cx, (void *)privateData->errorReport->filename);
+	JS_free(cx, (void *)privateData->errorReport->filename);
 
     JS_free(cx, privateData->errorReport);
 
@@ -164,10 +164,10 @@ exn_finalize(JSContext *cx, JSObject *obj)
     JSExnPrivate *privateData;
 
     privateData = (JSExnPrivate *)
-        JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE));
+	JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE));
 
     if (privateData) {
-        exn_destroyPrivate(cx, privateData);
+	exn_destroyPrivate(cx, privateData);
     }
 }
 
@@ -176,18 +176,18 @@ typedef enum JSExnType {
     JSEXN_NONE = -1,
     JSEXN_EXCEPTION,
       JSEXN_ERR,
-        JSEXN_INTERNALERR,
-        JSEXN_SYNTAXERR,
-        JSEXN_REFERENCEERR,
-        JSEXN_CALLERR,
-          JSEXN_TARGETERR,
-        JSEXN_CONSTRUCTORERR,        
-        JSEXN_CONVERSIONERR,
-          JSEXN_TOOBJECTERR,
-          JSEXN_TOPRIMITIVEERR,        
-          JSEXN_DEFAULTVALUEERR,
-        JSEXN_ARRAYERR,
-        JSEXN_LIMIT
+	JSEXN_INTERNALERR,
+	JSEXN_SYNTAXERR,
+	JSEXN_REFERENCEERR,
+	JSEXN_CALLERR,
+	  JSEXN_TARGETERR,
+	JSEXN_CONSTRUCTORERR,
+	JSEXN_CONVERSIONERR,
+	  JSEXN_TOOBJECTERR,
+	  JSEXN_TOPRIMITIVEERR,
+	  JSEXN_DEFAULTVALUEERR,
+	JSEXN_ARRAYERR,
+	JSEXN_LIMIT
 } JSExnType;
 
 #define FLAGS JSCLASS_HAS_PRIVATE
@@ -204,69 +204,69 @@ struct JSExnSpec {
  */
 static struct JSExnSpec exceptions[] = {
     { JSEXN_NONE, /* No proto? */ {
-        "Exception", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"Exception", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_EXCEPTION, {
-        "Error", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"Error", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "InternalError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"InternalError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "SyntaxError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"SyntaxError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "ReferenceError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"ReferenceError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "CallError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"CallError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_CALLERR, {
-        "TargetError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"TargetError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "ConstructorError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"ConstructorError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "ConversionError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"ConversionError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_CONVERSIONERR, {
-        "ToObjectError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"ToObjectError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_CONVERSIONERR, {
-        "ToPrimitiveError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"ToPrimitiveError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_CONVERSIONERR, {
-        "DefaultValueError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"DefaultValueError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     { JSEXN_ERR, {
-        "ArrayError", FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
+	"ArrayError", FLAGS,
+	JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+	JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize
     } },
     {0}
 };
@@ -299,46 +299,46 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v;
     char *name;
     JSClass *theclass;
-    
+
     /* Check needed against incompatible target... */
 
     /* Try to include the exception name in the error message. */
     theclass = OBJ_GET_CLASS(cx, obj);
     name = theclass->name;
-    
+
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
 
     if (!JSVAL_IS_NULL(v)) {
-        char *msgbuf, *tmp;
+	char *msgbuf, *tmp;
 
-        privateData = JSVAL_TO_PRIVATE(v);
-        report = privateData->errorReport;
+	privateData = JSVAL_TO_PRIVATE(v);
+	report = privateData->errorReport;
 
-        msgbuf = PR_smprintf("%s:", name);
+	msgbuf = PR_smprintf("%s:", name);
 
-        if (report->filename) {
-            tmp = msgbuf;
-            msgbuf = PR_smprintf("%s%s:", tmp, report->filename);
-            JS_free(cx, tmp);
-        }
-        if (report->lineno) {
-            tmp = msgbuf;
-            msgbuf = PR_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
-            if (tmp)
-                JS_free(cx, tmp);
-        }
-        PR_ASSERT(privateData->message);
-        tmp = msgbuf;
-        msgbuf = PR_smprintf("%s%s", tmp ? tmp : "", privateData->message);
-        if(tmp)
-            JS_free(cx, tmp);
+	if (report->filename) {
+	    tmp = msgbuf;
+	    msgbuf = PR_smprintf("%s%s:", tmp, report->filename);
+	    JS_free(cx, tmp);
+	}
+	if (report->lineno) {
+	    tmp = msgbuf;
+	    msgbuf = PR_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
+	    if (tmp)
+		JS_free(cx, tmp);
+	}
+	PR_ASSERT(privateData->message);
+	tmp = msgbuf;
+	msgbuf = PR_smprintf("%s%s", tmp ? tmp : "", privateData->message);
+	if(tmp)
+	    JS_free(cx, tmp);
 
-        str = JS_NewStringCopyZ(cx, msgbuf);
+	str = JS_NewStringCopyZ(cx, msgbuf);
     } else {
-        str = JS_NewStringCopyZ(cx, "some non-engine-thrown exception");
+	str = JS_NewStringCopyZ(cx, "some non-engine-thrown exception");
     }
     if (!str)
-        return JS_FALSE;
+	return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -356,18 +356,18 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     int i;
 
     for (i = 0; exceptions[i].theclass.name != 0; i++) {
-        int protoidx = exceptions[i].protoIndex;
-        protos[i] = JS_InitClass(cx, obj,
-                                 ((protoidx >= 0) ? protos[protoidx] : NULL),
-                                 &(exceptions[i].theclass),
-                                 Exception, 1,
-                                 NULL,
-                                 exception_methods,
-                                 NULL,
-                                 NULL);
+	int protoidx = exceptions[i].protoIndex;
+	protos[i] = JS_InitClass(cx, obj,
+				 ((protoidx >= 0) ? protos[protoidx] : NULL),
+				 &(exceptions[i].theclass),
+				 Exception, 1,
+				 NULL,
+				 exception_methods,
+				 NULL,
+				 NULL);
 
-        /* So finalize knows whether to. */
-        OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_NULL);
+	/* So finalize knows whether to. */
+	OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_NULL);
     }
 
     /*
@@ -378,25 +378,26 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
      */
 
 /*     protos[0]->slots[JSSLOT_PROTO] = JSVAL_NULL; */
-    
+
     return protos[0];
 }
 
 JSErrorReport *
-js_GetErrorFromException(JSContext *cx, JSObject *errobj) {
+js_GetErrorFromException(JSContext *cx, JSObject *errobj)
+{
     JSExnPrivate *privateData;
-#if 0 
+#if 0
     {
-        JSClass *errobjclass;
-        /* Assert that we have an Exception object */
-        /* This assert does the right thing, but we can't use it yet, because
-         * we're throwing lots of different exception classes. */
-        errobjclass = OBJ_GET_CLASS(cx, errobj);
-        PR_ASSERT(errobjclass == &(exceptions[JSEXN_CALLERR].theclass));
+	JSClass *errobjclass;
+	/* Assert that we have an Exception object */
+	/* This assert does the right thing, but we can't use it yet, because
+	 * we're throwing lots of different exception classes. */
+	errobjclass = OBJ_GET_CLASS(cx, errobj);
+	PR_ASSERT(errobjclass == &(exceptions[JSEXN_CALLERR].theclass));
     }
 #endif
     privateData = JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, errobj, JSSLOT_PRIVATE));
-    
+
     /* Still OK to return NULL, tho. */
     return privateData->errorReport;
 }
@@ -419,8 +420,9 @@ static struct exnname { char *name; char *exception; } errortoexnname[] = {
 #endif /* DEBUG */
 
 JSBool
-js_ErrorToException(JSContext *cx, JSErrorReport *reportp, const char *message) {
-    JSErrNum errorNumber; 
+js_ErrorToException(JSContext *cx, JSErrorReport *reportp, const char *message)
+{
+    JSErrNum errorNumber;
     JSObject *errobj;
     JSExnType exn;
     JSExnPrivate *privateData;
@@ -433,8 +435,8 @@ js_ErrorToException(JSContext *cx, JSErrorReport *reportp, const char *message) 
 #if defined( DEBUG_mccabe ) && defined ( PRINTNAMES )
     /* Print the error name and the associated exception name to stderr */
     fprintf(stderr, "%s\t%s\n",
-            errortoexnname[errorNumber].name,
-            errortoexnname[errorNumber].exception);
+	    errortoexnname[errorNumber].name,
+	    errortoexnname[errorNumber].exception);
 #endif
 
     /*
@@ -442,7 +444,7 @@ js_ErrorToException(JSContext *cx, JSErrorReport *reportp, const char *message) 
      * with the given error number.
      */
     if (exn == JSEXN_NONE)
-        return JS_FALSE;
+	return JS_FALSE;
 
     /*
      * Should (?) be js_ConstructObject... switching to NewObject
@@ -451,11 +453,11 @@ js_ErrorToException(JSContext *cx, JSErrorReport *reportp, const char *message) 
      * cx->fp was null when trying to construct the object...
      */
     errobj = js_NewObject(cx,
-                          &(exceptions[exn].theclass),
-                          NULL, NULL);
+			  &(exceptions[exn].theclass),
+			  NULL, NULL);
 
     /*
-     * Construct a new copy of the error report, and store it in the 
+     * Construct a new copy of the error report, and store it in the
      * exception objects' private data.  We can't use the error report
      * handed in, because it's stack-allocated, and may point to transient
      * data in the JSTokenStream.

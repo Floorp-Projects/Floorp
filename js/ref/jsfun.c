@@ -67,7 +67,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     PR_ASSERT(fp->fun);
     argsobj = fp->argsobj;
     if (argsobj)
-    	return argsobj;
+	return argsobj;
 
     /* Link the new object to fp so it can get actual argument values. */
     argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
@@ -205,7 +205,7 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ARGS_LENGTH:
 	if (fp) {
 	    if (!js_ValueToNumber(cx, *vp, &argc))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    argc = js_DoubleToInteger(argc);
 	    if (0 <= argc && argc < fp->argc)
 		fp->argc = (uintN)argc;
@@ -284,7 +284,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent,
     if (!withobj) {
 	for (obj = fp->scopeChain; obj; obj = parent) {
 	    if (OBJ_GET_CLASS(cx, obj) != &js_WithClass)
-	    	break;
+		break;
 	    parent = OBJ_GET_PARENT(cx, obj);
 	    if (parent == funobj) {
 		withobj = obj;
@@ -373,7 +373,7 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	if (fp && !TEST_BIT(slot, fp->overrides)) {
 	    JSObject *argsobj = js_GetArgsObject(cx, fp);
 	    if (!argsobj)
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    *vp = OBJECT_TO_JSVAL(argsobj);
 	}
 	break;
@@ -556,7 +556,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 				   getter, setter,
 				   JSPROP_ENUMERATE | JSPROP_PERMANENT,
 				   (JSProperty **)&sprop)) {
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    }
 	    PR_ASSERT(sprop);
 	    if (slot < nslots)
@@ -789,15 +789,15 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	break;
 
       case FUN_CALL:
-      	if (fp && fp->fun) {
+	if (fp && fp->fun) {
 	    JSObject *callobj = js_GetCallObject(cx, fp, NULL, NULL);
 	    if (!callobj)
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    *vp = OBJECT_TO_JSVAL(callobj);
-      	} else {
+	} else {
 	    *vp = JSVAL_NULL;
-      	}
-      	break;
+	}
+	break;
 
       default:
 	/* XXX fun[0] and fun.arguments[0] are equivalent. */
@@ -832,16 +832,16 @@ fun_enumProperty(JSContext *cx, JSObject *obj)
     JS_LOCK_OBJ(cx, obj);
     scope = (JSScope *) obj->map;
     for (sprop = scope->props; sprop; sprop = sprop->next) {
-        jsval id = sprop->id;
-        if (!JSVAL_IS_INT(id)) {
+	jsval id = sprop->id;
+	if (!JSVAL_IS_INT(id)) {
 	    if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
-	        id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
-	        id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
-	        id == ATOM_KEY(cx->runtime->atomState.nameAtom))
-            {
-	        sprop->attrs &= ~JSPROP_ENUMERATE;
+		id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
+		id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
+		id == ATOM_KEY(cx->runtime->atomState.nameAtom))
+	    {
+		sprop->attrs &= ~JSPROP_ENUMERATE;
 	    }
-        }
+	}
     }
     return JS_TRUE;
 }
@@ -877,7 +877,7 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     /* Set only if unqualified: 'arguments = ...' not 'fun.arguments = ...'. */
     if (!fp->pc || (js_CodeSpec[*fp->pc].format & JOF_MODEMASK) != JOF_NAME)
-    	goto _readonly;
+	goto _readonly;
 
     /* Get a Call object for fp and set its arguments property to vp. */
     callobj = js_GetCallObject(cx, fp, NULL, NULL);
@@ -891,8 +891,8 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 _readonly:
     if (JSVERSION_IS_ECMA(cx->version))
 	return fun_getProperty(cx, obj, id, vp);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
-                                JSMSG_READ_ONLY, js_arguments_str);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY,
+			 js_arguments_str);
     return JS_FALSE;
 }
 
@@ -919,7 +919,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     /* Hide prototype if fun->object is proxying for a Call object. */
     if (!(flags & JSRESOLVE_QUALIFIED)) {
-    	if (cx->fp && cx->fp->fun == fun && !cx->fp->callobj)
+	if (cx->fp && cx->fp->fun == fun && !cx->fp->callobj)
 	    return JS_TRUE;
     }
 
@@ -1062,9 +1062,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		    continue;
 		}
 		propname = ATOM_BYTES(sym_atom(sprop->symbols));
-                propid = sprop->id;
+		propid = sprop->id;
 		if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
+		    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
 		    !JS_XDRCString(xdr, &propname))
 		    return JS_FALSE;
 	    }
@@ -1074,7 +1074,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 	    i = fun->nvars + fun->nargs;
 	    while (i--) {
 		if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
+		    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
 		    !JS_XDRCString(xdr, &propname))
 		    return JS_FALSE;
 		PR_ASSERT(type == JSXDR_FUNARG || type == JSXDR_FUNVAR);
@@ -1087,17 +1087,17 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		    setter = js_SetLocalVariable;
 		    PR_ASSERT(nvars++ <= fun->nvars);
 		}
-                atom = js_Atomize(xdr->cx, propname, strlen(propname), 0);
+		atom = js_Atomize(xdr->cx, propname, strlen(propname), 0);
 		if (!atom ||
-                    !OBJ_DEFINE_PROPERTY(xdr->cx, fun->object, (jsid)atom,
-                                         JSVAL_VOID, getter, setter,
-                                         JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                         (JSProperty **)&sprop) ||
-                    !sprop){
+		    !OBJ_DEFINE_PROPERTY(xdr->cx, fun->object, (jsid)atom,
+					 JSVAL_VOID, getter, setter,
+					 JSPROP_ENUMERATE | JSPROP_PERMANENT,
+					 (JSProperty **)&sprop) ||
+		    !sprop){
 		    JS_free(xdr->cx, propname);
 		    return JS_FALSE;
 		}
-                sprop->id = propid;
+		sprop->id = propid;
 		JS_free(xdr->cx, propname);
 	    }
 	}
@@ -1113,11 +1113,11 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		return JS_FALSE;
 	}
 	*objp = fun->object;
-        if (!OBJ_DEFINE_PROPERTY(xdr->cx, xdr->cx->globalObject,
-                                 (jsid)fun->atom, OBJECT_TO_JSVAL(*objp),
-                                 NULL, NULL, JSPROP_ENUMERATE,
-                                 (JSProperty **)&sprop))
-            return JS_FALSE;
+	if (!OBJ_DEFINE_PROPERTY(xdr->cx, xdr->cx->globalObject,
+				 (jsid)fun->atom, OBJECT_TO_JSVAL(*objp),
+				 NULL, NULL, JSPROP_ENUMERATE,
+				 (JSProperty **)&sprop))
+	    return JS_FALSE;
     }
 
     return JS_TRUE;
@@ -1148,7 +1148,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 	return JS_FALSE;
     }
     if (!JSVAL_IS_PRIMITIVE(pval))
-        return js_IsDelegate(cx, JSVAL_TO_OBJECT(pval), v, bp);        
+	return js_IsDelegate(cx, JSVAL_TO_OBJECT(pval), v, bp);
 
     /*
      * Throw a runtime error if instanceof is called on a function
@@ -1156,8 +1156,8 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
      */
     str = js_DecompileValueGenerator(cx, OBJECT_TO_JSVAL(obj), NULL);
     if (str) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE,
-                             JS_GetStringBytes(str));
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE,
+			     JS_GetStringBytes(str));
     }
     return JS_FALSE;
 
@@ -1274,7 +1274,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	!JSVAL_IS_OBJECT(argv[1]) ||
 	!(aobj = JSVAL_TO_OBJECT(argv[1])) ||
 	!js_HasLengthProperty(cx, aobj, &length)) {
-    	return fun_call(cx, obj, argc, argv, rval);
+	return fun_call(cx, obj, argc, argv, rval);
     }
 
     if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &argv[-1]))
@@ -1397,7 +1397,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fun = js_NewFunction(cx, obj, NULL, 0, 0, parent,
 			 (JSVERSION_IS_ECMA(cx->version))
 			 ? cx->runtime->atomState.anonymousAtom
-                         : NULL);
+			 : NULL);
 
     if (!fun)
 	return JS_FALSE;
@@ -1405,135 +1405,135 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if ((fp = cx->fp) != NULL && (fp = fp->down) != NULL && fp->script) {
 	filename = fp->script->filename;
 	lineno = js_PCToLineNumber(fp->script, fp->pc);
-        principals = fp->script->principals;
+	principals = fp->script->principals;
     } else {
 	filename = NULL;
 	lineno = 0;
-        principals = NULL;
+	principals = NULL;
     }
 
     n = argc ? argc - 1 : 0;
     if (n > 0) {
-        /*
-         * Collect the function-argument arguments into one string, separated
-         * by commas, then make a tokenstream from that string, and scan it to
-         * get the arguments.  We need to throw the full scanner at the
-         * problem, because the argument string can legitimately contain
-         * comments and linefeeds.  XXX It might be better to concatenate
-         * everything up into a function definition and pass it to the
-         * compiler, but doing it this way is less of a delta from the old
-         * code.  See ECMA 15.3.2.1.
-         */
-        args_length = 0;
-        for (i = 0; i < n; i++) {
-            /* Collect the lengths for all the function-argument arguments. */
-            arg = JSVAL_TO_STRING(argv[i]);
-            args_length += arg->length;
-        }
-        /* Add 1 for each joining comma. */
-        args_length += n - 1;
+	/*
+	 * Collect the function-argument arguments into one string, separated
+	 * by commas, then make a tokenstream from that string, and scan it to
+	 * get the arguments.  We need to throw the full scanner at the
+	 * problem, because the argument string can legitimately contain
+	 * comments and linefeeds.  XXX It might be better to concatenate
+	 * everything up into a function definition and pass it to the
+	 * compiler, but doing it this way is less of a delta from the old
+	 * code.  See ECMA 15.3.2.1.
+	 */
+	args_length = 0;
+	for (i = 0; i < n; i++) {
+	    /* Collect the lengths for all the function-argument arguments. */
+	    arg = JSVAL_TO_STRING(argv[i]);
+	    args_length += arg->length;
+	}
+	/* Add 1 for each joining comma. */
+	args_length += n - 1;
 
-        /*
-         * Allocate a string to hold the concatenated arguments, including room
-         * for a terminating 0.
-         */
-        cp = collected_args = (jschar *) JS_malloc(cx, (args_length + 1) *
-                                                   sizeof(jschar));
-        /* Concatenate the arguments into the new string, separated by commas. */
-        for (i = 0; i < n; i++) {
-            arg = JSVAL_TO_STRING(argv[i]);
-            (void)js_strncpy(cp, arg->chars, arg->length);
-            cp += arg->length;
-            /* Add separating comma or terminating 0. */
-            *(cp++) = (i + 1 < n) ? ',' : 0;
-        }
+	/*
+	 * Allocate a string to hold the concatenated arguments, including room
+	 * for a terminating 0.
+	 */
+	cp = collected_args = (jschar *) JS_malloc(cx, (args_length + 1) *
+						   sizeof(jschar));
+	/* Concatenate the arguments into the new string, separated by commas. */
+	for (i = 0; i < n; i++) {
+	    arg = JSVAL_TO_STRING(argv[i]);
+	    (void)js_strncpy(cp, arg->chars, arg->length);
+	    cp += arg->length;
+	    /* Add separating comma or terminating 0. */
+	    *(cp++) = (i + 1 < n) ? ',' : 0;
+	}
 
-        /* Make a tokenstream that reads from the given string. */
-        ts = js_NewTokenStream(cx, collected_args, args_length, filename, lineno,
-                               principals);
-        if (!ts) {
-            JS_free(cx, collected_args);
-            return JS_FALSE;
-        }
+	/* Make a tokenstream that reads from the given string. */
+	ts = js_NewTokenStream(cx, collected_args, args_length, filename, lineno,
+			       principals);
+	if (!ts) {
+	    JS_free(cx, collected_args);
+	    return JS_FALSE;
+	}
 
-        tt = js_GetToken(cx, ts);
-        /* The argument string may be empty or contain no tokens. */
-        if (tt != TOK_EOF) {
-            while (1) {
-                /*
-                 * Check that it's a name.  This also implicitly guards against
-                 * TOK_ERROR.
-                 */
-                if (tt != TOK_NAME) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                                        JSMSG_NO_FORMAL);
-                    goto badargs;
-                }
-                /*
-                 * Get the atom corresponding to the name from the tokenstream;
-                 * we're assured at this point that it's a valid identifier.
-                 */
-                atom = ts->token.t_atom;
-                if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2,
-                                       (JSProperty **)&sprop)) {
-                    goto badargs;
-                }
-                if (sprop && obj2 == obj) {
+	tt = js_GetToken(cx, ts);
+	/* The argument string may be empty or contain no tokens. */
+	if (tt != TOK_EOF) {
+	    while (1) {
+		/*
+		 * Check that it's a name.  This also implicitly guards against
+		 * TOK_ERROR.
+		 */
+		if (tt != TOK_NAME) {
+		    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+					 JSMSG_NO_FORMAL);
+		    goto badargs;
+		}
+		/*
+		 * Get the atom corresponding to the name from the tokenstream;
+		 * we're assured at this point that it's a valid identifier.
+		 */
+		atom = ts->token.t_atom;
+		if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2,
+				       (JSProperty **)&sprop)) {
+		    goto badargs;
+		}
+		if (sprop && obj2 == obj) {
 #ifdef CHECK_ARGUMENT_HIDING
-                    PR_ASSERT(sprop->getter == js_GetArgument);
-                    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                    JS_ReportErrorNumber(cx, JSREPORT_WARNING, JSMSG_SAME_FORMAL,
-				   ATOM_BYTES(atom));
-                    goto badargs;
+		    PR_ASSERT(sprop->getter == js_GetArgument);
+		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+		    JS_ReportErrorNumber(cx, JSREPORT_WARNING,
+		    			 JSMSG_SAME_FORMAL, ATOM_BYTES(atom));
+		    goto badargs;
 #else
-                /*
-                 * A duplicate parameter name. We create a dummy symbol
-                 * entry with property id of the parameter number and set
-                 * the id to the name of the parameter.
-                 * The decompiler will know to treat this case specially.
-                 */
-                jsid oldArgId = (jsid) sprop->id;
-                OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                sprop = NULL;
-                if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
-                                       js_GetArgument, js_SetArgument,
-                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                       (JSProperty **)&sprop)) {
-                    goto badargs;
-                }
-                sprop->id = (jsid) atom;
+		/*
+		 * A duplicate parameter name. We create a dummy symbol
+		 * entry with property id of the parameter number and set
+		 * the id to the name of the parameter.
+		 * The decompiler will know to treat this case specially.
+		 */
+		jsid oldArgId = (jsid) sprop->id;
+		OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+		sprop = NULL;
+		if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
+				       js_GetArgument, js_SetArgument,
+				       JSPROP_ENUMERATE | JSPROP_PERMANENT,
+				       (JSProperty **)&sprop)) {
+		    goto badargs;
+		}
+		sprop->id = (jsid) atom;
 #endif
-                }
-                if (sprop)
-                    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
-                                       js_GetArgument, js_SetArgument,
-                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                       (JSProperty **)&sprop)) {
-                    goto badargs;
-                }
-                PR_ASSERT(sprop);
-                sprop->id = INT_TO_JSVAL(fun->nargs++);
-                OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
+		}
+		if (sprop)
+		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+		if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
+				       js_GetArgument, js_SetArgument,
+				       JSPROP_ENUMERATE | JSPROP_PERMANENT,
+				       (JSProperty **)&sprop)) {
+		    goto badargs;
+		}
+		PR_ASSERT(sprop);
+		sprop->id = INT_TO_JSVAL(fun->nargs++);
+		OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
 
-                /* Done with the NAME; get the next token. */
-                tt = js_GetToken(cx, ts);
-                /* Stop if we've reached the end of the string. */
-                if (tt == TOK_EOF)
-                    break;
+		/* Done with the NAME; get the next token. */
+		tt = js_GetToken(cx, ts);
+		/* Stop if we've reached the end of the string. */
+		if (tt == TOK_EOF)
+		    break;
 
-                /*
-                 * If a comma is seen, get the next token.  Otherwise, let the
-                 * loop catch the error.
-                 */
-                if (tt == TOK_COMMA)
-                    tt = js_GetToken(cx, ts);
-            }
-        }
-        /* Clean up. */
-        JS_free(cx, collected_args);
-        if (!js_CloseTokenStream(cx, ts))
-            return JS_FALSE;
+		/*
+		 * If a comma is seen, get the next token.  Otherwise, let the
+		 * loop catch the error.
+		 */
+		if (tt == TOK_COMMA)
+		    tt = js_GetToken(cx, ts);
+	    }
+	}
+	/* Clean up. */
+	JS_free(cx, collected_args);
+	if (!js_CloseTokenStream(cx, ts))
+	    return JS_FALSE;
     }
 
     if (argc) {
@@ -1552,14 +1552,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if ((fp = cx->fp) != NULL && (fp = fp->down) != NULL && fp->script) {
 	filename = fp->script->filename;
 	lineno = js_PCToLineNumber(fp->script, fp->pc);
-        principals = fp->script->principals;
+	principals = fp->script->principals;
     } else {
 	filename = NULL;
 	lineno = 0;
-        principals = NULL;
+	principals = NULL;
     }
     ts = js_NewTokenStream(cx, str->chars, str->length, filename, lineno,
-                           principals);
+			   principals);
     if (!ts)
 	return JS_FALSE;
     return js_ParseFunctionBody(cx, ts, fun) &&
@@ -1592,10 +1592,10 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 	goto bad;
     fun = js_NewFunction(cx, proto, NULL, 0, 0, obj, atom);
     if (!fun)
-    	goto bad;
+	goto bad;
     fun->script = js_NewScript(cx, 0);
     if (!fun->script)
-    	goto bad;
+	goto bad;
     return proto;
 
 bad:
@@ -1739,8 +1739,8 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
 	fp->sp = sp;
     if (str) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             constructing ? JSMSG_NOT_CONSTRUCTOR
-                                          : JSMSG_NOT_FUNCTION,
-                             JS_GetStringBytes(str));
+			     constructing ? JSMSG_NOT_CONSTRUCTOR
+					  : JSMSG_NOT_FUNCTION,
+			     JS_GetStringBytes(str));
     }
 }

@@ -150,7 +150,7 @@ js_InitScanner(JSContext *cx)
 	if (!atom)
 	    return JS_FALSE;
 	atom->kwindex = (JSVERSION_IS_ECMA(cx->version)
-                         || kw->version <= cx->version) ? kw - keywords : -1;
+			 || kw->version <= cx->version) ? kw - keywords : -1;
     }
     return JS_TRUE;
 }
@@ -177,7 +177,7 @@ js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
     ts->filename = filename;
     ts->lineno = lineno;
     if (principals)
-        JSPRINCIPALS_HOLD(cx, principals);
+	JSPRINCIPALS_HOLD(cx, principals);
     ts->principals = principals;
     return ts;
 }
@@ -217,7 +217,7 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
 
     PR_ARENA_ALLOCATE(base, &cx->tempPool, JS_LINE_LIMIT * sizeof(jschar));
     if (!base)
-    	return NULL;
+	return NULL;
     ts = js_NewBufferTokenStream(cx, base, JS_LINE_LIMIT);
     if (!ts)
 	return NULL;
@@ -226,8 +226,8 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
     } else {
 	file = fopen(filename, "r");
 	if (!file) {
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                            JSMSG_CANT_OPEN, filename, strerror(errno));
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
+				 filename, strerror(errno));
 	    return NULL;
 	}
     }
@@ -242,7 +242,7 @@ JS_FRIEND_API(JSBool)
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
 {
     if (ts->principals)
-        JSPRINCIPALS_DROP(cx, ts->principals);
+	JSPRINCIPALS_DROP(cx, ts->principals);
 #ifdef JSFILE
     return !ts->file || fclose(ts->file) == 0;
 #else
@@ -255,39 +255,39 @@ static void
 SendSourceToJSDebugger(JSTokenStream *ts, jschar *str, size_t length)
 {
     if (!ts->jsdsrc) {
-        const char* filename = ts->filename ? ts->filename : "typein";
+	const char* filename = ts->filename ? ts->filename : "typein";
 
-        if (1 == ts->lineno) {
-            ts->jsdsrc = JSD_NewSourceText(ts->jsdc, filename);
-        } else {
-            ts->jsdsrc = JSD_FindSourceForURL(ts->jsdc, filename);
-            if (ts->jsdsrc && JSD_SOURCE_PARTIAL !=
-                JSD_GetSourceStatus(ts->jsdc, ts->jsdsrc)) {
-                ts->jsdsrc = NULL;
-            }
-        }
+	if (1 == ts->lineno) {
+	    ts->jsdsrc = JSD_NewSourceText(ts->jsdc, filename);
+	} else {
+	    ts->jsdsrc = JSD_FindSourceForURL(ts->jsdc, filename);
+	    if (ts->jsdsrc && JSD_SOURCE_PARTIAL !=
+		JSD_GetSourceStatus(ts->jsdc, ts->jsdsrc)) {
+		ts->jsdsrc = NULL;
+	    }
+	}
     }
     if (ts->jsdsrc) {
-        /* here we convert our Unicode into a C string to pass to JSD */
+	/* here we convert our Unicode into a C string to pass to JSD */
 #define JSD_BUF_SIZE 1024
-        static char* buf = NULL;
-        int remaining = length;
+	static char* buf = NULL;
+	int remaining = length;
 
-        if (!buf)
-            buf = malloc(JSD_BUF_SIZE);
-        if (buf)
-        {
-            while (remaining && ts->jsdsrc) {
-                int bytes = PR_MIN(remaining, JSD_BUF_SIZE);
-                int i;
-                for (i = 0; i < bytes; i++)
-                    buf[i] = (const char) *(str++);
-                ts->jsdsrc = JSD_AppendSourceText(ts->jsdc,ts->jsdsrc,
-                                                  buf, bytes,
-                                                  JSD_SOURCE_PARTIAL);
-                remaining -= bytes;
-            }
-        }
+	if (!buf)
+	    buf = malloc(JSD_BUF_SIZE);
+	if (buf)
+	{
+	    while (remaining && ts->jsdsrc) {
+		int bytes = PR_MIN(remaining, JSD_BUF_SIZE);
+		int i;
+		for (i = 0; i < bytes; i++)
+		    buf[i] = (const char) *(str++);
+		ts->jsdsrc = JSD_AppendSourceText(ts->jsdc,ts->jsdsrc,
+						  buf, bytes,
+						  JSD_SOURCE_PARTIAL);
+		remaining -= bytes;
+	    }
+	}
     }
 }
 #endif
@@ -486,7 +486,7 @@ MatchChar(JSTokenStream *ts, int32 nextChar)
 
 void
 js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
-                      const char *format, ...)
+		      const char *format, ...)
 {
     va_list ap;
     char *message;
@@ -521,20 +521,20 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
 			  : NULL;
 	report.uclinebuf = ts->linebuf.base;
 	report.uctokenptr = ts->token.ptr;
-        report.flags = flags;
+	report.flags = flags;
 	(*onError)(cx, message, &report);
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
     } else {
 	if (!(ts->flags & TSF_INTERACTIVE))
 	    fprintf(stderr, "JavaScript %s: ",
-                    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
+		    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
 	if (ts->filename)
 	    fprintf(stderr, "%s, ", ts->filename);
 	if (ts->lineno)
 	    fprintf(stderr, "line %u: ", ts->lineno);
 	fprintf(stderr, "%s:\n%s\n",message,
-                js_DeflateString(cx, ts->linebuf.base,
-                                 ts->linebuf.limit - ts->linebuf.base));
+		js_DeflateString(cx, ts->linebuf.base,
+				 ts->linebuf.limit - ts->linebuf.base));
 #endif
     }
     if (lastc == '\n')
@@ -544,7 +544,7 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
 
 void
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
-                      const uintN errorNumber, ...)
+		      const uintN errorNumber, ...)
 {
     va_list ap;
     jschar *limit, lastc;
@@ -559,9 +559,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     message = NULL;
 
     va_start(ap, errorNumber);
-    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, 
-                                errorNumber, &message, &report, ap))
-        return;
+    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
+				errorNumber, &message, &report, ap))
+	return;
     va_end(ap);
 
     PR_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
@@ -582,24 +582,24 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 			  : NULL;
 	report.uclinebuf = ts->linebuf.base;
 	report.uctokenptr = ts->token.ptr;
-        report.flags = flags;
+	report.flags = flags;
 
 #if JS_HAS_ERROR_EXCEPTIONS
-        /*
-         * If there's a runtime exception type associated with this error
-         * number, set that as the pending exception.  For errors occuring at
-         * compile time, this is very likely to be a JSEXN_SYNTAXERR.  If an
-         * exception is thrown, then the JSREPORT_EXCEPTION flag will be set in
-         * report.flags.  Proper behavior for error reporters is probably to
-         * ignore this for all but toplevel compilation errors.
+	/*
+	 * If there's a runtime exception type associated with this error
+	 * number, set that as the pending exception.  For errors occuring at
+	 * compile time, this is very likely to be a JSEXN_SYNTAXERR.  If an
+	 * exception is thrown, then the JSREPORT_EXCEPTION flag will be set in
+	 * report.flags.  Proper behavior for error reporters is probably to
+	 * ignore this for all but toplevel compilation errors.
 
-         * XXXmccabe it's still at issue if there's a public API to distinguish
-         * between toplevel compilation and other types.
+	 * XXXmccabe it's still at issue if there's a public API to distinguish
+	 * between toplevel compilation and other types.
 
-         * XXX it'd probably be best if there was only one call to this
-         * function, but there seem to be two error reporter call points.
-         */
-        (void)js_ErrorToException(cx, &report, message);
+	 * XXX it'd probably be best if there was only one call to this
+	 * function, but there seem to be two error reporter call points.
+	 */
+	(void)js_ErrorToException(cx, &report, message);
 #endif
 
 	(*onError)(cx, message, &report);
@@ -608,14 +608,14 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     } else {
 	if (!(ts->flags & TSF_INTERACTIVE))
 	    fprintf(stderr, "JavaScript %s: ",
-                    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
+		    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
 	if (ts->filename)
 	    fprintf(stderr, "%s, ", ts->filename);
 	if (ts->lineno)
 	    fprintf(stderr, "line %u: ", ts->lineno);
 	fprintf(stderr, "%s:\n%s\n",message,
-                js_DeflateString(cx, ts->linebuf.base,
-                                 ts->linebuf.limit - ts->linebuf.base));
+		js_DeflateString(cx, ts->linebuf.base,
+				 ts->linebuf.limit - ts->linebuf.base));
 #endif
     }
     if (lastc == '\n')
@@ -779,14 +779,13 @@ retry:
 		radix = 16;
 	    } else if (JS7_ISDEC(c)) {
 		/*
-		 * We permit 08 and 09 as decimal numbers, which makes our 
+		 * We permit 08 and 09 as decimal numbers, which makes our
 		 * behaviour superset of the ECMA numeric grammar.  We might
 		 * not always be so permissive, so we warn about it.
 		 */
 		if (c > '7' && JSVERSION_IS_ECMA(cx->version)) {
 		    js_ReportCompileError(cx, ts, JSREPORT_WARNING,
-				  "0%c is not an ECMA-legal numeric constant",
-					  c);
+			"0%c is not a legal ECMA-262 numeric constant", c);
 		    radix = 10;
 		} else {
 		    radix = 8;
@@ -821,7 +820,7 @@ retry:
 		}
 		if (!JS7_ISDEC(c)) {
 		    js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                                          "missing exponent");
+					  "missing exponent");
 		    RETURN(TOK_ERROR);
 		}
 		do {
@@ -838,13 +837,13 @@ retry:
 	if (radix == 10) {
 	    if (!js_strtod(cx, ts->tokenbuf.base, &endptr, &dval)) {
 		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                                      "out of memory");
+				      "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	} else {
 	    if (!js_strtointeger(cx, ts->tokenbuf.base, &endptr, radix, &dval)) {
 		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                                      "out of memory");
+				      "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	}
@@ -860,7 +859,7 @@ retry:
 	    if (c == '\n' || c == EOF) {
 		UngetChar(ts, c);
 		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                                      "unterminated string literal");
+				      "unterminated string literal");
 		RETURN(TOK_ERROR);
 	    }
 	    if (c == '\\') {
@@ -1050,12 +1049,12 @@ skipline:
 		    if (MatchChar(ts, '/'))
 			goto retry;
 		    js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                                          "nested comment");
+					  "nested comment");
 		}
 	    }
 	    if (c == EOF) {
 		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                                      "unterminated comment");
+				      "unterminated comment");
 		RETURN(TOK_ERROR);
 	    }
 	    goto retry;
@@ -1179,7 +1178,7 @@ skipline:
 
       default:
 	js_ReportCompileError(cx, ts, JSREPORT_ERROR,
-                              "illegal character");
+			      "illegal character");
 	RETURN(TOK_ERROR);
     }
 

@@ -493,7 +493,7 @@ gc_mark(JSRuntime *rt, void *thing)
 			fun = JSVAL_TO_PRIVATE(v);
 			if (fun) {
 			    if (fun->atom)
-			    	GC_MARK_ATOM(rt, fun->atom, prev);
+				GC_MARK_ATOM(rt, fun->atom, prev);
 			    if (fun->script)
 				GC_MARK_SCRIPT(rt, fun->script, prev);
 			}
@@ -589,7 +589,7 @@ gc_root_marker(PRHashEntry *he, intN i, void *arg)
 	JSRuntime *rt = (JSRuntime *)arg;
 
 	for (a = rt->gcArenaPool.first.next; a; a = a->next) {
-	    PR_ASSERT(!rp || 
+	    PR_ASSERT(!rp ||
 		      (*rp >= (void *)a->base && *rp <= (void *)a->avail));
 	}
 #endif
@@ -623,6 +623,13 @@ js_GC(JSContext *cx)
     JSGCThing *thing, *final, **flp, **oflp;
     GCFinalizeOp finalizer;
     JSBool a_all_clear, f_all_clear;
+
+    /*
+     * XXX kludge for pre-ECMAv2 compile-time switch case expr eval, see
+     * jsemit.c:js_EmitTree, under case TOK_SWITCH: (look for XXX).
+     */
+    if (cx->gcDisabled)
+	return;
 
     rt = cx->runtime;
 #ifdef JS_THREADSAFE
@@ -707,18 +714,18 @@ restart:
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
 	/*
 	 * Iterate frame chain and dormant chains. Temporarily tack current
-         * frame onto the head of the dormant list to ease iteration.
-         *
-         * (NOTE: see comment on this whole 'dormant' thing in js_Execute)
-         */
+	 * frame onto the head of the dormant list to ease iteration.
+	 *
+	 * (NOTE: see comment on this whole 'dormant' thing in js_Execute)
+	 */
 	chain = acx->fp;
-        if (chain) {
-            PR_ASSERT(!chain->dormantNext);
-            chain->dormantNext = acx->dormantFrameChain;
-        } else {
-            chain = acx->dormantFrameChain;
-        }
-        for (fp=chain; fp; fp = chain = chain->dormantNext) {
+	if (chain) {
+	    PR_ASSERT(!chain->dormantNext);
+	    chain->dormantNext = acx->dormantFrameChain;
+	} else {
+	    chain = acx->dormantFrameChain;
+	}
+	for (fp=chain; fp; fp = chain = chain->dormantNext) {
 	    sp = fp->sp;
 	    if (sp) {
 		for (a = acx->stackPool.first.next; a; a = a->next) {
@@ -732,7 +739,7 @@ restart:
 			    GC_MARK(rt, JSVAL_TO_GCTHING(v), "stack", NULL);
 		    }
 		    if (end == (pruword)sp)
-		    	break;
+			break;
 		}
 	    }
 	    do {
@@ -750,16 +757,16 @@ restart:
 		    GC_MARK(rt, fp->sharpArray, "sharp array", NULL);
 	    } while ((fp = fp->down) != NULL);
 	}
-        /* cleanup temporary link */
-        if (acx->fp)
-            acx->fp->dormantNext = NULL;
+	/* cleanup temporary link */
+	if (acx->fp)
+	    acx->fp->dormantNext = NULL;
 	GC_MARK(rt, acx->globalObject, "global object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_OBJECT], "newborn object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_STRING], "newborn string", NULL);
 	GC_MARK(rt, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
 #if JS_HAS_EXCEPTIONS
-        if (acx->throwing)
-            GC_MARK(rt, acx->exception, "exception", NULL);
+	if (acx->throwing)
+	    GC_MARK(rt, acx->exception, "exception", NULL);
 #endif
     }
 

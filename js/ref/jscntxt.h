@@ -150,30 +150,19 @@ struct JSContext {
     /* Client opaque pointer */
     void                *data;
 
-    /* Java environment and JS errors to throw as exceptions. */
-    void                *javaEnv;
-    void                *savedErrors;
-
+    /* GC and thread-safe state. */
+    JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
+    uint32              gcDisabled;         /* XXX for pre-ECMAv2 switch */
 #ifdef JS_THREADSAFE
     prword              thread;
-    JSPackedBool        gcActive;
     jsrefcount          requestDepth;
+    JSPackedBool        gcActive;
 #endif
-    JSStackFrame        *dormantFrameChain; /* dormant frame chains */
+
+    /* Exception state (NB: throwing is packed with gcActive above). */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exceptin */
 };
-
-typedef struct JSInterpreterHooks {
-    void (*destroyContext)(JSContext *cx);
-    void (*destroyScript)(JSContext *cx, JSScript *script);
-    void (*destroyFrame)(JSContext *cx, JSStackFrame *frame);
-} JSInterpreterHooks;
-
-extern JSInterpreterHooks *js_InterpreterHooks;
-
-extern JS_FRIEND_API(void)
-js_SetInterpreterHooks(JSInterpreterHooks *hooks);
 
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize);
@@ -204,13 +193,13 @@ extern void
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
 extern void
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-                       void *userRef, const uintN errorNumber, va_list ap);
+		       void *userRef, const uintN errorNumber, va_list ap);
 
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-                        void *userRef, const uintN errorNumber, 
-                        char **message, JSErrorReport *reportp, 
-                        va_list ap);
+			void *userRef, const uintN errorNumber,
+			char **message, JSErrorReport *reportp,
+			va_list ap);
 #endif
 
 /*

@@ -493,8 +493,8 @@ struct JSFunctionSpec {
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	     JSClass *clasp, JSNative constructor, uintN nargs,
-             JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+	     JSPropertySpec *ps, JSFunctionSpec *fs,
+	     JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)
@@ -515,7 +515,7 @@ JS_SetPrivate(JSContext *cx, JSObject *obj, void *data);
 
 extern JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
-                      jsval *argv);
+		      jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(JSContext *cx, JSObject *obj);
@@ -612,8 +612,8 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
  * JS_FALSE and the value of *attrsp is undefined.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj, 
-                           const jschar *name, size_t namelen,
+JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+			   const jschar *name, size_t namelen,
 			   uintN *attrsp, JSBool *foundp);
 
 /*
@@ -624,7 +624,7 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
  */
 extern JS_PUBLIC_API(JSBool)
 JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
-                           const jschar *name, size_t namelen,
+			   const jschar *name, size_t namelen,
 			   uintN attrs, JSBool *foundp);
 
 
@@ -721,8 +721,8 @@ typedef struct JSPrincipals {
     ((principals)->refcount++)
 #define JSPRINCIPALS_DROP(cx, principals)               \
     ((--((principals)->refcount) == 0)                  \
-        ? (*(principals)->destroy)((cx), (principals))  \
-        : (void) 0)
+	? (*(principals)->destroy)((cx), (principals))  \
+	: (void) 0)
 
 /************************************************************************/
 
@@ -790,10 +790,10 @@ JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
-                                JSPrincipals *principals, const char *name,
-                                uintN nargs, const char **argnames,
-                                const char *bytes, size_t length,
-                                const char *filename, uintN lineno);
+				JSPrincipals *principals, const char *name,
+				uintN nargs, const char **argnames,
+				const char *bytes, size_t length,
+				const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
@@ -947,14 +947,13 @@ extern JS_PUBLIC_API(void)
 JS_ReportOutOfMemory(JSContext *cx);
 
 struct JSErrorReport {
-    const char      *filename;  /* source file name, URL, etc., or null */
-    uintN           lineno;     /* source line number */
-    const char      *linebuf;   /* offending source line without final '\n' */
-    const char      *tokenptr;  /* pointer to error token in linebuf */
-    const jschar    *uclinebuf; /* unicode (original) line buffer */
-    const jschar    *uctokenptr;/* unicode (original) token pointer */
-    uintN	    flags;      /* error/warning, etc. */
-    
+    const char      *filename;      /* source file name, URL, etc., or null */
+    uintN           lineno;         /* source line number */
+    const char      *linebuf;       /* offending source line without final \n */
+    const char      *tokenptr;      /* pointer to error token in linebuf */
+    const jschar    *uclinebuf;     /* unicode (original) line buffer */
+    const jschar    *uctokenptr;    /* unicode (original) token pointer */
+    uintN	    flags;          /* error/warning, etc. */
     uintN           errorNumber;    /* the error number, e.g. see jsmsg.def */
     JSString        *ucmessage;     /* the (default) error message */
     JSString        **messageArgs;  /* arguments for the error message */

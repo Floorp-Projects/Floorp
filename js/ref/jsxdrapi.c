@@ -20,6 +20,7 @@
 #include <string.h>
 #include "prtypes.h"
 #include "prassert.h"
+#include "prprintf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"		/* js_XDRObject */
@@ -47,10 +48,10 @@ typedef struct JSXDRMemState {
 
 #define MEM_LEFT(xdr, bytes)                                                  \
     PR_BEGIN_MACRO                                                            \
-        if ((xdr)->mode == JSXDR_DECODE &&                                    \
+	if ((xdr)->mode == JSXDR_DECODE &&                                    \
 	    MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                        \
 	    JS_ReportErrorNumber((xdr)->cx, js_GetErrorMessage, NULL,         \
-                                            JSMSG_END_OF_DATA);               \
+				 JSMSG_END_OF_DATA);                          \
 	    return 0;                                                         \
 	}                                                                     \
     PR_END_MACRO
@@ -58,7 +59,7 @@ typedef struct JSXDRMemState {
 /* XXXbe why does NEED even allow or cope with non-ENCODE mode? */
 #define MEM_NEED(xdr, bytes)                                                  \
     PR_BEGIN_MACRO                                                            \
-        if ((xdr)->mode == JSXDR_ENCODE) {                                    \
+	if ((xdr)->mode == JSXDR_ENCODE) {                                    \
 	    if (MEM_LIMIT(xdr) &&                                             \
 		MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                    \
 		void *_data = JS_realloc((xdr)->cx,                           \
@@ -72,7 +73,7 @@ typedef struct JSXDRMemState {
 	} else {                                                              \
 	    if (MEM_LIMIT(xdr) < MEM_COUNT(xdr) + bytes) {                    \
 		JS_ReportErrorNumber((xdr)->cx, js_GetErrorMessage, NULL,     \
-                                            JSMSG_END_OF_DATA);               \
+				     JSMSG_END_OF_DATA);                      \
 		return 0;                                                     \
 	    }                                                                 \
 	}                                                                     \
@@ -122,9 +123,9 @@ mem_raw(JSXDRState *xdr, uint32 len)
 {
     void *data;
     if (xdr->mode == JSXDR_ENCODE) {
-      	MEM_NEED(xdr, len);
+	MEM_NEED(xdr, len);
     } else if (xdr->mode == JSXDR_DECODE) {
-      	MEM_LEFT(xdr, len);
+	MEM_LEFT(xdr, len);
     }
     data = MEM_DATA(xdr);
     MEM_INCR(xdr, len);
@@ -138,7 +139,7 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
       case JSXDR_SEEK_CUR:
 	if ((int32)MEM_COUNT(xdr) + offset < 0) {
 	    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                                JSMSG_SEEK_BEYOND_START);
+				 JSMSG_SEEK_BEYOND_START);
 	    return JS_FALSE;
 	}
 	if (offset > 0)
@@ -148,7 +149,7 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
       case JSXDR_SEEK_SET:
 	if (offset < 0) {
 	    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                                JSMSG_SEEK_BEYOND_START);
+				 JSMSG_SEEK_BEYOND_START);
 	    return JS_FALSE;
 	}
 	if (xdr->mode == JSXDR_ENCODE) {
@@ -158,7 +159,7 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	} else {
 	    if ((uint32)offset > MEM_LIMIT(xdr)) {
 		JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                                    JSMSG_SEEK_BEYOND_END);
+				     JSMSG_SEEK_BEYOND_END);
 		return JS_FALSE;
 	    }
 	    MEM_COUNT(xdr) = offset;
@@ -169,18 +170,18 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	    xdr->mode == JSXDR_ENCODE ||
 	    (int32)MEM_LIMIT(xdr) + offset < 0) {
 	    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                                        JSMSG_END_SEEK);
+				 JSMSG_END_SEEK);
 	    return JS_FALSE;
 	}
 	MEM_COUNT(xdr) = MEM_LIMIT(xdr) + offset;
 	return JS_TRUE;
       default: {
 	char numBuf[12];
-	sprintf(numBuf, "%d", whence);
+	PR_snprintf(numBuf, sizeof numBuf, "%d", whence);
 	JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                            JSMSG_WHITHER_WHENCE, numBuf);
-	}
+			     JSMSG_WHITHER_WHENCE, numBuf);
 	return JS_FALSE;
+      }
     }
 }
 
@@ -331,8 +332,8 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
     if (xdr->mode == JSXDR_DECODE) {
 	(*sp)[len] = '\0';
     } else if (xdr->mode == JSXDR_FREE) {
-    	JS_free(xdr->cx, *sp);
-    	*sp = NULL;
+	JS_free(xdr->cx, *sp);
+	*sp = NULL;
     }
     return JS_TRUE;
 }
@@ -373,7 +374,7 @@ JS_XDRString(JSXDRState *xdr, JSString **strp)
     }
 
     if (nbytes % JSXDR_ALIGN)
-    	nbytes += JSXDR_ALIGN - (nbytes % JSXDR_ALIGN);
+	nbytes += JSXDR_ALIGN - (nbytes % JSXDR_ALIGN);
     if (!(raw = xdr->ops->raw(xdr, nbytes)))
 	goto bad;
     if (xdr->mode == JSXDR_ENCODE) {
@@ -465,7 +466,7 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 	break;
       }
       case JSVAL_BOOLEAN: {
-        uint32 b;
+	uint32 b;
 	if (xdr->mode == JSXDR_ENCODE)
 	    b = (uint32)JSVAL_TO_BOOLEAN(*vp);
 	if (!JS_XDRUint32(xdr, &b))
@@ -490,11 +491,11 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 		*vp = INT_TO_JSVAL(i);
 	    break;
 	}
-	sprintf(numBuf, "%#lx", type);
+	PR_snprintf(numBuf, sizeof numBuf, "%#lx", type);
 	JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                                        JSMSG_BAD_JVAL_TYPE, type);
-	}
+			     JSMSG_BAD_JVAL_TYPE, type);
 	return JS_FALSE;
+      }
     }
     return JS_TRUE;
 }

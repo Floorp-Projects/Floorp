@@ -25,6 +25,7 @@
 #include "prtypes.h"
 #include "prassert.h"
 #include "prhash.h"
+#include "prprintf.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -112,14 +113,14 @@ js_compare_atom_keys(const void *k1, const void *k2)
     if (JSVAL_IS_STRING(v1) && JSVAL_IS_STRING(v2))
 	return !js_CompareStrings(JSVAL_TO_STRING(v1), JSVAL_TO_STRING(v2));
     if (JSVAL_IS_DOUBLE(v1) && JSVAL_IS_DOUBLE(v2)) {
-        double d1 = *JSVAL_TO_DOUBLE(v1);
-        double d2 = *JSVAL_TO_DOUBLE(v2);
+	double d1 = *JSVAL_TO_DOUBLE(v1);
+	double d2 = *JSVAL_TO_DOUBLE(v2);
 	if (JSDOUBLE_IS_NaN(d1))
 	    return JSDOUBLE_IS_NaN(d2);
 #ifdef XP_PC
 	/* XXX MSVC miscompiles such that (NaN == 0) */
 	if (JSDOUBLE_IS_NaN(d2))
-            return JS_FALSE;
+	    return JS_FALSE;
 #endif
 	return d1 == d2;
     }
@@ -427,8 +428,8 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
 	if (state->tablegen != gen) {
 	    hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
 	    if ((he = *hep) != NULL) {
-	    	atom = (JSAtom *)he;
-	    	goto out;
+		atom = (JSAtom *)he;
+		goto out;
 	    }
 	}
 #endif
@@ -606,9 +607,9 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
     PR_ASSERT(map->vector && i < map->length);
     if (!map->vector || i >= map->length) {
 	char numBuf[12];
-	sprintf(numBuf, "%s", (long)i);
-	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
-                                JSMSG_BAD_ATOMIC_NUMBER, numBuf);
+	PR_snprintf(numBuf, sizeof numBuf, "%lu", (unsigned long)i);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+			     JSMSG_BAD_ATOMIC_NUMBER, numBuf);
 	return NULL;
     }
     atom = map->vector[i];
@@ -632,8 +633,8 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 
     count = al->count;
     if (count >= ATOM_INDEX_LIMIT) {
-	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
-                                            JSMSG_TOO_MANY_LITERALS);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+			     JSMSG_TOO_MANY_LITERALS);
 	return JS_FALSE;
     }
     vector = JS_malloc(cx, (size_t) count * sizeof *vector);
@@ -641,7 +642,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 	return JS_FALSE;
 
     do {
-        vector[ale->index] = ale->atom;
+	vector[ale->index] = ale->atom;
 	next = ale->next;
 	ale->next = NULL;
     } while ((ale = next) != NULL);

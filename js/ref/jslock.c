@@ -326,20 +326,20 @@ js_SuspendThread(JSThinLock *p)
     PRStatus stat;
 
     while ((fl = (JSFatLock*)js_AtomicSet((prword*)&p->fat,1)) == (JSFatLock*)1) /* busy wait */
-        PR_Sleep(PR_INTERVAL_NO_WAIT);
+	PR_Sleep(PR_INTERVAL_NO_WAIT);
     if (fl == NULL)
 	return 1;
     PR_Lock(fl->slock);
     js_AtomicSet((prword*)&p->fat,(prword)fl);
     fl->susp++;
     if (fl->susp < 1) {
-        PR_Unlock(fl->slock);
-        return 1;
+	PR_Unlock(fl->slock);
+	return 1;
     }
     stat = PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT);
     if (stat == PR_FAILURE) {
-        fl->susp--;
-        return 0;
+	fl->susp--;
+	return 0;
     }
     PR_Unlock(fl->slock);
     return 1;
@@ -350,17 +350,17 @@ js_ResumeThread(JSThinLock *p)
 {
     JSFatLock *fl;
     PRStatus stat;
-    
+
     while ((fl = (JSFatLock*)js_AtomicSet((prword*)&p->fat,1)) == (JSFatLock*)1)
-        PR_Sleep(PR_INTERVAL_NO_WAIT);
+	PR_Sleep(PR_INTERVAL_NO_WAIT);
     if (fl == NULL)
 	return;
     PR_Lock(fl->slock);
     js_AtomicSet((prword*)&p->fat,(prword)fl);
     fl->susp--;
     if (fl->susp < 0) {
-        PR_Unlock(fl->slock);
-        return;
+	PR_Unlock(fl->slock);
+	return;
     }
     stat = PR_NotifyCondVar(fl->svar);
     PR_ASSERT(stat != PR_FAILURE);
@@ -388,8 +388,8 @@ deleteListOfFatlocks(JSFatLock *m)
 {
     JSFatLock *m0;
     for (; m; m=m0) {
-        m0 = m->next;
-        freeFatlock(m);
+	m0 = m->next;
+	freeFatlock(m);
     }
 }
 
@@ -521,7 +521,7 @@ emptyFatlock(JSThinLock *p)
     while ((fl = (JSFatLock*)js_AtomicSet((prword*)&p->fat,1)) == (JSFatLock*)1)
        PR_Sleep(PR_INTERVAL_NO_WAIT);
     if (fl == NULL) {
-        js_AtomicSet((prword*)&p->fat,(prword)fl);
+	js_AtomicSet((prword*)&p->fat,(prword)fl);
 	return 1;
     }
     lck = fl->slock;
@@ -561,7 +561,7 @@ emptyFatlock(JSThinLock *p)
   Furthermore, when enqueueing (after the compare-and-swap has failed
   to lock the object), p->fat is used to serialize the different
   accesses to the fat lock. The four function thus synchronized are
-  js_Enqueue, emptyFatLock, js_SuspendThread, and js_ResumeThread. 
+  js_Enqueue, emptyFatLock, js_SuspendThread, and js_ResumeThread.
 
   When dequeueing, the lock is released, and one of the threads
   suspended on the lock is notified.  If other threads still are
@@ -569,7 +569,7 @@ emptyFatlock(JSThinLock *p)
   lock is deallocated (in emptyFatlock()).
 
   p->fat is set to 1 by enqueue and emptyFatlock to signal that the pointer
-  is being accessed. 
+  is being accessed.
 
 */
 
@@ -582,31 +582,31 @@ js_Enqueue(JSThinLock *p, prword me)
 	o = ReadWord(p->owner);
 	n = Thin_SetWait(o);
 	if (o != 0 && js_CompareAndSwap(&p->owner,o,n)) {
-            JSFatLock* fl;
-            while ((fl = (JSFatLock*)js_AtomicSet((prword*)&p->fat,1)) == (JSFatLock*)1)
-                PR_Sleep(PR_INTERVAL_NO_WAIT);
-            if (fl == NULL)
-                fl = allocateFatlock();
-            js_AtomicSet((prword*)&p->fat,(prword)fl);
-            js_SuspendThread(p);
-            if (emptyFatlock(p))
+	    JSFatLock* fl;
+	    while ((fl = (JSFatLock*)js_AtomicSet((prword*)&p->fat,1)) == (JSFatLock*)1)
+		PR_Sleep(PR_INTERVAL_NO_WAIT);
+	    if (fl == NULL)
+		fl = allocateFatlock();
+	    js_AtomicSet((prword*)&p->fat,(prword)fl);
+	    js_SuspendThread(p);
+	    if (emptyFatlock(p))
 		me = Thin_RemoveWait(me);
-            else
+	    else
 		me = Thin_SetWait(me);
 	}
 	else if (js_CompareAndSwap(&p->owner,0,me)) {
-            return;
+	    return;
 	}
     }
 }
 
 static void
 js_Dequeue(JSThinLock *p)
-{    
+{
     int o = ReadWord(p->owner);
     PR_ASSERT(Thin_GetWait(o));
     if (!js_CompareAndSwap(&p->owner,o,0)) /* release it */
-        PR_ASSERT(0);
+	PR_ASSERT(0);
     js_ResumeThread(p);
 }
 
@@ -615,9 +615,9 @@ js_Lock(JSThinLock *p, prword me)
 {
     PR_ASSERT(me == CurrentThreadId());
     if (js_CompareAndSwap(&p->owner, 0, me))
-        return;
+	return;
     if (Thin_RemoveWait(ReadWord(p->owner)) != me)
-        js_Enqueue(p, me);
+	js_Enqueue(p, me);
 #ifdef DEBUG
     else
 	PR_ASSERT(0);
