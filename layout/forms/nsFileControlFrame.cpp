@@ -187,6 +187,11 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
+  // add ourself as an nsIFormControlFrame
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
+
   PRInt32 numChildren = mFrames.GetLength();
   
   nsIFrame* childFrame;

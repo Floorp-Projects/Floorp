@@ -138,6 +138,7 @@ protected:
                                     const nsRect& aDirtyRect,
                                     nsFramePaintLayer aWhichLayer);
   virtual PRIntn GetSkipSides() const;
+  void InitTextStr();
 
   nsFormFrame*          mFormFrame;               // Parent Form Frame
   nsIFrame *            mPlaceHolderFrame;
