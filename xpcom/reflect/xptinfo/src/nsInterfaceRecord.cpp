@@ -48,7 +48,7 @@ nsInterfaceRecord::GetInfo(nsInterfaceInfo **result)
         nsInterfaceRecord *parent_record =
             this->typelibRecord->interfaceRecords[parent_index - 1];
         nsresult nsr = parent_record->GetInfo((nsInterfaceInfo **)&parent);
-        if (NS_IS_ERROR(nsr)) {
+        if (NS_FAILED(nsr)) {
             *result = NULL;
             return nsr;  // ? ... or NS_ERROR_FAILURE
         }
