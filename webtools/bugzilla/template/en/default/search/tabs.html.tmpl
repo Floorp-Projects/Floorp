@@ -27,7 +27,7 @@
   #%]
 
 [% tabs = [ { name => '__DEFAULT__', description => "Advanced Search" },
-            { name => 'specific', description => "Find a Specific Bug" } ] %]
+            { name => 'specific', description => "Find a Specific $terms.Bug " } ] %]
 
 [% current_tab = query_format || format || "__DEFAULT__" %]
 
