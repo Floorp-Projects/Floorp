@@ -411,39 +411,54 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 	{
 		// start and end parent should be the same since we are collapsed
 		nsCOMPtr<nsIDOMNode>	focusNode;
-		PRInt32	focusOffset;
+		PRInt32	contentOffset;
 		
 		if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
-				NS_SUCCEEDED(domSelection->GetFocusOffset(&focusOffset)))
+				NS_SUCCEEDED(domSelection->GetFocusOffset(&contentOffset)))
 		{
-			// is this a text node?
-			nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
-			
-			if (PR_TRUE || nodeAsText)
+			nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+      
+			if (contentNode)
 			{
-				nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
-	      
-				if (contentNode)
+			  PRBool  canContainChildren;
+			  
+	      // see if we have an offset between child nodes, or an offset into a text
+	      // node.
+			  if (NS_SUCCEEDED(contentNode->CanContainChildren(canContainChildren)) && canContainChildren)
+			  {
+			    // point the caret to the start of the child node
+			    nsCOMPtr<nsIContent> childNode;
+			    contentNode->ChildAt(contentOffset, *getter_AddRefs(childNode));
+			    if (childNode)
+			    {
+			      contentNode = childNode;
+			      contentOffset = 0;
+			    }
+			  }
+			  else
+			  {
+			    nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+          NS_ASSERTION(nodeAsText, "Should have a text node here");
+			  }
+			
+				nsIFrame*	theFrame = nsnull;
+				PRInt32 	focusOffset;
+				
+				if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
+					 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(contentOffset, &focusOffset, &theFrame)))
 				{
-					nsIFrame*	theFrame = nsnull;
-					PRInt32 	contentOffset = focusOffset;
-					
-					if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
-						 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame)))
-					{
 
-						// mark the frame, so we get notified on deletion.
-						// frames are never unmarked, which means that we'll touch every frame we visit.
-						// this is not ideal.
-						nsFrameState state;
-						theFrame->GetFrameState(&state);
-						state |= NS_FRAME_EXTERNAL_REFERENCE;
-						theFrame->SetFrameState(state);
-						
-						mLastCaretFrame = theFrame;
-						mLastContentOffset = contentOffset;
-						return PR_TRUE;
-					}
+					// mark the frame, so we get notified on deletion.
+					// frames are never unmarked, which means that we'll touch every frame we visit.
+					// this is not ideal.
+					nsFrameState state;
+					theFrame->GetFrameState(&state);
+					state |= NS_FRAME_EXTERNAL_REFERENCE;
+					theFrame->SetFrameState(state);
+					
+					mLastCaretFrame = theFrame;
+					mLastContentOffset = contentOffset;
+					return PR_TRUE;
 				}
 			}
 		}
