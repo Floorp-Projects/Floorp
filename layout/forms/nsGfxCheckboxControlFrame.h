@@ -27,40 +27,30 @@ private:
 
 public:
   nsGfxCheckboxControlFrame();
-
+  
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("CheckboxControl", aResult);
   }
-
-  virtual void MouseClicked(nsIPresContext* aPresContext);
-
-  //
-  // Methods used to GFX-render the checkbox
-  // 
-
-  virtual void PaintCheckBox(nsIPresContext& aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
-
-  //End of GFX-rendering methods
   
 protected:
-	virtual PRBool	GetCheckboxState();
-	virtual void 		SetCheckboxState(PRBool aValue);
+  virtual CheckState GetCheckboxState();
+  virtual void SetCheckboxState(CheckState aValue);
+
+  virtual void PaintCheckBox(nsIPresContext& aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer);
+  virtual void PaintMixedMark(nsIRenderingContext& aRenderingContext,
+                               float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight) ;
 
     //GFX-rendered state variables
-  PRBool mMouseDownOnCheckbox;
-  PRBool mChecked;
+  CheckState mChecked;
+  
 };
 
 #endif

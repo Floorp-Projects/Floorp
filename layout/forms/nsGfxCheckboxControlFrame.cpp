@@ -26,8 +26,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 
-
-
 nsresult
 NS_NewGfxCheckboxControlFrame(nsIFrame** aNewFrame)
 {
@@ -43,19 +41,13 @@ NS_NewGfxCheckboxControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+
+// Initialize GFX-rendered state
 nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
+  : mChecked(eOff)
 {
-   // Initialize GFX-rendered state
-  mMouseDownOnCheckbox = PR_FALSE;
-  mChecked = PR_FALSE;
 }
 
-void 
-nsGfxCheckboxControlFrame::MouseClicked(nsIPresContext* aPresContext) 
-{
-  mMouseDownOnCheckbox = PR_FALSE;
-  Inherited::MouseClicked(aPresContext);
-}
 
 void
 nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
@@ -68,25 +60,91 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
 
-  PRBool checked = PR_FALSE;
-
+  if ( IsTristateCheckbox() ) {
+    // Get current checked state through content model.
+    // XXX this won't work under printing. does that matter???
+    CheckState checked = GetCheckboxState();
+    switch ( checked ) {   
+      case eOn:
+      {
+        const nsStyleColor* color = (const nsStyleColor*)
+                                        mStyleContext->GetStyleData(eStyleStruct_Color);
+        aRenderingContext.SetColor(color->mColor);
+        nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, mRect.width, mRect.height);
+        break;
+      }    
+      case eMixed:
+      {
+        const nsStyleColor* color = (const nsStyleColor*)
+                                      mStyleContext->GetStyleData(eStyleStruct_Color);
+        aRenderingContext.SetColor(color->mColor);
+        PaintMixedMark(aRenderingContext, p2t, mRect.width, mRect.height);
+        break;
+      }  
+    } // case of value of checkbox
+  }
+  else {
     // Get current checked state through content model.
     // XXX: This is very inefficient, but it is necessary in the case of printing.
     // During printing the Paint is called but the actual state of the checkbox
     // is in a frame in presentation shell 0.
-  /*XXXnsresult result = */GetCurrentCheckState(&checked);
-  if (PR_TRUE == checked) {
-      // Draw check mark
-    const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
-    aRenderingContext.SetColor(color->mColor);
-    nsFormControlHelper::PaintCheckMark(aRenderingContext,
-                         p2t, mRect.width, mRect.height);
-   
+    PRBool checked = PR_FALSE;
+    GetCurrentCheckState(&checked);
+    if ( checked ) {
+      const nsStyleColor* color = (const nsStyleColor*)
+        mStyleContext->GetStyleData(eStyleStruct_Color);
+      aRenderingContext.SetColor(color->mColor);
+      nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, mRect.width, mRect.height);
+    }
   }
+  
   PRBool clip;
   aRenderingContext.PopState(clip);
 }
+
+
+//
+// PaintMixedMark
+//
+// Like nsFormControlHelper::PaintCheckMark(), but paints the horizontal "mixed"
+// bar inside the box. Only used for tri-state checkboxes.
+//
+void
+nsGfxCheckboxControlFrame::PaintMixedMark ( nsIRenderingContext& aRenderingContext,
+                                             float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
+{
+  const PRUint32 checkpoints = 4;
+  const PRUint32 checksize   = 6; //This is value is determined by added 2 units to the end
+                                //of the 7X& pixel rectangle below to provide some white space
+                                //around the checkmark when it is rendered.
+
+  // Points come from the coordinates on a 7X7 pixels 
+  // box with 0,0 at the lower left. 
+  nscoord checkedPolygonDef[] = { 1,2,  5,2,  5,4, 1,4 };
+  // Location of the center point of the checkmark
+  const PRUint32 centerx = 3;
+  const PRUint32 centery = 3;
+  
+  nsPoint checkedPolygon[checkpoints];
+  PRUint32 defIndex = 0;
+  PRUint32 polyIndex = 0;
+
+  // Scale the checkmark based on the smallest dimension
+  PRUint32 size = aWidth / checksize;
+  if (aHeight < aWidth)
+   size = aHeight / checksize;
+  
+  // Center and offset each point in the polygon definition.
+  for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
+    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aWidth / 2));
+    defIndex++;
+    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aHeight / 2));
+    polyIndex++;
+  }
+  
+  aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
+
+} // PaintMixedMark
 
 
 NS_METHOD 
@@ -95,57 +153,32 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)
 {
-
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
-	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->mVisible)
-		return NS_OK;
+  mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (!disp->mVisible)
+    return NS_OK;
 
-    // Paint the background
+  // Paint the background
   Inherited::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-      // Paint the checkmark 
+    // Paint the checkmark 
     PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
   return NS_OK;
 }
 
-NS_METHOD nsGfxCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                              nsGUIEvent* aEvent,
-                                              nsEventStatus& aEventStatus)
-{
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
-    return NS_OK;
-  }
 
-    // Handle GFX rendered widget Mouse Down event
-  PRInt32 type;
-  GetType(&type);
-  switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      mMouseDownOnCheckbox = PR_TRUE;
-  //XXX: TODO render gray rectangle on mouse down  
-    break;
-
-    case NS_MOUSE_EXIT:
-      mMouseDownOnCheckbox = PR_FALSE;
-  //XXX: TO DO clear gray rectangle on mouse up 
-    break;
-
-    }
-
-  return(Inherited::HandleEvent(aPresContext, aEvent, aEventStatus));
-}
-
-
-PRBool nsGfxCheckboxControlFrame::GetCheckboxState()
+nsCheckboxControlFrame::CheckState
+nsGfxCheckboxControlFrame :: GetCheckboxState ( )
 {
   return mChecked;
 }
 
-void nsGfxCheckboxControlFrame::SetCheckboxState(PRBool aValue)
+
+void 
+nsGfxCheckboxControlFrame :: SetCheckboxState ( nsCheckboxControlFrame::CheckState aValue )
 {
   mChecked = aValue;
-	nsFormControlHelper::ForceDrawFrame(this);
+  nsFormControlHelper::ForceDrawFrame(this);
 }
 
