@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "MPL"); you may not use this file except in
  * compliance with the MPL.  You may obtain a copy of the MPL at
@@ -14,12 +14,10 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  *
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
- * described herein are Copyright (c) International Business Machines Corporation, 2000.
- * Modifications to Mozilla code or documentation identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
+ * Contributors:
+ *   Mike Shaver <shaver@zeroknowledge.com>
+ *   John Bandhauer <jband@netscape.com>
+ *   IBM Corporation
  */
 
 #include "prlog.h"
@@ -42,8 +40,10 @@
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsIObserverService.h"
+#include "nsIXPCScriptable.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptObjectOwner.h"
 #endif
 
 // For reporting errors with the console service
@@ -114,13 +114,75 @@ static JSClass gGlobalClass = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
+#ifndef XPCONNECT_STANDALONE
+class BackstagePass : public nsIScriptObjectPrincipal, public nsIXPCScriptable
+{
+public:
+  NS_DECL_ISUPPORTS
+  XPC_DECLARE_IXPCSCRIPTABLE
+  
+  NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal) {
+    NS_ADDREF(*aPrincipal = mPrincipal);
+    return NS_OK;
+  }
+
+  BackstagePass(nsIPrincipal *prin) :
+    mPrincipal(prin)
+  {
+    NS_INIT_ISUPPORTS(); 
+  }
+
+  virtual ~BackstagePass() { }
+
+private:
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(BackstagePass, nsIScriptObjectPrincipal, nsIXPCScriptable);
+
+#else
+
+class BackstagePass : public nsIXPCScriptable
+{
+public:
+  NS_DECL_ISUPPORTS
+  XPC_DECLARE_IXPCSCRIPTABLE
+
+  BackstagePass()
+  {
+    NS_INIT_ISUPPORTS(); 
+  }
+
+  virtual ~BackstagePass() { }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(BackstagePass, nsIXPCScriptable);
+
+#endif
+
+XPC_IMPLEMENT_IGNORE_CREATE(BackstagePass)
+XPC_IMPLEMENT_IGNORE_GETFLAGS(BackstagePass);
+XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(BackstagePass)
+XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(BackstagePass)
+XPC_IMPLEMENT_FORWARD_GETPROPERTY(BackstagePass)
+XPC_IMPLEMENT_FORWARD_SETPROPERTY(BackstagePass)
+XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(BackstagePass)
+XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(BackstagePass)
+XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(BackstagePass)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(BackstagePass)
+XPC_IMPLEMENT_FORWARD_ENUMERATE(BackstagePass)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(BackstagePass)
+XPC_IMPLEMENT_FORWARD_CALL(BackstagePass)
+XPC_IMPLEMENT_FORWARD_CONSTRUCT(BackstagePass)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(BackstagePass);
+XPC_IMPLEMENT_FORWARD_FINALIZE(BackstagePass)
+
 mozJSComponentLoader::mozJSComponentLoader()
     : mCompMgr(nsnull),
       mSuperGlobal(nsnull),
       mRuntime(nsnull),
       mContext(nsnull),
       mCompMgrWrapper(nsnull),
-      mSeasonPass(nsnull),
       mModules(nsnull),
       mGlobals(nsnull),
       mXPCOMKey(0),
@@ -167,8 +229,7 @@ mozJSComponentLoader::~mozJSComponentLoader()
         mGlobals = nsnull;
 
         JS_RemoveRoot(mContext, &mSuperGlobal);
-	JS_RemoveRoot(mContext, &mCompMgrWrapper);
-	JS_RemoveRoot(mContext, &mSeasonPass);
+        JS_RemoveRoot(mContext, &mCompMgrWrapper);
         mCompMgrWrapper = nsnull; // release wrapper so GC can release CM
 
         JS_DestroyContext(mContext);
@@ -312,18 +373,31 @@ mozJSComponentLoader::ReallyInit()
     if (!mContext)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mSuperGlobal = JS_NewObject(mContext, &gGlobalClass, NULL, NULL);
+#ifndef XPCONNECT_STANDALONE
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secman, 
+                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv) || !secman)
+        return NS_ERROR_FAILURE;
+
+    rv = secman->GetSystemPrincipal(getter_AddRefs(mSystemPrincipal));
+    if (NS_FAILED(rv) || !mSystemPrincipal)
+        return NS_ERROR_FAILURE;
+#endif
+
+    mSuperGlobal = JS_NewObject(mContext, &gGlobalClass, nsnull, nsnull);
+
     if (!mSuperGlobal)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (!JS_InitStandardClasses(mContext, mSuperGlobal) ||
-        !JS_DefineFunctions(mContext, mSuperGlobal, gGlobalFun))
+        !JS_DefineFunctions(mContext, mSuperGlobal, gGlobalFun)) {
         return NS_ERROR_FAILURE;
+    }
 
     rv = mXPC->InitClasses(mContext, mSuperGlobal);
     if (NS_FAILED(rv))
         return rv;
-    
+
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = mXPC->WrapNative(mContext, mSuperGlobal, mCompMgr, 
                           NS_GET_IID(nsIComponentManager),
@@ -346,11 +420,6 @@ mozJSComponentLoader::ReallyInit()
     }
     JS_SetErrorReporter(mContext, Reporter);
 
-#ifdef shaver_not_yet
-    nsCOMPtr<nsIScriptObjectPrincipal> seasonPass = 
-      new mozSeasonPass();
-#endif
-
     mModules = PL_NewHashTable(16, PL_HashString, PL_CompareStrings,
                                PL_CompareValues, 0, 0);
     if (!mModules)
@@ -368,7 +437,6 @@ mozJSComponentLoader::ReallyInit()
     /* root last, so that we don't leak the roots in case of failure */
     JS_AddNamedRoot(mContext, &mSuperGlobal, "mJCL::mSuperGlobal");
     JS_AddNamedRoot(mContext, &mCompMgrWrapper, "mJCL::mCompMgrWrapper");
-    JS_AddNamedRoot(mContext, &mSeasonPass, "mJCL::mSeasonPass");
     return NS_OK;
 }
 
@@ -456,7 +524,7 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
 
     rv = mRegistry->AddSubtreeRaw(mXPCOMKey, eRegistryLocation, &key);
     if (registryLocation != eRegistryLocation)
-	nsMemory::Free(eRegistryLocation);
+        nsMemory::Free(eRegistryLocation);
 
     if (NS_FAILED(rv))
         return rv;
@@ -502,9 +570,9 @@ mozJSComponentLoader::RemoveRegistryInfo(const char *registryLocation)
 
 
     rv = mRegistry->RemoveSubtree(mXPCOMKey, eRegistryLocation);
- 	
+        
     if (registryLocation != eRegistryLocation)
-	    nsMemory::Free(eRegistryLocation);
+            nsMemory::Free(eRegistryLocation);
 
     return rv;
 }
@@ -533,7 +601,7 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
     nsRegistryKey key;
     int r = NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, eRegistryLocation, &key));
     if (registryLocation != eRegistryLocation)
-	nsMemory::Free(eRegistryLocation);
+        nsMemory::Free(eRegistryLocation);
     if (r)
         return PR_TRUE;
 
@@ -909,25 +977,35 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     
     nsresult rv;
     JSPrincipals* jsPrincipals = nsnull;
+
 #ifndef XPCONNECT_STANDALONE
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secman, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if(NS_FAILED(rv) || !secman)
+    nsCOMPtr<nsIScriptObjectPrincipal> backstagePass =
+      new BackstagePass(mSystemPrincipal);
+
+    rv = mSystemPrincipal->GetJSPrincipals(&jsPrincipals);
+    if (NS_FAILED(rv) || !jsPrincipals)
+      return nsnull;
+
+#else
+    nsCOMPtr<nsIScriptObjectPrincipal> backstagePass =
+      new BackstagePass();
+#endif
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = mXPC->WrapNative(mContext, mSuperGlobal, backstagePass,
+                          NS_GET_IID(nsISupports),
+                          getter_AddRefs(holder));
+    if (NS_FAILED(rv))
+        return nsnull;
+    
+    rv = holder->GetJSObject(&obj);
+    if (NS_FAILED(rv))
         return nsnull;
 
-    nsCOMPtr<nsIPrincipal> iPrincipals;
-    rv = secman->GetSystemPrincipal(getter_AddRefs(iPrincipals));
-    if(NS_FAILED(rv) || !iPrincipals)
-        return nsnull;
-
-    rv = iPrincipals->GetJSPrincipals(&jsPrincipals);
-    if(NS_FAILED(rv) || !jsPrincipals)
-        return nsnull;
-#endif /* XPCONNECT_STANDALONE */
-
-    obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal, NULL);
-
-    if (!obj)
-        return nsnull;
+    /* fix the scope and prototype links for cloning and scope containment */
+    if (!JS_SetPrototype(mContext, obj, mSuperGlobal) ||
+        !JS_SetParent(mContext, obj, nsnull))
+      return nsnull;
 
     if (!component) {
         if (NS_FAILED(mCompMgr->SpecForRegistryLocation(aLocation,
@@ -940,7 +1018,6 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     if (NS_FAILED(rv) ||
         NS_FAILED(cxstack->Push(mContext)))
         return nsnull;
-
     
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(component);
 
@@ -1041,7 +1118,7 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
 static NS_METHOD
 RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-		 const char *registryLocation, const char *componentType)
+                 const char *registryLocation, const char *componentType)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -1049,13 +1126,13 @@ RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
     return catman->AddCategoryEntry("component-loader", jsComponentTypeName,
-				    mozJSComponentLoaderProgID,
+                                    mozJSComponentLoaderProgID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
 static NS_METHOD
 UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-		   const char *registryLocation)
+                   const char *registryLocation)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -1069,7 +1146,7 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     // only unregister if we're the current JS component loader
     if (!strcmp(jsLoader, mozJSComponentLoaderProgID)) {
         return catman->DeleteCategoryEntry("component-loader",
-					   jsComponentTypeName, PR_TRUE,
+                                           jsComponentTypeName, PR_TRUE,
                                            getter_Copies(jsLoader));
     }
     return NS_OK;

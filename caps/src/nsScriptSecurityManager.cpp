@@ -57,6 +57,7 @@
 #include "nsIFile.h"
 #include "nsIZipReader.h"
 #include "nsIPluginInstance.h"
+#include "nsIXPConnect.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -1489,9 +1490,21 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
         if (jsClass && (jsClass->flags & (privateNsISupports)) == 
                             privateNsISupports)
         {
-            nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, parent);
+            nsCOMPtr<nsISupports> supports = (nsISupports *) JS_GetPrivate(aCx, parent);
             nsCOMPtr<nsIScriptObjectPrincipal> objPrin = 
                 do_QueryInterface(supports);
+            if (!objPrin) {
+                /*
+                 * If it's a wrapped native, check the underlying native
+                 * instead.
+                 */
+                nsCOMPtr<nsIXPConnectWrappedNative> xpcNative = 
+                    do_QueryInterface(supports);
+                if (xpcNative)
+                    xpcNative->GetNative(getter_AddRefs(supports));
+                objPrin = do_QueryInterface(supports);
+            }
+
             if (objPrin && NS_SUCCEEDED(objPrin->GetPrincipal(result)))
                 return NS_OK;
         }
