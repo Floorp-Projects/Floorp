@@ -148,19 +148,7 @@ void util_DumpJavaStack(JNIEnv *env);
 // Functions to wrap JNIEnv functions.
 //
 
-const char *util_GetStringUTFChars(JNIEnv *env, jstring inString);
-
-void util_ReleaseStringUTFChars(JNIEnv *env, jstring inString, 
-                                const char *stringFromGet);
-
-const jchar *util_GetStringChars(JNIEnv *env, jstring inString);
-
-void util_ReleaseStringChars(JNIEnv *env, jstring inString, 
-                             const jchar *stringFromGet);
-
-jstring util_NewStringUTF(JNIEnv *env, const char * inString);
-
-jstring util_NewString(JNIEnv *env, const jchar *inString, jsize len);
+#include "jni_util_export.h"
 
 jobject util_NewGlobalRef(JNIEnv *env, jobject toAddRef);
 

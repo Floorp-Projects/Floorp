@@ -30,6 +30,7 @@ MODULE=webclient
 
 OBJS =                              \
     .\$(OBJDIR)\jni_util.obj  \
+    .\$(OBJDIR)\jni_util_export.obj  \
     .\$(OBJDIR)\rdf_util.obj  \
     .\$(OBJDIR)\nsActions.obj  \
     .\$(OBJDIR)\BookmarksImpl.obj  \
@@ -47,15 +48,24 @@ OBJS =                              \
     .\$(OBJDIR)\nsSetupRegistry.obj  \
     $(NULL)
 
-INCS = \
-	-I$(JDKHOME)\include \
-	-I$(JDKHOME)\include\win32 \
-	$(INCS) \
+!ifdef BAL_INTERFACE
+OBJS = \
+	.\$(OBJDIR)\bal_util.obj  \
+	$(OBJS) \
 	$(NULL)
+!endif
+
 
 LCFLAGS = \
 	-DDEBUG_RAPTOR_CANVAS \
         $(NULL)
+
+!ifdef BAL_INTERFACE
+LCFLAGS = \
+	$(LCFLAGS) \
+	-DBAL_INTERFACE \
+	$(NULL)
+!endif
 
 LLIBS = \
 	$(DIST)\lib\gkweb.lib \
@@ -75,6 +85,21 @@ WIN_LIBS = \
 include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\java\config\localdefs.mak>
+
+!ifdef BAL_INTERFACE
+INCS = \
+	-I..\bal\ \
+	-I..\bal\win32 \
+	$(INCS) \
+	$(NULL)
+!else
+INCS = \
+	-I$(JDKHOME)\include \
+	-I$(JDKHOME)\include\win32 \
+	$(INCS) \
+	$(NULL)
+!endif
+
 
 !CMDSWITCHES -S
 
@@ -125,12 +150,15 @@ nsSetupRegistry.cpp:
 	copy $(MOZ_SRC)\mozilla\xpfe\bootstrap\nsSetupRegistry.cpp
 
 buildRunems:
+!ifdef BAL_INTERFACE
+!else
 	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\runem.bat.  Use this to run the test browser.
 	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\runem.bat
 	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\runem.bat
 	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\swingem.bat.  Use this to run the swing based test browser.
 	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\swingem.bat
 	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.swing.SwingEmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\swingem.bat
+!endif
 
 install:: $(DLL) buildRunems
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

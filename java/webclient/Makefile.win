@@ -37,13 +37,20 @@ DEPTH = ..\..
 
 !if defined(WEBCLIENT_SPEC)
 DIRS  = classes_spec \
-	src_moz
+	src_moz \
+	$(NULL)
 !else
 DIRS  = classes \
 	src
+	$(NULL)
 !endif
 
-
+!if defined(BAL_INTERFACE)
+DIRS = classes_spec \
+	src_moz \
+	bal_test \
+	$(NULL)
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 
