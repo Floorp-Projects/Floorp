@@ -490,7 +490,7 @@ function SetColor(ColorWellID, color)
     if (color)
     {
       globalCellElement.setAttribute(bgcolor, color);
-      gDialog.CellInheritColor.setAttribute("collapsed","true");
+      gDialog.CellInheritColor.collapsed = true;
     }
     else
     {
@@ -498,7 +498,7 @@ function SetColor(ColorWellID, color)
         gActiveEditor.removeAttributeOrEquivalent(globalCellElement, bgcolor, true);
       } catch(e) {}
       // Reveal addition message explaining "default" color
-      gDialog.CellInheritColor.removeAttribute("collapsed");
+      gDialog.CellInheritColor.collapsed = false;
     }
   }
   else
@@ -506,14 +506,14 @@ function SetColor(ColorWellID, color)
     if (color)
     {
       globalTableElement.setAttribute(bgcolor, color);
-      gDialog.TableInheritColor.setAttribute("collapsed","true");
+      gDialog.TableInheritColor.collapsed = true;
     }
     else
     {
       try {
         gActiveEditor.removeAttributeOrEquivalent(globalTableElement, bgcolor, true);
       } catch(e) {}
-      gDialog.TableInheritColor.removeAttribute("collapsed");
+      gDialog.TableInheritColor.collapsed = false;
     }
     SetCheckbox('CellColorCheckbox');
   }

@@ -149,14 +149,14 @@ function hideToolbar(){
   // Check to see if toolbar is already hidden
   if (tHide){
     // If it is show it
-    document.getElementById("toolbar").setAttribute("collapsed", "false");
+    document.getElementById("toolbar").collapsed = false;
     // Set the menu items text back to "Hide Toolbar"
     document.getElementById("view_hidetoolbar").setAttribute("label", GetString("HideToolbar"));
     tHide = false
   }
   else{
     // If not hide it
-    document.getElementById("toolbar").setAttribute("collapsed", "true");
+    document.getElementById("toolbar").collapsed = true;
     //Set the menu items text to "Show Toolbar"
     document.getElementById("view_hidetoolbar").setAttribute("label", GetString("ShowToolbar"));
     tHide = true;

@@ -121,7 +121,7 @@ function Startup()
     anchorElement = gActiveEditor.createElementWithDefaults(tagName);
     insertNew = true;
     // Hide message about removing existing link
-    //document.getElementById("RemoveLinkMsg").setAttribute("hidden","true");
+    //document.getElementById("RemoveLinkMsg").hidden = true;
   }
   if(!anchorElement)
   {
@@ -213,7 +213,7 @@ function Startup()
     SetTextboxFocus(gDialog.hrefInput);
 
     // We will not insert a new link at caret, so remove link text input field
-    gDialog.linkTextInput.setAttribute("hidden", "true");
+    gDialog.linkTextInput.hidden = true;
     gDialog.linkTextInput = null;
   }
     

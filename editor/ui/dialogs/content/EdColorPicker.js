@@ -102,7 +102,7 @@ function Startup()
       break;
     case "TableOrCell":
       TableOrCell = true;
-      document.getElementById("TableOrCellGroup").setAttribute("collapsed", "false");
+      document.getElementById("TableOrCellGroup").collapsed = false;
       haveTableRadio = true;
       if (gColorObj.SelectedType == "Cell")
       {
@@ -170,7 +170,7 @@ function Startup()
   if (NoDefault)
   {
     // Hide the "Default button -- user must pick a color
-    document.getElementById("DefaultColorButton").setAttribute("collapsed","true");
+    document.getElementById("DefaultColorButton").collapsed = true;
   }
 
   // Set focus to colorpicker if not set to table radio buttons above

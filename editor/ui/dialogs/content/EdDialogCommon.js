@@ -448,14 +448,14 @@ function onMoreFewer()
 {
   if (SeeMore)
   {
-    gDialog.MoreSection.setAttribute("collapsed","true");
+    gDialog.MoreSection.collapsed = true;
     gDialog.MoreFewerButton.setAttribute("more","0");
     gDialog.MoreFewerButton.setAttribute("label",GetString("MoreProperties"));
     SeeMore = false;
   }
   else
   {
-    gDialog.MoreSection.removeAttribute("collapsed");
+    gDialog.MoreSection.collapsed = false;
     gDialog.MoreFewerButton.setAttribute("more","1");
     gDialog.MoreFewerButton.setAttribute("label",GetString("FewerProperties"));
     SeeMore = true;
@@ -721,7 +721,7 @@ function SetRelativeCheckbox(checkbox)
   // Mail never allows relative URLs, so hide the checkbox
   if (editor && (editor.flags & Components.interfaces.nsIPlaintextEditor.eEditorMailMask))
   {
-    checkbox.setAttribute("collapsed", "true");
+    checkbox.collapsed = true;
     return;
   }
 
