@@ -99,7 +99,11 @@ EXTRA_LIBS	+= \
 endif
 
 ifdef MOZ_LDAP_XPCOM
-EXTRA_LIBS	+= -lldap40 -llber40
+EXTRA_LIBS	+= $(LDAP_LIBS)
+endif
+
+ifdef MOZ_SVG
+EXTRA_LIBS	+= $(MOZ_LIBART_LIBS)
 endif
 
 ifdef MOZ_ENABLE_GTK
