@@ -8389,7 +8389,7 @@ echo "configure:8380: checking whether ${CC-cc} accepts -pthread" >&5
 	rm -f conftest*
 
 	case "$target" in
-	    *-*-freebsd*)
+	    *-*-freebsd*|*-*-openbsd*)
 			cat >> confdefs.h <<\EOF
 #define _REENTRANT 1
 EOF
