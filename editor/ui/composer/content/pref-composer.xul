@@ -38,8 +38,6 @@
   ]]>
   </script>        
         
-  <popupset id="aTooltipSet" />
-
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <!-- Recent files menu -->
@@ -70,14 +68,12 @@
         value       = "false"
         label      = "&preserveExistingFormatting;" 
         accesskey  = "&preserveExistingFormatting.accesskey;"
-        tooltip    = "aTooltip"
         tooltiptext= "&preserveExistingFormatting.tooltip;"
       />
       <radio 
         value       = "true"
         label      = "&reformat.label;" 
         accesskey  = "&reformat.accesskey;"
-        tooltip    = "aTooltip"
         tooltiptext= "&reformat.tooltip;"
       />
     </radiogroup>
@@ -89,7 +85,7 @@
       label     = "&maintainTableStructure.label;"
       id        = "maintainTableStructure" 
       accesskey = "&maintainStructure.accesskey;"
-      tooltip   = "aTooltip" tooltiptext="&maintainTableStructure.tooltip;"
+      tooltiptext="&maintainTableStructure.tooltip;"
       prefstring= "editor.table.maintain_structure"
     />
     <separator class = "thin"/>

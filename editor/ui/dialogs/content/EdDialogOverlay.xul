@@ -32,7 +32,7 @@
     <!-- This will right-align the button -->
     <spacer flex="1"/>
     <button id="AdvancedEditButton1" oncommand="onAdvancedEdit()" label="&AdvancedEditButton.label;"
-            tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
+            tooltiptext="&AdvancedEditButton.tooltip;"/>
   </hbox>
   <separator class="groove"/>
 </vbox>
@@ -45,14 +45,12 @@
   id        = "AdvancedEditButton"
   oncommand = "onAdvancedEdit();"
   label     = "&AdvancedEditButton.label;"
-  tooltip   = "aTooltip" 
   tooltiptext="&AdvancedEditButton.tooltip;"/>
 
 <button 
   id        = "AdvancedEditButton2" 
   oncommand = "onAdvancedEdit()" 
   label     = "&AdvancedEditButton.label;"
-  tooltip   = "aTooltip"
   tooltiptext="&AdvancedEditButton.tooltip;"/>
 
 <button 
@@ -64,7 +62,6 @@
   id        = "MakeRelativeCheckbox"
   label     = "&makeUrlRelative.label;"
   oncommand = "MakeInputValueRelativeOrAbsolute()"
-  tooltip   = "aTooltip"
   tooltiptext = "&makeUrlRelative.tooltip;"
   style     = "margin-top: 0px"/>
 

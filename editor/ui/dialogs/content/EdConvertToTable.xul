@@ -56,7 +56,7 @@
       <radio id="space" label="&spaceRadio.label;" oncommand="SelectCharacter('1');"/>
       <checkbox id="CollapseSpaces" label="&collapseSpaces.label;"
                 style="margin-left:2em" checked="true" persist="checked"
-                tooltip="aTooltip" tooltiptext="&collapseSpaces.tooltip;"/>
+                tooltiptext="&collapseSpaces.tooltip;"/>
     </vbox>
     <hbox align="center">
       <radio id="other" label="&otherRadio.label;" oncommand="SelectCharacter('2');"/>

@@ -142,18 +142,98 @@
     </handlers>
   </binding>
 
-  <binding id="tooltips" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
-      <xul:vbox class="popup-internal-box" flex="1">
-        <children/>
-      </xul:vbox>
+      <children>
+        <xul:label class="tooltip-label" inherits="value=label" flex="1"/>
+      </children>
     </content>
-  </binding>
-  
-  <binding id="titletip" extends="chrome://global/content/bindings/popup.xml#popup">
-    <content>
-      <xul:label inherits="value=label"/>
-    </content>
+    
+    <implementation>
+      <field name="_mouseOutCount">0</field>
+      <field name="_isMouseOver">false</field>
+      
+      <property name="label"
+                onget="return this.getAttribute('label');"
+                onset="this.setAttribute('label', val); return val;"/>
+    </implementation>
+
+    <handlers>
+      <handler event="mouseover"><![CDATA[
+        var rel = event.relatedTarget;
+        //dump("ENTERING " + (rel ? rel.localName : "null") + "\n");
+        if (!rel)
+          return;
+          
+        // find out if the node we entered from is one of our anonymous children
+        while (rel) {
+          if (rel == this)
+            break;
+          rel = rel.parentNode;
+        }
+
+        // if the exited node is not a descendant of ours, we are entering for the first time
+        if (rel != this)
+          this._isMouseOver = true;
+      ]]></handler>
+
+      <handler event="mouseout"><![CDATA[
+        var rel = event.relatedTarget;
+        //dump("LEAVING " + (rel ? rel.localName : "null") + "\n");
+
+        // relatedTarget is null when the titletip is first shown: a mouseout event fires
+        // because the mouse is exiting the main window and entering the titletip "window".
+        // relatedTarget is also null when the mouse exits the main window completely,
+        // so count how many times relatedTarget was null after titletip is first shown 
+        // and hide popup the 2nd time
+        if (!rel) {
+          ++this._mouseOutCount;
+          if (this._mouseOutCount > 1)
+            this.closePopup();
+          return;
+        }
+          
+        // find out if the node we are entering is one of our anonymous children
+        while (rel) {
+          if (rel == this)
+            break;
+          rel = rel.parentNode;
+        }
+        
+        // if the entered node is not a descendant of ours, hide the tooltip
+        if (rel != this && this._isMouseOver) {
+          this.closePopup();
+        }        
+      ]]></handler>
+
+      <handler event="popupshowing">
+      <![CDATA[
+        // fill in the label automatically for the default tooltip
+        if (this.getAttribute("default") == "true") {
+          var label = "";
+          var ttNode = document.tooltipNode;
+          if (ttNode && ttNode.hasAttribute("tooltiptext"))
+            this.label = ttNode.getAttribute("tooltiptext");
+        }
+
+        // This is a special consideration for outliner titletips. There is a
+        // case where the user moves the mouse from over the outlinerbody to
+        // completely outside of the window, while passing over a cell that
+        // displays a titletip.  This causes the titletip to show, even though
+        // the mouse is not over the corresponding cell, so we need to check
+        // if the titletip was entered by the mouse, and if not, hide it.
+        // XXX commenting this out for now because it doesn't work on Mac 
+        //     become mouseover isn't fired when the tooltip appears with the mouse over it
+        //if (this.hasAttribute("titletip"))
+        //  window.setTimeout(function(me) { if (!me._isMouseOver) me.closePopup(); }, 100, this);
+      ]]>
+      </handler>
+
+      <handler event="popuphiding"><![CDATA[
+        this._isMouseOver = false;
+        this._mouseOutCount = 0;
+      ]]></handler>
+    </handlers>
   </binding>
   
   <!-- XXXben this binding is not currently used -->
@@ -335,10 +415,10 @@
   <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:hbox class="titlebar-box" flex="1">
-        <xul:hbox class="titlebar-title-box" flex="1" tooltip="aTooltip" tooltiptext="Click and drag to float">
+        <xul:hbox class="titlebar-title-box" flex="1" tooltiptext="Click and drag to float">
           <xul:label class="titlebar-title" inherits="value=title" flex="1" crop="right"/>
         </xul:hbox>
-        <xul:button class="popupClose" tooltip="aTooltip" tooltiptext="Close"/>
+        <xul:button class="popupClose" tooltiptext="Close"/>
       </xul:hbox>
     </content>
     <!--
@@ -530,7 +610,7 @@
         </box>
         <box class="floater-box-bottom">
           <resizer direction="bottom" flex="1"/>
-          <resizer direction="bottomright" tooltip="aTooltip" tooltiptext="Click and drag to resize"/>
+          <resizer direction="bottomright" tooltiptext="Click and drag to resize"/>
         </box>
       </vbox>
     </content>
@@ -546,7 +626,7 @@
           <box class="floater-children" flex="1"> 
             <children/>
           </box>
-          <resizer direction="right" tooltip="aTooltip" tooltiptext="Click and drag to resize"/>
+          <resizer direction="right" tooltiptext="Click and drag to resize"/>
         </box>
       </vbox>
     </content>

@@ -44,18 +44,24 @@ popup {
   border-left: 1px solid #EEF4FC;
 }
 
-/* ::::: tooltip popup ::::: */
+/* ::::: tooltip ::::: */
 
-.tooltip, tooltip {
+tooltip {
+  margin-top: 21px;
   border: 1px solid #000000;
   padding: 2px 3px 2px 3px;
+  max-width: 40em;
   background-color: #FFFFE7;
   color: #000000;
+  font: message-box;
 }
 
-.tooltip > .popup-internal-box,
-tooltip > .popup-internal-box {
-  border: none;
+.tooltip-label {
+  margin: 0px !important;
+}
+
+tooltip[titletip="true"] {
+  margin: -2px 0px 0px -4px;
 }
 
 /* ::::: menulist popup :::::: */

@@ -52,9 +52,7 @@
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
       <xul:tabbox onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:stack collapsed="true" tooltip="_child" context="_child">
-          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.getAttribute('label')) { this.childNodes[0].value = document.tooltipNode.getAttribute('label'); return true; } return false;">
-            <xul:label style="margin:0px; padding:0px;" value="Dummy"/>
-          </xul:tooltip>
+          <xul:tooltip label="foobar" onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup>
             <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.selectedTab = tabbrowser.addTab('about:blank');"/>
             <xul:menuseparator/>

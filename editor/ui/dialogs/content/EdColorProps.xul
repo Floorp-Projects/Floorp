@@ -44,15 +44,14 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
-  <popupset id="aTooltipSet" />
 
   <groupbox align="start">
     <caption label="&pageColors.label;"/>
     <radiogroup id="PageColorGroup">
       <radio id="DefaultColorsRadio" label="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
-        tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />
+        tooltiptext="&defaultColorsRadio.tooltip;" />
       <radio id="CustomColorsRadio" label="&customColorsRadio.label;" oncommand="UseCustomColors()"
-        tooltip="aTooltip"     tooltiptext="&customColorsRadio.tooltip;" />
+        tooltiptext="&customColorsRadio.tooltip;" />
     </radiogroup>
     <hbox class="big-left-margin">
       <grid>
@@ -109,7 +108,7 @@
   <label value="&backgroundImage.label;"/>
   <hbox>
     <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
-     tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" 
+     tooltiptext="&backgroundImage.tooltip;" 
      style="min-width : 21em"/>
     <!-- from EdDialogOverlay.xul -->
     <button id="ChooseFile"/>

@@ -27,27 +27,27 @@ menupopup, popup
     border-bottom         : 1px solid ThreeDShadow;
     padding               : 1px;
   }  
+
+/* ::::: tooltip ::::: */
+
+tooltip {
+  margin-top: 21px;
+  border: 1px solid WindowFrame;
+  padding: 2px 3px;
+  max-width: 40em;
+  background-color: InfoBackground;
+  color: InfoText;
+  font: message-box;
+}
+
+.tooltip-label {
+  margin: 0px !important;
+}
+
+tooltip[titletip="true"] {
+  margin: -2px 0px 0px -3px;
+}
   
-/** Tooltips (tooltip <popup> element is deprecated! Use <tooltip> instead!)
- *  class="tooltip"
- **/
-.tooltip, tooltip
-  {
-    border                : 1px solid WindowFrame;
-    padding               : 2px;
-    max-width             : 40em;
-    background-color      : InfoBackground;
-    color                 : InfoText;
-    font                  : message-box;
-  }
-
-.tooltip > .popup-internal-box,
-tooltip > .popup-internal-box
-  {
-  	border                : 0px;
-  	padding               : 0px;
-  }
-
 /* rules for popups associated with menulists */
 
   menulist > menupopup,

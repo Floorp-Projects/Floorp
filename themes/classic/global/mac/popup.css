@@ -10,25 +10,25 @@ menupopup, popup
     -moz-user-focus       : ignore;
   }
 
-/** Tooltips (tooltip <popup> element is deprecated.  USE <tooltip> instead!)
- *  class="tooltip"
- **/
-.tooltip, tooltip
-  {
-    background-color      : InfoBackground;
-    border                : 1px solid #000000;
-    color                 : InfoText;
-    font                  : message-box;
-    padding               : 2px 3px 2px 3px;
-    margin                : 0px;
-  }
+/* ::::: tooltip ::::: */
 
-.tooltip > .popup-internal-box,
-tooltip > .popup-internal-box
-  {
-    border: none;
-    padding: 0px;
-  }
+tooltip {
+  margin-top: 21px;
+  border: 1px solid #000000;
+  padding: 2px 3px;
+  max-width: 40em;
+  background-color: InfoBackground;
+  color: InfoText;
+  font: message-box;
+}
+
+.tooltip-label {
+  margin: 0px !important;
+}
+
+tooltip[titletip="true"] {
+  margin: -2px 0px 0px -3px;
+}
   
 /* rules for popups associated with menulists */
 
