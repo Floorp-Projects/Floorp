@@ -581,18 +581,24 @@ public final class Context {
             }
             
             // Define the JavaAdapter class, allowing it to be overridden.
+            String adapterName = "org.mozilla.javascript.JavaAdapter";
             try {
-                String defaultName = "org.mozilla.javascript.JavaAdapter";
-                String adapterName = System.getProperty(defaultName, defaultName);
+                adapterName = System.getProperty(adapterName, adapterName);
+            } catch (SecurityException e) {
+                // We may not be allowed to get system properties. Just
+                // use the default adapter in that case.
+            }
+            try {
                 Class adapterClass = Class.forName(adapterName);
                 ScriptableObject.defineClass(scope, adapterClass, sealed);
             } catch (ClassNotFoundException e) {
+                // If the class is not found, proceed without it.
             } catch (SecurityException e) {
-                  // Ignore AccessControlExceptions that may occur if a
-                  //    SecurityManager is installed:
-                  //  java.lang.RuntimePermission createClassLoader
-                  //  java.util.PropertyPermission 
-                  //        org.mozilla.javascript.JavaAdapter read
+                // Ignore AccessControlExceptions that may occur if a
+                //    SecurityManager is installed:
+                //  java.lang.RuntimePermission createClassLoader
+                //  java.util.PropertyPermission 
+                //        org.mozilla.javascript.JavaAdapter read
             }
             
             // This creates the Packages and java package roots.
