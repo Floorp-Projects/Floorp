@@ -382,7 +382,7 @@ var gEditorDocumentObserver =
           {
             try { 
               var controller = window.controllers.getControllerById(gComposerWindowControllerID);
-              controller.SetCommandRefCon(editor.QueryInterface(Components.interfaces.nsISupports));
+              controller.setCommandRefCon(editor);
             } catch (e) {}
           }
           // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
@@ -448,7 +448,6 @@ var gEditorDocumentObserver =
           onFontColorChange();
           onBackgroundColorChange();
         }
-
         break;
 
       case "cmd_setDocumentModified":
@@ -554,7 +553,7 @@ function EditorSharedStartup()
   gContentWindow = window.content;
 
   // Set up the mime type and register the commands.
-  if (IsHTMLEditor)
+  if (IsHTMLEditor())
     SetupHTMLEditorCommands();
   else
     SetupTextEditorCommands();
@@ -2337,7 +2336,7 @@ function EditorSetDefaultPrefsAndDoctype()
   // if it is missing from existing doc
   if (!domdoc.doctype)
   {
-    var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
+    var newdoctype = domdoc.implementation.createDocumentType("HTML", "-//W3C//DTD HTML 4.01 Transitional//EN","");
     if (newdoctype)
       domdoc.insertBefore(newdoctype, domdoc.firstChild);
   }
