@@ -1907,7 +1907,7 @@ nsInstall::FileOpFileGetModDate(nsInstallFolder& aTarget, double* aReturn)
     {
         double newStamp;
         PRInt64 lastModDate = LL_ZERO;
-        localFile->GetLastModificationTime(&lastModDate);
+        localFile->GetLastModifiedTime(&lastModDate);
     
         LL_L2D(newStamp, lastModDate);
 
@@ -1964,7 +1964,7 @@ nsInstall::FileOpFileModDateChanged(nsInstallFolder& aTarget, double aOldStamp, 
     {
         double newStamp;
         PRInt64 lastModDate = LL_ZERO;
-        localFile->GetLastModificationTime(&lastModDate);
+        localFile->GetLastModifiedTime(&lastModDate);
         
         LL_L2D(newStamp, lastModDate);
 

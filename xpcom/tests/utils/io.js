@@ -784,7 +784,7 @@ dateModified  : function (path) {
     try
     { 
       var fileInst  = new FilePath(path); 
-      var date = new Date(fileInst.lastModificationTime).toLocaleString();
+      var date = new Date(fileInst.lastModifiedTime).toLocaleString();
       retval=date;
     }
 

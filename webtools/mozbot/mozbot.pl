@@ -130,7 +130,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.2 $;
+my $VERSION = q$Revision: 2.3 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -2008,7 +2008,7 @@ use vars qw(@ISA);
 # Initialise - Called when the module is loaded
 sub Initialise {
     my $self = shift;
-    $self->{'_fileModificationTimes'} = {};
+    $self->{'_fileModifiedTimes'} = {};
     $self->{'_static'} = 1;
 } 
 
@@ -2195,11 +2195,11 @@ sub CheckSource {
     my $self = shift;
     my ($event) = @_;
     foreach my $file (@{$self->{'files'}}) {
-        my $lastModificationTime = $self->{'_fileModificationTimes'}->{$file};
+        my $lastModifiedTime = $self->{'_fileModifiedTimes'}->{$file};
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks)
             = stat($file);
-        $self->{'_fileModificationTimes'}->{$file} = $mtime;
-        if (defined($lastModificationTime) and ($mtime > $lastModificationTime)) {
+        $self->{'_fileModifiedTimes'}->{$file} = $mtime;
+        if (defined($lastModifiedTime) and ($mtime > $lastModifiedTime)) {
             $self->debug("Noticed that source code of $file had changed");
             # compile new bot using perl -cwT XXX
             if (1) { # XXX replace 1 with "did compile succeed" test
@@ -2213,11 +2213,11 @@ sub CheckSource {
     my @updatedModules;
     foreach my $module (@modules) {
         if ($module->{'_filename'}) {
-            my $lastModificationTime = $module->{'_fileModificationTime'};
+            my $lastModifiedTime = $module->{'_fileModificationTime'};
             my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks)
                 = stat($module->{'_filename'});
             $module->{'_fileModificationTime'} = $mtime;
-            if (defined($lastModificationTime) and ($mtime > $lastModificationTime)) {       
+            if (defined($lastModifiedTime) and ($mtime > $lastModifiedTime)) {       
                 push(@updatedModules, $module->{'_name'});
             }
         }

@@ -2952,12 +2952,12 @@ nsChromeRegistry::CheckForNewChrome()
   rv = chromeFile->Append(kChromeFileName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 chromeDate;
-  (void)chromeFile->GetLastModificationTime(&chromeDate.mValue);
+  (void)chromeFile->GetLastModifiedTime(&chromeDate.mValue);
 
   rv = listFile->AppendRelativePath(kInstalledChromeFileName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 listFileDate;
-  (void)listFile->GetLastModificationTime(&listFileDate.mValue);
+  (void)listFile->GetLastModifiedTime(&listFileDate.mValue);
 
   if (listFileDate < chromeDate)
     return NS_OK;

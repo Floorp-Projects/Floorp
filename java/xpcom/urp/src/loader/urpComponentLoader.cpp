@@ -285,7 +285,7 @@ nsresult urpComponentLoader::SetRegistryInfo(const char *registryLocation,
 
     PRInt64 modDate;
 
-    if (NS_FAILED(rv = component->GetLastModificationDate(&modDate)) ||
+    if (NS_FAILED(rv = component->GetLastModifiedTime(&modDate)) ||
         NS_FAILED(rv = mRegistry->SetLongLong(key, lastModValueName, &modDate)))
         return rv;
 
@@ -314,7 +314,7 @@ PRBool urpComponentLoader::HasChanged(const char *registryLocation, nsIFile *com
     if (NS_FAILED(mRegistry->GetLongLong(key, lastModValueName, &regTime)))
         return PR_TRUE;
     
-    if (NS_FAILED(component->GetLastModificationDate(&lastTime)) || LL_NE(lastTime, regTime))
+    if (NS_FAILED(component->GetLastModifiedTime(&lastTime)) || LL_NE(lastTime, regTime))
         return PR_TRUE;
 
     /* check file size */

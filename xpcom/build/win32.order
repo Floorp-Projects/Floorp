@@ -866,7 +866,7 @@ _DllMain@12 ; 235
 ?GetBufferSize@ByteBufferImpl@@UBGIXZ ; 226
 ??_EnsGenericFactory@@UAEPAXI@Z ; 226
 ??4nsFileSpec@@QAEXABVnsFilePath@@@Z ; 219
-?GetLastModificationDate@nsLocalFile@@UAGIPA_J@Z ; 217
+?GetLastModifiedTime@nsLocalFile@@UAGIPA_J@Z ; 217
 ?RFindInReadable@@YAHABVnsAString@@AAV?$nsReadingIterator@G@@1@Z ; 217
 ?GetTarget@nsLocalFile@@UAGIPAPAD@Z ; 216
 ?CopyFields@xptiFile@@AAEXABV1@@Z ; 212
