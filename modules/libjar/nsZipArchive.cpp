@@ -386,7 +386,12 @@ PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, nsZipItem** aResult)
     else if ( aFind->mRegExp )
       found = (XP_RegExpMatch( item->name, aFind->mPattern, PR_FALSE ) == MATCH);
     else
+#if defined(STANDALONE) && defined(XP_MAC)
+      // simulate <regexp>* matches
+      found = ( strncmp( item->name, aFind->mPattern, strlen(aFind->mPattern) ) == 0 );
+#else
       found = ( PL_strcmp( item->name, aFind->mPattern ) == 0 );
+#endif
   }
 
   if ( found ) 

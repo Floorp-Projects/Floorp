@@ -92,7 +92,7 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	if (rv!=ZIP_OK) return rv;
 
 	/* initialize the search */
-	hFind = ZIP_FindInit( hZip, 0 ); /* null to match all files in archive */
+	hFind = ZIP_FindInit( hZip, "core_" ); /* null to match all files in archive */
 	
 	
 	/* --- i n f l a t e   a l l   f i l e s --- */
@@ -131,7 +131,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 	OSErr		err = noErr;
 	Boolean		bFoundAll = false;
 	PRInt32		rv = 0;
-	char		filename[255] = "\0", *lastslash;
+	char		filename[255] = "\0", *lastslash, *leaf;
 	Handle		fullPathH = 0;
 	short 		fullPathLen = 0;
 	Ptr			fullPathStr = 0;
@@ -156,6 +156,9 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		if (lastslash == (&filename[0] + strlen(filename) - 1)) /* dir entry encountered */
 			continue;
 			
+		/* grab leaf filename only */
+		leaf = lastslash + 1;
+		
 		/* obtain and NULL terminate the full path string */
 		err = GetFullPath(tgtVRefNum, tgtDirID, "\p", &fullPathLen, &fullPathH); /* get dirpath */
 		if (err!=noErr)
@@ -163,8 +166,8 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		HLock(fullPathH);
 		fullPathStr = NewPtrClear(fullPathLen + strlen(filename) + 1);
 		strncat(fullPathStr, *fullPathH, fullPathLen);
-		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
-		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
+		strcat(fullPathStr, leaf);	/* tack on filename to dirpath */
+		*(fullPathStr+fullPathLen+strlen(leaf)) = '\0';
 		
 		/* create directories if file is nested in new subdirs */
 		SLASHES_2_COLONS(fullPathStr);
