@@ -41,8 +41,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
 
-
-
+#include "nsWeakReference.h"
 
 // Local Includes
 #include "nsDSURIContentListener.h"
@@ -121,7 +120,8 @@ class nsDocShell : public nsIDocShell,
                    public nsIContentViewerContainer,
                    public nsIInterfaceRequestor,
                    public nsIScriptGlobalObjectOwner,
-                   public nsIRefreshURI
+                   public nsIRefreshURI,
+                   public nsSupportsWeakReference
 {
 friend class nsDSURIContentListener;
 friend class nsDSWebProgressListener;
