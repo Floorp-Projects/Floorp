@@ -148,13 +148,7 @@ calDateTime::GetNativeTime(PRTime *aResult)
 NS_IMETHODIMP
 calDateTime::SetNativeTime(PRTime aNativeTime)
 {
-    if (mIsUtc) {
-        return SetTimeInTimezone (aNativeTime, "UTC");
-    } else if (!mTimezone.IsEmpty()) {
-        return SetTimeInTimezone (aNativeTime, mTimezone.get());
-    } else {
-        return SetTimeInTimezone (aNativeTime, NULL);
-    }
+    return SetTimeInTimezone (aNativeTime, NULL);
 }
 
 NS_IMETHODIMP
@@ -216,9 +210,13 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     struct icaltimetype icalt;
     time_t tt;
 
-    icaltimezone *zone = icaltimezone_get_builtin_timezone_from_tzid(aTimezone);
-    if (!zone)
-        return NS_ERROR_FAILURE;
+    icaltimezone *zone = nsnull;
+
+    if (aTimezone) {
+        icaltimezone *zone = icaltimezone_get_builtin_timezone_from_tzid(aTimezone);
+        if (!zone)
+            return NS_ERROR_FAILURE;
+    }
 
     PRInt64 temp, million;
     LL_I2L(million, PR_USEC_PER_SEC);
@@ -227,7 +225,11 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     LL_L2I(sectime, temp);
 
     tt = sectime;
-    icalt = icaltime_from_timet_with_zone(tt, 0, zone);
+    if (zone) {
+        icalt = icaltime_from_timet_with_zone(tt, 0, zone);
+    } else {
+        icalt = icaltime_from_timet(tt, 0);
+    }
     FromIcalTime(&icalt);
 
     return NS_OK;
@@ -330,9 +332,6 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
 
     mIsUtc = icalt->is_utc ? PR_TRUE : PR_FALSE;
     mIsDate = icalt->is_date ? PR_TRUE : PR_FALSE;
-
-    mTimezoneOffset = 0;
-    mTimezone.Assign("");
 
     // reconstruct nativetime
     time_t tt = icaltime_as_timet(*icalt);
