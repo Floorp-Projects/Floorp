@@ -144,9 +144,10 @@ var opTypeNames = {
 var keywords = {__proto__: null};
 
 // Define const END, etc., based on the token names.  Also map name to index.
-var consts;
+var consts = "const ";
 for (var i = 0, j = tokens.length; i < j; i++) {
-    consts = (!consts) ? "const " : consts + ", ";
+    if (i > 0)
+        consts += ", ";
     var t = tokens[i];
     if (/^[a-z]/.test(t)) {
         consts += t.toUpperCase();
