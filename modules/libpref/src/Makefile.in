@@ -89,3 +89,11 @@ include $(topsrcdir)/config/rules.mk
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 			all.js mailnews.js editor.js \
 			aix.js beos.js unix.js winpref.js os2prefs.js openvms.js photon.js)
+
+# Optimizer bug with GCC 3.2.2 on OS/2
+ifeq ($(OS_ARCH), OS2)
+nsPrefService.$(OBJ_SUFFIX): nsPrefService.cpp
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO)
+	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS:-O2=-O1) $(_VPATH_SRCS)
+endif
