@@ -226,6 +226,11 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_appearance,
   eCSSProperty_binding,
 
+  eCSSProperty__moz_border_radius_bottomLeft,
+  eCSSProperty__moz_border_radius_bottomRight,
+  eCSSProperty__moz_border_radius_topLeft,
+  eCSSProperty__moz_border_radius_topRight,
+
 #ifdef INCLUDE_XUL
   eCSSProperty_box_align,
   eCSSProperty_box_direction,
@@ -524,6 +529,14 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
       rv = GetBorderLeftColor(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_border_right_color :
       rv = GetBorderRightColor(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty__moz_border_radius_bottomLeft:
+      rv = GetBorderRadiusBottomLeft(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty__moz_border_radius_bottomRight:
+      rv = GetBorderRadiusBottomRight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty__moz_border_radius_topLeft:
+      rv = GetBorderRadiusTopLeft(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty__moz_border_radius_topRight:
+      rv = GetBorderRadiusTopRight(frame, *getter_AddRefs(val)); break;
 
       // Margin properties
     case eCSSProperty_margin_top :
@@ -1419,6 +1432,34 @@ nsComputedDOMStyle::GetBorderRightStyle(nsIFrame *aFrame,
                                         nsIDOMCSSPrimitiveValue*& aValue)
 {
   return GetBorderStyleFor(NS_SIDE_RIGHT, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBorderRadiusBottomLeft(nsIFrame *aFrame,
+                                              nsIDOMCSSPrimitiveValue*& aValue)
+{
+  return GetBorderRadiusFor(NS_SIDE_LEFT, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBorderRadiusBottomRight(nsIFrame *aFrame,
+                                               nsIDOMCSSPrimitiveValue*& aValue)
+{
+  return GetBorderRadiusFor(NS_SIDE_BOTTOM, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBorderRadiusTopLeft(nsIFrame *aFrame,
+                                           nsIDOMCSSPrimitiveValue*& aValue)
+{
+  return GetBorderRadiusFor(NS_SIDE_TOP, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBorderRadiusTopRight(nsIFrame *aFrame,
+                                            nsIDOMCSSPrimitiveValue*& aValue)
+{
+  return GetBorderRadiusFor(NS_SIDE_RIGHT, aFrame, aValue);
 }
 
 nsresult
@@ -4028,6 +4069,78 @@ nsComputedDOMStyle::GetLineHeightCoord(nsIFrame *aFrame,
     aCoord = 0;
 
   return rv;
+}
+
+nsresult
+nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide,
+                                       nsIFrame *aFrame,
+                                       nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBorder *border = nsnull;
+  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
+
+  if (border) {
+    nsStyleCoord coord;
+    PRUint8 borderStyle = border->GetBorderStyle(aSide);
+    if (borderStyle == NS_STYLE_BORDER_STYLE_NONE) {
+      coord.SetCoordValue(0);
+    }
+    else {
+      switch (aSide) {
+        case NS_SIDE_TOP:
+          border->mBorderRadius.GetTop(coord);
+          break;
+        case NS_SIDE_BOTTOM:
+          border->mBorderRadius.GetBottom(coord);
+          break;
+        case NS_SIDE_LEFT:
+          border->mBorderRadius.GetLeft(coord);
+          break;
+        case NS_SIDE_RIGHT:
+          border->mBorderRadius.GetRight(coord);
+          break;
+        default:
+          NS_WARNING("double check the side");
+          break;
+      }
+    }
+
+    switch (coord.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(coord.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        {
+          if (aFrame) {
+            nsSize frameSize;
+            aFrame->GetSize(frameSize);
+            val->SetTwips(coord.GetPercentValue() * frameSize.width);
+          }
+          else {
+            val->SetPercent(coord.GetPercentValue());
+          }
+          break;
+        }
+      case eStyleUnit_Inherit:
+        // XXX This will only happen if we are inheriting from
+        // a node with a percentage style unit for its relevant
+        // border radius property. Layout currently drops this
+        // one inherit case, so we do the same thing here.
+        val->SetString(NS_LITERAL_STRING(""));
+        break;
+      default:
+        NS_WARNING("double check the border radius");
+        break;
+    }
+  }
+  else {
+    val->SetTwips(0);
+  }
+
+  return CallQueryInterface(val, &aValue);
 }
 
 nsresult
