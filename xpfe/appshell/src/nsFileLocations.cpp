@@ -383,7 +383,16 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
                 break;
             }
-        
+        case App_ShrimpDirectory:
+            {
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+                *this += "Shrimp Files";
+#else
+                *this += "shrimpfiles";
+#endif
+                break;
+            }        
         case App_ResDirectory:
             {
                 *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
