@@ -188,10 +188,13 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
  *   so the supplied string may have been changed.
  * Caller should always update values in Publish dialog based
  *   on returned string after calling this 
+ * New version returns EDT_PUBLISH_OK (0) if OK, 
+ *    ED_PUBLISH_ERROR_FILENAME (1) for error in filename, or
+ *    ED_PUBLISH_ERROR_LOCATION (2) for error in location
  */
 /* OTHER PLATFORMS NEED TO CHANGE THIS WHEN THEY CHANGE 2ND PARAM IN FE */
 #ifdef XP_WIN
-XP_Bool EDT_CheckPublishURL( MWContext *pContext, char **ppURL);
+ED_PublishError EDT_CheckPublishURL( MWContext *pContext, char **ppURL);
 #else
 XP_Bool EDT_CheckPublishURL( MWContext * pContext, char * pURL);
 #endif

@@ -6850,7 +6850,8 @@ Try to publish to this URL anyway?")
 ResDef (XP_EDT_PUBLISH_BAD_URL, XP_MSG_BASE + 993,
   "Publish destination is invalid.")
 ResDef (XP_EDT_PUBLISH_BAD_CHAR, XP_MSG_BASE + 994,
-  "Publish destination contains at least one illegal character, such as a space.\n\n\
+  "Publish filename or location contains at least one\n\
+of these illegal characters:  % < > \\ or a space.\n\n\
 Replace illegal characters with underscore ('_') ?")
 
 ResDef (XP_EDT_PUBLISH_BAD_PROTOCOL, XP_MSG_BASE + 995,
