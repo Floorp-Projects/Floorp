@@ -238,6 +238,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
   switch (prop) {
+  case eCSSProperty_display :
+    rv = GetDisplay(frame, *getter_AddRefs(val)); break;
   case eCSSProperty_width :
     rv = GetWidth(frame, *getter_AddRefs(val)); break;
   case eCSSProperty_height :
