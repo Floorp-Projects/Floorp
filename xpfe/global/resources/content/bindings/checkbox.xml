@@ -34,7 +34,7 @@
       <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
                                          else this.removeAttribute('checked');
                                          return val;"
-                                  onget="this.hasAttribute('checked');"/>
+                                  onget="return this.hasAttribute('checked');"/>
     </implementation>
     <handlers>
       <handler event="click" button="0" action="this.checked = !this.checked;"/>
