@@ -48,43 +48,26 @@ sub SendHookMail {
 
      $pathname = DataDir() . "/$filename";
 
-print 'a';
      return unless $hooklist;
-print 'b';
      return unless -f $pathname;
-print 'c';
      return unless open(MAIL, "< $pathname");
-print 'd';
      $mail = join("", <MAIL>);
-print 'e';
      close (MAIL);
-print 'f';
 
      %substs = ();
-print 'g';
      $substs{'hooklist'} = $hooklist;
-print 'h';
      $mail = PerformSubsts($mail, \%substs);
-print 'i';
 
      %headers = ParseMailHeaders($mail);
-print 'j';
      %headers = CleanMailHeaders(%headers);
-print 'k';
      $body = FindMailBody($mail);
-print 'l';
 
      my $mail_relay = Param("mailrelay");
-print 'm';
      my $mailer = Mail::Mailer->new("smtp", Server => $mail_relay);
-print 'n';
      $mailer->open(\%headers)
           or warn "Can't send hook mail: $!\n";
-print 'o';
      print $mailer "$body\n";
-print 'p';
      $mailer->close();
-print 'q';
 }
 
 
