@@ -121,20 +121,8 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 
   // Get the frame for this content node (note: frames are not refcounted)
   nsIFrame *aFrame = nsnull;
-  nsCOMPtr<nsIContent>	contentNode;
-  if (aDOMNode)	contentNode = do_QueryInterface(aDOMNode);
-  nsCOMPtr<nsIDocument>	doc;
-  if (contentNode)	contentNode->GetDocument(*getter_AddRefs(doc));
-  nsCOMPtr<nsIPresShell>	presShell;
   nsCOMPtr<nsIPresContext> presContext;
-  if (doc)
-    presShell = getter_AddRefs(doc->GetShellAt(0));
-  if (presShell) 	{
-  	presShell->GetPresContext(getter_AddRefs(presContext));
-  	presShell->GetPrimaryFrameFor(contentNode, &aFrame);
-  }
-  NS_ASSERTION ( aFrame, "Can't get frame for this dom node" );
-  NS_ASSERTION ( presContext, "Can't get prescontext for this dom node" );
+  GetFrameFromNode ( aDOMNode, &aFrame, getter_AddRefs(presContext) );
   if ( !aFrame || !presContext )
     return PR_FALSE;
   

@@ -30,6 +30,11 @@
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 
+class nsIDOMNode;
+class nsIFrame;
+class nsIPresContext;
+
+
 /**
  * XP DragService wrapper base class
  */
@@ -49,6 +54,9 @@ public:
   NS_DECL_NSIDRAGSESSION
 
 protected:
+
+  virtual void GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
+                                   nsIPresContext** outContext ) ;
 
   nsCOMPtr<nsISupportsArray> mTransArray;
   PRBool             mCanDrop;
