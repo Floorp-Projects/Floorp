@@ -53,7 +53,8 @@ CPPSRCS		= \
 		ipcModuleReg.cpp \
 		ipcCommandModule.cpp
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += ipcdWin.cpp
 else
 CPPSRCS += ipcdUnix.cpp
 endif
