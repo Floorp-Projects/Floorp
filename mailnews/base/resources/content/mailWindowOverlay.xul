@@ -312,6 +312,13 @@ Rights Reserved.
              modifiers="shift"/>
         <key id="tabpaneClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('clockwise');"/>
 
+  <!-- Label Keys -->
+  <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>
+  <key id="key_label1" charcode="&labelCmd1.key;"  oncommand="goDoCommand('cmd_label1')"/>
+  <key id="key_label2" charcode="&labelCmd2.key;"  oncommand="goDoCommand('cmd_label2')"/>
+  <key id="key_label3" charcode="&labelCmd3.key;"  oncommand="goDoCommand('cmd_label3')"/>
+  <key id="key_label4" charcode="&labelCmd4.key;"  oncommand="goDoCommand('cmd_label4')"/>
+  <key id="key_label5" charcode="&labelCmd5.key;"  oncommand="goDoCommand('cmd_label5')"/>
 
 </keyset>
 
