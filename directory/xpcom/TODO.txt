@@ -18,6 +18,10 @@ housecleaning
 * get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
   from nsLDAP{Connection,Operation,Message}.[ch]
 
+* move the ldap_unbind() call out of the nsLDAPConnection destructor, 
+  since nsLDAPConnection will soon go back to being callable from the UI 
+  thread, and ldap_unbind() is actually synchronous.  
+
 * switch all old-style casts to use either QI or NS_CAST_* macros
 
 * some (many?) destructors don't clean up completely or correctly.  
