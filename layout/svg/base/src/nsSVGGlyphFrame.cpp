@@ -235,6 +235,7 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
   }
   nsCOMPtr<nsISVGRenderer> renderer;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
+  if (!renderer) return NS_ERROR_FAILURE;
 
   renderer->CreateGlyphMetrics(this, getter_AddRefs(mMetrics));
   if (!mMetrics) return NS_ERROR_FAILURE;
@@ -461,8 +462,8 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  nsresult rv = mMetrics->GetBoundingBox(_retval);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (!mMetrics || NS_FAILED(mMetrics->GetBoundingBox(_retval)))
+    return NS_ERROR_FAILURE;
   
   float x[4], y[4], width, height;
   (*_retval)->GetX(&x[0]);
@@ -955,7 +956,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics)
 {
   *metrics = mMetrics;
-  NS_ADDREF(*metrics);
+  NS_IF_ADDREF(*metrics);
   return NS_OK;
 }
 
@@ -1051,8 +1052,9 @@ nsSVGGlyphFrame::NotifyMetricsUnsuspended()
   NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::NotifyMetricsUnsuspended");
 
   if (mMetricsUpdateFlags != 0) {
-    PRBool metricsDirty;
-    mMetrics->Update(mMetricsUpdateFlags, &metricsDirty);
+    PRBool metricsDirty = PR_FALSE;
+    if (mMetrics)
+      mMetrics->Update(mMetricsUpdateFlags, &metricsDirty);
     if (metricsDirty) {
       mGeometryUpdateFlags |= nsISVGGlyphGeometrySource::UPDATEMASK_METRICS;
       nsISVGTextFrame* text_frame = GetTextFrame();

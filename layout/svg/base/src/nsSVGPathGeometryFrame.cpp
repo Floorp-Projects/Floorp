@@ -365,7 +365,8 @@ nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 {
   if (mUpdateFlags != 0) {
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
-    GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
+    if (GetGeometry())
+      GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
     if (dirty_region) {
       nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
       if (outerSVGFrame)
@@ -386,7 +387,9 @@ nsSVGPathGeometryFrame::SetMatrixPropagation(PRBool aPropagate)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  return GetGeometry()->GetBoundingBox(_retval);
+  if (GetGeometry())
+    return GetGeometry()->GetBoundingBox(_retval);
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -728,6 +731,7 @@ nsSVGPathGeometryFrame::Init()
   }
   nsCOMPtr<nsISVGRenderer> renderer;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
+  if (!renderer) return NS_ERROR_FAILURE;
 
   renderer->CreatePathGeometry(this, getter_AddRefs(mGeometry));
   
@@ -759,7 +763,8 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags)
   outerSVGFrame->IsRedrawSuspended(&suspended);
   if (!suspended) {
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
-    GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
+    if (GetGeometry())
+      GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
     if (dirty_region) {
       // if we're painting a marker, this will get called during paint
       // when the region already be invalidated as needed

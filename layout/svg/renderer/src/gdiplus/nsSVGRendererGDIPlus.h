@@ -14,13 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,36 +34,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <windows.h>
+#ifndef NS_SVGRENDERERGDIPLUS_H
+#define NS_SVGRENDERERGDIPLUS_H
 
-// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <unknwn.h>
+typedef struct nsSVGRendererGDIPlusFunctions {
+  void (*NS_InitSVGGDIPlusGlyphMetricsGlobals)();
+  void (*NS_FreeSVGGDIPlusGlyphMetricsGlobals)();
+  nsresult (*NS_NewSVGGDIPlusPathGeometry)(nsISVGRendererPathGeometry **, nsISVGPathGeometrySource *);
+  nsresult (*NS_NewSVGGDIPlusGlyphMetrics)(nsISVGRendererGlyphMetrics **, nsISVGGlyphMetricsSource *);
+  nsresult (*NS_NewSVGGDIPlusGlyphGeometry)(nsISVGRendererGlyphGeometry **, nsISVGGlyphGeometrySource *);
+  nsresult (*NS_NewSVGGDIPlusCanvas)(nsISVGRendererCanvas **, nsIRenderingContext *, nsPresContext *, const nsRect &);
+  nsresult (*NS_NewSVGGDIPlusRectRegion)(nsISVGRendererRegion **, float, float, float, float);
+  nsresult (*NS_NewSVGGDIPlusSurface)(nsISVGRendererSurface **, PRUint32, PRUint32);
+} nsSVGRendererGDIPlusFunctions;
 
-#include <Gdiplus.h>
-using namespace Gdiplus;
+extern "C" NS_EXPORT nsSVGRendererGDIPlusFunctions *NS_GetSVGRendererGDIPlusFunctions(void);
 
-#include "nsCOMPtr.h"
-#include "nsISVGRenderer.h"
-#include "nsSVGGDIPlusPathGeometry.h"
-#include "nsSVGGDIPlusGlyphGeometry.h"
-#include "nsSVGGDIPlusGlyphMetrics.h"
-#include "nsSVGGDIPlusCanvas.h"
-#include "nsSVGGDIPlusRegion.h"
-#include "nsSVGGDIPlusSurface.h"
-#include "nsSVGRendererGDIPlus.h"
-
-static nsSVGRendererGDIPlusFunctions gdiplusFunctions = {
-  &NS_InitSVGGDIPlusGlyphMetricsGlobals,
-  &NS_FreeSVGGDIPlusGlyphMetricsGlobals,
-  &NS_NewSVGGDIPlusPathGeometry,
-  &NS_NewSVGGDIPlusGlyphMetrics,
-  &NS_NewSVGGDIPlusGlyphGeometry,
-  &NS_NewSVGGDIPlusCanvas,
-  &NS_NewSVGGDIPlusRectRegion,
-  &NS_NewSVGGDIPlusSurface
-};
-
-nsSVGRendererGDIPlusFunctions *NS_GetSVGRendererGDIPlusFunctions(void)
-{
-  return &gdiplusFunctions;
-}
+#endif

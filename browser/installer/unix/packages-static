@@ -262,6 +262,12 @@ bin/res/language.properties
 bin/res/entityTables/*
 bin/res/builtin/platformHTMLBindings.xml
 
+; svg
+bin/components/libgksvgcairo.so
+bin/res/svg.css
+bin/res/svg.properties
+bin/components/dom_svg.xpt
+
 ; [Personal Security Manager]
 ;
 bin/libnssckbi.so

@@ -254,6 +254,12 @@ bin\res\language.properties
 bin\res\entityTables\*
 bin\res\builtin\platformHTMLBindings.xml
 
+; svg
+bin\gksvggdiplus.dll
+bin\res\svg.css
+bin\res\svg.properties
+bin\components\dom_svg.xpt
+
 ; [Personal Security Manager]
 ;
 bin\nssckbi.dll

@@ -42,6 +42,8 @@
 class nsISVGRendererGlyphMetrics;
 class nsISVGGlyphMetricsSource;
 
+void NS_InitSVGGDIPlusGlyphMetricsGlobals();
+void NS_FreeSVGGDIPlusGlyphMetricsGlobals();
 nsresult NS_NewSVGGDIPlusGlyphMetrics(nsISVGRendererGlyphMetrics **result,
                                       nsISVGGlyphMetricsSource *src);
 

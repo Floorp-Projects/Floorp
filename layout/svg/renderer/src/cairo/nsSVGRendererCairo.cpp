@@ -47,9 +47,7 @@
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoRegion.h"
 #include "nsSVGCairoSurface.h"
-
-void NS_InitSVGCairoGlyphMetricsGlobals();
-void NS_FreeSVGCairoGlyphMetricsGlobals();
+#include "nsIGenericFactory.h"
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
@@ -63,12 +61,10 @@ class nsSVGRendererCairo : public nsISVGRenderer
 {
 protected:
   friend nsresult NS_NewSVGRendererCairo(nsISVGRenderer** aResult);
-  friend void NS_InitSVGRendererCairoGlobals();
-  friend void NS_FreeSVGRendererCairoGlobals();
   
+public:
   nsSVGRendererCairo();
 
-public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
@@ -101,14 +97,6 @@ NS_NewSVGRendererCairo(nsISVGRenderer** aResult)
   NS_ADDREF(result);
   *aResult = result;
   return NS_OK;
-}
-
-void NS_InitSVGRendererCairoGlobals()
-{
-}
-
-void NS_FreeSVGRendererCairoGlobals()
-{
 }
 
 //----------------------------------------------------------------------
@@ -169,3 +157,17 @@ nsSVGRendererCairo::CreateSurface(PRUint32 width, PRUint32 height,
 {
   return NS_NewSVGCairoSurface(_retval, width, height);
 }
+
+
+/* Component manager stuff */
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSVGRendererCairo)
+
+static const nsModuleComponentInfo gComponents[] = {
+  { "SVG Cairo Renderer",
+    NS_SVG_RENDERER_CAIRO_CID,
+    NS_SVG_RENDERER_CAIRO_CONTRACTID,
+    nsSVGRendererCairoConstructor }
+};
+
+NS_IMPL_NSGETMODULE(nsSVGRendererCairo, gComponents)

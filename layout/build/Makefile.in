@@ -174,11 +174,6 @@ SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gksvgrendererlibart_s.$(LIB_SUFFIX) \
                 $(NULL)
 endif
-ifdef MOZ_SVG_RENDERER_CAIRO
-SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
-                $(NULL)
-endif
 endif
 
 EXTRA_DSO_LDOPTS = \
