@@ -54,6 +54,10 @@ ifdef MOZ_ENABLE_QT
 DIRS		+= qt
 endif
 
+ifdef MOZ_ENABLE_PHOTON
+DIRS		+= photon
+endif
+
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
