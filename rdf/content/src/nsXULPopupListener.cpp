@@ -202,6 +202,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       if (button == 1) {
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
+        aMouseEvent->PreventBubble();
       }
       break;
     case eXULPopupType_context:
