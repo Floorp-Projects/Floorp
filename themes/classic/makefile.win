@@ -25,14 +25,15 @@ THEME_ROOT_DEPTH = .
 include <$(DEPTH)\config\config.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-DIRS =  communicator\search\win  \
-        communicator\sidebar\win \
-        communicator\win         \
-        global\win               \
-        messenger\win            \
-        messenger\addressbook\win            \
-        preview\win              \
-        editor\win               \
+DIRS =  communicator\bookmarks\win      \
+        communicator\search\win         \
+        communicator\sidebar\win        \
+        communicator\win                \
+        global\win                      \
+        messenger\win                   \
+        messenger\addressbook\win       \
+        preview\win                     \
+        editor\win                      \
         navigator\win
 
 include <$(DEPTH)\config\rules.mak>

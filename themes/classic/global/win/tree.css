@@ -8,10 +8,6 @@
 tree 
   {
     border-spacing        : 0px;
-    border-top            : 1px solid ThreeDShadow;
-    border-right          : 1px solid ThreeDHighlight;
-    border-bottom         : 1px solid ThreeDHighlight;
-    border-left           : 1px solid ThreeDShadow;
     background-color      : -moz-field;
     color                 : WindowText;    
   }
@@ -22,7 +18,7 @@ tree
     padding               : 0px;
   }  
   
-.tree-container-treerows
+tree.inset > .tree-container-treerows
   {
     border-top            : 1px solid ThreeDDarkShadow;
     border-right          : 1px solid ThreeDLightShadow;
@@ -40,25 +36,26 @@ tree.inset
     margin                : 1px 5px 2px 5px;
   }
 
-tree > treechildren treeitem[selected="true"] > treerow
+treeitem[selected="true"] > treerow
   {
-	  color: ButtonText;
-  	background-color: ThreeDFace;
+    color                 : ButtonText;
+    background-color      : ThreeDFace;
   }
 
-treeitem {
-  list-style-image: none;
-}
+treeitem 
+  {
+    list-style-image      : none;
+  }
   
 treerow 
   {
-    border        : 1px solid transparent;
+    border                : 1px solid transparent;
   }
   
 treehead > treeitem > treerow,
 treehead > treerow 
   {
-    border              : none;
+    border                : none;
   }
   
 treecell 
@@ -71,15 +68,15 @@ treecell
 tree:focus > treechildren treeitem[selected="true"] > treerow,
 treeitem[dd-dropon="true"] > treerow
   {
-  	background-color    : Highlight;
-	  color               : HighlightText;
+    background-color      : Highlight;
+    color                 : HighlightText;
   }
 
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
   {
     /* this is not the right color, what we really need is a color complementary
        to Highlight, but someone needs to implement that first */
-    border              : 1px dotted #F5DB95;
+    border                : 1px dotted #F5DB95;
   }
 
 .treecell-header-image 
@@ -251,7 +248,7 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 
 .treecell-popup-icon
   {
-    list-style-image       : url("chrome://global/skin/columnselect.gif");
+    list-style-image      : url("chrome://global/skin/columnselect.gif");
   }
 
 /* Inline Editable Treecells */

@@ -31,3 +31,6 @@ classic.jar:
     skin/classic/global/question-icon.gif
     skin/classic/global/alert-icon.gif
     skin/classic/global/dialogOverlay.css
+    skin/classic/global/linkTree.css
+
+

@@ -128,10 +128,9 @@
       margin-bottom       : 0px;
     }
 
-  menulist > menupopup > menuitem[menuactive="true"],
   menulist > menupopup > menuitem[selected="true"]
     {
-      border              : 1px dotted #F5DB95;
+      border              : 1px dotted Highlight;
     }
 
   menulist > menupopup > menuitem > .menu-iconic-left,
@@ -221,3 +220,5 @@ menulist[editable="true"]:focus > .menulist-internal-box > .menulist-display-box
   {
     border                : none !important;
   }
+
+    

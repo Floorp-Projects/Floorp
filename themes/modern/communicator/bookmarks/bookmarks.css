@@ -24,7 +24,7 @@
  */
 
 /* ===== bookmarks.css ==================================================
-  == Styles specific to trees containing bookmarks.
+  == Styles specific to widgets containing bookmarks.
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -51,33 +51,3 @@
   list-style-image: url("chrome://communicator/skin/icon2/loading.gif") !important;
 }
 
-/* ::::: bookmark toolbar buttons ::::: */
-
-.bookmark-item.button-toolbar {
-  cursor: pointer;
-}
-
-.bookmark-item.button-toolbar:hover {
-  text-decoration: underline;
-}
-
-.bookmark-item.button-toolbar:hover,
-.bookmark-item.button-toolbar:hover:active,
-.bookmark-item.button-toolbar[open="true"] {
-  background-color: transparent;
-}
-
-.bookmark-item.button-toolbar[container="true"] {
-  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
-}
-
-.bookmark-item.button-toolbar[container="true"],
-.bookmark-item.button-toolbar[container="true"]:hover {
-  cursor: default;
-  text-decoration: none;
-}
-
-#navprintplus
-{
- display:none !important; 
-} 

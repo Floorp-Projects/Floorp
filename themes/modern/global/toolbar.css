@@ -2,7 +2,7 @@
  * toolbar
  **/ 
  
-toolbar
+toolbar, .toolbar
   {
     border-bottom         : 1px solid #000000;
   	background-color	    : #5B7693;

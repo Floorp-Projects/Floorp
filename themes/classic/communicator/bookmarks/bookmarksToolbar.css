@@ -1,0 +1,86 @@
+@import url(chrome://communicator/skin/bookmarks/bookmarks.css);
+
+/**
+ * Bookmark toolbar buttons
+ **/    
+    
+  .button-toolbar.bookmark-item,
+  .button-toolbar.bookmark-item:hover,
+  .button-toolbar.bookmark-item:hover:active,
+  .button-toolbar.bookmark-item > .button-internal-box,
+  .button-toolbar.bookmark-item:hover > .button-internal-box,
+  .button-toolbar.bookmark-item:hover:active > .button-internal-box,
+  .button-toolbar.bookmark-item 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar.bookmark-item:hover 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar.bookmark-item:hover:active 
+      > .menubutton-toolbar-single-internal-box
+    {
+      border              : none !important;
+    }
+    
+  .bookmark-item.button-toolbar[container="true"],
+  .bookmark-item.button-toolbar[container="true"]:hover,
+  .bookmark-item.button-toolbar[container="true"]:hover:active
+    {
+      cursor              : default;
+      background-color    : transparent;
+      color               : inherit;
+      text-decoration     : none;
+    }
+  
+  .bookmark-item.button-toolbar
+    {
+      cursor	            : pointer;
+    }
+
+  .bookmark-item > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+    {
+      display             : none;
+    }
+    
+  .button-toolbar.bookmark-item
+    {
+      max-width           : 10em;
+    }
+    
+  .button-toolbar.bookmark-item > .menubutton-toolbar-single-internal-box
+      > .menubutton-toolbar-single-text 
+    {
+      max-width           : 8em !important;
+    }
+
+  .bookmark-item.button-toolbar:hover
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+    }
+
+  .bookmark-item.button-toolbar:hover:active
+    {
+      background-color    : transparent;
+      color               : #FF0000;
+      text-decoration     : underline;
+    }
+
+  /* drag and drop feedback */
+  .bookmark-item.button-toolbar[dragover-left="true"]
+    {
+      margin-left         : 0px;
+      border-left         : 2px solid ThreeDDarksShadow;
+    }
+
+  .bookmark-item.button-toolbar[dragover-right="true"]
+    {
+      margin-right        : 0px;
+      border-right        : 2px solid ThreeDDarkShadow;
+    }
+
+  .menubutton-toolbar-single-text[dragover-top="true"]
+    {
+      background-color    : ThreeDDarkShadow;
+      color               : ThreeDHighlight;
+    }
+    
+    

@@ -19,30 +19,6 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH		= ..\..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
-
-DIRS  = communicator/bookmarks/win \
-	communicator/search/win \
-	communicator/sidebar/win \
-	communicator/win \
-	global/win \
-	messenger/win \
-	messenger/addressbook/win \
-	preview/win \
-	editor/win \
-	navigator/win \
-	$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-chrome::
-	@$(REGCHROME) skin classic/communicator classic.jar
-	@$(REGCHROME) skin classic/editor classic.jar
-	@$(REGCHROME) skin classic/global classic.jar
-	@$(REGCHROME) skin classic/messenger classic.jar
-	@$(REGCHROME) skin classic/navigator classic.jar
+include <$(DEPTH)\config\rules.mak>

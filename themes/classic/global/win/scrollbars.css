@@ -111,7 +111,7 @@ scrollbarbutton[type="increment"][disabled="true"][sborient="vertical"]
 
 slider 
   {
-    background-color	    : Scrollbar;		
+    background-color      : Scrollbar;                
     background-image      : url("chrome://global/skin/scrollbar-slider-bg.gif");
   }
   

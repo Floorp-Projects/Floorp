@@ -84,7 +84,7 @@ toolbargrippy[tbgrippy-collapsed="true"]
   
 toolbargrippy:hover
   {
-    background-color      : #CCCCFF;
+    background-color      : ThreeDHighlight;
   }
   
 toolbar[collapsed="true"] > toolbargrippy
