@@ -76,7 +76,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.6 $ )[1];
+$VERSION = ( qw $Revision: 1.7 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -271,7 +271,7 @@ sub status_table_row {
  # menus can view the notice.
 
   $href = (
-           "$FileStructure::URLS{'shownotice'}".
+           "$FileStructure::URLS{'shownote'}".
            "\?".
            "tree=$tree".
            "\&".
@@ -297,7 +297,7 @@ sub status_table_row {
                                 "href" => $href,
                                 "windowtxt" => $rendered_notice,
                                 "windowtitle" => "Notice Board",
-                                "windowheight" => (150 * $num_notices),
+                                "windowheight" => (175 * $num_notices)+100,
                                ).
                 "</td>");
   } else {
