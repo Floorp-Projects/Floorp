@@ -46,7 +46,6 @@
     <![CDATA[
       var panel = "chrome://browser/content/pref/pref-scripts.xul";
       var _elementIDs = ["enableJavascript",
-                         "allowWindowOpen",
                          "allowWindowMoveResize",
                          "allowWindowFlip",
                          "allowWindowStatusChange",
@@ -69,7 +68,6 @@
     <label id="allowScripts" value="&allowScripts.label;"/>
 
     <listbox id="AllowList" flex="1">
-      <listitem type="checkbox" id="allowWindowOpen" label="&allowWindowOpen.label;"/>
       <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
       <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
       <listitem type="checkbox" id="allowHideStatusBar" label="&allowHideStatusBar.label;"/>          

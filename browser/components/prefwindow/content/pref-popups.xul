@@ -47,6 +47,8 @@
       id="popupsPanel"
       onload="init()"
       headertitle="&title;">
+
+<script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
           
 <script type="application/x-javascript">
 <![CDATA[
