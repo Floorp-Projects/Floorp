@@ -87,7 +87,7 @@ int main(int argc, char** argv)
   nsCOMPtr<nsIConverterInputStream> uin =
     do_CreateInstance("@mozilla.org/intl/converter-input-stream;1", &rv);
   if (NS_SUCCEEDED(rv))
-    uin->Init(in, cset->get(), nsnull);
+    uin->Init(in, cset->get(), nsnull, PR_TRUE);
   if (NS_OK != rv) {
     printf("can't create converter input stream: %d\n", rv);
     return -1;
