@@ -94,6 +94,12 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
+#ifdef DEBUG_warren
+#include "prlog.h"
+#if defined(DEBUG) || defined(FORCE_PR_LOG)
+static PRLogModuleInfo* gTimerLog = nsnull;
+#endif /* DEBUG || FORCE_PR_LOG */
+#endif
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
@@ -1092,6 +1098,18 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   // XXX Ignore rv for now. They are using nsIEnumerator instead of
   // nsISimpleEnumerator.
 
+#ifdef DEBUG_warren
+  char* urls;
+  aURL->GetSpec(&urls);
+  if (gTimerLog == nsnull)
+    gTimerLog = PR_NewLogModule("Timer");
+  mLoadStartTime = PR_IntervalNow();
+  PR_LOG(gTimerLog, PR_LOG_DEBUG, 
+         (">>>>> Starting timer for %s\n", urls));
+  printf(">>>>> Starting timer for %s\n", urls);
+  nsCRT::free(urls);
+#endif
+
   // Kick start the throbber
   setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
 
@@ -1210,6 +1228,23 @@ done:
 	}
 
 end:
+
+#ifdef DEBUG_warren
+  nsCOMPtr<nsIURI> aURL;
+  channel->GetURI(getter_AddRefs(aURL));
+  char* urls;
+  aURL->GetSpec(&urls);
+  if (gTimerLog == nsnull)
+    gTimerLog = PR_NewLogModule("Timer");
+  PRIntervalTime end = PR_IntervalNow();
+  PRIntervalTime diff = end - mLoadStartTime;
+  PR_LOG(gTimerLog, PR_LOG_DEBUG, 
+         (">>>>> Stopping timer for %s. Elapsed: %.3f\n", 
+          urls, PR_IntervalToMilliseconds(diff) / 1000.0));
+  printf(">>>>> Stopping timer for %s. Elapsed: %.3f\n", 
+         urls, PR_IntervalToMilliseconds(diff) / 1000.0);
+  nsCRT::free(urls);
+#endif
 
   setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
   PRBool result=PR_TRUE;

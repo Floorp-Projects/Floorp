@@ -220,6 +220,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
 	  nsISessionHistory*  mSHistory;			           // this is a service
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
+#ifdef DEBUG_warren
+    PRIntervalTime      mLoadStartTime;
+#endif
 };
 
 #endif // nsBrowserAppCore_h___
