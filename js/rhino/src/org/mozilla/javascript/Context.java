@@ -1637,11 +1637,11 @@ public final class Context {
         return null;
     }
 
-    private static boolean requireSecurityDomain;
+    private static boolean requireSecurityDomain = true;
     static {
-        ResourceBundle rb = ResourceBundle.getBundle(
-            "org.mozilla.javascript.resources.Security");
         try {
+            ResourceBundle rb = ResourceBundle.getBundle(
+                "org.mozilla.javascript.resources.Security");
             String s = rb.getString("security.requireSecurityDomain");
             requireSecurityDomain = s.equals("true");
         } catch (java.util.MissingResourceException mre) {
