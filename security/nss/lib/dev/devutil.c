@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.21 $ $Date: 2003/07/01 00:32:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.22 $ $Date: 2003/09/12 19:17:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -755,6 +755,19 @@ loser:
  *    +-----------------------------+<--------------------------+
  *
  */
+
+/* This function must not be called with cache->lock locked. */
+static PRBool
+token_is_present (
+  nssTokenObjectCache *cache
+)
+{
+    NSSSlot *slot = nssToken_GetSlot(cache->token);
+    PRBool tokenPresent = nssSlot_IsTokenPresent(slot);
+    nssSlot_Destroy(slot);
+    return tokenPresent;
+}
+
 static PRBool
 search_for_objects (
   nssTokenObjectCache *cache
@@ -762,12 +775,6 @@ search_for_objects (
 {
     PRBool doSearch = PR_FALSE;
     NSSSlot *slot = nssToken_GetSlot(cache->token);
-    if (!nssSlot_IsTokenPresent(slot)) {
-	/* The token is no longer present, destroy any cached objects */
-	/* clear_cache(cache); */
-	nssSlot_Destroy(slot);
-	return PR_FALSE;
-    }
     /* Handle non-friendly slots (slots which require login for objects) */
     if (!nssSlot_IsFriendly(slot)) {
 	if (nssSlot_IsLoggedIn(slot)) {
@@ -826,7 +833,7 @@ get_token_certs_for_cache (
         !cache->doObjectType[cachedCerts]) 
     {
 	/* Either there was a state change that prevents a search
-	 * (token removed or logged out), or the search was already done,
+	 * (token logged out), or the search was already done,
 	 * or certs are not being cached.
 	 */
 	return PR_SUCCESS;
@@ -903,7 +910,7 @@ get_token_trust_for_cache (
         !cache->doObjectType[cachedTrust]) 
     {
 	/* Either there was a state change that prevents a search
-	 * (token removed or logged out), or the search was already done,
+	 * (token logged out), or the search was already done,
 	 * or trust is not being cached.
 	 */
 	return PR_SUCCESS;
@@ -976,7 +983,7 @@ get_token_crls_for_cache (
         !cache->doObjectType[cachedCRLs]) 
     {
 	/* Either there was a state change that prevents a search
-	 * (token removed or logged out), or the search was already done,
+	 * (token logged out), or the search was already done,
 	 * or CRLs are not being cached.
 	 */
 	return PR_SUCCESS;
@@ -1133,13 +1140,17 @@ nssTokenObjectCache_FindObjectsByTemplate (
 {
     PRStatus status = PR_FAILURE;
     nssCryptokiObject **rvObjects = NULL;
+    if (!token_is_present(cache)) {
+	status = PR_SUCCESS;
+	goto finish;
+    }
     PZ_Lock(cache->lock);
     switch (objclass) {
     case CKO_CERTIFICATE:
 	if (cache->doObjectType[cachedCerts]) {
 	    status = get_token_certs_for_cache(cache);
 	    if (status != PR_SUCCESS) {
-		goto finish;
+		goto unlock;
 	    }
 	    rvObjects = find_objects_in_array(cache->objects[cachedCerts], 
 	                                      otemplate, otlen, maximumOpt);
@@ -1149,7 +1160,7 @@ nssTokenObjectCache_FindObjectsByTemplate (
 	if (cache->doObjectType[cachedTrust]) {
 	    status = get_token_trust_for_cache(cache);
 	    if (status != PR_SUCCESS) {
-		goto finish;
+		goto unlock;
 	    }
 	    rvObjects = find_objects_in_array(cache->objects[cachedTrust], 
 	                                      otemplate, otlen, maximumOpt);
@@ -1159,7 +1170,7 @@ nssTokenObjectCache_FindObjectsByTemplate (
 	if (cache->doObjectType[cachedCRLs]) {
 	    status = get_token_crls_for_cache(cache);
 	    if (status != PR_SUCCESS) {
-		goto finish;
+		goto unlock;
 	    }
 	    rvObjects = find_objects_in_array(cache->objects[cachedCRLs], 
 	                                      otemplate, otlen, maximumOpt);
@@ -1167,8 +1178,9 @@ nssTokenObjectCache_FindObjectsByTemplate (
 	break;
     default: break;
     }
-finish:
+unlock:
     PZ_Unlock(cache->lock);
+finish:
     if (statusOpt) {
 	*statusOpt = status;
     }
@@ -1190,7 +1202,7 @@ cache_available_for_object_type (
 	return PR_FALSE;
     }
     if (!search_for_objects(cache)) {
-	/* not logged in or removed */
+	/* not logged in */
 	return PR_FALSE;
     }
     return PR_TRUE;
@@ -1212,6 +1224,9 @@ nssTokenObjectCache_GetObjectAttributes (
     nssCryptokiObjectAndAttributes *cachedOA = NULL;
     nssCryptokiObjectAndAttributes **oa = NULL;
     PRUint32 objectType;
+    if (!token_is_present(cache)) {
+	return PR_FAILURE;
+    }
     PZ_Lock(cache->lock);
     switch (objclass) {
     case CKO_CERTIFICATE:    objectType = cachedCerts; break;
@@ -1298,6 +1313,9 @@ nssTokenObjectCache_ImportObject (
     PRUint32 objectType;
     PRBool haveIt = PR_FALSE;
 
+    if (!token_is_present(cache)) {
+	return PR_SUCCESS; /* cache not active, ignored */
+    }
     PZ_Lock(cache->lock);
     switch (objclass) {
     case CKO_CERTIFICATE:    objectType = cachedCerts; break;
@@ -1361,6 +1379,9 @@ nssTokenObjectCache_RemoveObject (
 {
     PRUint32 oType;
     nssCryptokiObjectAndAttributes **oa, **swp = NULL;
+    if (!token_is_present(cache)) {
+	return;
+    }
     PZ_Lock(cache->lock);
     for (oType=0; oType<3; oType++) {
 	if (!cache_available_for_object_type(cache, oType) ||
