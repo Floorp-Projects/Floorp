@@ -989,9 +989,6 @@ BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
   }
 
   nscoord colPctTotal = 0;
-  nscoord* colPcts = new nscoord[numCols];
-  if (!colPcts) return 0;
-  if (0 == basis) return 0;
   
   // Determine the percentage contribution for cols and for cells with colspan = 1
   // Iterate backwards, similarly to the reasoning in AssignPreliminaryColumnWidths
@@ -999,7 +996,6 @@ BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     nscoord maxColPctWidth = WIDTH_NOT_SET;
     float maxColPct = 0.0f;
-    colPcts[colX] = 0;
 
     nsTableCellFrame* percentContributor = nsnull;
     // Scan the cells in the col that have colspan = 1; assign PER widths
@@ -1041,17 +1037,10 @@ BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
     // fixed width value if it exceeds the pct value and not recording the pct
     // value. This is not being done and IE5 doesn't do it either.
     if (maxColPctWidth > 0) {
-      nscoord minWidth = colFrame->GetMinWidth();
-      if (minWidth > maxColPctWidth) {
-        maxColPctWidth = minWidth;
-        colPcts[colX] = NSToCoordRound( 100.0f * ((float)maxColPctWidth) / ((float)basis) );
-      }
-      else {
-        colPcts[colX] = NSToCoordRound(maxColPct * 100.0f);
-      }
+      maxColPctWidth = PR_MAX(maxColPctWidth, colFrame->GetMinWidth());
       colFrame->SetWidth(PCT, maxColPctWidth);
       colFrame->SetConstrainingCell(percentContributor);
-      colPctTotal += colPcts[colX];
+      colPctTotal += NSToCoordRound(100.0f * (float)maxColPct);
     }
   }
   
@@ -1114,67 +1103,53 @@ BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
             nscoord minWidth = colFrame->GetMinWidth();
             nscoord colWidth = PR_MAX(minWidth, colFrame->GetFixWidth());
             colWidth = PR_MAX(colWidth, colFrame->GetDesWidth()); // XXX check this
-            //float colPctAdj = (0 == spanTotal) 
-            //  ? cellPctWidth / ((float) colSpan)
-            //  : cellPct * ((float)colWidth) / (float)spanTotal;
             float avail = (float)PR_MAX(cellPctWidth - colPctWidthTotal, 0);
             float colPctAdj = (0 == spanTotal) 
-              ? avail / ((float) colSpan)
-              : (avail / (float)basis) * (((float)colWidth) / (float)spanTotal);
+                              ? avail / ((float) colSpan)
+                              : (avail / (float)basis) * (((float)colWidth) / (float)spanTotal);
             if (colPctAdj > 0) {
               nscoord colPctAdjWidth = colFrame->GetWidth(PCT_ADJ);
               nscoord newColPctAdjWidth = NSToCoordRound(colPctAdj * (float)basis);
               if (newColPctAdjWidth > colPctAdjWidth) {
-                if (colPctAdjWidth > 0) { // remove its contribution
-                  colPctTotal -= colPcts[colX + spanX];
-                }
-                if (minWidth > newColPctAdjWidth) {
-                  newColPctAdjWidth = minWidth;
-                  colPcts[colX + spanX] = NSToCoordRound( 100.0f * ((float)newColPctAdjWidth) / ((float)basis) );
-                }
-                else {
-                  colPcts[colX + spanX] = NSToCoordRound( 100.0f * colPctAdj );
-                }
+                newColPctAdjWidth = PR_MAX(newColPctAdjWidth, minWidth); 
                 if (newColPctAdjWidth > colFrame->GetWidth(PCT)) {
                   colFrame->SetWidth(PCT_ADJ, newColPctAdjWidth);
                   colFrame->SetConstrainingCell(cellFrame);
                 }
-                colPctTotal += colPcts[colX + spanX];
               }
             }
           }
         }
       }
     } // end for (rowX ..
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+    colPctTotal += NSToCoordRound(100.0f * (float)colFrame->GetWidth(PCT_ADJ) / (float)basis);
   } // end for (colX ..
 
   // if the percent total went over 100%, adjustments need to be made to right most cols
   if (colPctTotal > 100) {
-    for (colX = numCols - 1; colX >= 0; colX--) {
-      if (colPcts[colX] > 0) {
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-        nscoord newPct = colPcts[colX] - (colPctTotal - 100);
-        if (newPct > 0) { // this col has enough percent alloc to handle it
-          nscoord newPctWidth = NSToCoordRound( ((float)basis) * ((float)newPct) / 100.0f );
-          newPctWidth = PR_MAX(newPctWidth, colFrame->GetMinWidth());
-          // since we don't care which one contributed, set both
-          colFrame->SetWidth(PCT, newPctWidth);
-          colFrame->SetWidth(PCT_ADJ, newPctWidth);
-          break;
-        }
-        else { // this col cannot handle all the reduction, reduce it down to zero
-          colFrame->SetWidth(PCT,     WIDTH_NOT_SET);
-          colFrame->SetWidth(PCT_ADJ, WIDTH_NOT_SET);
-          colPctTotal -= colPcts[colX];
-          if (colPctTotal <= 100) {
-            break;
-          }
+    nscoord excess = NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis);
+    for (colX = numCols - 1; (colX >= 0) && (excess > 0); colX--) {
+      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+      nscoord pctWidth = colFrame->GetWidth(PCT);
+      nscoord reduction = 0;
+      if (pctWidth > 0) {
+        reduction = (excess > pctWidth) ? pctWidth : excess;
+        nscoord newPctWidth = (reduction == pctWidth) ? WIDTH_NOT_SET : pctWidth - reduction;
+        colFrame->SetWidth(PCT, PR_MAX(newPctWidth, colFrame->GetMinWidth()));
+      }
+      else {
+        nscoord pctAdjWidth = colFrame->GetWidth(PCT_ADJ);
+        if (pctAdjWidth > 0) {
+          reduction = (excess > pctAdjWidth) ? pctAdjWidth : excess;
+          nscoord newPctAdjWidth = (reduction == pctAdjWidth) ? WIDTH_NOT_SET : pctAdjWidth - reduction;
+          colFrame->SetWidth(PCT_ADJ, PR_MAX(newPctAdjWidth, colFrame->GetMinWidth()));
         }
       }
+      excess -= reduction;
     }
   }
 
-  delete [] colPcts;
   return basis;
 }
 
