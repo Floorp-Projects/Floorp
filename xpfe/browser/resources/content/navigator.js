@@ -31,6 +31,7 @@ var gBrandBundle;
 var gNavigatorRegionBundle;
 var gBrandRegionBundle;
 var gLastValidURL = "";
+var gClickSelectsAll = -1;
 
 var pref = Components.classes["@mozilla.org/preferences;1"]
                      .getService(Components.interfaces.nsIPref);
@@ -1303,18 +1304,20 @@ function getNewThemes()
   loadURI(gBrandRegionBundle.getString("getNewThemesURL"));
 }
 
-function URLBarMouseupHandler(aEvent)
+function URLBarFocusHandler(aEvent)
 {
-  if (aEvent.button == 0 && pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
-    var selectionLen = gURLBar.selectionEnd - gURLBar.selectionStart;
-    if (selectionLen == 0)
+  if (gURLBar) {
+    if (gClickSelectsAll == -1)
+      gClickSelectsAll = pref.GetBoolPref("browser.urlbar.clickSelectsAll");
+    if (gClickSelectsAll)
       gURLBar.setSelectionRange(0, gURLBar.textLength);
   }
 }
 
 function URLBarBlurHandler(aEvent)
 {
-  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
+  // XXX why the hell do we have to do this?
+  if (gClickSelectsAll)
     gURLBar.setSelectionRange(0, 0);
 }
 

@@ -51,6 +51,8 @@ pref("middlemouse.scrollbarPosition", true);
 // Clipboard behavior
 pref("clipboard.autocopy", true);
 
+pref("browser.urlbar.clickSelectsAll", false);
+
 // autocomplete keyboard grab workaround
 pref("autocomplete.grab_during_popup", true);
 pref("autocomplete.ungrab_during_mode_switch", true);
