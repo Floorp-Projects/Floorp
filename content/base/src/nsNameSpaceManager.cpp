@@ -63,6 +63,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #define kXULNameSpaceURI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
 #define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
+#define kXHTML2UnofficialNameSpaceURI "http://www.w3.org/TR/xhtml2" // Will eventually change
 
 //-----------------------------------------------------------
 // Name Space 
@@ -309,6 +310,7 @@ nsresult NameSpaceManagerImpl::Init()
   AddNameSpace(NS_LITERAL_STRING(kXULNameSpaceURI), kNameSpaceID_XUL);
   AddNameSpace(NS_LITERAL_STRING(kSVGNameSpaceURI), kNameSpaceID_SVG);
   AddNameSpace(NS_LITERAL_STRING(kXMLEventsNameSpaceURI), kNameSpaceID_XMLEvents);
+  AddNameSpace(NS_LITERAL_STRING(kXHTML2UnofficialNameSpaceURI), kNameSpaceID_XHTML2_Unofficial);
 
   return NS_OK;
 }

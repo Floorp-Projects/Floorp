@@ -294,8 +294,7 @@ interface nsIAccessible : nsISupports
  * 
  *  ROLE_TITLEBAR, ROLE_SOUND, ROLE_CURSOR, ROLE_CARET, ROLE_BORDER,
  *  ROLE_GROUPING, ROLE_EQUATION, ROLE_COLUMN, ROLE_ROW, ROLE_LINK,
- *  ROLE_WHITESPACE, ROLE_CLOCK,
- *  ROLE_IPADDRESS
+ *  ROLE_WHITESPACE, ROLE_CLOCK, ROLE_IPADDRESS, ROLE_NOTHING
  *
  *  ROLE_GRIP
  *    The object represents a special mouse pointer, which allows a user to
@@ -414,7 +413,7 @@ interface nsIAccessible : nsISupports
   // directly adjacent to the button
   enum { ROLE_SPLITBUTTON = 42U }; // ATK_ROLE_PUSH_BUTTON
   enum { ROLE_IPADDRESS = 66U };   // ATK_ROLE_UNKNOWN
-  enum { ROLE_NOTHING = 0U };      // ATK_ROLE_INVALID
+  enum { ROLE_NOTHING = 66U };     // ATK_ROLE_UNKNOWN
   // Represent top level window
   enum { ROLE_FRAME = 22U };               // ATK_ROLE_FRAME
 
@@ -523,6 +522,10 @@ interface nsIAccessible : nsISupports
   enum { ROLE_IPADDRESS = 63U };
   enum { ROLE_NOTHING = 4294967295U };
 
+// Make up for ATK roles that we don't have in MSAA
+// When in doubt map them to ROLE_NOTHING so that the role string is exposed
+  enum { ROLE_ICON = ROLE_NOTHING };
+  enum { ROLE_PASSWORD_TEXT = ROLE_TEXT };
 #endif
 %}
 };

@@ -37,11 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBaseWidgetAccessible.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
 #include "nsILink.h"
+#include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
@@ -323,7 +325,7 @@ nsGenericAccessible::nsGenericAccessible(nsIDOMNode* aNode, nsIWeakReference* aS
 NS_IMPL_ISUPPORTS_INHERITED0(nsGenericAccessible, nsAccessible)
 
 NS_IMETHODIMP nsGenericAccessible::TakeFocus()
-{ 
+{
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content || !mWeakShell) {
     return NS_ERROR_FAILURE;  // Node already shut down
@@ -337,8 +339,24 @@ NS_IMETHODIMP nsGenericAccessible::TakeFocus()
 NS_IMETHODIMP nsGenericAccessible::GetRole(PRUint32 *aRole)
 {
   // XXX todo: use DHTML role attribs to fill in accessible role
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE; // Node already shut down
+  }
 
-  *aRole = ROLE_PANE;
+  *aRole = ROLE_NOTHING;
+
+  nsAutoString role;
+  if (content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role) != NS_CONTENT_ATTR_HAS_VALUE) {
+    return NS_OK;
+  }
+
+  if (role.EqualsLiteral("button")) {
+    *aRole = ROLE_PUSHBUTTON;
+  }
+  else if (role.EqualsLiteral("checkbox")) {
+    *aRole = ROLE_CHECKBUTTON;
+  }
 
   return NS_OK;
 }
