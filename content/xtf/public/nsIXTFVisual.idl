@@ -68,7 +68,7 @@ interface nsIXTFVisual : nsIXTFElement
   // Notification mask constants:
   // To receive a given event set the corresponding bit in
   // nsIXTFElementWrapper::notificationMask.
-  const unsigned long NOTIFY_DID_LAYOUT  = 0x00010000;
+  const unsigned long NOTIFY_DID_LAYOUT  = 0x00020000;
 
   // Event notifications:
   void didLayout();
