@@ -1686,7 +1686,7 @@ void nsImapServerResponseParser::resp_text_code()
 				{
 					fSettablePermanentFlags |= kImapMsgDraftFlag;
 				}
-				else if (!PL_strncasecmp(fNextToken, "\\*)]", 4))
+				else if (!PL_strncasecmp(fNextToken, "\\*", 2))
 				{
 					 fSupportsUserDefinedFlags |= kImapMsgSupportUserFlag;
 					 fSupportsUserDefinedFlags |= kImapMsgSupportForwardedFlag;

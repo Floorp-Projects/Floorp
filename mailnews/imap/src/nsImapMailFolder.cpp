@@ -2849,42 +2849,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
             msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
 
-            nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-            nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-
-            mdnGenerator =
-                do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &rv);
-            if (mdnGenerator)
-            {
-                mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID,
-                                                &rv);
-                if (NS_SUCCEEDED(rv))
-            {
-                    char *headers;
-                    PRInt32 headersSize;
-                    rv = m_msgParser->GetAllHeaders(&headers,
-                                                    &headersSize);
-                    if (NS_SUCCEEDED(rv))
-                    {
-                        mimeHeaders->Initialize(headers, headersSize);
-                        nsMsgKey msgKey;
-                        msgHdr->GetMessageKey(&msgKey);
-                        
-                        if (actionType == nsMsgFilterAction::Delete)
-                        {
-                            mdnGenerator->Process(nsIMsgMdnGenerator::eDeleted,
-                                                  msgWindow, this, msgKey,
-                                                  mimeHeaders, PR_TRUE);
-            }
-            else
-            {
-                            mdnGenerator->Process(nsIMsgMdnGenerator::eProcessed,
-                                                  msgWindow, this, msgKey,
-                                                  mimeHeaders, PR_TRUE);
-                        }
-                    }
-                }
-            }
           }
           nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter, msgWindow);
           if (NS_SUCCEEDED(err))
@@ -3494,12 +3458,6 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
           if (dbHdrFlags & MSG_FLAG_MDN_REPORT_NEEDED)
             tweakMe->AndFlags(~MSG_FLAG_MDN_REPORT_NEEDED, &dbHdrFlags);
         }
-      }
-      else
-      {
-        if (!(imap_flags & kImapMsgRecentFlag) && 
-          dbHdrFlags & MSG_FLAG_MDN_REPORT_NEEDED)
-          tweakMe->AndFlags(~MSG_FLAG_MDN_REPORT_NEEDED, &dbHdrFlags);
       }
 
       if (imap_flags & kImapMsgAnsweredFlag)
