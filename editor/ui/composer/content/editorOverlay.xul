@@ -25,7 +25,13 @@
    -   Stephen Donner (technutz@netscape.net)
 -->
 
-<!DOCTYPE overlay SYSTEM "chrome://editor/locale/editorOverlay.dtd">
+<!DOCTYPE overlay [
+<!ENTITY % editorOverlayDTD SYSTEM "chrome://editor/locale/editorOverlay.dtd">
+%editorOverlayDTD;
+<!ENTITY % platformCommunicatorDTD SYSTEM
+  "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
+%platformCommunicatorDTD;
+]>
 
 <overlay id="editorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -59,7 +65,12 @@
     <key id="findprevkb"        key="&editfindprev.keybinding;"        observes="cmd_findPrev"  modifiers="accel,shift"/>
     <key keycode="&editfindnext.keybinding2;" observes="cmd_findNext"/>
     <key keycode="&editfindprev.keybinding2;" observes="cmd_findPrev" modifiers="shift"/>
-    <key id="checkspellingkb"   key="&editcheckspelling.keybinding;"   observes="cmd_spelling"  modifiers="accel" disabled="true"/>
+    <key id="checkspellingkb"
+         key="&editcheckspelling.keybinding;"
+         observes="cmd_spelling"
+         modifiers="&accel.emacs_conflict;"
+         disabled="true"
+    />
 
     <key id="boldkb"         key="&stylebold.keybinding;"       observes="cmd_bold" modifiers="accel"/>
     <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>

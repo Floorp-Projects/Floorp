@@ -47,6 +47,9 @@
 %messengerDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
+<!ENTITY % platformCommunicatorDTD SYSTEM
+  "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
+%platformCommunicatorDTD;
 ]>
 
 <window id="msgcomposeWindow"
@@ -169,7 +172,11 @@
   
   <!-- Options Menu -->
   <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
-  <key id="key_checkspelling"  key="&checkSpellingCmd.key;" command="cmd_spelling"  modifiers="accel"/>
+  <key id="key_checkspelling"
+       key="&checkSpellingCmd.key;"
+       command="cmd_spelling"  
+       modifiers="&accel.emacs_conflict;"
+  />
   
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchElementFocus(event);" modifiers="control"/>

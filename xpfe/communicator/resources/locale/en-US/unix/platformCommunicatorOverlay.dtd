@@ -15,3 +15,5 @@
 
 <!ENTITY findTypeTextCmd.key        "/">
 <!ENTITY findTypeLinksCmd.key       "'">
+
+<!ENTITY accel.emacs_conflict       "accel,shift">
