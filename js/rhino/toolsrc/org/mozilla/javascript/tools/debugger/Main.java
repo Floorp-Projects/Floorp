@@ -57,8 +57,6 @@ import java.net.URL;
 
 public class Main {
 
-    DebugGui debugGui;
-
     static final int STEP_OVER = 0;
     static final int STEP_INTO = 1;
     static final int STEP_OUT = 2;
@@ -395,6 +393,8 @@ public class Main {
         }
     };
 
+    GuiCallback callback;
+    DebugGui debugGui;
 
     boolean breakFlag = false;
 
@@ -583,12 +583,7 @@ public class Main {
             }
         }
 
-        swingInvokeLater(new Runnable() {
-            public void run()
-            {
-                debugGui.updateFileText(sourceInfo);
-            }
-        });
+        callback.updateSourceText(sourceInfo);
     }
 
     FunctionSource functionSource(DebuggableScript fnOrScript)
@@ -801,13 +796,6 @@ public class Main {
                 alertMessage = scriptException.toString();
             }
 
-            Runnable enterAction = new Runnable() {
-                public void run()
-                {
-                    debugGui.enterInterrupt(frame, threadTitle, alertMessage);
-                }
-            };
-
             int returnValue = -1;
             if (!eventThreadFlag) {
                 synchronized (monitor) {
@@ -815,7 +803,7 @@ public class Main {
                     this.insideInterruptLoop = true;
                     this.evalRequest = null;
                     this.returnValue = -1;
-                    swingInvokeLater(enterAction);
+                    callback.enterInterrupt(frame, threadTitle, alertMessage);
                     try {
                         for (;;) {
                             try {
@@ -846,7 +834,7 @@ public class Main {
                 }
             } else {
                 this.returnValue = -1;
-                enterAction.run();
+                callback.enterInterrupt(frame, threadTitle, alertMessage);
                 while (this.returnValue == -1) {
                     try {
                         dispatchNextAwtEvent();
@@ -1095,6 +1083,7 @@ public class Main {
     public Main(String title)
     {
         debugGui = new DebugGui(this, title);
+        callback = debugGui;
     }
 
     public void doBreak() {

@@ -1915,7 +1915,7 @@ class LoadFile implements Runnable
     }
 }
 
-class DebugGui extends JFrame
+class DebugGui extends JFrame implements GuiCallback
 {
     Main main;
     JDesktopPane desk;
@@ -2251,21 +2251,44 @@ class DebugGui extends JFrame
         }
     }
 
-    public void updateFileText(Main.SourceInfo sourceInfo)
+    // Implementing GuiCallback
+
+    public void updateSourceText(final Main.SourceInfo sourceInfo)
     {
-        String fileName = sourceInfo.url();
-        FileWindow w = getFileWindow(fileName);
-        if (w != null) {
-            w.updateText(sourceInfo);
-            w.show();
-        } else if (!fileName.equals("<stdin>")) {
-            createFileWindow(sourceInfo, -1);
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run()
+            {
+                String fileName = sourceInfo.url();
+                FileWindow w = getFileWindow(fileName);
+                if (w != null) {
+                    w.updateText(sourceInfo);
+                    w.show();
+                } else if (!fileName.equals("<stdin>")) {
+                    createFileWindow(sourceInfo, -1);
+                }
+            }
+        });
+
+    }
+
+    public void enterInterrupt(final Main.StackFrame lastFrame,
+                               final String threadTitle,
+                               final String alertMessage)
+    {
+        if (SwingUtilities.isEventDispatchThread()) {
+            enterInterruptImpl(lastFrame, threadTitle, alertMessage);
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run()
+                {
+                    enterInterruptImpl(lastFrame, threadTitle, alertMessage);
+                }
+            });
         }
     }
 
-
-    public void enterInterrupt(Main.StackFrame lastFrame, String threadTitle,
-                               String alertMessage)
+    void enterInterruptImpl(Main.StackFrame lastFrame, String threadTitle,
+                            String alertMessage)
     {
         statusBar.setText("Thread: " + threadTitle);
 
