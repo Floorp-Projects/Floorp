@@ -1462,7 +1462,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheEle
   nsXPIDLCString utf8Name;
   rv = element->GetStringProperty("folderName", getter_Copies(utf8Name));
   NS_ENSURE_SUCCESS(rv, rv);
-  mName = NS_ConvertUTF8toUCS2(utf8Name.get());
+  CopyUTF8toUTF16(utf8Name, mName);
   return rv;
 }
 

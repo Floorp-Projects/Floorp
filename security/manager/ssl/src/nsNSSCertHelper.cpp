@@ -192,7 +192,7 @@ GetDefaultOIDFormat(SECItem *oid,
     val = 0;      
   }
 
-  outString = NS_ConvertASCIItoUCS2(buf).get();
+  CopyASCIItoUTF16(buf, outString);
   return NS_OK; 
 }
 

@@ -397,7 +397,6 @@ void CNsIHistory::GetTitleHistTest(nsIHistoryEntry* theHistoryEntry,
 								   PRInt16 displayMode)
 {
    nsXPIDLString theTitle;
-   const char *  titleCString;
 
 	rv = theHistoryEntry->GetTitle(getter_Copies(theTitle));
 	RvTestResult(rv, "GetTitle() (title attribute) test", 1);
@@ -407,9 +406,8 @@ void CNsIHistory::GetTitleHistTest(nsIHistoryEntry* theHistoryEntry,
 		return;
 	}
 
-	titleCString = NS_ConvertUCS2toUTF8(theTitle).get();
-	FormatAndPrintOutput("The title = ", (char *)titleCString, displayMode);
-
+	FormatAndPrintOutput("The title = ",
+                        NS_ConvertUCS2toUTF8(theTitle).get(), displayMode);
 }
 
 void CNsIHistory::GetIsSubFrameTest(nsIHistoryEntry* theHistoryEntry,

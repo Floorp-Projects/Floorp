@@ -525,7 +525,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
         nsXPIDLCString utf8Name;
         folderInfo->GetFolderName(getter_Copies(utf8Name));
         if (!utf8Name.IsEmpty())
-          mName = NS_ConvertUTF8toUCS2(utf8Name.get());
+          CopyUTF8toUTF16(utf8Name, mName);
         
         //These should be put in IMAP folder only.
         //folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);

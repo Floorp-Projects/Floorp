@@ -349,8 +349,7 @@ nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessag
             if (!PL_strcasecmp(attrs[i], "lastChangeNumber"))
                 mRootDSEEntry.lastChangeNumber = atol(NS_LossyConvertUCS2toASCII(vals[0]).get());
             if (!PL_strcasecmp(attrs[i], "dataVersion"))
-                // XXX This needs CopyUCS2toUTF8
-                mRootDSEEntry.dataVersion = NS_ConvertUCS2toUTF8(vals[0]).get();
+                CopyUTF16toUTF8(vals[0], mRootDSEEntry.dataVersion);
         }
     }
 

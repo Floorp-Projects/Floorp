@@ -1015,7 +1015,7 @@ const char *nsImapIncomingServer::GetPFCName()
       nsXPIDLString pfcName;
       nsresult res = m_stringBundle->GetStringFromID(IMAP_PERSONAL_FILING_CABINET, getter_Copies(pfcName));
       if (NS_SUCCEEDED(res))
-        m_pfcName = NS_ConvertUCS2toUTF8(pfcName).get();
+        CopyUTF16toUTF8(pfcName, m_pfcName);
     }
     m_readPFCName = PR_TRUE;
   }
