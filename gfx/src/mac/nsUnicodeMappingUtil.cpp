@@ -34,6 +34,9 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 nsUnicodeMappingUtil *nsUnicodeMappingUtil::gSingleton = nsnull;
 //--------------------------------------------------------------------------
 
+static nsIPref* gPref = nsnull;
+static int gUnicodeMappingUtilCount = 0;
+
 nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 {
 	InitScriptEnabled();
@@ -42,6 +45,7 @@ nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 	InitScriptFontMapping();
 	InitBlockToScriptMapping(); // this must be called after InitScriptEnabled()
 	gCache = new nsUnicodeFontMappingCache();
+	++gUnicodeMappingUtilCount;
 }
 //--------------------------------------------------------------------------
 
@@ -55,6 +59,9 @@ nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
 	}
 	if(gCache)
 		delete gCache;
+
+	if(0 == --gUnicodeMappingUtilCount)
+		NS_IF_RELEASE(gPref);
 }
 
 //--------------------------------------------------------------------------
@@ -223,7 +230,6 @@ ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup
 		return smRoman;
 	}
 }
-static nsIPref* gPref = nsnull;
 
 #define FACESIZE 255 // font name is Str255 in Mac script code
 void
