@@ -998,7 +998,11 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
       for (int blankX = mChildCount; blankX < numCells; blankX++) {
         // XXX the blank frame is using the content of its parent - at some point it should just have null content
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame(mContent, this);
-        //GetStyleContext(&aPresContext, blankFrame->mStyleContext); // set the blank frame's style context
+        nsIStyleContext* pseudoStyleContext =
+          aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::framesetBlankPseudo, this);
+        blankFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
+        NS_RELEASE(pseudoStyleContext);
+
         if (nsnull == lastChild) {
           mFirstChild = blankFrame;
         } else {
@@ -1035,6 +1039,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           nsIStyleContext* pseudoStyleContext =
             aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::horizontalFramesetBorderPseudo, this);
           borderFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
+          NS_RELEASE(pseudoStyleContext);
 
           mChildCount++;
           lastChild->SetNextSibling(borderFrame);
@@ -1059,6 +1064,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             nsIStyleContext* pseudoStyleContext =
               aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::verticalFramesetBorderPseudo, this);
             borderFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
+            NS_RELEASE(pseudoStyleContext);
 
             mChildCount++;
             lastChild->SetNextSibling(borderFrame);
