@@ -1485,12 +1485,6 @@ static JSBool Throw(uintN errNum, XPCCallContext& ccx)
     return JS_FALSE;
 }
 
-static JSBool ReportOutOfMemory(XPCCallContext& ccx)
-{
-    JS_ReportOutOfMemory(ccx);
-    return JS_FALSE;
-}
-
 enum SizeMode {GET_SIZE, GET_LENGTH};
 
 /***************************************************************************/
