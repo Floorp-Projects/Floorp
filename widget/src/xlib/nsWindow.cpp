@@ -168,11 +168,11 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
           nsISupports* child;
           if (NS_SUCCEEDED(children->CurrentItem(&child)))
             {
-              nsWindow* childWindow = NS_STATIC_CAST(nsWindow*,child);
+              nsWidget* childWindow = NS_STATIC_CAST(nsWidget*,child);
               NS_RELEASE(child);
               
               nsRect bounds;
-              childWindow->GetBounds(bounds);
+              childWindow->GetRequestedBounds(bounds);
               bounds.x += aDx;
               bounds.y += aDy;
               PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWindow::Scroll moving child to %d, %d\n", bounds.x, bounds.y));

@@ -291,9 +291,6 @@ NS_IMETHODIMP nsScrollbar::Resize(PRInt32 aX,
                                   PRInt32 aHeight,
                                   PRBool   aRepaint)
 {
-  // for scrollbars we need this info
-  mBounds.x = aX;
-  mBounds.y = aY;
   nsWidget::Resize(aX, aY, aWidth, aHeight, aRepaint);
   CalcBarBounds();
   LayoutBar();
@@ -386,15 +383,15 @@ void nsScrollbar::CalcBarBounds(void)
   
   if (mIsVertical == PR_TRUE) {
     mBarBounds.x = 0;
-    mBarBounds.y = (int)(bar_start * mBounds.height);
-    mBarBounds.width = mBounds.width;
-    mBarBounds.height = (int)(bar_end * mBounds.height);
+    mBarBounds.y = (int)(bar_start * mRequestedSize.height);
+    mBarBounds.width = mRequestedSize.width;
+    mBarBounds.height = (int)(bar_end * mRequestedSize.height);
   }
   else {
-    mBarBounds.x = (int)(bar_start * mBounds.width);
+    mBarBounds.x = (int)(bar_start * mRequestedSize.width);
     mBarBounds.y = 0;
-    mBarBounds.width = (int)(bar_end * mBounds.width);
-    mBarBounds.height = mBounds.height;
+    mBarBounds.width = (int)(bar_end * mRequestedSize.width);
+    mBarBounds.height = mRequestedSize.height;
   }
   if (mBarBounds.height == 0) {
     mBarBounds.height = 1;
@@ -417,7 +414,5 @@ void nsScrollbar::LayoutBar(void)
 
 NS_IMETHODIMP nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
 {
-  mBounds.x = aX;
-  mBounds.y = aY;
   return nsWidget::Move(aX, aY);
 }
