@@ -136,10 +136,11 @@ function getSelectedItem()
   selected_module = null;
   if (items.length > 0) {
     var kind = items[0].getAttribute("pk11kind");
+    var module_name;
     if (kind == "slot") {
       // get the module cell for this slot cell
       var cell = items[0].parentNode.parentNode.firstChild.firstChild;
-      var module_name = cell.getAttribute("label");
+      module_name = cell.getAttribute("label");
       var module = secmoddb.findModuleByName(module_name);
       // get the cell for the selected row (the slot to display)
       cell = items[0].firstChild.firstChild;
@@ -148,7 +149,7 @@ function getSelectedItem()
     } else { // (kind == "module")
       // get the cell for the selected row (the module to display)
       cell = items[0].firstChild.firstChild;
-      var module_name = cell.getAttribute("label");
+      module_name = cell.getAttribute("label");
       selected_module = secmoddb.findModuleByName(module_name);
     }
   }
@@ -162,7 +163,7 @@ function enableButtons()
   var unload_toggle = "true";
   getSelectedItem();
   if (selected_module) {
-    var unload_toggle = "false";
+    unload_toggle = "false";
     showModuleInfo();
   } else if (selected_slot) {
     // here's the workaround - login functions are all with token,
