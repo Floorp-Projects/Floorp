@@ -232,6 +232,7 @@ PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
    {
      c = GETCLASSFROMTABLE(gLBClass30, l);
    } else if (( ( 0x3200 <= h) && ( h <= 0x9fff) ) || // Unicode 3.0
+              ( ( 0xAC00 <= h) && ( h <= 0xD7FF) ) || // Hangul
               ( ( 0xf900 <= h) && ( h <= 0xfaff) ) 
              )
    { 
