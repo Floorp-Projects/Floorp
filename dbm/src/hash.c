@@ -66,27 +66,6 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #include <assert.h>
 #endif
 
-/*
- * fraioli@dg-rtp.dg.com (Marc J. Fraioli) writes the following:
- *
- * I used the SYS_BYTEORDER_H macro to decide whether or not to
- * include <sys/byteorder.h>.  This seems appropriate, but I'm happy to
- * have the feature test changed to DGUX if this breaks some other
- * platform.
- *
- * ramiro@netscape.com writes the follwing:
- *
- * There probably is a proper way to do this in a completely XP way,
- * but dbm has been hacked so much that such a change is likely to 
- * break a random platform out there.  Im protecting this code with 
- * #if defined(DGUX) to be really safe.
- */
-#if defined(DGUX)
-#if defined(SYS_BYTEORDER_H)
-#include <sys/byteorder.h>
-#endif
-#endif
-
 #include "mcom_db.h"
 #include "hash.h"
 #include "page.h"
