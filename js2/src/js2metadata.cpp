@@ -176,7 +176,6 @@ namespace MetaData {
                 retval = EvalExpression(env, phase, e->expr);
                 if (JSVAL_IS_OBJECT(retval)) {
                     JSObject *obj = JSVAL_TO_OBJECT(retval);
-                    if (obj
                 }
 
             }
@@ -418,14 +417,67 @@ namespace MetaData {
         } // switch (p->getKind())
     }
 
-    // Evaluate the expression rooted at p.
+
+
+    /*
+     * Evaluate the expression rooted at p.
+     * Works by generating a JS string that represents the expression and then using
+     * the JS interpreter to execute that string against the current environment. The
+     * result is the value of this expression.
+     *
+     */
     jsval JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
+    {
+        String s = EvalExprNode(env, phase, p);
+        return execute(&s);
+    }
+
+
+    String JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
     {
         switch (p->getKind()) {
         case ExprNode::index:
             {
             }
             break;
+
+/*
+
+  pause
+
+  char*
+
+    [FullPostfixExpression .PostfixExpressionOrSuper [no line break] ++] do
+    if phase = compile then throw compileExpressionError end if;
+    r: OBJORREFOPTIONALLIMIT .Eval[PostfixExpressionOrSuper](env, phase);
+    a: OBJOPTIONALLIMIT .readRefWithLimit(r, phase);
+    b: OBJECT .unaryDispatch(incrementTable, null, a, ARGUMENTLIST <<<<positional: [], named: {} >>>, phase);
+    writeReference(r, b, phase);
+    return getObject(a);
+
+            
+                    
+*/
+        case ExprNode::add:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                s = EvalExprNode(b->op1);
+                s += " + ";
+                s += EvalExprNode(b->op2);
+            }
+            break;
+
+        case ExprNode::postIncrement:
+            {
+                if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                s = EvalExprNode(env, phase, u->op);
+                s += "++";
+
+            }
+            break;
+
+
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
@@ -596,7 +648,7 @@ namespace MetaData {
 
     void *JS2Object::operator new(size_t s)
     {
-
+        return STD::malloc(s);
     }
 
 }; // namespace MetaData

@@ -54,6 +54,7 @@ static const char *const kindStrings[] = {
     "User exception",                       // 'throw' from user code
     "Definition error",                     // a monkey is a small cup of milk
     "Bad Value error",                      // bad value, no biscuit
+    "Compile Expression error"              // invalid compile-time execution 
 };
 
 // Return a null-terminated string describing the exception's kind.

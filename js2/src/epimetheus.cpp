@@ -139,7 +139,7 @@ static int readEvalPrint(FILE *in)
                     stdOut << '\n';
                 }
 
-                metadata.setCurrentParser(&p);
+                metadata.setCurrentParser(&p);  // for error reporting
                 MetaData::Context cxt;
 
                 metadata.ValidateStmtList(&cxt, &env, parsedStatements);

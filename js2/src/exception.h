@@ -58,7 +58,8 @@ namespace JavaScript
             semanticError,
             userException,
             definitionError,
-            badValueError
+            badValueError,
+            compileExpressionError
         };
         
         Kind kind;              // The exception's kind
