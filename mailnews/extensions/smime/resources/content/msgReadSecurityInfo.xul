@@ -38,20 +38,20 @@
 <?xml-sheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/smime/msgReadSecurityInfo.css" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger-smime/locale/msgReadSecurityInfo.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger-smime/locale/msgReadSecurityInfo.dtd">
-
-<window id="msgReadSecurityInfo" title="&status.label;"
+<dialog id="msgReadSecurityInfo" title="&status.label;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  style="width: 40em;"
+  buttons="accept,help"
+  ondialoghelp="doHelpButton();"
   onload="onLoad();">
 
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-<script type="application/x-javascript" src="chrome://messenger-smime/content/msgReadSecurityInfo.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript" src="chrome://messenger-smime/content/msgReadSecurityInfo.js"/>
 
-<stringbundle id="bundle_smime_read_info" src="chrome://messenger-smime/locale/msgSecurityInfo.properties"/> 
+  <stringbundle id="bundle_smime_read_info" src="chrome://messenger-smime/locale/msgSecurityInfo.properties"/> 
 
-<vbox id="outer_vbox">
   <vbox flex="1">
     <label id="signatureLabel"/>
     <label id="signatureHeader" collapsed="true"/>
@@ -99,8 +99,4 @@
       </hbox>
     </vbox>
   </vbox>
-  <separator class="thin"/>
-  <keyset id="dialogKeys"/>
-  <hbox id="okCancelHelpButtonsRight"/>
-</vbox>
-</window>
+</dialog>

@@ -147,23 +147,14 @@ function Startup()
       }
 
       //change the button label
-      var buttonlabels = document.getElementById("okCancelButtons");
-      element = document.getElementById("ok");
-      element.setAttribute("label", buttonlabels.getAttribute("button1Label"));
-      element = document.getElementById("cancel");
-      element.setAttribute("label", buttonlabels.getAttribute("button2Label"));
+      var buttonlabels = document.getElementById("hiddenLabels");
+      var sendButton = document.documentElement.getButton("accept");
+      sendButton.setAttribute("label", buttonlabels.getAttribute("sendLabel"));
 /*
-      element = document.getElementById("Button2");
-      element.setAttribute("value", buttonlabels.getAttribute("button3Label"));
-      element.removeAttribute("hidden");
-      element.setAttribute("disabled", "true");
-      element = document.getElementById("Button3");
-      element.setAttribute("value", buttonlabels.getAttribute("button4Label"));
-      element.removeAttribute("hidden");
-      element.setAttribute("disabled", "true");
+      var recipientsButton = document.documentElement.getButton("disclosure");
+      recipientsButton.setAttribute("value", buttonlabels.getAttribute("recipientsLabel"));
+      recipientsButton.setAttribute("disabled", "true");
 */        
-      //set buttons action
-      doSetOKCancel(Send, Cancel, Recipients, Help);
     }
   }
   else 

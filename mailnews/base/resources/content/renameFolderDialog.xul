@@ -24,34 +24,22 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!-- Contains the currently unused msgRenameFolderPicker.
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+-->
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/renameFolderDialog.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/renameFolderDialog.dtd">
 
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<dialog xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&renameFolderDialog.title;"
-        class="dialog"
+        ondialogaccept="return onOK();"
         onload="onLoad();">
 
   <stringbundleset id="stringbundleset"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/renameFolderDialog.js"/>
 
-  <keyset id="dialogKeys"/>
-
-  <vbox>
-
-    <spacer flex="100%"/>
-
-    <label value="&rename.label;" accesskey="&rename.accesskey;" control="name"/>
-    <textbox tabindex="0" id="name" oninput="doEnabling();"/>
-
-    <spacer flex="100%"/>
-
-    <hbox id="okCancelButtons"/>
-
-  </vbox>
-
-</window>
+  <label value="&rename.label;" accesskey="&rename.accesskey;" control="name"/>
+  <textbox id="name" oninput="doEnabling();"/>
+</dialog>

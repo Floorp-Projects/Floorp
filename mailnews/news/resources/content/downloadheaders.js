@@ -53,7 +53,6 @@ var args = null;
 
 function OnLoad()
 {
-    doSetOKCancel(OkButtonCallback, CancelButtonCallback);
     gNewsBundle = document.getElementById("bundle_news");
 
     if ("arguments" in window && window.arguments[0]) {
@@ -66,16 +65,13 @@ function OnLoad()
         nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
         var downloadHeadersTitlePrefix = gNewsBundle.getString("downloadHeadersTitlePrefix");
-        var downloadHeadersInfoText1 = gNewsBundle.getString("downloadHeadersInfoText1");
-        var downloadHeadersInfoText2 = gNewsBundle.getString("downloadHeadersInfoText2");
         var okButtonText = gNewsBundle.getString("okButtonText");
 
         window.title = downloadHeadersTitlePrefix;
 
-        // this is not i18n friendly, fix this
-        var infotext = downloadHeadersInfoText1 + " " + args.articleCount + " " + downloadHeadersInfoText2;
-        setText('info',infotext);
-        var okbutton = document.getElementById("ok");
+        var infotext =  gNewsBundle.getFormattedString("downloadHeadersInfoText", [args.articleCount]);
+        setText('info', infotext);
+        var okbutton = document.documentElement.getButton("accept");
         okbutton.setAttribute("label", okButtonText);
         setText("newsgroupLabel", args.groupName);
     }
@@ -119,12 +115,6 @@ function setupDownloadUI(enable) {
     var checkbox = document.getElementById("markread");
     var numberFld = document.getElementById("number");
 
-    if (enable) {
-        checkbox.removeAttribute("disabled");
-        numberFld.removeAttribute("disabled");
-    }
-    else {
-        checkbox.setAttribute("disabled", "true");
-        numberFld.setAttribute("disabled", "true");
-    }
+    checkbox.disabled = !enable;
+    numberFld.disabled = !enable;
 }

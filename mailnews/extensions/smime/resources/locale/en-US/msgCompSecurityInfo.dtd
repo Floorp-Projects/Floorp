@@ -7,7 +7,8 @@
 <!ENTITY status.encrypted "Encrypted:">
 <!ENTITY status.certificates "Certificates:">
 <!ENTITY view.label "View">
-<!ENTITY tree.recipient "Recipient:">
-<!ENTITY tree.status "Status:">
-<!ENTITY tree.issuedDate "Issued:">
-<!ENTITY tree.expiresDate "Expires:">
+<!ENTITY view.accesskey "V">
+<!ENTITY tree.recipient "Recipient">
+<!ENTITY tree.status "Status">
+<!ENTITY tree.issuedDate "Issued">
+<!ENTITY tree.expiresDate "Expires">

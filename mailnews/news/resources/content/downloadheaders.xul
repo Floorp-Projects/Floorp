@@ -39,37 +39,39 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/downloadheaders.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/downloadheaders.dtd">
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog" style="max-width: 27em;"
-        onload="OnLoad()">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="max-width: 27em;"
+        buttonpack="center"
+        ondialogaccept="return OkButtonCallback();"
+        ondialogcancel="return CancelButtonCallback();"
+        onload="OnLoad();">
 
   <stringbundle id="bundle_news" src="chrome://messenger/locale/news.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/downloadheaders.js" />
 
-  <keyset id="dialogKeys"/>
-  
   <description class="header" style="width: 25em; max-width: 25em;" id="newsgroupLabel"/> 
   <description style="width: 25em; max-width: 25em;" id="info"/>
   <separator class="thin"/>
   <vbox class="indent">
     <radiogroup id="downloadGroup">
-      <radio id="all" label="&all.label;" oncommand="setupDownloadUI(false);"/> 
+      <radio id="all" label="&all.label;" accesskey="&all.accesskey;"
+             oncommand="setupDownloadUI(false);"/>
       <separator class="thin"/>
       <hbox align="center" valign="middle">
-        <radio id="some" selected="true" label="&download.label;" oncommand="setupDownloadUI(true);"/>
+        <radio id="some" selected="true" label="&download.label;"
+               accesskey="&download.accesskey;"
+               oncommand="setupDownloadUI(true);"/>
         <textbox id="number" size="7"/>
-        <description value="&headers.label;" />
+        <label value="&headers.label;" accesskey="&headers.accesskey;"
+               control="number"/>
       </hbox>
     </radiogroup>
+
     <hbox class="indent" align="start">
-      <checkbox id="markread" label="&mark.label;"/>
+      <checkbox id="markread" label="&mark.label;" accesskey="&mark.accesskey;"/>
     </hbox>
   </vbox>
-  <separator/>
-  <hbox id="okCancelButtonsRight"/>
   
-</window>
+</dialog>

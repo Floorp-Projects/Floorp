@@ -80,8 +80,6 @@ function getStatusExplanation(value)
 
 function onLoad()
 {
-  document.getElementById("cancel").setAttribute("collapsed", "true");
-
   var params = window.arguments[0];
   if (!params)
     return;

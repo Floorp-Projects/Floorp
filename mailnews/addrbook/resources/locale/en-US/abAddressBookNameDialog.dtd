@@ -34,6 +34,6 @@
  the terms of any one of the MPL, the GPL or the LGPL.
 
  ***** END LICENSE BLOCK ***** -->
-
-<!-- Labels -->
-<!ENTITY name.label			"Address Book Name">
+<!ENTITY abAddressBookNameDialog.title "Address Book Name">
+<!ENTITY name.label                    "Address Book Name:">
+<!ENTITY name.accesskey                "A">

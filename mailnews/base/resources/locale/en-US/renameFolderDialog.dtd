@@ -23,4 +23,4 @@
 
 <!ENTITY renameFolderDialog.title          "Rename Folder">
 <!ENTITY rename.label                      "Enter the new name for your folder:">
-<!ENTITY rename.accesskey                  "e">
+<!ENTITY rename.accesskey                  "E">

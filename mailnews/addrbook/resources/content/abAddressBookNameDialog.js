@@ -5,8 +5,6 @@ function abNameOnLoad()
 {
   var abName = "";
   
-	doSetOKCancel(abNameOKButton, 0);
-
 	// look in arguments[0] for parameters
 	if ("arguments" in window && window.arguments[0])
 	{

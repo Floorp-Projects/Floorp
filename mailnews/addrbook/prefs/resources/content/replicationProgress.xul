@@ -40,20 +40,17 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/addressbook/replicationProgress.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/replicationProgress.dtd">
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="replicationProgress"
         style="width: 36em;"
-        class="dialog"
-        onload="onLoad()"
-        onclose="return DoReplicationClose()">
+        buttons="cancel"
+        onload="onLoad();"
+        ondialogcancel="return onCancelReplication();">
 
   <stringbundle id="bundle_replication" src="chrome://messenger/locale/addressbook/replicationProgress.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/replicationProgress.js"/>
-    <separator/>
     <grid flex="1">
       <columns>
         <column/>
@@ -74,9 +71,5 @@
         </row>
       </rows>
     </grid>
-    <separator/>
-    <hbox id="CancelButton" pack="end">
-      <button id="cancel" label="&replicationCancel.label;" accesskey="&replicationCancel.accesskey;" oncommand="onCancelReplication(true);"/>
-    </hbox>
 
-</window>
+</dialog>

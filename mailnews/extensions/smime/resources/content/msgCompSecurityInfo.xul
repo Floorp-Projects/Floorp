@@ -38,22 +38,20 @@
 <?xml-sheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/smime/msgCompSecurityInfo.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger-smime/locale/msgCompSecurityInfo.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger-smime/locale/msgCompSecurityInfo.dtd">
-
-<window id="msgCompSecurityInfo" title="&title.label;"
-  class="dialog"
+<dialog id="msgCompSecurityInfo" title="&title.label;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 50em;"
+  persist="width height"
+  buttons="accept,help"
+  ondialoghelp="doHelpButton();"
   onload="onLoad();">
 
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-<script type="application/x-javascript" src="chrome://messenger-smime/content/msgCompSecurityInfo.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript" src="chrome://messenger-smime/content/msgCompSecurityInfo.js"/>
 
-<stringbundle id="bundle_smime_comp_info" src="chrome://messenger-smime/locale/msgCompSecurityInfo.properties"/> 
-
-<vbox id="outer_vbox">
+  <stringbundle id="bundle_smime_comp_info" src="chrome://messenger-smime/locale/msgCompSecurityInfo.properties"/> 
 
   <description>&subject.plaintextWarning;</description>
   <separator class="thin"/>
@@ -78,7 +76,7 @@
   <separator class="thin"/>
   <label value="&status.certificates;"/>
 
-  <listbox id="infolist" style="height: 10em;" flex="1"
+  <listbox id="infolist" flex="1"
         onselect="onSelectionChange(event);">
     <listcols>
       <listcol flex="3" width="0"/>
@@ -98,12 +96,7 @@
   </listbox>
   <hbox pack="start">
     <button id="viewCertButton" disabled="true"
-            label="&view.label;"
+            label="&view.label;" accesskey="&view.accesskey;"
             oncommand="viewSelectedCert();"/>
   </hbox>
-
-  <separator class="thin"/>
-  <keyset id="dialogKeys"/>
-  <hbox id="okCancelHelpButtonsRight"/>
-</vbox>
-</window>
+</dialog>

@@ -48,7 +48,7 @@ function onLoad()
 
   dialog = {};
 
-  dialog.OKButton = document.getElementById("ok");
+  dialog.OKButton = document.documentElement.getButton("accept");
 
   dialog.nameField = document.getElementById("name");
   dialog.nameField.focus();
@@ -75,7 +75,6 @@ function onLoad()
 
   moveToAlertPosition();
   doEnabling();
-  doSetOKCancel(onOK, onCancel);
 }
 
 function onOK()
@@ -91,12 +90,6 @@ function onOK()
   else
     dialog.okCallback(name, uri);
 
-  return true;
-}
-
-function onCancel()
-{
-  // close the window
   return true;
 }
 

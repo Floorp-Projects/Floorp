@@ -24,29 +24,22 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/newFolderDialog.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/newFolderDialog.dtd">
 
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<dialog xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newFolderDialog.title;"
-        class="dialog"
-        onload="onLoad();">
+        onload="onLoad();"
+        ondialogaccept="return onOK();">
 
   <stringbundleset id="stringbundleset"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/newFolderDialog.js"/>
 
-  <keyset id="dialogKeys"/>
-
-  <vbox>
-
-    <spacer flex="1"/>
-
     <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
-    <textbox tabindex="0" id="name" oninput="doEnabling();"/>
+    <textbox id="name" oninput="doEnabling();"/>
 
     <separator/>
 
@@ -63,20 +56,11 @@
 
       <separator class="thin"/>
 
-      <radiogroup id="folderGroup">
+      <radiogroup id="folderGroup" orient="horizontal" class="indent">
         <radio oncommand="onFoldersOnly();" label="&foldersOnly.label;"/>
         <radio oncommand="onMessagesOnly();" label="&messagesOnly.label;" selected="true"/>
-        <spacer flex="100%"/>
       </radiogroup>
 
     </vbox>
 
-    <spacer flex="1"/>
-
-    <separator/>
-
-    <hbox id="okCancelButtonsRight"/>
-
-  </vbox>
-
-</window>
+</dialog>

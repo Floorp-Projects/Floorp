@@ -37,5 +37,3 @@
    - ***** END LICENSE BLOCK ***** -->
 <!ENTITY status.label   "Status:">
 <!ENTITY progress.label "Progress:">
-<!ENTITY replicationCancel.label "Cancel">
-<!ENTITY replicationCancel.accesskey "C">

@@ -2,19 +2,19 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/messengercompose/askSendFormat.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/askSendFormat.dtd">
-
-<window id="askSendFormat"
+<dialog id="askSendFormat"
     title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    buttonpack="center"
     onload="Startup()"
-    class="dialog">
+    ondialogaccept="return Send();"
+    ondialogdisclosure="return Recipients();"
+    ondialoghelp="return Help();"
+    ondialogcancel="return Cancel();">
 
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/>
-
-<keyset id="dialogKeys"/>
 
     <spacer style="height:0.5em"/>
     <hbox>
@@ -54,18 +54,12 @@
         <spacer style="width:10px"/>
     </hbox>
 
-    <spacer style="height:1em"/>
-  <hbox id="okCancelButtons"
-        button1Label="&send.label;"
-        button2Label="&cancel.label;"
-      button3Label="&recipients.label;"
-      button4Label="&help.label;"
-  />
-  <hbox id="hiddenLabels"
+  <data id="hiddenLabels"
+        sendLabel="&send.label;"
+        recipientsLabel="&recipients.label;"
         plainTextAndHtmlRecommendedLabel="&plainTextAndHtmlRecommended.label;"
         plainTextOnlyRecommendedLabel="&plainTextOnlyRecommended.label;"
         htmlOnlyRecommendedLabel="&htmlOnlyRecommended.label;"
   />
-    <spacer style="height:1em" />
 
-</window>
+</dialog>

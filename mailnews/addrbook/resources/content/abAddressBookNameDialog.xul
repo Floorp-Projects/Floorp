@@ -38,32 +38,18 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/addressbook/abAddressBookNameDialog.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abAddressBookNameDialog.dtd">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&abAddressBookNameDialog.title;"
+        style="width: 36em;"
+        onload="abNameOnLoad();"
+        ondialogaccept="return abNameOKButton();">
 
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abAddressBookNameDialog.js"/>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        onload="abNameOnLoad()"
-        style="padding:10px"> 
-        
-<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abAddressBookNameDialog.js"/>
-
-	<keyset id="dialogKeys"/>
-
-	<vbox style="width:36em; min-height:12em">
-		
-		<spacer flex="1"/>
-
-                <label control="name" style="margin-bottom:.3em" value="&name.label;"/>
-		
-		<textbox tabindex="0" id="name" style="width: 100%"/>
-		
-		<spacer flex="1"/>
-		
-		<hbox id="okCancelButtons"/>
-		
-	</vbox>
-
-</window>
+  <hbox align="center">
+    <label control="name" value="&name.label;" accesskey="&name.accesskey;"/>
+    <textbox id="name" flex="1"/>
+  </hbox>
+</dialog>

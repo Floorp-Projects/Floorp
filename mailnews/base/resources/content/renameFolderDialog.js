@@ -46,7 +46,7 @@ function onLoad()
 
   dialog = {};
 
-  dialog.OKButton = document.getElementById("ok");
+  dialog.OKButton = document.documentElement.getButton("accept");
 
   dialog.nameField = document.getElementById("name");
   dialog.nameField.value = arguments.name;
@@ -61,19 +61,12 @@ function onLoad()
 
   moveToAlertPosition();
   doEnabling();
-  doSetOKCancel(onOK, onCancel);
 }
 
 function onOK()
 {
   dialog.okCallback(dialog.nameField.value, dialog.preselectedFolderURI);
 
-  return true;
-}
-
-function onCancel()
-{
-  // close the window
   return true;
 }
 

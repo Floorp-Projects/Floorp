@@ -20,6 +20,4 @@
 <!ENTITY recommended.label "(recommended)">
 
 <!ENTITY send.label "Send">
-<!ENTITY cancel.label "Cancel">
 <!ENTITY recipients.label "Recipients...">
-<!ENTITY help.label "Help">

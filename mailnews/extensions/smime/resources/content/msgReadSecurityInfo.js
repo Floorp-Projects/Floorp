@@ -62,8 +62,6 @@ function setText(id, value) {
 
 function onLoad()
 {
-  document.getElementById("cancel").setAttribute("collapsed", "true");
-
   var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   var isupport = pkiParams.getISupportAtIndex(1);
   if (isupport) {
