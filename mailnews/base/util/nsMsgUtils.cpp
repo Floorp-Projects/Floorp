@@ -495,11 +495,12 @@ char * NS_MsgSACat (char **destination, const char *source)
   return *destination;
 }
 
-nsresult NS_MsgEscapeEncodeURLPath(const nsAString& str, nsACString& result)
+nsresult NS_MsgEscapeEncodeURLPath(const nsAString& str, nsAFlatCString& result)
 {
-  NS_EscapeURL(NS_ConvertUTF16toUTF8(str),
-               esc_FileBaseName|esc_Forced|esc_AlwaysCopy,
-               result);
+  char *escapedString = nsEscape(NS_ConvertUTF16toUTF8(str).get(), url_Path); 
+  if (!*escapedString)
+    return NS_ERROR_OUT_OF_MEMORY;
+  result.Adopt(escapedString);
   return NS_OK;
 }
 
