@@ -51,7 +51,7 @@ LINCS=-I$(XPDIST)\public\util -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\zlib 
 !endif
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
 
 #export::  $(LIBRARY)
 install::  $(LIBRARY)

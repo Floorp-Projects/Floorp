@@ -27,4 +27,4 @@ JSRCS=ILPixCtl.java ILPix_t.java IMGCBIF.java IMGCB.java PSIMGCB.java \
 JMC_EXPORT=IMGCBIF IMGCB PSIMGCB 
 CLASSROOT=D:\builds\clientsrc\ns\modules\libimg\classes 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak

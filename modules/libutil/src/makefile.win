@@ -28,4 +28,4 @@ C_OBJS=.\$(OBJDIR)\obs.obj
 LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\util 
 !endif
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
