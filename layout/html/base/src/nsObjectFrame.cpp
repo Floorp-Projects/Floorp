@@ -3800,8 +3800,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
     if (cvc) {
       nsCOMPtr<nsIContentViewer> cv;
       cvc->GetContentViewer(getter_AddRefs(cv));
-      if (cv)
-        cv->Show();
+      if (cv) {
+       cv->SetSticky(PR_FALSE);
+       cv->Show();
+      }
     }
   }
 
