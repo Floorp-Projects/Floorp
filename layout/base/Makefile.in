@@ -79,6 +79,7 @@ REQUIRES	= xpcom \
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
 		nsISelectionImageService.idl	\
+		nsIStyleSheetService.idl	\
 		$(NULL)
 
 EXPORTS		= \
@@ -134,6 +135,7 @@ CPPSRCS		= \
 		nsPresState.cpp \
 		nsQuoteList.cpp \
 		nsStyleChangeList.cpp \
+		nsStyleSheetService.cpp \
 		$(NULL)
 
 ifdef IBMBIDI

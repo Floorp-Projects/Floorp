@@ -124,6 +124,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsITimelineService.h"
 #include "nsGfxCIID.h"
+#include "nsStyleSheetService.h"
 
 // Printing
 #include "nsIWebBrowserPrint.h"
@@ -1714,6 +1715,22 @@ DocumentViewerImpl::ForceRefresh()
 
 NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
+PR_STATIC_CALLBACK(PRBool)
+AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
+{
+  nsStyleSet *styleSet = NS_STATIC_CAST(nsStyleSet*, aData);
+  styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
+  return PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+AppendUserSheet(nsIStyleSheet *aSheet, void *aData)
+{
+  nsStyleSet *styleSet = NS_STATIC_CAST(nsStyleSet*, aData);
+  styleSet->AppendStyleSheet(nsStyleSet::eUserSheet, aSheet);
+  return PR_TRUE;
+}
+
 nsresult
 DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
                                    nsStyleSet** aStyleSet)
@@ -1799,6 +1816,17 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   if (mUAStyleSheet) {
     styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
+  }
+
+  nsCOMPtr<nsIStyleSheetService> dummy =
+    do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
+
+  nsStyleSheetService *sheetService = nsStyleSheetService::gInstance;
+  if (sheetService) {
+    sheetService->AgentStyleSheets()->EnumerateForwards(AppendAgentSheet,
+                                                        styleSet);
+    sheetService->UserStyleSheets()->EnumerateForwards(AppendUserSheet,
+                                                       styleSet);
   }
 
   // Caller will handle calling EndUpdate, per contract.
