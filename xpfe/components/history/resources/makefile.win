@@ -19,8 +19,18 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
 
+FILES=\
+        history.xul     \
+        history.css     \
+        $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-# Nuthin' to do yet...
+install:: $(FILES:/=\)
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\samples
+
+clobber:: $(FILES:/=\)
+        !$(RM) $(DIST)\bin\res\samples\$**
+
 
 
