@@ -71,6 +71,7 @@ extern int MK_ACCESS_COOKIES_WISHES1;
 extern int MK_ACCESS_COOKIES_WISHESN;
 extern int MK_ACCESS_COOKIES_REMEMBER;
 extern int MK_ACCESS_COOKIES_ACCEPTED;
+extern int MK_ACCESS_SITE_COOKIES_ACCEPTED;
 extern int MK_ACCESS_COOKIES_PERMISSION;
 #else
 extern int MK_ACCESS_COOKIES_TOANYSERV; 
@@ -1462,6 +1463,7 @@ NET_CookieScriptPrefChanged(const char * newpref, void * data)
 }
  
 #if defined(CookieManagement)
+
 /*
  * search if permission already exists
  */
@@ -1487,6 +1489,46 @@ net_CheckForCookiePermission(char * hostname) {
     net_unlock_cookie_permission_list();
     return(NULL);
 }
+
+/*
+ * return:
+ *  +1 if cookie permission exists for host and indicates host can set cookies
+ *   0 if cookie permission does not exist for host
+ *  -1 if cookie permission exists for host and indicates host can't set cookies
+ */
+PUBLIC Bool
+NET_CookiePermission(MWContext * context) {
+    net_CookiePermissionStruct * cookiePermission;
+    char * host;
+    char * colon;
+
+    if (!context || !(context->hist.cur_doc_ptr) ||
+	    !(context->hist.cur_doc_ptr->address)) {
+	return 0;
+    }
+
+    /* remove protocol from URL name */
+    host = NET_ParseURL(context->hist.cur_doc_ptr->address, GET_HOST_PART);
+
+    /* remove port number from URL name */
+    colon = PL_strchr(host, ':');
+    if(colon) {
+        *colon = '\0';
+    }
+    cookiePermission = net_CheckForCookiePermission(host);
+    if(colon) {
+        *colon = ':';
+    }
+    PR_Free(host);
+    if (cookiePermission == NULL) {
+	return 0;
+    }
+    if (cookiePermission->permission) {
+	return 1;
+    }
+    return -1;
+}
+
 #endif
 
 /* called from mkgeturl.c, NET_InitNetLib(). This sets the module local cookie pref variables
@@ -1726,6 +1768,42 @@ net_AddCookiePermission
 	}
 
     }
+}
+
+/* find out how many cookies this host has already set */
+PUBLIC int
+NET_CookieCount(char * URLName) {
+    char * host;
+    char * colon;
+    int count = 0;
+    XP_List * list_ptr;
+    net_CookieStruct * cookie;
+
+    /* remove protocol from URL name */
+    host = NET_ParseURL(URLName, GET_HOST_PART);
+
+    /* remove port number from URL name */
+    colon = PL_strchr(host, ':');
+    if(colon) {
+        *colon = '\0';
+    }
+
+    net_lock_cookie_list();
+    list_ptr = net_cookie_list;
+    while((cookie = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
+	if (host && cookie->host &&
+		PL_strcmp(host, cookie->host) == 0) {
+	    count++;
+	}
+    }
+    net_unlock_cookie_list();
+
+    /* free up allocated string and return */
+    if(colon) {
+        *colon = ':';
+    }
+    PR_Free(host);
+    return count;
 }
 #endif
 
@@ -2067,25 +2145,13 @@ net_IntSetCookieString(MWContext * context,
 		char * new_string=0;
 		char * tmp_host = NET_ParseURL(cur_url, GET_HOST_PART);
 #if defined(CookieManagement)
-		XP_List * list_ptr;
-		net_CookieStruct * cookie;
-		int count = 0;
+		int count;
 		char * remember_string = 0;
 		StrAllocCopy
 		    (remember_string, XP_GetString(MK_ACCESS_COOKIES_REMEMBER));
 
 		/* find out how many cookies this host has already set */
-		net_lock_cookie_list();
-		list_ptr = net_cookie_list;
-		while((cookie = (net_CookieStruct *)
-				XP_ListNextObject(list_ptr))!=0) {
-		    if (host_from_header && cookie->host &&
-			    PL_strcmp(host_from_header, cookie->host) == 0) {
-			count++;
-		    }
-		}
-		net_unlock_cookie_list();
-
+		count = NET_CookieCount(host_from_header);
 		if (count>1) {
 		    new_string = PR_smprintf(
 			XP_GetString(MK_ACCESS_COOKIES_WISHESN),
@@ -3587,8 +3653,8 @@ struct _CookieViewerDialog {
 #pragma global_optimizer on
 #endif
 
-PUBLIC void
-NET_DisplayCookieInfoAsHTML(MWContext *context)
+PRIVATE void
+net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 {
     char *buffer = (char*)PR_Malloc(BUFLEN);
     char *buffer2 = 0;
@@ -3811,7 +3877,6 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
     }
 
     /* generate next section of html file */
-    StrAllocCopy (heading, XP_GetString(MK_ACCESS_COOKIES_ACCEPTED));
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      }\n"
 "      top.frames[prop_frame].document.close();\n"
@@ -3819,6 +3884,13 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "\n"
 "    function loadCookies(){\n"
 "      cookie_mode = 1;\n"
+	);
+    FLUSH_BUFFER
+
+    /* generate index frame only if full viewer */
+
+    if (!host) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[index_frame].document.open();\n"
 "      top.frames[index_frame].document.write(\n"
 "        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
@@ -3842,7 +3914,18 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "        \"</BODY>\"\n"
 "      );\n"
 "      top.frames[index_frame].document.close();\n"
-"\n"
+"\n",
+	    view_cookies, view_sites);
+	FLUSH_BUFFER
+    }
+
+    /* generate next section of html file */
+    if (!host) {
+	StrAllocCopy (heading, XP_GetString(MK_ACCESS_COOKIES_ACCEPTED));
+    } else {
+	StrAllocCopy (heading, XP_GetString(MK_ACCESS_SITE_COOKIES_ACCEPTED));
+    }
+    g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[title_frame].document.open();\n"
 "      top.frames[title_frame].document.write\n"
 "        (\"&nbsp;%s\");\n"
@@ -3862,7 +3945,7 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "                          \"MULTIPLE \" +\n"
 "                          \"onchange=top.ViewCookieSelected(selname.selectedIndex);>\"\n"
 "      );\n",
-	view_cookies, view_sites, heading);
+	heading);
     FLUSH_BUFFER
     PR_FREEIF(heading);
 
@@ -3870,7 +3953,8 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
     cookie_list=net_cookie_list;
     cookie = NULL;
     while (cookie = NextCookieAfter(cookie, &cookieNum)) {
-        g += PR_snprintf(buffer+g, BUFLEN-g,
+	if (!host || !PL_strcmp(host,cookie->host)) {
+	    g += PR_snprintf(buffer+g, BUFLEN-g,
 "      if (!deleted_cookies[%d]) {\n"
 "        top.frames[list_frame].document.write(\n"
 "                    \"<OPTION value=%d>\" +\n"
@@ -3878,11 +3962,12 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "                    \"</OPTION>\"\n"
 "        );\n"
 "      }\n",
-	    cookieNum, cookieNum,
-            (*(cookie->host)=='.') ? (cookie->host)+1: cookie->host,
-	    cookie->name
-	    );
-        FLUSH_BUFFER
+		cookieNum, cookieNum,
+		(*(cookie->host)=='.') ? (cookie->host)+1: cookie->host,
+		cookie->name
+		);
+	    FLUSH_BUFFER
+	}
     }
     net_unlock_cookie_list();
 
@@ -4124,6 +4209,36 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 		strings, 1, (void *)dlg);
 
     return;
+}
+
+PUBLIC void
+NET_DisplayCookieInfoOfSiteAsHTML(MWContext * context, char * URLName)
+{
+    char * host;
+    char * colon;
+
+    /* remove protocol from URL name */
+    host = NET_ParseURL(URLName, GET_HOST_PART);
+
+    /* remove port number from URL name */
+    colon = PL_strchr(host, ':');
+    if(colon) {
+        *colon = '\0';
+    }
+
+    net_DisplayCookieInfoAsHTML(context, host);
+
+    /* free up allocated string and return */
+    if(colon) {
+        *colon = ':';
+    }
+    PR_Free(host);
+}
+
+PUBLIC void
+NET_DisplayCookieInfoAsHTML(MWContext * context)
+{
+    net_DisplayCookieInfoAsHTML(context, NULL);
 }
 
 #ifdef XP_MAC
