@@ -1325,6 +1325,9 @@ cookie_CheckPrefs(nsIURI         *aHostURI,
   return nsICookie::STATUS_ACCEPTED;
 }
 
+// helper function for COOKIE_GetCookie
+PRIVATE inline PRBool ispathdelimiter(char c) { return c == '/' || c == '?' || c == '#' || c == ';'; }
+
 PUBLIC char *
 COOKIE_GetCookie(nsIURI *aHostURI,
                  nsIURI *aFirstURI)
@@ -1398,14 +1401,15 @@ COOKIE_GetCookie(nsIURI *aHostURI,
       continue;
     }
 
-    char pathLastChar = pathFromURI.CharAt(cookiePathLen);
     if (pathFromURI.Length() > cookiePathLen &&
-        pathLastChar != '/' && pathLastChar != '?' && pathLastChar != '#' && pathLastChar != ';') {
+        !ispathdelimiter(pathFromURI.CharAt(cookiePathLen))) {
       /*
-       * note that the '?' test above allows a site at host/abc?def to receive a cookie that
-       * has a path attribute of abc.  This seems strange but at least one major site
-       * (citibank, bug 156725) depends on it.  The test for # and ; are put in to proactively
-       * avoid problems with other sites - these are the only other chars allowed in the path.
+       * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
+       * '/' is the "standard" case; the '?' test allows a site at host/abc?def
+       * to receive a cookie that has a path attribute of abc.  this seems
+       * strange but at least one major site (citibank, bug 156725) depends
+       * on it.  The test for # and ; are put in to proactively avoid problems
+       * with other sites - these are the only other chars allowed in the path.
        */
       continue;
     }
