@@ -60,7 +60,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsQABrowserChrome)
 static NS_DEFINE_CID(kBrowserViewCID, NS_QABROWSERVIEW_CID);
 static NS_DEFINE_CID(kBrowserUIGlueCID, NS_QABROWSERUIGLUE_CID);
 static NS_DEFINE_CID(kBrowserChromeCID, NS_QABROWSERCHROME_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static const nsModuleComponentInfo gQAEmbeddingModuleViewInfo[] =
 {
