@@ -137,18 +137,8 @@ PRBool nsDll::Load(void)
 	}
 	
 #else
-#ifdef XP_UNIX
-    // On linux we seem to load multiple copies of the same dll but with different path
-    // like libraptorhtml.so and ./libraptorhtml.so
-    // Until this get fixed right, for now for ./libraptorhtml.so remove the "./"
-    if (m_fullpath[0] == '.' && m_fullpath[1] == '/')
-    	m_instance = PR_LoadLibrary( &(m_fullpath[2]) );
-    else
-#endif /* XP_UNIX */
-      {
-        // This is the only right way of doing this...
-        m_instance = PR_LoadLibrary(m_fullpath);
-      }
+	// This is the only right way of doing this...
+	m_instance = PR_LoadLibrary(m_fullpath);
 #endif /* XP_MAC */
 	return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 	
