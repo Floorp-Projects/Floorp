@@ -98,7 +98,7 @@ BookmarksToolbar.prototype = {
     openFolder: function (aSelectedItem)
     {
       var mbo = aSelectedItem.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
-      mbo.openMenu(true);
+      setTimeout(mbo.openMenu, 0, true);
     },
 
     editCell: function (aSelectedItem, aXXXLameAssIndex)
