@@ -13,6 +13,8 @@ mailnews/base/tests/Makefile
 mailnews/db/Makefile
 mailnews/db/mdb/Makefile
 mailnews/db/mdb/public/Makefile
+mailnews/db/mork/Makefile
+mailnews/db/mork/src/Makefile
 mailnews/db/msgdb/Makefile
 mailnews/db/msgdb/public/Makefile
 mailnews/db/msgdb/src/Makefile
