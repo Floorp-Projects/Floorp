@@ -182,6 +182,7 @@ typedef struct JavaPackageDef {
     const char *        name;   /* e.g. "java.lang" */
     const char *        path;   /* e.g. "java/lang", or NULL for default */
     int                 flags;  /* PKG_USER, PKG_SYSTEM, etc. */
+    int                 access; /* JSPROP_READONLY or 0 */            
 } JavaPackageDef;
 
 /*===========================================================================*/

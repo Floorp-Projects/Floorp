@@ -68,13 +68,13 @@ typedef struct {
 
 static JSObject *
 define_JavaPackage(JSContext *cx, JSObject *parent_obj,
-                   const char *obj_name, const char *path, int flags)
+                   const char *obj_name, const char *path, int flags, int access)
 {
     JSObject *package_obj;
     JavaPackage_Private *package;
 
-    package_obj = JS_DefineObject(cx, parent_obj, obj_name, &JavaPackage_class, 0,
-                                  JSPROP_PERMANENT | JSPROP_READONLY);
+    package_obj = JS_DefineObject(cx, parent_obj, obj_name, &JavaPackage_class, 0, JSPROP_PERMANENT | access);
+    
     if (!package_obj)
         return NULL;
     
@@ -238,7 +238,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             }
         }
 
-        if (!define_JavaPackage(cx, obj, subPath, newPath, 0)) {
+        if (!define_JavaPackage(cx, obj, subPath, newPath, 0, JSPROP_READONLY)) {
             ok = JS_FALSE;
             goto out;
         }
@@ -342,53 +342,53 @@ JSClass JavaPackage_class = {
 
 JavaPackageDef
 standard_java_packages[] = {
-    {"java",                NULL,   PKG_USER},
-    {"java.applet",         NULL,   PKG_USER},
-    {"java.awt",            NULL,   PKG_USER},
-    {"java.awt.datatransfer",
-                            NULL,   PKG_SYSTEM},
-    {"java.awt.event",      NULL,   PKG_SYSTEM},
-    {"java.awt.image",      NULL,   PKG_SYSTEM},
-    {"java.awt.peer",       NULL,   PKG_SYSTEM},
-    {"java.beans",          NULL,   PKG_USER},
-    {"java.io",             NULL,   PKG_SYSTEM},
-    {"java.lang",           NULL,   PKG_USER},
-    {"java.lang.reflect",   NULL,   PKG_SYSTEM},
-    {"java.math",           NULL,   PKG_SYSTEM},
-    {"java.net",            NULL,   PKG_USER},
-    {"java.rmi",            NULL,   PKG_USER},
-    {"java.rmi.dgc",        NULL,   PKG_USER},
-    {"java.rmi.user",       NULL,   PKG_USER},
-    {"java.rmi.registry",   NULL,   PKG_USER},
-    {"java.rmi.server",     NULL,   PKG_USER},
-    {"java.security",       NULL,   PKG_USER},
-    {"java.security.acl",   NULL,   PKG_SYSTEM},
+    {"java",                NULL,   PKG_USER,   0},
+    {"java.applet",         NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.awt",            NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.awt.datatransfer",                       
+                            NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.awt.event",      NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.awt.image",      NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.awt.peer",       NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.beans",          NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.io",             NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.lang",           NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.lang.reflect",   NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.math",           NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.net",            NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.rmi",            NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.rmi.dgc",        NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.rmi.user",       NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.rmi.registry",   NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.rmi.server",     NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.security",       NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.security.acl",   NULL,   PKG_SYSTEM, JSPROP_READONLY},
     {"java.security.interfaces",
-                            NULL,   PKG_SYSTEM},
-    {"java.sql",            NULL,   PKG_USER},
-    {"java.text",           NULL,   PKG_USER},
-    {"java.text.resources", NULL,   PKG_SYSTEM},
-    {"java.util",           NULL,   PKG_USER},
-    {"java.util.zip",       NULL,   PKG_SYSTEM},
+                            NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.sql",            NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.text",           NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.text.resources", NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"java.util",           NULL,   PKG_USER,   JSPROP_READONLY},
+    {"java.util.zip",       NULL,   PKG_SYSTEM, JSPROP_READONLY},
 
-    {"netscape",            NULL,   PKG_USER},
-    {"netscape.applet",     NULL,   PKG_SYSTEM},
-    {"netscape.application",NULL,   PKG_SYSTEM},
-    {"netscape.debug",      NULL,   PKG_SYSTEM},
-    {"netscape.javascript", NULL,   PKG_SYSTEM},
-    {"netscape.ldap",       NULL,   PKG_SYSTEM},
-    {"netscape.misc",       NULL,   PKG_SYSTEM},
-    {"netscape.net",        NULL,   PKG_SYSTEM},
-    {"netscape.plugin",     NULL,   PKG_SYSTEM},
-    {"netscape.util",       NULL,   PKG_SYSTEM},
-    {"netscape.secfile",    NULL,   PKG_SYSTEM},
-    {"netscape.security",   NULL,   PKG_SYSTEM},
-    {"netscape.WAI",        NULL,   PKG_SYSTEM},
+    {"netscape",            NULL,   PKG_USER,   0},
+    {"netscape.applet",     NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.application",NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.debug",      NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.javascript", NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.ldap",       NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.misc",       NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.net",        NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.plugin",     NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.util",       NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.secfile",    NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.security",   NULL,   PKG_SYSTEM, JSPROP_READONLY},
+    {"netscape.WAI",        NULL,   PKG_SYSTEM, JSPROP_READONLY},
 
-    {"sun",                 NULL,   PKG_USER},
-    {"Packages",            "",     PKG_USER},
+    {"sun",                 NULL,   PKG_USER,   0},
+    {"Packages",            "",     PKG_USER,   JSPROP_READONLY},
 
-    {NULL,                  NULL,   0}
+    {NULL,                  NULL,   0,          0}
 };
 
 /*
@@ -468,7 +468,8 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
                 }
             }
             flags = package_def->flags;
-            parent_obj = define_JavaPackage(cx, parent_obj, simple_name, path, flags);
+            parent_obj = define_JavaPackage(cx, parent_obj, simple_name, path, flags,
+                                            package_def->access);
             if (!parent_obj)
                 goto error;
  
