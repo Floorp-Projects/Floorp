@@ -389,11 +389,30 @@ System.out.println();
      *    code point value is less than decimal 128, then return ch.
      * 6. Return cu.
      */
-    private static char canonicalize(char ch)
+    private static char upcase(char ch)
     {
+        if (ch < 128) {
+            if ('a' <= ch && ch <= 'z') {
+                return (char)(ch + ('A' - 'a'));
+            }
+            return ch;
+        }
         char cu = Character.toUpperCase(ch);
         if ((ch >= 128) && (cu < 128)) return ch;
         return cu;
+    }
+
+    private static char downcase(char ch)
+    {
+        if (ch < 128) {
+            if ('A' <= ch && ch <= 'Z') {
+                return (char)(ch + ('a' - 'A'));
+            }
+            return ch;
+        }
+        char cl = Character.toLowerCase(ch);
+        if ((ch >= 128) && (cl < 128)) return ch;
+        return cl;
     }
 
 /*
@@ -631,9 +650,9 @@ System.out.println();
                 }
             }
             if ((state.flags & JSREG_FOLD) != 0){
-                c = canonicalize((char)localMax);
-                if (c > localMax)
-                    localMax = c;
+                char cu = upcase((char)localMax);
+                char cd = downcase((char)localMax);
+                localMax = (cu >= cd) ? cu : cd;
             }
             if (localMax > max)
                 max = localMax;
@@ -1382,7 +1401,7 @@ System.out.println();
         if (x.cp == gData.cpend)
             return null;
 
-        if (canonicalize(gData.cpbegin[x.cp]) != canonicalize(matchCh))
+        if (upcase(gData.cpbegin[x.cp]) != upcase(matchCh))
             return null;
         x.cp++;
         return x;
@@ -1415,8 +1434,8 @@ System.out.println();
         if ((x.cp + length) > gData.cpend)
             return null;
         for (i = 0; i < length; i++) {
-            if (canonicalize(gData.regexp.source[matchChars + i])
-                    != canonicalize(gData.cpbegin[x.cp + i]))
+            if (upcase(gData.regexp.source[matchChars + i])
+                    != upcase(gData.cpbegin[x.cp + i]))
                 return null;
         }
         x.cp += length;
@@ -1461,8 +1480,8 @@ System.out.println();
 
         if ((gData.regexp.flags & JSREG_FOLD) != 0) {
             for (i = 0; i < len; i++) {
-                if (canonicalize(gData.cpbegin[parenContent + i])
-                                      != canonicalize(gData.cpbegin[x.cp + i]))
+                if (upcase(gData.cpbegin[parenContent + i])
+                                      != upcase(gData.cpbegin[x.cp + i]))
                     return null;
             }
         }
@@ -1668,34 +1687,24 @@ System.out.println();
             }
             if (inRange) {
                 if ((gData.regexp.flags & JSREG_FOLD) != 0) {
-                    char minch = (char)65535;
-                    char maxch = 0;
-                    /*
-
-                        yuk
-
-                    */
-                    if (rangeStart < minch) minch = rangeStart;
-                    if (thisCh < minch) minch = thisCh;
-                    if (canonicalize(rangeStart) < minch)
-                                                minch = canonicalize(rangeStart);
-                    if (canonicalize(thisCh) < minch) minch = canonicalize(thisCh);
-
-                    if (rangeStart > maxch) maxch = rangeStart;
-                    if (thisCh > maxch) maxch = thisCh;
-                    if (canonicalize(rangeStart) > maxch)
-                                                maxch = canonicalize(rangeStart);
-                    if (canonicalize(thisCh) > maxch) maxch = canonicalize(thisCh);
-                    addCharacterRangeToCharSet(charSet, minch, maxch);
-                }
-                else
+                    addCharacterRangeToCharSet(charSet,
+                                               upcase(rangeStart),
+                                               upcase(thisCh));
+                    addCharacterRangeToCharSet(charSet,
+                                               downcase(rangeStart),
+                                               downcase(thisCh));
+                } else {
                     addCharacterRangeToCharSet(charSet, rangeStart, thisCh);
+                }
                 inRange = false;
             }
             else {
-                if ((gData.regexp.flags & JSREG_FOLD) != 0)
-                    addCharacterToCharSet(charSet, canonicalize(thisCh));
-                addCharacterToCharSet(charSet, thisCh);
+                if ((gData.regexp.flags & JSREG_FOLD) != 0) {
+                    addCharacterToCharSet(charSet, upcase(thisCh));
+                    addCharacterToCharSet(charSet, downcase(thisCh));
+                } else {
+                    addCharacterToCharSet(charSet, thisCh);
+                }
                 if (src < (end - 1)) {
                     if (gData.regexp.source[src] == '-') {
                         ++src;
@@ -1809,7 +1818,7 @@ System.out.println("Anchor ch = '" + anchorCh + "'");
                 matchCh = gData.cpbegin[x.cp];
                 if ((matchCh == anchorCh) ||
                         (((gData.regexp.flags & JSREG_FOLD) != 0)
-                        && (canonicalize(matchCh) == canonicalize(anchorCh)))) {
+                        && (upcase(matchCh) == upcase(anchorCh)))) {
                     anchor = true;
                     break;
                 }
