@@ -39,6 +39,7 @@ CPPSRCS =				\
 	nsTextFragment.cpp		\
 	nsXIFConverter.cpp		\
 	nsRangeList.cpp		\
+	nsLayoutAtoms.cpp		\
 	$(NULL)
 
 MODULE=raptor 
@@ -64,6 +65,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsTextFragment.obj		\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
 	.\$(OBJDIR)\nsRangeList.obj		\
+	.\$(OBJDIR)\nsLayoutAtoms.obj		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
