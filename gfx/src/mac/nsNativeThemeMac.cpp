@@ -387,7 +387,7 @@ nsNativeThemeMac::DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
   Pattern whitePat;
   ::BackColor(whiteColor);
-  ::BackPat(GetQDGlobalsWhite(&whitePat));
+//  ::BackPat(GetQDGlobalsWhite(&whitePat));
   ::EraseRect(&inBoxRect);
   
   ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
@@ -439,12 +439,16 @@ nsNativeThemeMac::DrawFullScrollbar ( const Rect& inSbarRect, PRInt32 inWidgetHi
   viewSize /= inLineHeight;
 
   // Figure out if something should be drawn depressed
+//printf("-- widget drawn is %ld\n", inWidgetHit);
   ThemeTrackPressState pressState = 0L;  
   if ( (inState & NS_EVENT_STATE_ACTIVE && inState & NS_EVENT_STATE_HOVER) ) {
 //printf("something is :hover:active!\n");
     switch ( inWidgetHit ) {
       case NS_THEME_SCROLLBAR_BUTTON_UP:
         pressState = kThemeTopOutsideArrowPressed;
+        break;    
+      case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+        pressState = kThemeBottomOutsideArrowPressed;
         break;    
     }
   }
@@ -566,10 +570,17 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
 #endif
 
+    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL: 
+      // do nothing, these don't exist in aqua
+      break;
+
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     {
