@@ -254,7 +254,7 @@
         </body>
       </method>
       
-      <method name="focusTextField">
+      <method name="focus">
         <body>
           document.getAnonymousNodes(this)[0].firstChild.focus();
         </body>
@@ -266,7 +266,7 @@
         </body>
       </method>
 
-      <property name="controllers"    onget="return document.getAnonymousNodes(this)[0].firstChild.controllers;"/>
+      <property name="controllers"    onget="return document.getAnonymousNodes(this)[0].controllers"/>
       <property name="textLength"     onget="return document.getAnonymousNodes(this)[0].firstChild.textLength;"/>
       <property name="selectionStart" onset="document.getAnonymousNodes(this)[0].firstChild.selectionStart = val; return val;"
                                       onget="return document.getAnonymousNodes(this)[0].firstChild.selectionStart;"/>
