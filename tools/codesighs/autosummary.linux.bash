@@ -106,7 +106,7 @@ SUMMARYFILE="$3"
 #
 #   Create our temporary directory.
 #
-TMPDIR="/tmp/codesighs.$PPID"
+TMPDIR="codesighs/$PPID"
 mkdir -p $TMPDIR
 
 
@@ -174,12 +174,20 @@ fi
 #       files parsed.
 #   Second number, if present, is growth/shrinkage.
 #
+
+if [ $TINDERBOX_OUTPUT ]; then
+    echo -n "TinderboxPrint:Z:"
+fi
 ./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV
+
 if [ -e $DIFFFILE ]; then
+if [ $TINDERBOX_OUTPUT ]; then
+    echo -n "TinderboxPrint:Zdiff:"
+fi
     ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE
 fi
 
 #
 #   Remove our temporary directory.
 #
-rm -rf $TMPDIR
+\rm -rf $TMPDIR
