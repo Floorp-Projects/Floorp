@@ -1572,11 +1572,8 @@ int main(int argc, char* argv[])
   if (HandleDumpArguments(argc, argv))
     return 0;
 
-  printf("Checking for trace malloc..\n");
 #ifdef NS_TRACE_MALLOC
-  printf("Trace malloc: %d args\n", argc);
   argc = NS_TraceMallocStartupArgs(argc, argv);
-  printf("Trace malloc: now have %d args\n", argc);
 #endif
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
