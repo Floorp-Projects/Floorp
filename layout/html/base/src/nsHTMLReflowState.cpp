@@ -107,6 +107,8 @@ nsHTMLReflowState::operator=(const nsHTMLReflowState &aOther)
   // to |this|.
   if (aOther.mCBReflowState == &aOther)
     mCBReflowState = this;
+
+  return *this;
 }
 
 // Initialize a <b>root</b> reflow state with a rendering context to
