@@ -1184,8 +1184,7 @@ void nsWindow::EndDraw()
 		return;
 	mDrawing = PR_FALSE;
 
-	PRBool clipEmpty;
-	mTempRenderingContext->PopState(clipEmpty);
+	mTempRenderingContext->PopState();
 
 	NS_RELEASE(mTempRenderingContext);
 	

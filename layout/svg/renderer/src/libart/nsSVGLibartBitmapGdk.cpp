@@ -228,8 +228,7 @@ nsSVGLibartBitmapGdk::UnlockRenderingContext()
   mRenderingContext->GetDrawingSurface((nsDrawingSurface*)&surface);
   NS_ASSERTION(surface, "null surface");
 
-  PRBool clipEmpty;
-  mRenderingContext->PopState(clipEmpty);
+  mRenderingContext->PopState();
   mRenderingContext->SelectOffScreenDrawingSurface(mTempSurface);
   mTempSurface = nsnull;
   

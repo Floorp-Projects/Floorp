@@ -1476,10 +1476,7 @@ void nsChildView::EndDraw()
   mDrawing = PR_FALSE;
 
   if (mTempRenderingContextMadeHere)
-  {
-    PRBool clipEmpty;
-    mTempRenderingContext->PopState(clipEmpty);
-  }
+    mTempRenderingContext->PopState();
   NS_RELEASE(mTempRenderingContext);
 }
 
