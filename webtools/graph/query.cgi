@@ -86,7 +86,7 @@ sub show_graph {
 
 
   # graph
-  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\">";
+  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\" alt=\"$TBOX $TESTNAME graph\">";
 }
 
 if(!$TESTNAME) {
