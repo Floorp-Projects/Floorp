@@ -903,7 +903,7 @@ Rights Reserved.
                     accesskey="&newNewMsgCmd.accesskey;"
                     key="key_newMessage"
                     oncommand="MsgNewMessage(null);"/>
-          <menuitem label="&newFolderCmd.label;"
+          <menuitem id="menu_newFolder" label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
           <menuitem id="newAccountMenuItem" label="&newAccountCmd.label;"

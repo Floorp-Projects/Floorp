@@ -351,9 +351,15 @@ function SetupNewMenuItem(folderResource, numSelected, isServer, serverType, spe
   var canCreateNew = GetFolderAttribute(folderTree, folderResource, "CanCreateSubfolders") == "true";
   var isInbox = specialFolder == "Inbox";
 
+  var isIMAPFolder = GetFolderAttribute(folderTree, folderResource,
+                       "ServerType") == "imap";
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                         .getService(Components.interfaces.nsIIOService);
+
   var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;
   ShowMenuItem("folderPaneContext-new", showNew);
-  EnableMenuItem("folderPaneContext-new", true);
+  EnableMenuItem("folderPaneContext-new", !isIMAPFolder || !ioService.offline);
   if(showNew)
   {
     if(isServer || isInbox)
