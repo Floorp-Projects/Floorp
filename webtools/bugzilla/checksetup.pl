@@ -309,7 +309,7 @@ my $chartbase   = have_vers("Chart::Base","1.0");
 my $xmlparser   = have_vers("XML::Parser",0);
 my $gdgraph     = have_vers("GD::Graph",0);
 my $gdtextalign = have_vers("GD::Text::Align",0);
-my $patchreader = have_vers("PatchReader",0);
+my $patchreader = have_vers("PatchReader","0.9.4");
 
 print "\n" unless $silent;
 
