@@ -109,6 +109,11 @@ function ValidateNumberString(value, minValue, maxValue)
   return "";
 }
 
+function SetTextfieldFocusById(id)
+{
+  SetTextfieldFocus(document.getElementById(id));
+}
+
 function SetTextfieldFocus(textfield)
 {
   if (textfield)
@@ -252,11 +257,13 @@ function SetClassEnabledById( elementID, doEnable )
 //  but elementInDoc is needed to find parent context in document
 function GetAppropriatePercentString(elementForAtt, elementInDoc)
 {
-  if (elementForAtt.nodeName == "TD" || elementForAtt.nodeName == "TH")
+  var name = elementForAtt.nodeName.toLowerCase();
+  if ( name == "td" || name == "th")
     return GetString("PercentOfTable");
 
   // Check if element is within a table cell
-  if(editorShell.GetElementOrParentByTagName("td",elementInDoc))
+  // Check if current selection anchor node is within a table cell
+  if (editorShell.GetElementOrParentByTagName("td", elementInDoc))
     return GetString("PercentOfCell");
   else
     return GetString("PercentOfWindow");
@@ -607,7 +614,7 @@ function getContainer ()
     if (selection)
     {
         var focusN = selection.focusNode;
-        if (focusN.nodeName == "TD")
+        if (focusN.nodeName.toLowerCase == "td")
           return focusN
                 else
         {

@@ -7,6 +7,7 @@
 function BuildHTMLAttributeTable()
 {
   var nodeMap = element.attributes;
+  var i;
   if(nodeMap.length > 0) {
     for(i = 0; i < nodeMap.length; i++)
     {
@@ -37,7 +38,7 @@ function onAddHTMLAttribute(which)
     return;
 
   if ( !CheckAttributeNameSimilarity( name, CSSAttrs ) )
-    return false;
+    return;
 
   if ( AddTreeItem ( name, value, "HTMLAList", HTMLAttrs ) ) {
     dialog.AddHTMLAttributeNameInput.value = "";
@@ -49,6 +50,7 @@ function onAddHTMLAttribute(which)
 // does enabling based on any user input.
 function doHTMLEnabling( keycode )
 {
+dump("***doHTMLEnabling\n");
   if(keycode == 13) {
     onAddHTMLAttribute(document.getElementById("AddHTMLAttribute"));
     return;
@@ -66,18 +68,20 @@ function UpdateHTMLAttributes()
 {
   dump("===============[ Setting and Updating HTML ]===============\n");
   var HTMLAList = document.getElementById("HTMLAList");
-  for(var i = 0; i < HTMLAList.childNodes.length; i++)
+  var name;
+  var i;
+  for( i = 0; i < HTMLAList.childNodes.length; i++)
   {
     var item = HTMLAList.childNodes[i];
-    var name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
     var value = TrimString(item.firstChild.lastChild.firstChild.value);
     // set the attribute
     element.setAttribute(name,value);
   }
   // remove removed attributes
-  for( var i = 0; i < HTMLRAttrs.length; i++ )
+  for( i = 0; i < HTMLRAttrs.length; i++ )
   {
-    var name = HTMLRAttrs[i];
+    name = HTMLRAttrs[i];
     if(element.getAttribute(name))
       element.removeAttribute(name);
     else continue; // doesn't exist, so don't bother removing it.

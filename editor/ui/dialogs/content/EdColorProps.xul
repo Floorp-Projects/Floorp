@@ -149,6 +149,6 @@
       </row>
     </rows>
   </grid>
-  <separator class="groove"/>
+  <separator class="groove-thin tb-margin"/>
   <box id="okCancelButtons"/> 
 </window>

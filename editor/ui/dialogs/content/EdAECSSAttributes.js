@@ -8,7 +8,7 @@ function BuildCSSAttributeTable()
   if(style == undefined || style == "")
   {
     dump("no style attributes to add\n");
-    return false;
+    return;
   }
   if(style.indexOf(";") == -1) {
     if(style.indexOf(":") != -1) {
@@ -17,7 +17,7 @@ function BuildCSSAttributeTable()
       if ( !AddTreeItem( name, value, "CSSATree", CSSAttrs ) )
         dump("Failed to add CSS attribute: " + i + "\n");
     } else
-      return false;
+      return;
   }
   nvpairs = style.split(";");
   for(i = 0; i < nvpairs.length; i++)
@@ -46,7 +46,7 @@ function onAddCSSAttribute( which )
     return;
 
   if ( !CheckAttributeNameSimilarity( name, CSSAttrs ) )
-    return false;
+    return;
 
   if ( AddTreeItem ( name, value, "CSSAList", CSSAttrs ) ) {
     dialog.AddCSSAttributeNameInput.value = "";

@@ -72,7 +72,8 @@ function UpdateJSEAttributes()
 {
   dump("===============[ Setting and Updating JSE ]===============\n");
   var JSEAList = document.getElementById("JSEAList");
-  for(var i = 0; i < JSEAList.childNodes.length; i++)
+  var i;
+  for( i = 0; i < JSEAList.childNodes.length; i++)
   {
     var item = JSEAList.childNodes[i];
     name = TrimString(item.firstChild.firstChild.getAttribute("value"));
@@ -81,7 +82,7 @@ function UpdateJSEAttributes()
     element.setAttribute(name,value);
   }
   // remove removed attributes
-  for( var i = 0; i < JSERAttrs.length; i++ )
+  for( i = 0; i < JSERAttrs.length; i++ )
   {
     var name = JSERAttrs[i];
     if(element.getAttribute(name))

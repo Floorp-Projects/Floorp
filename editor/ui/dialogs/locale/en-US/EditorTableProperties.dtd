@@ -32,16 +32,13 @@
 <!ENTITY tableSpacing.label               "Spacing:">
 <!ENTITY tablePadding.label               "Padding:">
 <!ENTITY tablePxBetwCells.label           "pixels between cells">
-<!-- LOCALIZATION NOTE (tablePxBetwBrdrCellContent.label): Don't translate <html:br/> -->
-<!ENTITY tablePxBetwBrdrCellContent.label "pixels between border<html:br/>and cell content">
+<!ENTITY tablePxBetwBrdrCellContent.label "pixels between cell border and content">
 <!ENTITY tableAlignment.label             "Table Alignment:">
 <!ENTITY tableCaption.label               "Caption:">
 <!ENTITY tableCaptionAbove.label          "Above Table">
 <!ENTITY tableCaptionBelow.label          "Below Table">
 <!ENTITY tableCaptionNone.label           "None">
 <!ENTITY tableInheritColor.label           "(Let page color show through)">
-<!-- Don't translate <html:br/> -->
-<!ENTITY tableUseCheckboxHelp.label       "Use checkboxes to determine which properties<html:br/>are applied to the table">
 
 <!ENTITY cellPercent.label                "percent of table">
 <!ENTITY cellSelection.label              "Selection">
@@ -58,20 +55,14 @@
 <!ENTITY cellContentAlignment.label       "Content Alignment">
 <!ENTITY cellHorizontal.label             "Horizontal:">
 <!ENTITY cellVertical.label               "Vertical:">
-<!ENTITY cellStyle.label                  "Cell Style:">
-<!ENTITY cellNormal.label                 "Normal">
-<!ENTITY cellHeader.label                 "Header">
-<!ENTITY cellTextWrap.label               "Text Wrap:">
-<!ENTITY cellWrap.label                   "Wrap">
-<!ENTITY cellNoWrap.label                 "Don't wrap">
+<!ENTITY cellHeader.label                 "Header style">
+<!ENTITY cellNoWrap.label                 "Don't wrap text">
 <!ENTITY cellAlignTop.label               "Top">
 <!ENTITY cellAlignMiddle.label            "Middle">
 <!ENTITY cellAlignBottom.label            "Bottom">
 <!ENTITY cellAlignJustify.label           "Justify">
 <!ENTITY cellAlignAtChar.label            "At Character:">
 <!ENTITY cellInheritColor.label           "(Let table color show through)">
-<!-- Don't translate <html:br/> -->
-<!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to determine which properties<html:br/>are applied to all selected cells">
 
 <!-- Used in both Table and Cell panels  -->
 <!ENTITY defaultColor.label               "Don't specify color">

@@ -88,7 +88,7 @@
         style="margin-right:0px;" oncommand="RemoveColor()"/>
     </box>
   </box>
-  <separator class="groove"/>
+  <separator class="groove-thin tb-margin"/>
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/> 
 </window>
