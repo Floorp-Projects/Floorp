@@ -16,6 +16,7 @@ function createShortcuts()
   var scProfileDesc;
   var scProfileDescParam;
   var scFolderName;
+  var fFolderDesktop;
   var fFolderPath;
   var fFolderPathStr;
   var is_winnt;
@@ -32,90 +33,92 @@ function createShortcuts()
   scFolderName         = "Mozilla Seamonkey";
   if(winreg != null) 
   {
+    /* determine if the script is running under NT or not */
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+    valname             = "CurrentVersion";
+    szCurrentVersion    = winreg.getValueString(subkey, valname);
+    logComment("szCurrentVersion: " + szCurrentVersion);
+    if((szCurrentVersion == "") || (szCurrentVersion == null))
+    {
+      is_winnt = false;
+    }
+    else
+    {
+      is_winnt = true;
+    }
+
+    if(is_winnt == false)
+    {
+      logComment("is_winnt is false: " + is_winnt);
+
+      winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      valname             = "Programs";
+      szStartMenuPrograms = winreg.getValueString(subkey, valname);
+      valname             = "Start Menu";
+      szStartMenu         = winreg.getValueString(subkey, valname);
+      valname             = "Desktop";
+      szFolderDesktop     = winreg.getValueString(subkey, valname);
+    }
+    else
+    {
+      logComment("is_winnt is true: " + is_winnt);
+
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      valname             = "Common Programs";
+      szStartMenuPrograms = winreg.getValueString(subkey, valname);
+      valname             = "Common Start Menu";
+      szStartMenu         = winreg.getValueString(subkey, valname);
+      valname             = "Common Desktop";
+      szFolderDesktop     = winreg.getValueString(subkey, valname);
+    }
+
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+    valname             = "SendTo";
+    szFolderSendTo      = winreg.getValueString(subkey, valname);
+
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
+    valname             = "Quick Launch";
+    szFolderQuickLaunch = winreg.getValueString(subkey, valname);
+
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
     subkey              = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
     valname             = "Program Folder Path";
     fFolderPathStr      = winreg.getValueString(subkey, valname);
     if((fFolderPathStr == "") || (fFolderPathStr == null))
     {
-      /* determine if the script is running under NT or not */
-      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-      subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
-      valname             = "CurrentVersion";
-      szCurrentVersion    = winreg.getValueString(subkey, valname);
-      logComment("szCurrentVersion: " + szCurrentVersion);
-      if((szCurrentVersion == "") || (szCurrentVersion == null))
-      {
-        is_winnt = false;
-      }
-      else
-      {
-        is_winnt = true;
-      }
-
-      if(is_winnt == false)
-      {
-        logComment("is_winnt is false: " + is_winnt);
-
-        winreg.setRootKey(winreg.HKEY_CURRENT_USER);
-        subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-        valname             = "Programs";
-        szStartMenuPrograms = winreg.getValueString(subkey, valname);
-        valname             = "Start Menu";
-        szStartMenu         = winreg.getValueString(subkey, valname);
-        valname             = "Desktop";
-        szFolderDesktop     = winreg.getValueString(subkey, valname);
-      }
-      else
-      {
-        logComment("is_winnt is true: " + is_winnt);
-
-        winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-        subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-        valname             = "Common Programs";
-        szStartMenuPrograms = winreg.getValueString(subkey, valname);
-        valname             = "Common Start Menu";
-        szStartMenu         = winreg.getValueString(subkey, valname);
-        valname             = "Common Desktop";
-        szFolderDesktop     = winreg.getValueString(subkey, valname);
-      }
-
-      winreg.setRootKey(winreg.HKEY_CURRENT_USER);
-      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-      valname             = "SendTo";
-      szFolderSendTo      = winreg.getValueString(subkey, valname);
-
-      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
-      valname             = "Quick Launch";
-      szFolderQuickLaunch = winreg.getValueString(subkey, valname);
-
       fTemp        = szStartMenuPrograms + "\\" + scFolderName;
       fFolderPath  = getFolder("file:///", fTemp);
-
-      logComment("Folder StartMenuPrograms: " + szStartMenuPrograms);
-      logComment("Folder StartMenu: "         + szStartMenu);
-      logComment("Folder FolderDesktop: "     + szFolderDesktop);
-      logComment("Folder FolderSendTo: "      + szFolderSendTo);
-      logComment("Folder FolderQuickLaunch: " + szFolderQuickLaunch);
     }
     else
     {
       /* convert the path string to a path folder object */
       fFolderPath = getFolder("file:///", fFolderPathStr);
     }
+    /* convert the path string to a path folder object */
+    fFolderDesktop = getFolder("file:///", szFolderDesktop);
 
-    logComment("fileExe: "                  + fileExe);
-    logComment("fFolderPath: "              + fFolderPath);
-    logComment("scExeDesc: "                + scExeDesc);
-    logComment("fCommunicator : "           + fCommunicator);
+    logComment("Folder StartMenuPrograms: " + szStartMenuPrograms);
+    logComment("Folder StartMenu        : " + szStartMenu);
+    logComment("Folder FolderDesktop    : " + szFolderDesktop);
+    logComment("Folder FolderSendTo     : " + szFolderSendTo);
+    logComment("Folder FolderQuickLaunch: " + szFolderQuickLaunch);
+    logComment("fileExe                 : " + fileExe);
+    logComment("fFolderPath             : " + fFolderPath);
+    logComment("scExeDesc               : " + scExeDesc);
+    logComment("fCommunicator           : " + fCommunicator);
 
     /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
      * This is so that the folder creation gets logged for uninstall to remove it. */
     File.dirCreate(fFolderPath);
 
     /* create the shortcuts */
-    File.windowsShortcut(fileExe, fFolderPath, scExeDesc,     fCommunicator,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath, scProfileDesc, fCommunicator,  scProfileDescParam, fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fCommunicator,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fCommunicator,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fCommunicator,  scProfileDescParam, fileExe, 0);
 
     /* set the Program Folder Path in the Mozilla key in the Windows Registry */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
