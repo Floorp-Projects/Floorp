@@ -2475,6 +2475,7 @@ void GC_save_callers(struct callinfo info[NFRAMES])
   currentTree = find_tree(currentFrame);
 	
   info[0].ci_pc = (word) currentTree;
+  info[1].ci_pc = 0;
 }
 
 #endif /* defined(SAVE_CALL_CHAIN) && defined(LINUX) */
