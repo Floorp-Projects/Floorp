@@ -196,6 +196,11 @@ namespace MetaData {
         }
     }
 
+    String *JS2Engine::allocStringPtr(const char *s)
+    { 
+        return allocStringPtr(&meta->world.identifiers[widenCString(s)]); 
+    }
+
     String *JS2Engine::allocStringPtr(const String *s)
     {
         String *p = (String *)(JS2Object::alloc(sizeof(String)));
@@ -343,7 +348,7 @@ namespace MetaData {
     }
 
 
-    #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(#n))
+    #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(&world.identifiers[#n]))
 
     JS2Engine::JS2Engine(World &world)
                 : pc(NULL),
@@ -591,6 +596,7 @@ namespace MetaData {
         if (bCon)
             bCon->mark();
         for (ActivationFrame *f = activationStack; (f < activationStackTop); f++) {
+            GCMARKOBJECT(f->topFrame);
             if (f->bCon)
                 f->bCon->mark();
         }

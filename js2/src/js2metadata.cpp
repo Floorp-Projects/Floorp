@@ -714,7 +714,7 @@ namespace MetaData {
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
                 BlockFrame *runtimeFrame = new BlockFrame(b->compileFrame);
-                env->addFrame(runtimeFrame);
+                env->addFrame(runtimeFrame);    // XXX is this right? shouldn't this be the compile frame until execution occurs?
                 bCon->emitOp(ePushFrame, p->pos);
                 bCon->addFrame(runtimeFrame);
                 StmtNode *bp = b->statements;
@@ -2377,7 +2377,17 @@ doUnary:
 
     }
 
-
+    // need to mark all the frames in the environment - otherwise a marked frame that
+    // came initially from the bytecodeContainer may prevent the markChildren call
+    // from finding frames further down the list.
+    void Environment::mark()
+    { 
+        Frame *pf = firstFrame;
+        while (pf) {
+            GCMARKOBJECT(pf)
+            pf = pf->nextFrame;
+        }
+    }
 
 
 /************************************************************************************
@@ -3636,7 +3646,8 @@ deleteClassProperty:
         // XXX - maybe have a separate pool to allocate chunks
         // that are meant to be never collected?
         GCMARKOBJECT(publicNamespace);
-        GCMARKOBJECT(forbiddenMember);
+        forbiddenMember->mark();
+
         GCMARKOBJECT(objectClass);
         GCMARKOBJECT(undefinedClass);
         GCMARKOBJECT(nullClass);
@@ -3956,10 +3967,10 @@ deleteClassProperty:
         GCMARKOBJECT(privateNamespace)
         InstanceBindingIterator ib, iend;
         for (ib = instanceReadBindings.begin(), iend = instanceReadBindings.end(); (ib != iend); ib++) {
-            GCMARKOBJECT(ib->second->content)
+            ib->second->content->mark();
         }        
         for (ib = instanceWriteBindings.begin(), iend = instanceWriteBindings.end(); (ib != iend); ib++) {
-            GCMARKOBJECT(ib->second->content)
+            ib->second->content->mark();
         }        
     }
 
@@ -4105,10 +4116,10 @@ deleteClassProperty:
         GCMARKOBJECT(pluralFrame)
         StaticBindingIterator sbi, end;
         for (sbi = staticReadBindings.begin(), end = staticReadBindings.end(); (sbi != end); sbi++) {
-            GCMARKOBJECT(sbi->second->content)
+            sbi->second->content->mark();
         }
         for (sbi = staticWriteBindings.begin(), end = staticWriteBindings.end(); (sbi != end); sbi++) {
-            GCMARKOBJECT(sbi->second->content)
+            sbi->second->content->mark();
         }
         if (temps) {
             for (std::vector<js2val>::iterator i = temps->begin(), end = temps->end(); (i != end); i++)
@@ -4188,20 +4199,10 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
-    bool InstanceMember::isMarked()
-    { 
-        return type->isMarked(); 
-    }
-
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceMember::mark()                 
     { 
-        type->mark(); 
-    }
-
-    // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void InstanceMember::markChildren()         
-    { 
-        type->markChildren(); 
+        GCMARKOBJECT(type);
     }
 
 
@@ -4213,26 +4214,13 @@ deleteClassProperty:
 
     // An instance variable type could be future'd when a gc runs (i.e. validate
     // has executed, but the pre-eval stage has yet to determine the actual type)
-    bool InstanceVariable::isMarked()
-    { 
-        if (type != FUTURE_TYPE)
-            return type->isMarked(); 
-        else
-            return false;
-    }
 
     void InstanceVariable::mark()                 
     { 
         if (type != FUTURE_TYPE)
-            type->mark(); 
+            GCMARKOBJECT(type);
     }
 
-    // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void InstanceVariable::markChildren()         
-    { 
-        if (type != FUTURE_TYPE)
-            type->markChildren(); 
-    }
 
 
  /************************************************************************************
@@ -4241,20 +4229,10 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
-    bool InstanceMethod::isMarked()
-    { 
-        return fInst->isMarked(); 
-    }
-
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceMethod::mark()                 
     { 
-        fInst->mark(); 
-    }
-
-    // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void InstanceMethod::markChildren()         
-    { 
-        fInst->markChildren(); 
+        GCMARKOBJECT(fInst); 
     }
 
 

@@ -184,7 +184,7 @@ public:
     js2val allocString(const String &s)       { return allocString(&s); }
     js2val allocString(const char *s)         { return STRING_TO_JS2VAL(allocStringPtr(s)); }
     String *allocStringPtr(const String *s);
-    String *allocStringPtr(const char *s)     { String &str = widenCString(s); return allocStringPtr(&str); }
+    String *allocStringPtr(const char *s);
 
     js2val allocFloat(float32 x); 
     js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }

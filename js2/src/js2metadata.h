@@ -261,9 +261,7 @@ public:
 
     MemberKind kind;
 
-    virtual bool isMarked()             { return true; }
     virtual void mark()                 { }
-    virtual void markChildren()         { }
 };
 
 // A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
@@ -295,9 +293,7 @@ public:
                                     // uninitialised if the variable must be written before it can be read
     bool immutable;                 // true if this variable's value may not be changed once set
 
-    virtual bool isMarked()             { return (JS2VAL_IS_OBJECT(value) && JS2VAL_TO_OBJECT(value)->isMarked()); }
-    virtual void mark()                 { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->mark(); }
-    virtual void markChildren()         { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->markChildren(); }
+    virtual void mark()                 { GCMARKVALUE(value); }
 };
 
 class HoistedVar : public StaticMember {
@@ -307,9 +303,7 @@ public:
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
 
-    virtual bool isMarked()             { return (JS2VAL_IS_OBJECT(value) && JS2VAL_TO_OBJECT(value)->isMarked()); }
-    virtual void mark()                 { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->mark(); }
-    virtual void markChildren()         { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->markChildren(); }
+    virtual void mark()                 { GCMARKVALUE(value); }
 };
 
 class ConstructorMethod : public StaticMember {
@@ -353,9 +347,7 @@ public:
     JS2Class *type;             // Type of values that may be stored in this variable
     bool final;                 // true if this member may not be overridden in subclasses
 
-    virtual bool isMarked();
     virtual void mark();
-    virtual void markChildren();
 };
 
 class InstanceVariable : public InstanceMember {
@@ -365,9 +357,7 @@ public:
     bool immutable;                 // true if this variable's value may not be changed once set
     uint32 slotIndex;               // The index into an instance's slot array in which this variable is stored
 
-    virtual bool isMarked();
     virtual void mark();
-    virtual void markChildren();
 };
 
 class InstanceMethod : public InstanceMember {
@@ -377,9 +367,7 @@ public:
     Invokable *code;        // This method itself (a callable object); null if this method is abstract
     FixedInstance *fInst;
 
-    virtual bool isMarked();
     virtual void mark();
-    virtual void markChildren();
 };
 
 class InstanceAccessor : public InstanceMember {
@@ -865,7 +853,7 @@ public:
 
     void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
 
-    void mark()                         { GCMARKOBJECT(firstFrame) }
+    void mark();
 
 private:
     Frame *firstFrame;
