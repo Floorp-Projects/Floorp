@@ -755,6 +755,9 @@ The changes made were:
                 if ($comp ne $i) {
                     PuntTryAgain("$i is not a legal bug number");
                 }
+                if ($id eq $i) {
+                    PuntTryAgain("You can't make a bug blocked or dependent on itself.");
+                }
                 if (!exists $seen{$i}) {
                     push(@{$deps{$target}}, $i);
                     $seen{$i} = 1;
@@ -778,8 +781,27 @@ The changes made were:
                     }
                 }
             }
-                        
 
+	    if ($me eq 'dependson') {
+                my @deps   =  @{$deps{'dependson'}};
+                my @blocks =  @{$deps{'blocked'}};
+                my @union = ();
+                my @isect = ();
+                my %union = ();
+                my %isect = ();
+                foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
+                @union = keys %union;
+                @isect = keys %isect;
+		if (@isect > 0) {
+                    my $both;
+                    foreach my $i (@isect) {
+                       $both = $both . "#" . $i . " ";	
+                    }
+                    PuntTryAgain("Dependency loop detected!<P>" .
+                                 "This bug can't be both blocked and dependent " .
+                                 "on bug "  . $both . "!");
+                }
+            }
             my $tmp = $me;
             $me = $target;
             $target = $tmp;
