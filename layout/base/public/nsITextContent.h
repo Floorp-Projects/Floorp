@@ -33,6 +33,8 @@ class nsIContent;
  */
 class nsITextContent : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ITEXT_CONTENT_IID; return iid; }
+
   /**
    * Get direct access to the text in the text content.
    */
