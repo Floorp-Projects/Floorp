@@ -38,8 +38,6 @@ include $(topsrcdir)/config/rules.mk
 
 libs::
 	@$(REGCHROME) content messenger-views messenger.jar
-	@$(REGCHROME) locale en-US/messenger-views en-US.jar
 
 install::
 	@$(REGCHROME_INSTALL) content messenger-views messenger.jar
-	@$(REGCHROME_INSTALL) locale en-US/messenger-views en-US.jar
