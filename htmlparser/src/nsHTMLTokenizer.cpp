@@ -342,8 +342,10 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         if(nsString::IsAlpha(aChar))
           result=ConsumeStartTag(aChar,aToken,aScanner);
         else if(kEOF!=aChar) {
+          // We are not dealing with a tag. So, put back the char
+          // and leave the decision to ConsumeText().
+          aScanner.PutBack(aChar);
           nsAutoString temp("<");
-          temp.Append(aChar);
           result=ConsumeText(temp,aToken,aScanner);
         }
     } //switch
