@@ -646,7 +646,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
               updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
             // Refresh the view
-            Refresh(view, nsnull, dirtyRegion, updateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
+            Refresh(view, nsnull, dirtyRegion, updateFlags);
             NS_RELEASE(dirtyRegion);
           }
         }

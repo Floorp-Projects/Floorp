@@ -254,10 +254,13 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   nsIView *pRoot;
   PRBool  clipres = PR_FALSE;
   PRBool  clipwasset = PR_FALSE;
+  float   opacity;
 
   mViewManager->GetRootView(pRoot);
 
   rc.PushState();
+
+  GetOpacity(opacity);
 
   if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
   {
@@ -266,28 +269,25 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   }
   else if (mVis == nsViewVisibility_kShow)
   {
-      float opacity;
-      GetOpacity(opacity);
-
     if (opacity == 1.0f)
     {
-    nsRect brect;
+      nsRect brect;
 
-    GetBounds(brect);
+      GetBounds(brect);
 
-    if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
-    {
-      nsRect  crect;
+      if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+      {
+        nsRect  crect;
 
-      crect.x = mClip.mLeft + brect.x;
-      crect.y = mClip.mTop + brect.y;
-      crect.width = mClip.mRight - mClip.mLeft;
-      crect.height = mClip.mBottom - mClip.mTop;
+        crect.x = mClip.mLeft + brect.x;
+        crect.y = mClip.mTop + brect.y;
+        crect.width = mClip.mRight - mClip.mLeft;
+        crect.height = mClip.mBottom - mClip.mTop;
 
-      rc.SetClipRect(crect, nsClipCombine_kIntersect, clipres);
-    }
-    else if (this != pRoot)
-      rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
+        rc.SetClipRect(crect, nsClipCombine_kIntersect, clipres);
+      }
+      else if (this != pRoot)
+        rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
     }
   }
 
@@ -365,9 +365,6 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
     if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow))
     {
-      float opacity;
-      GetOpacity(opacity);
-
       //don't render things that can't be seen...
 
       if ((opacity > 0.0f) && (mBounds.width > 1) && (mBounds.height > 1))
@@ -682,8 +679,9 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   //paint process. only do this if this view is actually
   //visible and if there is no widget (like a scrollbar) here.
 
-//  if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow))
-  if (!clipwasset && (clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
+  if (!clipwasset && (clipres == PR_FALSE) &&
+      (mVis == nsViewVisibility_kShow) && (nsnull == mWindow) &&
+      (opacity > 0.0f))
   {
     nsRect  brect;
 
