@@ -625,7 +625,14 @@ sub query_to_english {
         if ($english ne 'Checkins ') {
             $english .= "and ";
         }
-        $english .= "to file " . html_quote($::query_file) . " ";
+        if (defined($::query_filetype) && $::query_filetype eq 'regexp') {
+            $english .= "to a file like ";
+        } elsif (defined($::query_filetype) && $::query_filetype eq 'notregexp') {
+            $english .= "to a file not like ";
+        } else {
+            $english .= "to file ";
+        }
+        $english .= "<i>" . &html_quote($::query_file) . "</i> ";
     }
 
     if (!$::query_branch_head) {
@@ -648,7 +655,14 @@ sub query_to_english {
     }
 
     if( $::query_who) {
-        $english .= "by " . html_quote($::query_who) . " ";
+        if (defined($::query_whotype) && $::query_whotype eq 'regexp') {
+                $english .= "by someone like ";
+        } elsif (defined($::query_whotype) && $::query_whotype eq 'notregexp') {
+                $english .= "by someone not like ";
+        } else {
+                $english .= "by ";
+        } 
+        $english .= "<i>" . &html_quote($::query_who) . "</i> ";
     }
 
     $::query_date_type = $::FORM{'date'} || 'nothing';
