@@ -195,6 +195,10 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       ofn.Flags |= OFN_FILEMUSTEXIST;
       result = nsToolkit::mGetOpenFileName(&ofn);
     }
+    else if (mMode == modeOpenMultiple) {
+      ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+      result = nsToolkit::mGetOpenFileName(&ofn);
+    }
     else if (mMode == modeSave) {
       ofn.Flags |= OFN_NOREADONLYRETURN;
       result = nsToolkit::mGetSaveFileName(&ofn);
@@ -210,7 +214,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
     }
     else {
-      NS_ASSERTION(0, "Only load, save and getFolder are supported modes"); 
+      NS_ASSERTION(0, "unsupported mode"); 
     }
   
     // Remember what filter type the user selected
@@ -218,9 +222,58 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
     // Set user-selected location of file or directory
     if (result == PR_TRUE) {
-      // I think it also needs a conversion here (to unicode since appending to nsString) 
-      // but doing that generates garbage file name, weird.
-      mUnicodeFile.Append(fileBuffer);
+      if (mMode == modeOpenMultiple) {
+        nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        // from msdn.microsoft.com, "Open and Save As Dialog Boxes" section:
+        // If you specify OFN_EXPLORER,
+        // The directory and file name strings are NULL separated, 
+        // with an extra NULL character after the last file name. 
+        // This format enables the Explorer-style dialog boxes
+        // to return long file names that include spaces. 
+        PRUnichar *current = fileBuffer;
+        
+        nsAutoString dirName(current);
+        // sometimes dirName contains a trailing slash
+        // and sometimes it doesn't.
+        if (current[dirName.Length() - 1] != '\\')
+          dirName.Append((PRUnichar)'\\');
+        
+        while (current && *current && *(current + nsCRT::strlen(current) + 1)) {
+          current = current + nsCRT::strlen(current) + 1;
+          
+          nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          rv = file->InitWithPath(dirName + nsDependentString(current));
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          rv = mFiles->AppendElement(file);
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
+        
+        // handle the case where the user selected just one
+        // file.  according to msdn.microsoft.com:
+        // If you specify OFN_ALLOWMULTISELECT and the user selects 
+        // only one file, the lpstrFile string does not have 
+        // a separator between the path and file name.
+        if (current && *current && (current == fileBuffer)) {
+          nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          rv = file->InitWithPath(nsDependentString(current));
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          rv = mFiles->AppendElement(file);
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
+      }
+      else {
+        // I think it also needs a conversion here (to unicode since appending to nsString) 
+        // but doing that generates garbage file name, weird.
+        mUnicodeFile.Append(fileBuffer);
+      }
     }
 
   }
@@ -487,8 +540,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
         }
       }
       else {
-      mFile.Append(fileBuffer);
-    }
+        mFile.Append(fileBuffer);
+      }
     }
   }
 
