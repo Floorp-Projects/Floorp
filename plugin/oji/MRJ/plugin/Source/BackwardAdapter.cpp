@@ -727,7 +727,7 @@ public:
 	NS_METHOD
 	GetLength(PRUint32* result)
 	{
-		return mInputStream->GetLength(result);
+		return mInputStream->Available(result);
 	}
 
 	NS_METHOD
@@ -780,7 +780,7 @@ public:
      *  @return error status
      */
     NS_IMETHOD
-    GetLength(PRUint32 *aLength);
+    Available(PRUint32 *aLength);
 
     /** Read data from the stream.
      *  @param aErrorCode the error code if an error occurs
@@ -2290,7 +2290,7 @@ CPluginManagerStream::Write(const char* buffer, PRUint32 len, PRUint32 *aWriteCo
 NS_METHOD
 CPluginManagerStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
 {
-	nsresult rv = fromStream->GetLength(aWriteCount);
+	nsresult rv = fromStream->Available(aWriteCount);
 	if (rv == NS_OK) {
 		char buffer[1024];
 		PRUint32 len = *aWriteCount;
@@ -2428,7 +2428,7 @@ CPluginInputStream::Close(void)
 }
 
 NS_METHOD
-CPluginInputStream::GetLength(PRUint32 *aLength)
+CPluginInputStream::Available(PRUint32 *aLength)
 {
     *aLength = mStream->end;
     return NS_OK;
