@@ -112,8 +112,9 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
                     if (NS_OK == child->QueryInterface(kIWidgetIID, (void**)&widget)) {
                         widget->Resize(0, 0, 200, 
                           ((nsSizeEvent*)aEvent)->windowSize->height, PR_TRUE);
-                        NS_RELEASE(widget);
+                        NS_IF_RELEASE(widget);
                     }
+                    NS_IF_RELEASE(child);
                 }
 
                 NS_RELEASE(enumer);
