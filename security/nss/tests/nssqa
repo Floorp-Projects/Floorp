@@ -252,11 +252,21 @@ nssqa_main()
   
 }
   
-if [ $O_FILE = ON ]
-then
-    nssqa_main 2>>$FILENAME
-else
-    nssqa_main
-fi
+#FIXME start TEST_LEVEL with 0
+
+TEST_LEVEL=0
+
+while [ $TEST_LEVEL -lt 3 ] ; do
+    unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+    unset USE_64;export USE_64;Debug "USE_64 $USE_64"
+    bc $TEST_LEVEL
+    if [ $O_FILE = ON ]
+    then
+        nssqa_main 2>>$FILENAME
+    else
+        nssqa_main
+    fi
+    TEST_LEVEL=`expr $TEST_LEVEL + 1 `
+done
 
 Exit "Done."
