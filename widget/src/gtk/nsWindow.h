@@ -42,24 +42,16 @@ public:
   nsWindow();
   virtual ~nsWindow();
 
-  NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
-  NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);  
-
-  virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+  NS_IMETHOD           WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
 
   NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
   virtual void*        GetNativeData(PRUint32 aDataType);
 
-  NS_IMETHOD           SetColorMap(nsColorMap *aColorMap);
   NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
   NS_IMETHOD           SetTitle(const nsString& aTitle);
-  nsresult             SetIcon(GdkPixmap *window_pixmap, 
-                               GdkBitmap *window_mask);
-  NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
   NS_IMETHOD           Show(PRBool aShow);
-  NS_IMETHOD           ShowMenuBar(PRBool aShow);
   NS_IMETHOD           CaptureMouse(PRBool aCapture);
 
   NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
@@ -121,8 +113,6 @@ protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
-  nsresult     SetIcon();
-
 
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
@@ -140,6 +130,10 @@ protected:
   GtkWidget *mShell;  /* used for toplevel windows */
   
   nsIMenuBar *mMenuBar;
+private:
+  nsresult     SetIcon(GdkPixmap *window_pixmap, 
+                       GdkBitmap *window_mask);
+  nsresult     SetIcon();
 };
 
 //
