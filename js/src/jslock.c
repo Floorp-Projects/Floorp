@@ -1081,7 +1081,27 @@ js_UnlockScope(JSContext *cx, JSScope *scope)
         return;
     }
 
-    JS_ASSERT(scope->ownercx == NULL);
+    /*
+     * If scope->ownercx is not null, it's likely that two contexts not using
+     * requests nested locks for scope.  The first context, cx here, claimed
+     * scope; the second, scope->ownercx here, re-claimed it because the first
+     * was not in a request, or was on the same thread.  We don't want to keep
+     * track of such nesting, because it penalizes the common non-nested case.
+     * Instead of asserting here and silently coping, we simply re-claim scope
+     * for cx and return.
+     *
+     * See http://bugzilla.mozilla.org/show_bug.cgi?id=229200 for a real world
+     * case where an asymmetric thread model (Mozilla's main thread is known
+     * to be the only thread that runs the GC) combined with multiple contexts
+     * per thread has led to such request-less nesting.
+     */
+    if (scope->ownercx) {
+        JS_ASSERT(scope->u.count == 0);
+        JS_ASSERT(scope->lock.owner == 0);
+        scope->ownercx = cx;
+        return;
+    }
+
     JS_ASSERT(scope->u.count > 0);
     if (Thin_RemoveWait(ReadWord(scope->lock.owner)) != me) {
         JS_ASSERT(0);   /* unbalanced unlock */
