@@ -168,7 +168,7 @@ NS_IMETHODIMP nsCollationMacUC::Initialize(
 
 NS_IMETHODIMP nsCollationMacUC::GetSortKeyLen(
   const nsCollationStrength strength, 
-  const nsString& stringIn, 
+  const nsAString& stringIn, 
   PRUint32* outLen)
 {
   NS_ENSURE_ARG_POINTER(outLen);
@@ -181,7 +181,7 @@ NS_IMETHODIMP nsCollationMacUC::GetSortKeyLen(
 
 NS_IMETHODIMP nsCollationMacUC::CreateRawSortKey(
   const nsCollationStrength strength, 
-  const nsString& stringIn, 
+  const nsAString& stringIn, 
   PRUint8* key, 
   PRUint32* outLen)
 {
@@ -201,7 +201,7 @@ NS_IMETHODIMP nsCollationMacUC::CreateRawSortKey(
   NS_ENSURE_SUCCESS(res, res);
 
   ItemCount actual;
-  err = ::UCGetCollationKey(mCollator, (const UniChar*) stringIn.get(),
+  err = ::UCGetCollationKey(mCollator, (const UniChar*) PromiseFlatString(stringIn).get(),
                            (UniCharCount) stringIn.Length(),
                            (ItemCount) (keyLength / sizeof(UCCollationValue)),
                            &actual, (UCCollationValue *)key);
@@ -216,8 +216,8 @@ NS_IMETHODIMP nsCollationMacUC::CreateRawSortKey(
     
 NS_IMETHODIMP nsCollationMacUC::CompareString(
   const nsCollationStrength strength, 
-  const nsString& string1, 
-  const nsString& string2, 
+  const nsAString& string1, 
+  const nsAString& string2, 
   PRInt32* result) 
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
@@ -231,8 +231,8 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(
 
   OSStatus err;
   err = ::UCCompareText(mCollator, 
-                        (const UniChar *) string1.get(), (UniCharCount) string1.Length(),
-                        (const UniChar *) string2.get(), (UniCharCount) string2.Length(),
+                        (const UniChar *) PromiseFlatString(string1).get(), (UniCharCount) string1.Length(),
+                        (const UniChar *) PromiseFlatString(string2).get(), (UniCharCount) string2.Length(),
                         NULL, &order);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
