@@ -102,6 +102,10 @@ entity.8209=-
 entity.8210=-
 # U+2015 HORIZONTAL BAR
 entity.8213=--
+# U+200B, ZERO WIDTH SPACE (a.k.a. InvisibleComma)
+entity.8203=
+# U+2062, InvisibleTimes, marks multiplication when it is understood without a mark
+entity.8290=
 ##
 ## End of hand coded section
 ## Below are generated from the unicode character database

@@ -44,6 +44,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsICharRepresentable.h"
+#include "nsISaveAsCharset.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsFontMetricsWin.h"
@@ -122,6 +123,7 @@ PRUint32* nsFontMetricsWin::gEmptyMap = nsnull;
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
 static nsICharsetConverterManager2* gCharsetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
+static nsISaveAsCharset* gFontSubstituteConverter = nsnull;
 static nsIPref* gPref = nsnull;
 
 static nsIAtom* gUsersLocale = nsnull;
@@ -3542,6 +3544,9 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
   GLYPHMETRICS gm;                                                
   DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, aString[0], pstr[0], &gm);
   if (GDI_ERROR == len) {
+    if (pstr != str) {
+      delete[] pstr;
+    }
     return NS_ERROR_UNEXPECTED;
   }
   // flip sign of descent for cross-platform compatibility
@@ -3557,6 +3562,9 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
     for (PRUint32 i = 1; i < aLength; ++i) {
       len = gGlyphAgent.GetGlyphMetrics(aDC, aString[i], pstr[i], &gm);
       if (GDI_ERROR == len) {
+        if (pstr != str) {
+          delete[] pstr;
+        }
         return NS_ERROR_UNEXPECTED;
       }
       // flip sign of descent for cross-platform compatibility
@@ -3741,31 +3749,64 @@ SubstituteChars(PRBool           aDisplayUnicode,
                 PRUint32         aBufferLength, 
                 PRUint32*        aCount)
 {
+  if (!gFontSubstituteConverter) {
+    nsComponentManager::
+    CreateInstance(NS_SAVEASCHARSET_CONTRACTID, nsnull,
+                   NS_GET_IID(nsISaveAsCharset),
+                   (void**)&gFontSubstituteConverter);
+    if (gFontSubstituteConverter) {
+      // if aDisplayUnicode is set: transliterate, and then fallback
+      //   to literal Unicode points &#xNNNN; for unknown characters
+      // otherwise: transliterate, and then fallback to entities for
+      //   recorded characters and question marks for unknown characters
+      nsresult res;
+      res = gFontSubstituteConverter->Init("ISO-8859-1",
+              aDisplayUnicode
+              ? nsISaveAsCharset::attr_FallbackHexNCR
+              : nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackQuestionMark,
+              nsIEntityConverter::transliterate);
+      if (NS_FAILED(res)) {
+        NS_RELEASE(gFontSubstituteConverter);
+      }
+    }
+  }
+
+  // do the transliteration if we have a converter
   PRUnichar* result = aBuffer;
-  if (aDisplayUnicode) {
-    if (aLength*8 > aBufferLength) {
-      result = new PRUnichar[aLength*8];  //8 is the length of "&x#NNNN;"
-      if (!result) return nsnull;
+  if (gFontSubstituteConverter) {
+    char* conv = nsnull;
+    nsAutoString tmp(aString, aLength); // we need to pass a null-terminated string
+    gFontSubstituteConverter->Convert(tmp.get(), &conv);
+    if (conv) {
+      *aCount = nsCRT::strlen(conv);
+      if (*aCount > aBufferLength) {
+        // allocate a bigger array that the caller should free
+        result = new PRUnichar[*aCount];
+        if (!result) {
+          nsMemory::Free(conv);
+          return nsnull;
+        }
+      }
+      PRUnichar* u = result;
+      char* c = conv;
+      for (; *c; ++c, ++u) {
+        *u = *c;
+      }
+      nsMemory::Free(conv);
+      return result;
     }
-    char cbuf[10];
-    PRUint32 count = 0;
-    for (PRUint32 i = 0; i < aLength; ++i) {
-      // the substitute font should also have glyphs for '&', '#', 'x', ';' and digits
-      PR_snprintf(cbuf, sizeof(cbuf), "&#x%04X;", aString[i]);
-      for (PRUint32 j = 0; j < 8; ++j, ++count)
-        result[count] = PRUnichar(cbuf[j]); 
-    }
-    *aCount = count;
   }
-  else { // !aDisplayUnicode
-    if (aLength > aBufferLength) {
-      result = new PRUnichar[aLength];
-      if (!result) return nsnull;
-    }
-    for (PRUint32 i = 0; i < aLength; ++i)
-      result[i] = NS_REPLACEMENT_CHAR;
-    *aCount = aLength;
+
+  // we reach here if we couldn't transliterate, so fallback to question marks 
+  if (aLength > aBufferLength) {
+    // allocate a bigger array that the caller should free
+    result = new PRUnichar[aLength];
+    if (!result) return nsnull;
   }
+  for (PRUint32 i = 0; i < aLength; i++) {
+    result[i] = NS_REPLACEMENT_CHAR;
+  }
+  *aCount = aLength;
   return result;
 }
 
@@ -3776,7 +3817,7 @@ nsFontWinSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUnichar str[CHAR_BUFFER_SIZE];
   PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
                            aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-  if (!pstr) return 0;
+  if (!pstr || !aLength) return 0;
 
   SIZE size;
   ::GetTextExtentPoint32W(aDC, pstr, aLength, &size);
@@ -3795,7 +3836,7 @@ nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   PRUnichar str[CHAR_BUFFER_SIZE];
   PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
                            aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-  if (!pstr) return;
+  if (!pstr || !aLength) return;
 
   ::ExtTextOutW(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
 
@@ -3816,6 +3857,7 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
   PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
                            aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
   if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+  if (!aLength) return NS_OK;
   PRUint16 s[CHAR_BUFFER_SIZE];
   PRUint16* ps = (PRUint16*)&s;
 
@@ -3824,8 +3866,8 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
   NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
   if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
     // we are on a platform that doesn't implement GetGlyphOutlineW() 
-    // we need to use glyph indices
-    ps = GetGlyphIndices(aDC, &mCMAP, str, aLength, s, CHAR_BUFFER_SIZE);
+    // we better get all glyph indices in one swoop
+    ps = GetGlyphIndices(aDC, &mCMAP, pstr, aLength, s, CHAR_BUFFER_SIZE);
     if (!ps) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -4115,7 +4157,8 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
   char* pstr = str;
   int length = CHAR_BUFFER_SIZE;
   Convert(aString, aLength, &pstr, &length);
-  if (!length) return NS_ERROR_UNEXPECTED;
+  if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+  if (!length) return NS_OK;
 
   // measure the string
   nscoord descent;
@@ -4184,7 +4227,7 @@ public:
   nsFontSubsetSubstitute();
   virtual ~nsFontSubsetSubstitute();
 
-  // overloaded method to convert all chars to the replacement char
+  // overloaded method to convert all chars to substitute chars
   virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
                        char** aResult, int* aResultLength);
 };
@@ -4206,11 +4249,25 @@ void
 nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
   char** aResult, int* aResultLength)
 {
-  nsAutoString tmp;
-  for (PRUint32 i = 0; i < aLength; ++i) {
-    tmp.Append(NS_REPLACEMENT_CHAR);
+  PRUnichar str[CHAR_BUFFER_SIZE];
+  PRUnichar* pstr = SubstituteChars(PR_FALSE,
+                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
+  if (!pstr) {
+    // this is the out-of-memory error case
+    *aResult = nsnull;
+    *aResultLength = 0;
+    return;
   }
-  nsFontSubset::Convert(tmp.get(), aLength, aResult, aResultLength);
+  if (!aLength) {
+    // this is the case where the substitute string collapsed to nothingness
+    **aResult = '\0';
+    *aResultLength = 0;
+    return;
+  }
+  nsFontSubset::Convert(pstr, aLength, aResult, aResultLength);
+  if (pstr != str) {
+    delete[] pstr;
+  }
 }
 
 nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap)
