@@ -26,6 +26,10 @@
 #include "il_util.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
+#include "nsIScreenManager.h"
+#include "nsIScreen.h"
+
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
@@ -145,13 +149,20 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   mHeightFloat = (float)mClientRect.height;
   if (::GetDeviceCaps(aDC, TECHNOLOGY) == DT_RASDISPLAY)
   {
-    RECT workArea;
-    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    mClientRect.x = workArea.left;
-    mClientRect.y = workArea.top;
-    mClientRect.width = workArea.right - workArea.left;
-    mClientRect.height = workArea.bottom - workArea.top;
-  }
+    nsresult ignore;
+    nsCOMPtr<nsIScreenManager> sm ( do_GetService("component://netscape/gfx/screenmanager", &ignore) );
+    if ( sm ) {
+      //XXX rewrite this for multiple screens
+      nsCOMPtr<nsIScreen> screen;
+      sm->GetPrimaryScreen ( getter_AddRefs(screen) );
+      if ( screen ) {
+        screen->GetAvailTop ( &mClientRect.y );
+        screen->GetAvailLeft ( &mClientRect.x );
+        screen->GetAvailWidth ( &mClientRect.width );
+        screen->GetAvailHeight ( &mClientRect.height );      
+      }
+    }
+  } // if this dc is not a print device
 
   DeviceContextImpl::CommonInit();
 }

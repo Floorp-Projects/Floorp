@@ -50,9 +50,9 @@ NS_IMPL_ISUPPORTS(nsScreenManagerWin, NS_GET_IID(nsIScreenManager))
 // Utility routine. Creates a new screen object from the given device handle
 //
 nsIScreen* 
-nsScreenManagerWin :: CreateNewScreenObject (  )
+nsScreenManagerWin :: CreateNewScreenObject ( HDC inScreen )
 {
-  nsIScreen* retval = new nsScreenWin ( );
+  nsIScreen* retval = new nsScreenWin ( inScreen );
   NS_IF_ADDREF(retval);
   return retval;
 }
@@ -70,34 +70,23 @@ NS_IMETHODIMP
 nsScreenManagerWin :: ScreenForRect ( PRInt32 inTop, PRInt32 inLeft, PRInt32 inWidth, PRInt32 inHeight,
                                         nsIScreen **outScreen )
 {
-#if 0
-  if ( !(inTop || inLeft || inWidth || inHeight) ) {
-    NS_WARNING ( "trying to find screen for sizeless window" );
-    *outScreen = CreateNewScreenObject ( ::GetMainDevice() );    // addrefs
+  if ( !(inWidth || inHeight) ) {
+    NS_WARNING ( "trying to find screen for sizeless window, using primary monitor" );
+    *outScreen = CreateNewScreenObject ( ::GetDC(nsnull) );    // addrefs
     return NS_OK;
   }
 
-  Rect globalWindowBounds = { inTop, inLeft, inTop + inHeight, inLeft + inWidth };
+  RECT globalWindowBounds = { inLeft, inTop, inLeft + inWidth, inTop + inHeight };
 
-  GDHandle currDevice = ::GetDeviceList();
-  GDHandle deviceWindowIsOn = ::GetMainDevice();
-  PRInt32 greatestArea = 0;
-  while ( currDevice ) {
-    if ( ::TestDeviceAttribute(currDevice, screenDevice) && ::TestDeviceAttribute(currDevice, screenActive) ) {
-      // calc the intersection.
-      Rect intersection;
-      Rect devRect = (**currDevice).gdRect;
-      ::SectRect ( &globalWindowBounds, &devRect, &intersection );
-      PRInt32 intersectArea = (intersection.right - intersection.left) * 
-                                  (intersection.bottom - intersection.top);
-      if ( intersectArea > greatestArea ) {
-        greatestArea = intersectArea;
-        deviceWindowIsOn = currDevice;
-     }      
-    } // if device is a screen and visible
-    currDevice = ::GetNextDevice(currDevice);
-  } // foreach device in list
-
+  // we want to use ::MonitorFromRect() but it doesn't exist under 95/NT. For now, just 
+  // always return the primary monitor.
+  
+  *outScreen = CreateNewScreenObject ( ::GetDC(nsnull) );    // addrefs
+  
+#if 0
+  HMONITOR screen = ::MonitorFromRect ( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
+  
+  
   *outScreen = CreateNewScreenObject ( deviceWindowIsOn );    // addrefs
 #endif
   return NS_OK;
@@ -112,9 +101,9 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inTop, PRInt32 inLeft, PRInt32 inW
 // often.
 //
 NS_IMETHODIMP 
-nsScreenManagerWin :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen) 
+nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen) 
 {
-//  *aPrimaryScreen = CreateNewScreenObject ( ::GetMainDevice() );    // addrefs  
+  *aPrimaryScreen = CreateNewScreenObject ( ::GetDC(nsnull) );    // addrefs  
   return NS_OK;
   
 } // GetPrimaryScreen
