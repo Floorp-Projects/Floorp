@@ -11,6 +11,8 @@
 <!ENTITY importFromNetscape4.accesskey  "4">
 <!ENTITY importFromOpera.label          "Opera">
 <!ENTITY importFromOpera.accesskey      "O">
+<!ENTITY importFromSafari.label         "Safari">
+<!ENTITY importFromSafari.accesskey     "s">
 
 <!ENTITY importSource.title             "Import Settings and Data From">
 <!ENTITY importItems.title              "Items to Import">

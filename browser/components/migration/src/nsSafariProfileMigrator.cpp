@@ -36,13 +36,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
-#include "nsSafariProfileMigrator.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsILocalFileMac.h"
 #include "nsIObserverService.h"
 #include "nsIProfile.h"
 #include "nsIProfileInternal.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsSafariProfileMigrator.h"
+
+#include <CoreFoundation/CoreFoundation.h>
+#include <CFNumber.h>
+
+#define SAFARI_PREFERENCES_FILE_NAME NS_LITERAL_STRING("com.apple.Safari.plist")
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
@@ -70,6 +77,11 @@ nsSafariProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnich
   nsresult rv = NS_OK;
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
+  
+  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
+  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
+  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY,   NS_LITERAL_STRING("history").get());
+  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS, NS_LITERAL_STRING("bookmarks").get());
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
@@ -92,4 +104,84 @@ nsSafariProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
+
+nsresult
+GetPListFromFile(nsILocalFile* aPListFile, CFPropertyListRef* aResult)
+{
+  PRBool exists;
+  aPListFile->Exists(&exists);
+  nsCAutoString filePath;
+  aPListFile->GetNativePath(filePath);
+  if (!exists)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(aPListFile));
+  CFURLRef urlRef;
+  macFile->GetCFURL(&urlRef);
+  
+  CFDataRef resourceData;
+
+  SInt32 errorCode;
+  Boolean status = ::CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, 
+                                                              urlRef, 
+                                                              &resourceData, 
+                                                              NULL, 
+                                                              NULL, 
+                                                              &errorCode);
+  if (!status)
+    return NS_ERROR_FAILURE;
+                                                            
+  CFStringRef errorString;
+  *aResult = ::CFPropertyListCreateFromXMLData(kCFAllocatorDefault,
+                                               resourceData,
+                                               kCFPropertyListImmutable,
+                                               &errorString);
+  ::CFRelease(resourceData);
+  ::CFRelease(urlRef);
+  
+  return NS_OK;
+}
+
+nsresult
+nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
+{
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
+  nsCOMPtr<nsILocalFile> safariPrefsFile;
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(safariPrefsFile));
+  safariPrefsFile->Append(NS_LITERAL_STRING("Preferences"));
+  safariPrefsFile->Append(SAFARI_PREFERENCES_FILE_NAME);
+
+  CFDictionaryRef safariPrefs; 
+  nsresult rv = GetPListFromFile(safariPrefsFile, (CFDictionaryRef*)&safariPrefs);
+  if (NS_FAILED(rv)) 
+    return NS_OK;
+    
+  Boolean hasValue = ::CFDictionaryContainsKey(safariPrefs, CFSTR("AlwaysShowTabBar"));
+  if (hasValue) {
+    CFBooleanRef boolValue = ::CFDictionaryGetValue(safariPrefs, CFSTR("AlwaysShowTabBar"));
+    printf("*** AlwaysShowTabBar = %d", boolValue == kCFBooleanTrue);
+  }
+  
+  ::CFRelease(safariPrefs);
+
+  return NS_OK;
+}
+
+nsresult
+nsSafariProfileMigrator::CopyCookies(PRBool aReplace)
+{
+  return NS_OK;
+}
+
+nsresult
+nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
+{
+  return NS_OK;
+}
+
+nsresult 
+nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
+{
+  return NS_OK;
+}
 

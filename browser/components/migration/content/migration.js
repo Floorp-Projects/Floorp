@@ -20,8 +20,8 @@ var MigrationWizard = {
                    _import: [0, 1, 2, 3, 4, 5] },
 #endif
 #ifdef XP_MACOSX
-    "safari":   { _migrate: [],
-                   _import: [] },
+    "safari":   { _migrate: [nsIBPM.SETTINGS, nsIBPM.COOKIES, nsIBPM.HISTORY, nsIBPM.BOOKMARKS],
+                   _import: [0, 1, 2, 5] },
     "omniweb":  { _migrate: [],
                    _import: [] },
     "macie":    { _migrate: [],
@@ -89,11 +89,17 @@ var MigrationWizard = {
     // Create the migrator for the selected source.
     if (!this._migrator) {
       var contractID = "@mozilla.org/profile/migrator;1?app=browser&type=" + this._source;
+      dump("*** contractID = " + contractID + "\n");
       this._migrator = Components.classes[contractID].createInstance(nsIBPM);
     }
+    
+    dump("*** source = " + this._source + "\n");
 
     switch (this._source) {
+# Opera only supports profiles on Windows. 
+#ifdef XP_WIN
     case "opera":
+#endif
     case "dogbert":
     case "seamonkey":
       // check for more than one Opera profile
