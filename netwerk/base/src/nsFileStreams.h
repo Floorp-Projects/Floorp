@@ -91,7 +91,6 @@ public:
 
 protected:
     PRFileDesc*         mFD;
-    PRBool              mCloseFD;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +116,7 @@ public:
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file);
+    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file, PRBool deleteOnClose);
 protected:
     nsLineBuffer     *mLineBuffer;
     nsCOMPtr<nsIFile> mFileToDelete;

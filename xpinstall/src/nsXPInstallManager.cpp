@@ -777,7 +777,6 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
             rv = fts->CreateTransport(mItem->mFile,
                                       PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                       0664,
-                                      PR_TRUE,
                                       getter_AddRefs( outTransport));
 
             if (NS_SUCCEEDED(rv))

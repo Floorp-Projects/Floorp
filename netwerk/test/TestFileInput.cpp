@@ -366,7 +366,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(listener, "QI failed");
     
         nsITransport* trans;
-        rv = fts->CreateTransport(file, PR_RDONLY, 0, PR_TRUE, &trans);
+        rv = fts->CreateTransport(file, PR_RDONLY, 0, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
         nsCOMPtr<nsIRequest> request;
         rv = trans->AsyncRead(nsnull, listener, 0, -1, 0, getter_AddRefs(request));

@@ -339,7 +339,7 @@ nsJARChannel::AsyncReadJARElement()
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> jarTransport;
-    rv = fts->CreateTransportFromStreamIO(this, PR_TRUE, getter_AddRefs(jarTransport));
+    rv = fts->CreateTransportFromStreamIO(this, getter_AddRefs(jarTransport));
     if (NS_FAILED(rv)) return rv;
 
     if (mCallbacks) {
