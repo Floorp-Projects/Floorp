@@ -50,6 +50,7 @@
 #include "nsLocalFileUnix.h"
 #include "nsIEnumerator.h"
 #include "nsITimelineService.h"
+#include "nsFontDebug.h"
 /*
  * since this patch won't delete "gfx/src/freetype/nsFT2FontCatalog.h",
  * using "x11shared/nsFT2FontCatalog.h" will prevent this file from
@@ -58,6 +59,8 @@
  * unused "freetype/nsFT2FontCatalog.h"
  */
 #include "x11shared/nsFT2FontCatalog.h"
+
+PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
 
 #if (defined(MOZ_ENABLE_FREETYPE2))
 //

@@ -45,7 +45,7 @@ REQUIRES	= xpcom \
 
 DIRS        = shared
 
-ifdef MOZ_ENABLE_COREXFONTS
+ifdef MOZ_ENABLE_FREETYPE2
 DIRS        += freetype
 endif
 

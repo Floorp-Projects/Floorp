@@ -47,12 +47,9 @@
 #include "nsFontDebug.h"
 #include "nsFreeType.h"
 
-PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
-
 #if (!defined(MOZ_ENABLE_FREETYPE2))
 // nsFreeType stubs for development systems without a FreeType dev env
 nsresult nsFreeTypeInitGlobals() { 
-  FREETYPE_FONT_PRINTF(("direct freetype not compiled in"));
   NS_WARNING("direct freetype not compiled in");
   return NS_OK;
 };
