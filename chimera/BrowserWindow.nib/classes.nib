@@ -43,6 +43,8 @@
                 manageBookmarks = id; 
                 openLinkInNewTab = id; 
                 openLinkInNewWindow = id; 
+                performSearch = id; 
+                printDocument = id; 
                 reload = id; 
                 saveImageAs = id; 
                 saveLinkAs = id; 
@@ -82,7 +84,7 @@
                 mStatus = NSTextField; 
                 mStatusBar = NSView; 
                 mTabBrowser = CHExtendedTabView; 
-                mURLBar = NSTextView; 
+                mURLBar = NSTextField; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
@@ -93,13 +95,6 @@
             LANGUAGE = ObjC; 
             OUTLETS = {mProxyIcon = CHPageProxyIcon; }; 
             SUPERCLASS = NSTextField; 
-        }, 
-        {
-            ACTIONS = {onBlur = id; onResize = id; onRowClicked = id; }; 
-            CLASS = CHAutoCompleteTextView; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {mProxyIcon = CHPageProxyIcon; }; 
-            SUPERCLASS = NSTextView; 
         }, 
         {
             CLASS = CHBookmarksOutlineView; 

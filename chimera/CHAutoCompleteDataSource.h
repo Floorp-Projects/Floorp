@@ -25,7 +25,7 @@
 #import "CHAutoCompleteTextField.h"
 #include "nsIAutoCompleteResults.h"
 
-@class CHAutoCompleteTextView;
+@class CHAutoCompleteTextField;
 
 @interface CHAutoCompleteDataSource : NSObject
 {

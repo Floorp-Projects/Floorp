@@ -86,7 +86,7 @@ class nsIDOMNode;
   IBOutlet NSTabView*         mSidebarTabView;
   IBOutlet NSTabView*         mSidebarSourceTabView;
   IBOutlet NSView*            mLocationToolbarView;
-  IBOutlet NSTextView*        mURLBar;
+  IBOutlet NSTextField*       mURLBar;
   IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;
   IBOutlet NSImageView*       mLock;
@@ -149,6 +149,9 @@ class nsIDOMNode;
   // Throbber state variables.
   ThrobberHandler* mThrobberHandler;
   NSArray* mThrobberImages;
+
+  // Funky field editor for URL bar
+  NSTextView *mURLFieldEditor;
 }
 
 - (void)dealloc;

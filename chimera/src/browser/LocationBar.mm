@@ -21,7 +21,6 @@
 *
 * Contributor(s):
 * 	David Hyatt <hyatt@apple.com> (Original Author)
-* 	David Haas  <haasd@cae.wisc.edu>
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,33 +40,6 @@
 
 @implementation CHLocationBar
 
-//
-// awakeAfterUsingCoder:
-//
-// We need this method for the toolbar customization palette.
-// In OS X 10.1.5, cocoa doesn't automatically encode/decode
-// NSTextViews, so we have to help it out.  This may change
-// in future releases. Max Horn says 10.2 already does more than 10.1.5 . . .
-//
-// Get the scrollview, pull out its document view (our text area) and set
-// everything (ie, the internal clip view) to use that document. Since 
-// unarchiving never went through the proper channels to set the document
-// of the scrollview, we have to help it along just a tad.
-//
--(id) awakeAfterUsingCoder:(NSCoder *)coder
-{
-  NSEnumerator *theSubviews = [[self subviews] objectEnumerator];
-  id aView;
-  while ((aView = [theSubviews nextObject])) {
-    if ([aView isMemberOfClass:[NSScrollView class]]) {      
-      NSTextView* aTextView = [aView documentView];				// actually, it's a CHAutoCompleteTextView, but so what.
-      [aView setDocumentView:aTextView];
-      [aTextView setFrame:[[aView contentView] frame]];
-    }
-  }
-  return self;
-}
-
 - (void)drawRect:(NSRect)aRect {
   // Frame the border.
   //NSDrawLightBezel([self bounds], aRect);
@@ -78,5 +50,6 @@
   [[NSColor colorWithCalibratedWhite: 0.90 alpha: 1.0] set];
   NSFrameRectWithWidth([self bounds], 2.0);
 }
+
 
 @end

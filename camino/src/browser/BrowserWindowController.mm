@@ -188,6 +188,7 @@ static NSArray* sToolbarDefaults = nil;
         mContextMenuNode = nsnull;
         mThrobberImages = nil;
         mThrobberHandler = nil;
+        mURLFieldEditor = nil;
     }
     return self;
 }
@@ -239,6 +240,7 @@ static NSArray* sToolbarDefaults = nil;
 
   [self stopThrobber];
   [mThrobberImages release];
+  [mURLFieldEditor release];
   
   [super dealloc];
 }
@@ -436,24 +438,6 @@ static NSArray* sToolbarDefaults = nil;
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
   if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
     mSidebarToolbarItem = item;
-  else if ([[item itemIdentifier] isEqual:LocationToolbarItemIdentifier]) {
-    // For our custom location bar view, the custom toolbar dialog thinks it's ok
-    // to allow more than one of these. When we add it, scan the list and if it's
-    // already there, remove it. When creating a window, this code runs into problems
-    // (looks like a bug in OS X 10.1.5). Cocoa tries to add the buttons before the window
-    // is created and if it isn't, asking for an array of toolbar items leads
-    // to a crash (basically, it cycles through this method endlessly until it dies).
-    // Just ensure the window is visible before we ask for the array.
-    if ([[self window] isVisible]) {
-      NSArray *toolbarItemArray = [[notification object] items];
-      for (unsigned int i = 0;i < [toolbarItemArray count];i++) {
-        if ([[[toolbarItemArray objectAtIndex:i] itemIdentifier] isEqual:LocationToolbarItemIdentifier]) {
-          [[notification object] removeItemAtIndex:i];
-          return;
-        }
-      }
-    }
-  }
 }
 
 //
@@ -593,7 +577,6 @@ static NSArray* sToolbarDefaults = nil;
         
         [toolbarItem setLabel:@"Location"];
         [toolbarItem setPaletteLabel:@"Location"];
-        [toolbarItem setImage:[NSImage imageNamed:@"Enter a web location."]];
         [toolbarItem setView:mLocationToolbarView];
         [toolbarItem setMinSize:NSMakeSize(128,32)];
         [toolbarItem setMaxSize:NSMakeSize(2560,32)];
@@ -662,8 +645,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)focusURLBar
 {
-  [[self window] makeFirstResponder:mURLBar];
-	[mURLBar selectAll: self];
+	[mURLBar selectText: self];
 }
 
 - (void)beginLocationSheet
@@ -731,7 +713,7 @@ static NSArray* sToolbarDefaults = nil;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
 {
   // trim off any whitespace around url
-  NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender string]];
+  NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender stringValue]];
   CFStringTrimWhitespace((CFMutableStringRef)theURL);
   [self loadURL:theURL referrer:nil activate:YES];
   [theURL release];
@@ -954,7 +936,7 @@ static NSArray* sToolbarDefaults = nil;
 {
     if ( [locationString isEqual:@"about:blank"] ) 			// don't show about:blank to users
       locationString = @"";
-    [mURLBar setString:locationString];
+    [mURLBar setStringValue:locationString];
     [mLocationSheetURLField setStringValue:locationString];
 
     // don't call [window display] here, no matter how much you might want
@@ -1460,6 +1442,20 @@ static NSArray* sToolbarDefaults = nil;
 - (NSDrawer *)sidebarDrawer
 {
     return mSidebarDrawer;
+}
+
+
+- (id)windowWillReturnFieldEditor:(NSWindow *)aWindow toObject:(id)anObject
+{
+  if ([anObject isEqual:mURLBar]) {
+    if (!mURLFieldEditor) {
+      mURLFieldEditor = [[NSTextView alloc] init];
+      [mURLFieldEditor setFieldEditor:YES];
+      [mURLFieldEditor setAllowsUndo:YES];
+    }
+    return mURLFieldEditor;
+  }
+  return nil;
 }
 
 @end
