@@ -257,6 +257,36 @@ sub else {
     $stack->push(not $stack->pop);
 }
 
+sub elif {
+    my $stack = shift;
+    die "argument expected\n" unless @_;
+    if ($stack->pop) {
+        $stack->push(0);
+    } else {
+        &if($stack, @_);
+    }
+}
+
+sub elifdef {
+    my $stack = shift;
+    die "argument expected\n" unless @_;
+    if ($stack->pop) {
+        $stack->push(0);
+    } else {
+        &ifdef($stack, @_);
+    }
+}
+
+sub elifndef {
+    my $stack = shift;
+    die "argument expected\n" unless @_;
+    if ($stack->pop) {
+        $stack->push(0);
+    } else {
+        &ifndef($stack, @_);
+    }
+}
+
 sub endif {
     my $stack = shift;
     die "argument unexpected\n" if @_;
