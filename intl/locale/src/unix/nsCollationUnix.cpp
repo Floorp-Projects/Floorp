@@ -114,7 +114,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   mLocale.Assign('C');
 
   nsAutoString localeStr;
-  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_COLLATE");
+  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_COLLATE##PLATFORM");
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
