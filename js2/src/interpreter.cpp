@@ -19,9 +19,7 @@
 
 #include "interpreter.h"
 
-namespace JS = JavaScript;
-
-namespace JS {
+namespace JavaScript {
 
 // these should probably be in icodegenerator.h.
 typedef Instruction_2<StringAtom&, Register> LoadName;
