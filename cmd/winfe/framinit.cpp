@@ -515,6 +515,22 @@ BOOL CMainFrame::FileBookmark(HT_Resource pFolder)
 //
 void CMainFrame::OnLoadHomePage()
 {
+    //  Sometimes on startup the hourglass will remain if we use a blank
+    //      page as the home page.
+    //  We can avoid this by simply sticking the arrow in.  If we do load
+    //      a page, the hourglass will appear again in GetUrl, and stay
+    //      around until LayoutNewDocument.
+    HCURSOR hCurrent = ::GetCursor();
+    if(hCurrent)    {
+        HCURSOR hWait = ::LoadCursor(NULL, IDC_WAIT);
+        if(hCurrent == hWait)   {
+            HCURSOR hArrow = ::LoadCursor(NULL, IDC_ARROW);
+            if(hArrow)  {
+                ::SetCursor(hArrow);
+            }
+        }
+    }
+
 #ifdef EDITOR
     if ( IsEditFrame() )
     {
