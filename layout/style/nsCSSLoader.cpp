@@ -382,12 +382,12 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mSheetIndex(aSheetIndex),
     mOwningElement(nsnull),
     mParserToUnblock(nsnull),
-    mDidBlockParser(PR_FALSE),
     mParentSheet(aParentSheet),
     mParentRule(aParentRule),
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
+    mDidBlockParser(PR_FALSE),
     mIsInline(PR_FALSE),
     mIsAgent(PR_FALSE),
     mSyncLoad(PR_FALSE),
@@ -410,12 +410,12 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mSheetIndex(-1),
     mOwningElement(nsnull),
     mParserToUnblock(nsnull),
-    mDidBlockParser(PR_FALSE),
     mParentSheet(nsnull),
     mParentRule(nsnull),
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
+    mDidBlockParser(PR_FALSE),
     mIsInline(PR_FALSE),
     mIsAgent(PR_TRUE),
     mSyncLoad(PRBool(nsnull == aObserver)),
@@ -617,9 +617,24 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   nsresult result = NS_OK;
   nsString *strUnicodeBuffer = nsnull;
 
-  if (aString && aStringLen>0) {
-    nsCOMPtr<nsIRequest> request;
-    aLoader->GetRequest(getter_AddRefs(request));
+  nsCOMPtr<nsIRequest> request;
+  result = aLoader->GetRequest(getter_AddRefs(request));
+  if (NS_FAILED(result))
+    request = nsnull;
+  // If it's an HTTP channel, we want to make sure this is not an
+  // error document we got.
+  PRBool realDocument = PR_TRUE;
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  if (httpChannel) {
+    PRUint32 statusCode;
+    result = httpChannel->GetResponseStatus(&statusCode);
+    // Only accept 2xx responses
+    if (NS_SUCCEEDED(result) && statusCode / 100 != 2) {
+      realDocument = PR_FALSE;
+    }
+  }
+  
+  if (realDocument && aString && aStringLen>0) {
     nsCAutoString contentType;
     if (! (mLoader->mNavQuirkMode)) {
       nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
