@@ -1198,7 +1198,10 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
 
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
+    /* Allow only shared (slot-less) => unshared (slot-full) transition. */
     attrs |= sprop->attrs & mask;
+    JS_ASSERT(!((attrs ^ sprop->attrs) & JSPROP_SHARED) ||
+              !(attrs & JSPROP_SHARED));
     if (getter == JS_PropertyStub)
         getter = NULL;
     if (setter == JS_PropertyStub)
@@ -1218,6 +1221,18 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
     child.shortid = sprop->shortid;
 
     if (SCOPE_LAST_PROP(scope) == sprop) {
+        /*
+         * Optimize the case where the last property added to scope is changed
+         * to have a different attrs, getter, or setter.  In the last property
+         * case, we need not fork the property tree.  But since we do not call
+         * js_AddScopeProperty, we may need to allocate a new slot directly.
+         */
+        if ((sprop->attrs & JSPROP_SHARED) && !(attrs & JSPROP_SHARED)) {
+            JS_ASSERT(child.slot == SPROP_INVALID_SLOT);
+            if (!js_AllocSlot(cx, scope->object, &child.slot))
+                return NULL;
+        }
+
         newsprop = GetPropertyTreeChild(cx, sprop->parent, &child);
         if (newsprop) {
             spp = js_SearchScope(scope, sprop->id, JS_FALSE);
