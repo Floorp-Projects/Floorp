@@ -185,7 +185,6 @@ Usage(const char *progName)
 "l    SSL3 RSA EXPORT WITH DES CBC SHA\t(new)\n"
 "m    SSL3 RSA EXPORT WITH RC4 56 SHA\t(new)\n",
 	progName);
-    exit(1);
 }
 
 static void
@@ -201,9 +200,9 @@ networkStart(void)
     err = WSAStartup(wVersionRequested, &wsaData); 
  
     if (err != 0) {
-	/* Tell the user that we couldn't find a useable winsock.dll. */ 
-	fputs("WSAStartup failed!\n", stderr);
-	exit(1);
+		/* Tell the user that we couldn't find a useable winsock.dll. */ 
+		fputs("WSAStartup failed!\n", stderr);
+		exit(1);
     }
 
 /* Confirm that the Windows Sockets DLL supports 1.1.*/ 
@@ -214,10 +213,10 @@ networkStart(void)
  
     if ( LOBYTE( wsaData.wVersion ) != 1 || 
          HIBYTE( wsaData.wVersion ) != 1 ) { 
-	/* Tell the user that we couldn't find a useable winsock.dll. */ 
-	fputs("wrong winsock version\n", stderr);
-	WSACleanup(); 
-	exit(1); 
+		/* Tell the user that we couldn't find a useable winsock.dll. */ 
+		fputs("wrong winsock version\n", stderr);
+		WSACleanup(); 
+		exit(2); 
     } 
     /* The Windows Sockets DLL is acceptable. Proceed. */ 
 
@@ -271,7 +270,7 @@ errExit(char * funcString)
 #endif
 
     errWarn(funcString);
-    exit(1);
+    exit(3);
 }
 
 void
@@ -1136,7 +1135,9 @@ main(int argc, char **argv)
     unsigned short       port        = 0;
     SECStatus            rv;
     PRBool               useExportPolicy = PR_FALSE;
-    PLOptState *optstate;
+    PLOptState			*optstate;
+	PLOptStatus          status;
+
 
     tmp = strrchr(argv[0], '/');
     tmp = tmp ? tmp + 1 : argv[0];
@@ -1144,48 +1145,91 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
 
     optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:i:f:rt:vw:x");
-    while (PL_GetNextOpt(optstate) == PL_OPT_OK) {
-	switch(optstate->option) {
-	default:
-	case '?': Usage(progName); 		break;
-
-	case '2': fileName = optstate->value; 	break;
-
-	case '3': disableSSL3 = PR_TRUE;	break;
-
-	case 'R': disableRollBack = PR_TRUE;	break;
-
-	case 'T': disableTLS  = PR_TRUE;	break;
-
-        case 'c': cipherString = strdup(optstate->value); break;
-
-	case 'd': dir = optstate->value; 	break;
-
-	case 'f': fNickName = optstate->value; 	break;
-
-        case 'm': useModelSocket = PR_TRUE; 	break;
-
-        case 'n': nickName = optstate->value; 	break;
-
-        case 'i': pidFile = optstate->value; 	break;
-
-	case 'p': port = PORT_Atoi(optstate->value); break;
-
-	case 'r': ++requestCert; 		break;
-
-    case 't':
-        maxThreads = PORT_Atoi(optstate->value);
-        if ( maxThreads > MAX_THREADS ) maxThreads = MAX_THREADS;
-        if ( maxThreads < MIN_THREADS ) maxThreads = MIN_THREADS;
-        break;
-
-        case 'v': verbose++; 			break;
-
-	case 'w': passwd = optstate->value;	break;
-
-        case 'x': useExportPolicy = PR_TRUE; 	break;
-	}
+    while (status = PL_GetNextOpt(optstate) == PL_OPT_OK) {
+		switch(optstate->option) {
+		case '2':
+			fileName = optstate->value;
+			break;
+	
+		case '3': 
+			disableSSL3 = PR_TRUE;
+			break;
+	
+		case 'R': 
+			disableRollBack = PR_TRUE;
+			break;
+	
+		case 'T': 
+			disableTLS = PR_TRUE;
+			break;
+	
+		case 'c': 
+			cipherString = strdup(optstate->value);
+			break;
+	
+		case 'd': 
+			dir = optstate->value;
+			break;
+	
+		case 'f':
+			fNickName = optstate->value;
+			break;
+	
+		case 'h': 
+			Usage(progName);
+			exit(0);
+			break;
+	
+		case 'm': 
+			useModelSocket = PR_TRUE;
+			break;
+	
+		case 'n':
+			nickName = optstate->value;
+			break;
+	
+		case 'i':
+			pidFile = optstate->value;
+			break;
+	
+		case 'p': 
+			port = PORT_Atoi(optstate->value);
+			break;
+	
+		case 'r':
+			++requestCert;
+			break;
+	
+	    case 't':
+	        maxThreads = PORT_Atoi(optstate->value);
+	        if ( maxThreads > MAX_THREADS ) maxThreads = MAX_THREADS;
+	        if ( maxThreads < MIN_THREADS ) maxThreads = MIN_THREADS;
+	        break;
+	
+		case 'v':
+			verbose++;
+			break;
+	
+		case 'w':
+			passwd = optstate->value;
+			break;
+	
+		case 'x':
+			useExportPolicy = PR_TRUE;
+			break;
+		default:
+		case '?':
+			fprintf(stderr, "Unrecognized or bad option specified.\n");
+			fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+			exit(4);
+			break;
+		}
     }
+	if (status == PL_OPT_BAD) {
+		fprintf(stderr, "Unrecognized or bad option specified.\n");
+		fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+		exit(5);
+	}
 
     /* allocate the array of thread slots */
     threads = PR_Calloc(maxThreads, sizeof(perThread));
@@ -1194,19 +1238,24 @@ main(int argc, char **argv)
         goto mainExit;
     }
 
-    if ((nickName == NULL) && (fNickName == NULL))
-	Usage(progName);
+    if ((nickName == NULL) && (fNickName == NULL)) {
+		fprintf (stderr, "Required arg '-n' (rsa nickname) not supplied.\n");
+		fprintf(stderr, "Run '%s -h' for usage information.\n");
+        exit(6);
+    }
 
-    if (port == 0)
-	Usage(progName);
+    if (port == 0) {
+		fprintf(stderr, "Required argument 'port' must be non-zero value\n");
+		exit(7);
+	}
 
     if (pidFile) {
-	FILE *tmpfile=fopen(pidFile,"w+");
-
-	if (tmpfile) {
-	    fprintf(tmpfile,"%d",getpid());
-	    fclose(tmpfile);
-        }
+		FILE *tmpfile=fopen(pidFile,"w+");
+	
+		if (tmpfile) {
+		    fprintf(tmpfile,"%d",getpid());
+		    fclose(tmpfile);
+		}
     }
 	
 
@@ -1223,7 +1272,7 @@ main(int argc, char **argv)
     rv = NSS_Init(dir);
     if (rv != SECSuccess) {
     	fputs("NSS_Init failed.\n", stderr);
-	exit(1);
+		exit(8);
     }
 
     /* set the policy bits true for all the cipher suites. */
@@ -1236,26 +1285,29 @@ main(int argc, char **argv)
     if (cipherString) {
     	int ndx;
 
-	/* disable all the ciphers, then enable the ones we want. */
-	disableSSL2Ciphers();
-	disableSSL3Ciphers();
-
-	while (0 != (ndx = *cipherString++)) {
-	    int *cptr;
-	    int  cipher;
-
-	    if (! isalpha(ndx))
-	     	Usage(progName);
-	    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-	    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-	    	/* do nothing */;
-	    if (cipher) {
-		SECStatus status;
-		status = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
-		if (status != SECSuccess) 
-		    SECU_PrintError(progName, "SSL_CipherPrefSet()");
-	    }
-	}
+		/* disable all the ciphers, then enable the ones we want. */
+		disableSSL2Ciphers();
+		disableSSL3Ciphers();
+	
+		while (0 != (ndx = *cipherString++)) {
+		    int *cptr;
+		    int  cipher;
+	
+		    if (! isalpha(ndx)) {
+				fprintf(stderr, 
+					"Non-alphabetic char in cipher string (-c arg).\n");
+				exit(9);
+			}
+		    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+		    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
+		    	/* do nothing */;
+		    if (cipher) {
+				SECStatus status;
+				status = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
+				if (status != SECSuccess) 
+				    SECU_PrintError(progName, "SSL_CipherPrefSet()");
+		    }
+		}
     }
 
     if (nickName) {
@@ -1263,13 +1315,13 @@ main(int argc, char **argv)
 	cert[kt_rsa] = PK11_FindCertFromNickname(nickName, passwd);
 	if (cert[kt_rsa] == NULL) {
 	    fprintf(stderr, "selfserv: Can't find certificate %s\n", nickName);
-	    exit(1);
+	    exit(10);
 	}
 
 	privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], passwd);
 	if (privKey[kt_rsa] == NULL) {
 	    fprintf(stderr, "selfserv: Can't find Private Key for cert %s\n", nickName);
-	    exit(1);
+	    exit(11);
 	}
 
     }
@@ -1277,7 +1329,7 @@ main(int argc, char **argv)
 	cert[kt_fortezza] = PK11_FindCertFromNickname(fNickName, NULL);
 	if (cert[kt_fortezza] == NULL) {
 	    fprintf(stderr, "selfserv: Can't find certificate %s\n", fNickName);
-	    exit(1);
+	    exit(12);
 	}
 
 	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], NULL);
@@ -1295,4 +1347,3 @@ mainExit:
     PR_Cleanup();
     return 0;
 }
-
