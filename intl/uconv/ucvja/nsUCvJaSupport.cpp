@@ -366,7 +366,7 @@ nsresult nsBasicEncoder::QueryInterface(REFNSIID aIID,
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                          
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+  static NS_DEFINE_IID(kISupportsIID2, NS_ISUPPORTS_IID);                 
 
   if (aIID.Equals(kIUnicodeEncoderIID)) {                                          
     *aInstancePtr = (void*) ((nsIUnicodeEncoder*)this); 
@@ -378,7 +378,7 @@ nsresult nsBasicEncoder::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
+  if (aIID.Equals(kISupportsIID2)) {                                      
     *aInstancePtr = (void*) ((nsISupports*)((nsIUnicodeEncoder*)this));
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
