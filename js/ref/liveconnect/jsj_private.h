@@ -29,6 +29,7 @@
 #ifndef _JSJAVA_PVT_H
 #define _JSJAVA_PVT_H
 
+#include "jsj_hash.h"        /* Hash tables */
 #include "prhash.h"          /* NSPR hash-tables      */
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */
@@ -462,8 +463,8 @@ jsj_GetJavaErrorMessage(JNIEnv *env);
 extern void
 jsj_LogError(const char *error_msg);
 
-PR_CALLBACK prhashcode
-jsj_HashJavaObject(const void *key, JNIEnv *jEnv);
+PR_CALLBACK JSJHashNumber
+jsj_HashJavaObject(const void *key, void* env);
 
 PR_CALLBACK intN
 jsj_JavaObjectComparator(const void *v1, const void *v2, void *arg);

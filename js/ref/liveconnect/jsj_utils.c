@@ -40,13 +40,15 @@
  * This is a hash-table utility routine that computes the hash code of a Java
  * object by calling java.lang.System.identityHashCode()
  */
-PR_CALLBACK prhashcode
-jsj_HashJavaObject(const void *key, JNIEnv *jEnv)
+PR_CALLBACK JSJHashNumber
+jsj_HashJavaObject(const void *key, void* env)
 {
     prhashcode hash_code;
     jobject java_obj;
+    JNIEnv *jEnv;
 
     java_obj = (jobject)key;
+    jEnv = (JNIEnv*) env;
     hash_code = (*jEnv)->CallStaticIntMethod(jEnv, jlSystem,
                                              jlSystem_identityHashCode, java_obj);
     PR_ASSERT(!(*jEnv)->ExceptionOccurred(jEnv));
