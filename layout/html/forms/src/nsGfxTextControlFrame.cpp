@@ -955,7 +955,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
     break;
     
     case NS_FORM_SELECTED:
-      return UpdateTextControlCommands(nsAutoString("select"));
+      return UpdateTextControlCommands(NS_ConvertASCIItoUCS2("select"));
       break;
   }
   return NS_OK;
@@ -1106,7 +1106,7 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
           nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
           if(imeSupport) 
               imeSupport->ForceCompositionEnd();
-          nsString format ("text/plain");
+          nsString format; format.AssignWithConversion("text/plain");
           mEditor->OutputToString(*aText, format, 0);
         }
         // we've never built our editor, so the content attribute is the value
@@ -1494,7 +1494,7 @@ nsGfxTextControlFrame::Paint(nsIPresContext* aPresContext,
 #endif
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
-    nsAutoString text(" ");
+    nsAutoString text; text.AssignWithConversion(" ");
     nsRect rect(0, 0, mRect.width, mRect.height);
     PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, 
                      text, mStyleContext, rect);
@@ -1511,7 +1511,7 @@ nsGfxTextControlFrame::PaintTextControlBackground(nsIPresContext* aPresContext,
   // we paint our own border, but everything else is painted by the mDocshell
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
-    nsAutoString text(" ");
+    nsAutoString text; text.AssignWithConversion(" ");
     nsRect rect(0, 0, mRect.width, mRect.height);
     PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, 
                      text, mStyleContext, rect);
@@ -1629,11 +1629,11 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
 //XXX: this needs to be fixed for HTML output
 void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 {
-  aValue = "";  // initialize out param
+  aValue.SetLength(0);  // initialize out param
   
   if (mEditor && PR_TRUE==IsInitialized()) 
   {
-    nsString format ("text/plain");
+    nsString format; format.AssignWithConversion("text/plain");
     PRUint32 flags = 0;
 
     if (PR_TRUE==IsPlainTextControl()) {
@@ -1667,7 +1667,7 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
   if (mEditor && PR_TRUE==IsInitialized()) 
   {
     nsAutoString currentValue;
-    nsAutoString format ("text/plain");
+    nsAutoString format; format.AssignWithConversion("text/plain");
     nsresult result = mEditor->OutputToString(currentValue, format, 0);
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
@@ -1678,7 +1678,7 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
       // so convert windows and mac platform linebreaks to \n:
       // Unfortunately aValue is declared const, so we have to copy
       // in order to do this substitution.
-      currentValue = aValue;
+      currentValue.Assign(aValue);
       nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
 
       nsCOMPtr<nsIDOMDocument>domDoc;
@@ -2552,7 +2552,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
           // get the text value, either from input element attribute or cached state
           nsAutoString value;
           if (mCachedState) {
-            value = *mCachedState;
+            value.Assign(*mCachedState);
 	        } 
           else 
           {
@@ -3301,7 +3301,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   // now that the style context is initialized, initialize the content
   nsAutoString value;
   if (mCachedState) {
-    value = *mCachedState;
+    value.Assign(*mCachedState);
     delete mCachedState;
     mCachedState = nsnull;
   } else {
@@ -3363,7 +3363,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
     nsCOMPtr<nsIDOMNode>bodyNode;
-    nsAutoString bodyTag = "body";
+    nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
     result = GetFirstNodeOfType(bodyTag, aDoc, getter_AddRefs(bodyNode));
     if (NS_SUCCEEDED(result) && bodyNode)
     {
@@ -3463,7 +3463,7 @@ nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aComma
   
   if (mEditor)
   {  
-    if (aCommand == nsAutoString("select"))   // optimize select updates
+    if (aCommand == NS_ConvertASCIItoUCS2("select"))   // optimize select updates
     {
       nsCOMPtr<nsIDOMSelection> domSelection;
       rv = mEditor->GetSelection(getter_AddRefs(domSelection));
@@ -3573,7 +3573,7 @@ nsGfxTextControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aS
            nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
   NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");  
   
-  (*aState)->SetStateProperty("value", theString);
+  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("value"), theString);
   return res;
 }
 
@@ -3581,7 +3581,7 @@ NS_IMETHODIMP
 nsGfxTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
   nsAutoString stateString;
-  aState->GetStateProperty("value", stateString);
+  aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
   nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
   return res;
 }
@@ -4419,7 +4419,7 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
 
   if (gfxFrame && mContent && mView) {
-    mTextValue = "";
+    mTextValue.SetLength(0);
     gfxFrame->GetText(&mTextValue, PR_FALSE);
   }
 
@@ -4594,7 +4594,7 @@ NS_IMETHODIMP nsEnderEventListener::DidDo(nsITransactionManager *aManager,
     if (undoCount == 1)
     {
       if (mFirstDoOfFirstUndo)
-        gfxFrame->UpdateTextControlCommands(nsAutoString("undo"));
+        gfxFrame->UpdateTextControlCommands(NS_ConvertASCIItoUCS2("undo"));
  
       mFirstDoOfFirstUndo = PR_FALSE;
     }
@@ -4621,7 +4621,7 @@ NS_IMETHODIMP nsEnderEventListener::DidUndo(nsITransactionManager *aManager,
     if (undoCount == 0)
       mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
 
-    gfxFrame->UpdateTextControlCommands(nsAutoString("undo"));
+    gfxFrame->UpdateTextControlCommands(NS_ConvertASCIItoUCS2("undo"));
   }
   
   return NS_OK;
@@ -4640,7 +4640,7 @@ NS_IMETHODIMP nsEnderEventListener::DidRedo(nsITransactionManager *aManager,
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
   if (gfxFrame)
   {
-    gfxFrame->UpdateTextControlCommands(nsAutoString("undo"));
+    gfxFrame->UpdateTextControlCommands(NS_ConvertASCIItoUCS2("undo"));
   }
 
   return NS_OK;

@@ -1453,7 +1453,7 @@ nsDOMSelection::ToString(nsString& aReturn)
   PRInt32 cnt;
   GetRangeCount(&cnt);
   aReturn.AssignWithConversion("nsSelection: ");
-  aReturn += cnt;
+  aReturn.AppendInt(cnt);
   aReturn.AppendWithConversion(" items\n");
 
   // Get an iterator
@@ -1484,11 +1484,11 @@ nsDOMSelection::ToString(nsString& aReturn)
   PRInt32 theInt = (PRInt32)(nsIDOMNode*)FetchAnchorNode();
   aReturn.AppendWithConversion(theInt);
   aReturn.AppendWithConversion(", ");
-  aReturn += FetchAnchorOffset();
+  aReturn.AppendInt(FetchAnchorOffset());
   aReturn.AppendWithConversion("Focus is");
-  aReturn.AppendWithConversion((long)(nsIDOMNode*)FetchFocusNode(), 16);
+  aReturn.AppendInt((long)(nsIDOMNode*)FetchFocusNode(), 16);
   aReturn.AppendWithConversion(", ");
-  aReturn += FetchFocusOffset();
+  aReturn.AppendInt(FetchFocusOffset());
   aReturn.AppendWithConversion("\n ... end of selection\n");
 
   return NS_OK;

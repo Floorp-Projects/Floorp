@@ -266,19 +266,19 @@ nsXMLEntity::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp(mName);
   if (mPublicId.Length()) {
-    tmp.Append(" PUBLIC \"");
+    tmp.AppendWithConversion(" PUBLIC \"");
     tmp.Append(mPublicId);
-    tmp.Append("\"");
+    tmp.AppendWithConversion("\"");
   }
 
   if (mSystemId.Length()) {
-    tmp.Append(" SYSTEM \"");
+    tmp.AppendWithConversion(" SYSTEM \"");
     tmp.Append(mSystemId);
-    tmp.Append("\"");
+    tmp.AppendWithConversion("\"");
   }
 
   if (mNotationName.Length()) {
-    tmp.Append(" NDATA ");
+    tmp.AppendWithConversion(" NDATA ");
     tmp.Append(mNotationName);
   }
 

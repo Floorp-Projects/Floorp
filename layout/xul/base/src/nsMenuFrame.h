@@ -154,7 +154,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "Menu";
+      aResult.AssignWithConversion("Menu");
       return NS_OK;
   }
 

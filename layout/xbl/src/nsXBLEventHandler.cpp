@@ -58,7 +58,7 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
   NS_INIT_REFCNT();
   mBoundElement = aBoundElement;
   mHandlerElement = aHandlerElement;
-  mEventName = aEventName;
+  mEventName.Assign(aEventName);
   gRefCnt++;
   if (gRefCnt == 1) {
     kKeyCodeAtom = NS_NewAtom("keycode");
@@ -101,154 +101,154 @@ nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  if (!mEventName.Equals("keyup"))
+  if (!mEventName.EqualsWithConversion("keyup"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler(nsAutoString("keyup"), aKeyEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("keyup"), aKeyEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  if (!mEventName.Equals("keydown"))
+  if (!mEventName.EqualsWithConversion("keydown"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler(nsAutoString("keydown"), aKeyEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("keydown"), aKeyEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  if (!mEventName.Equals("keypress"))
+  if (!mEventName.EqualsWithConversion("keypress"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler(nsAutoString("keypress"), aKeyEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("keypress"), aKeyEvent);
   return NS_OK;
 }
    
 nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.Equals("mousedown"))
+  if (!mEventName.EqualsWithConversion("mousedown"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(nsAutoString("mousedown"), aMouseEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("mousedown"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.Equals("mouseup"))
+  if (!mEventName.EqualsWithConversion("mouseup"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(nsAutoString("mouseup"), aMouseEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("mouseup"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.Equals("click"))
+  if (!mEventName.EqualsWithConversion("click"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(nsAutoString("click"), aMouseEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("click"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.Equals("dblclick"))
+  if (!mEventName.EqualsWithConversion("dblclick"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(nsAutoString("dblclick"), aMouseEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("dblclick"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.Equals("mouseover"))
+  if (!mEventName.EqualsWithConversion("mouseover"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(nsAutoString("mouseover"), aMouseEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("mouseover"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.Equals("mouseout"))
+  if (!mEventName.EqualsWithConversion("mouseout"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(nsAutoString("mouseout"), aMouseEvent);
+    ExecuteHandler(NS_ConvertASCIItoUCS2("mouseout"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.Equals("command"))
+  if (!mEventName.EqualsWithConversion("command"))
     return NS_OK;
 
-  ExecuteHandler(nsAutoString("command"), aEvent);
+  ExecuteHandler(NS_ConvertASCIItoUCS2("command"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Create(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.Equals("create"))
+  if (!mEventName.EqualsWithConversion("create"))
     return NS_OK;
 
-  ExecuteHandler(nsAutoString("create"), aEvent);
+  ExecuteHandler(NS_ConvertASCIItoUCS2("create"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Close(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.Equals("close"))
+  if (!mEventName.EqualsWithConversion("close"))
     return NS_OK;
 
-  ExecuteHandler(nsAutoString("close"), aEvent);
+  ExecuteHandler(NS_ConvertASCIItoUCS2("close"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Broadcast(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.Equals("broadcast"))
+  if (!mEventName.EqualsWithConversion("broadcast"))
     return NS_OK;
 
-  ExecuteHandler(nsAutoString("broadcast"), aEvent);
+  ExecuteHandler(NS_ConvertASCIItoUCS2("broadcast"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.Equals("commandupdate"))
+  if (!mEventName.EqualsWithConversion("commandupdate"))
     return NS_OK;
 
-  ExecuteHandler(nsAutoString("commandupdate"), aEvent);
+  ExecuteHandler(NS_ConvertASCIItoUCS2("commandupdate"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.Equals("destroy"))
+  if (!mEventName.EqualsWithConversion("destroy"))
     return NS_OK;
 
-  ExecuteHandler(nsAutoString("destroy"), aEvent);
+  ExecuteHandler(NS_ConvertASCIItoUCS2("destroy"), aEvent);
   return NS_OK;
 }
 
@@ -257,8 +257,8 @@ nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 PRBool 
 nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 {
-  nsAutoString trueString = "true";
-  nsAutoString falseString = "false";
+  nsAutoString trueString; trueString.AssignWithConversion("true");
+  nsAutoString falseString; falseString.AssignWithConversion("false");
 
   // Get the keycode and charcode of the key event.
   PRUint32 keyCode, charCode;
@@ -272,12 +272,12 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   if (!key.IsEmpty())
     keyMatched = IsMatchingCharCode(charCode, key);
   
-  key = "";
+  key.SetLength(0);
   mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
   if (!key.IsEmpty())
     keyMatched = IsMatchingKeyCode(keyCode, key);
   
-  key = "";
+  key.SetLength(0);
   mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
   if (!key.IsEmpty())
     keyMatched = IsMatchingCharCode(charCode, key);
@@ -374,8 +374,8 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 PRBool 
 nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 {
-  nsAutoString trueString = "true";
-  nsAutoString falseString = "false";
+  nsAutoString trueString; trueString.AssignWithConversion("true");
+  nsAutoString falseString; falseString.AssignWithConversion("false");
 
   // XXX Check for button and modifier keys.
 
@@ -408,7 +408,7 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
 
   // Look for a compiled handler on the element. 
   // Should be compiled and bound with "on" in front of the name.
-  nsAutoString onEvent = "onxbl";
+  nsAutoString onEvent; onEvent.AssignWithConversion("onxbl");
   onEvent += aEventName;
   nsCOMPtr<nsIAtom> onEventAtom = getter_AddRefs(NS_NewAtom(onEvent));
 
@@ -1066,7 +1066,7 @@ nsXBLEventHandler::IsMatchingCharCode(const PRUint32 aChar, const nsString& aKey
   char tempChar[2];
   tempChar[0] = aChar;
   tempChar[1] = 0;
-  nsAutoString tempChar2 = tempChar;
+  nsAutoString tempChar2; tempChar2.AssignWithConversion(tempChar);
   
   return tempChar2.EqualsIgnoreCase(aKeyName);
 }

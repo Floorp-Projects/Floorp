@@ -84,7 +84,7 @@ nsTreeCellFrame::Init(nsIPresContext*  aPresContext,
   nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, attrValue);
   attrValue.ToLowerCase();
   PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-					    (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue.Equals("true")));
+					    (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue.EqualsWithConversion("true")));
   SetAllowEvents(allowEvents);
 
   // Determine if we're a column header or not.
@@ -171,7 +171,7 @@ nsTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // This allows selective overriding for subcontent.
         nsAutoString value;
         content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-        if (value.Equals("true"))
+        if (value.EqualsWithConversion("true"))
           return result;
       }
     }
@@ -354,18 +354,18 @@ nsTreeCellFrame::ToggleOpenClose()
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    treeItem->GetAttribute("open", attrValue);
+    treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded = (attrValue.Equals("true"));
+    PRBool isExpanded = (attrValue.EqualsWithConversion("true"));
     if (isExpanded)
 	  {
 		  // We're collapsing and need to remove frames from the flow.
-		  treeItem->RemoveAttribute("open");
+		  treeItem->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
 	  }
 	  else
 	  {
 		  // We're expanding and need to add frames to the flow.
-		  treeItem->SetAttribute("open", "true");
+		  treeItem->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
 	  }
   }
 }
@@ -389,12 +389,12 @@ nsTreeCellFrame::Open()
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    treeItem->GetAttribute("open", attrValue);
+    treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded = (attrValue.Equals("true"));
+    PRBool isExpanded = (attrValue.EqualsWithConversion("true"));
     if (!isExpanded) {
 		  // We're expanding and need to add frames to the flow.
-		  treeItem->SetAttribute("open", "true");
+		  treeItem->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
 	  }
   }
 }
@@ -418,12 +418,12 @@ nsTreeCellFrame::Close()
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    treeItem->GetAttribute("open", attrValue);
+    treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded = (attrValue.Equals("true"));
+    PRBool isExpanded = (attrValue.EqualsWithConversion("true"));
     if (isExpanded) {
 		  // We're expanding and need to add frames to the flow.
-		  treeItem->RemoveAttribute("open");
+		  treeItem->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
 	  }
   }
 }
@@ -449,9 +449,9 @@ void nsTreeCellFrame::Hover(nsIPresContext* aPresContext, PRBool isHover, PRBool
   if (isHover)
 	{
 		// We're selecting the node.
-		mContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
-    rowContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
-    itemContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
+		mContent->SetAttribute(kNameSpaceID_None, kHoverAtom, NS_ConvertASCIItoUCS2("true"), notifyForReflow);
+    rowContent->SetAttribute(kNameSpaceID_None, kHoverAtom, NS_ConvertASCIItoUCS2("true"), notifyForReflow);
+    itemContent->SetAttribute(kNameSpaceID_None, kHoverAtom, NS_ConvertASCIItoUCS2("true"), notifyForReflow);
 	}
 	else
 	{

@@ -125,7 +125,7 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
-    PRBool state = (aValue.Equals(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
+    PRBool state = (aValue.EqualsWithConversion(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
 
 
     // if there is no form than the radiobtn is an orphan
@@ -185,9 +185,9 @@ nsGfxRadioControlFrame::SetChecked(nsIPresContext* aPresContext, PRBool aValue, 
 {
   if (aSetInitialValue) {
     if (aValue) {
-      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, nsAutoString("1"), PR_FALSE); // XXX should be "empty" value
+      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2("1"), PR_FALSE); // XXX should be "empty" value
     } else {
-      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, nsAutoString("0"), PR_FALSE);
+      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2("0"), PR_FALSE);
     }
   }
 
@@ -226,7 +226,7 @@ nsGfxRadioControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     aValues[0] = value;
   } else {
-    aValues[0] = "on";
+    aValues[0].AssignWithConversion("on");
   }
   aNames[0]  = name;
   aNumValues = 1;
@@ -345,7 +345,7 @@ nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** a
   // This string will hold a single item, whether or not we're checked.
   nsAutoString stateString;
 	nsFormControlHelper::GetBoolString(GetRadioState(), stateString);
-  (*aState)->SetStateProperty("checked", stateString);
+  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), stateString);
 
   return NS_OK;
 }
@@ -364,8 +364,8 @@ nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState*
 
   mIsRestored = PR_TRUE;
   nsAutoString string;
-  aState->GetStateProperty("checked", string);
-  PRBool state = (string.Equals(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
+  aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
+  PRBool state = (string.EqualsWithConversion(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
 
   SetRadioState(aPresContext, state); // sets mChecked
   mRestoredChecked = mChecked;

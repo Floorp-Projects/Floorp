@@ -107,7 +107,7 @@ nsTextBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell),mTitle(""), mCropType(CropRight),mAccessKeyInfo(nsnull)
+nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mCropType(CropRight),mAccessKeyInfo(nsnull)
 {
 	mState |= NS_STATE_NEED_LAYOUT;
   NeedsRecalc();
@@ -140,17 +140,17 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString accesskey;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                          accesskey);
-  if (accesskey != "") {   
+  if (!accesskey.IsEmpty()) {   
       if (!mAccessKeyInfo)
           mAccessKeyInfo = new nsAccessKeyInfo();
 
       mAccessKeyInfo->mAccesskeyIndex = -1;
       mAccessKeyInfo->mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
 	  if (mAccessKeyInfo->mAccesskeyIndex == -1) {
-		  nsString tmpstring = "(" ;
+		  nsString tmpstring; tmpstring.AssignWithConversion("(");
 		  accesskey.ToUpperCase();
 		  tmpstring += accesskey;
-		  tmpstring += ")";
+		  tmpstring.AppendWithConversion(")");
 		  PRUint32 offset = mTitle.RFind("...");
 		  if ( offset != kNotFound)
 			mTitle.Insert(tmpstring,offset);
@@ -411,11 +411,11 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
    mTitleWidth = aWidth;
  
    if (aWidth <= elipsisWidth) {
-       mCroppedTitle = "";
+       mCroppedTitle.SetLength(0);
        return;
    }
 
-   mCroppedTitle = ELIPSIS;
+   mCroppedTitle.AssignWithConversion(ELIPSIS);
 
    aWidth -= elipsisWidth;
 
@@ -468,7 +468,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
            if (i == 0) 
                break;
         
-           nsString copy = "";
+           nsString copy;
            mTitle.Right(copy, length-i-1);
            mCroppedTitle = mCroppedTitle + copy;
        } 
@@ -476,10 +476,10 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
 
        case CropCenter:
 
-       nsString elipsisLeft = ELIPSIS;
+       nsString elipsisLeft; elipsisLeft.AssignWithConversion(ELIPSIS);
 
        if (aWidth <= elipsisWidth) 
-         elipsisLeft = "";
+         elipsisLeft.SetLength(0);
        else
           aWidth -= elipsisWidth;
     
@@ -513,7 +513,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
            }
 
 
-           nsString copy = "";
+           nsString copy;
 
            if (i2 > i)
               mTitle.Mid(copy, i,i2-i);
@@ -541,7 +541,7 @@ nsTextBoxFrame::UpdateAccessUnderline()
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
-    if (accesskey == "") {
+    if (accesskey.IsEmpty()) {
         if (mAccessKeyInfo) {
             delete mAccessKeyInfo;
             mAccessKeyInfo = nsnull;
@@ -650,8 +650,8 @@ nsTextBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
 NS_IMETHODIMP
 nsTextBoxFrame::GetFrameName(nsString& aResult) const
 {
-  aResult = "Text[value=";
+  aResult.AssignWithConversion("Text[value=");
   aResult += mTitle;
-  aResult += "]";
+  aResult.AppendWithConversion("]");
   return NS_OK;
 }

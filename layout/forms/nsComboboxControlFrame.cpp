@@ -223,7 +223,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mPresContext                 = nsnull;
   mFormFrame                   = nsnull;       
   mListControlFrame            = nsnull;
-  mTextStr                     = "";
   mButtonContent               = nsnull;
   mDroppedDown                 = PR_FALSE;
   mDisplayFrame                = nsnull;
@@ -337,7 +336,7 @@ nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext
       mListControlFrame->GetNumberOfOptions(&length);
       if (length > 0) {
          // Set listbox selection to first item in the list box
-        rv = fcFrame->SetProperty(aPresContext, nsHTMLAtoms::selectedindex, "0");
+        rv = fcFrame->SetProperty(aPresContext, nsHTMLAtoms::selectedindex, NS_ConvertASCIItoUCS2("0"));
         mSelectedIndex = 0;
       } else {
         UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
@@ -494,7 +493,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
   
   nsCOMPtr<nsIAtom> activeAtom ( dont_QueryInterface(NS_NewAtom(kMozDropdownActive)));
   if (PR_TRUE == aShowPopup) {
-    mContent->SetAttribute(kNameSpaceID_None, activeAtom, "", PR_TRUE);
+    mContent->SetAttribute(kNameSpaceID_None, activeAtom, nsAutoString(), PR_TRUE);
   } else {
     mContent->UnsetAttribute(kNameSpaceID_None, activeAtom, PR_TRUE);
   }
@@ -2085,7 +2084,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Add a child text content node for the label
   nsCOMPtr<nsIContent> labelContent;
   nsresult result = NS_NewTextNode(getter_AddRefs(labelContent));
-  nsAutoString value="X";
+  nsAutoString value; value.AssignWithConversion("X");
   if (NS_SUCCEEDED(result) && labelContent) {
     // set the value of the text node
     mDisplayContent = do_QueryInterface(labelContent);
@@ -2101,7 +2100,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     result = NS_NewHTMLInputElement(&mButtonContent, nsHTMLAtoms::input);
     //NS_ADDREF(mButtonContent);
     if (NS_SUCCEEDED(result) && mButtonContent) {
-      mButtonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
+      mButtonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
       aChildList.AppendElement(mButtonContent);
     }
   }

@@ -48,7 +48,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "Spring";
+      aResult.AssignWithConversion("Spring");
       return NS_OK;
   }
 

@@ -47,7 +47,7 @@ void nsXULAtoms::AddRefAtoms() {
     */
     if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager))) {
 //    gNameSpaceManager->CreateRootNameSpace(namespace);
-      nsAutoString nameSpace(kXULNameSpace);
+      nsAutoString nameSpace; nameSpace.AssignWithConversion(kXULNameSpace);
       gNameSpaceManager->RegisterNameSpace(nameSpace, nameSpaceID);
     } else {
       NS_ASSERTION(0, "failed to create xul atoms namespace manager");

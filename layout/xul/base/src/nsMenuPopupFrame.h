@@ -132,7 +132,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "MenuPopup";
+      aResult.AssignWithConversion("MenuPopup");
       return NS_OK;
   }
 

@@ -249,8 +249,8 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   if (fileWidget) {
-    nsString titles[] = {"all files"};
-    nsString filters[] = {"*.*"};
+    nsString titles[1]; titles[0].AssignWithConversion("all files");
+    nsString filters[1]; filters[0].AssignWithConversion("*.*");
     fileWidget->SetFilterList(1, titles, filters);
 
     fileWidget->Create(parentWidget, title, eMode_load, nsnull, nsnull);

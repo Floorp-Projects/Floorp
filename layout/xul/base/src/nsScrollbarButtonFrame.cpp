@@ -156,9 +156,9 @@ nsScrollbarButtonFrame::MouseClicked()
    {
      // if our class is DecrementButton subtract the current pos by increment amount
      // if our class is IncrementButton increment the current pos by the decrement amount
-     if (value.Equals("decrement"))
+     if (value.EqualsWithConversion("decrement"))
          curpos -= increment;
-     else if (value.Equals("increment"))
+     else if (value.EqualsWithConversion("increment"))
          curpos += increment;
 
       // make sure the current positon is between the current and max positions
@@ -171,7 +171,7 @@ nsScrollbarButtonFrame::MouseClicked()
     char v[100];
     sprintf(v, "%d", curpos);
 
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, v, PR_TRUE);
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(v), PR_TRUE);
    
    }
 

@@ -309,7 +309,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
     if (colContent) {
       nsAutoString fixedValue;
       colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
-      if (!fixedValue.Equals("true")) {
+      if (!fixedValue.EqualsWithConversion("true")) {
         // We are a proportional column and should be annotated with our current
         // width.
         PRInt32 colWidth = treeFrame->GetColumnWidth(i);
@@ -328,7 +328,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
         PRInt32 colWidth = colWidths[i];
         char ch[100];
         sprintf(ch,"%d*", colWidth);
-        nsAutoString propColWidth(ch);
+        nsAutoString propColWidth; propColWidth.AssignWithConversion(ch);
         colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
                                  PR_TRUE);
       }
@@ -379,7 +379,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
       colWidth = colWidths[colX] + mod;
      
       sprintf(ch,"%d*", colWidth);
-      nsAutoString propColWidth(ch);
+      nsAutoString propColWidth; propColWidth.AssignWithConversion(ch);
       
       colFrame->GetContent(getter_AddRefs(colContent));
       if (colContent) {
@@ -395,7 +395,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
   if (remaining != 0 && colContent) {
     colWidth += remaining;
     sprintf(ch,"%d*", colWidth);
-    nsAutoString propColWidth(ch);
+    nsAutoString propColWidth; propColWidth.AssignWithConversion(ch);
     colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
                              PR_TRUE);
 
@@ -412,7 +412,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
     
     colWidth = flexWidth - delta;
     sprintf(ch,"%d*", colWidth);
-    nsAutoString propColWidth(ch);
+    nsAutoString propColWidth; propColWidth.AssignWithConversion(ch);
     flexContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
                               PR_TRUE); // NOW we send the notification that causes the reflow.
   }

@@ -276,7 +276,9 @@ nsImageDocument::CreateSyntheticDocument()
 
   char* src;
   mDocumentURL->GetSpec(&src);
-  nsHTMLValue val(src);
+
+  nsString src_string; src_string.AssignWithConversion(src);
+  nsHTMLValue val(src_string);
   delete[] src;
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);

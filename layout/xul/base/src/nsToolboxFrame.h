@@ -72,7 +72,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "Toolbox";
+      aResult.AssignWithConversion("Toolbox");
       return NS_OK;
   }
 

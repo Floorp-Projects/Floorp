@@ -87,12 +87,12 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
     nsCOMPtr<nsIContent> content;
     splitter->GetContent(getter_AddRefs(content));
  
-	nsString a = "collapsed";
+	nsString a; a.AssignWithConversion("collapsed");
 	nsString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::state, value))
     {
-     if (value.Equals("collapsed"))
-       a = "open";
+     if (value.EqualsWithConversion("collapsed"))
+       a.AssignWithConversion("open");
     }
 
     content->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);
@@ -238,6 +238,6 @@ nsGrippyFrame::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt3
 NS_IMETHODIMP
 nsGrippyFrame::GetFrameName(nsString& aResult) const
 {
-  aResult = "Grippy";
+  aResult.AssignWithConversion("Grippy");
   return NS_OK;
 }

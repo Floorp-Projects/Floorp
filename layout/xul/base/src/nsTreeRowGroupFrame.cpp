@@ -131,8 +131,8 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 
   // NOTE: the last Remove will delete the drag capturer
   if ( receiver ) {
-    receiver->RemoveEventListener("dragover", mDragCapturer, PR_TRUE);
-    receiver->RemoveEventListener("dragexit", mDragCapturer, PR_TRUE);
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragCapturer, PR_TRUE);
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragCapturer, PR_TRUE);
   }
   
   NS_IF_RELEASE(mContentChain);
@@ -214,8 +214,8 @@ nsTreeRowGroupFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
     // with enough info to determine where the drop would happen so that JS down the 
     // line can do the right thing.
     mDragCapturer = new nsTreeItemDragCapturer(this, aPresContext);
-    receiver->AddEventListener("dragover", mDragCapturer, PR_TRUE);
-    receiver->AddEventListener("dragexit", mDragCapturer, PR_TRUE);
+    receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragCapturer, PR_TRUE);
+    receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragCapturer, PR_TRUE);
   }
   
   return rv;
@@ -551,7 +551,7 @@ nsTreeRowGroupFrame::FindRowContentAtIndex(PRInt32& aIndex,
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
       childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.Equals("true")) {
+      if (isOpen.EqualsWithConversion("true")) {
         // Find the <treechildren> node.
         PRInt32 childContentCount;
         nsCOMPtr<nsIContent> grandChild;
@@ -627,7 +627,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
       childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.Equals("true")) {
+      if (isOpen.EqualsWithConversion("true")) {
         // Find the <treechildren> node.
         PRInt32 childContentCount;
         nsCOMPtr<nsIContent> grandChild;
@@ -695,7 +695,7 @@ nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
       nsCOMPtr<nsIContent> parent;
       childContent->GetParent(*getter_AddRefs(parent));
       parent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.Equals("true"))
+      if (isOpen.EqualsWithConversion("true"))
       ComputeTotalRowCount(aCount, childContent);
     }
   }
@@ -828,7 +828,7 @@ nsTreeRowGroupFrame::PagedUpDown()
 #ifdef DEBUG_tree
     printf("PagedUpDown, setting increment to %d\n", rowGroupCount);
 #endif
-    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, nsAutoString(ch), PR_FALSE);
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
   }
 
   return NS_OK;
@@ -847,12 +847,12 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* a
   aFrame->GetContent(getter_AddRefs(scrollbarContent));
   
   nsAutoString scrollFactor;
-  scrollFactor.Append(SCROLL_FACTOR);
+  scrollFactor.AppendWithConversion(SCROLL_FACTOR);
 
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, "0", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2("0"), PR_FALSE);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::increment, scrollFactor, PR_FALSE);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, "1", PR_FALSE);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, "5000", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, NS_ConvertASCIItoUCS2("1"), PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, NS_ConvertASCIItoUCS2("5000"), PR_FALSE);
 
   nsIFrame* result;
   nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::slider, aFrame, result);
@@ -1496,7 +1496,7 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
      mCurrentIndex--;
      nsAutoString indexStr;
      PRInt32 pixelIndex = mCurrentIndex * SCROLL_FACTOR;
-     indexStr.Append(pixelIndex);
+     indexStr.AppendInt(pixelIndex);
     
      nsCOMPtr<nsIContent> scrollbarContent;
      mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
@@ -1564,7 +1564,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
     if (count < pageRowCount) {
       // first set the position to 0 so that all visible content
       // scrolls into view
-      value.Append(0);
+      value.AppendInt(0);
       scrollbarContent->SetAttribute(kNameSpaceID_None,
                                      nsXULAtoms::curpos,
                                      value, PR_TRUE);
@@ -1578,7 +1578,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
                                      nsXULAtoms::curpos, value);
     }
    
-    if (nukeScrollbar || (value.Equals("0") && !mIsFull)) {
+    if (nukeScrollbar || (value.EqualsWithConversion("0") && !mIsFull)) {
       
       // clear the scrollbar out of the event state manager so that the
       // event manager doesn't send events to the destroyed scrollbar frames
@@ -1629,7 +1629,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
     rowCount *= SCROLL_FACTOR;
     char ch[100];
     sprintf(ch,"%d", rowCount);
-    maxpos = ch;
+    maxpos.AssignWithConversion(ch);
   }
 
   // Make sure our position is accurate
@@ -1673,7 +1673,7 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
     nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
 
     nsCOMPtr<nsIDOMElement> node;
-    document->CreateElement("scrollbar",getter_AddRefs(node));
+    document->CreateElement(NS_ConvertASCIItoUCS2("scrollbar"),getter_AddRefs(node));
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     content->SetDocument(idocument, PR_FALSE);
@@ -1684,7 +1684,7 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
       xulContent->SetAnonymousState(PR_TRUE); // Mark as anonymous to keep events from getting out.
     
     nsCOMPtr<nsIAtom> align = dont_AddRef(NS_NewAtom("align"));
-    content->SetAttribute(kNameSpaceID_None, align, "vertical", PR_FALSE);
+    content->SetAttribute(kNameSpaceID_None, align, NS_ConvertASCIItoUCS2("vertical"), PR_FALSE);
     
     nsIFrame* aResult;
     mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, content,
@@ -1846,7 +1846,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 #endif
   
   scrollTo *= SCROLL_FACTOR;
-  value.Append(scrollTo);
+  value.AppendInt(scrollTo);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
                                  value, PR_TRUE);
 
@@ -1913,7 +1913,7 @@ void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
 
   scrollTo *= SCROLL_FACTOR;
   nsAutoString value;
-  value.Append(scrollTo);
+  value.AppendInt(scrollTo);
 
   nsCOMPtr<nsIContent> scrollbarContent;
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
@@ -2136,7 +2136,7 @@ nsTreeRowGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
     nsAutoString attribute;
     aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
     attribute.ToLowerCase();
-    mDropOnContainer = attribute.Equals("true");
+    mDropOnContainer = attribute.EqualsWithConversion("true");
   }
   else
     rv = nsTableRowGroupFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
@@ -2443,9 +2443,9 @@ nsTreeRowGroupFrame :: IsOpenContainer ( ) const
   nsCOMPtr<nsIDOMElement> me ( do_QueryInterface(mContent) );
   if ( me ) {
     nsAutoString isContainer, isOpen;
-    me->GetAttribute(nsAutoString("container"), isContainer);
-    me->GetAttribute(nsAutoString("open"), isOpen);
-    isOpenContainer = (isContainer.Equals("true") && isOpen.Equals("true"));
+    me->GetAttribute(NS_ConvertASCIItoUCS2("container"), isContainer);
+    me->GetAttribute(NS_ConvertASCIItoUCS2("open"), isOpen);
+    isOpenContainer = (isContainer.EqualsWithConversion("true") && isOpen.EqualsWithConversion("true"));
   }
 
   return isOpenContainer;

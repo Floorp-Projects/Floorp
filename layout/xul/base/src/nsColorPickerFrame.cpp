@@ -83,7 +83,7 @@ nsColorPickerFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString type;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
-  if (type.EqualsIgnoreCase("swatch") || type.Equals(""))
+  if (type.EqualsIgnoreCase("swatch") || type.IsEmpty())
   {
     mColorPicker = new nsStdColorPicker();
     mColorPicker->Init(mContent);
@@ -126,9 +126,9 @@ nsColorPickerFrame::HandleMouseDownEvent(nsIPresContext* aPresContext,
   nsresult rv = mColorPicker->GetColor(x, y, &color);
 
   if (NS_FAILED(rv))
-    node->RemoveAttribute("color");
+    node->RemoveAttribute(NS_ConvertASCIItoUCS2("color"));
   else
-    node->SetAttribute("color", color);
+    node->SetAttribute(NS_ConvertASCIItoUCS2("color"), NS_ConvertASCIItoUCS2(color));
 
   return NS_OK;
 }

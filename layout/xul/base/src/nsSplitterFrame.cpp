@@ -276,7 +276,7 @@ nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
         // create a spring
         nsCOMPtr<nsIContent> content;
         NS_CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, content);
-        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_FALSE);
+        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
         aAnonymousChildren.AppendElement(content);
 
         // a grippy
@@ -285,7 +285,7 @@ nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
         // create a spring
         NS_CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, content);
-        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_FALSE);
+        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
         aAnonymousChildren.AppendElement(content);
      }
   }
@@ -492,7 +492,7 @@ nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
           State newState = GetState(); 
           // if the state is dragging then make it Open.
           if (newState == Dragging)
-              mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "", PR_TRUE);
+              mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, nsAutoString(), PR_TRUE);
 
           mPressed = PR_FALSE;
 
@@ -586,7 +586,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                         //printf("Collapse right\n");
                         if (GetCollapseDirection() == After) 
                         {
-                             mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "collapsed", PR_TRUE);
+                             mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
                            
                         }
 
@@ -595,7 +595,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                         //printf("Collapse left\n");
                         if (GetCollapseDirection() == Before) 
                         {
-                          mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "collapsed", PR_TRUE);
+                          mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
                          
                         }
                     }
@@ -604,7 +604,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                 // if we are not in a collapsed position and we are not dragging make sure
                 // we are dragging.
                 if (currentState != Dragging)
-                  mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "dragging", PR_TRUE);
+                  mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
 
 #ifdef REAL_TIME_DRAG
                 AdjustChildren(aPresContext);
@@ -879,7 +879,7 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   if (IsMouseCaptured(mOuter->mPresContext))
     return NS_OK;
 
-  mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "dragging", PR_TRUE);
+  mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
 
   RemoveListener();
   CaptureMouse(mOuter->mPresContext, PR_TRUE);
@@ -957,7 +957,7 @@ nsSplitterFrameInner::UpdateState()
             // Open -> Collapsed
             // Dragging -> Collapsed
             sibling->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                                  "true", PR_TRUE);
+                                  NS_ConvertASCIItoUCS2("true"), PR_TRUE);
           }
         }
       }
@@ -1144,10 +1144,10 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   sprintf(ch,"%d",pref/aOnePixel);
   nsAutoString oldValue;
   content->GetAttribute(kNameSpaceID_None, attribute, oldValue);
-  if (oldValue == ch)
+  if (oldValue.EqualsWithConversion(ch))
      return;
 
-  content->SetAttribute(kNameSpaceID_None, attribute, ch, PR_FALSE);
+  content->SetAttribute(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
 #ifndef REAL_TIME_DRAG
   aChildBox->MarkDirty(aState);
 #else

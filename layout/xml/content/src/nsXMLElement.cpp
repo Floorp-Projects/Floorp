@@ -212,7 +212,7 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   // to create an atom.
   if ((kNameSpaceID_XLink == aNameSpaceID) &&
       (kTypeAtom == aName)) { 
-    if (aValue.Equals(kSimpleAtom, PR_FALSE)) {
+    if (aValue.EqualsAtom(kSimpleAtom, PR_FALSE)) {
       // NOTE: This really is a link according to the XLink spec,
       //       we do not need to check other attributes. If there
       //       is no href attribute, then this link is simply

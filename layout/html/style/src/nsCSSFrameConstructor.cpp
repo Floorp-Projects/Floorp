@@ -1342,7 +1342,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
 
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(document));
         nsresult  result;
-        result = domdoc->CreateElement("SPAN",getter_AddRefs(containerElement));//is the literal the correct way?
+        result = domdoc->CreateElement(NS_ConvertASCIItoUCS2("SPAN"),getter_AddRefs(containerElement));//is the literal the correct way?
         if (NS_SUCCEEDED(result) && containerElement)
         {
           containerContent = do_QueryInterface(containerElement);

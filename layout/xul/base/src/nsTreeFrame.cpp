@@ -139,7 +139,7 @@ void nsTreeFrame::SetSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aF
   nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
 
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
-  mContent->SetAttribute(kNameSpaceID_None, kSuppressSelectChange, "true", PR_FALSE);
+  mContent->SetAttribute(kNameSpaceID_None, kSuppressSelectChange, NS_ConvertASCIItoUCS2("true"), PR_FALSE);
   treeElement->SelectItem(itemElement);
   mContent->UnsetAttribute(kNameSpaceID_None, kSuppressSelectChange, PR_FALSE);
   treeElement->SelectCell(cellElement);
@@ -161,7 +161,7 @@ void nsTreeFrame::ToggleSelection(nsIPresContext* aPresContext, nsTreeCellFrame*
   nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
 
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
-  mContent->SetAttribute(kNameSpaceID_None, kSuppressSelectChange, "true", PR_FALSE);
+  mContent->SetAttribute(kNameSpaceID_None, kSuppressSelectChange, NS_ConvertASCIItoUCS2("true"), PR_FALSE);
   treeElement->ToggleItemSelection(itemElement);
   mContent->UnsetAttribute(kNameSpaceID_None, kSuppressSelectChange, PR_FALSE);
   treeElement->ToggleCellSelection(cellElement);
@@ -380,7 +380,7 @@ NS_IMETHODIMP
 nsTreeFrame::Destroy(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
-  target->RemoveEventListener("mousedown", mTwistyListener, PR_TRUE); 
+  target->RemoveEventListener(NS_ConvertASCIItoUCS2("mousedown"), mTwistyListener, PR_TRUE); 
 	mTwistyListener = nsnull;
   return nsTableFrame::Destroy(aPresContext);
 }
@@ -487,11 +487,11 @@ nsTreeFrame::Init(nsIPresContext*  aPresContext,
 
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
   
-  target->AddEventListener("mousedown", mTwistyListener, PR_TRUE); 
+  target->AddEventListener(NS_ConvertASCIItoUCS2("mousedown"), mTwistyListener, PR_TRUE); 
 
   nsAutoString value;
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);
-  element->GetAttribute("rows", value);
+  element->GetAttribute(NS_ConvertASCIItoUCS2("rows"), value);
 
   if (!value.IsEmpty()) {
     PRInt32 dummy;
@@ -514,7 +514,7 @@ nsTreeFrame::ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex,
     if (colContent) {
       nsAutoString fixedValue;
       colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
-      if (!fixedValue.Equals("true")) {
+      if (!fixedValue.EqualsWithConversion("true")) {
         // We are a proportional column.
         if (aResult)
           *aResult = result;

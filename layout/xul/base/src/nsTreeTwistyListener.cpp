@@ -88,11 +88,11 @@ nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
 
   nsAutoString tagName;
   element->GetTagName(tagName);
-  if (tagName.Equals("titledbutton")) {
+  if (tagName.EqualsWithConversion("titledbutton")) {
     // Find out if we're the twisty.
     nsAutoString classAttr;
-    element->GetAttribute("class", classAttr);
-    if (classAttr.Equals("twisty")) {
+    element->GetAttribute(NS_ConvertASCIItoUCS2("class"), classAttr);
+    if (classAttr.EqualsWithConversion("twisty")) {
       // Retrieve the parent treeitem.
       nsCOMPtr<nsIDOMElement> treeItem;
       GetTreeItem(element, getter_AddRefs(treeItem));
@@ -106,10 +106,10 @@ nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
       aEvent->PreventDefault();
 
       nsAutoString open;
-      treeItem->GetAttribute("open", open);
-      if (open.Equals("true"))
-        treeItem->RemoveAttribute("open");
-      else treeItem->SetAttribute("open", "true");
+      treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), open);
+      if (open.EqualsWithConversion("true"))
+        treeItem->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
+      else treeItem->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
     }
   }
   return NS_OK;

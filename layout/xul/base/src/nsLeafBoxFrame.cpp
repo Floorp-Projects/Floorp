@@ -211,7 +211,7 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
 NS_IMETHODIMP
 nsLeafBoxFrame::GetFrameName(nsString& aResult) const
 {
-  aResult = "LeafBox";
+  aResult.AssignWithConversion("LeafBox");
   return NS_OK;
 }
 

@@ -119,7 +119,7 @@ nsGfxCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
 
   // give the attribute a default value so it's always present, if we're a tristate
   if ( IsTristateCheckbox() )
-    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), "0", PR_FALSE );
+    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), NS_ConvertASCIItoUCS2("0"), PR_FALSE );
   
   return NS_OK;
 }
@@ -494,7 +494,7 @@ nsGfxCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumVa
       result = PR_FALSE;
    } else {
      if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
-       aValues[0] = "on";
+       aValues[0].AssignWithConversion("on");
      } else {
        aValues[0] = value;
      }
@@ -526,15 +526,15 @@ nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsString& ou
 {
   switch ( inState ) {
     case eOn:
-      outStateAsString = NS_STRING_TRUE;
+      outStateAsString.AssignWithConversion(NS_STRING_TRUE);
 	  break;
 
     case eOff:
-      outStateAsString = NS_STRING_FALSE;
+      outStateAsString.AssignWithConversion(NS_STRING_FALSE);
       break;
  
     case eMixed:
-      outStateAsString = "2";
+      outStateAsString.AssignWithConversion("2");
       break;
   }
 } // CheckStateToString
@@ -549,9 +549,9 @@ nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsString& ou
 nsGfxCheckboxControlFrame::CheckState 
 nsGfxCheckboxControlFrame::StringToCheckState ( const nsString & aStateAsString )
 {
-  if ( aStateAsString.Equals(NS_STRING_TRUE) )
+  if ( aStateAsString.EqualsWithConversion(NS_STRING_TRUE) )
     return eOn;
-  else if ( aStateAsString.Equals(NS_STRING_FALSE) )
+  else if ( aStateAsString.EqualsWithConversion(NS_STRING_FALSE) )
     return eOff;
 
   // not true and not false means mixed
@@ -614,7 +614,7 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
   // This string will hold a single item, whether or not we're checked.
   nsAutoString stateString;
   GetCheckboxControlFrameState(stateString);
-  (*aState)->SetStateProperty("checked", stateString);
+  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), stateString);
 
   return NS_OK;
 }
@@ -628,7 +628,7 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::RestoreState(nsIPresContext* aPresConte
     mDidInit = PR_TRUE;
   }
   nsAutoString string;
-  aState->GetStateProperty("checked", string);
+  aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
   SetCheckboxControlFrameState(aPresContext, string);
   return NS_OK;
 }

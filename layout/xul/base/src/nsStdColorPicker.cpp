@@ -195,7 +195,7 @@ NS_IMETHODIMP nsStdColorPicker::Paint(nsIPresContext * aPresContext, nsIRenderin
 
   for (i=0;i<mColors;i++)
   {
-    NS_LooseHexToRGB(mPalette[i], &color);
+    NS_LooseHexToRGB(NS_ConvertASCIItoUCS2(mPalette[i]), &color);
 
     aRenderingContext->SetColor(color);
     aRenderingContext->FillRect(col*width, row*height, width, height);
