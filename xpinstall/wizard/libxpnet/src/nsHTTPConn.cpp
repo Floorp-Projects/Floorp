@@ -429,8 +429,8 @@ nsHTTPConn::ParseURL(const char *aProto, char *aURL, char **aHost,
 void
 nsHTTPConn::ParseContentLength(const char *aBuf, int *aLength)
 {
-    char *clHdr; // Content-length header line start
-    char *eol, *pos;
+    const char *clHdr; // Content-length header line start
+    const char *eol, *pos;
     char clNameStr1[16] = "Content-length:";
     char clNameStr2[16] = "Content-Length:";
     char *clNameStr = clNameStr1;
