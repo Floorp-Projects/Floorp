@@ -39,7 +39,6 @@ static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsSplittableFrame(aContent, aParent),

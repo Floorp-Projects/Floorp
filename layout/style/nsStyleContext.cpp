@@ -29,12 +29,6 @@
 
 //#define DEBUG_REFS
 
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-#else
-static const PRBool gsDebug = PR_FALSE;
-#endif
-
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);

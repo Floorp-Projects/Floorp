@@ -37,9 +37,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
 
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-
 // Kludged Content stuff
 nsIFrame   * fFrameArray[1024];
 nsIContent * fContentArray[1024];

@@ -190,7 +190,6 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
       // look right so don't bother drawing them.
       aRenderingContext.FillRect(x0, y0, width, height);
     } else {
-      nscoord pix = NS_POINTS_TO_TWIPS_INT(1);
       aRenderingContext.FillArc(x0, y0, diameter, diameter, 90.0f, 180.0f);
       aRenderingContext.FillArc(x0 + width - diameter, y0,
                                 diameter, diameter, 270.0f, 180.0f);
