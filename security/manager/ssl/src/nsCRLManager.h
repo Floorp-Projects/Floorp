@@ -42,6 +42,9 @@ class nsCRLManager : public nsICRLManager
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICRLMANAGER
+  
+  nsCRLManager();
+  virtual ~nsCRLManager();
 };
 
 #endif

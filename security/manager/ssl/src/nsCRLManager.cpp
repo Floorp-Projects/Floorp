@@ -68,6 +68,15 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 NS_IMPL_ISUPPORTS1(nsCRLManager, nsICRLManager)
 
+nsCRLManager::nsCRLManager()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsCRLManager::~nsCRLManager()
+{
+}
+
 NS_IMETHODIMP 
 nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, PRBool doSilentDonwload, const PRUnichar* crlKey)
 {
