@@ -122,6 +122,14 @@ nsBaseURLParser::ParseURL(const char *spec, PRInt32 specLen,
     if (colon && stop && colon > stop)
         colon = nsnull;
 
+    // if the spec only contained whitespace or control characters...
+    if (specLen == 0) {
+        SET_RESULT(scheme, 0, -1);
+        SET_RESULT(authority, 0, 0);
+        SET_RESULT(path, 0, 0);
+        return NS_OK;
+    }
+
     // ignore trailing whitespace and control characters
     for (p = spec + specLen - 1; (*p > 0) && (*p <= ' '); --p);
     specLen = p - spec + 1;
