@@ -100,11 +100,10 @@ nscoord nsInputTextFrame::GetVerticalInsidePadding(float aPixToTwip,
 #ifdef XP_PC
   nsAutoString type;
   ((nsInput*)mContent)->GetType(type);
-  nscoord fudge = NSIntPixelsToTwips(2, aPixToTwip);
   if (type.EqualsIgnoreCase("textarea")) {
     return (nscoord)NSToIntRound(float(aInnerHeight) * 0.40f);
   } else {
-    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.20f) + fudge;
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.25f);
   }
 #endif
 #ifdef XP_UNIX
