@@ -493,23 +493,44 @@ nsHTMLContainerFrame::AttributeChanged(nsIPresShell* aShell,
   return NS_OK;
 }
 
+static void
+RemapStyleInTree(nsIPresContext* aPresContext,
+                 nsIFrame* aFrame)
+{
+  nsIStyleContext*  sc;
+  aFrame->GetStyleContext(nsnull, sc);
+  if (nsnull != sc) {
+    sc->RemapStyle(aPresContext);
+
+    // Update the children too...
+    nsIFrame* kid;
+    aFrame->FirstChild(kid);
+    while (nsnull != kid) {
+      RemapStyleInTree(aPresContext, kid);
+      kid->GetNextSibling(kid);
+    }
+  }
+}
+
 void
 nsHTMLContainerFrame::ApplyStyleChangeToTree(nsIPresContext& aPresContext,
                                              nsIFrame* aFrame)
 {
   nsIContent* content;
   nsIFrame* geometricParent;
-  nsIStyleContext* oldSC;
   aFrame->GetGeometricParent(geometricParent);
   aFrame->GetContent(content);
-  aFrame->GetStyleContext(&aPresContext, oldSC);
 
   if (nsnull != content) {
+    PRBool  onlyRemap = PR_FALSE;
+    nsIStyleContext* oldSC;
+    aFrame->GetStyleContext(nsnull, oldSC);
     nsIStyleContext* newSC =
       aPresContext.ResolveStyleContextFor(content, geometricParent);
     if (newSC == oldSC) {
       // Force cached style data to be recomputed
       newSC->RemapStyle(&aPresContext);
+      onlyRemap = PR_TRUE;
     }
     else {
       // Switch to new style context
@@ -522,9 +543,17 @@ nsHTMLContainerFrame::ApplyStyleChangeToTree(nsIPresContext& aPresContext,
     // Update the children too...
     nsIFrame* kid;
     aFrame->FirstChild(kid);
-    while (nsnull != kid) {
-      ApplyStyleChangeToTree(aPresContext, kid);
-      kid->GetNextSibling(kid);
+    if (onlyRemap) {
+      while (nsnull != kid) {
+        RemapStyleInTree(&aPresContext, kid);
+        kid->GetNextSibling(kid);
+      }
+    }
+    else {
+      while (nsnull != kid) {
+        ApplyStyleChangeToTree(aPresContext, kid);
+        kid->GetNextSibling(kid);
+      }
     }
   }
 }
