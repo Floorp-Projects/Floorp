@@ -1,9 +1,0 @@
-      interface AttributeList {
-        Attribute           getAttribute(in wstring attrName);
-        Attribute           setAttribute(in Attribute attr);
-        Attribute           remove(in wstring attrName)  interface NoSuchAttributeException {};
-
-        Attribute           item(in unsigned long index)  interface NoSuchAttributeException {};
-
-        unsigned long       getLength();
-      };
