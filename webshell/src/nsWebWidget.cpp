@@ -38,6 +38,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsICSSParser.h"
+#include "nsIDOMDocument.h"
 
 #include "prprf.h"
 #include "prtime.h"
@@ -93,8 +94,9 @@ public:
   virtual void ShowFrameBorders(PRBool aEnable);
   virtual PRBool GetShowFrameBorders();
   virtual nsIWidget* GetWWWindow();
-  virtual nsresult GetScriptContext(nsIScriptContext **aContext);
-  virtual nsresult ReleaseScriptContext();
+  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument);
+  NS_IMETHOD ReleaseScriptContext();
 
   NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
   NS_IMETHOD ResetScriptObject();
@@ -701,6 +703,21 @@ nsresult WebWidgetImpl::GetScriptContext(nsIScriptContext **aContext)
   }
 
   return res;
+}
+
+nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
+{
+  nsIDocument *doc = GetDocument();
+  *aDocument = nsnull;
+
+  static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+   
+  if (doc != nsnull) {
+    return doc->QueryInterface(kIDOMDocumentIID, (void**)aDocument);
+    NS_RELEASE(doc);
+  }
+
+  return NS_OK; 
 }
 
 nsresult WebWidgetImpl::ResetScriptObject()
