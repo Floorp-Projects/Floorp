@@ -193,15 +193,17 @@ nsPipe::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     if (aIID.Equals(nsIBufferInputStream::GetIID()) ||
         aIID.Equals(nsIInputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID())) {
-        *aInstancePtr = GetInputStream();
-        NS_ADDREF_THIS();
+        nsIBufferInputStream* in = GetInputStream();
+        NS_ADDREF(in);
+        *aInstancePtr = in;
         return NS_OK;
     }
     if (aIID.Equals(nsIBufferOutputStream::GetIID()) ||
         aIID.Equals(nsIOutputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID())) {
-        *aInstancePtr = GetOutputStream();
-        NS_ADDREF_THIS();
+        nsIBufferOutputStream* out = GetOutputStream();
+        NS_ADDREF(out);
+        *aInstancePtr = out;
         return NS_OK;
     }
     if (aIID.Equals(nsIPipe::GetIID()) ||
