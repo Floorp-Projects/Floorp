@@ -116,18 +116,16 @@ toolbar.main-bar .menu-left
   list-style-image: url('chrome://navigator/skin/TB_Location.gif');
 }
 
-toolbar.main-bar > menu > titledbutton,
-toolbar.main-bar menu > .menu-left
+toolbar.main-bar > titledbutton:hover,
+toolbar.main-bar .menu-left:hover
 {
   list-style-image: url('chrome://navigator/skin/TB_Location_mo.gif');
 }
 
-/**
- * the sidebar box can be squeezed up until it is 10 pixels and then
- * it will auto collapse.
- */
-box.sidebarbox {
-   min-width: 10px;
+toolbar.main-bar > menu > titledbutton,
+toolbar.main-bar menu > .menu-left
+{
+  list-style-image: url('chrome://bookmarks/skin/bookmark-folder-closed.gif');
 }
 
 /**
