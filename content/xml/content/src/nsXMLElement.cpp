@@ -50,9 +50,10 @@ NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIXMLContentIID, (void**) aInstancePtrResult);
 }
 
-static nsIAtom* kLinkAtom;  // XXX these should get moved to nsXMLAtoms
+static nsIAtom* kSimpleAtom;  // XXX these should get moved to nsXMLAtoms
 static nsIAtom* kHrefAtom;
 static nsIAtom* kShowAtom;
+static nsIAtom* kTypeAtom;
 static PRUint32 kElementCount;
 
 nsXMLElement::nsXMLElement(nsIAtom *aTag)
@@ -63,18 +64,20 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
   mContentID = 0;
 
   if (0 == kElementCount++) {
-    kLinkAtom = NS_NewAtom("link");
+    kSimpleAtom = NS_NewAtom("simple");
     kHrefAtom = NS_NewAtom("href");
     kShowAtom = NS_NewAtom("show");
+    kTypeAtom = NS_NewAtom("type");
   }
 }
  
 nsXMLElement::~nsXMLElement()
 {
   if (0 == --kElementCount) {
-    NS_RELEASE(kLinkAtom);
+    NS_RELEASE(kSimpleAtom);
     NS_RELEASE(kHrefAtom);
     NS_RELEASE(kShowAtom);
+    NS_RELEASE(kTypeAtom);
   }
 }
 
@@ -111,10 +114,24 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   // XXX It sucks that we have to do a strcmp for
   // every attribute set. It might be a bit more expensive
   // to create an atom.
-  if ((kNameSpaceID_XML == aNameSpaceID) && 
-      (aName == kLinkAtom) && (aValue.Equals("simple"))) {
-    mIsLink = PR_TRUE;
+  if ((kNameSpaceID_XLink == aNameSpaceID) &&
+      (kTypeAtom == aName)) { 
+    if (aValue.Equals(kSimpleAtom, PR_FALSE)) {
+      // NOTE: This really is a link according to the XLink spec,
+      //       we do not need to check other attributes. If there
+      //       is no href attribute, then this link is simply
+      //       untraversible [XLink 3.2].
+      // XXX If a parent of this element is already a simple link, then this
+      //     must not create a link of its own, this is just a normal element
+      //     inside the parent simple XLink element [XLink 3.2].
+      mIsLink = PR_TRUE;
+    } else {
+      mIsLink = PR_FALSE;
+    }
   }
+
+  // XXX If the XLink actuate attribute is present and its value is
+  //     onLoad, we should obey that too [XLink 3.6.2].
 
   return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
 }
@@ -142,7 +159,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
           NS_RELEASE(stateManager);
         }
-        *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeDoDefault;
       }
       break;
 
@@ -151,20 +168,23 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsAutoString show, href, target;
           nsIURI* baseURL = nsnull;
-	        nsLinkVerb verb = eLinkVerb_Replace;
-	        target.Truncate();
-          GetAttribute(kNameSpaceID_None, kHrefAtom, href);
-          GetAttribute(kNameSpaceID_None, kShowAtom, show);
+	        nsLinkVerb verb = eLinkVerb_Undefined;
+          GetAttribute(kNameSpaceID_XLink, kHrefAtom, href);
+          GetAttribute(kNameSpaceID_XLink, kShowAtom, show);
 	        // XXX Should probably do this using atoms 
 	        if (show.Equals("new")) {
 	          verb = eLinkVerb_New;
 	        }
+          else if (show.Equals("replace")) {
+            verb = eLinkVerb_Replace;
+          }
 	        else if (show.Equals("embed")) {
 	          verb = eLinkVerb_Embed;
 	        }
           
           if (nsnull != mInner.mDocument) {
             baseURL = mInner.mDocument->GetDocumentURL();
+            // XXX XML Base W3C
           }
           ret = mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
           NS_IF_RELEASE(baseURL);
@@ -181,9 +201,10 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       {
         nsAutoString href, target;
         nsIURI* baseURL = nsnull;
-        GetAttribute(kNameSpaceID_None, kHrefAtom, href);
+        GetAttribute(kNameSpaceID_XLink, kHrefAtom, href);
         if (nsnull != mInner.mDocument) {
           baseURL = mInner.mDocument->GetDocumentURL();
+          // XXX XML Base W3C
         }
 
         ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);

@@ -109,8 +109,6 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
 PRUint32 nsXMLContentSink::gRefCnt = 0;
 
-static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTextNode);
-
 // XXX Open Issues:
 // 1) html:style - Should we allow inline style? If so, the content
 //    sink needs to process the tag and invoke the CSS parser.

@@ -2,10 +2,11 @@
 <?xml-stylesheet href="layout.css" type="text/css"?>
 <!DOCTYPE Documentation>
 
-<Documentation xmlns:html="http://www.w3.org/TR/REC-HTML40">
+<Documentation xmlns:html="http://www.w3.org/TR/REC-HTML40"
+               xmlns:xlink="http://www.w3.org/1999/xlink">
 
 <Title>Gecko Layout Engine</Title>
-<Author xml:link="simple" show="new" href="mailto:troy@netscape.com">Troy Chevalier</Author>
+<Author xlink:type="simple" xlink:show="new" xlink:href="mailto:troy@netscape.com">Troy Chevalier</Author>
 <UpdateDate>8 August 1999</UpdateDate>
 
 <SectionHeading>Overview</SectionHeading>
@@ -22,29 +23,29 @@ by the style specification.</Body>
 
 <Components>
 <Term>Parser</Term>
-<Definition>Either the <A xml:link="simple" show="replace" href="http://www.mozilla.org/newlayout/doc/parser.html">HTML</A>
+<Definition>Either the <A xlink:type="simple" xlink:show="replace" xlink:href="http://www.mozilla.org/newlayout/doc/parser.html">HTML</A>
 or XML parser. Processes the document and makes calls to the content sink.</Definition>
 
 <Term>Content sink</Term>
 <Definition>Called by the parser. Responsible for building the content model.</Definition>
 
-<Term><A xml:link="simple" show="replace" href="http://www.mozilla.org/newlayout/doc/contentmodel.html">Content model</A></Term>
+<Term><A xlink:type="simple" xlink:show="replace" xlink:href="http://www.mozilla.org/newlayout/doc/contentmodel.html">Content model</A></Term>
 <Definition>Consists of document object and a tree of content objects. Changes to the
 content model result in modifications of the frame model.</Definition>
 
 <Term>Frame model</Term>
-<Definition><A xml:link="simple" show="replace" href="#Frames">Frames</A> are formatting
+<Definition><A xlink:type="simple" xlink:show="replace" xlink:href="#Frames">Frames</A> are formatting
 objects. Each frame defines a particular set of formatting characteristics.</Definition>
 
-<Term><A xml:link="simple" show="replace" href="#Reflow">Reflow</A></Term>
+<Term><A xlink:type="simple" xlink:show="replace" xlink:href="#Reflow">Reflow</A></Term>
 <Definition>The formatting process. Reflow of the frame model defines the visual appearance
 of the formatted document.</Definition>
 
-<Term><A xml:link="simple" show="replace" href="#FrameConstruction">Frame construction</A></Term>
+<Term><A xlink:type="simple" xlink:show="replace" xlink:href="#FrameConstruction">Frame construction</A></Term>
 <Definition>Initial creation and updating of the frame model in response to changes to the
 content model and changes to the style data.</Definition>
 
-<Term><A xml:link="simple" show="replace" href="http://www.mozilla.org/newlayout/doc/style.html">Style system</A></Term>
+<Term><A xlink:type="simple" xlink:show="replace" xlink:href="http://www.mozilla.org/newlayout/doc/style.html">Style system</A></Term>
 <Definition>Provide the mapping and management of style data onto document content in a given
 presentation. Major components are style set, style sheets, style sheet and
 rules, style context, and style sheet loader.</Definition>
@@ -52,7 +53,7 @@ rules, style context, and style sheet loader.</Definition>
 <Term>Presentation shell</Term>
 <Definition>Controlling point for managing the presentation of a document.</Definition>
 
-<Term><A xml:link="simple" show="replace" href="http://www.mozilla.org/newlayout/doc/viewsystem.html">View system</A></Term>
+<Term><A xlink:type="simple" xlink:show="replace" xlink:href="http://www.mozilla.org/newlayout/doc/viewsystem.html">View system</A></Term>
 <Definition>Consists of a view manager and view objects arranged in a tree hierarchy.
 Views support overlapped positioning, z-order sorting, and opacity levels.</Definition>
 </Components>
@@ -252,8 +253,8 @@ in mozilla/layout/html/src:
 block and inline display of flowed elements, floaters, and absolute positioning.</Body>
 
 <Body>For more information on block layout, click 
-<A xml:link="simple" show="replace" href="block.html">here</A>. For more information about
-line layout, click <A xml:link="simple" show="replace" href="line-layout.html">here</A>.</Body>
+<A xlink:type="simple" xlink:show="replace" xlink:href="block.html">here</A>. For more information about
+line layout, click <A xlink:type="simple" xlink:show="replace" xlink:href="line-layout.html">here</A>.</Body>
 
 <Body><RunIn>The table frame classes</RunIn> correspond to the HTML4 table spec, and in addition
 to the table frame there are row group frames, row frames, column group frames,

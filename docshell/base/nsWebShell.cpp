@@ -2207,11 +2207,12 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 {
   nsAutoString target(aTargetSpec);
 
-
   switch(aVerb) {
     case eLinkVerb_New:
       target.Assign("_blank");
       // Fall into replace case
+    case eLinkVerb_Undefined:
+      // Fall through, this seems like the most reasonable action
     case eLinkVerb_Replace:
       {
         // for now, just hack the verb to be view-link-clicked
@@ -2226,9 +2227,10 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       }
       break;
     case eLinkVerb_Embed:
+      // XXX TODO Should be similar to the HTML IMG ALT attribute handling
+      //          in NS 4.x
     default:
-      ;
-      // XXX Need to do this
+      NS_ABORT_IF_FALSE(0,"unexpected link verb");
   }
 }
 
@@ -2237,7 +2239,7 @@ nsWebShell::OnOverLink(nsIContent* aContent,
                        const PRUnichar* aURLSpec,
                        const PRUnichar* aTargetSpec)
 {
-   nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
 
    if(browserChrome)
       browserChrome->SetOverLink(aURLSpec);

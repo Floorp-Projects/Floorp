@@ -35,6 +35,7 @@ class nsINameSpace;
 #define kNameSpaceID_XMLNS    1 // not really a namespace, but it needs to play the game
 #define kNameSpaceID_XML      2
 #define kNameSpaceID_HTML     3
+#define kNameSpaceID_XLink    4
 
 // 'html' is by definition bound to the namespace name "urn:w3-org-ns:HTML" XXX ???
 // 'xml' is by definition bound to the namespace name "urn:Connolly:input:required" XXX
