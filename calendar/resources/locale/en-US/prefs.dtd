@@ -54,6 +54,10 @@
 <!ENTITY pref.defaultemail.label "Default address to send alarms to:">
 <!ENTITY pref.defaulttext.label "Default text for alarms:">
 <!ENTITY pref.missedalarms    "Show missed alarms" >
+<!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
+<!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
+<!ENTITY pref.alarm.on "On">
+<!ENTITY pref.alarm.off "Off">
 
 <!ENTITY pref.dateformat.label      "Date Text Format:" >
 <!ENTITY pref.dateformat.long       "Long" >

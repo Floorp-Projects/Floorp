@@ -120,5 +120,7 @@ function calendarPreferences( CalendarWindow )
    getIntPref( this.calendarPref, "week.start", categoriesStringBundle.GetStringFromName("defaultWeekStart" ) );
    getIntPref( this.calendarPref, "weeks.inview", categoriesStringBundle.GetStringFromName("defaultWeeksInView" ) );
    getIntPref( this.calendarPref, "previousweeks.inview", categoriesStringBundle.GetStringFromName("defaultPreviousWeeksInView" ) );
+   getIntPref( this.calendarPref, "alarms.onforevents", 0 );
+   getIntPref( this.calendarPref, "alarms.onfortodos", 0 );
 }
 

@@ -53,7 +53,7 @@
    
    <script type="application/x-javascript">
       var _elementIDs = [
-         "alarmplaysound", "alarmshow", "missedalarms", "alarmemailaddress"
+         "alarmplaysound", "alarmshow", "missedalarms", "alarmemailaddress", "eventdefalarm", "tododefalarm"
       ];
    </script>
 
@@ -67,6 +67,24 @@
       
       <checkbox id="missedalarms" prefstring="calendar.alarms.showmissed" label="&pref.missedalarms;" />
           
+      <hbox>
+         <description>&pref.defalarm4events.label;</description>
+         <menulist id="eventdefalarm" crop="none" prefstring="calendar.alarms.onforevents">
+             <menupopup id="eventdefalarm">
+               <menuitem id="eventdefalarmon"  label="&pref.alarm.on;" value="1"/>
+               <menuitem id="eventdefalarmoff" label="&pref.alarm.off;" value="0" selected="true"/>
+             </menupopup>
+           </menulist>
+      </hbox>
+      <hbox>
+         <description>&pref.defalarm4todos.label;</description>
+         <menulist id="tododefalarm" crop="none" prefstring="calendar.alarms.onfortodos">
+             <menupopup id="tododefalarm">
+               <menuitem id="tododefalarmon"  label="&pref.alarm.on;" value="1"/>
+               <menuitem id="tododefalarmoff" label="&pref.alarm.off;" value="0" selected="true"/>
+             </menupopup>
+           </menulist>
+      </hbox>
       <hbox>
          <description>&pref.defaultemail.label;</description>
          <textbox id="alarmemailaddress" prefstring="calendar.alarms.emailaddress" flex="1"/>      

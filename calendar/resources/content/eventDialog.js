@@ -205,6 +205,9 @@ function loadCalendarEventDialog()
       gEvent.alarmLength = gDefaultAlarmLength;
    }
    
+   if( "new" == args.mode )
+      gEvent.alarm = opener.getIntPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.onforevents", 0 );
+
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
