@@ -1386,15 +1386,13 @@ nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
 {
   // If the floater is the left-most non-zero size child frame then insert
   // it before the current line; otherwise add it to the below-current-line
-  // todo list and we'll handle it when we flush out the line
+  // todo list, and we'll handle it when we flush out the line
   if (IsLeftMostChild(aPlaceholder)) {
     nsISpaceManager* sm = aState.mSpaceManager;
 
     // Get the type of floater
-    nsIStyleContextPtr styleContext;
-    aFloater->GetStyleContext(aPresContext, styleContext.AssignRef());
-    nsStyleDisplay* floaterDisplay = (nsStyleDisplay*)
-      styleContext->GetData(kStyleDisplaySID);
+    nsStyleDisplay* floaterDisplay;
+    aFloater->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)floaterDisplay);
 
     // Commit some space in the space manager and adjust our current
     // band of available space.
@@ -1432,6 +1430,8 @@ nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
   }
 }
 
+// XXX It's unclear what coordinate space aY is in. Is it relative to the
+// upper-left origin of the containing block, or relative to aState.mY?
 void
 nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
                                             nscoord aY)
@@ -1452,13 +1452,12 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
     GetAvailableSpace(aState, aY);
 
     // Get the type of floater
-    nsIStyleContextPtr styleContext;
-    floater->GetStyleContext(aState.mPresContext, styleContext.AssignRef());
-    nsStyleDisplay* sd = (nsStyleDisplay*)
-      styleContext->GetData(kStyleDisplaySID);
+    nsStyleDisplay* sd;
+    floater->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)sd);
   
     floater->GetRect(region);
-    region.y = bd->availSpace.y;
+    // XXX GetAvailableSpace() is translating availSpace by aState.mY...
+    region.y = bd->availSpace.y - aState.mY;
     if (NS_STYLE_FLOAT_LEFT == sd->mFloats) {
       region.x = bd->availSpace.x;
     } else {
