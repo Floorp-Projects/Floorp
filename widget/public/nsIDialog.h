@@ -32,8 +32,8 @@
  * all basic and necessary functionality.
  */
 class nsIDialog : public nsISupports {
-
   public:
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDIALOG_IID)
 
    /**
     * Set the dialog label

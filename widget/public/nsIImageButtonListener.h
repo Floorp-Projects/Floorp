@@ -33,6 +33,7 @@ class nsIImageButtonListener : public nsISupports
 {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEBUTTONLISTENER_IID)
 
  /**
   * Notifies 

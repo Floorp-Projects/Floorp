@@ -51,6 +51,7 @@ struct nsListBoxInitData : public nsWidgetInitData {
 class nsIListBox : public nsISupports {
 
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILISTBOX_IID)
 
     /**
      * Set an item at the specific position

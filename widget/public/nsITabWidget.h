@@ -32,6 +32,7 @@
 class nsITabWidget : public nsISupports {
 
   public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITABWIDGET_IID)
  
    /**
     * Setup the tabs

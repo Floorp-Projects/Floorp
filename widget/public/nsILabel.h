@@ -53,8 +53,9 @@ struct nsLabelInitData : public nsWidgetInitData {
 class nsILabel : public nsISupports {
 
   public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILABEL_IID)
  
-    /**
+   /**
     * Set the label
     *
     * @param  Set the label to aText

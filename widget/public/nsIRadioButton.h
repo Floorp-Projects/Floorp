@@ -33,6 +33,7 @@
 class nsIRadioButton : public nsISupports {
 
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRADIOBUTTON_IID)
 
    /**
     * Set the button label

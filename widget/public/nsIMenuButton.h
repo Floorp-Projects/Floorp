@@ -47,6 +47,7 @@ class nsIMenuButton : public nsISupports
 {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUBUTTON_IID)
 
  /**
   * Sets the label on the Menu Button
