@@ -1,0 +1,98 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape Security Services for Java.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+
+CORE_DEPTH = ../../../../..
+
+MODULE = ninja
+
+NS_USE_JDK = 1
+
+REQUIRES =      nspr20 dbm security
+
+PACKAGE =       org/mozilla/jss/ssl
+
+JNI_GEN =	org.mozilla.jss.ssl.SSLInputStream \
+		org.mozilla.jss.ssl.SSLOutputStream \
+		org.mozilla.jss.ssl.SSLSecurityStatus \
+		org.mozilla.jss.ssl.SSLSocketImpl \
+		$(NULL)
+
+JSRCS =	        SSLHandshakeCompletedEvent.java \
+		SSLSecurityStatus.java          \
+		SSLHandshakeCompletedListener.java \
+		SSLServerSocket.java            \
+		SSLInputStream.java             \
+		SSLSocket.java                  \
+		SSLOutputStream.java            \
+		SSLSocketImpl.java		\
+		PrintOutputStreamWriter.java    \
+		SSLCertificateApprovalCallback.java    \
+		SSLClientCertificateSelectionCallback.java    \
+		$(NULL)
+
+PRIVATE_JSRCS = SSLServer.java     \
+		SSLClient.java     \
+		TestCertApprovalCallback.java \
+		TestClientCertificateSelectionCallback.java \
+		$(NULL)
+
+CLASSES =	SSLHandshakeCompletedEvent    \
+		SSLSecurityStatus             \
+		SSLHandshakeCompletedListener \
+		SSLServerSocket               \
+		SSLInputStream                \
+		SSLSocket                     \
+		SSLOutputStream               \
+		SSLSocketImpl		      \
+		PrintOutputStreamWriter       \
+		SSLCallbackNotifier           \
+		SSLCertificateApprovalCallback   \
+		SSLClientCertificateSelectionCallback \
+		$(NULL)
+
+PRIVATE_CLASSES =	SSLServer         \
+			SSLClient         \
+			ServerHandshakeCB \
+			ClientHandshakeCB \
+			$(NULL)
+
+CSRCS =	sslimpl.c \
+	sslmozx.c \
+	stubs.c \
+	testhelp.c \
+	sslerror.c \
+	client.c \
+	$(NULL)
+
+LIBRARY_NAME = jssssl
+

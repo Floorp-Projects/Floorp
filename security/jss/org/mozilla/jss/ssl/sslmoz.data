@@ -1,0 +1,114 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape Security Services for Java.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+
+# 
+# input is formatted like this.  More info on this file format in mozStubGen.pl
+#
+# gen <return-type> <error-value> <function-name> ([<type>, [<type>,...]])
+
+set prefix nsn
+set filename sslmoz
+
+#
+# you wouldn't believe how much grief error values can be
+#
+set getError nsn_GetSSLError
+set setError nsn_SetSSLError
+set threadsafeError 0
+
+# Client specific functions (sigh)
+#gen int -1 SECNAV_SetupSecureSocket(SSLFD, char*, MWContext*)
+
+#
+# Socket creation/connection/control functions. Standard BSD stuff
+#
+# gen SSLFD  NULL       PR_NewTCPSocket()
+gen PRStatus PR_FAILURE PR_Connect(SSLFD,  const PRNetAddr *, PRIntervalTime)
+gen SSLFD    NULL       PR_Accept(SSLFD,         PRNetAddr *, PRIntervalTime)
+gen PRStatus PR_FAILURE PR_Bind(SSLFD,     const PRNetAddr *)
+gen PRStatus PR_FAILURE PR_Listen(SSLFD,   PRIntn)
+gen PRStatus PR_FAILURE PR_Shutdown(SSLFD, PRShutdownHow)
+gen PRStatus PR_FAILURE PR_Close(SSLFD)
+
+# Socket i/o
+gen PRInt32 -1 PR_Recv(SSLFD,        void *, PRInt32, PRIntn, PRIntervalTime)
+gen PRInt32 -1 PR_Send(SSLFD,  const void *, PRInt32, PRIntn, PRIntervalTime)
+gen PRInt32 -1 PR_Read(SSLFD,        void *, PRInt32)
+gen PRInt32 -1 PR_Write(SSLFD, const void *, PRInt32)
+
+# Socket state functions
+gen PRStatus PR_FAILURE PR_GetPeerName(SSLFD, PRNetAddr *)
+gen PRStatus PR_FAILURE PR_GetSockName(SSLFD, PRNetAddr *)
+gen PRStatus PR_FAILURE PR_GetSocketOption(SSLFD,       PRSocketOptionData *)
+gen PRStatus PR_FAILURE PR_SetSocketOption(SSLFD, const PRSocketOptionData *)
+
+# unused SSL functions
+# n (unsigned long) 0 SSL_SecurityCapabilities()
+# n int   -1   SSL_AuthCertificate(void *, SSLFD, PRBool, PRBool)
+# n int   -1   SSL_AuthCertificateHook(SSLFD, SSLAuthCertificate, void *)
+# n int   -1   SSL_BadCertHook(SSLFD, SSLBadCertHandler, void *)
+# n int   -1   SSL_BindForSockd(SSLFD, const void *, int, long)
+# n int   -1   SSL_CheckDirectSock(SSLFD)
+# n int   -1   SSL_ConfigSecureServer(struct SECItemStr *, struct SECKEYPrivateKeyStr *, struct CERTCertificateListStr *, struct CERTDistNamesStr *)
+# n int   -1   SSL_ConfigServerSessionIDCache(int, time_t, time_t, const char *)
+# n int   -1   SSL_ConfigSockd(SSLFD, unsigned long, short)
+# n int   -1   SSL_IsDomestic()
+# n int   -1   SSL_SetSockPeerID(SSLFD, char *)
+
+gen void  NULL SSL_ClearSessionCache()
+gen int   -1   SSL_ConfigServerSessionIDCache(int, time_t, time_t, const char *)
+gen int   -1   SSL_DataPending(SSLFD)
+gen int   -1   SSL_Enable(SSLFD, int, int)
+gen int   -1   SSL_EnableCipher(long, int);
+gen int   -1   SSL_EnableDefault(int, int)
+gen int   -1   SSL_ForceHandshake(SSLFD)
+gen int   -1   SSL_GetClientAuthDataHook(SSLFD, SSLGetClientAuthData, void *)
+gen int   -1   SSL_HandshakeCallback(SSLFD, SSLHandshakeCallback, void *)
+gen SSLFD NULL SSL_ImportFD(SSLFD, SSLFD)
+gen int   -1   SSL_InvalidateSession(SSLFD)
+gen (struct CERTCertificateStr *) NULL SSL_PeerCertificate(SSLFD)
+gen int   -1   SSL_RedoHandshake(SSLFD)
+gen int   -1   SSL_ResetHandshake(SSLFD, int)
+gen int   -1   SSL_SecurityStatus(SSLFD, int *, char **, int *, int *, char **, char **)
+gen int   -1   SSL_SetPolicy(long, int);
+gen int   -1   SSL_SetURL(SSLFD, char *)
+
+# NON-SSL functions from HCL
+gen void NULL CERT_DestroyCertificate(CERTCertificate *)
+gen void NULL SECMOD_init(char *)
+# 
+
+# functions of our own devising, which call multiple SSL functions.
+gen int   -1   JSSL_InitDefaultCertDB(const char *)
+gen int   -1   JSSL_InitDefaultKeyDB(const char *)
+gen int   -1   JSSL_SetupSecureSocket(PRFileDesc *, char *, void *)
+gen int   -1   JSSL_ConfigSecureServerNickname(PRFileDesc *, const char *)
