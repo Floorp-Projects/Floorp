@@ -53,6 +53,8 @@ interface nsIDocShellLoadInfo : nsISupports
     */
     attribute boolean inheritOwner;
 
+    attribute boolean stopActiveDocument;
+
     /* these are load type enums... */
    const long loadNormal = 0;					// Normal Load
    const long loadNormalReplace = 1;			// Normal Load but replaces current history slot

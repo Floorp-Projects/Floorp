@@ -848,10 +848,10 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         NS_NewURI(getter_AddRefs(uri), nsLiteralString(aURLSpec), nsnull);
 
 #ifdef SH_IN_FRAMES
-		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, aPostDataStream, 
+		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, aPostDataStream, 
                  aHeadersDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
 #else
-        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, 
+        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, 
                      aPostDataStream, aHeadersDataStream, 
                      nsIDocShellLoadInfo::loadLink); 
 #endif  /* SH_IN_FRAMES */
