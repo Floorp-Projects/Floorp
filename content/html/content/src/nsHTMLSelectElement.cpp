@@ -27,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsITextContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -467,14 +468,45 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     Init();
   }
 
+  nsresult rv=NS_OK;
+
   PRUint32 curlen;
+  PRInt32 i;
   GetLength(&curlen);
   if (curlen && (curlen > aLength)) { // Remove extra options
-    nsresult result=NS_OK;
-    for (PRInt32 i = (curlen - 1); (i>=(PRInt32)aLength) && NS_SUCCEEDED(result); i--) {
-      result = Remove(i);
+    for (i = (curlen - 1); (i >= (PRInt32)aLength) && NS_SUCCEEDED(rv); i--) {
+      rv = Remove(i);
     }
-  } else { // Add options?
+  } else if (aLength) {
+    // This violates the W3C DOM but we do this for backwards compatibility
+    nsCOMPtr<nsIHTMLContent> element;
+
+    rv = NS_NewHTMLOptionElement(getter_AddRefs(element), nsHTMLAtoms::option);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIContent> text;
+    rv = NS_NewTextNode(getter_AddRefs(text));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = element->AppendChildTo(text, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
+
+    for (i = curlen; i < aLength; i++) {
+      nsCOMPtr<nsIDOMNode> tmpNode;
+
+      rv = AppendChild(node, getter_AddRefs(tmpNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (i < (aLength - 1)) {
+        nsCOMPtr<nsIDOMNode> newNode;
+        rv = node->CloneNode(PR_TRUE, getter_AddRefs(newNode));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        node = newNode;
+      }
+    }
   }
 
   return NS_OK;
@@ -514,15 +546,15 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
       res = NS_ERROR_NULL_POINTER;
       if (supp) {
 
-        nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
-        if (value) {
+        nsCOMPtr<nsISupportsArray> svalue = do_QueryInterface(supp);
+        if (svalue) {
 
           PRUint32 count = 0;
-          value->Count(&count);
+          svalue->Count(&count);
 
           nsCOMPtr<nsISupportsPRInt32> thisVal;
           for (PRUint32 i=0; i<count; i++) {
-            nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
+            nsCOMPtr<nsISupports> suppval = getter_AddRefs(svalue->ElementAt(i));
             thisVal = do_QueryInterface(suppval);
             if (thisVal) {
               res = thisVal->GetData(aValue);
