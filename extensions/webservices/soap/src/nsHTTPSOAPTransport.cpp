@@ -69,14 +69,14 @@ NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
 #ifdef DEBUG
 #define DEBUG_DUMP_DOCUMENT(message,doc) \
   { \
-	  nsresult rcc;\
-	  nsXPIDLString serial;\
-	  nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rcc));\
-	  if (NS_FAILED(rcc)) return rcc;  \
-	  rcc = serializer->SerializeToString(doc, getter_Copies(serial));\
-	  if (NS_FAILED(rcc)) return rcc;\
-	  nsAutoString result(serial);\
-	  printf(message ":\n%s\n", NS_ConvertUCS2toUTF8(result).get());\
+          nsresult rcc;\
+          nsXPIDLString serial;\
+          nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rcc));\
+          if (NS_FAILED(rcc)) return rcc;  \
+          rcc = serializer->SerializeToString(doc, getter_Copies(serial));\
+          if (NS_FAILED(rcc)) return rcc;\
+          nsAutoString result(serial);\
+          printf(message ":\n%s\n", NS_ConvertUCS2toUTF8(result).get());\
   }
 //  Availble from the debugger...
 nsresult DebugPrintDOM(nsIDOMNode * node)
@@ -281,7 +281,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
     return rv;
 
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
-			    PR_FALSE, nsnull, nsnull);
+                            PR_FALSE, nsnull, nsnull);
   if (NS_FAILED(rv))
     return rv;
 
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
     return rv;
   if (!AStringIsNull(action)) {
     rv = request->SetRequestHeader("SOAPAction",
-				   NS_ConvertUCS2toUTF8(action).get());
+                                   NS_ConvertUCS2toUTF8(action).get());
     if (NS_FAILED(rv))
       return rv;
   }
@@ -302,7 +302,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
     return rv;
 
   rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument),
-			       messageDocument);
+                               messageDocument);
   if (NS_FAILED(rv))
     return rv;
 
@@ -336,7 +336,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
 }
 
 NS_IMPL_ISUPPORTS2_CI(nsHTTPSOAPTransportCompletion, nsIDOMEventListener,
-		      nsISOAPCallCompletion)
+                      nsISOAPCallCompletion)
     nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
 {
   NS_INIT_ISUPPORTS();
@@ -363,7 +363,7 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetCall(nsISOAPCall * *aCall)
 /* readonly attribute nsISOAPResponse response; */
 NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::GetResponse(nsISOAPResponse *
-					       *aResponse)
+                                               *aResponse)
 {
   *aResponse =
       mRequest ? (nsCOMPtr < nsISOAPResponse >) nsnull : mResponse;
@@ -374,7 +374,7 @@ NS_IMETHODIMP
 /* readonly attribute nsISOAPResponseListener listener; */
 NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::GetListener(nsISOAPResponseListener *
-					       *aListener)
+                                               *aListener)
 {
   *aListener = mListener;
   NS_IF_ADDREF(*aListener);
@@ -408,7 +408,7 @@ NS_IMETHODIMP
 {
 //  PRUint32 status;
   nsresult rv = NS_OK;
-  if (mRequest) {		//  Avoid if it has been aborted.
+  if (mRequest) {                //  Avoid if it has been aborted.
 #if 0
     rv = mRequest->GetStatus(&status);
     if (NS_SUCCEEDED(rv) && (status < 200 || status >= 300))
@@ -418,16 +418,16 @@ NS_IMETHODIMP
       nsCOMPtr < nsIDOMDocument > document;
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {
-	rv = mResponse->SetMessage(document);
+        rv = mResponse->SetMessage(document);
       DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)} else {
-	mResponse = nsnull;
+        mResponse = nsnull;
       }
     } else {
       mResponse = nsnull;
     }
     nsCOMPtr < nsISOAPCallCompletion > kungFuDeathGrip = this;
-    mRequest = nsnull;		//  Break cycle of references by releas.
-    PRBool c;			//  In other transports, this may signal to stop returning if multiple returns
+    mRequest = nsnull;                //  Break cycle of references by releas.
+    PRBool c;                        //  In other transports, this may signal to stop returning if multiple returns
     mListener->HandleResponse(mResponse, mCall, rv, PR_TRUE, &c);
   }
   return NS_OK;
@@ -436,9 +436,9 @@ NS_IMETHODIMP
 /* void asyncCall (in nsISOAPCall aCall, in nsISOAPResponseListener aListener, in nsISOAPResponse aResponse); */
 NS_IMETHODIMP
     nsHTTPSOAPTransport::AsyncCall(nsISOAPCall * aCall,
-				   nsISOAPResponseListener * aListener,
-				   nsISOAPResponse * aResponse,
-				   nsISOAPCallCompletion ** aCompletion)
+                                   nsISOAPResponseListener * aListener,
+                                   nsISOAPResponse * aResponse,
+                                   nsISOAPCallCompletion ** aCompletion)
 {
   NS_ENSURE_ARG(aCall);
 
@@ -470,7 +470,7 @@ NS_IMETHODIMP
 
   DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
-			    PR_TRUE, nsnull, nsnull);
+                            PR_TRUE, nsnull, nsnull);
   if (NS_FAILED(rv))
     return rv;
 
@@ -480,7 +480,7 @@ NS_IMETHODIMP
     return rv;
   if (!AStringIsNull(action)) {
     rv = request->SetRequestHeader("SOAPAction",
-				   NS_ConvertUCS2toUTF8(action).get());
+                                   NS_ConvertUCS2toUTF8(action).get());
     if (NS_FAILED(rv))
       return rv;
   }
@@ -491,7 +491,7 @@ NS_IMETHODIMP
     return rv;
 
   rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument),
-			       messageDocument);
+                               messageDocument);
   if (NS_FAILED(rv))
     return rv;
 
@@ -499,19 +499,19 @@ NS_IMETHODIMP
 
   if (aListener) {
     completion =
-	new nsHTTPSOAPTransportCompletion(aCall, aResponse, request,
-					  aListener);
+        new nsHTTPSOAPTransportCompletion(aCall, aResponse, request,
+                                          aListener);
     if (!completion)
       return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr < nsIDOMEventListener > listener =
-	do_QueryInterface(completion);
+        do_QueryInterface(completion);
     rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener,
-				       PR_FALSE);
+                                       PR_FALSE);
     if (NS_FAILED(rv))
       return rv;
     rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"),
-				       listener, PR_FALSE);
+                                       listener, PR_FALSE);
     if (NS_FAILED(rv))
       return rv;
   }
@@ -528,7 +528,7 @@ NS_IMETHODIMP
 /* void addListener (in nsISOAPTransportListener aListener, in boolean aCapture); */
 NS_IMETHODIMP
     nsHTTPSOAPTransport::AddListener(nsISOAPTransportListener * aListener,
-				     PRBool aCapture)
+                                     PRBool aCapture)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -536,7 +536,7 @@ NS_IMETHODIMP
 /* void removeListener (in nsISOAPTransportListener aListener, in boolean aCapture); */
 NS_IMETHODIMP
     nsHTTPSOAPTransport::RemoveListener(nsISOAPTransportListener *
-					aListener, PRBool aCapture)
+                                        aListener, PRBool aCapture)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -35,35 +35,35 @@
 #
 # ***** END LICENSE BLOCK ***** *
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH                = ../../../..
+topsrcdir        = @top_srcdir@
+srcdir                = @srcdir@
+VPATH                = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xmlextras
-XPIDL_MODULE	= xmlsoap
+MODULE                = xmlextras
+XPIDL_MODULE        = xmlsoap
 
-XPIDLSRCS	= \
-		nsISOAPAttachments.idl \
-		nsISOAPBlock.idl \
-		nsISOAPCall.idl \
-		nsISOAPCallCompletion.idl \
-		nsISOAPDecoder.idl \
-		nsISOAPEncoder.idl \
-		nsISOAPEncoding.idl \
-		nsISOAPFault.idl \
-		nsISOAPHeaderBlock.idl \
-		nsISOAPMessage.idl \
-		nsISOAPParameter.idl \
-		nsISOAPPropertyBagMutator.idl \
-		nsISOAPResponse.idl \
-		nsISOAPResponseListener.idl \
-		nsISOAPService.idl \
-		nsISOAPServiceRegistry.idl \
-		nsISOAPTransport.idl \
-		nsISOAPTransportListener.idl \
-		$(NULL)
+XPIDLSRCS        = \
+                nsISOAPAttachments.idl \
+                nsISOAPBlock.idl \
+                nsISOAPCall.idl \
+                nsISOAPCallCompletion.idl \
+                nsISOAPDecoder.idl \
+                nsISOAPEncoder.idl \
+                nsISOAPEncoding.idl \
+                nsISOAPFault.idl \
+                nsISOAPHeaderBlock.idl \
+                nsISOAPMessage.idl \
+                nsISOAPParameter.idl \
+                nsISOAPPropertyBagMutator.idl \
+                nsISOAPResponse.idl \
+                nsISOAPResponseListener.idl \
+                nsISOAPService.idl \
+                nsISOAPServiceRegistry.idl \
+                nsISOAPTransport.idl \
+                nsISOAPTransportListener.idl \
+                $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -35,32 +35,32 @@
 #
 # ***** END LICENSE BLOCK ***** *
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH                = ../../../..
+topsrcdir        = @top_srcdir@
+srcdir                = @srcdir@
+VPATH                = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xmlextras
-LIBRARY_NAME	= xmlextrassoap_s
-REQUIRES	= xpcom string caps dom js widget xpconnect necko schema
+MODULE                = xmlextras
+LIBRARY_NAME        = xmlextrassoap_s
+REQUIRES        = xpcom string caps dom js widget xpconnect necko schema
 
-CPPSRCS	= 				\
-		nsDefaultSOAPEncoder.cpp\
-		nsHTTPSOAPTransport.cpp	\
-		nsSOAPBlock.cpp	        \
-		nsSOAPCall.cpp	        \
-		nsSOAPEncoding.cpp	\
-		nsSOAPException.cpp	\
-		nsSOAPFault.cpp	        \
-		nsSOAPHeaderBlock.cpp	\
-		nsSOAPMessage.cpp	\
-		nsSOAPParameter.cpp	\
-		nsSOAPPropertyBag.cpp	\
-		nsSOAPResponse.cpp	\
-		nsSOAPUtils.cpp		\
-		$(NULL)
+CPPSRCS        =                                 \
+                nsDefaultSOAPEncoder.cpp\
+                nsHTTPSOAPTransport.cpp        \
+                nsSOAPBlock.cpp                \
+                nsSOAPCall.cpp                \
+                nsSOAPEncoding.cpp        \
+                nsSOAPException.cpp        \
+                nsSOAPFault.cpp                \
+                nsSOAPHeaderBlock.cpp        \
+                nsSOAPMessage.cpp        \
+                nsSOAPParameter.cpp        \
+                nsSOAPPropertyBag.cpp        \
+                nsSOAPResponse.cpp        \
+                nsSOAPUtils.cpp                \
+                $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
@@ -68,8 +68,8 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_HTML
+DEFINES                += -D_IMPL_NS_HTML
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
+DEFINES                += -DWIN32_LEAN_AND_MEAN
 endif

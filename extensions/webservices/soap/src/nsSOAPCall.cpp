@@ -150,7 +150,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
     return rv;
 
   nsCOMPtr < nsIDOMDocument > document;
-  rv = response->GetMessage(getter_AddRefs(document));	//  No XML response.
+  rv = response->GetMessage(getter_AddRefs(document));        //  No XML response.
   if (NS_FAILED(rv))
     return rv;
   if (!document) {
@@ -159,13 +159,13 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
   }
 
   return response->QueryInterface(NS_GET_IID(nsISOAPResponse),
-				  (void **) _retval);
+                                  (void **) _retval);
 }
 
 /* void asyncInvoke (in nsISOAPResponseListener listener); */
 NS_IMETHODIMP
     nsSOAPCall::AsyncInvoke(nsISOAPResponseListener * listener,
-			    nsISOAPCallCompletion ** aCompletion)
+                            nsISOAPCallCompletion ** aCompletion)
 {
   nsresult rv;
   nsCOMPtr < nsISOAPTransport > transport;

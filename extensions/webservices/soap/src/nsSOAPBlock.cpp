@@ -55,7 +55,7 @@ nsSOAPBlock::~nsSOAPBlock()
 
 NS_IMPL_ISUPPORTS2(nsSOAPBlock, nsISOAPBlock, nsIJSNativeInitializer)
 NS_IMETHODIMP nsSOAPBlock::Init(nsISOAPAttachments * aAttachments,
-				PRUint16 aVersion)
+                                PRUint16 aVersion)
 {
   if (aVersion == nsISOAPMessage::VERSION_1_1
       || aVersion == nsISOAPMessage::VERSION_1_2) {
@@ -167,15 +167,15 @@ NS_IMETHODIMP nsSOAPBlock::SetElement(nsIDOMElement * aElement)
 NS_IMETHODIMP nsSOAPBlock::GetValue(nsIVariant * *aValue)
 {
   NS_ENSURE_ARG_POINTER(aValue);
-  if (mElement) {		//  Check for auto-computation
+  if (mElement) {                //  Check for auto-computation
     if (mComputeValue) {
       mComputeValue = PR_FALSE;
       if (mEncoding) {
-	mStatus =
-	    mEncoding->Decode(mElement, mSchemaType, mAttachments,
-			      getter_AddRefs(mValue));
+        mStatus =
+            mEncoding->Decode(mElement, mSchemaType, mAttachments,
+                              getter_AddRefs(mValue));
       } else {
-	mStatus = NS_ERROR_NOT_INITIALIZED;
+        mStatus = NS_ERROR_NOT_INITIALIZED;
       }
     }
   }
@@ -195,7 +195,7 @@ NS_IMETHODIMP nsSOAPBlock::SetValue(nsIVariant * aValue)
 
 NS_IMETHODIMP
     nsSOAPBlock::Initialize(JSContext * cx, JSObject * obj,
-			    PRUint32 argc, jsval * argv)
+                            PRUint32 argc, jsval * argv)
 {
 
 //  Get the arguments.
@@ -207,11 +207,11 @@ NS_IMETHODIMP
   nsCOMPtr < nsISupports > encoding;
 
   if (!JS_ConvertArguments(cx, argc, argv, "/%iv %is %is %ip %ip",
-			   getter_AddRefs(value),
-			   NS_STATIC_CAST(nsAString *, &name),
-			   NS_STATIC_CAST(nsAString *, &namespaceURI),
-			   getter_AddRefs(schemaType),
-			   getter_AddRefs(encoding)))
+                           getter_AddRefs(value),
+                           NS_STATIC_CAST(nsAString *, &name),
+                           NS_STATIC_CAST(nsAString *, &namespaceURI),
+                           getter_AddRefs(schemaType),
+                           getter_AddRefs(encoding)))
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsresult rc = SetValue(value);

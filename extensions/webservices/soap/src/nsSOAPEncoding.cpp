@@ -53,7 +53,7 @@
 //  First comes the registry which shares between associated encodings but is never seen by xpconnect.
 
 NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncoding) nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding):mEncodings(new
-	   nsSupportsHashtable)
+           nsSupportsHashtable)
 {
   NS_INIT_ISUPPORTS();
 
@@ -73,7 +73,7 @@ nsSOAPEncodingRegistry::~nsSOAPEncodingRegistry()
 nsresult
     nsSOAPEncodingRegistry::
 GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf,
-		      nsISOAPEncoding * *aEncoding)
+                      nsISOAPEncoding * *aEncoding)
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(aEncoding);
@@ -97,7 +97,7 @@ GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf,
 
 nsresult
     nsSOAPEncodingRegistry::SetSchemaCollection(nsISchemaCollection *
-						aSchemaCollection)
+                                                aSchemaCollection)
 {
   NS_ENSURE_ARG(aSchemaCollection);
   mSchemaCollection = aSchemaCollection;
@@ -106,13 +106,13 @@ nsresult
 
 nsresult
     nsSOAPEncodingRegistry::GetSchemaCollection(nsISchemaCollection **
-						aSchemaCollection)
+                                                aSchemaCollection)
 {
   NS_ENSURE_ARG_POINTER(aSchemaCollection);
   if (!mSchemaCollection) {
     nsresult rv;
     nsCOMPtr < nsISchemaLoader > loader =
-	do_CreateInstance(NS_SCHEMALOADER_CONTRACTID, &rv);
+        do_CreateInstance(NS_SCHEMALOADER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return rv;
     mSchemaCollection = do_QueryInterface(loader);
@@ -133,7 +133,7 @@ NS_IMETHODIMP nsSOAPEncodingRegistry::GetStyleURI(nsAString & aStyleURI)
 /* nsISOAPEncoder setEncoder (in AString aKey, in nsISOAPEncoder aEncoder); */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::SetEncoder(const nsAString & aKey,
-				       nsISOAPEncoder * aEncoder)
+                                       nsISOAPEncoder * aEncoder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -141,7 +141,7 @@ NS_IMETHODIMP
 /* nsISOAPEncoder getEncoder (in AString aKey); */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::GetEncoder(const nsAString & aKey,
-				       nsISOAPEncoder ** _retval)
+                                       nsISOAPEncoder ** _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -149,7 +149,7 @@ NS_IMETHODIMP
 /* nsISOAPDecoder setDecoder (in AString aKey, in nsISOAPDecoder aDecoder); */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::SetDecoder(const nsAString & aKey,
-				       nsISOAPDecoder * aDecoder)
+                                       nsISOAPDecoder * aDecoder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -157,7 +157,7 @@ NS_IMETHODIMP
 /* nsISOAPDecoder getDecoder (in AString aKey); */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::GetDecoder(const nsAString & aKey,
-				       nsISOAPDecoder ** _retval)
+                                       nsISOAPDecoder ** _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -165,14 +165,14 @@ NS_IMETHODIMP
 /* attribute nsISOAPEncoder defaultEncoder; */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::GetDefaultEncoder(nsISOAPEncoder *
-					      *aDefaultEncoder)
+                                              *aDefaultEncoder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::SetDefaultEncoder(nsISOAPEncoder *
-					      aDefaultEncoder)
+                                              aDefaultEncoder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -180,14 +180,14 @@ NS_IMETHODIMP
 /* attribute nsISOAPDecoder defaultDecoder; */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::GetDefaultDecoder(nsISOAPDecoder *
-					      *aDefaultDecoder)
+                                              *aDefaultDecoder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::SetDefaultDecoder(nsISOAPDecoder *
-					      aDefaultDecoder)
+                                              aDefaultDecoder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -195,12 +195,12 @@ NS_IMETHODIMP
 /* nsIDOMElement encode (in nsIVariant aSource, in AString aNamespaceURI, in AString aName, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments, in nsIDOMElement aDestination); */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::Encode(nsIVariant * aSource,
-				   const nsAString & aNamespaceURI,
-				   const nsAString & aName,
-				   nsISchemaType * aSchemaType,
-				   nsISOAPAttachments * aAttachments,
-				   nsIDOMElement * aDestination,
-				   nsIDOMElement ** _retval)
+                                   const nsAString & aNamespaceURI,
+                                   const nsAString & aName,
+                                   nsISchemaType * aSchemaType,
+                                   nsISOAPAttachments * aAttachments,
+                                   nsIDOMElement * aDestination,
+                                   nsIDOMElement ** _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -208,9 +208,9 @@ NS_IMETHODIMP
 /* nsIVariant decode (in nsIDOMElement aSource, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments); */
 NS_IMETHODIMP
     nsSOAPEncodingRegistry::Decode(nsIDOMElement * aSource,
-				   nsISchemaType * aSchemaType,
-				   nsISOAPAttachments * aAttachments,
-				   nsIVariant ** _retval)
+                                   nsISchemaType * aSchemaType,
+                                   nsISOAPAttachments * aAttachments,
+                                   nsIVariant ** _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -277,7 +277,7 @@ nsSOAPEncoding::~nsSOAPEncoding()
 
 nsresult
     nsSOAPEncoding::SetSchemaCollection(nsISchemaCollection *
-					aSchemaCollection)
+                                        aSchemaCollection)
 {
   NS_ENSURE_ARG(aSchemaCollection);
   return mRegistry->SetSchemaCollection(aSchemaCollection);
@@ -285,7 +285,7 @@ nsresult
 
 nsresult
     nsSOAPEncoding::GetSchemaCollection(nsISchemaCollection **
-					aSchemaCollection)
+                                        aSchemaCollection)
 {
   NS_ENSURE_ARG_POINTER(aSchemaCollection);
   return mRegistry->GetSchemaCollection(aSchemaCollection);
@@ -302,8 +302,8 @@ NS_IMETHODIMP nsSOAPEncoding::GetStyleURI(nsAString & aStyleURI)
 /* nsISOAPEncoding getAssociatedEncoding (in AString aStyleURI, in boolean aCreateIf); */
 NS_IMETHODIMP
     nsSOAPEncoding::GetAssociatedEncoding(const nsAString & aStyleURI,
-					  PRBool aCreateIf,
-					  nsISOAPEncoding ** _retval)
+                                          PRBool aCreateIf,
+                                          nsISOAPEncoding ** _retval)
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -313,7 +313,7 @@ NS_IMETHODIMP
 /* nsISOAPEncoder setEncoder (in AString aKey, in nsISOAPEncoder aEncoder); */
 NS_IMETHODIMP
     nsSOAPEncoding::SetEncoder(const nsAString & aKey,
-			       nsISOAPEncoder * aEncoder)
+                               nsISOAPEncoder * aEncoder)
 {
   NS_SOAP_ENSURE_ARG_STRING(aKey);
   NS_ENSURE_ARG(aEncoder);
@@ -329,7 +329,7 @@ NS_IMETHODIMP
 /* nsISOAPEncoder getEncoder (in AString aKey); */
 NS_IMETHODIMP
     nsSOAPEncoding::GetEncoder(const nsAString & aKey,
-			       nsISOAPEncoder ** _retval)
+                               nsISOAPEncoder ** _retval)
 {
   NS_SOAP_ENSURE_ARG_STRING(aKey);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -344,7 +344,7 @@ NS_IMETHODIMP
 /* nsISOAPDecoder setDecoder (in AString aKey, in nsISOAPDecoder aDecoder); */
 NS_IMETHODIMP
     nsSOAPEncoding::SetDecoder(const nsAString & aKey,
-			       nsISOAPDecoder * aDecoder)
+                               nsISOAPDecoder * aDecoder)
 {
   NS_SOAP_ENSURE_ARG_STRING(aKey);
   NS_ENSURE_ARG(aDecoder);
@@ -360,7 +360,7 @@ NS_IMETHODIMP
 /* nsISOAPDecoder getDecoder (in AString aKey); */
 NS_IMETHODIMP
     nsSOAPEncoding::GetDecoder(const nsAString & aKey,
-			       nsISOAPDecoder ** _retval)
+                               nsISOAPDecoder ** _retval)
 {
   NS_SOAP_ENSURE_ARG_STRING(aKey);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -375,12 +375,12 @@ NS_IMETHODIMP
 /* nsIDOMElement encode (in nsIVariant aSource, in AString aNamespaceURI, in AString aName, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments, in nsIDOMElement aDestination); */
 NS_IMETHODIMP
     nsSOAPEncoding::Encode(nsIVariant * aSource,
-			   const nsAString & aNamespaceURI,
-			   const nsAString & aName,
-			   nsISchemaType * aSchemaType,
-			   nsISOAPAttachments * aAttachments,
-			   nsIDOMElement * aDestination,
-			   nsIDOMElement ** _retval)
+                           const nsAString & aNamespaceURI,
+                           const nsAString & aName,
+                           nsISchemaType * aSchemaType,
+                           nsISOAPAttachments * aAttachments,
+                           nsIDOMElement * aDestination,
+                           nsIDOMElement ** _retval)
 {
   NS_ENSURE_ARG(aSource);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -391,8 +391,8 @@ NS_IMETHODIMP
     return rv;
   if (encoder) {
     return encoder->Encode(this, aSource, aNamespaceURI, aName,
-			   aSchemaType, aAttachments, aDestination,
-			   _retval);
+                           aSchemaType, aAttachments, aDestination,
+                           _retval);
   }
   *_retval = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -401,9 +401,9 @@ NS_IMETHODIMP
 /* nsIVariant decode (in nsIDOMElement aSource, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments); */
 NS_IMETHODIMP
     nsSOAPEncoding::Decode(nsIDOMElement * aSource,
-			   nsISchemaType * aSchemaType,
-			   nsISOAPAttachments * aAttachments,
-			   nsIVariant ** _retval)
+                           nsISchemaType * aSchemaType,
+                           nsISOAPAttachments * aAttachments,
+                           nsIVariant ** _retval)
 {
   NS_ENSURE_ARG(aSource);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -413,7 +413,7 @@ NS_IMETHODIMP
     return rv;
   if (decoder) {
     return decoder->Decode(this, aSource, aSchemaType, aAttachments,
-			   _retval);
+                           _retval);
   }
   *_retval = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -49,7 +49,7 @@ nsSOAPParameter::nsSOAPParameter()
 }
 
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPParameter, nsISOAPBlock,
-			     nsISOAPParameter)
+                             nsISOAPParameter)
     NS_IMPL_ADDREF_INHERITED(nsSOAPParameter, nsSOAPBlock)
     NS_IMPL_RELEASE_INHERITED(nsSOAPParameter, nsSOAPBlock)
     NS_INTERFACE_MAP_BEGIN(nsSOAPParameter)

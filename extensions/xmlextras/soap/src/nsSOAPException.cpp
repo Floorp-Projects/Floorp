@@ -215,7 +215,7 @@ nsresult nsSOAPException::AddException(nsresult aStatus, const nsAString & aName
         xs->GetCurrentException(getter_AddRefs(old));
       nsCOMPtr<nsIException> exception = new nsSOAPException(aStatus, 
         aName.IsEmpty() ? NS_LITERAL_STRING("SOAP_FAILURE") : aName, 
-	aMessage.IsEmpty() ? NS_LITERAL_STRING("No description") : aMessage, old);
+        aMessage.IsEmpty() ? NS_LITERAL_STRING("No description") : aMessage, old);
       if (exception) {
         xm->SetCurrentException(exception);
       }

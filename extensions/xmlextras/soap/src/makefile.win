@@ -41,7 +41,7 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=xmlextrassoap_s 
 MODULE=xmlextras
 
-REQUIRES	=  \
+REQUIRES        =  \
     xpcom      \
     string     \
     caps       \
@@ -53,21 +53,21 @@ REQUIRES	=  \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-OBJS=	\
-	.\$(OBJDIR)\nsDefaultSOAPEncoder.obj \
-	.\$(OBJDIR)\nsHTTPSOAPTransport.obj  \
-	.\$(OBJDIR)\nsSOAPBlock.obj          \
-	.\$(OBJDIR)\nsSOAPCall.obj           \
-	.\$(OBJDIR)\nsSOAPEncoding.obj       \
-	.\$(OBJDIR)\nsSOAPException.obj       \
-	.\$(OBJDIR)\nsSOAPFault.obj          \
-	.\$(OBJDIR)\nsSOAPHeaderBlock.obj    \
-	.\$(OBJDIR)\nsSOAPMessage.obj        \
-	.\$(OBJDIR)\nsSOAPParameter.obj      \
-	.\$(OBJDIR)\nsSOAPPropertyBag.obj      \
-	.\$(OBJDIR)\nsSOAPResponse.obj       \
-	.\$(OBJDIR)\nsSOAPUtils.obj          \
-	$(NULL)
+OBJS=        \
+        .\$(OBJDIR)\nsDefaultSOAPEncoder.obj \
+        .\$(OBJDIR)\nsHTTPSOAPTransport.obj  \
+        .\$(OBJDIR)\nsSOAPBlock.obj          \
+        .\$(OBJDIR)\nsSOAPCall.obj           \
+        .\$(OBJDIR)\nsSOAPEncoding.obj       \
+        .\$(OBJDIR)\nsSOAPException.obj       \
+        .\$(OBJDIR)\nsSOAPFault.obj          \
+        .\$(OBJDIR)\nsSOAPHeaderBlock.obj    \
+        .\$(OBJDIR)\nsSOAPMessage.obj        \
+        .\$(OBJDIR)\nsSOAPParameter.obj      \
+        .\$(OBJDIR)\nsSOAPPropertyBag.obj      \
+        .\$(OBJDIR)\nsSOAPResponse.obj       \
+        .\$(OBJDIR)\nsSOAPUtils.obj          \
+        $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -77,7 +77,7 @@ LCFLAGS = \
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

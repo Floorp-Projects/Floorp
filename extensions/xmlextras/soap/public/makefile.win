@@ -38,29 +38,29 @@
 
 DEPTH=..\..\..\..
 
-MODULE		= xmlextras
-XPIDL_MODULE	= xmlsoap
+MODULE                = xmlextras
+XPIDL_MODULE        = xmlsoap
 
 XPIDLSRCS =  \
-		.\nsISOAPAttachments.idl \
-		.\nsISOAPBlock.idl \
-		.\nsISOAPCall.idl \
-		.\nsISOAPCallCompletion.idl \
-		.\nsISOAPDecoder.idl \
-		.\nsISOAPEncoder.idl \
-		.\nsISOAPEncoding.idl \
-		.\nsISOAPFault.idl \
-		.\nsISOAPHeaderBlock.idl \
-		.\nsISOAPMessage.idl \
-		.\nsISOAPParameter.idl \
-		.\nsISOAPPropertyBagMutator.idl \
-		.\nsISOAPResponse.idl \
-		.\nsISOAPResponseListener.idl \
-		.\nsISOAPService.idl \
-		.\nsISOAPServiceRegistry.idl \
-		.\nsISOAPTransport.idl \
-		.\nsISOAPTransportListener.idl \
-	        $(NULL)
+                .\nsISOAPAttachments.idl \
+                .\nsISOAPBlock.idl \
+                .\nsISOAPCall.idl \
+                .\nsISOAPCallCompletion.idl \
+                .\nsISOAPDecoder.idl \
+                .\nsISOAPEncoder.idl \
+                .\nsISOAPEncoding.idl \
+                .\nsISOAPFault.idl \
+                .\nsISOAPHeaderBlock.idl \
+                .\nsISOAPMessage.idl \
+                .\nsISOAPParameter.idl \
+                .\nsISOAPPropertyBagMutator.idl \
+                .\nsISOAPResponse.idl \
+                .\nsISOAPResponseListener.idl \
+                .\nsISOAPService.idl \
+                .\nsISOAPServiceRegistry.idl \
+                .\nsISOAPTransport.idl \
+                .\nsISOAPTransportListener.idl \
+                $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

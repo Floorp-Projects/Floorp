@@ -55,7 +55,7 @@ nsSOAPResponse::~nsSOAPResponse()
 }
 
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPResponse, nsISOAPMessage,
-			     nsISOAPResponse)
+                             nsISOAPResponse)
     NS_IMPL_ADDREF_INHERITED(nsSOAPResponse, nsSOAPMessage)
     NS_IMPL_RELEASE_INHERITED(nsSOAPResponse, nsSOAPMessage)
     NS_INTERFACE_MAP_BEGIN(nsSOAPResponse)
@@ -80,20 +80,20 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
     if (rc != nsSOAPMessage::VERSION_UNKNOWN) {
       nsCOMPtr < nsIDOMElement > fault;
       nsSOAPUtils::GetSpecificChildElement(nsnull, body,
-					   *nsSOAPUtils::
-					   kSOAPEnvURI[version],
-					   nsSOAPUtils::kFaultTagName,
-					   getter_AddRefs(fault));
+                                           *nsSOAPUtils::
+                                           kSOAPEnvURI[version],
+                                           nsSOAPUtils::kFaultTagName,
+                                           getter_AddRefs(fault));
       if (fault) {
-	nsCOMPtr < nsISOAPFault > f =
-	    do_CreateInstance(NS_SOAPFAULT_CONTRACTID);
-	if (!f)
-	  return NS_ERROR_OUT_OF_MEMORY;
-	rc = f->SetElement(fault);
-	if (NS_FAILED(rc))
-	  return rc;
-	*aFault = f;
-	NS_ADDREF(*aFault);
+        nsCOMPtr < nsISOAPFault > f =
+            do_CreateInstance(NS_SOAPFAULT_CONTRACTID);
+        if (!f)
+          return NS_ERROR_OUT_OF_MEMORY;
+        rc = f->SetElement(fault);
+        if (NS_FAILED(rc))
+          return rc;
+        *aFault = f;
+        NS_ADDREF(*aFault);
       }
     }
   } else {

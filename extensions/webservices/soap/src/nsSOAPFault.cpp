@@ -67,14 +67,14 @@ NS_IMETHODIMP nsSOAPFault::SetElement(nsIDOMElement * aElement)
       return rc;
     if (name.Equals(nsSOAPUtils::kFaultTagName)) {
       if (namespaceURI.
-	  Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_2])) {
-	mVersion = nsISOAPMessage::VERSION_1_2;
+          Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_2])) {
+        mVersion = nsISOAPMessage::VERSION_1_2;
       } else if (namespaceURI.
-		 Equals(*nsSOAPUtils::
-			kSOAPEnvURI[nsISOAPMessage::VERSION_1_1])) {
-	mVersion = nsISOAPMessage::VERSION_1_1;
+                 Equals(*nsSOAPUtils::
+                        kSOAPEnvURI[nsISOAPMessage::VERSION_1_1])) {
+        mVersion = nsISOAPMessage::VERSION_1_1;
       } else {
-	return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_ILLEGAL_VALUE;
       }
     } else {
       return NS_ERROR_ILLEGAL_VALUE;
@@ -101,9 +101,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAString & aFaultCode)
   aFaultCode.Truncate();
   nsCOMPtr < nsIDOMElement > faultcode;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
-				       kEmpty,
-				       nsSOAPUtils::kFaultCodeTagName,
-				       getter_AddRefs(faultcode));
+                                       kEmpty,
+                                       nsSOAPUtils::kFaultCodeTagName,
+                                       getter_AddRefs(faultcode));
   if (faultcode) {
     nsAutoString combined;
     nsSOAPUtils::GetElementTextContent(faultcode, combined);
@@ -121,9 +121,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultNamespaceURI(nsAString & aNamespaceURI)
   aNamespaceURI.Truncate();
   nsCOMPtr < nsIDOMElement > faultcode;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
-				       kEmpty,
-				       nsSOAPUtils::kFaultCodeTagName,
-				       getter_AddRefs(faultcode));
+                                       kEmpty,
+                                       nsSOAPUtils::kFaultCodeTagName,
+                                       getter_AddRefs(faultcode));
   if (faultcode) {
     nsAutoString combined;
     nsSOAPUtils::GetElementTextContent(faultcode, combined);
@@ -142,9 +142,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAString & aFaultString)
   aFaultString.Truncate();
   nsCOMPtr < nsIDOMElement > element;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
-				       kEmpty,
-				       nsSOAPUtils::kFaultStringTagName,
-				       getter_AddRefs(element));
+                                       kEmpty,
+                                       nsSOAPUtils::kFaultStringTagName,
+                                       getter_AddRefs(element));
   if (element) {
     nsSOAPUtils::GetElementTextContent(element, aFaultString);
   }
@@ -161,9 +161,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultActor(nsAString & aFaultActor)
   aFaultActor.Truncate();
   nsCOMPtr < nsIDOMElement > element;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
-				       kEmpty,
-				       nsSOAPUtils::kFaultActorTagName,
-				       getter_AddRefs(element));
+                                       kEmpty,
+                                       nsSOAPUtils::kFaultActorTagName,
+                                       getter_AddRefs(element));
   if (element) {
     nsSOAPUtils::GetElementTextContent(element, aFaultActor);
   }
@@ -179,8 +179,8 @@ NS_IMETHODIMP nsSOAPFault::GetDetail(nsIDOMElement * *aDetail)
 
   nsCOMPtr < nsIDOMElement > element;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
-				       kEmpty,
-				       nsSOAPUtils::kFaultDetailTagName,
-				       aDetail);
+                                       kEmpty,
+                                       nsSOAPUtils::kFaultDetailTagName,
+                                       aDetail);
   return NS_OK;
 }

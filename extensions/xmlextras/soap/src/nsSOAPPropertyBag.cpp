@@ -106,7 +106,7 @@ nsSOAPPropertyBag::~nsSOAPPropertyBag()
 /* nsIVariant getProperty (in AString name); */
 NS_IMETHODIMP
     nsSOAPPropertyBag::GetProperty(const nsAString & aName,
-				   nsIVariant ** _retval)
+                                   nsIVariant ** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   nsStringKey nameKey(aName);
@@ -116,7 +116,7 @@ NS_IMETHODIMP
 
 NS_IMETHODIMP
     nsSOAPPropertyBag::SetProperty(const nsAString & aName,
-				   nsIVariant * aValue)
+                                   nsIVariant * aValue)
 {
   NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aValue);
@@ -129,22 +129,22 @@ NS_IMETHODIMP
 #define XPC_MAP_QUOTED_CLASSNAME   "SOAPPropertyBag"
 #define                             XPC_MAP_WANT_GETPROPERTY
 #define XPC_MAP_FLAGS               0
-#include "xpc_map_end.h"	/* This will #undef the above */
+#include "xpc_map_end.h"        /* This will #undef the above */
 
 NS_IMETHODIMP
     nsSOAPPropertyBag::GetProperty(nsIXPConnectWrappedNative * wrapper,
-				   JSContext * cx, JSObject * obj,
-				   jsval id, jsval * vp, PRBool * _retval)
+                                   JSContext * cx, JSObject * obj,
+                                   jsval id, jsval * vp, PRBool * _retval)
 {
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
     const PRUnichar *name = NS_REINTERPRET_CAST(const PRUnichar *,
-						JS_GetStringChars(str));
+                                                JS_GetStringChars(str));
     nsDependentString namestr(name);
     nsStringKey nameKey(namestr);
     nsCOMPtr < nsIVariant > value =
-	dont_AddRef(NS_STATIC_CAST
-		    (nsIVariant *, mProperties->Get(&nameKey)));
+        dont_AddRef(NS_STATIC_CAST
+                    (nsIVariant *, mProperties->Get(&nameKey)));
     if (value == nsnull)
       return NS_OK;
     void *mark;
@@ -161,8 +161,8 @@ PRBool PropertyBagEnumFunc(nsHashKey * aKey, void *aData, void *aClosure)
   nsAutoString name(NS_STATIC_CAST(nsStringKey *, aKey)->GetString());
   properties->
       AppendElement(new
-		    nsSOAPProperty(name,
-				   NS_STATIC_CAST(nsIVariant *, aData)));
+                    nsSOAPProperty(name,
+                                   NS_STATIC_CAST(nsIVariant *, aData)));
   return PR_TRUE;
 }
 
@@ -204,7 +204,7 @@ NS_IMETHODIMP
 NS_IMPL_ISUPPORTS1_CI(nsSOAPProperty, nsIProperty)
 
 nsSOAPProperty::nsSOAPProperty(const nsAString & aName,
-		 nsIVariant * aValue):mName(aName), mValue(aValue) {
+                 nsIVariant * aValue):mName(aName), mValue(aValue) {
   NS_INIT_REFCNT();
 }
 nsSOAPProperty::~nsSOAPProperty()
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsSOAPPropertyBagMutator::GetPropertyBag(nsIPropertyBag ** aProper
 
 NS_IMETHODIMP
     nsSOAPPropertyBagMutator::AddProperty(const nsAString & aName,
-				   nsIVariant * aValue)
+                                          nsIVariant * aValue)
 {
   NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aValue);
