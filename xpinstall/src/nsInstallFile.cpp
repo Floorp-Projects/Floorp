@@ -114,7 +114,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     nsString subString;
 
     location = inPartialPath.FindChar('/',PR_FALSE, offset);
-    if (location == ((PRInt32)inPartialPath.mLength - 1)) //trailing slash
+    if (location == ((PRInt32)inPartialPath.Length() - 1)) //trailing slash
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -124,7 +124,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     {
         if (location == kNotFound) //no separators were found
         {
-            nodeLength = inPartialPath.mLength - offset;
+            nodeLength = inPartialPath.Length() - offset;
             finished = PR_TRUE;
         }
         else

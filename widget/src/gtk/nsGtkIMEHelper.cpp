@@ -203,9 +203,7 @@ void nsIMEPreedit::Reset()
 {
   mCaretPosition = 0;
   mIMECompUnicode->SetCapacity(0);
-  mIMECompUnicode->mLength = 0;
   mIMECompAttr->SetCapacity(0);
-  mIMECompAttr->mLength = 0;
 }
 
 PRUnichar*

@@ -4748,9 +4748,8 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
       mIMECompString->get(),
       mIMECompString->Length(),
       (PRUnichar*)mIMECompUnicode->get(),
-      mIMECompUnicode->mCapacity);
-    ((PRUnichar*)mIMECompUnicode->get())[unicharSize] = (PRUnichar) 0;
-    mIMECompUnicode->mLength = unicharSize;
+      unicharSize+1);
+    mIMECompUnicode->SetLength(unicharSize);
   }
 
   //
@@ -5053,19 +5052,17 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       mIMECompUnicode->SetCapacity((compStrLen / sizeof(WCHAR))+1);
 
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompUnicode->get(), (mIMECompString->mCapacity * sizeof(WCHAR)), compStrLen);
+        (LPVOID)mIMECompUnicode->get(), compStrLen, compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
-      ((PRUnichar*)mIMECompUnicode->get())[compStrLen] = '\0';
-      mIMECompUnicode->mLength = compStrLen;
+      mIMECompUnicode->SetLength(compStrLen);
     } else {
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR, NULL, 0, compStrLen);
 
       mIMECompString->SetCapacity(compStrLen+1);
 
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompString->get(), mIMECompString->mCapacity, compStrLen);
-      ((char*)mIMECompString->get())[compStrLen] = '\0';
-      mIMECompString->mLength = compStrLen;
+        (LPVOID)mIMECompString->get(), compStrLen+1, compStrLen);
+      mIMECompString->SetLength(compStrLen);
     }
 #ifdef DEBUG_IME
 		fprintf(stderr,"GCS_RESULTSTR compStrLen = %d\n", compStrLen);
@@ -5191,10 +5188,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext,
         GCS_COMPSTR,
         (LPVOID)mIMECompUnicode->get(),
-        (mIMECompUnicode->mCapacity * sizeof(WCHAR)), compStrLen);
+        compStrLen, compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
-      ((PRUnichar*)mIMECompUnicode->get())[compStrLen] = '\0';
-      mIMECompUnicode->mLength = compStrLen;
+      mIMECompUnicode->SetLength(compStrLen);
     } else {
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPSTR, NULL, 0, compStrLen);
       mIMECompString->SetCapacity(compStrLen+1);
@@ -5202,9 +5198,8 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
         GCS_COMPSTR,
         (char*)mIMECompString->get(),
-        mIMECompString->mCapacity, compStrLen);
-      ((char*)mIMECompString->get())[compStrLen] = '\0';
-      mIMECompString->mLength = compStrLen;
+        compStrLen+1, compStrLen);
+      mIMECompString->SetLength(compStrLen);
     }
 #ifdef DEBUG_IME
 		fprintf(stderr,"GCS_COMPSTR compStrLen = %d\n", compStrLen);
@@ -5212,7 +5207,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 #ifdef DEBUG
                 for(int kk=0;kk<mIMECompClauseStringLength;kk++)
                 {
-                  NS_ASSERTION(mIMECompClauseString[kk] <= (nsToolkit::mIsNT ? mIMECompUnicode->mLength : mIMECompString->mLength), "illegal pos");
+                  NS_ASSERTION(mIMECompClauseString[kk] <= (nsToolkit::mIsNT ? mIMECompUnicode->Length() : mIMECompString->Length()), "illegal pos");
                 }
 #endif
 		//--------------------------------------------------------
@@ -5230,11 +5225,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 			HandleStartComposition(hIMEContext);
 
     if (nsToolkit::mIsNT) {
-      ((PRUnichar*)mIMECompUnicode->get())[0] = '\0';
-      mIMECompUnicode->mLength = 0;
+      mIMECompUnicode->Truncate();
     } else {
-      ((char*)mIMECompString->get())[0] = '\0';
-      mIMECompString->mLength = 0;
+      mIMECompString->Truncate();
     }
 		HandleTextEvent(hIMEContext,PR_FALSE);
 		result = PR_TRUE;
@@ -5276,11 +5269,9 @@ BOOL nsWindow::OnIMEEndComposition()
 		// we need to clear out the current composition string 
 		// in that case. 
     if (nsToolkit::mIsNT) {
-      ((PRUnichar*)mIMECompUnicode->get())[0] = '\0';
-      mIMECompUnicode->mLength = 0;
+      mIMECompUnicode->Truncate(0);
     } else {
-      ((char*)mIMECompString->get())[0] = '\0';
-      mIMECompString->mLength = 0;
+      mIMECompString->Truncate(0);
     }
 		HandleTextEvent(hIMEContext, PR_FALSE);
 

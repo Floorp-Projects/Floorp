@@ -1857,7 +1857,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		len = 0;
 		err = ::ConvertFromTextToUnicode(textToUnicodeInfo,committedLen,text,kUnicodeLooseMappingsMask,
 						0,NULL,NULL,NULL,
-						mIMECompositionStr->mCapacity *sizeof(PRUnichar),
+						(text_size + 1) * sizeof(PRUnichar),
 						&source_read,&len,NS_REINTERPRET_CAST(PRUint16*, ubuf));
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
 		if (err!=noErr)
@@ -1877,7 +1877,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		}
 		len = d;
 		ubuf[len] = '\0';		 // null terminate
-		mIMECompositionStr->mLength = len;
+		mIMECompositionStr->SetLength(len);
 		// for committed text, set no highlight ? (Do we need to set CaretPosition here ??? )
 #ifdef DEBUG_TSM
 			printf("1.2====================================\n");
@@ -2006,7 +2006,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 			// Note : The TEC will return -50 if sourceOffset[0,1] >= text_size-committedLen
 			err = ::ConvertFromTextToUnicode(textToUnicodeInfo,text_size-committedLen,text+committedLen,kUnicodeLooseMappingsMask,
 							destinationLength,sourceOffset,&destinationLength,destinationOffset,
-							mIMECompositionStr->mCapacity *sizeof(PRUnichar),
+							(text_size + 1) * sizeof(PRUnichar),
 							&source_read,&len, NS_REINTERPRET_CAST(PRUint16*, ubuf));
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
 			if (err!=noErr) 
@@ -2094,8 +2094,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		//------------------------------------------------------------------------------------------------
 		// 2.2.3 null terminate the uncommitted text
 		//------------------------------------------------------------------------------------------------
-		ubuf[len] = '\0';		 // null terminate // we convert the text in 2.2.2 ...
-		mIMECompositionStr->mLength = len;			
+		mIMECompositionStr->SetLength(len);			
 		//------------------------------------------------------------------------------------------------
 		// 2.2.4 send the text event
 		//------------------------------------------------------------------------------------------------
@@ -2116,8 +2115,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		// This is needed when we input some uncommitted text, and then delete all of them
 		// When the last delete come, we will got a text_size = 0 and fixedLength = 0
 		// In that case, we need to send a text event to clean un the input hole....
-		ubuf[0] = '\0';		 // null terminate
-		mIMECompositionStr->mLength = 0;			
+		mIMECompositionStr->SetLength(0);			
 #ifdef DEBUG_TSM
 			printf("3.====================================\n");
 #endif

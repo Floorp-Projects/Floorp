@@ -189,7 +189,7 @@ static void TranslateLineEnding(nsString& data)
   PRUnichar* sPtr;   //Start data pointer
   PRUnichar* ePtr;   //End data pointer
 
-  rPtr = wPtr = sPtr = data.mUStr;
+  rPtr = wPtr = sPtr = NS_CONST_CAST(PRUnichar*, data.get());
   ePtr = rPtr + data.Length();
 
   while (rPtr < ePtr)

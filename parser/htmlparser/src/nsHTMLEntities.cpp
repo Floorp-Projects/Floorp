@@ -182,7 +182,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 
     if(';'==aEntity.Last()) {
       nsCAutoString temp(aEntity);
-      temp.Truncate(aEntity.mLength-1);
+      temp.Truncate(aEntity.Length()-1);
       return EntityToUnicode(temp);
     }
       

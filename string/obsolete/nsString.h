@@ -83,6 +83,9 @@ class NS_COM nsCString :
   public nsAFlatCString,
   public nsStr {
 
+public:
+  friend class nsString;
+
 protected:
   virtual const nsBufferHandle<char>* GetFlatBufferHandle() const;
   virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
@@ -490,6 +493,9 @@ class NS_COM NS_ConvertUCS2toUTF8
       ...
     */
   {
+    public:
+      friend NS_COM char* ToNewUTF8String( const nsAString& aSource );
+
     public:
       explicit
       NS_ConvertUCS2toUTF8( const PRUnichar* aString )

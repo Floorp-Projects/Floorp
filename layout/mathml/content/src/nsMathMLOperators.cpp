@@ -34,24 +34,10 @@
 // operator dictionary entry
 struct OperatorData {
   OperatorData(void)
-    : mStr(),
-      mFlags(0),
+    : mFlags(0),
       mLeftSpace(0.0f),
       mRightSpace(0.0f)
   {
-    nsStr::Initialize(mStr, eTwoByte); // with MathML, we are two-byte by default
-  }
-
-  OperatorData(const nsStr& aStringValue, const nsOperatorFlags aFlags)
-    : mStr(),
-      mFlags(aFlags),
-      mLeftSpace(0.0f),
-      mRightSpace(0.0f)
-  { // point to the incomming buffer
-    // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity,
-                      aStringValue.mLength, eCharSize(aStringValue.mCharSize),
-                      PR_FALSE);
   }
 
   // member data
