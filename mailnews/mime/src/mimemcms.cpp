@@ -432,7 +432,7 @@ MimeMultCMS_generate (void *crypto_closure)
   nsresult rv;
   if (!data) return 0;
   encrypted_p = data->parent_is_encrypted_p;
-  PRInt32 signature_status = -1;
+  PRInt32 signature_status = nsICMSMessageErrors::GENERAL_ERROR;
   nsCOMPtr<nsIX509Cert> signerCert;
 
   // if we are the child of the topmost message, aNestLeve == 1

@@ -25,6 +25,7 @@ MODULE=msgsmime
 XPIDLSRCS =										    \
 				.\nsIMsgSMIMECompFields.idl	        \
                 .\nsIMsgSMIMEHeaderSink.idl         \
+				.\nsISMimeJSHelper.idl	        \
 				$(NULL)
 
 ################################################################################

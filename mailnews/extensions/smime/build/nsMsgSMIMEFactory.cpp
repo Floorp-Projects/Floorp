@@ -50,9 +50,11 @@
 
 /* Include all of the interfaces our factory can generate components for */
 #include "nsMsgComposeSecure.h"
+#include "nsSMimeJSHelper.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSecure);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSMIMEComposeFields);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSMimeJSHelper);
 
 ////////////////////////////////////////////////////////////
 //
@@ -67,7 +69,11 @@ static const nsModuleComponentInfo components[] =
   { "Msg SMIME Compose Fields",
     NS_MSGSMIMECOMPFIELDS_CID,
     NS_MSGSMIMECOMPFIELDS_CONTRACTID,
-    nsMsgSMIMEComposeFieldsConstructor }
+    nsMsgSMIMEComposeFieldsConstructor },
+  { "SMIME JS Helper",
+    NS_SMIMEJSJELPER_CID,
+    NS_SMIMEJSHELPER_CONTRACTID,
+    nsSMimeJSHelperConstructor }
 };
 
   

@@ -32,7 +32,7 @@
 
 class nsIMsgCompFields;
 
-class nsMsgSMIMEComposeFields : public nsIMsgSMIMECompFields 
+class nsMsgSMIMEComposeFields : public nsIMsgSMIMECompFields
 {
 public:
   NS_DECL_ISUPPORTS

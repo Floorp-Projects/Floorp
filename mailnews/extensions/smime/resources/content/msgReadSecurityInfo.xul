@@ -46,6 +46,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   onload="onLoad();">
 
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 <script type="application/x-javascript" src="chrome://messenger-smime/content/msgReadSecurityInfo.js"/>
 
 <stringbundle id="bundle_smime_read_info" src="chrome://messenger-smime/locale/msgSecurityInfo.properties"/> 
@@ -100,6 +101,6 @@
   </vbox>
   <separator class="thin"/>
   <keyset id="dialogKeys"/>
-  <hbox id="okCancelButtonsRight"/>
+  <hbox id="okCancelHelpButtonsRight"/>
 </vbox>
 </window>

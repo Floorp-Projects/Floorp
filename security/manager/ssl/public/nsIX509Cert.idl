@@ -156,6 +156,7 @@ interface nsIX509Cert : nsISupports {
   const unsigned long ISSUER_NOT_TRUSTED   = 1 << 4;
   const unsigned long ISSUER_UNKNOWN       = 1 << 5;
   const unsigned long INVALID_CA           = 1 << 6;
+  const unsigned long USAGE_NOT_ALLOWED    = 1 << 7;
   
   /*
    * accessors for certs
@@ -167,6 +168,23 @@ interface nsIX509Cert : nsISupports {
                  [array, size_is(count)] out wstring usages);
 
   void getPurposes(out PRUint32 verified, out wstring purposes);
+
+
+  const unsigned long CERT_USAGE_SSLClient = 0;
+  const unsigned long CERT_USAGE_SSLServer = 1;
+  const unsigned long CERT_USAGE_SSLServerWithStepUp = 2;
+  const unsigned long CERT_USAGE_SSLCA = 3;
+  const unsigned long CERT_USAGE_EmailSigner = 4;
+  const unsigned long CERT_USAGE_EmailRecipient = 5;
+  const unsigned long CERT_USAGE_ObjectSigner = 6;
+  const unsigned long CERT_USAGE_UserCertImport = 7;
+  const unsigned long CERT_USAGE_VerifyCA = 8;
+  const unsigned long CERT_USAGE_ProtectedObjectSigner = 9;
+  const unsigned long CERT_USAGE_StatusResponder = 10;
+  const unsigned long CERT_USAGE_AnyCA = 11;
+
+  void verifyForUsage(in PRUInt32 usage,
+                      out PRUInt32 verificationResult);
 
   /*
    * This method is here to make it easier to view a cert.

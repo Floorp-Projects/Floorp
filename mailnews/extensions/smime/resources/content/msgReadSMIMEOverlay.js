@@ -38,6 +38,7 @@
 var gEncryptionStatus = -1;
 var gSignatureStatus = -1;
 var gSignerCert = null;
+var gEncryptionCert = null;
 
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
@@ -48,6 +49,7 @@ function showMessageReadSecurityInfo()
 
   // isupport array starts with index 1
   pkiParams.setISupportAtIndex(1, gSignerCert);
+  pkiParams.setISupportAtIndex(2, gEncryptionCert);
   
   var params = pkiParams.QueryInterface(Components.interfaces.nsIDialogParamBlock);
 

@@ -201,6 +201,10 @@ var gComposeRecyclingListener = {
     //Release the nsIMsgComposeParams object
     if (window.arguments && window.arguments[0])
       window.arguments[0] = null;
+
+    var event = document.createEvent('Events');
+    event.initEvent('compose-window-close', false, true);
+    document.getElementById("msgcomposeWindow").dispatchEvent(event);
 	},
 
 	onReopen: function(params) {
@@ -208,6 +212,10 @@ var gComposeRecyclingListener = {
     window.editorShell.contentWindow.focus();
     enableEditableFields();
     ComposeStartup(true, params);
+
+    var event = document.createEvent('Events');
+    event.initEvent('compose-window-reopen', false, true);
+    document.getElementById("msgcomposeWindow").dispatchEvent(event);
 	}
 };
 
@@ -2496,7 +2504,6 @@ function LoadIdentity(startup)
       }
     }
 }
-
 
 function setupAutocomplete()
 {

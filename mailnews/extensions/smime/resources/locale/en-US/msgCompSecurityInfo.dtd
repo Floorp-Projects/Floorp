@@ -1,0 +1,13 @@
+<!--LOCALIZATION NOTE msgCompSecurityInfo.dtd UI for viewing security status when composing a message -->
+
+<!ENTITY title.label "Message Security">
+<!ENTITY subject.plaintextWarning "Please note: Subject lines of email messages are never encrypted.">
+<!ENTITY status.heading "The contents of your message will be sent as follows:">
+<!ENTITY status.signed "Digitally signed:">
+<!ENTITY status.encrypted "Encrypted:">
+<!ENTITY status.certificates "Certificates:">
+<!ENTITY view.label "View">
+<!ENTITY tree.recipient "Recipient:">
+<!ENTITY tree.status "Status:">
+<!ENTITY tree.issuedDate "Issued:">
+<!ENTITY tree.expiresDate "Expires:">

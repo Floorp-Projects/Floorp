@@ -50,7 +50,7 @@ interface nsIX509Cert;
 interface nsIMsgSMIMEHeaderSink : nsISupports 
 {
   void signedStatus(in PRInt32 aNestingLevel, in PRInt32 aSignatureStatus, in nsIX509Cert aSignerCert);
-  void encryptionStatus(in PRInt32 aNestingLevel, in PRInt32 aEncryptionStatus);
+  void encryptionStatus(in PRInt32 aNestingLevel, in PRInt32 aEncryptionStatus, in nsIX509Cert aReceipientCert);
 
   PRInt32 maxWantedNesting(); // 1 == only info on outermost nesting level wanted
 };

@@ -1544,7 +1544,7 @@ Rights Reserved.
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
     </statusbarpanel>
   </hbox>
-  <hbox insertafter="totalMessageCount">
+  <hbox insertafter="totalMessageCount" id="status-bar-end-box">
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
   </hbox>
 </statusbar> 

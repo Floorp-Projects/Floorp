@@ -35,6 +35,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<?xml-stylesheet href="chrome://messenger/skin/smime/msgReadSMIMEOverlay.css" type="text/css"?> 
+
 <!DOCTYPE overlay SYSTEM "chrome://messenger-smime/locale/msgReadSMIMEOverlay.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -49,5 +51,12 @@
     <menuitem insertafter="pageSourceMenuItem" label="&menu_securityStatus.label;" 
       accesskey="&menu_securityStatus.accesskey;" observes="cmd_viewSecurityStatus"/>
   </menupopup>
+
+  <hbox id="status-bar-end-box">
+    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
+      id="signed-status" oncommand="showMessageReadSecurityInfo();"/>
+    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
+      id="encrypted-status" oncommand="showMessageReadSecurityInfo();"/>
+  </hbox>
 
 </overlay>

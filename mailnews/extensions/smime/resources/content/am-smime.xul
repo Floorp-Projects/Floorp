@@ -75,9 +75,6 @@ Contributors:
       <radio id="encrypt_mail_never" wsm_persist="true" value="0"
              label="&neverEncrypt.label;" />
 
-      <radio id="encrypt_mail_if_possible" wsm_persist="true" value="1"
-             label="&ifPossibleEncryptMessage.label;" />
-    
       <radio id="encrypt_mail_always" wsm_persist="true" value="2"
               label="&alwaysEncryptMessage.label;" />
     </radiogroup>

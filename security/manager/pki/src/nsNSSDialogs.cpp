@@ -792,7 +792,12 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
 
 
 NS_IMETHODIMP
-nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *title, const PRUnichar *infoPrompt, const PRUnichar **certNickList, const PRUnichar **certDetailsList, PRUint32 count, PRInt32 *selectedIndex, PRBool *canceled) 
+nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, 
+                              const PRUnichar **certNickList, 
+                              const PRUnichar **certDetailsList, 
+                              PRUint32 count, 
+                              PRInt32 *selectedIndex, 
+                              PRBool *canceled) 
 {
   nsresult rv;
   PRUint32 i;
@@ -805,25 +810,22 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *title
   nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
 
-  block->SetNumberStrings(3+count*2);
-
-  rv = block->SetString(0, title);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = block->SetString(1, infoPrompt);
-  if (NS_FAILED(rv)) return rv;
+  block->SetNumberStrings(1+count*2);
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+2, certNickList[i]);
+	  rv = block->SetString(i, certNickList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+count+2, certDetailsList[i]);
+	  rv = block->SetString(i+count, certDetailsList[i]);
 	  if (NS_FAILED(rv)) return rv;
   }
 
   rv = block->SetInt(0, count);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = block->SetInt(1, *selectedIndex);
   if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(nsnull,

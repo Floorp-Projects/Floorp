@@ -34,6 +34,7 @@ EXPORTS		= \
 XPIDLSRCS	= \
 		nsIMsgSMIMECompFields.idl \
 		nsIMsgSMIMEHeaderSink.idl \
+		nsISMimeJSHelper.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

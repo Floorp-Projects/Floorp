@@ -47,9 +47,6 @@ function onInit()
   var encryptionPolicy = gIdentity.getIntAttribute("encryptionpolicy");
   switch (encryptionPolicy)
   {
-    case 1:
-      selectedItemId = 'encrypt_mail_if_possible';
-      break;
     case 2:
       selectedItemId = 'encrypt_mail_always';
       break;
@@ -65,9 +62,6 @@ function onInit()
     gEncryptAlways.setAttribute("disabled", true);
     gNeverEncrypt.setAttribute("disabled", true);
   }
-
-  // we currently don't support encrypt if possible so keep it disabled for now...
-  document.getElementById('encrypt_mail_if_possible').setAttribute("disabled", true);
 
   gSignCertName.value = gIdentity.getUnicharAttribute("signing_cert_name");
   gSignMessages.checked = gIdentity.getBoolAttribute("sign_mail");
@@ -123,8 +117,12 @@ function disableIfLocked( prefstrArray )
 
 function smimeSelectCert(smime_cert)
 {
+  var certInfo = document.getElementById(smime_cert);
+  if (!certInfo)
+    return;
+
   var picker = Components.classes["@mozilla.org/user_cert_picker;1"]
-               .getService(Components.interfaces.nsIUserCertPicker);
+               .createInstance(Components.interfaces.nsIUserCertPicker);
   var canceled = new Object;
   var x509cert = 0;
   var certUsage;
@@ -136,10 +134,8 @@ function smimeSelectCert(smime_cert)
   }
 
   try {
-    var smimeBundle = document.getElementById("bundle_smime");
     x509cert = picker.pickByUsage(window,
-      smimeBundle.getString("prefPanel-smime"),
-      smimeBundle.getString("smimeCertPrompt"),
+      certInfo.value,
       certUsage, // this is from enum SECCertUsage
       false, false, canceled);
   } catch(e) {
@@ -147,17 +143,14 @@ function smimeSelectCert(smime_cert)
   }
 
   if (!canceled.value && x509cert) {
-    var certInfo = document.getElementById(smime_cert);
-    if (certInfo) {
-      certInfo.setAttribute("disabled", "false");
-      certInfo.value = x509cert.nickname;
+    certInfo.setAttribute("disabled", "false");
+    certInfo.value = x509cert.nickname;
 
-      if (smime_cert == "identity.encryption_cert_name") {
-        gEncryptAlways.removeAttribute("disabled");
-        gNeverEncrypt.removeAttribute("disabled");
-      } else {
-        gSignMessages.removeAttribute("disabled");
-      }
-	}
+    if (smime_cert == "identity.encryption_cert_name") {
+      gEncryptAlways.removeAttribute("disabled");
+      gNeverEncrypt.removeAttribute("disabled");
+    } else {
+      gSignMessages.removeAttribute("disabled");
+    }
   }
 }

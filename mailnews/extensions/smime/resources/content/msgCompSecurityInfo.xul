@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp..
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-sheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/smime/msgCompSecurityInfo.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger-smime/locale/msgCompSecurityInfo.dtd">
+
+<window id="msgCompSecurityInfo" title="&title.label;"
+  class="dialog"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  style="width: 50em;"
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+<script type="application/x-javascript" src="chrome://messenger-smime/content/msgCompSecurityInfo.js"/>
+
+<stringbundle id="bundle_smime_comp_info" src="chrome://messenger-smime/locale/msgCompSecurityInfo.properties"/> 
+
+<vbox id="outer_vbox">
+
+  <description>&subject.plaintextWarning;</description>
+  <separator class="thin"/>
+  <description>&status.heading;</description>
+  <grid>
+    <columns>
+      <column/>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+        <label value="&status.signed;"/>
+        <label id="signed"/>
+      </row>
+      <row>
+        <label value="&status.encrypted;"/>
+        <label id="encrypted"/>
+      </row>
+    </rows>
+  </grid>
+
+  <separator class="thin"/>
+  <label value="&status.certificates;"/>
+
+  <listbox id="infolist" style="height: 10em;" flex="1"
+        onselect="onSelectionChange(event);">
+    <listcols>
+      <listcol flex="3" width="0"/>
+      <splitter class="tree-splitter"/>
+      <listcol flex="1" width="0"/>
+      <splitter class="tree-splitter"/>
+      <listcol flex="2" width="0"/>
+      <splitter class="tree-splitter"/>
+      <listcol flex="2" width="0"/>
+    </listcols>
+    <listhead>
+      <listheader label="&tree.recipient;"/>
+      <listheader label="&tree.status;"/>
+      <listheader label="&tree.issuedDate;"/>
+      <listheader label="&tree.expiresDate;"/>
+    </listhead>
+  </listbox>
+  <hbox pack="start">
+    <button id="viewCertButton" disabled="true"
+            label="&view.label;"
+            oncommand="viewSelectedCert();"/>
+  </hbox>
+
+  <separator class="thin"/>
+  <keyset id="dialogKeys"/>
+  <hbox id="okCancelHelpButtonsRight"/>
+</vbox>
+</window>

@@ -212,13 +212,13 @@ NS_IMETHODIMP nsMsgSMIMEComposeFields::GetSignMessage(PRBool *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgSMIMEComposeFields::SetAlwaysEncryptMessage(PRBool value)
+NS_IMETHODIMP nsMsgSMIMEComposeFields::SetRequireEncryptMessage(PRBool value)
 {
   mAlwaysEncryptMessage = value;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgSMIMEComposeFields::GetAlwaysEncryptMessage(PRBool *_retval)
+NS_IMETHODIMP nsMsgSMIMEComposeFields::GetRequireEncryptMessage(PRBool *_retval)
 {
   *_retval = mAlwaysEncryptMessage;
   return NS_OK;
@@ -353,15 +353,13 @@ nsresult nsMsgComposeSecure::ExtractEncryptionState(nsIMsgIdentity * aIdentity, 
   if (aComposeFields)
     aComposeFields->GetSecurityInfo(getter_AddRefs(securityInfo));
 
-  // XXX Later we need to handle the special "encrypt if possible case" in here
-
   if (securityInfo) // if we were given security comp fields, use them.....
   {
     nsCOMPtr<nsIMsgSMIMECompFields> smimeCompFields = do_QueryInterface(securityInfo);
     if (smimeCompFields)
     {
       smimeCompFields->GetSignMessage(aSignMessage);
-      smimeCompFields->GetAlwaysEncryptMessage(aEncrypt);
+      smimeCompFields->GetRequireEncryptMessage(aEncrypt);
     }
     return NS_OK;
   }

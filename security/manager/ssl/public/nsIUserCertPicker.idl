@@ -43,8 +43,7 @@ interface nsIInterfaceRequestor;
 [scriptable, uuid(06d018e0-d41b-4629-a4fc-daaa6029888e)]
 interface nsIUserCertPicker : nsISupports {
   nsIX509Cert pickByUsage(in nsIInterfaceRequestor ctx, 
-                          in wstring title,
-                          in wstring infoPrompt,
+                          in wstring selectedNickname,
                           in PRInt32 certUsage, // as defined by NSS enum SECCertUsage
                           in boolean allowInvalid,
                           in boolean allowDuplicateNicknames,

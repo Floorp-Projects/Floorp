@@ -96,6 +96,7 @@ interface nsICMSMessage : nsISupports
 interface nsICMSMessageErrors : nsISupports
 {
   const long SUCCESS = 0;
+  const long GENERAL_ERROR = 1;
   const long VERIFY_NOT_SIGNED = 1024;
   const long VERIFY_NO_CONTENT_INFO = 1025;
   const long VERIFY_BAD_DIGEST = 1026;

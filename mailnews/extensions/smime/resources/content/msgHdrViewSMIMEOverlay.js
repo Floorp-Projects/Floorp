@@ -19,12 +19,10 @@
  *   Scott MacGreogr <mscott@netscape.com>
  */
 
-var gSignedUIVisible = false;
-var gEncryptionUIVisible = false;
-
 var gSignedUINode = null;
 var gEncryptedUINode = null;
 var gSMIMEContainer = null;
+var gStatusBar = null;
 
 // manipulates some globals from msgReadSMIMEOverlay.js
 
@@ -47,23 +45,22 @@ var smimeHeaderSink =
     gSignatureStatus = aSignatureStatus;
     gSignerCert = aSignerCert;
 
-    gSignedUINode.collapsed = false; 
-    gSMIMEContainer.collapsed = false; 
+    gSMIMEContainer.collapsed = false;
+    gSignedUINode.collapsed = false;
 
     if (nsICMSMessageErrors.SUCCESS == aSignatureStatus)
     {
-      gSignedUINode.value = "<signed>";
+      gSignedUINode.setAttribute("signed", "ok");
+      gStatusBar.setAttribute("signed", "ok");
     }
     else
     {
-      // show a broken signature icon....
-      gSignedUINode.value = "<invalid signature>";
+      gSignedUINode.setAttribute("signed", "notok");
+      gStatusBar.setAttribute("signed", "notok");
     }
-
-    gSignedUIVisible = true;
   },
 
-  encryptionStatus: function(aNestingLevel, aEncryptionStatus)
+  encryptionStatus: function(aNestingLevel, aEncryptionStatus, aRecipientCert)
   {
     if (aNestingLevel > 1) {
       // we are not interested
@@ -71,21 +68,21 @@ var smimeHeaderSink =
     }
 
     gEncryptionStatus = aEncryptionStatus;
+    gEncryptionCert = aRecipientCert;
 
-    gEncryptedUINode.collapsed = false; 
     gSMIMEContainer.collapsed = false; 
+    gEncryptedUINode.collapsed = false;
 
     if (nsICMSMessageErrors.SUCCESS == aEncryptionStatus)
     {
-      gEncryptedUINode.value = "<encrypted>";
+      gEncryptedUINode.setAttribute("encrypted", "ok");
+      gStatusBar.setAttribute("encrypted", "ok");
     }
     else
     {
-      // show a broken encryption icon....
-      gEncryptedUINode.value = "<invalid encryption>";
+      gEncryptedUINode.setAttribute("encrypted", "notok");
+      gStatusBar.setAttribute("encrypted", "notok");
     }
-
-    gEncryptionUIVisible = true;
   },
 
   QueryInterface : function(iid)
@@ -102,20 +99,15 @@ function onSMIMEStartHeaders()
   gSignatureStatus = -1;
   
   gSignerCert = null;
+  gEncryptionCert = null;
   
   gSMIMEContainer.collapsed = true;
-
-  if (gEncryptionUIVisible)
-  {
-    gEncryptedUINode.collapsed = true;
-    gEncryptionUIVisible = false;
-  }
-
-  if (gSignedUIVisible)
-  {
-    gSignedUINode.collapsed = true; 
-    gSignedUIVisible = false;
-  }
+  gSignedUINode.collapsed = true;
+  gSignedUINode.removeAttribute("signed");
+  gStatusBar.removeAttribute("signed");
+  gEncryptedUINode.collapsed = true;
+  gEncryptedUINode.removeAttribute("encrypted");
+  gStatusBar.removeAttribute("encrypted");
 }
 
 function onSMIMEEndHeaders()
@@ -127,9 +119,10 @@ function msgHdrViewSMIMEOnLoad(event)
   // on the msgHdrSink used by mail.....
   msgWindow.msgHeaderSink.securityInfo = smimeHeaderSink;
 
-  gSignedUINode = document.getElementById('signedText');
-  gEncryptedUINode = document.getElementById('encryptedText');
+  gSignedUINode = document.getElementById('signedHdrIcon');
+  gEncryptedUINode = document.getElementById('encryptedHdrIcon');
   gSMIMEContainer = document.getElementById('smimeBox');
+  gStatusBar = document.getElementById('status-bar');
 
   // add ourself to the list of message display listeners so we get notified when we are about to display a
   // message.

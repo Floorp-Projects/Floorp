@@ -47,5 +47,5 @@
 interface nsIMsgSMIMECompFields : nsISupports 
 {
   attribute boolean signMessage;
-  attribute boolean alwaysEncryptMessage;
+  attribute boolean requireEncryptMessage;
 };

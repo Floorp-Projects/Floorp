@@ -22,15 +22,19 @@
    -    Scott MacGregor <mscott@netscape.com
   -->
 
+<?xml-stylesheet href="chrome://messenger/skin/smime/msgHdrViewSMIMEOverlay.css" type="text/css"?> 
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script language="JavaScript" src="chrome://messenger-smime/content/msgHdrViewSMIMEOverlay.js"/>
 
   <hbox id="expandedHeaderView">
-    <vbox id="smimeBox" insertafter="expandedHeaders">
+    <vbox id="smimeBox" insertafter="expandedHeaders" collapsed="true">
       <spacer flex="1"/>
-      <label id="encryptedText" onclick="showMessageReadSecurityInfo();" collapsed="true"/>
-      <label id="signedText"    onclick="showMessageReadSecurityInfo();" collapsed="true"/>     
+      <image id="signedHdrIcon"
+             onclick="showMessageReadSecurityInfo();" collapsed="true"/>
+      <image id="encryptedHdrIcon"
+             onclick="showMessageReadSecurityInfo();" collapsed="true"/>
       <spacer flex="1"/>
     </vbox>
   </hbox>

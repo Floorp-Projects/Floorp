@@ -24,28 +24,72 @@
   -->
 
 
+<?xml-stylesheet href="chrome://messenger/skin/smime/msgCompSMIMEOverlay.css" type="text/css"?> 
+
 <!DOCTYPE overlay SYSTEM "chrome://messenger-smime/locale/msgCompSMIMEOverlay.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript" src="chrome://messenger-smime/content/msgCompSMIMEOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript" src="chrome://messenger-smime/content/msgCompSMIMEOverlay.js"/>
+  <script type="application/x-javascript"><![CDATA[
+    window.addEventListener("load", smimeComposeOnLoad, true);
+  ]]></script>
+
+  <window id="msgcomposeWindow">
+    <broadcaster id="securityStatus" crypto="" signing=""/>
+    <observes element="securityStatus" attribute="crypto" />
+    <observes element="securityStatus" attribute="signing" />
+    <stringbundle id="bundle_comp_smime" src="chrome://messenger-smime/locale/msgCompSMIMEOverlay.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  </window>
 
   <menupopup id="optionsMenuPopup">
     <menuseparator insertafter="fccMenu"/>
     <menu label="&securityMenu.label;" accesskey="&securityMenu.accesskey;">
-      <menupopup onpopupshowing="setSecuritySettings()">
-        <menuitem id="menu_securityNoEncryption" type="radio" name="encryptmessage" 
+      <menupopup onpopupshowing="setSecuritySettings(1)">
+        <menuitem id="menu_securityNoEncryption1" type="radio" name="encryptmessage" 
           accesskey="&menu_securityNoEncryption.accesskey;" label="&menu_securityNoEncryption.label;" oncommand="noEncryption()"/>
-        <menuitem id="menu_securityEncryptAlways" type="radio" name="encryptmessage" 
-          accesskey="&menu_securityEncryptAlways.accesskey;" label="&menu_securityEncryptAlways.label;" oncommand="encryptMessage()"/>
-        <menuitem id="menu_securityEncryptIfPossible" type="radio" name="encryptmessage" 
-          accesskey="&menu_securityEncryptIfPossible.accesskey;" label="&menu_securityEncryptIfPossible.label;" disabled="true"/>
+        <menuitem id="menu_securityEncryptRequire1" type="radio" name="encryptmessage" 
+          accesskey="&menu_securityEncryptRequire.accesskey;" label="&menu_securityEncryptRequire.label;" oncommand="encryptMessage()"/>
         <menuseparator/>
-        <menuitem id="menu_securitySign" type="checkbox" accesskey="&menu_securitySign.accesskey;" label="&menu_securitySign.label;" oncommand="signMessage()"/>
-        <menuseparator/>
-        <menuitem id="menu_securityStatus" type="checkbox" accesskey="&menu_securityStatus.accesskey;" label="&menu_securityStatus.label;" oncommand="showMessageComposeSecurityStatus()"/>
+        <menuitem id="menu_securitySign1" type="checkbox" accesskey="&menu_securitySign.accesskey;" label="&menu_securitySign.label;" oncommand="signMessage()"/>
       </menupopup>
     </menu>
+  </menupopup>
+
+  <hbox id="toolbar_button_box">
+    <toolbarbutton id="button-security" type="menu-button" insertbefore="saveSeparator"
+                   oncommand="doSecurityButton();" class="toolbarbutton-1"
+                   label="&securityButton.label;">
+      <menupopup onpopupshowing="setSecuritySettings(2)">
+        <menuitem id="menu_securityNoEncryption2" type="radio" name="encryptmessage" 
+          accesskey="&menu_securityNoEncryption.accesskey;" label="&menu_securityNoEncryption.label;" oncommand="setNextCommand('noEncryption');"/>
+        <menuitem id="menu_securityEncryptRequire2" type="radio" name="encryptmessage" 
+          accesskey="&menu_securityEncryptRequire.accesskey;" label="&menu_securityEncryptRequire.label;" oncommand="setNextCommand('encryptMessage')"/>
+        <menuseparator/>
+        <menuitem id="menu_securitySign2" type="checkbox" accesskey="&menu_securitySign.accesskey;" label="&menu_securitySign.label;" oncommand="setNextCommand('signMessage');"/>
+        <menuseparator/>
+        <menuitem id="menu_securityStatus2" accesskey="&menu_securityStatus.accesskey;" label="&menu_securityStatus.label;" oncommand="setNextCommand('show');"/>
+      </menupopup>
+    </toolbarbutton>
+  </hbox>
+
+  <statusbar id="status-bar">
+    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
+      id="signing-status" oncommand="showMessageComposeSecurityStatus();"/>
+    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
+      id="encryption-status" oncommand="showMessageComposeSecurityStatus();"/>
+  </statusbar>
+
+  <commandset id="composeCommands">
+    <command id="cmd_viewSecurityStatus" oncommand="showMessageComposeSecurityStatus();"/>
+  </commandset>
+
+  <menupopup id="menu_View_Popup">
+    <menuseparator/>
+    <menuitem label="&menu_viewSecurityStatus.label;" 
+      accesskey="&menu_viewSecurityStatus.accesskey;" observes="cmd_viewSecurityStatus"/>
   </menupopup>
 
 </overlay>

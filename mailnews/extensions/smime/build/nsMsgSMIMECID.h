@@ -56,4 +56,12 @@
  0xdd753201, 0x9a23, 0x4e08,                     \
  {0x95, 0x7f, 0xb3, 0x61, 0x6b, 0xf7, 0xe0, 0x12 }}
 
+#define NS_SMIMEJSHELPER_CONTRACTID \
+  "@mozilla.org/messenger-smime/smimejshelper;1"
+
+#define NS_SMIMEJSJELPER_CID                     \
+{ /* d57d928c-60e4-4f81-999d-5c762e611205 */     \
+ 0xd57d928c, 0x60e4, 0x4f81,                     \
+ {0x99, 0x9d, 0x5c, 0x76, 0x2e, 0x61, 0x12, 0x05 }}
+
 #endif // nsMsgSMIMECID_h__

@@ -48,6 +48,7 @@
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgSMIMEHeaderSink.h"
 #include "nsCOMPtr.h"
+#include "nsIX509Cert.h"
 
 
 #define MIME_SUPERCLASS mimeEncryptedClass
@@ -449,9 +450,12 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   PR_SetError(0, 0);
   rv = data->decoder_context->Finish(getter_AddRefs(data->content_info));
 
+  nsCOMPtr<nsIX509Cert> recipientCert;
+
   /* Is the content info encrypted? */
   if (data->content_info) {
     data->ci_is_encrypted = PR_TRUE;
+    data->content_info->GetEncryptionCert(getter_AddRefs(recipientCert));
   }
 
   if (NS_FAILED(rv))
@@ -463,18 +467,20 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
 
     if (aNestLevel >= maxNestLevel)
     {
-      data->smimeHeaderSink->EncryptionStatus(
-        aNestLevel,
-        (
-          data->ci_is_encrypted 
+      PRInt32 status = nsICMSMessageErrors::GENERAL_ERROR;
+      
+      if (data->ci_is_encrypted 
           && !data->verify_error
           && !data->decode_error
-          && NS_SUCCEEDED(rv)
-        )
-        ?
-          nsICMSMessageErrors::SUCCESS
-        :
-         -1
+          && NS_SUCCEEDED(rv))
+      {
+        status = nsICMSMessageErrors::SUCCESS;
+      }
+    
+      data->smimeHeaderSink->EncryptionStatus(
+        aNestLevel,
+        status,
+        recipientCert
       );
     }
   }

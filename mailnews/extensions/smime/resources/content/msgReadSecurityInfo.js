@@ -60,17 +60,23 @@ function setText(id, value) {
 
 function onLoad()
 {
+  document.getElementById("cancel").setAttribute("collapsed", "true");
+
   var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   var isupport = pkiParams.getISupportAtIndex(1);
   if (isupport) {
     gSignerCert = isupport.QueryInterface(nsIX509Cert);
+  }
+  isupport = pkiParams.getISupportAtIndex(2);
+  if (isupport) {
+    gEncryptionCert = isupport.QueryInterface(nsIX509Cert);
   }
   
   params = pkiParams.QueryInterface(nsIDialogParamBlock);
   
   gSignatureStatus = params.GetInt(1);
   gEncryptionStatus = params.GetInt(2);
-
+  
   var bundle = document.getElementById("bundle_smime_read_info");
 
   if (bundle) {
@@ -120,7 +126,8 @@ function onLoad()
         // might also be:
         // SIExpired SIRevoked SINotYetValid SIUnknownCA SIExpiredCA SIRevokedCA SINotYetValidCA
         break;
-      
+
+      case nsICMSMessageErrors.GENERAL_ERROR:
       case nsICMSMessageErrors.VERIFY_NO_CONTENT_INFO:
       case nsICMSMessageErrors.VERIFY_BAD_DIGEST:
       case nsICMSMessageErrors.VERIFY_NOCERT:
@@ -138,7 +145,7 @@ function onLoad()
       bundle.getString(sigInfoLabel);
 
     if (sigInfoHeader) {
-      var l = document.getElementById("signatureLabel");
+      var l = document.getElementById("signatureHeader");
       l.collapsed = false;
       l.value = bundle.getString(sigInfoHeader);
     }
@@ -168,6 +175,12 @@ function onLoad()
         encInfoLabel = "EIValidLabel";
         encInfo = "EIValid";
         break;
+
+      case nsICMSMessageErrors.GENERAL_ERROR:
+        encInfoLabel = "EIInvalidLabel";
+        encInfoHeader = "EIInvalidHeader";
+        encInfo_clueless = 1;
+        break;
     }
 
 
@@ -175,7 +188,7 @@ function onLoad()
       bundle.getString(encInfoLabel);
 
     if (encInfoHeader) {
-      var l = document.getElementById("encryptionLLabel");
+      var l = document.getElementById("encryptionHeader");
       l.collapsed = false;
       l.value = bundle.getString(encInfoHeader);
     }
@@ -185,11 +198,10 @@ function onLoad()
       str = bundle.getString(encInfo);
     }
     else if (encInfo_clueless) {
-      str = bundle.getString("EIClueless") + " " + gEncryptionStatus;
+      str = bundle.getString("EIClueless");
     }
     setText("encryptionExplanation", str);
   }
-
   
   if (gSignerCert) {
     document.getElementById("signatureCert").collapsed = false;
@@ -216,8 +228,6 @@ function onLoad()
       document.getElementById("encCertIssuedBy").value = gEncryptionCert.issuerCommonName;
     }
   }
-
-  params.SetInt(0,0); // set cancel return value
 }
 
 function viewSignatureCert()
@@ -234,14 +244,7 @@ function viewEncryptionCert()
   }
 }
 
-function doOK()
+function doHelpButton()
 {
-  params.SetInt(0,1);
-  window.close();
-}
-
-function doCancel()
-{
-  params.SetInt(0,0);
-  window.close();
+  openHelp('received_security');
 }

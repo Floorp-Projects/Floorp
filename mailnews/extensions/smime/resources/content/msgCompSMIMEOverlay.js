@@ -20,105 +20,291 @@
  *   Scott MacGreogr <mscott@netscape.com>
  */
 
-var ismimeCompFields = Components.interfaces.nsIMsgSMIMECompFields;
-var smimeCompFieldsContractID = "@mozilla.org/messenger-smime/composefields;1";
+var gISMimeCompFields = Components.interfaces.nsIMsgSMIMECompFields;
+var gSMimeCompFieldsContractID = "@mozilla.org/messenger-smime/composefields;1";
+var gNextSecurityButtonCommand = "";
+var gBundle;
+var gBrandBundle;
+var gSMFields;
 
-// InitializeSecurityInfo --> when we want to override the default smime behavior for the current message,
-// we need to make sure we have a security info object on the msg compose fields....
-function GetSecurityInfo()
+
+function onComposerClose()
 {
-  var smimeComposefields;
-  var msgCompFields = gMsgCompose.compFields;
-  if (msgCompFields)
-  {
-    if (!msgCompFields.securityInfo)
-    {
-      smimeComposefields = Components.classes[smimeCompFieldsContractID].createInstance(ismimeCompFields);
-      if (smimeComposefields)
-      {
-        msgCompFields.securityInfo = smimeComposefields;
-        // set up the intial security state....
-        var encryptionPolicy = gCurrentIdentity.getIntAttribute("encryptionpolicy");
-        // 0 == never, 1 == if possible, 2 == always Encrypt.
-        smimeComposefields.alwaysEncryptMessage = encryptionPolicy == 2;
+  gSMFields = null;
+  setNoEncryptionUI();
+  setNoSignatureUI();
 
-        smimeComposefields.signMessage = gCurrentIdentity.getBoolAttribute("sign_mail");
-      }
-    } 
+  if (!gMsgCompose)
+    return;
+
+  if (!gMsgCompose.compFields)
+    return;
+
+  gMsgCompose.compFields.securityInfo = null;
+}
+
+function onComposerReOpen()
+{
+  // are we already set up?
+  if (gSMFields)
+    return;
+
+  if (!gMsgCompose)
+    return;
+
+  if (!gMsgCompose.compFields)
+    return;
+
+  gMsgCompose.compFields.securityInfo = null;
+
+  gSMFields = Components.classes[gSMimeCompFieldsContractID].createInstance(gISMimeCompFields);
+  if (gSMFields)
+  {
+    gMsgCompose.compFields.securityInfo = gSMFields;
+    // set up the intial security state....
+    var encryptionPolicy = gCurrentIdentity.getIntAttribute("encryptionpolicy");
+    // 0 == never, 1 == if possible, 2 == always Encrypt.
+    gSMFields.requireEncryptMessage = encryptionPolicy == 2;
+
+    gSMFields.signMessage = gCurrentIdentity.getBoolAttribute("sign_mail");
+
+    if (gSMFields.requireEncryptMessage)
+    {
+      setEncryptionUI();
+    }
     else
     {
-      smimeComposefields = msgCompFields.securityInfo.QueryInterface(ismimeCompFields);
+      setNoEncryptionUI();
     }
-  } // if we have message compose fields...
 
-  return smimeComposefields;
+    if (gSMFields.signMessage)
+    {
+      setSignatureUI();
+    }
+    else
+    {
+      setNoSignatureUI();
+    }
+  }
+}
+
+
+// this function gets called multiple times,
+// but only on first open, not on composer recycling
+function smimeComposeOnLoad()
+{
+  onComposerReOpen();
+}
+
+function setupBundles()
+{
+  if (gBundle && gBrandBundle)
+    return;
+  
+  if (!gBundle) {
+    gBundle = document.getElementById("bundle_comp_smime");
+    gBrandBundle = document.getElementById("bundle_brand");
+  }
+}
+
+function showNeedSetupInfo()
+{
+  var ifps = Components.interfaces.nsIPromptService;
+
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(ifps);
+  setupBundles();
+
+  if (promptService && gBundle && gBrandBundle) {
+    var dummy = new Object;
+    var buttonPressed = new Object;
+    promptService.confirmEx(window,
+      gBrandBundle.getString("brandShortName"),
+      gBundle.getString("NeedSetup"), 
+      (ifps.BUTTON_POS_0 * ifps.BUTTON_TITLE_YES
+       + ifps.BUTTON_POS_1 * ifps.BUTTON_TITLE_NO),
+      0,
+      0,
+      0,
+      null,
+      dummy,
+      buttonPressed);
+    
+    if (0 == buttonPressed.value) {
+      openHelp("sign-encrypt");
+    }
+  }
 }
 
 function noEncryption()
 {
-  var smimeCompFields = GetSecurityInfo();
-  if (smimeCompFields)
-    smimeCompFields.alwaysEncryptMessage = false;
+  if (!gSMFields)
+    return;
+
+  gSMFields.requireEncryptMessage = false;
+  setNoEncryptionUI();
 }
 
 function encryptMessage()
 {
-  var checkedNode = document.getElementById("menu_securityEncryptAlways");
-  var noEncryptionNode = document.getElementById("menu_securityNoEncryption");
-
-  var smimeCompFields = GetSecurityInfo();
+  if (!gSMFields)
+    return;
   
   var encryptionCertName = gCurrentIdentity.getUnicharAttribute("encryption_cert_name");
   if (!encryptionCertName) 
   {
-    alert(gComposeMsgsBundle.getString("chooseEncryptionCertMsg"));
-    checkedNode.removeAttribute("checked");
-    smimeCompFields.signMessage = false;
-    noEncryptionNode.setAttribute("checked");
+    gSMFields.requireEncryptMessage = false;
+    setNoEncryptionUI();
+    showNeedSetupInfo();
     return;
   }
-    
-  smimeCompFields.alwaysEncryptMessage = true;
-  checkedNode.setAttribute("checked", true);
+
+  gSMFields.requireEncryptMessage = true;
+  setEncryptionUI();
 }
 
 function signMessage()
 { 
-  var checkedNode = document.getElementById("menu_securitySign");
-  var checked = checkedNode.getAttribute("checked");
+  if (!gSMFields)
+    return;
 
-  var smimeCompFields = GetSecurityInfo(); 
+  // toggle
+  gSMFields.signMessage = !gSMFields.signMessage;
 
-  if (checked) // if checked, make sure we have a cert name...
+  if (gSMFields.signMessage) // make sure we have a cert name...
   {
     var signingCertName = gCurrentIdentity.getUnicharAttribute("signing_cert_name");
-    if (!signingCertName) 
+    if (!signingCertName)
     {
-      alert(gComposeMsgsBundle.getString("chooseSigningCertMsg"));
-      checkedNode.removeAttribute("checked");
-      smimeCompFields.signMessage = false;
+      gSMFields.signMessage = false;
+      showNeedSetupInfo();
       return;
     }
 
-    smimeCompFields.signMessage = true;
-    checkedNode.setAttribute("checked", true);  
+    setSignatureUI();
   }
   else
   {
-    smimeCompFields.signMessage = false;
-    checkedNode.removeAttribute("checked");  
+    setNoSignatureUI();
   }
 }
 
-function setSecuritySettings()
+function setSecuritySettings(menu_id)
 { 
-  var smimeCompFields = GetSecurityInfo();
-  document.getElementById("menu_securityEncryptAlways").setAttribute("checked", smimeCompFields.alwaysEncryptMessage);
-  document.getElementById("menu_securityNoEncryption").setAttribute("checked", !smimeCompFields.alwaysEncryptMessage);
-  document.getElementById("menu_securitySign").setAttribute("checked", smimeCompFields.signMessage);
+  if (!gSMFields)
+    return;
+
+  document.getElementById("menu_securityEncryptRequire" + menu_id).setAttribute("checked", gSMFields.requireEncryptMessage);
+  document.getElementById("menu_securityNoEncryption" + menu_id).setAttribute("checked", !gSMFields.requireEncryptMessage);
+  document.getElementById("menu_securitySign" + menu_id).setAttribute("checked", gSMFields.signMessage);
+}
+
+function setNextCommand(what)
+{
+  gNextSecurityButtonCommand = what;
+}
+
+function doSecurityButton()
+{
+  var what = gNextSecurityButtonCommand;
+  gNextSecurityButtonCommand = "";
+
+  switch (what)
+  {
+    case "noEncryption":
+      noEncryption();
+      break;
+    
+    case "encryptMessage":
+      encryptMessage();
+      break;
+    
+    case "signMessage":
+      signMessage();
+      break;
+    
+    case "show":
+    default:
+      showMessageComposeSecurityStatus();
+      break;
+  }
+}
+
+function setNoSignatureUI()
+{
+  top.document.getElementById("securityStatus").removeAttribute("signing");
+}
+
+function setSignatureUI()
+{
+  top.document.getElementById("securityStatus").setAttribute("signing", "ok");
+}
+
+function setNoEncryptionUI()
+{
+  top.document.getElementById("securityStatus").removeAttribute("crypto");
+}
+
+function setEncryptionUI()
+{
+  top.document.getElementById("securityStatus").setAttribute("crypto", "ok");
 }
 
 function showMessageComposeSecurityStatus()
 {
-  dump("showSecurityStatus when composing message not yet implemented\n");
+  Recipients2CompFields(gMsgCompose.compFields);
+
+  var areCertsAvailable = false;
+  var encryptionCertName = gCurrentIdentity.getUnicharAttribute("encryption_cert_name");
+  var signingCertName = gCurrentIdentity.getUnicharAttribute("signing_cert_name");
+  
+  if (encryptionCertName.length > 0 && signingCertName.length > 0 )
+  {
+    areCertsAvailable = true;
+  }
+
+  window.openDialog('chrome://messenger-smime/content/msgCompSecurityInfo.xul',
+    '',
+    'chrome,resizable=1,modal=1,dialog=1', 
+    {
+      compFields : gMsgCompose.compFields,
+      subject : GetMsgSubjectElement().value,
+      smFields : gSMFields,
+      certsAvailable : areCertsAvailable
+    }
+  );
 }
+
+var SecurityController =
+{
+  supportsCommand: function(command)
+  {
+    switch ( command )
+    {
+      case "cmd_viewSecurityStatus":
+        return true;
+      
+      default:
+        return false;
+     }
+  },
+
+  isCommandEnabled: function(command)
+  {
+    switch ( command )
+    {
+      case "cmd_viewSecurityStatus":
+      {
+        return true;
+      }
+
+      default:
+        return false;
+    }
+    return false;
+  }
+};
+
+top.controllers.appendController(SecurityController);
+addEventListener('compose-window-close', onComposerClose, true);
+addEventListener('compose-window-reopen', onComposerReOpen, true);
