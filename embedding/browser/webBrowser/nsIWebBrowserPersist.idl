@@ -1,0 +1,96 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIInputStream;
+interface nsIDOMDocument;
+
+[scriptable, uuid(F823C5B0-AF6C-11d4-9597-0020183BF181)]
+interface nsIWebBrowserPersistProgress : nsISupports
+{
+	/**
+	 * Flags that indicate the beginning and end of ALL downloading.
+	 * Every operation with begin with a call to the listener with a
+	 * PROGRESS_STARTED flag and finish with a PROGRESS_FINISHED flag.
+	 */
+	const unsigned long PROGRESS_STARTED    = 1;
+	const unsigned long PROGRESS_FINISHED   = 2;
+
+	/**
+	 * Flags that indicate the progress of a particular URI
+	 */
+	const unsigned long PROGRESS_START_URI  = 4;
+	const unsigned long PROGRESS_END_URI    = 8;
+
+    /**
+	 * Called as the downloading progresses.
+     *
+	 * aStatus - Status flags indicating the state of progress. 
+	 * aURI - URI to which the progress refers or nsnull when it refers
+	 *        to everything.
+	 * aAbort - 
+	 */
+	void OnProgress(in unsigned long aStatus, in nsIURI aURI, out boolean aAbort);
+};
+
+
+/**
+ * The nsIWebBrowserPersist
+ */
+[scriptable, uuid(814ba433-a816-4785-9f95-ad3ba0a43dab)]
+interface nsIWebBrowserPersist : nsISupports
+{
+  /**
+   * Callback listener for progress notifications.
+   */
+  attribute nsIWebBrowserPersistProgress progressListener;
+
+  /**
+   * Save the specified URI to file.
+   *
+   * aURI - The URI to save to file.
+   * aPostData - Data to pass with in an HTTP request or nsnull.
+   * aFileName - Target local filename.
+   */
+  void saveURI(in nsIURI aURI, in nsIInputStream aPostData, in string aFileName);
+
+  /*
+   * Save the current URI (in the browser) to file. Internal implementation
+   * calls saveURI passing in the current URI and postdata.
+   *
+   * aFileName - Target local filename.
+   */
+  void saveCurrentURI(in string aFileName);
+
+  /**
+   * Save the specified DOM document to file and optionally all linked files
+   * including images, CSS, JS & frames.
+   *
+   * aDocument - Document to save.
+   * aFileName - Target local filename.
+   * aDataPath - Path to folder (which must exist) to save linked files to,
+   *             or nsnull.
+   */
+  void saveDocument(in nsIDOMDocument aDocument, in string aFileName, in string aDataPath);
+};
