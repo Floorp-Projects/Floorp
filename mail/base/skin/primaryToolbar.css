@@ -384,7 +384,8 @@ toolbar[iconsize="small"] #button-next[disabled] {
 /* ::::: end small primary toolbar buttons ::::: */
 
 #junkBarImage {
-  list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
+  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
+  -moz-image-region: rect(0px 160px 20px 140px);
 }
 
 #junkBarMessage {
@@ -394,8 +395,10 @@ toolbar[iconsize="small"] #button-next[disabled] {
 #junkBar {
   border-bottom: 1px solid;
   -moz-border-bottom-colors: #000000;
-  background-color: #C7BC8F;
+  background: url("chrome://messenger/skin/icons/junkbar.png") repeat-y bottom left white;
+  color: white;
 }
+
 
 #junkIcon {
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
