@@ -1008,8 +1008,8 @@ NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
     char *inputStr = (char*)flat.get();
     size_t inputLen = flat.Length() + 1; // include null char
 
-    // assume worst case allocation
-    size_t resultLen = CCHMAXPATH;
+    // resultLen must be >= inputLen or the unicode conversion will fail
+    size_t resultLen = inputLen;
 
     output.Truncate();
     output.SetLength(resultLen);
@@ -1047,8 +1047,8 @@ NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
     UniChar *inputStr = (UniChar*)flat.get();
     size_t inputLen = flat.Length() + 1; // include null char
 
-    // assume worst case allocation
-    size_t resultLen = CCHMAXPATH;
+    // resultLen must be >= inputLen or the unicode conversion will fail
+    size_t resultLen = inputLen;
 
     output.Truncate();
     output.SetLength(resultLen);
