@@ -338,8 +338,8 @@ nsAbSync::SetDOMWindow(nsIDOMWindowInternal *aWindow)
     docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
     
     nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootAsItem));
-    mRootDocShell = docShell;
+    nsCOMPtr<nsIDocShell> temp_docShell(do_QueryInterface(rootAsItem));
+    mRootDocShell = temp_docShell;
   }
 
   return rv;
@@ -1682,7 +1682,7 @@ nsAbSync::ProcessOpReturn()
 {
   char  *workLine = nsnull;
 
-  while (workLine = ExtractCurrentLine())
+  while ((workLine = ExtractCurrentLine()) != nsnull)
   {
     if (!*workLine)   // end of this section
       break;
@@ -1926,7 +1926,7 @@ nsAbSync::ProcessDeletedRecords()
   if (!mDeletedRecordValues)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  while (workLine = ExtractCurrentLine())
+  while ((workLine = ExtractCurrentLine()) != nsnull)
   {
     if (!*workLine)   // end of this section
       break;
@@ -1938,7 +1938,7 @@ nsAbSync::ProcessDeletedRecords()
   // Now, see what the next line is...if its a CRLF, then we
   // really don't have anything to do here and we can just return
   //
-  while (workLine = ExtractCurrentLine())
+  while ((workLine = ExtractCurrentLine()) != nsnull)
   {
     if (!*workLine)
      break;
@@ -2287,7 +2287,7 @@ nsAbSync::ProcessNewRecords()
   if (!mNewRecordValues)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  while (workLine = ExtractCurrentLine())
+  while ((workLine = ExtractCurrentLine()) != nsnull)
   {
     if (!*workLine)   // end of this section
       break;
@@ -2299,7 +2299,7 @@ nsAbSync::ProcessNewRecords()
   // Now, see what the next line is...if its a CRLF, then we
   // really don't have anything to do here and we can just return
   //
-  while (workLine = ExtractCurrentLine())
+  while ((workLine = ExtractCurrentLine()) != nsnull)
   {
     if (!*workLine)
      break;
