@@ -8572,10 +8572,6 @@ cat >> confdefs.h <<\EOF
 #define LAYERS 1
 EOF
 
-cat >> confdefs.h <<\EOF
-#define NETSCAPE 1
-EOF
-
 
 if test "$MOZ_EDITOR"; then
   cat >> confdefs.h <<\EOF
