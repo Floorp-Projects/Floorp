@@ -24,4 +24,7 @@ interface XULTreeElement : XULElement {
 
   void selectAll();
   void invertSelection();
+
+  void ensureElementIsVisible(in XULElement element);
+  long getRowIndexOf(in XULElement element);
 };
