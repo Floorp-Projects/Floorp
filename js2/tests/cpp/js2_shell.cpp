@@ -468,6 +468,7 @@ static float64 testObjects(World &world, int32 n)
     return result.f64;
 }
 
+
 static float64 testProto(World &world, int32 n)
 {
     JSScope glob;
@@ -557,26 +558,24 @@ static float64 testProto(World &world, int32 n)
     return result.f64;
 }
 
+
 } /* namespace Shell */
 } /* namespace JavaScript */
 
 
 int main(int argc, char **argv)
 {
-#if defined(XP_MAC) && !defined(XP_MAC_MPW)
+  #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
-#endif
-
-#if 1
+  #endif
     using namespace JavaScript;
     using namespace Shell;
-    
+
     assert(testFactorial(world, 5) == 120);
     assert(testObjects(world, 5) == 5);
     assert(testProto(world, 5) == 5);
-//    JavaScript::Shell::testICG(world);
-     assert(testFunctionCall(world, 5) == 5);
-#endif
+	//JavaScript::Shell::testICG(world);
+    assert(testFunctionCall(world, 5) == 5);
     readEvalPrint(stdin, world);
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);

@@ -1546,94 +1546,50 @@ const char16 *JS::skipWhiteSpace(const char16 *str, const char16 *strEnd)
 
 
 //
-// Arenas
+// Zones
 //
 
-// #define DEBUG_ARENA to allocate each object in its own malloc block.
+// #define DEBUG_ZONE to allocate each object in its own malloc block.
 // This allows tools such as Purify to do bounds checking on all blocks.
 
-struct JS::Arena::DestructorEntry: JS::ArenaObject {
-	DestructorEntry *next;		// Next destructor registration in linked list
-	void (*destructor)(void *);	// Destructor function
-	void *object;				// Object on which to call the destructor
-	
-	DestructorEntry(void (*destructor)(void *), void *object): destructor(destructor), object(object) {}
-};
 
-
-// Construct an Arena that allocates memory in chunks of the given size.
-JS::Arena::Arena(size_t blockSize): freeBegin(0), freeEnd(0), blockSize(blockSize), destructorEntries(0)
+// Construct a Zone that allocates memory in chunks of the given size.
+JS::Zone::Zone(size_t blockSize): headers(0), freeBegin(0), freeEnd(0), blockSize(blockSize)
 {
 	ASSERT(blockSize && !(blockSize & basicAlignment-1));
-	rootDirectory.next = 0;
-	currentDirectory = &rootDirectory;
 }
 
 
-// Deallocate the Directory's blocks but do not follow the next link.
-void JS::Arena::Directory::clear()
+// Deallocate the Zone's blocks.
+void JS::Zone::clear()
 {
-	void **b = blocks + nBlocks;
-	while (b != blocks)
-		STD::free(*--b);
+	Header *h = headers;
+	while (h) {
+		Header *next = h->next;
+		STD::free(h);
+		h = next;
+	}
+	headers = 0;
 }
 
 
-// Call the Arena's registered destructors and then deallocate the Arena's blocks and
-// directories.
-void JS::Arena::clear()
+// Allocate a fully aligned block of the given size.
+// Throw bad_alloc if out of memory, without corrupting any of the Zone data structures.
+void *JS::Zone::newBlock(size_t size)
 {
-	DestructorEntry *e = destructorEntries;
-	while (e) {
-		e->destructor(e->object);
-		e = e->next;
-	}
-	destructorEntries = 0;
-
-	Directory *d = rootDirectory.next;
-	while (d) {
-		Directory *next = d->next;
-		d->clear();
-		delete d;
-		d = next;
-	}
-	rootDirectory.clear();
-	rootDirectory.next = 0;
-	currentDirectory = &rootDirectory;
-}
-
-
-// Allocate an internal block of the given size and link it into a Directory.
-// Throw bad_alloc if out of memory, without corrupting any of the Arena data structures.
-void *JS::Arena::newBlock(size_t size)
-{
-	Directory *d = currentDirectory;
-	uint nBlocks = d->nBlocks;
-
-	// Allocate a new Directory if the current one is full.  Link it just past the
-	// rootDirectory so that the links are in reverse order.  This allows clear() to
-	// deallocate memory in the reverse order from that in which it was allocated.
-	if (nBlocks == Directory::maxNBlocks) {
-		d = new Directory;
-		d->next = rootDirectory.next;
-		rootDirectory.next = d;
-		currentDirectory = d;
-		nBlocks = 0;
-	}
-	
-	void *p = STD::malloc(size);
-	d->blocks[nBlocks] = p;
-	d->nBlocks = nBlocks + 1;
-	return p;
+	Header *h = static_cast<Header *>(STD::malloc(sizeof(Header) + size));
+	h->next = headers;
+	headers = h;
+	return h+1;
 }
 
 
 // Allocate a naturally-aligned object of the given size (in bytes).  Throw
-// bad_alloc if out of memory, without corrupting any of the Arena data structures.
-void *JS::Arena::allocate(size_t size)
+// bad_alloc if out of memory, without corrupting any of the Zone data structures.
+void *JS::Zone::allocate(size_t size)
 {
 	ASSERT(size);	// Can't allocate zero-size blocks.
-#ifdef DEBUG_ARENA
+  #ifdef DEBUG_ZONE
 	return newBlock(size);
 #else
 	size = size + (basicAlignment-1) & -basicAlignment;	// Round up to natural alignment if necessary
@@ -1651,6 +1607,57 @@ void *JS::Arena::allocate(size_t size)
 	freeBegin = p + size;
 	return p;
 #endif
+}
+
+
+// Same as allocate but does not align size up to basicAlignment.  Thus, the next
+// object allocated in the zone will immediately follow this one if it falls in the same zone block.
+// Use this when all objects in the zone have the same size.
+void *JS::Zone::allocateUnaligned(size_t size)
+{
+	ASSERT(size);	// Can't allocate zero-size blocks.
+  #ifdef DEBUG_ZONE
+	return newBlock(size);
+  #else
+	char *p = freeBegin;
+	size_t freeBytes = static_cast<size_t>(freeEnd - p);
+
+	if (size > freeBytes) {
+		// If freeBytes is at least a quarter of blockSize, allocate a separate block.
+		if (freeBytes<<2 >= blockSize || size >= blockSize)
+			return newBlock(size);
+		
+		p = static_cast<char *>(newBlock(blockSize));
+		freeEnd = p + blockSize;
+	}
+	freeBegin = p + size;
+	return p;
+  #endif
+}
+
+
+//
+// Arenas
+//
+
+struct JS::Arena::DestructorEntry: JS::ArenaObject {
+	DestructorEntry *next;		// Next destructor registration in linked list
+	void (*destructor)(void *);	// Destructor function
+	void *object;				// Object on which to call the destructor
+	
+	DestructorEntry(void (*destructor)(void *), void *object): destructor(destructor), object(object) {}
+};
+
+
+// Call the Arena's registered destructors.
+void JS::Arena::runDestructors()
+{
+	DestructorEntry *e = destructorEntries;
+	while (e) {
+		e->destructor(e->object);
+		e = e->next;
+	}
+	destructorEntries = 0;
 }
 
 
@@ -1686,6 +1693,51 @@ JS::String &JS::newArenaString(Arena &arena, const String &str)
 	String *s = new(arena) String(str);
 	arena.registerDestructor(s);
 	return *s;
+}
+
+
+//
+// Input
+//
+
+
+// Read a line from the input file, including the trailing line break character.
+// Return the total number of characters read, which is str's length.
+// Translate <CR> and <CR><LF> sequences to <LF> characters; a <CR><LF> sequence
+// only counts as one character.
+size_t JS::LineReader::readLine(string &str)
+{
+	int ch;
+	bool oldCRWasLast = crWasLast;
+	crWasLast = false;
+
+	str.resize(0);
+	while ((ch = getc(in)) != EOF) {
+		if (ch == '\n') {
+			if (!str.size() && oldCRWasLast)
+				continue;
+			str += '\n';
+			break;
+		}
+		if (ch == '\r') {
+			crWasLast = true;
+			str += '\n';
+			break;
+		}
+		str += static_cast<char>(ch);
+	}
+	
+	return str.size();
+}
+
+
+size_t JS::LineReader::readLine(String &wstr)
+{
+    string str;
+    size_t n = readLine(str);
+    wstr.resize(n);
+	std::transform(str.begin(), str.end(), wstr.begin(), widen);
+	return n;
 }
 
 
@@ -1757,6 +1809,51 @@ int std::fprintf(FILE* file, const char *format, ...)
 
 
 
+// Write ch.
+void JS::Formatter::printChar8(char ch)
+{
+	printStr8(&ch, &ch + 1);
+}
+
+
+// Write ch.
+void JS::Formatter::printChar16(char16 ch)
+{
+	printStr16(&ch, &ch + 1);
+}
+
+
+// Write the null-terminated string str.
+void JS::Formatter::printZStr8(const char *str)
+{
+	printStr8(str, str + strlen(str));
+}
+
+
+// Write the String s.
+void JS::Formatter::printString16(const String &s)
+{
+	const char16 *begin = s.data();
+	printStr16(begin, begin + s.size());
+}
+
+
+// Write the printf format using the supplied args.
+void JS::Formatter::printVFormat8(const char *format, va_list args)
+{
+	Buffer<char, 1024> b;
+
+	while (true) {
+		int n = vsnprintf(b.buffer, b.size, format, args);
+		if (n >= 0 && n < b.size) {
+			printStr8(b.buffer, b.buffer + n);
+			return;
+		}
+		b.expand(b.size*2);
+	}
+}
+
+
 static const int printCharBufferSize = 64;
 
 // Print ch count times.
@@ -1769,7 +1866,7 @@ void JS::printChar(Formatter &f, char ch, int count)
 		if (c > printCharBufferSize)
 			c = printCharBufferSize;
 		count -= c;
-		STD::memset(str, ch, static_cast<size_t>(count));
+		STD::memset(str, ch, static_cast<size_t>(c));
 		printString(f, str, str+c);
 	}
 }
@@ -1933,76 +2030,449 @@ void JS::AsciiFileFormatter::printStr16(const char16 *strBegin, const char16 *st
 		printChars(file, buffer, q);
 }
 
-
-// Write the String s, escaping non-ASCII characters.
-void JS::AsciiFileFormatter::printString16(const String &s)
-{
-	const char16 *begin = s.data();
-	printStr16(begin, begin + s.size());
-}
-
-
-// Write the printf format using the supplied args, escaping non-ASCII characters.
-void JS::AsciiFileFormatter::printVFormat8(const char *format, va_list args)
-{
-	Buffer<char, 1024> b;
-
-	while (true) {
-		int n = vsnprintf(b.buffer, b.size, format, args);
-		if (n >= 0 && n < (int)b.size) {
-			printStr8(b.buffer, b.buffer + n);
-			return;
-		}
-		b.expand(b.size*2);
-	}
-}
-
 JS::AsciiFileFormatter JS::stdOut(stdout);
 JS::AsciiFileFormatter JS::stdErr(stderr);
 
 
-//
-// Input
-//
-
-
-// Read a line from the input file, including the trailing line break character.
-// Return the total number of characters read, which is str's length.
-// Translate <CR> and <CR><LF> sequences to <LF> characters; a <CR><LF> sequence
-// only counts as one character.
-size_t JS::LineReader::readLine(string& str)
+// Write ch.
+void JS::StringFormatter::printChar8(char ch)
 {
-	int ch;
-	bool oldCRWasLast = crWasLast;
-	crWasLast = false;
+	s += ch;
+}
 
-	str.resize(0);
-	while ((ch = getc(in)) != EOF) {
-		if (ch == '\n') {
-			if (!str.size() && oldCRWasLast)
-				continue;
-			str += '\n';
-			break;
-		}
-		if (ch == '\r') {
-			crWasLast = true;
-			str += '\n';
-			break;
-		}
-		str += static_cast<char>(ch);
+
+// Write ch.
+void JS::StringFormatter::printChar16(char16 ch)
+{
+	s += ch;
+}
+
+
+// Write the null-terminated string str.
+void JS::StringFormatter::printZStr8(const char *str)
+{
+	s += str;
+}
+
+
+// Write the string between strBegin and strEnd.
+void JS::StringFormatter::printStr8(const char *strBegin, const char *strEnd)
+{
+	appendChars(s, strBegin, strEnd);
+}
+
+
+// Write the string between strBegin and strEnd.
+void JS::StringFormatter::printStr16(const char16 *strBegin, const char16 *strEnd)
+{
+	s.append(strBegin, strEnd);
+}
+
+
+// Write the String str.
+void JS::StringFormatter::printString16(const String &str)
+{
+	s += str;
+}
+
+
+//
+// Formatted Output
+//
+
+// See "Prettyprinting" by Derek Oppen in ACM Transactions on Programming Languages and Systems 2:4,
+// October 1980, pages 477-482 for the algorithm.
+
+
+// The default line width for pretty printing
+uint32 JS::PrettyPrinter::defaultLineWidth = 20;
+
+
+// Create a PrettyPrinter that outputs to Formatter f.  The PrettyPrinter breaks lines at
+// optional breaks so as to try not to exceed lines of width lineWidth, although it may not
+// always be able to do so.  Formatter f should be at the beginning of a line.
+// Call end before destroying the Formatter; otherwise the last line may not be output to f.
+JS::PrettyPrinter::PrettyPrinter(Formatter &f, uint32 lineWidth):
+	lineWidth(min(lineWidth, unlimitedLineWidth)),
+	outputFormatter(f),
+	outputPos(0),
+	lineNum(0),
+	lastBreak(0),
+	margin(0),
+	nNestedBlocks(0),
+	leftSerialPos(0),
+	rightSerialPos(0),
+	itemPool(20)
+{
+  #ifdef DEBUG
+	topRegion = 0;
+  #endif
+}
+
+
+// Destroy the PrettyPrinter.  Because it's a very bad idea for a destructor to throw
+// exceptions, this destructor does not flush any buffered output.  Call end just before
+// destroying the PrettyPrinter to do that.
+JS::PrettyPrinter::~PrettyPrinter()
+{
+	ASSERT(!topRegion && !nNestedBlocks);
+}
+
+
+// Output either a line break (if sameLine is false) or length spaces (if sameLine is true).
+// Also advance leftSerialPos by length.
+//
+// If this method throws an exception, it is guaranteed to already have updated all of the
+// PrettyPrinter state; all that might be missing would be some output to outputFormatter.
+void JS::PrettyPrinter::outputBreak(bool sameLine, uint32 length)
+{
+	leftSerialPos += length;
+
+	if (sameLine) {
+		outputPos += length;
+		// Exceptions may be thrown below.
+		printChar(outputFormatter, ' ', static_cast<int>(length));
+	} else {
+		lastBreak = ++lineNum;
+		outputPos = margin;
+		// Exceptions may be thrown below.
+		outputFormatter << '\n';
+		printChar(outputFormatter, ' ', static_cast<int>(margin));
 	}
-	
-	return str.size();
 }
 
-size_t JS::LineReader::readLine(String& wstr)
+
+// Check to see whether (rightSerialPos+rightOffset)-leftSerialPos has gotten so large that we may pop items
+// off the left end of activeItems because their totalLengths are known to be larger than the
+// amount of space left on the current line.
+// Return true if there are any items left on activeItems.
+//
+// If this method throws an exception, it leaves the PrettyPrinter in a consistent state, having
+// atomically popped off one or more items from the left end of activeItems.
+bool JS::PrettyPrinter::reduceLeftActiveItems(uint32 rightOffset)
 {
-    string str;
-    size_t n = readLine(str);
-    wstr.resize(n);
-	std::transform(str.begin(), str.end(), wstr.begin(), widen);
-	return n;
+	uint32 newRightSerialPos = rightSerialPos + rightOffset;
+	while (activeItems) {
+		Item *leftItem = &activeItems.front();
+		if (itemStack && leftItem == itemStack.front()) {
+			if (outputPos + newRightSerialPos - leftSerialPos > lineWidth) {
+				itemStack.pop_front();
+				leftItem->lengthKnown = true;
+				leftItem->totalLength = infiniteLength;
+			} else if (leftItem->lengthKnown)
+				itemStack.pop_front();
+		}
+
+		if (!leftItem->lengthKnown)
+			return true;
+
+		activeItems.pop_front();
+		try {
+			uint32 length = leftItem->length;
+			switch (leftItem->kind) {
+			  case Item::text:
+				{
+					outputPos += length;
+					leftSerialPos += length;
+					// Exceptions may be thrown below.
+					char16 *textBegin;
+					char16 *textEnd;
+					do {
+						length -= itemText.pop_front(length, textBegin, textEnd);
+						printString(outputFormatter, textBegin, textEnd);
+					} while (length);
+				}
+				break;
+			
+			  case Item::blockBegin:
+			  case Item::indentBlockBegin:
+				{
+					BlockInfo *b = savedBlocks.advance_back();
+					b->margin = margin;
+					b->lastBreak = lastBreak;
+					b->fits = outputPos + leftItem->totalLength <= lineWidth;
+					if (leftItem->hasKind(Item::blockBegin))
+						margin = outputPos;
+					else
+						margin += length;
+				}
+				break;
+			
+			  case Item::blockEnd:
+				{
+					BlockInfo &b = savedBlocks.pop_back();
+					margin = b.margin;
+					lastBreak = b.lastBreak;
+				}
+				break;
+			
+			  case Item::indent:
+				margin += length;
+				ASSERT(static_cast<int32>(margin) >= 0);
+				break;
+			
+			  case Item::linearBreak:
+				// Exceptions may be thrown below, but only after updating the PrettyPrinter.
+				outputBreak(lastBreak == lineNum && outputPos + leftItem->totalLength <= lineWidth, length);
+				break;
+			
+			  case Item::fillBreak:
+				// Exceptions may be thrown below, but only after updating the PrettyPrinter.
+				outputBreak(savedBlocks.back().fits, length);
+				break;
+			}
+		} catch (...) {
+			itemPool.destroy(leftItem);
+			throw;
+		}
+		itemPool.destroy(leftItem);
+	}
+	return false;
 }
+
+
+// A break or end of input is about to be processed.  Check whether there are any complete
+// blocks or clumps on the itemStack whose lengths we can now compute; if so, compute these
+// and pop them off the itemStack.
+// The current rightSerialPos must be the beginning of the break or end of input.
+//
+// This method can't throw exceptions.
+void JS::PrettyPrinter::reduceRightActiveItems()
+{
+	uint32 nUnmatchedBlockEnds = 0;
+	while (itemStack) {
+		Item *rightItem = itemStack.pop_back();
+		switch (rightItem->kind) {
+		  case Item::blockBegin:
+		  case Item::indentBlockBegin:
+			if (!nUnmatchedBlockEnds) {
+				itemStack.fast_push_back(rightItem);
+				return;
+			}
+			rightItem->computeTotalLength(rightSerialPos);
+			--nUnmatchedBlockEnds;
+			break;
+
+		  case Item::blockEnd:
+			++nUnmatchedBlockEnds;
+			break;
+
+		  case Item::linearBreak:
+		  case Item::fillBreak:
+			rightItem->computeTotalLength(rightSerialPos);
+			if (!nUnmatchedBlockEnds)
+				return;	// There can be at most one consecutive break posted on the itemStack.
+			break;
+
+		  default:
+			ASSERT(false);	// Other kinds can't be pushed onto the itemStack.
+		}
+	}
+}
+
+
+// Indent the beginning of every new line after this one by offset until the corresponding endIndent
+// call.  Return an Item to pass to endIndent that will end this indentation.
+// This method may throw an exception, in which case the PrettyPrinter is left unchanged.
+JS::PrettyPrinter::Item &JS::PrettyPrinter::beginIndent(int32 offset)
+{
+	Item *unindent = new(itemPool) Item(Item::indent, static_cast<uint32>(-offset));
+	if (activeItems) {
+		try {
+			activeItems.push_back(*new(itemPool) Item(Item::indent, static_cast<uint32>(offset)));
+		} catch (...) {
+			itemPool.destroy(unindent);
+			throw;
+		}
+	} else {
+		margin += offset;
+		ASSERT(static_cast<int32>(margin) >= 0);
+	}
+	return *unindent;
+}
+
+
+// End an indent began by beginIndent.  i should be the result of a beginIndent.
+// This method can't throw exceptions (it's called by the Indent destructor).
+void JS::PrettyPrinter::endIndent(Item &i)
+{
+	if (activeItems)
+		activeItems.push_back(i);
+	else {
+		margin += i.length;
+		ASSERT(static_cast<int32>(margin) >= 0);
+		itemPool.destroy(&i);
+	}
+}
+
+
+// Begin a logical block.  If kind is Item::indentBlockBegin, offset is the indent to use for
+// the second and subsequent lines of this block.
+// Return an Item to pass to endBlock that will end this block.
+// This method may throw an exception, in which case the PrettyPrinter is left unchanged.
+JS::PrettyPrinter::Item &JS::PrettyPrinter::beginBlock(Item::Kind kind, int32 offset)
+{
+	uint32 newNNestedBlocks = nNestedBlocks + 1;
+	savedBlocks.reserve(newNNestedBlocks);
+	itemStack.reserve_back(1 + newNNestedBlocks);
+	Item *endItem = new(itemPool) Item(Item::blockEnd);
+	Item *beginItem;
+	try {
+		beginItem = new(itemPool) Item(kind, static_cast<uint32>(offset), rightSerialPos);
+	} catch (...) {
+		itemPool.destroy(endItem);
+		throw;
+	}
+	// No state modifications before this point.
+	// No exceptions after this point.
+	activeItems.push_back(*beginItem);
+	itemStack.fast_push_back(beginItem);
+	nNestedBlocks = newNNestedBlocks;
+	return *endItem;
+}
+
+
+// End a logical block began by beginBlock.  i should be the result of a beginBlock.
+// This method can't throw exceptions (it's called by the Block destructor).
+void JS::PrettyPrinter::endBlock(Item &i)
+{
+	activeItems.push_back(i);
+	itemStack.fast_push_back(&i);
+	--nNestedBlocks;
+}
+
+
+// Write a conditional line break.  This kind of a line break can only be emitted inside a block.
+//
+// A linear line break starts a new line if the containing block cannot be put all one one line;
+// otherwise the line break is replaced by nSpaces spaces.
+// Typically a block contains several linear breaks; either they all start new lines or none of them do.
+// Moreover, if a block directly contains a required break then linear breaks become required breaks.
+//
+// A fill line break starts a new line if either the preceding clump or the following clump cannot
+// be placed entirely on one line or if the following clump would not fit on the current line.  A
+// clump is a consecutive sequence of strings and nested blocks delimited by either a break or the
+// beginning or end of the currently enclosing block.
+//
+// If this method throws an exception, it leaves the PrettyPrinter in a consistent state.
+void JS::PrettyPrinter::conditionalBreak(uint32 nSpaces, Item::Kind kind)
+{
+	ASSERT(nSpaces <= unlimitedLineWidth && nNestedBlocks);
+	reduceRightActiveItems();
+	itemStack.reserve_back(1 + nNestedBlocks);
+	// Begin of exception-atomic stack update.  Only new(itemPool) can throw an exception here,
+	// in which case nothing is updated.
+	Item *i = new(itemPool) Item(kind, nSpaces, rightSerialPos);
+	activeItems.push_back(*i);
+	itemStack.fast_push_back(i);
+	rightSerialPos += nSpaces;
+	// End of exception-atomic stack update.
+	reduceLeftActiveItems(0);
+}
+
+
+// Write the string between strBegin and strEnd.  Any embedded newlines ('\n' only)
+// become required line breaks.
+//
+// If this method throws an exception, it may have partially formatted the string but
+// leaves the PrettyPrinter in a consistent state.
+void JS::PrettyPrinter::printStr8(const char *strBegin, const char *strEnd)
+{
+	while (strBegin != strEnd) {
+		const char *sectionEnd = findValue(strBegin, strEnd, '\n');
+		uint32 sectionLength = static_cast<uint32>(sectionEnd - strBegin);
+		if (sectionLength) {
+			if (reduceLeftActiveItems(sectionLength)) {
+				itemText.reserve_back(sectionLength);
+				Item &backItem = activeItems.back();
+				// Begin of exception-atomic update.  Only new(itemPool)
+				// can throw an exception here, in which case nothing is updated.
+				if (backItem.hasKind(Item::text))
+					backItem.length += sectionLength;
+				else
+					activeItems.push_back(*new(itemPool) Item(Item::text, sectionLength));
+				rightSerialPos += sectionLength;
+				itemText.fast_append(reinterpret_cast<const uchar *>(strBegin), reinterpret_cast<const uchar *>(sectionEnd));
+				// End of exception-atomic update.
+			} else {
+				ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
+				outputPos += sectionLength;
+				printString(outputFormatter, strBegin, sectionEnd);
+			}
+			strBegin = sectionEnd;
+			if (strBegin == strEnd)
+				break;
+		}
+		requiredBreak();
+		++strBegin;
+	}
+}
+
+
+// Write the string between strBegin and strEnd.  Any embedded newlines ('\n' only)
+// become required line breaks.
+//
+// If this method throws an exception, it may have partially formatted the string but
+// leaves the PrettyPrinter in a consistent state.
+void JS::PrettyPrinter::printStr16(const char16 *strBegin, const char16 *strEnd)
+{
+	while (strBegin != strEnd) {
+		const char16 *sectionEnd = findValue(strBegin, strEnd, uni::lf);
+		uint32 sectionLength = static_cast<uint32>(sectionEnd - strBegin);
+		if (sectionLength) {
+			if (reduceLeftActiveItems(sectionLength)) {
+				itemText.reserve_back(sectionLength);
+				Item &backItem = activeItems.back();
+				// Begin of exception-atomic update.  Only new(itemPool)
+				// can throw an exception here, in which case nothing is updated.
+				if (backItem.hasKind(Item::text))
+					backItem.length += sectionLength;
+				else
+					activeItems.push_back(*new(itemPool) Item(Item::text, sectionLength));
+				rightSerialPos += sectionLength;
+				itemText.fast_append(strBegin, sectionEnd);
+				// End of exception-atomic update.
+			} else {
+				ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
+				outputPos += sectionLength;
+				printString(outputFormatter, strBegin, sectionEnd);
+			}
+			strBegin = sectionEnd;
+			if (strBegin == strEnd)
+				break;
+		}
+		requiredBreak();
+		++strBegin;
+	}
+}
+
+
+// Write a required line break.
+//
+// If this method throws an exception, it may have emitted partial output but
+// leaves the PrettyPrinter in a consistent state.
+void JS::PrettyPrinter::requiredBreak()
+{
+	reduceRightActiveItems();
+	reduceLeftActiveItems(infiniteLength);
+	ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
+	outputBreak(false, 0);
+}
+
+
+// Flush any saved output in the PrettyPrinter to the output.  Call this just before
+// destroying the PrettyPrinter.  All Indent and Block objects must have been exited already.
+//
+// If this method throws an exception, it may have emitted partial output but
+// leaves the PrettyPrinter in a consistent state.
+void JS::PrettyPrinter::end()
+{
+	ASSERT(!topRegion);
+	reduceRightActiveItems();
+	reduceLeftActiveItems(infiniteLength);
+	ASSERT(!savedBlocks && !itemStack && !activeItems && !itemText && rightSerialPos == leftSerialPos && !margin);
+}
+
 
 //
 // Exceptions
