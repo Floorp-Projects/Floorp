@@ -653,19 +653,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  if (0 == kidSize.width) {
-    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
-//    const nsStylePosition* pos;
-//    GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
-//      if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
-//          (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
-//      kidSize.width = minCellWidth;
-//      if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->width))
-//        pMaxElementSize->width = kidSize.width;
-//      }
-    }
-    else  // empty content has to be forced to the assigned width for resize or incremental reflow
-      kidSize.width = kidReflowState.availableWidth;
+  if ((0 == kidSize.width) && (NS_UNCONSTRAINEDSIZE != kidReflowState.availableWidth)) {
+    // empty content has to be forced to the assigned width for resize or incremental reflow
+    kidSize.width = kidReflowState.availableWidth;
   }
   if (0 == kidSize.height) {
     const nsStylePosition* pos;
@@ -693,33 +683,37 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   // Return our size and our result
 
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
-  nscoord cellHeight = kidSize.height + topInset + bottomInset;
+  nscoord cellHeight = kidSize.height;
+  if (NS_UNCONSTRAINEDSIZE != cellHeight) {
+    cellHeight += topInset + bottomInset;
+  }
 
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
 
-  // add the insets into the cell width (in both the constrained-width and unconstrained-width cases
-  cellWidth += leftInset + rightInset;    // factor in border and padding
+  // factor in border and padding
+  if (NS_UNCONSTRAINEDSIZE != cellWidth) {
+    cellWidth += leftInset + rightInset;    
+  }
 
   // set the cell's desired size and max element size
-  aDesiredSize.width = cellWidth;
-  aDesiredSize.height = cellHeight;
-  aDesiredSize.ascent = topInset;
+  aDesiredSize.width   = cellWidth;
+  aDesiredSize.height  = cellHeight;
+  aDesiredSize.ascent  = topInset;
   aDesiredSize.descent = bottomInset;
-  if (nsnull!=aDesiredSize.maxElementSize)
-  {
+  if (nsnull!=aDesiredSize.maxElementSize) {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    if (0!=pMaxElementSize->height)
+    if (0!=pMaxElementSize->height) {
       aDesiredSize.maxElementSize->height += topInset + bottomInset;
-    //if (0!=pMaxElementSize->width)
+    }
     aDesiredSize.maxElementSize->width = PR_MAX(smallestMinWidth, aDesiredSize.maxElementSize->width); 
     aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
 
-  aDesiredSize.ascent=aDesiredSize.height;
-  aDesiredSize.descent=0;
+  aDesiredSize.ascent  = aDesiredSize.height;
+  aDesiredSize.descent = 0;
 
   if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
 
