@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
@@ -24,7 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsFilePicker.h"
-#include "nsLocalFile.h"
+#include "nsILocalFile.h"
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
+NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
                                           const PRUnichar **aTitles,
                                           const PRUnichar **filters)
 {
