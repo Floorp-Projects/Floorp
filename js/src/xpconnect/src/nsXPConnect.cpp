@@ -270,6 +270,36 @@ nsXPConnect::nsXPConnect()
     nsServiceManager::GetService("nsThreadJSContextStack",
                                  NS_GET_IID(nsIJSContextStack),
                                  (nsISupports **)&mContextStack);
+
+#ifdef XPC_TOOLS_SUPPORT
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
+    if(prefs)
+    {
+        char* filename;
+        if(NS_SUCCEEDED(prefs->CopyCharPref("xpctools.profiler.outputfilename",
+                                            &filename)) && filename)
+        {
+            mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+            if(mProfilerOutputFile && 
+               NS_SUCCEEDED(mProfilerOutputFile->InitWithPath(filename)))
+            {
+                mProfiler = do_GetService(XPCTOOLS_PROFILER_PROGID);
+                if(mProfiler)
+                {
+                    if(NS_SUCCEEDED(mProfiler->Start()))
+                    {
+#ifdef DEBUG
+                        printf("***** profiling JavaScript. Output to: %s\n",
+                               filename);
+#endif
+                    }
+                }
+            }
+            nsCRT::free(filename);
+        }
+    }
+#endif
+
 }
 
 nsXPConnect::~nsXPConnect()
@@ -317,14 +347,51 @@ nsXPConnect::GetXPConnect()
     return gSelf;
 }
 
+// In order to enable this jsgc heap dumping you need to compile
+// _both_ js/src/jsgc.c and this file with 'GC_MARK_DEBUG' #defined.
+// Normally this is done by adding -DGC_MARK_DEBUG to the appropriate
+// defines lists in the makefiles.
+
+#ifdef GC_MARK_DEBUG                                
+extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+#endif
+
 void
 nsXPConnect::ReleaseXPConnectSingleton()
 {
     nsXPConnect* xpc = gSelf;
     if (xpc) {
+
+#ifdef XPC_TOOLS_SUPPORT
+        if(xpc->mProfiler)
+        {
+            xpc->mProfiler->Stop();
+            xpc->mProfiler->WriteResults(xpc->mProfilerOutputFile);
+        }
+#endif
+
+#ifdef GC_MARK_DEBUG
+        // force a dump of the JavaScript gc heap if JS is still alive
+        if(GetRuntime() && GetRuntime()->GetJSRuntime())
+        {
+            AutoPushCompatibleJSContext a(GetRuntime()->GetJSRuntime());
+            if(a.GetJSContext())
+            {
+                FILE* oldFileHandle = js_DumpGCHeap;
+                js_DumpGCHeap = stdout;
+                js_ForceGC(a.GetJSContext());
+                js_DumpGCHeap = oldFileHandle;
+            }
+        }
+#endif
+#ifdef XPC_DUMP_AT_SHUTDOWN
+        // NOTE: to see really interesting stuff turn on the prlog stuff.
+        // See the comment at the top of xpclog.h to see how to do that.
+        xpc->DebugDump(4);
+#endif
         nsrefcnt cnt;
         NS_RELEASE2(xpc, cnt);
-#if defined(DEBUG_jband)
+#ifdef XPC_DUMP_AT_SHUTDOWN
         if (0 != cnt) {
             printf("*** dangling reference to nsXPConnect: refcnt=%d\n", cnt);
         }
@@ -426,7 +493,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
     nsCOMPtr<nsIInterfaceInfo> oldest = info;
     nsCOMPtr<nsIInterfaceInfo> parent;
 
-    while(NS_SUCCEEDED(oldest->GetParent(getter_AddRefs(parent))))
+    while(NS_SUCCEEDED(oldest->GetParent(getter_AddRefs(parent))) && parent)
     {
         oldest = parent;
     }

@@ -53,7 +53,7 @@ const char* XPCJSRuntime::mStrings[] = {
 
 XPCJSRuntime::~XPCJSRuntime()
 {
-#ifdef DEBUG_jband
+#ifdef XPC_DUMP_AT_SHUTDOWN
     {
     // count the total JSContexts in use
     JSContext* iter = nsnull;
@@ -75,7 +75,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if(mWrappedJSMap)
     {
-#ifdef DEBUG_jband
+#ifdef XPC_DUMP_AT_SHUTDOWN
         uint32 count = mWrappedJSMap->Count();
         if(count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObjects\n", (int)count);        
@@ -85,7 +85,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if(mWrappedJSClassMap)
     {
-#ifdef DEBUG_jband
+#ifdef XPC_DUMP_AT_SHUTDOWN
         uint32 count = mWrappedJSClassMap->Count();
         if(count)
             printf("deleting XPCJSRuntime with %d live xpcwrappedjsclasses\n", (int)count);        
@@ -95,7 +95,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if(mWrappedNativeClassMap)
     {
-#ifdef DEBUG_jband
+#ifdef XPC_DUMP_AT_SHUTDOWN
         uint32 count = mWrappedNativeClassMap->Count();
         if(count)
             printf("deleting XPCJSRuntime with %d live xpcwrappednativeclasses\n", (int)count);        
@@ -132,7 +132,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
 #ifdef DEBUG
     if(mJSRuntime)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
-#endif     
+#endif
 } 
 
 // static

@@ -81,8 +81,17 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 
+#ifdef XPC_TOOLS_SUPPORT
+#include "nsIXPCToolsProfiler.h"
+#include "nsIPref.h"
+#endif
+
 #ifdef DEBUG
 #define XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS 1
+#endif
+
+#ifdef DEBUG_jband
+#define XPC_DUMP_AT_SHUTDOWN 1
 #endif
 
 /***************************************************************************/
@@ -161,6 +170,10 @@ private:
     nsIJSContextStack* mContextStack;
     nsIXPCSecurityManager* mDefaultSecurityManager;
     PRUint16 mDefaultSecurityManagerFlags;
+#ifdef XPC_TOOLS_SUPPORT
+    nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
+    nsCOMPtr<nsILocalFile> mProfilerOutputFile;
+#endif
 };
 
 /***************************************************************************/
