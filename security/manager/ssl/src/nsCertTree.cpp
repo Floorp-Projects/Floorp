@@ -105,17 +105,17 @@ nsCertOutliner::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
   return cmp1;
 }
 
-// CmpByOrg
+// CmpByIssuerOrg
 //
 // Compare two certificates by their O= field.  Returns -1, 0, 1 as
 // in strcmp.  No organization (null) is treated as <.
 PRInt32
-nsCertOutliner::CmpByOrg(nsIX509Cert *a, nsIX509Cert *b)
+nsCertOutliner::CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp1;
   nsXPIDLString aOrg, bOrg;
-  a->GetOrganization(getter_Copies(aOrg));
-  b->GetOrganization(getter_Copies(bOrg));
+  a->GetIssuerOrganization(getter_Copies(aOrg));
+  b->GetIssuerOrganization(getter_Copies(bOrg));
   if (aOrg != nsnull && bOrg != nsnull) {
     nsAutoString aStr(aOrg);
     cmp1 = aStr.CompareWithConversion(bOrg);
@@ -145,17 +145,17 @@ nsCertOutliner::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
   return cmp1;
 }
 
-// CmpByTok_Org_Name
+// CmpByTok_IssuerOrg_Name
 //
-// Compare two certificates by token name, organization, and common name,
-// in that order.  Used to sort cert list.
+// Compare two certificates by token name, issuer organization, 
+// and common name, in that order.  Used to sort cert list.
 PRInt32
-nsCertOutliner::CmpByTok_Org_Name(nsIX509Cert *a, nsIX509Cert *b)
+nsCertOutliner::CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp;
   cmp = CmpByToken(a, b);
   if (cmp != 0) return cmp;
-  cmp = CmpByOrg(a, b);
+  cmp = CmpByIssuerOrg(a, b);
   if (cmp != 0) return cmp;
   return CmpByName(a, b);
 }
@@ -180,7 +180,7 @@ nsCertOutliner::CountOrganizations()
     isupport = dont_AddRef(mCertArray->ElementAt(i));
     nextCert = do_QueryInterface(isupport);
     if (!(CmpByToken(orgCert, nextCert) == 0 &&
-          CmpByOrg(orgCert, nextCert) == 0)) {
+          CmpByIssuerOrg(orgCert, nextCert) == 0)) {
       orgCert = nextCert;
       orgCount++;
     }
@@ -263,7 +263,7 @@ nsCertOutliner::LoadCerts(const PRUint32 aType)
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
   if (certdb == nsnull) return NS_ERROR_FAILURE;
   rv = certdb->GetCertsByType(aType, 
-                              CmpByTok_Org_Name,
+                              CmpByTok_IssuerOrg_Name,
                               getter_AddRefs(mCertArray));
   if (NS_FAILED(rv)) return rv;
   PRUint32 count;
@@ -276,14 +276,14 @@ nsCertOutliner::LoadCerts(const PRUint32 aType)
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
   nsCOMPtr<nsIX509Cert> orgCert = do_QueryInterface(isupport);
   for (PRInt32 i=0; i<mNumOrgs; i++) {
-    orgCert->GetOrganization(&mOutlinerArray[i].orgName);
+    orgCert->GetIssuerOrganization(&mOutlinerArray[i].orgName);
     mOutlinerArray[i].open = PR_TRUE;
     mOutlinerArray[i].certIndex = j;
     mOutlinerArray[i].numChildren = 1;
     if (++j >= count) break;
     isupport = dont_AddRef(mCertArray->ElementAt(j));
     nsCOMPtr<nsIX509Cert> nextCert = do_QueryInterface(isupport);
-    while (CmpByOrg(orgCert, nextCert) == 0) {
+    while (CmpByIssuerOrg(orgCert, nextCert) == 0) {
       mOutlinerArray[i].numChildren++;
       if (++j >= count) break;
       isupport = dont_AddRef(mCertArray->ElementAt(j));

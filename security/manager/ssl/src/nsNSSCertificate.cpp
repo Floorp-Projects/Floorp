@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.23 2001/05/15 17:35:33 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.24 2001/05/15 19:12:44 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -594,6 +594,40 @@ nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
       *aOrganization = NS_LITERAL_STRING("<not set>").get(), 
     }*/
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetIssuerOrganization(PRUnichar **aOrganization)
+{
+  NS_ENSURE_ARG(aOrganization);
+  if (mIssuerOrg.Length() == 0) {
+    PRBool failed = PR_TRUE;
+    CERTCertificate *issuer;
+    issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
+    if (issuer) {
+      char *org = CERT_GetOrgName(&issuer->subject);
+      if (org) {
+        mIssuerOrg = NS_ConvertASCIItoUCS2(org);
+        failed = PR_FALSE;
+      }
+    }
+    if (failed) {
+      nsresult rv;
+      nsCOMPtr<nsINSSComponent> nssComponent(
+                     do_GetService(kNSSComponentCID, &rv));
+      if (NS_FAILED(rv)) return rv;
+      if (!issuer) {
+        rv = nssComponent->GetPIPNSSBundleString(
+                     NS_LITERAL_STRING("UnknownCertIssuer").get(), mIssuerOrg);
+      } else { /* !org */
+        rv = nssComponent->GetPIPNSSBundleString(
+                     NS_LITERAL_STRING("UnknownCertOrg").get(), mIssuerOrg);
+      }
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+  *aOrganization = mIssuerOrg.ToNewUnicode();
   return NS_OK;
 }
 
