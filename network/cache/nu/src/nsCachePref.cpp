@@ -40,7 +40,7 @@ nsCachePref::nsCachePref(void):
     //Read all the stuff from pref here. 
     //If this changes to nsPref, here is all that needs to be changed.
     //PRUint32 nTemp;
-	//PREF_GetIntPref("browser.cache.memory_cache_size",&nTemp);
+    //PREF_GetIntPref("browser.cache.memory_cache_size",&nTemp);
     //*1024
 }
 

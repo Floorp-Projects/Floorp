@@ -22,10 +22,10 @@ MODULE=cache
 
 EXPORTS=nsCacheObject.h nsMemModule.h nsCacheManager.h  \
     nsDiskModule.h nsCacheModule.h nsMemCacheObject.h   \
-    nsCachePref.h nsCacheBkgThd.h nsBkgThread.h  	\
-    CacheStubs.h nsCacheIterator.h nsIterator.h  	\
+    nsCachePref.h nsCacheBkgThd.h nsBkgThread.h         \
+    CacheStubs.h nsCacheIterator.h nsIterator.h         \
     nsMonitorable.h nsStream.h nsFileStream.h           \
-    nsMemStream.h nsEnumeration.h                       \
+    nsMemStream.h nsEnumeration.h         \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

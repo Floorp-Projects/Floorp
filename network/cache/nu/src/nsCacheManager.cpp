@@ -271,9 +271,10 @@ PRUint32
 NumberOfObjects(void)
 {
     PRUint32 objs = 0;
-    for (int i = TheManager.Entries()-1; i-- ; i>=0)
+    int i = TheManager.Entries();
+    while (i>0)
     {
-        objs += TheManager.GetModule(i)->Entries();
+        objs += TheManager.GetModule(--i)->Entries();
     }
     return objs;
 }

@@ -174,7 +174,7 @@ inline void nsCacheModule::NextModule(nsCacheModule* pNext)
     {
         /* ERROR */
         delete m_pNext; //Worst case. 
-
+        m_pNext = 0;
     }
     m_pNext = pNext;
 }
