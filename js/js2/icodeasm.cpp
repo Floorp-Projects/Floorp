@@ -160,22 +160,21 @@ namespace ICodeASM {
     ICodeParser::ParseBool (iter begin, iter end, bool *rval)
     {
         iter curpos = begin;
-        string *str = new string();
         
-        if ((curpos != end) && (*curpos == "T" || *curpos == "t")) {
-            if ((++curpos != end) && (*curpos == "R" || *curpos == "r"))
-                if ((++curpos != end) && (*curpos == "U" || *curpos == "u"))
+        if ((curpos != end) && (*curpos == 'T' || *curpos == 't')) {
+            if ((++curpos != end) && (*curpos == 'R' || *curpos == 'r'))
+                if ((++curpos != end) && (*curpos == 'U' || *curpos == 'u'))
                     if ((++curpos != end) &&
-                        (*curpos == "E" || *curpos == "e")) {
+                        (*curpos == 'E' || *curpos == 'e')) {
                         *rval = true;
                         return ++curpos;
                     }
-        } else if ((curpos != end) && (*curpos == "F" || *curpos == "f")) {
-            if ((++curpos != end) && (*curpos == "A" || *curpos == "a"))
-                if ((++curpos != end) && (*curpos == "L" || *curpos == "l"))
-                    if ((++curpos != end) && (*curpos == "S" || *curpos == "s"))
+        } else if ((curpos != end) && (*curpos == 'F' || *curpos == 'f')) {
+            if ((++curpos != end) && (*curpos == 'A' || *curpos == 'a'))
+                if ((++curpos != end) && (*curpos == 'L' || *curpos == 'l'))
+                    if ((++curpos != end) && (*curpos == 'S' || *curpos == 's'))
                         if ((++curpos != end) && 
-                            (*curpos == "E" || *curpos == "e")) {
+                            (*curpos == 'E' || *curpos == 'e')) {
                             *rval = false;
                             return ++curpos;
                         }
@@ -312,7 +311,7 @@ namespace ICodeASM {
     ICodeParser::ParseUInt32 (iter begin, iter end, uint32 *rval)
     {
         /* XXX add overflow checking */
-        uint32 position = 0;
+        int32 position = 0;
         iter curpos;
         
         for (curpos = begin; curpos < end; ++curpos) {
@@ -329,8 +328,7 @@ namespace ICodeASM {
         }
     scan_done:
 
-        curpos = begin;
-        for (; position >= 0; --position)
+        for (curpos = begin; position >= 0; --position)
             *rval += (*curpos++ - '0') * static_cast<uint32>(pow (10, position));
 
         return curpos;
@@ -406,7 +404,7 @@ namespace ICodeASM {
         }
     scan_done:
 
-        if (tl.type = ttUndetermined) {
+        if (tl.type == ttUndetermined) {
             tl.type = ttInstruction;
             tl.end = end;
         }
@@ -419,17 +417,23 @@ namespace ICodeASM {
             string icode_str(tl.begin, tl.end);
             for (uint i = 0; i < icodemap_size; ++i)
                 if (cmp_nocase(icode_str, &icodemap[i].name[0],
-                               &icodemap[i].name[0] + strlen(icodemap[i].name) + 1))
+                               &icodemap[i].name[0] +
+                               strlen(icodemap[i].name) + 1))
                     return ParseInstruction (i, tl.end, end);
-            throw ("Unknown ICode " + icode_str);
+            throw new ICodeParseException ("Unknown ICode " + icode_str);
+        } else {
+            throw new ICodeParseException ("Internal error in ParseStatement.");
         }
+
     }
 
     iter
-    ICodeParser::ParseArgumentListOperand (iter begin, iter end, AnyOperand *o)
+    ICodeParser::ParseArgumentListOperand (iter begin, iter /*end*/,
+                                           AnyOperand */*o*/)
     {
         /* XXX this is hard, lets go shopping */
         ASSERT ("Not Implemented.");
+        return begin;
     }
 
     iter
@@ -446,7 +450,7 @@ namespace ICodeASM {
     }
 
     iter
-    ParseBoolOperand (iter begin, iter end, AnyOperand *o)
+    ICodeParser::ParseBoolOperand (iter begin, iter end, AnyOperand *o)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
@@ -457,7 +461,15 @@ namespace ICodeASM {
     }
 
     iter
-    ParseICodeModuleOperand (iter begin, iter end, AnyOperand *o)
+    ICodeParser::ParseDoubleOperand (iter begin, iter /*end*/,
+                                     AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseICodeModuleOperand (iter begin, iter end, AnyOperand *o)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
@@ -470,6 +482,69 @@ namespace ICodeASM {
         return end;
     }
     
+    iter
+    ICodeParser::ParseJSClassOperand (iter begin, iter /*end*/,
+                                      AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseJSStringOperand (iter begin, iter /*end*/,
+                                       AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
     
+    iter
+    ICodeParser::ParseJSFunctionOperand (iter begin, iter /*end*/,
+                                         AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseJSTypeOperand (iter begin, iter /*end*/,
+                                     AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseLabelOperand (iter begin, iter /*end*/,
+                                    AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseUInt32Operand (iter begin, iter /*end*/,
+                                     AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseRegisterOperand (iter begin, iter /*end*/,
+                                       AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
+    iter
+    ICodeParser::ParseStringAtomOperand (iter begin, iter /*end*/,
+                                         AnyOperand */*o*/)
+    {
+        ASSERT ("Not Implemented.");
+        return begin;
+    }
+
 }
 }
