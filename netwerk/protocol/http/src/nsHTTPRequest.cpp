@@ -48,11 +48,14 @@ extern PRLogModuleInfo* gHTTPLog;
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 
+extern nsresult DupString(char* *o_Dest, const char* i_Src);
+
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method, 
     nsIChannel* i_Transport):
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mUsingProxy(PR_FALSE)
+    mUsingProxy(PR_FALSE),
+    mRequestSpec(0)
 {
     NS_INIT_REFCNT();
 
@@ -140,6 +143,7 @@ nsHTTPRequest::~nsHTTPRequest()
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
     mTransport = null_nsCOMPtr();
+    CRTFREEIF(mRequestSpec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,12 +282,17 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     //
     mRequestBuffer.Append(MethodToString(mMethod));
 
-    if (mUsingProxy) {
-        rv = mURI->GetSpec(getter_Copies(autoBuffer));
-    } else {
-        rv = mURI->GetPath(getter_Copies(autoBuffer));
+    if (mRequestSpec) 
+        mRequestBuffer.Append(mRequestSpec);
+    else
+    {
+        if (mUsingProxy) {
+            rv = mURI->GetSpec(getter_Copies(autoBuffer));
+        } else {
+            rv = mURI->GetPath(getter_Copies(autoBuffer));
+        }
+        mRequestBuffer.Append(autoBuffer);
     }
-    mRequestBuffer.Append(autoBuffer);
     
     //Trim off the # portion if any...
     int refLocation = mRequestBuffer.RFind("#");
@@ -538,4 +547,16 @@ nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
     return mHeaders.GetEnumerator(aResult);
 }
 
+nsresult
+nsHTTPRequest::SetOverrideRequestSpec(const char* i_Spec)
+{
+    CRTFREEIF(mRequestSpec);
+    return DupString(&mRequestSpec, i_Spec);
+}
+
+nsresult
+nsHTTPRequest::GetOverrideRequestSpec(char** o_Spec)
+{
+    return DupString(o_Spec, mRequestSpec);
+}
 

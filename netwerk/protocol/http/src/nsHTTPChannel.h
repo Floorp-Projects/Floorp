@@ -45,6 +45,10 @@ class nsHTTPRequest;
 class nsHTTPResponse;
 class nsICachedNetData;
 
+// Utility functions- TODO share from nsURLHelpers...
+nsresult           
+DupString(char* *o_Dest, const char* i_Src);
+
 /* 
     The nsHTTPChannel class is an example implementation of a
     protocol instnce that is active on a per-URL basis.

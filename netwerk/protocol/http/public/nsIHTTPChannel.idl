@@ -48,7 +48,7 @@ interface nsIHTTPChannel : nsIChannel
     nsISimpleEnumerator GetRequestHeaderEnumerator();
 
     void SetRequestMethod(in unsigned long method);
-//    NS_IMETHOD          SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
+//  NS_IMETHOD SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
 
     /*
         Pass in the post data if any...
@@ -79,6 +79,14 @@ interface nsIHTTPChannel : nsIChannel
 	readonly attribute string Charset;
 
 	attribute PRBool AuthTriedWithPrehost;
+
+    /*
+       This string if set is used for forming the final request. So if you 
+       call SetProxyURI(foo) on an HTTP Channel, the outbound
+       request would look something like GET foo HTTP/1.0... This is done
+       to allow other non-http specs to be used in proxy cases. 
+   */
+    attribute string ProxyRequestURI;
 };
 
 

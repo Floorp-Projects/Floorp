@@ -1853,30 +1853,14 @@ nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
 NS_IMETHODIMP
 nsHTTPChannel::GetProxyHost(char* *o_ProxyHost)
 {
-    if (!o_ProxyHost)
-        return NS_ERROR_NULL_POINTER;
-    if (mProxy)
-    {
-        *o_ProxyHost = nsCRT::strdup(mProxy);
-        return (*o_ProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *o_ProxyHost = nsnull;
-        return NS_OK;
-    }
+    return DupString(o_ProxyHost, mProxy);
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::SetProxyHost(const char* i_ProxyHost) 
 {
     CRTFREEIF(mProxy);
-    if (i_ProxyHost)
-    {
-        mProxy = nsCRT::strdup(i_ProxyHost);
-        return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    return NS_OK;
+    return DupString(&mProxy, i_ProxyHost);
 }
 
 NS_IMETHODIMP
@@ -1941,3 +1925,34 @@ nsHTTPChannel::GetUsingProxy(PRBool* o_UsingProxy)
     *o_UsingProxy = mUsingProxy;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTTPChannel::SetProxyRequestURI(const char * i_Spec)
+{
+    return mRequest ? 
+        mRequest->SetOverrideRequestSpec(i_Spec) : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetProxyRequestURI(char * *o_Spec)
+{
+    return mRequest ? 
+        mRequest->GetOverrideRequestSpec(o_Spec) : NS_ERROR_FAILURE;
+}
+
+nsresult DupString(char* *o_Dest, const char* i_Src)
+{
+    if (!o_Dest)
+        return NS_ERROR_NULL_POINTER;
+    if (i_Src)
+    {
+        *o_Dest = nsCRT::strdup(i_Src);
+        return (*o_Dest == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_Dest = nsnull;
+        return NS_OK;
+    }
+}
+
