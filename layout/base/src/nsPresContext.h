@@ -106,7 +106,7 @@ protected:
   void   GetUserPreferences();
 
 private:
-  friend PrefChangedCallback(const char*, void*);
+  friend int PrefChangedCallback(const char*, void*);
   void   PreferenceChanged(const char* aPrefName);
 };
 
