@@ -144,6 +144,10 @@ protected:
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
 
+  void InitToolkit(nsIToolkit *aToolkit, nsIWidget * aWidgetParent);
+  void InitDeviceContext(nsIDeviceContext *aContext, Widget aWidgetParent);
+
+
   virtual void            UpdateVisibilityFlag();
   virtual void            UpdateDisplay();
 
