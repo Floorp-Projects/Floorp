@@ -780,7 +780,10 @@ nsDownloadManager::CleanUp()
   nsCOMPtr<nsIRDFInt> intLiteral;
   nsCOMPtr<nsISimpleEnumerator> downloads;
 
+  // Coalesce operations so that we don't write to disk for every removal, or
+  // attempt to update the UI too much. 
   StartBatchUpdate();
+  mDataSource->BeginUpdateBatch();
 
   // 1). First, clean out the usual suspects - downloads that are
   //     finished, failed or canceled. 
@@ -804,6 +807,7 @@ nsDownloadManager::CleanUp()
     }
   }
 
+  mDataSource->EndUpdateBatch();
   EndBatchUpdate();
 
   return NS_OK;
@@ -876,6 +880,9 @@ nsDownloadManager::ValidateDownloadsContainer()
     e->HasMoreElements(&hasMore);
   }
 
+  // Coalesce notifications
+  mDataSource->BeginUpdateBatch();
+
   // Now Remove all the bad downloads. 
   PRUint32 cnt;
   ary->Count(&cnt);
@@ -885,6 +892,8 @@ nsDownloadManager::ValidateDownloadsContainer()
     // Use the internal method because we know what we're doing! (We hope!)
     RemoveDownload(download);
   }
+
+  mDataSource->EndUpdateBatch();
 
   return NS_OK;
 }
