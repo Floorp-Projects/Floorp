@@ -544,3 +544,11 @@ nsImageBeOS::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   return NS_OK;
 }
 
+#ifdef USE_IMG2
+NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage* aDstImage,
+                                       nscoord aDX, nscoord aDY,
+                                       nscoord aDWidth, nscoord aDHeight)
+{
+  return NS_ERROR_FAILURE;
+}
+#endif
