@@ -20,9 +20,11 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
+class nsIStyleRule;
 class nsIStyleSheet;
 class nsIUnicharInputStream;
 class nsIURL;
+class nsString;
 
 #define NS_ICSS_PARSER_IID    \
 { 0xcc9c0610, 0x968c, 0x11d1, \
@@ -33,15 +35,22 @@ class nsICSSParser : public nsISupports {
 public:
   // Return a mask of the various css standards that this parser
   // supports.
-  virtual PRUint32 GetInfoMask() = 0;
+  NS_IMETHOD GetInfoMask(PRUint32& aResult) = 0;
 
   // Set a style sheet for the parser to fill in. The style sheet must
   // implement the nsICSSStyleSheet interface
-  virtual nsresult SetStyleSheet(nsIStyleSheet* aSheet) = 0;
+  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aSheet) = 0;
 
-  virtual nsIStyleSheet* Parse(PRInt32* aErrorCode,
-                               nsIUnicharInputStream* aInput,
-                               nsIURL* aInputURL) = 0;
+  NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
+                   nsIURL*                aInputURL,
+                   nsIStyleSheet*&        aResult) = 0;
+
+  // Parse declarations assuming that the outer curly braces have
+  // already been accounted for. aBaseURL is the base url to use for
+  // relative links in the declaration.
+  NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
+                               nsIURL*         aBaseURL,
+                               nsIStyleRule*&  aResult) = 0;
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved
