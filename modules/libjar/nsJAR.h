@@ -62,3 +62,4 @@ class nsJAR : public nsIJAR
 };
 
 #endif /* nsJAR_h__ */
+
