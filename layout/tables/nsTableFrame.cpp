@@ -1945,9 +1945,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
                                            NS_UNCONSTRAINEDSIZE);
             // reflow the children
             nsIFrame *lastReflowed;
+            nsRect overflowArea;
             ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(),
                            PR_FALSE, aStatus, lastReflowed,
-                           aDesiredSize.mOverflowArea);
+                           overflowArea);
           }
           mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
         }
