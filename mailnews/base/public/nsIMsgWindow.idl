@@ -35,10 +35,20 @@ interface nsIAuthPrompt;
  *  This interface can be used to set data specific to a window.
  */
 
+/* nsIMsgMessagePaneController is used to control the visiblity of the message pane
+   including the header overlay and the body. 
+*/
+
+[scriptable, uuid(923DE63D-EEB9-4574-850B-322C1A4667ED)]
+interface nsIMsgMessagePaneController : nsISupports {
+    void clearMsgPane();
+};
+
 
 [scriptable, uuid(BD85A416-5433-11d3-8AC5-0060B0FC04D2)]
 interface nsIMsgWindow : nsISupports {
 
+    attribute nsIMsgMessagePaneController messagePaneController;
 	attribute nsIMsgStatusFeedback statusFeedback;
 	attribute nsIMsgHeaderSink msgHeaderSink;
     attribute nsITransactionManager transactionManager;

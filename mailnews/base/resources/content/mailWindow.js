@@ -31,6 +31,7 @@ var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
 var messenger;
 var pref;
 var statusFeedback;
+var messagePaneController;
 var msgWindow;
 
 var msgComposeService;
@@ -165,6 +166,7 @@ function CreateMailWindowGlobals()
 
 function InitMsgWindow()
 {
+  msgWindow.messagePaneController = new nsMessagePaneController();
   msgWindow.statusFeedback = statusFeedback;
   msgWindow.msgHeaderSink = messageHeaderSink;
   msgWindow.SetDOMWindow(window);
@@ -390,6 +392,25 @@ nsMsgWindowCommands.prototype =
   SelectMessage: function(messageUri)
   {
     SelectMessage(messageUri);
+  }
+}
+
+function nsMessagePaneController()
+{
+}
+
+nsMessagePaneController.prototype =
+{
+  QueryInterface : function(iid)
+  {
+    if(iid.equals(Components.interfaces.nsIMsgMessagePaneController))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+        return null;
+  },
+  clearMsgPane: function()
+  {
+    ClearMessagePane();
   }
 }
 

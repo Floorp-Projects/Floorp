@@ -27,6 +27,7 @@ var gOfflineManager;
 function MailOfflineStateChanged(goingOffline)
 {
   // tweak any mail UI here that needs to change when we go offline or come back online
+  gFolderJustSwitched = true;
 }
 
 function MsgSettingsOffline()

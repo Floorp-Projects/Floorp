@@ -138,8 +138,7 @@ NS_IMETHODIMP nsMsgWindow::SelectMessage(const char *messageUri)
 NS_IMETHODIMP nsMsgWindow::CloseWindow()
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIURILoader> dispatcher = 
-           do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
+  nsCOMPtr<nsIURILoader> dispatcher = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->UnRegisterContentListener(this);
 
@@ -148,6 +147,8 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
 
   if (mStatusFeedback)
     mStatusFeedback->CloseWindow(); 
+
+  mMsgPaneController = nsnull;
 
   StopUrls();
 
@@ -189,6 +190,21 @@ NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedb
     webProgress->AddProgressListener(webProgressListener);
   }
 
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetMessagePaneController(nsIMsgMessagePaneController * * aMsgPaneController)
+{
+  NS_ENSURE_ARG(aMsgPaneController);
+
+  *aMsgPaneController = mMsgPaneController;
+	NS_IF_ADDREF(*aMsgPaneController);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetMessagePaneController(nsIMsgMessagePaneController * aMsgPaneController)
+{
+	mMsgPaneController = aMsgPaneController;
 	return NS_OK;
 }
 
@@ -516,6 +532,9 @@ NS_IMETHODIMP
 nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *body)
 {
     nsresult rv;
+
+    if (mMsgPaneController)
+      mMsgPaneController->ClearMsgPane();
 
     nsString htmlStr;
     htmlStr.Append(NS_LITERAL_STRING("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>").get());
