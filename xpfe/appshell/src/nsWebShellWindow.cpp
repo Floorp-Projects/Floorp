@@ -919,6 +919,9 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
         nsMenuEvent fake;
         menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
 
+        // Parent should own menubar now
+        NS_RELEASE(pnsMenuBar);
+        
       #ifdef USE_NATIVE_MENUS
       #else
       // Resize around the menu.
