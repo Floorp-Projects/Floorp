@@ -36,6 +36,7 @@
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
+    this.popupURL       = null;
     this.onTextInput    = false;
     this.onImage        = false;
     this.onLink         = false;
@@ -68,6 +69,8 @@ nsContextMenu.prototype = {
         this.setTarget( document.popupNode );
         
         this.isTextSelected = this.isTextSelection();
+
+        this.initPopupURL();
 
         // Initialize (disable/remove) menu items.
         this.initItems();
@@ -149,6 +152,19 @@ nsContextMenu.prototype = {
         this.showItem( "context-searchselect", this.isTextSelected );
         this.showItem( "frame", this.inFrame );
         this.showItem( "frame-sep", this.inFrame );
+        var blocking = true;
+        if (this.popupURL)
+          try {
+            const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                       .getService(Components.interfaces.nsIPopupWindowManager);
+            blocking = PM.testPermission(this.popupURL) ==
+                       Components.interfaces.nsIPopupWindowManager.eDisallow;
+          } catch (e) {
+          }
+
+        this.showItem( "popupwindow-reject", this.popupURL && !blocking);
+        this.showItem( "popupwindow-allow", this.popupURL && blocking);
+        this.showItem( "context-sep-popup", this.popupURL);
     },
     initClipboardItems : function () {
 
@@ -397,6 +413,48 @@ nsContextMenu.prototype = {
             elem = elem.parentNode;    
         }
     },
+    initPopupURL: function() {
+      // quick check: if no opener, it can't be a popup
+      if (!window.content.opener)
+        return;
+      try {
+        var show = false;
+        // is it a popup window?
+        const CI = Components.interfaces;
+        var xulwin = window
+                    .QueryInterface(CI.nsIInterfaceRequestor)
+                    .getInterface(CI.nsIWebNavigation)
+                    .QueryInterface(CI.nsIDocShellTreeItem)
+                    .treeOwner
+                    .QueryInterface(CI.nsIInterfaceRequestor)
+                    .getInterface(CI.nsIXULWindow);
+        if (xulwin.contextFlags &
+            CI.nsIWindowCreator2.PARENT_IS_LOADING_OR_RUNNING_TIMEOUT) {
+          // do the pref settings allow site-by-site popup management?
+          const PB = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(CI.nsIPrefBranch);
+          show = !PB.getBoolPref("dom.disable_open_during_load") &&
+                 PB.getIntPref("privacy.popups.policy") ==
+                     CI.nsIPopupWindowManager.eAllow &&
+                 PB.getBoolPref("privacy.popups.usecustom");
+        }
+        if (show) {
+          // initialize popupURL
+          const IOS = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(CI.nsIIOService);
+          var spec = Components.lookupMethod(window.content.opener, "location")
+                     .call();
+          this.popupURL = IOS.newURI(spec, null, null);
+
+          // but cancel if it's an unsuitable URL
+          const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                     .getService(CI.nsIPopupWindowManager);
+          if (!PM.testSuitability(this.popupURL))
+            this.popupURL = null;
+        }
+      } catch(e) {
+      }
+    },
     // Returns the computed style attribute for the given element.
     getComputedStyle: function( elem, prop ) {
          return elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyValue( prop );
@@ -440,6 +498,23 @@ nsContextMenu.prototype = {
             // so we won't be able to save it anyway
             return false;
         }
+    },
+    // Block popup windows
+    rejectPopupWindows: function(andClose) {
+      const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                 .getService(Components.interfaces.nsIPopupWindowManager);
+      PM.add(this.popupURL, false);
+      if (andClose) {
+        const OS = Components.classes["@mozilla.org/observer-service;1"]
+                   .getService(Components.interfaces.nsIObserverService);
+        OS.notifyObservers(window, "popup-perm-close", this.popupURL.spec);
+      }
+    },
+    // Unblock popup windows
+    allowPopupWindows: function() {
+      const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                 .getService(Components.interfaces.nsIPopupWindowManager);
+      PM.add(this.popupURL, true);
     },
     // Open linked-to URL in a new window.
     openLink : function () {
