@@ -19,7 +19,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onload="Startup()" title="Editor">
+			  onload="Startup()" onunload="Shutdown()" title="Editor">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
@@ -29,13 +29,16 @@
   <menubar>
     <menu name="File">
       <menuitem name=".New" onclick=""/>
-      <menuitem name=".Change Icons" onclick=""/>
+      <menuitem name=".Open..." onclick=""/>
+      <menuitem name=".Close" onclick="EditorClose()"/>
       <separator />
-      <menuitem name=".Print Setup" onclick=""/>
+      <menuitem name="Save" onclick="EditorSave()"/>
+      <menuitem name="Save As..." onclick="EditorSaveAs()"/>
+      <separator />
+      <menuitem name=".Print Setup..." onclick=""/>
       <menuitem name="Print Preview" onclick="EditorPrintPreview()"/>
-      <menuitem name=".Print" onclick=""/>
+      <menuitem name=".Print..." onclick=""/>
       <separator />
-      <menuitem name=".Close" onclick=""/>
       <menuitem name="Quit" onclick="EditorExit()"/>
     </menu>
 

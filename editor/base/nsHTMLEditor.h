@@ -86,6 +86,10 @@ public:
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement);
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
+// file handling
+  NS_IMETHOD Save();
+  NS_IMETHOD SaveAs(PRBool aSavingCopy);
+
 // cut, copy & paste
   NS_IMETHOD Cut();
   NS_IMETHOD Copy();

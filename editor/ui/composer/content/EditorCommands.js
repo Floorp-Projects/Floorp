@@ -41,6 +41,42 @@
     }
   }
 
+
+  function EditorSave()
+  {
+    dump("In EditorSave...\n");
+   
+    appCore = XPAppCoresManager.Find(editorName);  
+    if (appCore)
+    {
+      appCore.save();
+    }
+  }
+
+  function EditorSaveAs()
+  {
+    dump("In EditorSave...\n");
+   
+    appCore = XPAppCoresManager.Find(editorName);  
+    if (appCore)
+    {
+      appCore.saveAs();
+    }
+  }  
+  
+  function EditorClose()
+  {
+    dump("In EditorClose...\n");
+   
+    appCore = XPAppCoresManager.Find(editorName);  
+    if (appCore)
+    {
+    
+    
+    
+    }
+  }
+  
   function EditorFind(firstTime)
   {
     if (toolkitCore && firstTime) {

@@ -17,8 +17,13 @@ interface EditorAppCore : BaseAppCore
 	void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
 	void removeTextProperty(in DOMString prop, in DOMString attr);
 	void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out DOMString firstHas, out DOMString anyHas, out DOMString allHas);
-
+	
   void setParagraphFormat(in DOMString value);
+
+	void save();
+	void saveAs();
+	
+	void closeWindow();
 	
 	void undo();
 	void redo();

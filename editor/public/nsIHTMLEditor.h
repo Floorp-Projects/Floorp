@@ -44,6 +44,8 @@ class nsIHTMLEditor  : public nsISupports{
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IHTMLEDITOR_IID; return iid; }
 
+	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
+
   /** Initialize the text editor 
     *
     */
@@ -80,6 +82,10 @@ public:
   NS_IMETHOD ScrollUp(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
+
+  NS_IMETHOD Save()=0;
+  NS_IMETHOD SaveAs(PRBool aSavingCopy)=0;
+
   NS_IMETHOD Cut()=0;
   NS_IMETHOD Copy()=0;
   NS_IMETHOD Paste()=0;
