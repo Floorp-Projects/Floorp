@@ -36,7 +36,7 @@ public:
 
 	static PRBool	ReadIndex( nsIFileSpec *pFile, PRUint32 **ppIndex, PRUint32 *pSize);
 
-	static nsresult	ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination, PRInt32 *pCount);
+	static nsresult	ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination, PRUint32 *pCount);
 
 private:
 	typedef struct {

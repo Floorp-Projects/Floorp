@@ -47,7 +47,7 @@ public:
     
 	PRBool		Loaded( void) { return( m_bInitialized);}
 
-	HRESULT		IterateWABContents(CWabIterator *pIter);
+	HRESULT		IterateWABContents(CWabIterator *pIter, int *pDone);
 	
 	// Methods for User entries
 	LPDISTLIST		GetDistList( ULONG cbEid, LPENTRYID pEid);

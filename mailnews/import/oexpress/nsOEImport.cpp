@@ -90,7 +90,11 @@ private:
 	static void ReportError( PRInt32 errorNum, nsString& name, nsString *pStream);
 	static void	AddLinebreak( nsString *pStream);
 	static void	SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess);
+
+private:
+	PRUint32	m_bytesDone;
 };
+
 
 class ImportAddressImpl : public nsIImportAddressBooks
 {
@@ -143,6 +147,7 @@ public:
 
 private:
 	CWAB *	m_pWab;
+	int		m_doneSoFar;
 };
 ////////////////////////////////////////////////////////////////////////
 
@@ -453,14 +458,15 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
 	nsCRT::free( pPath);
 #endif
     
-	PRInt32	msgCount = 0;
+	m_bytesDone = 0;
+	PRUint32	msgCount = 0;
     nsresult rv;
 	if (nsOE5File::IsLocalMailFile( inFile)) {
 		IMPORT_LOG1( "Importing OE5 mailbox: %S!\n", name.GetUnicode());
-		rv = nsOE5File::ImportMailbox( &abort, name, inFile, pDestination, &msgCount);
+		rv = nsOE5File::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount);
 	}
 	else {
-		if (CImportMailbox::ImportMailbox( &abort, name, inFile, pDestination, &msgCount)) {
+		if (CImportMailbox::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount)) {
     		rv = NS_OK;
 		}
 		else {
@@ -491,7 +497,7 @@ NS_IMETHODIMP ImportMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
 	
 	// TLR: FIXME: Figure our how to update this from the import
 	// of the current mailbox.
-	*pDoneSoFar = 0;
+	*pDoneSoFar = m_bytesDone;
 	return( NS_OK);
 }
 
@@ -617,9 +623,10 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *sourc
 	}
     
     IMPORT_LOG0( "IMPORTING OUTLOOK EXPRESS ADDRESS BOOK\n");
-    
+
+    m_doneSoFar = 0;
     nsOEAddressIterator * pIter = new nsOEAddressIterator( m_pWab, destination);
-    m_pWab->IterateWABContents( pIter);
+    m_pWab->IterateWABContents( pIter, &m_doneSoFar);
     delete pIter;
     
 	return( NS_OK);
@@ -632,7 +639,7 @@ NS_IMETHODIMP ImportAddressImpl::GetImportProgress(PRUint32 *_retval)
     if (! _retval)
         return NS_ERROR_NULL_POINTER;
 	
-	*_retval = 0;
+	*_retval = (PRUint32) m_doneSoFar;
 	return( NS_OK);
 }
 

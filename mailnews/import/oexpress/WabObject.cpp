@@ -182,7 +182,7 @@ CWAB::~CWAB()
 }
 
 
-HRESULT CWAB::IterateWABContents(CWabIterator *pIter)
+HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
 {
 	if (!m_bInitialized || !m_lpAdrBook)
 		return( E_FAIL);
@@ -199,6 +199,8 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter)
 
     ULONG			lpcbEID = 0;
 	LPENTRYID		lpEID = NULL;
+	ULONG			rowCount = 0;
+	ULONG			curCount = 0;
 
     // Get the entryid of the root PAB container
     //
@@ -234,6 +236,12 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter)
 
     if(HR_FAILED(hr))
         goto exit;
+	
+	hr = lpAB->GetRowCount( 0, &rowCount);
+	if (HR_FAILED(hr))
+		rowCount = 100;
+	if (rowCount == 0)
+		rowCount = 1;
 
     // Order the columns in the ContentsTable to conform to the
     // ones we want - which are mainly DisplayName, EntryID and
@@ -286,10 +294,17 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter)
                     // us to uniquely identify the object later if we need to
                     //
 					keepGoing = pIter->EnumUser( lpsz, lpEID, cbEID);
+					curCount++;
+					if (pDone) {
+						*pDone = (curCount * 100) / rowCount;
+						if (*pDone > 100)
+							*pDone = 100;
+					}
                 }
 		    }
 		    FreeProws(lpRowAB );		
         }
+		
 
 	} while ( SUCCEEDED(hr) && cNumRows && lpRowAB && keepGoing)  ;
 
@@ -330,7 +345,13 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter)
                     // us to uniquely identify the object later if we need to
                     //
 					keepGoing = pIter->EnumList( lpsz, lpEID, cbEID);
-                }
+					curCount++;
+					if (pDone) {
+						*pDone = (curCount * 100) / rowCount;
+						if (*pDone > 100)
+							*pDone = 100;
+					}
+                 }
 		    }
 		    FreeProws(lpRowAB );		
         }

@@ -31,7 +31,7 @@ public:
 	~CMbxScanner();
 
 	virtual PRBool	Initialize( void);
-	virtual	PRBool	DoWork( PRBool *pAbort);
+	virtual	PRBool	DoWork( PRBool *pAbort, PRUint32 *pDone, PRUint32 *pCount);
 
 	PRBool		WasErrorFatal( void) { return( m_fatalError);}
 	PRUint32	BytesProcessed( void) { return( m_didBytes);}
@@ -47,9 +47,10 @@ private:
 	PRBool	IsFromLineKey( PRUint8 *pBuf, PRUint32 max);
 
 public:
-	PRInt32				m_msgCount;
+	PRUint32			m_msgCount;
 
 protected:
+	PRUint32 *			m_pDone;
 	nsString			m_name;
 	nsIFileSpec *		m_mbxFile;
 	nsIFileSpec *		m_dstFile;
@@ -72,7 +73,7 @@ public:
 	~CIndexScanner();
 
 	virtual PRBool	Initialize( void);
-	virtual	PRBool	DoWork( PRBool *pAbort);
+	virtual	PRBool	DoWork( PRBool *pAbort, PRUint32 *pDone, PRUint32 *pCount);
 
 protected:
 	virtual	void	CleanUp( void);
@@ -90,7 +91,7 @@ private:
 };
 
 
-PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec * inFile, nsIFileSpec * outFile, PRInt32 *pCount)
+PRBool CImportMailbox::ImportMailbox( PRUint32 *pDone, PRBool *pAbort, nsString& name, nsIFileSpec * inFile, nsIFileSpec * outFile, PRUint32 *pCount)
 {
 	PRBool		done = PR_FALSE;
 	nsIFileSpec *idxFile;
@@ -106,10 +107,8 @@ PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpe
 				
 		CIndexScanner *pIdxScanner = new CIndexScanner( name, idxFile, inFile, outFile);
 		if (pIdxScanner->Initialize()) {
-			if (pIdxScanner->DoWork( pAbort)) {
+			if (pIdxScanner->DoWork( pAbort, pDone, pCount)) {
 				done = PR_TRUE;
-				if (pCount)
-					*pCount = pIdxScanner->m_msgCount;
 			}
 			else {
 				IMPORT_LOG0( "CIndexScanner::DoWork() failed\n");
@@ -133,10 +132,8 @@ PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpe
 	*/
 	CMbxScanner *pMbx = new CMbxScanner( name, inFile, outFile);
 	if (pMbx->Initialize()) {
-		if (pMbx->DoWork( pAbort)) {
+		if (pMbx->DoWork( pAbort, pDone, pCount)) {
 			done = PR_TRUE;
-			if (pCount)
-				*pCount = pMbx->m_msgCount;
 		}
 		else {
 			IMPORT_LOG0( "CMbxScanner::DoWork() failed\n");
@@ -252,7 +249,7 @@ PRBool CMbxScanner::Initialize( void)
 #define	kMbxHeaderSize		0x0054
 #define kMbxMessageHeaderSz	16
 
-PRBool CMbxScanner::DoWork( PRBool *pAbort)
+PRBool CMbxScanner::DoWork( PRBool *pAbort, PRUint32 *pDone, PRUint32 *pCount)
 {
 	m_mbxOffset = kMbxHeaderSize;
 	m_didBytes = kMbxHeaderSize;
@@ -267,6 +264,10 @@ PRBool CMbxScanner::DoWork( PRBool *pAbort)
 		m_mbxOffset += msgSz;
 		m_didBytes += msgSz;
 		m_msgCount++;
+		if (pDone)
+			*pDone = m_didBytes;
+		if (pCount)
+			*pCount = m_msgCount;
 	}
 	
 	CleanUp();
@@ -613,7 +614,7 @@ PRBool CIndexScanner::GetMailItem( PRUint32 *pFlags, PRUint32 *pOffset, PRUint32
 
 #define	kOEDeletedFlag		0x0001
 
-PRBool CIndexScanner::DoWork( PRBool *pAbort)
+PRBool CIndexScanner::DoWork( PRBool *pAbort, PRUint32 *pDone, PRUint32 *pCount)
 {
 	m_didBytes = 0;
 	if (!ValidateIdxFile())
@@ -635,6 +636,10 @@ PRBool CIndexScanner::DoWork( PRBool *pAbort)
 			}
 		}
 		m_didBytes += size;
+		if (pDone)
+			*pDone = m_didBytes;
+		if (pCount)
+			*pCount = m_msgCount;
 	}
 	
 	CleanUp();

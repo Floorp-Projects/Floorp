@@ -25,7 +25,7 @@
 #include "OEDebugLog.h"
 
 
-#define	kIndexGrowBy		50
+#define	kIndexGrowBy		100
 #define	kSignatureSize		12
 #define	kDontSeek			0xFFFFFFFF
 
@@ -221,7 +221,7 @@ PRBool nsOE5File::IsFromLine( char *pLine, PRUint32 len)
 #define	kMailboxBufferSize	0x4000
 const char *nsOE5File::m_pFromLineSep = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
 
-nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination, PRInt32 *pCount)
+nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination, PRUint32 *pCount)
 {
 	nsresult	rv;
 	PRInt32		msgCount = 0;
@@ -271,6 +271,7 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 				proceeding to the next message.
 	*/
 	
+	PRUint32	didBytes = 0;
 	char		last2[2] = {0, 0};
 	PRUint32	next;
 	rv = NS_OK;
@@ -294,6 +295,7 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 					last2[1] = 0;
 				}
 				rv = WriteMessageBuffer( pDestination, pBuffer, block[2], last2);
+				didBytes += block[2];
 				if (NS_FAILED( rv))
 					break;
 				next = block[3];
@@ -304,6 +306,7 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 						(ReadBytes( inFile, pBuffer, kDontSeek, block[2]))) {
 						if (block[2])
 							rv = WriteMessageBuffer( pDestination, pBuffer, block[2], last2);
+						didBytes += block[2];
 						if (NS_FAILED( rv))
 							break;
 						next = block[3];
@@ -325,6 +328,10 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 				}
 
 				msgCount++;
+				if (pCount)
+					*pCount = msgCount;
+				if (pBytesDone)
+					*pBytesDone = didBytes;
 			}
 			else {
 				// Error reading message, should this be logged???
@@ -338,8 +345,6 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 	inFile->CloseStream();
 	pDestination->CloseStream();
 	
-	if (pCount)
-		*pCount = msgCount;
 
 	return( rv);
 }

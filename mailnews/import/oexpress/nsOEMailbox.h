@@ -30,7 +30,7 @@
 
 class CImportMailbox {
 public:
-	static PRBool	ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec * inFile, nsIFileSpec * outFile, PRInt32 *pCount);
+	static PRBool	ImportMailbox( PRUint32 *pDone, PRBool *pAbort, nsString& name, nsIFileSpec * inFile, nsIFileSpec * outFile, PRUint32 *pCount);
 
 private:
 	static PRBool	GetIndexFile( nsIFileSpec* mbxFile);
