@@ -583,7 +583,7 @@ if (UserInGroup("tweakparams")) {
     print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
 }
 if (UserInGroup("editcomponents")) {
-    print "<a href=editcomponents.cgi>Edit Bugzilla components</a><br>\n";
+    print "<a href=editproducts.cgi>Edit Bugzilla products and components</a><br>\n";
 }
 if (defined $::COOKIE{"Bugzilla_login"}) {
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";

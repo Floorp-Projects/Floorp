@@ -353,6 +353,12 @@ Reason: %reason%
 %urlbase%show_bug.cgi?id=%bugid%
 ");
          
+DefParam("allowbugdeletion",
+         q{The pages to edit products and components and versions can delete all associated bugs when you delete a product (or component or version).  Since that is a pretty scary idea, you have to turn on this option before any such deletions will ever happen.},
+         "b",
+         0);
+
+
 
 1;
 
