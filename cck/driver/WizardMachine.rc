@@ -261,15 +261,15 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "WIZARDMACHINE MFC Application\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "CompanyName", "Netscape Communications Corporation\0"
+            VALUE "FileDescription", "CCK WIZARDMACHINE Application\0"
+            VALUE "FileVersion", "6.1.0.0\0"
             VALUE "InternalName", "WIZARDMACHINE\0"
-            VALUE "LegalCopyright", "Copyright © 1998\0"
-            VALUE "LegalTrademarks", "\0"
+            VALUE "LegalCopyright", "Copyright (c) Netscape Communications, 2001\0"
+            VALUE "LegalTrademarks", "Netscape, Mozilla\0"
             VALUE "OriginalFilename", "WIZARDMACHINE.EXE\0"
-            VALUE "ProductName", "WIZARDMACHINE Application\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "ProductName", "NETSCAPE CCK\0"
+            VALUE "ProductVersion", "6.1\0"
         END
     END
     BLOCK "VarFileInfo"
