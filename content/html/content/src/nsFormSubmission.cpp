@@ -1238,11 +1238,8 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
   aPresContext->GetLinkHandler(getter_AddRefs(handler));
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
-  nsCAutoString actionURLSpec;
-  aActionURL->GetSpec(actionURLSpec);
-
   return handler->OnLinkClickSync(aSource, eLinkVerb_Replace,
-                                  NS_ConvertUTF8toUCS2(actionURLSpec).get(),
+                                  aActionURL,
                                   PromiseFlatString(aTarget).get(),
                                   postDataStream, nsnull,
                                   aDocShell, aRequest);

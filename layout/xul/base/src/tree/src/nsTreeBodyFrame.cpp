@@ -1870,6 +1870,9 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
     mImageGuard = PR_FALSE;
 
+    if (!imageRequest)
+      return NS_ERROR_FAILURE;
+
     // In a case it was already cached.
     imageRequest->GetImage(aResult);
 

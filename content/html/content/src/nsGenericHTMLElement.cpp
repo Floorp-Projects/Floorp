@@ -1547,10 +1547,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
       case NS_MOUSE_EXIT_SYNTH:
       {
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
-
-        nsAutoString empty;
-        ret = TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty,
-                          empty, PR_FALSE);
+        ret = LeaveLink(aPresContext);
       }
       break;
 

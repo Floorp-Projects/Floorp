@@ -79,8 +79,7 @@ public:
    *
    * @param aContent the content for the frame that generated the trigger
    * @param aVerb the verb to use when the link is triggered
-   * @param aURLSpec an absolute URL spec that defines the destination for the
-   *        link
+   * @param aURI a URI object that defines the destination for the link
    * @param aTargetSpec indicates where the link is targeted (may be an empty
    *        string)
    * @param aPostDataStream the POST data to send
@@ -88,7 +87,7 @@ public:
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
                          nsLinkVerb aVerb,
-                         const PRUnichar* aURLSpec,
+                         nsIURI* aURI,
                          const PRUnichar* aTargetSpec,
                          nsIInputStream* aPostDataStream = 0,
                          nsIInputStream* aHeadersDataStream = 0) = 0;
@@ -101,8 +100,7 @@ public:
    *
    * @param aContent the content for the frame that generated the trigger
    * @param aVerb the verb to use when the link is triggered
-   * @param aURLSpec an absolute URL spec that defines the destination for the
-   *        link
+   * @param aURI a URI obect that defines the destination for the link
    * @param aTargetSpec indicates where the link is targeted (may be an empty
    *        string)
    * @param aPostDataStream the POST data to send
@@ -112,7 +110,7 @@ public:
    */
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent, 
                              nsLinkVerb aVerb,
-                             const PRUnichar* aURLSpec,
+                             nsIURI* aURI,
                              const PRUnichar* aTargetSpec,
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
@@ -123,14 +121,19 @@ public:
    * Process a mouse-over a link.
    *
    * @param aContent the linked content.
-   * @param aURLSpec an absolute url spec that defines the destination for the
-   *        link
+   * @param aURI an URI object that defines the destination for the link
    * @param aTargetSpec indicates where the link is targeted (it may be an empty
    *        string)
    */
   NS_IMETHOD OnOverLink(nsIContent* aContent, 
-                        const PRUnichar* aURLSpec,
+                        nsIURI* aURLSpec,
                         const PRUnichar* aTargetSpec) = 0;
+
+  /**
+   * Process the mouse leaving a link.
+   */
+  NS_IMETHOD OnLeaveLink() = 0;
+      
 
   /**
    * Get the state of a link to a given absolute URL

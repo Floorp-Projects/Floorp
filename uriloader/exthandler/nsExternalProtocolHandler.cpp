@@ -47,12 +47,12 @@ class nsExtProtocolChannel : public nsIChannel
 {
 public:
 
-	  NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSICHANNEL
     NS_DECL_NSIREQUEST
 	
     nsExtProtocolChannel();
-	  virtual ~nsExtProtocolChannel();
+    virtual ~nsExtProtocolChannel();
 
     nsresult SetURI(nsIURI*);
 
@@ -136,15 +136,17 @@ nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
 nsresult nsExtProtocolChannel::OpenURL()
 {
   nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-  PRBool haveHandler = PR_FALSE;
   nsCAutoString urlScheme;
   mUrl->GetScheme(urlScheme);
 
   if (extProtService)
   {
+#ifdef DEBUG
+    PRBool haveHandler = PR_FALSE;
     extProtService->ExternalProtocolHandlerExists(urlScheme.get(), &haveHandler);
-    if (haveHandler)
-      return extProtService->LoadUrl(mUrl);
+    NS_ASSERTION(haveHandler, "Why do we have a channel for this url if we don't support the protocol?");
+#endif
+    return extProtService->LoadUrl(mUrl);
   }
   
   return NS_ERROR_FAILURE;
@@ -327,22 +329,13 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
                                                 nsIURI *aBaseURI,
                                                 nsIURI **_retval)
 {
-  nsresult rv = NS_ERROR_UNKNOWN_PROTOCOL;
+  nsresult rv;
   nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &rv);
-  if (uri)
-  {
-    uri->SetSpec(aSpec);
-    PRBool haveHandler = HaveProtocolHandler(uri);
-
-    if (haveHandler)
-    {
-      *_retval = uri;
-      NS_IF_ADDREF(*_retval);
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_UNKNOWN_PROTOCOL;
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  uri->SetSpec(aSpec);
+  NS_ADDREF(*_retval = uri);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)

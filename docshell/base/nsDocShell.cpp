@@ -2424,10 +2424,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                                        getter_AddRefs(uri));
     }
 
-    if (NS_ERROR_UNKNOWN_PROTOCOL == rv ||
-        NS_ERROR_MALFORMED_URI == rv) {
+    if (NS_ERROR_MALFORMED_URI == rv) {
         DisplayLoadError(rv, uri, aURI);
-    } // end unknown protocol
+    }
 
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
@@ -2444,6 +2443,11 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     // XXX: Need to pass in the extra headers stream too...
 
     rv = LoadURI(uri, loadInfo, 0, PR_TRUE);
+    
+    if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
+        DisplayLoadError(rv, uri, aURI);
+    }
+
     return rv;
 }
 
@@ -2467,13 +2471,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
 
     // Turn the error code into a human readable error message.
     if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
-        NS_ENSURE_ARG_POINTER(aURL);
-        const nsAutoString uriString(aURL);
-        PRInt32 colon = uriString.FindChar(':');
+        NS_ENSURE_ARG_POINTER(aURI);
         // extract the scheme
-        nsAutoString scheme;
-        uriString.Left(scheme, colon);
-        formatStrs[0].Assign(scheme.get());
+        nsCAutoString scheme;
+        aURI->GetScheme(scheme);
+        CopyASCIItoUCS2(scheme, formatStrs[0]);
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("protocolNotFound"));
     }
@@ -5158,8 +5160,17 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                        loadGroup,
                        NS_STATIC_CAST(nsIInterfaceRequestor *, this),
                        loadFlags);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
+            // This is a uri with a protocol scheme we don't know how
+            // to handle.  Embedders might still be interested in
+            // handling the load, though, so we fire a notification
+            // before throwing the load away.
+            PRBool abort;
+            mContentListener->OnStartURIOpen(aURI, &abort);
+        }
         return rv;
+    }
 
     channel->SetOriginalURI(aURI);
 

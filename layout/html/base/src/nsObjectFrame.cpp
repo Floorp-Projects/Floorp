@@ -2327,9 +2327,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
 
-  nsAutoString  uniurl; uniurl.AssignWithConversion(aURL);
   nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
-  nsAutoString  fullurl;
 
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIDocument> doc;
@@ -2341,9 +2339,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   }
 
   // Create an absolute URL
-  NS_MakeAbsoluteURI(fullurl, uniurl, baseURL);
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURL);
 
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv),NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   nsCOMPtr<nsIContent> content;
   mOwner->GetContent(getter_AddRefs(content));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
@@ -2372,7 +2371,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   }
 
   rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
-                       fullurl.get(), unitarget.get(), 
+                       uri, unitarget.get(), 
                        postDataStream, headersDataStream);
 
   return rv;

@@ -537,9 +537,13 @@ public:
   nsresult TriggerLink(nsIPresContext* aPresContext,
                        nsLinkVerb aVerb,
                        nsIURI* aBaseURL,
-                       const nsString& aURLSpec,
-                       const nsString& aTargetSpec,
+                       const nsAString& aURLSpec,
+                       const nsAFlatString& aTargetSpec,
                        PRBool aClick);
+  /**
+   * Do whatever needs to be done when the mouse leaves a link
+   */
+  nsresult LeaveLink(nsIPresContext* aPresContext);
 
   /**
    * Take two text nodes and append the second to the first.

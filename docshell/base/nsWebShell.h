@@ -71,21 +71,22 @@ public:
     // nsILinkHandler
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
         nsLinkVerb aVerb,
-        const PRUnichar* aURLSpec,
+        nsIURI* aURI,
         const PRUnichar* aTargetSpec,
         nsIInputStream* aPostDataStream = 0,
         nsIInputStream* aHeadersDataStream = 0);
     NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
         nsLinkVerb aVerb,
-        const PRUnichar* aURLSpec,
+        nsIURI* aURI,
         const PRUnichar* aTargetSpec,
         nsIInputStream* aPostDataStream = 0,
         nsIInputStream* aHeadersDataStream = 0,
         nsIDocShell** aDocShell = 0,
         nsIRequest** aRequest = 0);
     NS_IMETHOD OnOverLink(nsIContent* aContent,
-        const PRUnichar* aURLSpec,
+        nsIURI* aURI,
         const PRUnichar* aTargetSpec);
+    NS_IMETHOD OnLeaveLink();
     NS_IMETHOD GetLinkState(const nsACString& aLinkURI, nsLinkState& aState);
 
     NS_IMETHOD Create();

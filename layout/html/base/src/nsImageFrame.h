@@ -178,7 +178,7 @@ protected:
   nsImageMap* GetImageMap(nsIPresContext* aPresContext);
 
   void TriggerLink(nsIPresContext* aPresContext,
-                   const nsString& aURLSpec,
+                   nsIURI* aURI,
                    const nsString& aTargetSpec,
                    PRBool aClick);
 
