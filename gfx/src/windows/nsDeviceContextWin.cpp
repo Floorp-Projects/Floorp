@@ -247,7 +247,7 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont * aFont)
   // Do Style
   aFont->style = NS_FONT_STYLE_NORMAL;
   if (logFont->lfItalic) {
-    aFont->decorations &= NS_FONT_STYLE_ITALIC;
+    aFont->style = NS_FONT_STYLE_ITALIC;
   }
   // XXX What about oblique?
 
@@ -260,10 +260,10 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont * aFont)
   // Do decorations
   aFont->decorations = NS_FONT_DECORATION_NONE;
   if (logFont->lfUnderline) {
-    aFont->decorations &= NS_FONT_DECORATION_UNDERLINE;
+    aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
   }
   if (logFont->lfStrikeOut) {
-    aFont->decorations &= NS_FONT_DECORATION_LINE_THROUGH;
+    aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
   }
 
   // Do Size
