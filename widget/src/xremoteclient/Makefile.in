@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		XRemoteClient.cpp \
+		XRemoteClientFactory.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -45,6 +46,15 @@ EXTRA_DSO_LDOPTS = \
 
 EXPORTS		= \
 		nsXRemoteClientCID.h
+
+PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
+
+PROGOBJS        = mozilla-xremote-client.$(OBJ_SUFFIX)
+
+LIBS            = \
+		XRemoteClient.$(OBJ_SUFFIX) \
+		$(XPCOM_LIBS) $(NSPR_LIBS) \
+		$(XLDFLAGS) $(XLIBS)
 
 include $(topsrcdir)/config/rules.mk
 

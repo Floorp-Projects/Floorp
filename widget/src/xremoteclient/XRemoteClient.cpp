@@ -20,16 +20,6 @@
  * Contributor(s): 
  */
 
-#define NS_XREMOTECLIENT_CID                        \
-{ 0xcfae5900,                                        \
-  0x1dd1,                                            \
-  0x11b2,                                            \
-  { 0x95, 0xd0, 0xad, 0x45, 0x4c, 0x23, 0x3d, 0xc6 } \
-}
-
-/* cfae5900-1dd1-11b2-95d0-ad454c233dc6 */
-
-#include "nsIGenericFactory.h"
 #include "XRemoteClient.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -67,6 +57,7 @@ XRemoteClient::XRemoteClient()
   mMozResponseAtom = 0;
   mMozWMStateAtom = 0;
   mMozUserAtom = 0;
+  mLockData = 0;
   if (!sRemoteLm)
     sRemoteLm = PR_NewLogModule("XRemoteClient");
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::XRemoteClient"));
@@ -165,6 +156,10 @@ XRemoteClient::Shutdown (void)
   XCloseDisplay(mDisplay);
   mDisplay = 0;
   mInitialized = PR_FALSE;
+  if (mLockData) {
+    free(mLockData);
+    mLockData = 0;
+  }
   return NS_OK;
 }
 
@@ -322,11 +317,11 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
   PRBool waited = PR_FALSE;
   *aDestroyed = PR_FALSE;
 
-  if (mLockData.Length() == 0) {
+  if (!mLockData) {
     
-    char pidstr[256];
-    char  sysinfobuf[SYS_INFO_BUFFER_LENGTH];
-    PR_snprintf(pidstr, 255, "pid%d@", getpid());
+    char pidstr[32];
+    char sysinfobuf[SYS_INFO_BUFFER_LENGTH];
+    PR_snprintf(pidstr, sizeof(pidstr), "pid%d@", getpid());
     PRStatus status;
     status = PR_GetSystemInfo(PR_SI_HOSTNAME, sysinfobuf,
 			      SYS_INFO_BUFFER_LENGTH);
@@ -334,8 +329,16 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
       NS_WARNING("failed to get hostname");
       return NS_ERROR_FAILURE;
     }
-    mLockData.Append(pidstr);
-    mLockData.Append(sysinfobuf);
+    
+    // allocate enough space for the string plus the terminating
+    // char
+    mLockData = (char *)malloc(strlen(pidstr) + strlen(sysinfobuf) + 1);
+    if (!mLockData)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    strcpy(mLockData, pidstr);
+    if (!strcat(mLockData, sysinfobuf))
+      return NS_ERROR_FAILURE;
   }
 
   do {
@@ -358,8 +361,8 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
       /* It's not now locked - lock it. */
       XChangeProperty (mDisplay, aWindow, mMozLockAtom, XA_STRING, 8,
 		       PropModeReplace,
-		       (unsigned char *) mLockData.get(),
-		       mLockData.Length());
+		       (unsigned char *)mLockData,
+		       strlen(mLockData));
       locked = True;
     }
 
@@ -462,11 +465,10 @@ XRemoteClient::FreeLock(Window aWindow)
 	    (unsigned int) aWindow));
     return NS_ERROR_FAILURE;
   }
-  else if (strcmp((char *)data, mLockData.get())) {
-  PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	 (MOZILLA_LOCK_PROP
-	  " was stolen!  Expected \"%s\", saw \"%s\"!\n",
-	  mLockData.get(), data));
+  else if (strcmp((char *)data, mLockData)) {
+    PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+	   (MOZILLA_LOCK_PROP " was stolen!  Expected \"%s\", saw \"%s\"!\n",
+	    mLockData, data));
     return NS_ERROR_FAILURE;
   }
 
@@ -596,15 +598,4 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
   return NS_OK;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteClient)
-
-static nsModuleComponentInfo components[] =
-{
-  { "XRemote Client",
-    NS_XREMOTECLIENT_CID,
-    NS_XREMOTECLIENT_CONTRACTID,
-    XRemoteClientConstructor }
-};
-
-NS_IMPL_NSGETMODULE(XRemoteClientModule, components);
   

@@ -20,18 +20,7 @@
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
-#include "nsString.h"
 #include "nsIXRemoteClient.h"
-#include "nsXRemoteClientCID.h"
-
-#define NS_XREMOTECLIENT_CID                         \
-{ 0xcfae5900,                                        \
-  0x1dd1,                                            \
-  0x11b2,                                            \
-  { 0x95, 0xd0, 0xad, 0x45, 0x4c, 0x23, 0x3d, 0xc6 } \
-}
-
-/* cfae5900-1dd1-11b2-95d0-ad454c233dc6 */
 
 class XRemoteClient : public nsIXRemoteClient
 {
@@ -65,7 +54,7 @@ private:
   Atom           mMozWMStateAtom;
   Atom           mMozUserAtom;
 
-  nsCString      mLockData;
+  char          *mLockData;
 
   PRBool         mInitialized;
 
