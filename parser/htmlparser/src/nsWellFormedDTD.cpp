@@ -692,6 +692,19 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
   const nsParserError* error = errTok->GetError();
   result=(mSink)? mSink->NotifyError(error):NS_OK;
 
+  // Output the error to the console  
+  if (error) {
+    char* temp;          
+    cout << "XML Error in file '" << (temp = mFilename.ToNewCString()) << "', ";
+    Recycle(temp);
+    cout << "Line Number: " << error->lineNumber << ", ";
+    cout << "Col Number: " << error->colNumber << ", ";
+    cout << "Description: " << (temp = error->description.ToNewCString()) << "\n";
+    Recycle(temp);
+    cout << "Source Line: " << (temp = error->sourceLine.ToNewCString()) << "\n";
+    Recycle(temp);
+  }
+
   return result;
 }
 
