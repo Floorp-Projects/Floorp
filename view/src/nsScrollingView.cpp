@@ -238,102 +238,91 @@ void CornerView :: Show(PRBool aShow)
 NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                                   PRUint32 aPaintFlags, PRBool &aResult)
 {
-  PRBool  clipres = PR_FALSE;
-
   if (mVis == nsViewVisibility_kShow)
   {
     nsRect  brect;
+    nscolor bgcolor;
 
-    rc.PushState();
     GetBounds(brect);
 
-    rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
+    brect.x = brect.y = 0;
 
-    if (clipres == PR_FALSE)
+    if (nsnull == mLookAndFeel)
     {
-      nscolor bgcolor;
-
-      if (nsnull == mLookAndFeel)
-      {
-        nsRepository::CreateInstance(kLookAndFeelCID, nsnull,
-                                     kILookAndFeelIID, (void **)&mLookAndFeel);
-      }
-
-      if (nsnull != mLookAndFeel)
-        mLookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground, bgcolor);
-      else
-        bgcolor = NS_RGB(192, 192, 192);
-
-      rc.SetColor(bgcolor);
-      rc.FillRect(brect);
-
-      if (PR_TRUE == mShowQuality)
-      {
-        nscolor tcolor, bcolor;
-
-        //display quality indicator
-
-        rc.Translate(brect.x, brect.y);
-
-        rc.SetColor(NS_RGB(0, 0, 0));
-
-        rc.FillEllipse(NSToCoordFloor(brect.width * 0.15f),
-                       NSToCoordFloor(brect.height * 0.15f),
-                       NSToCoordRound(brect.width * 0.7f),    // XXX should use NSToCoordCeil ??
-                       NSToCoordRound(brect.height * 0.7f));  // XXX should use NSToCoordCeil ??
-
-        if (mQuality == nsContentQuality_kGood)
-          rc.SetColor(NS_RGB(0, 255, 0));
-        else if (mQuality == nsContentQuality_kFair)
-          rc.SetColor(NS_RGB(255, 176, 0));
-        else
-          rc.SetColor(NS_RGB(255, 0, 0));
-
-        //hey, notice that these numbers don't add up... that's because
-        //something funny happens on windows when the *right* numbers are
-        //used. MMP
-
-        rc.FillEllipse(NSToCoordRound(brect.width * 0.23f),  // XXX should use NSToCoordCeil ??
-                       NSToCoordRound(brect.height * 0.23f), // XXX should use NSToCoordCeil ??
-                       nscoord(brect.width * 0.46f),
-                       nscoord(brect.height * 0.46f));
-
-        rc.GetColor(bcolor);
-        tcolor = bcolor;
-
-        //this is inefficient, but compact...
-
-        tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 40, 255), 
-                        (int)min(NS_GET_G(bcolor) + 40, 255),
-                        (int)min(NS_GET_B(bcolor) + 40, 255));
-
-        rc.SetColor(tcolor);
-
-        rc.FillEllipse(NSToCoordRound(brect.width * 0.34f),  // XXX should use NSToCoordCeil ??
-                       NSToCoordRound(brect.height * 0.34f), // XXX should use NSToCoordCeil ??
-                       nscoord(brect.width * 0.28f),
-                       nscoord(brect.height * 0.28f));
-
-        tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 120, 255), 
-                        (int)min(NS_GET_G(bcolor) + 120, 255),
-                        (int)min(NS_GET_B(bcolor) + 120, 255));
-
-        rc.SetColor(tcolor);
-
-        rc.FillEllipse(NSToCoordRound(brect.width * 0.32f),  // XXX should use NSToCoordCeil ??
-                       NSToCoordRound(brect.height * 0.32f), // XXX should use NSToCoordCeil ??
-                       nscoord(brect.width * 0.17f),
-                       nscoord(brect.height * 0.17f));
-      }
+      nsRepository::CreateInstance(kLookAndFeelCID, nsnull,
+                                   kILookAndFeelIID, (void **)&mLookAndFeel);
     }
 
-    rc.PopState(clipres);
+    if (nsnull != mLookAndFeel)
+      mLookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground, bgcolor);
+    else
+      bgcolor = NS_RGB(192, 192, 192);
 
-    if (clipres == PR_FALSE)
-      rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
+    rc.SetColor(bgcolor);
+    rc.FillRect(brect);
+
+    if (PR_TRUE == mShowQuality)
+    {
+      nscolor tcolor, bcolor;
+
+      //display quality indicator
+
+      rc.Translate(brect.x, brect.y);
+
+      rc.SetColor(NS_RGB(0, 0, 0));
+
+      rc.FillEllipse(NSToCoordFloor(brect.width * 0.15f),
+                     NSToCoordFloor(brect.height * 0.15f),
+                     NSToCoordRound(brect.width * 0.7f),    // XXX should use NSToCoordCeil ??
+                     NSToCoordRound(brect.height * 0.7f));  // XXX should use NSToCoordCeil ??
+
+      if (mQuality == nsContentQuality_kGood)
+        rc.SetColor(NS_RGB(0, 255, 0));
+      else if (mQuality == nsContentQuality_kFair)
+        rc.SetColor(NS_RGB(255, 176, 0));
+      else
+        rc.SetColor(NS_RGB(255, 0, 0));
+
+      //hey, notice that these numbers don't add up... that's because
+      //something funny happens on windows when the *right* numbers are
+      //used. MMP
+
+      rc.FillEllipse(NSToCoordRound(brect.width * 0.23f),  // XXX should use NSToCoordCeil ??
+                     NSToCoordRound(brect.height * 0.23f), // XXX should use NSToCoordCeil ??
+                     nscoord(brect.width * 0.46f),
+                     nscoord(brect.height * 0.46f));
+
+      rc.GetColor(bcolor);
+      tcolor = bcolor;
+
+      //this is inefficient, but compact...
+
+      tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 40, 255), 
+                      (int)min(NS_GET_G(bcolor) + 40, 255),
+                      (int)min(NS_GET_B(bcolor) + 40, 255));
+
+      rc.SetColor(tcolor);
+
+      rc.FillEllipse(NSToCoordRound(brect.width * 0.34f),  // XXX should use NSToCoordCeil ??
+                     NSToCoordRound(brect.height * 0.34f), // XXX should use NSToCoordCeil ??
+                     nscoord(brect.width * 0.28f),
+                     nscoord(brect.height * 0.28f));
+
+      tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 120, 255), 
+                      (int)min(NS_GET_G(bcolor) + 120, 255),
+                      (int)min(NS_GET_B(bcolor) + 120, 255));
+
+      rc.SetColor(tcolor);
+
+      rc.FillEllipse(NSToCoordRound(brect.width * 0.32f),  // XXX should use NSToCoordCeil ??
+                     NSToCoordRound(brect.height * 0.32f), // XXX should use NSToCoordCeil ??
+                     nscoord(brect.width * 0.17f),
+                     nscoord(brect.height * 0.17f));
+    }
   }
 
-  aResult = clipres;
+  aResult = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -862,7 +851,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
 
     rv = mCornerView->Init(mViewManager, trect, this,
                            nsnull, nsViewVisibility_kHide);
-    mViewManager->InsertChild(this, mCornerView, 1);
+    mViewManager->InsertChild(this, mCornerView, 3);
     mCornerView->CreateWidget(kWidgetCID, nsnull,
                               mWindow ? nsnull : aNative);
   }
