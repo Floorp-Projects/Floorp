@@ -1749,7 +1749,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
       data = data->mParentData;
     }
 
-    NS_ASSERTION(parentData->mSheet = aParentSheet,
+    NS_ASSERTION(parentData->mSheet == aParentSheet,
                  "Unexpected call to LoadChildSheet");
   } else {
     LOG(("  No parent load; must be CSSOM"));
