@@ -747,7 +747,11 @@ endif
 endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+	$(HOST_LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(EXTRA_LIBS)
+else
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+endif
 
 #
 # This is an attempt to support generation of multiple binaries
@@ -779,7 +783,7 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 endif
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): %.ho $(HOST_EXTRA_DEPS) Makefile Makefile.in
-	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_CC) $(OUTOPTION)$@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 
 #
 # Purify target.  Solaris/sparc only to start.
@@ -945,23 +949,21 @@ _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 ifeq ($(OS_ARCH),WINNT)
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
-	set -e ; \
+	echo "Building deps for $(srcdir)/$(<F)"; \
 	touch $(_MDDEPFILE) && \
 	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(srcdir)/$(<F) >/dev/null 2>&1 && \
 	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
 	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
-	echo "Building deps for $(srcdir)/$(<F)"; \
 fi
 endef
 else
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
-	set -e ; \
+	echo "Building deps for $<"; \
 	touch $(_MDDEPFILE) && \
 	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
 	cat $(_MDDEPFILE).old | sed -e "s|^$(<D)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
-	echo "Building deps for $<"; \
 fi
 endef
 endif # WINNT

@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 MOZILLA_OFFICIAL =
 BUILD_OFFICIAL   =
 MODULE		 = mkdepend
-PROGRAM		 = mkdepend$(BIN_SUFFIX)
+HOST_PROGRAM	 = mkdepend$(BIN_SUFFIX)
 ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
 else
@@ -39,7 +39,7 @@ MODULE_OPTIMIZE_FLAGS = -fast
 endif
 endif
 
-CSRCS		= \
+HOST_CSRCS	= \
 		cppsetup.c \
 		ifparser.c \
 		include.c \
@@ -50,12 +50,12 @@ CSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".$(OBJ_SUFFIX)\"
+HOST_CFLAGS	+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".$(OBJ_SUFFIX)\"
 
 ifdef GNU_CC
 _GCCDIR		= $(shell $(CC) -print-file-name=include)
-DEFINES		+= -DPREINCDIR=\"$(_GCCDIR)\"
+HOST_CFLAGS	+= -DPREINCDIR=\"$(_GCCDIR)\"
 endif
 
-export:: $(PROGRAM)
+export:: $(HOST_PROGRAM)
 

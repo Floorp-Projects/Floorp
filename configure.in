@@ -733,18 +733,46 @@ dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
+*-beos*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE -DNO_X11"
+    HOST_NSPR_MDCPUCFG='\"md/_beos.cfg\"'
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
+    ;;
+
+*cygwin*|*mingw*|*mksnt*|*msvc*)
+    HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -DXP_PC -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11"
+    HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
+    ;;
+
+*-darwin*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
+    HOST_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
+    ;;
+
 *-linux*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
+    ;;
+
+*os2*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11"
+    HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 
 *-osf*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_NSPR_MDCPUCFG='\"md/_osf1.cfg\"'
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 
-*cygwin*)
-    HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
+*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
+    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
-
 esac
 
 dnl ========================================================
@@ -955,6 +983,7 @@ case "$target" in
         fi
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
+        HOST_LD='$(LD)'
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
@@ -4745,8 +4774,9 @@ AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
-
+AC_SUBST(HOST_OPTIMIZE_FLAGS)
 AC_SUBST(HOST_AR)
+AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_NSPR_MDCPUCFG)
 
