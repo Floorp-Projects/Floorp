@@ -1489,8 +1489,23 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   }
   if (ar) {
     nsCOMPtr<nsIToolkitProfile> profile;
-    rv = profileSvc->CreateProfile(nsnull, nsDependentCString(arg),
-                                   getter_AddRefs(profile));
+
+    const char* delim = strchr(arg, ' ');
+    if (delim) {
+      nsCOMPtr<nsILocalFile> lf;
+      rv = NS_NewNativeLocalFile(nsDependentCString(delim + 1),
+                                   PR_TRUE, getter_AddRefs(lf));
+      if (NS_FAILED(rv)) {
+        PR_fprintf(PR_STDERR, "Error: profile path not valid.");
+        return rv;
+      }
+      
+      rv = profileSvc->CreateProfile(lf, nsDependentCSubstring(arg, delim),
+                                     getter_AddRefs(profile));
+    } else {
+      rv = profileSvc->CreateProfile(nsnull, nsDependentCString(arg),
+                                     getter_AddRefs(profile));
+    }
     if (NS_SUCCEEDED(rv)) {
       rv = NS_ERROR_ABORT;
       PR_fprintf(PR_STDERR, "Success: created profile '%s'\n", arg);
@@ -1922,11 +1937,6 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // So we can open and close windows during startup
       appShellService->EnterLastWindowClosingSurvivalArea();
 
-      NS_TIMELINE_ENTER("appShellService->CreateHiddenWindow");
-      rv = appShellService->CreateHiddenWindow();
-      NS_TIMELINE_LEAVE("appShellService->CreateHiddenWindow");
-      NS_ENSURE_SUCCESS(rv, 1);
-
       if (gDoMigration) {
         gDoMigration = PR_FALSE;
         nsCOMPtr<nsIProfileMigrator> pm
@@ -1935,6 +1945,11 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
           pm->Migrate(&dirProvider);
       }
       dirProvider.DoStartup();
+
+      NS_TIMELINE_ENTER("appShellService->CreateHiddenWindow");
+      rv = appShellService->CreateHiddenWindow();
+      NS_TIMELINE_LEAVE("appShellService->CreateHiddenWindow");
+      NS_ENSURE_SUCCESS(rv, 1);
 
       // Extension Compatibility Checking and Startup
       nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
