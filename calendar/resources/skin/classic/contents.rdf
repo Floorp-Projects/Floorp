@@ -62,7 +62,6 @@
 	</RDF:Seq>
 	<RDF:Seq about="chrome://browser/content/browser.xul">
 		<RDF:li>chrome://calendar/skin/calendar-button.css</RDF:li>
-		<RDF:li>chrome://calendar/skin/calendar.css</RDF:li>
 	</RDF:Seq>
 	<RDF:Seq about="chrome://global/content/customizeToolbar.xul">
 		<RDF:li>chrome://calendar/skin/calendar-button.css</RDF:li>
