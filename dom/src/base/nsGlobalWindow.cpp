@@ -2136,7 +2136,7 @@ GlobalWindowImpl::Dump(const nsAString& aStr)
 
   if (cstr) {
     printf("%s", cstr);
-    nsCRT::free(cstr);
+    nsMemory::Free(cstr);
   }
 
   return NS_OK;
@@ -5150,7 +5150,9 @@ nsTimeoutImpl::Release(nsIScriptContext *aContext)
     mTimer = nsnull;
   }
 
-  PR_FREEIF(mFileName);
+  if (mFileName) {
+    PL_strfree(mFileName);
+  }
 
   NS_IF_RELEASE(mWindow);
 
