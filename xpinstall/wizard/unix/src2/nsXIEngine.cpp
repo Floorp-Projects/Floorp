@@ -57,7 +57,6 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
     nsFTPConn *conn = NULL;
     char *currURL = NULL;
     char *currHost = NULL;
-    char *lastHost = NULL;
     char *currDir = NULL;
     int i;
     
@@ -88,33 +87,25 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     nsInstallDlg::SetDownloadComp(currComp->GetDescShort(),
                         currCompNum, mTotalComps);
             
-                    if ( (lastHost && currHost && 
-                          (strcmp(lastHost, currHost) != 0)) || !conn)
+                    conn = new nsFTPConn(currHost);
+                    err = conn->Open();
+                    if (err != nsFTPConn::OK)
                     {
-                        if (lastHost && conn) 
-                        {
-                            conn->Close();
-                            XI_IF_DELETE(conn);
-                        }
-                        conn = new nsFTPConn(currHost);
-                        err = conn->Open();
-                        if (err != nsFTPConn::OK)
-                        {
-                            /* open failed: failover to next URL */
-                            XI_IF_DELETE(conn);
-                            XI_IF_FREE(currHost);
-                            XI_IF_FREE(currDir);
-                            lastHost = NULL;
-                            continue;
-                        }
+                        /* open failed: failover to next URL */
+                        XI_IF_DELETE(conn);
+                        XI_IF_FREE(currHost);
+                        XI_IF_FREE(currDir);
+                        continue;
                     }
 
                     err = FTPAnonGet(conn, currDir, currComp->GetArchive());
                     nsInstallDlg::ClearRateLabel(); // clean after ourselves
 
-                    XI_IF_FREE(lastHost);
+                    if (conn)
+                        conn->Close();
+                    XI_IF_DELETE(conn);
+                    XI_IF_FREE(currHost);
                     XI_IF_FREE(currDir);
-                    lastHost = currHost; /* helps determine open conn reuse */
 
                     if (err == OK) 
                     {
@@ -128,10 +119,6 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
         currComp = currComp->GetNext();
     }
     
-    XI_IF_FREE(currHost);
-    if (conn) 
-        conn->Close();
-    XI_IF_DELETE(conn);
     return OK;
 }
 

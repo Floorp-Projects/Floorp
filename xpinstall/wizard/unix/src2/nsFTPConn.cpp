@@ -191,10 +191,6 @@ BAIL:
     if (connfd > 0)
     {
         RawClose(connfd);
-    
-        /* flush control connection after closing data connection */
-        respBufSize = RESP_BUF_SIZE;
-        RawRecv((unsigned char *)resp, &respBufSize, mCntlFd);
     }
 
     mState = OPEN;
@@ -212,9 +208,6 @@ nsFTPConn::Close()
     if (mState != OPEN)
         return E_NOT_OPEN;
 
-    sprintf(cmd, "QUIT\r\n");
-    IssueCmd(cmd, resp, RESP_BUF_SIZE, mCntlFd);
-    
     /* close sockets */
     if (mCntlFd > 0)
     {
