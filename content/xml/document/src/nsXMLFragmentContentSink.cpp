@@ -48,7 +48,9 @@
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-
+#include "nsDOMError.h"
+#include "nsIConsoleService.h"
+#include "nsServiceManagerUtils.h"
 
 class nsXMLFragmentContentSink : public nsXMLContentSink,
                                  public nsIFragmentContentSink
@@ -107,9 +109,10 @@ protected:
   nsCOMPtr<nsIDocument> mTargetDocument;
   // the fragment
   nsCOMPtr<nsIContent>  mRoot;
+  PRPackedBool          mParseError;
 
   // if FALSE, take content inside endnote tag
-  PRBool                mAllContent;
+  PRPackedBool          mAllContent;
   nsCOMPtr<nsIContent>  mEndnote;
 };
 
@@ -139,7 +142,7 @@ NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aResult)
 }
 
 nsXMLFragmentContentSink::nsXMLFragmentContentSink(PRBool aAllContent)
- : mAllContent(aAllContent)
+ : mParseError(PR_FALSE), mAllContent(aAllContent)
 {
 }
 
@@ -176,7 +179,7 @@ nsXMLFragmentContentSink::DidBuildModel()
 {
   PopContent();  // remove mRoot pushed above
   
-  if (!mAllContent) {
+  if (!mAllContent && !mParseError) {
     NS_ASSERTION(mEndnote, "<endnote> missing in fragment string.");
     if (mEndnote) {
       NS_ASSERTION(mRoot->GetChildCount() == 1, "contents have too many children!");
@@ -295,8 +298,40 @@ NS_IMETHODIMP
 nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText, 
                                       const PRUnichar* aSourceText)
 {
+  mParseError = PR_TRUE;
+  // The following error reporting is copied from nsXBLContentSink::ReportError()
+
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (consoleService) {
+    consoleService->LogStringMessage(aErrorText);
+  }
+
+#ifdef DEBUG
+  // Report the error to stderr.
+  fprintf(stderr,
+          "\n%s\n%s\n\n",
+          NS_LossyConvertUCS2toASCII(aErrorText).get(),
+          NS_LossyConvertUCS2toASCII(aSourceText).get());
+#endif
+
+  // The following code is similar to the cleanup in nsXMLContentSink::ReportError()
+  mState = eXMLContentSinkState_InProlog;
+  mNameSpaceStack.Clear();
+
+  // Clear the current content
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mRoot));
-  return ReportErrorFrom( aErrorText, aSourceText, node );
+  if (node) {
+    for (;;) {
+      nsCOMPtr<nsIDOMNode> child, dummy;
+      node->GetLastChild(getter_AddRefs(child));
+      if (!child)
+        break;
+      node->RemoveChild(child, getter_AddRefs(dummy));
+    }
+  }
+
+  return NS_OK; 
 }
 
 nsresult
@@ -329,13 +364,15 @@ nsXMLFragmentContentSink::StartLayout()
 NS_IMETHODIMP 
 nsXMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
 {
-  if (mRoot) {
-    return CallQueryInterface(mRoot, aFragment);
-  }
-
   *aFragment = nsnull;
-
-  return NS_OK;
+  if (mParseError) {
+    //XXX PARSE_ERR from DOM3 Load and Save would be more appropriate
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  } else if (mRoot) {
+    return CallQueryInterface(mRoot, aFragment);
+  } else {
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP

@@ -1339,15 +1339,6 @@ NS_IMETHODIMP
 nsXMLContentSink::ReportError(const PRUnichar* aErrorText, 
                               const PRUnichar* aSourceText)
 {
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
-  return ReportErrorFrom( aErrorText, aSourceText, node );
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::ReportErrorFrom(const PRUnichar* aErrorText, 
-                                  const PRUnichar* aSourceText,
-                                  nsIDOMNode* aNode)
-{
   nsresult rv = NS_OK;
   
   mPrettyPrintXML = PR_FALSE;
@@ -1360,13 +1351,14 @@ nsXMLContentSink::ReportErrorFrom(const PRUnichar* aErrorText,
 
   // Clear the current content and
   // prepare to set <parsererror> as the document root
-  if (aNode) {
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
+  if (node) {
     for (;;) {
       nsCOMPtr<nsIDOMNode> child, dummy;
-      aNode->GetLastChild(getter_AddRefs(child));
+      node->GetLastChild(getter_AddRefs(child));
       if (!child)
         break;
-      aNode->RemoveChild(child, getter_AddRefs(dummy));
+      node->RemoveChild(child, getter_AddRefs(dummy));
     }
   }
   NS_IF_RELEASE(mDocElement); 

@@ -132,12 +132,6 @@ protected:
   PRInt32 PushContent(nsIContent *aContent);
   already_AddRefed<nsIContent> PopContent();
 
-  // node is the base content which will be cleared out and an error fragment will be inserted
-  // return value indicates whether fragment was successfully created
-  NS_IMETHOD ReportErrorFrom(const PRUnichar* aErrorText, 
-                             const PRUnichar* aSourceText,
-                             nsIDOMNode* aNode);
-
   nsresult ProcessBASETag(nsIContent* aContent);
 
   
