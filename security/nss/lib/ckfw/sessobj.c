@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.2 $ $Date: 2000/04/03 21:58:53 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -870,7 +870,7 @@ attributes_match
     return 0;
   }
 
-  if( PR_TRUE == nsslibc_memequal(a->data, b->data, a->size, (PRStatus *)NULL) ) {
+  if( PR_TRUE == nsslibc_memequal(a->data, b_data, a->size, (PRStatus *)NULL) ) {
     return 1;
   } else {
     return 0;
