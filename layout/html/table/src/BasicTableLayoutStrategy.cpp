@@ -1416,8 +1416,8 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32& aCellSpacing,
       aTotalAvailWidths[MIN_PRO] = aTotalWidths[MIN_PRO];
       aTotalCounts[DES_CON]++;
       aTotalWidths[DES_CON] += NSToCoordRound(((float)minProp) * mMinToDesProportionRatio);
-      aTotalAvailWidths[DES_CON] = aTotalWidths[DES_CON]+PR_MAX(0,colFrame->GetWidth(DES_ADJ) - 
-                 NSToCoordRound(((float)minProp) * mMinToDesProportionRatio));
+      aTotalAvailWidths[DES_CON] += PR_MAX(colFrame->GetWidth(DES_ADJ),
+                                           NSToCoordRound(((float)minProp) * mMinToDesProportionRatio));      
       aMinWidths[MIN_PRO] += minCol;
       aMinWidths[DES_CON] += minProp;
       continue;
