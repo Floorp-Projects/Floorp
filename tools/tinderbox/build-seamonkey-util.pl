@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.59 $ ';
+$::UtilsVersion = '$Revision: 1.60 $ ';
 
 package TinderUtils;
 
@@ -549,6 +549,8 @@ sub BuildIt {
     my $exit_early = 0;
     my $start_time = 0;
 
+	my $status = 0;
+
 	my $build_failure_count = 0;  # Keep count of build failures.
 
     # Bypass profile at startup.
@@ -618,7 +620,7 @@ sub BuildIt {
 		  # Set CVSROOT here.  We should only need to checkout a new
 		  # version of client.mk once; we might have more than one
 		  # cvs tree so set CVSROOT here to avoid confusion.
-		  $ENV{CVSROOT} = ":pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot";
+		  $ENV{CVSROOT} = $Settings::moz_cvsroot;
 		  
 		  run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
         }
@@ -644,7 +646,7 @@ sub BuildIt {
 			# Make sure we have an ObjDir if we need one.
 			mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
-            my $status = run_shell_command "$make $targets";
+            $status = run_shell_command "$make $targets";
             if ($status != 0) {
               $build_status = 'busted';
             } elsif (not BinaryExists($full_binary_name)) {
