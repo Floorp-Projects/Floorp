@@ -717,7 +717,9 @@ var BookmarksToolbar =
 
   resizeFunc: function(event) 
   { 
-    if (event && event.target != document)
+    if (!event) // timer callback case
+      BookmarksToolbarRDFObserver._overflowTimerInEffect = false;
+    else if (event.target != document)
       return; // only interested in chrome resizes
 
     var buttons = document.getElementById("bookmarks-ptf");
@@ -755,7 +757,6 @@ var BookmarksToolbar =
         }
       }
     }
-    BookmarksToolbarRDFObserver._overflowTimerInEffect = false;
   },
 
   // Fill in tooltips for personal toolbar
@@ -807,7 +808,7 @@ var BookmarksToolbarRDFObserver =
     if (this._overflowTimerInEffect)
       return;
     this._overflowTimerInEffect = true;
-    setTimeout(BookmarksToolbar.resizeFunc, 0);
+    setTimeout(BookmarksToolbar.resizeFunc, 0, null);
   },
 
   _overflowTimerInEffect: false,
@@ -818,6 +819,6 @@ var BookmarksToolbarRDFObserver =
     if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == NC_NS+"LastModifiedDate")
       return;
     this._overflowTimerInEffect = true;
-    setTimeout(BookmarksToolbar.resizeFunc, 0);
+    setTimeout(BookmarksToolbar.resizeFunc, 0, null);
   }
 }
