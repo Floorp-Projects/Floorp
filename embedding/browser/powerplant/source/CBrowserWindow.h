@@ -43,6 +43,8 @@
 #include "nsIWidget.h"
 #endif
 
+#include "nsIWebBrowserChrome.h"
+
 class CBrowserShell;
 class CWebBrowserChrome;
 class LEditText;
@@ -54,6 +56,9 @@ class nsIDocumentLoader;
 class nsIURI;
 class nsIRequest;
 class nsIWebProgress;
+class CWebBrowserCMAttachment;
+class nsIDOMEvent;
+class nsIDOMNode;
 
 // CBrowserWindow:
 // A simple browser window that hooks up a CBrowserShell to a minimal set of controls
@@ -61,45 +66,62 @@ class nsIWebProgress;
 
 
 class CBrowserWindow :	public LWindow,
-						      public LListener,
-						      public LBroadcaster
+						public LListener,
+						public LBroadcaster
 {
 private:
-	typedef LWindow Inherited;
+    typedef LWindow Inherited;
 
-   friend class CWebBrowserChrome;	
+    friend class CWebBrowserChrome;	
 
 public:
 	enum { class_ID = FOUR_CHAR_CODE('BroW') };
 
-						      CBrowserWindow();
-						      CBrowserWindow(LStream*	inStream);
+                                CBrowserWindow();
+                                CBrowserWindow(LCommander*		inSuperCommander,
+                                               const Rect&		inGlobalBounds,
+                                               ConstStringPtr	inTitle,
+                                               SInt16			inProcID,
+                                               UInt32			inAttributes,
+                                               WindowPtr		inBehind);
+                                CBrowserWindow(LStream*	inStream);
 
-	virtual				   ~CBrowserWindow();
+	virtual				        ~CBrowserWindow();
 
+    static CBrowserWindow*      CreateWindow(PRUint32 chromeFlags, PRInt32 width, PRInt32 height);
 
-   virtual void         FinishCreate();
-	virtual void		   FinishCreateSelf();
-	virtual void		   ResizeFrameBy(SInt16		inWidthDelta,
+    virtual void                FinishCreate();
+	virtual void                FinishCreateSelf();
+	virtual void                ResizeFrameBy(SInt16		inWidthDelta,
              								  SInt16		inHeightDelta,
-             								  Boolean	inRefresh);
-   virtual void         ShowSelf();
+             								  Boolean	    inRefresh);
+    virtual void                ShowSelf();
 
-	virtual void		   ListenToMessage(MessageT		inMessage,
+	virtual void                ListenToMessage(MessageT		inMessage,
     								             void*			ioParam);
 
-	virtual Boolean		ObeyCommand(CommandT			inCommand,
-      								      void				*ioParam);
+	virtual Boolean             ObeyCommand(CommandT			inCommand,
+      								        void				*ioParam);
 								
-  virtual void          FindCommandStatus(PP_PowerPlant::CommandT	inCommand,
-                                         	Boolean					&outEnabled,
-                                         	Boolean					&outUsesMark,
-                                         	PP_PowerPlant::Char16	&outMark,
-                                         	Str255					outName);
+    virtual void                FindCommandStatus(PP_PowerPlant::CommandT	inCommand,
+                                             	  Boolean					&outEnabled,
+                                             	  Boolean					&outUsesMark,
+                                             	  PP_PowerPlant::Char16	    &outMark,
+                                             	  Str255					outName);
 
-   NS_METHOD            GetWidget(nsIWidget** aWidget);
-   CBrowserShell*       GetBrowserShell() const
-                        { return mBrowserShell; }
+    NS_METHOD                   GetWidget(nsIWidget** aWidget);
+    CBrowserShell*              GetBrowserShell() const
+                                { return mBrowserShell; }
+                        
+    void                        SetSizeToContent(Boolean isSizedToContent)
+                                { mSizeToContent = isSizedToContent; }
+    Boolean                     GetSizeToContent()
+                                { return mSizeToContent; }
+    NS_METHOD                   SizeToContent();
+                        
+    NS_METHOD                   Stop();
+    Boolean                     IsBusy()
+                                { return mBusy; }
                         
 protected:
 
@@ -110,30 +132,41 @@ protected:
    // Methods called by CWebBrowserChrome
    // -----------------------------------
    
-   NS_METHOD            SetStatus(const PRUnichar* aStatus);
-   NS_METHOD            SetOverLink(const PRUnichar* aStatus)
-                        { return SetStatus(aStatus); }
+    NS_METHOD                   SetStatus(const PRUnichar* aStatus);
+    NS_METHOD                   SetOverLink(const PRUnichar* aStatus)
+                                { return SetStatus(aStatus); }
                         
-   NS_METHOD            SetLocation(const nsString& aLocation);
+    NS_METHOD                   SetLocation(const nsString& aLocation);
                         
-	NS_METHOD            OnStatusNetStart(nsIWebProgress *progress, nsIRequest *request,
-                                         PRInt32 progressStateFlags, PRUint32 status);
-	NS_METHOD            OnStatusNetStop(nsIWebProgress *progress, nsIRequest *request,
-                                        PRInt32 progressStateFlags, PRUint32 status);
+	NS_METHOD                   OnStatusNetStart(nsIWebProgress *progress, nsIRequest *request,
+                                                 PRInt32 progressStateFlags, PRUint32 status);
+	NS_METHOD                   OnStatusNetStop(nsIWebProgress *progress, nsIRequest *request,
+                                                PRInt32 progressStateFlags, PRUint32 status);
 
-   NS_METHOD            OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
-                                         PRInt32 curSelfProgress, PRInt32 maxSelfProgress, 
-                                         PRInt32 curTotalProgress, PRInt32 maxTotalProgress);   
+    NS_METHOD                   OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
+                                                 PRInt32 curSelfProgress, PRInt32 maxSelfProgress, 
+                                                 PRInt32 curTotalProgress, PRInt32 maxTotalProgress);
+                                                 
+    NS_METHOD                   SetVisibility(PRBool aVisibility);
+    
+    NS_METHOD                   OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
+       
 protected:
-   nsCOMPtr<nsIWidget>  mWindow;
+    nsCOMPtr<nsIWidget>         mWindow;
 
-	CBrowserShell*		   mBrowserShell;
-	CWebBrowserChrome*   mBrowserChrome;
-	LEditText*			   mURLField;
-	LStaticText*		   mStatusBar;
-	CThrobber*           mThrobber;
-	LBevelButton			*mBackButton, *mForwardButton, *mStopButton;
-	LProgressBar*        mProgressBar;
+	CBrowserShell*		        mBrowserShell;
+	CWebBrowserChrome*          mBrowserChrome;
+	LEditText*			        mURLField;
+	LStaticText*		        mStatusBar;
+	CThrobber*                  mThrobber;
+	LBevelButton			    *mBackButton, *mForwardButton, *mStopButton;
+	LProgressBar*               mProgressBar;
+	Boolean                     mBusy;
+	Boolean                     mInitialLoadComplete, mShowOnInitialLoad;
+	Boolean                     mSizeToContent;
+	
+	PRUint32                    mContextMenuContext;
+	nsIDOMNode*                 mContextMenuDOMNode; // weak ref - only kept during call of OnShowContextMenu
 };
 
 
