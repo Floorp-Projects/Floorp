@@ -1,7 +1,4 @@
 .deps
 Makefile
-art_config.h
-gen_art_config
-host_gen_art_config
 testart
 testuta

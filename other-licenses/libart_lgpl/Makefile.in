@@ -9,8 +9,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE	= libart_lgpl
 LIBRARY_NAME = moz_art_lgpl
 
-REQUIRES = nspr
-
 CSRCS  = \
 	art_affine.c \
 	art_alphagamma.c \
@@ -100,14 +98,6 @@ EXPORTS = \
 	libart-features.h \
 	$(NULL)
 
-ifdef CROSS_COMPILE
-GEN_ART_CONFIG = host_gen_art_config$(BIN_SUFFIX)
-HOST_SIMPLE_PROGRAMS = $(GEN_ART_CONFIG)
-else
-GEN_ART_CONFIG = gen_art_config$(BIN_SUFFIX)
-SIMPLE_PROGRAMS = $(GEN_ART_CONFIG)
-endif
-
 ifdef ENABLE_TESTS
 SIMPLE_PROGRAMS	= testart testuta
 endif
@@ -118,12 +108,6 @@ FORCE_SHARED_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-art_config.h: $(GEN_ART_CONFIG) Makefile Makefile.in
-	./$(GEN_ART_CONFIG) > art_config.h
-
 DEFINES	+= -DLIBART_COMPILATION
-
-# SIMPLE_PROGRAMS doesn't use REQUIRES, but we need this for config.h!
-CFLAGS += -I$(DIST)/include/nspr
 
 LIBS += -L. -l$(LIBRARY_NAME)
