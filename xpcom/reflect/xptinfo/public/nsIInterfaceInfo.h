@@ -50,6 +50,8 @@ public:
     // These include methods and constants of parents.
     // There do *not* make copies ***explicit bending of XPCOM rules***
     NS_IMETHOD GetMethodInfo(uint16 index, const nsXPTMethodInfo** info) = 0;
+    NS_IMETHOD GetMethodInfoForName(const char* methodName, uint16 *index,
+                                    const nsXPTMethodInfo** info) = 0;
     NS_IMETHOD GetConstant(uint16 index, const nsXPTConstant** constant) = 0;
 
     // Get the interface information or iid associated with a param of some
