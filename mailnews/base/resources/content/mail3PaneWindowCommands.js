@@ -1046,7 +1046,8 @@ function SearchBarToggled()
   }
 
   for (var currentNode = top.document.commandDispatcher.focusedElement; currentNode; currentNode = currentNode.parentNode) {
-    if (currentNode.getAttribute("hidden") == "true") {
+    // But skip the last node, which is a XULDocument.
+    if ((currentNode instanceof XULElement) && currentNode.hidden) {
       SetFocusThreadPane();
       return;
     }
