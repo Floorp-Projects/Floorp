@@ -129,7 +129,9 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFontHandle.SetSize( rounded * app2dev );
  
 #ifdef NOISY_FONTS
+#ifdef DEBUG
   fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
+#endif
 #endif
 
   RealizeFont(aContext);
