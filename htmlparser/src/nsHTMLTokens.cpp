@@ -297,7 +297,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CStartToken::GetSource(nsString& anOutputString){
-  anOutputString="<";
+  anOutputString+="<";
   /*
    * mTextValue used to contain the name of the tag.
    * But for the sake of performance we now rely on the tagID
@@ -429,7 +429,7 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEndToken::GetSource(nsString& anOutputString){
-  anOutputString="</";
+  anOutputString+="</";
   anOutputString+=mTextValue;
   anOutputString+=">";
 }
@@ -486,8 +486,8 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  static nsString theTerminals("\n\r&<",4);
+nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {;
+  static nsString theTerminals("\n\r&<",4);  
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
@@ -1176,7 +1176,7 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
  *  @return  nada
  */
 void CAttributeToken::GetSource(nsString& anOutputString){
-  anOutputString=mTextKey;
+  anOutputString+=mTextKey;
   anOutputString+="=";
   anOutputString+=mTextValue;
   anOutputString+=";";
@@ -1670,7 +1670,7 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEntityToken::GetSource(nsString& anOutputString){
-  anOutputString="&";
+  anOutputString+="&";
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }

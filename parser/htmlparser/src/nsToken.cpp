@@ -183,7 +183,7 @@ nsString& CToken::GetStringValueXXX(void) {
  * @return  reference to string containing string value
  */
 void CToken::GetSource(nsString& anOutputString){
-  anOutputString=mTextValue;
+  anOutputString+=mTextValue;
 }
 
 /**
