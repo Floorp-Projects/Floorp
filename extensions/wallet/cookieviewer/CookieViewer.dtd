@@ -1,0 +1,25 @@
+<!ENTITY     tab.cookiesonsystem.label      "Stored Cookies">
+<!ENTITY     tab.bannedservers.label        "Website Setup">
+<!ENTITY     div.bannedservers.label        "Select Internet websites that can and cannot store Cookies on your computer.">
+<!ENTITY     div.cookiesonsystem.label      "View and Remove Cookies that are stored on your computer.">
+<!ENTITY     treehead.cookiename.label      "Cookie Name">
+<!ENTITY     treehead.cookiedomain.label    "Cookie Domain"> 
+<!ENTITY     treehead.infoselected.label    "Information about the selected Cookie">
+<!ENTITY     button.removecookie.label      "Remove Cookie">
+
+<!ENTITY     props.name.label               "Cookie Name:">
+<!ENTITY     props.value.label              "Data Stored in Cookie:">
+<!ENTITY     props.domain.label             "Server which set the Cookie:">
+<!ENTITY     props.path.label               "Path:">
+<!ENTITY     props.secure.label             "Is Cookie secure?">
+<!ENTITY     props.expires.label            "Cookie will expire on:">
+
+<!ENTITY     treehead.sitename.label        "Domain Name">
+<!ENTITY     treehead.status.label          "Status">
+<!ENTITY     windowtitle.label              "Cookie Manager">
+
+<!ENTITY     addpermission.label            "New Site">
+<!ENTITY     removepermission.label         "Remove Site">
+
+<!ENTITY     canSet.label                   "can set cookies">
+<!ENTITY     cannotSet.label                "cannot set cookies">

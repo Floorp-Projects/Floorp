@@ -1,0 +1,84 @@
+window {
+  min-width: 400px;
+  min-height: 400px;
+}
+
+box.tabpanel {
+  border: 1px outset #CCCCDD;
+  padding: 10px;
+}
+
+tab {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+treehead > treerow > treecell {
+  border: 1px outset #CCCCDD;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  background-color: #CCCCDD;
+  color: #000000;
+}
+
+treechildren > treeitem > treerow > treecell {
+  border-right: 1px solid #CCCCDD;
+  border-bottom: 1px solid #CCCCDD;
+  color: inherit;
+  padding-left: 10px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+treechildren > treeitem > treerow > treecell.fieldcell {
+  border-right: 1px solid #CCCCDD;
+  border-bottom: 1px solid #CCCCDD;
+  color: inherit;
+  padding: 0px;
+  margin: 0px;
+}
+
+
+treechildren > treeitem > treerow [selectedrow ~= false] {
+  background-color: white;
+  color: black;
+}
+
+treechildren > treeitem > treerow [selectedrow ~= true] {
+  background-color: #666699;
+  color: white;
+}
+
+tree#infotree treechildren > treeitem > treerow [selectedrow ~= false] {
+  background-color: white;
+  color: black;
+}
+
+tree#infotree treechildren > treeitem > treerow [selectedrow ~= true] {
+  background-color: white;
+  color: black;
+}
+
+tree {
+  border: 1px inset #CCCCDD;
+}
+
+a {
+  color: #0000FF;
+  text-decoration: underline;
+}
+
+a:hover {
+  color: #FF0000;
+  text-decoration: underline;
+}
+
+tree treechildren > treeitem > treerow[selectedrow=true] > treecell > a:link {
+  color: #FFFFFF;
+}
+
+tree treechildren > treeitem > treerow[selectedrow ~= true]  > treecell > a:hover {
+  color: #FFFFFF;
+}
