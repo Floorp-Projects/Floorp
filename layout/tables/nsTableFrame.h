@@ -430,7 +430,8 @@ public:
                                   PRInt32            aColX, 
                                   PRBool*            aOriginates = nsnull, 
                                   PRInt32*           aColSpan = nsnull);
-  PRInt32 GetNumCellsOriginatingIn(PRInt32 aColIndex);
+  PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
+  PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
   NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
 
@@ -820,6 +821,11 @@ public: /* ----- Cell Map public methods ----- */
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
   PRBool RequiresPass1Layout();
 
+  // compute the height of the table to be used as the basis for 
+  // percentage height cells
+  void ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState);
+
+  nscoord GetPercentBasisForRows();
 
   /*---------------- nsITableLayout methods ------------------------*/
   
@@ -864,6 +870,7 @@ protected:
 
   nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
+  nscoord      mPercentBasisForRows;
 };
 
 
@@ -872,6 +879,11 @@ inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
   return PRBool((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplayType));
+}
+
+inline nscoord nsTableFrame::GetPercentBasisForRows()
+{
+  return mPercentBasisForRows;
 }
 
 enum nsTableIteration {

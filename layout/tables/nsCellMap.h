@@ -69,8 +69,9 @@ public:
   PRInt32 GetEffectiveColSpan(nsTableCellFrame* aCell) const;
   PRInt32 GetEffectiveColSpan(PRInt32                 aColIndex, 
                               const nsTableCellFrame* aCell) const;
-  PRInt32 GetNumCellsIn(PRInt32 aColIndex) const;
-  PRInt32 GetNumCellsOriginatingIn(PRInt32 aColIndex) const;
+
+  PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
+  PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
   PRInt32 GetNumCollapsedRows() const;
   PRBool IsRowCollapsedAt(PRInt32 aRowIndex) const;
@@ -143,9 +144,13 @@ protected:
   /** an array of col frames. It is as large as mRowCount */
   nsVoidArray mColFrames;
 
-  /** an array of PRInt32[2] indexed by col and giving the number of cells originating
-    * and occupying each col. */
-  nsVoidArray mNumCellsInCol;
+  /** an array of PRInt32 indexed by row and giving the number of cells originating
+    * in each row. */
+  nsVoidArray mNumCellsOrigInRow;
+
+  /** an array of PRInt32 indexed by col and giving the number of cells originating
+    * in each col. */
+  nsVoidArray mNumCellsOrigInCol;
 
   // an array of booleans where the ith element indicates if the ith row is collapsed
   PRPackedBool* mIsCollapsedRows;
@@ -167,7 +172,7 @@ inline CellData* nsCellMap::GetCellAt(PRInt32 aRowIndex,
                                       PRInt32 aColIndex) const
 {
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
-      (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+      (0 > aColIndex) || (aColIndex >= mNumCellsOrigInCol.Count())) {
     //bug 9024 tickled this
     //printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
@@ -184,7 +189,7 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
                                          PRInt32 aColIndex) const
 {
   if ((0 > aMapRowIndex) || (aMapRowIndex >= mRows.Count()) || 
-      (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+      (0 > aColIndex) || (aColIndex >= mNumCellsOrigInCol.Count())) {
     //see bug 9024 comments above 
     //printf("%s \n", "nsCellMap::GetMapCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
@@ -199,7 +204,7 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
 
 inline PRInt32 nsCellMap::GetColCount() const
 { 
-  return mNumCellsInCol.Count();
+  return mNumCellsOrigInCol.Count();
 }
 
 inline PRInt32 nsCellMap::GetRowCount() const

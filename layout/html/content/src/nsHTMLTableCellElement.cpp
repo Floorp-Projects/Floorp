@@ -448,28 +448,31 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
 
-    // width: pixel
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
-    if (widthValue.GetUnit() == eHTMLUnit_Pixel) {
+    if (widthValue.GetUnit() == eHTMLUnit_Pixel) {     // width: pixel
       nscoord width = widthValue.GetPixelValue();
       nscoord twips = NSIntPixelsToTwips(width, p2t);
       pos->mWidth.SetCoordValue(twips);
     }
-    else if (widthValue.GetUnit() == eHTMLUnit_Percent) {
+    else if (widthValue.GetUnit() == eHTMLUnit_Percent) { // width: percent
       float widthPercent = widthValue.GetPercentValue();
       pos->mWidth.SetPercentValue(widthPercent);
     }
 
     // height: pixel
     aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
+    if (value.GetUnit() == eHTMLUnit_Pixel) { // height: pixel
       nscoord height = value.GetPixelValue();
       nscoord twips = NSIntPixelsToTwips(height, p2t);
       pos->mHeight.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) { // height: percent
+      float heightPercent = value.GetPercentValue();
+      pos->mHeight.SetPercentValue(heightPercent);
     }
 
     // nowrap
