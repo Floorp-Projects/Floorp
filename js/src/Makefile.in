@@ -206,29 +206,29 @@ JSJAVA_CFLAGS	= -I$(topsrcdir)/sun-java/md-include \
 
 DASH_R		= -r
 
-ifeq ($(OS_ARCH), IRIX)
+ifeq ($(OS_ARCH),IRIX)
 ifneq ($(basename $(OS_RELEASE)),5)
 LDFLAGS		+= -n32
 DASH_R		+= -n32
 endif
 endif
-ifeq ($(OS_ARCH), Linux)
+ifeq ($(OS_ARCH),Linux)
 LDFLAGS		+= -ldl
 endif
-ifeq ($(OS_ARCH), FreeBSD)
+ifeq ($(OS_ARCH),FreeBSD)
 LDFLAGS		+= -pthread
 endif
-ifeq ($(OS_ARCH), OSF1)
+ifeq ($(OS_ARCH),OSF1)
 LDFLAGS		+= -lc_r
 endif
-ifeq ($(OS_ARCH), QNX)
-ifeq ($(OS_TARGET), NTO)
+ifeq ($(OS_ARCH),QNX)
+ifeq ($(OS_TARGET),NTO)
 DASH_R		= -r
 else
 DASH_R		=
 endif
 endif
-ifeq ($(OS_ARCH), SunOS)
+ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1)
 LDFLAGS         += -ldl -lnsl
 else
@@ -252,7 +252,7 @@ endif
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
-ifeq ($(OS_ARCH), AIX)
+ifeq ($(OS_ARCH),AIX)
 $(OBJDIR)/jsdtoa.o: jsdtoa.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) $<
@@ -273,6 +273,15 @@ $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	@rm -f $@ $(OBJDIR)/jsautocfg.tmp
 	$(OBJDIR)/jscpucfg > $(OBJDIR)/jsautocfg.tmp
 	mv $(OBJDIR)/jsautocfg.tmp $@
+
+ifeq ($(OS_ARCH),OpenVMS)
+# force a posix build for OpenVMS
+$(OBJDIR)/jscpucfg.o: jscpucfg.c
+	c89 -c -o $@ $<
+
+$(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
+	c89 -o $@ $<
+endif
 
 export:: $(OBJDIR)/jsautocfg.h
 	$(INSTALL) -m 444 $< $(DIST)/include
