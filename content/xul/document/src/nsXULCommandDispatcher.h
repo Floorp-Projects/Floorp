@@ -86,6 +86,8 @@ protected:
     nsCOMPtr<nsIDOMWindow> mCurrentWindow; // [OWNER]
 
     PRBool mSuppressFocus;
+	PRBool mActive;
+	PRBool mFocusInitialized;
 
     class Updater {
     public:
