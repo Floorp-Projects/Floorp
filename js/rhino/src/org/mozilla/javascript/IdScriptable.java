@@ -419,7 +419,7 @@ public abstract class IdScriptable extends ScriptableObject
             throw new RuntimeException("No id for constructor property");
         }
 
-        IdFunction ctor = newIdFunction(constructorId);
+        IdFunction ctor = newIdFunction(getClassName(), constructorId);
         ctor.initAsConstructor(scope, this);
         fillConstructorProperties(cx, ctor, sealed);
         if (sealed) {
@@ -484,7 +484,11 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     protected IdFunction newIdFunction(int id) {
-        IdFunction f = new IdFunction(this, getIdName(id), id);
+        return newIdFunction(getIdName(id), id);
+    }
+
+    protected IdFunction newIdFunction(String name, int id) {
+        IdFunction f = new IdFunction(this, name, id);
         if (0 != (setupFlags & SEAL_FUNCTIONS_FLAG)) { f.sealObject(); }
         return f;
     }
