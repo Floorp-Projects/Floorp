@@ -27,6 +27,7 @@
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       title="&languages.customize.add.title.label;"
       onload="Init();"
+      ondialogaccept="return AddAvailableLanguage();"
       style="width: 25em;height: 25em;">
 
   <script type="application/x-javascript" src="pref-languages.js"/>
