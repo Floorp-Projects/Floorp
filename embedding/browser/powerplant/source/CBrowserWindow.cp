@@ -553,9 +553,7 @@ NS_METHOD CBrowserWindow::SizeToContent()
   nsCOMPtr<nsIDOMWindow> domWindow;
   rv = mBrowserChrome->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDOMWindowInternal> domWindowInternal(do_QueryInterface(domWindow, &rv));
-  if (NS_FAILED(rv)) return rv;
-  return domWindowInternal->SizeToContent();
+  return domWindow->SizeToContent();
 }
 
 NS_METHOD CBrowserWindow::Stop()

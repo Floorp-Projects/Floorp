@@ -935,6 +935,7 @@
     "window.scrollto", \
     "window.scrollx", \
     "window.scrolly", \
+    "window.sizetocontent", \
     "window.top", \
     "windowcollection.item", \
     "windowcollection.length", \
@@ -1020,7 +1021,6 @@
     "windowinternal.setinterval", \
     "windowinternal.settimeout", \
     "windowinternal.sidebar", \
-    "windowinternal.sizetocontent", \
     "windowinternal.status", \
     "windowinternal.statusbar", \
     "windowinternal.stop", \
