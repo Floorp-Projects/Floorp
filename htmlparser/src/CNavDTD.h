@@ -510,6 +510,7 @@ protected:
     nsresult    WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult    DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
     nsresult    HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode);
+    nsresult    HandleSavedTokensAbove(eHTMLTags aTag);
 
     nsIHTMLContentSink* mSink;
 
@@ -531,6 +532,7 @@ protected:
     nsITokenizer*       mTokenizer;
     nsDeque             mMisplacedContent;
     PRBool              mHasOpenScript;
+    PRBool              mSaveBadTokens;
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
