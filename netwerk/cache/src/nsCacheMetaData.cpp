@@ -197,14 +197,14 @@ nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
  *  hash table operation callback functions
  */
 
-const void *
+const void * CRT_CALL
 nsCacheMetaData::GetKey( PLDHashTable * /* table */, PLDHashEntryHdr *hashEntry)
 {
     return ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
 }
 
 
-PLDHashNumber
+PLDHashNumber CRT_CALL
 nsCacheMetaData::HashKey( PLDHashTable * table, const void *key)
 {
     // XXX need scc's new flat string abstract class here (bug 70075)
@@ -212,7 +212,7 @@ nsCacheMetaData::HashKey( PLDHashTable * table, const void *key)
 }
 
 
-PRBool
+PRBool CRT_CALL
 nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
 				     const PLDHashEntryHdr * hashEntry,
 				     const void *            key)
@@ -225,7 +225,7 @@ nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
 }
 
 
-void
+void CRT_CALL
 nsCacheMetaData::MoveEntry(PLDHashTable * /* table */,
 				    const PLDHashEntryHdr *from,
 				    PLDHashEntryHdr       *to)
@@ -238,7 +238,7 @@ nsCacheMetaData::MoveEntry(PLDHashTable * /* table */,
 }
 
 
-void
+void CRT_CALL
 nsCacheMetaData::ClearEntry(PLDHashTable * /* table */,
                             PLDHashEntryHdr * hashEntry)
 {
@@ -248,7 +248,7 @@ nsCacheMetaData::ClearEntry(PLDHashTable * /* table */,
 }
 
 
-void
+void CRT_CALL
 nsCacheMetaData::Finalize(PLDHashTable * table)
 {
     (void) PL_DHashTableEnumerate(table, FreeElements, nsnull);   
@@ -259,7 +259,7 @@ nsCacheMetaData::Finalize(PLDHashTable * table)
  * hash table enumeration callback functions
  */
 
-PLDHashOperator
+PLDHashOperator CRT_CALL
 nsCacheMetaData::CalculateSize(PLDHashTable *table,
                                PLDHashEntryHdr *hdr,
                                PRUint32 number,
@@ -270,7 +270,7 @@ nsCacheMetaData::CalculateSize(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
-PLDHashOperator
+PLDHashOperator CRT_CALL
 nsCacheMetaData::AccumulateElements(PLDHashTable *table,
                                  PLDHashEntryHdr *hdr,
                                  PRUint32 number,
@@ -287,7 +287,7 @@ nsCacheMetaData::AccumulateElements(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
-PLDHashOperator
+PLDHashOperator CRT_CALL
 nsCacheMetaData::FreeElements(PLDHashTable *table,
                               PLDHashEntryHdr *hdr,
                               PRUint32 number,

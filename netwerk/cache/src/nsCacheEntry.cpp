@@ -503,7 +503,7 @@ nsCacheEntryHashTable::VisitEntries( nsCacheEntryHashTable::Visitor *visitor)
 }
 
 
-PLDHashOperator
+PLDHashOperator CRT_CALL
 nsCacheEntryHashTable::VisitEntry(PLDHashTable *table,
                                   PLDHashEntryHdr *hashEntry,
                                   PRUint32 number,
@@ -517,7 +517,7 @@ nsCacheEntryHashTable::VisitEntry(PLDHashTable *table,
 /**
  *  hash table operation callback functions
  */
-const void *
+const void * CRT_CALL
 nsCacheEntryHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEntry)
 {
     nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
@@ -525,13 +525,13 @@ nsCacheEntryHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEn
 }
 
 
-PLDHashNumber
+PLDHashNumber CRT_CALL
 nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
 {
     return PL_DHashStringKey(table,((nsCString *)key)->get());
 }
 
-PRBool
+PRBool CRT_CALL
 nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
                                   const PLDHashEntryHdr * hashEntry,
                                   const void *            key)
@@ -543,7 +543,7 @@ nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
 }
 
 
-void
+void CRT_CALL
 nsCacheEntryHashTable::MoveEntry(PLDHashTable * /* table */,
                                  const PLDHashEntryHdr *from,
                                  PLDHashEntryHdr       *to)
@@ -554,7 +554,7 @@ nsCacheEntryHashTable::MoveEntry(PLDHashTable * /* table */,
 }
 
 
-void
+void CRT_CALL
 nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
                                   PLDHashEntryHdr * hashEntry)
 {
@@ -570,7 +570,7 @@ nsCacheEntryHashTable::Finalize(PLDHashTable * table)
 }
 
 
-PLDHashOperator
+PLDHashOperator CRT_CALL
 nsCacheEntryHashTable::FreeCacheEntries(PLDHashTable *table,
                               PLDHashEntryHdr *hdr,
                               PRUint32 number,

@@ -67,39 +67,39 @@ public:
 
 private:
     // PLDHashTable operation callbacks
-    static const void *   GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
+    static const void *   CRT_CALL GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
 
-    static PLDHashNumber  HashKey( PLDHashTable *table, const void *key);
+    static PLDHashNumber  CRT_CALL HashKey( PLDHashTable *table, const void *key);
 
-    static PRBool         MatchEntry( PLDHashTable *           table,
-                                      const PLDHashEntryHdr *  entry,
-                                      const void *             key);
+    static PRBool         CRT_CALL MatchEntry( PLDHashTable *           table,
+                                               const PLDHashEntryHdr *  entry,
+                                               const void *             key);
 
-    static void           MoveEntry( PLDHashTable *table,
-                                     const PLDHashEntryHdr *from,
-                                     PLDHashEntryHdr       *to);
+    static void           CRT_CALL MoveEntry( PLDHashTable *table,
+                                              const PLDHashEntryHdr *from,
+                                              PLDHashEntryHdr       *to);
 
-    static void           ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
+    static void           CRT_CALL ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
 
-    static void           Finalize( PLDHashTable *table);
-
-    static
-    PLDHashOperator       CalculateSize(PLDHashTable *table,
-                                        PLDHashEntryHdr *hdr,
-                                        PRUint32 number,
-                                        void *arg);
+    static void           CRT_CALL Finalize( PLDHashTable *table);
 
     static
-    PLDHashOperator       AccumulateElements(PLDHashTable *table,
-                                        PLDHashEntryHdr *hdr,
-                                        PRUint32 number,
-                                        void *arg);
+    PLDHashOperator       CRT_CALL CalculateSize(PLDHashTable *table,
+                                                 PLDHashEntryHdr *hdr,
+                                                 PRUint32 number,
+                                                 void *arg);
 
     static
-    PLDHashOperator       FreeElements(PLDHashTable *table,
-                                       PLDHashEntryHdr *hdr,
-                                       PRUint32 number,
-                                       void *arg);
+    PLDHashOperator       CRT_CALL AccumulateElements(PLDHashTable *table,
+                                                      PLDHashEntryHdr *hdr,
+                                                      PRUint32 number,
+                                                      void *arg);
+
+    static
+    PLDHashOperator       CRT_CALL FreeElements(PLDHashTable *table,
+                                                PLDHashEntryHdr *hdr,
+                                                PRUint32 number,
+                                                void *arg);
 
     // member variables
     static PLDHashTableOps ops;

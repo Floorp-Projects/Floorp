@@ -766,15 +766,15 @@ void
 nsCacheService::ClearActiveEntries()
 {
     // XXX really we want a different finalize callback for mActiveEntries
-    PL_DHashTableEnumerate(&mActiveEntries.table, DeactiveateAndClearEntry, nsnull);
+    PL_DHashTableEnumerate(&mActiveEntries.table, DeactivateAndClearEntry, nsnull);
 }
 
 
-PLDHashOperator
-nsCacheService::DeactiveateAndClearEntry(PLDHashTable *    table,
-                                         PLDHashEntryHdr * hdr,
-                                         PRUint32          number,
-                                         void *            arg)
+PLDHashOperator CRT_CALLBACK
+nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
+                                        PLDHashEntryHdr * hdr,
+                                        PRUint32          number,
+                                        void *            arg)
 {
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
     NS_ASSERTION(entry, "### active entry = nsnull!");
