@@ -1554,7 +1554,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   // notice that we ignore the result
   NotifyReflowObservers(NS_PRESSHELL_INITIAL_REFLOW);
-  StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
+  mCaret->EraseCaret();
+  //StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
   
   WillCauseReflow();
 
@@ -1692,7 +1693,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
 
-  StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
+  mCaret->EraseCaret();
+  //StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
   WillCauseReflow();
 
   if (mPresContext) {
@@ -3350,7 +3352,8 @@ PresShell::Paint(nsIView              *aView,
       
   if (nsnull != frame)
   {
-    StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
+    mCaret->EraseCaret();
+    //StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
 
     // If the frame is absolutely positioned, then the 'clip' property
     // applies
