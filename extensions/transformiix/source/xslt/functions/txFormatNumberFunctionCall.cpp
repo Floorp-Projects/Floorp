@@ -43,11 +43,7 @@
 #include "txIXPathContext.h"
 #include <math.h>
 
-#ifndef TX_EXE
 #include "prdtoa.h"
-#else
-#include <stdio.h>
-#endif
 
 const PRUnichar txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 
@@ -281,87 +277,6 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     // Prefix
     nsAutoString res(prefix);
 
-#ifdef TX_EXE
-
-    int bufsize;
-    if (value > 1)
-        bufsize = (int)log10(value) + 1;
-    else
-        bufsize = 1;
-
-    if (bufsize < minIntegerSize)
-        bufsize = minIntegerSize;
-
-    bufsize += maxFractionSize + 3; // decimal separator + ending null +
-                                    // rounding safety
-
-    char* buf = new char[bufsize];
-    if (!buf) {
-        //XXX ErrorReport: out of memory
-        return new StringResult;
-    }
-
-    int totalSize = minIntegerSize + maxFractionSize;
-    if (maxFractionSize > 0)
-        totalSize++; //to account for decimal point
-
-    char formatBuf[30];
-    sprintf(formatBuf, "%%0%d.%df", totalSize, maxFractionSize);
-
-    sprintf(buf, formatBuf, value);
-    
-    // Find decimalseparator for grouping
-    int intDigits;
-    for (intDigits = 0; buf[intDigits] && buf[intDigits] != '.'; intDigits++);
-    
-    if (groupSize < 0)
-        groupSize = intDigits * 2; //to simplify grouping
-
-    // Integer digits
-    int i;
-    for (i = 0; i < intDigits; ++i) {
-        if ((intDigits-i)%groupSize == 0 && i != 0)
-            res.Append(format->mGroupingSeparator);
-
-        res.Append((PRUnichar)(buf[i] - '0' + format->mZeroDigit));
-    }
-
-    // Fractions
-    MBool printDeci = MB_TRUE;
-    int extraZeros = 0;
-
-    if (buf[i])
-        i++;  // skip decimal separator
-    
-    for (; buf[i]; i++) {
-        if (i-intDigits-1 >= minFractionSize && buf[i] == '0') {
-            extraZeros++;
-        }
-        else {
-            if (printDeci) {
-                res.Append(format->mDecimalSeparator);
-                printDeci = MB_FALSE;
-            }
-            while (extraZeros) {
-                res.Append(format->mZeroDigit);
-                extraZeros--;
-            }
-
-            res.Append((PRUnichar)(buf[i] - '0' + format->mZeroDigit));
-        }
-    }
-
-    if (!intDigits && printDeci) {
-        // If we havn't added any characters we add a '0'
-        // This can only happen for formats like '##.##'
-        res.Append(format->mZeroDigit);
-    }
-    
-    delete [] buf;
-
-
-#else // TX_EXE
-
     int bufsize;
     if (value > 1)
         bufsize = (int)log10(value) + 30;
@@ -467,8 +382,6 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     }
 
     delete [] buf;
-
-#endif // TX_EXE
 
     // Build suffix
     res.Append(suffix);
