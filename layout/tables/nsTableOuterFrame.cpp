@@ -839,19 +839,31 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
                             nsSize(availWidth, aOuterRS.availableHeight));
   childRS.reason = aReflowReason;
 
-  // Normally, the outer table's mComputed values are NS_INTRINSICSIZE since they
-  // depend on the caption and inner table. Boxes can force a size.
+  // Normally, the outer table's mComputed values are NS_INTRINSICSIZE (although to
+  // to work around boxes they can also be set to 0) since they depend on the caption 
+  // and inner table. Boxes can force a constrained size.
+  // XXX remove this code when trees are converted to use grids instead of tables
   if ((aOuterRS.mComputedWidth != NS_INTRINSICSIZE) && 
       (aOuterRS.mComputedWidth != 0)) {
-    childRS.mComputedWidth = aOuterRS.mComputedWidth - aMargin.left - childRS.mComputedBorderPadding.left -
-                             childRS.mComputedBorderPadding.right - aMargin.right;
-    childRS.mComputedWidth = PR_MAX(0, childRS.mComputedWidth);
+    if (mInnerTableFrame == aChildFrame) {
+      childRS.mComputedWidth = aOuterRS.mComputedWidth - aMargin.left - childRS.mComputedBorderPadding.left -
+                               childRS.mComputedBorderPadding.right - aMargin.right;
+      childRS.mComputedWidth = PR_MAX(0, childRS.mComputedWidth);
+    }
+    else {
+      NS_ASSERTION(PR_FALSE, "box set mComputedWidth on an outer table with a caption");
+    }
   }
   if ((aOuterRS.mComputedHeight != NS_INTRINSICSIZE) &&
       (aOuterRS.mComputedHeight != 0)) {
-    childRS.mComputedHeight = aOuterRS.mComputedHeight - aMargin.top - childRS.mComputedBorderPadding.top -
-                              childRS.mComputedBorderPadding.bottom - aMargin.bottom;
-    childRS.mComputedHeight = PR_MAX(0, childRS.mComputedHeight);
+    if (mInnerTableFrame == aChildFrame) {
+      childRS.mComputedHeight = aOuterRS.mComputedHeight - aMargin.top - childRS.mComputedBorderPadding.top -
+                                childRS.mComputedBorderPadding.bottom - aMargin.bottom;
+      childRS.mComputedHeight = PR_MAX(0, childRS.mComputedHeight);
+    }
+    else {
+      NS_ASSERTION(PR_FALSE, "box set mComputedHeight on an outer table with a caption");
+    }
   }
 
   // use the current position as a best guess for placement

@@ -186,21 +186,6 @@ nsTreeOuterFrame::Release(void)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsTreeOuterFrame::FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
-                                    nsHTMLReflowState& aChildReflowState)
-{
-  if (aParentReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-    aChildReflowState.mComputedWidth = aParentReflowState.mComputedWidth;
-  }
-
-  if (aParentReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE) {
-    aChildReflowState.mComputedHeight = aParentReflowState.mComputedHeight;
-  }
-  
-  return NS_OK;
-}
-
 nsITreeFrame*
 nsTreeOuterFrame::FindTreeFrame(nsIPresContext* aPresContext)
 {

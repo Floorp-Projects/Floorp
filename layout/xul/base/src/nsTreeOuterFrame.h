@@ -50,9 +50,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
-                               nsHTMLReflowState& aChildReflowState);
-
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
   NS_IMETHOD CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide);
   NS_IMETHOD ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages);
