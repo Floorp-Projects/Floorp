@@ -2,7 +2,47 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
 
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+
+<!DOCTYPE window
+[
+    <!ENTITY searchHeading.label "Search for messages in:">
+    <!ENTITY matchAll.label "Match all of the following:">
+    <!ENTITY matchAny.label "Match any of the following:">
+    <!ENTITY scopeSubject.label "subject">
+    <!ENTITY scopeSender.label  "sender">
+    <!ENTITY scopeDate.label    "date">
+    <!ENTITY scopeText.label    "any text">
+    <!ENTITY scopeKeyword.label "keyword">
+    <!ENTITY scopeAgeDays.label "age in days">
+    <!ENTITY critContains.label "contains">
+    <!ENTITY critNotContains.label "doesn't contain">
+    <!ENTITY buttonMore.label "More">
+    <!ENTITY buttonFewer.label "Fewer">
+    <!ENTITY buttonClear.label "Clear">
+    <!ENTITY buttonSearch.label "Search">
+    <!ENTITY buttonOptions.label "Options">
+    <!ENTITY buttonCancel.label "Cancel">
+
+]>
 <xul:window id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="Account Manager">
@@ -10,7 +50,7 @@
   <box flex="100%" align="vertical" class="padded">
     <box align="horizontal">
       <html:div>
-        Search for messages in:
+         &searchHeading.label;
       </html:div>
       <html:select flex="100%">
          <html:option>sample server 1</html:option>
@@ -22,42 +62,42 @@
     <box align="vertical">
        <html:div>
          <html:input type="radio" name="andor" value="and"/>
-         Match all of the following
+         &matchAll.label;
        </html:div>
        <html:div>
          <html:input type="radio" name="andor" value="or"/>
-         Match any of the following
+         &matchAny.label;
        </html:div>
     </box>
 
     <box align="horizontal" class="padded">
     <html:select>
-      <html:option>subject</html:option>
-      <html:option>sender</html:option>
-      <html:option>date</html:option>
-      <html:option>any text</html:option>
-      <html:option>keyword</html:option>
-      <html:option>age in days</html:option>
+      <html:option>&scopeSubject.label;</html:option>
+      <html:option>&scopeSender.label;</html:option>
+      <html:option>&scopeDate.label;</html:option>
+      <html:option>&scopeText.label;</html:option>
+      <html:option>&scopeKeyword.label;</html:option>
+      <html:option>&scopeAgeDays.label;</html:option>
     </html:select>
     <html:select>
-      <html:option>contains</html:option>
-      <html:option>doesn't contain</html:option>
+      <html:option>&critContains.label;</html:option>
+      <html:option>&critNotContains.label;</html:option>
     </html:select>
     <html:input type="text" flex="100%"/>
     </box>
     <spring class="spacer"/>
     <box align="horizontal">
-      <titledbutton class="push" value="More"/>
-      <titledbutton class="push" value="Fewer"/>
+      <titledbutton class="push" value="&buttonMore.label;"/>
+      <titledbutton class="push" value="&buttonFewer.label;"/>
       <spring flex="100%"/>
-      <titledbutton class="push" value="Clear"/>
+      <titledbutton class="push" value="&buttonClear.label;"/>
     </box>
   </box>
   </box>
   <box align="vertical" class="padded">
-    <titledbutton class="push" value="Search"/>
-    <titledbutton class="push" value="Options"/>
-    <titledbutton class="push" value="Cancel"/>
+    <titledbutton class="push" value="&buttonSearch.label;"/>
+    <titledbutton class="push" value="&buttonOptions.label;"/>
+    <titledbutton class="push" value="&buttonCancel.label;"/>
   </box>
 </box>
 </xul:window>
