@@ -1055,12 +1055,12 @@ int nsParseMailMessageState::FinalizeHeaders()
 				 reduce memory and file usage at the expense of only showing the one
 				 group in the summary list, and only being able to sort on the first
 				 group rather than the whole list.  It's worth it. */
-				char *s;
+				char * ch;
 				NS_ASSERTION (recipient->length == (PRUint16) nsCRT::strlen(recipient->value), "invalid recipient");
-				s = PL_strchr(recipient->value, ',');
-				if (s)
+				ch = PL_strchr(recipient->value, ',');
+				if (ch)
 				{
-					*s = 0;
+					*ch = 0;
 					recipient->length = nsCRT::strlen(recipient->value);
 				}
 				m_newMsgHdr->SetRecipients(recipient->value, FALSE);
@@ -1138,19 +1138,19 @@ int nsParseMailMessageState::FinalizeHeaders()
 				{
 				  /* Parse a little bit of the Berkeley Mail status header. */
                     for (s = statush->value; *s; s++) {
-                        PRUint32 flags;
-                        (void)m_newMsgHdr->GetFlags(&flags);
+                        PRUint32 msgFlags = 0;
+                        (void)m_newMsgHdr->GetFlags(&msgFlags);
                         switch (*s)
                         {
                           case 'R': case 'r':
-                            m_newMsgHdr->SetFlags(flags | MSG_FLAG_READ);
+                            m_newMsgHdr->SetFlags(msgFlags | MSG_FLAG_READ);
                             break;
                           case 'D': case 'd':
                             /* msg->flags |= MSG_FLAG_EXPUNGED;  ### Is this reasonable? */
                             break;
                           case 'N': case 'n':
                           case 'U': case 'u':
-                            m_newMsgHdr->SetFlags(flags & ~MSG_FLAG_READ);
+                            m_newMsgHdr->SetFlags(msgFlags & ~MSG_FLAG_READ);
                             break;
                         }
                     }
@@ -1161,7 +1161,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				if (date) {
 					time_t	resDate = 0;
 					PRTime resultTime, intermediateResult, microSecondsPerSecond;
-					PRStatus status = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
+					PRStatus timeStatus = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
 
 					LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
 					LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
@@ -1170,7 +1170,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 						resDate = 0;
 
 					// no reason to store milliseconds, since they aren't specified
-					if (PR_SUCCESS == status)
+					if (PR_SUCCESS == timeStatus)
 						m_newMsgHdr->SetDate(resDate);
 				}
 				if (priority)
