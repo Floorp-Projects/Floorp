@@ -170,7 +170,8 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
 static void
 Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
-    fprintf(stderr, "mJCL: ERROR %s\n", message ? message : "<null>");
+    fprintf(stderr, "mJCL: ERROR %s:%d %s\n", rep->filename, rep->lineno,
+            message ? message : "<null>");
 }
 
 PR_STATIC_CALLBACK(PLHashNumber)
@@ -285,11 +286,6 @@ NS_IMETHODIMP
 mozJSComponentLoader::AutoRegisterComponents(PRInt32 when,
                                              nsIFileSpec *aDirectory)
 {
-    char *nativePath = NULL;
-    nsresult rv = aDirectory->GetNativePath(&nativePath);
-    if (NS_FAILED(rv))
-        return rv;
-
     return RegisterComponentsInDir(when, aDirectory);
 }
 
@@ -346,13 +342,18 @@ nsresult
 mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
                                       nsIFileSpec *component)
 {
-    if (!mRegistry)
+    if (!mRegistry.get())
         return NS_OK;           // silent failure
 
     nsresult rv;
     nsIRegistry::Key key;
-    if (NS_FAILED(rv = mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation,
-                                                &key)))
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation,
+                                  &key);
+
+    if (rv == NS_ERROR_REG_NOT_FOUND)
+        rv = mRegistry->AddSubtreeRaw(mXPCOMKey, registryLocation, &key);
+
+    if (NS_FAILED(rv))
         return rv;
 
     PRUint32 modDate;
@@ -364,6 +365,11 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
     if (NS_FAILED(rv = component->GetFileSize(&fileSize)) ||
         NS_FAILED(rv = mRegistry->SetInt(key, fileSizeValueName, fileSize)))
         return rv;
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "SetRegistryInfo(%s) => (%d,%d)\n", registryLocation,
+            modDate, fileSize);
+#endif
 
     return NS_OK;
 }
@@ -410,7 +416,7 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
         return NS_ERROR_NULL_POINTER;
 
     const char jsExtension[] = ".js";
-    int jsExtensionLen = 4;
+    int jsExtensionLen = 3;
     char *nativePath = nsnull, *leafName = nsnull, *registryLocation = nsnull;
     nsIModule *module;
 
@@ -445,16 +451,18 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
         goto out;
     }
 
-    module = ModuleForLocation(registryLocation, component);
+    SetRegistryInfo(registryLocation, component);
 
+    module = ModuleForLocation(registryLocation, component);
+    if (!module)
+        goto out;
+    
     rv = module->RegisterSelf(mCompMgr, component, registryLocation,
                               jsComponentTypeName);
     if (NS_FAILED(rv)) {
         fprintf(stderr, "module->RegisterSelf failed(%x)\n", rv);
         goto out;
     }
-
-    SetRegistryInfo(registryLocation, component);
 
 #ifdef DEBUG_shaver
     fprintf(stderr, "added module %p for %s\n", module, registryLocation);
@@ -477,6 +485,10 @@ nsIModule *
 mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
                                         nsIFileSpec *component)
 {
+    if (!mInitialized &&
+        NS_FAILED(ReallyInit()))
+        return NULL;
+
     PLHashNumber hash = PL_HashString(registryLocation);
     PLHashEntry **hep = PL_HashTableRawLookup(mModules, hash,
                                               (void *)registryLocation);
@@ -569,6 +581,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
                 nativePath);
 #endif
+        obj = NULL;
         goto out;
     }
 
@@ -580,6 +593,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 #ifdef DEBUG_shaver
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath);
 #endif
+        obj = NULL;
         goto out;
     }
 
