@@ -92,8 +92,9 @@
     {
       handleLinkClick(event, linkNode.href, null);
       // block the link click if we determine that this URL
-      // is phishy (i.e. a potential email scam)
-      return isPhishingURL(linkNode, false); 
+      // is phishy (i.e. a potential email scam) 
+
+      return !isPhishingURL(linkNode, false); 
     }
 
     return true;

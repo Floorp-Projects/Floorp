@@ -50,7 +50,7 @@ const kPhishingWithMismatchedHosts = 2;
 function isPhishingURL(aLinkNode, aSilentMode)
 {
   if (!gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
-    return true;
+    return false;
 
   var phishingType = kPhishingNotSuspicious;
   var href = aLinkNode.href;
@@ -121,5 +121,5 @@ function confirmSuspiciousURL(phishingType, hrefURL, linkNodeURL)
   const nsIPS = Components.interfaces.nsIPromptService;
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPS);
   var buttons = nsIPS.STD_YES_NO_BUTTONS + nsIPS.BUTTON_POS_1_DEFAULT;
-  return !promptService.confirmEx(window, titleMsg, dialogMsg, buttons, "", "", "", "", {}); /* the yes button is in position 0 */
+  return promptService.confirmEx(window, titleMsg, dialogMsg, buttons, "", "", "", "", {}); /* the yes button is in position 0 */
 }
