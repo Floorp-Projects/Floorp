@@ -15,6 +15,13 @@ extern const char *prefContractID;
 
 @implementation CHPreferenceManager
 
+
++ (CHPreferenceManager *) sharedInstance {
+  static CHPreferenceManager *sSharedInstance = nil;
+	return ( sSharedInstance ? sSharedInstance : (sSharedInstance = [[[CHPreferenceManager alloc] init] autorelease] ));
+}
+
+
 - (id) init
 {
     if ((self = [super init])) {
@@ -258,33 +265,36 @@ extern const char *prefContractID;
     return string;
 }
 
-- (NSString *) homePage
-{
-    NSString *url;
-    char *buf;
-    PRInt32 mode;
-    nsresult rv;
-    NSLog(@"getting home page");
-    
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(prefContractID));
-    if (!prefs)
-        return @"about:blank";
 
-    // copied from Gecko: mode 0 is blank page, mode 1 is home page.
-    // 2 is "last page visited" but we don't care about that.
+- (NSString *) homePage:(BOOL)checkStartupPagePref
+{
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(prefContractID));
+  if (!prefs)
+    return @"about:blank";
+
+  NSString *url = nil;
+  PRInt32 mode = 1;
+  
+  // In some cases, we need to check browser.startup.page to see if
+  // we want to use the homepage or if the user wants a blank window.
+  // mode 0 is blank page, mode 1 is home page. 2 is "last page visited"
+  // but we don't care about that. Default to 1 unless |checkStartupPagePref|
+  // is true.
+  nsresult rv = NS_OK;
+  if ( checkStartupPagePref )
     rv = prefs->GetIntPref("browser.startup.page", &mode);
-    // if the pref isn't set, default to mode 1
-    NSLog(@"startup.page: %d", (int)mode);
-    if (NS_FAILED(rv) || mode == 1) {
-        prefs->GetCharPref("browser.startup.homepage", &buf);
-        if (buf && *buf)
-            url = [NSString stringWithCString:buf];
-        else
-            url = @"about:blank";
-        free (buf);
-        return url;
-    } else
-        return @"about:blank";
+  if (NS_FAILED(rv) || mode == 1) {
+      char *buf = nsnull;
+      prefs->GetCharPref("browser.startup.homepage", &buf);
+      if (buf && *buf)
+          url = [NSString stringWithCString:buf];
+      else
+          url = @"about:blank";
+      free (buf);
+      return url;
+  }
+  else
+      return @"about:blank";
 }
 
 @end
