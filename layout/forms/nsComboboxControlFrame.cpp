@@ -1161,6 +1161,7 @@ nsComboboxControlFrame::GetSkipSides() const
 nsresult
 nsComboboxControlFrame::Focus(nsIDOMEvent* aEvent)
 {
+#if 0
   printf("nsComboboxControlFrame::Focus ");
 
   nsCOMPtr<nsIDOMNode> node;
@@ -1194,13 +1195,14 @@ nsComboboxControlFrame::Focus(nsIDOMEvent* aEvent)
     printf("After ------------------------\n");
     NS_RELEASE(stateManager);
   }
-
+#endif
   return NS_OK;
 }
 
 nsresult
 nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
 {
+#if 0
   printf("nsComboboxControlFrame::Blur ");
   nsCOMPtr<nsIDOMNode> node;
   aEvent->GetTarget(getter_AddRefs(node));
@@ -1213,6 +1215,7 @@ nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
   } else if (content == mButtonContent) {
     printf("Button\n");
   }
+#endif
   return NS_OK;
 }
 
