@@ -377,11 +377,11 @@ nsFrame::DeleteFrame(nsIPresContext& aPresContext)
   nsCOMPtr<nsIPresShell> shell;
   aPresContext.GetShell(getter_AddRefs(shell));
   
-  // XXX Rather than always do this it would be better if it was part of
+  // XXX Rather than always doing this it would be better if it was part of
   // a frame observer mechanism and the pres shell could register as an
   // observer of the frame while the reflow command is pending...
   if (shell) {
-    shell->CancelReflowCommand(this);
+    shell->NotifyDestroyingFrame(this);
   }
 
   if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||

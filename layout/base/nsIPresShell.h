@@ -182,26 +182,29 @@ public:
                                     nsIFrame* aPlaceholderFrame) = 0;
   NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
+  /**
+   * Reflow commands
+   */
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
-
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame) = 0;
-
   NS_IMETHOD ProcessReflowCommands() = 0;
 
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   /**
-   * Given a frame, cough up a rendering context suitable for use with
+   * Given a frame, create a rendering context suitable for use with
    * the frame.
    */
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
                                     nsIRenderingContext** aContext) = 0;
 
-  // Notification that we were unable to render a replaced element.
-  // Called when the replaced element can not be rendered, and we should
-  // instead render the element's contents.
-  // The content object associated with aFrame should either be a IMG
-  // element, an OBJECT element, or an APPLET element
+  /**
+   * Notification that we were unable to render a replaced element.
+   * Called when the replaced element can not be rendered, and we should
+   * instead render the element's contents.
+   * The content object associated with aFrame should either be a IMG
+   * element, an OBJECT element, or an APPLET element
+   */
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
 
@@ -262,6 +265,13 @@ public:
                                  PRUint32  aVFlags,
                                  PRInt32   aHOffsetPercent, 
                                  PRUint32  aHFlags) const = 0;
+
+  /**
+   * Notification sent by a frame informing the pres shell that it is about to
+   * be destroyed.
+   * This allows any outstanding references to the frame to be cleaned up
+   */
+  NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
    * Notify the Clipboard that we have something to copy.
