@@ -84,6 +84,10 @@ protected:
     nsresult ReadFromCache();
     nsresult OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aWriteAccess, PRBool * aDelayFlag = nsnull);
        
+    nsresult                            mStatus;
+    PRBool                              mIsPending;
+    PRInt32                             mContentLength;
+    PRUint32                            mLoadFlags;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsISupports>               mOwner;
@@ -92,12 +96,6 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsIStreamListener>         mListener;
     nsCOMPtr<nsISupports>               mListenerContext;
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRInt32                             mContentLength;
-    PRUint32                            mLoadFlags;
-    nsresult                            mStatus;
-    PRBool                              mIsPending;
 
     // reuse as much of this channel implementation as we can
     nsCOMPtr<nsIInputStreamPump>        mPump;

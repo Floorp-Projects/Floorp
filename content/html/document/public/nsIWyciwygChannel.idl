@@ -51,7 +51,7 @@ interface nsIWyciwygChannel : nsIChannel
     /**
      * Append data to the cache entry; opens the cache entry if necessary.
      */
-    void writeToCacheEntry(in ACString aScript);
+    void writeToCacheEntry(in AString aData);
 
     /**
      * Close the cache entry; subsequent writes have undefined behavior.
