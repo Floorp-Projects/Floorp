@@ -1935,35 +1935,36 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
     HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
     char name[sizeof(logFont.lfFaceName)];
     if (::GetTextFace(aDC, sizeof(name), name) &&
-        // MJA strcmp(name, logFont.lfFaceName)) {
         !strcmpi(name, logFont.lfFaceName)) {
       eFontType fontType = eFontType_UNKNOWN;
-      PRUint16* ccmap = GetCCMAP(aDC, logFont.lfFaceName, &fontType, nsnull);
-      if (ccmap) {
-        nsFontWin* font = nsnull;
-        if (mIsUserDefined) {
-          font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedCCMap,
-                                         gUserDefinedConverter);
-        }
-        else if (eFontType_Unicode == fontType) {
-          font = new nsFontWinUnicode(&logFont, hfont, ccmap);
-        }
-        else if (eFontType_NonUnicode == fontType) {
-          nsCOMPtr<nsIUnicodeEncoder> converter;
-          if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
-            font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter);
+      nsFontWin* font = nsnull;
+      if (mIsUserDefined) {
+        font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedCCMap,
+                                       gUserDefinedConverter);
+      } else {
+        PRUint16* ccmap = GetCCMAP(aDC, logFont.lfFaceName, &fontType, nsnull);
+        if (ccmap) {
+          if (eFontType_Unicode == fontType) {
+            font = new nsFontWinUnicode(&logFont, hfont, ccmap);
+          }
+          else if (eFontType_NonUnicode == fontType) {
+            nsCOMPtr<nsIUnicodeEncoder> converter;
+            if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
+              font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter);
+            }
           }
         }
-        if (font) {
-          InitMetricsFor(aDC, font);
-          mLoadedFonts.AppendElement(font);
-          ::SelectObject(aDC, (HGDIOBJ)oldFont);  
-          return font;
-        }
-        // do not free 'ccmap', it is cached in the gFontMaps hashtable and
-        // it is going to be deleted by the cleanup observer
       }
-    }  
+
+      if (font) {
+        InitMetricsFor(aDC, font);
+        mLoadedFonts.AppendElement(font);
+        ::SelectObject(aDC, (HGDIOBJ)oldFont);  
+        return font;
+      }
+      // do not free 'ccmap', it is cached in the gFontMaps hashtable and
+      // it is going to be deleted by the cleanup observer
+    }
     ::SelectObject(aDC, (HGDIOBJ)oldFont);
     ::DeleteObject(hfont);
   }
@@ -1985,11 +1986,7 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
   HFONT hfont = CreateFontHandle(aDC, &logFont);
   if (hfont) {
     nsFontWin* font = nsnull;
-    if (mIsUserDefined) {
-      font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedCCMap,
-                                     gUserDefinedConverter);
-    }
-    else if (eFontType_Unicode == aGlobalFont->fonttype) {
+    if (eFontType_Unicode == aGlobalFont->fonttype) {
       font = new nsFontWinUnicode(&logFont, hfont, aGlobalFont->ccmap);
     }
     else if (eFontType_NonUnicode == aGlobalFont->fonttype) {
@@ -2685,10 +2682,11 @@ nsFontWin*
 nsFontMetricsWin::FindUserDefinedFont(HDC aDC, PRUnichar aChar)
 {
   if (mIsUserDefined) {
+    // the user-defined font is always loaded as the first font
     nsFontWin* font = LoadFont(aDC, &mUserDefined);
-    if (font && font->HasGlyph(aChar)) {
-      return font;
-    }
+    mIsUserDefined = PR_FALSE;
+    if (font && font->HasGlyph(aChar))
+      return font;    
   }
   return nsnull;
 }
