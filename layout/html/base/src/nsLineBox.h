@@ -51,9 +51,11 @@ protected:
  */
 class nsLineBox {
 public:
+#if XXX
   nscoord GetCarriedOutTopMargin() const {
     return mCarriedOutTopMargin;
   }
+#endif
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -194,7 +196,7 @@ public:
   PRUint8 mBreakType;
   nsRect mBounds;
   nsRect mCombinedArea;
-  nscoord mCarriedOutTopMargin;/* XXX switch to 16 bits */
+//XXX  nscoord mCarriedOutTopMargin;/* XXX switch to 16 bits */
   nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
   nsVoidArray* mFloaters;
   nsLineBox* mNext;
