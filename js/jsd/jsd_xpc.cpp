@@ -380,7 +380,8 @@ jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
     jsval jv;
 
     const nsSharedBufferHandle<PRUnichar> *h = bytes.GetSharedBufferHandle();
-    const PRUnichar *char_bytes = h->DataStart();
+    const jschar *char_bytes = NS_REINTERPRET_CAST(const jschar *,
+                                                   h->DataStart());
 
     if (!JSD_EvaluateUCScriptInStackFrame (mCx, mThreadState, mStackFrameInfo,
                                            char_bytes, bytes.Length(), fileName,
