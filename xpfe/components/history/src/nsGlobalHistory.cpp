@@ -291,9 +291,11 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   PRInt64 rowDate;
   mdb_column column;
   mdb_err err = store->StringToToken(env, "LastVisitDate", &column);
+  if (err != 0) return PR_FALSE;
 
   mdbYarn yarn;
-  row->AliasCellYarn(env, column, &yarn);
+  err = row->AliasCellYarn(env, column, &yarn);
+  if (err != 0) return PR_FALSE;
   
   CharsToPRInt64((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill, &rowDate);
 
@@ -445,12 +447,12 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 
 
 nsGlobalHistory::nsGlobalHistory()
-  : mEnv(nsnull),
-    mStore(nsnull),
-    mTable(nsnull),
-    mExpireDays(9), // make default be nine days
+  : mExpireDays(9), // make default be nine days
     mNowValid(PR_FALSE),
-    mDirty(PR_FALSE)
+    mDirty(PR_FALSE),
+    mEnv(nsnull),
+    mStore(nsnull),
+    mTable(nsnull)
 {
   NS_INIT_REFCNT();
   LL_I2L(mFileSizeOnDisk, 0);
@@ -519,8 +521,7 @@ NS_IMETHODIMP
 nsGlobalHistory::AddPage(const char *aURL)
 {
   NS_ENSURE_ARG_POINTER(aURL);
-  NS_ENSURE_ARG_POINTER(mEnv);
-  NS_ENSURE_ARG_POINTER(mStore);
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
   nsresult rv;
 
@@ -824,6 +825,13 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
   if (! aURL)
     return NS_ERROR_NULL_POINTER;
 
+  // avoid this one well-known url since we can avoid
+  // reading in the db
+  if (PL_strcmp(aURL, "about:blank")==0)
+    return NS_OK;
+  
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
+  
   nsresult rv;
   
   // Be defensive if somebody sends us a null title.
@@ -1053,6 +1061,7 @@ nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_NOT_INITIALIZED);
 
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
@@ -1587,6 +1596,8 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
   if (!aTruthValue)
     return NS_NewEmptyEnumerator(aTargets);
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
+  
   // list all URLs off the root
   if ((aSource == kNC_HistoryRoot) &&
       (aProperty == kNC_child)) {
@@ -2074,9 +2085,6 @@ nsGlobalHistory::Init()
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
   }
   
-  rv = OpenDB();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -2086,6 +2094,8 @@ nsGlobalHistory::OpenDB()
 {
   nsresult rv;
 
+  if (mStore) return NS_OK;
+  
   nsCOMPtr <nsIFile> historyFile;
   rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
   NS_ENSURE_SUCCESS(rv, rv);
