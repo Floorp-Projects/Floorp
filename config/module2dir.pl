@@ -111,6 +111,7 @@ my %map = (
   'xul',                'content/xul/content',
   'xuldoc',             'content/xul/document',
   'xultmpl',            'content/xul/templates',
+  'zlib',               'modules/zlib',
 );
 
 
