@@ -1,5 +1,6 @@
 /*
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -19,8 +20,8 @@
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s):
-#   Ben Goodger <ben@netscape.com> (Original Author)
+# Contributor(s): Ben Goodger <ben@netscape.com> (Original Author)
+#                 Kevin Gerich <webmail@kmgerich.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 */
+
 
 .buttonBox {
   margin: 0px 5px 0px 0px !important;
@@ -77,21 +79,21 @@
   background-color: #C1D2EE;
 }
 
-#calendarGeneralButton   {-moz-image-region: rect(0px, 32px,  32px, 0px)}
+#calendarGeneralButton {-moz-image-region: rect(0px, 32px,  32px, 0px)}
 #calendarAlarmButton   {-moz-image-region: rect(0px, 64px,  32px, 32px)}
-#calendarPublishbutton  {-moz-image-region: rect(0px, 96px,  32px, 64px)}
-#calendarThemesButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
-#calendarExtButton  {-moz-image-region: rect(0px, 160px, 32px, 128px)}
+#calendarPublishbutton {-moz-image-region: rect(0px, 96px,  32px, 64px)}
+#calendarThemesButton  {-moz-image-region: rect(0px, 128px, 32px, 96px)}
+#calendarExtButton     {-moz-image-region: rect(0px, 160px, 32px, 128px)}
 #calendarViewButton    {-moz-image-region: rect(0px, 192px, 32px, 160px)}
-#calendarTZButton       {-moz-image-region: rect(0px, 224px, 32px, 192px)}
+#calendarTZButton      {-moz-image-region: rect(0px, 224px, 32px, 192px)}
 
-.themesLink {                                                                   
-  margin-left: 5px;                                                             
-  text-decoration: underline;                                                   
-  color: blue;                                                                  
-  cursor: pointer;                                                              
-}                                                                               
+.themesLink {
+  margin-left: 5px;
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}
 
-.themesLink:active {                                                            
-  color: red;                                                                   
+.themesLink:active {
+  color: red;
 }

@@ -1,52 +1,57 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
- *
- * The Initial Developer of the Original Code is
- * OEone Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s): Garth Smedley <garths@oeone.com>
- *                 Mike Potter <mikep@oeone.com>
- *                 Karl Guertin <grayrest@grayrest.com> 
- *                 Colin Phillips <colinp@oeone.com> 
- *                 ArentJan Banck <ajbanck@planet.nl>
- *                 Eric Belhaire <belhaire@ief.u-psud.fr>
- *                 Mark Swaffer <swaff@fudo.org>
- *                 Christopher Cook <tangent@intraplanar.net>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/*
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is OEone Calendar Code, released October 31st, 2001.
+#
+# The Initial Developer of the Original Code is
+# OEone Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s): Garth Smedley <garths@oeone.com>
+#                 Mike Potter <mikep@oeone.com>
+#                 Karl Guertin <grayrest@grayrest.com>
+#                 Colin Phillips <colinp@oeone.com>
+#                 ArentJan Banck <ajbanck@planet.nl>
+#                 Eric Belhaire <belhaire@ief.u-psud.fr>
+#                 Mark Swaffer <swaff@fudo.org>
+#                 Christopher Cook <tangent@intraplanar.net>
+#                 Kevin Gerich <webmail@kmgerich.com>
+#                 Matthew Willis <mattwillis@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
 
 
 /*--------------------------------------------------------------------
  *   Top bar, with name, image and buttons
  *-------------------------------------------------------------------*/
 #calendar-deck {
-	overflow: auto;
+    overflow: auto;
 }
 
 /*--------------------------------------------------------------------
@@ -54,8 +59,8 @@
  *-------------------------------------------------------------------*/
 
 #calendar-controls-box {
-	min-height: 33px;
-	max-height: 33px;
+    min-height: 33px;
+    max-height: 33px;
 }
 
 /*--------------------------------------------------------------------
@@ -81,9 +86,9 @@ toolbar[mode="text"] .toolbarbutton-text {
  *-------------------------------------------------------------------*/
 
 .toolbarbutton-1 {
-	-moz-box-orient: vertical;
-	min-width: 0px;
-	list-style-image: url("chrome://calendar/skin/toolbar-large.png");
+    -moz-box-orient: vertical;
+    min-width: 0px;
+    list-style-image: url("chrome://calendar/skin/toolbar-large.png");
 }
 
 /*--------------------------------------------------------------------
@@ -91,25 +96,25 @@ toolbar[mode="text"] .toolbarbutton-text {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
-	-moz-box-orient: vertical;
-	min-width: 0px;
-	list-style-image: url("chrome://calendar/skin/toolbar-small.png");
+    -moz-box-orient: vertical;
+    min-width: 0px;
+    list-style-image: url("chrome://calendar/skin/toolbar-small.png");
 }
 
 /*--------------------------------------------------------------------
  *   new event button
  *-------------------------------------------------------------------*/
 
-#calendar-new-event-button {
-	-moz-image-region: rect(0px 24px 24px 0px);
+ #calendar-new-event-button {
+    -moz-image-region: rect(0px 24px 24px 0px);
 }
 #calendar-new-event-button[disabled="true"],
 #calendar-new-event-button[disabled="true"]:hover,
 #calendar-new-event-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 24px 72px 0px);
+    -moz-image-region: rect(48px 24px 72px 0px);
 }
 #calendar-new-event-button:hover {
-	-moz-image-region: rect(24px 24px 48px 0px);
+    -moz-image-region: rect(24px 24px 48px 0px);
 }
 #calendar-new-event-button:hover:active {
 }
@@ -119,15 +124,15 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-new-event-button {
-	-moz-image-region: rect(0px 16px 16px 0px);
+    -moz-image-region: rect(0px 16px 16px 0px);
 }
 toolbar[iconsize="small"] #calendar-new-event-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-new-event-button[disabled="true"]:hover,
 toolbar[iconsize="small"] #calendar-new-event-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 16px 48px 0px);
+    -moz-image-region: rect(32px 16px 48px 0px);
 }
 toolbar[iconsize="small"] #calendar-new-event-button:hover {
-	-moz-image-region: rect(16px 16px 32px 0px);
+    -moz-image-region: rect(16px 16px 32px 0px);
 }
 toolbar[iconsize="small"] #calendar-new-event-button:hover:active {
 }
@@ -137,15 +142,15 @@ toolbar[iconsize="small"] #calendar-new-event-button:hover:active {
  *-------------------------------------------------------------------*/
 
 #calendar-edit-event-button {
-	-moz-image-region: rect(0px 48px 24px 24px);
+    -moz-image-region: rect(0px 48px 24px 24px);
 }
 #calendar-edit-event-button[disabled="true"],
 #calendar-edit-event-button[disabled="true"]:hover,
 #calendar-edit-event-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 48px 72px 24px);
+    -moz-image-region: rect(48px 48px 72px 24px);
 }
 #calendar-edit-event-button:hover {
-	-moz-image-region: rect(24px 48px 48px 24px);
+    -moz-image-region: rect(24px 48px 48px 24px);
 }
 #calendar-edit-event-button:hover:active {
 }
@@ -155,15 +160,15 @@ toolbar[iconsize="small"] #calendar-new-event-button:hover:active {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-edit-event-button {
-	-moz-image-region: rect(0px 32px 16px 16px);
+    -moz-image-region: rect(0px 32px 16px 16px);
 }
 toolbar[iconsize="small"] #calendar-edit-event-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-edit-event-button[disabled="true"]:hover,
 toolbar[iconsize="small"] #calendar-edit-event-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 32px 48px 16px);
+    -moz-image-region: rect(32px 32px 48px 16px);
 }
 toolbar[iconsize="small"] #calendar-edit-event-button:hover {
-	-moz-image-region: rect(16px 32px 32px 16px);
+    -moz-image-region: rect(16px 32px 32px 16px);
 }
 toolbar[iconsize="small"] #calendar-edit-event-button:hover:active {
 }
@@ -173,15 +178,15 @@ toolbar[iconsize="small"] #calendar-edit-event-button:hover:active {
  *-------------------------------------------------------------------*/
 
 #calendar-delete-event-button {
-	-moz-image-region: rect(0px 72px 24px 48px);
+    -moz-image-region: rect(0px 72px 24px 48px);
 }
 #calendar-delete-event-button[disabled="true"],
 #calendar-delete-event-button[disabled="true"]:hover,
 #calendar-delete-event-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 72px 72px 48px);
+    -moz-image-region: rect(48px 72px 72px 48px);
 }
 #calendar-delete-event-button:hover {
-	-moz-image-region: rect(24px 72px 48px 48px);
+    -moz-image-region: rect(24px 72px 48px 48px);
 }
 #calendar-delete-event-button:hover:active {
 }
@@ -191,15 +196,15 @@ toolbar[iconsize="small"] #calendar-edit-event-button:hover:active {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-delete-event-button {
-	-moz-image-region: rect(0px 48px 16px 32px);
+    -moz-image-region: rect(0px 48px 16px 32px);
 }
 toolbar[iconsize="small"] #calendar-delete-event-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-delete-event-button[disabled="true"]:hover,
 toolbar[iconsize="small"] #calendar-delete-event-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 48px 48px 32px);
+    -moz-image-region: rect(32px 48px 48px 32px);
 }
 toolbar[iconsize="small"] #calendar-delete-event-button:hover {
-	-moz-image-region: rect(16px 48px 32px 32px);
+    -moz-image-region: rect(16px 48px 32px 32px);
 }
 toolbar[iconsize="small"] #calendar-delete-event-button:hover:active {
 }
@@ -280,33 +285,33 @@ toolbar[iconsize="small"] #calendar-choose-date-button:hover:active {
  *   Multiweek view button
  *-------------------------------------------------------------------*/
 #calendar-multiweek-view-button {
-	-moz-image-region: rect(0px 144px 24px 120px);
+    -moz-image-region: rect(0px 144px 24px 120px);
 }
 #calendar-multiweek-view-button:hover {
-	-moz-image-region: rect(24px 144px 48px 120px);
+    -moz-image-region: rect(24px 144px 48px 120px);
 }
 #calendar-multiweek-view-button:hover:active,
 #calendar-multiweek-view-button[disabled="true"],
 #calendar-multiweek-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(72px 144px 96px 120px);
-	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-	padding: 5px 3px 3px 5px;
-	color: ButtonText;
+    -moz-image-region: rect(72px 144px 96px 120px);
+    border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+    padding: 5px 3px 3px 5px;
+    color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
  *   Multiweek view button - small
  *-------------------------------------------------------------------*/
 toolbar[iconsize="small"] #calendar-multiweek-view-button {
-	-moz-image-region: rect(0px 96px 16px 80px);
+    -moz-image-region: rect(0px 96px 16px 80px);
 }
 toolbar[iconsize="small"] #calendar-multiweek-view-button:hover {
-	-moz-image-region: rect(16px 96px 32px 80px);
+    -moz-image-region: rect(16px 96px 32px 80px);
 }
 toolbar[iconsize="small"] #calendar-multiweek-view-button:hover:active,
 toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(48px 96px 64px 80px);
+    -moz-image-region: rect(48px 96px 64px 80px);
 }
 
 /*--------------------------------------------------------------------
@@ -314,18 +319,18 @@ toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"]:hover
  *-------------------------------------------------------------------*/
 
 #calendar-month-view-button {
-	-moz-image-region: rect(0px 168px 24px 144px);
+    -moz-image-region: rect(0px 168px 24px 144px);
 }
 #calendar-month-view-button:hover {
-	-moz-image-region: rect(24px 168px 48px 144px);
+    -moz-image-region: rect(24px 168px 48px 144px);
 }
 #calendar-month-view-button:hover:active,
 #calendar-month-view-button[disabled="true"],
 #calendar-month-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(72px 168px 96px 144px);
-	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-	padding: 5px 3px 3px 5px;
-	color: ButtonText;
+    -moz-image-region: rect(72px 168px 96px 144px);
+    border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+    padding: 5px 3px 3px 5px;
+    color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
@@ -333,15 +338,15 @@ toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"]:hover
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-month-view-button {
-	-moz-image-region: rect(0px 112px 16px 96px);
+    -moz-image-region: rect(0px 112px 16px 96px);
 }
 toolbar[iconsize="small"] #calendar-month-view-button:hover {
-	-moz-image-region: rect(16px 112px 32px 96px);
+    -moz-image-region: rect(16px 112px 32px 96px);
 }
 toolbar[iconsize="small"] #calendar-month-view-button:hover:active,
 toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(48px 112px 64px 96px);
+    -moz-image-region: rect(48px 112px 64px 96px);
 }
 
 /*--------------------------------------------------------------------
@@ -349,18 +354,18 @@ toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"]:hover {
  *-------------------------------------------------------------------*/
 
 #calendar-week-view-button {
-	-moz-image-region: rect(0px 120px 24px 96px);
+    -moz-image-region: rect(0px 120px 24px 96px);
 }
 #calendar-week-view-button:hover {
-	-moz-image-region: rect(24px 120px 48px 96px);
+    -moz-image-region: rect(24px 120px 48px 96px);
 }
 #calendar-week-view-button:hover:active,
 #calendar-week-view-button[disabled="true"],
 #calendar-week-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(72px 120px 96px 96px);
-	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-	padding: 5px 3px 3px 5px;
-	color: ButtonText;
+    -moz-image-region: rect(72px 120px 96px 96px);
+    border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+    padding: 5px 3px 3px 5px;
+    color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
@@ -368,15 +373,15 @@ toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"]:hover {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-week-view-button {
-	-moz-image-region: rect(0px 80px 16px 64px);
+    -moz-image-region: rect(0px 80px 16px 64px);
 }
 toolbar[iconsize="small"] #calendar-week-view-button:hover {
-	-moz-image-region: rect(16px 80px 32px 64px);
+    -moz-image-region: rect(16px 80px 32px 64px);
 }
 toolbar[iconsize="small"] #calendar-week-view-button:hover:active,
 toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(48px 80px 64px 64px);
+    -moz-image-region: rect(48px 80px 64px 64px);
 }
 
 /*--------------------------------------------------------------------
@@ -384,18 +389,18 @@ toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"]:hover {
  *-------------------------------------------------------------------*/
 
 #calendar-day-view-button {
-	-moz-image-region: rect(0px 96px 24px 72px);
+    -moz-image-region: rect(0px 96px 24px 72px);
 }
 #calendar-day-view-button:hover {
-	-moz-image-region: rect(24px 96px 48px 72px);
+    -moz-image-region: rect(24px 96px 48px 72px);
 }
 #calendar-day-view-button:hover:active,
 #calendar-day-view-button[disabled="true"],
 #calendar-day-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(72px 96px 96px 72px);
-	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-	padding: 5px 3px 3px 5px;
-	color: ButtonText;
+    -moz-image-region: rect(72px 96px 96px 72px);
+    border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+    padding: 5px 3px 3px 5px;
+    color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
@@ -403,15 +408,15 @@ toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"]:hover {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-day-view-button {
-	-moz-image-region: rect(0px 64px 16px 48px);
+    -moz-image-region: rect(0px 64px 16px 48px);
 }
 toolbar[iconsize="small"] #calendar-day-view-button:hover {
-	-moz-image-region: rect(16px 64px 32px 48px);
+    -moz-image-region: rect(16px 64px 32px 48px);
 }
 toolbar[iconsize="small"] #calendar-day-view-button:hover:active,
 toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"]:hover {
-	-moz-image-region: rect(48px 64px 64px 48px);
+    -moz-image-region: rect(48px 64px 64px 48px);
 }
 
 /*--------------------------------------------------------------------
@@ -813,6 +818,7 @@ toolbar[iconsize="small"] #calendar-new-task-button:hover:active {
  *   Throbber button
  *-------------------------------------------------------------------*/
 
+/* "Chasing dots" throbber */
 #navigator-throbber {
   -moz-appearance: none;
   -moz-user-focus: ignore;
@@ -842,15 +848,15 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
  *-------------------------------------------------------------------*/
 
 .prevnextbuttons {
-	list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
-	margin: 5px 15px;
-	cursor: pointer;
+    list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
+    margin: 5px 15px;
+    cursor: pointer;
 }
 
 .updownbuttons {
-	list-style-image: url("chrome://calendar/skin/pageupdown.png");
-	margin: 5px 5px;
-	cursor: pointer;
+    list-style-image: url("chrome://calendar/skin/pageupdown.png");
+    margin: 5px 5px;
+    cursor: pointer;
 }
 
 /*
@@ -859,47 +865,47 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 *****************************
 */
 #multiweek-grid {
-	border: 1px solid #3f7d91;
+    border: 1px solid #3f7d91;
 }
 
 #multiweek-grid-box {
-	border: 1px solid #3f7d91;
-	padding: 2px;
-	margin: 10px 2px 15px 10px;
-	background-color: #E7EEEC;
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
+    border: 1px solid #3f7d91;
+    padding: 2px;
+    margin: 10px 2px 15px 10px;
+    background-color: #E7EEEC;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
 }
 
 
 /*Right column*/
-.multiweek-rightcol-class { 
-	margin: 10px 2px 15px 2px;
+.multiweek-rightcol-class {
+    margin: 10px 2px 15px 2px;
 }
 
 #multiweek-view-box {
-	-moz-box-align: center;
-	-moz-box-pack: center;
-	overflow: auto;
-	background-color: #FAFCFB;
+    -moz-box-align: center;
+    -moz-box-pack: center;
+    overflow: auto;
+    background-color: #FAFCFB;
 }
 
 #multiweek-title {
-	font-size:1.2em;
-	color: #3f7d91;
-	font-weight:bold;
-	margin:0px;
-	padding:0px;
+    font-size:1.2em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
 }
 
 .multiweek-header-class {
-	border-left: 1px solid #3f7d91;
-	-moz-box-align: center;
-	font-size: 1.3em;
-	font-family: Arial, Helvetica;
-	color: #3f7d91;
-	background-color: #FFFFFF;
-	font-weight:bold;
+    border-left: 1px solid #3f7d91;
+    -moz-box-align: center;
+    font-size: 1.3em;
+    font-family: Arial, Helvetica;
+    color: #3f7d91;
+    background-color: #FFFFFF;
+    font-weight:bold;
 }
 .multiweek-header-left-class{
      -moz-box-align: center;
@@ -909,7 +915,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
     font-weight:bold;
 }
 
-.multiweek-leftcol-box-class{ 
+.multiweek-leftcol-box-class{
    display            : -moz-stack;
    background-color   : #E7EEEC;
 }
@@ -977,10 +983,10 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 .multiweek-view-event-class
 {
-  border	       : 1px solid #1D7AB5;
+  border           : 1px solid #1D7AB5;
   margin               : 1px;
   background-color     : #F9F4FF;
-  text-align           : left; 	
+  text-align           : left;
   font-size            : 0.9em;
   font-family          : Arial, Helvetica;
   cursor               : pointer;
@@ -988,18 +994,18 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 .multiweek-view-event-class:hover
 {
-  border		: 1px solid #003366;
+  border        : 1px solid #003366;
 }
 
 .multiweek-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;  
-   border	        : 2px solid #990000;
+   background-color     :  #D5E3F2;
+   border            : 2px solid #990000;
    margin               : 0px;
 }
 
 .multiweek-view-event-dot-class
-{                  
+{
    margin-left             : 2px;
    margin-top              : 2px;
    list-style-image        : url("chrome://calendar/skin/dot.png");
@@ -1017,7 +1023,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
-	 min-height:	54px;
+     min-height:    54px;
 }
 
 #month-view-box{
@@ -1103,7 +1109,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
     background-repeat: no-repeat;
 }
 #month-grid-box[background="true"]{
-    background-image: url("chrome://calendar/skin/userbackground.png"); 
+    background-image: url("chrome://calendar/skin/userbackground.png");
 }
 
 /*this rule defines the borders around the day boxes and day names*/
@@ -1112,7 +1118,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
     border-bottom: 1px solid #3f7d91;
 }
 /*this rule is for the week number and surrounding box*/
-.month-leftcol-box-class{ 
+.month-leftcol-box-class{
     border-top: 1px solid #3f7d91;
     border-left: 1px solid #3f7d91;
    display              : -moz-stack;
@@ -1194,9 +1200,9 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 .month-day-number-class
 {
 
-   margin-top           : 3px; 	
-   margin-left          : 4px; 	
-   margin-bottom        : -1px; 	
+   margin-top           : 3px;
+   margin-left          : 4px;
+   margin-bottom        : -1px;
    font-size            : 1.1em;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
@@ -1220,7 +1226,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
    border               : 1px solid #1D7AB5;
    margin               : 1px;
    background-color     : #F9F4FF;
-   text-align           : left; 	
+   text-align           : left;
    font-size            : 0.9em;
    font-family          : Arial, Helvetica;
    cursor               : pointer;
@@ -1228,13 +1234,13 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 .month-view-event-class:hover
 {
-   border	        : 1px solid #003366;
+   border            : 1px solid #003366;
 }
 
 .month-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;  
-   border	        : 2px solid #990000;
+   background-color     :  #D5E3F2;
+   border            : 2px solid #990000;
    margin               : 0px;
 }
 
@@ -1242,22 +1248,22 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 .month-allday-busy-ind-class[busy="true"]
 {
    list-style-image     :url("chrome://calendar/skin/all_day_event.png");
-}  
+}
 
 .all-day-event-class:hover,
 .month-allday-busy-ind-class[busy="true"]:hover
 {
    list-style-image     :url("chrome://calendar/skin/all_day_event_hover.png");
-}  
+}
 
 .all-day-event-class:hover:active,
 .month-allday-busy-ind-class[busy="true"]:hover:active
 {
    list-style-image     :url("chrome://calendar/skin/all_day_event_down.png");
-}  
+}
 
 .month-view-event-dot-class
-{                  
+{
    margin-left             : 2px;
    margin-top              : 2px;
    list-style-image        : url("chrome://calendar/skin/dot.png");
@@ -1290,7 +1296,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 #inner-day-view-box
 {
-	margin						: 15px;
+    margin                        : 15px;
 }
 
 /*--------------------------------------------------------------------
@@ -1302,7 +1308,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
-	 min-height:	54px;
+     min-height:    54px;
 }
 
 #day-specific-title-box
@@ -1493,7 +1499,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
   /* !important to prevent calendar-specific color setting from overriding this */
   background-color  : #D5E3F2 !important;
 }
- 
+
 /*--------------------------------------------------------------------
  * Box for hours
  *-------------------------------------------------------------------*/
@@ -1518,7 +1524,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 .day-view-hour-box-class[selected="true"]
 {
    background-color     : blue;
-   
+
 }
 
 /*--------------------------------------------------------------------
@@ -1527,7 +1533,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 .day-time-class
 {
-   margin               : 6px; 	
+   margin               : 6px;
    margin-left          : 0px;
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
@@ -1585,7 +1591,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 
 #inner-week-view-box
 {
-	margin						: 0px 15px;
+    margin                        : 0px 15px;
 }
 
 /* Week View: Controls */
@@ -1595,7 +1601,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
-	 min-height:	54px;
+     min-height:    54px;
 }
 
 #week-next-button {
@@ -1660,7 +1666,7 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 }
 #weekview-header-spacer-left
 {
-	-moz-box-align 		     : start;
+    -moz-box-align              : start;
    background-color          : #FAFCFB;
    border-bottom             : 1px solid #1D7AB5;
 }
@@ -1681,9 +1687,9 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
    color                   : #3f7d91;
    font-size               : 11pt;
    font-family             : Arial, Helvetica;
-   text-align              : center; 
+   text-align              : center;
    font-weight             : bold;
-   background-color 	      : #ffffff;
+   background-color           : #ffffff;
    -moz-border-top-colors:  #3f7d91 #E7EEEC  #E7EEEC;
     border-top: 3px solid;
     border-bottom         : 1px solid #2085c4;
@@ -1717,10 +1723,10 @@ then observed (ERic 20/06/03)
    background-color     :#ffffff;
    -moz-user-focus      : normal;
    /*padding            : 2px;*/
-} 
+}
 #week-view-header-box{
   /*padding             : 2px 2px 0px 2px;*/
-  border-bottom         : 1px solid #2085c4;        
+  border-bottom         : 1px solid #2085c4;
 }
 
 #week-view-content-holder,#week-view-header-holder{
@@ -1742,13 +1748,13 @@ then observed (ERic 20/06/03)
 
 .week-view-event-class:hover
 {
-  border		: 1px solid #003366;
+  border        : 1px solid #003366;
 }
 
 .week-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;  
-   border	        : 2px solid #990000;
+   background-color     :  #D5E3F2;
+   border            : 2px solid #990000;
 }
 
 /*--------------------------------------------------------------------
@@ -1765,7 +1771,7 @@ then observed (ERic 20/06/03)
 
 .week-time-class-text
 {
-   margin               : 5px; 	
+   margin               : 5px;
    margin-top           : 2px;
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
@@ -1773,7 +1779,7 @@ then observed (ERic 20/06/03)
    width                : 50px;
 }
 
-.week-row-class{  
+.week-row-class{
    height               : 40px;
    min-height:            30px;
 }
@@ -1799,13 +1805,13 @@ then observed (ERic 20/06/03)
 
 .month-day-box-class[weekend="true"],
 .week-view-hour-box-class[weekend="true"]{
-   background-color 		: #FFF9EF;
+   background-color         : #FFF9EF;
 }
 
 .week-view-hour-box-class[today="true"]
 {
-  	border-left				: 2px solid #2085c4;
-	border-right			: 1px solid #2085c4;
+      border-left                : 2px solid #2085c4;
+    border-right            : 1px solid #2085c4;
 }
 
 .week-view-hour-box-class-last-day[today="true"]
@@ -1841,25 +1847,25 @@ then observed (ERic 20/06/03)
    color                : #1d7ab5;
    -moz-box-pack       : center;
    text-align           : left;
-} 
+}
 
 .all-day-content-box-week
 {
-  	width				: 78px;
+      width                : 78px;
    -moz-box-align : start;
-	padding					: 2px;
+    padding                    : 2px;
    background-color     : white;
-   min-height       		: 25px;
+   min-height               : 25px;
 }
 
 #all-day-content-spacer
 {
-  	width			: 8px;
-}	
+      width            : 8px;
+}
 
 .calendar-unifinder-event-indent
 {
-  	padding-left		: 30px;
+      padding-left        : 30px;
 }
 
 .unifinder-treecell-box-class
@@ -1893,9 +1899,9 @@ treechildren::-moz-tree-row(overdue,selected)
    background-color                  : red;
 }
 
-treechildren::-moz-tree-row 
-{ 
-   border-bottom             : 1px dotted #AAA; 
+treechildren::-moz-tree-row
+{
+   border-bottom             : 1px dotted #AAA;
 }
 
 treechildren::-moz-tree-cell-text(duetoday)
@@ -1973,19 +1979,19 @@ listitem[selected="true"] > .calendar-list-item-class
 .todo-due-image-class
 {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
-}  
+}
 
 .todo-due-image-class[highpriority="true"]
 {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_high.png" )
-}  
+}
 
 .todo-due-image-class[lowpriority="true"]
 {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
-}  
+}
 /*--------------------------------------------------------------------
- * Unifinder 
+ * Unifinder
  *-------------------------------------------------------------------*/
 /* workaround to avoid Window Flick */
 #unifinder-search-results-listbox

@@ -1,3 +1,5 @@
 calendar.jar:
-        skin/classic/calendar/pref/Options.png                   (pref/Options.png)
-        skin/classic/calendar/pref/pref.css                      (pref/pref.css)
+        skin/classic/calendar/mainCalendar.css                   (../../winstripe/sunbird/calendar.css)
++       skin/classic/calendar/calendar.css
++       skin/classic/calendar/pref/Options.png                   (pref/Options.png)
++       skin/classic/calendar/pref/pref.css                      (pref/pref.css)
