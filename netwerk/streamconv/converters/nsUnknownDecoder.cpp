@@ -309,6 +309,8 @@ nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
   // text or whether it's data.
   SNIFFER_ENTRY_WITH_FUNC("#!", &nsUnknownDecoder::LastDitchSniff),
 
+  // XXXbz should (and can) we also include the various ways that <?xml can
+  // appear as UTF-16 and such?  See http://www.w3.org/TR/REC-xml#sec-guessing
   SNIFFER_ENTRY_WITH_FUNC("<?xml", &nsUnknownDecoder::SniffForXML)
 };
 
@@ -492,18 +494,35 @@ PRBool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
 }
 
 // This macro is based on RFC 2046 Section 4.1.2.  Treat any char 0-31
-// except the 9-13 range (\t, \n, \v, \f, \r) as non-text
+// except the 9-13 range (\t, \n, \v, \f, \r) and char 27 (used by
+// encodings like Shift_JIS) as non-text
 #define IS_TEXT_CHAR(ch)                                     \
-  ((((unsigned char)(ch)) & 31) != ((unsigned char)(ch)) ||    \
-   (9 <= ch && ch <= 13))
+  (((unsigned char)(ch)) > 31 || (9 <= (ch) && (ch) <= 13) || (ch) == 27)
 
 PRBool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
 {
   // All we can do now is try to guess whether this is text/plain or
   // application/octet-stream
-  //
-  // See if the buffer has any non-text chars.  If not, then lets just
-  // call it text/plain...
+
+  // First, check for a BOM.  If we see one, assume this is text/plain
+  // in whatever encoding.  If there is a BOM _and_ text we will
+  // always have at least 4 bytes in the buffer (since the 2-byte BOMs
+  // are for 2-byte encodings and the UTF-8 BOM is 3 bytes).
+  if (mBufferLen >= 4) {
+    const unsigned char* buf = (const unsigned char*)mBuffer;
+    if ((buf[0] == 0xFE && buf[1] == 0xFF) || // UTF-16BE
+        (buf[0] == 0xFF && buf[1] == 0xFE) || // UTF-16LE
+        (buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF) || // UTF-8
+        (buf[0] == 0 && buf[1] == 0 && buf[2] == 0xFE && buf[3] == 0xFF) || // UCS-4BE
+        (buf[0] == 0 && buf[1] == 0 && buf[2] == 0xFF && buf[3] == 0xFE)) { // UCS-4
+        
+      mContentType = TEXT_PLAIN;
+      return PR_TRUE;
+    }
+  }
+  
+  // Now see whether the buffer has any non-text chars.  If not, then let's
+  // just call it text/plain...
   //
   PRUint32 i;
   for (i=0; i<mBufferLen && IS_TEXT_CHAR(mBuffer[i]); i++);
@@ -512,7 +531,7 @@ PRBool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
     mContentType = TEXT_PLAIN;
   }
   else {
-    mContentType = APPLICATION_OCTET_STREAM;
+    mContentType = APPLICATION_GUESS_FROM_EXT;
   }
 
   return PR_TRUE;    
@@ -575,4 +594,10 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   mBufferLen = 0;
 
   return rv;
+}
+
+void
+nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
+{
+  LastDitchSniff(aRequest);
 }

@@ -75,6 +75,8 @@
 #include "nsIMIMEHeaderParam.h"
 #include "nsNetCID.h"
 
+#include "nsMimeTypes.h"
+
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsURILoader::mLog = nsnull;
@@ -284,6 +286,31 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
     return NS_OK;
   }
 
+  if (httpChannel && mContentType.IsEmpty()) {
+    // This is our initial dispatch, and this is an HTTP channel.  Check for
+    // the text/plain mess.
+    nsCAutoString contentType;
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                   contentType);
+    // Make sure to do a case-sensitive exact match comparison here.  Apache
+    // 1.x just sends text/plain for "unknown", while Apache 2.x sends
+    // text/plain with a ISO-8859-1 charset.  Debian's Apache version, just to
+    // be different, sends text/plain with iso-8859-1 charset.  Don't do
+    // general case-insensitive comparison, since we really want to apply this
+    // crap as rarely as we can.
+    if (contentType.Equals(NS_LITERAL_CSTRING("text/plain")) ||
+        contentType.Equals(
+             NS_LITERAL_CSTRING("text/plain; charset=ISO-8859-1")) ||
+        contentType.Equals(
+             NS_LITERAL_CSTRING("text/plain; charset=iso-8859-1"))) {
+      // OK, this is initial dispatch of an HTTP response and its Content-Type
+      // header is exactly "text/plain".  We need to check whether this is
+      // really text....
+      LOG(("  Possibly bogus text/plain; resetting type to " APPLICATION_MAYBE_TEXT));
+      httpChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_MAYBE_TEXT));
+    }
+  }
+  
   rv = DispatchContent(request, aCtxt);
 
   LOG(("  After dispatch, m_targetStreamListener: 0x%p", m_targetStreamListener.get()));
@@ -346,7 +373,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     return NS_ERROR_FAILURE;
   }
 
-  if (mContentType.IsEmpty()) {
+  NS_NAMED_LITERAL_CSTRING(anyType, "*/*");
+  if (mContentType.IsEmpty() || mContentType == anyType) {
     rv = aChannel->GetContentType(mContentType);
     if (NS_FAILED(rv)) return rv;
     LOG(("  Got type from channel: '%s'", mContentType.get()));
@@ -512,7 +540,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // it in our Accept header and got confused.
   // XXXbz have to be careful here; may end up in some sort of bizarre infinite
   // decoding loop.
-  NS_NAMED_LITERAL_CSTRING(anyType, "*/*");
   if (mContentType != anyType) {
     rv = ConvertData(request, m_contentListener, mContentType, anyType);
     if (NS_FAILED(rv)) {
@@ -591,13 +618,12 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
   // Also make sure it has to look for a stream listener to pump data into.
   nextLink->m_targetStreamListener = nsnull;
 
-  if (aOutContentType != NS_LITERAL_CSTRING("*/*")) {
-    // Make sure that nextLink treats the data as aOutContentType when
-    // dispatching; that way even if the stream converters don't
-    // change the type on the channel we will still do the right
-    // thing.
-    nextLink->mContentType = aOutContentType;
-  }
+  // Make sure that nextLink treats the data as aOutContentType when
+  // dispatching; that way even if the stream converters don't change the type
+  // on the channel we will still do the right thing.  If aOutContentType is
+  // */*, that's OK -- that will just indicate to nextLink that it should get
+  // the type off the channel.
+  nextLink->mContentType = aOutContentType;
 
   // The following call sets m_targetStreamListener to the input end of the
   // stream converter and sets the output end of the stream converter to
