@@ -48,7 +48,7 @@ void main(void)
 	OSErr err = noErr;
 	
 	Init();
-	if (VerifyEnv())	
+	if (VerifyEnv() && !gDone)	
 	{
 		err = NavLoad();
 		if (err!=noErr)
@@ -359,6 +359,13 @@ void ErrorHandler(short errCode)
 // TO DO
 //		* handle a "fatality" parameter for recovery
 
+    // only throw up the error dialog once (since we have no fatality param)
+    static Boolean bErrHandled = false;
+    if (bErrHandled)
+        return;
+    else
+        bErrHandled = true;
+        
     Str255      pErrorStr = "\pUnexpected error!";
     Str255      pMessage = "\pError ";
     char        *cErrNo = 0;
@@ -396,7 +403,7 @@ void ErrorHandler(short errCode)
 void Shutdown(void)
 {
 	WindowPtr	frontWin;
-	long 		MIWMagic = 0;
+	long 		MIWMagic = 0, i;
 
 #if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
 	UnloadSDLib(&gConnID);
@@ -404,8 +411,58 @@ void Shutdown(void)
 	NavUnload();
 	
 /* deallocate config object */
-	// TO DO	
-	
+    if (gControls->cfg)
+    {
+        /* General */
+        if (gControls->cfg->targetSubfolder)
+            DisposePtr((Ptr) gControls->cfg->targetSubfolder);
+        if (gControls->cfg->globalURL)
+            DisposePtr((Ptr) gControls->cfg->globalURL);
+            
+        /* LicenseWin */
+        if (gControls->cfg->licFileName)
+            DisposePtr((Ptr) gControls->cfg->licFileName);        
+            
+        /* WelcomeWin */
+        for (i = 0; i < kNumWelcMsgs; i++)
+        {
+            if (gControls->cfg->welcMsg[i])
+                DisposePtr((Ptr) gControls->cfg->welcMsg[i]);  
+        }      
+        if (gControls->cfg->readmeFile)
+            DisposePtr((Ptr) gControls->cfg->readmeFile);    
+        if (gControls->cfg->readmeApp)
+            DisposePtr((Ptr) gControls->cfg->readmeApp);
+            
+        /* ComponentsWin and AdditionsWin */
+        if (gControls->cfg->selCompMsg)
+            DisposePtr((Ptr) gControls->cfg->selCompMsg);
+        if (gControls->cfg->selAddMsg)
+            DisposePtr((Ptr) gControls->cfg->selAddMsg);
+
+        /* TerminalWin */            
+        if (gControls->cfg->startMsg)
+            DisposePtr((Ptr) gControls->cfg->startMsg);
+        if (gControls->cfg->saveBitsMsg)
+            DisposePtr((Ptr) gControls->cfg->saveBitsMsg);
+                        
+        /* "Tunneled" IDI keys */
+        if (gControls->cfg->coreFile)
+            DisposePtr((Ptr) gControls->cfg->coreFile);  
+        if (gControls->cfg->coreDir)
+            DisposePtr((Ptr) gControls->cfg->coreDir);  
+        if (gControls->cfg->noAds)
+            DisposePtr((Ptr) gControls->cfg->noAds);  
+        if (gControls->cfg->silent)
+            DisposePtr((Ptr) gControls->cfg->silent);  
+        if (gControls->cfg->execution)
+            DisposePtr((Ptr) gControls->cfg->execution);  
+        if (gControls->cfg->confirmInstall)
+            DisposePtr((Ptr) gControls->cfg->confirmInstall);
+            
+        DisposePtr((Ptr)gControls->cfg);
+    }
+    	
 /* deallocate options object */
 	if (gControls->opt && gControls->opt->folder)
 	{

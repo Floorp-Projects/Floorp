@@ -146,9 +146,8 @@ if (err) 								\
 #define kValueMaxLen	512
 #define kSNameMaxLen	128	  /*    v--- for KV_DELIM char   */
 #define	kSectionMaxLen	(kKeyMaxLen+1+kValueMaxLen)*kMaxNumKeys
-#define kMaxURLPerComp	8
 #define kArchiveMaxLen	64
-#define kGenIDIFileSize	0x2000
+#define kGenIDIFileSize	2048
 #define kEnableControl	0
 #define kDisableControl	255
 #define kNotSelected	0
@@ -312,9 +311,11 @@ if (err) 								\
 #define sMessage		41
 
 #define sSiteSelector	42
+#define sIdentifier     50
 #define sDomain			43
 #define sDescription	44
 #define sRedirect		46
+#define sSubpath        51
 
 #define sTermDlg		27
 		
@@ -346,11 +347,6 @@ typedef struct InstComp {
 	/* archive properties */
 	Handle	archive;
 	long	size;
-	
-	/* URL details */
-	Handle 	domain[kMaxURLPerComp];
-	Handle	serverPath[kMaxURLPerComp];
-	short	numURLs;
 	
 	/* attributes */
 	Boolean selected;
@@ -389,14 +385,14 @@ typedef struct LegacyCheck {
 } LegacyCheck;
 
 typedef struct SiteSelector {
+	Handle  id;
 	Handle 	desc;
 	Handle	domain;
 } SiteSelector;
 
 typedef struct Redirect {
 	Handle 	desc;
-	Handle 	url[kMaxSites];
-	short	numURLs;
+	Handle 	subpath;
 } Redirect; 
 
 typedef struct Config {
@@ -407,6 +403,7 @@ typedef struct Config {
 	 
 	/* General */
 	Handle  targetSubfolder;
+	Handle  globalURL;
 	
 	/* LicenseWin */
 	Handle	licFileName;
@@ -604,6 +601,7 @@ Boolean		GetNextSection(char **, char *, char *);
 Boolean		GetNextKeyVal(char **, char *, char*);
 unsigned char *CToPascal(char *);
 char *		PascalToC(unsigned char *);
+void        CopyPascalStrToC(ConstStr255Param srcPString, char* dest);
 
 /*-----------------------------------------------------------*
  *   EvtHandlers

@@ -63,7 +63,10 @@ ShowTerminalWin(void)
 		rectH = Get1Resource('RECT', rStartMsgBox);
 		reserr = ResError();
 		if (reserr == noErr && rectH != NULL)
+		{
 			viewRect = (Rect) **((Rect **)rectH);
+			ReleaseResource(rectH);
+        }
 		else
 		{
 			ErrorHandler(reserr);
@@ -135,7 +138,10 @@ ShowTerminalWin(void)
 				rectH = Get1Resource('RECT', rSaveBitsMsgBox);
 				reserr = ResError();
 				if (reserr == noErr && rectH != NULL)
+				{
 					 gControls->tw->saveBitsMsgBox  = (Rect) **((Rect **)rectH);
+					 DisposeHandle(rectH);
+			    }
 				else
 				{
 					ErrorHandler(reserr);

@@ -99,7 +99,6 @@ InitLicTxt(void)
 	HLock(gControls->cfg->licFileName);
 	if(**gControls->cfg->licFileName != nil)
 	{
-		cLicFName = (unsigned char*)NewPtrClear(strlen(*gControls->cfg->licFileName));
 		cLicFName = CToPascal(*gControls->cfg->licFileName);
 		
 		ERR_CHECK(FSMakeFSSpec(vRefNum, dirID, cLicFName, &licFile));

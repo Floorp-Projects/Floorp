@@ -38,6 +38,7 @@ pascal void* Install(void* unused)
 #if MOZILLA == 0
 	FSSpec 			redirectSpec;
 	HRESULT			dlErr;
+	short           siteIndex;
 #endif
 #ifdef MIW_DEBUG
 	FSSpec			tmpSpec;
@@ -101,11 +102,34 @@ pascal void* Install(void* unused)
 		GetPort(&oldPort);
 
 #if MOZILLA == 0
-		if (gControls->cfg->redirect.numURLs > 0)
+        HLock(gControls->cfg->redirect.subpath);
+		if (gControls->cfg->redirect.subpath && *(gControls->cfg->redirect.subpath))
 		{
-			if (DownloadRedirect(vRefNum, dirID, &redirectSpec))
-				ParseRedirect(&redirectSpec);
+		    HUnlock(gControls->cfg->redirect.subpath);
+		    
+		    /* replace global URL from redirect.ini */
+		    if (DownloadRedirect(vRefNum, dirID, &redirectSpec))
+                ParseRedirect(&redirectSpec);
 		}
+		else
+		{
+	        HUnlock(gControls->cfg->redirect.subpath);
+	        
+		    /* otherwise if site selector exists, replace global URL with selected site */
+	        if (gControls->cfg->numSites > 0)
+	        {
+		        if (gControls->cfg->globalURL)
+		            DisposeHandle(gControls->cfg->globalURL);
+                gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
+                
+                siteIndex = gControls->opt->siteChoice - 1;
+	            HLock(gControls->cfg->globalURL);
+	            HLock(gControls->cfg->site[siteIndex].domain);
+	            strcpy(*(gControls->cfg->globalURL), *(gControls->cfg->site[siteIndex].domain));
+	            HUnlock(gControls->cfg->globalURL);
+	            HUnlock(gControls->cfg->site[siteIndex].domain);
+		    }
+	    }
 #endif /* MOZILLA == 0 */
 
 		/* generate idi */
@@ -131,7 +155,10 @@ pascal void* Install(void* unused)
 #endif /* SDINST_IS_DLL */
 		if (dlErr != 0)
 		{
-			ErrorHandler(dlErr);
+		    if (dlErr != 0x800704C7)
+			    ErrorHandler(dlErr);
+			else 
+			    gDone = true;
 			return (void*) nil;
 		}
 #endif /* MOZILLA */
@@ -179,10 +206,6 @@ pascal void* Install(void* unused)
 			InitProgressBar();
 			
 			/* extract contents of downloaded or packaged core file */
-			
-			// XXX move this call to the end by 06/18/2000 if the issue is cleared
-			// XXX IfRemoveOldCore(vRefNum, dirID);
-			
 			err = ExtractCoreFile(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr) 
 			{
@@ -224,24 +247,22 @@ pascal void* Install(void* unused)
 	return (void*) 0;
 }
 
+#define GETRED_BUF_SIZE 512
+
 Boolean
 DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
 {
 	Boolean 	bSuccess = true;
-	char 		*buf = NULL, *idx = NULL, *leaf = NULL;;
-	int			i;
+	char 		buf[GETRED_BUF_SIZE], *leaf = NULL;
 	FSSpec		getRedirectIDI;
 	short		refNum;
 	long		count;
 	SDISTRUCT	sdistruct;
 	StringPtr	pLeaf = NULL;
 	OSErr		err = noErr;
-	
-	buf = NewPtrClear(2048);
-	if (!buf)
-		return false;
 		
 	/* generate IDI */
+	memset(buf, 0, GETRED_BUF_SIZE);
 	
 	/*
 	 [Netscape Install]
@@ -264,22 +285,19 @@ DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
 	HUnlock(gControls->cfg->redirect.desc);
 	strcat(buf, "\r");
 	
-	/* iterate <n>=URLn */
-	for (i = 0; i < gControls->cfg->redirect.numURLs; i++)
-	{
-		idx = ltoa(i);
-		
-		strcat(buf, idx);
-		strcat(buf, "=");
-		HLock(gControls->cfg->redirect.url[i]);
-		strcat(buf, *(gControls->cfg->redirect.url[i]));
-		HUnlock(gControls->cfg->redirect.url[i]);
-		strcat(buf, "\r");
-		
-		if (idx)
-			free(idx);
-		idx = NULL;
-	}
+	/* 1=URL */
+	strcat(buf, "1=");
+
+    /* get domain of selected site */
+	HLock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
+	strcat(buf, *(gControls->cfg->site[gControls->opt->siteChoice-1].domain));
+    HUnlock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
+	
+	/* tack on redirect subpath (usually just the file leaf name) */
+	HLock(gControls->cfg->redirect.subpath);
+	strcat(buf, *(gControls->cfg->redirect.subpath));
+	HUnlock(gControls->cfg->redirect.subpath);
+	strcat(buf, "\r");
 	
 	/* write out buffer to temp location */
 	err = FSMakeFSSpec(vRefNum, dirID, "\pGetRedirect.idi", &getRedirectIDI);
@@ -308,6 +326,9 @@ DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
 		bSuccess = false;
 	FSClose(refNum);
 	
+	if (!bSuccess)
+	    goto BAIL;
+	
 	/* populate SDI struct */
 	sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
 	sdistruct.fsIDIFile 	= getRedirectIDI;
@@ -324,34 +345,26 @@ DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
 #endif /* SDINST_IS_DLL */
 #endif /* MOZILLA */
 	
-	bSuccess = false;
-	for (i = 0; i < gControls->cfg->redirect.numURLs; i++)
-	{
-    	/* verify redirect.ini existence */
-    	HLock(gControls->cfg->redirect.url[i]);
-    	leaf = strrchr(*(gControls->cfg->redirect.url[i]), '/');
-    	if (!leaf)
-    	{
-    		bSuccess = false;
-    		goto BAIL;
-    	}
-    	pLeaf = CToPascal(leaf+1);
-    	HUnlock(gControls->cfg->redirect.url[i]);
-    	
-    	err = FSMakeFSSpec(vRefNum, dirID, pLeaf, redirectINI);
-    	if (err == noErr)
-    	{
-    		bSuccess = true;
-    		break;
-    	}
-	}
+	bSuccess = false; 
 	
-	if (!bSuccess)
-	    FSMakeFSSpec(0, 0, "\p", redirectINI);
+	/* verify redirect.ini existence */
+	HLock(gControls->cfg->redirect.subpath);
+	leaf = strrchr(*(gControls->cfg->redirect.subpath), '/');
+	if (!leaf)
+	    leaf = *(gControls->cfg->redirect.subpath);
+	else
+	    leaf++;
+	pLeaf = CToPascal(leaf);
+	HUnlock(gControls->cfg->redirect.subpath);
+	
+	err = FSMakeFSSpec(vRefNum, dirID, pLeaf, redirectINI);
+	if (err == noErr)
+		bSuccess = true;
 	
 BAIL:
-	if (buf)
-		DisposePtr((Ptr)buf);
+	if (!bSuccess)
+	    FSMakeFSSpec(0, 0, "\p", redirectINI);
+
 	if (pLeaf)
 		DisposePtr((Ptr)pLeaf);
 		
@@ -362,11 +375,10 @@ void
 ParseRedirect(FSSpecPtr redirectINI)
 {
 	short 		fileRefNum;
-	Boolean		bSuccess = false;
 	OSErr 		err = noErr;
 	long		dataSize;
-	char 		*text = NULL, *cDomain = NULL, *cSection = NULL, *cIndex = NULL;
-	Str255		pSection, pDomainRoot;
+	char 		*text = NULL, *cId = NULL, *cSection = NULL;
+	Str255		pSection;
 	int			siteIndex;
 	Handle		domainH = NULL;
 	
@@ -379,51 +391,51 @@ ParseRedirect(FSSpecPtr redirectINI)
 		return;
 	if (dataSize > 0)
 	{
-		text = (char*) NewPtrClear(dataSize);
+		text = (char*) NewPtrClear(dataSize + 1);
 		if (!text)
 			return;
 			
         err = FSRead(fileRefNum, &dataSize, text);
         if (err != noErr)
+        {
+            FSClose(fileRefNum);
         	goto BAIL;
+        }
     }
 	FSClose(fileRefNum);
 		 
-	/* parse text for selected site replacing selected 
-	 * site with parsed text (new site domain) 
+	/* parse text for selected site replacing teh global URL 
+	 * with the identifed site's URL in the redirect.ini
 	 */
 	if (gControls->cfg->numSites > 0)
 	{
 		siteIndex = gControls->opt->siteChoice - 1;
+		if (!gControls->cfg->site[siteIndex].id)
+		    goto BAIL;
 		
+		HLock(gControls->cfg->site[siteIndex].id);
+		cId = NewPtrClear(strlen(*(gControls->cfg->site[siteIndex].id)) + 1); // add 1 for null termination
+		strcpy(cId, *(gControls->cfg->site[siteIndex].id));
+		HUnlock(gControls->cfg->site[siteIndex].id);
+				
 		GetIndString(pSection, rParseKeys, sSiteSelector);
-		GetIndString(pDomainRoot, rParseKeys, sDomain);
-		cDomain = NewPtrClear(pDomainRoot[0] + 4);
 		cSection = PascalToC(pSection);
-		if (!cSection || !cDomain)
+		if (!cSection || !cId)
 			goto BAIL;
-		
-		cIndex = ltoa(siteIndex);
-		if (!cIndex) 
-			goto BAIL;
-		
-		memset(cDomain, 0 , pDomainRoot[0] + 4);
-		strncpy(cDomain, (char*)&pDomainRoot[1], pDomainRoot[0]);
-		strcat(cDomain, cIndex);
 		
 		domainH = NewHandleClear(kValueMaxLen);
 		if (!domainH ) 
 			goto BAIL;
-		if (FillKeyValueUsingName(cSection, cDomain, domainH, text))
+		if (FillKeyValueUsingName(cSection, cId, domainH, text))
 		{	
-			if (gControls->cfg->site[siteIndex].domain)
-				DisposeHandle(gControls->cfg->site[siteIndex].domain);
-			gControls->cfg->site[siteIndex].domain = NewHandleClear(kValueMaxLen);
-			HLock(domainH);
-			HLock(gControls->cfg->site[siteIndex].domain);
-			strcpy(*(gControls->cfg->site[siteIndex].domain), *domainH);
-			HUnlock(domainH);
-			HUnlock(gControls->cfg->site[siteIndex].domain);
+			if (gControls->cfg->globalURL)
+				DisposeHandle(gControls->cfg->globalURL);
+			gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
+			HLock(domainH);     
+			HLock(gControls->cfg->globalURL);
+			strcpy(*(gControls->cfg->globalURL), *domainH);
+			HUnlock(domainH);   
+			HUnlock(gControls->cfg->globalURL);
 		}
 		if (domainH)
 			DisposeHandle(domainH);
@@ -432,12 +444,10 @@ ParseRedirect(FSSpecPtr redirectINI)
 BAIL:
 	if (text)
 		DisposePtr((Ptr) text);
-	if (cDomain)
-		DisposePtr((Ptr) cDomain);
+	if (cId)
+		DisposePtr((Ptr) cId);
 	if (cSection)
 		DisposePtr((Ptr) cSection);
-	if (cIndex)
-		free(cIndex);
 }
 
 void
@@ -451,15 +461,17 @@ IfRemoveOldCore(short vRefNum, long dirID)
 		err = DeleteDirectory(fsViewer.vRefNum, fsViewer.parID, fsViewer.name);
 }
 
+#define IDI_BUF_SIZE 512
+
 Boolean 	
 GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 {
 	Boolean bSuccess = true;
 	OSErr 	err;
 	short	refNum, instChoice;
-	long 	count, compsDone, i, j, k, len;
-	char 	ch, siteDomain[255];
-	Ptr 	buf, keybuf, fnum;
+	long 	count, compsDone, i;
+	char 	ch, buf[IDI_BUF_SIZE];
+	Ptr 	keybuf;
 	Str255	pkeybuf;
 	FSSpec	fsExists;
 	StringPtr	pcurrArchive = 0;
@@ -478,14 +490,6 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	}
 	ERR_CHECK_RET(FSpOpenDF(idiSpec, fsRdWrPerm, &refNum), false);
 	
-	// setup buffer to at least 8K
-	buf = NULL;
-	buf = NewPtrClear(kGenIDIFileSize);
-	if (!buf)
-	{
-		ErrorHandler(eMem);
-		return false;
-	}
 	compsDone = 0;
 	instChoice = gControls->opt->instChoice-1;
 	
@@ -502,7 +506,6 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
-// XXX shouldn't this be #if MOZILLA == 1
 				// verify that file does not exist already
 				HLock(gControls->cfg->comp[i].archive);
 				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
@@ -512,36 +515,29 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				// if file doesn't exist
 				if (err == fnfErr)
 				{
-// XXX shouldn't this be #endif /* MOZILLA == 1 */
-                        
+				    char   fnum[12];
 					// get file number 
-					fnum = ltoa(compsDone);
-				
+					// fnum = ltoa(compsDone);
+					sprintf(fnum, "%ld", compsDone);
+					
+				    memset(buf, 0, IDI_BUF_SIZE);
+				    
 					// construct through concatenation [File<num>]\r
 					GetIndString(pkeybuf, rIDIKeys, sFile);
-					keybuf = PascalToC(pkeybuf);
+
 					ch = '[';
-					strncat(buf, &ch, 1);
-					strncat(buf, keybuf, strlen(keybuf));
+					strncpy(buf, &ch, 1);
+                    CopyPascalStrToC(pkeybuf, buf + strlen(buf));
 					strncat(buf, fnum, strlen(fnum));
-					DisposePtr(keybuf);
-				
-					keybuf = NewPtrClear(3);
-					keybuf = "]\r";
-					strncat(buf, keybuf, strlen(keybuf));
-					if (keybuf)
-						DisposePtr(keybuf);
+					strcat(buf, "]\r");
 
 					// write out \tdesc=
 					GetIndString(pkeybuf, rIDIKeys, sDesc);
-					keybuf = PascalToC(pkeybuf);
 					ch = '\t';								
 					strncat(buf, &ch, 1);					// \t
-					strncat(buf, keybuf, strlen(keybuf));	// \tdesc
+					CopyPascalStrToC(pkeybuf, buf + strlen(buf));
 					ch = '=';								// \tdesc=
 					strncat(buf, &ch, 1);
-					if (keybuf)
-						DisposePtr(keybuf);
 				
 					// write out gControls->cfg->comp[i].shortDesc\r
 					HLock(gControls->cfg->comp[i].shortDesc);
@@ -549,87 +545,30 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 					HUnlock(gControls->cfg->comp[i].shortDesc);
 					ch = '\r';
 					strncat(buf, &ch, 1);
-			
-					// if [Site Selector] sections exists
-					if (gControls->cfg->numSites > 0)
-					{
-						memset(siteDomain, 0 , 255);
-						
-						// get domain of selected site
-						HLock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
-						len = strlen(*(gControls->cfg->site[gControls->opt->siteChoice-1].domain));
-						strncpy(siteDomain, *(gControls->cfg->site[gControls->opt->siteChoice-1].domain),
-								(len < 255) ? len : 255);
-						HUnlock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
-		
-    					// iterate over gControls->cfg->comp[i].numURLs
-    					for (j=0; j<gControls->cfg->comp[i].numURLs; j++)
-    					{
-    						// write out \tnumURLs+1= from STR# resource
-    						GetIndString(pkeybuf, rIndices, j+2); // j+2 since 1-based idx, not 0-based
-    						keybuf = PascalToC(pkeybuf);
-    						ch = '\t';
-    						strncat(buf, &ch, 1);					// \t
-    						strncat(buf, keybuf, strlen(keybuf));	// \t<n>
-    						ch = '=';
-    						strncat(buf, &ch, 1);					// \t<n>=
-    						if (keybuf)
-    							DisposePtr(keybuf);
-    							
-    						// use selected DomainX to replace Domain0 in curr ComponentX section
-    						strncat(buf, siteDomain, strlen(siteDomain));
-
-    						// tack on server path for this index
-    						HLock(gControls->cfg->comp[i].serverPath[j]);
-    						strncat(buf, *gControls->cfg->comp[i].serverPath[j], strlen(*gControls->cfg->comp[i].serverPath[j]));
-    						HUnlock(gControls->cfg->comp[i].serverPath[j]);						
-    						
-    						// tack on 'archive\r'
-    						HLock(gControls->cfg->comp[i].archive);
-    						strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
-    						HUnlock(gControls->cfg->comp[i].archive);
-    						ch = '\r';
-    						strncat(buf, &ch, 1);
-    					}
-                    }
-                    
-                    // now tack on failovers from ComponentX section
-                    for (k=0; k<gControls->cfg->comp[i].numURLs; k++)
-					{
-						// write out \tnumURLs+1= from STR# resource
-						GetIndString(pkeybuf, rIndices, k+j+2); // j+2 since 1-based idx, not 0-based
-						keybuf = PascalToC(pkeybuf);
-						ch = '\t';
-						strncat(buf, &ch, 1);					// \t
-						strncat(buf, keybuf, strlen(keybuf));	// \t<n>
-						ch = '=';
-						strncat(buf, &ch, 1);					// \t<n>=
-						if (keybuf)
-							DisposePtr(keybuf);
-							
-						// get domain for this index
-						HLock(gControls->cfg->comp[i].domain[k]);
-						strncat(buf, *gControls->cfg->comp[i].domain[k], strlen(*gControls->cfg->comp[i].domain[k]));
-						HUnlock(gControls->cfg->comp[i].domain[k]);
-
-						// tack on server path for this index
-						HLock(gControls->cfg->comp[i].serverPath[k]);
-						strncat(buf, *gControls->cfg->comp[i].serverPath[k], strlen(*gControls->cfg->comp[i].serverPath[k]));
-						HUnlock(gControls->cfg->comp[i].serverPath[k]);						
-						
-						// tack on 'archive\r'
-						HLock(gControls->cfg->comp[i].archive);
-						strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
-						HUnlock(gControls->cfg->comp[i].archive);
-						ch = '\r';
-						strncat(buf, &ch, 1);
-					}
-					if (fnum)
-						free(fnum);
+			         
+					// write out \t0=                       // \t0=
+					strcat(buf, "\t0=");
+					
+					// tack on URL to xpi directory         // \t0=<URL>
+					HLock(gControls->cfg->globalURL);
+					strcat(buf, *gControls->cfg->globalURL);
+					HUnlock(gControls->cfg->globalURL);
+					
+					// tack on 'archive\r'                  // \t0=<URL>/archive\r
+					HLock(gControls->cfg->comp[i].archive);
+					strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
+					HUnlock(gControls->cfg->comp[i].archive);
+					ch = '\r';
+					strncat(buf, &ch, 1);
+					
+					count = strlen(buf);
+	                err = FSWrite(refNum, &count, buf);
+	                
+					if (err != noErr)
+					    goto BAIL;
+					    
 					compsDone++;
-// XXX shouldn't this be #if MOZILLA == 1
 				}
-// XXX shouldn't this be #endif /* MOZILLA == 1 */
 			}
 		}
 		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
@@ -637,10 +576,11 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	}			
 	
 	// terminate by entering Netscape Install section
+	memset(buf, 0, IDI_BUF_SIZE);
 	GetIndString(pkeybuf, rIDIKeys, sNSInstall);
 	keybuf = PascalToC(pkeybuf);
 	ch = '[';
-	strncat(buf, &ch, 1);					// [
+	strncpy(buf, &ch, 1);					// [
 	strncat(buf, keybuf, strlen(keybuf));	// [Netscape Install
 	if (keybuf)
 		DisposePtr(keybuf);
@@ -672,12 +612,11 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	// write buf to disk
 	count = strlen(buf);
 	ERR_CHECK_RET(FSWrite(refNum, &count, buf), false);
-	
+
+BAIL:	
 	// close file
-	ERR_CHECK_RET(FSClose(refNum), false)
+	ERR_CHECK_RET(FSClose(refNum), false);
 	
-	if (buf)
-		DisposePtr(buf);
 	return bSuccess;
 }
 
