@@ -560,9 +560,10 @@ PK11_DestroyPBEParams;
 ;+};
 ;+NSS_3.4 { 	# NSS 3.4 release
 ;+    global:
-PK11_LoadPKCS11Module;
-SECMOD_GetDefaultDBModule;
-pk11_getModuleSpecList;
+SECMOD_LoadModule;
+SECMOD_GetModuleSpecList;
+SECMOD_FreeModuleSpecList;
+SECMOD_UpdateModule;
 ;+    local:
 ;+       *;
 ;+};
