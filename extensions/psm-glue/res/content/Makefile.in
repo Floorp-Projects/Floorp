@@ -36,7 +36,6 @@ NAVIGATOR_EXPORT_CONTENT = \
 GLOBAL_CONTENT_DIR = $(DIST)/bin/chrome/global/content/default/
 GLOBAL_EXPORT_CONTENT = \
   $(srcdir)/PSMTaskMenu.xul \
-  $(srcdir)/psm.js \
   $(NULL)
 
 install::
