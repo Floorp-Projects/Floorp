@@ -126,6 +126,9 @@ public:
   NS_IMETHOD MenuIsChecked(PRBool& aResult) { aResult = mChecked; return NS_OK; }
   NS_IMETHOD MenuIsDisabled(PRBool& aResult) { aResult = IsDisabled(); return NS_OK; }
   
+  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult);
+  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild);
+
   NS_IMETHOD SelectFirstItem();
 
   NS_IMETHOD Escape(PRBool& aHandledFlag);

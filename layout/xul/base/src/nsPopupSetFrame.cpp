@@ -56,6 +56,8 @@
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
 //
 // NS_NewPopupSetFrame
 //
@@ -692,4 +694,61 @@ nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
   nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+}
+
+NS_IMETHODIMP
+nsPopupSetFrame::GetActiveChild(nsIDOMElement** aResult)
+{
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsIMenuFrame* menuFrame;
+  menuPopup->GetCurrentMenuItem(&menuFrame);
+  
+  if (!menuFrame) {
+    *aResult = nsnull;
+  }
+  else {
+    nsIFrame* f;
+    menuFrame->QueryInterface(kIFrameIID, (void**)&f);
+    nsCOMPtr<nsIContent> c;
+    f->GetContent(getter_AddRefs(c));
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(c));
+    *aResult = elt;
+    NS_IF_ADDREF(*aResult);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupSetFrame::SetActiveChild(nsIDOMElement* aChild)
+{
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
+  
+  nsCOMPtr<nsIContent> par;
+  child->GetParent(*getter_AddRefs(par));
+  
+  nsCOMPtr<nsIContent> menuPopupContent;
+  menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+  if (menuPopupContent != par)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame* kid;
+  shell->GetPrimaryFrameFor(child, &kid);
+  if (!kid)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(kid));
+  if (!menuFrame)
+    return NS_ERROR_FAILURE;
+  menuPopup->SetCurrentMenuItem(menuFrame);
+  return NS_OK;
 }

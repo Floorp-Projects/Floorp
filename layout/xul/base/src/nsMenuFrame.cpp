@@ -74,6 +74,7 @@ nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //
@@ -649,17 +650,13 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         if (element) {
           nsCOMPtr<nsIContent> selectedContent = do_QueryInterface(element);
           nsIFrame* curr;
-          menuPopup->FirstChild(mPresContext, nsnull, &curr);
-          while (curr) {
-            nsCOMPtr<nsIContent> child;
-            curr->GetContent(getter_AddRefs(child));
-            if (selectedContent == child) {
-              nsCOMPtr<nsIMenuFrame> menuframe(do_QueryInterface(curr));
-              if (menuframe)
-                menuPopup->SetCurrentMenuItem(menuframe);
-            }
-            curr->GetNextSibling(&curr);
-          }
+          nsCOMPtr<nsIPresShell> shell;
+          mPresContext->GetShell(getter_AddRefs(shell));
+          shell->GetPrimaryFrameFor(selectedContent, &curr);
+
+          nsCOMPtr<nsIMenuFrame> menuframe(do_QueryInterface(curr));
+          if (menuframe)
+            menuPopup->SetCurrentMenuItem(menuframe);
         }
       }
       // End of menulist stuff.  We now return to our regularly scheduled
@@ -1713,6 +1710,64 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   return rv;
 }
+
+NS_IMETHODIMP
+nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
+{
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsIMenuFrame* menuFrame;
+  menuPopup->GetCurrentMenuItem(&menuFrame);
+  
+  if (!menuFrame) {
+    *aResult = nsnull;
+  }
+  else {
+    nsIFrame* f;
+    menuFrame->QueryInterface(kIFrameIID, (void**)&f);
+    nsCOMPtr<nsIContent> c;
+    f->GetContent(getter_AddRefs(c));
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(c));
+    *aResult = elt;
+    NS_IF_ADDREF(*aResult);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
+{
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
+  
+  nsCOMPtr<nsIContent> par;
+  child->GetParent(*getter_AddRefs(par));
+  
+  nsCOMPtr<nsIContent> menuPopupContent;
+  menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+  if (menuPopupContent != par)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame* kid;
+  shell->GetPrimaryFrameFor(child, &kid);
+  if (!kid)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(kid));
+  if (!menuFrame)
+    return NS_ERROR_FAILURE;
+  menuPopup->SetCurrentMenuItem(menuFrame);
+  return NS_OK;
+}
+
 
 /* Need to figure out what this does.
 NS_IMETHODIMP
