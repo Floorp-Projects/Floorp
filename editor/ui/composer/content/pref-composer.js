@@ -57,8 +57,6 @@ function Startup()
   dialog.BackgroundImageData = document.getElementById("backgroundImageData");
 
   browserColors = GetDefaultBrowserColors();
-  // XXX TODO: This is a problem! If this is false, it overrides ability to display colors set in document!!!
-//    var useDocumentColors =    prefs.GetBoolPref("browser.display.use_document_colors");
 
   // Use author's browser pref colors passed into dialog
   defaultTextColor = browserColors.TextColor;
@@ -78,11 +76,11 @@ function Startup()
   if (backgroundImage)
     dialog.BackgroundImageInput.value = backgroundImage;
 
-  // Kinda lame, but "data" attribute value is a string conversion of boolean!
+  // "data" attribute value is a string conversion of boolean!
   if( document.getElementById( "useCustomColors" ).data == "true" )
-    UseDefaultColors();
-  else
     UseCustomColors();
+  else
+    UseDefaultColors();
 
   return true;
 }                   
