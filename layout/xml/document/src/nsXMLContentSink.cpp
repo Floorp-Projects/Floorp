@@ -27,7 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsNeckoUtil.h"
 #else
 #include "nsIURLGroup.h"
