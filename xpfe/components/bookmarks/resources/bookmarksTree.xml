@@ -644,9 +644,12 @@
           var selection = this.mOuter.getTreeSelection();
           this.mOuter._selection = selection;
           var selectionLength = selection.length;
-          this.mOuter._target = selectionLength
-            ? this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE)
-            : null;
+          if (!selectionLength)
+            this.mOuter._target = null;
+          else {
+            var orient = selection.isExpanded[0] ? BookmarksUtils.DROP_ON : BookmarksUtils.DROP_AFTER;
+            this.mOuter._target = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], orient);
+          }
           this.mOuter.onCommandUpdate();
           const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
           var displayValue;
