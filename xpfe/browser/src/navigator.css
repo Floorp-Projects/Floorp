@@ -39,7 +39,7 @@ titledbutton#Throbber
 }
 
 titledbutton#Throbber[busy="true"] {
-	list-style-image:url(resource:/res/throbber/throbbingN.gif);
+	list-style-image:url(resource:/res/throbber/anim.gif);
 }
 
 toolbar#taskbar titledbutton{
