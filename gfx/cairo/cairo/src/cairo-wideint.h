@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.3 2005/03/23 19:53:39 tor%cs.brown.edu Exp $
+ * $Id: cairo-wideint.h,v 1.4 2005/03/29 20:53:07 tor%cs.brown.edu Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -41,7 +41,7 @@
 #if defined (__SVR4) && defined (__sun)
 # include <sys/int_types.h>
 #else
-# if defined (__OpenBSD__)
+# if defined (__OpenBSD__) || defined (_AIX)
 #  include <inttypes.h>
 # else 
 #  include <stdint.h>
