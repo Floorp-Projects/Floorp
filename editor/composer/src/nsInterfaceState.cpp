@@ -40,16 +40,10 @@
 
 
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 
-#include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDiskDocument.h"
-#include "nsIDOMElement.h"
 #include "nsISelection.h"
-#include "nsIDOMAttr.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsITimer.h"
