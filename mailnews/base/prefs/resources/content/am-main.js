@@ -67,10 +67,40 @@ function selectFile()
     var title = prefutilitiesBundle.getString("choosefile");
     fp.init(window, title, nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterAll);
+
+    // Get current signature folder, if there is one.
+    // We can set that to be the initial folder so that users 
+    // can maintain their signatures better.
+    var sigFolder = GetSigFolder();
+    if (sigFolder)
+        fp.displayDirectory = sigFolder;
   
     var ret = fp.show();
     if (ret == nsIFilePicker.returnOK) {
         var folderField = document.getElementById("identity.signature");
         folderField.value = fp.file.unicodePath;
     }
+}
+
+function GetSigFolder()
+{
+    var sigFolder = null;
+    try {
+        var result = parent.getServerIdAndPageIdFromTree(parent.accounttree);
+        var account = parent.getAccountFromServerId(result.serverId);
+        var identity = account.defaultIdentity;
+        var signatureFile = identity.signature;
+
+        if (signatureFile) {
+            signatureFile = signatureFile.QueryInterface( Components.interfaces.nsILocalFile );
+            sigFolder = signatureFile.parent;
+
+            if (!sigFolder.exists) 
+                sigFolder = null;
+        }
+    }
+    catch (ex) {
+        dump("failed to get signature folder..\n");
+    }
+    return sigFolder;
 }
