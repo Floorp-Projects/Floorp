@@ -69,7 +69,9 @@ nsProperties::~nsProperties()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsProperties, NS_IPROPERTIES_IID)
+NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
+
+NS_IMPL_ISUPPORTS(nsProperties, kIPropertiesIID)
 
 NS_IMETHODIMP
 nsProperties::Load(nsIInputStream *aIn)
