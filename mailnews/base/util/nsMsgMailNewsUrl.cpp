@@ -793,7 +793,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetMimeHeaders(nsIMimeHeaders * *mimeHeaders)
 {
     NS_ENSURE_ARG_POINTER(mimeHeaders);
     NS_IF_ADDREF(*mimeHeaders = mMimeHeaders);
-    return NS_OK;
+    return (mMimeHeaders) ? NS_OK : NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMimeHeaders(nsIMimeHeaders *mimeHeaders)
