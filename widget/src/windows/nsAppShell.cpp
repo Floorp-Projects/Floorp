@@ -78,20 +78,22 @@ NS_METHOD nsAppShell::Run(void)
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
     // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
-    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE)) {
+    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+      ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+
       keepGoing = (msg.message != WM_QUIT);
-    
+
+      if (keepGoing != 0) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        if (mDispatchListener)
+          mDispatchListener->AfterDispatch();
+      }
     } else {
-      // Block and wait for any posted application message
-      keepGoing = ::GetMessage(&msg, NULL, 0, 0);
+       // Block and wait for any posted application message
+      ::WaitMessage();
     }
 
-    if (keepGoing != 0) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-      if (mDispatchListener)
-        mDispatchListener->AfterDispatch();
-    }
   } while (keepGoing != 0);
   Release();
   return msg.wParam;
