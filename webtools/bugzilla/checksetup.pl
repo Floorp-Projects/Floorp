@@ -1785,12 +1785,73 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
 # 2000-12-14 New graphing system requires a directory to put the graphs in
 # This code copied from what happens for the 'data' dir above.
+# If the graphs dir is not present, we assume that they have been using
+# a Bugzilla with the old data format, and so upgrade their data files.
 unless (-d 'graphs') {
     print "Creating graphs directory ...\n";
     mkdir 'graphs', 0770; 
     if ($::webservergroup eq "") {
         chmod 0777, 'graphs';
     } 
+    
+    # Upgrade data format
+    foreach my $in_file (glob("data/mining/*"))
+    {
+        # Don't try and upgrade image files!
+        if (($in_file =~ /\.gif$/i) || ($in_file =~ /\.png$/i)) {
+            next;
+        }
+
+        open(IN, $in_file) or next;
+
+        # Fields in the header
+        my @declared_fields = ();
+
+        # Fields we changed to half way through by mistake
+        # This list comes from an old version of collectstats.pl
+        # This part is only for people who ran later versions of 2.11 (devel)
+        my @intermediate_fields = qw(DATE UNCONFIRMED NEW ASSIGNED REOPENED 
+                                     RESOLVED VERIFIED CLOSED);
+
+        # Fields we actually want (matches the current collectstats.pl)                             
+        my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED              
+                            VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND 
+                            DUPLICATE WORKSFORME MOVED);
+
+        while (<IN>) {
+            if (/^# fields: (.*)\s$/) {
+                @declared_fields = map uc, (split /\|/, $1);
+                print "# fields: ", join('|', @out_fields), "\n";
+            }
+            elsif (/^(\d+\|.*)/) {
+                my @data = split /\|/, $1;
+                my %data = ();
+                if (@data == @declared_fields) {
+                    # old format
+                    for my $i (0 .. $#declared_fields) {
+                        $data{$declared_fields[$i]} = $data[$i];
+                    }
+                }
+                elsif (@data == @intermediate_fields) {
+                    # Must have changed over at this point 
+                    for my $i (0 .. $#intermediate_fields) {
+                        $data{$intermediate_fields[$i]} = $data[$i];
+                    }
+                }
+                else {
+                    print "Oh dear, input line $. of $in_file had " . scalar(@data) . " fields\n";
+                    print "This was unexpected. You may want to check your data files.\n";
+                }
+
+                print join('|', map { $data{$_} || "" } @out_fields), "\n";
+            }
+            else {
+                print;
+            }
+        }
+
+        close(IN);
+    }    
 }
 
 
