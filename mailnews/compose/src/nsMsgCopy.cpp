@@ -381,19 +381,19 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       // use the defaults by getting the folder by flags
       if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, 1, &numFolders, msgFolder);
         }
       else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, 1, &numFolders, msgFolder);
         }
       else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, 1, &numFolders, msgFolder);
         }
       else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
         {
-          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, msgFolder, 1, &numFolders);
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, 1, &numFolders, msgFolder);
         }
 
       if (NS_SUCCEEDED(rv) && *msgFolder) {

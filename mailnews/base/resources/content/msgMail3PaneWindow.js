@@ -293,14 +293,9 @@ function loadStartFolder()
 	var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
 	//now find Inbox
-    var inboxFolder; 
-    var outInbox = new Object();
     var outNumFolders = new Object();
-        
-    rootMsgFolder.getFoldersWithFlag(0x1000, outInbox, 1, outNumFolders); 
-    inboxFolder = outInbox.value;
-	if(!inboxFolder)
-		return;
+    var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
+	if(!inboxFolder) return;
 
 	var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 	var inboxURI = resource.Value;

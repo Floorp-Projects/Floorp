@@ -1030,8 +1030,8 @@ nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 		if(NS_SUCCEEDED(rv))
 		{
 			PRUint32 numFolders;
-			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, result,
-                                          1, &numFolders);
+			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
+                                          1, &numFolders, result);
 #if 0
       // ** jt -- This shouldn't be needed. The OS should prevent
       // user from deleting the trash folder while we are running the app.

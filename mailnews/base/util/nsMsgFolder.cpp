@@ -1310,8 +1310,7 @@ NS_IMETHODIMP nsMsgFolder::GetFlags(PRUint32 *_retval)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **result,
-											PRUint32 resultsize, PRUint32 *numFolders)
+NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, PRUint32 resultsize, PRUint32 *numFolders, nsIMsgFolder **result)
 {
 	PRUint32 num = 0;
 	if ((flags & mFlags) == flags) {
@@ -1340,12 +1339,12 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
 
         if (!result)
         {
-          folder->GetFoldersWithFlag(flags, NULL, 0, &numSubFolders);
+          folder->GetFoldersWithFlag(flags, 0, &numSubFolders, NULL);
           num += numSubFolders;
         }
         else if (num < resultsize)
         {
-          folder->GetFoldersWithFlag(flags, result + num, resultsize - num, &numSubFolders);
+          folder->GetFoldersWithFlag(flags, resultsize - num, &numSubFolders, result+num);
           num += numSubFolders;
         }
         else

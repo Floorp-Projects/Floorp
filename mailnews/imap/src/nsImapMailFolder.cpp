@@ -1175,8 +1175,8 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
             nsCOMPtr<nsIMsgFolder> trashFolder;
             PRUint32 numFolders = 0;
             rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
-                                                getter_AddRefs(trashFolder),
-                                                1, &numFolders);
+                                                1, &numFolders,
+                                                getter_AddRefs(trashFolder));
 
             if(NS_SUCCEEDED(rv) && trashFolder)
             {
@@ -1276,7 +1276,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 	if(NS_SUCCEEDED(rv) && rootFolder)
 	{
 		PRUint32 numFolders;
-		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
+		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
 	}
 		nsCOMPtr <nsIEventQueue> eventQ;
 		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
@@ -2570,7 +2570,7 @@ nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUint32 numFolders;
-		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, pTrashFolder, 1, &numFolders);
+		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, pTrashFolder);
 		if (*pTrashFolder)
 			NS_ADDREF(*pTrashFolder);
 	}

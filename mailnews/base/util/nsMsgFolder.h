@@ -122,7 +122,7 @@ public:
   NS_IMETHOD ToggleFlag(PRUint32 flag);
   NS_IMETHOD OnFlagChange(PRUint32 flag);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
-  NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **result, PRUint32 resultsize, PRUint32 *numFolders);
+  NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, PRUint32 resultsize, PRUint32 *numFolders, nsIMsgFolder **result);
   NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray);
   // NS_IMETHOD DeleteMessages(nsISupportsArray *message, nsITransactionManager *txnMgr, PRBool deleteStorage);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray *messages, PRBool isMove, nsIMsgWindow *window, nsIMsgCopyServiceListener *listener);

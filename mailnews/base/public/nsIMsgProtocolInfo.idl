@@ -38,5 +38,6 @@ interface nsIMsgProtocolInfo : nsISupports
     readonly attribute boolean preflightPrettyNameWithEmailAddress;
     readonly attribute boolean canDelete;
     readonly attribute boolean canDuplicate;
+	readonly attribute boolean defaultCopiesAndFoldersPrefsToServer;
 };
 

@@ -224,7 +224,7 @@ interface nsIMsgFolder : nsIFolder {
   
 	readonly attribute unsigned long flags;
 
-	void getFoldersWithFlag(in unsigned long flags, out nsIMsgFolder result,
+	nsIMsgFolder getFoldersWithFlag(in unsigned long flags,
                          in unsigned long resultsize, out unsigned long numFolders);
 
 	void getExpansionArray(in nsISupportsArray expansionArray);

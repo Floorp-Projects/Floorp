@@ -124,7 +124,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 		if(rootMsgFolder)
 		{
 			PRUint32 numFolders;
-			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
+			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
 		}
 	}
 

@@ -1597,7 +1597,7 @@ nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 		if (rootMsgFolder)
 		{
 			PRUint32 numFolders;
-			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, pTrashFolder, 1, &numFolders);
+			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, pTrashFolder);
 			if (*pTrashFolder)
 				NS_ADDREF(*pTrashFolder);
 		}
@@ -1615,7 +1615,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 	if (rootMsgFolder)
 	{
 		PRUint32 numFolders;
-		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
+		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
 		nsresult matchTermStatus;
