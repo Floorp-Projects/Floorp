@@ -328,7 +328,7 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
  */
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
   if(!mTokenizer)
-    mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
+    mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer(&mFilename);
   return mTokenizer;
 }
 
