@@ -337,6 +337,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:sidebar:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:communicator:bookmarks:mac:jar.mn", , $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:navigator:mac:jar.mn", $chrome_dir, \%jars);
