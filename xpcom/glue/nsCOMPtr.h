@@ -89,11 +89,11 @@
   #pragma warning( disable: 4514 )
 #endif
 
-#define NSCAP_FEATURE_FACTOR_DESTRUCTOR
+#define NSCAP_FEATURE_USE_BASE
 
 #ifdef NS_DEBUG
   #define NSCAP_FEATURE_TEST_DONTQUERY_CASES
-  #define NSCAP_FEATURE_DEBUG_PTR_TYPES
+  #undef NSCAP_FEATURE_USE_BASE
 //#define NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
 #endif
 
@@ -110,15 +110,11 @@
 #if defined(__GNUC__) && __GNUC__ >= 3
   // Without this, we violate the C++ standard's aliasing rules.  See
   // http://bugzilla.mozilla.org/show_bug.cgi?id=212082
-  #define NSCAP_FEATURE_DEBUG_PTR_TYPES
+  #undef NSCAP_FEATURE_USE_BASE
 #endif
 
-#if defined(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-  #undef NSCAP_FEATURE_DEBUG_PTR_TYPES
-#endif
-
-#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
-  #undef NSCAP_FEATURE_FACTOR_DESTRUCTOR
+#if !defined(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+  #define NSCAP_FEATURE_USE_BASE
 #endif
 
 
@@ -400,13 +396,7 @@ class nsCOMPtr_base
           // nothing else to do here
         }
 
-#ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
       NS_COM ~nsCOMPtr_base();
-#else
-      // Allow debug builds to link with optimized versions of nsCOMPtr-using
-      // plugins (e.g., JVMs).
-      NS_COM ~nsCOMPtr_base() { }
-#endif
 
       NS_COM void    assign_with_AddRef( nsISupports* );
       NS_COM void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
@@ -439,12 +429,16 @@ class nsCOMPtr_base
 
 template <class T>
 class nsCOMPtr
-#ifndef NSCAP_FEATURE_DEBUG_PTR_TYPES
+#ifdef NSCAP_FEATURE_USE_BASE
     : private nsCOMPtr_base
 #endif
   {
 
-#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
+#ifdef NSCAP_FEATURE_USE_BASE
+  #define NSCAP_CTOR_BASE(x) nsCOMPtr_base(x)
+#else
+  #define NSCAP_CTOR_BASE(x) mRawPtr(x)
+
     private:
       void    assign_with_AddRef( nsISupports* );
       void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
@@ -463,16 +457,12 @@ class nsCOMPtr
 
     private:
       T* mRawPtr;
-
-  #define NSCAP_CTOR_BASE(x) mRawPtr(x)
-#else
-  #define NSCAP_CTOR_BASE(x) nsCOMPtr_base(x)
 #endif
 
     public:
       typedef T element_type;
       
-#ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
+#ifndef NSCAP_FEATURE_USE_BASE
      ~nsCOMPtr()
         {
           NSCAP_LOG_RELEASE(this, mRawPtr);
@@ -611,10 +601,10 @@ class nsCOMPtr
       swap( nsCOMPtr<T>& rhs )
           // ...exchange ownership with |rhs|; can save a pair of refcount operations
         {
-#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
-          T* temp = rhs.mRawPtr;
-#else
+#ifdef NSCAP_FEATURE_USE_BASE
           nsISupports* temp = rhs.mRawPtr;
+#else
+          T* temp = rhs.mRawPtr;
 #endif
           NSCAP_LOG_ASSIGNMENT(&rhs, mRawPtr);
           NSCAP_LOG_ASSIGNMENT(this, temp);
@@ -629,10 +619,10 @@ class nsCOMPtr
       swap( T*& rhs )
           // ...exchange ownership with |rhs|; can save a pair of refcount operations
         {
-#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
-          T* temp = rhs;
-#else
+#ifdef NSCAP_FEATURE_USE_BASE
           nsISupports* temp = rhs;
+#else
+          T* temp = rhs;
 #endif
           NSCAP_LOG_ASSIGNMENT(this, temp);
           NSCAP_LOG_RELEASE(this, mRawPtr);
@@ -748,16 +738,6 @@ class nsCOMPtr<nsISupports>
   {
     public:
       typedef nsISupports element_type;
-
-#ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-     ~nsCOMPtr()
-        {
-          NSCAP_LOG_RELEASE(this, mRawPtr);
-          if ( mRawPtr )
-            NSCAP_RELEASE(this, mRawPtr);
-        }
-#endif
-
 
         // Constructors
 
@@ -953,7 +933,7 @@ class nsCOMPtr<nsISupports>
         }
   };
 
-#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
+#ifndef NSCAP_FEATURE_USE_BASE
 template <class T>
 void
 nsCOMPtr<T>::assign_with_AddRef( nsISupports* rawPtr )
