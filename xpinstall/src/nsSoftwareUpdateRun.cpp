@@ -41,6 +41,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
+#include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 
 #include "nsIEventQueueService.h"
@@ -56,14 +57,14 @@ extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *gl
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(const nsFileSpec& jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(const nsFileSpec& jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name	: XPInstallErrorReporter
-// Description	    : Prints error message to stdout
-// Return type		: void
+// Function name    : XPInstallErrorReporter
+// Description      : Prints error message to stdout
+// Return type      : void
 // Argument         : JSContext *cx
 // Argument         : const char *message
 // Argument         : JSErrorReport *report
@@ -76,31 +77,31 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
     fputs("xpinstall: ", stderr);
     if (!report) 
     {
-		fprintf(stderr, "%s\n", message);
-		return;
+        fprintf(stderr, "%s\n", message);
+        return;
     }
 
     if (report->filename)
-		fprintf(stderr, "%s, ", report->filename);
+        fprintf(stderr, "%s, ", report->filename);
     if (report->lineno)
-		fprintf(stderr, "line %u: ", report->lineno);
+        fprintf(stderr, "line %u: ", report->lineno);
     fputs(message, stderr);
     if (!report->linebuf) 
     {
-		putc('\n', stderr);
-		return;
+        putc('\n', stderr);
+        return;
     }
 
     fprintf(stderr, ":\n%s\n", report->linebuf);
     n = report->tokenptr - report->linebuf;
     for (i = j = 0; i < n; i++) {
-		if (report->linebuf[i] == '\t') {
-			for (k = (j + 8) & ~7; j < k; j++)
-				putc('.', stderr);
-			continue;
-		}
-		putc('.', stderr);
-		j++;
+        if (report->linebuf[i] == '\t') {
+            for (k = (j + 8) & ~7; j < k; j++)
+                putc('.', stderr);
+            continue;
+        }
+        putc('.', stderr);
+        j++;
     }
     fputs("^\n", stderr);
 }
@@ -110,9 +111,9 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name	: GetInstallScriptFromJarfile
-// Description	    : Extracts and reads in a install.js file from a passed jar file.
-// Return type		: static PRInt32 
+// Function name    : GetInstallScriptFromJarfile
+// Description      : Extracts and reads in a install.js file from a passed jar file.
+// Return type      : static PRInt32 
 // Argument         : const char* jarFile     - **NSPR** filepath
 // Argument         : char** scriptBuffer     - must be deleted via delete []
 // Argument         : PRUint32 *scriptLength
@@ -133,7 +134,7 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
                                                      getter_AddRefs(hZip));
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
-    
+
     rv = hZip->Init(jarFile);
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
@@ -164,7 +165,7 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
         {
             instream->Available(&bufferLength);
             buffer = new char[bufferLength + 1];
-    
+
             if (buffer != nsnull)
             {
                 rv = instream->Read(buffer, bufferLength, &readLength);
@@ -195,48 +196,41 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name	: SetupInstallContext
-// Description	    : Creates a Javascript runtime and adds our xpinstall objects to it.
-// Return type		: static nsresult
+// Function name    : SetupInstallContext
+// Description      : Creates a Javascript context and adds our xpinstall objects to it.
+// Return type      : static nsresult
 // Argument         : const char* jarFile - native filepath to where jar exists on disk 
 // Argument         : const PRUnichar* url  - URL of where this package came from
 // Argument         : const PRUnichar* args    - any arguments passed into the javascript context
-// Argument         : JSRuntime **jsRT   - Must be deleted via JS_DestroyRuntime
-// Argument         : JSContext **jsCX   - Must be deleted via JS_DestroyContext
-// Argument         : JSObject **jsGlob
+// Argument         : JSRuntime *jsRT    - A valid JS Runtime
+// Argument         : JSContext **jsCX   - Created context, destroy via JS_DestroyContext
+// Argument         : JSObject **jsGlob  - created global object
 ///////////////////////////////////////////////////////////////////////////////////////////////
 static nsresult SetupInstallContext(const nsFileSpec& jarFile,
                                     const PRUnichar* url,
                                     const PRUnichar* args, 
-                                    JSRuntime **jsRT, 
+                                    JSRuntime *rt, 
                                     JSContext **jsCX, 
                                     JSObject **jsGlob)
 {
-    JSRuntime   *rt;
-	JSContext   *cx;
+    JSContext   *cx;
     JSObject    *glob;
     
-    *jsRT   = nsnull;
     *jsCX   = nsnull;
     *jsGlob = nsnull;
 
-    // JS init
-	rt = JS_Init(8L * 1024L * 1024L);
-	if (!rt)
+    if (!rt) 
         return NS_ERROR_OUT_OF_MEMORY;
-    else
+
+    cx = JS_NewContext(rt, 8192);
+    if (!cx)
     {
-        cx = JS_NewContext(rt, 8192);
-	    if (!cx)
-        {
-            JS_DestroyRuntime(rt);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
-	
+
     glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args);
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
@@ -245,7 +239,6 @@ static nsresult SetupInstallContext(const nsFileSpec& jarFile,
     InitInstallVersionClass(cx, glob, nsnull);
     InitInstallTriggerGlobalClass(cx, glob, nsnull);
 
-    *jsRT   = rt;
     *jsCX   = cx;
     *jsGlob = glob;
 
@@ -348,10 +341,21 @@ extern "C" void RunInstallOnThread(void *data)
 
         if ( finalStatus == NS_OK && scriptBuffer )
         {
+            PRBool ownRuntime = PR_FALSE;
+
+            NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+            if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
+            {
+                // service not available (wizard context?)
+                // create our own runtime
+                ownRuntime = PR_TRUE;
+	            rt = JS_Init(4L * 1024L * 1024L);
+            }
+
             rv = SetupInstallContext( jarpath, 
                                       url.GetUnicode(),
                                       args.GetUnicode(), 
-                                      &rt, &cx, &glob);
+                                      rt, &cx, &glob);
 
             if (NS_SUCCEEDED(rv))
             {
@@ -400,13 +404,16 @@ extern "C" void RunInstallOnThread(void *data)
                 }
 
                 JS_DestroyContext(cx);
-                JS_DestroyRuntime(rt);
             }
             else
             {
                 // couldn't initialize install context
                 finalStatus = nsInstall::UNEXPECTED_ERROR;
             }
+
+            // clean up Runtime if we created it ourselves
+            if ( ownRuntime ) 
+                JS_DestroyRuntime(rt);
         }
     }
     else 
