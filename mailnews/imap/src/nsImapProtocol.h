@@ -36,6 +36,9 @@
 #include "nsIMAPNamespace.h"
 #include "nsVoidArray.h"
 #include "nsMsgLineBuffer.h" // we need this to use the nsMsgLineStreamBuffer helper class...
+#include "nsIInputStream.h"
+#include "nsIWebShell.h"
+#include "nsIMsgIncomingServer.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
