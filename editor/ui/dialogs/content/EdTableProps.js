@@ -709,7 +709,7 @@ function MoveSelection(forward)
   //    the point to bring into view.
   var selectionController = editorShell.selectionController;
   if (selectionController)
-    selectionController.scrollSelectionIntoView(selectionController.SELECTION_NORMAL, selectionController.SELECTION_ANCHOR_REGION);
+    selectionController.scrollSelectionIntoView(selectionController.SELECTION_NORMAL, selectionController.SELECTION_ANCHOR_REGION, true);
 
   // Reinitialize dialog using new cell
 //  if (!gDialog.KeepCurrentData.checked)

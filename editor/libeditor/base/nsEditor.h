@@ -297,12 +297,17 @@ protected:
   /* Helper for output routines -- we expect subclasses to override this */
   NS_IMETHOD GetWrapWidth(PRInt32* aWrapCol);
 
-// XXXX: Horrible hack! We are doing this because
-// of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/13/99
-  void HACKForceRedraw(void);
-
-  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
+  /** helper method for scrolling the selection into view after
+   *  an edit operation. aScrollToAnchor should be PR_TRUE if you
+   *  want to scroll to the point where the selection was started.
+   *  If PR_FALSE, it attempts to scroll the end of the selection into view.
+   *
+   *  Editor methods *should* call this method instead of the versions
+   *  in the various selection interfaces, since this version makes sure
+   *  that the editor's sync/async settings for reflowing, painting, and
+   *  scrolling match.
+   */
+  NS_IMETHOD ScrollSelectionIntoView(PRBool aScrollToAnchor);
 
   // stub.  see comment in source.                     
   virtual PRBool IsBlockNode(nsIDOMNode *aNode);

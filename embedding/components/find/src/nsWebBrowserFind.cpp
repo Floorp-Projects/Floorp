@@ -327,7 +327,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMRange* aRange,
   // Scroll if necessary to make the selection visible:
   aSelCon->ScrollSelectionIntoView
     (nsISelectionController::SELECTION_NORMAL,
-     nsISelectionController::SELECTION_FOCUS_REGION);
+     nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 
 // Adapted from nsTextServicesDocument::GetDocumentContentRootNode

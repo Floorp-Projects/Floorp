@@ -268,8 +268,10 @@ public:
    *
    * @param aType the selection to scroll into view.
    * @param aRegion the region inside the selection to scroll into view.
+   * @param aIsSynchronous when PR_TRUE, scrolls the selection into view
+   * at some point after the method returns.request which is processed
    */
-  NS_IMETHOD ScrollSelectionIntoView(SelectionType aSelectionType, SelectionRegion aRegion)=0;
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aSelectionType, SelectionRegion aRegion, PRBool aIsSynchronous)=0;
 
   /** RepaintSelection repaints the selected frames that are inside the selection
    *  specified by aSelectionType.

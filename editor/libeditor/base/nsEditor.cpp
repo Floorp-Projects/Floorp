@@ -102,19 +102,9 @@
 #include "nsINodeInfo.h"
 #include "nsINameSpaceManager.h"
 
-// #define HACK_FORCE_REDRAW 1
-
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsISelectionDisplay.h"
-
-#ifdef HACK_FORCE_REDRAW
-// INCLUDES FOR EVIL HACK TO FOR REDRAW
-// BEGIN
-#include "nsIViewManager.h"
-#include "nsIView.h"
-// END
-#endif
 
 static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
@@ -711,9 +701,7 @@ nsEditor::EndPlaceHolderTransaction()
     // time to turn off the batch
     EndUpdateViewBatch();
     // make sure selection is in view
-    nsCOMPtr<nsISelectionController> selCon;
-    if (NS_SUCCEEDED(GetSelectionController(getter_AddRefs(selCon))) && selCon)
-      selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION);
+    ScrollSelectionIntoView(PR_FALSE);
 
     if (mSelState)
     {
@@ -841,7 +829,6 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
             if (NS_FAILED(result)) return result;
             result = selection->Collapse(parentNode, offsetInParent);
           }
-          ScrollIntoView(PR_TRUE);
         }
         else
         {
@@ -1837,6 +1824,43 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
   if (NS_SUCCEEDED(result) && caretP) {
     if (aReply) {
       caretP->SetCaretDOMSelection(selection);
+
+      // XXX_kin: BEGIN HACK! HACK! HACK!
+      // XXX_kin:
+      // XXX_kin: This is lame! The IME stuff needs caret coordinates
+      // XXX_kin: synchronously, but the editor could be using async
+      // XXX_kin: updates (reflows and paints) for performance reasons.
+      // XXX_kin: In order to give IME what it needs, we have to temporarily
+      // XXX_kin: switch to sync updating during this call so that the
+      // XXX_kin: nsAutoUpdateViewBatch can force sync reflows and paints
+      // XXX_kin: so that we get back accurate caret coordinates.
+
+      PRUint32 flags = 0;
+
+      if (NS_SUCCEEDED(GetFlags(&flags)) &&
+          (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))
+      {
+        PRBool restoreFlags = PR_FALSE;
+
+        if (NS_SUCCEEDED(SetFlags(flags & (~nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))))
+        {
+           // Scope the viewBatch within this |if| block so that we
+           // force synchronous reflows and paints before restoring
+           // our editor flags below.
+
+           nsAutoUpdateViewBatch viewBatch(this);
+           restoreFlags = PR_TRUE;
+        }
+
+        // Restore the previous set of flags!
+
+        if (restoreFlags)
+          SetFlags(flags);
+      }
+
+
+      // XXX_kin: END HACK! HACK! HACK!
+
       result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
 		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
     }
@@ -2221,9 +2245,33 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
+NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsISelectionController> selCon;
+  if (NS_SUCCEEDED(GetSelectionController(getter_AddRefs(selCon))) && selCon)
+  {
+    PRInt16 region = nsISelectionController::SELECTION_FOCUS_REGION;
+
+    if (aScrollToAnchor)
+      region = nsISelectionController::SELECTION_ANCHOR_REGION;
+
+    PRBool syncScroll = PR_TRUE;
+    PRUint32 flags = 0;
+
+    if (NS_SUCCEEDED(GetFlags(&flags)))
+    {
+      // If the editor is relying on asynchronous reflows, we have
+      // to use asynchronous requests to scroll, so that the scrolling happens
+      // after reflow requests are processed.
+
+      syncScroll = !(flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
+    }
+
+    selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                    region, syncScroll);
+  }
+
+  return NS_OK;
 }
 
 /** static helper method */
@@ -3709,32 +3757,6 @@ NS_IMETHODIMP nsEditor::ResetModificationCount()
   return NS_OK;
 }
 
-
-void nsEditor::HACKForceRedraw()
-{
-#ifdef HACK_FORCE_REDRAW
-// XXXX: Horrible hack! We are doing this because
-// of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/11/99
-  // BEGIN HACK!!!
-  nsCOMPtr<nsIPresShell> shell;
-  
-   GetPresShell(getter_AddRefs(shell));
-  if (shell) {
-    nsCOMPtr<nsIViewManager> viewmgr;
-
-    shell->GetViewManager(getter_AddRefs(viewmgr));
-    if (viewmgr) {
-      nsIView* view;
-      viewmgr->GetRootView(view);      // views are not refCounted
-      if (view) {
-        viewmgr->UpdateView(view,NS_VMREFRESH_IMMEDIATE);
-      }
-    }
-  }
-  // END HACK
-#endif
-}
 //END nsEditor Private methods
 
 
@@ -4191,11 +4213,7 @@ nsresult nsEditor::BeginUpdateViewBatch()
   {
     if (0==mUpdateCount)
     {
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->DisableRefresh();
-#else
       mViewManager->BeginUpdateViewBatch();
-#endif
       nsCOMPtr<nsIPresShell> presShell;
       rv = GetPresShell(getter_AddRefs(presShell));
       if (NS_SUCCEEDED(rv) && presShell)
@@ -4259,7 +4277,7 @@ nsresult nsEditor::EndUpdateViewBatch()
 
       PRBool forceReflow = PR_TRUE;
 
-      if (flags & nsIPlaintextEditor::eEditorDisableForcedReflowsMask)
+      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
         forceReflow = PR_FALSE;
 
       nsCOMPtr<nsIPresShell>    presShell;
@@ -4269,15 +4287,10 @@ nsresult nsEditor::EndUpdateViewBatch()
 
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
-      if (flags & nsIPlaintextEditor::eEditorDisableForcedUpdatesMask)
+      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
         updateFlag = NS_VMREFRESH_NO_SYNC;
 
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->EnableRefresh(updateFlag);
-      HACKForceRedraw();
-#else
       mViewManager->EndUpdateViewBatch(updateFlag);
-#endif
     }
   }  
 

@@ -88,8 +88,6 @@ static NS_DEFINE_CID(kPrefServiceCID,          NS_PREF_CID);
 
 //#define DEBUG_IME
 
-static nsresult ScrollSelectionIntoView(nsIEditor *aEditor);
-
 /*
  * nsTextEditorKeyListener implementation
  */
@@ -238,7 +236,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
           return NS_OK;
 
         mEditor->DeleteSelection(nsIEditor::ePrevious);
-        ScrollSelectionIntoView(mEditor);
         aKeyEvent->PreventDefault(); // consumed
         return NS_OK;
         break;
@@ -254,7 +251,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if (isAnyModifierKeyButShift || isShiftModifierKey)
            return NS_OK;
         mEditor->DeleteSelection(nsIEditor::eNext);
-        ScrollSelectionIntoView(mEditor);
         aKeyEvent->PreventDefault(); // consumed
         return NS_OK; 
         break;
@@ -270,7 +266,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
         // else we insert the tab straight through
         textEditor->HandleKeyPress(keyEvent);
-        ScrollSelectionIntoView(mEditor);
         aKeyEvent->PreventDefault(); // consumed
         return NS_OK; 
 
@@ -282,15 +277,13 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if (!(flags & nsIPlaintextEditor::eEditorSingleLineMask))
         {
           textEditor->HandleKeyPress(keyEvent);
-          ScrollSelectionIntoView(mEditor);
           aKeyEvent->PreventDefault(); // consumed
         }
         return NS_OK;
     }
   }
 
-  if (NS_SUCCEEDED(textEditor->HandleKeyPress(keyEvent)))
-    ScrollSelectionIntoView(mEditor);
+  textEditor->HandleKeyPress(keyEvent);
 
   return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
 }
@@ -303,21 +296,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   return NS_OK;
 }
 
-nsresult
-ScrollSelectionIntoView(nsIEditor *aEditor)
-{
-  if (! aEditor)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsISelectionController> selCon;
-  
-  nsresult result = aEditor->GetSelectionController(getter_AddRefs(selCon));
-
-  if (NS_FAILED(result) || ! selCon)
-    return result ? result: NS_ERROR_FAILURE;
-
-  return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION);
-}
 
 /*
  * nsTextEditorMouseListener implementation
@@ -596,7 +574,6 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
        }
      }
      result = imeEditor->SetCompositionString(composedText,textRangeList,textEventReply);
-     ScrollSelectionIntoView(mEditor);
    }
    return result;
 }

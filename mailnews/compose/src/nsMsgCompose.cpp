@@ -640,7 +640,7 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
     editor->GetSelectionController(getter_AddRefs(selCon));
 
     if (selCon)
-      selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION);
+      selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION, PR_TRUE);
   }
 
   if (editor)
@@ -2265,7 +2265,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::InsertToCompose(nsIEditorShell *aEdit
       editor->GetSelectionController(getter_AddRefs(selCon));
 
       if (selCon)
-        selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION);
+        selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION, PR_TRUE);
     }
   }
 
