@@ -43,7 +43,7 @@ function onInit()
 function initServerSettings()
 {	 
  
-    document.getElementById("offline.notDownload").checked =  gIncomingServer.limitMessageSize;
+    document.getElementById("offline.notDownload").checked =  gIncomingServer.limitOfflineMessageSize;
     if(gIncomingServer.maxMessageSize > 0)
         document.getElementById("offline.notDownloadMin").setAttribute("value", gIncomingServer.maxMessageSize);
     else
@@ -206,7 +206,7 @@ function onSave()
     var retentionSettings = new Array;
     var downloadSettings = new Array;
 
-    gIncomingServer.limitMessageSize = document.getElementById("offline.notDownload").checked;
+    gIncomingServer.limitOfflineMessageSize = document.getElementById("offline.notDownload").checked;
     gIncomingServer.maxMessageSize = document.getElementById("offline.notDownloadMin").value;
 
     if(document.getElementById("nntp.keepAllMsg").checked)
@@ -276,7 +276,7 @@ function onLockPreference()
       { prefstring:"offline_download", id:"offline.newFolder"},
       { prefstring:"download_bodies_on_get_new_mail",
                            id:"offline.downloadBodiesOnGetNewMail"},
-      { prefstring:"limit_message_size", id:"offline.notDownload"},
+      { prefstring:"limit_offline_message_size", id:"offline.notDownload"},
       { prefstring:"max_size", id:"offline.notDownloadMin"},
       { prefstring:"downloadUnreadOnly", id:"nntp.downloadUnread"},
       { prefstring:"downloadByDate", id:"nntp.downloadMsg"},
