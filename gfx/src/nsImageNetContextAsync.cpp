@@ -182,12 +182,6 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
 {
   PRInt32 max_read;
   PRInt32 bytes_read = 0, str_length;
-
-  // If we previously held onto a stream, drop our reference
-  if (mStream != nsnull) {
-    NS_RELEASE(mStream);
-  }
-
   ilINetReader *reader = mURL->GetReader();
 
   if (mInterrupted || mStatus != 0) {
@@ -247,8 +241,12 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
     // If we haven't emptied the stream, hold onto it, because
     // we will need to read from it subsequently and we don't
     // know if we'll get a OnDataAvailable call again.
+    //
+    // Addref the new stream before releasing the old one,
+    // in case it is the same stream!
+    NS_ADDREF(pIStream);
+    NS_IF_RELEASE(mStream);
     mStream = pIStream;
-    NS_ADDREF(mStream);
   }
 
   NS_RELEASE(reader);
