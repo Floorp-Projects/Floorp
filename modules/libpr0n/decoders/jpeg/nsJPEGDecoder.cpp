@@ -431,7 +431,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
           return NS_OK; /* I/O suspension */
         default:
-          printf("got someo other state!?\n");
+          {
+#ifdef DEBUG
+            printf("got someo other state!?\n");
+#endif
+          }
       }
     }
   }
