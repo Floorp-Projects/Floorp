@@ -226,6 +226,10 @@ JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr)
     int size;
 
     PR_ASSERT(env!=NULL && nativeProxy != NULL && ptr != NULL);
+    if( nativeProxy == NULL ) {
+        JSS_throw(env, NULL_POINTER_EXCEPTION);
+        return PR_FAILURE;
+    }
 
 	proxyClass = (*env)->GetObjectClass(env, nativeProxy);
 	PR_ASSERT(proxyClass != NULL);
