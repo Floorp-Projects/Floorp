@@ -1411,6 +1411,7 @@ PK11_VerifyMechanism(PK11SlotInfo *slot,PK11SlotInfo *intern,
     unsigned char encRef[8];
     int outLenTest,outLenRef;
     int key_size = 0;
+    PRBool verify = PR_FALSE;
     SECStatus rv;
 
     if ((mech == CKM_RC2_CBC) || (mech == CKM_RC2_ECB) || (mech == CKM_RC4)) {
@@ -1449,7 +1450,7 @@ PK11_VerifyMechanism(PK11SlotInfo *slot,PK11SlotInfo *intern,
     if (outLenTest != outLenRef) goto loser;
     if (PORT_Memcmp(encTest, encRef, outLenTest) != 0) goto loser;
 
-    return PR_TRUE;
+    verify = PR_TRUE;
 
 loser:
     if (test) PK11_DestroyContext(test,PR_TRUE);
@@ -1458,7 +1459,7 @@ loser:
     if (reference) PK11_DestroyContext(reference,PR_TRUE);
     if (param) SECITEM_FreeItem(param,PR_TRUE);
 
-    return PR_FALSE;
+    return verify;
 }
 
 /*
@@ -1881,7 +1882,7 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
     /* removable slots have a flag that says they are present */
     if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
     if (PK11_GETTAB(slot)->C_GetSlotInfo(slot->slotID,&slotInfo) != CKR_OK) {
-        if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
+        if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
 	return PR_FALSE;
     }
     if ((slotInfo.flags & CKF_TOKEN_PRESENT) == 0) {
