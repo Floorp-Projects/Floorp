@@ -673,11 +673,15 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   NPError error;
 
 #if defined(MOZ_WIDGET_GTK)
-  if (mXtBin)
+  if (mXtBin) {
     gtk_widget_destroy(mXtBin);
+    mXtBin = 0;
+  }
 #elif defined(MOZ_WIDGET_XLIB)
-  if (mXlibXtBin)
+  if (mXlibXtBin) {
     mXlibXtBin->xtbin_destroy();
+    mXlibXtBin = 0;
+  }
 #endif
 
   if(!mStarted)
@@ -838,7 +842,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
              window->width, window->height, win);
 #endif
 
-#if 1
+#if 0
       // if we destroyed the plugin when we left the page, we could remove this
       // code (i believe) the problem here is that the window gets destroyed when
       // its parent, etc does by changing a page the plugin instance is being
