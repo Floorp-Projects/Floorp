@@ -361,7 +361,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   // XXX Hack because we need the pres context in some of the event handling functions...
   mPresContext = aPresContext; 
 
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,nsnull,PR_TRUE);
   nsIView* view;
   GetView(aPresContext, &view);
 

@@ -965,7 +965,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.GetDesiredSize(aCX, &aReflowState, aMetrics);
     if (!mImageLoader.GetLoadImageFailed()) {
-      nsHTMLContainerFrame::CreateViewForFrame(aCX, this, mStyleContext,
+      nsHTMLContainerFrame::CreateViewForFrame(aCX, this, mStyleContext, nsnull,
                                                PR_FALSE);
       aMetrics.ascent = aMetrics.height;
       aMetrics.descent = 0;

@@ -2502,7 +2502,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       parentFrame, outerStyleContext, nsnull, aNewOuterFrame);  
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewOuterFrame,
-                                           outerStyleContext, PR_FALSE);
+                                           outerStyleContext, nsnull, PR_FALSE);
 
   // Create the inner table frame
   aTableCreator.CreateTableFrame(&aNewInnerFrame);
@@ -3768,7 +3768,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     pageFrame->Init(aPresContext, nsnull, rootFrame, pagePseudoStyle,
                     nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageFrame,
-                                             pagePseudoStyle, PR_TRUE);
+                                             pagePseudoStyle, nsnull, PR_TRUE);
 
     // The eventual parent of the document element frame
     mDocElementContainingBlock = pageFrame;
@@ -4054,7 +4054,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
                             geometricParent, aStyleContext, nsnull, comboboxFrame);
 
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
-                                                 aStyleContext, PR_FALSE);
+                                                 aStyleContext, aParentFrame, PR_FALSE);
 
         if (HasGfxScrollbars() && mDoGfxCombobox) {
           ///////////////////////////////////////////////////////////////////
@@ -4087,7 +4087,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
                                 comboboxFrame, gfxListStyle, nsnull, listFrame);
 
             nsHTMLContainerFrame::CreateViewForFrame(aPresContext, listFrame,
-                                           gfxListStyle, PR_TRUE);
+                                           gfxListStyle, nsnull, PR_TRUE);
             nsIView * view;
             listFrame->GetView(aPresContext, &view);
             if (view != nsnull) {
@@ -4502,7 +4502,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
                         scrollFrame, scrolledPseudoStyle, nsnull, scrolledFrame);
 
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, scrolledFrame,
-                                           scrolledPseudoStyle, PR_TRUE);
+                                           scrolledPseudoStyle, nsnull, PR_TRUE);
 
 
     // The area frame is a floater container
@@ -4710,7 +4710,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   // See if we need to create a view, e.g. the frame is absolutely
   // positioned
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                           aStyleContext, PR_FALSE);
+                                           aStyleContext, aParentFrame, PR_FALSE);
 
     // cache our display type
   const nsStyleDisplay* styleDisplay;
@@ -5064,7 +5064,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
       // See if we need to create a view, e.g. the frame is absolutely
       // positioned
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               aStyleContext, PR_FALSE);
+                                               aStyleContext, aParentFrame, PR_FALSE);
 
       // Process the child content if requested
       nsFrameItems childItems;
@@ -6163,7 +6163,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       */
         // See if we need to create a view, e.g. the frame is absolutely positioned
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                                 aStyleContext, PR_FALSE);
+                                                 aStyleContext, aParentFrame, PR_FALSE);
 
       /*
       } else {
@@ -6317,7 +6317,7 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIPresContext*      aPresConte
 {
   // create a view
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aScrolledFrame,
-                                           aScrolledContentStyle, PR_TRUE);
+                                           aScrolledContentStyle, nsnull, PR_TRUE);
 
   // the the scroll frames child list
   aScrollFrame->SetInitialChildList(aPresContext, nsnull, aScrolledFrame);
@@ -6448,7 +6448,7 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
 
   // Create a view
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, nsnull, PR_FALSE);
 
   nsIFrame* scrollbox = nsnull;
   NS_NewScrollPortFrame(aPresShell, &scrollbox);
@@ -6610,7 +6610,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
 
     // Create a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, aParentFrame, PR_FALSE);
 
     // Process the child content. The area frame becomes a container for child
     // frames that are absolutely positioned
@@ -6665,7 +6665,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
 
     // See if we need to create a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, aParentFrame, PR_FALSE);
 
     // Process the child content
     nsFrameConstructorSaveState floaterSaveState;
@@ -6717,7 +6717,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
 
       // Create a view
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               aStyleContext, PR_FALSE);
+                                               aStyleContext, nsnull, PR_FALSE);
 
       // Process the child content. Relatively positioned frames becomes a
       // container for child frames that are positioned
@@ -7267,7 +7267,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, aParentFrame, PR_FALSE);
 
     // Add the new frame to our list of frame items.
     aFrameItems.AddChild(newFrame);
@@ -7378,7 +7378,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, aParentFrame, PR_FALSE);
 
     // Add the new frame to our list of frame items.
     aFrameItems.AddChild(newFrame);
@@ -9481,7 +9481,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
   }
 
   if (viewManager) {
-    viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+      viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     NS_RELEASE(viewManager);
   }
 }
@@ -10140,7 +10140,7 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   }
   containerFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
-                                           aStyleContext, PR_FALSE);
+                                           aStyleContext, nsnull, PR_FALSE);
 
   // If the frame is out-of-flow, then mark it as such
   if (isOutOfFlow) {
@@ -10504,7 +10504,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
   if (NS_SUCCEEDED(rv)) {
     newFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, nsnull, PR_FALSE);
 
     // Create a continuing inner table frame, and if there's a caption then
     // replicate the caption
@@ -10585,7 +10585,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
   if (NS_SUCCEEDED(rv)) {
     newFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, nsnull, PR_FALSE);
 
     // Replicate any header/footer frames
     nsIFrame*     rowGroupFrame;
@@ -10673,7 +10673,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
     
   } else if (nsLayoutAtoms::inlineFrame == frameType) {
@@ -10681,7 +10681,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::blockFrame == frameType) {
@@ -10689,7 +10689,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::areaFrame == frameType) {
@@ -10698,7 +10698,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
       newFrame->Init(aPresContext, content, aParentFrame, styleContext,
                      aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
@@ -10706,7 +10706,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
 
   } else if (nsLayoutAtoms::pageFrame == frameType) {
@@ -10714,7 +10714,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_TRUE);
+                                               styleContext, nsnull, PR_TRUE);
     }
 
   } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
@@ -10730,7 +10730,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
 
   } else if (nsLayoutAtoms::tableRowFrame == frameType) {
@@ -10738,7 +10738,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
 
       // Create a continuing frame for each table cell frame
       nsIFrame*     cellFrame;
@@ -10770,7 +10770,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
 
       // Create a continuing area frame
       nsIFrame* areaFrame;
@@ -10787,7 +10787,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::letterFrame == frameType) {
@@ -10795,7 +10795,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
+                                               styleContext, nsnull, PR_FALSE);
     }
 
   } else {
@@ -12244,7 +12244,7 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell* aPresShell,
 
   // See if we need to create a view, e.g. the frame is absolutely positioned
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                           aStyleContext, PR_FALSE);
+                                           aStyleContext, nsnull, PR_FALSE);
 
   // See if the block has first-letter style applied to it...
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
@@ -12379,7 +12379,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
   if (aIsPositioned) {
     // Relatively positioned frames need a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, nsnull, PR_FALSE);
 
     // Relatively positioned frames becomes a container for child
     // frames that are positioned
@@ -12492,7 +12492,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
   if (aIsPositioned) {
     // Relatively positioned frames need a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, blockFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, nsnull, PR_FALSE);
   }
 
   MoveChildrenTo(aPresContext, blockSC, blockFrame, list2);
@@ -12514,7 +12514,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
   if (aIsPositioned) {
     // Relatively positioned frames need a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
-                                             aStyleContext, PR_FALSE);
+                                             aStyleContext, nsnull, PR_FALSE);
   }
 
   if (list3) {
