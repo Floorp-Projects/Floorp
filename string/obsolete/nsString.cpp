@@ -69,15 +69,15 @@ nsString::nsString() {
 /**
  * This constructor accepts an isolatin string
  * @update	gess7/30/98
- * @param   anISOLatin1 is a ptr to a 1-byte cstr
+ * @param   aCString is a ptr to a 1-byte cstr
  */
-nsString::nsString(const char* anISOLatin1) {  
+nsString::nsString(const char* aCString) {  
   mLength=mCapacity=0;
   mStr = kCommonEmptyBuffer;
-  if(anISOLatin1) {
-    PRInt32 len=strlen(anISOLatin1);
+  if(aCString) {
+    PRInt32 len=strlen(aCString);
     EnsureCapacityFor(len);
-    this->SetString(anISOLatin1,len);
+    this->SetString(aCString,len);
   }
 }
 
@@ -319,12 +319,12 @@ nsString nsString::operator+(const nsString& aString){
 /**
  * create a new string by adding this to the given buffer.
  * @update	gess 7/27/98
- * @param   anISOLatin1 is a ptr to cstring to be added to this
+ * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created string
  */
-nsString nsString::operator+(const char* anISOLatin1) {
+nsString nsString::operator+(const char* aCString) {
   nsString temp(*this);
-  temp.Append(anISOLatin1);
+  temp.Append(aCString);
   return temp;
 }
 
@@ -458,9 +458,10 @@ nsString* nsString::ToNewString() const {
 }
 
 /**
- * Creates an ISOLatin1 clone of this string
+ * Creates an aCString clone of this string
+ * NOTE: Call delete[] when you're done with this copy. NOT free!
  * @update	gess 7/27/98
- * @return  ptr to new isolatin1 string
+ * @return  ptr to new aCString string
  */
 char* nsString::ToNewCString() const
 {
@@ -599,7 +600,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
 /**
  * assign given PRUnichar* to this string
  * @update	gess 7/27/98
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   PRUnichar: buffer to be assigned to this 
  * @return  this
  */
 nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
@@ -625,15 +626,15 @@ nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
 /**
  * assign given char* to this string
  * @update	gess 7/27/98
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   aCString: buffer to be assigned to this 
  * @return  this
  */
-nsString& nsString::SetString(const char* anISOLatin1,PRInt32 aLength) {
-  if(anISOLatin1!=0) {
-    PRInt32 len=(aLength<0) ? nsCRT::strlen(anISOLatin1) : aLength; 
+nsString& nsString::SetString(const char* aCString,PRInt32 aLength) {
+  if(aCString!=0) {
+    PRInt32 len=(aLength<0) ? nsCRT::strlen(aCString) : aLength; 
     if(mCapacity<=len) 
       EnsureCapacityFor(len);
-    const unsigned char* from = (const unsigned char*) anISOLatin1;
+    const unsigned char* from = (const unsigned char*) aCString;
     const unsigned char* end = from + len;
     PRUnichar* dst = mStr;
     while (from < end) {
@@ -652,7 +653,7 @@ nsString& nsString::SetString(const char* anISOLatin1,PRInt32 aLength) {
 /**
  * assign given char* to this string
  * @update	gess 7/27/98
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   PRUnichar: buffer to be assigned to this 
  * @return  this
  */
 nsString& nsString::operator=(const PRUnichar* aStr) {
@@ -673,11 +674,11 @@ nsString& nsString::operator=(const nsString& aString) {
 /**
  * assign given char* to this string
  * @update	gess 7/27/98
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   aCString: buffer to be assigned to this 
  * @return  this
  */
-nsString& nsString::operator=(const char* anISOLatin1) {
-  return SetString(anISOLatin1);
+nsString& nsString::operator=(const char* aCString) {
+  return SetString(aCString);
 }
 
 
@@ -722,13 +723,13 @@ nsString& nsString::Append(const nsString& aString,PRInt32 aLength) {
  * @param   aString : string to be appended to this
  * @return  this
  */
-nsString& nsString::Append(const char* anISOLatin1,PRInt32 aLength) {
-  if(anISOLatin1!=0) {
-    PRInt32 len=(aLength<0) ? strlen(anISOLatin1) : aLength;
+nsString& nsString::Append(const char* aCString,PRInt32 aLength) {
+  if(aCString!=0) {
+    PRInt32 len=(aLength<0) ? strlen(aCString) : aLength;
     if(mLength+len >= mCapacity) {
       EnsureCapacityFor(mLength+len);
     }
-    const unsigned char* from = (const unsigned char*) anISOLatin1;
+    const unsigned char* from = (const unsigned char*) aCString;
     const unsigned char* end = from + len;
     PRUnichar* to = mStr + mLength;
     while (from < end) {
@@ -805,11 +806,11 @@ nsString& nsString::operator+=(const nsString &aString) {
 /**
  * append given buffer to this string
  * @update	gess 7/27/98
- * @param   anISOLatin1: buffer to be appended to this
+ * @param   aCString: buffer to be appended to this
  * @return  this
  */
-nsString& nsString::operator+=(const char* anISOLatin1) {
-  return Append(anISOLatin1);
+nsString& nsString::operator+=(const char* aCString) {
+  return Append(aCString);
 }
 
 
@@ -1248,18 +1249,18 @@ PRInt32 nsString::BinarySearch(PRUnichar aChar) const {
  *  Search for given buffer within this string
  *  
  *  @update  gess 3/25/98
- *  @param   anISOLatin1Buf - charstr to be found
+ *  @param   aCStringBuf - charstr to be found
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsString::Find(const char* anISOLatin1Buf) const{
-  NS_ASSERTION(0!=anISOLatin1Buf,kNullPointerError);
+PRInt32 nsString::Find(const char* aCStringBuf) const{
+  NS_ASSERTION(0!=aCStringBuf,kNullPointerError);
   PRInt32 result=kNotFound;
-  if(anISOLatin1Buf) {
-    PRInt32 len=strlen(anISOLatin1Buf);
+  if(aCStringBuf) {
+    PRInt32 len=strlen(aCStringBuf);
     if((0<len) && (len<=mLength)) { //only enter if abuffer length is <= mStr length.
       PRInt32 max=mLength-len;
       for(PRInt32 offset=0;offset<=max;offset++) 
-        if(0==nsCRT::strncmp(&mStr[offset],anISOLatin1Buf,len)) 
+        if(0==nsCRT::strncmp(&mStr[offset],aCStringBuf,len)) 
           return offset;  //in this case, 0 means they match
     }
   }
@@ -1336,11 +1337,11 @@ PRInt32 nsString::Find(PRUnichar aChar, PRInt32 anOffset) const{
  *  @param   
  *  @return  
  */
-PRInt32 nsString::FindCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
-  NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
-  if(anISOLatin1Set && (strlen(anISOLatin1Set))) {
+PRInt32 nsString::FindCharInSet(const char* anAsciiSet,PRInt32 anOffset) const{
+  NS_ASSERTION(0!=anAsciiSet,kNullPointerError);
+  if(anAsciiSet && (strlen(anAsciiSet))) {
     for(PRInt32 i=anOffset;i<mLength;i++){
-      char* pos=strchr(anISOLatin1Set,char(mStr[i]));
+      char* pos=strchr(anAsciiSet,char(mStr[i]));
       if(pos)
         return i;
     }
@@ -1373,11 +1374,11 @@ PRInt32 nsString::FindCharInSet(nsString& aSet,PRInt32 anOffset) const{
  *  @param   
  *  @return   
  */
-PRInt32 nsString::RFindCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
-  NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
-  if(anISOLatin1Set && strlen(anISOLatin1Set)) {
+PRInt32 nsString::RFindCharInSet(const char* anAsciiSet,PRInt32 anOffset) const{
+  NS_ASSERTION(0!=anAsciiSet,kNullPointerError);
+  if(anAsciiSet && strlen(anAsciiSet)) {
     for(PRInt32 i=mLength-1;i>0;i--){
-      char* pos=strchr(anISOLatin1Set,char(mStr[i]));
+      char* pos=strchr(anAsciiSet,char(mStr[i]));
       if(pos) 
         return i;
     }
@@ -1458,17 +1459,17 @@ PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase) const{
  *  @param   
  *  @return  
  */
-PRInt32 nsString::RFind(const char* anISOLatin1Set,PRBool aIgnoreCase) const{
-  NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
+PRInt32 nsString::RFind(const char* anAsciiSet,PRBool aIgnoreCase) const{
+  NS_ASSERTION(0!=anAsciiSet,kNullPointerError);
 
-  if(anISOLatin1Set) {
-    PRInt32 len=strlen(anISOLatin1Set);
+  if(anAsciiSet) {
+    PRInt32 len=strlen(anAsciiSet);
     if((len) && (len<=mLength)) { //only enter if abuffer length is <= mStr length.
       for(PRInt32 offset=mLength-len;offset>=0;offset--) {
         PRInt32 result=0;
         if(aIgnoreCase) 
-          result=nsCRT::strncasecmp(&mStr[offset],anISOLatin1Set,len);
-        else result=nsCRT::strncmp(&mStr[offset],anISOLatin1Set,len);
+          result=nsCRT::strncasecmp(&mStr[offset],anAsciiSet,len);
+        else result=nsCRT::strncmp(&mStr[offset],anAsciiSet,len);
         if(0==result)
           return offset;  //in this case, 0 means they match
       }
@@ -1506,12 +1507,12 @@ PRInt32 nsString::RFind(PRUnichar aChar,PRBool aIgnoreCase) const{
 /**
  * Compares given cstring to this string. 
  * @update	gess 7/27/98
- * @param   anISOLatin1 pts to a cstring
+ * @param   aCString pts to a cstring
  * @param   aIgnoreCase tells us how to treat case
  * @return  -1,0,1
  */
-PRInt32 nsString::Compare(const char *anISOLatin1,PRBool aIgnoreCase,PRInt32 aLength) const {
-  NS_ASSERTION(0!=anISOLatin1,kNullPointerError);
+PRInt32 nsString::Compare(const char *aCString,PRBool aIgnoreCase,PRInt32 aLength) const {
+  NS_ASSERTION(0!=aCString,kNullPointerError);
 
   if(-1!=aLength) {
 
@@ -1527,15 +1528,15 @@ PRInt32 nsString::Compare(const char *anISOLatin1,PRBool aIgnoreCase,PRInt32 aLe
       return 1;
     }
     if (aIgnoreCase) {
-      return nsCRT::strncasecmp(mStr,anISOLatin1,maxlen);
+      return nsCRT::strncasecmp(mStr,aCString,maxlen);
     }
-    return nsCRT::strncmp(mStr,anISOLatin1,maxlen);
+    return nsCRT::strncmp(mStr,aCString,maxlen);
   }
 
   if (aIgnoreCase) {
-    return nsCRT::strcasecmp(mStr,anISOLatin1);
+    return nsCRT::strcasecmp(mStr,aCString);
   }
-  return nsCRT::strcmp(mStr,anISOLatin1);
+  return nsCRT::strcmp(mStr,aCString);
 }
 
 /**
@@ -1810,11 +1811,11 @@ nsAutoString::nsAutoString()
  * @param 
  * @return
  */
-nsAutoString::nsAutoString(const char* isolatin1) 
+nsAutoString::nsAutoString(const char* aCString) 
   : nsString()
 {
   INIT_AUTO_STRING();
-  SetString(isolatin1);
+  SetString(aCString);
 }
 
 /**
