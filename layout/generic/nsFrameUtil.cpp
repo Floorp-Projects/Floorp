@@ -36,7 +36,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2);
+  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,PRInt32 aRegressionOutput=0);
   NS_IMETHOD DumpRegressionData(FILE* aInputFile, FILE* aOutputFile);
 
   struct Node;
@@ -637,17 +637,20 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
 }
 
 NS_IMETHODIMP
-nsFrameUtil::CompareRegressionData(FILE* aFile1, FILE* aFile2)
+nsFrameUtil::CompareRegressionData(FILE* aFile1, FILE* aFile2,PRInt32 aRegressionOutput)
 {
   Node* tree1 = Node::ReadTree(aFile1);
   Node* tree2 = Node::ReadTree(aFile2);
 
   nsresult rv = NS_OK;
   if (!CompareTrees(tree1, tree2)) {
-    printf("Regression data 1:\n");
-    DumpTree(tree1, stdout, 0);
-    printf("Regression data 2:\n");
-    DumpTree(tree2, stdout, 0);
+    // only output this if aRegressionOutput is 0
+    if( 0 == aRegressionOutput ){
+      printf("Regression data 1:\n");
+      DumpTree(tree1, stdout, 0);
+      printf("Regression data 2:\n");
+      DumpTree(tree2, stdout, 0);
+    }
     rv = NS_ERROR_FAILURE;
   }
 
