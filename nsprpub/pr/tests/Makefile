@@ -116,6 +116,7 @@ CSRCS =             \
 	prftest.c		\
 	prftest1.c		\
 	prftest2.c		\
+	primblok.c		\
 	priotest.c		\
 	provider.c		\
 	prpoll.c		\

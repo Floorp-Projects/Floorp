@@ -140,6 +140,7 @@ poll_nm
 poll_to
 pollable
 prftest
+primblok
 priotest
 provider
 ranfile
