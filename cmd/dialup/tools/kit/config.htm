@@ -19,53 +19,18 @@
 <HTML>
   
 <HEAD>
-<SCRIPT LANGUAGE="JavaScript" ID="config100" ARCHIVE="config.jar">
-// Request privilege
+<SCRIPT LANGUAGE="JavaScript" ID="config100" ARCHIVE="kit.jar" SRC="config.js"></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" SRC="imagswap.js" ARCHIVE="kit.jar"></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" SRC="toolbar.js" ARCHIVE="kit.jar"></SCRIPT>
 
-netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
-compromisePrincipals();			// work around for the security check
-enableExternalCapture(); 												// This requires UniversalBrowserWrite access
-parent.captureEvents(Event.MOUSEDOWN | Event.MOUSEUP | Event.DRAGDROP | Event.DBLCLICK);
-parent.onmousedown=cancelEvent;
-parent.onmouseup=cancelEvent;
-parent.ondragdrop=cancelEvent;
-
-function cancelEvent(e)
-{
-		var retVal=false;
-
-	if ((e.which < 2) && (e.type != "dragdrop") && (e.type != "dblclick"))	{
-		retVal=routeEvent(e);
-		}
-	return(retVal);
-}
-
-window.setHotkeys(false);
-
-
-function loadData()
-{
-	var theRef = opener.document.forms[0].packageRef.value;
-	document.forms[0].packageRef.value = theRef;
-	opener.top.location = "../../" + theRef + "/start.htm";
-}
-</SCRIPT>
-<SCRIPT LANGUAGE="JavaScript" SRC="imagswap.js" ARCHIVE="config.jar">
-</SCRIPT>
-<SCRIPT LANGUAGE="JavaScript" SRC="toolbar.js" ARCHIVE="config.jar">
-</SCRIPT>
-
-<LINK REL=STYLESHEET TYPE="text/JavaScript" HREF="sheet.js" ARCHIVE="sheet.jar">
-	<TITLE>Account Setup Editor</TITLE>
+<LINK REL=STYLESHEET TYPE="text/JavaScript" HREF="sheet.js" ARCHIVE="kit.jar">
+<TITLE>Account Setup Editor</TITLE>
 </HEAD>
 
 <BODY BGCOLOR="#CCCCFF" onLoad="callback()" ID="config101">
-
 <P>
-
-
 <LAYER NAME="reload" LEFT=4 TOP=4 VISIBILITY="show">	
-	
+
 <TABLE border=0 CELLPADDING=0 CELLSPACING=0 VALIGN=TOP ID="nospace">
 	<TR>
 		<TD VALIGN=TOP ALIGN=CENTER WIDTH=48 HEIGHT=34>
