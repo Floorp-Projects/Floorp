@@ -72,12 +72,14 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://global/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
  
-  <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_browser_region" src="chrome://navigator-region/locale/region.properties"/>
-  <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
-  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  
+  <stringbundleset id="stringbundleset"> <!-- Overlay hook for 3rd parties. Don't remove. -->
+    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_browser_region" src="chrome://navigator-region/locale/region.properties"/>
+    <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
+    <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+  </stringbundleset>
+
   <commandset commandupdater="true"
               events="focus"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>

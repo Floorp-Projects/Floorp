@@ -102,6 +102,42 @@
     </hbox>
     <separator/>
   </vbox>
+
+  <vbox flex="1">
+    
+    <listbox id="extensionsList" datasources="rdf:chrome" 
+    </listbox>
+
+    <separator class="thin"/>
+  
+    <hbox class="inset" align="center" pack="center">
+      <image/>
+    </hbox>
+
+    <separator class="thin"/>
+    <hbox>
+      <vbox flex="1">
+        <label class="header" id="displayName" value=""/>
+        <hbox align="center">
+          <label value="&author.label;"/>
+          <label/>
+        </hbox>
+        <label flex="1"/>
+      </vbox>
+      <vbox>
+        <button label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+        <vbox flex="1">
+          <spacer flex="1"/>
+          <hbox align="start">
+          <html:a href="&getNewThemesURL;"
+              style="padding-left:4px; display: block;" target="_new">&getNewThemes.label;</html:a>
+          </hbox>
+        </vbox>
+      </vbox>
+    </hbox>
+    <separator/>
+  </vbox>
+
   </tabpanels>
 </tabbox>
 </page>
