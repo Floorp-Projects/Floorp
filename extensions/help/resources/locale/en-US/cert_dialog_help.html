@@ -14,6 +14,7 @@
 
 
 
+
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
@@ -37,6 +38,18 @@
 
 <p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&#151;information normally of interest to IS professionals only.</p>
 
+<p>If you are not currently viewing the Certificate Details window, follow these steps:
+
+<ol>
+   <li>Open the Edit menu and choose Preferences.
+   <li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click the category to expand the list.) 
+   <li>Click Manage Certificates.
+   <li>Click the tab for the type of certificate whose details you want to view.
+   <li>Select the certificate whose details you want to view.
+   <li>Click View.
+</ol>
+
+
 
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
@@ -59,27 +72,27 @@
 <ul>
 	<li><b>This certificate has been verified for the following uses:</b> See <a href="glossary.html#certificate_verification">certificate verification</a> for a discussion of how the Certificate Manager verifies certificates. Uses can include any of the following:
 <ul>
-<LI><B>SSL Client Certificate.</B> Certificate used to identify you to web sites.</LI>
+<LI><B>SSL Client Certificate:</B> Certificate used to identify you to web sites.</LI>
 
-<LI><B>SSL Server Certificate.</B> Certificate used to identify a web site server to browsers.</LI>
+<LI><B>SSL Server Certificate:</B> Certificate used to identify a web site server to browsers.</LI>
 
-<LI><B>Email Signer Certificate.</B> Certificate used to identify you for the purposes of digitally signing email messages.</LI>
+<LI><B>Email Signer Certificate:</B> Certificate used to identify you for the purposes of digitally signing email messages.</LI>
 
-<LI><B>Email Recipient Certificate.</B> Certificate used to identify someone else, for example so you can send that person encrypted email.</LI>
+<LI><B>Email Recipient Certificate:</B> Certificate used to identify someone else, for example so you can send that person encrypted email.</LI>
 
-<LI><B>Status Responder Certificate.</B> Certificate used to identify an online status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
+<LI><B>Status Responder Certificate:</B> Certificate used to identify an online status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
 
-<LI><B>Certificate Authority.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI>
+<LI><B>Certificate Authority:</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI>
 
 </ul>
 	<li><b>Issued To:</b> Summarizes the following information about the certificate:
 	<ul>
-	<LI><p><B>Common Name.</B> The name of the person or other entity that the certificate identifies.</LI>
+	<LI><p><B>Common Name:</B> The name of the person or other entity that the certificate identifies.</LI>
 
-	<LI><p><B>Organization.</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
+	<LI><p><B>Organization:</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
 
-	<LI><p><B>Organizational Unit.</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
-	<LI><B>Serial Number.</B> The certificate's serial number.</LI>
+	<LI><p><B>Organizational Unit:</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
+	<LI><B>Serial Number:</B> The certificate's serial number.</LI>
 	</UL>
 
 	<li><b>Issued By:</b> Summarizes information (similar to that provided under "Issued To"; see above) about the certificate authority (CA) that issued the  certificate.
@@ -96,9 +109,9 @@
 
 
 <ul>
-	<li><b>Certificate Hierarchy.</b> Displays the certificate chain, with the certificate you originally selected at the bottom. A certificate chain is a hierarchical series of certificates signed by successive certificate authorities (CAs). A CA certificate identifies a <a href="glossary.html#certificate_authority_(CA)">certificate authority</a> and is used to sign certificates issued by that authority. A CA certificate can in turn be signed by the CA certificate of a parent CA and so on up to a <a href="glossary.html#root_CA">root_CA</a>.
-	<li><b>Certificate Fields.</b> Displays the fields of the certificate selected under Certificate Hierarchy.	
-	<li><b>Field Value.</b> Displays the value of the field selected under Certificate Fields.
+	<li><b>Certificate Hierarchy:</b> Displays the certificate chain, with the certificate you originally selected at the bottom. A certificate chain is a hierarchical series of certificates signed by successive certificate authorities (CAs). A CA certificate identifies a <a href="glossary.html#certificate_authority_(CA)">certificate authority</a> and is used to sign certificates issued by that authority. A CA certificate can in turn be signed by the CA certificate of a parent CA and so on up to a <a href="glossary.html#root_CA">root CA</a>.
+	<li><b>Certificate Fields:</b> Displays the fields of the certificate selected under Certificate Hierarchy.	
+	<li><b>Field Value:</b> Displays the value of the field selected under Certificate Fields.
 </ul>
 
 <p>The Certificate Details tab displays basic ANSI types in human-readable form wherever possible. For fields whose contents the Certificate Manager cannot interpret, it displays the actual values contained in the certificate.</P>
@@ -291,7 +304,7 @@
 
 <hr>
 <p><i>9/06/2001</i></p>
-<p>Copyright &copy; 1998-2001 The Mozilla Organization.</p>
+<p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
 </html>
