@@ -3890,11 +3890,12 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
         canonicalSubDir.SetLength((PRUint32) canonicalSubDir.Length()-1);
   }
     
-    switch (m_hierarchyNameState)
+  switch (m_hierarchyNameState)
   {
-  case kNoOperationInProgress:
-  case kDiscoverTrashFolderInProgress:
-  case kListingForInfoAndDiscovery:
+    case kListingForCreate:
+    case kNoOperationInProgress:
+    case kDiscoverTrashFolderInProgress:
+    case kListingForInfoAndDiscovery:
     {
             if (canonicalSubDir.Length() &&
                 PL_strstr(adoptedBoxSpec->allocatedPathName,
@@ -3961,6 +3962,8 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
                 nsCString boxNameCopy; 
                 
         boxNameCopy = adoptedBoxSpec->allocatedPathName;
+        if (m_hierarchyNameState == kListingForCreate)
+          adoptedBoxSpec->box_flags |= kNewlyCreatedFolder;
 
                 if (m_imapServerSink)
                 {
@@ -4884,13 +4887,15 @@ char * nsImapProtocol::OnCreateServerDestinationFolderPathString()
 
 void nsImapProtocol::OnCreateFolder(const char * aSourceMailbox)
 {
-    PRBool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
-    if (created)
-    {
-        List(aSourceMailbox, PR_FALSE);
-    }
-    else
-        FolderNotCreated(aSourceMailbox);
+  PRBool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
+  if (created)
+  {
+    m_hierarchyNameState = kListingForCreate;
+    List(aSourceMailbox, PR_FALSE);
+    m_hierarchyNameState = kNoOperationInProgress;
+  }
+  else
+    FolderNotCreated(aSourceMailbox);
 }
 
 void nsImapProtocol::OnEnsureExistsFolder(const char * aSourceMailbox)

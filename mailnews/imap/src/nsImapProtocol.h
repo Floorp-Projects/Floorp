@@ -559,11 +559,12 @@ private:
     enum EMailboxHierarchyNameState {
         kNoOperationInProgress,
         kDiscoverBaseFolderInProgress,
-		kDiscoverTrashFolderInProgress,
+	kDiscoverTrashFolderInProgress,
         kDeleteSubFoldersInProgress,
-		kListingForInfoOnly,
-		kListingForInfoAndDiscovery,
-		kDiscoveringNamespacesOnly
+	kListingForInfoOnly,
+	kListingForInfoAndDiscovery,
+	kDiscoveringNamespacesOnly,
+        kListingForCreate
     };
     EMailboxHierarchyNameState m_hierarchyNameState;
   PRBool m_onlineBaseFolderExists;

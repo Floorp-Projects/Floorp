@@ -47,6 +47,7 @@ typedef PRUint16 imapMessageFlagsType;
 #define kPublicMailbox		0x80	/* this mailbox is in the public namespace */
 #define kOtherUsersMailbox	0x100	/* this mailbox is in the other users' namespace */
 #define kNameSpace			0x200	/* this mailbox IS a namespace */
+#define kNewlyCreatedFolder     0x400 /* this folder was just created */
 
 /* flags for individual messages */
 /* currently the ui only offers \Seen and \Flagged */

@@ -3704,13 +3704,13 @@ nsImapMailFolder::SetContentModified(nsIImapUrl *aImapUrl, nsImapContentModified
 // the nsIImapMesageSink interfaces ParseAdoptedMessageLine and NormalEndMsgWriteStream
 NS_IMETHODIMP nsImapMailFolder::OnDataAvailable(nsIRequest * /* request */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
-	nsresult rv = NS_OK;
-	return rv;
+  nsresult rv = NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
@@ -3723,7 +3723,7 @@ nsImapMailFolder::OnStartRunningUrl(nsIURI *aUrl)
 {
   NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
   m_urlRunning = PR_TRUE;
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3736,7 +3736,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   m_urlRunning = PR_FALSE;
   m_downloadingFolderForOfflineUse = PR_FALSE;
   SetNotifyDownloadedLines(PR_FALSE);
-    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
   if (aUrl)
   {
     nsCOMPtr<nsIMsgWindow> aWindow;

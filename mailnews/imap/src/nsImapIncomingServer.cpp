@@ -631,18 +631,18 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 
   *aImapConnection = nsnull;
 	// iterate through the connection cache for a connection that can handle this url.
-	PRUint32 cnt;
+  PRUint32 cnt;
   nsCOMPtr<nsISupports> aSupport;
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   // loop until we find a connection that can run the url, or doesn't have to wait?
   for (PRUint32 i = 0; i < cnt && !canRunUrlImmediately && !canRunButBusy; i++) 
-	{
+  {
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
-		if (connection)
-			rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
+    if (connection)
+      rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
     if (NS_FAILED(rv)) 
     {
         connection = null_nsCOMPtr();
@@ -666,40 +666,40 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   if (ConnectionTimeOut(connection))
       connection = null_nsCOMPtr();
   if (ConnectionTimeOut(freeConnection))
-      freeConnection = null_nsCOMPtr();
-
-	if (redirectLogon && (!connection || !canRunUrlImmediately))
-	{
-		// here's where we'd start the asynchronous process of requesting a connection to the 
-		// AOL Imap server and getting back an ip address, port #, and cookie.
-		// if m_overRideUrlConnectionInfo is true, then we can go ahead and make a connection to this server.
-		// We should set some sort of timer on this override info.
-		if (!m_waitingForConnectionInfo)
-		{
-			m_waitingForConnectionInfo = PR_TRUE;
-			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
-			nsCOMPtr<nsIMsgWindow> aMsgWindow;
-			if (NS_SUCCEEDED(rv)) 
-				rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
-
-			RequestOverrideInfo(aMsgWindow);
+    freeConnection = null_nsCOMPtr();
+  
+  if (redirectLogon && (!connection || !canRunUrlImmediately))
+  {
+    // here's where we'd start the asynchronous process of requesting a connection to the 
+    // AOL Imap server and getting back an ip address, port #, and cookie.
+    // if m_overRideUrlConnectionInfo is true, then we can go ahead and make a connection to this server.
+    // We should set some sort of timer on this override info.
+    if (!m_waitingForConnectionInfo)
+    {
+      m_waitingForConnectionInfo = PR_TRUE;
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+      nsCOMPtr<nsIMsgWindow> aMsgWindow;
+      if (NS_SUCCEEDED(rv)) 
+        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
+      
+      RequestOverrideInfo(aMsgWindow);
       canRunButBusy = PR_TRUE;
-		}    
-	}
-	// if we got here and we have a connection, then we should return it!
-	if (canRunUrlImmediately && connection)
-	{
-		*aImapConnection = connection;
-		NS_IF_ADDREF(*aImapConnection);
-	}
+    }    
+  }
+  // if we got here and we have a connection, then we should return it!
+  if (canRunUrlImmediately && connection)
+  {
+    *aImapConnection = connection;
+    NS_IF_ADDREF(*aImapConnection);
+  }
   else if (canRunButBusy)
   {
       // do nothing; return NS_OK; for queuing
   }
-	else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
-	{	
-		rv = CreateProtocolInstance(aEventQueue, aImapConnection);
-	}
+  else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
+  {	
+    rv = CreateProtocolInstance(aEventQueue, aImapConnection);
+  }
   else if (freeConnection)
   {
     *aImapConnection = freeConnection;
@@ -714,7 +714,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   }
 
   PR_CExitMonitor(this);
-	return rv;
+  return rv;
 }
 
 nsresult
@@ -1029,20 +1029,20 @@ NS_IMETHODIMP nsImapIncomingServer::GetSentMailPFC(PRBool createIfMissing, nsIMs
 NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, PRUnichar hierarchyDelimiter, PRInt32 boxFlags)
 {
   // folderPath is in canonical format, i.e., hierarchy separator has been replaced with '/'
-	nsresult rv;
+  nsresult rv;
   PRBool found = PR_FALSE;
-	PRBool haveParent = PR_FALSE;
+  PRBool haveParent = PR_FALSE;
   nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
   nsCOMPtr<nsIMsgFolder> aFolder;
   PRBool explicitlyVerify = PR_FALSE;
     
   if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
 
-	if (mDoingSubscribeDialog) 
+  if (mDoingSubscribeDialog) 
   {
-		rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
-		return rv;
-	}
+    rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
+    return rv;
+  }
 
   nsCAutoString dupFolderPath(folderPath);
   if (dupFolderPath.Last() == hierarchyDelimiter)
@@ -1055,10 +1055,10 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
   nsCAutoString folderName(dupFolderPath);
         
-    nsCAutoString uri;
-	nsXPIDLCString serverUri;
+  nsCAutoString uri;
+  nsXPIDLCString serverUri;
 
-	GetServerURI(getter_Copies(serverUri));
+  GetServerURI(getter_Copies(serverUri));
 
     uri.Assign(serverUri);
 
@@ -1139,10 +1139,10 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
       GetIsAOLServer(&isAOLServer);
 
-			nsXPIDLCString onlineName;
-			nsXPIDLString unicodeName;
-			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
-			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+      nsXPIDLCString onlineName;
+      nsXPIDLString unicodeName;
+      imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
+      imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
       if (boxFlags & kImapTrash)
       {
         PRInt32 deleteModel;
@@ -1153,6 +1153,13 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       imapFolder->SetBoxFlags(boxFlags);
       imapFolder->SetExplicitlyVerify(explicitlyVerify);
       imapFolder->GetOnlineName(getter_Copies(onlineName));
+      if (boxFlags & kNewlyCreatedFolder)
+      {
+        PRBool setNewFoldersForOffline = PR_FALSE;
+        GetOfflineDownload(&setNewFoldersForOffline);
+        if (setNewFoldersForOffline)
+          child->SetFlag(MSG_FOLDER_FLAG_OFFLINE);
+      }
       // online name needs to use the correct hierarchy delimiter (I think...)
       // or the canonical path - one or the other, but be consistent.
       dupFolderPath.ReplaceChar('/', hierarchyDelimiter);
@@ -1171,9 +1178,9 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         nsAutoString trashName; trashName.AssignWithConversion("Trash");
         child->SetPrettyName(trashName.GetUnicode()); // don't localize - it's a semi-reserved name for IMAP
       }
-		}
     }
-	return NS_OK;
+  }
+  return NS_OK;
 }
 
 nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolder)
