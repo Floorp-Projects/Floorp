@@ -3214,9 +3214,11 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // exception, we must make sure that exception is propagated.
 
     *_retval = PR_FALSE;
+
+    return NS_OK;
   }
 
-  return NS_OK;
+  return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 NS_IMETHODIMP
@@ -4502,7 +4504,7 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     doc->AddReference(content, wrapper);
   }
 
-  return NS_OK;
+  return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 NS_IMETHODIMP
@@ -4615,7 +4617,9 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               PRUint32 flags, JSObject **objp, PRBool *_retval)
 {
-  if (!JSVAL_IS_STRING(id)) {
+  // If we're assigning to an on* property, we'll register the handler
+  // in our ::SetProperty() hook, so no need to do it here too.
+  if (!JSVAL_IS_STRING(id) || (flags & JSRESOLVE_ASSIGNING)) {
     return NS_OK;
   }
 
@@ -4645,6 +4649,14 @@ nsEventReceiverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   PRBool did_compile; // Ignored here.
 
   return RegisterCompileHandler(wrapper, cx, obj, id, PR_FALSE, &did_compile);
+}
+
+NS_IMETHODIMP
+nsEventReceiverSH::AddProperty(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *obj, jsval id,
+                               jsval *vp, PRBool *_retval)
+{
+  return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 /*
@@ -5292,7 +5304,7 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   nsresult rv =
     sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
   if (NS_FAILED(rv)) {
-    ThrowJSException(cx, rv);
+    nsDOMClassInfo::ThrowJSException(cx, rv);
 
     return JS_FALSE;
   }
