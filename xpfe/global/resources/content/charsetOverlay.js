@@ -120,11 +120,17 @@ function SetForcedCharset(charset)
 
 function UpdateCurrentCharset()
 {
-    var wnd = document.commandDispatcher.focusedWindow;
-    if ((window == wnd) || (wnd == null)) wnd = window._content;
+    var menuitem = null;
 
-    var charset = wnd.document.characterSet;
-    var menuitem = document.getElementById('charset.' + charset);
+    if (gLastBrowserCharset) {
+      //avoid looking for the focused window, use the charset last used in charsetLoadListener
+      menuitem = document.getElementById('charset.' + gLastBrowserCharset);
+    } else {
+      //fall-back: when page has not finished loading exctract the charset from DOM
+      var wnd = document.commandDispatcher.focusedWindow;
+      if ((window == wnd) || (wnd == null)) wnd = window._content;
+      menuitem = document.getElementById('charset.' + wnd.document.characterSet);
+    }
 
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
@@ -194,36 +200,28 @@ function UpdateMailMenus(event)
     setTimeout("UpdateCharsetDetector()", 0);
 }
 
+var gCharsetMenu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'].getService().QueryInterface(Components.interfaces.nsICurrentCharsetListener);
+var gLastBrowserCharset = null;
+
 function charsetLoadListener (event)
 {
-    var menu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'];
-
-    if (menu) {
-        menu = menu.getService();
-        menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
-    }
-
     var charset = window._content.document.characterSet;
 
-    if (menu) {
-        menu.SetCurrentCharset(charset);
+    if (charset.length > 0 && (charset != gLastBrowserCharset)) {
+        gCharsetMenu.SetCurrentCharset(charset);
+        gLastBrowserCharset = charset;
     }
-
-    // XXX you know, here I could also set the checkmark, for the case when a 
-    // doc finishes loading after the menu is already diplayed. But I get a
-    // weird assertion!
 }
 
-var gCharsetMenu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'].getService().QueryInterface(Components.interfaces.nsICurrentCharsetListener);
-var gLastCurrentCharset = null;
+var gLastMailCharset = null;
 
 function mailCharsetLoadListener (event)
 {
     if (msgWindow) {
             var charset = msgWindow.mailCharacterSet;
-            if (charset.length > 0 && (charset != gLastCurrentCharset)) {
+            if (charset.length > 0 && (charset != gLastMailCharset)) {
                 gCharsetMenu.SetCurrentMailCharset(charset);
-                gLastCurrentCharset = charset;
+                gLastMailCharset = charset;
                 dump("mailCharsetLoadListener: " + charset + " \n");
             }
     }
