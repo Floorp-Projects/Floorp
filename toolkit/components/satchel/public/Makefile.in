@@ -25,7 +25,7 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = toolkitcomps
+MODULE = satchel
 XPIDL_MODULE = satchel
 
 XPIDLSRCS	= nsIFormFillController.idl \

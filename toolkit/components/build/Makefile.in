@@ -38,6 +38,8 @@ REQUIRES = xpcom \
 		       dom \
 		       mork \
 		       docshell \
+		       autocomplete \
+		       satchel \
 		       $(NULL)
 
 EXPORTS = nsToolkitCompsCID.h

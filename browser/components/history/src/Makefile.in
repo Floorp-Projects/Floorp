@@ -27,7 +27,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browsercomps
+MODULE = history
 LIBRARY_NAME  = history_s
 FORCE_STATIC_LIB = 1
 
@@ -39,7 +39,7 @@ REQUIRES = xpcom \
            necko \
            intl \
            unicharutil \
-           toolkitcomps \
+           autocomplete \
            $(NULL)
 
 CPPSRCS = nsGlobalHistory.cpp  \
