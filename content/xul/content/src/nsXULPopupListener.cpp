@@ -25,7 +25,7 @@
 #include "nsIDOMElement.h"
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
-#include "nsIDOMFocusListener.h"
+#include "nsIDOMMouseMotionListener.h"
 #include "nsRDFCID.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -55,7 +55,7 @@ static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 //
 class XULPopupListenerImpl : public nsIXULPopupListener,
                              public nsIDOMMouseListener,
-                             public nsIDOMFocusListener
+                             public nsIDOMMouseMotionListener
 {
 public:
     XULPopupListenerImpl(void);
@@ -73,12 +73,12 @@ public:
     virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) ;
+    virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) ;
 
-    // nsIDOMFocusListener
-    virtual nsresult Focus(nsIDOMEvent* aEvent) { return NS_OK; };
-    virtual nsresult Blur(nsIDOMEvent* aEvent);
+    // nsIDOMMouseMotionListener
+    virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
+    virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; };
 
     // nsIDOMEventListener
     virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
@@ -86,26 +86,29 @@ public:
 protected:
 
     virtual nsresult LaunchPopup(nsIDOMEvent* anEvent);
-    virtual nsresult LaunchPopup( nsIDOMElement* aElement, PRInt32 aScreenX, PRInt32 aScreenY, 
-                                    PRInt32 aClientX, PRInt32 aClientY ) ;
+    virtual nsresult LaunchPopup(nsIDOMElement* aElement, PRInt32 aClientX, PRInt32 aClientY) ;
 
-    nsresult FindDocumentForNode ( nsIDOMNode* inNode, nsIDOMXULDocument** outDoc ) ;
+    nsresult FindDocumentForNode(nsIDOMNode* inNode, nsIDOMXULDocument** outDoc) ;
 
 private:
-      // |mElement| is the node to which this listener is attached.
+    // |mElement| is the node to which this listener is attached.
     nsIDOMElement* mElement;               // Weak ref. The element will go away first.
+
+    // The popup that is getting shown on top of mElement.
+    nsIDOMElement* mPopupContent; 
+
+    // The type of the popup
     XULPopupType popupType;
-    nsCOMPtr<nsIDOMWindow> mPopup;         // The popup. We are responsible for making it go away.
     
     // The following members are not used unless |popupType| is tooltip.
       
       // a timer for determining if a tooltip should be displayed. 
     static void sTooltipCallback ( nsITimer *aTimer, void *aClosure ) ;
     nsCOMPtr<nsITimer> mTooltipTimer;
-    PRInt32 mMouseScreenX, mMouseScreenY;       // mouse coordinates for tooltip event
-    PRInt32 mMouseClientX, mMouseClientY;
-      // The node hovered over that fired the timer. This may turn into the node that
-      // triggered the tooltip, but only if the timer ever gets around to firing.
+    PRInt32 mMouseClientX, mMouseClientY;       // mouse coordinates for tooltip event
+    
+    // The node hovered over that fired the timer. This may turn into the node that
+    // triggered the tooltip, but only if the timer ever gets around to firing.
     nsIDOMNode* mPossibleTooltipNode;     // weak ref.
         
 };
@@ -113,8 +116,8 @@ private:
 ////////////////////////////////////////////////////////////////////////
 
 XULPopupListenerImpl::XULPopupListenerImpl(void)
-  : mElement(nsnull), mPossibleTooltipNode(nsnull), mMouseScreenX(0),
-     mMouseScreenY(0), mMouseClientX(0), mMouseClientY(0)
+  : mElement(nsnull), mPopupContent(nsnull), mPossibleTooltipNode(nsnull), mMouseClientX(0),
+     mMouseClientY(0)
 {
 	NS_INIT_REFCNT();
 	
@@ -124,9 +127,6 @@ XULPopupListenerImpl::~XULPopupListenerImpl(void)
 {
   //XXX do we need to close the popup here? Will we get the right events as
   //XXX the topLevel window is going away when the closebox is pressed?
-  if ( mPopup )
-    mPopup->Close();
-
 }
 
 NS_IMPL_ADDREF(XULPopupListenerImpl)
@@ -150,8 +150,8 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMFocusListener::GetIID())) {
-        *result = NS_STATIC_CAST(nsIDOMFocusListener*, this);
+    else if (iid.Equals(nsIDOMMouseMotionListener::GetIID())) {
+        *result = NS_STATIC_CAST(nsIDOMMouseMotionListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -201,9 +201,9 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
     case eXULPopupType_context:
 #ifdef	XP_MAC
       // XXX: Handle Mac (currently checks if CTRL key is down)
-	PRBool	ctrlKey = PR_FALSE;
-	uiEvent->GetCtrlKey(&ctrlKey);
-	if (ctrlKey == PR_TRUE)
+	    PRBool	ctrlKey = PR_FALSE;
+	    uiEvent->GetCtrlKey(&ctrlKey);
+	    if (ctrlKey == PR_TRUE)
 #else
       // Check for right mouse button down
       uiEvent->GetButton(&button);
@@ -226,55 +226,50 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 
 
 //
-// MouseOver
+// MouseMove
 //
 // If we're a tooltip, fire off a timer to see if a tooltip should be shown.
 //
 nsresult
-XULPopupListenerImpl::MouseOver(nsIDOMEvent* aMouseEvent)
+XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
 {
   nsresult rv = NS_OK;
-  
+ 
   // make sure we're a tooltip. if not, bail.
   if ( popupType != eXULPopupType_tooltip )
     return NS_OK;
   
+  nsCOMPtr<nsIDOMUIEvent> uiEvent ( do_QueryInterface(aMouseEvent) );
+  if (!uiEvent)
+    return NS_OK;
+
+  // stash the coordinates of the event so that we can still get back to it from within the 
+  // timer scallback. Also stash the node that started this so we can put it into the
+  // document later on (if the timer ever fires).
+  uiEvent->GetClientX(&mMouseClientX);
+  uiEvent->GetClientY(&mMouseClientY);
+
   //XXX recognize when a popup is already up and immediately show the
   //XXX tooltip for the new item if the dom element is different than
   //XXX the element for which we are currently displaying the tip.
   //XXX
   //XXX for now, just be stupid to get things working.
-  if ( mPopup )
+  if (mPopupContent || mTooltipTimer)
     return NS_OK;
   
-  // Kill off an old timer and create a new one.
-  if ( mTooltipTimer ) {
-    mTooltipTimer->Cancel();
-    mTooltipTimer = nsnull;
-  }
   NS_NewTimer ( getter_AddRefs(mTooltipTimer) );
   if ( mTooltipTimer ) {
-    nsCOMPtr<nsIDOMUIEvent> uiEvent ( do_QueryInterface(aMouseEvent) );
-    if ( uiEvent ) {
-      // stash the coordinates of the event so that we can still get back to it from within the 
-      // timer scallback. Also stash the node that started this so we can put it into the
-      // document later on (if the timer ever fires).
-      nsCOMPtr<nsIDOMNode> eventTarget;
-      aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-      mPossibleTooltipNode = eventTarget.get();
-      uiEvent->GetScreenX(&mMouseScreenX);
-      uiEvent->GetScreenY(&mMouseScreenY);
-      uiEvent->GetClientX(&mMouseClientX);
-      uiEvent->GetClientY(&mMouseClientY);
-      mTooltipTimer->Init(sTooltipCallback, this, 1000);   // one second delay
-    }
+    nsCOMPtr<nsIDOMNode> eventTarget;
+    aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+    mPossibleTooltipNode = eventTarget.get();
+    mTooltipTimer->Init(sTooltipCallback, this, 500);   // 500 ms delay
   }
   else
     NS_WARNING ( "Could not create a timer for tooltip tracking" );
     
   return NS_OK;
   
-} // MouseOver
+} // MouseMove
 
 
 //
@@ -290,12 +285,16 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
   if ( popupType != eXULPopupType_tooltip )
     return NS_OK;
   
-  if ( mTooltipTimer )
+  if ( mTooltipTimer ) {
     mTooltipTimer->Cancel();
+    mTooltipTimer = nsnull;
+  }
   
-  if ( mPopup ) {
-    mPopup->Close();  // hide the popup
-    mPopup = nsnull;  // release the popup
+  if ( mPopupContent ) {
+    mPopupContent->RemoveAttribute("menugenerated");  // hide the popup
+    mPopupContent->RemoveAttribute("menuactive");
+
+    mPopupContent = nsnull;  // release the popup
     
     // clear out the tooltip node on the document
     nsCOMPtr<nsIDOMNode> eventTarget;
@@ -327,6 +326,9 @@ XULPopupListenerImpl :: FindDocumentForNode ( nsIDOMNode* inElement, nsIDOMXULDo
   // get the document associated with this content element
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(inElement);
+  if (!content)
+    return rv;
+
   if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
     NS_ERROR("Unable to retrieve the document.");
     return rv;
@@ -361,14 +363,10 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
   }
 
   PRInt32 xPos, yPos;
-  uiEvent->GetScreenX(&xPos); 
-  uiEvent->GetScreenY(&yPos); 
+  uiEvent->GetClientX(&xPos); 
+  uiEvent->GetClientY(&yPos); 
 
-  PRInt32 offsetX, offsetY;
-  uiEvent->GetClientX(&offsetX);
-  uiEvent->GetClientY(&offsetY);
-
-  return LaunchPopup ( mElement, xPos, yPos, offsetX, offsetY );
+  return LaunchPopup(mElement, xPos, yPos);
 }
 
 
@@ -376,7 +374,7 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
 // LaunchPopup
 //
 // Given the element on which the event was triggered and the mouse locations in
-// screen and widget coordinates, popup a new window showing the appropriate 
+// Client and widget coordinates, popup a new window showing the appropriate 
 // content.
 //
 // This looks for an attribute on |aElement| of the appropriate popup type 
@@ -384,14 +382,8 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
 // the popup content in the document.
 //
 nsresult
-XULPopupListenerImpl::LaunchPopup( nsIDOMElement* aElement, PRInt32 aScreenX, PRInt32 aScreenY, 
-                                      PRInt32 aOffsetX, PRInt32 aOffsetY )
+XULPopupListenerImpl::LaunchPopup(nsIDOMElement* aElement, PRInt32 aClientX, PRInt32 aClientY)
 {
-#ifdef NS_DEBUG
-printf("screen coords %ld %ld\n", aScreenX, aScreenY);
-printf("client coords %ld %ld\n", aOffsetX, aOffsetY);
-#endif
-
   nsresult rv = NS_OK;
 
   nsAutoString type("popup");
@@ -454,22 +446,15 @@ printf("client coords %ld %ld\n", aOffsetX, aOffsetY);
         // Set the popup in the document for the duration of this call.
         xulDocument->SetPopupElement(mElement);
         
-        // If we're anchored, we pass in client/screen offsets so that
-        // we can translate the frames corners to screen coords. 
-        PRInt32 xPos = aScreenX, yPos = aScreenY;
-        if (anchorAlignment != "none") {
-          xPos -= aOffsetX;
-          yPos -= aOffsetY;
-        }
-printf("***creating XUL popup at %ld %ld\n", xPos, yPos);
+        PRInt32 xPos = aClientX, yPos = aClientY;
+        
+        mPopupContent = popupContent.get();
+
+        nsCOMPtr<nsIDOMWindow> uselessPopup; // XXX Should go away.
         domWindow->CreatePopup(mElement, popupContent, 
                                xPos, yPos, 
                                type, anchorAlignment, popupAlignment,
-                               getter_AddRefs(mPopup));
-        if ( popupType == eXULPopupType_popup && mPopup )
-          mPopup->Focus();
-      
-        // XXX For menus only, clear the document.popup field.
+                               getter_AddRefs(uselessPopup));
       }
       NS_RELEASE(global);
     }
@@ -478,65 +463,6 @@ printf("***creating XUL popup at %ld %ld\n", xPos, yPos);
 
   return NS_OK;
 }
-
-nsresult
-XULPopupListenerImpl::Blur(nsIDOMEvent* aMouseEvent)
-{
-  nsresult rv = NS_OK;
-  
-#if 0
-// ONLY NEEDED BECAUSE HYATT WAS LAZY
-  // Try to find the popup content.
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
-  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
-    NS_ERROR("Unable to retrieve the document.");
-    return rv;
-  }
-
-  // Blur events don't bubble, so this means our window lost focus.
-  // Let's check just to make sure.
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-  
-  // We have some popup content. Obtain our window.
-  nsIScriptContextOwner* owner = document->GetScriptContextOwner();
-  nsCOMPtr<nsIScriptContext> context;
-  if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
-    nsIScriptGlobalObject* global = context->GetGlobalObject();
-    if (global) {
-      // Get the DOM window
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
-  
-      // Close, but only if we are the same target.
-      nsCOMPtr<nsIDOMNode> windowNode = do_QueryInterface(domWindow);
-      if (windowNode.get() == eventTarget.get())
-        domWindow->Close();
-    }
-  }
-#endif
-
-  // Blur events don't bubble, so this means our window lost focus.
-  // Let's check just to make sure.
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-  
-  // Close, but only if we are the same target.
-  nsCOMPtr<nsIDOMNode> windowNode = do_QueryInterface(mPopup);
-  if (windowNode.get() == eventTarget.get()) {
-    mPopup->Close();
-    mPopup = nsnull;
-  }
-    
-  // XXX Figure out how to fire the DESTROY event for the
-  // arbitrary XUL case
-
-  // XXX Set document.popup to null in the parent document NOW.
-  // xulDocument->SetPopup(nsnull); 
-      
-  return rv;
-}
-
 
 //
 // sTooltipCallback
@@ -566,8 +492,7 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
         element->GetAttribute ( "disabled", disabledState );
         if ( disabledState != "true" ) {
           doc->SetTooltipElement ( element );        
-          self->LaunchPopup ( element, self->mMouseScreenX, self->mMouseScreenY, 
-                               self->mMouseClientX, self->mMouseClientY );
+          self->LaunchPopup (element, self->mMouseClientX, self->mMouseClientY+16);
         } // if node enabled
       }
     } // if document

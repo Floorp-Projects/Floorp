@@ -2307,7 +2307,12 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
         // Add the popup as a listener on this element.
         nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
-        AddEventListener("mousedown", eventListener, PR_FALSE);  
+
+        if (popupType == eXULPopupType_tooltip) {
+          AddEventListener("mouseout", eventListener, PR_FALSE);
+          AddEventListener("mousemove", eventListener, PR_FALSE);
+        }
+        else AddEventListener("mousedown", eventListener, PR_FALSE);  
         
         NS_IF_RELEASE(popupListener);
     }
