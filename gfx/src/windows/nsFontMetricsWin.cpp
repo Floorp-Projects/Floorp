@@ -1474,12 +1474,10 @@ static void
 ReadCMAPTableFormat12(PRUint8* aBuf, PRInt32 len, PRUint32 **aExtMap) 
 {
   PRUint8* p = aBuf;
-  PRUint8* end = aBuf + len;
   PRUint32 i;
 
   p += sizeof(PRUint16); // skip format
   p += sizeof(PRUint16); // skip reserve field
-  PRUint32 tabLen = GET_LONG(p);
   p += sizeof(PRUint32); // skip tableLen
   p += sizeof(PRUint32); // skip language
   PRUint32 nGroup = GET_LONG(p);
@@ -1529,7 +1527,6 @@ ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aI
   PRUint16* startCode = endCode + segCount + 1;
   PRUint16* idDelta = startCode + segCount;
   PRUint16* idRangeOffset = idDelta + segCount;
-  PRUint16* glyphIdArray = idRangeOffset + segCount;
 
   for (i = 0; i < segCount; ++i) {
     if (idRangeOffset[i]) {
@@ -2827,7 +2824,6 @@ nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRIC * metrics,
 // printf("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
   nsFontWeightInfo* weightInfo = (nsFontWeightInfo*)closure;
   if (metrics) {
-    int pos = metrics->tmWeight / 100;
       // Set a bit to indicate the font weight is available
     if (weightInfo->mFontCount == 0)
       weightInfo->mLogFont = *logFont;
