@@ -29,6 +29,7 @@
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 #include "netCore.h"
+#include "nsFileStream.h"
 #include "nsIFileStream.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIURL.h"
@@ -756,13 +757,6 @@ nsFileChannel::OnEmpty(nsIBuffer* buffer)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::GetCreationDate(PRTime *aCreationDate)
-{
-    // XXX no GetCreationDate in nsFileSpec yet
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsFileChannel::GetModDate(PRTime *aModDate)
 {
     nsFileSpec::TimeStamp date;
@@ -781,27 +775,9 @@ nsFileChannel::GetFileSize(PRUint32 *aFileSize)
 NS_IMETHODIMP
 nsFileChannel::GetParent(nsIFileChannel * *aParent)
 {
-    nsresult rv;
-
     nsFileSpec parentSpec;
     mSpec.GetParent(parentSpec);
-    nsFileURL parentURL(parentSpec);
-    const char* urlStr = parentURL.GetURLString();
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsIChannel* channel;
-    rv = serv->NewChannel("load",    // XXX what should this be?
-                          urlStr, nsnull,
-                          mGetter, &channel);
-    if (NS_FAILED(rv)) return rv;
-
-    // this cast is safe because nsFileURL::GetURLString aways
-    // returns file: strings, and consequently we'll make nsIFileChannel
-    // objects from them:
-    *aParent = NS_STATIC_CAST(nsIFileChannel*, channel);
-
-    return NS_OK;
+    return CreateFileChannelFromFileSpec(parentSpec, aParent);
 }
 
 class nsDirEnumerator : public nsISimpleEnumerator
@@ -922,15 +898,22 @@ nsFileChannel::Exists(PRBool *result)
 NS_IMETHODIMP
 nsFileChannel::Create()
 {
-    // XXX no Create in nsFileSpec -- creates non-existent file
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsFileSpec mySpec(mSpec, PR_TRUE); // relative path.
+    {
+        nsIOFileStream testStream(mySpec); // creates the file
+        // Scope ends here, file gets closed
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileChannel::Delete()
 {
-    // XXX no Delete in nsFileSpec -- deletes file or dir
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mSpec.Delete(PR_TRUE); // RECURSIVE DELETE!
+    if (mSpec.Exists())
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -993,24 +976,38 @@ nsFileChannel::IsFile(PRBool *result)
 NS_IMETHODIMP
 nsFileChannel::IsLink(PRBool *_retval)
 {
-    // XXX no IsLink in nsFileSpec (for alias/shortcut/symlink)
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = mSpec.IsSymlink();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileChannel::ResolveLink(nsIFileChannel **_retval)
 {
-    // XXX no ResolveLink in nsFileSpec yet -- returns what link points to
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRBool ignore;
+    nsFileSpec tempSpec = mSpec;
+    nsresult rv = tempSpec.ResolveSymlink(ignore);
+
+    if(NS_SUCCEEDED(rv))
+    {
+        return CreateFileChannelFromFileSpec(tempSpec, _retval);
+    }
+    
+    return rv;
 }
 
 NS_IMETHODIMP
-nsFileChannel::MakeUniqueFileName(const char* baseName, char **_retval)
+nsFileChannel::MakeUnique(const char* baseName, nsIFileChannel **_retval)
 {
-    // XXX makeUnique needs to return the name or file spec to the newly create
-    // file!
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mSpec.IsDirectory())
+    {
+        nsFileSpec tempSpec = mSpec;
+        tempSpec.MakeUnique(baseName);
+
+        return CreateFileChannelFromFileSpec(tempSpec, _retval);
+    }
+    return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_NOT_DIRECTORY or something
 }
+    
 
 NS_IMETHODIMP
 nsFileChannel::Execute(const char *args)
@@ -1036,3 +1033,29 @@ nsFileChannel::Execute(const char *args)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+nsresult
+nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **result)
+{
+    nsresult rv;
+
+    nsFileURL aURL(spec);
+    const char* urlStr = aURL.GetURLString();
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIChannel* channel;
+    rv = serv->NewChannel("load",    // XXX what should this be?
+                          urlStr, 
+                          nsnull,
+                          mGetter, 
+                          &channel);
+
+    if (NS_FAILED(rv)) return rv;
+
+    // this cast is safe because nsFileURL::GetURLString aways
+    // returns file: strings, and consequently we'll make nsIFileChannel
+    // objects from them:
+    *result = NS_STATIC_CAST(nsIFileChannel*, channel);
+    return NS_OK;
+}

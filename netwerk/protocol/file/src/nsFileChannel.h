@@ -135,6 +135,8 @@ protected:
     PRUint32                    mLoadAttributes;
     nsILoadGroup*               mLoadGroup;
 
+    nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
+
 #ifdef STREAM_CONVERTER_HACK
 	nsCOMPtr<nsIStreamConverter2> mStreamConverter;
 	nsXPIDLCString				 mStreamConverterOutType;
