@@ -46,6 +46,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIJSConsoleService.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
@@ -53,11 +54,6 @@ static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-
-#define CONSOLE_CHROME_URL \
-  NS_LITERAL_STRING("chrome://global/content/console.xul")
-#define CONSOLE_WINDOW_OPTIONS \
-  NS_LITERAL_STRING("chrome,menubar,toolbar,resizable")
 
 class nsJSThunk;
 
@@ -211,18 +207,13 @@ nsEvaluateStringProxy::BringUpConsole()
         globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
         NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        rv = global->GetContext(getter_AddRefs(scriptContext));
-        if (NS_FAILED(rv)) return rv;
-
         // Finally, QI global to nsIDOMWindow and open the console.
-        nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(global, &rv);
+        nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global, &rv);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-        nsCOMPtr<nsIDOMWindow> tmp;
-
-        rv = window->Open(CONSOLE_CHROME_URL, NS_LITERAL_STRING("_blank"),
-                          CONSOLE_WINDOW_OPTIONS, getter_AddRefs(tmp));
+        NS_WITH_SERVICE(nsIJSConsoleService, jsconsole, "@mozilla.org/embedcomp/jsconsole-service;1", &rv);
+        if (NS_FAILED(rv) || !jsconsole) return rv;
+        jsconsole->Open ( window );
     }
     return rv;
 }

@@ -24,6 +24,7 @@ DIRS= \
 	windowwatcher \
 	appstartup \
 	find \
+	jsconsole \
 	ui \
 	build \
 	$(NULL)
