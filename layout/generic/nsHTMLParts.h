@@ -372,6 +372,11 @@ NS_NewObjectFrame(nsIContent* aContent,
                   nsIFrame*& aFrameResult);
 
 extern nsresult
+NS_NewImageFrame(nsIContent* aContent,
+                 nsIFrame* aParentFrame,
+                 nsIFrame*& aFrameResult);
+
+extern nsresult
 NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
                  nsIAtom* aTag, nsIWebShell* aWebShell);
 
