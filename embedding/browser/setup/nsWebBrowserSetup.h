@@ -34,8 +34,6 @@ public:
    
    NS_DECL_NSIWEBBROWSERSETUP
 
-   static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
-
 protected:
    virtual ~nsWebBrowserSetup();
 };
