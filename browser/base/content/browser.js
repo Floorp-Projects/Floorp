@@ -4411,7 +4411,7 @@ function openWebPanel(aTitle, aURI)
     
     // Tell the Web Panels sidebar to load the bookmark.
     var sidebar = document.getElementById("sidebar");
-    if (sidebar.contentDocument && sidebar.contentDocument.getElementById('web-panels-browser')) {
+    if (sidebar.docShell && sidebar.contentDocument && sidebar.contentDocument.getElementById('web-panels-browser')) {
         sidebar.contentWindow.loadWebPanel(aURI);
         if (gWebPanelURI) {
             gWebPanelURI = "";
