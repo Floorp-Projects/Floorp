@@ -360,6 +360,6 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIChannel* channel, nsISupports* ct
   nsXPIDLString str;
   rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
   if (NS_FAILED(rv)) return rv;
-  nsAutoString msg = str;
+  nsAutoString msg = (const PRUnichar*)str;
   return ShowStatusString(msg.GetUnicode());
 }
