@@ -769,18 +769,6 @@ nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports
     return NS_OK;
 }
 
-
-class CCaseConversionServiceInitializer {
-public:
-  CCaseConversionServiceInitializer(){
-    HandleCaseConversionShutdown3* listener = 
-      new HandleCaseConversionShutdown3();
-    if(listener){
-      nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),(nsISupports**) &gCaseConv, listener);
-    }
-  }
-};
-
 #endif
 #endif /* XPCOM_STANDALONE */
 
@@ -798,26 +786,31 @@ public:
 PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper);
 PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){ 
   PRUnichar* cp = (PRUnichar*)aString;
-  PRUnichar* end = cp + aCount-1;
+  PRUnichar* end = cp + aCount;
   PRInt32 result=0;
 
-#ifndef XPCOM_STANDALONE
-#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
-  static CCaseConversionServiceInitializer  gCaseConversionServiceInitializer;
-
-  // I18N code begin
-  if(gCaseConv) {
-    nsresult err=(aToUpper) ? gCaseConv->ToUpper(cp, cp, aCount) : gCaseConv->ToLower(cp, cp, aCount);
-    if(NS_SUCCEEDED(err))
-      return 0;
-  }
-  // I18N code end
-#endif
-#endif /* XPCOM_STANDALONE */
-
-
-  while (cp <= end) {
+  while (cp < end) {
     PRUnichar ch = *cp;
+#if !defined(XPCOM_STANDALONE) && !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
+    if (ch & 0xFF80) {
+      // If we detect a non-ASCII character, fault through to the I18n
+      // case conversion routines.
+      if (! gCaseConv) {
+        HandleCaseConversionShutdown3* listener = new HandleCaseConversionShutdown3();
+        if (listener)
+          nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion), (nsISupports**) &gCaseConv, listener);
+      }
+
+      if (! gCaseConv)
+        return NS_ERROR_FAILURE;
+
+      result = PRInt32(aToUpper
+                       ? gCaseConv->ToUpper(cp, cp, end - cp)
+                       : gCaseConv->ToLower(cp, cp, end - cp));
+
+      break;
+    }
+#endif
     if(aToUpper) {
       if ((ch >= 'a') && (ch <= 'z')) {
         *cp = PRUnichar('A' + (ch - 'a'));
