@@ -682,7 +682,7 @@ nsHTMLInputElement::GetStyleHintForAttributeChange(
 nsresult nsHTMLInputElement::GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame)
 {
   nsIDocument* doc = nsnull;
-  nsresult res;
+  nsresult res = NS_NOINTERFACE;
    // Get the document
   if (NS_OK == GetDocument(doc)) {
      // Get presentation shell 0
