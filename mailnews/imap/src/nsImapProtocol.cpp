@@ -4739,7 +4739,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   char * currentCommand=nsnull;
   nsresult rv;
 
-  if (flag & kHasCRAMCapability)
+  if (m_useSecAuth && flag & kHasCRAMCapability)
   {
       nsresult rv;
       char *digest;
