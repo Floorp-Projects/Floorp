@@ -370,10 +370,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   res = inner->GetText(&textFrag);
   if (!NS_SUCCEEDED(res))
     return res;
-#ifdef DEBUG_akkana
-  if (numFragments == 0)
-    printf("numFragments is zero!  Go figure!\n");
-#endif
+
   if (sel != nsnull && document->IsInSelection(sel,content))
   {
     nsIEnumerator *enumerator;
