@@ -94,15 +94,15 @@ function onLoad() {
     wizardManager.URL_PagePostfix = ".xul"; 
     wizardManager.SetHandlers(null, null, onFinish, null, null, null);
 
-    checkForInvalidAccounts();
-    var pageData = GetPageData();
-    updateMap(pageData, gWizardMap);
-
     // load up the SMTP service for later
     if (!smtpService) {
         smtpService =
             Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
     }
+
+    checkForInvalidAccounts();
+    var pageData = GetPageData();
+    updateMap(pageData, gWizardMap);
 
     // skip the first page if we have an account
     if (currentAccount) {
