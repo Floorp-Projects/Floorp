@@ -26,10 +26,12 @@
 // interfaces into the web shell and so forth.
 
 class CWebShellContainer :
-//		public nsIBrowserWindow,
+		public nsIBaseWindow,
+		public nsIWebBrowserChrome,
 		public nsIWebShellContainer,
 		public nsIStreamObserver,
-		public nsIDocumentLoaderObserver
+		public nsIDocumentLoaderObserver,
+		public nsIDocShellTreeOwner
 {
 public:
 	CWebShellContainer(CMozillaBrowser *pOwner);
@@ -46,38 +48,11 @@ protected:
 	CDWebBrowserEvents2 *m_pEvents2;
 
 public:
-	// nsISupports
+
 	NS_DECL_ISUPPORTS
-
-	// nsIBrowserWindow
-
-	NS_IMETHOD Init(nsIAppShell* aAppShell, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins = PR_TRUE);
-	NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
-	NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
-	NS_IMETHOD GetContentBounds(nsRect& aResult);
-	NS_IMETHOD GetBounds(nsRect& aResult);
-	NS_IMETHOD GetWindowBounds(nsRect& aResult);
-	NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
-	NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
-                                PRBool aWidthTransient, PRBool aHeightTransient);
-	NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight);
-	NS_IMETHOD ShowAfterCreation();
-	NS_IMETHOD Show();
-	NS_IMETHOD Hide();
-	NS_IMETHOD Close();
-	NS_IMETHOD ShowModally(PRBool aPrepare);
-	NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
-	NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
-	NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-    NS_IMETHOD GetTitle(PRUnichar** aResult);
-	NS_IMETHOD SetStatus(const PRUnichar* aStatus);
-	NS_IMETHOD GetStatus(const PRUnichar** aResult);
-	NS_IMETHOD SetDefaultStatus(const PRUnichar* aStatus);
-	NS_IMETHOD GetDefaultStatus(const PRUnichar** aResult);
-	NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
-	NS_IMETHOD ShowMenuBar(PRBool aShow);
-	NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
-	NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
+	NS_DECL_NSIBASEWINDOW
+	NS_DECL_NSIWEBBROWSERCHROME
+	NS_DECL_NSIDOCSHELLTREEOWNER
 
 	// nsIWebShellContainer
 	NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
@@ -87,7 +62,6 @@ public:
 	NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
 						PRBool aVisible,
 						nsIWebShell *&aNewWebShell);
-	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 	NS_IMETHOD ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode);
 	NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 

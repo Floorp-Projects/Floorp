@@ -31,10 +31,13 @@
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
 
+#include "nsCWebBrowser.h"
 #include "nsFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
-#include "nsIWebNavigation.h"
+
+static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
@@ -308,7 +311,7 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	if (m_pIWebShell)
 	{
 		nsIContentViewer *pContentViewer = nsnull;
-		res = m_pIWebShell->GetContentViewer(&pContentViewer);
+		res = mDocShell->GetContentViewer(&pContentViewer);
 		if (NS_SUCCEEDED(res))
 		{
             nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
@@ -665,28 +668,22 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	rv = m_pIPref->StartUp();		//Initialize the preference service
 	rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
 	
-	// Create the web shell object
-	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-									kIWebShellIID,
-									(void**)&m_pIWebShell);
-	if (NS_FAILED(rv))
+//------------------------------------------------------
+
+
+	PRBool aAllowPlugins = PR_TRUE;
+
+	// Create top level window
+	rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
+		   kIWidgetIID, (void**)&mWindow);
+	if (NS_OK != rv)
 	{
-		NG_ASSERT(0);
-		NG_TRACE(_T("Could not create web shell rv=%08x\n"), (int) rv);
-		m_sErrorMessage = _T("Error - could not create web shell, check PATH settings");
-		return E_FAIL;
+		return rv;
 	}
 
-	m_pIWebShell->QueryInterface(kIBaseWindowIID, (void **) &m_pIWebShellWin);
-
-	// Register the cookie service
-	NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
-	if (NS_FAILED(rv) || (cookieService == nsnull)) {
-		NG_TRACE(_T("Could not register the cookie manager.  rv=%08x\n"), (int) rv);
-	}
-	// TODO make the cookie service persistent.  Currently does not save or load cookies to/from disk.
-
-	// Initialise the web shell, making it fit the control dimensions
+	nsWidgetInitData initData;
+	initData.mWindowType = eWindowType_child;
+	initData.mBorderStyle = eBorderStyle_none;
 
 	nsRect r;
 	r.x = 0;
@@ -694,25 +691,48 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	r.width  = rcLocation.right  - rcLocation.left;
 	r.height = rcLocation.bottom - rcLocation.top;
 
-	PRBool aAllowPlugins = PR_TRUE;
-	PRBool aIsSunkenBorder = PR_FALSE;
+	// TODO set parent window to this control
+	mWindow->Create((nsIWidget*)NULL, r, nsnull, nsnull, nsnull, nsnull, &initData);
+	mWindow->GetClientBounds(r);
 
-	rv = m_pIWebShell->Init(m_hWnd, 
-					r.x, r.y,
-					r.width, r.height,
-					aAllowPlugins,
-					aIsSunkenBorder);
-	
-	NG_ASSERT(NS_SUCCEEDED(rv));
+	  // Create web shell
+	mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
+/*  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
+                                          NS_GET_IID(nsIDocShell),
+                                          (void**)&mDocShell);
+*/
+	if (NS_OK != rv)
+	{
+		return rv;
+	}
+	r.x = r.y = 0;
+	nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
+	rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+	webBrowserWin->Create();
+	mWebBrowser->GetDocShell(&mDocShell);
+	mDocShell->SetAllowPlugins(aAllowPlugins);
+	nsCOMPtr<nsIDocumentLoader> docLoader;
+	nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+	webShell->SetContainer((nsIWebShellContainer*) this);
 
 	// Create the container object
 	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
+	webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+	if (docLoader)
+	{
+		docLoader->AddObserver(m_pWebShellContainer);
+	}
+	webBrowserWin->SetVisibility(PR_TRUE);
+
+
+	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+	docShellAsItem->SetTreeOwner(m_pWebShellContainer);
+
 //	m_pIWebShell->SetPrefs(m_pIPref);
-	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
-///	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
-	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
+	webShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
+	mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
 //	m_pIWebShell->SetWebShellType(nsWebShellContent);
 
 	m_pIWebShellWin->SetVisibility(PR_TRUE);
@@ -872,7 +892,7 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 	}
 	
 	nsIContentViewer* pIContentViewer = nsnull;
-	res = m_pIWebShell->GetContentViewer(&pIContentViewer);
+	res = mDocShell->GetContentViewer(&pIContentViewer);
 	if (NS_SUCCEEDED(res) && pIContentViewer)
 	{
 		nsIDocumentViewer* pIDocViewer = nsnull;
@@ -918,7 +938,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	}
 	
 	nsIContentViewer * pCViewer = nsnull;
-	res = m_pIWebShell->GetContentViewer(&pCViewer);
+	res = mDocShell->GetContentViewer(&pCViewer);
 	if (NS_SUCCEEDED(res) && pCViewer)
 	{
 		nsIDocumentViewer * pDViewer = nsnull;
@@ -1214,10 +1234,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
-
-	if (m_pIWebShell->CanBack() == NS_OK)
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+	PRBool aCanGoBack = PR_FALSE;
+	webNav->GetCanGoBack(&aCanGoBack);
+	if (aCanGoBack == PR_TRUE)
 	{
-		m_pIWebShell->Back();
+		webNav->GoBack();
 	}
 
 	return S_OK;
@@ -1234,9 +1256,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
 		RETURN_E_UNEXPECTED();
 	}
 
-	if (m_pIWebShell->CanForward() == NS_OK)
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+	PRBool aCanGoForward = PR_FALSE;
+	webNav->GetCanGoForward(&aCanGoForward);
+	if (aCanGoForward == PR_TRUE)
 	{
-		m_pIWebShell->Forward();
+		webNav->GoForward();
 	}
 
 	return S_OK;

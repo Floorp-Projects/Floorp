@@ -44,237 +44,287 @@ CWebShellContainer::~CWebShellContainer()
 ///////////////////////////////////////////////////////////////////////////////
 // nsISupports implementation
 
+
 NS_IMPL_ADDREF(CWebShellContainer)
 NS_IMPL_RELEASE(CWebShellContainer)
-NS_IMPL_QUERY_HEAD(CWebShellContainer)
-	NS_IMPL_QUERY_BODY(nsIBrowserWindow)
-	NS_IMPL_QUERY_BODY(nsIStreamObserver)
-	NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
-	NS_IMPL_QUERY_BODY(nsIWebShellContainer)
-NS_IMPL_QUERY_TAIL(nsIStreamObserver)
+
+NS_INTERFACE_MAP_BEGIN(CWebShellContainer)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
+//	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
+	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+NS_INTERFACE_MAP_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIBrowserWindow implementation
+// nsIDocShellTreeOwner
 
 NS_IMETHODIMP
-CWebShellContainer::Init(nsIAppShell* aAppShell, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins)
+CWebShellContainer::FindItemWithName(const PRUnichar* aName,
+   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::MoveTo(PRInt32 aX, PRInt32 aY)
-{
-	NG_TRACE_METHOD(CWebShellContainer::MoveTo);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
-{
-	NG_TRACE_METHOD(CWebShellContainer::SizeTo);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
-                                 PRBool aWidthTransient, PRBool aHeightTransient)
-{
-	NG_TRACE_METHOD(CWebShellContainer::SizeWindowTo);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
-{
-	NG_TRACE_METHOD(CWebShellContainer::SizeContentTo);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::GetContentBounds(nsRect& aResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::GetContentBounds);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::GetBounds(nsRect& aResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::GetBounds);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::GetWindowBounds(nsRect& aResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::GetWindowBounds);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::IsIntrinsicallySized(PRBool& aResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::IsIntrinsicallySized);
-    aResult = PR_FALSE;
-    return NS_OK;
+	NS_ERROR("Haven't Implemented this yet");
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-CWebShellContainer::ShowAfterCreation()
+CWebShellContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+   PRBool aPrimary, const PRUnichar* aID)
 {
-  return NS_OK;
+	NS_ERROR("Haven't Implemented this yet");
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-CWebShellContainer::Show()
+CWebShellContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::Hide()
-{
-	NG_TRACE_METHOD(CWebShellContainer::Hide);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::Close()
-{
-	NG_TRACE_METHOD(CWebShellContainer::Close);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::ShowModally(PRBool aPrepare)
-{
-	NG_TRACE_METHOD(CWebShellContainer::ShowModally);
-	return NS_OK;
+	NS_ERROR("Haven't Implemented this yet");
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-CWebShellContainer::SetChrome(PRUint32 aNewChromeMask)
+CWebShellContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
+   PRInt32 aCX, PRInt32 aCY)
 {
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::GetChrome(PRUint32& aChromeMaskResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::GetChrome);
-	aChromeMaskResult = 0;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::SetTitle(const PRUnichar* aTitle)
-{
-	//Fire a title change event
-	USES_CONVERSION;
-	LPOLESTR pszConvertedLocationName = W2OLE(const_cast<PRUnichar *>(aTitle));
-	BSTR __RPC_FAR LocationName = SysAllocString(pszConvertedLocationName);
-	m_pEvents1->Fire_TitleChange(LocationName);
-	m_pEvents2->Fire_TitleChange(LocationName);
-
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::GetTitle(PRUnichar** aResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::GetTitle);
-	*aResult = nsnull;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::SetStatus(const PRUnichar* aStatus)
-{
-
-	NG_TRACE_METHOD(CWebShellContainer::SetStatus);
-	
-	//Gets fired on mouse over link events.
-	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aStatus));
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
-
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::GetStatus(const PRUnichar** aResult)
-{
-	NG_TRACE_METHOD(CWebShellContainer::GetStatus);
-	*aResult = nsnull;
-	return NS_OK;
+	NS_ERROR("Haven't Implemented this yet");
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-CWebShellContainer::SetDefaultStatus(const PRUnichar* aStatus)
+CWebShellContainer::ShowModal()
 {
-	NG_TRACE_METHOD(CWebShellContainer::SetDefaultStatus);
-	return NS_OK;
+	NS_ERROR("Haven't Implemented this yet");
+	return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP CWebShellContainer::GetNewWindow(PRInt32 aChromeFlags, 
+   nsIDocShellTreeItem** aDocShellTreeItem)
+{
+	NS_ERROR("Haven't Implemented this yet");
+	return NS_ERROR_FAILURE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIBaseWindow
+
+NS_IMETHODIMP 
+CWebShellContainer::InitWindow(nativeWindow parentNativeWindow, nsIWidget * parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::Create(void)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::Destroy(void)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetPosition(PRInt32 x, PRInt32 y)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetPosition(PRInt32 *x, PRInt32 *y)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetSize(PRInt32 *cx, PRInt32 *cy)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::Repaint(PRBool force)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetParentWidget(nsIWidget * *aParentWidget)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetParentWidget(nsIWidget * aParentWidget)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetParentNativeWindow(nativeWindow *aParentNativeWindow)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetParentNativeWindow(nativeWindow aParentNativeWindow)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetVisibility(PRBool *aVisibility)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetVisibility(PRBool aVisibility)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetMainWidget(nsIWidget * *aMainWidget)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetFocus(void)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFocus)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::GetTitle(PRUnichar * *aTitle)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebShellContainer::SetTitle(const PRUnichar * aTitle)
+{
+	return NS_ERROR_FAILURE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIWebBrowserChrome implementation
 
 NS_IMETHODIMP
-CWebShellContainer::GetDefaultStatus(const PRUnichar** aResult)
+CWebShellContainer::SetJSStatus(const PRUnichar *status)
 {
-	NG_TRACE_METHOD(CWebShellContainer::GetDefaultStatus);
-	*aResult = nsnull;
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-CWebShellContainer::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
+CWebShellContainer::SetJSDefaultStatus(const PRUnichar *status)
 {
-	NG_TRACE_METHOD(CWebShellContainer::SetProgress);
-
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP
-CWebShellContainer::ShowMenuBar(PRBool aShow)
+CWebShellContainer::SetOverLink(const PRUnichar *link)
 {
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP
-CWebShellContainer::GetWebShell(nsIWebShell*& aResult)
+CWebShellContainer::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
 {
-	NG_TRACE_METHOD(CWebShellContainer::GetWebShell);
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP
-CWebShellContainer::GetContentWebShell(nsIWebShell **aResult)
+CWebShellContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 {
-	NG_TRACE_METHOD(CWebShellContainer::GetContentWebShell);
-	*aResult = nsnull;
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+CWebShellContainer::GetChromeMask(PRUint32 *aChromeMask)
+{
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::SetChromeMask(PRUint32 aChromeMask)
+{
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **_retval)
+{
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::FindNamedBrowser(const PRUnichar *aName, nsIWebBrowser **_retval)
+{
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
+{
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::ShowAsModal(void)
+{
+	return NS_ERROR_FAILURE;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -394,9 +444,13 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsres
 	CComVariant vURL(bstrURL);
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
 
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->mWebBrowser));
+
 	// Fire the new NavigateForward state
 	VARIANT_BOOL bEnableForward = VARIANT_FALSE;
-	if ( m_pOwner->m_pIWebShell->CanForward() == NS_OK )
+	PRBool aCanGoForward = PR_FALSE;
+	webNav->GetCanGoForward(&aCanGoForward);
+	if (aCanGoForward == PR_TRUE)
 	{
 		bEnableForward = VARIANT_TRUE;
 	}
@@ -404,7 +458,9 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsres
 
 	// Fire the new NavigateBack state
 	VARIANT_BOOL bEnableBack = VARIANT_FALSE;
-	if ( m_pOwner->m_pIWebShell->CanBack() == NS_OK )
+	PRBool aCanGoBack = PR_FALSE;
+	webNav->GetCanGoBack(&aCanGoBack);
+	if (aCanGoBack == PR_TRUE)
 	{
 		bEnableBack = VARIANT_TRUE;
 	}
@@ -423,26 +479,6 @@ CWebShellContainer::NewWebShell(PRUint32 aChromeMask, PRBool aVisible, nsIWebShe
 	NG_TRACE_METHOD(CWebShellContainer::NewWebShell);
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 	return rv;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
-{
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::FindWebShellWithName(\"%s\", ...)\n"), W2T(aName));
-
-	nsresult rv = NS_OK; 
-
-	// Zero result (in case we fail). 
-	aResult = nsnull;  
-
-	if (m_pOwner->m_pIWebShell != NULL)
-	{ 
-		rv = m_pOwner->m_pIWebShell->FindChildWithName(aName, aResult); 
-	} 
-
-	return rv; 
 }
 
 
