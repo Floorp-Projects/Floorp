@@ -31,6 +31,9 @@
 
 class nsITimer;
 
+// The chrome registry interface
+class nsIChromeRegistry;
+
 class nsNetlibService : public nsINetService {
 
 public:
@@ -115,6 +118,10 @@ protected:
 #if defined(NETLIB_THREAD)
     static void NetlibThreadMain(void *aParam);
 #endif /* NETLIB_THREAD */
+
+    // Chrome Registry static variables
+    static nsIChromeRegistry* gChromeRegistry;
+    static int gRefCnt;
 
 private:
     void SetupURLStruct(nsIURL *aURL, URL_Struct *aURL_s);

@@ -108,6 +108,8 @@ NS_InitializeHttpURLFactory(nsINetService* inet)
     if (rv != NS_OK) goto done;
     inet->RegisterProtocol(*new nsString("resource"), urlf, NULL);
     if (rv != NS_OK) goto done;
+    inet->RegisterProtocol(*new nsString("chrome"), urlf, NULL);
+    if (rv != NS_OK) goto done;
     inet->RegisterProtocol(*new nsString("file"), urlf, NULL);
     if (rv != NS_OK) goto done;
     inet->RegisterProtocol(*new nsString("javascript"), urlf, NULL);
