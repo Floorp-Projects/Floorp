@@ -68,7 +68,7 @@ static const char sPrefChangedTopic[] = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
 //*****************************************************************************
 
 nsPopupWindowManager::nsPopupWindowManager() :
-  mPolicy(eAllow),
+  mPolicy(ALLOW_POPUP),
   mCustomPermissions(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
@@ -110,14 +110,14 @@ nsPopupWindowManager::Init()
 NS_IMETHODIMP
 nsPopupWindowManager::GetDefaultPermission(PRUint32 *aDefaultPermission)
 {
-  return eAllow;
+  return ALLOW_POPUP;
 }
 
 NS_IMETHODIMP
 nsPopupWindowManager::SetDefaultPermission(PRUint32 aDefaultPermission)
 {
-  NS_ASSERTION(aDefaultPermission == eAllow, "whitelist not supported");
-  return aDefaultPermission == eAllow ? NS_OK : NS_ERROR_FAILURE;
+  NS_ASSERTION(aDefaultPermission == ALLOW_POPUP, "whitelist not supported");
+  return aDefaultPermission == ALLOW_POPUP ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* Note: since we don't support whitelists, Add(uri, true) is the same thing
@@ -180,7 +180,7 @@ nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *_retval)
 
   *_retval = mPolicy;
 
-  if (mPolicy == eAllow && mCustomPermissions) {
+  if (mPolicy == ALLOW_POPUP && mCustomPermissions) {
     if (mPermManager) {
       /* Because of a bug/quirk/something in the PermissionManager
          the value of blockDomain will be left unchanged if the URI
@@ -193,7 +193,7 @@ nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *_retval)
       nsCAutoString uri;
       aURI->GetPrePath(uri);
       mPermManager->TestForBlocking(uri, WINDOWPERMISSION, &blockDomain);
-      *_retval = blockDomain ? eDisallow : eAllowConditionally;
+      *_retval = blockDomain ? DENY_POPUP : ALLOW_POPUP_WITH_PREJUDICE;
     }
   }
   return NS_OK;
@@ -235,7 +235,7 @@ nsPopupWindowManager::Observe(nsISupports *aSubject, const char *aTopic,
         (NS_LITERAL_STRING(POLICYSTRING).Equals(aData) ||
          NS_LITERAL_STRING(CUSTOMSTRING).Equals(aData))) {
     // refresh our local copy of the "allow popups" pref
-    PRInt32 perm = eAllow;
+    PRInt32 perm = ALLOW_POPUP;
     PRBool custom = PR_FALSE;
 
     if (mPopupPrefBranch) {

@@ -52,13 +52,13 @@ interface nsIPopupWindowManager : nsISupports {
   /**
    * These values are returned by the testPermission method
    */
-  const PRUint32 eAllow = 1;
-  const PRUint32 eDisallow = 2;
-  const PRUint32 eAllowConditionally = 3;
+  const PRUint32 ALLOW_POPUP = 1;
+  const PRUint32 DENY_POPUP = 2;
+  const PRUint32 ALLOW_POPUP_WITH_PREJUDICE = 3;
 
   /**
-   * The manager's default permission can be eAllow (a blacklist)
-   * or eDisallow (a whitelist).
+   * The manager's default permission can be ALLOW_POPUP (a blacklist)
+   * or DENY_POPUP (a whitelist).
    */
   attribute PRUint32 defaultPermission;
 
@@ -93,7 +93,7 @@ interface nsIPopupWindowManager : nsISupports {
   /**
    * Test whether a website has permission to show a popup window.
    * @param aURI the website to be tested
-   * @return one of the eAllow consts defined above
+   * @return one of the ALLOW/DENY consts defined above
    */
   PRUint32 testPermission(in nsIURI aURI);
 
@@ -125,5 +125,5 @@ interface nsIPopupWindowManager : nsISupports {
 { 0x2e14fec9, 0xe8e9, 0x44cc, { 0x8c, 0x86, 0xc8, 0x67, 0x3c, 0x23, 0x83,0xcc }}
 #define NS_POPUPWINDOWMANAGER_CONTRACTID "@mozilla.org/PopupWindowManager;1"
 
-#define PPM_CHANGE_NOTIFICATION "popup perm change"
+#define PPM_CHANGE_NOTIFICATION "popup-perm-change"
 %}
