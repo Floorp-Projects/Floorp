@@ -175,6 +175,7 @@ namespace MSDotNETCSEmbed
 			{
 				case '\r':
 					gecko1.OpenURL(urlBar.Text);
+					e.Handled = true;
 					break;
 			}
 		}
