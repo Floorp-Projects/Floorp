@@ -3046,14 +3046,8 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   }
 
   if (!mCurrentFocus)   // Get tabindex ready
-    if (aForward) {
-      if (docHasFocus && selectionFrame)
-        mCurrentTabIndex = 0;
-      else {
-        SetFocusedContent(rootContent);
-        mCurrentTabIndex = 1;
-      }
-    } 
+    if (aForward)
+      mCurrentTabIndex = docHasFocus && selectionFrame ? 0 : 1;
     else if (!docHasFocus) 
       mCurrentTabIndex = 0;
     else if (selectionFrame)
