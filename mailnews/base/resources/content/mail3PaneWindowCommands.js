@@ -354,8 +354,9 @@ var DefaultController =
         return(MailAreaHasFocus() && GetNumSelectedMessages() > 0);
       case "cmd_editDraft":
                 return (gIsEditableMsgFolder && (GetNumSelectedMessages() > 0));
-      case "cmd_nextMsg":
       case "button_next":
+        return IsViewNavigationItemEnabled();
+      case "cmd_nextMsg":
       case "cmd_nextUnreadMsg":
       case "cmd_nextUnreadThread":
       case "cmd_previousMsg":
@@ -492,6 +493,7 @@ var DefaultController =
                 if (gDBView.numSelected >= 0)
                     MsgComposeDraftMessage();
 				break;
+      case "button_next":
 			case "cmd_nextUnreadMsg":
 				MsgNextUnreadMessage();
 				break;
