@@ -860,7 +860,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
     }
 
     // these functions were added post 1.6 (need to check size of |functions|)
-    if (functions->size > offsetof(XPCOMFunctions, cstringCopy)) {
+    if (functions->size > offsetof(XPCOMFunctions, utf16ToCString)) {
         GET_FUNC(stringContainerInit,    StringContainerInitFunc,        "NS_StringContainerInit");
         GET_FUNC(stringContainerFinish,  StringContainerFinishFunc,      "NS_StringContainerFinish");
         GET_FUNC(stringGetData,          StringGetDataFunc,              "NS_StringGetData");
