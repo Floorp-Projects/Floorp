@@ -139,6 +139,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Mi zona horaria">
 <!ENTITY pref.calendar.timezone.caption "Zona horaria">
+<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
 <!ENTITY pref.defaultzone.label     "Zona horaria predeterminada:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >

@@ -141,6 +141,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Mon fuseau horaire">
 <!ENTITY pref.calendar.timezone.caption "Fuseau horaire">
+<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
 <!ENTITY pref.defaultzone.label     "Fuseau horaire par défaut :" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrique/Abidjan" >

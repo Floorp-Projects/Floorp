@@ -141,6 +141,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Moje časowe pasmo">
 <!ENTITY pref.calendar.timezone.caption "Časowe pasmo">
+<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
 <!ENTITY pref.defaultzone.label     "Standardne časowe pasmo:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidjan" >

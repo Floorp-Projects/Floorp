@@ -141,6 +141,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Cylchfa Amser">
 <!ENTITY pref.calendar.timezone.caption "Cylchfa Amser">
+<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
 <!ENTITY pref.defaultzone.label     "Cylchfa Amser Rhagosodedig:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Affrica/Abidjan" >

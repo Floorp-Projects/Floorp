@@ -140,6 +140,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Meine Zeitzone">
 <!ENTITY pref.calendar.timezone.caption "Zeitzone">
+<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
 <!ENTITY pref.defaultzone.label     "Standard-Zeitzone:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >

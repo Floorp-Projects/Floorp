@@ -141,6 +141,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Laiko juosta">
 <!ENTITY pref.calendar.timezone.caption "Laiko juosta">
+<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
 <!ENTITY pref.defaultzone.label     "Numatytoji laiko juosta:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidžanas" >
