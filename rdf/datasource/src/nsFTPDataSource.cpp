@@ -280,6 +280,46 @@ FTPDataSource::GetURL(nsIRDFResource *source, nsVoidArray **array)
 
 
 
+NS_METHOD
+FTPDataSource::GetName(nsIRDFResource *source, nsVoidArray **array)
+{
+	nsVoidArray *urlArray = new nsVoidArray();
+	*array = urlArray;
+	if (nsnull == urlArray)
+	{
+		return(NS_ERROR_OUT_OF_MEMORY);
+	}
+
+        nsXPIDLCString uri;
+	source->GetValue( getter_Copies(uri) );
+	nsAutoString	url(uri);
+
+	// strip off trailing slash, if its a directory
+	PRInt32		len = url.Length();
+	if (len > 0)
+	{
+		if (url[len-1] == '/')
+		{
+			url.Cut(len-1, 1);
+		}
+	}
+	// get basename
+	PRInt32		slash = url.RFind('/');
+	if (slash > 0)
+	{
+		url.Cut(0, slash+1);
+	}
+
+	// XXX To Do: unescape basename
+	
+	nsIRDFLiteral	*literal;
+	gRDFService->GetLiteral(url, &literal);
+	urlArray->AppendElement(literal);
+	return(NS_OK);
+}
+
+
+
 NS_IMETHODIMP
 FTPDataSource::GetTarget(nsIRDFResource *source,
                           nsIRDFResource *property,
@@ -298,12 +338,11 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 
 		if (peq(property, kNC_Name))
 		{
-//			rv = GetName(source, &array);
+			rv = GetName(source, &array);
 		}
 		else if (peq(property, kNC_URL))
 		{
 			rv = GetURL(source, &array);
-			rv = NS_OK;
 		}
 		else if (peq(property, kRDF_type))
 		{
