@@ -49,8 +49,6 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMDocument.h"
-#include "nsIDiskDocument.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -1227,24 +1225,15 @@ nsresult nsMsgCompose::SetBodyModified(PRBool modified)
     rv = m_editor->GetEditor(getter_AddRefs(editor));
     if (NS_SUCCEEDED(rv) && editor)
     {
-      nsCOMPtr<nsIDOMDocument>  theDoc;
-      rv = editor->GetDocument(getter_AddRefs(theDoc));
-      if (NS_FAILED(rv))
-        return rv;
-  
-      nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc, &rv);
-      if (NS_FAILED(rv))
-        return rv;
-
       if (modified)
       {
         PRInt32  modCount = 0;
-        diskDoc->GetModificationCount(&modCount);
+        editor->GetModificationCount(&modCount);
         if (modCount == 0)
-          diskDoc->IncrementModificationCount(1);
+          editor->IncrementModificationCount(1);
       }
       else
-        diskDoc->ResetModificationCount();
+        editor->ResetModificationCount();
     }
   }
 
