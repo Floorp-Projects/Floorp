@@ -154,8 +154,7 @@ Wallet_Confirm(PRUnichar * szMessage)
 
   const nsAutoString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-/*  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval); */
-  res = dialog->Confirm(message.GetUnicode(), &retval);
+  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
   return retval;
 }
 
@@ -310,6 +309,30 @@ SI_SetCharPref(const char * prefname, const char * prefvalue) {
     }
   }
 }
+
+ PRBool
+SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
+  nsresult ret;
+  PRBool prefvalue = defaultvalue;
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->GetBoolPref(prefname, &prefvalue);
+  }
+  return prefvalue;
+}
+
+ void
+SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
+  nsresult ret;
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->SetBoolPref(prefname, prefvalue);
+    if (!NS_FAILED(ret)) {
+      ret = pPrefService->SavePrefFile(); 
+    }
+  }
+}
+
 
 /************************ UTILITIES *****************************************/
 
@@ -970,12 +993,32 @@ ChangePassword()
     return NS_OK;
   }
 
+  /* obscure the data if it is encrypted */
+
+  PRBool encrypted = SI_GetBoolPref("wallet.crypto", PR_TRUE);
+  if (encrypted) {
+    SI_SetBoolPref("wallet.crypto", PR_FALSE);
+  }
+
   /* force the user to supply old database key, for security */
+  nsresult rv = NS_OK;
   WLLT_ExpirePassword();
+  Wallet_InitKeySet(PR_FALSE);
+  if (!Wallet_SetKey(PR_FALSE)) {
+    rv = NS_ERROR_FAILURE;
+  }
 
   /* establish new key */
-  Wallet_SetKey(PR_TRUE);
-  return NS_OK;
+  if (!Wallet_SetKey(PR_TRUE)) {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  if (encrypted) {
+    SI_SetBoolPref("wallet.crypto", PR_TRUE);
+  }
+
+  return rv;
+
 }
 
 /* void logout(); */
