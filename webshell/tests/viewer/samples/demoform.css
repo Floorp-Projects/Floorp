@@ -16,7 +16,7 @@ input[type="radio"] {
  -moz-border-radius:0;
 }
 
-:-moz-radio {
+::-moz-radio {
  width:8px;
  width:8px;
  background-color:yellow;
@@ -47,7 +47,7 @@ select {
   background-color:#0000cc;
 }
 
-:-moz-dropdown-list {
+::-moz-dropdown-list {
   background-color:#0000cc;
   border:4px inset green;
 }

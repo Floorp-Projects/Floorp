@@ -110,19 +110,19 @@ titledbutton[pseudoclass~="active"]:-moz-outline {
    border : 1px solid black;
 }
  
-titledbutton:-moz-focus-inner {
+titledbutton::-moz-focus-inner {
 }
 
-titledbutton:-moz-focus-outer {
+titledbutton::-moz-focus-outer {
 }
 
 titledbutton[pseudoclass~="focus"] {
 }
 
-titledbutton[pseudoclass~="focus"]:-moz-focus-inner {
+titledbutton[pseudoclass~="focus"]::-moz-focus-inner {
 }
 
-titledbutton[pseudoclass~="focus"]:-moz-focus-outer {
+titledbutton[pseudoclass~="focus"]::-moz-focus-outer {
 }
 
 titledbutton[pseudoclass~="disabled"] {

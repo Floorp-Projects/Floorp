@@ -2509,16 +2509,16 @@ nsresult PresShell::SetPrefFocusRules(void)
         NS_ENSURE_SUCCESS(result, result);
         if (focusRingWidth != 1) {
           // If the focus ring width is different from the default, fix buttons with rings
-          strRule.Assign(NS_LITERAL_STRING("button:-moz-focus-inner, input[type=\"reset\"]:-moz-focus-inner,"));
-          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:-moz-focus-inner, "));
-          strRule.Append(NS_LITERAL_STRING("input[type=\"submit\"]:-moz-focus-inner { padding: 1px 2px 1px 2px; border: "));
+          strRule.Assign(NS_LITERAL_STRING("button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner,"));
+          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]::-moz-focus-inner, "));
+          strRule.Append(NS_LITERAL_STRING("input[type=\"submit\"]::-moz-focus-inner { padding: 1px 2px 1px 2px; border: "));
           strRule.AppendInt(focusRingWidth);
           strRule.Append(NS_LITERAL_STRING("px dotted transparent !important; } "));
           result = sheet->InsertRule(strRule,0,&index);
           NS_ENSURE_SUCCESS(result, result);
           
-          strRule.Assign(NS_LITERAL_STRING("button:focus:-moz-focus-inner, input[type=\"reset\"]:focus:-moz-focus-inner,"));
-          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:focus:-moz-focus-inner, input[type=\"submit\"]:focus:-moz-focus-inner {"));
+          strRule.Assign(NS_LITERAL_STRING("button:focus::-moz-focus-inner, input[type=\"reset\"]:focus::-moz-focus-inner,"));
+          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:focus::-moz-focus-inner, input[type=\"submit\"]:focus::-moz-focus-inner {"));
           strRule.Append(NS_LITERAL_STRING("border-color: ButtonText !important; }"));
           result = sheet->InsertRule(strRule,0,&index);
         }
@@ -4825,8 +4825,8 @@ PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnony
       oldAnonymousElements->Count(&count);
       
       while (PRInt32(--count) >= 0) {
-        nsCOMPtr<nsISupports> isupports( getter_AddRefs(oldAnonymousElements->ElementAt(count)) );
-        nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+        nsCOMPtr<nsIContent> content = do_QueryElementAt(oldAnonymousElements,
+                                                         count);
         NS_ASSERTION(content != nsnull, "not an nsIContent");
         if (! content)
           continue;
@@ -4865,8 +4865,7 @@ ClearDocumentEnumerator(nsHashKey* aKey, void* aData, void* aClosure)
   PRUint32 count;
   anonymousElements->Count(&count);
   while (PRInt32(--count) >= 0) {
-    nsCOMPtr<nsISupports> isupports( getter_AddRefs(anonymousElements->ElementAt(count)) );
-    nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+    nsCOMPtr<nsIContent> content = do_QueryElementAt(anonymousElements, count);
     NS_ASSERTION(content != nsnull, "not an nsIContent");
     if (! content)
       continue;

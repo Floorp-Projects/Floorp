@@ -42,7 +42,7 @@
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
-*|*:-moz-fieldset-content {
+*|*::-moz-fieldset-content {
   display: block;
   height: inherit;   /* Need this so percentage heights of kids work right */
 }
@@ -119,7 +119,7 @@ textarea > scrollbar {
   cursor: default;
 }
 
-*|*:-moz-singleline-textcontrol-frame {
+*|*::-moz-singleline-textcontrol-frame {
   overflow: hidden;
   white-space: nowrap;
   background-color: inherit;
@@ -179,12 +179,12 @@ select[size] {
    -moz-appearance: listbox;
 }
 
-select:-moz-dummy-option { 
+select::-moz-dummy-option { 
   visibility: hidden; 
   content: "XX"; /* demo 8, edge case test 1 */
 }
 
-*|*:-moz-display-comboboxcontrol-frame {
+*|*::-moz-display-comboboxcontrol-frame {
   overflow: hidden;
   /* This top/bottom padding plus the combobox top/bottom border need to
      add up to the top/bottom borderpadding of text inputs and buttons */ 
@@ -234,7 +234,7 @@ optgroup:before {
   content: attr(label);
 }
 
-*|*:-moz-dropdown-list {
+*|*::-moz-dropdown-list {
   z-index: 2147483647;
   background-color: inherit;
   -moz-user-select: none;
@@ -380,7 +380,7 @@ input[type="radio"]:hover:active {
   border-style: inset !important;
 }
 
-*|*:-moz-radio {
+*|*::-moz-radio {
   width: 4px;
   height: 4px;
   background-color: -moz-FieldText ! important;
@@ -419,7 +419,7 @@ button {
   white-space: normal;  
 }
 
-*|*:-moz-button-content {
+*|*::-moz-button-content {
   display: block;
   text-align: center;
 }
@@ -432,20 +432,20 @@ input[type="submit"]:active:hover {
   border-style: inset;
 }
 
-button:-moz-focus-inner,
-input[type="reset"]:-moz-focus-inner,
-input[type="button"]:-moz-focus-inner,
-input[type="submit"]:-moz-focus-inner,
-input[type="file"] > input[type="button"]:-moz-focus-inner {
+button::-moz-focus-inner,
+input[type="reset"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+input[type="file"] > input[type="button"]::-moz-focus-inner {
   padding: 0px 2px 0px 2px;
   border: 1px dotted transparent;
 }
 
-button:focus:-moz-focus-inner,
-input[type="reset"]:focus:-moz-focus-inner,
-input[type="button"]:focus:-moz-focus-inner,
-input[type="submit"]:focus:-moz-focus-inner,
-input[type="file"] > input[type="button"]:focus:-moz-focus-inner {
+button:focus::-moz-focus-inner,
+input[type="reset"]:focus::-moz-focus-inner,
+input[type="button"]:focus::-moz-focus-inner,
+input[type="submit"]:focus::-moz-focus-inner,
+input[type="file"] > input[type="button"]:focus::-moz-focus-inner {
   border-color: ButtonText;
 }
 

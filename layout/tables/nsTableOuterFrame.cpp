@@ -409,12 +409,11 @@ nsTableOuterFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
   // data by giving the table frame the style context associated with
   // the table content node and creating a style context for the outer
   // frame that is a *child* of the table frame's style context,
-  // matching the :table-outer (should be :-moz-table-outer!)
-  // pseudo-element.  html.css has a rule that causes that
-  // pseudo-element (and thus the outer table) to inherit *some* style
-  // properties from the table frame.  The children of the table inherit
-  // directly from the inner table, and the outer table's style context
-  // is a leaf.
+  // matching the ::-moz-table-outer pseudo-element.  html.css has a
+  // rule that causes that pseudo-element (and thus the outer table)
+  // to inherit *some* style properties from the table frame.  The
+  // children of the table inherit directly from the inner table, and
+  // the outer table's style context is a leaf.
 
   if (!mInnerTableFrame) {
     *aProviderFrame = this;
