@@ -309,6 +309,7 @@ nsFtpConnectionThread::Process() {
             case FTP_COMPLETE:
                 {
                 PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - COMPLETE\n", mURL.get()));
+
                 if (NS_SUCCEEDED(mInternalError)) {
                     // we only want to cache the connection if things are ok.
                     // push through all of the pertinent state into the cache entry;
@@ -881,6 +882,8 @@ nsFtpConnectionThread::S_pass() {
     PRUint32 bytes;
     nsCAutoString passwordStr("PASS ");
 
+    mResponseMsg = "";
+
     if (mAnonymous) {
         passwordStr.Append("mozilla@");
     } else {
@@ -946,6 +949,27 @@ nsFtpConnectionThread::R_pass() {
         // note: the password was successful, and it's stored in mPassword
         mRetryPass = PR_FALSE;
         return FTP_S_USER;
+    } else if (mResponseCode == 530) {
+        // user limit reached
+        if (!mPrompter) return FTP_ERROR;
+        nsresult rv;
+        NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                        kProxyObjectManagerCID, &rv);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        nsCOMPtr<nsIPrompt> proxyprompter;
+        rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
+                    NS_GET_IID(nsIPrompt), mPrompter,
+                    PROXY_SYNC, getter_AddRefs(proxyprompter));
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        nsAutoString    title;
+        title.AssignWithConversion("Error");        // localization
+        nsAutoString    text;
+        text.AssignWithConversion(mResponseMsg);
+
+        rv = proxyprompter->Alert(title.GetUnicode(), text.GetUnicode());
+        return FTP_ERROR;
     } else {
         // kick back out to S_pass() and ask the user again.
         nsresult rv = NS_OK;
@@ -998,7 +1022,6 @@ nsFtpConnectionThread::R_syst() {
 
         mConn->mServerType = mServerType;
         mConn->mList = mList;
-        return FindActionState();
     }
     return FTP_S_PWD;
 }
@@ -1041,7 +1064,22 @@ nsFtpConnectionThread::R_pwd() {
             // quoted path
             nsCAutoString tmpPath;
             mResponseMsg.Mid(tmpPath, beginQ+1, (endQ-beginQ-1));
+
+            if (tmpPath.Length() <= 1)
+            {
+                tmpPath = "";
+            }
+            tmpPath.Append(mPath);
+
+            // ensure FTP directory URLs end with '/'    
+            if (tmpPath.Last() != '/')
+            {
+                tmpPath.Append("/");
+            }
+
             mResponseMsg = tmpPath;
+            mURL->SetPath(tmpPath);
+            mPath = tmpPath;            
         }
     } 
 
@@ -1094,7 +1132,7 @@ nsFtpConnectionThread::S_cwd() {
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), cwdStr.GetBuffer()));
 
-    cwdStr.Mid(mCwdAttempt, 3, cwdStr.Length() - 4);
+    cwdStr.Mid(mCwdAttempt, 4, cwdStr.Length() - 6);
 
     return mCOutStream->Write(cwdStr.GetBuffer(), cwdStr.Length(), &bytes);
 }
@@ -1104,6 +1142,9 @@ nsFtpConnectionThread::R_cwd() {
     FTP_STATE state = FTP_ERROR;
     if (mResponseCode/100 == 2) {
         mCwd = mCwdAttempt;
+
+        // update
+        mURL->SetPath(mCwd);
 
         nsresult rv = mChannel->SetContentType("application/http-index-format");
         if (NS_FAILED(rv)) return FTP_ERROR;
