@@ -1408,27 +1408,29 @@ nsXBLPrototypeBinding::NotifyBoundElements()
       nsCOMPtr<nsIDocument> doc;
       content->GetDocument(*getter_AddRefs(doc));
     
-      // Flush first
-      doc->FlushPendingNotifications();
+      if (doc) {
+        // Flush first
+        doc->FlushPendingNotifications();
 
-      // Notify
-      nsCOMPtr<nsIContent> parent;
-      content->GetParent(*getter_AddRefs(parent));
-      PRInt32 index = 0;
-      if (parent)
-        parent->IndexOf(content, index);
+        // Notify
+        nsCOMPtr<nsIContent> parent;
+        content->GetParent(*getter_AddRefs(parent));
+        PRInt32 index = 0;
+        if (parent)
+          parent->IndexOf(content, index);
         
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
-      if (shell) {
-        nsIFrame* childFrame;
-        shell->GetPrimaryFrameFor(content, &childFrame);
-        nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
-        if (!childFrame)
-          obs->ContentInserted(doc, parent, content, index);
-      }
+        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+        if (shell) {
+          nsIFrame* childFrame;
+          shell->GetPrimaryFrameFor(content, &childFrame);
+          nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
+          if (!childFrame)
+            obs->ContentInserted(doc, parent, content, index);
+        }
 
-      // Flush again
-      doc->FlushPendingNotifications();
+        // Flush again
+        doc->FlushPendingNotifications();
+      }
     }
   }
 

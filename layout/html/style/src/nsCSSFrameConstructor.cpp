@@ -8495,6 +8495,16 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
 
     if (parentFrame) {
+      // See if we have an XBL insertion point.  If so, then see if the
+      // frame for it has been built yet.  If it hasn't been built yet,
+      // then we just bail.
+      nsCOMPtr<nsIFrameManager> frameManager;
+      shell->GetFrameManager(getter_AddRefs(frameManager));
+      nsIFrame* insertionPoint = nsnull;
+      frameManager->GetInsertionPoint(shell, parentFrame, aChild, &insertionPoint);
+      if (!insertionPoint)
+        return NS_OK; // Don't build the frames.
+
       // Find the frame that precedes the insertion point.
       nsIFrame* prevSibling = (aIndexInContainer == -1) ? 
                                FindPreviousAnonymousSibling(shell, aContainer, aChild) :

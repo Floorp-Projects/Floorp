@@ -4456,7 +4456,8 @@ PresShell::UnsuppressAndInvalidate()
   mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
   nsCOMPtr<nsIFocusController> focusController;
-  ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+  if (ourWindow)
+    ourWindow->GetRootFocusController(getter_AddRefs(focusController));
   if (focusController)
     // Suppress focus.  The act of tearing down the old content viewer
     // causes us to blur incorrectly.
@@ -4489,7 +4490,8 @@ PresShell::UnsuppressAndInvalidate()
     ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
   }
 
-  CheckForFocus(ourWindow, focusController, mDocument);
+  if (ourWindow)
+    CheckForFocus(ourWindow, focusController, mDocument);
 
   if (focusController) // Unsuppress now that we've shown the new window and focused it.
     focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
