@@ -18,5 +18,5 @@ help.jar:
 	skin/help/throbber-busy.gif                     (skin/throbber-busy.gif)
 	skin/help/sidebarBindings.xml                   (skin/sidebarBindings.xml)
 	skin/help/zoomImg.png                           (skin/zoomImg.png)
-        locale/en-US/help/contents.rdf                  (locale/contents.rdf)
-        locale/en-US/help/help.properties               (locale/help.properties)
+        locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
+        locale/en-US/help/help.properties               (locale/en-US/help.properties)
