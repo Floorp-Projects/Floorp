@@ -39,6 +39,8 @@
 
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserFind.h"
+#include "nsIWebBrowserPrint.h"
+#include "nsIPrintSettings.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
@@ -528,8 +530,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     }
 }
 
-#if 0 // convenience
-
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativePrint
@@ -539,10 +539,33 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 (JNIEnv * env, jobject obj, jint nativeBCPtr)
 {
     NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-    if (nativeBrowserControl->initComplete) {
-        wsPrintEvent * actionEvent = new wsPrintEvent(nativeBrowserControl);
-        PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(nativeBrowserControl, event);
+    nsresult rv;
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIPrintSettings> printSettings;
+
+    // get the web browser
+    rv = nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    if (NS_FAILED(rv) || !webBrowser) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't get WebBrowser");
+    }
+    
+    // get the print interface
+    nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
+    if (!print) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't get nsIWebBrowserPrint");
+    }
+
+    rv = print->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+    if (NS_FAILED(rv) || !printSettings) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't get printSettings");
+
+    }
+    // XXX kyle: we have to disable the Print Progress dialog until we are able to show the java native dialog.
+    printSettings->SetShowPrintProgress(PR_FALSE);
+    rv = print->Print(printSettings, nsnull);
+    
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't print");
     }
 }
 
@@ -555,11 +578,40 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 (JNIEnv * env, jobject obj, jint nativeBCPtr, jboolean preview)
 {
     NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-    if (nativeBrowserControl->initComplete) {
-        wsPrintPreviewEvent * actionEvent = new wsPrintPreviewEvent(nativeBrowserControl, preview);
-        PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(nativeBrowserControl, event);
+    nsresult rv;
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIPrintSettings> printSettings;
+
+    // get the web browser
+    rv = nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    if (NS_FAILED(rv) || !webBrowser) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't get WebBrowser");
     }
+    
+    // get the print interface
+    nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
+    if (!print) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't get nsIWebBrowserPrint");
+    }
+
+    rv = print->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+    if (NS_FAILED(rv) || !printSettings) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't get printSettings");
+
+    }
+    // XXX kyle: we have to disable the Print Progress dialog by now because we are unable to show the java native dialog yet.
+    printSettings->SetShowPrintProgress(PR_FALSE);
+    printSettings->SetShowPrintProgress(PR_FALSE);
+    if (preview) {
+        rv = print->PrintPreview(printSettings, nsnull, nsnull);
+    }
+    else {
+        rv = print->ExitPrintPreview();
+    }
+    
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativePrint: Can't print");
+    }
+
 }
 
-# endif // if 0

@@ -303,20 +303,22 @@ public void selectAll() {
 
 public void print()
 {
-    getWrapperFactory().verifyInitialized();
-
-    synchronized(getBrowserControl()) {
-        nativePrint(getNativeBrowserControl());
-    }
+    NativeEventThread.instance.pushRunnable(new Runnable() {
+	    public void run() {
+		nativePrint(CurrentPageImpl.this.getNativeBrowserControl());
+	    }
+	});
 }
 
-public void printPreview(boolean preview)
+public void printPreview(boolean pre)
 {
-    getWrapperFactory().verifyInitialized();
-
-    synchronized(getBrowserControl()) {
-        nativePrintPreview(getNativeBrowserControl(), preview);
-    }
+    final boolean preview = pre;
+    NativeEventThread.instance.pushRunnable(new Runnable() {
+	    public void run() {
+		nativePrintPreview(CurrentPageImpl.this.getNativeBrowserControl(), 
+				   preview);
+	    }
+	});
 }
 
 //

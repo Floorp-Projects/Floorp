@@ -1,5 +1,5 @@
 /*
- * $Id: CurrentPageTest.java,v 1.8 2005/02/14 02:16:18 edburns%acm.org Exp $
+ * $Id: CurrentPageTest.java,v 1.9 2005/02/14 02:37:51 edburns%acm.org Exp $
  */
 
 /* 
@@ -376,6 +376,122 @@ public class CurrentPageTest extends WebclientTestCase implements ClipboardOwner
 	selection = currentPage.getSelection();
 	assertEquals(0, selection.toString().length());
 
+	
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
+    public void NoIdeaHowToTestPrintingUsingJunit() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentLoadListenerImpl listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	currentPage = (CurrentPage2) 
+	  firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
+		public void doEndCheck() {
+		    CurrentPageTest.keepWaiting = false;
+		}
+	    });
+	
+	Thread.currentThread().sleep(3000);
+	
+
+	//
+	// load four files.
+	//
+	CurrentPageTest.keepWaiting = true;
+
+	nav.loadURL("http://localhost:5243/HistoryTest0.html");
+	
+	// keep waiting until the previous load completes
+	while (CurrentPageTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	currentPage.print();
+
+	Thread.currentThread().sleep(10000);
+	
+	
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
+    public void testPrintPreview() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentLoadListenerImpl listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	currentPage = (CurrentPage2) 
+	  firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
+		public void doEndCheck() {
+		    CurrentPageTest.keepWaiting = false;
+		}
+	    });
+	
+	Thread.currentThread().sleep(3000);
+	
+
+	//
+	// load four files.
+	//
+	CurrentPageTest.keepWaiting = true;
+
+	nav.loadURL("http://localhost:5243/HistoryTest0.html");
+	
+	// keep waiting until the previous load completes
+	while (CurrentPageTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	currentPage.printPreview(true);
+
+	Thread.currentThread().sleep(3000);
+
+	currentPage.printPreview(false);
+	
 	
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
