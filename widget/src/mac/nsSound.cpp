@@ -31,6 +31,8 @@
 #include "nsNetUtil.h"
 #include "prmem.h"
 
+#include <QuickTimeComponents.h>
+
 NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
@@ -86,14 +88,12 @@ NS_METHOD nsSound::Beep()
 
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
-#if 0
   nsresult rv;
   nsIInputStream *inputStream;
   PRUint32 totalLen = 0;
   PRUint32 len;
 
   if ( mPlayBuf ) {
-          ::PlaySound(nsnull, nsnull, 0);       // stop what might be playing so we can free
           PR_Free( this->mPlayBuf );
           this->mPlayBuf = (char *) NULL;
   }
@@ -123,11 +123,48 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
         }
   } while (len > 0);
   if ( this->mPlayBuf != (char *) NULL )
-/* XXX call something similar to Win32 PlaySound() here */
-        ::PlaySound(this->mPlayBuf, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
+        PlaySound(this->mPlayBuf, totalLen);
+        
   NS_IF_RELEASE( inputStream );
   return NS_OK;
-#endif
-  NS_NOTYETIMPLEMENTED("nsSound::Play");
-  return NS_OK;
+}
+
+void nsSound::PlaySound(Ptr waveDataPtr, long waveDataSize)
+{
+  Handle                  myHandle, dataRef = nil;
+  Movie                   movie;
+  MovieImportComponent    miComponent;
+  Track                   targetTrack = nil;
+  TimeValue               addedDuration = 0;
+  long                    outFlags = 0;
+  OSErr                   err;
+  ComponentResult         result;
+
+  myHandle = NewHandleClear((Size)waveDataSize);
+  BlockMove(waveDataPtr, *myHandle, waveDataSize);
+
+  err = PtrToHand(&myHandle, &dataRef, sizeof(Handle));
+
+  miComponent = OpenDefaultComponent(MovieImportType, kQTFileTypeWave);
+  movie = NewMovie(0);
+
+  result = MovieImportDataRef(miComponent,
+                              dataRef,
+                              HandleDataHandlerSubType,
+                              movie,
+                              nil,
+                              &targetTrack,
+                              nil,
+                              &addedDuration,
+                              movieImportCreateTrack,
+                              &outFlags);
+
+  SetMovieVolume(movie, kFullVolume);
+  GoToBeginningOfMovie(movie);
+  StartMovie(movie);
+  while (!IsMovieDone(movie))
+    {
+    MoviesTask(movie, 0);
+    err = GetMoviesError();
+    }
 }
