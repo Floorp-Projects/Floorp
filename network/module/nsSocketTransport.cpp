@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPComCIID.h"
 
+#include "netutils.h"
 #include "mktcp.h"
 #include "sockstub.h"
 
