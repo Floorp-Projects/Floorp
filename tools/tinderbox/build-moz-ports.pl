@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.25 $';
+$Version = '$Revision: 1.26 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -109,12 +109,20 @@ sub SetupPath {
     }
 
     if ( $OS eq 'IRIX' ) {
-	$ENV{'PATH'} = '/opt/bin:' . $ENV{'PATH'};
-	$ENV{'LD_LIBRARY_PATH'} .= ':/opt/lib';
+	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/opt/bin:/builds/local/bin:' . $ENV{'PATH'};
+	$ENV{'LD_LIBRARY_PATH'} .= ':/opt/lib:/builds/local/lib';
 	$ENV{'LD_LIBRARYN32_PATH'} = $ENV{'LD_LIBRARY_PATH'};
-	$ConfigureEnvArgs = 'CC=cc CXX=CC CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
+	if ( $OSVer eq '5.2' ) {
+	    $ConfigureEnvArgs = 'CC=cc CXX="hcpp CC"';
+	} else {
+	    $ConfigureEnvArgs = 'CC=cc CXX=CC';
+	}
 	$Compiler = 'cc/CC';
-	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+	$NSPRArgs .= 'NS_USE_NATIVE=1';
+	if ( $OSVerMajor eq '6' ) {
+	    $NSPRArgs .= ' USE_PTHREADS=1';
+	    $ConfigureEnvArgs .= ' CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
+	}
     }
 
     if ( $OS eq 'NetBSD' ) {
@@ -123,6 +131,13 @@ sub SetupPath {
 	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	$Compiler = 'egcc';
 	$mail = '/usr/bin/mail';
+    }
+
+    if ( $OS eq 'OpenServer' ) {
+	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/usr/local/bin:' . $ENV{'PATH'};
+	$ConfigureEnvArgs = 'CC="cc -belf" CXX="hcpp CC -belf +w" LIBS="-lPW"';
+	$Compiler = 'cc/CC (wrapped)';
+	$NSPRArgs .= 'NS_USE_NATIVE=1';
     }
 
     if ( $OS eq 'OSF1' ) {
@@ -139,7 +154,7 @@ sub SetupPath {
 	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
 	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
-	$ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX" LIBS="-lunix" CONFIG_SHELL="/usr/local/bin/bash"';
+	$ConfigureEnvArgs = 'CC=cc CXX=cc LIBS="-lunix" CONFIG_SHELL="/usr/local/bin/bash"';
 	$Compiler = 'cc';
 	$ShellOverride = '/usr/local/bin/bash';
 	$mail = '/usr/bin/sendmail';
@@ -224,7 +239,7 @@ sub GetSystemInfo {
     }
 
     if ( $OS eq 'SCO_SV' ) {
-	$OS = 'SCOOS';
+	$OS = 'OpenServer';
 	$OSVer = '5.0';
     }
 
@@ -261,13 +276,14 @@ sub GetSystemInfo {
 
     if ( $OS eq 'IRIX' ) {
 	$ObjDir = 'obj-mips-sgi-irix' . $OSVer;
+	$OSVerMajor = substr($OSVer, 0, 1);
     }
 
     if ( $OS eq 'Linux' ) {
 	if ( $CPU eq 'alpha' || $CPU eq 'sparc' ) {
 	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
-	} elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
+	} elsif ( $CPU eq 'arm32' || $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
 	    $ObjDir = 'obj-arm-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer;
 	    # This is here because I ran out of space on my netwinder. --briano.
@@ -282,8 +298,13 @@ sub GetSystemInfo {
     }
 
     if ( $OS eq 'NetBSD' ) {
-	$ObjDir = 'obj-' . $CPU . '-unknown-netbsd' . $OSVer;
-	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+	if ( $CPU eq 'arm32' || $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
+	    $ObjDir = 'obj-arm-unknown-netbsd1.4.';
+	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer;
+	} else {
+	    $ObjDir = 'obj-' . $CPU . '-unknown-netbsd' . $OSVer;
+	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+	}
     }
 
     if ( $OS eq 'OSF1' ) {
