@@ -52,13 +52,10 @@ my $define;
 
 if ($^O eq "MSWin32") {
     $define = "-DXP_PC";
+    $extras{OBJECT} = '$(BASEEXT)$(OBJ_EXT) jsperl.obj';
 } else {
     $define = '-DXP_UNIX';
 }
-$extras{OBJECT} = '$(BASEEXT)$(OBJ_EXT) jsperl.obj';
-
-
-print "+++> $libpath\n";
 
 WriteMakefile(NAME => 'JS',
 	      DEFINE => $define,
