@@ -215,16 +215,22 @@ CF_EXPORT Boolean CFURLGetFSRef(CFURLRef url, FSRef *fsRef);
 
 static CFBundleRef getPluginBundle()
 {
+#ifdef DEBUG
     printf("### MRJPlugin:  getPluginBundle() here. ###\n");
+#endif
     CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.netscape.MRJPlugin"));
     if (bundle) {
+#ifdef DEBUG
         printf("### MRJPlugin:  CFBundleGetBundleWithIdentifier() succeeded. ###\n");
+#endif
         // initialize thePluginSpec for later use. open our resource fork as well?
         CFURLRef url = CFBundleCopyExecutableURL(bundle);
         if (url) {
             FSRef ref;
             if (CFURLGetFSRef(url, &ref)) {
+#ifdef DEBUG
                 printf("### MRJPlugin:  CFURLGetFSRef() succeeded. ###\n");
+#endif
                 FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &thePluginSpec, NULL);
 
                 // Open plugin's resource fork for read-only access. is this really necessary?
