@@ -1123,9 +1123,70 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const PRUnichar* aString, PRUint3
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  const nscoord* aSpacing)
+NS_IMETHODIMP
+nsRenderingContextBeOS::GetTextDimensions(const char*       aString,
+                                          PRUint32          aLength,
+                                          nsTextDimensions& aDimensions)
+{
+  if (mFontMetrics) {
+    mFontMetrics->GetMaxAscent(aDimensions.ascent);
+    mFontMetrics->GetMaxDescent(aDimensions.descent);
+  }
+  return GetWidth(aString, aLength, aDimensions.width);
+}
+
+NS_IMETHODIMP
+nsRenderingContextBeOS::GetTextDimensions(const PRUnichar*  aString,
+                                          PRUint32          aLength,
+                                          nsTextDimensions& aDimensions,
+                                          PRInt32*          aFontID)
+{
+  if (mFontMetrics) {
+    mFontMetrics->GetMaxAscent(aDimensions.ascent);
+    mFontMetrics->GetMaxDescent(aDimensions.descent);
+  }
+  return GetWidth(aString, aLength, aDimensions.width, aFontID);
+}
+
+NS_IMETHODIMP
+nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   const nscoord* aSpacing)
+{
+  nscoord y = 0;
+  if (mFontMetrics) {
+    mFontMetrics->GetMaxAscent(y);
+  }
+  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
+}
+
+NS_IMETHODIMP 
+nsRenderingContextBeOS::DrawString(const PRUnichar* aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   PRInt32 aFontID,
+                                   const nscoord* aSpacing)
+{
+  nscoord y = 0;
+  if (mFontMetrics) {
+    mFontMetrics->GetMaxAscent(y);
+  }
+  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
+}
+
+NS_IMETHODIMP
+nsRenderingContextBeOS::DrawString(const nsString& aString,
+                                   nscoord aX, nscoord aY,
+                                   PRInt32 aFontID,
+                                   const nscoord* aSpacing)
+{
+  return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, 
+                    aSpacing);
+}
+
+NS_IMETHODIMP
+nsRenderingContextBeOS::DrawString2(const char *aString, PRUint32 aLength,
+                                    nscoord aX, nscoord aY,
+                                    const nscoord* aSpacing) 
 {
   if (0 != aLength) {
     if (mTranMatrix == NULL) return NS_ERROR_FAILURE;
@@ -1135,11 +1196,14 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
     nscoord x = aX;
     nscoord y = aY;
 
-	// Substract xFontStruct ascent since drawing specifies baseline
+#if 0
+    // XXX - doesn't seem to be needed right now but leaving just incase -cls
+    // Substract xFontStruct ascent since drawing specifies baseline
     if (mFontMetrics) {
-		mFontMetrics->GetMaxAscent(y);
-		y += aY;
-	}
+      mFontMetrics->GetMaxAscent(y);
+      y += aY;
+    }
+#endif
 
     UpdateView();
 
@@ -1177,10 +1241,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const PRUnichar* aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
+NS_IMETHODIMP
+nsRenderingContextBeOS::DrawString2(const PRUnichar *aString, PRUint32 aLength,
+                                    nscoord aX, nscoord aY,
+                                    PRInt32 aFontID,
+                                    const nscoord* aSpacing)
 {
 	uint8 *utf8str = new uint8 [aLength * 4 + 1];	// max UTF-8 string length
 	uint8 *utf8ptr = utf8str;
@@ -1191,17 +1256,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const PRUnichar* aString, PRUin
   *utf8ptr = '\0';
   utf8str_len = strlen(utf8str);
   
-  DrawString((char *)utf8str, utf8str_len, aX, aY, aSpacing);
+  DrawString2((char *)utf8str, utf8str_len, aX, aY, aSpacing);
 	delete [] utf8str;
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const nsString& aString,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
-{
-	return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, 
