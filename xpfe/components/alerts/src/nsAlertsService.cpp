@@ -62,9 +62,9 @@ nsAlertsService::nsAlertsService()
 nsAlertsService::~nsAlertsService()
 {}
 
-NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, const PRUnichar * aAlertTitle, 
-                                                     const PRUnichar * aAlertText, PRBool aAlertTextClickable,
-                                                     const PRUnichar * aAlertCookie,
+NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
+                                                     const nsAString & aAlertText, PRBool aAlertTextClickable,
+                                                     const nsAString & aAlertCookie,
                                                      nsIObserver * aAlertListener)
 {
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -76,22 +76,22 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create scriptable versions of our strings that we can store in our nsISupportsArray....
-  nsCOMPtr<nsISupportsCString> scriptableImageUrl (do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> scriptableImageUrl (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableImageUrl, NS_ERROR_FAILURE);
 
-  scriptableImageUrl->SetData(nsDependentCString(aImageUrl));
+  scriptableImageUrl->SetData(aImageUrl);
   argsArray->AppendElement(scriptableImageUrl);
 
   nsCOMPtr<nsISupportsString> scriptableAlertTitle (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertTitle, NS_ERROR_FAILURE);
 
-  scriptableAlertTitle->SetData(nsDependentString(aAlertTitle));
+  scriptableAlertTitle->SetData(aAlertTitle);
   argsArray->AppendElement(scriptableAlertTitle);
 
   nsCOMPtr<nsISupportsString> scriptableAlertText (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertText, NS_ERROR_FAILURE);
 
-  scriptableAlertText->SetData(nsDependentString(aAlertText));
+  scriptableAlertText->SetData(aAlertText);
   argsArray->AppendElement(scriptableAlertText);
 
   nsCOMPtr<nsISupportsPRBool> scriptableIsClickable (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID));
@@ -103,7 +103,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
   nsCOMPtr<nsISupportsString> scriptableAlertCookie (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertCookie, NS_ERROR_FAILURE);
 
-  scriptableAlertCookie->SetData(nsDependentString(aAlertCookie));
+  scriptableAlertCookie->SetData(aAlertCookie);
   argsArray->AppendElement(scriptableAlertCookie);
 
   if (aAlertListener)

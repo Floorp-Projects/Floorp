@@ -55,9 +55,9 @@ interface nsIAlertsService : nsISupports
                          alert goes away, or "alertclickcallback" when the text is clicked. Data
                          is aAlertCookie.
    */
-   void showAlertNotification(in string aImageUrl, in wstring aAlertTitle, 
-                              in wstring aAlertText, in boolean alertTextClickable,
-                              in wstring aAlertCookie,
+   void showAlertNotification(in AString aImageUrl, in AString aAlertTitle, 
+                              in AString aAlertText, in boolean alertTextClickable,
+                              in AString aAlertCookie,
                               in nsIObserver aAlertListener );
 };
 
