@@ -148,6 +148,12 @@ PRBool nsCalTimeContext::GetHorizontal()
   return mHorizontal;
 }
 
+nsresult nsCalTimeContext::SetHorizontal(PRBool aHorizontal)
+{
+  mHorizontal = aHorizontal;
+  return NS_OK;
+}
+
 nsIDateTime * nsCalTimeContext::GetDate()
 {
   return (mDate);
@@ -640,7 +646,7 @@ PRUint32 nsCalTimeContext::GetLastVisibleTime(nsCalPeriodFormat aFormat)
  * visual notification to all observers of us ... 
  */
 
-nsresult nsCalTimeContext::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
+nsEventStatus nsCalTimeContext::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
 
   /*
@@ -655,10 +661,10 @@ nsresult nsCalTimeContext::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aC
 
   Notify(aCommand);
 
-  return NS_OK;
+  return (nsEventStatus_eIgnore);
 }
 
-nsresult nsCalTimeContext::Action(nsIXPFCCommand * aCommand)
+nsEventStatus nsCalTimeContext::Action(nsIXPFCCommand * aCommand)
 {
   nsCalDurationCommand * duration_command  = nsnull;
   nsCalDayListCommand * daylist_command  = nsnull;
@@ -685,10 +691,10 @@ nsresult nsCalTimeContext::Action(nsIXPFCCommand * aCommand)
     return (HandleDayListCommand(daylist_command));
 
 
-  return res;
+  return nsEventStatus_eIgnore;
 }
 
-nsresult nsCalTimeContext::HandleDayListCommand(nsCalDayListCommand * aDayListCommand)
+nsEventStatus nsCalTimeContext::HandleDayListCommand(nsCalDayListCommand * aDayListCommand)
 {
   /*
    * Handle the DayList here...
@@ -704,7 +710,7 @@ nsresult nsCalTimeContext::HandleDayListCommand(nsCalDayListCommand * aDayListCo
   res = aDayListCommand->CreateIterator(&iterator);
 
   if (NS_OK != res)
-    return res;
+    return nsEventStatus_eIgnore;
 
   iterator->Init();
 
@@ -719,17 +725,17 @@ nsresult nsCalTimeContext::HandleDayListCommand(nsCalDayListCommand * aDayListCo
   NS_IF_RELEASE(iterator);
   NS_IF_RELEASE(aDayListCommand);
 
-  return NS_OK;
+  return nsEventStatus_eIgnore;
 }
 
-nsresult nsCalTimeContext::HandleDurationCommand(nsCalDurationCommand * aDurationCommand)
+nsEventStatus nsCalTimeContext::HandleDurationCommand(nsCalDurationCommand * aDurationCommand)
 {
   nsDuration * dtDuration;
 
   dtDuration = aDurationCommand->GetDuration();
 
   if (nsnull == dtDuration)
-    return NS_OK;
+    return nsEventStatus_eIgnore;
 
   switch (aDurationCommand->GetPeriodFormat())
   {
@@ -781,7 +787,7 @@ nsresult nsCalTimeContext::HandleDurationCommand(nsCalDurationCommand * aDuratio
 
   NS_IF_RELEASE(aDurationCommand);
 
-  return NS_OK;
+  return nsEventStatus_eIgnore;
 }
 
 nsresult nsCalTimeContext :: Attach(nsIXPFCObserver * aObserver)

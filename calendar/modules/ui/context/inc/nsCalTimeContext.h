@@ -95,6 +95,7 @@ public:
                                );
 
   NS_IMETHOD_(PRBool) GetHorizontal();
+  NS_IMETHOD          SetHorizontal(PRBool aHorizontal);
 
   NS_IMETHOD  SetPeriodFormat(nsCalPeriodFormat aPeriodFormat);
   NS_IMETHOD_(nsCalPeriodFormat)  GetPeriodFormat();
@@ -120,10 +121,10 @@ public:
   NS_IMETHOD SetDate(nsIDateTime * aDateTime) ;
 
   // nsIXPFCObserver methods
-  NS_IMETHOD Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
+  NS_IMETHOD_(nsEventStatus) Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
 
   // nsIXPFCCommandReceiver methods
-  NS_IMETHOD Action(nsIXPFCCommand * aCommand);
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
 
   // nsIXPFCSubject methods
   NS_IMETHOD Attach(nsIXPFCObserver * aObserver);
@@ -141,8 +142,8 @@ protected:
   ~nsCalTimeContext();
 
 private:
-  NS_IMETHOD  HandleDurationCommand(nsCalDurationCommand * aDurationCommand);
-  NS_IMETHOD  HandleDayListCommand(nsCalDayListCommand * aDayListCommand);
+  NS_IMETHOD_(nsEventStatus)  HandleDurationCommand(nsCalDurationCommand * aDurationCommand);
+  NS_IMETHOD_(nsEventStatus)  HandleDayListCommand(nsCalDayListCommand * aDayListCommand);
 
 private:
   nsIDateTime * mStartTime;

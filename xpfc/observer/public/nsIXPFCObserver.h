@@ -20,6 +20,7 @@
 #define nsIXPFCObserver_h___
 
 #include "nsISupports.h"
+#include "nsGUIEvent.h"
 
 class nsIXPFCSubject;
 class nsIXPFCCommand;
@@ -35,7 +36,7 @@ class nsIXPFCObserver : public nsISupports
 public:
 
   NS_IMETHOD Init() = 0;
-  NS_IMETHOD Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand) = 0;
+  NS_IMETHOD_(nsEventStatus) Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand) = 0;
 
 };
 

@@ -1912,7 +1912,7 @@ nsresult nsXPFCCanvas :: DumpCanvas(FILE * f, PRUint32 indent)
 
 
 
-nsresult nsXPFCCanvas::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
+nsEventStatus nsXPFCCanvas::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
 
   /*
@@ -1921,7 +1921,7 @@ nsresult nsXPFCCanvas::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aComma
 
   Action(aCommand);
 
-  return NS_OK;
+  return (Action(aCommand));
 }
 
 /*
@@ -1944,7 +1944,7 @@ nsEventStatus nsXPFCCanvas::ProcessCommand(nsIXPFCCommand * aCommand)
   return (nsEventStatus_eIgnore); 
 }
 
-nsresult nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
+nsEventStatus nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
 {
 
   /*
@@ -1999,7 +1999,7 @@ nsresult nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
 
   gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
 
-  return NS_OK;
+  return nsEventStatus_eIgnore;
 }
 
 nsCursor nsXPFCCanvas::GetCursor()

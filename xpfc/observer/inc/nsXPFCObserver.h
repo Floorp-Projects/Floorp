@@ -29,7 +29,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() ;
-  NS_IMETHOD Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand) ;
+  NS_IMETHOD_(nsEventStatus) Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand) ;
 
 protected:
   ~nsXPFCObserver();

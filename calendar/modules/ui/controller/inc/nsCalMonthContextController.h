@@ -258,10 +258,10 @@ public:
 
 
     // nsIXPFCObserver methods
-    NS_IMETHOD Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
+    NS_IMETHOD_(nsEventStatus) Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
 
     // nsIXPFCCommandReceiver methods
-    NS_IMETHOD Action(nsIXPFCCommand * aCommand);
+    NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
 
     void SetDefaults();
 

@@ -33,6 +33,7 @@ public:
 
   NS_IMETHOD Init();
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
+  NS_IMETHOD SetTimeContext(nsICalTimeContext * aContext);
 
 protected:
   ~nsCalMultiUserViewCanvas();

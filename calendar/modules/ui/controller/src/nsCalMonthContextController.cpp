@@ -1846,7 +1846,7 @@ nsEventStatus nsCalMonthContextController::OnMouseMove(nsGUIEvent *aEvent)
     return nsEventStatus_eConsumeNoDefault;
 }
 
-nsresult nsCalMonthContextController::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
+nsEventStatus nsCalMonthContextController::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
   return (nsXPFCCanvas::Update(aSubject,aCommand));
 }
@@ -1857,7 +1857,7 @@ nsresult nsCalMonthContextController::Update(nsIXPFCSubject * aSubject, nsIXPFCC
  *
  */
 
-nsresult nsCalMonthContextController::Action(nsIXPFCCommand * aCommand)
+nsEventStatus nsCalMonthContextController::Action(nsIXPFCCommand * aCommand)
 {
     /*
      *  Adjust the duration if this is a duration command
@@ -1877,7 +1877,7 @@ nsresult nsCalMonthContextController::Action(nsIXPFCCommand * aCommand)
     {
       dtDuration = duration_command->GetDuration();
       if (nsnull == dtDuration)
-        return NS_OK;
+        return nsEventStatus_eIgnore;
 
       DateTime d = GetDate();
       d.add(dtDuration->GetDuration());
@@ -1886,7 +1886,7 @@ nsresult nsCalMonthContextController::Action(nsIXPFCCommand * aCommand)
       for (int i = 0; i < m_pDates->GetSize(); i++)
           ((DateTime*)m_pDates->GetAt(i))->add(dtDuration->GetDuration());
 
-      return NS_OK;
+      return nsEventStatus_eIgnore;
     }
   
 
@@ -1903,7 +1903,7 @@ nsresult nsCalMonthContextController::Action(nsIXPFCCommand * aCommand)
       int iDateSet = 0;
 
       if (NS_OK != res)
-        return res;
+        return nsEventStatus_eIgnore;
       iterator->Init();
       ClearDateList();    /* empty the current date list first */
       while(!(iterator->IsDone()))
@@ -1926,7 +1926,7 @@ nsresult nsCalMonthContextController::Action(nsIXPFCCommand * aCommand)
         }
         iterator->Next();
       }
-      return res;
+      return nsEventStatus_eIgnore;
     }
 
     return(nsXPFCCanvas::Action(aCommand));

@@ -24,3 +24,4 @@ libs::
 	$(INSTALL) julian_month_sum.cal $(DIST)/bin/res/ui
 	$(INSTALL) julian_html.cal $(DIST)/bin/res/ui
 	$(INSTALL) julian_html_blank.cal $(DIST)/bin/res/ui
+	$(INSTALL) test.cal $(DIST)/bin/res/ui

@@ -200,3 +200,9 @@ nsresult nsCalMultiUserViewCanvas :: SetParameter(nsString& aKey, nsString& aVal
   
   return (nsXPFCCanvas :: SetParameter(aKey, aValue));
 }
+
+nsresult nsCalMultiUserViewCanvas :: SetTimeContext(nsICalTimeContext * aContext)
+{
+  aContext->SetHorizontal(PR_TRUE); //XXX
+  return (nsCalMultiViewCanvas :: SetTimeContext(aContext));
+}

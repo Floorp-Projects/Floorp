@@ -263,7 +263,7 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
 }
 
 
-nsresult nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
+nsEventStatus nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
 {
   /*
    * If this is a DayList Command, modify our children as necessary
@@ -291,7 +291,7 @@ nsresult nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
     res = daylist_command->CreateIterator(&iterator);
 
     if (NS_OK != res)
-      return res;
+      return nsEventStatus_eIgnore;
 
     iterator->Init();
 

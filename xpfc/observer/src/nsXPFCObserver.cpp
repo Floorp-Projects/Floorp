@@ -42,7 +42,7 @@ nsresult nsXPFCObserver::Init()
   return NS_OK;
 }
 
-nsresult nsXPFCObserver::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
+nsEventStatus nsXPFCObserver::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
-  return NS_OK;
+  return (nsEventStatus_eIgnore);
 }

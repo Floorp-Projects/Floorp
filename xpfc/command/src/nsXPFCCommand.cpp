@@ -46,7 +46,8 @@ nsresult nsXPFCCommand::Init()
 
 nsresult nsXPFCCommand::Execute()
 {
-  return (mReceiver->Action(this));
+  mReceiver->Action(this);  
+  return (NS_OK);
 }
 
 nsIXPFCCommandReceiver * nsXPFCCommand::GetReceiver()

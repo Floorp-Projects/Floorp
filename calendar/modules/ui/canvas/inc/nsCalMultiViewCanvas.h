@@ -43,7 +43,7 @@ public:
   NS_IMETHOD_(PRBool) GetShowTimeScale();
 
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
-  NS_IMETHOD Action(nsIXPFCCommand * aCommand);
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
 
   NS_IMETHOD_(nsEventStatus) PaintBackground(nsIRenderingContext& aRenderingContext,
                                              const nsRect& aDirtyRect);

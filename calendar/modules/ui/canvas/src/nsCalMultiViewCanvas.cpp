@@ -125,7 +125,7 @@ nsresult nsCalMultiViewCanvas :: SetShowTimeScale(PRBool aShowTimeScale)
 }
 
 
-nsresult nsCalMultiViewCanvas::Action(nsIXPFCCommand * aCommand)
+nsEventStatus nsCalMultiViewCanvas::Action(nsIXPFCCommand * aCommand)
 {
   return (nsCalTimebarComponentCanvas::Action(aCommand));
 }

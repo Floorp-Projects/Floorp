@@ -44,7 +44,7 @@ public:
   NS_IMETHOD SetTimeContext(nsICalTimeContext * aContext);
 
   // nsIXPFCCommandReceiver methods
-  NS_IMETHOD Action(nsIXPFCCommand * aCommand);
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
 
 protected:
   ~nsCalMultiDayViewCanvas();

@@ -142,8 +142,8 @@ nsresult nsCalDayViewCanvas::PaintInterval(nsIRenderingContext& aRenderingContex
      */
     PRUint32 iYStart = rect.y + INSET;
     PRUint32 iYStop = rect.y + rect.height - INSET;
-    PRUint32 iXSpace = rect.height / aMinorInterval;
-    PRUint32 iX = rect.x + iXSpace;
+    PRUint32 iXSpace = rect.width / aMinorInterval;
+    PRUint32 iX = rect.x + INSET + iXSpace;
     for (i = 1; i < (PRUint32) aMinorInterval; i++)
     {
       aRenderingContext.DrawLine(iX,iYStart, iX,iYStop);
@@ -267,68 +267,129 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
       GetBounds(rect);
       GetBounds(bounds);
 
-      /*
-       * XXX: Subtract off the modulus of the area. This should not be so hardcoded!
-       */
-      rect.height = rect.height - ((rect.height-2)%GetVisibleMajorIntervals());
-
       PRUint32 vis_event_start_min = dstart.getHour() * 60 + dstart.getMinute();
       PRUint32 vis_event_end_min   = dsend.getHour() * 60 + dsend.getMinute();
 
       PRFloat64 sratio = ((PRFloat64)(vis_event_start_min - vis_start_min)) * (div_ratio);
       PRFloat64 eratio = ((PRFloat64)(vis_event_end_min   - vis_start_min)) * (div_ratio);
 
-      rect.y += (int)(rect.height * sratio);
-      rect.height = (int)((rect.height * eratio) - (rect.y - bounds.y));
-
       aRenderingContext.SetColor(mComponentColor);
 
-      rect.x = rect.x + 2 * INSET ; 
-      rect.width = rect.width - 4*INSET ;
-      rect.y = rect.y + INSET ;
-      rect.height = rect.height - 2 * INSET;
-
-
-      if (rect.y < bounds.y)
-        rect.y = bounds.y+1;
-
-      if ((rect.y+rect.height) > (bounds.y+bounds.height))
-        rect.height = (bounds.y+bounds.height)-1;
-
-      aRenderingContext.FillRect(rect);
-
-      /*
-      * Render the highlights
-      */
-      aRenderingContext.SetColor(nsLighter(mComponentColor));
-      aRenderingContext.DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
-      aRenderingContext.DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
-      aRenderingContext.SetColor(nsDarker(mComponentColor));
-      aRenderingContext.DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
-      aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
-
-      aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
-
-      if (rect.height > fm_height)
+      if (GetTimeContext()->GetHorizontal() == PR_FALSE)
       {
-        // rndctx->SetColor(GetForegroundColor());
-        aRenderingContext.SetColor(NS_RGB(255,255,255));          /* XXX: This color should come from someplace else... */
+        /*
+         * XXX: Subtract off the modulus of the area. This should not be so hardcoded!
+         */
+        rect.height = rect.height - ((rect.height-2)%GetVisibleMajorIntervals());
+
+        rect.y += (int)(rect.height * sratio);
+        rect.height = (int)((rect.height * eratio) - (rect.y - bounds.y));
+
+        rect.x = rect.x + 2 * INSET ; 
+        rect.width = rect.width - 4*INSET ;
+        rect.y = rect.y + INSET ;
+        rect.height = rect.height - 2 * INSET;
+
+
+        if (rect.y < bounds.y)
+          rect.y = bounds.y+1;
+
+        if ((rect.y+rect.height) > (bounds.y+bounds.height))
+          rect.height = (bounds.y+bounds.height)-1;
+
+        aRenderingContext.FillRect(rect);
 
         /*
-         * XXX. we need to handle '\n' in a format string...
-         * This should not require two separate coding calls
-         * we need to generalize this.
-         */
-        psBuf = pEvent->toStringFmt(usFmt).toCString("");
-        aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
-        delete psBuf;
+        * Render the highlights
+        */
+        aRenderingContext.SetColor(nsLighter(mComponentColor));
+        aRenderingContext.DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
+        aRenderingContext.DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
+        aRenderingContext.SetColor(nsDarker(mComponentColor));
+        aRenderingContext.DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
+        aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
 
-        if (rect.height > (2 * fm_height))
+        aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
+
+        if (rect.height > fm_height)
         {
-          psBuf = pEvent->getSummary().toCString("");
-          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
+          // rndctx->SetColor(GetForegroundColor());
+          aRenderingContext.SetColor(NS_RGB(255,255,255));          /* XXX: This color should come from someplace else... */
+
+          /*
+           * XXX. we need to handle '\n' in a format string...
+           * This should not require two separate coding calls
+           * we need to generalize this.
+           */
+          psBuf = pEvent->toStringFmt(usFmt).toCString("");
+          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
           delete psBuf;
+
+          if (rect.height > (2 * fm_height))
+          {
+            psBuf = pEvent->getSummary().toCString("");
+            aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
+            delete psBuf;
+          }
         }
+      } else {
+
+        /*
+         * XXX: Subtract off the modulus of the area. This should not be so hardcoded!
+         */
+        rect.width = rect.width - ((rect.width-2)%GetVisibleMajorIntervals());
+
+        rect.x += (int)(rect.width * sratio);
+        rect.width = (int)((rect.width * eratio) - (rect.x - bounds.x));
+
+        rect.y = rect.y + 2 * INSET ; 
+        rect.height = rect.height - 4*INSET ;
+        rect.x = rect.x + INSET ;
+        rect.width = rect.width - 2 * INSET;
+
+
+        if (rect.x < bounds.x)
+          rect.x = bounds.x+1;
+
+        if ((rect.x+rect.width) > (bounds.x+bounds.width))
+          rect.width = (bounds.x+bounds.width)-1;
+
+        aRenderingContext.FillRect(rect);
+
+        /*
+        * Render the highlights
+        */
+        aRenderingContext.SetColor(nsLighter(mComponentColor));
+        aRenderingContext.DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
+        aRenderingContext.DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
+        aRenderingContext.SetColor(nsDarker(mComponentColor));
+        aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
+        aRenderingContext.DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
+
+        aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
+
+        if (rect.height > fm_height)
+        {
+          // rndctx->SetColor(GetForegroundColor());
+          aRenderingContext.SetColor(NS_RGB(255,255,255));          /* XXX: This color should come from someplace else... */
+
+          /*
+           * XXX. we need to handle '\n' in a format string...
+           * This should not require two separate coding calls
+           * we need to generalize this.
+           */
+          psBuf = pEvent->toStringFmt(usFmt).toCString("");
+          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
+          delete psBuf;
+
+          if (rect.height > (2 * fm_height))
+          {
+            psBuf = pEvent->getSummary().toCString("");
+            aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
+            delete psBuf;
+          }
+        }
+
       }
     }
   }

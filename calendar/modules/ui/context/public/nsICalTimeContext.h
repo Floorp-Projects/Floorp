@@ -88,6 +88,8 @@ public:
                                ) = 0;
 
   NS_IMETHOD_(PRBool) GetHorizontal() = 0;
+  NS_IMETHOD          SetHorizontal(PRBool aHorizontal) = 0;
+
 
   NS_IMETHOD_(nsIDateTime *) GetDTStart() = 0;
   NS_IMETHOD_(nsIDateTime *) GetDTEnd() = 0;

@@ -171,8 +171,8 @@ nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsIRenderingContext& aRender
   PRUint32 space_per_interval, start;
 
   if (GetTimeContext()->GetHorizontal() == PR_TRUE) {
-    space_per_interval = (rect.width) / major_intervals; 
-    start = rect.x;
+    space_per_interval = ((rect.width-(2*LOCAL_INSET)) - ((rect.width-(2*LOCAL_INSET)) % major_intervals)) / major_intervals;
+    start = rect.x+LOCAL_INSET;
   } else {
     space_per_interval = ((rect.height-(2*LOCAL_INSET)) - ((rect.height-(2*LOCAL_INSET)) % major_intervals)) / major_intervals;
     start = rect.y+LOCAL_INSET;
@@ -211,12 +211,12 @@ nsresult nsCalTimebarCanvas::PaintInterval(nsIRenderingContext& aRenderingContex
   if (GetTimeContext()->GetHorizontal() == PR_TRUE) {
     rect.x = aStart;
     rect.width = aSpace;
+    aRenderingContext.DrawLine(rect.x, rect.y+LOCAL_INSET, rect.x, rect.y+rect.height-LOCAL_INSET);
   } else {
     rect.y = aStart;
     rect.height = aSpace;
+    aRenderingContext.DrawLine(rect.x+LOCAL_INSET, rect.y, rect.x+rect.width-LOCAL_INSET, rect.y);
   }
-
-  aRenderingContext.DrawLine(rect.x+LOCAL_INSET, rect.y, rect.x+rect.width-LOCAL_INSET, rect.y);
 
   return NS_OK ;
 }

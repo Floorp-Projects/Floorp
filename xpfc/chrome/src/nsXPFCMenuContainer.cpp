@@ -214,7 +214,7 @@ nsIXPFCMenuItem * nsXPFCMenuContainer :: MenuItemFromID(PRUint32 aID)
   return item;
 }
 
-nsresult nsXPFCMenuContainer :: Action(nsIXPFCCommand * aCommand)
+nsEventStatus nsXPFCMenuContainer :: Action(nsIXPFCCommand * aCommand)
 {
   
   /*
@@ -229,7 +229,7 @@ nsresult nsXPFCMenuContainer :: Action(nsIXPFCCommand * aCommand)
   res = aCommand->QueryInterface(kXPFCActionCommandCID,(void**)&action_command);
 
   if (NS_OK != res)
-    return res;
+    return nsEventStatus_eIgnore;
   
 
   /*
@@ -240,7 +240,7 @@ nsresult nsXPFCMenuContainer :: Action(nsIXPFCCommand * aCommand)
 
   NS_RELEASE(action_command);
 
-  return NS_OK;
+  return nsEventStatus_eIgnore;
 }
 
 nsresult nsXPFCMenuContainer::ProcessActionCommand(nsString& aAction)
