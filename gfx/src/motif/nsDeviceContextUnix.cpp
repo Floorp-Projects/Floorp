@@ -23,7 +23,6 @@
 #include "math.h"
 #include "nspr.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 #define NS_TO_X_COMPONENT(a) ((a << 8) | (a))
@@ -34,10 +33,29 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
 
   mFontCache = nsnull;
   mSurface = nsnull;
+
+  mTwipsToPixels = 1.0;
+  mPixelsToTwips = 1.0;
+
+  mDevUnitsToAppUnits = 1.0f;
+  mAppUnitsToDevUnits = 1.0f;
+
+  mGammaValue = 1.0f;
+  mGammaTable = new PRUint8[256];
+
+  mZoom = 1.0f;
+
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
 {
+
+  if (nsnull != mGammaTable)
+  {
+    delete mGammaTable;
+    mGammaTable = nsnull;
+  }
+
   NS_IF_RELEASE(mFontCache);
 
   if (mSurface) delete mSurface;
@@ -49,46 +67,53 @@ NS_IMPL_RELEASE(nsDeviceContextUnix)
 
 nsresult nsDeviceContextUnix :: Init()
 {
+  for (PRInt32 cnt = 0; cnt < 256; cnt++)
+    mGammaTable[cnt] = cnt;
 
   return NS_OK;
 }
 
 float nsDeviceContextUnix :: GetTwipsToDevUnits() const
 {
-  return 0.0;
+  return mTwipsToPixels;
 }
 
 float nsDeviceContextUnix :: GetDevUnitsToTwips() const
 {
-  return 0.0;
+  return mPixelsToTwips;
 }
+
 
 void nsDeviceContextUnix :: SetAppUnitsToDevUnits(float aAppUnits)
 {
+  mAppUnitsToDevUnits = aAppUnits;
 }
 
 void nsDeviceContextUnix :: SetDevUnitsToAppUnits(float aDevUnits)
 {
+  mDevUnitsToAppUnits = aDevUnits;
 }
 
 float nsDeviceContextUnix :: GetAppUnitsToDevUnits() const
 {
-  return 0.0;
+  return mAppUnitsToDevUnits;
 }
 
 float nsDeviceContextUnix :: GetDevUnitsToAppUnits() const
 {
-  return 0.0;
+  return mDevUnitsToAppUnits;
 }
 
 float nsDeviceContextUnix :: GetScrollBarWidth() const
 {
-  return 0.0;
+  // XXX Should we push this to widget library
+  return 240.0;
 }
 
 float nsDeviceContextUnix :: GetScrollBarHeight() const
 {
-  return 0.0;
+  // XXX Should we push this to widget library
+  return 240.0;
 }
 
 nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aView)
@@ -111,6 +136,7 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
   if (NS_OK == rv)
     InitRenderingContext(pContext, win);
 
+  NS_IF_RELEASE(win);
   return pContext;
 }
 
@@ -118,14 +144,18 @@ void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, 
 {
   aContext->Init(this, aWin);
 
+  mTwipsToPixels = (((float)::XDisplayWidth(mSurface->display, DefaultScreen(mSurface->display))) /
+		    ((float)::XDisplayWidthMM(mSurface->display,DefaultScreen(mSurface->display) )) * 25.4) / 
+    NS_POINTS_TO_TWIPS_FLOAT(72.0f);
+
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
+
   InstallColormap();
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
 {
-  PRUint32 i ;
   PRUint32 newcolor = 0;
-  PRBool foundcolor = PR_FALSE;
 
   if (mDepth == 8) {
 
@@ -320,21 +350,28 @@ nsresult nsDeviceContextUnix::CreateFontCache()
 
 void nsDeviceContextUnix::FlushFontCache()
 {
+  NS_RELEASE(mFontCache);
 }
 
 
 nsIFontMetrics* nsDeviceContextUnix::GetMetricsFor(const nsFont& aFont)
 {
-  return nsnull;
+  if (nsnull == mFontCache) {
+    if (NS_OK != CreateFontCache()) {
+      return nsnull;
+    }
+  }
+  return mFontCache->GetMetricsFor(aFont);
 }
 
 void nsDeviceContextUnix :: SetZoom(float aZoom)
 {
+  mZoom = aZoom;
 }
 
 float nsDeviceContextUnix :: GetZoom() const
 {
-  return 0.0;
+  return mZoom;
 }
 
 nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
@@ -361,6 +398,8 @@ void nsDeviceContextUnix :: SetGamma(float aGamma)
     //really happens to be. existing images will get a one time
     //re-correction when they're rendered the next time. MMP
 
+    SetGammaTable(mGammaTable, 1.0f, aGamma);
+
     mGammaValue = aGamma;
   }
 }
@@ -369,10 +408,16 @@ PRUint8 * nsDeviceContextUnix :: GetGammaTable(void)
 {
   //XXX we really need to ref count this somehow. MMP
 
-  return nsnull;
+  return mGammaTable;
 }
 
+void nsDeviceContextUnix :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
+{
+  double fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
 
+  for (PRInt32 cnt = 0; cnt < 256; cnt++)
+    aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
+}
 
 
 
