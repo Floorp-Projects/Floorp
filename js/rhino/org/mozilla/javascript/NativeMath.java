@@ -100,10 +100,14 @@ public class NativeMath extends ScriptableObject {
     }
 
     public double max(double x, double y) {
+        if ((x != x) || (y != y))
+            return Double.NEGATIVE_INFINITY;
         return Math.max(x, y);
     }
 
     public double min(double x, double y) {
+        if ((x != x) || (y != y))
+            return Double.POSITIVE_INFINITY;
         return Math.min(x, y);
     }
 
