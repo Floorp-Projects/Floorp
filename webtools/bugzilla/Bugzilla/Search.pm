@@ -424,6 +424,9 @@ sub init {
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
              push(@supptables, "attachments $table");
+             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+                 push(@wherepart, "$table.isprivate = 0") ;
+             }
              push(@wherepart, "bugs.bug_id = $table.bug_id");
              $f =~ m/^attachments\.(.*)$/;
              my $field = $1;
