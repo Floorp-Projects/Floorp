@@ -55,6 +55,8 @@ protected:
   void WillModify();
   void DidModify();
   
+  friend class nsSVGValueAutoNotifier;
+  
 public:
   // Partial Implementation of nsISVGValue interface:
   NS_IMETHOD AddObserver(nsISVGValueObserver* observer);
@@ -80,5 +82,19 @@ private:
   PRInt32 mModifyNestCount;
 };
 
+// Class that will automatically call WillModify and DidModify in its ctor
+// and dtor respectively (for functions that have multiple exit points).
+
+class nsSVGValueAutoNotifier
+{
+public:
+  nsSVGValueAutoNotifier(nsSVGValue* val)
+    : mVal(val) { mVal->WillModify(); }
+  ~nsSVGValueAutoNotifier()
+    { mVal->DidModify(); }
+
+private:
+  nsRefPtr<nsSVGValue> mVal;
+};
 
 #endif //__NS_SVGVALUE_H__

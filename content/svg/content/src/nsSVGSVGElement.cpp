@@ -686,7 +686,8 @@ nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
                                               nsIDOMSVGTransform **_retval)
 {
   nsresult rv = NS_NewSVGTransform(_retval);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   (*_retval)->SetMatrix(matrix);
   return NS_OK;
