@@ -100,6 +100,7 @@ AutoAdminTimeoutCallback(void *closure)
 PUBLIC void
 NET_DownloadAutoAdminCfgFile()
 {
+#ifndef MODULAR_NETLIB
 	static XP_Bool first_time = TRUE;
 	XP_Bool append_email;
 	char* email_addr;
@@ -168,6 +169,7 @@ NET_DownloadAutoAdminCfgFile()
 			}
 		}
 	}
+#endif
 }
  
 
