@@ -741,7 +741,7 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
    }
 
    // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsGuiThread())
+   if(mOS2Toolkit && !mOS2Toolkit->IsGuiThread())
    {
       ULONG args[7] = { hwndP, (ULONG) aParent, (ULONG) &aRect,
                         (ULONG) aHandleEventFunction,
