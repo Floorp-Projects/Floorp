@@ -78,7 +78,8 @@ $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
 
 my @bug_fields = ("reporter", "product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc", "component");
+                  "bug_status", "bug_file_loc", "short_desc", "component",
+                  "status_whiteboard", "target_milestone");
 
 if (Param("useqacontact")) {
     SendSQL("select initialqacontact from components where program=" .
@@ -93,15 +94,20 @@ if (Param("useqacontact")) {
 
 
 
+my @used_fields;
+foreach my $f (@bug_fields) {
+    if (exists $::FORM{$f}) {
+        push (@used_fields, $f);
+    }
+}
 
-
-my $query = "insert into bugs (\n" . join(",\n", @bug_fields) . ",
+my $query = "insert into bugs (\n" . join(",\n", @used_fields) . ",
 creation_ts, long_desc )
 values (
 ";
 
 
-foreach my $field (@bug_fields) {
+foreach my $field (@used_fields) {
     $query .= SqlQuote($::FORM{$field}) . ",\n";
 }
 
