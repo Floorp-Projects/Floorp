@@ -229,7 +229,7 @@
     </implementation>
   </binding>
 
-  <binding id="menubar" extends="xul:menubar">
+  <binding id="menubar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base" display="xul:menubar">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>
