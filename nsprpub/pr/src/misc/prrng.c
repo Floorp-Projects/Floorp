@@ -34,7 +34,16 @@
 
 #include "primpl.h"
 
+/*
+ * We were not including <string.h> in optimized builds.  On AIX this
+ * caused libnspr4.so to export memcpy and some binaries linked with
+ * libnspr4.so resolved their memcpy references with libnspr4.so.  To
+ * be backward compatible with old libnspr4.so binaries, we do not
+ * include <string.h> in optimized builds for AIX.  (bug 200561)
+ */
+#if !(defined(AIX) && !defined(DEBUG))
 #include <string.h>
+#endif
 
 PRSize _pr_CopyLowBits( 
     void *dst, 
