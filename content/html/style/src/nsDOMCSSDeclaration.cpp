@@ -74,7 +74,6 @@ nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
   nsCSSDeclaration* decl;
   aCssText.Truncate();
   GetCSSDeclaration(&decl, PR_FALSE);
-  NS_ASSERTION(decl, "null CSSDeclaration");
 
   if (decl) {
     decl->ToString(aCssText);
