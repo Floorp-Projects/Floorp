@@ -1357,57 +1357,35 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   return result;
 }
 
-NS_IMETHODIMP nsEditor::EndOfDocument()
-{
-  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nsCOMPtr<nsIDOMSelection> selection;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_SUCCEEDED(result) && selection)
-  {
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-    if (!doc) return NS_ERROR_NOT_INITIALIZED;
-    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-    if ((NS_SUCCEEDED(result)) && nodeList)
-    {
-      PRUint32 count;
-      nodeList->GetLength(&count);
-      NS_VERIFY(PRBool(1==count), "there is not exactly 1 body in the document!");
-      nsCOMPtr<nsIDOMNode> bodyNode;
-      result = nodeList->Item(0, getter_AddRefs(bodyNode));
-      if ((NS_SUCCEEDED(result)) && bodyNode)
-      {
-        nsCOMPtr<nsIDOMNode> lastChild;  
-        result = GetLastEditableNode(bodyNode, &lastChild);
-        if ((NS_SUCCEEDED(result)) && lastChild)
-        {
-          // See if the last child is a text node; if so, set offset:
-          PRUint32 offset = 0;
-          if (IsTextNode(lastChild))
-          {
-            nsCOMPtr<nsIDOMText> text (do_QueryInterface(lastChild));
-            if (text)
-              text->GetLength(&offset);
-          }
-          result = selection->Collapse(lastChild, offset);
-          ScrollIntoView(PR_FALSE);
-        }
-        else
-        {
-          // just the body node, set selection to inside the body
-          result = selection->Collapse(bodyNode, 0);
-        }
-      }
-    }
-  }
-  return result;
-}
-
+NS_IMETHODIMP
+nsEditor::EndOfDocument() 
+{ 
+  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; } 
+  nsresult res; 
+  
+  // get selection 
+  nsCOMPtr<nsIDOMSelection> selection; 
+  res = GetSelection(getter_AddRefs(selection)); 
+  if (NS_FAILED(res)) return res; 
+  if (!selection)   return NS_ERROR_NULL_POINTER; 
+  
+  // get the root element 
+  nsCOMPtr<nsIDOMElement> rootElement; 
+  res = GetRootElement(getter_AddRefs(rootElement)); 
+  if (NS_FAILED(res)) return res; 
+  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement); 
+  
+  // get the length of the rot element 
+  PRUint32 len; 
+  res = GetLengthOfDOMNode(rootNode, len); 
+  if (NS_FAILED(res)) return res; 
+  
+  // set the selection to after the last child of the root element 
+  res = selection->Collapse(rootNode, (PRInt32)len); 
+  return res; 
+} 
+  
 NS_IMETHODIMP
 nsEditor::GetDocumentModified(PRBool *outDocModified)
 {
