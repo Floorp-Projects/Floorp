@@ -1923,6 +1923,10 @@ PRBool CSSParserImpl::ParseClip(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
                         kClipKTable)) {
         return PR_FALSE;
       }
+      if (3 != i) {
+        // skip optional commas between elements
+        ExpectSymbol(aErrorCode, ',', PR_TRUE);
+      }
     }
     if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
       return PR_FALSE;
