@@ -26,7 +26,7 @@
 #include "prprf.h"
 #include "nsIComponentManager.h"
 //#include "nsAppCores.h"
-//#include "nsAppCoresCIDs.h"
+#include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
 #include "nsIScriptContext.h"
@@ -785,7 +785,6 @@ done:
 #else
 
 
-#if 0
   // This code is to ensure that the editor's pseudo-onload handler is always called.
   static NS_DEFINE_CID(kToolkitCoreCID,           NS_TOOLKITCORE_CID);
 
@@ -807,7 +806,7 @@ done:
   if (nsnull != toolkit) {
     nsServiceManager::ReleaseService(kToolkitCoreCID, toolkit);
   }
-#endif
+
 #endif
 
   return rv;
@@ -1820,19 +1819,19 @@ nsEditorShell::CreateElementWithDefaults(const PRUnichar *tagName, nsIDOMElement
 
 
 NS_IMETHODIMP
-nsEditorShell::InsertElement(nsIDOMElement *element, PRBool deleteSelection, nsIDOMElement **_retval)
+nsEditorShell::InsertElement(nsIDOMElement *element, PRBool deleteSelection)
 {
-  if (!element || !_retval)
+  if (!element)
     return NS_ERROR_NULL_POINTER;
 
   nsresult  result = NS_NOINTERFACE;
-   switch (mEditorType)
+  switch (mEditorType)
   {
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          result = htmlEditor->InsertElement(element, deleteSelection, _retval);
+          result = htmlEditor->InsertElement(element, deleteSelection);
       }
       break;
     default:
