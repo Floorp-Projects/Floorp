@@ -1,22 +1,28 @@
+
+# This file specifies the build flags for Sunbird.  You can use it by adding:
+#  . $topsrcdir/calendar/sunbird/config/mozconfig
+# to the top of your mozconfig file.
+
+export MOZ_SUNBIRD=1
+mk_add_options MOZ_SUNBIRD=1
+
 ac_add_options --enable-calendar
-ac_add_options --enable-crypto
+
+ac_add_options --disable-ldap
+ac_add_options --disable-mailnews
 ac_add_options --enable-extensions=pref
+ac_add_options --enable-crypto
+ac_add_options --disable-composer
+ac_add_options --disable-profilesharing
 ac_add_options --enable-plaintext-editor-only
 ac_add_options --enable-necko-protocols=about,http,file,jar,res
 ac_add_options --disable-accessibility
 ac_add_options --disable-activex
 ac_add_options --disable-activex-scripting
-ac_add_options --disable-composer
 ac_add_options --disable-installer
 ac_add_options --disable-jsd
-ac_add_options --disable-ldap
-ac_add_options --disable-logging
-ac_add_options --disable-mailnews
 ac_add_options --disable-mathml
 ac_add_options --disable-necko-disk-cache
 ac_add_options --disable-oji
-ac_add_options --disable-profilesharing
 ac_add_options --disable-view-source
-  
-export MOZ_SUNBIRD=1
-mk_add_options MOZ_SUNBIRD=1
+ac_add_options --disable-logging
