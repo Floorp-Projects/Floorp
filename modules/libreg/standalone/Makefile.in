@@ -35,8 +35,7 @@ CSRCS		= $(MODULES_LIBREG_SRC_LCSRCS)
 
 OBJS		= $(addprefix S_,$(CSRCS:.c=.$(OBJ_SUFFIX)))
 
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 
 MDDEPDIR := $(MDDEPDIR)_S
 

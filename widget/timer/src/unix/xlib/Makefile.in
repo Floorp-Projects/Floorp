@@ -36,12 +36,12 @@ ifndef MOZ_MONOLITHIC_TOOLKIT
 EXPORT_LIBRARY = 1
 TIMER_SUFFIX	= xlib
 IS_COMPONENT	= 1
+COMPONENT_NAME	= nsXlibTimerModule
 CPPSRCS		+= nsTimerXlibFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_XLIB_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 else
 TIMER_SUFFIX	= s
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 endif
 
 include $(topsrcdir)/config/rules.mk

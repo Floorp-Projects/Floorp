@@ -37,8 +37,10 @@ BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 PROGOBJS        = $(addprefix R_,$(BIN_SRCS:.c=.o))
 
 # We don't want a shared lib.  Static lib only.
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
+
+# Force use of PIC
+FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/config.mk
 

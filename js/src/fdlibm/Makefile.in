@@ -81,8 +81,7 @@ EXPORTS		= fdlibm.h
 
 # we need to force a static lib for the linking that js/src/Makefile.in wants
 # to do, and we don't really need a shared library ever, so:
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 

@@ -36,8 +36,7 @@ CPPSRCS		= \
 		moc_nsQtMenu.cpp \
 		$(NULL)
 
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 

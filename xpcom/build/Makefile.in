@@ -75,7 +75,12 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 XPCOM_SWITCH	= 1
 endif
- 
+
+# Force use of PIC
+FORCE_USE_PIC	= 1 
+
+FORCE_SHARED_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE

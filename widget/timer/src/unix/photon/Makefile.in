@@ -34,12 +34,12 @@ CPPSRCS		= nsTimerPh.cpp
 ifndef MOZ_MONOLITHIC_TOOLKIT
 TIMER_SUFFIX	= photon
 IS_COMPONENT	= 1
+COMPONENT_NAME	= nsPhTimerModule
 CPPSRCS		+= nsTimerPhFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 else
 TIMER_SUFFIX	= s
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 endif
 
 include $(topsrcdir)/config/rules.mk
