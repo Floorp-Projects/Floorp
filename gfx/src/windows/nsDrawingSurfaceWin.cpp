@@ -218,19 +218,40 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
       if (nsnull == mSelectedBitmap)
       {
         HBITMAP tbits = ::CreateCompatibleBitmap(mDC, 2, 2);
-        mLockedBitmap = (HBITMAP)::SelectObject(mDC, tbits);
+        if ( tbits != nsnull )
+        {
+          mLockedBitmap = (HBITMAP)::SelectObject(mDC, tbits);
 
-        ::GetObject(mLockedBitmap, sizeof(BITMAP), &mBitmap);
+          // if the SelectObject fails, or there was no bitmap returned from this DC
+          if ( mLockedBitmap != nsnull ) 
+          {
+            ::GetObject(mLockedBitmap, sizeof(BITMAP), &mBitmap);
 
-        mLockOffset = aY;
-        mLockHeight = min((PRInt32)aHeight, (mBitmap.bmHeight - aY));
+            mLockOffset = aY;
+            mLockHeight = min((PRInt32)aHeight, (mBitmap.bmHeight - aY));
 
-        mBitmapInfo = CreateBitmapInfo(mBitmap.bmWidth, mBitmap.bmHeight, mBitmap.bmBitsPixel, (void **)&mDIBits);
+            mBitmapInfo = CreateBitmapInfo(mBitmap.bmWidth, mBitmap.bmHeight, mBitmap.bmBitsPixel, (void **)&mDIBits);
 
-        if (!(aFlags & NS_LOCK_SURFACE_WRITE_ONLY))
-          ::GetDIBits(mDC, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
+            if ( mBitmapInfo != nsnull ) {
+              if (!(aFlags & NS_LOCK_SURFACE_WRITE_ONLY))
+                ::GetDIBits(mDC, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
 
-        mBitmap.bmBits = mDIBits;
+              mBitmap.bmBits = mDIBits;
+            } else {
+              ::DeleteObject(tbits);
+              return NS_ERROR_FAILURE;
+            }
+          } 
+          else 
+          {      
+            ::DeleteObject(tbits);
+            return NS_ERROR_FAILURE;
+          }
+        }
+        else
+        {
+          return NS_ERROR_FAILURE;
+        }
       }
       else
       {
@@ -631,8 +652,13 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       else
         memset(colortable, 0, sizeof(RGBQUAD) * palsize);
 
-      if (nsnull != aBits)
+      if (nsnull != aBits) {
         *aBits = PR_Malloc(imagesize);
+        if ( nsnull == *aBits ) {
+          PR_Free(rv);
+          rv = nsnull;
+        }
+      }
     }
   }
 
