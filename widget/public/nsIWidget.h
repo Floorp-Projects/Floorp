@@ -429,6 +429,7 @@ class nsIWidget : public nsISupports {
 
     virtual void RemoveTooltips() = 0;
 
+
      /**
      * Convert from this widget coordinates to screen coordinates.
      *
