@@ -448,6 +448,11 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   else {
     if (kButton_Image == GetButtonType()) { // there is an image
+      // Setup url before starting the image load
+      nsAutoString src;
+      if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+        mImageLoader.SetURL(src);
+      }
       mImageLoader.GetDesiredSize(aPresContext, this,
                                   aDesiredLayoutSize, aMaxSize);
     }
