@@ -220,7 +220,7 @@ MyLoadImage(char *aFileName)
     NS_ColorNameToRGB("white", &white);
     gImageReq = gImageGroup->GetImage(fileURL,
                                       observer,
-                                      white, 0, 0, 0);
+                                      &white, 0, 0, 0);
     if (gImageReq == NULL) {
       ::MessageBox(NULL, "Couldn't create image request",
                    class1Name, MB_OK);

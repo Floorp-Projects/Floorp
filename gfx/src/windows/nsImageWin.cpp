@@ -78,17 +78,30 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     this->MakePalette();
 
     if (aMaskRequirements != nsMaskRequirements_kNoMask)
+    {
+      PRInt32 sizeMask;
+
+      if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements)
       {
-      mAlphaWidth=aWidth;
-      mAlphaWidth=aHeight;
-      mAlphaBits = new unsigned char[aWidth * aHeight];
+        sizeMask = (aWidth + 7) / 8 * aHeight;
       }
+      else
+      {
+        NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
+                     "unexpected mask depth");
+        sizeMask = aWidth * aHeight;
+      }
+
+      mAlphaWidth = aWidth;
+      mAlphaWidth = aHeight;
+      mAlphaBits = new unsigned char[sizeMask];
+    }
     else
-      {
-      mAlphaBits = 0;
-      mAlphaWidth=0;
-      mAlphaHeight=0;
-      }
+    {
+      mAlphaBits = nsnull;
+      mAlphaWidth = 0;
+      mAlphaHeight = 0;
+    }
 
     mColorMap = new nsColorMap;
 

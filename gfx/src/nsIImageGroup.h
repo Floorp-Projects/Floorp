@@ -99,7 +99,7 @@ public:
    */
   virtual nsIImageRequest* GetImage(const char* aUrl, 
                                     nsIImageRequestObserver *aObserver,
-                                    nscolor aBackgroundColor,
+                                    nscolor* aBackgroundColor,
                                     PRUint32 aWidth, PRUint32 aHeight,
                                     PRUint32 aFlags) = 0;
 
