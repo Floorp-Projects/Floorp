@@ -20,6 +20,8 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
+	$(MAKE_INSTALL) abAddressBookNameDialog.js	$(DIST)\bin\chrome\addressbook\content\default
+	$(MAKE_INSTALL) abAddressBookNameDialog.xul	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) abCardOverlay.js			$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) abCardOverlay.xul			$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) abCardViewOverlay.js		$(DIST)\bin\chrome\addressbook\content\default
@@ -35,6 +37,8 @@ install::
 	$(MAKE_INSTALL) addressbook.xul				$(DIST)\bin\chrome\addressbook\content\default
 
 clobber::
+	rm -f $(DIST)\chrome\addressbook\content\default\abAddressBookNameDialog.js
+	rm -f $(DIST)\chrome\addressbook\content\default\abAddressBookNameDialog.xul
 	rm -f $(DIST)\chrome\addressbook\content\default\abCardOverlay.js
 	rm -f $(DIST)\chrome\addressbook\content\default\abCardOverlay.xul
 	rm -f $(DIST)\chrome\addressbook\content\default\abCardViewOverlay.js

@@ -23,6 +23,7 @@ DISTBROWSER=$(DIST)\bin\chrome\addressbook\locale\en-US
 
 
 install::
+	$(MAKE_INSTALL) abAddressBookNameDialog.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) abCardOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) abCardViewOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) abDirTreeOverlay.dtd $(DISTBROWSER)

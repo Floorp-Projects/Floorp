@@ -29,6 +29,8 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/chrome/addressbook/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
+	$(srcdir)/abAddressBookNameDialog.js \
+	$(srcdir)/abAddressBookNameDialog.xul \
 	$(srcdir)/abCardOverlay.js \
 	$(srcdir)/abCardOverlay.xul \
 	$(srcdir)/abCardViewOverlay.js \

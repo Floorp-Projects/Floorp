@@ -16,6 +16,8 @@
 # This is a list of local files which get copied to the res\mailnews\messenger directory
 #
 
+abAddressBookNameDialog.js
+abAddressBookNameDialog.xul
 abCardOverlay.js
 abCardOverlay.xul
 abCardViewOverlay.js

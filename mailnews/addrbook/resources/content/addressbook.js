@@ -1,15 +1,16 @@
-// functions used only by abMainWindow
+var addressbook = 0;
+
+// functions used only by addressbook
 
 function OnLoadAddressBook()
 {
 	// FIX ME - later we will be able to use onload from the overlay
 	OnLoadCardView();
+	
+	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
+	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 }
 
-
-// FIX ME - this should be in onload and have a different name
-var addressbook = Components.classes["component://netscape/addressbook"].createInstance();
-	addressbook = addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 
 function AbDelete()
 {
@@ -22,7 +23,7 @@ function AbDelete()
 		//get the current folder
 		var srcDirectory = document.getElementById('resultsTree');
 		dump("srcDirectory = " + srcDirectory + "\n");
-		addressbook.DeleteCards(tree, srcDirectory, cardList);
+		top.addressbook.DeleteCards(tree, srcDirectory, cardList);
 	}
 }
 
@@ -43,7 +44,16 @@ function AbClose()
 
 function AbNewAddressBook()
 {
-	addressbook.NewAddressBook(document.getElementById('dirTree').database, document.getElementById('resultsTree'), "My New Address Book");
+	var dialog = window.openDialog("chrome://addressbook/content/abAddressBookNameDialog.xul",
+								   "",
+								   "chrome",
+								   {title:"New Address Book",
+								    okCallback:AbCreateNewAddressBook});
+}
+
+function AbCreateNewAddressBook(name)
+{
+	top.addressbook.NewAddressBook(document.getElementById('dirTree').database, document.getElementById('resultsTree'), name);
 }
 
 
