@@ -56,18 +56,6 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTCONTROLELEMENT_IID)
 
   /**
-   * Get the value of the text control.  This is the value that is set when
-   * the control is not there or goes away.
-   */
-  NS_IMETHOD GetValueInternal(nsAWritableString& str) = 0;
-
-  /**
-   * Set the value of the text control.  This is the value that is set when
-   * the control is not there or goes away.
-   */
-  NS_IMETHOD SetValueInternal(nsAReadableString& str) = 0;
-
-  /**
    * Tell the control that value has been deliberately changed (or not).
    */
   NS_IMETHOD SetValueChanged(PRBool changed) = 0;

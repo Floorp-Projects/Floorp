@@ -186,8 +186,6 @@ public:
   }
 
   // nsITextControlElement
-  NS_IMETHOD GetValueInternal(nsAWritableString& str);
-  NS_IMETHOD SetValueInternal(nsAReadableString& str);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
 protected:
@@ -413,19 +411,6 @@ nsHTMLInputElement::SetType(const nsAReadableString& aValue)
                                                PR_TRUE);
 }
 
-NS_IMETHODIMP
-nsHTMLInputElement::GetValueInternal(nsAWritableString& aValue)
-{
-  aValue.Truncate();
-  if (!mValueChanged || !mValue) {
-    GetDefaultValue(aValue);
-  } else {
-    aValue = NS_ConvertUTF8toUCS2(mValue);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 {
@@ -440,10 +425,23 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
     // have) even if we force it to be created
     GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
+    nsIGfxTextControlFrame2* textControlFrame = nsnull;
     if (formControlFrame) {
+      CallQueryInterface(formControlFrame, &textControlFrame);
+    }
+
+    PRBool frameOwnsValue = PR_FALSE;
+    if (textControlFrame) {
+      textControlFrame->OwnsValue(&frameOwnsValue);
+    }
+    if (frameOwnsValue) {
       formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
     } else {
-      GetValueInternal(aValue);
+      if (!mValueChanged || !mValue) {
+        GetDefaultValue(aValue);
+      } else {
+        aValue = NS_ConvertUTF8toUCS2(mValue);
+      }
     }
  
     return NS_OK;
@@ -463,19 +461,6 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetValueInternal(nsAReadableString& aValue)
-{
-  if (mValue) {
-    nsMemory::Free(mValue);
-  }
-
-  mValue = ToNewUTF8String(aValue);
-
-  SetValueChanged(PR_TRUE);
-  return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP 
@@ -520,13 +505,30 @@ nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
     // new value.
     GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
+    nsIGfxTextControlFrame2* textControlFrame = nsnull;
     if (formControlFrame) {
+      CallQueryInterface(formControlFrame, &textControlFrame);
+    }
+
+    PRBool frameOwnsValue = PR_FALSE;
+    if (textControlFrame) {
+      textControlFrame->OwnsValue(&frameOwnsValue);
+    }
+    if (frameOwnsValue) {
       nsCOMPtr<nsIPresContext> presContext;
       GetPresContext(this, getter_AddRefs(presContext));
       formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
     } else {
-      SetValueInternal(aValue);
+      if (mValue) {
+        nsMemory::Free(mValue);
+      }
+
+      mValue = ToNewUTF8String(aValue);
+
+      SetValueChanged(PR_TRUE);
+      return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
+
     return NS_OK;
   }
 

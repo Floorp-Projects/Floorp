@@ -57,6 +57,7 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
+#include "nsIGfxTextControlFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 #include "nsLinebreakConverter.h"
@@ -112,8 +113,6 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsITextControlElement
-  NS_IMETHOD GetValueInternal(nsAWritableString& str);
-  NS_IMETHOD SetValueInternal(nsAReadableString& str);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
@@ -393,14 +392,6 @@ nsHTMLTextAreaElement::GetType(nsAWritableString& aType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLTextAreaElement::GetValueInternal(nsAWritableString& aValue)
-{
-  return nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
-                                                    nsHTMLAtoms::value,
-                                                    aValue);
-}
-
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
 {
@@ -411,26 +402,25 @@ nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
   // force the frame to be created.
   GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
+  nsIGfxTextControlFrame2* textControlFrame = nsnull;
   if (formControlFrame) {
+    CallQueryInterface(formControlFrame, &textControlFrame);
+  }
+
+  PRBool frameOwnsValue = PR_FALSE;
+  if (textControlFrame) {
+    textControlFrame->OwnsValue(&frameOwnsValue);
+  }
+  if (frameOwnsValue) {
     formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
     return NS_OK;
   } else {
-    return GetValueInternal(aValue);
+    return nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                                      nsHTMLAtoms::value,
+                                                      aValue);
   }
 }
 
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::SetValueInternal(nsAReadableString& aValue)
-{
-  // Set the attribute in the DOM too, we call SetAttribute with aNotify
-  // false so that we don't generate unnecessary reflows.
-  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
-                                             nsHTMLAtoms::value, aValue,
-                                             PR_FALSE);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
@@ -441,7 +431,16 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
   // creation of one will not do us any good
   GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
+  nsIGfxTextControlFrame2* textControlFrame = nsnull;
   if (formControlFrame) {
+    CallQueryInterface(formControlFrame, &textControlFrame);
+  }
+
+  PRBool frameOwnsValue = PR_FALSE;
+  if (textControlFrame) {
+    textControlFrame->OwnsValue(&frameOwnsValue);
+  }
+  if (frameOwnsValue) {
     nsCOMPtr<nsIPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext));
 
@@ -449,7 +448,12 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
   }
 
   // Always set the value internally, since it affects layout
-  SetValueInternal(aValue);
+  //
+  // Set the attribute in the DOM too, we call SetAttribute with aNotify
+  // false so that we don't generate unnecessary reflows.
+  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::value, aValue,
+                                             PR_FALSE);
 
   return NS_OK;
 }

@@ -153,6 +153,7 @@ public:
 //==== NSIGFXTEXTCONTROLFRAME2
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor);
+  NS_IMETHOD    OwnsValue(PRBool* aOwnsValue);
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength);
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
