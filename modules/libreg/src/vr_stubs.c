@@ -291,7 +291,7 @@ extern void vr_findGlobalRegName()
     }
 }
 
-extern char* vr_findGlobalRegName()
+extern char* vr_findVerRegName()
 {
     FSSpec  regSpec;
     OSErr   err;
