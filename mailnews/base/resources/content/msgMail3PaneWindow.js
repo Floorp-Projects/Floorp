@@ -39,6 +39,7 @@ var gCurrentLoadingFolderSortDirection = null;
 
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
+var gNextMessageAfterLoad = false;
 
 var gActiveThreadPaneSortColumn = "";
 
@@ -101,7 +102,7 @@ var folderListener = {
 			if(resource)
 			{
 				var uri = resource.Value;
-				//dump("In OnFolderLoaded for " + uri +"\n");
+				dump("In OnFolderLoaded for " + uri +"\n");
 				if(uri == gCurrentFolderToReroot)
 				{
 					gCurrentFolderToReroot="";
@@ -114,6 +115,15 @@ var folderListener = {
 						gCurrentLoadingFolderSortID = "";
 						gCurrentLoadingFolderSortDirection = null;
 
+                        if (gNextMessageAfterLoad) {
+                            gNextMessageAfterLoad = false;
+
+                            GoNextMessage(navigateUnread, true); 
+
+				            msgNavigationService.EnsureDocumentIsLoaded(document);
+	                        SetFocusThreadPane();
+                            PositionThreadPane();
+                        }
 					}
 				}
 				if(uri == gCurrentLoadingFolderURI)
@@ -884,6 +894,7 @@ function SelectFolder(folderUri)
 
 function SelectMessage(messageUri)
 {
+    dump("SelectMessage: " + messageUri + "\n");
 	var tree = GetThreadTree();
 	var treeitem = document.getElementById(messageUri);
 	if(tree && treeitem)

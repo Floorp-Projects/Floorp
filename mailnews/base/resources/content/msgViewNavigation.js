@@ -26,6 +26,56 @@ var navigateUnread = 1;
 var navigateFlagged = 2;
 var navigateNew = 3;
 
+var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
+commonDialogs = commonDialogs.QueryInterface(Components.interfaces.nsICommonDialogs);
+
+function FindNextFolder(originalFolderURI)
+{
+    if (!originalFolderURI) return;
+
+    var originalFolderResource = RDF.GetResource(originalFolderURI);
+	var folder = originalFolderResource.QueryInterface(Components.interfaces.nsIFolder);
+    if (!folder) return null;
+    dump("folder = " + folder.URI + "\n");
+
+    try {
+       var subFolderEnumerator = folder.GetSubFolders();
+       var done = false;
+       while (!done) {
+         var element = subFolderEnumerator.currentItem();
+         var currentSubFolder = element.QueryInterface(Components.interfaces.nsIMsgFolder);
+         dump("current folder = " + currentSubFolder.URI + "\n");
+         if (currentSubFolder.getNumUnread(false /* don't descend */) > 0) {
+           dump("if the child has unread, use it.\n");
+           return currentSubFolder.URI;
+         }
+         else if (currentSubFolder.getNumUnread(true /* descend */) > 0) {
+           dump("if the child doesn't have any unread, but it's children do, recurse\n");
+           return FindNextFolder(currentSubFolder.URI);
+         }
+
+         try {
+           subFolderEnumerator.next();
+         } 
+         catch (ex) {
+           done=true;
+         }
+      } // while
+    }
+    catch (ex) {
+        // one way to get here is if the folder has no sub folders
+    }
+ 
+    if (folder.parent && folder.parent.URI) {
+      dump("parent = " + folder.parent.URI + "\n");
+      return FindNextFolder(folder.parent.URI);
+    }
+    else {
+      dump("no parent\n");
+    }
+    return null;
+}
 
 /*GoNextMessage finds the message that matches criteria and selects it.  
   nextFunction is the function that will be used to detertime if a message matches criteria.
@@ -57,8 +107,24 @@ function GoNextMessage(type, startFromBeginning )
 
 		var nextMessage = msgNavigationService.FindNextMessage(type, tree, currentMessage, RDF, document, startFromBeginning, messageView.showThreads);
 		//Only change the selection if there's a valid nextMessage
-		if(nextMessage && (nextMessage != currentMessage))
+		if(nextMessage && (nextMessage != currentMessage)) {
 			ChangeSelection(tree, nextMessage);
+        }
+        else if (type == navigateUnread) {
+	        var treeFolder = GetThreadTreeFolder();
+	        var originalFolderURI = treeFolder.getAttribute('ref');
+            var nextFolderURI = FindNextFolder(originalFolderURI);
+            if (nextFolderURI && (originalFolderURI != nextFolderURI)) {
+                var nextFolderResource = RDF.GetResource(nextFolderURI);
+                var nextFolder = nextFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+ 
+                var promptText = Bundle.formatStringFromName("advanceNextPrompt", [ nextFolder.name ], 1); 
+                if (commonDialogs.Confirm(window, promptText, promptText)) {
+                        gNextMessageAfterLoad = true;
+                        SelectFolder(nextFolderURI);
+                }
+            }
+        }
 	}
 
 	var afterGoNextMessage = new Date();
