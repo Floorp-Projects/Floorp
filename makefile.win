@@ -159,5 +159,9 @@ splitsymbols:
 !endif
 !endif
 
-install:: rebase splitsymbols
+componentreg:
+	cd $(DIST)\bin
+	regxpcom.exe
+
+install:: rebase componentreg splitsymbols
 
