@@ -124,12 +124,15 @@ function MonthView( calendarWindow )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         //dump( "\nIn Month view, on selection changed");
+         
+         dump( "\nIn Month view, on selection changed");
          if( EventSelectionArray.length > 0 )
          {
             //if there are selected events.
-
-            gCalendarWindow.monthView.clearSelectedDate();
+            
+            //for some reason, this function causes the tree to go into a select / unselect loop
+            //putting it in a settimeout fixes this.
+            setTimeout( "gCalendarWindow.monthView.clearSelectedDate();", 1 );
 
             gCalendarWindow.monthView.clearSelectedBoxes();
             
