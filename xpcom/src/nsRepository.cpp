@@ -1249,6 +1249,8 @@ nsresult nsRepository::SelfRegisterDll(nsDll *dll)
 {
 	// Precondition: dll is not loaded already
 	PR_ASSERT(dll->IsLoaded() == PR_FALSE);
+
+    nsresult res = NS_ERROR_FAILURE;
 	
 	if (dll->Load() == PR_FALSE)
 	{
@@ -1257,8 +1259,7 @@ nsresult nsRepository::SelfRegisterDll(nsDll *dll)
 	}
 	
 	nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
-	nsresult res;
-	
+
 	if (regproc == NULL)
 	{
 		// Smart registration
@@ -1266,15 +1267,20 @@ nsresult nsRepository::SelfRegisterDll(nsDll *dll)
 			NS_QUICKREGISTER_DATA_SYMBOL);
 		if (qr == NULL)
 		{
-			return(NS_ERROR_NO_INTERFACE);
+			res = NS_ERROR_NO_INTERFACE;
 		}
-		// XXX register the quick registration data on behalf of the dll
+        else
+        {
+            // XXX register the quick registration data on behalf of the dll
+         	// XXX for now return failure
+        	res = NS_ERROR_FAILURE;
+        }
 	}
 	else
 	{
 		// Call the NSRegisterSelfProc to enable dll registration
 		nsIServiceManager* serviceMgr = NULL;
-		nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+		res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
 		if (res == NS_OK)
 		{
 			res = regproc(/* serviceMgr, */ dll->GetFullPath());
