@@ -1696,13 +1696,6 @@ nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
     // XXX Need to make this actually do something - bug 165110
 }
 
-PRBool
-nsXULElement::CanContainChildren() const
-{
-    // XXX Hmm -- not sure if this is unilaterally true...
-    return PR_TRUE;
-}
-
 PRUint32
 nsXULElement::GetChildCount() const
 {

@@ -3564,17 +3564,15 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
-  PRBool canHaveKids = CanContainChildren();
-  if (canHaveKids) {
-    fputs("\n", out);
-    PRInt32 kids = GetChildCount();
+  fputs("\n", out);
+  PRInt32 kids = GetChildCount();
 
-    for (index = 0; index < kids; index++) {
-      nsIContent *kid = GetChildAt(index);
-      kid->List(out, aIndent + 1);
-    }
-    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (index = 0; index < kids; index++) {
+    nsIContent *kid = GetChildAt(index);
+    kid->List(out, aIndent + 1);
   }
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
   fputs(">\n", out);
 
   if (mDocument) {
@@ -3641,12 +3639,6 @@ nsGenericElement::DumpContent(FILE* out, PRInt32 aIndent,
 {
 }
 #endif
-
-PRBool
-nsGenericElement::CanContainChildren() const
-{
-  return PR_TRUE;
-}
 
 PRUint32
 nsGenericElement::GetChildCount() const

@@ -147,12 +147,6 @@ public:
   virtual nsINodeInfo * GetNodeInfo() const = 0;
 
   /**
-   * Tell whether this element can contain children
-   * @return whether this element can contain children
-   */
-  virtual PRBool CanContainChildren() const = 0;
-
-  /**
    * Get the number of children
    * @return the number of children
    */

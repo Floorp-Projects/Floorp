@@ -264,9 +264,6 @@ int main(int argc, char** argv)
   txt->AppendData(tmp);
   NS_RELEASE(txt);
 
-  PRBool canHaveKids;
-  text->CanContainChildren(canHaveKids);
-  NS_ASSERTION(!canHaveKids,"");
   text->SetDocument(myDoc, PR_FALSE, PR_TRUE);
 
 #if 0
@@ -300,8 +297,6 @@ int main(int argc, char** argv)
     printf("Could not create container.\n");
     return -1;
   }
-  container->CanContainChildren(canHaveKids);
-  NS_ASSERTION(canHaveKids,"");
   container->SetDocument(myDoc, PR_FALSE, PR_TRUE);
 
   container->AppendChildTo(text, PR_FALSE, PR_FALSE);

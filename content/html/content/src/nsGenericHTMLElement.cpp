@@ -2051,15 +2051,14 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
-  if (CanContainChildren()) {
-    fputs("\n", out);
-    PRInt32 kids = GetChildCount();
-    for (index = 0; index < kids; index++) {
-      nsIContent *kid = GetChildAt(index);
-      kid->List(out, aIndent + 1);
-    }
-    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  fputs("\n", out);
+  PRInt32 kids = GetChildCount();
+  for (index = 0; index < kids; index++) {
+    nsIContent *kid = GetChildAt(index);
+    kid->List(out, aIndent + 1);
   }
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
   fputs(">\n", out);
 }
 
@@ -2081,21 +2080,19 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,
 
   fputs(">",out);
 
-  if (CanContainChildren()) {
-    if(aIndent) fputs("\n", out);
-    PRInt32 kids = GetChildCount();
-    for (index = 0; index < kids; index++) {
-      nsIContent *kid = GetChildAt(index);
-      PRInt32 indent = aIndent ? aIndent + 1 : 0;
-      kid->DumpContent(out, indent, aDumpAll);
-    }
-    for (index = aIndent; --index >= 0; ) fputs("  ", out);
-    fputs("</",out);
-    fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
-    fputs(">",out);
-
-    if(aIndent) fputs("\n", out);
+  if(aIndent) fputs("\n", out);
+  PRInt32 kids = GetChildCount();
+  for (index = 0; index < kids; index++) {
+    nsIContent *kid = GetChildAt(index);
+    PRInt32 indent = aIndent ? aIndent + 1 : 0;
+    kid->DumpContent(out, indent, aDumpAll);
   }
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  fputs("</",out);
+  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
+  fputs(">",out);
+
+  if(aIndent) fputs("\n", out);
 }
 #endif
 

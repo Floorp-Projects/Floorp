@@ -371,7 +371,6 @@ public:
   virtual void GetNameSpaceID(PRInt32* aNameSpaceID) const;
   virtual nsIAtom *Tag() const;
   virtual nsINodeInfo *GetNodeInfo() const;
-  virtual PRBool CanContainChildren() const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
