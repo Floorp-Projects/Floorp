@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
    - The contents of this file are subject to the Mozilla Public License Version
@@ -16,10 +16,10 @@
    -
    - The Initial Developer of the Original Code is
    - OEone Corporation.
-   - Portions created by OEone Corporation are Copyright (C) 2001
-   - OEone Corporation. All Rights Reserved.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Colin Phillips (colinp@oeone.com)
+   - Contributor(s): Colin Phillips <colinp@oeone.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,7 +33,7 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-   -  -->
+   - ***** END LICENSE BLOCK ***** -->
 
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
