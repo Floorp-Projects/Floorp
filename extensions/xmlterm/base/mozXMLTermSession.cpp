@@ -1153,12 +1153,19 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
   if (NS_FAILED(result) || !selection)
     return NS_ERROR_FAILURE;
 
+#ifdef NO_WORKAROUND
+  // Collapse selection to new cursor location
+  result = selection->Collapse(mInputTextNode, cursorCol);
+#else
+  // WORKAROUND for cursor positioning at end of prompt
+  // Without this workaround, the cursor is positioned too close to the prompt
+  // (i.e., too far to the left, ignoring the prompt whitespace)
+
   if ((cursorCol > 0) || (mPromptHTML.Length() > 0)) {
     // Collapse selection to new cursor location
     result = selection->Collapse(mInputTextNode, cursorCol);
 
   } else {
-    // WORKAROUND for cursor positioning at end of prompt
     nsCOMPtr<nsIDOMNode> promptTextNode;
     result = mPromptSpanNode->GetFirstChild(getter_AddRefs(promptTextNode));
 
@@ -1176,6 +1183,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
       }
     }
   }
+#endif // !NO_WORKAROUND
 
   NS_ASSERTION((NS_SUCCEEDED(result)),
                  "selection could not be collapsed after insert.");
@@ -1313,13 +1321,13 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
       return result;
 
 
-    nsCOMPtr<nsIDocShell> webShell;
-    result = mXMLTerminal->GetDocShell(getter_AddRefs(webShell));
-    if (NS_FAILED(result) || !webShell)
+    nsCOMPtr<nsIDocShell> docShell;
+    result = mXMLTerminal->GetDocShell(getter_AddRefs(docShell));
+    if (NS_FAILED(result) || !docShell)
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMWindow> outerDOMWindow;
-    result = mozXMLTermUtils::ConvertDocShellToDOMWindow(webShell,
+    result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell,
                                               getter_AddRefs(outerDOMWindow));
 
     if (NS_FAILED(result) || !outerDOMWindow) {
@@ -2277,39 +2285,21 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
 
   XMLT_LOG(mozXMLTermSession::ScrollToBottomLeft,70,("\n"));
 
-#if 0
-  // Scroll primary frame to bottom of view
-  nsCOMPtr<nsIContent> blockContent (do_QueryInterface(mSessionNode));
-  if (!blockContent)
+  // Get DOM Window
+  nsCOMPtr<nsIDocShell> docShell;
+  result = mXMLTerminal->GetDocShell(getter_AddRefs(docShell));
+  if (NS_FAILED(result) || !docShell)
     return NS_ERROR_FAILURE;
 
-  nsIFrame* primaryFrame;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell,
+                                           getter_AddRefs(domWindow));
 
-  result = mPresShell->GetPrimaryFrameFor(blockContent, &primaryFrame);
-  if (NS_FAILED(result))
-    return result;
-
-  result = mPresShell->ScrollFrameIntoView(primaryFrame,
-                                           NS_PRESSHELL_SCROLL_BOTTOM,
-                                           NS_PRESSHELL_SCROLL_LEFT);
-  if (NS_FAILED(result))
-    return result;
-
-#else
-  // Root scrollable view for presShell.
-  nsCOMPtr<nsIViewManager> viewManager;
-  result = mPresShell->GetViewManager(getter_AddRefs(viewManager));
-  if (NS_FAILED(result) || !viewManager)
+  if (NS_FAILED(result) || !domWindow)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIScrollableView> scrollableView;
-  result = viewManager->GetRootScrollableView(getter_AddRefs(scrollableView));
-  if (NS_FAILED(result) || !scrollableView)
-    return NS_ERROR_FAILURE;
-
-  // Scroll to bottom of view
-  scrollableView->ScrollByWhole(false);
-#endif
+  // Scroll to bottom left of screen
+  domWindow->ScrollBy(-9999,9999);
 
   return NS_OK;
 }

@@ -25,24 +25,11 @@
 
 #include <stdio.h>
 
-#undef RAW_GTK_WINDOW
+#undef NEW_XMLTERM_IMP
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-
-#ifdef RAW_GTK_WINDOW
-#include <gtk/gtk.h>
-#include "gtkmozarea.h"
-#include "gdksuperwin.h"
-#include "mozISimpleContainer.h"
-#else
-#include "nsIWidget.h"
-#include "nsWidgetsCID.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
-#include "nsIBaseWindow.h"
-#endif
 
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -51,6 +38,15 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIScriptGlobalObject.h"
+
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+
+#ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
+#include "nsIWidget.h"
+#include "nsWidgetsCID.h"
+#include "nsIBaseWindow.h"
+#endif
 
 #include "nsIServiceManager.h"
 
@@ -71,8 +67,7 @@ static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 // Define Class IDs
 static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
 
-#ifdef RAW_GTK_WINDOW
-#else
+#ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
 static NS_DEFINE_IID(kWindowCID,             NS_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID,           NS_WEB_SHELL_CID);
 #endif
@@ -365,8 +360,6 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
                                   nsIDOMWindow **_retval)
 {
   nsresult result;
-  PRInt32 width = 760;
-  PRInt32 height = 400;
 
   XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,10,("\n"));
 
@@ -396,74 +389,9 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
   nsCOMPtr<nsIPref> prefs = nsnull;
   result = mContentAreaDocShell->GetPrefs(getter_AddRefs(prefs));
 
-#ifdef RAW_GTK_WINDOW // Create window using raw GTK calls
-  GtkWidget *mainWin = NULL;
-  GtkWidget *mozArea = NULL;
-  GdkSuperWin *superWin = NULL;
-
-  mainWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_default_size( GTK_WINDOW(mainWin), width, height);
-  gtk_window_set_title(GTK_WINDOW(mainWin), "XMLterm2");
-  
-  mozArea = gtk_mozarea_new();
-  gtk_container_add(GTK_CONTAINER(mainWin), mozArea);
-  gtk_widget_realize(mozArea);
-  gtk_widget_show(mozArea);
-  superWin = GTK_MOZAREA(mozArea)->superwin;
-
-  gdk_window_show(superWin->bin_window);                                       
-  gdk_window_show(superWin->shell_window);
-
-  gtk_widget_show(mainWin);
-
-
-  // Create simple container
-  nsCOMPtr<mozISimpleContainer> gSimpleContainer = nsnull;
-  result = NS_NewSimpleContainer(getter_AddRefs(gSimpleContainer));
-
-  if (NS_FAILED(result) || !gSimpleContainer) {
-    return result; // Exit main program
-  }
-
-  // Determine window dimensions
-  GtkAllocation *alloc = &GTK_WIDGET(mainWin)->allocation;
-    
-  // Initialize container it to hold a doc shell
-  result = gSimpleContainer->Init((nsNativeWidget *) superWin,
-                              alloc->width, alloc->height, prefs);
-
-  if (NS_FAILED(result)) {
-    return result; // Exit main program
-  }
-
-  // Get reference to doc shell embedded in a simple container
-  nsCOMPtr<nsIDocShell> docShell;
-  result = gSimpleContainer->GetDocShell(*getter_AddRefs(docShell));
-
-  if (NS_FAILED(result) || !docShell) {
-    return result; // Exit main program
-  }
-
-  // Load initial XMLterm document
-  result = gSimpleContainer->LoadURL(
-                                 "file:///home/svn/mysrc/web/home/links.html");
-  if (NS_FAILED(result))
-    return result;
-
-  ///nsCOMPtr<nsIWebShell> webShell( do_QueryInterface(docShell) );
-  ///nsString aStr("file:///home/svn/mysrc/web/home/links.html");
-  ///result = webShell->LoadURL(aStr.GetUnicode());
-  ///if (NS_FAILED(result))
-  ///  return result;
-
-  // Return new DOM window
-  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell, _retval);
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check8, *_retval=0x%x\n",
-                                                *_retval));
-  if (NS_FAILED(result) || !*_retval)
-    return NS_ERROR_FAILURE;
-
-#else            // Use nsIAppShellService
+#ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
+  PRInt32 width = 760;
+  PRInt32 height = 400;
 
   XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check4\n"));
 

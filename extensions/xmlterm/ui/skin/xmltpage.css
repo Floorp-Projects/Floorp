@@ -17,6 +17,11 @@ SPAN.command     { color: blue }
 PRE.row   { margin: 0; padding-top: 0; padding-bottom: 0 }
 SPAN.row  { margin: 0; padding-top: 0; padding-bottom: 0 }
 
+/* Tips */
+SPAN.tips        { font-family: sans-serif }
+SPAN.moretips    { font-family: sans-serif; color: blue; cursor: hand;
+                   font-weight: bold; text-decoration: underline };
+
 /* Highlighting */
 DIV.textlink     { font-family: monaco; color: blue; cursor: hand }
 SPAN.textlink    { font-family: monaco; color: blue; cursor: hand }
