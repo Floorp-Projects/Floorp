@@ -65,17 +65,50 @@ nsJavaXPTCStub::~nsJavaXPTCStub()
   if (isCopy)
     mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
 #endif
-  if (mMaster)
-  {
-    mMaster->mChildren.RemoveElement(this);
-    NS_RELEASE(mMaster);
+
+  if (!mMaster) {
+    // delete each child stub
+    for (PRInt32 i = 0; i < mChildren.Count(); i++) {
+      delete (nsJavaXPTCStub*) mChildren[i];
+    }
   }
 
   mJavaEnv->DeleteGlobalRef(mJavaObject);
 }
 
-NS_IMPL_ADDREF(nsJavaXPTCStub)
-NS_IMPL_RELEASE(nsJavaXPTCStub)
+NS_IMETHODIMP_(nsrefcnt)
+nsJavaXPTCStub::AddRef()
+{
+  // if this is a child
+  if (mMaster)
+    return mMaster->AddRef();
+
+  // if this is the master interface
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  NS_ASSERT_OWNINGTHREAD(nsJavaXPTCStub);
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsJavaXPTCStub", sizeof(*this));
+  return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsJavaXPTCStub::Release()
+{
+  // if this is a child
+  if (mMaster)
+    return mMaster->Release();
+
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD(nsJavaXPTCStub);
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsJavaXPTCStub");
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
 
 NS_IMETHODIMP
 nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
@@ -112,10 +145,6 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   PR_Free(iid_str);
   jobject obj = mJavaEnv->CallObjectMethod(mJavaObject, qiMID, iid_jstr);
 
-  // XXX Should we check here if the jobject we got back is the same as
-  //  mJavaObject?  Or to see if it already has a nsJavaXPTCStub associated
-  //  with it?
-
   if (obj) {
     // Get interface info for new java object
     nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
@@ -125,10 +154,26 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
     nsJavaXPTCStub* stub = new nsJavaXPTCStub(mJavaEnv, obj, iinfo);
 
     // add stub to the master's list of children, so we can preserve
-    // symmetry in future QI calls.  each child owns his master, but
-    // the master only keeps weak references to its children.  the
-    // children are responsible for removing themselves as they die.
-    NS_ADDREF(master);
+    // symmetry in future QI calls.  the master will delete each child
+    // when it is destroyed.  the refcount of each child is bound to
+    // the refcount of the master.  this is done to deal with code
+    // like this:
+    //
+    //   nsCOMPtr<nsIBar> bar = ...;
+    //   nsIFoo *foo;
+    //   {
+    //     nsCOMPtr<nsIFoo> temp = do_QueryInterface(bar);
+    //     foo = temp;
+    //   }
+    //   foo->DoStuff();
+    //
+    // while this code is not valid XPCOM (since it is using |foo|
+    // after having called Release on it), such code is unfortunately
+    // very common in the mozilla codebase.  the assumption this code
+    // is making is that so long as |bar| is alive, it should be valid
+    // to access |foo| even if the code doesn't own a strong reference
+    // to |foo|!  clearly wrong, but we need to support it anyways.
+
     stub->mMaster = master;
     master->mChildren.AppendElement(stub);
 
