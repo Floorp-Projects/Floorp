@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 
 class nsHTTPIndex : public nsIHTTPIndex
 {
-private:
+protected:
   // We grab a reference to the content viewer container (which
   // indirectly owns us) so that we can insert ourselves as a global
   // in the script context _after_ the XUL doc has been embedded into
@@ -86,8 +86,8 @@ private:
   nsCOMPtr<nsIRDFDataSource> mDataSource;
 
   nsHTTPIndex(nsIContentViewerContainer* aContainer);
-  virtual ~nsHTTPIndex();
   nsresult Init(nsIURI* aBaseURL);
+  virtual ~nsHTTPIndex();
 
 public:
 
@@ -109,7 +109,7 @@ public:
 
 class nsHTTPIndexParser : public nsIStreamListener
 {
-private:
+protected:
   static nsrefcnt gRefCnt;
   static nsIRDFService* gRDF;
   static nsIRDFResource* kHTTPIndex_Comment;
@@ -801,7 +801,7 @@ nsHTTPIndex::CreateListener(nsIStreamListener** _result)
 
 class nsDirectoryViewerFactory : public nsIDocumentLoaderFactory
 {
-private:
+protected:
   nsDirectoryViewerFactory();
   virtual ~nsDirectoryViewerFactory();
 
