@@ -1053,6 +1053,15 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
             result = nsEditor::DeleteNode(newTextNode);
             if (NS_SUCCEEDED(result)) {
               result = nsEditor::InsertNode(newTextNode, newStyleNode, 0);
+              if (NS_SUCCEEDED(result)) {
+                nsCOMPtr<nsIDOMSelection>selection;
+                result = nsEditor::GetSelection(getter_AddRefs(selection));
+                if (NS_SUCCEEDED(result)) {
+                  selection->Collapse(newTextNode, 0);
+                  PRInt32 endOffset = aEndOffset-aStartOffset;
+                  selection->Extend(newTextNode, endOffset);
+                }
+              }
             }
           }
         }
