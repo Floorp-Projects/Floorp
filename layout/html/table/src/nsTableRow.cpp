@@ -110,25 +110,6 @@ nsrefcnt nsTableRow::Release(void)
   return mRefCnt;
 }
 
-//QQQ could be removed
-PRInt32 nsTableRow::GetMaxColumns() 
-{
-  int sum = 0;
-  for (int i = 0, n = ChildCount(); i < n; i++) {
-    nsTableCell *cell = (nsTableCell *) ChildAt(i); // cell: REFCNT++
-    sum += cell->GetColSpan();
-    NS_RELEASE(cell);                               // cell: REFCNT--
-  }
-  return sum;
-}
-
-void nsTableRow::ResetCellMap ()
-{
-  if (nsnull != mRowGroup)
-  {
-    mRowGroup->ResetCellMap ();
-  }
-}
 
 NS_IMETHODIMP
 nsTableRow::AppendChild (nsIContent *aContent, PRBool aNotify)
@@ -150,7 +131,6 @@ nsTableRow::AppendChild (nsIContent *aContent, PRBool aNotify)
       if (NS_OK == rv)
       {
         ((nsTableCell *)aContent)->SetRow (this);
-        ResetCellMap ();
       }
     }
   }
@@ -177,7 +157,6 @@ nsTableRow::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
       if (NS_OK == rv)
       {
         ((nsTableCell *)aContent)->SetRow (this);
-        ResetCellMap ();
       }
     }
   }
@@ -216,7 +195,6 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
       ((nsTableCell *)aContent)->SetRow (this);
       if (nsnull!=oldChild)
         ((nsTableCell *)oldChild)->SetRow (nsnull);
-      ResetCellMap ();
     }
     NS_IF_RELEASE(oldChild);                  // oldChild: REFCNT--
 #endif
@@ -244,7 +222,6 @@ nsTableRow::RemoveChildAt (int aIndex, PRBool aNotify)
     {
       if (nsnull != oldChild)
         ((nsTableCell *)oldChild)->SetRow (nsnull);
-      ResetCellMap ();
     }
   }
   NS_IF_RELEASE(oldChild);                    // oldChild: REFCNT--

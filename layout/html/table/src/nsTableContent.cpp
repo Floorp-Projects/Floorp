@@ -130,9 +130,10 @@ void nsTableContent::SetTable (nsTablePart *aTable)
   mTable = aTable;
 }
 
-PRBool nsTableContent::IsImplicit () const
+NS_METHOD nsTableContent::IsSynthetic(PRBool& aResult)
 {
-  return mImplicit;
+  aResult = mImplicit;
+  return NS_OK;
 }
 
 /**
@@ -169,7 +170,7 @@ void nsTableContent::List(FILE* out, PRInt32 aIndent) const
   }
 
   char *isImplicitString = "";
-  if (PR_TRUE==IsImplicit())
+  if (PR_TRUE==mImplicit)
     isImplicitString = " (I)";
 
   ListAttributes(out);

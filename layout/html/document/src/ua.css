@@ -236,6 +236,7 @@ CAPTION {
   text-align: center;
   display: table-caption;
 }
+TR { display: table-row;}
 TBODY { display: table-row-group;    }
 THEAD { display: table-header-group; }
 TFOOT { display: table-footer-group; }

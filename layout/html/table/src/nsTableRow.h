@@ -98,11 +98,6 @@ public:
   /** set this row's starting row index */
   virtual void SetRowIndex (int aRowIndex);
 
-  /** return the number of columns represented by the cells in this row */
-  virtual PRInt32 GetMaxColumns();
-
-  /** notify the containing nsTablePart that cell information has changed */
-  virtual void ResetCellMap ();
 
   /* ----------- nsTableContent overrides ----------- */
 

@@ -29,7 +29,7 @@
  * within a table.
  *
  * @author  sclark
- * @version $Revision: 3.5 $
+ * @version $Revision: 3.6 $
  * @see
  */
 class nsTableContent : public nsHTMLContainer, public nsITableContent
@@ -87,7 +87,7 @@ public:
 
 
   /** @see nsITableContent::IsImplicit */
-  virtual PRBool IsImplicit () const;
+  NS_IMETHOD IsSynthetic(PRBool& aResult);
 
   /** @see nsITableContent::SkipSelfForSaving */
   virtual PRBool SkipSelfForSaving ();

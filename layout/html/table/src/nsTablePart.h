@@ -98,13 +98,6 @@ public:
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
 
-/* public Table methods */
-
-  /** returns the actual number of columns in this table.<br>
-    * as a side effect, will call BuildCellMap to constuct mCellMap if needed.
-    */
-  virtual PRInt32 GetMaxColumns();
-
 
 /* overrides from nsHTMLContainer */
 
@@ -152,8 +145,6 @@ protected:
 
 private:
 
-  PRInt32 mColCount;
-  PRInt32 mSpecifiedColCount;
   static nsIAtom *kDefaultTag;
 };
 

@@ -35,12 +35,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-// hack, remove when hack in nsTableCol constructor is removed
-static PRInt32 HACKcounter=0;
-static nsIAtom *HACKattribute=nsnull;
-#include "prprf.h"  // remove when nsTableCol constructor hack is removed
-// end hack code
-
 
 nsTableColGroup::nsTableColGroup(nsIAtom* aTag, int aSpan)
   : nsTableContent(aTag),
@@ -48,17 +42,6 @@ nsTableColGroup::nsTableColGroup(nsIAtom* aTag, int aSpan)
     mStartColIndex(0),
     mColCount(0)
 {
-  /* begin hack */
-  // temporary hack to get around style sheet optimization that folds all
-  // col style context into one, unless there is a unique HTML attribute set
-  char out[40];
-  PR_snprintf(out, 40, "%d", HACKcounter);
-  const nsString value(out);
-  if (nsnull==HACKattribute)
-    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
-  SetAttribute(HACKattribute, value);
-  HACKcounter++;
-  /* end hack */
 }
 
 nsTableColGroup::nsTableColGroup (PRBool aImplicit)
@@ -68,17 +51,6 @@ nsTableColGroup::nsTableColGroup (PRBool aImplicit)
     mColCount(0)
 {
   mImplicit = aImplicit;
-  /* begin hack */
-  // temporary hack to get around style sheet optimization that folds all
-  // col style context into one, unless there is a unique HTML attribute set
-  char out[40];
-  PR_snprintf(out, 40, "%d", HACKcounter);
-  const nsString value(out);
-  if (nsnull==HACKattribute)
-    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
-  SetAttribute(HACKattribute, value);
-  HACKcounter++;
-  /* end hack */
 }
 
 
@@ -161,7 +133,9 @@ nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
   PRBool contentHandled = PR_FALSE;
   // SEC: TODO verify that aContent is table content
   nsTableContent *tableContent = (nsTableContent *)aContent;
-  if (PR_FALSE==tableContent->IsImplicit())
+  PRBool isImplicit;
+  tableContent->IsSynthetic(isImplicit);
+  if (PR_FALSE==isImplicit)
   {
     /* if aContent is not implicit, 
      * and if we already have an implicit column for this actual column, 
@@ -172,7 +146,9 @@ nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
     {
       nsTableContent *col = (nsTableContent*)ChildAt(colIndex);
       NS_ASSERTION(nsnull!=col, "bad child");
-      if (PR_TRUE==col->IsImplicit())
+      PRBool colIsImplicit;
+      col->IsSynthetic(colIsImplicit);
+      if (PR_TRUE==colIsImplicit)
       {
         ReplaceChildAt(aContent, colIndex, aNotify);
         contentHandled = PR_TRUE;
