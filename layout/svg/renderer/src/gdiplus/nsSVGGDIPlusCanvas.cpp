@@ -53,6 +53,7 @@ using namespace Gdiplus;
 #include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsIRenderingContextWin.h"
+#include "nsIDOMSVGMatrix.h"
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -84,6 +85,8 @@ private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
   nsCOMPtr<nsPresContext> mPresContext;
   Graphics *mGraphics;
+  nsVoidArray mClipStack;
+
 #ifdef SVG_GDIPLUS_ENABLE_OFFSCREEN_BUFFER
   Bitmap *mOffscreenBitmap;
   Graphics *mOffscreenGraphics;
@@ -319,4 +322,71 @@ nsSVGGDIPlusCanvas::GetGraphics()
 #endif
 }
 
+/** Implements pushClip(); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::PushClip()
+{
+  Region *region = new Region;
+  if (region)
+    mGraphics->GetClip(region);
+  // append even if we failed to allocate the region so push/pop match
+  mClipStack.AppendElement((void *)region);
 
+  return NS_OK;
+}
+
+/** Implements popClip(); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::PopClip()
+{
+  PRUint32 count = mClipStack.Count();
+  if (count == 0)
+    return NS_OK;
+
+  Region *region = (Region *)mClipStack[count-1];
+  if (region) {
+    mGraphics->SetClip(region);
+    delete region;
+  }
+  mClipStack.RemoveElementAt(count-1);
+
+  return NS_OK;
+}
+
+/** Implements setClipRect(in nsIDOMSVGMatrix canvasTM, in float x, in float y,
+    in float width, in float height); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
+                                float aWidth, float aHeight)
+{
+  if (!aCTM)
+    return NS_ERROR_FAILURE;
+
+  float m[6];
+  float val;
+  aCTM->GetA(&val);
+  m[0] = val;
+    
+  aCTM->GetB(&val);
+  m[1] = val;
+    
+  aCTM->GetC(&val);  
+  m[2] = val;  
+    
+  aCTM->GetD(&val);  
+  m[3] = val;  
+  
+  aCTM->GetE(&val);
+  m[4] = val;
+  
+  aCTM->GetF(&val);
+  m[5] = val;
+
+  Matrix matrix(m[0], m[1], m[2], m[3], m[4], m[5]);
+  RectF rect(aX, aY, aWidth, aHeight);
+  Region clip(rect);
+  clip.Transform(&matrix);
+  mGraphics->SetClip(&clip, CombineModeIntersect);
+
+  return NS_OK;
+}
