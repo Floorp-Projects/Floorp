@@ -346,7 +346,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
+#ifndef XP_OS2
     BeginTrackingDragGesture ( aPresContext, (nsGUIEvent*)aEvent, aTargetFrame );
+#endif
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     mNormalLMouseEventInProcess = PR_TRUE;
@@ -356,6 +358,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
+#ifdef XP_OS2
+    BeginTrackingDragGesture ( aPresContext, (nsGUIEvent*)aEvent, aTargetFrame );
+#endif
     mRClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
@@ -363,10 +368,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 #ifdef CLICK_HOLD_CONTEXT_MENUS
     KillClickHoldTimer();
 #endif
+#ifndef XP_OS2
     StopTrackingDragGesture();
+#endif
     mNormalLMouseEventInProcess = PR_FALSE;
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
+#ifdef XP_OS2
+    StopTrackingDragGesture();
+#endif
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_MOVE:
