@@ -77,8 +77,6 @@ extern "C" {
   Widget         fe_EditorCreateComposeToolbar(MWContext*, Widget, char*);
 }
 
-extern "C" void fe_sec_logo_cb (Widget, XtPointer, XtPointer);
-
 extern "C" XtPointer fe_GetFont(MWContext *context, int sizeNum, int fontmask);
 extern "C" void
 fe_set_compose_wrap_state(MWContext *context, XP_Bool wrap_p);
@@ -95,11 +93,6 @@ extern "C" void fe_paste_quoted_cb (Widget widget, XtPointer closure,
                                XtPointer call_data);
 extern "C" void fe_mailNew_cb (Widget widget, XtPointer closure,
                                XtPointer call_data);
-extern "C" void fe_load_default_font (MWContext *context);
-extern "C" void fe_find_scrollbar_sizes (MWContext *context);
-extern "C" void fe_get_final_context_resources (MWContext *context);
-extern "C" void fe_InitScrolling (MWContext *context);
-extern "C" void fe_InitRemoteServerWindow (MWContext *context);
 extern "C" void fe_SensitizeMenus (MWContext *context);
 extern "C" int FE_GetMessageBody (MSG_Pane* comppane,
                    char **body,

@@ -106,10 +106,6 @@ extern int XFE_COULD_NOT_FDOPEN_THE_NEW_STDOUT;
 extern int XFE_COULD_NOT_DUP_A_NEW_STDOUT;
 extern int MK_UNABLE_TO_LOCATE_FILE;
 
-#ifdef MOZ_LDAP
-extern "C" void fe_ldapsearch_finished(MWContext *context);
-#endif
-
 #ifndef NO_WEB_FONTS
 /* Webfonts related routines defined in fonts.c */
 extern "C" int fe_WebfontsNeedReload(MWContext *context);

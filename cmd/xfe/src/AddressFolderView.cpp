@@ -68,8 +68,6 @@ static MSG_HEADER_SET standard_header_set[] = {
 
 #define TOTAL_HEADERS (sizeof(standard_header_set)/sizeof(MSG_HEADER_SET))
 
-extern "C" char *fe_StringTrim (char *string);
-
 extern "C" char* xfe_ExpandForNameCompletion(char *pString,
                                              ABook *pAddrBook,
                                              DIR_Server *pDirServer);

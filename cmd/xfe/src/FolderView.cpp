@@ -69,9 +69,6 @@
 #define FOLDER_OUTLINER_GEOMETRY_PREF "mail.folderpane.outliner_geometry"
 
 // bloody entrails dragging behind.... weighing me down...
-extern "C" CL_Compositor *fe_create_compositor(MWContext *context);
-extern "C" void fe_load_default_font (MWContext *context);
-extern "C" void fe_get_final_context_resources (MWContext *context);
 extern "C" void fe_sec_logo_cb (Widget, XtPointer, XtPointer);
 
 const char *XFE_FolderView::folderSelected = "XFE_FolderView::folderSelected";
