@@ -41,11 +41,12 @@ DIRS += 			\
 endif
 
 ifndef MOZ_NATIVE_NSPR
+# Do not regenerate Makefile for NSPR
 ifdef USE_NSPR_AUTOCONF
 DIRS		+= nsprpub
+STATIC_MAKEFILES := nsprpub
 else
 DIRS		+= $(topsrcdir)/nsprpub
-# NSPR does not use Makefile.in
 STATIC_MAKEFILES := $(topsrcdir)/nsprpub
 endif
 endif
