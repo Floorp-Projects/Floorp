@@ -90,6 +90,8 @@ input {
   line-height: normal !important;
   text-align: start;
   text-transform: none;
+  word-spacing: normal;
+  letter-spacing: normal;
   cursor: text;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
@@ -104,6 +106,8 @@ textarea {
   line-height: normal !important;
   text-align: start;
   text-transform: none;
+  word-spacing: normal;
+  letter-spacing: normal;
   vertical-align: text-bottom;
   cursor: text;
   -moz-user-focus: normal;
