@@ -6668,26 +6668,20 @@ void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
   if (truncatedPrefix.Last() == slash)
         truncatedPrefix.SetLength(truncatedPrefix.Length()-1);
     
-    char *utf7ListArg = 
-        CreateUtf7ConvertedString(truncatedPrefix.get(),PR_TRUE);
-    if (utf7ListArg)
-    {
-        nsCString pattern(utf7ListArg);
-        nsCString suffix;
-        int count = 0;
-        char separator = 0;
-        m_runningUrl->GetOnlineSubDirSeparator(&separator);
-        suffix.Assign(separator);
-        suffix += '%';
-        
-        while (count < depth)
-        {
-            pattern += suffix;
-            count++;
-            List(pattern.get(), PR_FALSE);
-        }
-        PR_Free(utf7ListArg);
-    }
+  nsCAutoString pattern(truncatedPrefix);
+  nsCAutoString suffix;
+  int count = 0;
+  char separator = 0;
+  m_runningUrl->GetOnlineSubDirSeparator(&separator);
+  suffix.Assign(separator);
+  suffix += '%';
+  
+  while (count < depth)
+  {
+      pattern += suffix;
+      count++;
+      List(pattern.get(), PR_FALSE);
+  }
 }
 
 void nsImapProtocol::ProcessAuthenticatedStateURL()

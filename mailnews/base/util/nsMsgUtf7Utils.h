@@ -41,8 +41,6 @@
 #include "msgCore.h"
 #include "nsError.h"
 
-NS_MSG_BASE char* CreateUtf7ConvertedString(const char * aSourceString, PRBool aConvertToUtf7Imap);
-
 NS_MSG_BASE nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **result);
 
 NS_MSG_BASE char * CreateUtf7ConvertedStringFromUnicode(const PRUnichar *aSourceString);
