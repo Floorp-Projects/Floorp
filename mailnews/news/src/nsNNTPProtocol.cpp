@@ -2411,7 +2411,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	  }
 #endif /* 0 */
 
-	if (newsgroupURI) {
+	if ((const char *)newsgroupURI) {
 		nsCOMPtr<nsIRDFResource> resource;
 		rv = rdf->GetResource((const char *)newsgroupURI, getter_AddRefs(resource));
 		if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
@@ -2524,7 +2524,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
         }
     }        
 
-    if (newsgroupURI) {
+    if ((const char *)newsgroupURI) {
         nsCOMPtr<nsIRDFResource> resource;
         rv = rdf->GetResource((const char *)newsgroupURI, getter_AddRefs(resource));
         if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
