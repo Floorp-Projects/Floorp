@@ -340,7 +340,6 @@ NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
 
     int i = 0;
     char* hexChars = "0123456789ABCDEF";
-    static const char CheckHexChars[] = "0123456789ABCDEFabcdef";
     int len = PL_strlen(str);
     PRBool forced = PR_FALSE;
 
@@ -349,30 +348,20 @@ NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
 
     register const unsigned char* src = (const unsigned char *) str;
 
-    src = (const unsigned char *) str;
-
     char tempBuffer[100];
     unsigned int tempBufferPos = 0;
 
-    char c1[] = " ";
-    char c2[] = " ";
-    char* const pc1 = c1;
-    char* const pc2 = c2;
-
     for (i = 0; i < len; i++)
     {
-      c1[0] = *(src+1);
-      if (*(src+1) == '\0') 
-          c2[0] = '\0';
-      else
-          c2[0] = *(src+2);
       unsigned char c = *src++;
 
       /* if the char has not to be escaped or whatever follows % is 
          a valid escaped string, just copy the char */
-      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !(forced) && (pc1) && (pc2) &&
-         PL_strpbrk(pc1, CheckHexChars) != 0 &&  
-         PL_strpbrk(pc2, CheckHexChars) != 0)) {
+ 
+      /* Also the % will not be escaped until forced */
+      /* See bugzilla bug 61269 for details why we changed this */
+
+      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !(forced))) {
 		  tempBuffer[tempBufferPos++]=c;
       }
       else 
