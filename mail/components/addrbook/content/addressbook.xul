@@ -366,7 +366,7 @@
           <menupopup id="menu_HelpPopup">
             <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
             <menuitem accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
-            <menuseparator/>
+            <menuseparator id="menu_HelpAboutSeparator"/>
             <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
                       label="&aboutCmd.label;"
                       oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
