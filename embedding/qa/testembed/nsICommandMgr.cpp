@@ -71,58 +71,58 @@ CnsICommandMgr::~CnsICommandMgr()
 {
 }
 
-// 1st column: command; 2nd column: DoCommand state; 
+// 1st column: command; 2nd column: DoCommand state, 3rd column: CmdParam state; 
 CommandTest CommandTable[] = {
-	{"cmd_bold", "", "state_all", "state_begin", "state_end", "state_mixed", 1},
-	{"cmd_italic", "", "state_all", "state_begin", "state_end", "state_mixed", 1},
-	{"cmd_underline", "", "state_all", "state_begin", "state_end", "state_mixed", 1},
-	{"cmd_indent", "", "state_enabled", "", "", "", 1},
-	{"cmd_outdent", "", "state_enabled", "", "", "", 1},
-	{"cmd_increaseFont", "", "state_enabled", "", "", "", 1},
-	{"cmd_undo", "", "state_enabled", "", "", "", 1},
-	{"cmd_redo", "", "state_enabled", "", "", "", 1},
-	{"cmd_decreaseFont", "", "", "", "", "", 1},
-	{"cmd_fontColor", "state_attribute", "state_attribute", "", "", "", 1},
-	{"cmd_backgroundColor", "state_attribute", "state_attribute", "", "", "", 1},
-	{"cmd_fontFace", "state_attribute", "state_attribute", "", "", "", 1},
-	{"cmd_align", "state_attribute", "state_attribute", "", "", "", 1},
-	{"cmd_charSet", "state_attribute", "state_attribute", "", "", "", 1},
-	{"cmd_copy", "", "state_enabled", "", "", "", 1},
-	{"cmd_delete", "", "state_enabled", "", "", "", 1},
-	{"cmd_deleteCharBackward", "", "state_enabled", "", "", "", 1},
-	{"cmd_deleteCharForward", "", "state_enabled", "", "", "", 1},
-	{"cmd_deleteWordForward", "", "state_enabled", "", "", "", 1},
-	{"cmd_deleteWordBackward", "", "state_enabled", "", "", "", 1},
-	{"cmd_deleteToBeginningOfLine", "", "state_enabled", "", "", "", 1},
-	{"cmd_deleteToEndOfLine", "", "state_enabled", "", "", "", 1},
-	{"cmd_scrollTop", "", "state_enabled", "", "", "", 1},
-	{"cmd_scrollBottom", "", "state_enabled", "", "", "", 1},
-	{"cmd_scrollPageUp", "", "state_enabled", "", "", "", 1},
-	{"cmd_scrollPageDown", "", "state_enabled", "", "", "", 1},
-	{"cmd_movePageUp", "", "state_enabled", "", "", "", 1},
-	{"cmd_movePageDown", "", "state_enabled", "", "", "", 1},
-	{"cmd_moveTop", "", "state_enabled", "", "", "", 1},
-	{"cmd_moveBottom", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectTop", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectBottom", "", "state_enabled", "", "", "", 1},
-	{"cmd_lineNext", "", "state_enabled", "", "", "", 1},
-	{"cmd_linePrevious", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectLineNext", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectLinePrevious", "", "state_enabled", "", "", "", 1},
-	{"cmd_charPrevious", "", "state_enabled", "", "", "", 1},
-	{"cmd_charNext", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectCharPrevious", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectCharNext", "", "state_enabled", "", "", "", 1},
-	{"cmd_beginLine", "", "state_enabled", "", "", "", 1},
-	{"cmd_endLine", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectBeginLine", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectEndLine", "", "state_enabled", "", "", "", 1},
-	{"cmd_wordPrevious", "", "state_enabled", "", "", "", 1},
-	{"cmd_wordNext", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectWordPrevious", "", "state_enabled", "", "", "", 1},
-	{"cmd_selectWordNext", "", "state_enabled", "", "", "", 1},
-	{"cmd_cut", "", "state_enabled", "", "", "", 1},
-	{"cmd_cutOrDelete", "", "state_enabled", "", "", "", 1},
+	{"cmd_bold",   "",    "state_all", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_italic", "",    "state_all", PR_TRUE, 10000000, 2.27,      "This is a complete sentence", "This isn't!"},
+	{"cmd_underline", "", "state_all", PR_TRUE, 17,		  7839.3480, "A longer string than the previous one.", "Shorter string, but still pretty long."},
+	{"cmd_indent", "",	  "state_enabled", PR_TRUE, 7480, -1.487, "Another string input for testing ...", "How about them Giants?!"},
+	{"cmd_outdent", "",   "state_enabled", PR_FALSE, 0, 24987.2465, "A few numbers: 1 2 3,  A few letters: C A B,  A few characters: Mickey Goofy $%*&@", "nothing here"},
+	{"cmd_increaseFont", "", "state_enabled", PR_TRUE, 500000000, 16, "hi", "HI"},
+	{"cmd_undo", "",	  "state_enabled", PR_TRUE, 987352487, 36.489, "x ", "x"},
+	{"cmd_redo", "",	  "state_enabled", PR_FALSE, 90, -24, "", " "},
+	{"cmd_decreaseFont", "", "", PR_TRUE, 0.0,    0.0,     "hello",						 "HELLO"},
+	{"cmd_fontColor", "state_attribute", "state_attribute", PR_TRUE, 25,    100,     "#FF0000",						 "#000000"},
+	{"cmd_backgroundColor", "state_attribute", "state_attribute", PR_TRUE, -35871678,    15.345363645,     "#FF1234",						 "#001234"},
+	{"cmd_fontFace", "state_attribute", "state_attribute", PR_TRUE, 50000,    5.798,     "Times New Roman, Times, serif",						 "Courier New, Courier, monospace"},
+	{"cmd_align", "state_attribute", "state_attribute", PR_TRUE, 10000,    5.798,     "right",						 "center"},
+	{"cmd_charSet", "state_attribute", "state_attribute", PR_TRUE, 20000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_copy", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_delete", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_deleteCharBackward", "", "state_enabled", PR_TRUE, 30000,    245.2323,     "hello",						 "HELLO"},
+	{"cmd_deleteCharForward", "", "state_enabled", PR_TRUE, 50000,    -24235.2346,     "a very very very very very very very very looooooooooooooooooooong stringgggggggggggggggggggggggggggggggggggggggggggg!!!",						 "HELLO"},
+	{"cmd_deleteWordForward", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_deleteWordBackward", "", "state_enabled", PR_TRUE, 6034600,    5.798,     "hello",						 "HELLO"},
+	{"cmd_deleteToBeginningOfLine", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_deleteToEndOfLine", "", "state_enabled", PR_TRUE, -5434,    5.798,     "hello",						 "HELLO"},
+	{"cmd_scrollTop", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_scrollBottom", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_scrollPageUp", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_scrollPageDown", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_movePageUp", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_movePageDown", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_moveTop", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_moveBottom", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectTop", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectBottom", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_lineNext", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_linePrevious", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectLineNext", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectLinePrevious", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_charPrevious", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_charNext", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectCharPrevious", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectCharNext", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_beginLine", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_endLine", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectBeginLine", "", "state_enabled", PR_FALSE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectEndLine", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_wordPrevious", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_wordNext", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectWordPrevious", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_selectWordNext", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_cut", "", "state_enabled", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
+	{"cmd_cutOrDelete", "", "state_enabled", PR_FALSE, 50000,    5.798,     "hello",						 "HELLO"},
 };
 
 nsICommandManager * CnsICommandMgr::GetCommandMgrObject(nsIWebBrowser *aWebBrowser)
@@ -148,41 +148,41 @@ nsICommandManager * CnsICommandMgr::GetCommandMgrWithContractIDObject()
 	return cmdMgrObj;
 }
 
-void CnsICommandMgr::IsCommandSupportedTest(const char *aCommandName)
+void CnsICommandMgr::IsCommandSupportedTest(const char *aCommandName, int displayMethod)
 {
 	PRBool isSupported;
 
-	FormatAndPrintOutput("the Command input = ", aCommandName, 2);
+	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
 	if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object.");
 		return;
 	}
 	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	rv = cmdMgrObj->IsCommandSupported(aCommandName, &isSupported);
-	RvTestResult(rv, "IsCommandSupported() test", 2);
-	FormatAndPrintOutput("isSupported boolean = ", isSupported, 2);
+	RvTestResult(rv, "IsCommandSupported() test", displayMethod);
+	FormatAndPrintOutput("isSupported boolean = ", isSupported, displayMethod);
 }
 
-void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName)
+void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName, int displayMethod)
 {
 	PRBool isEnabled;
 
-	FormatAndPrintOutput("the Command input = ", aCommandName, 2);
+	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
 	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object.");
 		return;
 	}
 	rv = cmdMgrObj->IsCommandEnabled(aCommandName, &isEnabled);
-	RvTestResult(rv, "IsCommandEnabled() test", 2);
-	FormatAndPrintOutput("isEnabled boolean = ", isEnabled, 2);
+	RvTestResult(rv, "IsCommandEnabled() test", displayMethod);
+	FormatAndPrintOutput("isEnabled boolean = ", isEnabled, displayMethod);
 }
 
-void CnsICommandMgr::GetCommandStateTest(const char *aCommandName)
+void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, int displayMethod)
 {
 	PRBool enabled = PR_FALSE;
 
-	FormatAndPrintOutput("the Command input = ", aCommandName, 2);
+	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
 	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	cmdParamObj = CnsICmdParams::GetCommandParamObject();
 	if (!cmdMgrObj) {
@@ -195,16 +195,17 @@ void CnsICommandMgr::GetCommandStateTest(const char *aCommandName)
 	}
 	else {
 		rv = cmdMgrObj->GetCommandState(aCommandName, cmdParamObj);
-		RvTestResult(rv, "GetCommandState() test", 2);
+		RvTestResult(rv, "GetCommandState() test", displayMethod);
 	}
 }
 
 void CnsICommandMgr::DoCommandTest(const char *aCommandName,
-								   const char *doCommandState)
+								   const char *doCommandState,
+								   int displayMethod)
 {
 	nsCAutoString value;
 
-	FormatAndPrintOutput("the Command input = ", aCommandName, 2);
+	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
 	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	cmdParamObj = CnsICmdParams::GetCommandParamObject();
 	if (!cmdMgrObj) {
@@ -228,7 +229,7 @@ void CnsICommandMgr::DoCommandTest(const char *aCommandName,
 		cmdParamObj->SetCStringValue("state_attribute", value.get());
 	}
 	rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj);
-	RvTestResult(rv, "DoCommand() test", 2);
+	RvTestResult(rv, "DoCommand() test", displayMethod);
 }
 
 
@@ -246,16 +247,16 @@ void CnsICommandMgr::OnStartTests(UINT nMenuID)
 			QAOutput("Not implemented yet.", 2);
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_ISCOMMANDESUPPORTED  :
-			IsCommandSupportedTest("cmd_bold");
+			IsCommandSupportedTest("cmd_bold", 2);
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_ISCOMMANDENABLED :
-			IsCommandEnabledTest("cmd_bold");
+			IsCommandEnabledTest("cmd_bold", 2);
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_GETCOMMANDSTATE :
-			GetCommandStateTest("cmd_charSet");
+			GetCommandStateTest("cmd_charSet", 2);
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_DOCOMMAND :
-			DoCommandTest("cmd_fontColor", "state_attribute");
+			DoCommandTest("cmd_fontColor", "state_attribute", 2);
 			break;
 	}
 }
@@ -264,15 +265,17 @@ void CnsICommandMgr::RunAllTests()
 {
 	PRInt16 i;
 
+	QAOutput("Run All nsICommandManager tests. Check C:/Temp/TestOutput.txt for test results.", 2);
 	for (i=0; i < 50; i++)
 	{
-		FormatAndPrintOutput("loop cnt = ", i, 2);
-		IsCommandSupportedTest(CommandTable[i].mCmdName);
-		IsCommandEnabledTest(CommandTable[i].mCmdName);
-		GetCommandStateTest(CommandTable[i].mCmdName);
+		FormatAndPrintOutput("loop cnt = ", i, 1);
+		IsCommandSupportedTest(CommandTable[i].mCmdName, 1);
+		IsCommandEnabledTest(CommandTable[i].mCmdName, 1);
+		GetCommandStateTest(CommandTable[i].mCmdName, 1);
 		DoCommandTest(CommandTable[i].mCmdName,
-					  CommandTable[i].mDoCmdParam);
+					  CommandTable[i].mDoCmdState, 1);
 	}
+	QAOutput("Tests completed.", 2);
 }
 
 
