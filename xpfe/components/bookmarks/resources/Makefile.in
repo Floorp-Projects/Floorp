@@ -32,10 +32,10 @@ CHROME_SKIN_DIR	= skin/default
 CHROME_SOURCE_DIR = $(srcdir)
 
 CHROME_CONTENT	= \
+		bm-panel.js \
 		bm-panel.xul \
-		bm-props.xul \
 		bm-props.js \
-		bookmarks.html \
+		bm-props.xul \
 		bookmarks.js \
 		bookmarks.xul \
 		$(NULL)
