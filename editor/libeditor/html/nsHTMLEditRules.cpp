@@ -1839,10 +1839,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   if (endNode.get() != startNode.get())
   {
     // block parents the same?  use default deletion
-    if (mHTMLEditor->HasSameBlockNodeParent(startNode, endNode)) return NS_OK;
-    
-    // deleting across blocks
-    // are the blocks of same type?
     nsCOMPtr<nsIDOMNode> leftParent;
     nsCOMPtr<nsIDOMNode> rightParent;
     if (IsBlockNode(startNode))
@@ -1853,6 +1849,10 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       rightParent = endNode;
     else
       rightParent = mHTMLEditor->GetBlockNodeParent(endNode);
+    if (leftParent == rightParent) return NS_OK;
+    
+    // deleting across blocks
+    // are the blocks of same type?
     
     // are the blocks siblings?
     nsCOMPtr<nsIDOMNode> leftBlockParent;
