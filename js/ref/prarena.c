@@ -27,6 +27,7 @@
 #include "prtypes.h"
 #include "prarena.h"
 #include "prassert.h"
+
 #ifdef JS_THREADSAFE
 extern js_CompareAndSwap(prword *, prword, prword);
 #endif
@@ -67,7 +68,7 @@ PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb)
 {
     PRArena **ap, *a, *b;
 #ifdef JS_THREADSAFE
-	PRArena *c;
+    PRArena *c;
 #endif
     PRUint32 sz;
     void *p;
@@ -87,7 +88,7 @@ PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb)
 	    if (b->limit - b->base == pool->arenasize) {
 #ifdef JS_THREADSAFE
 		do {
-		  c = b->next;
+		    c = b->next;
 		} while (!js_CompareAndSwap((prword *)ap,(prword)b,(prword)c));
 #else
 		*ap = b->next;
@@ -136,7 +137,7 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
 {
     PRArena **ap, *a;
 #ifdef JS_THREADSAFE
-	PRArena *b;
+    PRArena *b;
 #endif
 
     ap = &head->next;
@@ -167,7 +168,7 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
 	} while (*ap);
 #ifdef JS_THREADSAFE
 	do {
-	  *ap = b = arena_freelist;
+	    *ap = b = arena_freelist;
 	} while (!js_CompareAndSwap((prword*)&arena_freelist,(prword)b,(prword)a));
 #else
 	*ap = arena_freelist;
