@@ -65,7 +65,7 @@
           if (par.nodeName == 'td' && par.className == 'expander') {
             if (par.parentNode.className == 'expander-closed') {
               par.parentNode.className = '';
-              event.originalTarget.firstChild.data = '-';
+              event.originalTarget.firstChild.data = '\u2212';
             }
             else {
               par.parentNode.className = 'expander-closed';
