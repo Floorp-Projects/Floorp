@@ -113,9 +113,18 @@ nsString::nsString(const nsString& aString) {
  * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
+#ifdef AIX
+nsString::nsString(const nsSubsumeStr& aSubsumeStr)  {
+  nsStr::Initialize(*this,eTwoByte);
+
+  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
+  Subsume(*this,temp);
+#else
 nsString::nsString(nsSubsumeStr& aSubsumeStr)  {
   nsStr::Initialize(*this,eTwoByte);
+
   Subsume(*this,aSubsumeStr);
+#endif /* AIX */
 }
 
 /**
