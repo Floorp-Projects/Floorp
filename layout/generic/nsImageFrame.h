@@ -312,6 +312,7 @@ private:
     PRPackedBool     mPrefAllImagesBlocked;
     PRPackedBool     mPrefShowPlaceholders;
   };
+  friend IconLoad;
   static IconLoad* mIconLoad; // singleton pattern: one LoadIcons instance is used
 };
 
