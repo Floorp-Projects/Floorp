@@ -93,9 +93,7 @@ mozXMLTermShell::mozXMLTermShell() :
 
 mozXMLTermShell::~mozXMLTermShell()
 {
-  if (mInitialized) {
-    Finalize();
-  }
+  Finalize();
 }
 
 
@@ -224,6 +222,8 @@ mozXMLTermShell::Init(nsIDOMWindowInternal* aContentWin,
   if (!aContentWin)
       return NS_ERROR_NULL_POINTER;
 
+  mInitialized = PR_TRUE;
+
   mContentWindow = aContentWin;  // no addref
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow,
@@ -284,7 +284,12 @@ mozXMLTermShell::Close(const PRUnichar* aCookie)
 NS_IMETHODIMP
 mozXMLTermShell::Finalize(void)
 {
+  if (!mInitialized)
+    return NS_OK;
+
   XMLT_LOG(mozXMLTermShell::Finalize,10,("\n"));
+
+  mInitialized = PR_FALSE;
 
   if (mXMLTerminal) {
     // Finalize and release reference to XMLTerm object owned by us
@@ -295,7 +300,7 @@ mozXMLTermShell::Finalize(void)
   mContentAreaDocShell = nsnull;
   mContentWindow =       nsnull;
 
-  mInitialized = PR_FALSE;
+  XMLT_LOG(mozXMLTermShell::Finalize,12,("END\n"));
 
   return NS_OK;
 }

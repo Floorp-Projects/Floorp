@@ -456,6 +456,8 @@ NS_IMETHODIMP mozLineTerm::SuspendAux(PRBool aSuspend)
  */
 NS_IMETHODIMP mozLineTerm::Close(const PRUnichar* aCookie)
 {
+  XMLT_LOG(mozLineTerm::Close,20, ("\n"));
+
   if (!mCookie.EqualsWithConversion(aCookie)) {
     XMLT_ERROR("mozLineTerm::Close: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
@@ -481,6 +483,8 @@ NS_IMETHODIMP mozLineTerm::Close(const PRUnichar* aCookie)
  */
 NS_IMETHODIMP mozLineTerm::CloseAux(void)
 {
+  XMLT_LOG(mozLineTerm::CloseAux,20, ("\n"));
+
   if (lterm_close(mLTerm) == 0) {
     return NS_OK;
   } else {
