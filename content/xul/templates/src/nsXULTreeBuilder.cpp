@@ -2068,9 +2068,12 @@ nsXULTreeBuilder::Drop(PRInt32 row, PRInt32 orient)
             nsCOMPtr<nsIXULTreeBuilderObserver> observer;
             mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
             if (observer) {
-                PRBool canDropOn = PR_FALSE;
-                observer->CanDropOn(row, &canDropOn);
-                if (canDropOn)
+                PRBool canDrop = PR_FALSE;
+                if (orient == nsITreeView::inDropOn)
+                    observer->CanDropOn(row, &canDrop);
+                else
+                    observer->CanDropBeforeAfter(row, orient, &canDrop);
+                if (canDrop)
                     observer->OnDrop(row, orient);
             }
         }
