@@ -123,7 +123,6 @@ public:
 
 private:
     int     MakeUniqueTmpDir();
-    int     ParseURL(char *aURL, char **aHost, char **aDir);
     int     LoadXPIStub(xpistub_t *aStub, char *aDestionation);
     int     InstallXPI(nsComponent *aComp, xpistub_t *aStub);
     int     UnloadXPIStub(xpistub_t *aStub);
