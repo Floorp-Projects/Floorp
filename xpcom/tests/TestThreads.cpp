@@ -17,6 +17,8 @@
  */
 
 #include "nsIThread.h"
+#include "nsIThreadPool.h"
+#include "nsIRunnable.h"
 #include <stdio.h>
 
 class nsRunner : public nsIRunnable {
