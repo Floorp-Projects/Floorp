@@ -34,7 +34,7 @@
 /*
  * Base64 decoding (ascii to binary).
  *
- * $Id: nssb64d.c,v 1.2 2000/04/06 00:26:24 thayes%netscape.com Exp $
+ * $Id: nssb64d.c,v 1.3 2000/04/06 00:38:12 repka%netscape.com Exp $
  */
 
 #include "nssb64.h"
@@ -570,7 +570,7 @@ PL_Base64DecodeBuffer (const char *src, PRUint32 srclen, unsigned char *dest,
 
     /*
      * Make sure we have at least that much, if output buffer provided.
-     * If not output buffer provided, then we allocate that much.
+     * If no output buffer provided, then we allocate that much.
      */
     if (dest != NULL) {
 	PR_ASSERT(maxdestlen >= need_length);
@@ -734,13 +734,13 @@ NSSBase64Decoder_Destroy (NSSBase64Decoder *data, PRBool abort_p)
  * and the Item will be allocated for you.
  *
  * In any case, the data within the Item will be allocated for you.
- * All allocation will happen out the passed-in "arenaOpt", if non-NULL.
+ * All allocation will happen out of the passed-in "arenaOpt", if non-NULL.
  * If "arenaOpt" is NULL, standard allocation (heap) will be used and
  * you will want to free the result via SECITEM_FreeItem.
  *
  * Return value is NULL on error, the Item (allocated or provided) otherwise.
  */
-extern SECItem *
+SECItem *
 NSSBase64_DecodeBuffer (PRArenaPool *arenaOpt, SECItem *outItemOpt,
 			const char *inStr, unsigned int inLen)
 {
@@ -809,7 +809,7 @@ NSSBase64_DecodeBuffer (PRArenaPool *arenaOpt, SECItem *outItemOpt,
 ** Return an PORT_Alloc'd string which is the base64 decoded version
 ** of the input string; set *lenp to the length of the returned data.
 */
-extern unsigned char *
+unsigned char *
 ATOB_AsciiToData(const char *string, unsigned int *lenp)
 {
     SECItem binary_item, *dummy;
@@ -831,11 +831,23 @@ ATOB_AsciiToData(const char *string, unsigned int *lenp)
 /*
 ** Convert from ascii to binary encoding of an item.
 */
-extern SECStatus
+SECStatus
 ATOB_ConvertAsciiToItem(SECItem *binary_item, char *ascii)
 {
     SECItem *dummy;
 
+    if (binary_item == NULL) {
+	PORT_SetError (SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+
+    /*
+     * XXX Would prefer to assert here if data is non-null (actually,
+     * don't need to, just let NSSBase64_DecodeBuffer do it), so as to
+     * to catch unintended memory leaks, but callers are not clean in
+     * this respect so we need to explicitly clear here to avoid the
+     * assert in NSSBase64_DecodeBuffer.
+     */
     binary_item->data = NULL;
     binary_item->len = 0;
 
