@@ -28,7 +28,7 @@
       title="&languages.customize.add.title.label;"
       onload="Init();"
       ondialogaccept="return AddAvailableLanguage();"
-      style="width: 25em;height: 25em;">
+      style="width: 25em;height: 28em;">
 
   <script type="application/x-javascript" src="pref-languages.js"/>
   <!-- XXX: Replace strres.js when pref-languages is converted -->
@@ -42,9 +42,10 @@
            ondblclick="HandleDoubleClick(event.target)"/>
 
   <hbox align="center">
-    <label value="&languages.customize.others.label;" control="languages.other"
-           accesskey="&languages.customize.others.accesskey;"/>
-    <textbox id="languages.other" size="6" />
+    <label value="&languages.customize.others.label;" 
+           accesskey="&languages.customize.others.accesskey;" 
+           control="languages.other"/>
+    <textbox id="languages.other" size="6" flex="1"/>
     <label value="&languages.customize.others.examples;" control="languages.other"/>
   </hbox>
 
