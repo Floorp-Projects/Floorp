@@ -200,15 +200,20 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     }
     NS_NewTextControlFrame(childFrame);
 
-   
+     //XXX: This style should be cached, rather than resolved each time.
      // Get pseudo style for the text field
     nsCOMPtr<nsIStyleContext> textFieldStyleContext;
     nsresult rv = aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fileTextStylePseudo,
                                                        mStyleContext, PR_FALSE,
                                                        getter_AddRefs(textFieldStyleContext));
 
-
-    childFrame->Init(aPresContext, text, this, textFieldStyleContext);
+    if (NS_SUCCEEDED(rv)) {
+        // Found the pseudo style for the text field
+      childFrame->Init(aPresContext, text, this, textFieldStyleContext);
+    } else {
+        // Can't find pseduo style so use the style set for the file updload element
+      childFrame->Init(aPresContext, mContent, this, mStyleContext);
+    }
     mTextFrame = (nsTextControlFrame*)childFrame;
     mFrames.SetFrames(childFrame);
 
@@ -223,13 +228,19 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     ((nsButtonControlFrame*)childFrame)->SetMouseListener((nsIFormControlFrame*)this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
 
-       // Get pseudo style for the button
+     //XXX: This style should be cached, rather than resolved each time.
+     // Get pseudo style for the button
     nsCOMPtr<nsIStyleContext> buttonStyleContext;
     rv = aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fileButtonStylePseudo,
                                                        mStyleContext, PR_FALSE,
                                                        getter_AddRefs(buttonStyleContext));
-
-    childFrame->Init(aPresContext, browse, this, buttonStyleContext);
+    if (NS_SUCCEEDED(rv)) {
+       // Found pseduo style for the button
+      childFrame->Init(aPresContext, browse, this, buttonStyleContext);
+    } else {
+       // Can't find pseudo style for the button so use the style set for the file upload element
+      childFrame->Init(aPresContext, mContent, this, mStyleContext);
+    }
 
     mFrames.FirstChild()->SetNextSibling(childFrame);
 
@@ -438,25 +449,11 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
   if (HasWidget())
     return NS_OK;
 
-#if 0
-//XXX: TODO Get style for button and text box using pseduo classes
-  nsCOMPtr<nsIStyleContext> fileButtonStyle(mStyleContext);
-  nsCOMPtr<nsIAtom> fileButtonAtom (NS_NewAtom(":file-button"));
-  aPresContext.ProbePseudoStyleContextFor(mContent, fileButtonAtom, mStyleContext,
-                                          PR_FALSE,
-                                          getter_AddRefs(fileButtonStyle));
-
-  nsCOMPtr<nsIStyleContext> fileTextFieldStyle(mStyleContext);
-  nsCOMPtr<nsIAtom> fileButtonAtom (NS_NewAtom(":file-textfield"));
-  aPresContext.ProbePseudoStyleContextFor(mContent, fileButtonAtom, mStyleContext,
-                                          PR_FALSE,
-                                          getter_AddRefs(fileTextFieldStyle));
-#endif 
   nsAutoString browse("Browse...");
   nsRect rect;
   mBrowseFrame->GetRect(rect);
   mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect,
-                            browse, rect /*, fileButtonStyle */);
+                            browse, rect);
 
   mTextFrame->PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 

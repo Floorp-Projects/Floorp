@@ -310,7 +310,6 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
 {
   aRenderingContext.PushState();
 
-
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
 
