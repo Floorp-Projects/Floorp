@@ -613,8 +613,6 @@
             //observer.beginUpdateBatch(this.db);
             BookmarksController.doCommand(aCommand, selection, target);
             //observer.endUpdateBatch(this.db);
-
-
             //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
             //this.mOuter.treeBoxObject.selection.currentIndex=-1;
             //this.mOuter.tree.builder.rebuild();
