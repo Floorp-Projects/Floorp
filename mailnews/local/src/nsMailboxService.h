@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 
 #include "nsIMailboxService.h"
+#include "nsIMsgMessageService.h"
 #include "nsIURL.h"
 #include "nsIUrlListener.h"
 #include "nsIStreamListener.h"
@@ -35,7 +36,7 @@
 // this service away =).
 ////////////////////////////////////////////////////////////////////////////////////////
 
-class nsMailboxService : public nsIMailboxService
+class nsMailboxService : public nsIMailboxService, public nsIMsgMessageService
 {
 public:
 
@@ -51,11 +52,6 @@ public:
 	NS_IMETHOD ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
 							nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	
-	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURL **aURL);
-
-	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 	NS_IMETHOD DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
 									nsIUrlListener * aUrlListener, nsIURL ** aURL);
@@ -63,6 +59,15 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIMailboxService Interface
 	////////////////////////////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// we suppport the nsIMsgMessageService Interface 
+	////////////////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
+						   nsIUrlListener * aUrlListener, nsIURL **aURL);
+
+	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 };
 
