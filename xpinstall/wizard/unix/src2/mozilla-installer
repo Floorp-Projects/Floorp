@@ -36,12 +36,11 @@
 #=====================================================================
 
 
-LD_LIBRARY_PATH=.${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
-LIBPATH=.${LIBPATH+":$LIBPATH"}
-export LD_LIBRARY_PATH LIBPATH
+LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
 unset MOZILLA_FIVE_HOME
 
-PATH=.${PATH+":$PATH"}
+PATH=.:$PATH
 export PATH
 
 BASEDIR=`dirname $0`
