@@ -1050,7 +1050,6 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         k.Append(attr->GetUnicode());
 
         // Add the attribute to RDF
-        nsresult rv;
 
         nsCOMPtr<nsIRDFResource> property;
         rv = gRDFService->GetUnicodeResource(k.GetUnicode(), getter_AddRefs(property));
