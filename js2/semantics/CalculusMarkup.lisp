@@ -1305,7 +1305,8 @@
       (depict-delayed-action (markup-stream depict-env)
         (depict-semantics (markup-stream depict-env)
           (depict-logical-block (markup-stream 4)
-            (depict-declare-action-contents markup-stream world action-name general-grammar-symbol type-expr)))))))
+            (depict-declare-action-contents markup-stream world action-name general-grammar-symbol type-expr)
+            (depict markup-stream ";")))))))
 
 
 ; Declare and define the lexer-action on the charclass given by nonterminal.
