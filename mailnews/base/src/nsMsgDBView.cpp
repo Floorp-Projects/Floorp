@@ -830,6 +830,16 @@ NS_IMETHODIMP nsMsgDBView::IsContainerEmpty(PRInt32 index, PRBool *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBView::IsSeparator(PRInt32 index, PRBool *_retval)
+{
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+
+  *_retval = PR_FALSE;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {  
   *_retval = -1;

@@ -173,6 +173,12 @@ function bov_isctrempt (index)
     return false;
 }
 
+BasicOView.prototype.isSeparator =
+function bov_isseparator (index)
+{
+    return false;
+}
+
 BasicOView.prototype.isSorted =
 function bov_issorted (index)
 {

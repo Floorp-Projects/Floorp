@@ -1755,6 +1755,13 @@ nsNntpIncomingServer::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 }
 
 NS_IMETHODIMP 
+nsNntpIncomingServer::IsSeparator(PRInt32 index, PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsNntpIncomingServer::IsSorted(PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -1224,6 +1224,7 @@
           isContainer: function(aIndex) {},
           isContainerOpen: function(aIndex) {},
           isContainerEmpty: function(aIndex) {},
+          isSeparator: function(aIndex) {},
           toggleOpenState: function(aIndex) {},
           selectionChanged: function() {},
           cycleHeader: function(aColId, aElt) {},

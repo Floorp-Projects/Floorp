@@ -1473,6 +1473,18 @@ nsRect nsOutlinerBodyFrame::GetInnerBox()
   return r;
 }
 
+nsLineStyle nsOutlinerBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
+{
+  switch (aBorderStyle) {
+    case NS_STYLE_BORDER_STYLE_DOTTED:
+      return nsLineStyle_kDotted;
+    case NS_STYLE_BORDER_STYLE_DASHED:
+      return nsLineStyle_kDashed;
+    default:
+      return nsLineStyle_kSolid;
+  }
+}
+
 // Painting routines
 NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
                                          nsIRenderingContext& aRenderingContext,
@@ -1650,19 +1662,55 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
   // Adjust the rect for its border and padding.
   AdjustForBorderPadding(rowContext, rowRect);
 
-  // Now loop over our cells. Only paint a cell if it intersects with our dirty rect.
-  nscoord currX = rowRect.x;
-  for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
-       currCol = currCol->GetNext()) {
-    nsRect cellRect(currX, rowRect.y, currCol->GetWidth(), rowRect.height);
-    PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
-    if (overflow > 0)
-      cellRect.width -= overflow;
-    nsRect dirtyRect;
-    if (dirtyRect.IntersectRect(aDirtyRect, cellRect)) {
-      PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+  PRBool isSeparator = PR_FALSE;
+  mView->IsSeparator(aRowIndex, &isSeparator);
+  if (isSeparator) {
+    // The row is a separator. Paint only a double horizontal line.
+
+    // Resolve style for the separator.
+    nsCOMPtr<nsIStyleContext> separatorContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinerseparator, getter_AddRefs(separatorContext));
+
+    // Get border style
+    const nsStyleBorder* borderStyle = (const nsStyleBorder*)separatorContext->GetStyleData(eStyleStruct_Border);
+
+    aRenderingContext.PushState();
+
+    PRUint8 side = NS_SIDE_TOP;
+    PRInt32 y = rowRect.y + rowRect.height / 2;
+    for (PRInt32 i = 0; i < 2; i++) {
+      nscolor color;
+      PRBool transparent; PRBool foreground;
+      borderStyle->GetBorderColor(side, color, transparent, foreground);
+      aRenderingContext.SetColor(color);
+      PRUint8 style;
+      style = borderStyle->GetBorderStyle(side);
+      aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
+
+      aRenderingContext.DrawLine(rowRect.x, y, rowRect.x + rowRect.width, y);
+
+      side = NS_SIDE_BOTTOM;
+      y = y + 16;
     }
-    currX += currCol->GetWidth();
+
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
+  }
+  else {
+    // Now loop over our cells. Only paint a cell if it intersects with our dirty rect.
+    nscoord currX = rowRect.x;
+    for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
+         currCol = currCol->GetNext()) {
+      nsRect cellRect(currX, rowRect.y, currCol->GetWidth(), rowRect.height);
+      PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
+      if (overflow > 0)
+        cellRect.width -= overflow;
+      nsRect dirtyRect;
+      if (dirtyRect.IntersectRect(aDirtyRect, cellRect)) {
+        PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+      }
+      currX += currCol->GetWidth();
+    }
   }
 
   return NS_OK;
@@ -1747,12 +1795,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
       aRenderingContext.SetColor(color);
       PRUint8 style;
       style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);
-      if (style == NS_STYLE_BORDER_STYLE_DOTTED)
-        aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-      else if (style == NS_STYLE_BORDER_STYLE_DASHED)
-        aRenderingContext.SetLineStyle(nsLineStyle_kDashed);
-      else
-        aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
+      aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
       PRInt32 x;
       PRInt32 y = (aRowIndex - mTopRowIndex) * mRowHeight;

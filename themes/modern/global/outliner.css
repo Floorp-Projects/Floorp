@@ -86,6 +86,11 @@ outlinerbody:-moz-outliner-line(selected, focus) {
   border: 1px dotted #FFFFFF;
 }
 
+outlinerbody:-moz-outliner-separator {
+  border-top: 1px solid #7A8490;
+  border-bottom: 1px solid #FEFEFE;
+}
+
 /* ::::: outliner columns ::::: */
 
 outlinercol { 

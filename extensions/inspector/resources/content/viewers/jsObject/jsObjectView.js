@@ -106,6 +106,10 @@ JSObjectView.prototype =
   {
   },
   
+  isSeparator: function(aIndex)
+  {
+  },
+
   getParentIndex: function(aRowIndex)
   {
     return 1;

@@ -173,6 +173,12 @@ function bov_isctrempt (index)
     return false;
 }
 
+BasicOView.prototype.isSeparator =
+function bov_iscontainer (index)
+{
+    return false;
+}
+
 BasicOView.prototype.isSorted =
 function bov_issorted (index)
 {
@@ -1124,6 +1130,12 @@ function tov_colprops (colID, elem, properties)
 TreeOView.prototype.getRowProperties =
 function tov_rowprops (index, properties)
 {}
+
+TreeOView.prototype.isSeparator =
+function tov_isseparator (index)
+{
+    return false;
+}
 
 TreeOView.prototype.isSorted =
 function tov_issorted (index)

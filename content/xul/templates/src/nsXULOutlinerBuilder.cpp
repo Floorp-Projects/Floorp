@@ -519,6 +519,17 @@ nsXULOutlinerBuilder::IsContainerEmpty(PRInt32 aIndex, PRBool* aResult)
 }
 
 NS_IMETHODIMP
+nsXULOutlinerBuilder::IsSeparator(PRInt32 aIndex, PRBool* aResult)
+{
+    NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad row");
+    if (aIndex < 0 || aIndex >= mRows.Count())
+        return NS_ERROR_INVALID_ARG;
+
+    *aResult = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULOutlinerBuilder::GetParentIndex(PRInt32 aRowIndex, PRInt32* aResult)
 {
     NS_PRECONDITION(aRowIndex >= 0 && aRowIndex < mRows.Count(), "bad row");

@@ -62,6 +62,12 @@ outlinerbody:-moz-outliner-line(selected)
   border: 1px dotted black;
 }
 
+outlinerbody:-moz-outliner-separator
+{
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+}
+
 outlinercol
 { 
   background-color: #CCCCCC; 
