@@ -3058,25 +3058,30 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
 
-      // Menus can scroll.
-      if (IsScrollable(aPresContext, display)) {        
-        // See if it's absolute positioned or fixed positioned
-        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-          isAbsolutelyPositioned = PR_TRUE;
-        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-          isFixedPositioned = PR_TRUE;
-        }
-
-        // Create a scroll frame
-        nsIFrame* scrollFrame;
-        NS_NewScrollFrame(&scrollFrame);
-
-        // Initialize it (note we don't honor absolute or fixed, since this is
-        // going to behave a lot like the GFX combo box).
-        InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
-                              aStyleContext, newFrame, PR_FALSE, PR_FALSE, PR_TRUE);
-        frameHasBeenInitialized = PR_TRUE;
+      // Menus scroll.
+      // See if it's absolute positioned or fixed positioned
+      if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+        isAbsolutelyPositioned = PR_TRUE;
+      } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+        isFixedPositioned = PR_TRUE;
       }
+
+      // Create a scroll frame
+      nsIFrame* scrollFrame;
+      NS_NewScrollFrame(&scrollFrame);
+
+      // Initialize it (note we don't honor absolute or fixed, since this is
+      // going to behave a lot like the GFX combo box).
+      // Resolve psuedo element style for the dropdown menu 
+      nsCOMPtr<nsIStyleContext> menuStyle;
+      rv = aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                                      nsXULAtoms::dropDownMenuPseudo, 
+                                                      aStyleContext,
+                                                      PR_FALSE,
+                                                      getter_AddRefs(menuStyle));
+      InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
+                            menuStyle, newFrame, PR_FALSE, PR_FALSE, PR_TRUE);
+      frameHasBeenInitialized = PR_TRUE;
     }
 
     // BOX CONSTRUCTION
