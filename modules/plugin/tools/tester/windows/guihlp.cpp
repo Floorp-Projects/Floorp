@@ -163,6 +163,8 @@ static void replaceEditWithCombo(HWND hWnd, BOOL b1, BOOL b2, BOOL b3, BOOL b6)
   }
 }
 
+#define NS_SAMPLE_URL "http://mozilla.org"
+
 void updateUI(HWND hWnd)
 {
   CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
@@ -205,21 +207,21 @@ void updateUI(HWND hWnd)
     showArgControls7(hWnd, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
     enableEdits7(hWnd, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
     setStaticTexts7(hWnd, "instance:", "URL:", "target (or 'NULL'):", "", "", "", "");
-    setEditTexts7(hWnd, szNPInstance,"http://w3","_npapi_Display","","","","");
+    setEditTexts7(hWnd, szNPInstance,NS_SAMPLE_URL,"_npapi_Display","","","","");
   }
   else if(strcmp(szString, STRING_NPN_GETURLNOTIFY) == 0)
   {
     showArgControls7(hWnd, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
     enableEdits7(hWnd, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
     setStaticTexts7(hWnd, "instance:", "URL:", "target (or 'NULL'):", "notifyData:", "", "", "");
-    setEditTexts7(hWnd, szNPInstance,"http://w3","_npapi_Display","0","","","");
+    setEditTexts7(hWnd, szNPInstance,NS_SAMPLE_URL,"_npapi_Display","0","","","");
   }
   else if(strcmp(szString, STRING_NPN_POSTURL) == 0)
   {
     showArgControls7(hWnd, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE);
     enableEdits7(hWnd, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE);
     setStaticTexts7(hWnd, "instance:", "URL:", "target (or 'NULL'):", "len:", "buf:", "file:", "");
-    setEditTexts7(hWnd, szNPInstance,"http://w3","_npapi_Display","0","","","");
+    setEditTexts7(hWnd, szNPInstance,NS_SAMPLE_URL,"_npapi_Display","0","","","");
     replaceEditWithCombo(hWnd, FALSE, FALSE, FALSE, TRUE);
     HWND hWndCombo = GetDlgItem(hWnd, IDC_COMBO_ARG6);
     ComboBox_AddString(hWndCombo, "FALSE");
@@ -231,7 +233,7 @@ void updateUI(HWND hWnd)
     showArgControls7(hWnd, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
     enableEdits7(hWnd, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
     setStaticTexts7(hWnd, "instance:", "URL:", "target (or 'NULL'):", "len:", "buf:", "file:", "notifyData:");
-    setEditTexts7(hWnd, szNPInstance,"http://w3","_npapi_Display","0","","","0");
+    setEditTexts7(hWnd, szNPInstance,NS_SAMPLE_URL,"_npapi_Display","0","","","0");
     replaceEditWithCombo(hWnd, FALSE, FALSE, FALSE, TRUE);
     HWND hWndCombo = GetDlgItem(hWnd, IDC_COMBO_ARG6);
     ComboBox_AddString(hWndCombo, "FALSE");
