@@ -1,0 +1,12 @@
+?get@?$nsCOMPtr@VnsIServiceManager@@@@QBEPAV?$nsDerivedSafe@VnsIServiceManager@@@@XZ ; 2
+??C?$nsCOMPtr@VnsIServiceManager@@@@QBEPAV?$nsDerivedSafe@VnsIServiceManager@@@@XZ ; 2
+?GetIID@nsIServiceManager@@SAABUnsID@@XZ ; 1
+?do_QueryInterface@@YA?BVnsQueryInterface@@PAVnsISupports@@PAI@Z ; 1
+??1?$nsCOMPtr@VnsIServiceManager@@@@QAE@XZ ; 1
+??0?$nsCOMPtr@VnsIServiceManager@@@@QAE@ABVnsQueryInterface@@@Z ; 1
+?GetIID@?$nsCOMTypeInfo@VnsIComponentManager@@@@SAABUnsID@@XZ ; 1
+?GetIID@nsIComponentManager@@SAABUnsID@@XZ ; 1
+?assign_assuming_AddRef@?$nsCOMPtr@VnsIServiceManager@@@@AAEXPAVnsIServiceManager@@@Z ; 1
+?assign_from_helper@?$nsCOMPtr@VnsIServiceManager@@@@AAEXABVnsCOMPtr_helper@@ABUnsID@@@Z ; 1
+?GetIID@?$nsCOMTypeInfo@VnsIServiceManager@@@@SAABUnsID@@XZ ; 1
+_NSRegisterSelf ; 1

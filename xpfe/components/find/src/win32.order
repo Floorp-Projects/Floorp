@@ -1,0 +1,12 @@
+?AddRef@nsFindComponentModule@@UAGKXZ ; 4
+?GetIID@?$nsCOMTypeInfo@VnsIModule@@@@SAABUnsID@@XZ ; 3
+?Release@nsFindComponentModule@@UAGKXZ ; 3
+?GetIID@nsIModule@@SAABUnsID@@XZ ; 3
+?Equals@nsID@@QBEHABU1@@Z ; 2
+?QueryInterface@nsFindComponentModule@@UAGIABUnsID@@PAPAX@Z ; 2
+?GetCID@nsFindComponent@@SAABUnsID@@XZ ; 1
+??0nsISupports@@QAE@XZ ; 1
+_NSGetModule ; 1
+??0nsIModule@@QAE@XZ ; 1
+??0nsFindComponentModule@@QAE@XZ ; 1
+?RegisterSelf@nsFindComponentModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
