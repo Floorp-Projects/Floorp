@@ -99,6 +99,8 @@ CSRCS =             \
 	prftest2.c		\
 	priotest.c		\
 	provider.c		\
+	ranfile.c       \
+	rwlocktest.c    \
 	prpoll.c		\
 	ranfile.c       \
 	sel_spd.c  		\
@@ -185,6 +187,9 @@ else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
   LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+  ifdef PROFILE                                                                              
+    LDOPTS += -PROFILE -MAP                                                                  
+  endif # profile
 endif
 endif
 endif

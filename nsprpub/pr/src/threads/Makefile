@@ -41,12 +41,14 @@ endif
 ifdef USE_PTHREADS
 CSRCS = \
 	prcmon.c \
+	prrwlock.c   \
 	prtpd.c \
 	$(NULL)
 else
 ifdef USE_BTHREADS
 CSRCS = \
 	prcmon.c \
+	prrwlock.c   \
 	prtpd.c \
 	$(NULL)
 else
@@ -55,6 +57,7 @@ CSRCS =	\
 	prdump.c  \
 	prmon.c   \
 	prsem.c   \
+	prrwlock.c   \
 	prcthr.c \
 	prtpd.c \
 	$(NULL)

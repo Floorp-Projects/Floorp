@@ -165,6 +165,7 @@ OBJS = \
     io/$(OBJDIR)/prscanf.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prstdio.$(OBJ_SUFFIX) \
     threads/$(OBJDIR)/prcmon.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prrwlock.$(OBJ_SUFFIX) \
 	threads/$(OBJDIR)/prtpd.$(OBJ_SUFFIX) \
     linking/$(OBJDIR)/prlink.$(OBJ_SUFFIX) \
     malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
