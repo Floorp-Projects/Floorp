@@ -68,7 +68,7 @@ void mork_assertion_signal(const char* inMessage)
   mork_mac_break_string(inMessage);
 #endif /*MORK_OBSOLETE*/
 
-#ifdef MORK_WIN
+#if defined(MORK_WIN) || defined(MORK_MAC)
   // asm { int 3 }
   NS_ASSERTION(0, inMessage);
 #endif /*MORK_WIN*/
