@@ -744,8 +744,10 @@ if test "$GNU_CXX"; then
 fi
 
 dnl Put your C++ language/feature checks below
-AC_LANG_SAVE
-AC_LANG_CPLUS_PLUS
+dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
+_SAVE_CC=$CC
+CC=$CXX
+ac_ext=C
 AC_MSG_CHECKING(for ios::binary)
 AC_CACHE_VAL(ac_cv_ios_binary,
  [AC_TRY_COMPILE([#include <iostream.h>]
@@ -867,7 +869,8 @@ if test "$ac_cv_cpp_unused_required" = yes ; then
    AC_DEFINE(NEED_CPP_UNUSED_IMPLEMENTATIONS)
 fi
     
-AC_LANG_RESTORE
+CC=$_SAVE_CC
+ac_ext=c
 
 dnl End of C++ language/feature checks
 
