@@ -153,16 +153,23 @@ namespace JavaScript {
 	};
 
     /**
-     * Generic base class for objects allocated using a gc_allocator.
+     * Generic base class for objects allocated using a gc_allocator. How they are allocated
+     * can be controlled by specializing gc_traits for the specific class.
      */
     template <typename T> class gc_object {
     public:
-        void* operator new(size_t) { return alloc.allocate(1, 0); }
+        void* operator new(size_t) { return gc_allocator<T>::allocate(1, 0); }
         void operator delete(void* /* ptr */) {}
-    private:
-        static gc_allocator<T> alloc;
     };
-    template <typename T> gc_allocator<T> gc_object<T>::alloc;
+
+    /**
+     * Simpler base class for classes that have no need to specialize allocation behavior.
+     */
+    class gc_base {
+    public:
+        void* operator new(size_t n) { return GC_malloc(n); }
+        void operator delete(void*) {}
+    };
 }
 
 #endif /* gc_allocator_h */
