@@ -1166,6 +1166,8 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
                                     NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+     if(charset.Equals(NS_LITERAL_STRING("ISO-8859-1")))
+       charset.Assign(NS_LITERAL_STRING("windows-1252"));
      rv = ccm->GetUnicodeEncoder(&charset, encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
      if (nsnull == encoder) {
