@@ -552,6 +552,8 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
     rv = cert->GetIssuedDate(&wstr);
   } else if (strcmp(col, "expiredcol") == 0) {
     rv = cert->GetExpiresDate(&wstr);
+  } else if (strcmp(col, "serialnumcol") == 0) {
+    rv = cert->GetSerialNumber(&wstr);
 /*
   } else if (strcmp(col, "certdbkeycol") == 0) {
     rv = cert->GetDbKey(&str);
