@@ -272,6 +272,10 @@ protected:
   PRPackedBool mComputeMaxElementSize;
   PRUint8 mTextAlign;
 
+  // The amount of text indent that we applied to this line, needed for
+  // max-element-size calculation.
+  nscoord mTextIndent;
+
   // This state varies during the reflow of a line but is line
   // "global" state not span "local" state.
   nsIFrame* mFirstLetterFrame;

@@ -164,6 +164,7 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
     mBlockRS(nsnull),/* XXX temporary */
     mMinLineHeight(0),
     mComputeMaxElementSize(aComputeMaxElementSize),
+    mTextIndent(0),
     mWordFrames(0)
 {
   MOZ_COUNT_CTOR(nsLineLayout);
@@ -252,6 +253,16 @@ nsLineLayout::InStrictMode()
   return GetFlag(LL_INSTRICTMODE);
 }
 
+// Find out if the frame has a non-null prev-in-flow, i.e., whether it
+// is a continuation.
+inline PRBool
+HasPrevInFlow(nsIFrame *aFrame)
+{
+  nsIFrame *prevInFlow;
+  aFrame->GetPrevInFlow(&prevInFlow);
+  return prevInFlow != nsnull;
+}
+
 void
 nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                               nscoord aWidth, nscoord aHeight,
@@ -338,10 +349,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   // If this is the first line of a block then see if the text-indent
   // property amounts to anything.
   
-  if (0 == mLineNumber) {
-    // XXX this test is not ideal, since in print media mLineNumber is
-    // zero on the first line of a paragraph that has been split over a
-    // page break, and this causes bug 45694
+  if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowState->frame)) {
     nscoord indent = 0;
     nsStyleUnit unit = mStyleText->mTextIndent.GetUnit();
     if (eStyleUnit_Coord == unit) {
@@ -354,6 +362,8 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
         indent = nscoord(mStyleText->mTextIndent.GetPercentValue() * width);
       }
     }
+
+    mTextIndent = indent;
 
     if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
       if (NS_UNCONSTRAINEDSIZE != psd->mRightEdge) {
@@ -1437,9 +1447,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   }
 
   // Only apply start-margin on the first-in flow for inline frames
-  nsIFrame *prevInFlow;
-  pfd->mFrame->GetPrevInFlow(&prevInFlow);
-  if (prevInFlow) {
+  if (HasPrevInFlow(pfd->mFrame)) {
     // Zero this out so that when we compute the max-element-size of
     // the frame we will properly avoid adding in the starting margin.
     if (ltr)
@@ -1952,13 +1960,19 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
   int frameCount = 0;
 #endif
 
+  nscoord indent = mTextIndent; // Used for the first frame.
+
   while (nsnull != pfd) {
 
     // Compute max-element-size if necessary
     if (mComputeMaxElementSize) {
 
       nscoord mw = pfd->mMaxElementSize.width +
-        pfd->mMargin.left + pfd->mMargin.right;
+        pfd->mMargin.left + pfd->mMargin.right + indent;
+      // Zero |indent| after including the 'text-indent' only for the
+      // frame that is indented.
+      indent = 0;
+
       if (psd->mNoWrap) {
         maxElementWidth += mw;
       }
@@ -1976,7 +1990,6 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
         //       image frames as well, thus eliminating the need for this code
         if (!strictMode && inUnconstrainedTable ) {
 
-          PRBool inChild = PR_FALSE;
           nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame);
           PRBool curFrameAccumulates = (imgSizes > 0) || 
                                        (pfd->mMaxElementSize.width == pfd->mCombinedArea.width &&
@@ -3445,9 +3458,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
 
     // Ignore continuing frames
-    nsIFrame* prevInFlow;
-    next->GetPrevInFlow(&prevInFlow);
-    if (prevInFlow)
+    if (HasPrevInFlow(next))
       continue;
 
     // If this is a text frame, return it.
