@@ -621,6 +621,14 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::IsPercentageBase(PRBool& aBase) const
+{
+  aBase = PR_TRUE;
+  return NS_OK;
+}
+
+
 PRIntn
 nsHTMLButtonControlFrame::GetSkipSides() const
 {
