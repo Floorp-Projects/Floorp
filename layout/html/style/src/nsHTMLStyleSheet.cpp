@@ -249,9 +249,7 @@ TableBackgroundRule::List(FILE* out, PRInt32 aIndent) const
 class AttributeKey: public nsHashKey
 {
 public:
-  AttributeKey(nsMapAttributesFunc aFontMapFunc, 
-               nsMapAttributesFunc aMapFunc, 
-               nsIHTMLAttributes* aAttributes);
+  AttributeKey(nsIHTMLMappedAttributes* aAttributes);
   virtual ~AttributeKey(void);
 
   PRBool      Equals(const nsHashKey* aOther) const;
@@ -264,9 +262,7 @@ private:
   AttributeKey& operator=(const AttributeKey& aCopy);
 
 public:
-  nsMapAttributesFunc mFontMapFunc;
-  nsMapAttributesFunc mMapFunc;
-  nsIHTMLAttributes*  mAttributes;
+  nsIHTMLMappedAttributes*  mAttributes;
   union {
     struct {
       PRUint32  mHashSet: 1;
@@ -276,12 +272,8 @@ public:
   } mHash;
 };
 
-AttributeKey::AttributeKey(nsMapAttributesFunc aFontMapFunc,
-                           nsMapAttributesFunc aMapFunc, 
-                           nsIHTMLAttributes* aAttributes)
-  : mFontMapFunc(aFontMapFunc),
-    mMapFunc(aMapFunc),
-    mAttributes(aAttributes)
+AttributeKey::AttributeKey(nsIHTMLMappedAttributes* aAttributes)
+  : mAttributes(aAttributes)
 {
   NS_ADDREF(mAttributes);
   mHash.mInitializer = 0;
@@ -295,12 +287,9 @@ AttributeKey::~AttributeKey(void)
 PRBool AttributeKey::Equals(const nsHashKey* aOther) const
 {
   const AttributeKey* other = (const AttributeKey*)aOther;
-  if ((mMapFunc == other->mMapFunc) && (mFontMapFunc == other->mFontMapFunc)) {
-    PRBool  equals;
-    mAttributes->Equals(other->mAttributes, equals);
-    return equals;
-  }
-  return PR_FALSE;
+  PRBool  equals;
+  mAttributes->Equals(other->mAttributes, equals);
+  return equals;
 }
 
 PRUint32 AttributeKey::HashValue(void) const
@@ -310,8 +299,6 @@ PRUint32 AttributeKey::HashValue(void) const
     PRUint32  hash;
     mAttributes->HashValue(hash);
     self->mHash.mBits.mHashCode = (0x7FFFFFFF & hash);
-    self->mHash.mBits.mHashCode |= (0x7FFFFFFF & PRUint32(mFontMapFunc));
-    self->mHash.mBits.mHashCode |= (0x7FFFFFFF & PRUint32(mMapFunc));
     self->mHash.mBits.mHashSet = 1;
   }
   return mHash.mBits.mHashCode;
@@ -319,7 +306,7 @@ PRUint32 AttributeKey::HashValue(void) const
 
 nsHashKey* AttributeKey::Clone(void) const
 {
-  AttributeKey* clown = new AttributeKey(mFontMapFunc, mMapFunc, mAttributes);
+  AttributeKey* clown = new AttributeKey(mAttributes);
   if (nsnull != clown) {
     clown->mHash.mInitializer = mHash.mInitializer;
   }
@@ -382,13 +369,20 @@ public:
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
                               nsIHTMLAttributes*& aAttributes);
   NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, 
+                             PRBool aMappedToStyle,
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes);
   NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, 
+                             PRBool aMappedToStyle,
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes);
   NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIHTMLContent* aContent, 
                                nsIHTMLAttributes*& aAttributes);
+
+  // Mapped Attribute management methods
+  NS_IMETHOD UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
+                                    nsIHTMLMappedAttributes*& aUniqueMapped);
+  NS_IMETHOD DropMappedAttributes(nsIHTMLMappedAttributes* aMapped);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -400,17 +394,6 @@ private:
 protected:
   virtual ~HTMLStyleSheetImpl();
 
-  NS_IMETHOD EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes, 
-                                    nsMapAttributesFunc aFontMapFunc,
-                                    nsMapAttributesFunc aMapFunc,
-                                    PRBool aCreate, 
-                                    nsIHTMLAttributes*& aSingleAttrs);
-  NS_IMETHOD UniqueAttributes(nsIHTMLAttributes*& aSingleAttrs,
-                              nsMapAttributesFunc aFontMapFunc,
-                              nsMapAttributesFunc aMapFunc,
-                              PRInt32 aAttrCount,
-                              nsIHTMLAttributes*& aAttributes);
-
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -421,8 +404,7 @@ protected:
   HTMLAnchorRule*      mVisitedRule;
   HTMLAnchorRule*      mActiveRule;
   TableBackgroundRule* mTableBackgroundRule;
-  nsHashtable          mAttrTable;
-  nsIHTMLAttributes*   mRecycledAttrs;
+  nsHashtable          mMappedAttrTable;
 };
 
 
@@ -468,12 +450,18 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mDocument(nsnull),
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
-    mActiveRule(nsnull),
-    mRecycledAttrs(nsnull)
+    mActiveRule(nsnull)
 {
   NS_INIT_REFCNT();
   mTableBackgroundRule = new TableBackgroundRule(this);
   NS_ADDREF(mTableBackgroundRule);
+}
+
+PRBool MappedDropSheet(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsIHTMLMappedAttributes* mapped = (nsIHTMLMappedAttributes*)aData;
+  mapped->DropStyleSheetReference();
+  return PR_TRUE;
 }
 
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
@@ -495,8 +483,7 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
     mTableBackgroundRule->mSheet = nsnull;
     NS_RELEASE(mTableBackgroundRule);
   }
-    
-  NS_IF_RELEASE(mRecycledAttrs);
+  mMappedAttrTable.Enumerate(MappedDropSheet);
 }
 
 NS_IMPL_ADDREF(HTMLStyleSheetImpl)
@@ -599,7 +586,10 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
                   char *absUrlStr = nsnull;
                   char *urlSpec = href.ToNewCString();
-                  if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
+                  if (!urlSpec) {
+                    NS_RELEASE(baseUri);
+                    return 0;
+                  }
                   rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
                   NS_RELEASE(baseUri);
                   nsCRT::free(urlSpec);
@@ -836,7 +826,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
     mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
   }
-  mAttrTable.Reset();
+  mMappedAttrTable.Reset();
 
   return NS_OK;
 }
@@ -882,199 +872,49 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributesFor(nsIHTMLContent* aContent, nsIHTMLAttributes*& aAttributes)
 {
-  nsIHTMLAttributes*  attrs = aAttributes;
-
-  if (nsnull != attrs) {
-    nsMapAttributesFunc fontMapFunc;
-    nsMapAttributesFunc mapFunc;
-    aContent->GetAttributeMappingFunctions(fontMapFunc, mapFunc);
-    AttributeKey  key(fontMapFunc, mapFunc, attrs);
-    nsIHTMLAttributes* sharedAttrs = (nsIHTMLAttributes*)mAttrTable.Get(&key);
-    if (nsnull == sharedAttrs) {  // we have a new unique set
-      mAttrTable.Put(&key, attrs);
-    }
-    else {  // found existing set
-      if (sharedAttrs != aAttributes) {
-        aAttributes->ReleaseContentRef();
-        NS_RELEASE(aAttributes);  // release content's ref
-
-        aAttributes = sharedAttrs;
-        aAttributes->AddContentRef();
-        NS_ADDREF(aAttributes); // add ref for content
-      }
-    }
+  if (aAttributes) {
+    aAttributes->SetStyleSheet(this);
   }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
                                                   const nsString& aValue,
+                                                  PRBool aMappedToStyle,
                                                   nsIHTMLContent* aContent, 
                                                   nsIHTMLAttributes*& aAttributes)
 {
-  nsresult            result = NS_OK;
-  nsIHTMLAttributes*  attrs;
-  nsMapAttributesFunc fontMapFunc;
-  nsMapAttributesFunc mapFunc;
-
-  aContent->GetAttributeMappingFunctions(fontMapFunc, mapFunc);
-
-  result = EnsureSingleAttributes(aAttributes, fontMapFunc, mapFunc, PR_TRUE, attrs);
-
-  if ((NS_OK == result) && (nsnull != attrs)) {
-    PRInt32 count;
-    attrs->SetAttribute(aAttribute, aValue, count);
-
-    result = UniqueAttributes(attrs, fontMapFunc, mapFunc, count, aAttributes);
-  }
-
-  return result;
-}
-
-#ifdef NS_DEBUG
-#define NS_ASSERT_REFCOUNT(ptr,cnt,msg) { \
-  nsrefcnt  count = ptr->AddRef();        \
-  ptr->Release();                         \
-  NS_ASSERTION(--count == cnt, msg);      \
-}
-#else
-#define NS_ASSERT_REFCOUNT(ptr,cnt,msg) {}
-#endif
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes, 
-                                           nsMapAttributesFunc aFontMapFunc,
-                                           nsMapAttributesFunc aMapFunc,
-                                           PRBool aCreate, 
-                                           nsIHTMLAttributes*& aSingleAttrs)
-{
   nsresult  result = NS_OK;
-  PRInt32   contentRefCount;
 
-  if (nsnull == aAttributes) {
-    if (PR_TRUE == aCreate) {
-      if (nsnull != mRecycledAttrs) {
-        NS_ASSERT_REFCOUNT(mRecycledAttrs, 1, "attributes used elsewhere");
-        aSingleAttrs = mRecycledAttrs;
-        mRecycledAttrs = nsnull;
-        aSingleAttrs->SetMappingFunctions(aFontMapFunc, aMapFunc);
-      }
-      else {
-        result = NS_NewHTMLAttributes(&aSingleAttrs, this, aFontMapFunc, aMapFunc);
-      }
-    }
-    else {
-      aSingleAttrs = nsnull;
-    }
-    contentRefCount = 0;
+  if (! aAttributes) {
+    result = NS_NewHTMLAttributes(&aAttributes);
   }
-  else {
-    aSingleAttrs = aAttributes;
-    aSingleAttrs->GetContentRefCount(contentRefCount);
-    NS_ASSERTION(0 < contentRefCount, "bad content ref count");
+  if (aAttributes) {
+    result = aAttributes->SetAttributeFor(aAttribute, aValue, aMappedToStyle, 
+                                          aContent, this);
   }
 
-  if (NS_OK == result) {
-    if (1 < contentRefCount) {  // already shared, copy it
-      result = aSingleAttrs->Clone(&aSingleAttrs);
-      if (NS_OK != result) {
-        aSingleAttrs = nsnull;
-        return result;
-      }
-      contentRefCount = 0;
-      aAttributes->ReleaseContentRef();
-      NS_RELEASE(aAttributes);
-    }
-    else {  // one content ref, ok to use, remove from table because hash may change
-      if (1 == contentRefCount) {
-        AttributeKey  key(aFontMapFunc, aMapFunc, aSingleAttrs);
-        mAttrTable.Remove(&key);
-        NS_ADDREF(aSingleAttrs); // add a local ref so we match up 
-      }
-    }
-    // at this point, content ref count is 0 or 1, and we hold a local ref
-    // attrs is also unique and not in the table
-    NS_ASSERTION(((0 == contentRefCount) && (nsnull == aAttributes)) ||
-                 ((1 == contentRefCount) && (aSingleAttrs == aAttributes)), "this is broken");
-  }
   return result;
 }
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::UniqueAttributes(nsIHTMLAttributes*& aSingleAttrs,
-                                     nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc,
-                                     PRInt32 aAttrCount,
-                                     nsIHTMLAttributes*& aAttributes)
-{
-  nsresult result = NS_OK;
-
-  if (0 < aAttrCount) {
-    AttributeKey  key(aFontMapFunc, aMapFunc, aSingleAttrs);
-    nsIHTMLAttributes* sharedAttrs = (nsIHTMLAttributes*)mAttrTable.Get(&key);
-    if (nsnull == sharedAttrs) {  // we have a new unique set
-      mAttrTable.Put(&key, aSingleAttrs);
-      if (aSingleAttrs != aAttributes) {
-        NS_ASSERTION(nsnull == aAttributes, "this is broken");
-        aAttributes = aSingleAttrs;
-        aAttributes->AddContentRef(); 
-        NS_ADDREF(aAttributes); // add ref for content
-      }
-    }
-    else {  // found existing set
-      NS_ASSERTION (sharedAttrs != aAttributes, "should never happen");
-      if (nsnull != aAttributes) {
-        aAttributes->ReleaseContentRef();
-        NS_RELEASE(aAttributes);  // release content's ref
-      }
-      aAttributes = sharedAttrs;
-      aAttributes->AddContentRef();
-      NS_ADDREF(aAttributes); // add ref for content
-
-      if (nsnull == mRecycledAttrs) {
-        mRecycledAttrs = aSingleAttrs;
-        NS_ADDREF(mRecycledAttrs);
-        mRecycledAttrs->Reset();
-      }
-    }
-  }
-  else {  // no attributes to store
-    if (nsnull != aAttributes) {
-      aAttributes->ReleaseContentRef();
-      NS_RELEASE(aAttributes);
-    }
-    if ((nsnull != aSingleAttrs) && (nsnull == mRecycledAttrs)) {
-      mRecycledAttrs = aSingleAttrs;
-      NS_ADDREF(mRecycledAttrs);
-      mRecycledAttrs->Reset();
-    }
-  }
-  NS_IF_RELEASE(aSingleAttrs);
-  return result;
-}
-
-
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
                                                   const nsHTMLValue& aValue,
+                                                  PRBool aMappedToStyle,
                                                   nsIHTMLContent* aContent, 
                                                   nsIHTMLAttributes*& aAttributes)
 {
-  nsresult            result = NS_OK;
-  nsIHTMLAttributes*  attrs;
-  PRBool              hasValue = PRBool(eHTMLUnit_Null != aValue.GetUnit());
-  nsMapAttributesFunc fontMapFunc;
-  nsMapAttributesFunc mapFunc;
+  nsresult  result = NS_OK;
 
-  aContent->GetAttributeMappingFunctions(fontMapFunc, mapFunc);
-
-  result = EnsureSingleAttributes(aAttributes, fontMapFunc, mapFunc, hasValue, attrs);
-
-  if ((NS_OK == result) && (nsnull != attrs)) {
+  if ((! aAttributes) && (eHTMLUnit_Null != aValue.GetUnit())) {
+    result = NS_NewHTMLAttributes(&aAttributes);
+  }
+  if (aAttributes) {
     PRInt32 count;
-    attrs->SetAttribute(aAttribute, aValue, count);
-
-    result = UniqueAttributes(attrs, fontMapFunc, mapFunc, count, aAttributes);
+    result = aAttributes->SetAttributeFor(aAttribute, aValue, aMappedToStyle,
+                                          aContent, this, count);
+    if (0 == count) {
+      NS_RELEASE(aAttributes);
+    }
   }
 
   return result;
@@ -1084,24 +924,55 @@ NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
                                                     nsIHTMLContent* aContent, 
                                                     nsIHTMLAttributes*& aAttributes)
 {
-  nsresult            result = NS_OK;
-  nsIHTMLAttributes*  attrs;
-  nsMapAttributesFunc fontMapFunc;
-  nsMapAttributesFunc mapFunc;
+  nsresult  result = NS_OK;
 
-  aContent->GetAttributeMappingFunctions(fontMapFunc, mapFunc);
-
-  result = EnsureSingleAttributes(aAttributes, fontMapFunc, mapFunc, PR_FALSE, attrs);
-
-  if ((NS_OK == result) && (nsnull != attrs)) {
+  if (aAttributes) {
     PRInt32 count;
-    attrs->UnsetAttribute(aAttribute, count);
-
-    result = UniqueAttributes(attrs, fontMapFunc, mapFunc, count, aAttributes);
+    result = aAttributes->UnsetAttributeFor(aAttribute, aContent, this, count);
+    if (0 == count) {
+      NS_RELEASE(aAttributes);
+    }
   }
 
   return result;
 
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
+                                           nsIHTMLMappedAttributes*& aUniqueMapped)
+{
+  nsresult result = NS_OK;
+
+  AttributeKey  key(aMapped);
+  nsIHTMLMappedAttributes* sharedAttrs = (nsIHTMLMappedAttributes*)mMappedAttrTable.Get(&key);
+  if (nsnull == sharedAttrs) {  // we have a new unique set
+    mMappedAttrTable.Put(&key, aMapped);
+    aMapped->SetUniqued(PR_TRUE);
+    NS_ADDREF(aMapped);
+    aUniqueMapped = aMapped;
+  }
+  else {  // found existing set
+    aUniqueMapped = sharedAttrs;
+    NS_ADDREF(aUniqueMapped);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::DropMappedAttributes(nsIHTMLMappedAttributes* aMapped)
+{
+  if (aMapped) {
+    PRBool inTable = PR_FALSE;
+    aMapped->GetUniqued(inTable);
+    if (inTable) {
+      AttributeKey  key(aMapped);
+      nsIHTMLMappedAttributes* old = (nsIHTMLMappedAttributes*)mMappedAttrTable.Remove(&key);
+      NS_ASSERTION(old == aMapped, "not in table");
+      aMapped->SetUniqued(PR_FALSE);
+    }
+  }
+  return NS_OK;
 }
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
