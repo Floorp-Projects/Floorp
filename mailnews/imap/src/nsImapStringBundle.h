@@ -22,9 +22,12 @@
 #ifndef _nsImapStringBundle_H__
 #define _nsImapStringBundle_H__
 
+#include "nsIStringBundle.h"
+
 NS_BEGIN_EXTERN_C
 
-PRUnichar     *IMAPGetStringByID(PRInt32 stringID);
+nsresult      IMAPGetStringByID(PRInt32 stringID, PRUnichar **aString);
+nsresult      IMAPGetStringBundle(nsIStringBundle **aBundle);
 
 NS_END_EXTERN_C
 
@@ -96,5 +99,5 @@ NS_END_EXTERN_C
 #define IMAP_PERSONAL_FILING_CABINET                5062
 #define IMAP_PFC_READ_MAIL                          5063
 #define IMAP_PFC_SENT_MAIL                          5064
-
+#define IMAP_SPECIAL_CHAR                           5065
 #endif /* _nsImapStringBundle_H__ */

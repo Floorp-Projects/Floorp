@@ -2182,8 +2182,10 @@ NS_IMETHODIMP nsImapIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_re
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
                                                       nsIMsgWindow * aMsgWindow)
 {
-    PRUnichar *passwordTemplate = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT);
-    PRUnichar *passwordTitle = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT_TITLE);
+    nsXPIDLString passwordTemplate;
+    IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
+    nsXPIDLString passwordTitle; 
+    IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
     PRUnichar *passwordText = nsnull;
     nsXPIDLCString hostName;
     nsXPIDLCString userName;
@@ -2196,8 +2198,6 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
     nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
                                      &okayValue, aPassword);
     nsTextFormatter::smprintf_free(passwordText);
-    nsCRT::free(passwordTemplate);
-    nsCRT::free(passwordTitle);
     return rv;
 }
 

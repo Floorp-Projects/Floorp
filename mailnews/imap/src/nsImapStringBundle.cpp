@@ -34,41 +34,27 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define IMAP_MSGS_URL       "chrome://messenger/locale/imapMsgs.properties"
 
 extern "C" 
-PRUnichar *
-IMAPGetStringByID(PRInt32 stringID)
+nsresult
+IMAPGetStringByID(PRInt32 stringID, PRUnichar **aString)
 {
-	nsresult    res;
-	char*       propertyURL = NULL;
-	nsString	resultString; resultString.AssignWithConversion("???");
-
-	propertyURL = IMAP_MSGS_URL;
-
-	nsCOMPtr<nsIStringBundleService> sBundleService = 
-	         do_GetService(kStringBundleServiceCID, &res); 
-	if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-	{
-		nsIStringBundle* sBundle = nsnull;
-		res = sBundleService->CreateBundle(propertyURL, &sBundle);
-
-		if (NS_SUCCEEDED(res))
-		{
-			PRUnichar *ptrv = nsnull;
-			res = sBundle->GetStringFromID(stringID, &ptrv);
-
-			NS_RELEASE(sBundle);
-
-			if (NS_FAILED(res)) 
-			{
-				resultString.AssignWithConversion("[StringID");
-				resultString.AppendInt(stringID, 10);
-				resultString.AppendWithConversion("?]");
-				return resultString.ToNewUnicode();
-			}
-
-			return ptrv;
-		}
-	}
-
-	return resultString.ToNewUnicode();
+  nsresult res=NS_OK;
+  nsCOMPtr <nsIStringBundle> sBundle;
+  res = IMAPGetStringBundle(getter_AddRefs(sBundle));
+  if (NS_SUCCEEDED(res) && sBundle)
+    res = sBundle->GetStringFromID(stringID, aString);
+  return res;
 }
 
+nsresult
+IMAPGetStringBundle(nsIStringBundle **aBundle)
+{
+  nsresult rv=NS_OK;
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!stringService) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  rv = stringService->CreateBundle(IMAP_MSGS_URL, getter_AddRefs(stringBundle));
+  *aBundle = stringBundle;
+  NS_IF_ADDREF(*aBundle);
+  return rv;
+}

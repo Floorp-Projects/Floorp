@@ -683,7 +683,8 @@ nsImapMailFolder::AlertSpecialFolderExists(nsIMsgWindow *msgWindow)
     nsresult rv = NS_OK;
     nsCOMPtr<nsIDocShell> docShell;
     msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-    PRUnichar *alertString = IMAPGetStringByID(IMAP_MAILBOX_ALREADY_EXISTS);
+    nsXPIDLString alertString;
+    IMAPGetStringByID(IMAP_MAILBOX_ALREADY_EXISTS, getter_Copies(alertString));
     if (!alertString) return rv;
         if (docShell)
         {
@@ -1178,6 +1179,33 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow )
 {
     nsresult rv = NS_ERROR_FAILURE;
+    nsAutoString newNameStr(newName);
+    if (newNameStr.FindChar(m_hierarchyDelimiter,0) != -1)
+    {
+      nsCOMPtr<nsIDocShell> docShell;
+      if (msgWindow)
+        msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+      if (docShell)
+      {
+        nsCOMPtr<nsIStringBundle> bundle;
+        rv = IMAPGetStringBundle(getter_AddRefs(bundle));
+        if (NS_SUCCEEDED(rv) && bundle)
+        {
+          const PRUnichar *formatStrings[] =
+          {
+             (const PRUnichar*) m_hierarchyDelimiter
+          };
+          nsXPIDLString alertString;
+          rv = bundle->FormatStringFromID(IMAP_SPECIAL_CHAR,
+                                        formatStrings, 1,
+                                        getter_Copies(alertString));
+          nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+          if (dialog && alertString)
+            dialog->Alert(nsnull, alertString);
+        }
+      }
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr <nsIImapIncomingServer> incomingImapServer;
 
     GetImapIncomingServer(getter_AddRefs(incomingImapServer));
@@ -1979,8 +2007,9 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                 deleteNoTrash = PR_TRUE;
             }
 
-            PRUnichar *confirmationStr = IMAPGetStringByID((!deleteNoTrash)
-              ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH);
+            nsXPIDLString confirmationStr;
+            IMAPGetStringByID(((!deleteNoTrash) ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH),
+            getter_Copies(confirmationStr));
 
             if (dialog && confirmationStr) {
                 dialog->Confirm(nsnull, confirmationStr, &confirmed);
@@ -2007,10 +2036,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                                                        nsnull);
                   }
               }
-            }
-            else
-            if (confirmationStr)
-                nsCRT::free(confirmationStr);
+            }  
         }
     }
     
@@ -4442,7 +4468,7 @@ NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
                                  PRUint32 aMsgId, const PRUnichar *extraInfo)
 {
-  PRUnichar *progressMsg = nsnull;
+  PRUnichar *progressMsg=nsnull;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = GetServer(getter_AddRefs(server));
@@ -4453,7 +4479,7 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
       serverSink->GetImapStringByID(aMsgId, &progressMsg);
   }
   if (!progressMsg)
-    progressMsg = IMAPGetStringByID(aMsgId);
+    IMAPGetStringByID(aMsgId, &progressMsg);
 
   if (aProtocol && progressMsg)
   {
