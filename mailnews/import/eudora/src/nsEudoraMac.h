@@ -24,14 +24,14 @@
 #include "nsIFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsEudoraMailbox.h"
-
+#include "nsEudoraAddress.h"
 
 class nsIImportService;
 class nsIMsgAccountManager;
 class nsIMsgAccount;
 
 
-class nsEudoraMac : public nsEudoraMailbox {
+class nsEudoraMac : public nsEudoraMailbox, public nsEudoraAddress {
 public:
 	nsEudoraMac();
 	~nsEudoraMac();
@@ -45,7 +45,12 @@ public:
 
 	virtual nsresult	GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType);
 
-		// import settings from Win32 ini file
+		// Address book stuff
+	virtual PRBool		FindAddressFolder( nsIFileSpec *pFolder);
+		// get the list of mailboxes
+	virtual nsresult	FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **ppArray);
+
+		// import settings
 	static PRBool	ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **localMailAccount);
 	static PRBool	FindSettingsFile( nsIFileSpec *pIniFile) { return( FindEudoraLocation( pIniFile, PR_TRUE));}
 

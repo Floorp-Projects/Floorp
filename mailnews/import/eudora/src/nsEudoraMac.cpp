@@ -29,6 +29,7 @@
 #include "nsEudoraMac.h"
 #include "nsIImportService.h"
 #include "nsIImportMailboxDescriptor.h"
+#include "nsIImportABDescriptor.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEudoraStringBundle.h"
 
@@ -853,8 +854,10 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 				c = fileNum.CharAt( i);
 				if ((c >= '0') && (c <= '9'))
 					fNum += (c - '0');
-				else if (((c >= 'a') && (c <= 'f')) || ((c >= 'A') && (c <= 'F')))
+				else if ((c >= 'a') && (c <= 'f'))
 					fNum += (c - 'a' + 10);
+				else if ((c >= 'A') && (c <= 'F'))
+					fNum += (c - 'A' + 10);
 				else
 					break;
 			}
@@ -882,6 +885,16 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 		}
 	}
 	
+#ifdef IMPORT_DEBUG
+	nsCString	typeStr;
+	nsCString	creatStr;
+	
+	creatStr.Append( (const char *)&creator, 4);
+	typeStr.Append( (const char *)&type, 4);
+	IMPORT_LOG3( "\tAttachment type: %s, creator: %s, fileNum: %ld\n", (const char *)typeStr, (const char *)creatStr, fNum);
+	IMPORT_LOG1( "\tAttachment file name: %s\n", (const char *)str);
+#endif
+	
 	// Now we have all of the pertinent info, find out if the file exists?
 	nsCString	fileName;
 	if ((str.CharAt( 0) == '"') && (str.Last() == '"')) {
@@ -890,18 +903,19 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	}
 	
 	PRInt32 idx = str.FindChar( ':');
-	if (idx == -1)
+	if (idx == -1) {
 		return( NS_ERROR_FAILURE);
+	}
 	
 	nsCString	volumeName;
-	str.Left( volumeName, idx);
+	str.Left( volumeName, idx + 1);
 	str.Right( fileName, str.Length() - idx - 1);
 	
 	// Create a FSSpec from the volume name, fileName, and folderNumber
 	// Assume that we are looking for a file on the volume with macFileId
 	FSSpec	spec;
 	Str63	str63;
-	short	vRefNum;
+	short	vRefNum = 0;
 	if (volumeName.Length() > 63) {
 		nsCRT::memcpy( &(str63[1]), (const char *)volumeName, 63);
 		str63[0] = 63;
@@ -910,18 +924,25 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 		nsCRT::memcpy( &(str63[1]), (const char *)volumeName, volumeName.Length());
 		str63[0] = volumeName.Length();
 	}
-	
+		
 	OSErr err = DetermineVRefNum( str63, 0, &vRefNum);
-	if (err != noErr)
+	if (err != noErr) {
+		IMPORT_LOG0( "\t*** Error cannot find volume ref num\n");
 		return( NS_ERROR_FAILURE);
+	}
 	
+	nsCRT::memset( &spec, 0, sizeof( spec));
 	err = FSpResolveFileIDRef( nil, vRefNum, (long) fNum, &spec);
-	if (err != noErr)
+	if (err != noErr) {
+		IMPORT_LOG1( "\t*** Error, cannot resolve fileIDRef: %ld\n", (long) err);
 		return( NS_ERROR_FAILURE);
+	}
+	
 	
 	FInfo	fInfo;
 	err = FSpGetFInfo( &spec, &fInfo);
 	if ((err != noErr) || (fInfo.fdType != (OSType) type)) {
+		IMPORT_LOG0( "\t*** Error, file type does not match\n");
 		return( NS_ERROR_FAILURE);
 	}
 	
@@ -942,6 +963,8 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 		mimeType = "application/applefile";
 	else
 		mimeType = "application/octet-stream";
+	
+	IMPORT_LOG1( "\tMimeType: %s\n", (const char *)mimeType);
 	
 	return( NS_OK);
 }
@@ -1010,4 +1033,157 @@ PRBool nsEudoraMac::IsValidMailboxFile( nsIFileSpec *pFile)
 
 
 
+
+PRBool nsEudoraMac::FindAddressFolder( nsIFileSpec *pFolder)
+{
+	return( FindEudoraLocation( pFolder));
+}
+
+nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **ppArray)
+{
+	// Look for the nicknames file in this folder and then
+	// additional files in the Nicknames folder
+	// Try and find the nickNames file
+	nsCOMPtr<nsIFileSpec>	spec;
+	nsresult rv = NS_NewFileSpec( getter_AddRefs( spec));
+	if (NS_FAILED( rv))
+		return( rv);
+	rv = spec->FromFileSpec( pRoot);
+	if (NS_FAILED( rv))
+		return( rv);
+	rv = NS_NewISupportsArray( ppArray);
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "FAILED to allocate the nsISupportsArray\n");
+		return( rv);
+	}
+		
+	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	if (NS_FAILED( rv))
+		return( rv);
+	
+	
+	nsString		displayName;
+	nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NICKNAMES_NAME, displayName);
+	PRUint32		sz = 0;
+	
+	// First find the Nicknames file itself
+	rv = spec->AppendRelativeUnixPath( "Eudora Nicknames");
+	PRBool	exists = PR_FALSE;
+	PRBool	isFile = PR_FALSE;
+	if (NS_SUCCEEDED( rv))
+		rv = spec->Exists( &exists);
+	if (NS_SUCCEEDED( rv) && exists)
+		rv = spec->IsFile( &isFile);
+
+	nsCOMPtr<nsIImportABDescriptor>	desc;
+	nsISupports *					pInterface;
+	
+	if (exists && isFile) {
+		rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
+		if (NS_SUCCEEDED( rv)) {
+			sz = 0;
+			spec->GetFileSize( &sz);	
+			desc->SetPreferredName( displayName.GetUnicode());
+			desc->SetSize( sz);
+			nsIFileSpec *pSpec = nsnull;
+			desc->GetFileSpec( &pSpec);
+			if (pSpec) {
+				pSpec->FromFileSpec( spec);
+				NS_RELEASE( pSpec);
+			}
+			rv = desc->QueryInterface( kISupportsIID, (void **) &pInterface);
+			(*ppArray)->AppendElement( pInterface);
+			pInterface->Release();
+		}
+		if (NS_FAILED( rv)) {
+			IMPORT_LOG0( "*** Error creating address book descriptor for eudora nicknames\n");
+			return( rv);
+		}
+	}
+	
+	// Now try the directory of address books!
+	rv = spec->FromFileSpec( pRoot);
+	if (NS_SUCCEEDED( rv))
+		rv = spec->AppendRelativeUnixPath( "Nicknames Folder");
+	exists = PR_FALSE;
+	PRBool	isDir = PR_FALSE;
+	if (NS_SUCCEEDED( rv))
+		rv = spec->Exists( &exists);
+	if (NS_SUCCEEDED( rv) && exists)
+		rv = spec->IsDirectory( &isDir);
+	
+	if (!isDir)
+		return( NS_OK);	
+	
+	// We need to iterate the directory
+	nsCOMPtr<nsIDirectoryIterator>	dir;
+	rv = NS_NewDirectoryIterator( getter_AddRefs( dir));
+	if (NS_FAILED( rv))
+		return( rv);
+
+	exists = PR_FALSE;
+	rv = dir->Init( spec, PR_TRUE);
+	if (NS_FAILED( rv))
+		return( rv);
+
+	rv = dir->Exists( &exists);
+	if (NS_FAILED( rv))
+		return( rv);
+	
+	char *					pName;
+	nsFileSpec				fSpec;
+	OSType					type;
+	OSType					creator;
+	
+	while (exists && NS_SUCCEEDED( rv)) {
+		rv = dir->GetCurrentSpec( getter_AddRefs( spec));
+		if (NS_SUCCEEDED( rv)) {
+			isFile = PR_FALSE;
+			pName = nsnull;
+			rv = spec->IsFile( &isFile);
+			rv = spec->GetLeafName( &pName);
+			if (pName)	{
+				displayName = pName;
+				nsCRT::free( pName);
+			}
+			if (NS_SUCCEEDED( rv) && pName && isFile) {
+				rv = spec->GetFileSpec( &fSpec);
+				if (NS_SUCCEEDED( rv)) {
+					type = 0;
+					creator = 0;
+					fSpec.GetFileTypeAndCreator( &type, &creator);
+					if (type == 'TEXT') {
+						rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
+						if (NS_SUCCEEDED( rv)) {
+							sz = 0;
+							spec->GetFileSize( &sz);	
+							desc->SetPreferredName( displayName.GetUnicode());
+							desc->SetSize( sz);
+							nsIFileSpec *pSpec = nsnull;
+							desc->GetFileSpec( &pSpec);
+							if (pSpec) {
+								pSpec->FromFileSpec( spec);
+								NS_RELEASE( pSpec);
+							}
+							rv = desc->QueryInterface( kISupportsIID, (void **) &pInterface);
+							(*ppArray)->AppendElement( pInterface);
+							pInterface->Release();
+						}
+						if (NS_FAILED( rv)) {
+							IMPORT_LOG0( "*** Error creating address book descriptor for eudora address book\n");
+							return( rv);
+						}
+					}
+				}
+			}				
+		}
+
+		rv = dir->Next();
+		if (NS_SUCCEEDED( rv))
+			rv = dir->Exists( &exists);
+	}
+
+	
+	return( rv);
+}
 
