@@ -737,7 +737,7 @@ alpha*-*-osf*)
 	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
     else
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
-	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
+	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact -noexceptions"
 	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@'
 	DSO_CFLAGS=
 	MKSHLIB='-$(LD) $(DSO_LDOPTS)'
