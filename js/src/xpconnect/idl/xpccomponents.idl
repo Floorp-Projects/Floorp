@@ -37,15 +37,7 @@
 #include "xpcexception.idl"
 #include "xpcjsid.idl"
 #include "nsIComponentManager.idl"
-
-/**
-* interface of Components.interfaces
-* (interesting stuff only reflected into JavaScript)
-*/
-[scriptable, uuid(4b62a640-d26c-11d2-9842-006008962422)]
-interface nsIXPCComponents_Interfaces : nsISupports
-{
-};
+#include "nsIScriptableInterfaces.idl"
 
 /**
 * interface of Components.classes
@@ -119,7 +111,7 @@ interface nsIXPCConstructor : nsISupports
 [scriptable, uuid(42624f80-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents : nsISupports
 {
-    readonly attribute nsIXPCComponents_Interfaces  interfaces;
+    readonly attribute nsIScriptableInterfaces      interfaces;
     readonly attribute nsIXPCComponents_Classes     classes;
     readonly attribute nsIXPCComponents_ClassesByID classesByID;
     readonly attribute nsIStackFrame                stack;

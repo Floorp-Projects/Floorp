@@ -91,30 +91,10 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 
 /***************************************************************************/
 
-class nsXPCComponents_Interfaces :
-            public nsIXPCComponents_Interfaces,
-            public nsIXPCScriptable
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
-{
-public:
-    // all the interface method declarations...
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCCOMPONENTS_INTERFACES
-    NS_DECL_NSIXPCSCRIPTABLE
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
-
-public:
-    nsXPCComponents_Interfaces();
-    virtual ~nsXPCComponents_Interfaces();
-};
-
 nsXPCComponents_Interfaces::nsXPCComponents_Interfaces()
 {
     NS_INIT_ISUPPORTS();
+    mManager = dont_AddRef(XPTI_GetInterfaceInfoManager());
 }
 
 nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
@@ -123,13 +103,26 @@ nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
 }
 
 
+/* [noscript] attribute nsIInterfaceInfoManager manager; */
+NS_IMETHODIMP nsXPCComponents_Interfaces::GetManager(nsIInterfaceInfoManager * *aManager)
+{
+    *aManager = mManager;
+    NS_IF_ADDREF(*aManager);
+    return NS_OK;
+}
+NS_IMETHODIMP nsXPCComponents_Interfaces::SetManager(nsIInterfaceInfoManager * aManager)
+{
+    mManager = aManager;
+    return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Interfaces)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Interfaces)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptableInterfaces)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
 #endif
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Interfaces)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptableInterfaces)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Interfaces)
@@ -158,10 +151,8 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     {
         case JSENUMERATE_INIT:
         {
-            nsCOMPtr<nsIInterfaceInfoManager>
-                iim(dont_AddRef(XPTI_GetInterfaceInfoManager()));
-
-            if(!iim || NS_FAILED(iim->EnumerateInterfaces(&e)) || !e ||
+            if(!mManager || 
+               NS_FAILED(mManager->EnumerateInterfaces(&e)) || !e ||
                NS_FAILED(e->First()))
 
             {
@@ -231,12 +222,19 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
     const char* name = nsnull;
 
-    if(JSVAL_IS_STRING(id) &&
+    if(mManager &&
+       JSVAL_IS_STRING(id) &&
        nsnull != (name = JS_GetStringBytes(JSVAL_TO_STRING(id))) &&
        name[0] != '{') // we only allow interfaces by name here
     {
-        nsCOMPtr<nsIJSIID> nsid =
-            dont_AddRef(NS_STATIC_CAST(nsIJSIID*,nsJSIID::NewID(name)));
+        nsCOMPtr<nsIInterfaceInfo> info;
+        mManager->GetInfoForName(name, getter_AddRefs(info));
+        if(!info)
+            return NS_OK;
+
+        nsCOMPtr<nsIJSIID> nsid = 
+            dont_AddRef(NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID(info)));
+
         if(nsid)
         {
             nsCOMPtr<nsIXPConnect> xpc;
@@ -1392,7 +1390,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         // argv[1] is an iid name string
         // XXXjband support passing "Components.interfaces.foo"?
 
-        nsCOMPtr<nsIXPCComponents_Interfaces> ifaces;
+        nsCOMPtr<nsIScriptableInterfaces> ifaces;
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         JSObject* ifacesObj = nsnull;
 
@@ -1402,7 +1400,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
         if(NS_FAILED(comp->GetInterfaces(getter_AddRefs(ifaces))) ||
            NS_FAILED(xpc->WrapNative(cx, obj, ifaces,
-                                     NS_GET_IID(nsIXPCComponents_Interfaces),
+                                     NS_GET_IID(nsIScriptableInterfaces),
                                      getter_AddRefs(holder))) || !holder ||
            NS_FAILED(holder->GetJSObject(&ifacesObj)) || !ifacesObj)
         {
@@ -1432,9 +1430,15 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     }
     else
     {
-        cInterfaceID =
-            dont_AddRef(
-                NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID("nsISupports")));
+        nsCOMPtr<nsIInterfaceInfo> info;
+        xpc->GetInfoForIID(&NS_GET_IID(nsISupports), getter_AddRefs(info));
+        
+        if(info)
+        {
+            cInterfaceID =
+                dont_AddRef(
+                    NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID(info)));
+        }
         if(!cInterfaceID)
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
     }
@@ -1560,8 +1564,8 @@ nsXPCComponents::~nsXPCComponents()
 }
 
 /*******************************************/
-#define XPC_IMPL_GET_OBJ_METHOD(_n) \
-NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) { \
+#define XPC_IMPL_GET_OBJ_METHOD(_b, _n) \
+NS_IMETHODIMP nsXPCComponents::Get##_n(_b##_n * *a##_n) { \
     NS_ENSURE_ARG_POINTER(a##_n); \
     if(!m##_n) { \
         if(!(m##_n = new nsXPCComponents_##_n())) { \
@@ -1575,13 +1579,13 @@ NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) { \
     return NS_OK; \
 }
 
-XPC_IMPL_GET_OBJ_METHOD(Interfaces);
-XPC_IMPL_GET_OBJ_METHOD(Classes);
-XPC_IMPL_GET_OBJ_METHOD(ClassesByID);
-XPC_IMPL_GET_OBJ_METHOD(Results);
-XPC_IMPL_GET_OBJ_METHOD(ID);
-XPC_IMPL_GET_OBJ_METHOD(Exception);
-XPC_IMPL_GET_OBJ_METHOD(Constructor);
+XPC_IMPL_GET_OBJ_METHOD(nsIScriptable,     Interfaces);
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Classes);
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ClassesByID);
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Results);
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ID);
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Exception);
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Constructor);
 
 #undef XPC_IMPL_GET_OBJ_METHOD
 /*******************************************/

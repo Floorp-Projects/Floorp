@@ -48,12 +48,18 @@ NS_DECL_CLASSINFO(XPCVariant)
 
 #define XPCVARIANT_CONTRACTID "@mozilla.org/xpcvariant;1"
 
+// {FE4F7592-C1FC-4662-AC83-538841318803}
+#define SCRIPTABLE_INTERFACES_CID \
+    {0xfe4f7592, 0xc1fc, 0x4662, \
+      { 0xac, 0x83, 0x53, 0x88, 0x41, 0x31, 0x88, 0x3 } }
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect, nsXPConnect::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSContextStack, nsXPCThreadJSContextStackImpl::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSRuntimeService, nsJSRuntimeServiceImpl::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
 
 NS_DECL_CLASSINFO(nsXPCException)
 
@@ -64,6 +70,7 @@ static const nsModuleComponentInfo components[] = {
   {nsnull, NS_XPCEXCEPTION_CID,                  XPC_EXCEPTION_CONTRACTID,     nsXPCExceptionConstructor, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsXPCException), nsnull, &NS_CLASSINFO_NAME(nsXPCException)},
   {nsnull, NS_JS_RUNTIME_SERVICE_CID,            XPC_RUNTIME_CONTRACTID,       nsIJSRuntimeServiceConstructor},
   {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID,    nsScriptErrorConstructor      },
+  {nsnull, SCRIPTABLE_INTERFACES_CID,            NS_SCRIPTABLE_INTERFACES_CONTRACTID,        nsXPCComponents_InterfacesConstructor },
   {nsnull, XPCVARIANT_CID,                       XPCVARIANT_CONTRACTID,        nsnull, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(XPCVariant), nsnull, &NS_CLASSINFO_NAME(XPCVariant)}
 };
 

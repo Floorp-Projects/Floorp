@@ -381,7 +381,7 @@ public:
     static nsIJSRuntimeService* GetJSRuntimeService(nsXPConnect* xpc = nsnull);
 
     // Gets addref'd pointer
-    static nsresult GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
+    static nsresult GetInterfaceInfoManager(nsIInterfaceInfoSuperManager** iim,
                                             nsXPConnect* xpc = nsnull);
 
     // Gets addref'd pointer
@@ -411,6 +411,9 @@ public:
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
+    nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
+    nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
+
 protected:
     nsXPConnect();
 
@@ -427,7 +430,7 @@ private:
     static PRThread*         gMainThread;
 
     XPCJSRuntime*            mRuntime;
-    nsIInterfaceInfoManager* mInterfaceInfoManager;
+    nsIInterfaceInfoSuperManager* mInterfaceInfoManager;
     nsIThreadJSContextStack* mContextStack;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;
@@ -2529,16 +2532,14 @@ public:
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 #endif
 
-    static nsJSIID* NewID(const char* str);
+    static nsJSIID* NewID(nsIInterfaceInfo* aInfo);
 
-    nsJSIID();
+    nsJSIID(nsIInterfaceInfo* aInfo);
+    nsJSIID(); // not implemented
     virtual ~nsJSIID();
 
 private:
-    void ResolveName();
-
-private:
-    nsJSID mDetails;
+    nsCOMPtr<nsIInterfaceInfo> mInfo;
 };
 
 // nsJSCID
@@ -2821,6 +2822,33 @@ private:
     nsXPCComponents_Exception*   mException;
     nsXPCComponents_Constructor* mConstructor;
 };
+
+/***************************************************************************/
+
+class nsXPCComponents_Interfaces :
+            public nsIScriptableInterfaces,
+            public nsIXPCScriptable
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+          , public nsISecurityCheckedComponent
+#endif
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCRIPTABLEINTERFACES
+    NS_DECL_NSIXPCSCRIPTABLE
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
+#endif
+
+public:
+    nsXPCComponents_Interfaces();
+    virtual ~nsXPCComponents_Interfaces();
+
+private:
+    nsCOMPtr<nsIInterfaceInfoManager> mManager;
+};
+
 
 /***************************************************************************/
 

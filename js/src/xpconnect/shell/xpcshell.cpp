@@ -961,6 +961,9 @@ main(int argc, char **argv)
 
 /***************************************************************************/
 
+/* XXXbe writeme */
+#if 0
+
 #include "jsatom.h"
 #ifdef DEBUG
 int
@@ -1001,4 +1004,6 @@ void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 //void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
 //void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
 JS_END_EXTERN_C
+#endif
+
 #endif
