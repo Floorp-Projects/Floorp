@@ -2448,7 +2448,7 @@ static NSArray* sToolbarDefaults = nil;
     nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
 
     nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
-    pm->Add(uri, nsIPermissionManager::POPUP_TYPE, nsIPermissionManager::ALLOW_ACTION);
+    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);
   }
 }
 
@@ -2470,7 +2470,7 @@ static NSArray* sToolbarDefaults = nil;
   for ( PRUint32 i = 0; i < count; ++i ) {
     nsCOMPtr<nsISupports> genUri = dont_AddRef(blockedSites->ElementAt(i));
     nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
-    pm->Add(uri, nsIPermissionManager::POPUP_TYPE, nsIPermissionManager::ALLOW_ACTION);   
+    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);   
   }
 }
 

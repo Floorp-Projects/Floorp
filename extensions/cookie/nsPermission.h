@@ -51,12 +51,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERMISSION
 
-  nsPermission(const nsACString &aHost, PRUint32 aType, PRUint32 aCapability);
+  nsPermission(const nsACString &aHost, const nsACString &aType, PRUint32 aCapability);
   virtual ~nsPermission();
   
 protected:
   nsCString mHost;
-  PRUint32  mType;
+  nsCString mType;
   PRUint32  mCapability;
 };
 

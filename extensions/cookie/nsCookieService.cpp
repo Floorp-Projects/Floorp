@@ -1178,9 +1178,7 @@ nsCookieService::Remove(const nsACString &aHost,
           }
 
           if (NS_SUCCEEDED(rv))
-            permissionManager->Add(uri,
-                                   nsIPermissionManager::COOKIE_TYPE,
-                                   nsIPermissionManager::DENY_ACTION);
+            permissionManager->Add(uri, "cookie", nsIPermissionManager::DENY_ACTION);
         }
       }
 

@@ -70,13 +70,11 @@
       // determine current state (blocked or unblocked) and hide appropriate menu item
       var blocked = nsIPermissionManager.UNKNOWN_ACTION;
       
-      blocked = 
-        permissionmanager.testPermission(uri, nsIPermissionManager.COOKIE_TYPE);
+      blocked = permissionmanager.testPermission(uri, "cookie");
       enableElement("AllowCookies", blocked != nsIPermissionManager.ALLOW_ACTION);
       enableElement("BlockCookies", blocked != nsIPermissionManager.DENY_ACTION);
 
-      blocked =
-        permissionmanager.testPermission(uri, nsIPermissionManager.IMAGE_TYPE);
+      blocked = permissionmanager.testPermission(uri, "image");
       enableElement("AllowImages", blocked != nsIPermissionManager.ALLOW_ACTION);
       enableElement("BlockImages", blocked != nsIPermissionManager.DENY_ACTION);
       
@@ -106,7 +104,7 @@
       var blocked = nsIPermissionManager.UNKNOWN_ACTION;
       var policy = pref.getBoolPref("dom.disable_open_during_load");
 
-      blocked = permissionmanager.testPermission(getBrowser().currentURI, nsIPermissionManager.POPUP_TYPE);
+      blocked = permissionmanager.testPermission(getBrowser().currentURI, "popup");
       
       document.getElementById("AboutPopups").hidden = policy;
       document.getElementById("ManagePopups").hidden = !policy;
@@ -138,22 +136,22 @@
       var uri = getBrowser().currentURI;
       switch (action) {
         case "cookieAllow":
-          permissionmanager.add(uri, nsIPermissionManager.COOKIE_TYPE, nsIPermissionManager.ALLOW_ACTION);
+          permissionmanager.add(uri, "cookie", nsIPermissionManager.ALLOW_ACTION);
           element = document.getElementById("AllowCookies");
           alert(element.getAttribute("msg"));
           break;
         case "cookieBlock":
-          permissionmanager.add(uri, nsIPermissionManager.COOKIE_TYPE, nsIPermissionManager.DENY_ACTION);
+          permissionmanager.add(uri, "cookie", nsIPermissionManager.DENY_ACTION);
           element = document.getElementById("BlockCookies");
           alert(element.getAttribute("msg"));
           break;
         case "imageAllow":
-          permissionmanager.add(uri, nsIPermissionManager.IMAGE_TYPE, nsIPermissionManager.ALLOW_ACTION);
+          permissionmanager.add(uri, "image", nsIPermissionManager.ALLOW_ACTION);
           element = document.getElementById("AllowImages");
           alert(element.getAttribute("msg"));
           break;
         case "imageBlock":
-          permissionmanager.add(uri, nsIPermissionManager.IMAGE_TYPE, nsIPermissionManager.DENY_ACTION);
+          permissionmanager.add(uri, "image", nsIPermissionManager.DENY_ACTION);
           element = document.getElementById("BlockImages");
           alert(element.getAttribute("msg"));
           break;

@@ -38,9 +38,9 @@ var deletedPermissions   = [];
 
 // differentiate between cookies, images, and popups
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
-const cookieType = nsIPermissionManager.COOKIE_TYPE;
-const imageType = nsIPermissionManager.IMAGE_TYPE;
-const popupType = nsIPermissionManager.POPUP_TYPE;
+const cookieType = "cookie";
+const imageType = "image";
+const popupType = "popup";
 
 var dialogType = cookieType;
 if (window.arguments[0] == "imageManager")

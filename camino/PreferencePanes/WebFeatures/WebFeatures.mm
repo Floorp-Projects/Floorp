@@ -124,9 +124,9 @@
       permEnum->GetNext(getter_AddRefs(curr));
       nsCOMPtr<nsIPermission> currPerm(do_QueryInterface(curr));
       if ( currPerm ) {
-        PRUint32 type = nsIPermissionManager::POPUP_TYPE;
-        currPerm->GetType(&type);
-        if ( type == nsIPermissionManager::POPUP_TYPE )
+        nsCAutoString type;
+        currPerm->GetType(type);
+        if ( type.Equals(NS_LITERAL_CSTRING("popup")) )
           inPermissions->AppendElement(curr);
       }
       permEnum->HasMoreElements(&hasMoreElements);
@@ -187,7 +187,7 @@
     if ( perm ) {
       nsCAutoString host;
       perm->GetHost(host);
-      mManager->Remove(host, nsIPermissionManager::POPUP_TYPE);           // could this api _be_ any worse? Come on!
+      mManager->Remove(host, "popup");           // could this api _be_ any worse? Come on!
       
       mCachedPermissions->RemoveElementAt(row);
     }
@@ -213,7 +213,7 @@
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI), siteURL);
     if ( newURI ) {
-      mManager->Add(newURI, nsIPermissionManager::POPUP_TYPE, nsIPermissionManager::ALLOW_ACTION);
+      mManager->Add(newURI, "popup", nsIPermissionManager::ALLOW_ACTION);
       mCachedPermissions->Clear();
       [self populatePermissionCache:mCachedPermissions];
 

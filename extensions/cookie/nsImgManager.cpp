@@ -270,11 +270,11 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
   
   if (mPermissionManager) {
     PRUint32 temp;
-    mPermissionManager->TestPermission(aCurrentURI, nsIPermissionManager::IMAGE_TYPE, &temp);
+    mPermissionManager->TestPermission(aCurrentURI, "image", &temp);
     // Blacklist for now
     *aPermission = (temp != nsIPermissionManager::DENY_ACTION);
   } else {
-    // no premission manager, return ok
+    // no permission manager, return ok
     *aPermission = PR_TRUE;
   }
 

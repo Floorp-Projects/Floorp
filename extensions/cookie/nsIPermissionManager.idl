@@ -38,8 +38,8 @@
 
 /**
  * This file contains an interface to the Permission Manager,
- * used for blocking objects (cookies, images etc) from
- * used-defined sites
+ * used to persistenly store permissions for different object types (cookies, 
+ * images etc) on a site-by-site basis.
  *
  * This service broadcasts a PERM_CHANGE_NOTIFICATION notification
  * when any permission changes. You can add yourself as an observer.
@@ -55,37 +55,48 @@ interface nsIObserver;
 interface nsIPermissionManager : nsISupports
 {
   /**
-   * Allowed return values from the testPermission method
+   * Predefined return values for the testPermission method and for
+   * the permission param of the add method
    */
   const PRUint32 UNKNOWN_ACTION = 0;
   const PRUint32 ALLOW_ACTION = 1;
   const PRUint32 DENY_ACTION = 2;
 
   /**
-   * These values are the different types of permissions supported
-   */
-  const PRUint32 COOKIE_TYPE = 0;
-  const PRUint32 IMAGE_TYPE = 1;
-  const PRUint32 POPUP_TYPE = 2;
-
-  /**
-   * Add permission information for a given URI and permission type.
-   * @param uri is the website to add the permission for
-   * @param permission is one of the enumerated permission actions above
-   * @param type is one of the enumerated permission types above
+   * Add permission information for a given URI and permission type. This
+   * operation will cause the type string to be registered if it does not
+   * currently exist.
+   *
+   * @param uri         the uri to add the permission for
+   * @param type        a case-sensitive ASCII string, identifying the consumer.
+   *                    Consumers should choose this string to be unique, with
+   *                    respect to other consumers. The number of unique type
+   *                    indentifiers may be limited.
+   * @param permission  an integer from 1 to 15, representing the desired
+   *                    action (e.g. allow or deny). The interpretation of
+   *                    this number is up to the consumer, and may represent
+   *                    different actions for different types. Consumers may
+   *                    use one of the enumerated permission actions defined
+   *                    above. 0 is reserved for UNKNOWN_ACTION, and shouldn't
+   *                    be used.
+   * @throws            NS_ERROR_FAILURE if there is no more room for adding
+   *                    a new type
    */
   void add(in nsIURI uri,
-           in PRUint32 type,
+           in string type,
            in PRUint32 permission);
 
   /**
    * Remove permission information for a given URI and permission type.
    * Note that this method takes a host string, not an nsIURI.
-   * @param host is the host to remove the permission for
-   * @param type is one of the enumerated permission types above
+   *
+   * @param host   the host to remove the permission for
+   * @param type   a case-sensitive ASCII string, identifying the consumer. 
+   *               The type must have been previously registered using the
+   *               add() method.
    */
   void remove(in AUTF8String host,
-              in PRUint32 type);
+              in string type);
 
   /**
    * Clear permission information for all websites.
@@ -94,12 +105,13 @@ interface nsIPermissionManager : nsISupports
 
   /**
    * Test whether a website has permission to perform the given action.
-   * @param  uri   the website to be tested
-   * @param  type  one of the enumerated types above
-   * @return       one of the enumerated permission actions above
+   * @param uri     the uri to be tested
+   * @param type    a case-sensitive ASCII string, identifying the consumer
+   * @param return  see add(), param permission. returns UNKNOWN_ACTION when
+   *                there is no stored permission for this uri and / or type.
    */
   PRUint32 testPermission(in nsIURI uri,
-                          in PRUint32 type);
+                          in string type);
 
   /**
    * Allows enumeration of all stored permissions
