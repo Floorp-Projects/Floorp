@@ -486,12 +486,12 @@ PRInt16     dspan,sspan,span;
 
   if (nsnull != aSecondSImage) {
     ss1 = (PRUint16 *)aSecondSImage;
-    srccolor = ((NS_GET_R(aSrcBackColor) & 0xf8) << 8) |
-               ((NS_GET_G(aSrcBackColor) & 0xfc) << 3) |
-               ((NS_GET_B(aSrcBackColor) & 0xf8) >> 3);
-    secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & 0xf8) << 8) |
-                  ((NS_GET_G(aSecondSrcBackColor) & 0xfc) << 3) |
-                  ((NS_GET_B(aSecondSrcBackColor) & 0xf8) >> 3);
+    srccolor = ((NS_GET_R(aSrcBackColor) & mRedSetMask) << mRedShift) |
+               ((NS_GET_G(aSrcBackColor) & mGreenSetMask) << mGreenShift) |
+               ((NS_GET_B(aSrcBackColor) & mBlueSetMask) >> mBlueShift);
+    secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & mRedSetMask) << mRedShift) |
+                  ((NS_GET_G(aSecondSrcBackColor) & mGreenSetMask) << mGreenShift) |
+                  ((NS_GET_B(aSecondSrcBackColor) & mBlueSetMask) >> mBlueShift);
   } else {
     ss1 = nsnull;
   }
