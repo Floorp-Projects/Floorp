@@ -96,13 +96,12 @@ nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
   // We're in a final state.
   // Look up our style context for this state.
-  nsCOMPtr<nsIStyleContext> currContext;
-  if (mCache)
+   if (mCache)
     *aResult = NS_STATIC_CAST(nsIStyleContext*, mCache->Get(currState)); // Addref occurs on *aResult.
   if (!*aResult) {
     // We missed the cache. Resolve this pseudo-style.
     aPresContext->ResolvePseudoStyleWithComparator(aContent, aPseudoElement,
-                                                   currContext, PR_FALSE,
+                                                   aContext, PR_FALSE,
                                                    aComparator,
                                                    aResult); // Addref occurs on *aResult.
     // Put it in our table.
@@ -396,6 +395,7 @@ PRInt32 nsOutlinerBodyFrame::GetRowHeight(nsIPresContext* aPresContext)
     if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord)  {
       PRInt32 val = myPosition->mHeight.GetCoordValue();
       if (val > 0) {
+        // XXX Check box-sizing to determine if border/padding should augment the height
         // Inflate the height by our margins.
         nsRect rowRect(0,0,0,val);
         const nsStyleMargin* rowMarginData = (const nsStyleMargin*)rowContext->GetStyleData(eStyleStruct_Margin);
@@ -567,9 +567,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
   // RIGHT means paint from right to left.
   // XXX Implement RIGHT alignment!
 
-  // If we're the primary column, we need to indent and paint the twisty.
+  // XXX If we're the primary column, we need to indent and paint the twisty.
 
-  // Now paint the various images.
+  // XXX Now paint the various images.
 
   // Now paint our text.
   nsRect textRect(currX, cellRect.y, remainingWidth, cellRect.height);
@@ -633,7 +633,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
     // XXX Crop if the width is too big!
     nscoord width;
     aRenderingContext.GetWidth(realText, width);
+
+    // Set our font.
     aRenderingContext.SetFont(fontMet);
+
+    // Set our color.
+    const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
+    aRenderingContext.SetColor(colorStyle->mColor);
 
     aRenderingContext.DrawString(realText, textRect.x, textRect.y);
   }
