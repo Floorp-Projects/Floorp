@@ -1087,6 +1087,7 @@ CNetscapeStatusBar::CParentSubclass::CParentSubclass( CWnd *pParent, CNetscapeSt
  
     ASSERT( IsWindow( m_pParent->m_hWnd ) );
     
+	m_uTimerId = 0;
     //
     // Subclass the parent window so we can process the WM_MENUSELECT msg i.e., so we
     // can switch modes from Simple/Panes without client intervention.
