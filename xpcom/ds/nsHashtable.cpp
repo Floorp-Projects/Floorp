@@ -454,3 +454,68 @@ nsSupportsHashtable::Reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsOpaqueKey: Where keys are opaque byte array blobs
+//
+
+// Note opaque keys are not copied by this constructor.  If you want a private
+// copy in each hash key, you must create one and pass it in to this function.
+nsOpaqueKey::nsOpaqueKey(const char *aOpaqueKey, PRUint32 aKeyLength)
+{
+    mOpaqueKey = aOpaqueKey;
+    mKeyLength = aKeyLength;
+}
+
+nsOpaqueKey::~nsOpaqueKey(void)
+{
+}
+
+PRUint32
+nsOpaqueKey::HashValue(void) const
+{
+    PRUint32 h, i, k;
+
+    h = 0;
+
+    // Same hashing technique as for java.lang.String.hashCode()
+    if (mKeyLength <= 15) {
+        // A short key; Use a dense sampling to compute the hash code
+        for (i = 0; i < mKeyLength; i++)
+            h += 37 * mOpaqueKey[i];
+    } else {
+        // A long key; Use a sparse sampling to compute the hash code
+        k = mKeyLength >> 3;
+        for (i = 0; i < mKeyLength; i += k)
+            h += 39 * mOpaqueKey[i];
+    }
+    return h;
+}
+
+PRBool
+nsOpaqueKey::Equals(const nsHashKey* aKey) const
+{
+    nsOpaqueKey *otherKey = (nsOpaqueKey*)aKey;
+    if (mKeyLength !=  otherKey->mKeyLength)
+        return PR_FALSE;
+	return !(PRBool)memcmp(otherKey->mOpaqueKey, mOpaqueKey, mKeyLength);
+}
+
+nsHashKey*
+nsOpaqueKey::Clone() const
+{
+	return new nsOpaqueKey(mOpaqueKey, mKeyLength);
+}
+
+PRUint32
+nsOpaqueKey::GetKeyLength() const
+{
+    return mKeyLength;
+}
+
+const char*
+nsOpaqueKey::GetKey() const
+{
+    return mOpaqueKey;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
