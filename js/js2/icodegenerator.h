@@ -36,7 +36,6 @@
 
 #include <vector>
 #include <stack>
-#include <iostream>
 
 #include "utilities.h"
 #include "parser.h"
