@@ -833,7 +833,7 @@ browser/components/build/Makefile
 browser/components/console/Makefile
 browser/components/downloads/Makefile
 browser/components/downloads/public/Makefile
-browser/components/download/src/Makefile
+browser/components/downloads/src/Makefile
 browser/components/prefwindow/Makefile
 browser/components/prefwindow/content/Makefile
 browser/components/prefwindow/content/unix/Makefile
