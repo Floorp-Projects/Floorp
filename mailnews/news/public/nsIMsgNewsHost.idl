@@ -18,15 +18,17 @@
 #include "nsISupports.idl"
 
 [object, uuid(2F5041B0-939E-11d2-B7EA-00805F05FFA5)]
-interface nsIMsgHostNews : nsISupports {
+interface nsIMsgNewsHost : nsISupports {
 
   attribute boolean supportsExtensions;
   void AddExtension(in string extension);
   boolean QueryExtension(in string extension);
 
+
   attribute boolean postingAllowed;
   attribute boolean pushAuth;
-  attribute long lastUpdatedTime;
+  attribute long long lastUpdatedTime;
+
 
   /* libnet callbacks for Dredd NNTP extensions
    * please document if you know how these work
@@ -34,6 +36,7 @@ interface nsIMsgHostNews : nsISupports {
   void AddPropertyForGet(in string name, in string value);
   void AddSearchableGroup(in string groupname);
   void AddProfileGroup(in string responseText);
+  void AddSearchableHeader(in string headerName);
   /* going away */
   void AddSubscribedNewsgroup(in string url);
 
@@ -75,6 +78,7 @@ interface nsIMsgHostNews : nsISupports {
                               in boolean visit_now);
 
   string GetFirstGroupNeedingExtraInfo();
+  void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo);
 
   
   /* News servers work better if you ask for message numbers instead of IDs.
@@ -85,6 +89,8 @@ interface nsIMsgHostNews : nsISupports {
   void GetNewsGroupAndNumberOfID(in string message_id,
                                  out string groupname,
                                  out long message_number);
-  
+
+
+  void AddPrettyName(in string groupName, in string prettyName);
 };
 

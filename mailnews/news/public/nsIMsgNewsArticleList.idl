@@ -36,12 +36,12 @@ interface nsIMsgNewsArticleList : nsISupports {
   void InitAddArticleKeyToGroup();
   void AddArticleKeyToGroup(in long found_id);
   void FinishAddArticleKeyToGroup();
-  void GetRangeOfArtsToDownload(in long first_message,
+  void GetRangeOfArtsToDownload(out long status,
+                                in long first_message,
                                 in long last_message,
-                                in long total_messages,
+                                in long maxextra,
                                 out long real_first_message,
-                                out long real_last_message,
-                                out long real_total_messages);
+                                out long real_last_message);
   
   void AddToKnownArticles(in long first_message, in long last_message);
   

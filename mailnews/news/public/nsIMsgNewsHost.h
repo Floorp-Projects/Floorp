@@ -7,21 +7,21 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 
-/* starting interface nsIMsgHostNews */
+/* starting interface nsIMsgNewsHost */
 
 /* {2F5041B0-939E-11d2-B7EA-00805F05FFA5} */
-#define NS_IMSGHOSTNEWS_IID_STR "2F5041B0-939E-11d2-B7EA-00805F05FFA5"
-#define NS_IMSGHOSTNEWS_IID \
+#define NS_IMSGNEWSHOST_IID_STR "2F5041B0-939E-11d2-B7EA-00805F05FFA5"
+#define NS_IMSGNEWSHOST_IID \
   {0x2F5041B0, 0x939E, 0x11d2, \
     { 0xB7, 0xEA, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
-class nsIMsgHostNews : public nsISupports {
+class nsIMsgNewsHost : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 
  public: 
   static const nsIID& IID() {
-    static nsIID iid = NS_IMSGHOSTNEWS_IID;
+    static nsIID iid = NS_IMSGNEWSHOST_IID;
     return iid;
   }
 
@@ -44,8 +44,8 @@ class nsIMsgHostNews : public nsISupports {
   NS_IMETHOD SetPushAuth(PRBool aPushAuth) = 0;
 
   /* attribute  lastUpdatedTime; */
-  NS_IMETHOD GetLastUpdatedTime(PRInt32 *aLastUpdatedTime) = 0;
-  NS_IMETHOD SetLastUpdatedTime(PRInt32 aLastUpdatedTime) = 0;
+  NS_IMETHOD GetLastUpdatedTime(PRInt64 *aLastUpdatedTime) = 0;
+  NS_IMETHOD SetLastUpdatedTime(PRInt64 aLastUpdatedTime) = 0;
 
   /* void AddPropertyForGet(in string name, in string value); */
   NS_IMETHOD AddPropertyForGet(const char *name, const char *value) = 0;
@@ -55,6 +55,9 @@ class nsIMsgHostNews : public nsISupports {
 
   /* void AddProfileGroup(in string responseText); */
   NS_IMETHOD AddProfileGroup(const char *responseText) = 0;
+
+  /* void AddSearchableHeader(in string headerName); */
+  NS_IMETHOD AddSearchableHeader(const char *headerName) = 0;
 
   /* void AddSubscribedNewsgroup(in string url); */
   NS_IMETHOD AddSubscribedNewsgroup(const char *url) = 0;
@@ -77,8 +80,14 @@ class nsIMsgHostNews : public nsISupports {
   /* string GetFirstGroupNeedingExtraInfo(); */
   NS_IMETHOD GetFirstGroupNeedingExtraInfo(char **_retval) = 0;
 
+  /* void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo); */
+  NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;
+
   /* void GetNewsGroupAndNumberOfID(in string message_id, out string groupname, out  message_number); */
   NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, char **groupname, PRInt32 *message_number) = 0;
+
+  /* void AddPrettyName(in string groupName, in string prettyName); */
+  NS_IMETHOD AddPrettyName(const char *groupName, const char *prettyName) = 0;
 };
 
 #endif /* __nsIMsgNewsHost_h__ */

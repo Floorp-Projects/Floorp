@@ -34,8 +34,8 @@ class nsIMsgNewsArticleList : public nsISupports {
   /* void FinishAddArticleKeyToGroup(); */
   NS_IMETHOD FinishAddArticleKeyToGroup() = 0;
 
-  /* void GetRangeOfArtsToDownload(in  first_message, in  last_message, in  total_messages, out  real_first_message, out  real_last_message, out  real_total_messages); */
-  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRInt32 *real_first_message, PRInt32 *real_last_message, PRInt32 *real_total_messages) = 0;
+  /* void GetRangeOfArtsToDownload(out  status, in  first_message, in  last_message, in  maxextra, out  real_first_message, out  real_last_message); */
+  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 *status, PRInt32 first_message, PRInt32 last_message, PRInt32 maxextra, PRInt32 *real_first_message, PRInt32 *real_last_message) = 0;
 
   /* void AddToKnownArticles(in  first_message, in  last_message); */
   NS_IMETHOD AddToKnownArticles(PRInt32 first_message, PRInt32 last_message) = 0;
