@@ -69,9 +69,10 @@ nsFingerChannel::Init(const char* verb,
     mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
 
-    rv = mUrl->GetPort(&mPort);
-    if (NS_FAILED(rv) || mPort < 1)
-        mPort = FINGER_PORT;
+//  For security reasons, we do not allow the user to specify a
+//  non-default port for finger: URL's.
+
+    mPort = FINGER_PORT;
 
     rv = mUrl->GetPath(getter_Copies(autoBuffer)); // autoBuffer = user@host
     if (NS_FAILED(rv)) return rv;
