@@ -17,30 +17,26 @@
 
 DEPTH=../../..
 
-include $(DEPTH)/config/config.mk
-
 LIBRARY_NAME = raptorevents_s
 
 DEFINES += -D_IMPL_NS_HTML
 
-INCLUDES += \
-	-I$(PUBLIC)/dom
-	$(NULL)
-
-# Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
 	nsEventListenerManager.cpp	\
-	nsDOMEvent.cpp	\
+	nsDOMEvent.cpp			\
 	$(NULL)
 
 MODULE = raptor
-
 
 EXPORTS = \
 	nsEventListenerManager.h \
 	$(NULL)
 
 REQUIRES = xpcom raptor dom
+
+include $(DEPTH)/config/config.mk
+
+INCLUDES += -I$(PUBLIC)/dom
 
 include $(DEPTH)/config/rules.mk
 
