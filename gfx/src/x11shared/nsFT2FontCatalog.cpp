@@ -38,15 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * since this patch won't delete "gfx/src/freetype/nsFT2FontCatalog.h",
- * using "x11shared/nsFT2FontCatalog.h" will prevent this file from
- * including that "nsFT2FontCatalog.h". This can be changed to
- * "#include nsFT2FontCatalog.h" safely after deleting
- * unused "freetype/nsFT2FontCatalog.h"
- */
-
-#include "x11shared/nsFT2FontCatalog.h"
+#include "nsFT2FontCatalog.h"
 #include "nsFontDebug.h"
 
 PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;

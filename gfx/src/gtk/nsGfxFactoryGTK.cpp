@@ -70,7 +70,7 @@
 #include "nsFontMetricsUtils.h"
 #include "nsPrintSession.h"
 #include "gfxImageFrame.h"
-#include "x11shared/nsFT2FontCatalog.h"
+#include "nsFT2FontCatalog.h"
 #include "nsFreeType.h"
 
 // objects that just require generic constructors

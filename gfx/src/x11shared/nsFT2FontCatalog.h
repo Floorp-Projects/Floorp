@@ -44,14 +44,7 @@
 #include "nsIFontCatalogService.h"
 
 #if (defined(MOZ_ENABLE_FREETYPE2))
-/*
- * since this patch won't delete "gfx/src/x11shared/nsFreeType.h",
- * using "freetype/nsFreeType.h" will prevent this file from
- * including the one under "x11shared". This can be changed to
- * "#include nsFreeType.h" safely after deleting
- * unused "x11shared/nsFreeType.h".
- */
-#include "freetype/nsFreeType.h"
+#include "nsFreeType.h"
 #include "nsCompressedCharMap.h"
 #include "nsICharRepresentable.h"
 
