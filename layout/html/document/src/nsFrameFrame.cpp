@@ -24,6 +24,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -186,7 +187,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  nsIWebShell* mWebShell;
+  nsCOMPtr<nsIWebShell> mWebShell;
   PRBool mCreatingViewer;
 };
 
@@ -429,17 +430,18 @@ NS_NewHTMLFrameOuterFrame(nsIFrame** aNewFrame)
 nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
   : nsLeafFrame()
 {
-  mWebShell       = nsnull;
   mCreatingViewer = PR_FALSE;
 }
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
-  //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
-  if (nsnull != mWebShell) {
-    mWebShell->Destroy();    
-    NS_RELEASE(mWebShell);
-  }
+   //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
+
+   nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+   if(webShellWin)
+      webShellWin->Destroy();
+   mWebShell = nsnull; // This is the location it was released before...
+                        // Not sure if there is ordering depending on this.
 }
 
 PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
@@ -682,12 +684,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   nsIContent* content;
   GetParentContent(content);
 
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
-                                    (void**)&mWebShell);
-  if (NS_OK != rv) {
-    NS_ASSERTION(0, "could not create web widget");
-    return rv;
-  }
+  mWebShell = do_CreateInstance(kWebShellCID);
+  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
   
   // pass along marginwidth, marginheight, scrolling so sub document can use it
   mWebShell->SetMarginWidth(GetMarginWidth(aPresContext, content));
@@ -817,8 +815,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
     view->SetVisibility(nsViewVisibility_kHide);
   }
 
-  nsIWidget* widget;
-  view->GetWidget(widget);
+  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+  NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIWidget> widget;
+  view->GetWidget(*getter_AddRefs(widget));
   nsRect webBounds(0, 0, NSToCoordRound(aSize.width * t2p), 
                    NSToCoordRound(aSize.height * t2p));
 
@@ -827,9 +827,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
                   webBounds.width, webBounds.height);
                   //GetScrolling(content, PR_FALSE));
   NS_RELEASE(content);
-  NS_RELEASE(widget);
 
-  mWebShell->Show();
+  webShellWin->SetVisibility(PR_TRUE);
 
   return NS_OK;
 }
@@ -859,7 +858,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 
     // if the size is not 0 and there is a src, create the web shell
     if ((aReflowState.availableWidth >= 0) && (aReflowState.availableHeight >= 0) && hasURL) {
-      if (nsnull == mWebShell) {
+      if (!mWebShell) {
         nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
         rv = CreateWebShell(aPresContext, maxSize);
 #ifdef INCLUDE_XUL
@@ -869,7 +868,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 #endif // INCLUDE_XUL
       }
 
-      if (nsnull != mWebShell) {
+      if (mWebShell) {
         mCreatingViewer=PR_TRUE;
 
         // load the document
@@ -908,17 +907,18 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // resize the sub document
-  if (mWebShell) {
+  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+  if(webShellWin) {
     float t2p;
     aPresContext->GetTwipsToPixels(&t2p);
     nsRect subBounds;
 
-    mWebShell->GetBounds(subBounds.x, subBounds.y,
-                       subBounds.width, subBounds.height);
+    webShellWin->GetPositionAndSize(&subBounds.x, &subBounds.y,
+                       &subBounds.width, &subBounds.height);
     subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
     subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
-    mWebShell->SetBounds(subBounds.x, subBounds.y,
-                       subBounds.width, subBounds.height);
+    webShellWin->SetPositionAndSize(subBounds.x, subBounds.y,
+                       subBounds.width, subBounds.height, PR_FALSE);
 
     NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
       ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
@@ -941,7 +941,7 @@ nsHTMLFrameInnerFrame::ReloadURL()
 
     // load a new url if the size is not 0
     if ((mRect.width > 0) && (mRect.height > 0)) {
-      if (nsnull != mWebShell) {
+      if (mWebShell) {
         mCreatingViewer=PR_TRUE;
 
         // load the document
