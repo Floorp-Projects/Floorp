@@ -34,7 +34,7 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<!ENTITY ab-selectAddressesDialog.title "Internet Appliance Dialog- Adressen wählen">
+<!ENTITY ab-selectAddressesDialog.title "Internet Appliance Dialog-Adressen wählen">
 <!ENTITY ab-selectAddressesDialogHeader.label "Adressen auswählen">
 <!ENTITY ab-selectAddressesDialogLookIn.label "Suchen in:">
 <!ENTITY ab-selectAddressesDialogNameColumn.label "Name">
