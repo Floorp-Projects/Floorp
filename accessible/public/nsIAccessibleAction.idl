@@ -33,11 +33,11 @@ interface nsIAccessibleAction : nsISupports
 
   boolean doAction (in long index);
 
-  wstring getDescription (in long index);
+  AString getDescription (in long index);
   void getDescriptionConst (in long index,
                             [shared, retval] out string description);
 
-  wstring getKeyBinding (in long index);
+  AString getKeyBinding (in long index);
   void getKeyBindingConst (in long index,
                            [shared, retval] out string keyBinding);
 };

@@ -38,18 +38,18 @@ interface nsIAccessible : nsISupports
   readonly attribute nsIAccessible accLastChild;
 
   readonly attribute long accChildCount;
-  attribute DOMString accName;
-  readonly attribute DOMString accValue;
+  attribute AString accName;
+  readonly attribute AString accValue;
   readonly attribute long accId;
 
-  readonly attribute DOMString accDescription;
-  readonly attribute DOMString accKeyboardShortcut;
+  readonly attribute AString accDescription;
+  readonly attribute AString accKeyboardShortcut;
 
   readonly attribute unsigned long accRole;
   readonly attribute unsigned long accState;
   readonly attribute unsigned long accExtState;
 
-  readonly attribute DOMString accHelp;
+  readonly attribute AString accHelp;
   readonly attribute nsIAccessible accFocused;
 
   nsIAccessible accGetAt(in long x, in long y);
@@ -71,7 +71,7 @@ interface nsIAccessible : nsISupports
   void accTakeFocus();
 
   readonly attribute PRUint8 accNumActions;
-  DOMString getAccActionName(in PRUint8 index);
+  AString getAccActionName(in PRUint8 index);
   void accDoAction(in PRUint8 index);   // Action number 0 is the default action
 
   nsIDOMNode accGetDOMNode();
