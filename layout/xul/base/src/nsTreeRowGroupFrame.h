@@ -96,6 +96,12 @@ protected:
                                       nsReflowStatus&      aStatus,
                                       nsReflowReason       aReason);
 
+  NS_IMETHOD     IR_TargetIsChild(nsIPresContext&      aPresContext,
+                                      nsHTMLReflowMetrics& aDesiredSize,
+                                      RowGroupReflowState& aReflowState,
+                                      nsReflowStatus&      aStatus,
+                                      nsIFrame *           aNextFrame);
+
   virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext& aPresContext);
   virtual void GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult);
 

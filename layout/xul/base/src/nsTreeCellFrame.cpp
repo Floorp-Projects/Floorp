@@ -428,4 +428,3 @@ nsTreeCellFrame::Destroy(nsIPresContext& aPresContext)
 {
   return nsTableCellFrame::Destroy(aPresContext);
 }
-
