@@ -48,6 +48,10 @@ static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
 
+#ifdef PR_LOGGING
+PRLogModuleInfo *gWidgetLog = nsnull;
+#endif
+
 static gboolean event_processor_callback (GIOChannel *source,
 					  GIOCondition condition,
 					  gpointer data)
@@ -71,6 +75,11 @@ IntHashKey(PRInt32 key)
 nsAppShell::nsAppShell(void)
 {
   NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+  if (!gWidgetLog)
+    gWidgetLog = PR_NewLogModule("Widget");
+#endif
 }
 
 nsAppShell::~nsAppShell(void)
