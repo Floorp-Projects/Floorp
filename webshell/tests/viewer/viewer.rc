@@ -56,7 +56,6 @@ VIEWER MENU DISCARDABLE
       MENUITEM "Select &All",                 VIEWER_EDIT_SELECTALL, HELP
       MENUITEM SEPARATOR
       MENUITEM "&Find in Page",               VIEWER_EDIT_FINDINPAGE
-      , GRAYED
   END
   POPUP "&Debug"
   {
