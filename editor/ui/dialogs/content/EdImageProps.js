@@ -39,6 +39,7 @@ var dialog;
 var globalMap;
 var doAltTextError = true;
 var actualWidth = "";
+var gOriginalSrc = "";
 var actualHeight = "";
 
 // These must correspond to values in EditorDialog.css for each theme
@@ -86,13 +87,7 @@ function Startup()
   dialog.imagetbInput      = document.getElementById( "imagetopbottomInput" );
   dialog.border            = document.getElementById( "border" );
   dialog.alignTypeSelect   = document.getElementById( "alignTypeSelect" );
-  dialog.alignImage        = document.getElementById( "alignImage" );
-  dialog.alignText         = document.getElementById( "alignText" );
-  dialog.editImageMap      = document.getElementById( "editImageMap" );
-  dialog.removeImageMap    = document.getElementById( "removeImageMap" );
   dialog.ImageHolder       = document.getElementById( "preview-image-holder" );
-  dialog.PreviewImage      = document.getElementById( "preview-image" );
-  dialog.PreviewBox        = document.getElementById( "preview-image-box" );
   dialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
   dialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
   dialog.PreviewSize       = document.getElementById( "PreviewSize" );
@@ -153,6 +148,9 @@ function Startup()
     globalMap = null;
   }
   InitDialog();
+
+  // Save initial source URL
+  gOriginalSrc = dialog.srcInput.value;
 
   // By default turn constrain on, but both width and height must be in pixels
   dialog.constrainCheckbox.checked =
@@ -245,11 +243,13 @@ function chooseFile()
 {
   // Get a local file, converted into URL format
   var fileName = GetLocalFileURL("img");
-  if (fileName) {
+  if (fileName)
+  {
     dialog.srcInput.value = fileName;
     doOverallEnabling();
   }
   GetImageFromURL();
+
   // Put focus into the input field
   SetTextboxFocus(dialog.srcInput);
 }
@@ -277,12 +277,8 @@ function PreviewImageLoaded()
         height = gPreviewImageHeight;
         width = actualWidth * (gPreviewImageHeight / actualHeight);
       }
-      if (actualWidth > gPreviewImageWidth || actualHeight > gPreviewImageHeight)
-      {
-        // Resize image to fit preview frame
-        dialog.PreviewImage.setAttribute("width", width);
-        dialog.PreviewImage.setAttribute("height", height);
-      }
+      dialog.PreviewImage.width = width;
+      dialog.PreviewImage.height = height;
 
       dialog.PreviewWidth.setAttribute("value", actualWidth);
       dialog.PreviewHeight.setAttribute("value", actualHeight);
@@ -307,7 +303,38 @@ function GetImageFromURL()
   if (!imageSrc) return;
 
   if (IsValidImage(imageSrc))
-    dialog.PreviewImage.src = imageSrc;
+  {
+    try {
+      // Remove the image URL from image cache so it loads fresh
+      //  (if we don't do this, loads after the first will always use image cache
+      //   and we won't see image edit changes or be able to get actual width and height)
+
+      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                    .createInstance(Components.interfaces.nsIURI);
+      uri.spec = imageSrc;
+
+      var imgCacheService = Components.classes["@mozilla.org/image/cache;1"].getService();
+      var imgCache = imgCacheService.QueryInterface(Components.interfaces.imgICache);
+    
+      // This returns error if image wasn't in the cache; ignore that
+      imgCache.removeEntry(uri);
+
+    } catch(e) {}
+
+    if(dialog.PreviewImage)
+      removeEventListener("load", PreviewImageLoaded, true);
+
+    if (dialog.ImageHolder.firstChild)
+      dialog.ImageHolder.removeChild(dialog.ImageHolder.firstChild);
+      
+    dialog.PreviewImage = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
+    if(dialog.PreviewImage)
+    {
+      dialog.ImageHolder.appendChild(dialog.PreviewImage);
+      dialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
+      dialog.PreviewImage.src = imageSrc;
+    }
+  }
 }
 
 function SetActualSize()
@@ -388,7 +415,8 @@ function doOverallEnabling()
   SetElementEnabledById("ok", canEnableOk );
 
   SetElementEnabledById( "imagemapLabel",  canEnableOk );
-  SetElementEnabledById( "editImageMap",   canEnableOk );
+  //TODO: Restore when Image Map editor is finished
+  //SetElementEnabledById( "editImageMap",   canEnableOk );
   SetElementEnabledById( "removeImageMap", canRemoveImageMap);
 }
 
@@ -517,21 +545,23 @@ function ValidateData()
   }
 
   // We always set the width and height attributes, even if same as actual.
-  //  This speeds up layout of pages since sizes are known before image is downloaded
-  // (But don't set if we couldn't obtain actual dimensions)
+  //  This speeds up layout of pages since sizes are known before image is loaded
   if (!width)
     width = actualWidth;
   if (!height)
     height = actualHeight;
 
+  // Remove existing width and height only if source changed
+  //  and we couldn't obtain actual dimensions
+  var srcChanged = (src != gOriginalSrc);
   if (width)
     globalElement.setAttribute("width", width);
-  else
+  else if (srcChanged)
     globalElement.removeAttribute("width");
 
   if (height)
     globalElement.setAttribute("height", height);
-  else
+  else if (srcChanged) 
     globalElement.removeAttribute("height");
 
   // spacing attributes
