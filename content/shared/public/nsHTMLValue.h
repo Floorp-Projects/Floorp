@@ -32,6 +32,7 @@ enum nsHTMLUnit {
   eHTMLUnit_Enumerated    = 51,     // (int) value has enumerated meaning
   eHTMLUnit_Proportional  = 52,     // (int) value is a relative proportion of some whole
   eHTMLUnit_Color         = 80,     // (color) an RGBA value
+  eHTMLUnit_ColorName     = 81,     // (nsString/color) a color name value
   eHTMLUnit_Percent       = 90,     // (float) 1.0 == 100%) value is percentage of something
 
   // Screen relative measure
@@ -43,7 +44,7 @@ public:
   nsHTMLValue(nsHTMLUnit aUnit = eHTMLUnit_Null);
   nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit);
   nsHTMLValue(float aValue);
-  nsHTMLValue(const nsString& aValue);
+  nsHTMLValue(const nsString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
   nsHTMLValue(nsISupports* aValue);
   nsHTMLValue(nscolor aValue);
   nsHTMLValue(const nsHTMLValue& aCopy);
@@ -65,7 +66,7 @@ public:
   void  SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit);
   void  SetPixelValue(PRInt32 aValue);
   void  SetPercentValue(float aValue);
-  void  SetStringValue(const nsString& aValue);
+  void  SetStringValue(const nsString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
   void  SetISupportsValue(nsISupports* aValue);
   void  SetColorValue(nscolor aValue);
   void  SetEmptyValue(void);
@@ -117,9 +118,11 @@ inline float nsHTMLValue::GetPercentValue(void) const
 
 inline nsString& nsHTMLValue::GetStringValue(nsString& aBuffer) const
 {
-  NS_ASSERTION((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_Null), "not a string value");
+  NS_ASSERTION((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_ColorName) ||
+               (mUnit == eHTMLUnit_Null), "not a string value");
   aBuffer.SetLength(0);
-  if ((mUnit == eHTMLUnit_String) && (nsnull != mValue.mString)) {
+  if (((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_ColorName)) && 
+      (nsnull != mValue.mString)) {
     aBuffer.Append(*(mValue.mString));
   }
   return aBuffer;
@@ -137,9 +140,18 @@ inline nsISupports* nsHTMLValue::GetISupportsValue(void) const
 
 inline nscolor nsHTMLValue::GetColorValue(void) const 
 {
-  NS_ASSERTION(mUnit == eHTMLUnit_Color, "not a color value");
+  NS_ASSERTION((mUnit == eHTMLUnit_Color) || (mUnit == eHTMLUnit_ColorName), 
+               "not a color value");
   if (mUnit == eHTMLUnit_Color) {
     return mValue.mColor;
+  }
+  if ((mUnit == eHTMLUnit_ColorName) && (mValue.mString)) {
+    char cbuf[40];
+    mValue.mString->ToCString(cbuf, sizeof(cbuf));
+    nscolor color;
+    if (NS_ColorNameToRGB(cbuf, &color)) {
+      return color;
+    }
   }
   return NS_RGB(0,0,0);
 }
