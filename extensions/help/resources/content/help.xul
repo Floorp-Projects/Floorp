@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
-
 <?xml-stylesheet href="chrome://communicator/skin/help.css" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
@@ -19,13 +19,13 @@
 
 
 <window id="help"
-        windowtype="mozilla:help"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&helpWin.ttl;"
-        width="640"
-        height="650"
-        persist="width height screenX screenY"
-        onload="init();" >
+   windowtype="mozilla:help"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   width="640"
+   height="650"
+   persist="width height screenX screenY"
+   onload="init();" >
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
@@ -37,9 +37,10 @@
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
 
-  <popup id="backMenu" position="after_start" onpopupshowing="return createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  <popup id="forwardMenu" position="after_start" onpopupshowing="return createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-
+  <menupopup id="backMenu" position="after_start"
+     onpopupshowing="return createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <menupopup id="forwardMenu" position="after_start"
+     onpopupshowing="return createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <popupset id="contentAreaContextSet"/>
   <broadcasterset id="helpBroadcasters">
     <broadcaster id="canGoBack"    disabled="true"/>
@@ -69,127 +70,279 @@
     <key id="printKb" key="&printCmd.commandkey;" oncommand="print();" modifiers="accel"/>
     <keyset id="viewZoomKeys"/>
     <keyset id="navigationKeys"/>
-    <key id="key_find"              key="&findOnCmd.commandkey;" oncommand="find(false);" modifiers="accel"/>
-    <key id="key_findAgain"         key="&findAgainCmd.commandkey;" oncommand="find(true);" modifiers="accel"/>
-    <key id="key_viewSource" key="&pageSourceCmd.commandkey;" oncommand="BrowserViewSource();" modifiers="accel"/>
-    <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   oncommand="BrowserPageInfo();"   modifiers="accel"/>
+    <key id="key_find"
+        key="&findOnCmd.commandkey;" oncommand="find(false);" modifiers="accel"/>
+    <key id="key_findAgain"
+        key="&findAgainCmd.commandkey;" oncommand="find(true);" modifiers="accel"/>
+    <key id="key_viewSource" key="&pageSourceCmd.commandkey;"
+        oncommand="BrowserViewSource();" modifiers="accel"/>
+    <key id="key_viewInfo" key="&pageInfoCmd.commandkey;"
+        oncommand="BrowserPageInfo();"   modifiers="accel"/>
   </keyset>
   <stringbundle id="bundle_viewZoom"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
   <vbox flex="1">
 
-    <!-- button bar -->
-    <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
-      <toolbar id="helpToolbar" class="toolbar-primary" 
-            	grippytooltiptext="&toolbar.tooltip;"
-              tbalign="stretch" persist="collapsed">
+  <!-- button bar -->
+  <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
+    <toolbar id="helpToolbar" class="toolbar-primary"
+        tooltiptext="The Help Toolbar"
+        tbalign="stretch" persist="collapsed">
 
         <toolbarbutton id="helpBackButton" type="menu-button" class="toolbarbutton-1"
-                       label="&backBtn.label;" crop="right"
-                       oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
-                       observes="canGoBack" context="backMenu" 
-                       tooltiptext="&backButton.tooltip;">
+          label="&backBtn.label;" 
+          oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
+          observes="canGoBack" context="backMenu"
+          tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="createBackMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="helpForwardButton" type="menu-button" class="toolbarbutton-1"
-                       label="&fwdBtn.label;" crop="right"
-                       tooltiptext="&forwardButton.tooltip;"
-                       oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
-                       observes="canGoForward" context="forwardMenu">
+          label="&fwdBtn.label;" 
+          tooltiptext="&forwardButton.tooltip;"
+          oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
+          observes="canGoForward" context="forwardMenu">
           <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="helpHomeButton" class="toolbarbutton-1"
-                label="&homeBtn.label;" oncommand="goHome();"
-                tooltiptext="&homeBtn.tooltip;"/>
+          label="&homeBtn.label;" oncommand="goHome();"
+          tooltiptext="&homeBtn.tooltip;"/>
 
         <spacer flex="1"/>
 
         <toolbarbutton id="print" class="toolbarbutton-1"
-                       label="&printButton.label;" oncommand="print();"
-                       tooltiptext="&printButton.tooltip;"/>
+          label="&printButton.label;" oncommand="print();"
+          tooltiptext="&printButton.tooltip;"/>
       </toolbar>
     </toolbox>
 
-
     <!-- the two help panes (sidebar & content) -->
     <hbox flex="1">
+      <vbox id="helpsidebar-box" persist="width">
+     <button id="help-search-btn" class="box-texttab texttab-sidebar"
+             label="&searchtab.label;" oncommand="showPanel('help-search-panel')"/>
+             <vbox id="help-search-panel" hidden="true" flex="1">
+                <hbox>
+                  <label value="&searchbtn.label;" align="end" flex="0"/>
+                  <textbox id="findText" flex="1"/>
+                  <button id="findButton" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
+                </hbox>
+                <outliner id="help-search-outliner"
+                  flex="1" hidecolumnpicker="true"
+            datasources="rdf:null"
+            containment="http://home.netscape.com/NC-rdf#child"
+            ref="urn:root"
+            flags="dont-build-content"
+            onselect="onselect_loadURI(this, 'ResultsColumn')">
+            <template>
+              <rule>
+                <conditions>
+                  <outlineritem uri="?uri"/>
+                  <member container="?uri" child="?subheading" />
+                </conditions>
 
-      <vbox id="helpsidebar-box" flex="10">
-       <separator class="thin"/>
-        <tabbox flex="1">
-          <tabs>
-            <tab label="&tab1.label;"/>
-            <tab label="&tab2.label;"/>
-          </tabs>
-          <tabpanels flex="1">
-            <hbox id="help-toc">
-              <outliner id="help-toc-outliner" flex="1"
-                        datasources="chrome://help/locale/help-toc.rdf"
-                        ref="urn:root" flags="dont-build-content"    
-                        containment="http://home.netscape.com/NC-rdf#subheadings"
-                        onselect="selectItem();">
-           
-                <template>
-                  <rule>
-                    <conditions>
-                      <outlineritem uri="?uri"/>
-                      <triple subject="?uri"
-                              predicate="http://home.netscape.com/NC-rdf#subheadings"
-                              object="?subheadings" />
-                      <member container="?subheadings" child="?subheading"/>
-                    </conditions>
-                    <bindings>
-                      <binding subject="?subheading"
-                               predicate="http://home.netscape.com/NC-rdf#name"
-                               object="?name" />
-                    </bindings>
-                    <action>
-                      <outlinerchildren>
-                        <outlineritem uri="?subheading">
-                          <outlinerrow>
-                            <outlinercell ref="Column" label="?name"/>
-                          </outlinerrow>
-                        </outlineritem>
-                     </outlinerchildren>
-                    </action>
-                  </rule>
-                </template>
-                <outlinercols>
-                  <outlinercol flex="1" id="Column" primary="true"/>
-                </outlinercols>
-              </outliner>
-            </hbox>
+                <bindings>
+                  <binding subject="?subheading"
+                   predicate="http://home.netscape.com/NC-rdf#name"
+                   object="?name" />
+                  <binding subject="?subheading"
+                   predicate="http://home.netscape.com/NC-rdf#link"
+                   object="?link" />
+                </bindings>
 
-            <hbox id="help-index">
-              <!-- right now this makes the toc as wide as the content area -->
-              <iframe flex="1" style="min-width: 0px; width: 0px;" 
-		src="chrome://help/locale/help_index.html" />
-            </hbox>
+                <action>
+                  <outlinerchildren>
+                    <outlineritem uri="?subheading">
+                     <outlinerrow>
+                      <outlinercell label="?name"
+                         properties="link-?link"/>
+                     </outlinerrow>
+                    </outlineritem>
+                  </outlinerchildren>
+                </action>
+              </rule>
+            </template>
 
-          </tabpanels>
-        </tabbox>
+                 <outlinercols>
+                    <outlinercol id="ResultsColumn" flex="1"
+                       label="&name.label;" ignoreincolumnpicker="true"
+                       primary="true"/>
+                 </outlinercols>
+          </outliner>
+       </vbox>
+
+       <button id="help-toc-btn" class="box-texttab texttab-sidebar"
+          label="&toctab.label;" oncommand="showPanel('help-toc-outliner')"/>
+          <outliner id="help-toc-outliner" flex="1"  hidecolumnpicker="true"
+                datasources="rdf:null"
+                  containment="http://home.netscape.com/NC-rdf#subheadings"
+                  ref="urn:root"
+                  flags="dont-build-content"
+                  onselect="onselect_loadURI(this, 'NameColumn')">
+          <template>
+            <rule>
+              <conditions>
+               <outlineritem uri="?uri"/>
+               <triple subject="?uri"
+                 predicate="http://home.netscape.com/NC-rdf#subheadings"
+                 object="?subheadings" />
+               <member container="?subheadings" child="?subheading"/>
+              </conditions>
+
+              <bindings>
+               <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#name"
+                 object="?name" />
+               <binding subject="?subheading"
+                 predicate="http://home.netscape.com/NC-rdf#link"
+                 object="?link" />
+              </bindings>
+
+              <action>
+                <outlinerchildren>
+                  <outlineritem uri="?subheading">
+                    <outlinerrow>
+                      <outlinercell label="?name"
+                          properties="link-?link"/>
+                    </outlinerrow>
+                  </outlineritem>
+              </outlinerchildren>
+            </action>
+          </rule>
+        </template>
+            <outlinercols>
+               <outlinercol id="NameColumn" flex="1"
+                  label="&name.label;" ignoreincolumnpicker="true"
+                  primary="true"/>
+            </outlinercols>
+         </outliner>
+
+         <button id="help-index-btn" class="box-texttab texttab-sidebar"
+            label="&indextab.label;"  oncommand="showPanel('help-index-outliner')"/>
+
+         <outliner id="help-index-outliner" flex="1"   hidecolumnpicker="true" hidden="true"
+             datasources="rdf:null"
+               containment="http://home.netscape.com/NC-rdf#subheadings"
+               ref="urn:root"
+               flags="dont-build-content dont-test-empty"
+               onselect="onselect_loadURI(this, 'IndexNameColumn')">
+        <template>
+          <rule>
+          <conditions>
+            <outlineritem uri="?uri"/>
+            <triple subject="?uri"
+              predicate="http://home.netscape.com/NC-rdf#subheadings"
+              object="?subheadings" />
+            <member container="?subheadings" child="?subheading"/>
+          </conditions>
+          <bindings>
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#name"
+              object="?name" />
+
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#link"
+              object="?link" />
+          </bindings>
+
+          <action>
+            <outlinerchildren>
+              <outlineritem uri="?subheading">
+                <outlinerrow>
+                  <outlinercell ref="IndexNameColumn" label="?name"
+                      properties="link-?link"/>
+                </outlinerrow>
+              </outlineritem>
+            </outlinerchildren>
+          </action>
+          </rule>
+        </template>
+            <outlinercols>
+               <outlinercol id="IndexNameColumn" flex="1"
+                  label="&name.label;" ignoreincolumnpicker="true"
+                  primary="true"
+                  sortActive="true"
+                  sortDirection="ascending"
+                  sort="?name"/>
+            </outlinercols>
+         </outliner>
+
+         <button id="help-glossary-btn" class="box-texttab texttab-sidebar"
+            label="&glossarytab.label;" oncommand="showPanel('help-glossary-outliner')"/>
+         <outliner id="help-glossary-outliner" flex="1" hidecolumnpicker="true" hidden="true"
+               datasources="rdf:null"
+               containment="http://home.netscape.com/NC-rdf#subheadings"
+               ref="urn:root"
+               flags="dont-build-content"
+               onselect="onselect_loadURI(this, 'GlossaryNameColumn')">
+        <template>
+          <rule>
+          <conditions>
+            <outlineritem uri="?uri"/>
+            <triple subject="?uri"
+              predicate="http://home.netscape.com/NC-rdf#subheadings"
+              object="?subheadings" />
+            <member container="?subheadings" child="?subheading"/>
+          </conditions>
+          <bindings>
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#name"
+              object="?name" />
+
+            <binding subject="?subheading"
+              predicate="http://home.netscape.com/NC-rdf#link"
+              object="?link" />
+          </bindings>
+
+          <action>
+            <outlinerchildren>
+              <outlineritem uri="?subheading">
+                <outlinerrow>
+                  <outlinercell label="?name"
+                    properties="link-?link"/>
+                </outlinerrow>
+              </outlineritem>
+            </outlinerchildren>
+          </action>
+          </rule>
+        </template>
+            <outlinercols>
+               <outlinercol id="GlossaryNameColumn" flex="1"
+                  label="&name.label;" ignoreincolumnpicker="true"
+                  primary="true"
+                  sortActive="true"
+                  sortDirection="ascending"
+                  sort="?name"/>
+            </outlinercols>
+         </outliner>
+
       </vbox>
 
       <splitter id="helpsidebar-splitter"
-                collapse="before"
-                persist="state hidden"
-                state="open">
-        <grippy/>
+          collapse="before"
+          persist="state hidden"
+          autostretch="never"
+          state="open">
+          <grippy/>
       </splitter>
 
       <!-- this stuff lifted from navigator.xul -->
-      <vbox id="appcontent" flex="5">
+      <vbox id="appcontent" flex="3">
         <!-- this box is temporary, pending XBLified <browser> -->
         <hbox id="browser" flex="1">
           <!-- type attribute is used by frame construction to locate iframes
                intended to hold (html) content -->
           <browser context="contentAreaContextMenu" type="content-primary" id="help-content"
-                   src="about:blank" flex="1"
-                   ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
-                   onclick="return contentAreaClick(event);"/>
+              src="about:blank" flex="1"
+              ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
+              onclick="return contentAreaClick(event);"/>
         </hbox>
       </vbox>
     </hbox>
   </vbox>
 </window>
+
+
+
+
+

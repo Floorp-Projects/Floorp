@@ -1,182 +1,303 @@
-//-------- global variables
-
-var gBrowser;
-var gRDF = null;
-var gBuilder = null;
-const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
-const kRDFIID = Components.interfaces.nsIRDFService;
-
-// The key object is used to define special context strings that, when appended to
-// the url for the help window itself, load specific content. For example, the uri:
-//     chrome://help/content/help.xul?mail
-// loads the document at:
-//     chrome://help/locale/mail_help.html into the window on initialization.
-var key = {
- "?mail": "chrome://help/locale/mail_help.html",
- "?nav":  "chrome://help/locale/nav_help.html",
- "?im":    "chrome://help/locale/im_help.html",
- "?sec":   "chrome://help/locale/security_help.html",
- "?cust":  "chrome://help/locale/customize_help.html",
- "?comp":  "chrome://help/locale/composer_help.html",
- "?prefs":   "chrome://help/locale/prefs_help.html#prefs_first",
-
- "?mail_prefs_general": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_MAIN_PANE", 
- "?mail_prefs_display": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_DISPLAY", 
- "?mail_prefs_messages": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_MESSAGES", 
- "?mail_prefs_formatting": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_FORMATTING", 
- "?mail_prefs_addressing": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_ADDRESSING", 
- "?mail_prefs_offline": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_OFFLINE", 
-
- "?composer_prefs_general": "chrome://help/locale/composer_help.html#PREFERENCES_EDITOR_GENERAL", 
- "?composer_prefs_newpage": "chrome://help/locale/composer_help.html#PREFERENCES_NEWPAGE", 
-
- "?appearance_pref":  "chrome://help/locale/cs_nav_prefs_appearance.html",
- "?appearance_pref_appearance":  "chrome://help/locale/cs_nav_prefs_appearance.html#appearance",
- "?appearance_pref_fonts":  "chrome://help/locale/cs_nav_prefs_appearance.html#fonts",
- "?appearance_pref_colors":  "chrome://help/locale/cs_nav_prefs_appearance.html#colors",
- "?appearance_pref_fonts":  "chrome://help/locale/cs_nav_prefs_appearance.html#fonts",
- "?appearance_pref_themes":  "chrome://help/locale/cs_nav_prefs_appearance.html#themes",
- "?appearance_pref_content_packs":  "chrome://help/locale/cs_nav_prefs_appearance.html#content",
-
- "?navigator_pref":  "chrome://help/locale/cs_nav_prefs_navigator.html",
- "?navigator_pref_navigator":  "chrome://help/locale/cs_nav_prefs_navigator.html#Navigator",
- "?navigator_pref_history":  "chrome://help/locale/cs_nav_prefs_navigator.html#History",
- "?navigator_pref_languages":  "chrome://help/locale/cs_nav_prefs_navigator.html#Languages",
- "?navigator_pref_helper_applications": "chrome://help/locale/cs_nav_prefs_navigator.html#Helper",
- "?navigator_pref_internet_searching": "chrome://help/locale/cs_nav_prefs_navigator.html#Internet",
- "?navigator_pref_smart_browsing": "chrome://help/locale/cs_nav_prefs_navigator.html#Smart",  
-
- "?advanced_pref":  "chrome://help/locale/cs_nav_prefs_advanced.html",
- "?advanced_pref_advanced":  "chrome://help/locale/cs_nav_prefs_advanced.html#Advanced",
- "?advanced_pref_cache":  "chrome://help/locale/cs_nav_prefs_advanced.html#Cache",
- "?advanced_pref_installation": "chrome://help/locale/cs_nav_prefs_advanced.html#Software_Installation",
- "?advanced_pref_mouse_wheel": "chrome://help/locale/cs_nav_prefs_advanced.html#Mouse_Wheel",
- "?advanced_pref_system":  "chrome://help/locale/cs_nav_prefs_advanced.html#system",
-"?advanced_pref_proxies": "chrome://help/locale/cs_nav_prefs_advanced.html#Proxies",
- "?nover_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Not_Verified_Not Encrypted",
- "?ver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Encrypted",
- "?conver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Conditionally_Verified_Encrypted",
- "?ver_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Not Encrypted",
- "?conver_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Conditionally_Verified_Not_Encrypted",
-
- "?cookies_stored":  "chrome://help/locale/using_priv_help.html#cookies_stored",
- "?cookie_sites":  "chrome://help/locale/using_priv_help.html#cookie_sites",
- "?privacy_levels":  "chrome://help/locale/using_priv_help.html#privacy_levels_window",
-
- "?my_certs":  "chrome://help/locale/certs_help.html#My_Certificates",
- "?cert_backup_pwd":  "chrome://help/locale/certs_help.html#Choose_a_Certificate_Backup_Password",
- "?delete_my_certs":  "chrome://help/locale/certs_help.html#Delete_My_Certificate",
- "?change_pwd":  "chrome://help/locale/passwords_help.html#Change_Master_Password",
- "?reset_pwd":  "chrome://help/locale/passwords_help.html#Reset_Master_Password",
- "?web_certs":  "chrome://help/locale/certs_help.html#Web_Site_Certificates",
- "?edit_web_certs":  "chrome://help/locale/certs_help.html#Edit_Web_Site_Certificate_Settings",
- "?delete_web_certs":  "chrome://help/locale/certs_help.html#Delete_Web_Site_Certificate",
- "?ca_certs":  "chrome://help/locale/certs_help.html#CA_Certificates",
- "?edit_ca_certs":  "chrome://help/locale/certs_help.html#Edit_CA_Certificate_Settings",
- "?delete_ca_certs":  "chrome://help/locale/certs_help.html#Delete_CA_Certificate",
- "?sec_devices":  "chrome://help/locale/certs_help.html#Security_Devices",
-
- "?cert_details":  "chrome://help/locale/cert_dialog_help.html#Certificate_Details",
- "?which_token":  "chrome://help/locale/cert_dialog_help.html#Choose_Security_Device",
- "?priv_key_copy":  "chrome://help/locale/cert_dialog_help.html#Encryption_Key_Copy",
- "?backup_your_cert":  "chrome://help/locale/cert_dialog_help.html#Certificate_Backup",
- "?which_cert":  "chrome://help/locale/cert_dialog_help.html#User_Identification_Request",
- "?no_cert":  "chrome://help/locale/cert_dialog_help.html#No_Acceptable_Identification",
- "?new_ca":  "chrome://help/locale/cert_dialog_help.html#New_Certificate_Authority",
- "?exp_crl":  "chrome://help/locale/cert_dialog_help.html#old_next_update_crl",
- "?new_web_cert":  "chrome://help/locale/cert_dialog_help.html#New_Web_Site_Certificate",
- "?exp_web_cert":  "chrome://help/locale/cert_dialog_help.html#Expired_Web_Site_Certificate",
- "?not_yet_web_cert":  "chrome://help/locale/cert_dialog_help.html#Web_Site_Certificate_Not_Yet_Valid",
- "?bad_name_web_cert":  "chrome://help/locale/cert_dialog_help.html#Unexpected_Certificate_Name",
-
- "?sec_gen":  "chrome://help/locale/privsec_help.html#privsec_help_first",
- "?ssl_prefs":  "chrome://help/locale/ssl_help.html#ssl_first",
- "?validation_prefs":  "chrome://help/locale/validation_help.html",
- "?passwords_prefs":  "chrome://help/locale/passwords_help.html#passwords_first",
- "?passwords_master":  "chrome://help/locale/passwords_help.html#Master_Password_Timeout",
- "?forms_prefs":  "chrome://help/locale/using_priv_help.html#forms_prefs",  
- "?cookies_prefs": "chrome://help/locale/using_priv_help.html#cookie_prefs",
- "?images_prefs": "chrome://help/locale/using_priv_help.html#using_images",
- "?certs_prefs": "chrome://help/locale/certs_prefs_help.html#certs_prefs_help_first",
-
- "?im_prefs_general": "chrome://help/locale/im_help.html#im_gen", 
- "?im_prefs_privacy": "chrome://help/locale/im_help.html#im_privacy", 
- "?im_prefs_notification": "chrome://help/locale/im_help.html#im_notif", 
- "?im_prefs_away": "chrome://help/locale/im_help.html#im_awaypref", 
- "?im_prefs_connection": "chrome://help/locale/im_help.html#im_connect", 
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * Contributor(s): 
+ *    Original author: oeschger@netscape.com 
+ *    amended by: Peter Wilson (added sidebar tabs) */
  
- "?image_properties": "chrome://help/locale/composer_help.html#PROPERTIES_IMAGE",
- "?imagemap_properties": "chrome://help/locale/composer_help.html#IMAGE_MAPS",
- "?link_properties": "chrome://help/locale/composer_help.html#page_link",
- "?table_properties": "chrome://help/locale/composer_help.html#Setting_table_properties",
- "?advanced_property_editor": "chrome://help/locale/composer_help.html#PROPERTY_EDITOR",
+//-------- global variables
+var helpBrowser;
+var helpWindow;
+var helpSearchPanel;
+var helpTocPanel;
+var helpIndexPanel;
+var helpGlossaryPanel;
 
- // Mailnews account settings tag mappings. 
- "?mail_account_identity": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_IDENTITY",
- "?mail_server_imap": "chrome://help/locale/mail_help.html#IMAP_SERVER", 
- "?mail_server_pop3": "chrome://help/locale/mail_help.html#POP_SERVER", 
- "?mail_server_nntp": "chrome://help/locale/mail_help.html#DISCUSSION_HOST_PROPERTIES", 
- "?mail_copies": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_COPIES",
- "?mail_addressing_settings": "chrome://help/locale/mail_help.html#addressing_settings", 
- "?mail_offline_imap": "chrome://help/locale/mail_help.html#OFFLINE_IMAP", 
- "?mail_offline_pop3": "chrome://help/locale/mail_help.html#OFFLINE_POP", 
- "?mail_offline_nntp": "chrome://help/locale/mail_help.html#OFFLINE_NEWS", 
- "?mail_smtp": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_SMTP" 
+// Namespaces
+const NC = "http://home.netscape.com/NC-rdf#";
+const SN = "rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const XML = "http://www.w3.org/XML/1998/namespace#"
+
+// Resources
+var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+var RDF_ROOT = RDF.GetResource("urn:root");
+var NC_PANELLIST = RDF.GetResource(NC + "panellist");
+var NC_PANELID = RDF.GetResource(NC + "panelid");
+var NC_DATASOURCES = RDF.GetResource(NC + "datasources");
+var NC_SUBHEADINGS = RDF.GetResource(NC + "subheadings");
+var NC_NAME = RDF.GetResource(NC + "name");
+var NC_LINK = RDF.GetResource(NC + "link");
+var NC_TITLE = RDF.GetResource(NC + "title");
+var NC_BASE = RDF.GetResource(NC + "base"); 
+var NC_DEFAULTTOPIC = RDF.GetResource(NC + "defaulttopic"); 
+
+var RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService().
+   QueryInterface(Components.interfaces.nsIRDFContainerUtils);
+var RDFContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
+var CONSOLE_SERVICE = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+            
+var urnID = 0;
+var RE;
+
+var helpFileURI;
+var helpFileDS;
+// Set from nc:base attribute on help rdf file. It may be used for prefix reduction on all links within
+// the current help set.
+var helpBaseURI;
+
+const defaultHelpFile = "chrome://help/locale/mozillahelp.rdf";
+// Set from nc:defaulttopic. It is used when the requested uri has no topic specified. 
+var defaultTopic = "welcome"; 
+
+const NSRESULT_RDF_SYNTAX_ERROR = 0x804e03f7; 
+
+// This function is called by dialogs/windows that want to display context-sensitive help
+// These dialogs/windows should include scrip chrome://help/content/contectHelp.js
+function displayTopic(topic) {
+  if (!topic)
+    topic = defaultTopic;
+  var uri = getLink(topic);
+  loadURI(uri);
 }
 
-// This function is called by dialogs that want to display context-sensitive help
-function openHelp(uri)
-{
-  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  var topWindow = windowManagerInterface.getMostRecentWindow( "mozilla:help" );
-  if ( topWindow ) {
-     topWindow.focus();
-  } else {
-      window.open(uri, "_blank", "chrome,menubar,toolbar,dialog=no,resizable,scrollbars");
-  }
-}
+// Initialize the Help window
+function init() {
+  //cache panel references.
+  helpWindow = document.getElementById("help");
+  helpSearchPanel = document.getElementById("help-search-panel");
+  helpTocPanel = document.getElementById("help-toc-outliner");
+  helpIndexPanel = document.getElementById("help-index-outliner");
+  helpGlossaryPanel = document.getElementById("help-glossary-outliner");
+  helpBrowser = document.getElementById("help-content");
 
-function init()
-{
-  // Initialize the Help window
+  var URI = normalizeURI(decodeURIComponent(window.location.search));
+  helpFileURI = URI.helpFileURI;
+  var helpTopic = URI.topic;
+  helpBaseURI = helpFileURI.substring(0, helpFileURI.lastIndexOf("/")+1); // trailing "/" included.
+
+  loadHelpRDF();
+
+  displayTopic(helpTopic);  
 
   // move to right end of screen
   var width = document.documentElement.getAttribute("width");
   var height = document.documentElement.getAttribute("height");
   window.moveTo(screen.availWidth-width, (screen.availHeight-height)/2);
 
-  gBrowser = document.getElementById("help-content");
   var sessionHistory =  Components.classes["@mozilla.org/browser/shistory;1"]
-                                  .createInstance(Components.interfaces.nsISHistory);
+                  .createInstance(Components.interfaces.nsISHistory);
 
   getWebNavigation().sessionHistory = sessionHistory;
-  // if this is context-sensitive,
-  // then window.location.search contains the "key" (from the top of this file)
-  // that resolves to a particular html document or target
-  if (key[window.location.search]) {
-      dump("loading help content: " + key[window.location.search] + "\n");
-      loadURI(key[window.location.search]);
-   } else {
-      goHome();
-  }
   window.XULBrowserWindow = new nsHelpStatusHandler();
   // hook up UI through progress listener
-  var browser = document.getElementById("help-content");
-  var interfaceRequestor = browser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
   webProgress.addProgressListener(window.XULBrowserWindow);
 }
 
-function getWebNavigation()
-{
-  return gBrowser.webNavigation;
+function normalizeURI(uri) {
+  // uri in format [uri of help rdf file][?initial topic]
+  // if the whole uri or help file uri is omitted then the default help is assumed.
+  // unpack uri
+  var URI = {};
+  URI.helpFileURI = defaultHelpFile;
+  URI.topic = null;
+  // Case: No help uri at all.
+  if (uri) {
+    // remove leading ?
+    if (uri.substr(0,1) == "?") 
+      uri = uri.substr(1);
+    var i = uri.indexOf("?");
+    // Case: Full uri with topic.
+    if ( i != -1) {
+        URI.helpFileURI = uri.substr(0,i);
+        URI.topic = uri.substr(i+1);
+    }
+    else {
+      // Case: uri with no topic.
+      if (uri.substr(0,7) == "chrome:") 
+        URI.helpFileURI = uri;
+      else {
+        // Case: uri with topic only.
+        URI.topic = uri;
+      }  
+    }
+  }  
+  URI.uri = URI.helpFileURI + ((URI.topic)? "?" + URI.topic : "");
+  return URI;
 }
 
-function loadURI(aURI)
+function loadHelpRDF() {
+  if (!helpFileDS) {
+    try {
+      helpFileDS = RDF.GetDataSourceBlocking(helpFileURI);
+    }
+    catch (e if (e.result == NSRESULT_RDF_SYNTAX_ERROR)) {
+      log("Help file: " + helpFileURI + " contains a syntax error.");
+    }
+    catch (e) {
+      log("Help file: " + helpFileURI + " was not found.");
+    }
+    try {
+      helpWindow.setAttribute("title", getAttribute(helpFileDS, RDF_ROOT, NC_TITLE, ""));
+      helpBaseURI = getAttribute(helpFileDS, RDF_ROOT, NC_BASE, helpBaseURI);
+      defaultTopic = getAttribute(helpFileDS, RDF_ROOT, NC_DEFAULTTOPIC, "welcome");
+
+      var panelDefs = helpFileDS.GetTarget(RDF_ROOT, NC_PANELLIST, true);      
+      RDFContainer.Init(helpFileDS, panelDefs);
+      var iterator = RDFContainer.GetElements();
+        while (iterator.hasMoreElements()) {
+        var panelDef = iterator.getNext();
+        var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);        
+
+        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:none");
+        datasources = normalizeLinks(helpBaseURI, datasources);
+        // cache toc datasources for use by ID lookup.
+        var outliner = document.getElementById("help-" + panelID + "-outliner");
+        outliner.setAttribute("datasources", datasources);
+        //if (panelID == "toc") {
+          if (outliner.database) {
+            loadDatabases(outliner.database, datasources);
+            outliner.builder.rebuild();
+          }
+        //}
+      }  
+    }
+    catch (e) {
+      log(e + "");      
+    }
+  }
+}
+function loadDatabases(compositeDatabase, datasources) {
+  var ds = datasources.split(/\s+/);
+  for (var i=0; i < ds.length; i++) {
+    if (ds[i] == "rdf:null" || ds[i] == "")
+      continue;
+    try {  
+      // we need blocking here to ensure the database is loaded so getLink(topic) works.
+      var datasource = RDF.GetDataSourceBlocking(ds[i]);
+      if (datasource)  
+        compositeDatabase.AddDataSource(datasource);
+    }
+    catch (e) {
+      log("Datasource: " + ds[i] + " was not found.");
+    }
+  }
+}
+
+// prepend helpBaseURI to list of space separated links if the don't start with "chrome:"
+function normalizeLinks(helpBaseURI, links) {
+  if (!helpBaseURI)
+    return links;
+  var ls = links.split(/\s+/);
+  if (ls.length == 0)
+    return links;
+  for (var i=0; i < ls.length; i++) {
+    if (ls[i] == "")
+      continue;
+    if (ls[i].substr(0,7) != "chrome:" && ls[i].substr(0,4) != "rdf:") 
+      ls[i] = helpBaseURI + ls[i];
+  }
+  return ls.join(" ");  
+}
+
+function getLink(ID) {
+  if (!ID)
+    return null;
+  // Note resources are stored in fileURL#ID format.
+  // We have one possible source for an ID for each datasource in the composite datasource.
+  // The first ID which matches is returned.
+  var tocOutliner = document.getElementById("help-toc-outliner");
+    tocDS = tocOutliner.database;
+    if (tocDS == null)
+      return null;
+    var tocDatasources = tocOutliner.getAttribute("datasources");
+  var ds = tocDatasources.split(/\s+/);
+  for (var i=0; i < ds.length; i++) {
+    if (ds[i] == "rdf:null" || ds[i] == "")
+      continue;
+    try {
+      var rdfID = ds[i] + "#" + ID;
+      var resource = RDF.GetResource(rdfID);
+      if (resource) {
+        var link = tocDS.GetTarget(resource, NC_LINK, true);
+        if (link) {
+          link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          if (link) 
+            return link.Value;
+          else  
+            return null;
+        }  
+      }
+    }
+    catch (e) { log(rdfID + " " + e);}
+  }
+  return null;
+}
+
+// Called by contextHelp.js to determine if this window is displaying the requested help file.
+function getHelpFileURI() {
+  return helpFileURI;
+}
+
+// select the item in the tree called "Dialog Help" if the window was loaded from a dialog
+function setContext() {
+  var items = document.getElementsByAttribute("helplink", "chrome://help/locale/context_help.html");
+  if (items.length) {
+     var tree = document.getElementById("help-toc-tree");
+     try { tree.selectItem(items[0].parentNode.parentNode); } catch(ex) { dump("can't select in toc: " + ex + "\n"); }
+  }
+}
+
+function selectTOC(link_attr) {
+  var items = document.getElementsByAttribute("helplink", link_attr);
+  if (items.length) {
+     openTwistyTo(items[0]);
+     var tree = document.getElementById("help-toc-tree");
+     try { tree.selectItem(items[0].parentNode.parentNode); } catch(ex) { dump("can't select in toc: " + ex + "\n"); }
+  } 
+}
+
+// open parent nodes for the selected node
+// until you get to the top of the tree
+function openTwistyTo(selectedURINode)
 {
+  var parent = selectedURINode.parentNode;
+  var tree = document.getElementById("help-toc-tree");
+  if (parent == tree)
+    return;
+ 
+  parent.setAttribute("open", "true");
+  openTwistyTo(parent);
+}
+
+
+function getWebNavigation()
+{
+  return helpBrowser.webNavigation;
+}
+
+function loadURI(uri)
+{
+  if (uri.substr(0,7) != "chrome:")
+    uri = helpBaseURI + uri;
   const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-  getWebNavigation().loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null ,null, null);
+  getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
 }
 
 function goBack()
@@ -195,24 +316,7 @@ function goForward()
 
 function goHome() {
   // load "Welcome" page
-  loadURI("chrome://help/locale/welcome_help.html");
-}
-
-function selectItem() {
-  var outliner = document.getElementById("help-toc-outliner");
-  if (!gBuilder)
-    gBuilder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-
-  var source = gBuilder.getResourceAtIndex(outliner.outlinerBoxObject.selection.currentIndex);
-  if (!gRDF)
-    gRDF = Components.classes[kRDFContractID].getService(kRDFIID);
-
-  var property = gRDF.GetResource("http://home.netscape.com/NC-rdf#link");
-  
-  var target = outliner.database.GetTarget(source, property, true);
-  if (target)
-    target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-  loadURI(target);
+  displayTopic(defaultTopic);
 }
 
 function print()
@@ -319,18 +423,17 @@ function UpdateBackForwardButtons()
 function find(again)
 {
   var focusedWindow = document.commandDispatcher.focusedWindow;
-  var browser = document.getElementById("help-content");
   if (!focusedWindow || focusedWindow == window)
     focusedWindow = window._content;
   if (again)
-    findAgainInPage(browser, window._content, focusedWindow);
+    findAgainInPage(helpBrowser, window._content, focusedWindow);
   else
     findInPage(browser, window._content, focusedWindow)
 }
 
 function getMarkupDocumentViewer()
 {
-  return document.getElementById("help-content").markupDocumentViewer;
+  return helpBrowser.markupDocumentViewer;
 }
 
 function BrowserReload()
@@ -384,6 +487,182 @@ function BrowserViewSourceOfURL(url, charset)
              url, charset);
 }
 
-function getBrowser() {
-  return document.getElementById("help-content");
+//Show the selected sidebar panel
+function showPanel(panelId) {
+  helpSearchPanel.setAttribute("hidden", "true");
+  helpTocPanel.setAttribute("hidden", "true");
+  helpIndexPanel.setAttribute("hidden", "true");
+  helpGlossaryPanel.setAttribute("hidden", "true");
+  var thePanel = document.getElementById(panelId);
+  thePanel.setAttribute("hidden","false");
+}
+
+function onselect_loadURI(outliner, columnName) {
+  try {
+    var row = outliner.outlinerBoxObject.view.selection.currentIndex;
+    var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    outliner.outlinerBoxObject.view.getCellProperties(row, columnName, properties);
+    if (!properties) return;
+    var uri = getPropertyValue(properties, "link-");
+    if (uri)
+      loadURI(uri);
+  }
+  catch (e) {}// when switching between tabs a spurious row number is returned.
+}
+
+/** Search properties nsISupportsArray for an nsIAtom which starts with the given property name. **/
+function getPropertyValue(properties, propName) {
+  for (var i=0; i< properties.Count(); i++) {
+    var atom = properties.GetElementAt(i).QueryInterface(Components.interfaces.nsIAtom);
+    var atomValue = atom.GetUnicode();
+    if (atomValue.substr(0, propName.length) == propName)
+      return atomValue.substr(propName.length);
+  }
+  return null;
+}
+
+function doFind() {
+  var searchOutliner = document.getElementById("help-search-outliner");
+  var findText = document.getElementById("findText");
+
+  // clear any previous results.
+  clearDatabases(searchOutliner.database);
+
+  // split search string into separate terms and compile into regexp's
+  RE = findText.value.split(/\s+/);
+  for (var i=0; i < RE.length; i++) {
+    if (RE[i] == "")
+      continue;
+    RE[i] = new RegExp(RE[i], "i");
+  }
+
+  var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
+  var outliner = document.getElementById("help-toc-outliner");
+  var sourceDS = outliner.database;
+  doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
+
+  // search index.
+  outliner = document.getElementById("help-index-outliner");
+  sourceDS = outliner.database;
+  if (!sourceDS) // If the index has never been displayed this will be null (sigh!).
+    sourceDS = loadCompositeDS(outliner.datasources);
+  doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
+
+  // search glossary.
+  outliner = document.getElementById("help-glossary-outliner");
+  sourceDS = outliner.database;
+  if (!sourceDS) // If the glossary has never been displayed this will be null (sigh!).
+    sourceDS = loadCompositeDS(outliner.datasources);
+  doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
+
+  // Add the datasource to the search outliner
+  searchOutliner.database.AddDataSource(resultsDS);
+  searchOutliner.builder.rebuild();
+}
+
+function clearDatabases(compositeDataSource) {
+  var enumDS = compositeDataSource.GetDataSources()
+  while (enumDS.hasMoreElements()) {
+    var ds = enumDS.getNext();
+        compositeDataSource.RemoveDataSource(ds);
+  }
+}
+
+function doFindOnDatasource(resultsDS, sourceDS, resource, level) {
+  // find all SUBHEADING children of current resource.
+  var targets = sourceDS.GetTargets(resource, NC_SUBHEADINGS, true);
+  while (targets.hasMoreElements()) {
+      var target = targets.getNext();
+      target = target.QueryInterface(Components.interfaces.nsIRDFResource);
+        // The first child of a rdf:subheading should (must) be a rdf:seq.
+        // Should we test for a SEQ here?
+    doFindOnSeq(resultsDS, sourceDS, target, level+1);       
+  }  
+}
+
+function doFindOnSeq(resultsDS, sourceDS, resource, level) {
+  // load up an RDFContainer so we can access the contents of the current rdf:seq.    
+    RDFContainer.Init(sourceDS, resource);
+    var targets = RDFContainer.GetElements();
+    while (targets.hasMoreElements()) {
+    var target = targets.getNext();
+        target = target.QueryInterface(Components.interfaces.nsIRDFResource);
+        var name = sourceDS.GetTarget(target, NC_NAME, true);
+        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        
+        if (isMatch(name.Value)) {
+          // we have found a search entry - add it to the results datasource.
+          
+          // Get URL of html for this entry.
+      var link = sourceDS.GetTarget(target, NC_LINK, true);
+      link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);        
+
+      urnID++;
+      resultsDS.Assert(RDF_ROOT,
+             RDF.GetResource("http://home.netscape.com/NC-rdf#child"),
+             RDF.GetResource("urn:" + urnID),
+             true);
+      resultsDS.Assert(RDF.GetResource("urn:" + urnID),
+             RDF.GetResource("http://home.netscape.com/NC-rdf#name"),
+             name,
+             true);
+      resultsDS.Assert(RDF.GetResource("urn:" + urnID),
+             RDF.GetResource("http://home.netscape.com/NC-rdf#link"),
+             link,
+             true);
+    }
+    // process any nested rdf:seq elements.
+    doFindOnDatasource(resultsDS, sourceDS, target, level+1);       
+    }  
+}
+
+function isMatch(text) {
+  for (var i=0; i < RE.length; i++ ) {
+    if (!RE[i].test(text))
+      return false;
+  }
+  return true;
+}
+function loadCompositeDS(datasources) {
+  // We can't search on each individual datasource's - only the aggregate (for each sidebar tab)
+  // has the appropriate structure.
+  var compositeDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=composite-datasource"]
+      .createInstance(Components.interfaces.nsIRDFCompositeDataSource);
+  
+  var ds = datasources.split(/\s+/);
+  for (var i=0; i < ds.length; i++) {
+    if (ds[i] == "rdf:null" || ds[i] == "")
+      continue;
+    try {  
+      // we need blocking here to ensure the database is loaded.
+      var sourceDS = RDF.GetDataSourceBlocking(ds[i]);
+      compositeDS.AddDataSource(sourceDS);
+    }
+    catch (e) {
+      log("Datasource: " + ds[i] + " was not found.");
+    }
+  }
+  return compositeDS;
+}
+
+function getAttribute(datasource, resource, attributeResourceName, defaultValue) {
+  var literal = datasource.GetTarget(resource, attributeResourceName, true);
+  if (!literal)
+    return defaultValue;
+  return getLiteralValue(literal, defaultValue);  
+}
+
+function getLiteralValue(literal, defaultValue) {
+  if (literal) {
+      literal = literal.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (literal)
+        return literal.Value;
+  }
+  if (defaultValue)
+    return defaultValue;
+  return null;
+}
+// Write debug string to javascript console.
+function log(aText) {
+  CONSOLE_SERVICE.logStringMessage(aText);
 }

@@ -9,9 +9,17 @@
 <!ENTITY fwdBtn.tooltip     "Forward" >
 <!ENTITY homeBtn.tooltip    "Help Home Page" >
 
-<!ENTITY t1.label           "What part of &brandShortName;" >
-<!ENTITY t2.label           "do you need help with?" >
-<!ENTITY t3.label           "Click one:" >
-
 <!ENTITY tab1.label         "Contents">
 <!ENTITY tab2.label         "Index">
+<!-- added bt PW 1/29/02- please check for correctness-->
+<!ENTITY searchtab.label    "Search">
+<!ENTITY searchbtn.label    "Find">
+<!ENTITY toctab.label       "Contents">
+<!ENTITY indextab.label     "Index">
+<!ENTITY ixname.label       "Name">
+<!ENTITY glossarytab.label  "Glossary">
+<!ENTITY glossname.label    "Name">
+<!-- added IO 2/7/01 -->
+<!ENTITY gobtn.label        "Go">
+<!ENTITY name.label	    "Item">
+
