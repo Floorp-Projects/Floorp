@@ -1,0 +1,73 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..
+MODULE=appcomps
+
+MAKE_OBJ_TYPE=DLL
+DLLNAME=appcomps
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
+
+CPP_OBJS=                            \
+        .\$(OBJDIR)\nsModule.obj  \
+	$(NULL)
+
+LLIBS=                                   \
+        $(DIST)\lib\js3250.lib           \
+        $(DIST)\lib\xpcom.lib            \
+        $(DIST)\lib\timer_s.lib          \
+        $(LIBNSPR)                       \
+        $(DIST)\lib\autocomplete_s.lib   \
+        $(DIST)\lib\bookmarks_s.lib      \
+        $(DIST)\lib\directory_s.lib      \
+        $(DIST)\lib\history_s.lib        \
+        $(DIST)\lib\related_s.lib        \
+        $(DIST)\lib\search_s.lib         \
+        $(DIST)\lib\timebomb_s.lib       \
+        $(DIST)\lib\urlbarhistory_s.lib  \
+        $(DIST)\lib\urlwidgt_s.lib       \
+        $(DIST)\lib\winhooks_s.lib       \
+	$(NULL)
+
+INCS = $(INCS)                                       \
+        -I$(DEPTH)\xpfe\components\autocomplete\src  \
+        -I$(DEPTH)\xpfe\components\bookmarks\src     \
+        -I$(DEPTH)\xpfe\components\directory         \
+        -I$(DEPTH)\xpfe\components\history\src       \
+        -I$(DEPTH)\xpfe\components\related\src       \
+        -I$(DEPTH)\xpfe\components\search\src        \
+        -I$(DEPTH)\xpfe\components\timebomb          \
+        -I$(DEPTH)\xpfe\components\urlbarhistory\src \
+        -I$(DEPTH)\xpfe\components\urlwidget         \
+        -I$(DEPTH)\xpfe\components\winhooks          \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+    $(RM) $(DIST)\bin\components\$(DLLNAME).dll
+	$(RM) $(DIST)\lib\$(DLLNAME).lib 
