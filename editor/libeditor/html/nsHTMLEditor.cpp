@@ -4859,7 +4859,7 @@ nsHTMLEditor::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   if (!aOutLastChild || !aNode) return NS_ERROR_NULL_POINTER;
   
   // init out parms
-  *aOutLastChild = nsnull;
+  *aOutLastChild = aNode;
   
   // find last editable child
   nsCOMPtr<nsIDOMNode> child;
@@ -4879,8 +4879,6 @@ nsHTMLEditor::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   return res;
 }
 
-// jfrancis or glazman may want to use this method (currently it's unused)
-#ifdef XXX_DEAD_CODE
 nsresult 
 nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf)
 {
@@ -4888,7 +4886,7 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   if (!aOutFirstLeaf || !aNode) return NS_ERROR_NULL_POINTER;
   
   // init out parms
-  *aOutFirstLeaf = nsnull;
+  *aOutFirstLeaf = aNode;
   
   // find leftmost leaf
   nsCOMPtr<nsIDOMNode> child;
@@ -4913,7 +4911,6 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   *aOutFirstLeaf = child;
   return res;
 }
-#endif
 
 
 nsresult 

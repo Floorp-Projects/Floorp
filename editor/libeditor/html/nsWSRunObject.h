@@ -45,6 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsITextContent.h"
 #include "nsIEditor.h"
+#include "nsEditorUtils.h"
 
 class nsIDOMDocument;
 class nsIDOMNode;
@@ -238,27 +239,7 @@ class nsWSRunObject
                      mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar) {}
       WSPoint(nsITextContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
-    };
-
-    // general dom point utility struct
-    struct DOMPoint
-    {
-      nsCOMPtr<nsIDOMNode> node;
-      PRInt32 offset;
-      
-      DOMPoint() : node(0),offset(0) {}
-      DOMPoint(nsIDOMNode *aNode, PRInt32 aOffset) : 
-                     node(aNode),offset(aOffset) {}
-      void SetPoint(nsIDOMNode *aNode, PRInt32 aOffset)
-      {
-        node = aNode; offset = aOffset;
-      }
-      void GetPoint(nsCOMPtr<nsIDOMNode> &aNode, PRInt32 &aOffset)
-      {
-        aNode = node; aOffset = offset;
-      }
-    };
-    
+    };    
     
     
     // protected methods ---------------------------------------------------------
