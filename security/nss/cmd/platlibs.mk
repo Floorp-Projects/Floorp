@@ -35,6 +35,13 @@
 ifeq ($(OS_ARCH), WINNT)
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/crypto.lib
+endif
+ifdef MOZILLA_BSAFE_BUILD
+	CRYPTOLIB=$(DIST)/lib/bsafe41.lib
+endif
+
 EXTRA_LIBS += \
 	$(DIST)/lib/ssl.lib \
 	$(DIST)/lib/jar.lib \
@@ -49,6 +56,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/certdb.lib \
 	$(DIST)/lib/softoken.lib \
 	$(DIST)/lib/freebl.lib \
+	$(CRYPTOLIB) \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/dbm.lib \
@@ -56,16 +64,6 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
-
-ifdef MOZILLA_SECURITY_BUILD
-EXTRA_LIBS += $(DIST)/lib/crypto.lib
-endif
-ifdef MOZILLA_BSAFE_BUILD
-EXTRA_LIBS += \
-	$(DIST)/lib/bsafe41.lib \
-	$(DIST)/lib/freebl.lib \
-	$(NULL)
-endif
 
 # $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
 OS_LIBS += \
@@ -75,6 +73,12 @@ OS_LIBS += \
 else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/libcrypto.a
+endif
+ifdef MOZILLA_BSAFE_BUILD
+	CRYPTOLIB=$(DIST)/lib/libbsafe.a
+endif
 EXTRA_LIBS += \
 	$(DIST)/lib/libssl.a \
 	$(DIST)/lib/libjar.a \
@@ -92,19 +96,10 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libcertdb.a \
 	$(DIST)/lib/libswfci.a \
 	$(DIST)/lib/libfreebl.a \
+	$(CRYPTOLIB) \
 	$(DIST)/lib/libsecutil.a \
 	$(DIST)/lib/libdbm.a \
 	$(NULL)
-
-ifdef MOZILLA_SECURITY_BUILD
-EXTRA_LIBS += $(DIST)/lib/libcrypto.a
-endif
-ifdef MOZILLA_BSAFE_BUILD
-EXTRA_LIBS += \
-	$(DIST)/lib/libbsafe.a \
-	$(DIST)/lib/libfreebl.a \
-	$(NULL)
-endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
