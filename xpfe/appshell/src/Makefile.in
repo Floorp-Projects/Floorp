@@ -44,7 +44,6 @@ CPPSRCS		= \
 		nsFileLocations.cpp \
 		nsNetSupportDialog.cpp \
 		nsWindowMediator.cpp \
-		nsSessionHistory.cpp \
 		nsDialogParamBlock.cpp \
 		nsCommonDialogs.cpp \
 		nsAbout.cpp \

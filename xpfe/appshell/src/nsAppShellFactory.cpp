@@ -28,7 +28,6 @@
 #include "nsIFileLocator.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIWindowMediator.h"
-#include "nsISessionHistory.h"
 #include "rdf.h"
 #include "nsICommonDialogs.h"
 #include "nsIDialogParamBlock.h"
@@ -42,7 +41,6 @@
 #include "nsAppShellService.h"
 #include "nsXPConnectFactory.h"
 #include "nsWindowMediator.h"
-#include "nsSessionHistory.h"
 #include "nsCommonDialogs.h"
 #include "nsDialogParamBlock.h"
 #include "nsFileLocations.h"
@@ -58,7 +56,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(XPConnectFactoryImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNetSupportDialog);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSessionHistory);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommonDialogs);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileLocator);
@@ -90,11 +87,6 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_WINDOWMEDIATOR_CID,
     NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
     nsWindowMediatorConstructor,
-  },
-  { "Session History",
-    NS_SESSIONHISTORY_CID,
-    NULL,
-    nsSessionHistoryConstructor,
   },
   { "Common Dialogs",
     NS_CommonDialog_CID,
