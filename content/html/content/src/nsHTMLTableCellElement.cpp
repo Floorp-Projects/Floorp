@@ -283,7 +283,7 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
     if (res) {
       PRInt32 val = aResult.GetIntegerValue();
       // quirks mode does not honor the special html 4 value of 0
-      if (val < 0 || (0 == val && InNavQuirksMode(GetCurrentDoc()))) {
+      if (val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
         aResult.SetTo(1, nsAttrValue::eInteger);
       }
     }

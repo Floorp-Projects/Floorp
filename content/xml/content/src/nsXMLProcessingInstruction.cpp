@@ -166,6 +166,8 @@ nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   GetData(data);
 
   nsIDocument *document = GetOwnerDoc();
+  // We really want to pass the document here, but can't yet.  Waiting
+  // on BindToTree.
   nsXMLProcessingInstruction *pi =
     new nsXMLProcessingInstruction(mTarget, data, nsnull);
   if (!pi) {

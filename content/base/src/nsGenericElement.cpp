@@ -1006,12 +1006,13 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
     return CallQueryInterface(parent, aParentNode);
   }
 
-  if (IsInDoc()) {
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
     // If we don't have a parent, but we're in the document, we must
     // be the root node of the document. The DOM says that the root
     // is the document.
 
-    return CallQueryInterface(GetOwnerDoc(), aParentNode);
+    return CallQueryInterface(doc, aParentNode);
   }
 
   *aParentNode = nsnull;
@@ -1033,13 +1034,15 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
     if (pos > 0 ) {
       sibling = parent->GetChildAt(pos - 1);
     }
-  } else if (IsInDoc()) {
-    // Nodes that are just below the document (their parent is the
-    // document) need to go to the document to find their next sibling.
-    nsIDocument *document = GetOwnerDoc();
-    PRInt32 pos = document->IndexOf(this);
-    if (pos > 0 ) {
-      sibling = document->GetChildAt(pos - 1);
+  } else {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      // Nodes that are just below the document (their parent is the
+      // document) need to go to the document to find their next sibling.
+      PRInt32 pos = document->IndexOf(this);
+      if (pos > 0 ) {
+        sibling = document->GetChildAt(pos - 1);
+      }
     }
   }
 
@@ -1065,13 +1068,15 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
     if (pos > -1 ) {
       sibling = parent->GetChildAt(pos + 1);
     }
-  } else if (IsInDoc()) {
-    // Nodes that are just below the document (their parent is the
-    // document) need to go to the document to find their next sibling.
-    nsIDocument *document = GetOwnerDoc();
-    PRInt32 pos = document->IndexOf(this);
-    if (pos > -1 ) {
-      sibling = document->GetChildAt(pos + 1);
+  } else {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      // Nodes that are just below the document (their parent is the
+      // document) need to go to the document to find their next sibling.
+      PRInt32 pos = document->IndexOf(this);
+      if (pos > -1 ) {
+        sibling = document->GetChildAt(pos + 1);
+      }
     }
   }
 
@@ -1746,6 +1751,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
       // check the document on the nodeinfo to see whether we need a
       // new nodeinfo
+      // XXXbz sXBL/XBL2 issue!
       nsIDocument *ownerDocument = GetOwnerDoc();
       if (aDocument != ownerDocument) {
 
@@ -1873,12 +1879,14 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
 
   // determine the parent:
   nsCOMPtr<nsIContent> parent;
-  if (IsInDoc()) {
-    nsIBindingManager* bindingManager = GetOwnerDoc()->GetBindingManager();
-    if (bindingManager) {
-      // we have a binding manager -- do we have an anonymous parent?
-      bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
-    }
+  nsIBindingManager* bindingManager = nsnull;
+  nsIDocument* ownerDoc = GetOwnerDoc();
+  if (ownerDoc) {
+    bindingManager = ownerDoc->GetBindingManager();
+  }
+  if (bindingManager) {
+    // we have a binding manager -- do we have an anonymous parent?
+    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
   }
   if (!parent) {
     // if we didn't find an anonymous parent, use the explicit one,
@@ -1933,11 +1941,14 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
       parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                              aFlags & NS_EVENT_CAPTURE_MASK,
                              aEventStatus);
-    } else if (IsInDoc()) {
-        ret = GetOwnerDoc()->HandleDOMEvent(aPresContext, aEvent,
-                                            aDOMEvent,
-                                            aFlags & NS_EVENT_CAPTURE_MASK,
-                                            aEventStatus);
+    } else {
+      nsIDocument* document = GetCurrentDoc();
+      if (document) {
+        ret = document->HandleDOMEvent(aPresContext, aEvent,
+                                       aDOMEvent,
+                                       aFlags & NS_EVENT_CAPTURE_MASK,
+                                       aEventStatus);
+      }
     }
   }
 
@@ -2015,10 +2026,12 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
     } else {
       // If there's no parent but there is a document (i.e. this is
       // the root node) we pass the event to the document...
-
-      ret = GetOwnerDoc()->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                          aFlags & NS_EVENT_BUBBLE_MASK, 
-                                          aEventStatus);
+      nsIDocument* document = GetCurrentDoc();
+      if (document) {
+        ret = document->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                       aFlags & NS_EVENT_BUBBLE_MASK, 
+                                       aEventStatus);
+      }
     }
   }
 
@@ -3099,7 +3112,7 @@ NS_IMPL_RELEASE(nsGenericElement)
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsIDocument *document = GetCurrentDoc();
+  nsIDocument *document = GetOwnerDoc();
   if (document) {
     nsIBindingManager* manager = document->GetBindingManager();
     if (manager)
@@ -3562,7 +3575,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
   fputs(">\n", out);
 
-  nsIDocument *document = GetCurrentDoc();
+  nsIDocument *document = GetOwnerDoc();
   if (document) {
     nsIBindingManager* bindingManager = document->GetBindingManager();
     if (bindingManager) {

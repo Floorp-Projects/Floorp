@@ -230,10 +230,12 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
   mIsInitialized = PR_TRUE;
   mIsSelected = aValue;
 
-  if (aNotify && IsInDoc()) {
-    nsIDocument* document = GetOwnerDoc();
-    mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
-    document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+  if (aNotify) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
+      document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+    }
   }
 
   return NS_OK;
@@ -505,7 +507,12 @@ nsHTMLOptionElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 nsIFormControlFrame *
 nsHTMLOptionElement::GetSelectFrame() const
 {
-  if (!GetParent() || !IsInDoc()) {
+  if (!GetParent()) {
+    return nsnull;
+  }
+
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (!currentDoc) {
     return nsnull;
   }
 
@@ -519,7 +526,7 @@ nsHTMLOptionElement::GetSelectFrame() const
     return nsnull;
   }
 
-  return GetFormControlFrameFor(selectContent, GetOwnerDoc(), PR_FALSE);
+  return GetFormControlFrameFor(selectContent, currentDoc, PR_FALSE);
 }
 
 // Get the select content element that contains this option

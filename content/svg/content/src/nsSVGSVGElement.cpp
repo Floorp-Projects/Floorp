@@ -352,9 +352,10 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
 
   *aPixelUnitToMillimeterX = 0.28f; // 90dpi
 
-  if (!IsInDoc()) return NS_OK;
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_OK;
   // Get Presentation shell 0
-  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetShellAt(0);
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -381,9 +382,10 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
 
   *aScreenPixelToMillimeterX = 0.28f; // 90dpi
 
-  if (!IsInDoc()) return NS_OK;
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_OK;
     // Get Presentation shell 0
-  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetShellAt(0);
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -454,9 +456,10 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
 
   if (++mRedrawSuspendCount > 1) 
     return NS_OK;
-  
-  if (!IsInDoc()) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = doc->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to suspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -505,9 +508,10 @@ NS_IMETHODIMP
 nsSVGSVGElement::UnsuspendRedrawAll()
 {
   mRedrawSuspendCount = 0;
-  
-  if (!IsInDoc()) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = doc->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -531,9 +535,10 @@ nsSVGSVGElement::UnsuspendRedrawAll()
 NS_IMETHODIMP
 nsSVGSVGElement::ForceRedraw()
 {
-  if (!IsInDoc()) return NS_ERROR_FAILURE;
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -888,8 +893,13 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> CTM;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (IsInDoc()) {
-    bindingManager = GetOwnerDoc()->GetBindingManager();
+  // XXXbz I _think_ this is right.  We want to be using the binding manager
+  // that would have attached the binding that gives us our anonymous parent.
+  // That's the binding manager for the document we actually belong to, which
+  // is our owner doc.
+  nsIDocument* ownerDoc = GetOwnerDoc();
+  if (ownerDoc) {
+    bindingManager = ownerDoc->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -961,8 +971,13 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> screenCTM;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (IsInDoc()) {
-    bindingManager = GetOwnerDoc()->GetBindingManager();
+  // XXXbz I _think_ this is right.  We want to be using the binding manager
+  // that would have attached the binding that gives us our anonymous parent.
+  // That's the binding manager for the document we actually belong to, which
+  // is our owner doc.
+  nsIDocument* ownerDoc = GetOwnerDoc();
+  if (ownerDoc) {
+    bindingManager = ownerDoc->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -1134,8 +1149,9 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
 
   mViewBoxToViewportTransform = nsnull;
   
-  if (!IsInDoc()) return NS_ERROR_FAILURE;
-  nsIPresShell* presShell = GetOwnerDoc()->GetShellAt(0);
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_ERROR_FAILURE;
+  nsIPresShell* presShell = doc->GetShellAt(0);
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 

@@ -217,6 +217,7 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
     return NS_OK;
   }
 
+  // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
   nsIDocument *sub_doc = GetOwnerDoc()->GetSubDocumentFor(this);
 
   if (!sub_doc) {

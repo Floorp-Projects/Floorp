@@ -184,9 +184,10 @@ nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
   aPresContext->EventStateManager()->SetContentState(this,
                                                      NS_EVENT_STATE_FOCUS);
     
-  // Make sure the presentation is up-to-date    
-  if (IsInDoc()) {
-    GetOwnerDoc()->FlushPendingNotifications(Flush_Layout);
+  // Make sure the presentation is up-to-date
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(Flush_Layout);
   }
 
   nsIPresShell *presShell = aPresContext->GetPresShell();

@@ -459,8 +459,13 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
   *aOwnerSVGElement = nsnull;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (IsInDoc()) {
-    bindingManager = GetOwnerDoc()->GetBindingManager();
+  // XXXbz I _think_ this is right.  We want to be using the binding manager
+  // that would have attached the binding that gives us our anonymous parent.
+  // That's the binding manager for the document we actually belong to, which
+  // is our owner doc.
+  nsIDocument* ownerDoc = GetOwnerDoc();
+  if (ownerDoc) {
+    bindingManager = ownerDoc->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
