@@ -20,7 +20,6 @@
 #include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIWebShell.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
