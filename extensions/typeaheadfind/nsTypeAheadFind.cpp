@@ -632,7 +632,10 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     if (soundInterface)
       soundInterface->Beep();
     // Remove bad character from buffer, so we can continue typing from last matched character
-    mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length() - 1);
+#ifdef DONT_ADD_CHAR_IF_NOT_FOUND
+    if (mTypeAheadBuffer.Length == 1)  // If first character is bad, flush it away anyway
+#endif
+      mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length() - 1);
   }
 
   return NS_OK;
@@ -792,13 +795,13 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
       continue;  // Go through all docs again
     }
 
-    // Last resort, the aardvark rule
-    if (mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.First() == mTypeAheadBuffer.CharAt(1) &&
+    if (aIsRepeatingSameChar && 
+        mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.First() == mTypeAheadBuffer.CharAt(1) &&
         mTypeAheadBuffer.Last() != mTypeAheadBuffer.First()) {
-      // The aardvark rule: if they repeat the same character and then change
-      // first find exactly what they typed, if not there start over with new char
+      // If they repeat the same character and then change, such as aaaab
+      // start over with new char as a repeated char find
       mTypeAheadBuffer = mTypeAheadBuffer.Last();
-      return FindItNow(aIsRepeatingSameChar, PR_TRUE, aIsFirstVisiblePreferred, aIsBackspace);
+      return FindItNow(PR_TRUE, PR_TRUE, aIsFirstVisiblePreferred, aIsBackspace);
     }
     
     // ------------- Failed --------------
