@@ -71,6 +71,7 @@
 #include "nsIGlobalHistory.h"
 #include "prmem.h"
 #include "nsXPIDLString.h"
+#include "nsDOMError.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
@@ -1719,8 +1720,12 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       rv = pNetService->NewChannelFromURI(aCommand, aUri, loadGroup, requestor,
                                           aType, referrer /* referring uri */, 0, 0,
                                           getter_AddRefs(pChannel));
-      if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
-
+      if (NS_FAILED(rv)) {
+		  if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
+			  return NS_OK;                        // dom and there is nothing else to do
+		  else
+		      return rv; // uhoh we were unable to get a channel to handle the url!!!
+	  }
       // Mark the channel as being a document URI...
       nsLoadFlags loadAttribs = 0;
       pChannel->GetLoadAttributes(&loadAttribs);
