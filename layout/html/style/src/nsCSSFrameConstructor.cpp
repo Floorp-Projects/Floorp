@@ -10449,7 +10449,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   if (primaryFrame) {
     const nsStyleDisplay* disp;
     primaryFrame->GetStyleData(eStyleStruct_Display,
-                               (nsStyleStruct*&)disp);
+                               (const nsStyleStruct*&)disp);
     if (disp && disp->mAppearance) {
       nsCOMPtr<nsITheme> theme;
       aPresContext->GetTheme(getter_AddRefs(theme));
