@@ -500,6 +500,8 @@ nsHttpConnection::CreateTransport()
 
     if (mConnectionInfo->UsingSSL())
         type = "ssl";
+    else
+        type = nsHttpHandler::get()->DefaultSocketType();
 
     nsCOMPtr<nsITransport> transport;
     rv = sts->CreateTransportOfType(type,

@@ -90,6 +90,7 @@ public:
     PRUint8        RedirectionLimit()        { return mRedirectionLimit; }
     PRUint16       IdleTimeout()             { return mIdleTimeout; }
     PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
+    const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
 
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
@@ -275,6 +276,8 @@ private:
     nsCString mAcceptLanguages;
     nsCString mAcceptEncodings;
     nsCString mAcceptCharsets;
+
+    nsXPIDLCString mDefaultSocketType;
 
     // cache support
     nsCOMPtr<nsICacheSession> mCacheSession_ANY;

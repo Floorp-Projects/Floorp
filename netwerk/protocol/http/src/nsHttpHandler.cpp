@@ -48,6 +48,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefLocalizedString.h"
+#include "nsISocketProviderService.h"
+#include "nsISocketProvider.h"
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
@@ -78,6 +80,7 @@ static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 
 #define UA_PREF_PREFIX          "general.useragent."
 #define UA_APPNAME              "Mozilla"
@@ -1469,6 +1472,29 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 // release our references to the cache
                 mCacheSession_ANY = 0;
                 mCacheSession_MEM = 0;
+            }
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("default-socket-type"))) {
+        nsXPIDLCString val;
+        rv = prefs->GetCharPref(HTTP_PREF("default-socket-type"),
+                                getter_Copies(val));
+        if (NS_SUCCEEDED(rv)) {
+            if (val.IsEmpty())
+                mDefaultSocketType.Adopt(0);
+            else {
+                // verify that this socket type is actually valid
+                nsCOMPtr<nsISocketProviderService> sps(
+                        do_GetService(kSocketProviderServiceCID, &rv));
+                if (NS_SUCCEEDED(rv)) {
+                    nsCOMPtr<nsISocketProvider> sp;
+                    rv = sps->GetSocketProvider(val, getter_AddRefs(sp));
+                    if (NS_SUCCEEDED(rv)) {
+                        // OK, this looks like a valid socket provider.
+                        mDefaultSocketType.Assign(val);
+                    }
+                }
             }
         }
     }
