@@ -1639,30 +1639,31 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
   nsCOMPtr<nsIDocument> doc;
   aNodeInfo->GetDocument(*getter_AddRefs(doc));
   if (doc) {
-    PRBool alreadyLoaded = PR_FALSE;
-    PRInt32 i = 0, sheetCount = 0;
-    doc->GetNumberOfStyleSheets(PR_TRUE, &sheetCount);
-    for (; i < sheetCount; i++) {
-      nsCOMPtr<nsIStyleSheet> sheet;
-      doc->GetStyleSheetAt(i, PR_TRUE, getter_AddRefs(sheet));
-      NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
-      if (sheet) {
-        nsCOMPtr<nsIURI> uri;
-        sheet->GetURL(*getter_AddRefs(uri));
-        nsCAutoString uriStr;
-        uri->GetSpec(uriStr);
-        if (uriStr.Equals(kMathMLStyleSheetURI)) {
-          alreadyLoaded = PR_TRUE;
-          break;
+    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+    if (htmlContainer) {
+      PRBool enabled;
+      nsCOMPtr<nsICSSLoader> cssLoader;
+      htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
+      if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
+        PRBool alreadyLoaded = PR_FALSE;
+        PRInt32 i = 0, sheetCount = 0;
+        doc->GetNumberOfStyleSheets(PR_TRUE, &sheetCount);
+        for (; i < sheetCount; i++) {
+          nsCOMPtr<nsIStyleSheet> sheet;
+          doc->GetStyleSheetAt(i, PR_TRUE, getter_AddRefs(sheet));
+          NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
+          if (sheet) {
+            nsCOMPtr<nsIURI> uri;
+            sheet->GetURL(*getter_AddRefs(uri));
+            nsCAutoString uriStr;
+            uri->GetSpec(uriStr);
+            if (uriStr.Equals(kMathMLStyleSheetURI)) {
+              alreadyLoaded = PR_TRUE;
+              break;
+            }
+          }
         }
-      }
-    }
-    if (!alreadyLoaded) {
-      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-      if (htmlContainer) {
-        nsCOMPtr<nsICSSLoader> cssLoader;
-        htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-        if (cssLoader) {
+        if (!alreadyLoaded) {
           nsCOMPtr<nsIURI> uri;
           NS_NewURI(getter_AddRefs(uri), kMathMLStyleSheetURI);
           if (uri) {
