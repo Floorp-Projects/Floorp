@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef	_RDF_AUTOUPDT_H_
-#define	_RDF_AUTOUPDT_H_
+#ifndef	_AUTOUPDT_H_
+#define	_AUTOUPDT_H_
 
 #include "nspr.h"
 #include "xp.h"
@@ -97,6 +97,13 @@ PUBLIC NET_StreamClass * autoupdate_Converter(FO_Present_Types format_out,
 void autoupdate_GetUrlExitFunc(URL_Struct *urls, int status, MWContext *cx);
 int  autoupdate_ExecuteFile( const char * cmdline );
 
+#ifdef	XP_MAC
+PR_PUBLIC_API(void)
+#else
+PUBLIC void
+#endif
+checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint32 interval);
+
 PR_END_EXTERN_C
 
-#endif
+#endif /* _AUTOUPDT_H_ */
