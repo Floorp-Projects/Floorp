@@ -57,6 +57,7 @@ nsIAtom *nsXFormsAtoms::nodeset;
 nsIAtom *nsXFormsAtoms::model;
 nsIAtom *nsXFormsAtoms::selected;
 nsIAtom *nsXFormsAtoms::appearance;
+nsIAtom *nsXFormsAtoms::incremental;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -76,7 +77,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "nodeset",                  &nsXFormsAtoms::nodeset },
   { "model",                    &nsXFormsAtoms::model },
   { "selected",                 &nsXFormsAtoms::selected },
-  { "appearance",               &nsXFormsAtoms::appearance }
+  { "appearance",               &nsXFormsAtoms::appearance },
+  { "incremental",              &nsXFormsAtoms::incremental }
 };
 
 void

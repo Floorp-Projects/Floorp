@@ -56,6 +56,7 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIContent.h"
 #include "nsIDOMXPathExpression.h"
+#include "nsXFormsAtoms.h"
 
 /**
  * Implementation of the \<input\>, \<secret\>, and \<textarea\> elements.
@@ -75,6 +76,8 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
@@ -95,13 +98,17 @@ public:
 
   // nsXFormsInputElement
   nsXFormsInputElement(ControlType aType)
-    : mType(aType)
+    : mType(aType), mIncremental(PR_FALSE)
     {}
 
 private:
+  // Updates the instance data node bound to this form control.
+  nsresult UpdateInstanceData();
+
   nsCOMPtr<nsIDOMElement>          mLabel;
   nsCOMPtr<nsIDOMElement>          mControl;
   ControlType                      mType;
+  PRBool                           mIncremental;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
@@ -205,6 +212,36 @@ nsXFormsInputElement::OnDestroyed()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsInputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
+{
+  nsXFormsControlStub::WillSetAttribute(aName, aValue);
+  
+  if (aName == nsXFormsAtoms::incremental)
+    mIncremental = aValue.EqualsLiteral("true");
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::HandleDefault(nsIDOMEvent *aEvent,
+                                    PRBool      *aHandled)
+{
+  nsresult rv;
+  rv = nsXFormsControlStub::HandleDefault(aEvent, aHandled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (*aHandled || !mIncremental) {
+    return NS_OK;
+  }
+  
+  nsAutoString type;
+  aEvent->GetType(type);
+  if (type.EqualsLiteral("keyup"))
+    UpdateInstanceData();
+
+  return NS_OK;
+}
+
 // nsIDOMEventListener
 
 NS_IMETHODIMP
@@ -221,6 +258,12 @@ nsXFormsInputElement::Focus(nsIDOMEvent *aEvent)
 
 NS_IMETHODIMP
 nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
+{
+  return UpdateInstanceData();
+}
+
+nsresult
+nsXFormsInputElement::UpdateInstanceData()
 {
   if (!mControl && !mBoundNode && !mModel)
     return NS_OK;
