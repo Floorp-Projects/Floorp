@@ -224,10 +224,11 @@ function getTestCases() {
                                   8,
                                   eval("var m = Math; m.indexOf = String.prototype.indexOf; m.indexOf( 'Math' )") );
 
+    // new Date(0) has '31' or '01' at index 8 depending on whether tester is (GMT-) or (GMT+), respectively
     array[item++] = new TestCase( SECTION,
-                                  "var d = new Date(0); d.indexOf = String.prototype.indexOf; d.indexOf('31')",
+                                  "var d = new Date(0); d.indexOf = String.prototype.indexOf; d.getTimezoneOffset()>0 ? d.indexOf('31') : d.indexOf('01')",
                                   8,
-                                  eval("var d = new Date(0); d.indexOf = String.prototype.indexOf; d.indexOf('31')") );
+                                  eval("var d = new Date(0); d.indexOf = String.prototype.indexOf; d.getTimezoneOffset()>0 ? d.indexOf('31') : d.indexOf('01')") );
 
 
     return array;
