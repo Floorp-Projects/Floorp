@@ -620,7 +620,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
     nsAutoString flavor, stuffToPaste;
     flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
-#ifdef DEBUG_akkana
+#ifdef DEBUG_clipboard
     printf("Got flavor [%s]\n", bestFlavor);
 #endif
     if (flavor.EqualsWithConversion(kHTMLMime))
@@ -1289,7 +1289,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 #endif
       return rv;
     }
-#ifdef DEBUG_akkana
+#ifdef DEBUG_clipboard
     printf("Got flavor [%s]\n", flav);
 #endif
     nsAutoString flavor; flavor.AssignWithConversion(flav);

@@ -132,7 +132,9 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
   NS_REGISTER_ONE_COMMAND(nsRedoCommand, "cmd_redo");
 
   NS_REGISTER_ONE_COMMAND(nsCutCommand, "cmd_cut");
+  NS_REGISTER_ONE_COMMAND(nsCutOrDeleteCommand, "cmd_cutOrDelete");
   NS_REGISTER_ONE_COMMAND(nsCopyCommand, "cmd_copy");
+  NS_REGISTER_ONE_COMMAND(nsCopyOrDeleteCommand, "cmd_copyOrDelete");
   NS_REGISTER_ONE_COMMAND(nsSelectAllCommand, "cmd_selectAll");
   
   NS_REGISTER_ONE_COMMAND(nsPasteCommand, "cmd_paste");
