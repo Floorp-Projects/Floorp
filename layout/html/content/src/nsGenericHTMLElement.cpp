@@ -106,10 +106,8 @@ public:
   virtual void DropReference();
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
-                                        PRInt32 aHint);
+  virtual nsresult ParseDeclaration(const nsString& aDecl);
   virtual nsresult GetParent(nsISupports **aParent);
-  virtual nsresult GetBaseURL(nsIURI** aURL);
 
 protected:
   nsIHTMLContent *mContent;  
@@ -177,19 +175,57 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
 }
 
 nsresult 
-nsDOMCSSAttributeDeclaration::StylePropertyChanged(const nsString& aPropertyName,
-                                                   PRInt32 aHint)
+nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl)
 {
-  nsresult result = NS_OK;
-  if (nsnull != mContent) {
-    nsIDocument *doc;
+  nsICSSDeclaration *decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
+
+  if (NS_SUCCEEDED(result) && (decl)) {
+    nsICSSLoader* cssLoader = nsnull;
+    nsICSSParser* cssParser = nsnull;
+    nsIURI* baseURI = nsnull;
+    nsIDocument*  doc = nsnull;
+
     result = mContent->GetDocument(doc);
     if (NS_SUCCEEDED(result) && (nsnull != doc)) {
-      result = doc->AttributeChanged(mContent, nsHTMLAtoms::style, aHint);
-      NS_RELEASE(doc);
+      doc->GetBaseURL(baseURI);
+
+      nsIHTMLContentContainer* htmlContainer;
+      result = doc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+      if (NS_SUCCEEDED(result)) {
+        result = htmlContainer->GetCSSLoader(cssLoader);
+        NS_RELEASE(htmlContainer);
+      }
     }
+
+    if (cssLoader) {
+      result = cssLoader->GetParserFor(nsnull, &cssParser);
+    }
+    else {
+      result = NS_NewCSSParser(&cssParser);
+    }
+
+    if (NS_SUCCEEDED(result)) {
+      PRInt32 hint;
+      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl, &hint);
+      if (NS_SUCCEEDED(result)) {
+        if (doc) {
+          doc->AttributeChanged(mContent, nsHTMLAtoms::style, hint);
+        }
+      }
+      if (cssLoader) {
+        cssLoader->RecycleParser(cssParser);
+      }
+      else {
+        NS_RELEASE(cssParser);
+      }
+    }
+    NS_IF_RELEASE(cssLoader);
+    NS_IF_RELEASE(baseURI);
+    NS_IF_RELEASE(doc);
+    NS_RELEASE(decl);
   }
-  
+
   return result;
 }
 
@@ -201,27 +237,6 @@ nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
   }
 
   return NS_OK;
-}
-
-nsresult 
-nsDOMCSSAttributeDeclaration::GetBaseURL(nsIURI** aURL)
-{
-  NS_ASSERTION(nsnull != aURL, "null pointer");
-
-  nsresult result = NS_ERROR_NULL_POINTER;
-
-  if (nsnull != aURL) {
-    *aURL = nsnull;
-    if (nsnull != mContent) {
-      nsIDocument *doc;
-      result = mContent->GetDocument(doc);
-      if (NS_SUCCEEDED(result) && (nsnull != doc)) {
-        doc->GetBaseURL(*aURL);
-        NS_RELEASE(doc);
-      }
-    }
-  }
-  return result;
 }
 
 //----------------------------------------------------------------------
