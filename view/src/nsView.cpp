@@ -573,22 +573,6 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
   nsIScrollbar  *scroll;
   nsEventStatus retval = nsEventStatus_eIgnore;
 
-  if (nsnull != mWindow)
-  {
-    //if this is a scrollbar window that sent
-    //us the event, do special processing
-
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
-
-    if (NS_OK == mWindow->QueryInterface(kscroller, (void **)&scroll))
-    {
-      if (nsnull != mParent)
-        retval = mParent->HandleEvent(event, NS_VIEW_FLAG_CHECK_SIBLINGS);
-
-      NS_RELEASE(scroll);
-    }
-  }
-
   //see if any of this view's children can process the event
   if ((aEventFlags & NS_VIEW_FLAG_CHECK_CHILDREN) &&
       (retval == nsEventStatus_eIgnore))
