@@ -65,9 +65,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableFrame(nsIContent* aContent,
-                   nsIFrame*   aParentFrame,
-                   nsIFrame*&  aResult);
+  NS_NewTableFrame(nsIFrame*& aResult);
 
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -251,7 +249,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsTableFrame();
 
   /** destructor, responsible for mColumnLayoutData and mColumnWidths */
   virtual ~nsTableFrame();

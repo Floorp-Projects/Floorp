@@ -29,8 +29,7 @@ class nsFileControlFrame : public nsHTMLContainerFrame,
                            public nsIFormControlFrame
 {
 public:
-  nsFileControlFrame(nsIContent* aContent, 
-                     nsIFrame* aParentFrame);
+  nsFileControlFrame();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -64,7 +63,6 @@ public:
   //static PRInt32 gSpacing;
 
 protected:
-  virtual ~nsFileControlFrame();
   virtual PRIntn GetSkipSides() const;
 
   nsTextControlFrame*   mTextFrame;

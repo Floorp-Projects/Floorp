@@ -68,7 +68,7 @@ static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 class nsLabelFrame : public nsHTMLContainerFrame
 {
 public:
-  nsLabelFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsLabelFrame();
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -100,7 +100,6 @@ protected:
   PRBool FindForControl(nsIFormControlFrame*& aResultFrame);
   void GetTranslatedRect(nsRect& aRect);
 
-  virtual  ~nsLabelFrame();
   PRIntn GetSkipSides() const;
   PRBool mInline;
   nsCursor mPreviousCursor;
@@ -112,20 +111,17 @@ protected:
 };
 
 nsresult
-NS_NewLabelFrame(nsIContent* aContent,
-                 nsIFrame*   aParent,
-                 nsIFrame*&  aResult)
+NS_NewLabelFrame(nsIFrame*& aResult)
 {
-  aResult = new nsLabelFrame(aContent, aParent);
+  aResult = new nsLabelFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsLabelFrame::nsLabelFrame(nsIContent* aContent,
-                                           nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsLabelFrame::nsLabelFrame()
+  : nsHTMLContainerFrame()
 {
   mInline          = PR_TRUE;
   mLastMouseState  = eMouseNone;
@@ -135,11 +131,6 @@ nsLabelFrame::nsLabelFrame(nsIContent* aContent,
   mTranslatedRect  = nsRect(0,0,0,0);
   mDidInit         = PR_FALSE;
 }
-
-nsLabelFrame::~nsLabelFrame()
-{
-}
-
 
 void
 nsLabelFrame::GetTranslatedRect(nsRect& aRect)
@@ -362,12 +353,12 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
-  NS_NewBodyFrame(mContent, this, mFirstChild, flags);
+  NS_NewBodyFrame(mFirstChild, flags);
 
-  // Resolve style and set the style context
+  // Resolve style and initialize the frame
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo, mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   // Set the geometric and content parent for each of the child frames

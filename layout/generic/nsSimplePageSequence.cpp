@@ -24,23 +24,18 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 
-nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent)
-{
-}
-
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
-  // Create a page frame and set its style context
-  mFirstChild = new nsPageFrame(mContent, this);
+  // Create a page frame and initialize it
+  mFirstChild = new nsPageFrame;
 
   // XXX This is all wrong...
   nsIStyleContext* pseudoStyleContext =
    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::columnPseudo, mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
+  mFirstChild->Init(aPresContext, mContent, this, pseudoStyleContext);
   NS_RELEASE(pseudoStyleContext);
 
   // Set the geometric and content parent for each of the child frames to be the
@@ -212,10 +207,9 @@ nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewSimplePageSequenceFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                              nsIFrame*& aResult)
+NS_NewSimplePageSequenceFrame(nsIFrame*& aResult)
 {
-  nsSimplePageSequenceFrame*  it = new nsSimplePageSequenceFrame(aContent, aParentFrame);
+  nsSimplePageSequenceFrame*  it = new nsSimplePageSequenceFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

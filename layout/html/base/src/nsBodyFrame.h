@@ -38,8 +38,7 @@ class nsBodyFrame : public nsBlockFrame,
                     public nsIAbsoluteItems
 {
 public:
-  friend nsresult NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent,
-                                  nsIFrame*& aResult, PRUint32 aFlags);
+  friend nsresult NS_NewBodyFrame(nsIFrame*& aResult, PRUint32 aFlags);
 
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -79,8 +78,7 @@ public:
 protected:
   static nsIAtom* gAbsoluteAtom;
 
-  nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
+  nsBodyFrame();
   ~nsBodyFrame();
 
   void ReflowAbsoluteItems(nsIPresContext& aPresContext,

@@ -82,18 +82,13 @@ struct RowReflowState {
 
 /* ----------- nsTableRowpFrame ---------- */
 
-nsTableRowFrame::nsTableRowFrame(nsIContent* aContent,
-                                 nsIFrame*   aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame),
+nsTableRowFrame::nsTableRowFrame()
+  : nsHTMLContainerFrame(),
     mTallestCell(0),
     mCellMaxTopMargin(0),
     mCellMaxBottomMargin(0),
     mMinRowSpan(1),
     mInitializedChildren(PR_FALSE)
-{
-}
-
-nsTableRowFrame::~nsTableRowFrame()
 {
 }
 
@@ -1453,11 +1448,9 @@ PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableRowFrame(nsIContent* aContent,
-                    nsIFrame*   aParentFrame,
-                    nsIFrame*&  aResult)
+NS_NewTableRowFrame(nsIFrame*& aResult)
 {
-  nsIFrame* it = new nsTableRowFrame(aContent, aParentFrame);
+  nsIFrame* it = new nsTableRowFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

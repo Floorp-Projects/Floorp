@@ -166,8 +166,8 @@ nsrefcnt nsFormFrame::Release(void)
   return 0;
 }
 
-nsFormFrame::nsFormFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aParentFrame)
+nsFormFrame::nsFormFrame()
+  : nsLeafFrame()
 {
   mTextSubmitter = nsnull;
 }
@@ -443,10 +443,9 @@ nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl, PRBool aChecked)
 
 
 nsresult
-NS_NewFormFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aResult)
+NS_NewFormFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new nsFormFrame(aContent, aParentFrame);
+  nsIFrame* frame = new nsFormFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -57,7 +57,7 @@ class nsLegendFrame;
 class nsFieldSetFrame : public nsHTMLContainerFrame {
 public:
 
-  nsFieldSetFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsFieldSetFrame();
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -78,8 +78,6 @@ public:
 
 protected:
 
-  virtual ~nsFieldSetFrame();
-
   void SetMaxElementSize(nsSize& maxSize, nsSize* aSize);
   virtual PRIntn GetSkipSides() const;
   //virtual void GetDesiredSize(nsIPresContext* aPresContext,
@@ -95,30 +93,23 @@ protected:
 };
 
 nsresult
-NS_NewFieldSetFrame(nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*&  aResult)
+NS_NewFieldSetFrame(nsIFrame*& aResult)
 {
-  aResult = new nsFieldSetFrame(aContent, aParent);
+  aResult = new nsFieldSetFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsFieldSetFrame::nsFieldSetFrame(nsIContent* aContent,
-                                               nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsFieldSetFrame::nsFieldSetFrame()
+  : nsHTMLContainerFrame()
 {
   mContentFrame       = nsnull;
   mLegendFrame     = nsnull;
   mTopBorderGap    = nsRect(0,0,0,0);
   mTopBorderOffset = 0;
   mInline          = PR_TRUE;
-}
-
-nsFieldSetFrame::~nsFieldSetFrame()
-{
 }
 
 NS_IMETHODIMP
@@ -132,14 +123,14 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
-  NS_NewBodyFrame(mContent, this, mFirstChild, flags);
+  NS_NewBodyFrame(mFirstChild, flags);
   mContentFrame = mFirstChild;
 
-  // Resolve style and set the style context
+  // Resolve style and initialize the frame
   nsIStyleContext* styleContext = aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                                                             nsHTMLAtoms::fieldsetContentPseudo,
                                                                             mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   nsIFrame* newChildList = aChildList;

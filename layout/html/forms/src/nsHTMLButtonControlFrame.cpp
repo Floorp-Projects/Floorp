@@ -63,7 +63,7 @@ class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
                                  public nsIFormControlFrame 
 {
 public:
-  nsHTMLButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsHTMLButtonControlFrame();
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -106,7 +106,6 @@ public:
   void GetDefaultLabel(nsString& aLabel);
 
 protected:
-  virtual  ~nsHTMLButtonControlFrame();
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
   void AddToPadding(nsIPresContext& aPresContext, nsStyleUnit aStyleUnit,
@@ -125,20 +124,17 @@ protected:
 };
 
 nsresult
-NS_NewHTMLButtonControlFrame(nsIContent* aContent,
-                         nsIFrame*   aParent,
-                         nsIFrame*&  aResult)
+NS_NewHTMLButtonControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsHTMLButtonControlFrame(aContent, aParent);
+  aResult = new nsHTMLButtonControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsIContent* aContent,
-                                           nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
+  : nsHTMLContainerFrame()
 {
   mInline = PR_TRUE;
   mLastMouseState = eMouseNone;
@@ -146,10 +142,6 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsIContent* aContent,
   mGotFocus = PR_FALSE;
   mTranslatedRect = nsRect(0,0,0,0);
   mDidInit = PR_FALSE;
-}
-
-nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
-{
 }
 
 nsrefcnt nsHTMLButtonControlFrame::AddRef(void)
@@ -512,12 +504,12 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
-  NS_NewBodyFrame(mContent, this, mFirstChild, flags);
+  NS_NewBodyFrame(mFirstChild, flags);
 
-  // Resolve style and set the style context
+  // Resolve style and initialize the frame
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo, mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   // Set the geometric and content parent for each of the child frames

@@ -25,15 +25,11 @@
 class nsAbsoluteFrame : public nsFrame {
 public:
   /**
-   * Create a placeholder for an absolutely positioned frame. Also creates
-   * the absolutely positioned frame itself
+   * Create a placeholder for an absolutely positioned frame.
    *
    * @see #GetAbsoluteFrame()
    */
-  friend nsresult NS_NewAbsoluteFrame(nsIFrame**  aInstancePtrResult,
-                                      nsIContent* aContent,
-                                      nsIFrame*   aParent,
-                                      nsIFrame*   aAbsoluteFrame = nsnull);
+  friend nsresult NS_NewAbsoluteFrame(nsIFrame**  aInstancePtrResult);
 
   // Returns the associated anchored item
   nsIFrame*   GetAbsoluteFrame() const {return mFrame;}
@@ -58,10 +54,6 @@ public:
 
 protected:
   nsIFrame* mFrame;  // the absolutely positioned frame
-
-  // Constructor. Takes as arguments the content object, the index in parent,
-  // and the Frame for the content parent
-  nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame* aAbsoluteFrame);
 
   virtual ~nsAbsoluteFrame();
 

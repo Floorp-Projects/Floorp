@@ -130,8 +130,21 @@ class nsIFrame : public nsISupports
 {
 public:
   /**
+   * Called to initialize the frame. This is the first thing that happens
+   * after creating the frame.
+   *
+   * @param   aContent the content object associated with the frame
+   * @param   aParent  the parent frame
+   * @param   aContext the style context associated with the frame
+   */
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext) = 0;
+
+  /**
    * Called to set the initial list of frames. This happens after the frame
-   * has been initialized and had its style context set.
+   * has been initialized.
    *
    * This is only called once for a given child list, and won't be called
    * at all for child lists with no initial list of frames.
@@ -144,6 +157,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
    *            initial list of frames has already been set for that child list,
    *          NS_OK otherwise
+   * @see     #Init()
    */
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
@@ -198,7 +212,7 @@ public:
   /**
    * Accessor functions for geometric and content parent.
    */
-  NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const = 0;
+                                              NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const = 0;
   NS_IMETHOD  SetContentParent(const nsIFrame* aParent) = 0;
   NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const = 0;
   NS_IMETHOD  SetGeometricParent(const nsIFrame* aParent) = 0;

@@ -38,8 +38,6 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 
 class nsCheckboxControlFrame : public nsFormControlFrame {
 public:
-  nsCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);
@@ -69,7 +67,6 @@ public:
   NS_IMETHOD GetChecked(PRBool* aResult);
 
 protected:
-  virtual ~nsCheckboxControlFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
@@ -77,24 +74,13 @@ protected:
 };
 
 nsresult
-NS_NewCheckboxControlFrame(nsIContent* aContent,
-                           nsIFrame*   aParent,
-                           nsIFrame*&  aResult)
+NS_NewCheckboxControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsCheckboxControlFrame(aContent, aParent);
+  aResult = new nsCheckboxControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-nsCheckboxControlFrame::nsCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFormControlFrame(aContent, aParentFrame)
-{
-}
-
-nsCheckboxControlFrame::~nsCheckboxControlFrame()
-{
 }
 
 const nsIID&

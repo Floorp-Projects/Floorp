@@ -25,33 +25,18 @@
 #include "nsIStyleContext.h"
 
 nsresult
-NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult,
-                       nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*   aAnchoredItem)
+NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsPlaceholderFrame(aContent, aParent, aAnchoredItem);
+  nsIFrame* it = new nsPlaceholderFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   *aInstancePtrResult = it;
   return NS_OK;
-}
-
-nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent,
-                                       nsIFrame*   aParent,
-                                       nsIFrame*   aAnchoredItem)
-  : nsFrame(aContent, aParent)
-{
-  mAnchoredItem = aAnchoredItem;
-}
-
-nsPlaceholderFrame::~nsPlaceholderFrame()
-{
 }
 
 NS_IMETHODIMP

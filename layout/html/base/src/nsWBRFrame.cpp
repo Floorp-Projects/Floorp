@@ -20,12 +20,10 @@
 #include "nsHTMLIIDs.h"
 
 nsresult
-NS_NewWBRFrame(nsIContent* aContent,
-               nsIFrame* aParentFrame,
-               nsIFrame*& aResult)
+NS_NewWBRFrame(nsIFrame*& aResult)
 {
   nsIFrame* frame = nsnull;
-  nsresult rv = NS_NewEmptyFrame(&frame, aContent, aParentFrame);
+  nsresult rv = NS_NewEmptyFrame(&frame);
   if (NS_OK != rv) {
     return rv;
   }

@@ -46,9 +46,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableOuterFrame(nsIContent* aContent,
-                        nsIFrame*   aParentFrame,
-                        nsIFrame*&  aResult);
+  NS_NewTableOuterFrame(nsIFrame*& aResult);
 
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
@@ -82,7 +80,7 @@ protected:
   /** protected constructor 
     * @see NewFrame
     */
-  nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsTableOuterFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -106,14 +104,6 @@ protected:
     * @see nsContainerFrame::VerifyTree
     */
   NS_IMETHOD VerifyTree() const;
-
-  /** overridden here to handle special caption-table relationship
-    * @see nsContainerFrame::PrepareContinuingFrame
-    */
-  void PrepareContinuingFrame(nsIPresContext&    aPresContext,
-                              nsIFrame*          aParent,
-                              nsIStyleContext* aStyleContext,
-                              nsTableOuterFrame* aContFrame);
 
   /**
    * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow

@@ -59,25 +59,13 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 nsresult
-NS_NewTextControlFrame(nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*&  aResult)
+NS_NewTextControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsTextControlFrame(aContent, aParent);
+  aResult = new nsTextControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-nsTextControlFrame::nsTextControlFrame(nsIContent* aContent,
-                                       nsIFrame* aParentFrame)
-  : nsFormControlFrame(aContent, aParentFrame)
-{
-}
-
-nsTextControlFrame::~nsTextControlFrame()
-{
 }
 
 nscoord 

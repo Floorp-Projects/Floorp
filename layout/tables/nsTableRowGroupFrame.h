@@ -48,9 +48,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableRowGroupFrame(nsIContent* aContent,
-                           nsIFrame*   aParentFrame,
-                           nsIFrame*&  aResult);
+  NS_NewTableRowGroupFrame(nsIFrame*& aResult);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -91,15 +89,6 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  /** returns the type of the mapped row group content in aType.
-    * caller MUST call release on the returned object if it is not null.
-    *
-    * @param  aType out param filled with the type of the mapped content, or null if none.
-    *
-    * @return NS_OK
-    */ 
-  NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
-
   /** set aCount to the number of child rows (not necessarily == number of child frames) */
   NS_METHOD GetRowCount(PRInt32 &aCount);
 
@@ -110,14 +99,6 @@ public:
 
 
 protected:
-
-  /** protected constructor.
-    * @see NewFrame
-    */
-  nsTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  /** protected destructor */
-  ~nsTableRowGroupFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;

@@ -93,7 +93,7 @@ struct nsFramesetDrag {
 class nsHTMLFramesetFrame : public nsHTMLContainerFrame {
 
 public:
-  nsHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsHTMLFramesetFrame();
 
   virtual ~nsHTMLFramesetFrame();
 

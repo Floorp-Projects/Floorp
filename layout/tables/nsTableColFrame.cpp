@@ -32,8 +32,8 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
+nsTableColFrame::nsTableColFrame()
+  : nsFrame()
 {
   mColIndex = 0;
   mMaxColWidth = 0;
@@ -42,11 +42,6 @@ nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   mMinEffectiveColWidth = 0;
   mMinAdjustedColWidth = 0;
   mWidthSource = eWIDTH_SOURCE_NONE;
-}
-
-
-nsTableColFrame::~nsTableColFrame()
-{
 }
 
 NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
@@ -95,11 +90,9 @@ nscoord nsTableColFrame::GetColWidthForComputation()
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableColFrame(nsIContent* aContent,
-                    nsIFrame*   aParentFrame,
-                    nsIFrame*&  aResult)
+NS_NewTableColFrame(nsIFrame*& aResult)
 {
-  nsIFrame* it = new nsTableColFrame(aContent, aParentFrame);
+  nsIFrame* it = new nsTableColFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

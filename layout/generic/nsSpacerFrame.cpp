@@ -34,8 +34,6 @@
 
 class SpacerFrame : public nsFrame {
 public:
-  SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -49,21 +47,14 @@ protected:
 };
 
 nsresult
-NS_NewSpacerFrame(nsIContent* aContent,
-                  nsIFrame* aParentFrame,
-                  nsIFrame*& aResult)
+NS_NewSpacerFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new SpacerFrame(aContent, aParentFrame);
+  nsIFrame* frame = new SpacerFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
   return NS_OK;
-}
-
-SpacerFrame::SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
-{
 }
 
 SpacerFrame::~SpacerFrame()

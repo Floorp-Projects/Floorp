@@ -212,7 +212,6 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
 #include "nsHTMLImage.h"
 class BulletFrame : public nsFrame {
 public:
-  BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   virtual ~BulletFrame();
 
   // nsIFrame
@@ -243,11 +242,6 @@ public:
   nsMargin mPadding;
   nsHTMLImageLoader mImageLoader;
 };
-
-BulletFrame::BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
-{
-}
 
 BulletFrame::~BulletFrame()
 {
@@ -1225,20 +1219,19 @@ nsIAtom* nsBlockFrame::gFloaterAtom;
 nsIAtom* nsBlockFrame::gBulletAtom;
 
 nsresult
-NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aNewFrame, PRUint32 aFlags)
+NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags)
 {
-  nsBlockFrame* it = new nsBlockFrame(aContent, aParentFrame);
+  nsBlockFrame* it = new nsBlockFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aNewFrame = it;
   it->SetFlags(aFlags);
+  aNewFrame = it;
   return NS_OK;
 }
 
-nsBlockFrame::nsBlockFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsBlockFrameSuper(aContent, aParent)
+nsBlockFrame::nsBlockFrame()
+  : nsBlockFrameSuper()
 {
   // XXX for now these are a memory leak
   if (nsnull == gFloaterAtom) {
@@ -1362,18 +1355,18 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
   if ((nsnull == mPrevInFlow) &&
       (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
       (nsnull == mBullet)) {
-    // Create bullet frame
-    mBullet = new BulletFrame(mContent, this);
-    if (nsnull == mBullet) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     // Resolve style for the bullet frame
     nsIStyleContext* kidSC;
     kidSC = aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                                       nsHTMLAtoms::bulletPseudo, 
                                                       mStyleContext);
-    mBullet->SetStyleContext(&aPresContext, kidSC);
+    // Create bullet frame
+    mBullet = new BulletFrame;
+    if (nsnull == mBullet) {
+      NS_RELEASE(kidSC);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mBullet->Init(aPresContext, mContent, this, kidSC);
     NS_RELEASE(kidSC);
 
     // If the list bullet frame should be positioned inside then add
@@ -1434,15 +1427,17 @@ nsBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 
 NS_IMETHODIMP
 nsBlockFrame::CreateContinuingFrame(nsIPresContext&  aCX,
-                                       nsIFrame*        aParent,
-                                       nsIStyleContext* aStyleContext,
-                                       nsIFrame*&       aContinuingFrame)
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aStyleContext,
+                                    nsIFrame*&       aContinuingFrame)
 {
-  nsBlockFrame* cf = new nsBlockFrame(mContent, aParent);
+  nsBlockFrame* cf = new nsBlockFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aCX, aParent, aStyleContext, cf);
+  cf->Init(aCX, mContent, aParent, aStyleContext);
+  cf->SetFlags(mFlags);
+  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("nsBlockFrame::CreateContinuingFrame: newFrame=%p", cf));

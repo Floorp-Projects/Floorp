@@ -50,9 +50,8 @@ static const PRBool gsDebugNT = PR_FALSE;
 
 /**
   */
-nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
-                                   nsIFrame*   aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsTableCellFrame::nsTableCellFrame()
+  : nsHTMLContainerFrame()
 {
   mColIndex=0;
   mPriorAvailWidth=0;
@@ -66,22 +65,18 @@ nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
   mPass1MaxElementSize.height=0;
 }
 
-nsTableCellFrame::~nsTableCellFrame()
-{
-}
-
 NS_IMETHODIMP
 nsTableCellFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
   // Create body pseudo frame
-  NS_NewBodyFrame(mContent, this, mFirstChild, NS_BODY_NO_AUTO_MARGINS);
+  NS_NewBodyFrame(mFirstChild, NS_BODY_NO_AUTO_MARGINS);
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::cellContentPseudo, mStyleContext);              // styleContext: ADDREF++
-  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
 
   // Set the geometric and content parent for each of the child frames
@@ -453,11 +448,12 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                         nsIStyleContext* aStyleContext,
                                         nsIFrame*&       aContinuingFrame)
 {
-  nsTableCellFrame* cf = new nsTableCellFrame(mContent, aParent);
+  nsTableCellFrame* cf = new nsTableCellFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;
 }
@@ -647,11 +643,9 @@ nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableCellFrame( nsIContent* aContent,
-                      nsIFrame*   aParentFrame,
-                      nsIFrame*&  aResult)
+NS_NewTableCellFrame(nsIFrame*& aResult)
 {
-  nsIFrame* it = new nsTableCellFrame(aContent, aParentFrame);
+  nsIFrame* it = new nsTableCellFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

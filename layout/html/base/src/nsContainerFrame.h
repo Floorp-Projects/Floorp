@@ -83,12 +83,6 @@ public:
                                         nsIFrame* aChild);
 
 protected:
-  // Constructor. Takes as arguments the content object, the index in parent,
-  // and the Frame for the content parent
-  nsContainerFrame(nsIContent* aContent, nsIFrame* aParent);
-
-  virtual ~nsContainerFrame();
-
   void DeleteFrameList(nsIPresContext& aPresContext,
                        nsIFrame** aListP);
 
@@ -97,18 +91,6 @@ protected:
   nsresult GetFrameForPointUsing(const nsPoint& aPoint,
                                  nsIAtom*       aList,
                                  nsIFrame**     aFrame);
-
-  /**
-   * Prepare a continuation frame of this frame for reflow. Appends
-   * it to the flow, sets its content offsets, mLastContentIsComplete,
-   * and style context.  Subclasses should invoke this method after
-   * construction of a continuing frame.
-   */
-  void PrepareContinuingFrame(nsIPresContext&   aPresContext,
-                              nsIFrame*         aParent,
-                              nsIStyleContext*  aStyleContext,
-                              nsContainerFrame* aContFrame);
-
 
   virtual void  PaintChildren(nsIPresContext&      aPresContext,
                               nsIRenderingContext& aRenderingContext,

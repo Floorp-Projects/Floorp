@@ -24,11 +24,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 
-nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent)
-{
-}
-
 NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
@@ -131,11 +126,12 @@ nsPageFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame)
 {
-  nsPageFrame* cf = new nsPageFrame(mContent, aParent);
+  nsPageFrame* cf = new nsPageFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;
 }

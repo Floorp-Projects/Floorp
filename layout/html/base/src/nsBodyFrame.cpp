@@ -40,10 +40,9 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 nsIAtom* nsBodyFrame::gAbsoluteAtom;
 
 nsresult
-NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult,
-                PRUint32 aFlags)
+NS_NewBodyFrame(nsIFrame*& aResult, PRUint32 aFlags)
 {
-  nsBodyFrame* it = new nsBodyFrame(aContent, aParent);
+  nsBodyFrame* it = new nsBodyFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -52,8 +51,8 @@ NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult,
   return NS_OK;
 }
 
-nsBodyFrame::nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsBlockFrame(aContent, aParentFrame)
+nsBodyFrame::nsBodyFrame()
+  : nsBlockFrame()
 {
   mSpaceManager = new nsSpaceManager(this);
   NS_ADDREF(mSpaceManager);
@@ -353,11 +352,13 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame)
 {
-  nsBodyFrame* cf = new nsBodyFrame(mContent, aParent);
+  nsBodyFrame* cf = new nsBodyFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->SetFlags(mFlags);
+  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;
 }

@@ -102,9 +102,7 @@ public:
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  friend nsresult NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult,
-                                   nsIContent* aContent,
-                                   nsIFrame*   aParent);
+  friend nsresult NS_NewEmptyFrame(nsIFrame** aInstancePtrResult);
 
   // Overloaded new operator. Initializes the memory to 0
   void* operator new(size_t size);
@@ -113,6 +111,10 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext);
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
@@ -307,12 +309,8 @@ protected:
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
-
-
-  // Constructor. Takes as arguments the content object, the index in parent,
-  // and the Frame for the content parent
-  nsFrame(nsIContent* aContent, nsIFrame* aParent);
-
+  // Protected constructor and destructor
+  nsFrame();
   virtual ~nsFrame();
 
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;

@@ -60,7 +60,7 @@ class nsOption;
 
 class nsSelectControlFrame : public nsFormControlFrame {
 public:
-  nsSelectControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsSelectControlFrame();
 
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("SelectControl", aResult);
@@ -98,8 +98,6 @@ protected:
   nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
   PRBool GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
 
-  virtual ~nsSelectControlFrame();
-
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
@@ -112,29 +110,21 @@ protected:
 };
 
 nsresult
-NS_NewSelectControlFrame(nsIContent* aContent,
-                         nsIFrame*   aParent,
-                         nsIFrame*&  aResult)
+NS_NewSelectControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsSelectControlFrame(aContent, aParent);
+  aResult = new nsSelectControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsSelectControlFrame::nsSelectControlFrame(nsIContent* aContent,
-                             nsIFrame* aParentFrame)
-  : nsFormControlFrame(aContent, aParentFrame)
+nsSelectControlFrame::nsSelectControlFrame()
+  : nsFormControlFrame()
 {
   mIsComboBox   = PR_FALSE;
   mOptionsAdded = PR_FALSE;
 }
-
-nsSelectControlFrame::~nsSelectControlFrame()
-{
-}
-
 
 nscoord 
 nsSelectControlFrame::GetVerticalBorderWidth(float aPixToTwip) const

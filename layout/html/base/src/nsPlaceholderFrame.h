@@ -28,18 +28,11 @@ public:
   /**
    * Create a new placeholder frame
    */
-  friend nsresult NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult,
-                                         nsIContent* aContent,
-                                         nsIFrame*   aParent,
-                                         nsIFrame*   aAnchoredItem = nsnull);
+  friend nsresult NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult);
 
   // Get/Set the associated anchored item
-  nsIFrame*   GetAnchoredItem() const {
-    return mAnchoredItem;
-  }
-  void        SetAnchoredItem(nsIFrame* aAnchoredItem) {
-    mAnchoredItem = aAnchoredItem;
-  }
+  nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
+  void        SetAnchoredItem(nsIFrame* aAnchoredItem) {mAnchoredItem = aAnchoredItem;}
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -64,13 +57,6 @@ public:
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
 
 protected:
-  // Constructor. Takes as arguments the content object and the Frame for
-  // the content parent
-  nsPlaceholderFrame(nsIContent* aContent,
-                     nsIFrame* aParent,
-                     nsIFrame* aAnchoredItem);
-  virtual ~nsPlaceholderFrame();
-
   nsIFrame* mAnchoredItem;
 };
 

@@ -50,26 +50,19 @@ static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
  
 nsresult
-NS_NewLegendFrame(nsIContent* aContent,
-                  nsIFrame*   aParent,
-                  nsIFrame*&  aResult)
+NS_NewLegendFrame(nsIFrame*& aResult)
 {
-  aResult = new nsLegendFrame(aContent, aParent);
+  aResult = new nsLegendFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsLegendFrame::nsLegendFrame(nsIContent* aContent,
-                                               nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsLegendFrame::nsLegendFrame()
+  : nsHTMLContainerFrame()
 {
   mInline = PR_FALSE;
-}
-
-nsLegendFrame::~nsLegendFrame()
-{
 }
 
 NS_IMETHODIMP
@@ -97,12 +90,12 @@ nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
-  NS_NewBodyFrame(mContent, this, mFirstChild, flags);
+  NS_NewBodyFrame(mFirstChild, flags);
 
-  // Resolve style and set the style context
+  // Resolve style and initialize the frame
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::legendContentPseudo, mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   // Set the geometric and content parent for each of the child frames

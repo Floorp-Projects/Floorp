@@ -36,15 +36,15 @@ void XXXNeverCalled()
   NS_NewHTMLDocument(&doc);
   NS_NewImageDocument(&doc);
   nsIFrame* f;
-  NS_NewTextFrame(nsnull, nsnull, f);
-  NS_NewInlineFrame(nsnull, nsnull, f);
-  NS_NewBRFrame(nsnull, nsnull, f);
-  NS_NewWBRFrame(nsnull, nsnull, f);
-  NS_NewHRFrame(nsnull, nsnull, f);
-  NS_NewObjectFrame(nsnull, nsnull, f);
-  NS_NewSpacerFrame(nsnull, nsnull, f);
-  NS_NewHTMLFramesetFrame(nsnull, nsnull, f);
-  NS_NewHTMLFrame(nsnull, nsnull, f);
-  NS_NewScrollFrame(nsnull, nsnull, f);
-  NS_NewSimplePageSequenceFrame(nsnull, nsnull, f);
+  NS_NewTextFrame(f);
+  NS_NewInlineFrame(f);
+  NS_NewBRFrame(f);
+  NS_NewWBRFrame(f);
+  NS_NewHRFrame(f);
+  NS_NewObjectFrame(f);
+  NS_NewSpacerFrame(f);
+  NS_NewHTMLFramesetFrame(f);
+  NS_NewHTMLFrame(f);
+  NS_NewScrollFrame(f);
+  NS_NewSimplePageSequenceFrame(f);
 }

@@ -119,25 +119,13 @@ nsButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
 
 nsresult
-NS_NewButtonControlFrame(nsIContent* aContent,
-                         nsIFrame*   aParent,
-                         nsIFrame*&  aResult)
+NS_NewButtonControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsButtonControlFrame(aContent, aParent);
+  aResult = new nsButtonControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-nsButtonControlFrame::nsButtonControlFrame(nsIContent* aContent,
-                                           nsIFrame* aParentFrame)
-  : nsFormControlFrame(aContent, aParentFrame)
-{
-}
-
-nsButtonControlFrame::~nsButtonControlFrame()
-{
 }
 
 nscoord 

@@ -39,7 +39,7 @@ struct nsBlockReflowState;
 class nsBlockFrame : public nsBlockFrameSuper
 {
 public:
-  nsBlockFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsBlockFrame();
   ~nsBlockFrame();
 
   // nsISupports

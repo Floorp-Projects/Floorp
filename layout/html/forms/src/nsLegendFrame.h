@@ -33,7 +33,7 @@ struct nsRect;
 class nsLegendFrame : public nsHTMLContainerFrame {
 public:
 
-  nsLegendFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsLegendFrame();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -58,7 +58,6 @@ public:
 
 protected:
 
-  virtual ~nsLegendFrame();
   PRIntn GetSkipSides() const;
   PRBool mInline;
 

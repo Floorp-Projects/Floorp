@@ -314,21 +314,14 @@ nsHTMLImageLoader::GetLoadImageFailed() const
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewImageFrame(nsIContent* aContent,
-                 nsIFrame* aParentFrame,
-                 nsIFrame*& aResult)
+NS_NewImageFrame(nsIFrame*& aResult)
 {
-  nsImageFrame* frame = new nsImageFrame(aContent, aParentFrame);
+  nsImageFrame* frame = new nsImageFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
   return NS_OK;
-}
-
-nsImageFrame::nsImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aParentFrame)
-{
 }
 
 nsImageFrame::~nsImageFrame()

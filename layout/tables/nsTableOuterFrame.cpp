@@ -96,8 +96,8 @@ struct OuterTableReflowState {
 
 /**
   */
-nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame),
+nsTableOuterFrame::nsTableOuterFrame()
+  : nsHTMLContainerFrame(),
   mInnerTableFrame(nsnull),
   mCaptionFrame(nsnull),
   mMinCaptionWidth(0),
@@ -1152,26 +1152,16 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                          nsIStyleContext* aStyleContext,
                                          nsIFrame*&       aContinuingFrame)
 {
-  nsTableOuterFrame* cf = new nsTableOuterFrame(mContent, aParent);
+  nsTableOuterFrame* cf = new nsTableOuterFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->AppendToFlow(this);
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
   return NS_OK;
-}
-
-void
-nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext&    aPresContext,
-                                          nsIFrame*          aParent,
-                                          nsIStyleContext*   aStyleContext,
-                                          nsTableOuterFrame* aContFrame)
-{
-  // Append the continuing frame to the flow
-  aContFrame->AppendToFlow(this);
-  aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
 NS_METHOD nsTableOuterFrame::VerifyTree() const
@@ -1267,11 +1257,9 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableOuterFrame( nsIContent* aContent,
-                       nsIFrame*   aParentFrame,
-                       nsIFrame*&  aResult)
+NS_NewTableOuterFrame(nsIFrame*& aResult)
 {
-  nsIFrame* it = new nsTableOuterFrame(aContent, aParentFrame);
+  nsIFrame* it = new nsTableOuterFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -103,7 +103,7 @@ public:
 class nsHTMLFrameOuterFrame : public nsHTMLContainerFrame {
 
 public:
-  nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsHTMLFrameOuterFrame();
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -139,7 +139,7 @@ class nsHTMLFrameInnerFrame : public nsLeafFrame {
 
 public:
 
-  nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsHTMLFrameInnerFrame();
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -191,8 +191,8 @@ protected:
 /*******************************************************************************
  * nsHTMLFrameOuterFrame
  ******************************************************************************/
-nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsHTMLContainerFrame(aContent, aParent)
+nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame()
+  : nsHTMLContainerFrame()
 {
   mIsInline = nsnull;
 }
@@ -314,9 +314,9 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   if (nsnull == mFirstChild) {
-    mFirstChild = new nsHTMLFrameInnerFrame(mContent, this);
+    mFirstChild = new nsHTMLFrameInnerFrame;
     // XXX temporary! use style system to get correct style!
-    mFirstChild->SetStyleContext(&aPresContext, mStyleContext);
+    mFirstChild->Init(aPresContext, mContent, this, mStyleContext);
   }
  
   // nsContainerFrame::PaintBorder has some problems, kludge it here
@@ -379,10 +379,9 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 nsresult
-NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                          nsIFrame*& aResult)
+NS_NewHTMLFrameOuterFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new nsHTMLFrameOuterFrame(aContent, aParentFrame);
+  nsIFrame* frame = new nsHTMLFrameOuterFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -393,9 +392,8 @@ NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 /*******************************************************************************
  * nsHTMLFrameInnerFrame
  ******************************************************************************/
-nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent,
-                                             nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aParentFrame)
+nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
+  : nsLeafFrame()
 {
   mWebShell = nsnull;
   mCreatingViewer = PR_FALSE;

@@ -43,24 +43,13 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 
 nsresult
-NS_NewRadioControlFrame(nsIContent* aContent,
-                        nsIFrame*   aParent,
-                        nsIFrame*&  aResult)
+NS_NewRadioControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsRadioControlFrame(aContent, aParent);
+  aResult = new nsRadioControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-nsRadioControlFrame::nsRadioControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFormControlFrame(aContent, aParentFrame)
-{
-}
-
-nsRadioControlFrame::~nsRadioControlFrame()
-{
 }
 
 const nsIID&

@@ -209,15 +209,13 @@ nsIFrame::GetLogModuleInfo()
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 nsresult
-NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult,
-                 nsIContent* aContent,
-                 nsIFrame*   aParent)
+NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsFrame(aContent, aParent);
+  nsIFrame* it = new nsFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -233,10 +231,8 @@ void* nsFrame::operator new(size_t size)
   return result;
 }
 
-nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
-  : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
+nsFrame::nsFrame()
 {
-  NS_IF_ADDREF(mContent);
   mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW;
 }
 
@@ -294,6 +290,18 @@ nsrefcnt nsFrame::Release(void)
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
+
+NS_IMETHODIMP
+nsFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext)
+{
+  mContent = aContent;
+  NS_IF_ADDREF(mContent);
+  mGeometricParent = mContentParent = aParent;
+  return SetStyleContext(&aPresContext, aContext);
+}
 
 NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                            nsIAtom*        aListName,

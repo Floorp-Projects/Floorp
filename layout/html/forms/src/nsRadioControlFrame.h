@@ -29,8 +29,6 @@ class nsIAtom;
 class nsRadioControlFrame : public nsFormControlFrame 
 {
 public:
-  nsRadioControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);
@@ -57,8 +55,6 @@ public:
   virtual const nsIID& GetIID();
 
 protected:
-
-  virtual ~nsRadioControlFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,

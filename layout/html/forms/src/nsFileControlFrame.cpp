@@ -46,27 +46,21 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 
 nsresult
-NS_NewFileControlFrame(nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*&  aResult)
+NS_NewFileControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsFileControlFrame(aContent, aParent);
+  aResult = new nsFileControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsFileControlFrame::nsFileControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsFileControlFrame::nsFileControlFrame()
+  : nsHTMLContainerFrame()
 {
   mTextFrame   = nsnull;
   mBrowseFrame = nsnull;
   mFormFrame   = nsnull;
-}
-
-nsFileControlFrame::~nsFileControlFrame()
-{
 }
 
 nsresult
@@ -211,8 +205,8 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     if (disabled) {
       text->SetAttribute("disabled", "1", PR_FALSE);
     }
-    NS_NewTextControlFrame(text, this, childFrame);
-    childFrame->SetStyleContext(&aPresContext, mStyleContext);
+    NS_NewTextControlFrame(childFrame);
+    childFrame->Init(aPresContext, text, this, mStyleContext);
     mTextFrame = (nsTextControlFrame*)childFrame;
     mFirstChild = childFrame;
 
@@ -223,10 +217,10 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     if (disabled) {
       browse->SetAttribute("disabled", "1", PR_FALSE);
     }
-    NS_NewButtonControlFrame(browse, this, childFrame);
+    NS_NewButtonControlFrame(childFrame);
     ((nsButtonControlFrame*)childFrame)->SetFileControlFrame(this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
-    childFrame->SetStyleContext(&aPresContext, mStyleContext);
+    childFrame->Init(aPresContext, browse, this, mStyleContext);
 
     mFirstChild->SetNextSibling(childFrame);
 
