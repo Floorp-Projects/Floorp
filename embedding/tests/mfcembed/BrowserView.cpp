@@ -155,6 +155,7 @@ CBrowserView::CBrowserView()
 
     m_SecurityState = SECURITY_STATE_INSECURE;
 
+  m_InPrintPreview = FALSE;
 }
 
 CBrowserView::~CBrowserView()
@@ -267,11 +268,6 @@ HRESULT CBrowserView::CreateBrowser()
 
 	// Finally, show the web browser window
 	mBaseWindow->SetVisibility(PR_TRUE);
-
-  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
-  if (print) {
-    print->GetNewPrintSettings(getter_AddRefs(m_PrintSettings));
-  }
 
 	return S_OK;
 }
@@ -983,13 +979,14 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 
 void CBrowserView::OnFilePrint()
 {
-  nsresult rv;
   nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	if(print)
 	{
     if (!m_PrintSettings) 
     {
-      print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings));
+      if (NS_FAILED(print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings)))) {
+        return;
+      }
     }
 
     m_PrintSettings->SetShowPrintProgress(PR_FALSE);
@@ -1014,7 +1011,37 @@ void CBrowserView::OnFilePrintPreview()
   nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	if(print)
 	{
-    print->PrintPreview(m_PrintSettings, nsnull);
+    if (!m_PrintSettings) 
+    {
+      if (NS_FAILED(print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings)))) {
+        return;
+      }
+    }
+    if (!m_InPrintPreview) 
+    {
+      if (NS_SUCCEEDED(print->PrintPreview(m_PrintSettings, nsnull))) 
+      {
+        m_InPrintPreview = TRUE;
+
+        CMenu* menu = mpBrowserFrame->GetMenu();
+        if (menu) 
+        {
+          menu->CheckMenuItem( ID_FILE_PRINTPREVIEW, MF_CHECKED );
+        }
+      }
+    } 
+    else 
+    {
+      if (NS_SUCCEEDED(print->ExitPrintPreview())) 
+      {
+        m_InPrintPreview = FALSE;
+        CMenu* menu = mpBrowserFrame->GetMenu();
+        if (menu) 
+        {
+          menu->CheckMenuItem( ID_FILE_PRINTPREVIEW, MF_UNCHECKED );
+        }
+      }
+    }
   }
 }
 
@@ -1038,50 +1065,60 @@ static PRUnichar* GetUnicodeFromCString(const CString& aStr)
 
 void CBrowserView::OnFilePrintSetup()
 {
-  CPrintSetupDialog  dlg(m_PrintSettings);
-  if (dlg.DoModal() == IDOK && m_PrintSettings != NULL) {
-    m_PrintSettings->SetMarginTop(GetFloatFromStr(dlg.m_TopMargin));
-    m_PrintSettings->SetMarginLeft(GetFloatFromStr(dlg.m_LeftMargin));
-    m_PrintSettings->SetMarginRight(GetFloatFromStr(dlg.m_RightMargin));
-    m_PrintSettings->SetMarginBottom(GetFloatFromStr(dlg.m_BottomMargin));
+  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	if(print)
+  {
+    if (!m_PrintSettings) 
+    {
+      if (NS_FAILED(print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings)))) {
+        return;
+      }
+    }
+    CPrintSetupDialog  dlg(m_PrintSettings);
+    if (dlg.DoModal() == IDOK && m_PrintSettings != NULL) {
+      m_PrintSettings->SetMarginTop(GetFloatFromStr(dlg.m_TopMargin));
+      m_PrintSettings->SetMarginLeft(GetFloatFromStr(dlg.m_LeftMargin));
+      m_PrintSettings->SetMarginRight(GetFloatFromStr(dlg.m_RightMargin));
+      m_PrintSettings->SetMarginBottom(GetFloatFromStr(dlg.m_BottomMargin));
 
-    m_PrintSettings->SetScaling(double(dlg.m_Scaling) / 100.0);
-    m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGColors);
-    m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGImages);
+      m_PrintSettings->SetScaling(double(dlg.m_Scaling) / 100.0);
+      m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGColors);
+      m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGImages);
 
-    short  type;
-    double width;
-    double height;
-    dlg.GetPaperSizeInfo(type, width, height);
-    m_PrintSettings->SetPaperSizeType(type);
-    m_PrintSettings->SetPaperWidth(width);
-    m_PrintSettings->SetPaperHeight(height);
+      short  type;
+      double width;
+      double height;
+      dlg.GetPaperSizeInfo(type, width, height);
+      m_PrintSettings->SetPaperSizeType(type);
+      m_PrintSettings->SetPaperWidth(width);
+      m_PrintSettings->SetPaperHeight(height);
 
-    PRUnichar* uStr;
-    uStr = GetUnicodeFromCString(dlg.m_HeaderLeft);
-    m_PrintSettings->SetHeaderStrLeft(uStr);
-    if (uStr != nsnull) nsMemory::Free(uStr);
+      PRUnichar* uStr;
+      uStr = GetUnicodeFromCString(dlg.m_HeaderLeft);
+      m_PrintSettings->SetHeaderStrLeft(uStr);
+      if (uStr != nsnull) nsMemory::Free(uStr);
 
-    uStr = GetUnicodeFromCString(dlg.m_HeaderMiddle);
-    m_PrintSettings->SetHeaderStrCenter(uStr);
-    if (uStr != nsnull) nsMemory::Free(uStr);
+      uStr = GetUnicodeFromCString(dlg.m_HeaderMiddle);
+      m_PrintSettings->SetHeaderStrCenter(uStr);
+      if (uStr != nsnull) nsMemory::Free(uStr);
 
-    uStr = GetUnicodeFromCString(dlg.m_HeaderRight);
-    m_PrintSettings->SetHeaderStrRight(uStr);
-    if (uStr != nsnull) nsMemory::Free(uStr);
+      uStr = GetUnicodeFromCString(dlg.m_HeaderRight);
+      m_PrintSettings->SetHeaderStrRight(uStr);
+      if (uStr != nsnull) nsMemory::Free(uStr);
 
-    uStr = GetUnicodeFromCString(dlg.m_FooterLeft);
-    m_PrintSettings->SetFooterStrLeft(uStr);
-    if (uStr != nsnull) nsMemory::Free(uStr);
+      uStr = GetUnicodeFromCString(dlg.m_FooterLeft);
+      m_PrintSettings->SetFooterStrLeft(uStr);
+      if (uStr != nsnull) nsMemory::Free(uStr);
 
-    uStr = GetUnicodeFromCString(dlg.m_FooterMiddle);
-    m_PrintSettings->SetFooterStrCenter(uStr);
-    if (uStr != nsnull) nsMemory::Free(uStr);
+      uStr = GetUnicodeFromCString(dlg.m_FooterMiddle);
+      m_PrintSettings->SetFooterStrCenter(uStr);
+      if (uStr != nsnull) nsMemory::Free(uStr);
 
-    uStr = GetUnicodeFromCString(dlg.m_FooterRight);
-    m_PrintSettings->SetFooterStrRight(uStr);
-    if (uStr != nsnull) nsMemory::Free(uStr);
+      uStr = GetUnicodeFromCString(dlg.m_FooterRight);
+      m_PrintSettings->SetFooterStrRight(uStr);
+      if (uStr != nsnull) nsMemory::Free(uStr);
 
+    }
   }
 }
 
@@ -1106,6 +1143,24 @@ void CBrowserView::OnUpdateFilePrint(CCmdUI* pCmdUI)
 //
 void CBrowserView::UpdateBusyState(PRBool aBusy)
 {
+  if (mbDocumentLoading && !aBusy && m_InPrintPreview)
+  {
+      nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	    if(print)
+	    {
+          PRBool isDoingPP;
+          print->GetDoingPrintPreview(&isDoingPP);
+          if (!isDoingPP) 
+          {
+              m_InPrintPreview = FALSE;
+              CMenu* menu = mpBrowserFrame->GetMenu();
+              if (menu) 
+              {
+                  menu->CheckMenuItem( ID_FILE_PRINTPREVIEW, MF_UNCHECKED );
+              }
+          }
+      }
+  }
 	mbDocumentLoading = aBusy;
 }
 
