@@ -39,7 +39,11 @@
 
 #include "nsIPref.h"
 
+#if DEBUG
+static const char CACHE_DIR_PREF[] = { "browser.newcache.directory" };
+#else
 static const char CACHE_DIR_PREF[] = { "browser.cache.directory" };
+#endif
 
 static int PR_CALLBACK cacheDirectoryChanged(const char *pref, void *closure)
 {
