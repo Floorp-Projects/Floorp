@@ -24,6 +24,7 @@
 ###################
 
 #INCLUDE
+mozilla:config:mac:export.mac						:config
 mozilla:include:export.mac							:include
 mozilla:cmd:macfe:pch:export.mac					:include
 
@@ -31,13 +32,16 @@ mozilla:cmd:macfe:pch:export.mac					:include
 mozilla:build:mac:export.mac						:mac:common
 mozilla:lib:mac:NSStdLib:include:export.mac			:mac:common
 mozilla:lib:mac:MacMemoryAllocator:include:export.mac	:mac:common
+mozilla:lib:mac:Misc:export.mac						:mac:common
 mozilla:lib:mac:MoreFiles:export.mac				:mac:common:morefiles
+mozilla:cmd:macfe:export.mac						:mac:macfe
 
 #NSPR
 mozilla:nsprpub:pr:include:export.mac				:nspr
 mozilla:nsprpub:pr:src:md:mac:export.mac			:nspr:mac
 mozilla:nsprpub:lib:ds:export.mac					:nspr
 mozilla:nsprpub:lib:libc:include:export.mac			:nspr
+mozilla:nsprpub:lib:msgc:include:export.mac			:nspr
 
 #DBM
 mozilla:dbm:include:export.mac						:dbm
@@ -77,6 +81,7 @@ mozilla:modules:xml:expat:xmlparse:export.mac		:xml
 
 #LIBFONT
 mozilla:modules:libfont:public:export.mac			:libfont
+mozilla:modules:libfont:src:export.mac				:libfont
 
 #SCHEDULER
 mozilla:modules:schedulr:public:export.mac			:schedulr
@@ -134,6 +139,10 @@ mozilla:modules:progress:public:export.mac			:progress
 
 #SOFTUPDATE
 mozilla:modules:softupdt:include:export.mac			:softupdate
+
+#NAV_JAVA
+mozilla:nav-java:stubs:macjri:export.mac			:nav-java:macjri
+mozilla:nav-java:stubs:include:export.mac			:nav-java
 
 #SUN_JAVA
 mozilla:sun-java:stubs:include:export.mac			:sun-java:include
