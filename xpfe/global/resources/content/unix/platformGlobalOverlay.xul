@@ -1,0 +1,28 @@
+<?xml version="1.0"?> 
+<!-- unix version of platformGlobalOverlay.xul -->
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/platformGlobalOverlay.dtd">
+
+
+<overlay id="platformGlobalOverlay"
+		 xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://global/content/platformGlobalOverlay.js"/>
+
+	<!-- close -->
+	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" observes="cmd_close"/>
+	<key id="key_close" command="true" key="&closeCmd.key;" observes="cmd_close"/>
+	
+	<!-- quit -->
+	<menupopup id="menu_FilePopup">
+		<menuitem value="&quitApplicationCmd.label;" key="key_quit" observes="cmd_quit"/>
+	</menupopup>
+	<key id="key_quit" command="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
+ 	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
+	
+	<!-- Edit Menu -->
+	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
+	<key id="key_redo" command="true" key="&redoCmd.key;" observes="cmd_redo"/>
+	
+</overlay>		

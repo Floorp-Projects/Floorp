@@ -1,0 +1,9 @@
+<!-- win version of platformGlobalOverlay.dtd -->
+
+<!ENTITY closeCmd.label						"Close">  
+<!ENTITY closeCmd.key						"W">  
+<!ENTITY quitApplicationCmd.label			"Exit"> 
+<!ENTITY quitApplicationCmd.key				"Q"> 
+
+<!ENTITY redoCmd.label						"Redo">  
+<!ENTITY redoCmd.key						"Y">  
