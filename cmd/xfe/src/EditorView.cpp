@@ -2570,16 +2570,16 @@ fe_editor_selection_contains_point(MWContext* context, int32 x, int32 y)
     return FALSE;
 }
 
-class PopupCommand : public XFE_EditorViewCommand
+class EditorPopupCommand : public XFE_EditorViewCommand
 {
 public:
-	PopupCommand() : XFE_EditorViewCommand(xfeCmdShowPopup) {};
+	EditorPopupCommand() : XFE_EditorViewCommand(xfeCmdShowPopup) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* info);
 };
 
 void
-PopupCommand::reallyDoCommand(XFE_View* v_view, XFE_CommandInfo* info)
+EditorPopupCommand::reallyDoCommand(XFE_View* v_view, XFE_CommandInfo* info)
 {	
 	XFE_EditorView* view = (XFE_EditorView*)v_view;
 
@@ -2772,7 +2772,7 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	registerCommand(my_commands, new EditLinkCommand);
 	registerCommand(my_commands, new BookmarkLinkCommand);
 	registerCommand(my_commands, new CopyLinkCommand);
-	registerCommand(my_commands, new PopupCommand);
+	registerCommand(my_commands, new EditorPopupCommand);
 	registerCommand(my_commands, new UndoCommand);
 	registerCommand(my_commands, new RedoCommand);
 	registerCommand(my_commands, new CutCommand);

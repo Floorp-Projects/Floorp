@@ -127,10 +127,10 @@ public:
 	};
 };
 
-class PopupCommand : public XFE_RDFViewAlwaysEnabledCommand
+class RdfPopupCommand : public XFE_RDFViewAlwaysEnabledCommand
 {
 public:
-    PopupCommand() : XFE_RDFViewAlwaysEnabledCommand(xfeCmdShowPopup) {};
+    RdfPopupCommand() : XFE_RDFViewAlwaysEnabledCommand(xfeCmdShowPopup) {};
 
     virtual XP_Bool isSlow() {
         return FALSE;
@@ -153,7 +153,7 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
   if (my_commands != 0)
       return;
     
-  registerCommand(my_commands, new PopupCommand);
+  registerCommand(my_commands, new RdfPopupCommand);
 
   Widget tree = 
       XtVaCreateManagedWidget(TREE_NAME,
