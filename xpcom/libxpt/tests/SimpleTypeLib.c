@@ -97,7 +97,7 @@ main(int argc, char **argv)
     TRY("NewInterfaceDescriptor", id);
     
     ok = XPT_FillInterfaceDirectoryEntry(header->interface_directory, &iid,
-					 "Interface", "NS", id, NULL);
+					 "Interface", "NS", id);
     TRY("FillInterfaceDirectoryEntry", ok);
 
     /* void method1(void) */

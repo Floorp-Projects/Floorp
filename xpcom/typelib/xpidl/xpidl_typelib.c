@@ -51,12 +51,10 @@ typedef struct {
     char    *name;
     char    *name_space;
     char    *iid;
-    PRUint8 flags;
 } NewInterfaceHolder;
 
 static NewInterfaceHolder*
-CreateNewInterfaceHolder(char *name, char *name_space, 
-                         char *iid, PRUint8 flags)
+CreateNewInterfaceHolder(char *name, char *name_space, char *iid)
 {
     NewInterfaceHolder *holder = calloc(1, sizeof(NewInterfaceHolder));
     if(holder) {
@@ -77,7 +75,6 @@ CreateNewInterfaceHolder(char *name, char *name_space,
             holder->full_name = holder->name;
         if(iid)
             holder->iid = strdup(iid);
-        holder->flags = flags;
     }
     return holder;
 }
@@ -115,11 +112,8 @@ add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
                 char *iid = (char *)IDL_tree_property_get(tfd->tree, "uuid");
                 char *name_space = (char *)
                             IDL_tree_property_get(tfd->tree, "namespace");
-                PRUint8 flags =
-                            IDL_tree_property_get(tfd->tree, "scriptable") ?
-                                    XPT_ID_SCRIPTABLE : 0;
                 NewInterfaceHolder *holder =
-                        CreateNewInterfaceHolder(iface, name_space, iid, flags);
+                        CreateNewInterfaceHolder(iface, name_space, iid);
                 if(!holder)
                     return FALSE;
                 g_hash_table_insert(IFACE_MAP(state),
@@ -253,8 +247,7 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
     iid = holder->iid ? holder->iid : "";
 
 #ifdef DEBUG_shaver_ifaces
-    fprintf(stderr, "filling %s with flags %d\n", holder->full_name, 
-                                                  (int)holder->flags);
+    fprintf(stderr, "filling %s\n", holder->full_name);
 #endif
 
     if (!fill_iid(&id, iid)) {
@@ -264,8 +257,7 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
 
     ide = &(HEADER(state)->interface_directory[IFACES(state)]);
     if (!XPT_FillInterfaceDirectoryEntry(ide, &id, holder->name,
-                                         holder->name_space, NULL,
-                                         (void*)holder->flags)) {
+                                         holder->name_space, NULL)) {
         IDL_tree_error(state->tree, "INTERNAL: XPT_FillIDE failed for %s\n",
                        holder->full_name);
         return FALSE;
@@ -490,6 +482,9 @@ typelib_interface(TreeState *state)
     XPTInterfaceDirectoryEntry *ide;
     XPTInterfaceDescriptor *id;
     uint16 parent_id = 0;
+    PRUint8 interface_flags =
+        IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable") ?
+            XPT_ID_SCRIPTABLE : 0;
 
     ide = FindInterfaceByName(HEADER(state)->interface_directory,
                               HEADER(state)->num_interfaces, name);
@@ -518,7 +513,7 @@ typelib_interface(TreeState *state)
         }
     }
 
-    id = XPT_NewInterfaceDescriptor(parent_id, 0, 0, (uint8) ide->user_data);
+    id = XPT_NewInterfaceDescriptor(parent_id, 0, 0, interface_flags);
     if (!id)
         return FALSE;
 
@@ -526,6 +521,7 @@ typelib_interface(TreeState *state)
 #ifdef DEBUG_shaver_ifaces
     fprintf(stderr, "DBG: starting interface %s @ %p\n", name, id);
 #endif
+
     NEXT_METH(state) = 0;
     NEXT_CONST(state) = 0;
 
