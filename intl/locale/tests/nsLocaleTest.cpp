@@ -27,6 +27,9 @@
 #ifdef XP_UNIX
 #include "nsIPosixLocale.h"
 #endif
+#ifdef XP_MAC
+#include "nsIMacLocale.h"
+#endif
 
 NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
@@ -46,9 +49,11 @@ NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 #ifdef XP_UNIX
 NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
 NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
-
 #endif
-
+#ifdef XP_MAC
+NS_DEFINE_CID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
+NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
+#endif
 
 char* localeCatagoryList[6] = { "NSILOCALE_TIME",
 								"NSILOCALE_COLLATE",
@@ -939,6 +944,61 @@ posixlocale_test_special(void)
   
 #endif
 
+#ifdef XP_MAC
+
+void
+macfactory_create_interface(void)
+{
+	nsresult			  result;
+	nsIFactory*			  factory;
+	nsIMacLocale*		  mac_locale;
+
+	result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
+									NULL,
+									kIFactoryIID,
+									(void**)&factory);
+	NS_ASSERTION(factory!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	factory->Release();
+
+	result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
+									NULL,
+									kIMacLocaleIID,
+									(void**)&mac_locale);
+	NS_ASSERTION(posix_locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	mac_locale->Release();
+}
+
+void
+maclocale_test(void)
+{
+	nsresult			    result;
+	nsIMacLocale*			mac_locale;
+	nsString*			    locale;
+	short              		script_code;
+
+  //
+  // create the locale object
+  //
+	result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
+									NULL,
+									kIMacLocaleIID,
+									(void**)&mac_locale);
+	NS_ASSERTION(posix_locale!=NULL,"nsLocaleTest: create interface failed.\n");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: create interface failed\n");
+
+  	//
+  	// release the locale interface
+  	//
+  	mac_locale->Release();
+}
+
+
+#endif
+
 int
 main(int argc, char** argv)
 {
@@ -967,8 +1027,7 @@ main(int argc, char** argv)
 	win32locale_conversion_test();
 	win32locale_reverse_conversion_test();
 	win32_test_special_locales();
-#endif
-#ifdef XP_UNIX
+#elif defined(XP_UNIX)
 
   //
   // do the younicks tests
@@ -979,6 +1038,14 @@ main(int argc, char** argv)
   posixlocale_reverse_conversion_test();
   posixlocale_test_special();
 
+#elif defined(XP_MAC)
+
+  //
+  // do the Mac specific tests
+  //
+  macfactory_create_interface();
+  maclocale_test();
+  
 #endif
 
 	//
