@@ -46,6 +46,7 @@
 #define PSUEDO_NAME_PREFIX "newsrc-"
 
 #if defined(XP_PC)
+#define NEWS_FCC_DEFAULT_TO_IMAP_SENT
 #define NEWS_FAT_FILE_NAME "fat"
 /*
  * on the PC, the fat file stores absolute paths to the newsrc files
@@ -177,8 +178,8 @@ private:
   nsresult MigrateIdentity(nsIMsgIdentity *identity);
   nsresult MigrateSmtpServer(nsISmtpServer *server);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
-  nsresult SetNewsCcAndFccValues(nsIMsgIdentity *identity);
-  nsresult SetMailCcAndFccValues(nsIMsgIdentity *identity);
+  nsresult SetMailCopiesAndFolders(nsIMsgIdentity *identity, const char *username, const char *hostname);
+  nsresult SetNewsCopiesAndFolders(nsIMsgIdentity *identity);
    
   nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
   nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort);
@@ -205,7 +206,7 @@ private:
   static char *getUniqueAccountKey(const char* prefix,
                                    nsISupportsArray *accounts);
 
-  nsresult Convert4XUri(const char *old_uri, const char *default_folder_name, char **new_uri);
+  nsresult Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, char **new_uri);
  
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
  

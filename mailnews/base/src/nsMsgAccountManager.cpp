@@ -103,8 +103,8 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
  * TODO:  these need to be put into a string bundle
  * see bug #18364
  */
-#define LOCAL_MAIL_FAKE_HOST_NAME "Local Folders"
 #define LOCAL_MAIL_FAKE_USER_NAME "nobody"
+#define LOCAL_MAIL_FAKE_HOST_NAME "Local Folders"
 #ifdef HAVE_MOVEMAIL
 #define MOVEMAIL_FAKE_HOST_NAME "movemail"
 #endif /* HAVE_MOVEMAIL */
@@ -157,7 +157,7 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 #define PREF_4X_NEWS_NOTIFY_ON "news.notify.on"
 #define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
 
-#define CONVERT_4X_URI(IDENTITY,DEFAULT_FOLDER_NAME,MACRO_GETTER,MACRO_SETTER) \
+#define CONVERT_4X_URI(IDENTITY,FOR_NEWS,USERNAME,HOSTNAME,DEFAULT_FOLDER_NAME,MACRO_GETTER,MACRO_SETTER) \
 { \
   nsXPIDLCString macro_oldStr; \
   nsresult macro_rv; \
@@ -168,7 +168,7 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
   }\
   else {	\
     char *converted_uri = nsnull; \
-    macro_rv = Convert4XUri((const char *)macro_oldStr, DEFAULT_FOLDER_NAME, &converted_uri); \
+    macro_rv = Convert4XUri((const char *)macro_oldStr, FOR_NEWS, USERNAME, HOSTNAME, DEFAULT_FOLDER_NAME, &converted_uri); \
     if (NS_FAILED(macro_rv)) { \
       IDENTITY->MACRO_SETTER("");	\
     } \
@@ -259,15 +259,23 @@ static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
   { \
     nsresult macro_rv; \
     nsCOMPtr <nsIFileSpec>macro_spec;	\
-    macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
-    if (NS_SUCCEEDED(macro_rv)) { \
-	char *macro_oldStr = nsnull; \
-	macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
-    	if (NS_SUCCEEDED(macro_rv)) { \
-		MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
+	char *macro_val = nsnull; \
+	macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_val); \
+	if (NS_SUCCEEDED(macro_rv) && macro_val && PL_strlen(macro_val)) { \
+		macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+		if (NS_SUCCEEDED(macro_rv)) { \
+			char *macro_oldStr = nsnull; \
+			macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
+    		if (NS_SUCCEEDED(macro_rv)) { \
+				MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
+			}	\
+			PR_FREEIF(macro_oldStr); \
+    	} \
+	} \
+	else { \
+		printf("the string was empty, leave it that way. stupid mac.\n"); \
+		MACRO_OBJECT->MACRO_METHOD(""); \
 	}	\
-	PR_FREEIF(macro_oldStr); \
-    } \
   }
 
 #define MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
@@ -1541,13 +1549,9 @@ nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
   MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
   MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetSignature);
   MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetAttachSignature);
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_SIGNATURE_DATE,identity,SetSignatureDate);
-  CONVERT_4X_URI(identity,DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationeryFolder)
-  CONVERT_4X_URI(identity,DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
   /* NOTE:  if you add prefs here, make sure you update CopyIdentity() */
   return NS_OK;
 }
@@ -1561,7 +1565,7 @@ nsMsgAccountManager::MigrateSmtpServer(nsISmtpServer *server)
 }
 
 nsresult
-nsMsgAccountManager::SetNewsCcAndFccValues(nsIMsgIdentity *identity)
+nsMsgAccountManager::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
 {
   nsresult rv;
   
@@ -1569,6 +1573,8 @@ nsMsgAccountManager::SetNewsCcAndFccValues(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_USE_DEFAULT_CC,identity,SetBccOthers)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_DEFAULT_CC,identity,SetBccList)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_USE_FCC,identity,SetDoFcc)
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationeryFolder)
       
   PRBool news_used_uri_for_sent_in_4x;
   rv = m_prefs->GetBoolPref(PREF_4X_NEWS_USE_IMAP_SENTMAIL, &news_used_uri_for_sent_in_4x);
@@ -1583,13 +1589,57 @@ nsMsgAccountManager::SetNewsCcAndFccValues(nsIMsgIdentity *identity)
 	    MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
 	  }
   }
-  CONVERT_4X_URI(identity,DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+
+  // todo:  cache this
+  PRInt32 oldMailType;
+  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
+  if (NS_FAILED(rv)) return rv;
+	
+  if (oldMailType == IMAP_4X_MAIL_TYPE) {
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
+  }
+  else if (oldMailType == POP_4X_MAIL_TYPE) {
+    char *pop_username = nsnull;
+    char *pop_hostname = nsnull;
+
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &pop_hostname);
+    if (NS_FAILED(rv)) return rv;
+
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
+
+    PR_FREEIF(pop_username);
+    PR_FREEIF(pop_hostname);
+  }
+#ifdef HAVE_MOVEMAIL
+  else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+    char *pop_username = nsnull;
+
+	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
+    if (NS_FAILED(rv)) return rv;
+
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
+
+	PR_FREEIF(pop_username);
+  }
+#endif /* HAVE_MOVEMAIL */
+  else {
+	return NS_ERROR_UNEXPECTED;
+  }
 
   return NS_OK;
 }
 
 nsresult
-nsMsgAccountManager::SetMailCcAndFccValues(nsIMsgIdentity *identity)
+nsMsgAccountManager::SetMailCopiesAndFolders(nsIMsgIdentity *identity, const char *username, const char *hostname)
 {
   nsresult rv;
   
@@ -1597,9 +1647,13 @@ nsMsgAccountManager::SetMailCcAndFccValues(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_USE_DEFAULT_CC,identity,SetBccOthers)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_CC,identity,SetBccList)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_USE_FCC,identity,SetDoFcc)
-    
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationeryFolder)
+
   PRBool imap_used_uri_for_sent_in_4x;
   rv = m_prefs->GetBoolPref(PREF_4X_MAIL_USE_IMAP_SENTMAIL, &imap_used_uri_for_sent_in_4x);
+
+
   if (NS_FAILED(rv)) {
 	MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
   }
@@ -1611,14 +1665,16 @@ nsMsgAccountManager::SetMailCcAndFccValues(nsIMsgIdentity *identity)
 		MIGRATE_SIMPLE_FILE_PREF_TO_CHAR_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
 	}
   }
-  CONVERT_4X_URI(identity,DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+  CONVERT_4X_URI(identity, PR_FALSE /* for news */, username, hostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+  CONVERT_4X_URI(identity, PR_FALSE /* for news */, username, hostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+  CONVERT_4X_URI(identity, PR_FALSE /* for news */, username, hostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
     
   return NS_OK;
 }
 
 // caller will free the memory
 nsresult
-nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folder_name, char **new_uri)
+nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, char **new_uri)
 {
   nsresult rv;
   *new_uri = nsnull;
@@ -1626,11 +1682,45 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
   if (!old_uri) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  // todo:  cache this
+  PRInt32 oldMailType;
+  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
+  if (NS_FAILED(rv)) return rv;
  
-  // if the old_uri is "", don't attempt any conversion
+  // if the old_uri is "", do some default conversion
   if (PL_strlen(old_uri) == 0) {
-	*new_uri = PR_smprintf("");
-        return NS_OK;
+	if (!aUsername || !aHostname) {
+		// if the old uri was "", and we don't know the username or the hostname
+		// leave it blank.  either someone will be back to fix it,
+		// SetNewsCopiesAndFolders() and SetMailCopiesAndFolders()
+		// or we are out of luck.
+		*new_uri = PR_smprintf("");
+		return NS_OK;
+	}
+
+#ifdef NEWS_FCC_DEFAULT_TO_IMAP_SENT
+	// another case of mac vs. windows in 4.x
+	// on mac, the default for news fcc, if you used imap, was "Sent on Local Mail"
+	// on windows, the default for news fcc, if you used imap, was "Sent on <imap server>"
+	for_news = PR_FALSE;
+#endif /* NEWS_FCC_DEFAULT_TO_IMAP_SENT */
+
+	if ((oldMailType == IMAP_4X_MAIL_TYPE) && !for_news) {
+		*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA,aUsername,aHostname,default_folder_name);
+	}
+	else if ((oldMailType == POP_4X_MAIL_TYPE) 
+#ifdef HAVE_MOVEMAIL
+		|| (oldMailType == MOVEMAIL_4X_MAIL_TYPE)
+#endif /* HAVE_MOVEMAIL */
+		|| (oldMailType == IMAP_4X_MAIL_TYPE)) {
+		*new_uri = PR_smprintf("%s/%s@%s/%s",MAILBOX_SCHEMA,aUsername,aHostname,default_folder_name);
+	}
+	else {
+		*new_uri = PR_smprintf("");
+		return NS_ERROR_UNEXPECTED;
+	}
+    return NS_OK;
   }
 
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1676,8 +1766,8 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
 			*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
 			return NS_OK;      
 		}
-        }
-        else {
+    }
+    else {
 		// IMAP uri's began with "IMAP:/".  we need that to be "imap:/"
 #ifdef DEBUG_ACCOUNTMANAGER
 		printf("new_uri = %s%s\n",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
@@ -1711,9 +1801,6 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
     }
   }
 
-  PRInt32 oldMailType;
-  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
-  if (NS_FAILED(rv)) return rv;
 
   if (oldMailType == POP_4X_MAIL_TYPE) {
     char *pop_username = nsnull;
@@ -1837,7 +1924,7 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool mig
     // only set the cc and fcc values if we were migrating.
     // otherwise, we won't have them.
     if (migrating) {
-	rv = SetMailCcAndFccValues(copied_identity);
+	rv = SetMailCopiesAndFolders(copied_identity, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME);
 	if (NS_FAILED(rv)) return rv;
     }
   }
@@ -1947,7 +2034,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   rv = CopyIdentity(identity,copied_identity);
   if (NS_FAILED(rv)) return rv;
 
-  rv = SetMailCcAndFccValues(copied_identity);
+  rv = SetMailCopiesAndFolders(copied_identity, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME);
   if (NS_FAILED(rv)) return rv;
     
   // hook them together
@@ -2050,7 +2137,7 @@ nsMsgAccountManager::MigrateMovemailAccount(nsIMsgIdentity *identity)
 
   // XXX: this probably won't work yet...
   // the cc and fcc values
-  rv = SetMailCcAndFccValues(copied_identity);
+  rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, MOVEMAIL_FAKE_HOST_NAME);
   if (NS_FAILED(rv)) return rv;
 
   // hook them together
@@ -2169,7 +2256,7 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   rv = CopyIdentity(identity,copied_identity);
   if (NS_FAILED(rv)) return rv;
 
-  rv = SetMailCcAndFccValues(copied_identity);
+  rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
   if (NS_FAILED(rv)) return rv;
 
   // hook them together
@@ -2408,7 +2495,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = CopyIdentity(identity,copied_identity);
   if (NS_FAILED(rv)) return rv;
   
-  rv = SetMailCcAndFccValues(copied_identity);
+  rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
   if (NS_FAILED(rv)) return rv;  
   
   // hook them together
@@ -2768,7 +2855,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	rv = CopyIdentity(identity,copied_identity);
 	if (NS_FAILED(rv)) return rv;
 
-    rv = SetNewsCcAndFccValues(copied_identity);
+    rv = SetNewsCopiesAndFolders(copied_identity);
     if (NS_FAILED(rv)) return rv;
 
     // hook them together
