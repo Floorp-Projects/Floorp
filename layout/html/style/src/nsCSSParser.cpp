@@ -2869,6 +2869,11 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty__moz_border_radius_bottomRight:
   case eCSSProperty__moz_border_radius_bottomLeft:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+  case eCSSProperty__moz_outline_radius_topLeft:
+  case eCSSProperty__moz_outline_radius_topRight:
+  case eCSSProperty__moz_outline_radius_bottomRight:
+  case eCSSProperty__moz_outline_radius_bottomLeft:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty_bottom:
   case eCSSProperty_top:
   case eCSSProperty_left:
