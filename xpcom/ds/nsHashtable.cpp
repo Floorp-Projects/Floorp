@@ -37,6 +37,7 @@
 #include "nsReadableUtils.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "plarena.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // These functions really should be part of nspr, and have internal knowledge
@@ -164,6 +165,10 @@ static void PR_CALLBACK _hashFreeTable(void *pool, void *item) {
 }
 
 static PLHashEntry * PR_CALLBACK _hashAllocEntry(void *pool, const void *key) {
+    if (pool) {
+        return (PLHashEntry*)((nsFixedSizeAllocator*)pool)->Alloc(sizeof(PLHashEntry));
+    }
+    
     return PR_NEW(PLHashEntry);
 }
 
@@ -172,7 +177,11 @@ static void PR_CALLBACK _hashFreeEntry(void *pool, PLHashEntry *entry,
 {
     if (flag == HT_FREE_ENTRY) {
         delete (nsHashKey *) (entry->key);
-        PR_DELETE(entry);
+        if (pool) {
+            ((nsFixedSizeAllocator*)pool)->Free((void*)entry, sizeof(PLHashEntry));
+        }
+        else
+            PR_DELETE(entry);
     }
 }
 
@@ -220,13 +229,22 @@ nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
   : mLock(NULL), mEnumerating(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsHashtable);
+    
+    static const size_t kBucketSizes[] =
+        { sizeof(PLHashEntry) };
+    static const PRInt32 kNumBucketSizes =
+        sizeof(kBucketSizes) / sizeof(size_t);
+    
+    mPool.Init("hashFoo", kBucketSizes, kNumBucketSizes,
+               sizeof(PLHashEntry)*aInitSize);
+    
     PRStatus status = PL_HashTableInit(&mHashtable,
                                        aInitSize,
                                        _hashValue,
                                        _hashKeyCompare,
                                        _hashValueCompare,
                                        &_hashAllocOps,
-                                       NULL);
+                                       (void*)&mPool);
     PR_ASSERT(status == PR_SUCCESS);
     if (threadSafe) {
         mLock = PR_NewLock();
