@@ -649,7 +649,6 @@
     
     (%subsection "Unary Operators")
     (production :unary-expression (:postfix-expression) unary-expression-postfix)
-    (production :unary-expression (const :postfix-expression-or-super) unary-expression-const)
     (production :unary-expression (delete :postfix-expression-or-super) unary-expression-delete)
     (production :unary-expression (void :unary-expression) unary-expression-void)
     (production :unary-expression (typeof :unary-expression) unary-expression-typeof)
@@ -1166,9 +1165,9 @@
       (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
-      (production (:statement :omega) (:block-statement) statement-block-statement
-        (verify (verify :block-statement))
-        (eval (eval :block-statement)))
+      (production (:statement :omega) (:annotated-block) statement-annotated-block
+        (verify (verify :annotated-block))
+        (eval (eval :annotated-block)))
       (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement
         (verify (verify :labeled-statement))
         (eval (eval :labeled-statement)))
@@ -1205,6 +1204,14 @@
       (production (:statement :omega) (:try-statement) statement-try-statement
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo))))
+    
+    (rule (:substatement :omega) ((verify (-> (static-env) void)) (eval (-> (dynamic-env object) object)))
+      (production (:substatement :omega) ((:statement :omega)) substatement-statement
+        (verify (verify :statement))
+        (eval (eval :statement)))
+      (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
+        ((verify (s :unused)) (todo))
+        ((eval (e :unused) (d :unused)) (todo))))
     (%print-actions)
     
     (production (:semicolon :omega) (\;) semicolon-semicolon)
@@ -1219,7 +1226,7 @@
     
     (%subsection "Expression Statement")
     (rule :expression-statement ((verify (-> (static-env) void)) (eval (-> (dynamic-env) object)))
-      (production :expression-statement ((:- function { const) (:list-expression allow-in)) expression-statement-list-expression
+      (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression
         (verify (verify :list-expression))
         ((eval e) (return (read-reference ((eval :list-expression) e))))))
     (%print-actions)
@@ -1231,10 +1238,10 @@
     
     
     (%subsection "Block Statement")
-    (rule :block-statement ((verify (-> (static-env) void)) (eval (-> (dynamic-env object) object)))
-      (production :block-statement (:block) block-statement-block
-        (verify (verify :block))
-        (eval (eval :block))))
+    (rule :annotated-block ((verify (-> (static-env) void)) (eval (-> (dynamic-env object) object)))
+      (production :annotated-block (:attributes :block) annotated-block-attributes-and-block
+        (verify (verify :block)) ;******
+        (eval (eval :block)))) ;******
     
     (rule :block ((verify (-> (static-env) void)) (eval (-> (dynamic-env object) object)))
       (production :block ({ :directives }) block-directives
@@ -1346,10 +1353,10 @@
     (production (:for-statement :omega) (for \( :for-in-binding in (:list-expression allow-in) \) (:substatement :omega)) for-statement-in)
     
     (production :for-initializer () for-initializer-empty)
-    (production :for-initializer ((:- const) (:list-expression no-in)) for-initializer-expression)
+    (production :for-initializer ((:list-expression no-in)) for-initializer-expression)
     (production :for-initializer (:attributes :variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
     
-    (production :for-in-binding ((:- const) :postfix-expression) for-in-binding-expression)
+    (production :for-in-binding (:postfix-expression) for-in-binding-expression)
     (production :for-in-binding (:attributes :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
     (%print-actions)
     
@@ -1400,16 +1407,16 @@
     
     
     (%subsection "Try Statement")
-    (production :try-statement (try :block-statement :catch-clauses) try-statement-catch-clauses)
-    (production :try-statement (try :block-statement :finally-clause) try-statement-finally-clause)
-    (production :try-statement (try :block-statement :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
+    (production :try-statement (try :block :catch-clauses) try-statement-catch-clauses)
+    (production :try-statement (try :block :finally-clause) try-statement-finally-clause)
+    (production :try-statement (try :block :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
     
     (production :catch-clauses (:catch-clause) catch-clauses-one)
     (production :catch-clauses (:catch-clauses :catch-clause) catch-clauses-more)
     
     (production :catch-clause (catch \( :parameter \) :block) catch-clause-block)
     
-    (production :finally-clause (finally :block-statement) finally-clause-block-statement)
+    (production :finally-clause (finally :block) finally-clause-block)
     (%print-actions)
     
     
@@ -1418,113 +1425,37 @@
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
         (verify (verify :statement))
         (eval (eval :statement)))
-      (production (:directive :omega_2) ((:annotated-definition :omega_2)) directive-annotated-definition
+      (production (:directive :omega_2) ((:annotatable-directive :omega_2)) directive-annotatable-directive
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
-      (production (:directive :omega_2) (:annotated-block) directive-annotated-block
+      (production (:directive :omega_2) (:attribute :no-line-break :attributes (:annotatable-directive :omega_2)) directive-attributes-and-directive
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
-      (production (:directive :omega_2) (:use-directive (:semicolon :omega_2)) directive-use-directive
+      (production (:directive :omega_2) (:package-definition) directive-package-definition
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
-      (? js2
+    (? js2
         (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
           ((verify (s :unused)) (todo))
           ((eval (e :unused) (d :unused)) (todo))))
       (production (:directive :omega_2) (:pragma (:semicolon :omega_2)) directive-pragma
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo))))
+    (%print-actions)
     
-    (rule (:substatement :omega) ((verify (-> (static-env) void)) (eval (-> (dynamic-env object) object)))
-      (production (:substatement :omega) ((:statement :omega)) substatement-statement
-        (verify (verify :statement))
-        (eval (eval :statement)))
-      (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused) (d :unused)) (todo)))
-      (production (:substatement :omega) (:simple-annotated-block) substatement-simple-annotated-block
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused) (d :unused)) (todo))))
+    (production (:annotatable-directive :omega_2) (:export-definition (:semicolon :omega_2)) annotatable-directive-export-definition)
+    (production (:annotatable-directive :omega_2) (:variable-definition (:semicolon :omega_2)) annotatable-directive-variable-definition)
+    (production (:annotatable-directive :omega_2) ((:function-definition :omega_2)) annotatable-directive-function-definition)
+    (production (:annotatable-directive :omega_2) ((:class-definition :omega_2)) annotatable-directive-class-definition)
+    (production (:annotatable-directive :omega_2) (:namespace-definition (:semicolon :omega_2)) annotatable-directive-namespace-definition)
+    (? js2
+      (production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition))
+    (production (:annotatable-directive :omega_2) (:use-directive (:semicolon :omega_2)) annotatable-directive-use-directive)
+    (production (:annotatable-directive :omega_2) (:import-directive (:semicolon :omega_2)) annotatable-directive-import-directive)
     (%print-actions)
     
     
-    (%subsection "Annotated Blocks")
-    (production :annotated-block (:nonempty-attributes :block) annotated-block-nonempty-attributes-and-block)
-    
-    (production :nonempty-attributes (:attribute :no-line-break :attributes) nonempty-attributes-more)
-    
-    (production :simple-annotated-block (:nonempty-attributes { :substatements }) simple-annotated-block-nonempty-attributes-and-simple-block)
-    
-    (production :substatements () substatements-none)
-    (production :substatements (:substatements-prefix (:substatement abbrev)) substatements-more)
-    
-    (production :substatements-prefix () substatements-prefix-none)
-    (production :substatements-prefix (:substatements-prefix (:substatement full)) substatements-prefix-more)
-    
-    
-    (%subsection "Use Directive")
-    (production :use-directive (use namespace :parenthesized-expressions :use-includes-excludes) use-directive-normal)
-    
-    (production :use-includes-excludes () use-includes-excludes-none)
-    (production :use-includes-excludes (\, exclude \( :use-name-patterns \)) use-includes-excludes-exclude-list)
-    (production :use-includes-excludes (\, include \( :use-name-patterns \)) use-includes-excludes-include-list)
-    
-    (production :use-name-patterns () use-name-patterns-empty)
-    (production :use-name-patterns (:use-name-pattern-list) use-name-patterns-use-name-pattern-list)
-    (production :use-name-patterns (*) use-name-patterns-wildcard)
-    
-    (production :use-name-pattern-list (:identifier) use-name-pattern-list-one)
-    (production :use-name-pattern-list (:use-name-pattern-list \, :identifier) use-name-pattern-list-more)
-    
-    #|
-    (production :use-name-patterns (:use-name-pattern) use-name-patterns-one)
-    (production :use-name-patterns (:use-name-patterns \, :use-name-pattern) use-name-patterns-more)
-    
-    (production :use-name-pattern (:qualified-wildcard-pattern) use-name-pattern-qualified-wildcard-pattern)
-    (production :use-name-pattern (:full-postfix-expression \. :qualified-wildcard-pattern) use-name-pattern-dot-qualified-wildcard-pattern)
-    (production :use-name-pattern (:attribute-expression \. :qualified-wildcard-pattern) use-name-pattern-dot-qualified-wildcard-pattern2)
-    
-    (production :qualified-wildcard-pattern (:qualified-identifier) qualified-wildcard-pattern-qualified-identifier)
-    (production :qualified-wildcard-pattern (:wildcard-pattern) qualified-wildcard-pattern-wildcard-pattern)
-    (production :qualified-wildcard-pattern (:qualifier \:\: :wildcard-pattern) qualified-wildcard-pattern-qualifier)
-    (production :qualified-wildcard-pattern (:parenthesized-expression \:\: :wildcard-pattern) qualified-wildcard-pattern-expression-qualifier)
-    
-    (production :wildcard-pattern (*) wildcard-pattern-all)
-    (production :wildcard-pattern ($regular-expression) wildcard-pattern-regular-expression)
-    |#
-    
-    
-    (? js2
-      (%subsection "Include Directive")
-      (production :include-directive (include :no-line-break $string) include-directive-include))
-    
-    
-    (%section "Pragma")
-    (production :pragma (use :pragma-items) pragma-pragma-items)
-    
-    (production :pragma-items (:pragma-item) pragma-items-one)
-    (production :pragma-items (:pragma-items \, :pragma-item) pragma-items-more)
-    
-    (production :pragma-item (:pragma-expr) pragma-item-pragma-expr)
-    (production :pragma-item (:pragma-expr \?) pragma-item-optional-pragma-expr)
-    
-    (production :pragma-expr (:identifier) pragma-expr-identifier)
-    (production :pragma-expr (:identifier :parenthesized-expressions) pragma-expr-identifier-and-arguments)
-    
-    
-    (%section "Definitions")
-    (production (:annotated-definition :omega_2) (:attributes (:definition :omega_2)) annotated-definition-attributes-and-definition)
-    (production (:annotated-definition :omega_2) (:package-definition) annotated-definition-package-definition)
-    
-    (production (:definition :omega_2) (:import-definition (:semicolon :omega_2)) definition-import-definition)
-    (production (:definition :omega_2) (:export-definition (:semicolon :omega_2)) definition-export-definition)
-    (production (:definition :omega_2) (:variable-definition (:semicolon :omega_2)) definition-variable-definition)
-    (production (:definition :omega_2) ((:function-definition :omega_2)) definition-function-definition)
-    (production (:definition :omega_2) ((:class-definition :omega_2)) definition-class-definition)
-    (production (:definition :omega_2) (:namespace-definition (:semicolon :omega_2)) definition-namespace-definition)
-    (? js2
-      (production (:definition :omega_2) ((:interface-definition :omega_2)) definition-interface-definition))
-    
+    (%subsection "Attributes")
     (production :attributes () attributes-none)
     (production :attributes (:attribute :no-line-break :attributes) attributes-more)
     
@@ -1536,21 +1467,72 @@
     (production :attribute (static) attribute-static)
     (production :attribute (true) attribute-true)
     (production :attribute (false) attribute-false)
+    (%print-actions)
     
     
-    (%subsection "Import Definition")
-    (production :import-definition (import :import-binding :import-uses :use-includes-excludes) import-definition-import)
+
+    (%subsection "Use Directive")
+    (production :use-directive (use namespace :parenthesized-list-expression :includes-excludes) use-directive-normal)
     
-    (production :import-binding (:import-item) import-binding-import-item)
-    (production :import-binding (:identifier = :import-item) import-binding-named-import-item)
+    (production :includes-excludes () includes-excludes-none)
+    (production :includes-excludes (\, exclude \( :name-patterns \)) includes-excludes-exclude-list)
+    (production :includes-excludes (\, include \( :name-patterns \)) includes-excludes-include-list)
     
-    (production :import-item ($string) import-item-string)
-    (production :import-item (:package-name) import-item-package-name)
+    (production :name-patterns () name-patterns-empty)
+    (production :name-patterns (:name-pattern-list) name-patterns-name-pattern-list)
     
-    (production :import-uses () import-uses-none)
-    (production :import-uses (:parenthesized-expressions) import-uses-parenthesized-expressions)
+    (production :name-pattern-list (:identifier) name-pattern-list-one)
+    (production :name-pattern-list (:name-pattern-list \, :identifier) name-pattern-list-more)
+    
+    #|
+    (production :name-patterns (:name-pattern) name-patterns-one)
+    (production :name-patterns (:name-patterns \, :name-pattern) name-patterns-more)
+    
+    (production :name-pattern (:qualified-wildcard-pattern) name-pattern-qualified-wildcard-pattern)
+    (production :name-pattern (:full-postfix-expression \. :qualified-wildcard-pattern) name-pattern-dot-qualified-wildcard-pattern)
+    (production :name-pattern (:attribute-expression \. :qualified-wildcard-pattern) name-pattern-dot-qualified-wildcard-pattern2)
+    
+    (production :qualified-wildcard-pattern (:qualified-identifier) qualified-wildcard-pattern-qualified-identifier)
+    (production :qualified-wildcard-pattern (:wildcard-pattern) qualified-wildcard-pattern-wildcard-pattern)
+    (production :qualified-wildcard-pattern (:qualifier \:\: :wildcard-pattern) qualified-wildcard-pattern-qualifier)
+    (production :qualified-wildcard-pattern (:parenthesized-expression \:\: :wildcard-pattern) qualified-wildcard-pattern-expression-qualifier)
+    
+    (production :wildcard-pattern (*) wildcard-pattern-all)
+    (production :wildcard-pattern ($regular-expression) wildcard-pattern-regular-expression)
+    |#
     
     
+    (%subsection "Import Directive")
+    (production :import-directive (import :import-binding :includes-excludes) import-directive-import)
+    (production :import-directive (import :import-binding \, namespace :parenthesized-list-expression :includes-excludes)
+                import-directive-import-namespaces)
+    
+    (production :import-binding (:import-source) import-binding-import-source)
+    (production :import-binding (:identifier = :import-source) import-binding-named-import-source)
+    
+    (production :import-source ($string) import-source-string)
+    (production :import-source (:package-name) import-source-package-name)
+    
+    
+    (? js2
+      (%subsection "Include Directive")
+      (production :include-directive (include :no-line-break $string) include-directive-include))
+    
+    
+    (%subsection "Pragma")
+    (production :pragma (use :pragma-items) pragma-pragma-items)
+    
+    (production :pragma-items (:pragma-item) pragma-items-one)
+    (production :pragma-items (:pragma-items \, :pragma-item) pragma-items-more)
+    
+    (production :pragma-item (:pragma-expr) pragma-item-pragma-expr)
+    (production :pragma-item (:pragma-expr \?) pragma-item-optional-pragma-expr)
+    
+    (production :pragma-expr (:identifier) pragma-expr-identifier)
+    (production :pragma-expr (:identifier :parenthesized-list-expression) pragma-expr-identifier-and-arguments)
+    
+    
+    (%section "Definitions")
     (%subsection "Export Definition")
     (production :export-definition (export :export-binding-list) export-definition-definition)
     
@@ -1570,8 +1552,8 @@
     (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one)
     (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more)
     
-    (production (:variable-binding :beta) ((:typed-variable :beta)) variable-binding-simple)
-    (production (:variable-binding :beta) ((:typed-variable :beta) = (:variable-initializer :beta)) variable-binding-initialized)
+    (production (:variable-binding :beta) ((:typed-identifier :beta)) variable-binding-simple)
+    (production (:variable-binding :beta) ((:typed-identifier :beta) = (:variable-initializer :beta)) variable-binding-initialized)
     
     (production (:variable-initializer :beta) ((:assignment-expression :beta)) variable-initializer-assignment-expression)
     (production (:variable-initializer :beta) (:multiple-attributes) variable-initializer-multiple-attributes)
@@ -1583,9 +1565,9 @@
     (production :multiple-attributes (:attribute :no-line-break :attribute) multiple-attributes-two)
     (production :multiple-attributes (:multiple-attributes :no-line-break :attribute) multiple-attributes-more)
     
-    (production (:typed-variable :beta) (:identifier) typed-variable-identifier)
-    (production (:typed-variable :beta) (:identifier \: (:type-expression :beta)) typed-variable-identifier-and-type)
-    ;(production (:typed-variable :beta) ((:type-expression :beta) :identifier) typed-variable-type-and-identifier)
+    (production (:typed-identifier :beta) (:identifier) typed-identifier-identifier)
+    (production (:typed-identifier :beta) (:identifier \: (:type-expression :beta)) typed-identifier-identifier-and-type)
+    ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
     
     
     (production :simple-variable-definition (var :untyped-variable-binding-list) simple-variable-definition-definition)
@@ -1626,9 +1608,7 @@
     (production :rest-parameter (\.\.\.) rest-parameter-none)
     (production :rest-parameter (\.\.\. :parameter) rest-parameter-parameter)
     
-    (production :parameter (:parameter-attributes :identifier) parameter-identifier)
-    (production :parameter (:parameter-attributes :identifier \: (:type-expression allow-in)) parameter-identifier-and-type)
-    ;(production :parameter (:parameter-attributes (:- const) (:type-expression allow-in) :identifier) parameter-type-and-identifier)
+    (production :parameter (:parameter-attributes (:typed-identifier allow-in)) parameter-typed-identifier)
     
     (production :parameter-attributes () parameter-attributes-none)
     (production :parameter-attributes (const) parameter-attributes-const)
@@ -1665,7 +1645,7 @@
     (production :namespace-definition (namespace :identifier) namespace-definition-normal)
     
     
-    (%section "Package Definition")
+    (%subsection "Package Definition")
     (production :package-definition (package :block) package-definition-anonymous)
     (production :package-definition (package :package-name :block) package-definition-named)
     
