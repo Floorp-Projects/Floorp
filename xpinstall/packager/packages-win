@@ -200,6 +200,7 @@ bin\chrome\search\*
 bin\defaults\pref\all.js
 bin\defaults\pref\config.js
 bin\defaults\pref\initpref.js
+bin\defaults\pref\psm-glue.js
 bin\defaults\pref\winpref.js
 bin\defaults\pref\xpinstall.js
 bin\defaults\profile\*

@@ -220,6 +220,7 @@ bin/defaults/pref/config.js
 bin/defaults/pref/initpref.js
 bin/defaults/pref/unix.js
 bin/defaults/pref/xpinstall.js
+bin/defaults/pref/psm-glue.js
 bin/defaults/profile/*
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
