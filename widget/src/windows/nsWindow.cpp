@@ -5900,17 +5900,26 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
   size_t  length;
   int err = 0;
 
-  if (aByte1) {
-    charToConvert[0] = aByte1;
-    charToConvert[1] = aByte2;
-    length=2;
-  }
-  else  {
-    charToConvert[0] = aByte2;
-    length=1;
-  }
-  err = ::MultiByteToWideChar(gCurrentKeyboardCP, MB_PRECOMPOSED, charToConvert, length,
-	  &uniChar, 1);
+#ifdef MOZ_UNICODE
+  if (nsToolkit::mUseImeApiW) { 
+    uniChar = MAKEWORD(aByte2, aByte1); 
+  } 
+  else  { 
+#endif /* MOZ_UNICODE */
+    if (aByte1) {
+      charToConvert[0] = aByte1;
+      charToConvert[1] = aByte2;
+      length=2;
+    }
+    else  {
+      charToConvert[0] = aByte2;
+      length=1;
+    }
+    err = ::MultiByteToWideChar(gCurrentKeyboardCP, MB_PRECOMPOSED, charToConvert, length,
+      &uniChar, 1);
+#ifdef MOZ_UNICODE
+  } 
+#endif /* MOZ_UNICODE */
 
 #ifdef DEBUG_IME
   if (!err) {
