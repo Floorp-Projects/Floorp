@@ -793,7 +793,10 @@ public:
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult ParseDeclaration(const nsString& aDecl);
+  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult ParseDeclaration(const nsString& aDecl,
+                                    PRBool aParseOnlyOneDecl,
+                                    PRBool aClearOldDecl);
   virtual nsresult GetParent(nsISupports **aParent);
 
 protected:
@@ -865,8 +868,20 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsICSSDeclaration **aDecl,
   return NS_OK;
 }
 
+nsresult
+DOMCSSDeclarationImpl::SetCSSDeclaration(nsICSSDeclaration *aDecl)
+{
+  if (nsnull != mRule) {
+    mRule->SetDeclaration(aDecl);
+  }
+
+  return NS_OK;
+}
+
 nsresult 
-DOMCSSDeclarationImpl::ParseDeclaration(const nsString& aDecl)
+DOMCSSDeclarationImpl::ParseDeclaration(const nsString& aDecl,
+                                        PRBool aParseOnlyOneDecl,
+                                        PRBool aClearOldDecl)
 {
   nsICSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
@@ -904,9 +919,35 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsString& aDecl)
     }
 
     if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsICSSDeclaration> declClone;
+      decl->Clone(*getter_AddRefs(declClone));
+      NS_ENSURE_TRUE(declClone, NS_ERROR_OUT_OF_MEMORY);
+
+      if (aClearOldDecl) {
+        // This should be done with decl->Clear() once such a method exists.
+        nsAutoString propName;
+        PRUint32 count, i;
+
+        decl->Count(&count);
+
+        for (i = 0; i < count; i++) {
+          decl->GetNthProperty(0, propName);
+
+          nsCSSProperty prop = nsCSSProps::LookupProperty(propName);
+          nsCSSValue val;
+ 
+          decl->RemoveProperty(prop, val);
+        }
+      }
+
       PRInt32 hint;
-      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl, &hint);
-      if (NS_SUCCEEDED(result)) {
+      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
+                                                    aParseOnlyOneDecl, &hint);
+
+      if (result == NS_CSS_PARSER_DROP_DECLARATION) {
+        SetCSSDeclaration(declClone);
+        result = NS_OK;
+      } else if (NS_SUCCEEDED(result)) {
         if (cssSheet) {
           cssSheet->SetModified(PR_TRUE);
         }

@@ -72,6 +72,7 @@ public:
   NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
                                        nsIURI*            aBaseURL,
                                        nsICSSDeclaration* aDeclaration,
+                                       PRBool             aParseOnlyOneDecl,
                                        PRInt32*           aHint) = 0;
 
   // Charset management method:
@@ -91,6 +92,10 @@ public:
 #define NS_CSS_GETINFO_CSSP         ((PRUint32) 0x00000002L)
 #define NS_CSS_GETINFO_CSS2         ((PRUint32) 0x00000004L)
 #define NS_CSS_GETINFO_CSS_FROSTING ((PRUint32) 0x00000008L)
+
+// Success code that can be returned from ParseAndAppendDeclaration()
+#define NS_CSS_PARSER_DROP_DECLARATION \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,1)
 
 extern NS_HTML nsresult
   NS_NewCSSParser(nsICSSParser** aInstancePtrResult);
