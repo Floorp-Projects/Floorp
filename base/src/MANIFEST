@@ -20,3 +20,5 @@ nsUnitConversion.h
 nsIBaseStream.h
 nsIInputStream.h
 nsIOutputStream.h
+nsInt64.h
+nsTime.h
