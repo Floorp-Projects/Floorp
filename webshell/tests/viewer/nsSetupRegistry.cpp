@@ -215,6 +215,7 @@ static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
 static NS_DEFINE_IID(kContentIteratorCID,       NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID,       NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
+static NS_DEFINE_CID(kCEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
 #if defined(XP_PC) && defined(XP_MAC)
@@ -289,6 +290,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kNameSpaceManagerCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCEventListenerManagerCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
 #if defined(XP_MAC) // XXX somebody please make dynamic registration work on Mac
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
