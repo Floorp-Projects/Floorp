@@ -27,6 +27,7 @@
 #include "nsIEventQueue.h"
 #include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
+#include "nsCOMPtr.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
@@ -76,6 +77,8 @@ public:
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
+    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
 
     // nsIHTTPChannel methods:
     NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
@@ -106,6 +109,7 @@ protected:
     PRUint32                    mLoadAttributes;
 
     nsCOMPtr<nsISupports>       mResponseContext;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
 };
 
 #endif /* _nsHTTPChannel_h_ */

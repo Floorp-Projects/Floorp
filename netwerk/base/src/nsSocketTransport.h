@@ -128,6 +128,8 @@ public:
   NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
   NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
   NS_IMETHOD GetContentType(char * *aContentType);
+  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
+  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
 
   // nsIBufferObserver methods:
   NS_IMETHOD OnFull (nsIBuffer* aBuffer);

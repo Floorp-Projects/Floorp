@@ -98,6 +98,9 @@ public:
     /* readonly attribute string ContentType; */
     NS_IMETHOD GetContentType(char * *aContentType);
 
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
+    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
+
     ////////////////////////////////////////////////////////////////////////////
     // from nsIFileChannel:
 
@@ -216,6 +219,7 @@ protected:
 
     PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
 
 #ifdef STREAM_CONVERTER_HACK
 	nsCOMPtr<nsIStreamConverter2> mStreamConverter;

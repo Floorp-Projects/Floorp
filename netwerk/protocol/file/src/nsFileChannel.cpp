@@ -645,6 +645,21 @@ nsFileChannel::GetContentType(char * *aContentType)
     }
 }
 
+NS_IMETHODIMP
+nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    *aLoadGroup = mLoadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;    // releases and addrefs
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable methods:
 ////////////////////////////////////////////////////////////////////////////////

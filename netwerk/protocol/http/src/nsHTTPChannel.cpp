@@ -282,6 +282,21 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     return rv;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    *aLoadGroup = mLoadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;    // releases and addrefs
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIHTTPChannel methods:
 

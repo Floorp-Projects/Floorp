@@ -23,6 +23,7 @@
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 
 class nsInputStreamChannel : public nsIChannel
 {
@@ -48,6 +49,8 @@ public:
     NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
+    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
 
     // nsInputStreamChannel methods:
     nsInputStreamChannel(); 
@@ -59,9 +62,10 @@ public:
     nsresult Init(nsIURI* uri, const char* contentType, nsIInputStream* in);
 
 protected:
-    nsIURI*             mURI;
-    char*               mContentType;
-    nsIInputStream*     mInputStream;
+    nsCOMPtr<nsIURI>            mURI;
+    char*                       mContentType;
+    nsCOMPtr<nsIInputStream>    mInputStream;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
 };
 
 #define NS_INPUTSTREAMCHANNEL_CID                    \

@@ -744,8 +744,18 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
         nsIChannel* channel;
         rv = serv->NewChannelFromURI("load", newURL, nsnull, &channel);
         if (NS_SUCCEEDED(rv)) {
-          rv = channel->AsyncRead(0, -1, m_ResponseContext, m_pConsumer);
-          NS_RELEASE(channel);
+            nsCOMPtr<nsILoadGroup> group;
+            rv = m_pConnection->GetLoadGroup(getter_AddRefs(group));
+            if (NS_SUCCEEDED(rv)) {
+                // Add the new channel first. That way we don't run the risk
+                // of emptying the group and firing off the OnEndDocumentLoad
+                // notification.
+                (void)group->AddChannel(channel, m_ResponseContext);
+                (void)group->RemoveChannel(m_pConnection, m_ResponseContext,
+                                           aStatusCode, nsnull);        // XXX error message
+            }
+            rv = channel->AsyncRead(0, -1, m_ResponseContext, m_pConsumer);
+            NS_RELEASE(channel);
         }
 #endif
         if (NS_SUCCEEDED(rv)) {

@@ -218,6 +218,21 @@ nsFTPChannel::GetContentType(char* *contentType) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    *aLoadGroup = mLoadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;    // releases and addrefs
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIFTPChannel methods:
 

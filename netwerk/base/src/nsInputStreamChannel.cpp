@@ -19,21 +19,19 @@
 #include "nsInputStreamChannel.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
-#include "nsCOMPtr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mURI(nsnull), mContentType(nsnull), mInputStream(nsnull)
+    : mContentType(nsnull)
 {
     NS_INIT_REFCNT(); 
 }
 
-nsInputStreamChannel::~nsInputStreamChannel() {
-    NS_IF_RELEASE(mURI);
+nsInputStreamChannel::~nsInputStreamChannel()
+{
     if (mContentType) nsCRT::free(mContentType);
-    NS_IF_RELEASE(mInputStream);
 }
 
 NS_METHOD
@@ -53,13 +51,11 @@ nsresult
 nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
                            nsIInputStream* in)
 {
-    mURI = uri;
-    NS_IF_ADDREF(mURI);
+    mURI = uri; // addrefs
     mContentType = nsCRT::strdup(contentType);
     if (mContentType == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    mInputStream = in;
-    NS_IF_ADDREF(mInputStream);
+    mInputStream = in;  // addrefs
     return NS_OK;
 }
 
@@ -100,7 +96,7 @@ NS_IMETHODIMP
 nsInputStreamChannel::GetURI(nsIURI * *aURI)
 {
     *aURI = mURI;
-    NS_IF_ADDREF(mURI);
+    NS_IF_ADDREF(*aURI);
     return NS_OK;
 }
 
@@ -111,7 +107,7 @@ nsInputStreamChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     // if we had seekable streams, we could seek here:
     NS_ASSERTION(startPosition == 0, "Can't seek in nsInputStreamChannel");
     *result = mInputStream;
-    NS_ADDREF(mInputStream);
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -184,6 +180,21 @@ nsInputStreamChannel::GetContentType(char * *aContentType)
 {
     *aContentType = nsCRT::strdup("text/html");
     return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    *aLoadGroup = mLoadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;    // releases and addrefs
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
