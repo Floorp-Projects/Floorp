@@ -428,6 +428,14 @@ protected:
                                    PRInt32 &aStartOffset, 
                                    PRInt32 &aEndOffset);
 
+  nsresult GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
+                                       PRInt32 aInStartOffset,
+                                       nsIDOMNode *aInEndNode,
+                                       PRInt32 aInEndOffset,
+                                       nsIDOMNode *aInCommonParentNode,
+                                       PRInt32 &aOutStartOffset, 
+                                       PRInt32 &aEndOffset);
+
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation();
   NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText);
