@@ -28,7 +28,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		messengercompose.dtd \
 		addressingWidgetOverlay.dtd \
 		MsgAttachPage.dtd \
-		composeMsgs_en.properties \
+		composeMsgs.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
