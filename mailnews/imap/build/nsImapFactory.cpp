@@ -138,21 +138,10 @@ nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	{
 		inst = NS_STATIC_CAST(nsIImapService *, new nsImapService());
 	}
-  else if (mClassID.Equals(kCImapResource))
-  {
-      nsImapMailFolder* aImapMailFolder = new nsImapMailFolder();
-      if (aImapMailFolder)
-      {
-          rv = aImapMailFolder->QueryInterface(aIID, aResult);
-          if (NS_FAILED(rv))
-              delete aImapMailFolder;
-          return rv;
-      }
-      else
-      {
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-  }
+	else if (mClassID.Equals(kCImapResource))
+	{
+		inst = NS_STATIC_CAST(nsIMsgImapMailFolder *, new nsImapMailFolder());
+	}
 
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -272,6 +261,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterFactory(kCImapService, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterFactory(kCImapResource, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:
