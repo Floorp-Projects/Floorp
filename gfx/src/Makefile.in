@@ -24,15 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_TARGET),Rhapsody)
-DIRS = rhapsody
-else
-ifeq ($(USE_NGLAYOUT_GTK),1)
-DIRS = gtk
-else
-DIRS = motif
-endif
-endif
+DIRS = $(MOZ_TOOLKIT)
 
 LIBRARY_NAME = raptorgfx
 

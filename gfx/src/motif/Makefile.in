@@ -38,8 +38,7 @@ EXTRA_DSO_LDOPTS+=\
 	-lraptorgfx \
 	-lraptorbase \
 	-lreg \
-	$(LIBNSPR)\
-	$(DIST)/lib/libplc21.a
+	$(NSPR_LIBS)
 
 EXTRA_DSO_LDOPTS+= $(XLDFLAGS) $(XLIBS)
 

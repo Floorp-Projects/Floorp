@@ -24,10 +24,16 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(USE_NGLAYOUT_GTK),1)
-LIBRARY_NAME = widgetgtk
+LIBRARY_NAME = $(addsuffix $(MOZ_TOOLKIT), widget)
+
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
+TOOLKIT_LIBS += $(TK_GTK_LIBS)
 else
-LIBRARY_NAME = widgetmotif
+ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
+TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
+TOOLKIT_LIBS += $(TK_MOTIF_LIBS)
+endif
 endif
 
 MODULE=raptor
@@ -36,7 +42,7 @@ REQUIRES=util img xpcom raptor netlib
 
 INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 
-INCLUDES += $(FE_X_CFLAGS)
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
 CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
@@ -47,11 +53,8 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
-ifeq ($(USE_NGLAYOUT_GTK),1)
-TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetgtk_s.a
-else
-TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetmotif_s.a
-endif
+TOOLKIT_DSO_LDOPTS = $(addprefix $(DIST)/lib/libraptorwidget, \
+			$(addsuffix _s.a, $(MOZ_TOOLKIT)))
 
 EXTRA_DSO_LDOPTS+=\
 	$(TOOLKIT_DSO_LDOPTS) \
@@ -62,6 +65,6 @@ EXTRA_DSO_LDOPTS+=\
 	-lreg \
 	$(NSPR_LIBS)
 
-EXTRA_DSO_LDOPTS += $(FE_X_LIBS) $(XLDFLAGS) $(XLIBS)
+EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
 
 include $(topsrcdir)/config/rules.mk

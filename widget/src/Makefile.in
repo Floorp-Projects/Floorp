@@ -22,16 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(OS_TARGET),Rhapsody)
-DIRS = rhapsody
-else
-ifeq ($(USE_NGLAYOUT_GTK),1)
-DIRS = gtk
-else
-DIRS = motif
-endif
-DIRS += xpwidgets build
-endif
+DIRS = $(MOZ_TOOLKIT) xpwidgets build
 
 include $(topsrcdir)/config/config.mk
 

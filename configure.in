@@ -45,9 +45,7 @@ dnl Set various checks
 dnl ========================================================
 MISSING_X=
 MISSING_MOTIF=
-MISSING_QT=
 MISSING_GTK=
-MISSING_GNOME=
 
 dnl Checks for programs.
 dnl ========================================================
@@ -67,7 +65,6 @@ AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(UNZIP, unzip, :)
 AC_PATH_PROG(ZIP, zip, :)
 
-AC_PATH_X
 AC_PATH_XTRA
 
 dnl CFLAGS="$CFLAGS $X_CFLAGS"
@@ -265,53 +262,23 @@ dnl AC_CHECK_LIB(svld, main)
 
 dnl Mozilla specific options
 dnl ========================================================
-AC_ARG_ENABLE(nglayout,
-[  --enable-nglayout      enable the new generation layout features], 
-    [ if test "$enableval" = "yes"; then
-	USE_NGLAYOUT=1
-	OS_TARGET=`uname -s`
-    elif test "$enableval" = "gtk"; then
-	USE_NGLAYOUT=1
-	OS_TARGET=`uname -s`
-	USE_NGLAYOUT_GTK=1
-    else 
-	USE_NGLAYOUT=
-	USE_NGLAYOUT_GTK=
-    fi],
-    USE_NGLAYOUT= )
+dnl nglayout only supports building with one toolkit
+dnl so ignore everything after the first ,
+AC_ARG_ENABLE(toolkit,
+[  --enable-toolkit=\$val	  enable \$val fe (defaults to gtk)],
+    [MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*//g" `], 
+    MOZ_TOOLKIT=USE_DEFAULT)
 
-AC_ARG_ENABLE(fe,
-[  --enable-fe=\$val	  enable \$val fe (defaults to x)],
-    [fe_list=`echo "$enableval" | sed -e 's/,/ /g' -e 's|$| |'`], 
-    fe_list=USE_DEFAULT)
-
-if [ test "$fe_list" = "USE_DEFAULT" ]; then
+if [ test "$MOZ_TOOLKIT" = "USE_DEFAULT" ]; then
     res=`echo $target_os| grep -c "^Rhapsody"`
     if [ test $res != 0 ]; then
-	fe_list="yb "
+	MOZ_TOOLKIT="rhapsody"
     else
-	fe_list="x  "
+	MOZ_TOOLKIT="gtk"
     fi
 fi
 
-for fe in $fe_list; do
-    # Test whether such a subdir really exists.
-    if [ test -d $srcdir/cmd/${fe}fe ]; then
-	MOZ_FE="$MOZ_FE $fe"
-    else
-    	AC_MSG_ERROR(FE directory $srcdir/cmd/${fe}fe does not exist.)
-    fi
-done
-
-echo "Using FE:${MOZ_FE}."
-unset fe_list
-
-FULL_STATIC_BUILD=1
-AC_ARG_ENABLE(min-shared,
-[  --enable-min-shared     enable use of minimal internal dynamic libs ],
-        [if test "$enableval" = "yes"; then
-	    FULL_STATIC_BUILD=
-        fi] )
+OS_TARGET=`uname -s`
 
 AC_ARG_ENABLE(shared,
 [  --disable-shared        disable building of internal shared libs],
@@ -435,10 +402,8 @@ AC_ARG_ENABLE(ldap,
 	    NO_UNIX_LDAP=
 	fi] )
 
-AC_SUBST(USE_NGLAYOUT)
-AC_SUBST(USE_NGLAYOUT_GTK)
 AC_SUBST(OS_TARGET)
-AC_SUBST(MOZ_FE)
+AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_SECURITY)
 AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
@@ -455,7 +420,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_SMART_MAIL)
 AC_SUBST(MOZ_DOM)
-AC_SUBST(USE_PTHREADS)
 AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
@@ -478,22 +442,24 @@ AC_CHECK_LIB(Xmu, XmuLookupString, [XLIBS="-lXmu $XLIBS"],
 	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
 LDFLAGS="$_SAVE_LDFLAGS"
 
-res=`echo :$MOZ_FE | grep -c " x"`
+dnl Check for toolkit libs
+dnl ========================================================
+res=`echo :$MOZ_TOOLKIT | grep -c "motif"`
 if [ test $res != 0 ]; then
     if [ test "$MOTIF_REQUIRES_XPM" = "True" || test "$MOTIF_VERSION" = "2.1" ]; then
         _SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
 	if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
 	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-		FE_X_LIBS="-lXpm $FE_X_LIBS", 
+		TK_MOTIF_LIBS="-lXpm $TK_MOTIF_LIBS", 
 		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
 	fi
 	if [ test "$MOTIF_VERSION" = "2.1" ]; then
 	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
-		FE_X_LIBS="-lXp $FE_X_LIBS",
+		TK_MOTIF_LIBS="-lXp $TK_MOTIF_LIBS",
 		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
 	fi
-	FE_X_LIBS="$XLDFLAGS $FE_X_LIBS"
+	TK_MOTIF_LIBS="$XLDFLAGS $TK_MOTIF_LIBS"
 	LDFLAGS="$_SAVE_LDFLAGS"
     fi
 
@@ -526,63 +492,38 @@ if [ test $res != 0 ]; then
 	_SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
     	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    FE_X_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $FE_X_LIBS",
+	    TK_MOTIF_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_MOTIF_LIBS",
 	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
-	    $MOTIF_DYNAMIC_PATHS $FE_X_LIBS $XLIBS)
+	    $MOTIF_DYNAMIC_PATHS $TK_MOTIF_LIBS $XLIBS)
 	LDFLAGS="$_SAVE_LDFLAGS"
     else
     	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    FE_X_LIBS="$MOTIF_STATIC_FLAGS $FE_X_LIBS",
+	    TK_MOTIF_LIBS="$MOTIF_STATIC_FLAGS $TK_MOTIF_LIBS",
 	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
-	    $FE_X_LIBS $XLIBS)
+	    $TK_MOTIF_LIBS $XLIBS)
     fi
 
-    FE_X_CFLAGS="$MOTIF_INCLUDES"
+    TK_MOTIF_CFLAGS="$MOTIF_INCLUDES"
 fi
 
-res=`echo :$MOZ_FE | grep -c " qt"`
-if [ test $res != 0 ]; then
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -L$QTDIR/lib"
-    AC_CHECK_LIB(qt, set_new_handler, 
-	[FE_QT_LIBS='-L$(QTDIR)/lib -lqt' FE_QT_CFLAGS='-I$(QTDIR)/include'],
-	[MISSING_QT=1])
-    LDFLAGS=$_SAVE_LDFLAGS 
-    AC_PATH_PROG(MOC, moc, :)
-fi
-
-res=`echo :$MOZ_FE | grep -c " gtk"`
+res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
     AC_CHECK_LIB(gtk, gtk_widget_set, 
-	[FE_GTK_LIBS="`gtk-config --libs`" FE_GTK_CFLAGS="`gtk-config --cflags`" ],
+	[TK_GTK_LIBS="`gtk-config --libs`" TK_GTK_CFLAGS="`gtk-config --cflags`" ],
 	[MISSING_GTK=1],
 	`gtk-config --libs`)
 fi
 
-res=`echo :$MOZ_FE | grep -c " gnome"`
-if [ test $res != 0 ]; then
-    AC_CHECK_LIB(gnome, gnome_init,
-	[FE_GNOME_LIBS="`gnome-config --libs gnomeui`" FE_GNOME_CFLAGS="`gnome-config --cflags gnomeui`"],
-	[MISSING_GNOME=1],
-	`gnome-config --libs gnomeui`)
-fi
+AC_SUBST(TK_GTK_CFLAGS)
+AC_SUBST(TK_GTK_LIBS)
+AC_SUBST(TK_MOTIF_CFLAGS)
+AC_SUBST(TK_MOTIF_LIBS)
 
 XCFLAGS="$X_CFLAGS"
 
 AC_SUBST(XCFLAGS)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
-
-AC_SUBST(FE_X_CFLAGS)
-AC_SUBST(FE_X_LIBS)
-AC_SUBST(FE_QT_CFLAGS)
-AC_SUBST(FE_QT_LIBS)
-AC_SUBST(FE_GTK_CFLAGS)
-AC_SUBST(FE_GTK_LIBS)
-AC_SUBST(FE_GNOME_CFLAGS)
-AC_SUBST(FE_GNOME_LIBS)
-
-#if test -z "$USE_NGLAYOUT"; then
 
 dnl system JPEG support
 dnl ========================================================
@@ -698,8 +639,6 @@ if [ test -n "${PNG_DIR}" && test -d "${PNG_DIR}" && test "$SYSTEM_PNG" = 1 ]; t
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
-#fi # !USE_NGLAYOUT
-
 dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
 dnl tells where to find nspr rather than whether to use it
@@ -720,16 +659,6 @@ _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
 LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
-
-dnl AC_MSG_CHECKING("for nspr.h")
-dnl AC_TRY_COMPILE([#include "nspr.h"], [], 
-dnl [result="yes"],
-dnl [MISSING_NSPR="$MISSING_NSPR nspr.h" result="no"])
-dnl AC_MSG_RESULT("$result")
-
-dnl AC_CHECK_LIB(nspr21, PR_GetUniqueIdentity, 
-dnl	[_FOUND_NSPR_LIB=1 NSPR_LIBS="-lnspr21 $NSPR_LIBS",
-dnl [MISSING_NSPR="$MISSING_NSPR -lnspr21"], $NSPR_LIBS)
 
 AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21")
 LIBS="-lnspr21 $NSPR_LIBS $LIBS"
@@ -753,7 +682,7 @@ LIBS=$_SAVE_LIBS
 case "$target" in
 *-*-linux*) 
 	AC_CHECK_LIB(pthread, pthread_create, 
-		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1) ;;
+		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
 alpha-*-osf*)
 	CFLAGS="$CFLAGS -pthread" 
 	_SAVE_CFLAGS="$_SAVE_CFLAGS -pthread" ;;
@@ -817,276 +746,25 @@ if [ test "$MISSING_X" != "" ]; then
    AC_MSG_ERROR([ Could not find the following libraries: $MISSING_X ]);
 fi
 
-res=`echo :$MOZ_FE | grep -c " x"`
-if [ test $res != 0 ]; then
-    if [ test "$MISSING_MOTIF" != "" ]; then 
-	AC_MSG_ERROR([ Could not the following libraries needed for xfe: $MISSING_MOTIF ]);
-    else
-	FE_X_MAKEFILES="
-cmd/xfe/Makefile
-cmd/xfe/DtWidgets/Makefile
-cmd/xfe/Microline3.0/Makefile
-cmd/xfe/Microline3.0/XmL/Makefile
-cmd/xfe/Microline3.0/examples/Makefile
-cmd/xfe/XfeWidgets/Makefile
-cmd/xfe/XfeWidgets/Xfe/Makefile
-cmd/xfe/XfeWidgets/XfeBm/Makefile
-cmd/xfe/XfeWidgets/XfeCaption/Makefile
-cmd/xfe/XfeWidgets/XfeComboBox/Makefile
-cmd/xfe/XfeWidgets/XfeToolBar/Makefile
-cmd/xfe/XfeWidgets/XfeToolTip/Makefile
-cmd/xfe/XfeWidgets/XfeTest/Makefile
-cmd/xfe/XfeWidgets/tests/Makefile
-cmd/xfe/XfeWidgets/tests/Xfe/Makefile
-cmd/xfe/XfeWidgets/tests/XfeBm/Makefile
-cmd/xfe/XfeWidgets/tests/XfeCaption/Makefile
-cmd/xfe/XfeWidgets/tests/XfeComboBox/Makefile
-cmd/xfe/XfeWidgets/tests/XfeToolBar/Makefile
-cmd/xfe/XfeWidgets/tests/XfeToolTip/Makefile
-cmd/xfe/XfeWidgets/tests/XmL/Makefile
-cmd/xfe/icons/Makefile
-cmd/xfe/plugins/Makefile
-cmd/xfe/plugins/ImAlive/Makefile
-cmd/xfe/plugins/javatest/Makefile
-cmd/xfe/plugins/nullplugin/Makefile
-cmd/xfe/plugins/textplugin/Makefile
-cmd/xfe/src/Makefile"
-    fi
+if [ test "$MISSING_GTK" != "" ]; then
+   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_GTK ]);
 fi
 
-res=`echo :$MOZ_FE | grep -c " qt"`
-if [ test $res != 0 ]; then
-    if [ test "$MISSING_QT" != "" ]; then 
-	AC_MSG_ERROR([ Could not find standard qt libraries.]);
-    else
-	FE_QT_MAKEFILES="
-cmd/qtfe/Makefile
-cmd/qtfe/icons/Makefile"
-    fi
-fi
-
-res=`echo :$MOZ_FE | grep -c " gtk"`
-if [ test $res != 0 ]; then
-    if [ test "$MISSING_GTK" != "" ]; then
-	AC_MSG_ERROR([ Could not find standard gtk libraries.]);
-    else
-	FE_GTK_MAKEFILES=""
-    fi
-fi
-
-res=`echo :$MOZ_FE | grep -c " gnome"`
-if [ test $res != 0 ]; then
-    if [ test "$MISSING_GNOME" != "" ]; then
-	AC_MSG_ERROR([ Could not find standard gnome libraries.]);
-    else
-	FE_GNOME_MAKEFILES="
-cmd/gnomefe/Makefile
-cmd/gnomefe/gnome-src/Makefile
-cmd/gnomefe/gnome-widgets/Makefile"
-    fi
+if [ test "$MISSING_MOTIF" != "" ]; then
+   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_MOTIF ]);
 fi
 
 if [ test "$MISSING_NSPR" != "" ]; then
     AC_MSG_ERROR([Could not find standard nspr headers or libraries.]);
 fi
 
-CLASSIC_MAKEFILES="
-Makefile
-base/Makefile
-base/public/Makefile
-base/src/Makefile
-base/src/motif/Makefile
-base/src/gtk/Makefile
-base/tests/Makefile
-caps/Makefile
-caps/public/Makefile
-caps/include/Makefile
-caps/src/Makefile
-cmd/Makefile
-cmd/stubfe/Makefile
-$FE_GNOME_MAKEFILES
-$FE_GTK_MAKEFILES
-$FE_QT_MAKEFILES
-$FE_X_MAKEFILES
-config/Makefile
-config/autoconf.mk
-config/mkdepend/Makefile
-config/mkdetect/Makefile
-config/ports/Makefile
-dbm/Makefile
-dbm/include/Makefile
-dbm/src/Makefile
-dbm/tests/Makefile
-include/Makefile
-jpeg/Makefile
-js/Makefile
-js/jsd/Makefile
-js/jsd/classes/Makefile
-js/src/Makefile
-js/src/liveconnect/Makefile
-js/src/liveconnect/classes/Makefile
-js/src/xpcom/Makefile
-l10n/Makefile
-l10n/us/Makefile
-l10n/us/xp/Makefile
-lib/Makefile
-lib/htmldlgs/Makefile
-lib/layout/Makefile
-lib/libdom/Makefile
-lib/libi18n/Makefile
-lib/libi18n/unicode/Makefile
-lib/libi18n/unicode/tbltool/Makefile
-lib/libi18n/unicode/ufrmtbl/Makefile
-lib/libi18n/unicode/utotbl/Makefile
-lib/liblayer/Makefile
-lib/liblayer/include/Makefile
-lib/liblayer/src/Makefile
-lib/libmime/Makefile
-lib/libmisc/Makefile
-lib/libmocha/Makefile
-lib/libparse/Makefile
-lib/libpics/Makefile
-lib/libpwcac/Makefile
-lib/libstyle/Makefile
-lib/mailto/Makefile
-lib/mariner/Makefile
-lib/mariner/public/Makefile
-lib/mariner/src/Makefile
-lib/xlate/Makefile
-lib/xp/Makefile
-modules/Makefile
-modules/calendar/Makefile
-modules/calendar/src/Makefile
-modules/calendar/src/libcal/Makefile
-modules/edtplug/Makefile
-modules/edtplug/classes/Makefile
-modules/edtplug/classes/netscape/Makefile
-modules/edtplug/classes/netscape/plugin/Makefile
-modules/edtplug/classes/netscape/plugin/composer/Makefile
-modules/edtplug/classes/netscape/plugin/composer/io/Makefile
-modules/edtplug/classes/netscape/test/Makefile
-modules/edtplug/classes/netscape/test/plugin/Makefile
-modules/edtplug/classes/netscape/test/plugin/composer/Makefile
-modules/edtplug/include/Makefile
-modules/edtplug/src/Makefile
-modules/libfont/Makefile
-modules/libfont/classes/Makefile
-modules/libfont/classes/netscape/Makefile
-modules/libfont/classes/netscape/fonts/Makefile
-modules/libfont/producers/Makefile
-modules/libfont/public/Makefile
-modules/libfont/src/Makefile
-modules/libhook/Makefile
-modules/libhook/public/Makefile
-modules/libhook/src/Makefile
-modules/libimg/Makefile
-modules/libimg/classes/Makefile
-modules/libimg/classes/netscape/Makefile
-modules/libimg/classes/netscape/libimg/Makefile
-modules/libimg/png/Makefile
-modules/libimg/public/Makefile
-modules/libimg/src/Makefile
-modules/libpref/Makefile
-modules/libpref/admin/Makefile
-modules/libpref/l10n/Makefile
-modules/libpref/public/Makefile
-modules/libpref/src/Makefile
-modules/libreg/Makefile
-modules/libreg/include/Makefile
-modules/libreg/src/Makefile
-modules/libutil/Makefile
-modules/libutil/public/Makefile
-modules/libutil/src/Makefile
-modules/oji/Makefile
-modules/oji/public/Makefile
-modules/oji/src/Makefile
-modules/plugin/Makefile
-modules/plugin/nglsrc/Makefile
-modules/plugin/public/Makefile
-modules/plugin/src/Makefile
-modules/plugin/test/Makefile
-modules/progress/Makefile
-modules/progress/public/Makefile
-modules/progress/src/Makefile
-modules/rdf/Makefile
-modules/rdf/include/Makefile
-modules/rdf/src/Makefile
-modules/schedulr/Makefile
-modules/schedulr/public/Makefile
-modules/schedulr/src/Makefile
-modules/security/Makefile
-modules/security/freenav/Makefile
-modules/softupdt/Makefile
-modules/softupdt/classes/Makefile
-modules/softupdt/classes/netscape/Makefile
-modules/softupdt/classes/netscape/softupdate/Makefile
-modules/softupdt/include/Makefile
-modules/softupdt/src/Makefile
-modules/softupdt/src/nsdiff/Makefile
-modules/softupdt/src/nspatch/Makefile
-modules/xml/Makefile
-modules/xml/js/Makefile
-modules/xml/js/test/Makefile
-modules/zlib/Makefile
-modules/zlib/src/Makefile
-nav-java/Makefile
-nav-java/stubs/Makefile
-nav-java/stubs/include/Makefile
-nav-java/stubs/jri/Makefile
-nav-java/stubs/src/Makefile
-network/Makefile
-network/cache/Makefile
-network/cache/nu/Makefile
-network/cache/nu/include/Makefile
-network/cache/nu/public/Makefile
-network/cache/nu/src/Makefile
-network/client/Makefile
-network/cnvts/Makefile
-network/cstream/Makefile
-network/main/Makefile
-network/mimetype/Makefile
-network/module/Makefile
-network/module/tests/Makefile
-network/protocol/Makefile
-network/protocol/about/Makefile
-network/protocol/callback/Makefile
-network/protocol/certld/Makefile
-network/protocol/dataurl/Makefile
-network/protocol/file/Makefile
-network/protocol/ftp/Makefile
-network/protocol/gopher/Makefile
-network/protocol/http/Makefile
-network/protocol/imap4/Makefile
-network/protocol/js/Makefile
-network/protocol/ldap/Makefile
-network/protocol/mailbox/Makefile
-network/protocol/marimba/Makefile
-network/protocol/nntp/Makefile
-network/protocol/pop3/Makefile
-network/protocol/remote/Makefile
-network/protocol/smtp/Makefile
-network/util/Makefile
-privacy/Makefile
-privacy/public/Makefile
-privacy/src/Makefile
-sun-java/Makefile
-sun-java/stubs/Makefile
-sun-java/stubs/include/Makefile
-sun-java/stubs/jri/Makefile
-sun-java/stubs/src/Makefile
-xpcom/Makefile
-xpcom/public/Makefile
-xpcom/src/Makefile
-xpcom/tests/Makefile
-xpcom/tests/dynamic/Makefile "
-
 NG_MAKEFILES="
 Makefile
 base/Makefile
 base/public/Makefile
 base/src/Makefile
+base/src/motif/Makefile
 base/src/rhapsody/Makefile
-base/src/unix/Makefile
 base/src/gtk/Makefile
 base/tests/Makefile
 config/Makefile
@@ -1265,10 +943,5 @@ xpcom/src/Makefile
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile"
 
-if test "$USE_NGLAYOUT" = 1; then
-    THE_MAKEFILES="$NG_MAKEFILES"
-else
-    THE_MAKEFILES="$CLASSIC_MAKEFILES"
-fi
-AC_OUTPUT($THE_MAKEFILES)
+AC_OUTPUT($NG_MAKEFILES)
 

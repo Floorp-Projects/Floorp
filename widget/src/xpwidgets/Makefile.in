@@ -35,8 +35,6 @@ else
 INCLUDES += -I$(srcdir)/../public -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../motif -I$(srcdir)/.
 endif
 
-INCLUDES +=  $(FE_X_CFLAGS)
-
 CPPSRCS=nsBaseWidget.cpp                \
 	nsMenuButton.cpp                \
 	nsToolbarItemHolder.cpp         \

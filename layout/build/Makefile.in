@@ -44,11 +44,7 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
-ifeq ($(USE_NGLAYOUT_GTK),1)
-BASE_DSO_FLAGS = -lgmbasegtk
-else
-BASE_DSO_FLAGS = -lgmbasemotif
-endif
+BASE_DSO_FLAGS = $(addprefix -lgmbase, $(MOZ_TOOLKIT))
 
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib	\
