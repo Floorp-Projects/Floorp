@@ -42,6 +42,9 @@ typedef void
                       nsIAtom*  aPropertyName,
                       void*     aPropertyValue);
 
+// Option flags for GetFrameProperty() member function
+#define NS_IFRAME_MGR_REMOVE_PROPERTY 0x0001
+
 /**
  * Frame manager interface. The frame manager serves two purposes:
  * <li>provides a serice for mapping from content to frame and from out-of-flow
@@ -142,10 +145,15 @@ public:
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
                               nsIAtom*  aPropertyName,
+                              PRUint32  aOptions,
                               void**    aPropertyValue) = 0;
   
-  // Sets the property value. A frame may only have one property value
-  // at a time for a given property name.
+  // Sets the property value
+  //
+  // A frame may only have one property value at a time for a given property
+  // name. The current property value (if there is one) is replaced and the
+  // current value is destroyed
+  //
   // When setting a property you may specify the dtor function (can be
   // NULL) that will be used to destroy the property value. There can be
   // only one dtor function for a given property atom, and the set call
