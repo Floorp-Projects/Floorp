@@ -1899,6 +1899,15 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     // set the back pixmap to None so that we don't get a flash of
     // black
     gdk_window_set_back_pixmap(mShell->window, NULL, FALSE);
+
+    // gdk does not automatically set the cursor for "temporary"
+    // windows, which are what gtk uses for popups.
+
+    mCursor = eCursor_wait; // force SetCursor to actually set the cursor,
+                            // even though our internal state indicates
+                            // that we already have the standard cursor.
+    SetCursor(eCursor_standard);
+
     break;
 
   case eWindowType_toplevel:
