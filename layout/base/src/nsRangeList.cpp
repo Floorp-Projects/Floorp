@@ -1768,7 +1768,7 @@ nsRangeList::GetRangeAt(PRInt32 aIndex, SelectionType aType, nsIDOMRange** aRetu
 
 
 //may change parameters may not.
-//return NS_ERROR_FAILED if invalid new selection between anchor and passed in parameters
+//return NS_ERROR_FAILURE if invalid new selection between anchor and passed in parameters
 NS_IMETHODIMP
 nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBool *aFixupState, SelectionType aType)
 {
@@ -1832,8 +1832,8 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
     if (parent != startNode)
     {
       result = startNode->GetParentNode(getter_AddRefs(tempNode));
-      if (NS_FAILED(result))
-        return result;
+      if (NS_FAILED(result) || !tempNode)
+        return NS_ERROR_FAILURE;
       while (tempNode != parent)
       {
         atom = GetTag(tempNode);
@@ -1841,7 +1841,7 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
         {
           result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
           if (NS_FAILED(result))
-            return result;
+            return NS_ERROR_FAILURE;
           if (*aDir == eDirPrevious) //select after
             startOffset++;
           dirty = PR_TRUE;
@@ -1858,8 +1858,8 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
           dirty = PR_TRUE;
         }
         result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
-        if (NS_FAILED(result))
-          return result;
+        if (NS_FAILED(result) || !tempNode2)
+          return NS_ERROR_FAILURE;
         tempNode = tempNode2;
       }
     }
@@ -1869,8 +1869,8 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
     {
       result = endNode->GetParentNode(getter_AddRefs(tempNode));
       PRBool found = !cellMode;
-      if (NS_FAILED(result))
-        return result;
+      if (NS_FAILED(result) || !tempNode)
+        return NS_ERROR_FAILURE;
       while (tempNode != parent)
       {
         atom = GetTag(tempNode);
@@ -1899,8 +1899,8 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
           dirty = PR_TRUE;
         }
         result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
-        if (NS_FAILED(result))
-          return result;
+        if (NS_FAILED(result) || !tempNode2)
+          return NS_ERROR_FAILURE;
         tempNode = tempNode2;
       }
       if (!found)
