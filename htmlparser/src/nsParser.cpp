@@ -839,7 +839,7 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
 nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
   
   nsresult result=NS_OK;
-  if(mParserContext->mParserEnabled) {
+  if(mParserContext->mParserEnabled && !mParserContext->mParserTerminated) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
@@ -848,7 +848,8 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
         result=Tokenize();
         result=BuildModel();
 
-        if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
+        if((!mParserContext->mMultipart) || (mParserContext->mParserTerminated) || 
+          ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
         }
         else {
@@ -899,6 +900,8 @@ nsresult nsParser::BuildModel() {
     nsIDTD* theRootDTD=theRootContext->mDTD;
     if(theRootDTD) {
       result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
+      if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
+        mParserContext->mParserTerminated=PR_TRUE;
     }
   }
   else{
@@ -1149,6 +1152,8 @@ nsresult nsParser::Tokenize(){
           result=NS_OK;
           break;
         }
+        else if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
+          mParserContext->mParserTerminated=PR_TRUE;
       }
     } 
     DidTokenize();
