@@ -274,38 +274,12 @@ JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
 	jmethodID constructor;
 	jbyteArray byteArray;
 	jobject Cert=NULL;
-    char *className;
-    PK11SlotInfo *slot = NULL;
 
 	PR_ASSERT(env!=NULL && cert!=NULL && *cert!=NULL);
 
 	byteArray = JSS_ptrToByteArray(env, *cert);
 
-    /* Is this a user cert? */
-    slot = PK11_KeyForCertExists(*cert, NULL /*keyPtr*/, NULL /*wincx*/);
-
-	/*
-	 * Lookup the class and constructor
-	 */
-    if( slot ) {
-        if( (*cert)->isperm ) {
-            /* it has a slot and it's in the permanent database */
-            className = INTERNAL_TOKEN_CERT_CLASS_NAME;
-        } else {
-            /* it has a slot, but it's not in the permanent database */
-            className = TOKEN_CERT_CLASS_NAME;
-        }
-    } else {
-        if( (*cert)->isperm ) {
-            /* it is in the permanent database, but has no slot */
-            className = INTERNAL_CERT_CLASS_NAME;
-        } else {
-            /* it is not in the permanent database, and it has no slot */
-            className = CERT_CLASS_NAME;
-        }
-    }
-
-	certClass = (*env)->FindClass(env, className);
+	certClass = (*env)->FindClass(env, INTERNAL_TOKEN_CERT_CLASS_NAME);
 	if(certClass == NULL) {
 		ASSERT_OUTOFMEM(env);
 		goto finish;
@@ -331,9 +305,6 @@ finish:
 	if(Cert==NULL) {
 		CERT_DestroyCertificate(*cert);
 	}
-    if( slot != NULL ) {
-        PK11_FreeSlot(slot);
-    }
 	*cert = NULL;
 	return Cert;
 }
@@ -403,7 +374,7 @@ Java_org_mozilla_jss_pkcs11_PK11Cert_getUniqueID
      ***************************************************/
     id = PK11_GetLowLevelKeyIDForCert(NULL /*slot*/, cert, NULL/*pinarg*/);
     if( id == NULL ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to read ID");
+        PR_ASSERT(PR_FALSE);
         goto finish;
     }
 

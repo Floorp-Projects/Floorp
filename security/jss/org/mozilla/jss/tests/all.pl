@@ -140,6 +140,13 @@ $result >>=8;
 $result and die "SetupDBs returned $result";
 
 #
+# List CA certs
+#
+$result = system("$java org.mozilla.jss.tests.ListCACerts $testdir");
+$result >>=8;
+$result and die "ListCACerts returned $result";
+
+#
 # test sockets
 #
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile");
