@@ -343,7 +343,8 @@ nsImapProtocol::GetImapHostName()
 	if (!m_userName && m_runningUrl)
 	{
 		const char * temp = nsnull;
-		m_runningUrl->GetHost(&temp);
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningUrl);
+		url->GetHost(&temp);
 		if (temp) // keep our own copy
 			m_hostName = PL_strdup(temp); 
 	}
@@ -458,7 +459,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer)
 			// extract the file name and create a file transport...
 			PRUint32 port = IMAP_PORT;
 
-			m_runningUrl->GetHostPort(&port);
+			aURL->GetHostPort(&port);
 			NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 
 			if (NS_SUCCEEDED(rv) && pNetService)
@@ -878,8 +879,10 @@ void nsImapProtocol::ProcessCurrentURL()
     else if (!logonFailed)
         HandleCurrentUrlError(); 
 
-    if (m_runningUrl)
-        m_runningUrl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
+    if (NS_SUCCEEDED(rv) && mailnewsurl)
+        mailnewsurl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
 
@@ -890,9 +893,7 @@ void nsImapProtocol::ProcessCurrentURL()
 	// now try queued urls, now that we've released this connection.
 	if (m_server && m_imapMiscellaneousSink)
 	{
-		nsresult rv;
-		nsCOMPtr<nsIImapIncomingServer>
-			aImapServer(do_QueryInterface(m_server, &rv));
+		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			rv = m_imapMiscellaneousSink->LoadNextQueuedUrl(this, aImapServer);
@@ -945,8 +946,10 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
     PR_CEnterMonitor(this);
-    if (m_runningUrl)
-        m_runningUrl->SetUrlState(PR_TRUE, NS_OK);
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
+    if (NS_SUCCEEDED(rv) && mailnewsurl)
+        mailnewsurl->SetUrlState(PR_TRUE, NS_OK);
     PR_CExitMonitor(this);
 	return NS_OK;
 }
@@ -955,8 +958,10 @@ NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURL* aURL, const char *aContentT
 NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
     PR_CEnterMonitor(this);
-    if (m_runningUrl)
-        m_runningUrl->SetUrlState(PR_FALSE, aStatus); // set change in url
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
+    if (NS_SUCCEEDED(rv) && mailnewsurl)
+        mailnewsurl->SetUrlState(PR_FALSE, aStatus); // set change in url
     m_transport = null_nsCOMPtr();
     m_outputStream = null_nsCOMPtr();
     m_outputConsumer = null_nsCOMPtr();
@@ -1003,10 +1008,10 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer)
                                    &writeCount);
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
-			nsCOMPtr<nsIInputStream> inputStream =
-                do_QueryInterface(m_outputStream); 
+			nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(m_outputStream); 
+			nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningUrl);
 			if (inputStream)
-				rv = m_outputConsumer->OnDataAvailable(m_runningUrl,
+				rv = m_outputConsumer->OnDataAvailable(url,
                                                        inputStream,
                                                        writeCount);
 		}
@@ -1054,7 +1059,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 			if (transportOpen == PR_FALSE)
 			{
                 // m_urlInProgress = PR_TRUE;
-				rv = m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
+				rv = m_transport->Open(aURL);  // opening the url will cause to get notified when the connection is established
 			}
 
 			// We now have a url to run so signal the monitor for url ready to be processed...
@@ -1241,14 +1246,13 @@ void nsImapProtocol::ProcessSelectedStateURL()
 	nsIImapUrl::nsImapAction imapAction; 
 	PRBool					bMessageIdsAreUids = PR_TRUE;
 	imapMessageFlagsType	msgFlags = 0;
-	const char					*hostName = nsnull;
+	const char					*hostName = GetImapHostName();
 	nsString2				urlHost("",eOneByte);
 
 	// this can't fail, can it?
 	nsresult res = m_runningUrl->GetImapAction(&imapAction);
 	m_runningUrl->MessageIdsAreUids(&bMessageIdsAreUids);
 	m_runningUrl->GetMsgFlags(&msgFlags);
-	m_runningUrl->GetHost(&hostName);
 
 	res = m_runningUrl->CreateServerSourceFolderPathString(&mailboxName);
     if (mailboxName && NS_SUCCEEDED(res))
@@ -1871,11 +1875,11 @@ nsImapProtocol::GetShouldDownloadArbitraryHeaders()
 {
     // *** allocate instead of using local variable to be thread save ***
     GenericInfo *aInfo = (GenericInfo*) PR_CALLOC(sizeof(GenericInfo));
-    const char *hostName = nsnull;
+    const char *hostName = GetImapHostName();
     PRBool rv;
     aInfo->rv = PR_TRUE;         // default
-    m_runningUrl->GetHost(&hostName);
-    aInfo->hostName = PL_strdup (hostName);
+    
+	aInfo->hostName = PL_strdup (hostName);
     if (m_imapMiscellaneousSink)
     {
         m_imapMiscellaneousSink->GetShouldDownloadArbitraryHeaders(this, aInfo);
@@ -1895,10 +1899,9 @@ nsImapProtocol::GetArbitraryHeadersToDownload()
 {
     // *** allocate instead of using local variable to be thread save ***
     GenericInfo *aInfo = (GenericInfo*) PR_CALLOC(sizeof(GenericInfo));
-    const char *hostName = nsnull;
+    const char *hostName = GetImapHostName();
     char *rv = nsnull;
     aInfo->rv = PR_TRUE;         // default
-    m_runningUrl->GetHost(&hostName);
     aInfo->hostName = PL_strdup (hostName);
     if (m_imapMiscellaneousSink)
     {
@@ -2990,9 +2993,7 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 	static char *selectedStateName = "S";
     //	static char *waitingStateName = "W";
 	char *stateName = NULL;
-    const char *hostName = "";  // initilize to empty string
-    if (m_runningUrl)
-        m_runningUrl->GetHost(&hostName);
+    const char *hostName = GetImapHostName();  // initilize to empty string
 	switch (GetServerStateParser().GetIMAPstate())
 	{
 	case nsImapServerResponseParser::kFolderSelected:
@@ -3339,8 +3340,7 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
 		if (nonUTF7ConvertedName)
 			mailboxName = nonUTF7ConvertedName;
 
-        const char *hostName = "";
-        m_runningUrl->GetHost(&hostName);
+        const char *hostName = GetImapHostName();
 
 		aclRightsInfo->hostName = PL_strdup(hostName);
 		if (nsForMailbox)
