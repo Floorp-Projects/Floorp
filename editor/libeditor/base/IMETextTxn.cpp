@@ -143,7 +143,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   //
   IMETextTxn*  otherTxn = nsnull;
   result = aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn);
-  if (otherTxn && result==NS_OK)
+  if (otherTxn && NS_SUCCEEDED(NS_OK))
   {
     //
     //  we absorbe the next IME transaction by adopting it's insert string as our own
@@ -164,7 +164,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   //
   IMECommitTxn* commitTxn = nsnull;
   result = aTransaction->QueryInterface(IMECommitTxn::GetCID(),(void**)&commitTxn);
-  if (commitTxn && result==NS_OK)
+  if (commitTxn && NS_SUCCEEDED(NS_OK))
   {
     (void)CollapseTextSelectionOnCommit();
     mFixed = PR_TRUE;
