@@ -62,7 +62,7 @@
       <separator orient="horizontal" class="thin"/>
       <radiogroup id="mode" oncommand="dialog.toggleChoice()" align="stretch">
         <hbox flex="1" align="center">
-            <radio id="openUsing"
+            <radio id="openUsing" flex="1"
                    label="&openUsing.label;"
                    accesskey="&openUsing.accesskey;"/>
             <spacer flex="1"/>
