@@ -46,42 +46,33 @@ box#DisplayModeBar {
 	background-color: #999999;
 }
 
-toolbar#EditToolbar titledbutton#SaveButton {
-  list-style-image:url(chrome://editor/skin/images/savefile.gif); 
-}
-
-toolbar#EditToolbar titledbutton#SaveButton[dirty="true"] {
-  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
-}
-
-toolbar#FormatToolbar titledbutton[class~=format] {
-  margin: 2px 2px 2px 2px;
+toolbar#FormatToolbar titledbutton.format {
+  border: 1px solid transparent;
+  margin: 1px 1px 1px 1px;
 	padding: 2px;
 	text-decoration: none;
 	color: inherit;
 }
 
-toolbar#FormatToolbar titledbutton[class~=format]:hover {
+toolbar#FormatToolbar titledbutton.format[toggled="1"] {
+  border: 1px white inset;
+}
+
+toolbar#FormatToolbar titledbutton.format:hover {
 /* What we should use, but this has a blue border that doesn't look good against gray toolbars 
 	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
-*/
 	background-image:url("chrome://editor/skin/images/hover-teal.gif");
 	background-repeat: no-repeat;
   background-position: center center;
+*/
+  border: 1px solid white;
 	text-decoration: none;
   /* global class="plain" should do this! */
 }
 
 toolbar#FormatToolbar titledbutton[class~=format]:active {
-  margin: 3px 1px 1px 3px;
+  margin: 2px 0px 0px 2px;
 }
-
-/* 
-Experimental: a flat look for buttons that show "set" state, like bold
-toolbar#FormatToolbar titledbutton[class~=format][toggled="1"] {
-  border: 1px solid #003366;
-}
-*/
 
 toolbar#FormatToolbar titledbutton[class~=TextAttribute] {
 	/* Make these narrower */
@@ -108,13 +99,18 @@ toolbar#FormatToolbar titledbutton#underlineButton {
   text-decoration: underline;
 }
 
-/* Use negative margins to bring buttons together to look like one */
-toolbar#FormatToolbar titledbutton#TextColorPopupButton {
-  margin-right: -2px;
+div.toolbar-middle {
+  /* trying to center vertically in the toolbar! */
+  vertical-align: middle;
 }
-
-toolbar#FormatToolbar titledbutton#BackColorPopupButton {
-  margin-left: -2px;
+select.toolbar {
+  /* I'd prefer to have this centered */
+  margin-top:   3px;
+  margin-left:  3px;
+  margin-right: 3px;
+  /* This is ignored! */
+	font-size: smaller;
+  max-width: 20em;
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton] {
@@ -128,12 +124,11 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton] {
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton]:hover {
-  /*border:  1px solid white;
-  padding: 0px 4px 0px 4px;
-  margin: 0px;
-  */
+  border:  1px solid white;
+  /* Alternate hover style: change background
   color: white;
   background-color: #66AAAA;
+  */
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton]:active {
@@ -151,8 +146,11 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:hover {
+  border:  1px solid white;
+  /* Alternate hover style: change background
   background-color: #66AAAA;
   color: white;
+  */
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:active {
@@ -175,4 +173,99 @@ spring.spacer3 {
 spring.spacer5 {
       width:  5px;
       height: 5px;
+}
+
+/* Image URLs for all Editor toolbar buttons */
+
+titledbutton#newButton {
+	list-style-image:url("chrome://editor/skin/images/newfile.gif");
+}
+titledbutton#openButton {
+	list-style-image:url("chrome://editor/skin/images/openfile.gif");
+}
+
+titledbutton#saveButton {
+	list-style-image:url("chrome://editor/skin/images/savefile.gif");
+}
+titledbutton#saveButton[dirty="true"] {
+  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
+}
+
+titledbutton#publishButton {
+	list-style-image:url("chrome://editor/skin/images/publish.gif");
+}
+titledbutton#printButton {
+	list-style-image:url("chrome://editor/skin/images/print.gif");
+}
+titledbutton#findButton {
+	list-style-image:url("chrome://editor/skin/images/find.gif");
+}
+titledbutton#linkButton {
+	list-style-image:url("chrome://editor/skin/images/link.gif");
+}
+titledbutton#imageButton {
+	list-style-image:url("chrome://editor/skin/images/image.gif");
+}
+titledbutton#namedAnchorButton {
+	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+}
+titledbutton#hlineButton {
+	list-style-image:url("chrome://editor/skin/images/hline.gif");
+}
+titledbutton#tableButton {
+	list-style-image:url("chrome://editor/skin/images/table.gif");
+}
+titledbutton#spellingButton {
+	list-style-image:url("chrome://editor/skin/images/spell.gif");
+}
+titledbutton#ulButton {
+	list-style-image:url("chrome://editor/skin/images/bullets.gif");
+}
+titledbutton#olButton {
+	list-style-image:url("chrome://editor/skin/images/numbers.gif");
+}
+titledbutton#outdentButton {
+	list-style-image:url("chrome://editor/skin/images/outdent.gif");
+}
+titledbutton#indentButton {
+	list-style-image:url("chrome://editor/skin/images/indent.gif");
+}
+titledbutton#AlignPopupButton {
+	list-style-image:url("chrome://editor/skin/images/align.gif");
+}
+
+/* Use negative margins to bring buttons together to look like one */
+titledbutton#TextColorPopupButton {
+	list-style-image:url("chrome://editor/skin/images/text-color.gif");
+  border: 1px solid transparent;
+  margin: 1px -1px 1px 1px;
+  padding: 0px;
+}
+titledbutton#TextColorPopupButton:hover {
+	list-style-image:url("chrome://editor/skin/images/text-color.gif");
+  border: 1px solid white;
+}
+
+titledbutton#BackColorPopupButton {
+	list-style-image:url("chrome://editor/skin/images/backcolor.gif");
+  border: 1px solid transparent;
+  margin: 1px 1px 1px -1px;
+  padding: 0px;
+}
+titledbutton#BackColorPopupButton:hover {
+	list-style-image:url("chrome://editor/skin/images/backcolor.gif");
+  border: 1px solid white;
+}
+
+titledbutton#text-align-left {
+	list-style-image:url("chrome://editor/skin/images/left.gif");
+}
+titledbutton#text-align-center {
+	list-style-image:url("chrome://editor/skin/images/center.gif");
+}
+titledbutton#text-align-right {
+	list-style-image:url("chrome://editor/skin/images/right.gif");
+}
+titledbutton#text-align-justify {
+	list-style-image:url("chrome://editor/skin/images/justify.gif");
 }

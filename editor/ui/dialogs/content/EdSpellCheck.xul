@@ -40,27 +40,27 @@
   <xul:broadcaster id="args" value=""/>
 
   <table>
-    <tr>
+    <tr valign="top">
       <td colspan="3">
         <label for="Word"> &wordEditField.label; </label>
       </td>
     </tr>
-    <tr>
+    <tr valign="top">
       <td>
         <input type="text" class="SpellCheckWord" id="Word" size="24"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToParent"  id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
       </td>
       <td>
       </td>
     </tr>
-    <tr>
+    <tr  valign="top">
       <td colspan="3">
         <label> &suggestions.label; </label>
       </td>
     </tr>
-    <tr>
+    <tr  valign="top">
       <td rowspan="5">
         <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()">
         </select>
@@ -68,18 +68,18 @@
     </tr>
     <tr>
       <td>
-        <xul:titledbutton class="SizeToParent"  id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToParent"  id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
       </td>
     </tr>
-    <tr>
+    <tr valign="top">
       <td>
-        <xul:titledbutton class="SizeToParent"  id="Replace" onclick="Replace()" value="&changeButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="Replace" onclick="Replace()" value="&changeButton.label;"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToParent"  id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
       </td>
     </tr>
     <tr>
@@ -87,27 +87,27 @@
         <label> &userDictionary.label; </label>
       </td>
     </tr>
-    <tr>
+    <tr valign="top">
       <td>
-        <xul:titledbutton class="SizeToParent"  id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToParent"  id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
       </td>
     </tr>
-    <tr>
+    <tr valign="top">
       <td colspan="3">
         <label> &languagePopup.label; </label>
       </td>
     </tr>
-    <tr>
+    <tr valign="top">
       <td colspan="2">
         <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
           <option> &englishLanguagePopup.value; </option>
         </select>
       </td>
       <td>
-        <xul:titledbutton class="SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
+        <xul:titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
       </td>
     </tr>
   </table>

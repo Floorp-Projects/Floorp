@@ -36,620 +36,369 @@
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical"
-    style="width: auto; height: auto;">
-
-
-  <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdImageProps.js">
-  </script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+    align="vertical">
+  
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdImageProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
   <xul:broadcaster id="args" value=""/>
   <xul:keyset id="keyset"/>
 
-<!-- /////////////////////// Parent  table //////////////////////////////// -->
+<fieldset>
+  <legend
+    class = "dialog"
+    align = "left">
+    &locationFieldset.label;
+  </legend>
+  <table>
 
+    <!--/////// Src URL and ALT Text //////-->
+    <tr>
+      <td align="right">  
+        <label 
+          class = "dialog"
+          for   = "srcInput">
+          &locationEditField.label;
+        </label>
+      </td> 
+      <td>  
+        <input 
+          type       = "text" 
+          id         = "srcInput" 
+          size       = "30" 
+          onkeypress = "OnChangeSrc()" 
+          onkeyup    = "checkForImage( this.id ); doValueChanged()"
+          onmouseup  = "checkForImage( this.id ); doValueChanged()"
+          onchange   = "OnChangeSrc(); doOverallEnabling()" />
+      </td>  
+      <td>  
+        <xul:titledbutton 
+          class   = "push dialog" 
+          id      = "ChooseFile" 
+          onclick = "chooseFile()"
+          value   = "&chooseButton.label;"/>
+      </td>  
+    </tr>  
+    <tr>  
+      <td>  
+        <label
+          class = "dialog"
+          id    = "altTextLabel" 
+          for   = "altTextInput"> 
+          &altTextEditField.label;
+        </label>
+      </td> 
+      <td>
+        <input 
+          type     ="text"
+          id       ="altTextInput"
+          size     ="30" 
+          onchange = "doValueChanged()"/>
+      </td>
+      <td/> 
+    </tr>  
+  </table>  
+</fieldset>
+
+<div>
+  <xul:titledbutton 
+    class   = "push dialog"
+    id      = "MoreFewerButton" 
+    align   = "left" 
+    onclick = "onMoreFewer()" 
+    style   = "width: 10em"
+    persist = "more"/>
+</div>
+<!-- 
+<xul:box align="horizontal">
+  <xul:titledbutton 
+    class   = "push dialog" 
+    id      = "MoreFewerButton" 
+    align   = "left" 
+    onclick = "onMoreFewer()" 
+    persist = "more"/>
+  <xul:spring flex="100%"/>
+</xul:box>
+-->
+<!-- Area that shows and hides via MoreFewerButton --> 
+<!-- xul:box id="MoreSection" align="horizontal" -->
+<!-- div id="MoreSection" align="vertical" flex="100%" -->
+<table id="MoreSection" style="width: 100% height: 100%">
+  <tbody>
+  <tr>
+    <td rowspan="2" valign="bottom">
+    <!-- //////// Image Dimensions //////// -->
+    <fieldset>
+      <legend 
+        class="dialog"
+        id="dimensionsLabel">
+        &dimensionsFieldset.label; 
+      </legend>
+      <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
+      <input 
+        type    = "radio" 
+        name    = "dimensionType" 
+        id      = "originalsizeRadio" 
+        onclick = "doDimensionEnabling( false );"/>
+                  <!-- onclick was: "doValueChanged();" -->
+      <label 
+        class   = "dialog" 
+        id      = "originalsizeLabel"
+        for     = "originalsizeRadio"> 
+        &originalSizeRadio.label;
+      </label>
+      <br/>
+      <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
+      <input 
+        type    ="radio" 
+        name    = "dimensionType" 
+        id      = "customsizeRadio" 
+        onclick = "doDimensionEnabling( true );" />
+      <label 
+        class   = "dialog" 
+        id      = "customsizeLabel"
+        for     = "customsizeRadio"> 
+        &customSizeRadio.label;
+      </label>
+
+      <table>
+        <!--//////  IMAGE WIDTH  //////-->
+        <tr>
+          <td>
+            <label 
+              class = "dialog"
+              id    = "widthLabel"
+              for   = "widthInput">
+              &widthEditField.label;
+            </label>
+          </td>
+          <td>
+            <input 
+              type     = "text" 
+              id       = "widthInput" 
+              size     = "4" 
+              length   = "4"
+              onfocus  = "oldSourceInt = this.value;"
+              onkeyup  = "constrainProportions(this.id, 'heightInput')" 
+              onchange = "doValueChanged()" />
+          </td>
+          <td>
+            <select 
+              id      = "widthUnitsSelect" 
+              size    = "1"
+              onclick = "doValueChanged()"/>
+            <!-- option elements are appended by JS -->
+          </td>
+        </tr>
+
+        <!--////// IMAGE HEIGHT //////-->
+        <tr>
+          <td>
+            <label 
+              class  = "dialog"
+              id     = "heightLabel"
+              for    = "heightInput">
+              &heightEditField.label;
+            </label>
+          </td>
+          <td>
+            <input 
+              type     = "text" 
+              size     = "4" 
+              length   = "4" 
+              id       = "heightInput" 
+              onfocus  = "oldSourceInt = this.value;"
+              onkeyup  = "constrainProportions(this.id, 'widthInput')"
+              onchange = "doValueChanged()" />
+          </td>
+          <td>
+            <select 
+              id      = "heightUnitsSelect" 
+              size    = "1" 
+              onclick = "doValueChanged()"/>
+              <!-- option elements are appended by JS -->
+          </td>
+        </tr>
+      </table>
+
+      <!--////// CONSTRAIN DIMENSIONS //////-->
+      <input type="checkbox" id="constrainCheckbox"/>
+      <label 
+        class = "dialog" 
+        id    = "constrainLabel" 
+        for   = "constrainCheckbox">
+        &constrainCheckbox.label;
+      </label>
+    </fieldset>
+    </td>
+    <!-- End of Bottom Left Region -->
+    <!-- Bottom Right Region -->
+    <td>
+      <!--//////// Alignment ////////-->
+      <label
+        class = "dialog" 
+        id    = "alignLabel"
+        for   = "alignTypeSelect">
+        &alignment.label;
+      </label>
+      <br/>
+      <!-- BUG: Select contents can be nothing but text! -->
+      <select
+        id   = "alignTypeSelect" 
+        size = "1">
+        <option>
+          &topPopup.value;
+        </option>
+        <option>
+          &centerPopup.value;
+        </option>
+        <option>
+          &bottomPopup.value;
+        </option>
+        <option>
+          &wrapLeftPopup.value;
+        </option>
+        <option>
+          &wrapRightPopup.value;
+        </option>
 <!--
-<table>
+Use this when option content bug is fixed:
+        <option>
+          <titledbutton id="img-align-top" value="&topPopup.value;" align="left"/>
+        </option>
+        <option>
+          <titledbutton id="img-align-center" value="&centerPopup.value;" align="left"/>
+        </option>
+        <option>
+          <titledbutton id="img-align-bottom" value="&bottomPopup.value;" align="left"/>
+        </option>
+        <option>
+          <titledbutton id="img-align-left" value="&wrapLeftPopup.value;" align="left"/>
+        </option>
+        <option>
+          <titledbutton id="img-align-right" value="&wrapRightPopup.value;" align="left"/>
+        </option>
+-->
+      </select>
+<!--
+      <xul:titledbutton 
+        id          = "alignTypeSelect" 
+        src         = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
+        class       = "push dialog popup" 
+        popup       = "ImageTextAlignment" 
+        popupanchor = "bottomleft" 
+        align       = "left"
+        onchange    = "doValueChanged()" />
+-->
+    </td>
+  </tr>
   <tr>
     <td>
--->
-
-<!-- /////////////////////// Choose File Alt text  table /////////////////// -->
-
-  <table>
-    <tr>
-      <td colspan="2">
-        <fieldset id="imageInfo.fieldset" ><legend align="left"> &locationFieldset.label; </legend>
-          <table>
-            <tr>
-              <td align="right" valign="middle">
-
-  <label 
-                class           = "enabled" 
-                for             = "image.srcInput">
-
-                  &locationEditField.label; 
-                </label>
-
-              </td>
-              <td valign="middle">
-              
-  <input 
-                type            = "text" 
-                size            = "30" 
-                length          = "30"
-                id              = "image.srcInput" 
-                onkeypress      = "OnChangeSrc()" 
-                onkeyup         = "checkForImage( this.id ); doValueChanged()"
-                onmouseup       = "checkForImage( this.id ); doValueChanged()"
-                onblur          = "/*checkForImage( this.id ); doValueChanged()*/"
-                onfocus         = "checkForImage( this.id ); doValueChanged()"
-                onchange        = "OnChangeSrc(); doOverallEnabling()" />
-
-                    <!-- onmouseup checks for a paste
-                         onkeyup checks for typing
-                         onblur is for good luck
-                    -->
-
-
-              </td>
-              <td>
-
-  <button 
-                id              = "ChooseFile" 
-                onclick         = "chooseFile(); checkForImage( 'image.srcInput' );">
-
-                  &chooseButton.label; 
-                </button>
-
-              </td>
-            </tr>
-            
-            <tr>
-              <td align="right" valign="middle">
-                
-  <label 
-                class           = "enabled" 
-                for             = "image.altTextInput" 
-                id              = "image.altTextLabel"> 
-
-                  &altTextEditField.label;
-                </label>
-
-              </td>
-              <td>
-              
-  <input 
-                type            ="text" 
-                size            = "30" 
-                id              = "image.altTextInput" 
-                onchange        = "doValueChanged()"/>
-              
-                </td>
-              <td/>
-            </tr>
-          </table>
-        </fieldset>
-      </td>
-      <td/>
-    </tr>
-    <tr>
-      <td>
-        <xul:titledbutton class="push" id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()" persist="more"/>
-      </td>
-      <td/>
-    </tr>
-    </table>
-    
-<!-- ////////////////////// "More" controls table ///////////////////////////////// -->
-
-<div id="MoreRow" style="visibility: inherit; display: block;">
-<xul:box align="vertical">
-   <table>
-    <tr>
-      <td>
-  <fieldset 
-                id              = "imagedimensionsFieldset" >
-
-        <legend 
-                id              = "dimensionsLegend"
-                class           = "disabled"
-                align           = "left"> 
-
-            &dimensionsFieldset.label; 
-          </legend>
-
-          <table cellspacing="0" cellpadding="0">
-            <tr>
-              <td>
-
-                    <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
-
-  <input 
-                type            = "radio" 
-                name            = "image.dimensionType" 
-                id              = "originalsizeRadio" 
-                onclick         = " doValueChanged();" 
-                checked         = "true" />
-
-              </td>
-              <td colspan="3">
-
-        <label 
-                class           = "disabled" 
-                for             = "originalsizeRadio" 
-                id              = "originalsizeLabel" >
-
-                  &originalSizeRadio.label;
-                </label>
-
-        </td>
-      </tr>
-      <tr>
-        <td>
-
- <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
-
-  <input type="radio" 
-                name            = "image.dimensionType" 
-                id              = "customsizeRadio" 
-                onclick         = "doDimensionEnabling( true );" />
-
-              </td>
-              <td colspan="3">
-
-        <label 
-                class           = "disabled" 
-                for             = "customsizeRadio" 
-                id              = "customsizeLabel" >
-
-                  &customSizeRadio.label;
-                </label>
-              </td>
-            </tr>
-          
-<!--  IMAGE WIDTH  -->
-
-  <tr valign="middle">
-    <td/>
-    <td>
-
-        <label 
-                class           = "disabled"
-                for             = "imagewidthInput"
-                id              = "imagewidthLabel">
-
-                  &widthEditField.label;
-                </label>
-
-              </td>
-              <td>
-
-  
-   <input 
-                type            = "text" 
-                size            = "4" 
-                length          = "4"
-                id              = "imagewidthInput" 
-                disabled        = "true"
-                onfocus         = "oldSourceInt = this.value;"
-                onkeyup         = "constrainProportions(this.id, 'imageheightInput')" 
-                onchange        = "doValueChanged()" />
-
-                </td>
-                <td>
-
-        <xul:titledbutton 
-                class           = "push popup" 
-                id              = "widthunitSelect" 
-                style           = "width: 50px;"
-                disabled        = "true"
-                value           = "&pixelsPopup.value;" 
-                align           = "left"
-                popup           = "PixelOrPercentMenu1"
-                popupanchor     = "bottomleft" 
-                onchange        = "doValueChanged()" />
-
-              </td>
-            </tr>
-                    
-              <!-- IMAGE HEIGHT -->
-
-            <tr valign="middle">
-              <td/>
-              <td>
-
-      <label 
-                class           = "disabled"
-                for             = "imageheightInput"
-                id              = "imageheightLabel">
-
-                  &heightEditField.label;
-                </label>
-
-              </td>
-              <td>
-
-      <input 
-                type            = "text" 
-                size            = "4" 
-                length          = "4" 
-                id              = "imageheightInput" 
-                disabled        = "true"
-                onfocus         = "oldSourceInt = this.value;"
-                onkeyup         = "constrainProportions(this.id, 'imagewidthInput')"
-                onchange        = "doValueChanged()" />
-
-                </td>
-                <td>
-
-        <xul:titledbutton 
-                class           = "push popup"
-                id              = "heightunitSelect"
-                style           = "width: 50px;"
-                disabled        = "true"
-                value           = "&pixelsPopup.value;" 
-                align           = "left"
-                popup           = "PixelOrPercentMenu2"
-                popupanchor     = "bottomleft" 
-                onchange        = "doValueChanged()" />
-
-              </td>
-            </tr>
-
-
-              <!-- CONSTRAIN DIMENSIONS -->
-
-            <tr valign="middle">
-              <td/>
-              <td/>
-              <td colspan="2">
-
-    <input 
-                type            = "checkbox" 
-                id              = "constrainCheckbox" />
-
-        <label 
-                class           = "disabled" 
-                id              = "constrainLabel" 
-                for             = "constrainCheckbox">
-
-                  &constrainCheckbox.label;
-                </label>
-
-              </td>
-            </tr>
-          </table>
-        </fieldset>
-      </td>
-      <td align="right">
-
-              <!-- IMAGE ALIGNMENT -->
-
-  <label 
-                class           = "selectbox" 
-                for             = "image.alignType"
-                id              = "imagealignmentLabel">
-
-          &alignment.label;
-        </label>
-        
-        <xul:titledbutton 
-                id              = "image.alignType" 
-                src             = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
-                class           = "push popup" 
-                popup           = "ImageTextAlignment" 
-                popupanchor     = "bottomleft" 
-                align           = "left"
-                onchange        = "doValueChanged()" />
-
-        <fieldset 
-                id              = "spacing.fieldset">
-
-        <legend 
-                id              = "spacingLegend"
-                class           = "disabled"
-                align           = "left"> 
-
-            &spacingFieldset.label; 
-          </legend>
-
-          <table cellspacing="0" cellpadding="0">
-            <tr valign="middle">
-              <td align="right">
-
-  <label 
-                class           = "disabled" 
-                for             = "imageleftrightInput"
-                id              = "leftrightLabel">
-
-                  &leftRightEditField.label;
-                </label>
-
-              </td>
-              <td>
-  <input 
-                type            = "text" 
-                size            = "4" 
-                length          = "4" 
-                maxlength       = "4" 
-                id              = "imageleftrightInput" 
-                onkeyup         = "forceInteger(this.id)" 
-                onchange        = "doValueChanged()"/>
-
-                </td>
-                <td valign="middle">
-
-        <label 
-                class           = "disabled" 
-                for             = "imageleftrightInput"
-                id              = "leftrighttypeLabel">
-
-                &pixelsPopup.value;
-        </label>
-
-                </td>
-                </tr>
-
-                <tr valign="middle">
-                <td align="right">
-
-        <label 
-                class           = "disabled" 
-                for             = "imagetopbottomInput"
-                id              = "topbottomLabel">
-
-                  &topBottomEditField.label;
-                </label>
-
-              </td>
-              <td>
-
-  <input 
-                type            = "text" 
-                size            = "4" 
-                length          = "4" 
-                maxlength       = "4" 
-                id              = "imagetopbottomInput" 
-                onkeyup         = "forceInteger(this.id)"
-                onchange        = "doValueChanged()"/>
-
-                </td>
-                <td valign="middle">
-
-        <label 
-                class           = "disabled" 
-                for             = "imagetopbottomInput"
-                id              = "topbottomtypeLabel">
-
-                &pixelsPopup.value;
-        </label>
-
-                </td>
-                </tr>
-
-                <tr valign="middle">
-                <td align="right">
-
-        <label 
-                class           = "disabled" 
-                for             = "imageborderInput"
-                id              = "borderLabel">
-
-                  &borderEditField.label;
-                </label>
-
-              </td>
-              <td>
-
-  <input 
-                type            ="text" 
-                size            = "4" 
-                length          = "4" 
-                maxlength       = "4"
-                id              = "imageborderInput" 
-                onkeyup         = "forceInteger(this.id)"
-                onchange        = "doValueChanged()" />
-
-                </td>
-                <td valign="middle">
-
-        <label 
-                class           = "disabled"
-                for             = "imageborderInput"
-                id              = "bordertypeLabel">
-
-                  &pixelsPopup.value;
-                </label>
-
-              </td>
-            </tr>
-          </table>
-        </fieldset>
-      </td>
-    </tr>
-  </table>
-  </xul:box>
-  </div> <!-- END of block that is hidden by More/Less button -->
-
-  <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEditButtonNoHR"/>
-
-<!-- ///////////////////// End Parent Table //////////////////////////////////// -->
-<!--
-   </td>
+    <!--//////// Borders and Spacing ////////-->
+    <fieldset>
+      <legend
+        class = "dialog"
+        id    = "spacingLabel"
+        align = "left"> 
+        &spacingFieldset.label; 
+      </legend>
+      <table>
+        <tr>
+          <td align="right">
+            <label 
+              class = "dialog" 
+              id    = "leftrightLabel"
+              for   = "imageleftrightInput">
+              &leftRightEditField.label;
+            </label>
+          </td>
+          <td>
+            <input 
+              type      = "text" 
+              id        = "imageleftrightInput" 
+              size      = "4" 
+              length    = "4" 
+              maxlength = "4" 
+              onkeyup   = "forceInteger(this.id)" 
+              onchange  = "doValueChanged()"/>
+          </td>
+          <td>
+            <label 
+              class = "dialog" 
+              id    = "leftrighttypeLabel"
+              for   = "imageleftrightInput">
+              &pixelsPopup.value;
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label 
+              class = "dialog" 
+              id    = "topbottomLabel"
+              for   = "imagetopbottomInput">
+              &topBottomEditField.label;
+            </label>
+          </td>
+          <td>
+            <input 
+              type      = "text" 
+              id        = "imagetopbottomInput" 
+              size      = "4" 
+              length    = "4" 
+              maxlength = "4" 
+              onkeyup   = "forceInteger(this.id)"
+              onchange  = "doValueChanged()"/>
+          </td>
+          <td>
+            <label 
+              class = "dialog" 
+              id    = "topbottomtypeLabel"
+              for   = "imagetopbottomInput">
+              &pixelsPopup.value;
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label 
+              class = "dialog" 
+              id    = "borderLabel"
+              for   = "border">
+              &borderEditField.label;
+            </label>
+          </td>
+          <td>
+            <input 
+              type      ="text" 
+              id        = "border" 
+              size      = "4" 
+              length    = "4" 
+              maxlength = "4"
+              onkeyup   = "forceInteger(this.id)"
+              onchange  = "doValueChanged()" />
+          </td>
+          <td valign="middle">
+            <label 
+              class = "dialog"
+              id    = "bordertypeLabel"
+              for   = "border">
+              &pixelsPopup.value;
+            </label>
+          </td>
+        </tr>
+      </table>
+    </fieldset>
+    </td>
   </tr>
+  </tbody>
 </table>
--->
-<div class="separator" align="horizontal"/>
-<!-- ////////////////////////// OK CANCEL Box /////////////////////////////// -->
+<!--/div-->
 
-  <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
-
-
-<!-- ///////////////////// Image Percent 1 PopUp Window //////////////////////// -->
-
-<xul:popup      id              = "PixelOrPercentMenu1">
-<xul:window 
-        class                   = "popup" 
-        xmlns                   = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        name                    = "menu2"
-        align                   = "vertical" 
-        flex                    = "100%" 
-        
-        style="
-                background-color:       #CCCCDD;
-                width:                  70px; 
-                height:                 auto; 
-                display:                block;
-                overflow:               hidden;  
-                font:                   3mm tahoma,arial,helvetica,sans-serif;
-                padding:                0px;"
->
-
-    <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
-
-    <xul:titledbutton
-                class           = "push select" 
-                value           = "&pixelsPopup.value;" 
-                align           = "center"
-                style           = "height:20px; vertical-align: middle;"
-                onclick         = "opener.SetPixelOrPercentByID('heightunitSelect', ''); 
-                                opener.popupSelectedImage('&pixelsPopup.value;', 'widthunitSelect', 'value');
-                                window.close();"/>
-
-    <xul:titledbutton 
-                class           = "push select" 
-                value           = "&percentPopup.value;" 
-                align           = "center"
-                style           = "height:20px; vertical-align: middle;"
-                onclick         = "opener.SetPixelOrPercentByID('heightunitSelect', '%'); 
-                                opener.popupSelectedImage('&percentPopup.value;', 'widthunitSelect', 'value');
-                                window.close();"/>
-
-
-  </xul:box>
-</xul:window>
-</xul:popup>
-
-<!-- ///////////////////// Image Percent 2 PopUp Window //////////////////////// -->
-
-<xul:popup      id              = "PixelOrPercentMenu2">
-<xul:window 
-        class                   = "popup" 
-        xmlns                   = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        name                    = "menu2"
-        align                   = "vertical" 
-        flex                    = "100%" 
-        
-        style="
-                background-color:       #CCCCDD;
-                width:                  70px; 
-                height:                 auto; 
-                display:                block;
-                overflow:               hidden;  
-                font:                   3mm tahoma,arial,helvetica,sans-serif;
-                padding:                0px;"
->
-
-
-    <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
-
-    <xul:titledbutton
-                class           = "push select" 
-                value           = "&pixelsPopup.value;" 
-                align           = "center"
-                style           = "height:20px; vertical-align: middle;"
-                onclick         = "opener.SetPixelOrPercentByID('heightunitSelect', ''); 
-                                opener.popupSelectedImage('&pixelsPopup.value;', 'heightunitSelect', 'value');
-                                window.close();"/>
-
-    <xul:titledbutton 
-                class           = "push select" 
-                value           = "&percentPopup.value;" 
-                align           = "center"
-                style           = "height:20px; vertical-align: middle;"
-                onclick         = "opener.SetPixelOrPercentByID('heightunitSelect', '%'); 
-                                opener.popupSelectedImage('&percentPopup.value;', 'heightunitSelect', 'value');
-                                window.close();"/>
-
-  </xul:box>
-</xul:window>
-</xul:popup>
-
-<!-- ///////////////////// Image Align PopUp Window //////////////////////// -->
-
-<xul:popup id="ImageTextAlignment">
-
-<xul:window 
-        class                   = "popup" 
-        xmlns                   = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        name                    = "imageAlignPopup"
-        align                   = "vertical" 
-        flex                    = "100%" 
-        
-        style="
-                background-color:       #CCCCDD;
-                width:                  auto; 
-                height:                 auto; 
-                display:                block;
-                overflow:               hidden;  
-                font:                   3mm tahoma,arial,helvetica,sans-serif;
-                padding:                0px;"
->
-
-        <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
-                
-        <xul:titledbutton class="push" 
-                src             = "&topIcon.url;" 
-                value           = "&topPopup.value;"  
-                onclick         = "opener.SetImageAlignment('top'); 
-                                opener.popupSelectedImage('&topIcon.url;', 'image.alignType', 'src'); 
-                                window.close();" />
-
-        <titledbutton class="push" 
-                src             = "&centerIcon.url;"
-                value           ="&centerPopup.value;"
-                onclick         = "opener.SetImageAlignment('middle'); 
-                                opener.popupSelectedImage('&centerIcon.url;', 'image.alignType', 'src'); 
-                                window.close();" />
-
-        <titledbutton class="push" 
-                src             = "&bottomIcon.url;"
-                value           = "&bottomPopup.value;"
-                onclick         = "opener.SetImageAlignment('bottom', 'image.alignType'); 
-                                opener.popupSelectedImage('&bottomIcon.url;', 'image.alignType', 'src'); 
-                                window.close();" />
-
-        <titledbutton class="push" 
-                src             = "&wrapRightIcon.url;"
-                value           = "&wrapRightPopup.value;"
-                onclick         = "opener.SetImageAlignment('left', 'image.alignType'); 
-                                opener.popupSelectedImage('&wrapRightIcon.url;', 'image.alignType', 'src'); 
-                                window.close();" />
-
-        <titledbutton class="push" 
-                src             = "&wrapLeftIcon.url;"
-                value           = "&wrapLeftPopup.value;"
-                onclick         = "opener.SetImageAlignment('right'); 
-                                opener.popupSelectedImage('&wrapLeftIcon.url;', 'image.alignType', 'src'); 
-                                window.close();" />
-
-</xul:box>
-</xul:window>
-</xul:popup>
+<!-- from EdDialogOverlay -->
+<xul:box id="AdvancedEditButton"/>
+<!-- from global dialogOverlay -->
+<xul:box id="okCancelButtons"/> 
 
 </xul:window>
-
-<!-- The old stuff:
-    <input type="checkbox"> Leave Image at Original Location
-    <input type="checkbox"> Page Background
-            <input type="button" value=" Edit Image "/>
-            <input type="button" value=" Remove Image Map " disabled />
--->
-

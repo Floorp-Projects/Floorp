@@ -218,6 +218,7 @@ function FillListboxes()
   } else {
     // Message to tell user there are none
     AppendStringToList(NamedAnchorList,GetString("NoNamedAnchors"));
+    NamedAnchorList.setAttribute("disabled", "true");
   }
   var firstHeading = true;
   for (var j = 1; j <= 6; j++) {
@@ -263,6 +264,7 @@ function FillListboxes()
   } else {
     // Message to tell user there are none
     AppendStringToList(HeadingsList,GetString("NoHeadings"));
+    HeadingsList.setAttribute("disabled", "true");
   }
 }
 
@@ -295,24 +297,20 @@ function onMoreFewer()
 {
   if (SeeMore)
   {
-    SeeMore = false;
-// This doesn't work very well - lots of layout bugs
-//    MoreSection.setAttribute("style","visibility:collapse");
     MoreSection.setAttribute("style","display: none");
-    MoreFewerButton.setAttribute("value",GetString("MoreAttributes"));
+    window.sizeToContent();
     MoreFewerButton.setAttribute("more","0");
-    //AdvancedEditSection.setAttribute("style","display: none");
+    MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
+    SeeMore = false;
   }
   else
   {
-    SeeMore = true;
-//    MoreSection.setAttribute("style","visibility: inherit");
     MoreSection.setAttribute("style","display: inherit");
-    MoreFewerButton.setAttribute("value",GetString("FewerAttributes"));
+    window.sizeToContent();
     MoreFewerButton.setAttribute("more","1");
-    //AdvancedEditSection.setAttribute("style","display: inherit");
+    MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
+    SeeMore = true;
   }
-  window.sizeToContent();
 }
 
 

@@ -63,6 +63,7 @@ function StringExists(string)
 
 function ClearList(list)
 {
+  dump("Clear List: list="+list+"\n");
   if (list) {
     list.selectedIndex = -1;
     for( i=list.length-1; i >= 0; i--)
@@ -227,7 +228,7 @@ function PrepareStringForURL(string)
 // or disabled (setAttribute) as specified in the "doEnable" parameter
 function SetElementEnabledByID( elementID, doEnable )
 {
-  element           = document.getElementById(elementID);
+  element = document.getElementById(elementID);
   if ( element )
   {
     if ( doEnable )
@@ -336,7 +337,6 @@ function InitPixelOrPercentPopupButton(element, attribute, buttonID)
 function SetPixelOrPercentByID(elementID, percentString)
 {
   percentChar = percentString;
-  dump("SetPixelOrPercent. PercentChar="+percentChar+"\n");
 
   btn = document.getElementById( elementID );
   if ( btn )
@@ -346,7 +346,6 @@ function SetPixelOrPercentByID(elementID, percentString)
       var containing = getContainer();
       if (containing != null)
       {
-        dump("Containing Element = " + containing + "\n");
         if (containing.nodeName == "TD")
           btn.setAttribute("value", GetString("PercentOfCell"));
         else
@@ -397,7 +396,6 @@ function onAdvancedEdit()
     //  (the copy named "globalElement")
     window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal", "", globalElement);
     if (window.AdvancedEditOK) {
-      dump("Advanced Dialog closed with OK\n");
       // Copy edited attributes to the dialog widgets:
       //  to setup for validation
       InitDialog();
@@ -415,7 +413,6 @@ function onAdvancedEdit()
 
 function onCancel()
 {
-  dump("Cancel button clicked: closing window\n");
   window.close();
 }
 
