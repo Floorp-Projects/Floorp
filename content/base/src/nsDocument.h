@@ -408,9 +408,9 @@ public:
   virtual void AddReference(void *aKey, nsISupports *aReference);
   virtual already_AddRefed<nsISupports> RemoveReference(void *aKey);
   virtual nsIScriptEventManager* GetScriptEventManager();
-  virtual void SetXMLDeclaration(const nsAString& aVersion,
-                               const nsAString& aEncoding,
-                               const nsAString& Standalone);
+  virtual void SetXMLDeclaration(const PRUnichar *aVersion,
+                                 const PRUnichar *aEncoding,
+                                 const PRInt32 aStandalone);
   virtual void GetXMLDeclaration(nsAString& aVersion,
                                  nsAString& aEncoding,
                                  nsAString& Standalone);

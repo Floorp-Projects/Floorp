@@ -1425,14 +1425,14 @@ XML_SetEntityDeclHandler(XML_Parser parser,
 {
   entityDeclHandler = handler;
 }
+#endif
+/* END MOZILLA CHANGE */
 
 void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser parser,
                       XML_XmlDeclHandler handler) {
   xmlDeclHandler = handler;
 }
-#endif
-/* END MOZILLA CHANGE */
 
 int XMLCALL
 XML_SetParamEntityParsing(XML_Parser parser,

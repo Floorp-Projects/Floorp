@@ -4087,25 +4087,26 @@ nsDocument::GetScriptEventManager()
 }
 
 void
-nsDocument::SetXMLDeclaration(const nsAString& aVersion,
-                              const nsAString& aEncoding,
-                              const nsAString& aStandalone)
+nsDocument::SetXMLDeclaration(const PRUnichar *aVersion,
+                              const PRUnichar *aEncoding,
+                              const PRInt32 aStandalone)
 {
-  if (aVersion.IsEmpty()) {
+  if (!aVersion || *aVersion == '\0') {
     mXMLDeclarationBits = 0;
     return;
   }
 
   mXMLDeclarationBits = XML_DECLARATION_BITS_DECLARATION_EXISTS;
 
-  if (!aEncoding.IsEmpty()) {
+  if (aEncoding && *aEncoding != '\0') {
     mXMLDeclarationBits |= XML_DECLARATION_BITS_ENCODING_EXISTS;
   }
 
-  if (aStandalone.EqualsLiteral("yes")) {
+  if (aStandalone == 1) {
     mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS |
                            XML_DECLARATION_BITS_STANDALONE_YES;
-  } else if (aStandalone.EqualsLiteral("no")) {
+  }
+  else if (aStandalone == 0) {
     mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS;
   }
 }

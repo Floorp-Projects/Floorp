@@ -223,8 +223,9 @@ txStylesheetSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleXMLDeclaration(const PRUnichar *aData,
-                                       PRUint32 aLength)
+txStylesheetSink::HandleXMLDeclaration(const PRUnichar *aVersion,
+                                       const PRUnichar *aEncoding,
+                                       const PRInt32 aStandalone)
 {
     return NS_OK;
 }

@@ -987,8 +987,9 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
 
 NS_IMETHODIMP
-XULContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aData, 
-                                         PRUint32 aLength)
+XULContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aVersion,
+                                         const PRUnichar *aEncoding,
+                                         const PRInt32 aStandalone)
 {
   return NS_OK;
 }
