@@ -243,13 +243,11 @@ nsLocalFile::Clone(nsIFile **file)
     CHECK_mPath();
     NS_ENSURE_ARG(file);
 
-    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile();
+    nsLocalFile *localFile = new nsLocalFile(*this);
     if (!localFile)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = localFile->InitWithPath(mPath);
-    if (NS_FAILED(rv))
-        return rv;
+    localFile->mRefCnt = 0;
 
     *file = localFile;
     NS_ADDREF(*file);
