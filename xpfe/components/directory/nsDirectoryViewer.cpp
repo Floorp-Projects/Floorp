@@ -262,7 +262,7 @@ nsHTTPIndexParser::Init()
     rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "loading",  &kHTTPIndex_Loading);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gRDF->GetLiteral(nsAutoString("true").GetUnicode(), &kTrueLiteral);
+    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
     if (NS_FAILED(rv)) return rv;
 
     for (Field* field = gFieldTable; field->mName; ++field) {
@@ -508,12 +508,12 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
 					else if (buf[2] == '1' && buf[3] == ':')
 					{
 						// 101. Human-readable information line.
-						mComment += (buf + 4);
+						mComment.AppendWithConversion(buf + 4);
 					}
 					else if (buf[2] == '2' && buf[3] == ':')
 					{
 						// 102. Human-readable information line, HTML.
-						mComment += (buf + 4);
+						mComment.AppendWithConversion(buf + 4);
 					}
 				}
 			}
@@ -687,7 +687,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
     // Monkey with the nsStr, because we're bold.
     value.mLength = nsUnescapeCount(value.mStr);
 
-    values[i] = value;
+    values[i].AppendWithConversion(value);
 
     Field* field = NS_STATIC_CAST(Field*, mFormat.ElementAt(i));
     if (field && field->mProperty == kHTTPIndex_Filename) {
@@ -703,7 +703,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
       char* result = nsnull;
       rv = ioServ->Escape(filename, nsIIOService::url_FileBaseName +
                           nsIIOService::url_Forced, &result);
-      rv = NS_MakeAbsoluteURI(entryuri, result, realbase);
+      rv = NS_MakeAbsoluteURI(entryuri, NS_ConvertASCIItoUCS2(result), realbase);
       CRTFREEIF(result);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
       if (filetype.EqualsIgnoreCase("directory"))
@@ -1129,7 +1129,7 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
 						if (NS_SUCCEEDED(rv = channel->AsyncRead(listener, aSource)))
 						{
 							nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-							gRDF->GetLiteral(nsAutoString("true").GetUnicode(),
+							gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
 								getter_AddRefs(trueLiteral));
 							rv = mInner->Assert(aSource, kNC_loading, trueLiteral, PR_TRUE);
 						}

@@ -32,7 +32,7 @@ public:
     virtual ~nsConsoleMessage();
 
     nsConsoleMessage(const PRUnichar *message) {
-        mMessage.SetString(message);
+        mMessage.Assign(message);
     }
 
     NS_DECL_ISUPPORTS
