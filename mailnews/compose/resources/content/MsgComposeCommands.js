@@ -29,6 +29,10 @@ var messengerMigratorProgID   = "component://netscape/messenger/migrator";
 
 var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+
+var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
@@ -488,7 +492,8 @@ function GenericSendMessage( msgType )
 	    if (msgCompFields)
 	    {
 			Recipients2CompFields(msgCompFields);
-			msgCompFields.SetSubject(document.getElementById("msgSubject").value);
+			var subject = document.getElementById("msgSubject").value;
+			msgCompFields.SetSubject(subject);
 			dump("attachments = " + GenerateAttachmentsString() + "\n");
 			try {
 				msgCompFields.SetAttachments(GenerateAttachmentsString());
@@ -499,6 +504,27 @@ function GenericSendMessage( msgType )
 		
 			if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
 			{
+				//Check if we have a subject, else ask user for confirmation
+				if (subject == "")
+				{ 
+    				if (commonDialogsService)
+    				{
+						var result = {value:0};
+        				if (commonDialogsService.Prompt(
+        					window,
+        					Bundle.GetStringFromName("subjectDlogTitle"),
+        					Bundle.GetStringFromName("subjectDlogMessage"),
+        					Bundle.GetStringFromName("defaultSubject"),
+        					result
+        					))
+        				{
+        					msgCompFields.SetSubject(result.value);
+        					var subjectInputElem = document.getElementById("msgSubject");
+        					subjectInputElem.value = result.value;
+        				}
+        			}
+    			}
+            
 				// Before sending the message, check what to do with HTML message, eventually abort.
 				action = DetermineHTMLAction();
 				if (action == msgCompSendFormat.AskUser)
@@ -812,8 +838,6 @@ function ComposeCanClose()
 	// Returns FALSE only if user cancels save action
 	if (contentChanged || msgCompose.bodyModified)
 	{
-		var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
-		commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 		if (commonDialogsService)
 		{
             var result = {value:0};
@@ -875,7 +899,7 @@ function AttachFile()
 	try {
 		var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
                 filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);     
-		currentAttachment = filePicker.chooseFile("Enter file to attach");
+		currentAttachment = filePicker.chooseFile(Bundle.GetStringFromName("&chooseFileToAttach;"));
 	}
 	catch (ex) {
 		dump("failed to get the local file to attach\n");
@@ -905,10 +929,19 @@ function AddAttachment(attachment)
 
 function AttachPage()
 {
-    var result = {url: ""};
-	window.openDialog("chrome://messenger/content/messengercompose/MsgAttachPage.xul", "attachPageDialog", "chrome,modal", result);
-	if (result.url != "")
-	    AddAttachment(result.url);
+    if (commonDialogsService)
+    {
+        var result = {value:0};
+        if (commonDialogsService.Prompt(
+        	window,
+        	Bundle.GetStringFromName("attachPageDlogTitle"),
+        	Bundle.GetStringFromName("attachPageDlogMessage"),
+        	null,
+        	result))
+        {
+			AddAttachment(result.value);
+        }
+    }
 }
 
 function GenerateAttachmentsString()
