@@ -2271,7 +2271,6 @@ js_Interpret(JSContext *cx, jsval *result)
 	     * ECMAv2 forbids conversion of discriminant, so we will skip to
 	     * the default case if the discriminant isn't an int jsval.
 	     * (This opcode is emitted only for dense jsint-domain switches.)
-	     * XXX don't use JSVERSION_IS_ECMAv2, it's wrong and overloaded
 	     */
 	    if (cx->version == JSVERSION_DEFAULT ||
 		cx->version >= JSVERSION_1_4) {

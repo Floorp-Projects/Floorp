@@ -107,8 +107,6 @@ typedef enum JSVersion {
 
 #define JSVERSION_IS_ECMA(version) \
     ((version) == JSVERSION_DEFAULT || (version) >= JSVERSION_1_3)
-#define JSVERSION_IS_ECMAv2(version) \
-    ((version) >= JSVERSION_1_3)
 
 /* Result of typeof operator enumeration. */
 typedef enum JSType {
