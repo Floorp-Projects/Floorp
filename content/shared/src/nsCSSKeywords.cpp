@@ -64,13 +64,15 @@ nsCSSKeywords::AddRefTable(void)
 #ifdef DEBUG
     {
       // let's verify the table...
-      for (PRInt32 index = 0; index < eCSSKeyword_COUNT; ++index) {
+      PRInt32 index = 0;
+      for (; index < eCSSKeyword_COUNT && kCSSRawKeywords[index]; ++index) {
         nsCAutoString temp1(kCSSRawKeywords[index]);
         nsCAutoString temp2(kCSSRawKeywords[index]);
         ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
         NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
       }
+      NS_ASSERTION(index == eCSSKeyword_COUNT, "kCSSRawKeywords and eCSSKeyword_COUNT are out of sync");
     }
 #endif      
       gKeywordTable->Init(kCSSRawKeywords, eCSSKeyword_COUNT); 
