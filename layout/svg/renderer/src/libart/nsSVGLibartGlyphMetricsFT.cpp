@@ -350,7 +350,7 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   PRBool retval = PR_TRUE;
   
-  FindFontStruct* &font_data = (FindFontStruct*) aData;
+  FindFontStruct* font_data = (FindFontStruct*) aData;
   
 #ifdef DEBUG
   printf("trying to instantiate font %s, generic=%d\n", NS_ConvertUCS2toUTF8(aFamily).get(),
