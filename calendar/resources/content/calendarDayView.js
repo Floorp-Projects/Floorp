@@ -236,7 +236,7 @@ DayView.prototype.refreshEvents = function( )
          //newTextNode.setAttribute( "AllDayText", "true" );
          
          newImage = document.createElement("image");
-         newImage.setAttribute( "src", "chrome://calendar/skin/all_day_event.png" );
+         newImage.setAttribute( "class", "all-day-event-class" );
          newImage.calendarEventDisplay = calendarEventDisplay;
          newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
          newImage.setAttribute( "onclick", "dayEventItemClick( this, event )" );

@@ -316,8 +316,6 @@
 
 /*--------------------------------------------------------------------
  * Month header has the names of the days. 
- *          :TODO: What about localization of day names? since they
- *                 are in images,
  *-------------------------------------------------------------------*/
 
 #month-header-box
@@ -709,9 +707,22 @@
 {
 }
 
+.all-day-event-class,
 .month-allday-busy-ind-class[busy="true"]
 {
-   list-style-image     :url("chrome://calendar/skin/all_day_event.png");
+   list-style-image     :url("chrome://calendar/skin/all_day_event.gif");
+}  
+
+.all-day-event-class:hover,
+.month-allday-busy-ind-class[busy="true"]:hover
+{
+   list-style-image     :url("chrome://calendar/skin/all_day_event.gif");
+}  
+
+.all-day-event-class:hover:active,
+.month-allday-busy-ind-class[busy="true"]:hover:active
+{
+   list-style-image     :url("chrome://calendar/skin/all_day_event.gif");
 }  
 
 .month-view-event-dot-class

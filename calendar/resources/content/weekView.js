@@ -271,7 +271,7 @@ WeekView.prototype.refreshEvents = function( )
          
 
             newImage = document.createElement("image");
-            newImage.setAttribute( "src", "chrome://calendar/skin/all_day_event.png" );
+				newImage.setAttribute( "class", "all-day-event-class" );
             newImage.setAttribute( "WeekViewAllDayText", "true" );
             newImage.calendarEventDisplay = calendarEventDisplay;
             newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );

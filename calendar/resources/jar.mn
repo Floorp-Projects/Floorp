@@ -32,7 +32,7 @@ calendar.jar:
     locale/en-US/calendar/contents.rdf (locale/en-US/contents.rdf)
     locale/en-US/calendar/dateFormat.properties (locale/en-US/dateFormat.properties)
     locale/en-US/calendar/global.dtd (locale/en-US/global.dtd)
-    skin/modern/calendar/all_day_event.png (skin/modern/all_day_event.png)
+    skin/modern/calendar/all_day_event.gif (skin/modern/all_day_event.gif)
     skin/modern/calendar/arrow_left.png (skin/modern/arrow_left.png)
     skin/modern/calendar/arrow_left_down.png (skin/modern/arrow_left_down.png)
     skin/modern/calendar/arrow_left_hover.png (skin/modern/arrow_left_hover.png)
