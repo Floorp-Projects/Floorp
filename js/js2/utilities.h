@@ -27,7 +27,7 @@
 #include <iterator>
 #include <iostream>
 
-#ifndef _WIN32 // Microsoft VC6 bug: standard identifiers should be in std namespace
+#ifndef _WIN32	// Microsoft Visual C++ 6.0 bug: standard identifiers should be in std namespace
 using std::size_t;
 using std::ptrdiff_t;
 using std::strlen;
@@ -266,13 +266,19 @@ namespace JavaScript {
 // Arenas
 //
 
+#ifndef _WIN32
 	// Pretend that obj points to a value of class T and call obj's destructor.
 	template<class T>
 	void classDestructor(void *obj)
 	{
 		static_cast<T *>(obj)->~T();
 	}
-	
+#else	// Microsoft Visual C++ 6.0 bug workaround
+	template<class T>
+	struct DestructorHolder {
+		static void destroy(void *obj) {static_cast<T *>(obj)->~T();}
+	};
+#endif
 
 	// An arena is a region of memory from which objects either derived from ArenaObject or allocated
 	// using a ArenaAllocator can be allocated.  Deleting these objects individually runs the destructors,
@@ -325,7 +331,11 @@ namespace JavaScript {
 		// The destructors will be called in reverse order of being registered.
 		// registerDestructor might itself runs out of memory, in which case it immediately
 		// calls object's destructor before throwing bad_alloc.
+#ifndef _WIN32
 		template<class T> void registerDestructor(T *object) {newDestructorEntry(&classDestructor<T>, object);}
+#else
+		template<class T> void registerDestructor(T *object) {newDestructorEntry(&DestructorHolder<T>::destroy, object);}
+#endif
 	};
 
 	
@@ -333,6 +343,10 @@ namespace JavaScript {
 	struct ArenaObject {
 		void *operator new(size_t size, Arena &arena) {return arena.allocate(size);}
 		void *operator new[](size_t size, Arena &arena) {return arena.allocate(size);}
+#ifndef __MWERKS__	// Metrowerks 5.3 bug: These aren't supported yet
+		void operator delete(void *, Arena &) {}
+		void operator delete[](void *, Arena &) {}
+#endif
 	  private:
 		void operator delete(void *, size_t) {}
 		void operator delete[](void *) {}
@@ -474,7 +488,7 @@ namespace JavaScript {
 	// parameter E must be a class that has a member named 'next' whose type is E* or const E*.
 	
 	template <class E>
-	class ListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t, E*, E&> {
+	class ListIterator: public std::iterator<std::forward_iterator_tag, E> {
 		E *element;
 
 	  public:
@@ -491,7 +505,11 @@ namespace JavaScript {
 
 	
 	template <class E>
+#ifndef _WIN32 // Microsoft VC6 bug: std::iterator should support five template arguments
 	class ConstListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t, const E*, const E&> {
+#else
+	class ConstListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t> {
+#endif
 		const E *element;
 
 	  public:
@@ -586,11 +604,16 @@ namespace JavaScript {
 
 
 inline void *operator new(size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
-inline void *operator new[](size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
-#if 0	// Most compilers don't support this yet
-// Global delete operators.  These are only called in the rare cases that a constructor throws an exception
-// and has to undo an operator new.  An explicit delete statement will never invoke these.
-inline void operator delete(void *, JavaScript::Arena &) {}
-inline void operator delete[](void *, JavaScript::Arena &) {}
+#ifndef _WIN32		// Microsoft Visual C++ 6.0 bug: new and new[] aren't distinguished
+ inline void *operator new[](size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
+#endif
+
+#ifndef __MWERKS__	// Metrowerks 5.3 bug: These aren't supported yet
+ // Global delete operators.  These are only called in the rare cases that a constructor throws an exception
+ // and has to undo an operator new.  An explicit delete statement will never invoke these.
+ inline void operator delete(void *, JavaScript::Arena &) {}
+ #ifndef _WIN32		// Microsoft Visual C++ 6.0 bug: new and new[] aren't distinguished
+  inline void operator delete[](void *, JavaScript::Arena &) {}
+ #endif
 #endif
 #endif
