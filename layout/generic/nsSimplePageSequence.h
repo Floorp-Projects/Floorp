@@ -15,36 +15,26 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsPageFrame_h___
-#define nsPageFrame_h___
+#ifndef nsSimplePageSequence_h___
+#define nsSimplePageSequence_h___
 
 #include "nsHTMLContainerFrame.h"
 
-// Page frame class used by the simple page sequence frame
-class nsPageFrame : public nsContainerFrame {
+// Simple page sequence frame class. Used when we're in paginated mode
+class nsSimplePageSequenceFrame : public nsContainerFrame {
 public:
-  nsPageFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsSimplePageSequenceFrame(nsIContent* aContent, nsIFrame* aParent);
+
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
 
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aCX,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
-
-  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect);
-
   // Debugging
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
-
-protected:
-  void CreateFirstChild(nsIPresContext* aPresContext);
 };
 
-#endif /* nsPageFrame_h___ */
+#endif /* nsSimplePageSequence_h___ */
 

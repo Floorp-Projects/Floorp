@@ -47,6 +47,7 @@ CPPSRCS=				\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
 	nsPresShell.cpp			\
+	nsSimplePageSequence.cpp \
 	nsScrollFrame.cpp		\
 	nsSpacerFrame.cpp		\
 	nsSplittableFrame.cpp		\
@@ -80,6 +81,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsPageFrame.obj		\
 	.\$(OBJDIR)\nsPlaceholderFrame.obj	\
 	.\$(OBJDIR)\nsPresShell.obj		\
+	.\$(OBJDIR)\nsSimplePageSequence.obj \
 	.\$(OBJDIR)\nsScrollFrame.obj		\
 	.\$(OBJDIR)\nsSpacerFrame.obj		\
 	.\$(OBJDIR)\nsSplittableFrame.obj	\
