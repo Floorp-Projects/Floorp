@@ -112,100 +112,98 @@ public class Token
         NAME           = 38,
         NUMBER         = 39,
         STRING         = 40,
-        ZERO           = 41,
-        ONE            = 42,
-        NULL           = 43,
-        THIS           = 44,
-        FALSE          = 45,
-        TRUE           = 46,
-        SHEQ           = 47,   // shallow equality (===)
-        SHNE           = 48,   // shallow inequality (!==)
-        REGEXP         = 49,
-        BINDNAME       = 50,
-        THROW          = 51,
-        IN             = 52,
-        INSTANCEOF     = 53,
-        LOCAL_SAVE     = 54,
-        LOCAL_LOAD     = 55,
-        GETVAR         = 56,
-        SETVAR         = 57,
-        CATCH_SCOPE    = 58,
-        ENUM_INIT      = 59,
-        ENUM_NEXT      = 60,
-        ENUM_ID        = 61,
-        THISFN         = 62,
-        RETURN_RESULT  = 63, // to return prevoisly stored return result
-        ARRAYLIT       = 64, // array literal
-        OBJECTLIT      = 65, // object literal
-        GET_REF        = 66, // *reference
-        SET_REF        = 67, // *reference    = something
-        REF_CALL       = 68, // f(args)    = something or f(args)++
-        SPECIAL_REF    = 69, // reference for special properties like __proto
-        GENERIC_REF    = 70, // generic reference to generate runtime ref errors
+        NULL           = 41,
+        THIS           = 42,
+        FALSE          = 43,
+        TRUE           = 44,
+        SHEQ           = 45,   // shallow equality (===)
+        SHNE           = 46,   // shallow inequality (!==)
+        REGEXP         = 47,
+        BINDNAME       = 48,
+        THROW          = 49,
+        IN             = 50,
+        INSTANCEOF     = 51,
+        LOCAL_SAVE     = 52,
+        LOCAL_LOAD     = 53,
+        GETVAR         = 54,
+        SETVAR         = 55,
+        CATCH_SCOPE    = 56,
+        ENUM_INIT      = 57,
+        ENUM_NEXT      = 58,
+        ENUM_ID        = 59,
+        THISFN         = 60,
+        RETURN_RESULT  = 61, // to return prevoisly stored return result
+        ARRAYLIT       = 62, // array literal
+        OBJECTLIT      = 63, // object literal
+        GET_REF        = 64, // *reference
+        SET_REF        = 65, // *reference    = something
+        REF_CALL       = 66, // f(args)    = something or f(args)++
+        SPECIAL_REF    = 67, // reference for special properties like __proto
+        GENERIC_REF    = 68, // generic reference to generate runtime ref errors
 
-        LAST_BYTECODE_TOKEN    = 70,
+        LAST_BYTECODE_TOKEN    = 68,
         // End of interpreter bytecodes
 
-        TRY            = 71,
-        SEMI           = 72,  // semicolon
-        LB             = 73,  // left and right brackets
-        RB             = 74,
-        LC             = 75,  // left and right curlies (braces)
-        RC             = 76,
-        LP             = 77,  // left and right parentheses
-        RP             = 78,
-        COMMA          = 79,  // comma operator
-        ASSIGN         = 80, // simple assignment  (=)
-        ASSIGNOP       = 81, // assignment with operation (+= -= etc.)
-        HOOK           = 82, // conditional (?:)
-        COLON          = 83,
-        OR             = 84, // logical or (||)
-        AND            = 85, // logical and (&&)
-        INC            = 86, // increment/decrement (++ --)
-        DEC            = 87,
-        DOT            = 88, // member operator (.)
-        FUNCTION       = 89, // function keyword
-        EXPORT         = 90, // export keyword
-        IMPORT         = 91, // import keyword
-        IF             = 92, // if keyword
-        ELSE           = 93, // else keyword
-        SWITCH         = 94, // switch keyword
-        CASE           = 95, // case keyword
-        DEFAULT        = 96, // default keyword
-        WHILE          = 97, // while keyword
-        DO             = 98, // do keyword
-        FOR            = 99, // for keyword
-        BREAK          = 100, // break keyword
-        CONTINUE       = 101, // continue keyword
-        VAR            = 102, // var keyword
-        WITH           = 103, // with keyword
-        CATCH          = 104, // catch keyword
-        FINALLY        = 105, // finally keyword
-        VOID           = 106, // void keyword
-        RESERVED       = 107, // reserved keywords
+        TRY            = 69,
+        SEMI           = 70,  // semicolon
+        LB             = 71,  // left and right brackets
+        RB             = 72,
+        LC             = 73,  // left and right curlies (braces)
+        RC             = 74,
+        LP             = 75,  // left and right parentheses
+        RP             = 76,
+        COMMA          = 77,  // comma operator
+        ASSIGN         = 78, // simple assignment  (=)
+        ASSIGNOP       = 79, // assignment with operation (+= -= etc.)
+        HOOK           = 80, // conditional (?:)
+        COLON          = 81,
+        OR             = 82, // logical or (||)
+        AND            = 83, // logical and (&&)
+        INC            = 84, // increment/decrement (++ --)
+        DEC            = 85,
+        DOT            = 86, // member operator (.)
+        FUNCTION       = 87, // function keyword
+        EXPORT         = 88, // export keyword
+        IMPORT         = 89, // import keyword
+        IF             = 90, // if keyword
+        ELSE           = 91, // else keyword
+        SWITCH         = 92, // switch keyword
+        CASE           = 93, // case keyword
+        DEFAULT        = 94, // default keyword
+        WHILE          = 95, // while keyword
+        DO             = 96, // do keyword
+        FOR            = 97, // for keyword
+        BREAK          = 98, // break keyword
+        CONTINUE       = 99, // continue keyword
+        VAR            = 100, // var keyword
+        WITH           = 101, // with keyword
+        CATCH          = 102, // catch keyword
+        FINALLY        = 103, // finally keyword
+        VOID           = 104, // void keyword
+        RESERVED       = 105, // reserved keywords
 
-        EMPTY          = 108,
+        EMPTY          = 106,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK          = 109, // statement block
-        LABEL          = 110, // label
-        TARGET         = 111,
-        LOOP           = 112,
-        EXPR_VOID      = 113, // expression statement in functions
-        EXPR_RESULT    = 114, // expression statement in scripts
-        JSR            = 115,
-        SCRIPT         = 116, // top-level node for entire script
-        TYPEOFNAME     = 117, // for typeof(simple-name)
-        USE_STACK      = 118,
-        SETPROP_OP     = 119, // x.y op= something
-        SETELEM_OP     = 120, // x[y] op= something
-        LOCAL_BLOCK    = 121,
-        SET_REF_OP     = 122, // *reference op= something
+        BLOCK          = 107, // statement block
+        LABEL          = 108, // label
+        TARGET         = 109,
+        LOOP           = 110,
+        EXPR_VOID      = 111, // expression statement in functions
+        EXPR_RESULT    = 112, // expression statement in scripts
+        JSR            = 113,
+        SCRIPT         = 114, // top-level node for entire script
+        TYPEOFNAME     = 115, // for typeof(simple-name)
+        USE_STACK      = 116,
+        SETPROP_OP     = 117, // x.y op= something
+        SETELEM_OP     = 118, // x[y] op= something
+        LOCAL_BLOCK    = 119,
+        SET_REF_OP     = 120, // *reference op= something
 
-        LAST_TOKEN     = 122;
+        LAST_TOKEN     = 120;
 
     public static String name(int token)
     {
@@ -260,8 +258,6 @@ public class Token
           case NAME:            return "NAME";
           case NUMBER:          return "NUMBER";
           case STRING:          return "STRING";
-          case ZERO:            return "ZERO";
-          case ONE:             return "ONE";
           case NULL:            return "NULL";
           case THIS:            return "THIS";
           case FALSE:           return "FALSE";

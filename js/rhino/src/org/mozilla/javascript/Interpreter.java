@@ -58,85 +58,91 @@ public class Interpreter
     // Stack: ... value2 value1 -> ... value1 value2
         Icode_SWAP                      = -3,
 
+    // Stack: ... value1 -> ...
+        Icode_POP                       = -4,
+
+    // Store stack top into return register and then pop it
+        Icode_POP_RESULT                = -5,
+
     // To jump conditionally and pop additional stack value
-        Icode_IFEQ_POP                  = -4,
+        Icode_IFEQ_POP                  = -6,
 
     // various types of ++/--
-        Icode_VAR_INC_DEC               = -5,
-        Icode_NAME_INC_DEC              = -6,
-        Icode_PROP_INC_DEC              = -7,
-        Icode_ELEM_INC_DEC              = -8,
-        Icode_REF_INC_DEC               = -9,
+        Icode_VAR_INC_DEC               = -7,
+        Icode_NAME_INC_DEC              = -8,
+        Icode_PROP_INC_DEC              = -9,
+        Icode_ELEM_INC_DEC              = -10,
+        Icode_REF_INC_DEC               = -11,
 
     // helper codes to deal with activation
-        Icode_SCOPE                     = -10,
-        Icode_TYPEOFNAME                = -11,
+        Icode_SCOPE                     = -12,
+        Icode_TYPEOFNAME                = -13,
 
     // helper for function calls
-        Icode_NAME_FAST_THIS            = -12,
-        Icode_NAME_SLOW_THIS            = -13,
-        Icode_PUSH_PARENT               = -14,
+        Icode_NAME_FAST_THIS            = -14,
+        Icode_NAME_SLOW_THIS            = -15,
+        Icode_PUSH_PARENT               = -16,
 
     // Create closure object for nested functions
-        Icode_CLOSURE_EXPR              = -15,
-        Icode_CLOSURE_STMT              = -16,
+        Icode_CLOSURE_EXPR              = -17,
+        Icode_CLOSURE_STMT              = -18,
 
     // Special calls
-        Icode_CALLSPECIAL               = -17,
+        Icode_CALLSPECIAL               = -19,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -18,
+        Icode_RETUNDEF                  = -20,
 
     // Exception handling implementation
-        Icode_CATCH                     = -19,
-        Icode_GOSUB                     = -20,
-        Icode_RETSUB                    = -21,
+        Icode_CATCH                     = -21,
+        Icode_GOSUB                     = -22,
+        Icode_RETSUB                    = -23,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -22,
+        Icode_LINE                      = -24,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -23,
-        Icode_INTNUMBER                 = -24,
+        Icode_SHORTNUMBER               = -25,
+        Icode_INTNUMBER                 = -26,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -25,
-        Icode_LITERAL_SET               = -26,
+        Icode_LITERAL_NEW               = -27,
+        Icode_LITERAL_SET               = -28,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -27,
+        Icode_SPARE_ARRAYLIT            = -29,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -28,
-        Icode_REG_IND_C1                = -29,
-        Icode_REG_IND_C2                = -30,
-        Icode_REG_IND_C3                = -31,
-        Icode_REG_IND_C4                = -32,
-        Icode_REG_IND_C5                = -33,
-        Icode_REG_IND1                  = -34,
-        Icode_REG_IND2                  = -35,
-        Icode_REG_IND4                  = -36,
+        Icode_REG_IND_C0                = -30,
+        Icode_REG_IND_C1                = -31,
+        Icode_REG_IND_C2                = -32,
+        Icode_REG_IND_C3                = -33,
+        Icode_REG_IND_C4                = -34,
+        Icode_REG_IND_C5                = -35,
+        Icode_REG_IND1                  = -36,
+        Icode_REG_IND2                  = -37,
+        Icode_REG_IND4                  = -38,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -37,
-        Icode_REG_STR_C1                = -38,
-        Icode_REG_STR_C2                = -39,
-        Icode_REG_STR_C3                = -40,
-        Icode_REG_STR1                  = -41,
-        Icode_REG_STR2                  = -42,
-        Icode_REG_STR4                  = -43,
+        Icode_REG_STR_C0                = -39,
+        Icode_REG_STR_C1                = -40,
+        Icode_REG_STR_C2                = -41,
+        Icode_REG_STR_C3                = -42,
+        Icode_REG_STR1                  = -43,
+        Icode_REG_STR2                  = -44,
+        Icode_REG_STR4                  = -45,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -44,
-        Icode_SETVAR1                   = -45,
+        Icode_GETVAR1                   = -46,
+        Icode_SETVAR1                   = -47,
 
-        Icode_UNDEF                     = -46,
-
-        Icode_POP                       = -47,
-        Icode_POP_RESULT                = -48,
+    // Load unefined
+        Icode_UNDEF                     = -48,
+        Icode_ZERO                      = -49,
+        Icode_ONE                       = -50,
 
     // Last icode
-        MIN_ICODE                       = -48;
+        MIN_ICODE                       = -50;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -171,6 +177,8 @@ public class Interpreter
           case Icode_DUP:              return "DUP";
           case Icode_DUP2:             return "DUP2";
           case Icode_SWAP:             return "SWAP";
+          case Icode_POP:              return "POP";
+          case Icode_POP_RESULT:       return "POP_RESULT";
           case Icode_IFEQ_POP:         return "IFEQ_POP";
           case Icode_VAR_INC_DEC:      return "VAR_INC_DEC";
           case Icode_NAME_INC_DEC:     return "NAME_INC_DEC";
@@ -214,8 +222,8 @@ public class Interpreter
           case Icode_GETVAR1:          return "GETVAR1";
           case Icode_SETVAR1:          return "SETVAR1";
           case Icode_UNDEF:            return "UNDEF";
-          case Icode_POP:              return "POP";
-          case Icode_POP_RESULT:       return "POP_RESULT";
+          case Icode_ZERO:             return "ZERO";
+          case Icode_ONE:              return "ONE";
         }
 
         // icode without name
@@ -986,32 +994,9 @@ public class Interpreter
             iCodeTop = visitIncDec(node, child, iCodeTop);
             break;
 
-          case Token.NUMBER: {
-            double num = node.getDouble();
-            int inum = (int)num;
-            if (inum == num) {
-                if (inum == 0) {
-                    iCodeTop = addToken(Token.ZERO, iCodeTop);
-                    // Check for negative zero
-                    if (1.0 / num < 0.0) {
-                        iCodeTop = addToken(Token.NEG, iCodeTop);
-                    }
-                } else if (inum == 1) {
-                    iCodeTop = addToken(Token.ONE, iCodeTop);
-                } else if ((short)inum == inum) {
-                    iCodeTop = addIcode(Icode_SHORTNUMBER, iCodeTop);
-                    iCodeTop = addShort(inum, iCodeTop);
-                } else {
-                    iCodeTop = addIcode(Icode_INTNUMBER, iCodeTop);
-                    iCodeTop = addInt(inum, iCodeTop);
-                }
-            } else {
-                int index = getDoubleIndex(num);
-                iCodeTop = addIndexOp(Token.NUMBER, index, iCodeTop);
-            }
-            stackChange(1);
+          case Token.NUMBER:
+            iCodeTop = visitNumber(node, iCodeTop);
             break;
-          }
 
           case Token.CATCH_SCOPE:
             iCodeTop = visitExpression(child, iCodeTop);
@@ -1237,6 +1222,34 @@ public class Interpreter
             throw badTree(node);
           }
         }
+        return iCodeTop;
+    }
+
+    private int visitNumber(Node node, int iCodeTop)
+    {
+        double num = node.getDouble();
+        int inum = (int)num;
+        if (inum == num) {
+            if (inum == 0) {
+                iCodeTop = addIcode(Icode_ZERO, iCodeTop);
+                // Check for negative zero
+                if (1.0 / num < 0.0) {
+                    iCodeTop = addToken(Token.NEG, iCodeTop);
+                }
+            } else if (inum == 1) {
+                iCodeTop = addIcode(Icode_ONE, iCodeTop);
+            } else if ((short)inum == inum) {
+                iCodeTop = addIcode(Icode_SHORTNUMBER, iCodeTop);
+                iCodeTop = addShort(inum, iCodeTop);
+            } else {
+                iCodeTop = addIcode(Icode_INTNUMBER, iCodeTop);
+                iCodeTop = addInt(inum, iCodeTop);
+            }
+        } else {
+            int index = getDoubleIndex(num);
+            iCodeTop = addIndexOp(Token.NUMBER, index, iCodeTop);
+        }
+        stackChange(1);
         return iCodeTop;
     }
 
@@ -2715,12 +2728,12 @@ switch (op) {
         ++pc;
         continue Loop;
     }
-    case Token.ZERO :
+    case Icode_ZERO :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = 0;
         continue Loop;
-    case Token.ONE :
+    case Icode_ONE :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = 1;
