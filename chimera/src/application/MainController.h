@@ -116,6 +116,9 @@ class BookmarksService;
 -(IBAction) newTab:(id)aSender;
 -(IBAction) closeTab:(id)aSender;
 
+//Help menu actions
+-(IBAction) feedbackLink:(id)aSender;
+
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL;
 - (void)openNewWindowOrTabWithURL:(NSString*)inURLString;
 

@@ -2,3 +2,4 @@ HomePageDefault = "http://www.mozilla.org";
 SearchPageDefault = "http://www.dmoz.org";
 StartPageDefault = "about:blank";
 ThrobberPageDefault = "http://www.mozilla.org";
+FeedbackPageDefault = "http://chimera.mozdev.org";
