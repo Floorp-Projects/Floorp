@@ -34,7 +34,7 @@
 /*
  * CMS ASN.1 templates
  *
- * $Id: cmsasn1.c,v 1.3 2000/06/14 23:12:48 chrisk%netscape.com Exp $
+ * $Id: cmsasn1.c,v 1.4 2000/06/20 16:28:57 chrisk%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -305,7 +305,7 @@ static const SEC_ASN1Template NSSCMSOriginatorIdentifierOrKeyTemplate[] = {
     { 0 }
 };
 
-static const SEC_ASN1Template NSSCMSRecipientKeyIdentifierTemplate[] = {
+const SEC_ASN1Template NSSCMSRecipientKeyIdentifierTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	  0, NULL, sizeof(NSSCMSRecipientKeyIdentifier) },
     { SEC_ASN1_OCTET_STRING,

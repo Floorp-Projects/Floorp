@@ -127,6 +127,7 @@
 #define PKCS9_CERT_TYPES	PKCS9, 0x16
 #define PKCS9_CRL_TYPES		PKCS9, 0x17
 #define PKCS9_SMIME_IDS		PKCS9, 0x10
+#define PKCS9_SMIME_ATTRS	PKCS9_SMIME_IDS, 2
 #define PKCS9_SMIME_ALGS	PKCS9_SMIME_IDS, 3
 #define PKCS12_VERSION1		PKCS12, 0x0a
 #define PKCS12_V1_BAG_IDS	PKCS12_VERSION1, 1
@@ -390,6 +391,9 @@ static unsigned char netscapeRecoveryRequest[] =
 static unsigned char cmsESDH[] = { PKCS9_SMIME_ALGS, 5 };
 static unsigned char cms3DESwrap[] = { PKCS9_SMIME_ALGS, 6 };
 static unsigned char cmsRC2wrap[] = { PKCS9_SMIME_ALGS, 7 };
+
+/* RFC2633 SMIME message attributes */
+static unsigned char smimeEncryptionKeyPreference[] = { PKCS9_SMIME_ATTRS, 11 };
 
 /*
  * NOTE: the order of these entries must mach the SECOidTag enum in secoidt.h!
@@ -1205,6 +1209,12 @@ static SECOidData oids[] = {
         SEC_OID_CMS_RC2_KEY_WRAP,
         "CMS RC2 Key Wrap", CKM_INVALID_MECHANISM /* XXX */,
         INVALID_CERT_EXTENSION },
+    { { siDEROID, smimeEncryptionKeyPreference,
+	sizeof(smimeEncryptionKeyPreference) },
+	SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE,
+	"S/MIME Encryption Key Preference", CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION },
+
 };
 
 /*

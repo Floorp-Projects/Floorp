@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.3 2000/06/14 23:16:39 chrisk%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.4 2000/06/20 16:28:55 chrisk%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -356,7 +356,7 @@ sign(FILE *out, FILE *infile, char *progName, struct optionsStr options, struct 
     char ibuf[4096];
     PK11PasswordFunc pwcb;
     void *pwcb_arg;
-    CERTCertificate *cert;
+    CERTCertificate *cert, *ekpcert;
 
     if (signOptions.nickname == NULL) {
 	fprintf(stderr, "ERROR: please indicate the nickname of a certificate to sign with.\n");
@@ -431,8 +431,31 @@ sign(FILE *out, FILE *infile, char *progName, struct optionsStr options, struct 
 	}
     }
     if (signOptions.encryptionKeyPreferenceNick) {
-	/* TBD */
 	/* get the cert, add it to the message */
+	if ((ekpcert = CERT_FindCertByNickname(options.certHandle, signOptions.encryptionKeyPreferenceNick)) == NULL) {
+	    SECU_PrintError(progName, "the corresponding cert for key \"%s\" does not exist",
+				signOptions.encryptionKeyPreferenceNick);
+	    NSS_CMSMessage_Destroy(cmsg);
+	    return SECFailure;
+	}
+	if (NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(signerinfo, ekpcert, options.certHandle) != SECSuccess) {
+	    fprintf(stderr, "ERROR: cannot add SMIMEEncKeyPrefs attribute.\n");
+	    NSS_CMSMessage_Destroy(cmsg);
+	    return SECFailure;
+	}
+	if (NSS_CMSSignedData_AddCertificate(sigd, ekpcert) != SECSuccess) {
+	    fprintf(stderr, "ERROR: cannot add encryption certificate.\n");
+	    NSS_CMSMessage_Destroy(cmsg);
+	    return SECFailure;
+	}
+    } else {
+	/* check signing cert for fitness as encryption cert */
+	/* if yes, add signing cert as EncryptionKeyPreference */
+	if (NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(signerinfo, cert, options.certHandle) != SECSuccess) {
+	    fprintf(stderr, "ERROR: cannot add default SMIMEEncKeyPrefs attribute.\n");
+	    NSS_CMSMessage_Destroy(cmsg);
+	    return SECFailure;
+	}
     }
 
     if (NSS_CMSSignedData_AddSignerInfo(sigd, signerinfo) != SECSuccess) {

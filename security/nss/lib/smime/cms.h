@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.3 2000/06/14 23:16:41 chrisk%netscape.com Exp $
+ * $Id: cms.h,v 1.4 2000/06/20 16:28:56 chrisk%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -716,16 +716,17 @@ NSS_CMSSignerInfo_AddSigningTime(NSSCMSSignerInfo *signerinfo, PRTime t);
 extern SECStatus
 NSS_CMSSignerInfo_AddSMIMECaps(NSSCMSSignerInfo *signerinfo);
 
+/*
+ * NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs - add a SMIMEEncryptionKeyPreferences attribute to the
+ * authenticated (i.e. signed) attributes of "signerinfo".
+ *
+ * This is expected to be included in outgoing signed messages for email (S/MIME).
+ */
+SECStatus
+NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert, CERTCertDBHandle *certdb);
+
 /* 
  * NSS_CMSSignerInfo_AddCounterSignature - countersign a signerinfo
- *
- * 1. digest the DER-encoded signature value of the original signerinfo
- * 2. create new signerinfo with correct version, sid, digestAlg
- * 3. add message-digest authAttr, but NO content-type
- * 4. sign the authAttrs
- * 5. add the whole thing to original signerInfo's unAuthAttrs
- *
- * XXXX give back the new signerinfo?
  */
 extern SECStatus
 NSS_CMSSignerInfo_AddCounterSignature(NSSCMSSignerInfo *signerinfo,

@@ -35,7 +35,7 @@
  * Header file for routines specific to S/MIME.  Keep things that are pure
  * pkcs7 out of here; this is for S/MIME policy, S/MIME interoperability, etc.
  *
- * $Id: smime.h,v 1.3 2000/06/14 23:16:41 chrisk%netscape.com Exp $
+ * $Id: smime.h,v 1.4 2000/06/20 16:28:57 chrisk%netscape.com Exp $
  */
 
 #ifndef _SECMIME_H_
@@ -118,12 +118,23 @@ extern PRBool NSS_SMIMEUtil_DecryptionAllowed(SECAlgorithmID *algid, PK11SymKey 
 extern PRBool NSS_SMIMEUtil_EncryptionPossible(void);
 
 /*
- * NSS_SMIMEUtil_GetSMIMECapabilities - get S/MIME capabilities for this instance of NSS
+ * NSS_SMIMEUtil_CreateSMIMECapabilities - get S/MIME capabilities attr value
  *
  * scans the list of allowed and enabled ciphers and construct a PKCS9-compliant
  * S/MIME capabilities attribute value.
  */
-extern SECStatus NSS_SMIMEUtil_GetSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers);
+extern SECStatus NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers);
+
+/*
+ * NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs - create S/MIME encryption key preferences attr value
+ */
+extern SECStatus NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs(PLArenaPool *poolp, SECItem *dest, CERTCertificate *cert);
+
+/*
+ * NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference - find cert marked by EncryptionKeyPreference
+ *          attribute
+ */
+extern CERTCertificate *NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(CERTCertDBHandle *certdb, SECItem *DERekp);
 
 /*
  * NSS_SMIMEUtil_FindBulkAlgForRecipients - find bulk algorithm suitable for all recipients

@@ -36,7 +36,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.2 2000/05/22 15:28:22 chrisk%netscape.com Exp $
+ * $Id: secoidt.h,v 1.3 2000/06/20 16:28:59 chrisk%netscape.com Exp $
  */
 
 #include "secitem.h"
@@ -280,6 +280,9 @@ typedef enum {
     SEC_OID_CMS_EPHEMERAL_STATIC_DIFFIE_HELLMAN,
     SEC_OID_CMS_3DES_KEY_WRAP,
     SEC_OID_CMS_RC2_KEY_WRAP,
+
+    /* SMIME attributes */
+    SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE,
 
     SEC_OID_TOTAL
 } SECOidTag;
