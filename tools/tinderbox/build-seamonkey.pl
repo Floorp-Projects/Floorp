@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.43 $ ';
+$Version = '$Revision: 1.44 $ ';
 
 
 sub PrintUsage {
@@ -248,27 +248,37 @@ sub BuildIt {
     
 	if (&BinaryExists($fe)) {
 	  if ($RunTest) {
-		print LOG "export binary exists, build successful.\n";
+		print LOG "$fe binary exists, build successful.\n";
 
         # Mozilla AliveTest.
 		print LOG "Running AliveTest ...\n";
 		print "Running AliveTest ...\n";
-		$BuildStatus = &RunAliveTest($fe);
+		$BuildStatus = &RunAliveTest($fe, 60);
 
 		# ViewerTest.
 		if ($BuildStatus == 0 and $ViewerTest) {
 		  print LOG "Running ViewerTest ...\n";
 		  print "Running ViewerTest ...\n";
-		  $BuildStatus = &RunAliveTest('viewer');
+		  $BuildStatus = &RunAliveTest("viewer", 60);
 		}
-		
 
         # BloatTest.
-		if ($BuildStatus == 0 and $BloatStats) {
+		if ($BuildStatus == 0 and ($BloatStats or $BloatTest)) {
 		  $BuildStatusStr = 'success';
 		  print LOG "Running BloatTest ...\n";
 		  print "Running BloatTest ...\n";
 		  $BuildStatus = &RunBloatTest($fe);
+		}
+
+		# Run MailNews test.
+		if ($BuildStatus == 0 and $MailNewsTest) {
+		  $BuildStatusStr = 'success';
+		  print LOG "Running MailNewsTest ...\n";
+          print "Running MailNewsTest ...\n";
+		  $BuildStatus = 
+			&RunFileBasedTest("MailNewsTest", 
+							  "mozilla-bin http://www.mozilla.org/quality/mailnews/APITest.html", 
+							  60, "enablePrivile33");
 		}
 
         # Run Editor test.
@@ -276,16 +286,16 @@ sub BuildIt {
 		  $BuildStatusStr = 'success';
 		  print LOG "Running EditorTest ...\n";
           print "Running EditorTest ...\n";
-		  $BuildStatus = &RunFileBasedTest("TestOutSinks", 15, "FAILED");
+		  $BuildStatus = &RunFileBasedTest("EditorTest", "TestOutSinks", 15, "FAILED");
 		}
         
 
 	  } else {
-		print LOG "export binary exists, build successful. Skipping test.\n";
+		print LOG "$fe binary exists, build successful. Skipping test.\n";
 		$BuildStatus = 0;
 	  }
 	} else {
-	  print LOG "export binary missing, build FAILED\n";
+	  print LOG "Error: $fe binary missing, build FAILED\n";
 	  $BuildStatus = 666;
 	} # if (&BinaryExists($fe))
 
@@ -469,11 +479,10 @@ sub killproc {
 # after $waittime (seconds).
 #
 sub RunAliveTest {
-  my ($fe) = @_;
+  my ($binaryName, $testTimeoutSec) = @_;
   my $Binary;
   my $status = 0;
-  my $waittime = 45;
-  $fe = 'x' unless defined $fe;
+  $binaryName = 'x' unless defined $binaryName;
   
   $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
   $ENV{MOZILLA_FIVE_HOME} = $ENV{LD_LIBRARY_PATH};
@@ -481,7 +490,7 @@ sub RunAliveTest {
   
   print LOG "$Binary\n";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
-  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/$fe";
+  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/$binaryName";
   $BinaryLog = $BuildDir . '/runlog';
   
   # Fork off a child process.
@@ -504,36 +513,36 @@ sub RunAliveTest {
     die "Couldn't exec()";
   }
   
-  # parent - wait $waittime seconds then check on child
-  sleep $waittime;
+  # parent - wait $testTimeoutSec seconds then check on child
+  sleep $testTimeoutSec;
   $status = waitpid($pid, WNOHANG());
 
-  print LOG "$fe quit AliveTest with status $status\n";
+  print LOG "$binaryName quit AliveTest with status $status\n";
   if ($status != 0) {
-    print LOG "$fe has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure output from $fe for alive test --------------- \n";
+    print LOG "$binaryName has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
+    print LOG "----------- failure output from $binaryName for alive test --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
       print LOG $_;
     }
     close READRUNLOG;
-    print LOG "--------------- End of AliveTest($fe) Output -------------------- \n";
+    print LOG "--------------- End of AliveTest($binaryName) Output -------------------- \n";
     return 333;
   }
   
-  print LOG "Success! $fe is still running.\n";
+  print LOG "Success! $binaryName is still running.\n";
 
   &killproc($pid);
 
-  print LOG "----------- success output from $fe for alive test --------------- \n";
+  print LOG "----------- success output from $binaryName for alive test --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
     print LOG $_;
   }
   close READRUNLOG;
-  print LOG "--------------- End of AliveTest ($fe) Output -------------------- \n";
+  print LOG "--------------- End of AliveTest ($binaryName) Output -------------------- \n";
   return 0;
 
 } # RunAliveTest
@@ -544,7 +553,8 @@ sub RunAliveTest {
 # report status based on that.  A hack, but should
 # be useful for many tests.
 #
-#     testBinary = Test we're gonna run, in dist/bin.
+#       testName = Name of test we're gonna run, in dist/bin.
+# testExecString = How to run the test
 # testTimeoutSec = Timeout for hung tests, minimum test time.
 #   failureToken = What string to look for in test output to 
 #                  determine failure.
@@ -553,17 +563,21 @@ sub RunAliveTest {
 #       the process flow control got too confusing :(  -mcafee
 #
 sub RunFileBasedTest {
-  my ($testBinary, $testTimeoutSec, $failureToken) = @_;
+  my ($testName, $testExecString, $testTimeoutSec, $failureToken) = @_;
   my $Binary;
 
-  print LOG "testBinary = ", $testBinary, "\n";
+  print LOG "testExecString = ", $testExecString, "\n";
 
   $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
   $ENV{MOZILLA_FIVE_HOME} = $ENV{LD_LIBRARY_PATH};
 
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
-  $Binary    = $BinaryDir . '/' . $testBinary;
-  $BinaryLog = $BuildDir . '/' .$testBinary . '.log';
+
+  # Assume the app is the first argument in the execString.
+  @parseExecString =   split ' ', $testExecString;
+  $Binary    = $BinaryDir . '/' . $parseExecString[0];
+
+  $BinaryLog = $BuildDir . '/' .$testName . '.log';
 
   # If we care about log files, clear the old log, if there is one.
   unlink($BinaryLog);
@@ -600,15 +614,15 @@ sub RunFileBasedTest {
     print `date`, "\n";
 
 	if (-e $Binary) {
-	  $cmd = "$testBinary";   
+	  $cmd = "$testExecString";
 	  print LOG $cmd, "\n";
 	  print $cmd, "\n";
 	  print LOG $cmd;
 	  chdir($BinaryDir);
 	  exec ($cmd);
 	} else {
-	  print LOG "ERROR: cannot run ", $Binary, ".\n";
-	  print "ERROR: cannot run ", $Binary, ".\n";
+	  print LOG "ERROR: cannot run ", $testName, ".\n";
+	  print "ERROR: cannot run ", $testName, ".\n";
 	}
 
     close STDOUT;
@@ -625,6 +639,8 @@ sub RunFileBasedTest {
 
   # Wait $testTimeoutSec seconds, then kill the process if it's still alive.
   alarm $testTimeoutSec;
+  print "testTimeoutSec = $testTimeoutSec\n";
+  print LOG "testTimeoutSec = $testTimeoutSec\n";
 
   $status = waitpid($pid, 0);
 
@@ -635,22 +651,29 @@ sub RunFileBasedTest {
 
   #
   # Determine proper status, look in log file for failure token.
-  #
+  # XXX: What if test is supposed to exit, but crashes?  -mcafee
+
+  print LOG "$testName exited with status $status\n";
+
+  if ($status < 0) {
+	print LOG "$testName timed out and needed to be killed.\n";
+  } else {
+	print LOG "$testName completed on its own, before the timeout.\n";
+  }
 
   open TESTLOG, "<$BinaryLog" or die "Can't open $!";
   $status = parse_file_for_token(*TESTLOG, $failureToken);
   close TESTLOG;
 
-  print LOG "$testBinary exited with status $status\n";
 
   #
   # Write test output to log.
   #
   if ($status != 0) {
-    print LOG "$testBinary has crashed or quit.  Turn the tree orange now.\n";
-    print LOG "----------- failure output from ", $testBinary, " test --------------- \n";
+    print LOG "$testName has failed.  Turn the tree orange now.\n";
+    print LOG "----------- failure output from ", $testName, " test --------------- \n";
   } else {
-	print LOG "----------- success output from ", $testBinary, " test --------------- \n";
+	print LOG "----------- success output from ", $testName, " test --------------- \n";
   }
 
   # Parse the test log, dumping lines into tinderbox log.
@@ -660,7 +683,7 @@ sub RunFileBasedTest {
 	print LOG $_;
   }
   close READRUNLOG;
-  print LOG "--------------- End of ", $testBinary, " Output -------------------- \n";
+  print LOG "--------------- End of ", $testName, " Output -------------------- \n";
 
   # 0 = success, 333 = orange.
   if ($status != 0) {
