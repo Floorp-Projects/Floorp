@@ -255,16 +255,13 @@ nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, char** uri)
 		return NS_ERROR_NULL_POINTER;
 	// need to convert mailbox://hostname/.. to mailbox_message://hostname/..
 
-	nsAutoString tailURI(baseURI);
+	nsCAutoString tailURI(baseURI);
 
 	// chop off mailbox:/
 	if (tailURI.Find(kMailboxRootURI) == 0)
 		tailURI.Cut(0, PL_strlen(kMailboxRootURI));
-  
-	char *tail = tailURI.ToNewCString();
 
-	*uri = PR_smprintf("%s%s#%d", kMailboxMessageRootURI, tail, key);
-	delete[] tail;
+	*uri = PR_smprintf("%s%s#%u", kMailboxMessageRootURI, tailURI.GetBuffer(), key);
 	return NS_OK;
 }
 
