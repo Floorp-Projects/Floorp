@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#error "This file is obsolete: nsTextAreaWidget is WASTE-based / nsTextWidget is a control"
+
 #include "nsTextHelper.h"
 #include "nsTextWidget.h"
 #include "nsToolkit.h"
