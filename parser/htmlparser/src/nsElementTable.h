@@ -209,7 +209,6 @@ struct nsHTMLElement {
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
   static  PRBool  IsResidualStyleTag(eHTMLTags aTag) ;
-  static  PRBool  IsHeadingTag(eHTMLTags aTag) ;
   static  PRBool  IsTextTag(eHTMLTags aTag);
   static  PRBool  IsWhitespaceTag(eHTMLTags aTag);
 

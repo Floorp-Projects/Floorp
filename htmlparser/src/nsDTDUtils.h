@@ -45,8 +45,31 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
 
-#define IF_HOLD(_ptr) if(_ptr) { _ptr->AddRef(); }
-#define IF_FREE(_ptr, _allocator) if(_ptr) { _ptr->Release((_allocator)->GetArenaPool()); _ptr=0; } // recycles _ptr  
+#define IF_HOLD(_ptr) \
+ PR_BEGIN_MACRO       \
+ if(_ptr) {           \
+   _ptr->AddRef();    \
+ }                    \
+ PR_END_MACRO
+
+// recycles _ptr
+#define IF_FREE(_ptr, _allocator)                \
+  PR_BEGIN_MACRO                                 \
+  if(_ptr) {                                     \
+    _ptr->Release((_allocator)->GetArenaPool()); \
+    _ptr=0;                                      \
+  }                                              \
+  PR_END_MACRO   
+
+// release objects and destroy _ptr
+#define IF_DELETE(_ptr, _allocator) \
+  PR_BEGIN_MACRO                    \
+  if(_ptr) {                        \
+    _ptr->ReleaseAll(_allocator);   \
+    delete(_ptr);                   \
+    _ptr=0;                         \
+  }                                 \
+  PR_END_MACRO
 
 class nsIParserNode;
 class nsCParserNode;
@@ -73,6 +96,7 @@ struct nsTagEntry {
 };
 
 class nsEntryStack {
+
 public:
                   nsEntryStack();
                   ~nsEntryStack();
@@ -91,6 +115,11 @@ public:
   eHTMLTags       Last() const;
   void            Empty(void); 
 
+  /*
+   * Release all objects in the entry stack
+   */
+  void ReleaseAll(nsNodeAllocator* aNodeAllocator);
+  
   /**
    * Find the first instance of given tag on the stack.
    * @update	gess 12/14/99

@@ -190,26 +190,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
 }
 
 /**
- * This method recycles the nodes on a nodestack.
- * NOTE: Unlike recycleNode(), we force the usecount
- *       to 0 of all nodes, then force them to recycle.
- * @update  gess1/8/99
- * @param   aNodeStack
- * @return  nothing
- */
-void CNavDTD::RecycleNodes(nsEntryStack *aNodeStack) {
-  if(aNodeStack) {
-    PRInt32 theCount=aNodeStack->mCount;
-    PRInt32 theIndex=0;
-
-    for(theIndex=0;theIndex<theCount;theIndex++) {
-      nsCParserNode* node=aNodeStack->NodeAt(theIndex);
-      IF_FREE(node, &mNodeAllocator);
-    }
-  }
-}
-
-/**
  * 
  * @update  gess1/8/99
  * @param 
@@ -631,12 +611,9 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
             nsEntryStack *theChildStyles=0;
             nsCParserNode* theNode=mBodyContext->Pop(theChildStyles);
-            if(theNode) {
-              if(theChildStyles) {
-                delete theChildStyles;
-              }
-              IF_FREE(theNode, &mNodeAllocator);
-            }
+
+            IF_DELETE(theChildStyles,&mNodeAllocator);
+            IF_FREE(theNode, &mNodeAllocator);
           } 
         }
 
@@ -2926,8 +2903,22 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
             if(1==theNode->mUseCount) {
               eHTMLTags theNodeTag=(eHTMLTags)theNode->GetNodeType();
               if(gHTMLElements[theNodeTag].CanContain(aChildTag)) {
-                theEntry->mParent=theStack;  //we do this too, because this entry differs from the new one we're pushing...              
-                result=OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
+                theEntry->mParent = theStack;  //we do this too, because this entry differs from the new one we're pushing...
+                if(gHTMLElements[mBodyContext->Last()].IsMemberOf(kHeading)) {
+                  // Bug 77352
+                  // The style system needs to identify residual style tags
+                  // within heading tags so that heading tags' size can take
+                  // precedence over the residual style tags' size info.. 
+                  // *Note: Make sure that this attribute is transient since it
+                  // should not get carried over to cases other than heading.
+                  CAttributeToken theAttrToken(NS_LITERAL_STRING("_moz-rs-heading"),NS_LITERAL_STRING(""));
+                  theNode->AddAttribute(&theAttrToken);
+                  result = OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
+                  theNode->PopAttributeToken();
+                }
+                else { 
+                  result = OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
+                }
               }
               else {
                 //if the node tag can't contain the child tag, then remove the child tag from the style stack
@@ -3658,10 +3649,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                 mBodyContext->PushStyles(theChildStyleStack);
               }
               else{
-                //add code here to recycle styles...
-                RecycleNodes(theChildStyleStack);
-                delete theChildStyleStack; // XXX try to recycle this...
-                theChildStyleStack=0;
+                IF_DELETE(theChildStyleStack,&mNodeAllocator);
               }
             }
             else if (0==theNode->mUseCount) {
@@ -3687,9 +3675,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
           //the tag is not a style tag...
           if(theChildStyleStack) {
             if(theStyleDoesntLeakOut) {
-              RecycleNodes(theChildStyleStack);
-              delete theChildStyleStack; // XXX try to recycle this...
-              theChildStyleStack=0;
+              IF_DELETE(theChildStyleStack,&mNodeAllocator);
             }
             else mBodyContext->PushStyles(theChildStyleStack);
           }
@@ -3726,7 +3712,8 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
 
   PRBool theTagIsSynonymous=((nsHTMLElement::IsResidualStyleTag(aTarget)) && (nsHTMLElement::IsResidualStyleTag(theTopTag)));
   if(!theTagIsSynonymous){
-    theTagIsSynonymous=((nsHTMLElement::IsHeadingTag(aTarget)) && (nsHTMLElement::IsHeadingTag(theTopTag)));  
+    theTagIsSynonymous=(gHTMLElements[aTarget].IsMemberOf(kHeading) && 
+                        gHTMLElements[theTopTag].IsMemberOf(kHeading));  
   }
 
   if(theTagIsSynonymous) {

@@ -104,7 +104,7 @@ TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 //*********************************************************************************************
 
 TagList  gRootTags={4,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet}};
-TagList  gTableRootTags={7,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th,eHTMLTag_ul}};
+TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th}};
 TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
  
 TagList  gLIRootTags={8,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td,eHTMLTag_th}};
@@ -1955,17 +1955,6 @@ PRBool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
   };
   return result;
 }
-
-/**
- * 
- * @update	gess12/13/98
- * @param 
- * @return
- */
-PRBool nsHTMLElement::IsHeadingTag(eHTMLTags aChild) {
-  return FindTagInSet(aChild,gHeadingTags.mTags,gHeadingTags.mCount);
-}
-
 
 /**
  * 

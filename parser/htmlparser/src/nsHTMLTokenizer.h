@@ -97,11 +97,8 @@ protected:
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
 
   nsDeque            mTokenDeque;
-  PRBool             mDoXMLEmptyTags;
-  PRInt32            mParseMode;
-  eParserDocType     mDocType;
+  PRInt32            mFlags;
   PRBool             mRecordTrailingContent;
-  eParserCommands    mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
   nsTokenAllocator*  mTokenAllocator;
   PRInt32            mTokenScanPos;
   PRBool             mIsFinalChunk;
