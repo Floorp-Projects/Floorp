@@ -185,9 +185,6 @@ mozilla_destroy( PtWidget_t *widget )
 
 	if (moz->EmbedRef)
 	{
-		if (moz->download_dest)
-			moz->EmbedRef->CancelSaveURI();
-
 		moz->EmbedRef->Destroy();
 		delete moz->EmbedRef;
 	}
@@ -357,35 +354,18 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 #endif
 				break;
 
-		case Pt_ARG_MOZ_UNKNOWN_RESP: 
-#if 1
-			{
-				PtMozUnknownResp_t *data = ( PtMozUnknownResp_t * ) argt->value;
-				switch( data->response ) 
-				{
-					case Pt_WEB_RESPONSE_OK:
-						if( moz->EmbedRef->app_launcher ) {
-							if( moz->download_dest ) free( moz->download_dest );
-							moz->download_dest = strdup( data->filename );
-							moz->EmbedRef->app_launcher->SaveToDisk( NULL, PR_TRUE );
-							}
-						break;
-					case Pt_WEB_RESPONSE_CANCEL: {
-							moz->EmbedRef->app_launcher->Cancel( );
-							moz->EmbedRef->app_launcher->CloseProgressWindow( );
-							moz->EmbedRef->app_launcher = NULL;
-							}
-						break;
+		case Pt_ARG_MOZ_UNKNOWN_RESP: {
+			PtWebClient2UnknownData_t *unknown = ( PtWebClient2UnknownData_t * ) argt->value;
+			if( unknown->response == Pt_WEB_RESPONSE_CANCEL ) {
+				Download_t *d = FindDownload( moz, unknown->download_ticket );
+				d->mLauncher->Cancel();
+				RemoveDownload( moz, unknown->download_ticket );
 				}
 			}
-#endif
 			break;
 
 		case Pt_ARG_MOZ_DOWNLOAD: 
 			{
-				if( moz->download_dest ) 
-					free( moz->download_dest );
-				moz->download_dest = strdup( (char*)argt->len );
 				moz->EmbedRef->SaveURI((char*)argt->value, (char*) argt->len);
 			}
 			break;
@@ -532,7 +512,7 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	char buffer[1024];
 
 	mozilla_get_pref( widget, option, buffer );
-	if( buffer[0] && !strcmp( value, buffer ) ) 
+	if( buffer[0] && !strcmp( value, buffer ) )
 		return; /* the option is already set */
 
 /* HTML Options */
@@ -595,25 +575,41 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	else if( !strcmp( option, "socks_app" ) ) 		; /* not used */
 
 /* HTTP options */
-	else if( !strcmp( option, "http_proxy_host" ) )
+
+	else if( !strcmp( option, "enable_proxy" ) ) {
+		if( value && !stricmp( value, "yes" ) )
+			pref->SetIntPref( "network.proxy.type", 1 );
+			else pref->SetIntPref( "network.proxy.type", 0 );
+		}
+	else if( !strcmp( option, "http_proxy_host" ) ) {
 		pref->SetCharPref( "network.proxy.http", value );
-	else if( !strcmp( option, "http_proxy_port" ) )
-		pref->SetCharPref( "network.proxy.http_port", value );
-	else if( !strcmp( option, "proxy_overrides" ) )
+		}
+	else if( !strcmp( option, "http_proxy_port" ) ) {
+		pref->SetIntPref( "network.proxy.http_port", atoi(value) );
+		}
+	else if( !strcmp( option, "proxy_overrides" ) ) {
 		pref->SetCharPref( "network.proxy.no_proxies_on", value );
+		}
+	else if( !strcmp( option, "https_proxy_host" ) ) {
+		pref->SetCharPref( "network.proxy.ssl", value );
+		}
+	else if( !strcmp( option, "https_proxy_port" ) ) {
+		pref->SetIntPref( "network.proxy.ssl_port", atoi(value) );
+		}
+
 
 /* FTP options */
 	else if( !strcmp( option, "ftp_proxy_host" ) )
 		pref->SetCharPref( "network.proxy.ftp", value );
 	else if( !strcmp( option, "ftp_proxy_port" ) )
-		pref->SetCharPref( "network.proxy.ftp_port", value );
+		pref->SetIntPref( "network.proxy.ftp_port", atoi(value) );
 	else if( !strcmp( option, "email_address" ) )		; /* not used */
 
 /* Gopher options */
 	else if( !strcmp( option, "gopher_proxy_host" ) )
 		pref->SetCharPref( "network.proxy.gopher", value );
 	else if( !strcmp( option, "gopher_proxy_port" ) )
-		pref->SetCharPref( "network.proxy.gopher_port", value );
+		pref->SetIntPref( "network.proxy.gopher_port", atoi(value) );
 
 /* TCP/IP options */
 	else if( !strcmp( option, "socket_timeout" ) )
@@ -812,15 +808,26 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		if( s ) strcpy( value, s );
 		}
   else if( !strcmp( option, "http_proxy_port" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.http_port", &s );
-		if( s ) strcpy( value, s );
+		int n;
+		pref->GetIntPref( "network.proxy.http_port", &n );
+		sprintf( value, "%d", n );
 		}
   else if( !strcmp( option, "proxy_overrides" ) ) {
 		char *s = NULL;
 		pref->CopyCharPref( "network.proxy.no_proxies_on", &s );
 		if( s ) strcpy( value, s );
 		}
+  else if( !strcmp( option, "https_proxy_host" ) ) {
+		char *s = NULL;
+		pref->CopyCharPref( "network.proxy.ssl", &s );
+		if( s ) strcpy( value, s );
+    }
+  else if( !strcmp( option, "https_proxy_port" ) ) {
+		int n;
+		pref->GetIntPref( "network.proxy.ssl_port", &n );
+		sprintf( value, "%d", n );
+    }
+
 
 /* FTP options */
   else if( !strcmp( option, "ftp_proxy_host" ) ) {
@@ -829,9 +836,9 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		if( s ) strcpy( value, s );
 		}
   else if( !strcmp( option, "ftp_proxy_port" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.ftp_port", &s );
-		if( s ) strcpy( value, s );
+		int n;
+		pref->GetIntPref( "network.proxy.ftp_port", &n );
+		sprintf( value, "%d", n );
 		}
 
 /* Gopher options */
@@ -841,9 +848,9 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		if( s ) strcpy( value, s );
 		}
   else if( !strcmp( option, "gopher_proxy_port" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "gopher_proxy_port", &s );
-		if( s ) strcpy( value, s );
+		int n;
+		pref->GetIntPref( "gopher_proxy_port", &n );
+		sprintf( value, "%d", n );
 		}
 
 /* TCP/IP options */
@@ -1011,6 +1018,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_ARG_MOZ_UNKNOWN_RESP,      mozilla_modify,	Pt_QUERY_PREVENT },
 		{ Pt_ARG_MOZ_DOWNLOAD,          mozilla_modify,	Pt_QUERY_PREVENT },
 		{ Pt_ARG_MOZ_AUTH_CTRL,					NULL, NULL, Pt_ARG_IS_POINTER( PtMozillaWidget_t, moz_auth_ctrl ) },
+		{ Pt_ARG_MOZ_UNKNOWN_CTRL,			NULL, NULL, Pt_ARG_IS_POINTER( PtMozillaWidget_t, moz_unknown_ctrl ) },
 		{ Pt_CB_MOZ_INFO,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, info_cb) },
 		{ Pt_CB_MOZ_START,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, start_cb) },
 		{ Pt_CB_MOZ_COMPLETE,			NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, complete_cb) },
@@ -1031,6 +1039,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_CB_MOZ_WEB_DATA_REQ,		NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_data_req_cb) },
 		{ Pt_CB_MOZ_UNKNOWN,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_unknown_cb) },
 		{ Pt_CB_MOZ_ERROR,					NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_error_cb) },
+		{ Pt_CB_MOZ_DOWNLOAD,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_download_cb) }
 	};
 
 	static const PtArg_t args[] = 
