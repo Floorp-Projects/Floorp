@@ -24,13 +24,13 @@ Rights Reserved.
 <!-- Menus:  the . means that the menu item isn't implemented yet -->
 
 <!-- File Menu -->
-<!ENTITY newCard.label						"New Address Book Card">
+<!ENTITY newCard.label						"New Address Book Card...">
 <!-- LOCALIZATION NOTE (newCard.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newCard.accesskey					"n">  
-<!ENTITY newListCmd.label					"Mailing List">
+<!ENTITY newListCmd.label					"Mailing List...">
 <!-- LOCALIZATION NOTE (newListCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newListCmd.accesskey				"l">  
-<!ENTITY newAddressBookCmd.label			"Address Book"> 
+<!ENTITY newAddressBookCmd.label			"Address Book..."> 
 <!-- LOCALIZATION NOTE (newAddressBookCmd.accesskey) : DONT_TRANSLATE --> 
 <!ENTITY newAddressBookCmd.accesskey		"b">  
 <!ENTITY newDirectoryCmd.label				".Directory">
@@ -39,7 +39,7 @@ Rights Reserved.
 <!ENTITY importCmd.label					"Import..."> 
 <!ENTITY exportCmd.label					".Export...">  
 <!ENTITY printPreviewCmd.label				".Print Preview">  
-<!ENTITY printCardViewCmd.label				"Print Card View...">
+<!ENTITY printCardViewCmd.label				"Print Card...">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key				"P">
 <!ENTITY printAddressBook.label				".Print Address Book...">  
@@ -65,13 +65,11 @@ Rights Reserved.
 <!ENTITY lastFirstCmd.accesskey				"l"> 
 <!ENTITY displayNameCmd.label				"Display Name">  
 <!ENTITY displayNameCmd.accesskey			"d"> 
-<!ENTITY sortMenu.label						"Sort"> 
-<!ENTITY sortByNameCmd.label					"by Name">  
-<!ENTITY sortByEmailCmd.label					"by Email">  
-<!ENTITY sortByWorkPhoneCmd.label				"by Work Phone">  
-<!ENTITY sortByOrganizationCmd.label			"by Organization">  
-<!ENTITY sortAscendingCmd.label					".Ascending">  
-<!ENTITY sortDescendingCmd.label				".Descending">  
+<!ENTITY sortMenu.label						"Sort by"> 
+<!ENTITY sortByNameCmd.label					"Name">  
+<!ENTITY sortByEmailCmd.label					"Email">  
+<!ENTITY sortByWorkPhoneCmd.label				"Work Phone">  
+<!ENTITY sortByOrganizationCmd.label			"Organization">  
 <!ENTITY stopSearchingCmd.label				".Stop Searching"> 
 
 <!-- Toolbar items -->  

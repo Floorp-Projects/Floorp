@@ -8,8 +8,8 @@
 
   <!-- addressbook specific UI items -->
   <menupopup id="menu_NewPopup">
-    <menuitem id="menu_newMessage" key="key_newMessage" observes="cmd_newMessage" position="6"/>
-    <menuitem id="menu_newCard"      observes="cmd_newCard" position="7"/>
+    <menuitem id="menu_newMessage" key="key_newMessage" observes="cmd_newMessage" position="5"/>
+    <menuitem id="menu_newCard"      observes="cmd_newCard" position="6"/>
   </menupopup>
 
 </overlay>
