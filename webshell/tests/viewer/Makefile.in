@@ -155,7 +155,6 @@ LIBS			= \
 			$(PROFILER_LIBS) \
 			$(NULL)
 
-QT_LIBS			= unix/qt/libviewer_qt_s.a $(XP_LIBS) $(MOZ_QT_LDFLAGS)
 XLIB_LIBS		= unix/xlib/libviewer_xlib_s.a $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= unix/gtk/libviewer_gtk_s.a -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
@@ -189,7 +188,6 @@ ifneq ($(OS_ARCH),WINNT)
 EXTRA_LIBS     += -L$(DEPTH)/dist/lib/components
 endif # !WINNT
 EXTRA_LIBS     += $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
-QT_LIBS        += $(EXTRA_LIBS)
 XLIB_LIBS      += $(EXTRA_LIBS)
 GTK_LIBS       += $(EXTRA_LIBS)
 DEFINES        += $(STATIC_DEFINES)
@@ -216,7 +214,7 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DUSE_LOCAL_WIDGETS
 endif
 
-GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_qt $(PROGRAM)_xlib
+GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_xlib
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= shell32.lib ole32.lib oleaut32.lib oleacc.lib \
@@ -238,20 +236,11 @@ endif
 unix/gtk/libviewer_gtk_s.a:
 	@$(MAKE) -C $(@D) $(@F)
 
-unix/qt/libviewer_qt_s.a:
-	@$(MAKE) -C $(@D) $(@F)
-
 unix/xlib/libviewer_xlib_s.a:
 	@$(MAKE) -C $(@D) $(@F)
 
 $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/gtk/libviewer_gtk_s.a
 	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
-ifdef ENABLE_STRIP
-	$(STRIP) $@
-endif
-
-$(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/qt/libviewer_qt_s.a
-	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS) $(PROFILER_LIBS)
 ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
@@ -264,11 +253,6 @@ endif
 
 ifdef MOZ_ENABLE_GTK
 libs:: $(PROGRAM)_gtk
-	$(INSTALL) -m 555 $< $(DIST)/bin
-endif
-
-ifdef MOZ_ENABLE_QT
-libs:: $(PROGRAM)_qt
 	$(INSTALL) -m 555 $< $(DIST)/bin
 endif
 

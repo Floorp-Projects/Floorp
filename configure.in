@@ -87,8 +87,6 @@ GLIB_VERSION=1.2.0
 GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
-QT_VERSION=2.2.0
-QT_VERSION_NUM=220
 LIBART_VERSION=2.3.4
 GTK2_VERSION=1.3.7
 
@@ -675,11 +673,6 @@ fi
 if test "$GNU_CXX"; then
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy"
-
-	dnl The following warning breaks Qt
-	if test ! "$QTDIR"; then
-    	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS}"
-	fi
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -2972,7 +2965,6 @@ MOZ_ARG_HEADER(Toolkit Options)
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
     if test "$_DEFAULT_TOOLKIT" = "gtk" \
-        -o "$_DEFAULT_TOOLKIT" = "qt" \
         -o "$_DEFAULT_TOOLKIT" = "gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "xlib" \
         -o "$_DEFAULT_TOOLKIT" = "os2" \
@@ -2987,7 +2979,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
         if test "$no_x" != "yes"; then
-            AC_MSG_ERROR([Toolkit must be xlib, gtk, gtk2 or qt.])
+            AC_MSG_ERROR([Toolkit must be xlib, gtk or gtk2.])
         else
             AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT.])
         fi
@@ -3010,14 +3002,6 @@ if test "$no_x" != "yes"; then
 	[  --enable-toolkit-xlib   Enable xlib toolkit support ],
         MOZ_ENABLE_XLIB=1,
         MOZ_ENABLE_XLIB= )
-
-    dnl ========================================================
-    dnl = Qt support hackery                                   =
-    dnl ========================================================
-	MOZ_ARG_ENABLE_BOOL(toolkit-qt,
-	[  --enable-toolkit-qt     Enable Qt Toolkit support ],
-        MOZ_ENABLE_QT=1, 
-        MOZ_ENABLE_QT= )
 
 fi # !no_x
 
@@ -3050,14 +3034,6 @@ xlib)
 	TK_CFLAGS='$(MOZ_XLIB_CFLAGS)'
 	TK_LIBS='$(MOZ_XLIB_LDFLAGS)'
 	AC_DEFINE(MOZ_WIDGET_XLIB)
-    ;;
-
-qt)
-	MOZ_ENABLE_QT=1
-    MOZ_ENABLE_XREMOTE=1
-	TK_CFLAGS='$(MOZ_QT_CFLAGS)'
-	TK_LIBS='$(MOZ_QT_LDFLAGS)'
-	AC_DEFINE(MOZ_WIDGET_QT)
     ;;
 
 photon)
@@ -3117,77 +3093,6 @@ then
     MOZ_XLIB_LDFLAGS="$MOZ_XLIB_LDFLAGS $XEXT_LIBS $X11_LIBS"
 fi
 
-if test "$MOZ_ENABLE_QT"
-then
-    MOZ_ARG_WITH_STRING(qtdir,
-    [  --with-qtdir=\$dir       Specify Qt directory ],
-    [ QTDIR=$withval])
-
-    if test -z "$QTDIR"; then
-      QTDIR="/usr"
-    fi
-    QTINCDIR="/include/qt"
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include/X11/qt"
-    fi
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include"
-    fi
-
-    if test -x "$QTDIR/bin/moc"; then
-      HOST_MOC="$QTDIR/bin/moc"
-    else
-      AC_CHECK_PROGS(HOST_MOC, moc, "")
-    fi
-    if test -z "$HOST_MOC"; then
-      AC_MSG_ERROR([no acceptable moc preprocessor found])
-    fi
-    MOC=$HOST_MOC
-
-    QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR -DQT_NO_STL"
-    if test -z "$MOZ_DEBUG"; then
-      QT_CFLAGS="$QT_CFLAGS -DQT_NO_DEBUG -DNO_DEBUG"
-    fi
-    _SAVE_LDFLAGS=$LDFLAGS
-    QT_LDFLAGS=-L${QTDIR}/lib
-    LDFLAGS="$LDFLAGS $QT_LDFLAGS"
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_LIB(qt, main, QT_LIB=-lqt,
-        AC_CHECK_LIB(qt-mt, main, QT_LIB=-lqt-mt,
-            AC_MSG_ERROR([Cannot find QT libraries.])))
-    LDFLAGS=$_SAVE_LDFLAGS
-    QT_LIBS="-L/usr/X11R6/lib $QT_LDFLAGS $QT_LIB -lXext -lX11"
-dnl    AM_PATH_QT($QT_VERSION,,
-dnl      AC_MSG_ERROR(Test for QT failed.))
-
-    MOZ_QT_LDFLAGS=$QT_LIBS
-    MOZ_QT_CFLAGS=$QT_CFLAGS
-
-    _SAVE_CXXFLAGS=$CXXFLAGS
-    _SAVE_LIBS=$LIBS
-
-    CXXFLAGS="$CXXFLAGS $QT_CFLAGS"
-    LIBS="$LIBS $QT_LIBS"
-    
-    AC_MSG_CHECKING(Qt - version >= $QT_VERSION)
-    AC_TRY_COMPILE([#include <qglobal.h>],
-    [
-        #if (QT_VERSION < $QT_VERSION_NUM)
-            #error  "QT_VERSION too old"
-        #endif
-    ],result="yes",result="no")
-
-    AC_MSG_RESULT("$result")
-    if test "$result" = "no"; then
-       AC_MSG_ERROR([Qt Mozilla requires at least version $QT_VERSION of Qt])
-    fi
-    CXXFLAGS=$_SAVE_CXXFLAGS
-    LIBS=$_SAVE_LIBS
-
-    AC_LANG_RESTORE
-fi
-
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
 
 AC_SUBST(GTK_CONFIG)
@@ -3197,7 +3102,6 @@ AC_SUBST(TK_LIBS)
 AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
-AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
@@ -3207,12 +3111,10 @@ AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
 AC_SUBST(MOZ_XLIB_CFLAGS)
 AC_SUBST(MOZ_XLIB_LDFLAGS)
-AC_SUBST(MOZ_QT_CFLAGS)
-AC_SUBST(MOZ_QT_LDFLAGS)
 
 AC_SUBST(MOC)
 
-if test "$MOZ_ENABLE_GTK" || test "$MOZ_ENABLE_QT" \
+if test "$MOZ_ENABLE_GTK" \
 || test "$MOZ_ENABLE_XLIB" \
 || test "$MOZ_ENABLE_GTK2"
 then
