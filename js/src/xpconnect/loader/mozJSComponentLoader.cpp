@@ -400,6 +400,7 @@ mozJSComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFile *dir)
     return NS_OK;
 }
 
+
 nsresult
 mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
                                       nsIFile *component)
@@ -431,6 +432,15 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
 #endif
 
     return NS_OK;
+}
+
+nsresult
+mozJSComponentLoader::RemoveRegistryInfo(const char *registryLocation)
+{
+    if (!mRegistry.get())
+        return NS_OK;           // silent failure
+
+    return mRegistry->RemoveSubtree(mXPCOMKey, registryLocation);
 }
 
 PRBool
@@ -511,6 +521,46 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+mozJSComponentLoader::AutoUnregisterComponent(PRInt32 when,
+                                              nsIFile *component,
+                                              PRBool *unregistered)
+{
+    nsresult rv;
+    if (!unregistered)
+        return NS_ERROR_NULL_POINTER;
+
+    const char jsExtension[] = ".js";
+    int jsExtensionLen = 3;
+    nsXPIDLCString leafName;
+
+    *unregistered = PR_FALSE;
+
+    /* we only do files */
+    PRBool isFile = PR_FALSE;
+    if (NS_FAILED(rv = component->IsFile(&isFile)) || !isFile)
+        return rv;
+
+    if (NS_FAILED(rv = component->GetLeafName(getter_Copies(leafName))))
+        return rv;
+    int len = PL_strlen(leafName);
+    
+    /* if it's not *.js, return now */
+    if (len < jsExtensionLen || // too short
+        PL_strcasecmp(leafName + len - jsExtensionLen, jsExtension))
+        return NS_OK;
+
+    rv = UnregisterComponent(component);
+#ifdef DEBUG_dp
+    if (NS_SUCCEEDED(rv))
+        fprintf(stderr, "unregistered module %s\n", (const char *)leafName);
+    else
+        fprintf(stderr, "failed to unregister %s\n", (const char *)leafName);
+#endif    
+    *unregistered = (PRBool) NS_SUCCEEDED(rv);
+    return NS_OK;
+}
+
 nsresult
 mozJSComponentLoader::AttemptRegistration(nsIFile *component,
                                           PRBool deferred)
@@ -549,6 +599,34 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
 
     return rv;
 }
+
+nsresult
+mozJSComponentLoader::UnregisterComponent(nsIFile *component)
+{
+    nsXPIDLCString registryLocation;
+    nsresult rv;
+    nsIModule *module;
+
+    rv = mCompMgr->RegistryLocationForSpec(component, 
+                                           getter_Copies(registryLocation));
+    if (NS_FAILED(rv))
+        return rv;
+    
+    module = ModuleForLocation(registryLocation, component);
+    if (!module)
+        return NS_ERROR_FAILURE;
+    
+    rv = module->UnregisterSelf(mCompMgr, component, registryLocation);
+
+    if (NS_SUCCEEDED(rv))
+    {
+        // Remove any autoreg specific info. Ignore error.
+        RemoveRegistryInfo(registryLocation);
+    }
+        
+    return rv;
+}
+
 
 nsresult
 mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
@@ -599,6 +677,7 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
     /* are there any fatal errors? */
     return NS_OK;
 }
+
 
 nsIModule *
 mozJSComponentLoader::ModuleForLocation(const char *registryLocation,

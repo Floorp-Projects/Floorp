@@ -49,6 +49,7 @@ public:
  protected:
     nsresult ReallyInit();
     nsresult AttemptRegistration(nsIFile *component, PRBool deferred);
+    nsresult UnregisterComponent(nsIFile *component);
     nsresult RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
     JSObject *GlobalForLocation(const char *aLocation, nsIFile *component);
     nsIModule *ModuleForLocation(const char *aLocation,
@@ -56,6 +57,7 @@ public:
     PRBool HasChanged(const char *registryLocation, nsIFile *component);
     nsresult SetRegistryInfo(const char *registryLocation,
                              nsIFile *component);
+    nsresult RemoveRegistryInfo(const char *registryLocation);
 
     nsIComponentManager* mCompMgr; // weak ref, should make it strong?
     nsCOMPtr<nsIRegistry> mRegistry;
