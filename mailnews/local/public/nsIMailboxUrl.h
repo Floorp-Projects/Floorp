@@ -37,6 +37,10 @@
 class nsIMailboxUrl : public nsIURL
 {
 public:
+  static const nsIID& IID() {
+    static nsIID iid = NS_IMAILBOXURL_IID;
+    return iid;
+  }
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the mailbox specific event sinks to bind to to your url

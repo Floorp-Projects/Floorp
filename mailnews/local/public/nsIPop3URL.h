@@ -36,6 +36,10 @@
 class nsIPop3URL : public nsIURL
 {
 public:
+ static const nsIID& IID() {
+    static nsIID iid = NS_IPOP3URL_IID;
+    return iid;
+  }
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the news specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
