@@ -59,10 +59,4 @@ interface imgILoader : nsISupports
    * @param cx some random data
    */
   imgIRequest loadImageWithChannel(in nsIChannel aChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
-
-  /**
-   * Returns the channels contained directly in this group.
-   * @note Enumerator element type: imgIRequest.
-   */
-  readonly attribute nsISimpleEnumerator requests;
 };
