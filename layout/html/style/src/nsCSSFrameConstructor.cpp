@@ -133,8 +133,6 @@ NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#include "nsToolboxFrame.h"
-#include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"

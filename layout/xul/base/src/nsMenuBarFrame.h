@@ -21,6 +21,7 @@
  *
  * Contributor(s): 
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 //
@@ -33,7 +34,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-#include "nsToolbarFrame.h"
+#include "nsBoxFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsMenuListener.h"
 #include "nsIMenuParent.h"
@@ -44,7 +45,7 @@ class nsIMenuFrame;
 
 nsresult NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
-class nsMenuBarFrame : public nsToolbarFrame, public nsIMenuParent
+class nsMenuBarFrame : public nsBoxFrame, public nsIMenuParent
 {
 public:
   nsMenuBarFrame(nsIPresShell* aShell);
