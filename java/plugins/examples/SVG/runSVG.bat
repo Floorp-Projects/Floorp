@@ -1,0 +1,2 @@
+set CLASSPATH=;D:\Projects\0_9_1_BRANCH\mozilla\java\plugins\examples\SVG\extra\batik-1.0\lib\batik-1_0.jar;D:\Projects\0_9_1_BRANCH\mozilla\dist\classes;D:\Projects\blackwood\wf_private.jar;C:\JMF2.1.1\lib\customizer.jar;C:\JMF2.1.1\lib\jmf.jar;C:\JMF2.1.1\lib\jmf.properties;C:\JMF2.1.1\lib\mediaplayer.jar;C:\JMF2.1.1\lib\multiplayer.jar;D:\Projects\0_9_1_BRANCH\mozilla\dist\classes 
+D:\Projects\0_9_1_BRANCH\mozilla\dist\win32_d.obj\bin\mozilla "file:///D:\Projects\0_9_1_BRANCH/mozilla/java/plugins/examples/SVG/samples/samples.html" 
