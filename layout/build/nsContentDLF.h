@@ -87,6 +87,11 @@ public:
 
   static nsICSSStyleSheet* gUAStyleSheet;
 
+#ifdef MOZ_SVG
+  static NS_IMETHODIMP RegisterSVG();
+  static NS_IMETHODIMP UnregisterSVG();
+#endif
+
   static NS_IMETHODIMP
   RegisterDocumentFactories(nsIComponentManager* aCompMgr,
                             nsIFile* aPath,

@@ -110,6 +110,9 @@ static char* gSVGTypes[] = {
   "image/svg+xml",
   0
 };
+
+// defined in nsSVGElementFactory.cpp
+extern PRBool SVGEnabled();
 #endif
 
 static const char* const gRDFTypes[] = {
@@ -189,9 +192,11 @@ nsContentDLF::CreateInstance(const char* aCommand,
     }
 
 #ifdef MOZ_SVG
-    for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
-      if (type.Equals(gSVGTypes[typeIndex])) {
-        knownType = PR_TRUE;
+    if (SVGEnabled()) {
+      for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
+        if (type.Equals(gSVGTypes[typeIndex])) {
+          knownType = PR_TRUE;
+        }
       }
     }
 #endif // MOZ_SVG
@@ -235,14 +240,16 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
 #ifdef MOZ_SVG
-  // Try SVG
-  typeIndex = 0;
-  while(gSVGTypes[typeIndex]) {
-    if (!PL_strcmp(gSVGTypes[typeIndex++], aContentType)) {
-      return CreateDocument(aCommand,
-                            aChannel, aLoadGroup,
-                            aContainer, kSVGDocumentCID,
-                            aDocListener, aDocViewer);
+  if (SVGEnabled()) {
+    // Try SVG
+    typeIndex = 0;
+    while(gSVGTypes[typeIndex]) {
+      if (!PL_strcmp(gSVGTypes[typeIndex++], aContentType)) {
+        return CreateDocument(aCommand,
+                              aChannel, aLoadGroup,
+                              aContainer, kSVGDocumentCID,
+                              aDocListener, aDocViewer);
+      }
     }
   }
 #endif
@@ -532,6 +539,27 @@ static nsresult UnregisterTypes(nsICategoryManager* aCatMgr,
 
 }
 
+#ifdef MOZ_SVG
+NS_IMETHODIMP
+nsContentDLF::RegisterSVG()
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  return RegisterTypes(catmgr, gSVGTypes);
+}
+
+NS_IMETHODIMP
+nsContentDLF::UnregisterSVG()
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  return UnregisterTypes(catmgr, gSVGTypes);
+}
+#endif
 
 NS_IMETHODIMP
 nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
@@ -552,11 +580,6 @@ nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
     rv = RegisterTypes(catmgr, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-#ifdef MOZ_SVG
-    rv = RegisterTypes(catmgr, gSVGTypes);
-    if (NS_FAILED(rv))
-      break;
-#endif
     rv = RegisterTypes(catmgr, gRDFTypes);
     if (NS_FAILED(rv))
       break;

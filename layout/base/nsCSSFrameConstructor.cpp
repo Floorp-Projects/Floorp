@@ -213,6 +213,9 @@ extern nsresult
 NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
 nsresult
 NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+
+// defined in nsSVGElementFactory.cpp
+extern PRBool SVGEnabled();
 #endif
 
 #include "nsIDocument.h"
@@ -4091,7 +4094,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     else
 #endif 
 #ifdef MOZ_SVG
-    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
+    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG && SVGEnabled()) {
       rv = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, &contentFrame);
       if (NS_FAILED(rv)) {
         return rv;
@@ -7549,7 +7552,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
 #ifdef MOZ_SVG
   if (NS_SUCCEEDED(rv) &&
       (!frameItems->childList || lastChild == frameItems->lastChild) &&
-      aNameSpaceID == kNameSpaceID_SVG) {
+      aNameSpaceID == kNameSpaceID_SVG &&
+      SVGEnabled()) {
     rv = ConstructSVGFrame(aState, aContent, adjParentFrame, aTag,
                            aNameSpaceID, styleContext,
                            *frameItems, pseudoParent);
