@@ -2557,15 +2557,12 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   { 
     if (NS_SUCCEEDED(prefs->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
     {
-      nsRect bounds(mRect);
-      
-      bounds.MoveBy(origin.x, origin.y);
-      if (aPoint.y < bounds.y)//above rectangle
+      if (aPoint.y < origin.y)//above rectangle
       {
         aOffset = mContentOffset;
         outofstylehandled = PR_TRUE;
       }
-      else if (aPoint.y > (bounds.y + bounds.height))
+      else if ((aPoint.y - origin.y) > mRect.height)
       {
         aOffset = mContentOffset + mContentLength;
         outofstylehandled = PR_TRUE;
