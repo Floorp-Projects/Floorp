@@ -165,7 +165,7 @@ CLASS_EXPORT_HTMLPARS nsIParser : public nsISupports {
      *  until you wind up being emitted to the given contentsink (which may or may not
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
-    virtual PRBool    EnableParser(PRBool aState) = 0;
+    virtual nsresult  EnableParser(PRBool aState) = 0;
     virtual PRBool    IsParserEnabled() = 0;
     virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
     virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
