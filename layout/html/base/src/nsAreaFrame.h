@@ -26,8 +26,6 @@
 #include "nsVoidArray.h"
 #include "nsAbsoluteContainingBlock.h"
 
-class nsSpaceManager;
-
 struct nsStyleDisplay;
 struct nsStylePosition;
 

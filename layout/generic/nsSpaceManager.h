@@ -25,13 +25,16 @@
 #include "nsISpaceManager.h"
 #include "prclist.h"
 
+#define NS_SPACE_MANAGER_CACHE_SIZE 4
+
 /**
  * Implementation of nsISpaceManager that maintains a region data structure of
  * unavailable space
  */
 class nsSpaceManager : public nsISpaceManager {
 public:
-  nsSpaceManager(nsIFrame* aFrame);
+  static nsSpaceManager *Create(nsIFrame* aFrame);
+  static void Shutdown();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -64,6 +67,8 @@ public:
 #endif
 
 protected:
+  nsSpaceManager(nsIFrame* aFrame);
+
   // Structure that maintains information about the region associated
   // with a particular frame
   struct FrameInfo {
@@ -169,8 +174,13 @@ protected:
                                    nsBandData&     aAvailableSpace) const;
 
 private:
-	nsSpaceManager(const nsSpaceManager&);  // no implementation
-	void operator=(const nsSpaceManager&);  // no implementation
+  static PRInt32 sCachedSpaceManagerCount;
+  static nsSpaceManager *sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
+
+  void LastRelease();
+
+  nsSpaceManager(const nsSpaceManager&);  // no implementation
+  void operator=(const nsSpaceManager&);  // no implementation
 };
 
 #endif /* nsSpaceManager_h___ */

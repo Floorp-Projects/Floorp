@@ -44,6 +44,7 @@
 #include "nsCSSAtoms.h"     // to addref/release table
 #include "nsColorNames.h"   // to addref/release table
 #include "nsCSSFrameConstructor.h"
+#include "nsSpaceManager.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -146,6 +147,8 @@ Shutdown(nsIModule* self)
   nsCSSFrameConstructor::ReleaseGlobals();
 
   nsTextTransformer::Shutdown();
+
+  nsSpaceManager::Shutdown();
 }
 
 #ifdef NS_DEBUG

@@ -674,7 +674,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // only when there are actually floats to manage.  Otherwise things
   // like tables will gain significant bloat.
   if (NS_BLOCK_SPACE_MGR & mState) {
-    nsSpaceManager* rawPtr = new nsSpaceManager(this);
+    nsSpaceManager* rawPtr = nsSpaceManager::Create(this);
     if (!rawPtr) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
