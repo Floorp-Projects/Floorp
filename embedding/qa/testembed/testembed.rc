@@ -260,6 +260,45 @@ BEGIN
             MENUITEM "SetSessionHistory",           ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY
 
         END
+        POPUP "nsI&Channel"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSICHANNEL_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "SetOriginalURI",              ID_INTERFACES_NSICHANNEL_SETORIGINALURI
+
+            MENUITEM "GetOriginalURI",              ID_INTERFACES_NSICHANNEL_GETORIGINALURI
+
+            MENUITEM "GetURI",                      ID_INTERFACES_NSICHANNEL_GETURI
+
+            MENUITEM "SetOwner",                    ID_INTERFACES_NSICHANNEL_SETOWNER
+
+            MENUITEM "GetOwner",                    ID_INTERFACES_NSICHANNEL_GETOWNER
+
+            MENUITEM "SetNotifications",            ID_INTERFACES_NSICHANNEL_SETNOTIFICATIONS
+
+            MENUITEM "GetNotifications",            ID_INTERFACES_NSICHANNEL_GETNOTIFICATIONS
+
+            MENUITEM "GetSecurityInfo",             ID_INTERFACES_NSICHANNEL_GETSECURITYINFO
+
+            MENUITEM "SetContentType",              ID_INTERFACES_NSICHANNEL_SETCONTENTTYPE
+
+            MENUITEM "GetContentType",              ID_INTERFACES_NSICHANNEL_GETCONTENTTYPE
+
+            MENUITEM "SetContentCharset",           ID_INTERFACES_NSICHANNEL_SETCONTENTCHARSET
+
+            MENUITEM "GetContentCharset",           ID_INTERFACES_NSICHANNEL_GETCONTENTCHARSET
+
+            MENUITEM "SetContentLength",            ID_INTERFACES_NSICHANNEL_SETCONTENTLENGTH
+
+            MENUITEM "GetContentLength",            ID_INTERFACES_NSICHANNEL_GETCONTENTLENGTH
+
+            MENUITEM SEPARATOR
+            MENUITEM "Open",                        ID_INTERFACES_NSICHANNEL_OPEN
+
+            MENUITEM "AsyncOpen",                   ID_INTERFACES_NSICHANNEL_ASYNCOPEN
+
+        END
         POPUP "nsI&Request"
         BEGIN
             MENUITEM "Run All Tests",               ID_INTERFACES_NSIREQUEST_RUNALLTESTS

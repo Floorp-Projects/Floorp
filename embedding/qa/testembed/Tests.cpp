@@ -72,6 +72,7 @@
 #include "nsICmdParams.h"
 #include "QaUtils.h"
 #include "nsIIOService.h"
+#include "nsIChannelTests.h"
 #include <stdio.h>
 
 #ifdef _DEBUG
@@ -184,6 +185,23 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RUNALLTESTS, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_STOP, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_RUNALLTESTS, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_SETORIGINALURI, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETORIGINALURI, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETURI, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_SETOWNER, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETOWNER, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_SETNOTIFICATIONS, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETNOTIFICATIONS, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETSECURITYINFO, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_SETCONTENTTYPE, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETCONTENTTYPE, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_SETCONTENTCHARSET, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETCONTENTCHARSET, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_SETCONTENTLENGTH, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_GETCONTENTLENGTH, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_OPEN, OnInterfacesNsichannel)
+	ON_COMMAND(ID_INTERFACES_NSICHANNEL_ASYNCOPEN, OnInterfacesNsichannel)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETLOADFLAGS, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETLOADGROUP, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETNAME, OnInterfacesNsirequest)
@@ -930,6 +948,12 @@ void CTests::OnInterfacesNsicmdparams()
 	oCmdParams.OnStartTests(nCommandID);
 }
 
+void CTests::OnInterfacesNsichannel()
+{
+	CnsIChannelTests oChannelTests(qaWebBrowser, qaBrowserImpl);
+	oChannelTests.OnStartTests(nCommandID);
+}
+
 
 //Run all interface test cases in automation
 
@@ -999,4 +1023,7 @@ void CTests::OnInterfacesRunalltestcases()
 
 	CnsICmdParams oCmdParams(qaWebBrowser);
 	oCmdParams.OnStartTests(ID_INTERFACES_NSICOMMANDPARAMS_RUNALLTESTS);
+
+	CnsIChannelTests oChannelTests(qaWebBrowser, qaBrowserImpl);
+	oChannelTests.OnStartTests(ID_INTERFACES_NSICHANNEL_RUNALLTESTS);
 }

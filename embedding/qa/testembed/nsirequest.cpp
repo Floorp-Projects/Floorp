@@ -250,7 +250,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	}
 	else {
 	   RvTestResult(rv, "NS_NewChannel", 1);
-	   RvTestResultDlg(rv, "NS_NewURI");
+	   RvTestResultDlg(rv, "NS_NewChannel");
 	}
 
 	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
