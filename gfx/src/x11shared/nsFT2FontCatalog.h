@@ -45,8 +45,8 @@
 
 #if (defined(MOZ_ENABLE_FREETYPE2))
 #include "nsFreeType.h"
-#include "nsCompressedCharMap.h"
 #include "nsICharRepresentable.h"
+#include "nsCompressedCharMap.h"
 
 #include "nsString.h"
 #include "nsIPref.h"

@@ -113,5 +113,8 @@ interface nsIFreeType2 : nsISupports
                        in FTC_Face_Requester requester, in FT_Pointer req_data,
                        out FTC_Manager manager);
     void    imageCacheNew(in FTC_Manager manager, out FTC_Image_Cache cache);
-};
 
+    FT_ULong getFirstChar(in FT_Face face, out FT_UInt gindex);
+    FT_ULong getNextChar(in FT_Face face, in FT_ULong charcode, out FT_UInt gindex);
+    void supportsExtFunc(out PRBool res);
+};

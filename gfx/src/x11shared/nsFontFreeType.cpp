@@ -44,6 +44,7 @@
 #endif
 
 #include "nsFontFreeType.h"
+#include "nsUnicharUtils.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
 
@@ -316,13 +317,25 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
     return NS_ERROR_FAILURE;
 
   // get the text size
-  PRUint32 i;
-  for (i=0; i<aLength; i++) {
+  PRUint32 i, extraSurrogateLength;
+  for (i=0; i<aLength; i+=1+extraSurrogateLength) {
     FT_UInt glyph_index;
     FT_Glyph glyph;
     FT_BBox glyph_bbox;
     FT_Pos advance;
-    mFt2->GetCharIndex(face, (FT_ULong)aString[i], &glyph_index);
+    extraSurrogateLength=0;
+
+    FT_ULong code_point = aString[i];
+    if(i<aLength-1 && IS_HIGH_SURROGATE(code_point) && IS_LOW_SURROGATE(aString[i+1])) {
+      // if surrogate, make UCS4 code point from high aString[i] surrogate and
+      // low surrogate aString[i+1]
+      code_point = SURROGATE_TO_UCS4(code_point, aString[i+1]);
+
+      // skip aString[i+1], it is already used as low surrogate
+      extraSurrogateLength = 1;
+    }
+    mFt2->GetCharIndex(face, code_point, &glyph_index);
+
     //NS_ASSERTION(glyph_index,"failed to get glyph");
     if (glyph_index) {
       rv = mFt2->ImageCacheLookup(icache, &mImageDesc, glyph_index, &glyph);
@@ -392,8 +405,19 @@ nsFreeTypeFont::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   if (!icache)
     return 0;
 
-  for (PRUint32 i=0; i<aLength; i++) {
-    mFt2->GetCharIndex((FT_Face)face, (FT_ULong)aString[i], &glyph_index);
+  PRUint32 i, extraSurrogateLength;
+  for (i=0; i<aLength; i+=1+extraSurrogateLength) {
+    extraSurrogateLength=0;
+    FT_ULong code_point = aString[i];
+    if(i<aLength-1 && IS_HIGH_SURROGATE(code_point) && IS_LOW_SURROGATE(aString[i+1])) {
+      // if surrogate, make UCS4 code point from high aString[i] surrogate and
+      // low surrogate aString[i+1]
+      code_point = SURROGATE_TO_UCS4(code_point, aString[i+1]);
+
+      // skip aString[i+1], it is already used as low surrogate
+      extraSurrogateLength = 1;
+    }
+    mFt2->GetCharIndex((FT_Face)face, code_point, &glyph_index);
     nsresult rv;
     rv = mFt2->ImageCacheLookup(icache, &mImageDesc, glyph_index, &glyph);
     NS_ASSERTION(NS_SUCCEEDED(rv),"error loading glyph");
@@ -709,13 +733,25 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   // Get aa glyphs and blend with background
   //
   blendGlyph blendGlyph = nsX11AlphaBlend::GetBlendGlyph();
-  PRUint32 i;
-  for (i=0; i<aLength; i++) {
+  PRUint32 i, extraSurrogateLength;
+  for (i=0; i<aLength; i+=1+extraSurrogateLength) {
     FT_UInt glyph_index;
     FT_Glyph glyph;
     nsresult rv;
     FT_BBox glyph_bbox;
-    mFt2->GetCharIndex(face, (FT_ULong)aString[i], &glyph_index);
+    FT_ULong code_point = aString[i];
+    extraSurrogateLength = 0;
+
+    if(i<aLength-1 && IS_HIGH_SURROGATE(code_point) && IS_LOW_SURROGATE(aString[i+1])) {
+      // if surrogate, make UCS4 code point from high aString[i] surrogate and
+      // low surrogate aString[i+1]
+      code_point = SURROGATE_TO_UCS4(code_point, aString[i+1]);
+
+      // skip aString[i+1], it is already used as low surrogate
+      extraSurrogateLength = 1;
+    }
+
+    mFt2->GetCharIndex(face, code_point, &glyph_index);
     if (glyph_index) {
       rv = mFt2->ImageCacheLookup(icache, &mImageDesc, glyph_index, &glyph);
     }
