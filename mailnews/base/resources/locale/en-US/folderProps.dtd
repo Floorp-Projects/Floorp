@@ -22,8 +22,8 @@
 
 <!ENTITY folderProps.windowtitle.label  "Properties">
 <!ENTITY generalInfo.label            "General Information">
-<!ENTITY folderCharsetTab.label       "Character coding">
-<!ENTITY folderCharsetOverride.label  "Apply default to all messages (ignore charset specified by MIME header)">
+<!ENTITY folderCharsetTab.label       "Default Character Coding:">
+<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character coding settings and auto-detection will be ignored).">
 <!ENTITY folderOfflineTab.label                             "Offline">
 <!ENTITY folderOfflineTab.accesskey                         "o">
 
