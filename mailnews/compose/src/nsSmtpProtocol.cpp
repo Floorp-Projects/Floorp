@@ -15,12 +15,16 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "msgCore.h"
 
 #include "nsSmtpProtocol.h"
 #include "nscore.h"
+#include "xp.h"  // mscott -- remove this dependency...
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIMsgRFC822Parser.h"
+#include "nsMsgRFC822Parser.h"
 
 #include "rosetta.h"
 
@@ -28,6 +32,7 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
+#include "prprf.h"
 #include "nsEscape.h"
 
 static NS_DEFINE_IID(kISmtpURLIID, NS_ISMTPURL_IID);
@@ -44,6 +49,158 @@ static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
  * fortezza: proxy auth is huge, buffer increased to 8k (sigh).
  */
 #define OUTPUT_BUFFER_SIZE (4096*2)
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// TEMPORARY HARD CODED FUNCTIONS 
+///////////////////////////////////////////////////////////////////////////////////////////
+#ifdef XP_WIN
+char *XP_AppCodeName = "Mozilla";
+#else
+const char *XP_AppCodeName = "Mozilla";
+#endif
+#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
+typedef PRUint32 MessageKey;
+const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
+
+/*
+ * This function takes an error code and associated error data
+ * and creates a string containing a textual description of
+ * what the error is and why it happened.
+ *
+ * The returned string is allocated and thus should be freed
+ * once it has been used.
+ *
+ * This function is defined in mkmessag.c.
+ */
+char * NET_ExplainErrorDetails (int code, ...)
+{
+	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
+	return rv;
+}
+
+char * NET_SACopy (char **destination, const char *source)
+{
+	if(*destination)
+	  {
+	    PR_Free(*destination);
+		*destination = 0;
+	  }
+    if (! source)
+	  {
+        *destination = NULL;
+	  }
+    else 
+	  {
+        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+        if (*destination == NULL) 
+ 	        return(NULL);
+
+        PL_strcpy (*destination, source);
+      }
+    return *destination;
+}
+
+/*  Again like strdup but it concatinates and free's and uses Realloc
+*/
+char * NET_SACat (char **destination, const char *source)
+{
+    if (source && *source)
+      {
+        if (*destination)
+          {
+            int length = PL_strlen (*destination);
+            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+            if (*destination == NULL)
+            return(NULL);
+
+            PL_strcpy (*destination + length, source);
+          }
+        else
+          {
+            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+            if (*destination == NULL)
+                return(NULL);
+
+             PL_strcpy (*destination, source);
+          }
+      }
+    return *destination;
+}
+
+/* RFC 1891 -- extended smtp value encoding scheme
+
+  5. Additional parameters for RCPT and MAIL commands
+
+     The extended RCPT and MAIL commands are issued by a client when it wishes to request a DSN from the
+     server, under certain conditions, for a particular recipient. The extended RCPT and MAIL commands are
+     identical to the RCPT and MAIL commands defined in [1], except that one or more of the following parameters
+     appear after the sender or recipient address, respectively. The general syntax for extended SMTP commands is
+     defined in [4]. 
+
+     NOTE: Although RFC 822 ABNF is used to describe the syntax of these parameters, they are not, in the
+     language of that document, "structured field bodies". Therefore, while parentheses MAY appear within an
+     emstp-value, they are not recognized as comment delimiters. 
+
+     The syntax for "esmtp-value" in [4] does not allow SP, "=", control characters, or characters outside the
+     traditional ASCII range of 1- 127 decimal to be transmitted in an esmtp-value. Because the ENVID and
+     ORCPT parameters may need to convey values outside this range, the esmtp-values for these parameters are
+     encoded as "xtext". "xtext" is formally defined as follows: 
+
+     xtext = *( xchar / hexchar ) 
+
+     xchar = any ASCII CHAR between "!" (33) and "~" (126) inclusive, except for "+" and "=". 
+
+	; "hexchar"s are intended to encode octets that cannot appear
+	; as ASCII characters within an esmtp-value.
+
+		 hexchar = ASCII "+" immediately followed by two upper case hexadecimal digits 
+
+	When encoding an octet sequence as xtext:
+
+	+ Any ASCII CHAR between "!" and "~" inclusive, except for "+" and "=",
+		 MAY be encoded as itself. (A CHAR in this range MAY instead be encoded as a "hexchar", at the
+		 implementor's discretion.) 
+
+	+ ASCII CHARs that fall outside the range above must be encoded as
+		 "hexchar". 
+
+ */
+/* caller must free the return buffer */
+PRIVATE char *
+esmtp_value_encode(char *addr)
+{
+	char *buffer = (char *) PR_MALLOC(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
+	char *bp = buffer, *bpEnd = buffer+500;
+	int len, i;
+
+	if (!buffer) return NULL;
+
+	*bp=0;
+	if (! addr || *addr == 0) /* this will never happen */
+		return buffer;
+
+	for (i=0, len=PL_strlen(addr); i < len && bp < bpEnd; i++)
+	{
+		if (*addr >= 0x21 && 
+			*addr <= 0x7E &&
+			*addr != '+' &&
+			*addr != '=')
+		{
+			*bp++ = *addr++;
+		}
+		else
+		{
+			PR_snprintf(bp, bpEnd-bp, "+%.2X", ((int)*addr++));
+			bp += PL_strlen(bp);
+		}
+	}
+	*bp=0;
+	return buffer;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// END OF TEMPORARY HARD CODED FUNCTIONS 
+///////////////////////////////////////////////////////////////////////////////////////////
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsSmtpProtocol)
@@ -118,11 +275,10 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_responseText = nsnull;
 	m_continuationResponse = -1; 
 
-	m_AddressCopy = nsnull;
+	m_addressCopy = nsnull;
 	m_addresses = nsnull;
 	m_addressesLeft = nsnull;
-	m_verifyAddress = nsnull;
-	m_PostData = nsnull;	
+	m_verifyAddress = nsnull;	
 	m_totalAmountWritten = 0;
 	m_totalMessageSize = 0;
 
@@ -131,7 +287,24 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_socketIsOpen = PR_FALSE;
 }
 
+const char * nsSmtpProtocol::GetUserDomainName()
+{
+	NS_PRECONDITION(m_runningURL != nsnull, "we must be running a url in order to get the user's domain...");
 
+	if (m_runningURL)
+	{
+		const char * mailAddr = nsnull;
+		const char *atSignMarker = nsnull;
+		m_runningURL->GetUserEmailAddress(&mailAddr);
+		if (mailAddr)
+		{
+			atSignMarker = PL_strchr(mailAddr, '@');
+			return atSignMarker ? atSignMarker+1 : mailAddr;  // return const ptr into buffer in running url...
+		}
+	}
+
+	return nsnull;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // we suppport the nsIStreamListener interface 
@@ -271,18 +444,18 @@ PRInt32 nsSmtpProtocol::SendData(const char * dataBuffer)
  */
 PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char * line;
+	char * line = nsnull;
 	char cont_char;
 	PRInt32 status = 0;
 	int err = 0;
 
-    status = ReadLine(inputStream, buffer);
+    status = ReadLine(inputStream, length, &line);
 
     if(status == 0)
     {
         m_nextState = SMTP_ERROR_DONE;
         ClearFlag(SMTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseTxt));
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseText));
 		status = MK_SMTP_SERVER_ERROR;
         return(MK_SMTP_SERVER_ERROR);
     }
@@ -301,8 +474,6 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 		return status;
 	}
 
-    TRACEMSG(("SMTP Rx: %s\n", line));
-
 	cont_char = ' '; /* default */
     sscanf(line, "%d%c", &m_responseCode, &cont_char);
 
@@ -312,16 +483,16 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 			m_continuationResponse = m_responseCode;
 
 		if(PL_strlen(line) > 3)
-         	StrAllocCopy(m_responseTxt, line+4);
+         	StrAllocCopy(m_responseText, line+4);
     }
     else
     {    /* have to continue */
 		if (m_continuationResponse == m_responseCode && cont_char == ' ')
 			m_continuationResponse = -1;    /* ended */
 
-        StrAllocCat(m_responseTxt, "\n");
+        StrAllocCat(m_responseText, "\n");
         if(PL_strlen(line) > 3)
-            StrAllocCat(m_responseTxt, line+4);
+            StrAllocCat(m_responseText, line+4);
      }
 
 	if(m_continuationResponse == -1)  /* all done with this response? */
@@ -346,7 +517,7 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 
 
 	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, 
-				net_smtp_get_user_domain_name());
+				GetUserDomainName());
 	 
 	TRACEMSG(("Tx: %s", buffer));
 
@@ -372,7 +543,7 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 	}
 
 	PR_snprintf(buffer, sizeof(buffer), "EHLO %.256s" CRLF, 
-				net_smtp_get_user_domain_name());
+				GetUserDomainName());
 
 	TRACEMSG(("Tx: %s", buffer));
 
@@ -390,17 +561,16 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 {
     PRInt32 status = 0;
 	char buffer[620];
-#ifdef UNREADY_CODE
-	const char *mail_add = FE_UsersMailAddress();
-#else
-	const char *mail_add = nsnull;
-#endif
+
+	// extract the email addresss
+	const char * userAddress = nsnull;
+	m_runningURL->GetUserEmailAddress(&userAddress);
 
 	/* don't check for a HELO response because it can be bogus and
 	 * we don't care
 	 */
 
-	if(!mail_add)
+	if(!userAddress)
 	{
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS));
 		return(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS);
@@ -413,12 +583,12 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	else
 	{
 		/* else send the MAIL FROM: command */
-		nsIMsgRFC822Parser * parser = nsnull;
+ 	  	 nsIMsgRFC822Parser * parser = nsnull;
 		 NS_NewRFC822Parser(&parser);
 		 char * s = nsnull;
 		 if (parser)
 		 {
-			 parser->MakeFullAddress(nsnull, mail_add, s);
+			 parser->MakeFullAddress(nsnull, userAddress, &s);
 			 NS_RELEASE(parser);
 		 }
 
@@ -427,12 +597,12 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_OUT_OF_MEMORY));
 			return(MK_OUT_OF_MEMORY);
 		 }
-		
+#ifdef UNREADY_CODE		
 		 if (CE_URL_S->msg_pane) 
 		 {
 			if (MSG_RequestForReturnReceipt(CE_URL_S->msg_pane)) 
 			{
-				if (CD_EHLO_DSN_ENABLED) 
+				if (TestFlag(SMTP_EHLO_DSN_ENABLED)) 
 				{
 					PR_snprintf(buffer, sizeof(buffer), 
 								"MAIL FROM:<%.256s> RET=FULL ENVID=NS40112696JT" CRLF, s);
@@ -455,6 +625,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 			}
 		}
 		else 
+#endif
 		{
 			PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);
 		}
@@ -486,7 +657,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	char buffer[384];
 
 	HG10349
-	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, net_smtp_get_user_domain_name());
+	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, GetUserDomainName());
 
 	TRACEMSG(("Tx: %s", buffer));
 
@@ -502,8 +673,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	char *ptr = NULL;
 	PRBool auth_login_enabled = FALSE;
 
-	ptr = PL_strcasestr(m_responseTxt, "DSN");
-	if (ptr && nsCRT::toupper(*(ptr-1)) != 'X')
+	ptr = PL_strcasestr(m_responseText, "DSN");
+	if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
 		SetFlag(SMTP_EHLO_DSN_ENABLED);
 	else
 		ClearFlag(SMTP_EHLO_DSN_ENABLED); 
@@ -511,17 +682,19 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	/* should we use auth login */
 #ifdef UNREADY_CODE
 	PREF_GetBoolPref("mail.auth_login", &auth_login_enabled);
+#else
+	auth_login_enabled = PR_FALSE;
 #endif
 	if (auth_login_enabled) 
 	{
 		/* okay user has set to use skey
 		   let's see does the server have the capability */
-		if (PL_strcasestr(m_responseTxt, " PLAIN") != 0)
+		if (PL_strcasestr(m_responseText, " PLAIN") != 0)
 			m_authMethod =  SMTP_AUTH_PLAIN;
-		else if (strcasestr(m_responseTxt, "AUTH=LOGIN") != 0)
+		else if (strcasestr(m_responseText, "AUTH=LOGIN") != 0)
 			m_authMethod = SMTP_AUTH_LOGIN;	/* old style */
 	}
-
+#ifdef UNREADY_CODE
 	HG40702
 
 	HG30626
@@ -530,7 +703,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	{
 		HG92990
 	}
-	
+#endif
 	return (status);
   }
 }
@@ -545,17 +718,13 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   {
   case 2:
 	  {
-#ifdef UNREADY_CODE
-		  char *mail_password = MSG_GetPasswordForMailHost(cd->master,  m_hostName);
-#else
-		char * mail_password = nsnull;
-#endif
+		  const char * mailPassword = nsnull;
+		  m_runningURL->GetUserPassword(&mailPassword);
 		  m_nextState = SMTP_SEND_HELO_RESPONSE;
 #ifdef UNREADY_CODE
-		  if (mail_password == NULL)
+		  if (mailPassword == NULL)
 			MSG_SetPasswordForMailHost(cd->master, m_hostName, net_smtp_password);
 #endif
-		  PR_FREEIF(mail_password);
 	  }
 	break;
   case 3:
@@ -568,8 +737,8 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
 		char* tmp_name = 0;
 #ifdef UNREADY_CODE
 		PREF_CopyCharPref("mail.smtp_name", &net_smtp_name);
-#endif
 		PR_FREEIF(net_smtp_password);
+#endif
 		if (net_smtp_name)
 			tmp_name = PL_strdup(net_smtp_name);
 #ifdef UNREADY_CODE
@@ -598,28 +767,6 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   return (status);
 }
 
-/* return allocated password string */
-PRIVATE char *
-net_smtp_prompt_for_password(ActiveEntry *cur_entry)
-{
-	char buffer[1024];
-	char host[256];
-	int len = 256;
-	char *fmt = XP_GetString (XP_PASSWORD_FOR_POP3_USER);
-	char *net_smtp_name = 0;
-	
-	nsCRT::memset(host, 0, 256);
-#ifdef UNREADY_CODE
-	PREF_GetCharPref("network.hosts.smtp_server", host, &len);
-	PREF_CopyCharPref("mail.smtp_name", &net_smtp_name);
-#endif
-	PR_snprintf(buffer, sizeof (buffer), 
-				fmt, net_smtp_name ? net_smtp_name : "", host);
-	FREEIF(net_smtp_name);
-#ifdef UNREADY_CODE
-	return FE_PromptPassword(cur_entry->window_id, buffer);
-#endif
-}
 
 PRInt32 nsSmtpProtocol::AuthLoginUsername()
 {
@@ -694,7 +841,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
    * if pop password undefined 
    * sync with smtp password
    */
-  
+#ifdef UNREADY_CODE  
   if (!net_smtp_password || !*net_smtp_password)
   {
 	  PR_FREEIF(net_smtp_password); /* in case its an empty string */
@@ -731,6 +878,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 		return (status);
 	}
   }
+#endif
 
   return -1;
 }
@@ -759,7 +907,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
     if(m_responseCode != 250)
 	{
 
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND), m_responseTxt);
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, m_responseText));
 		return(MK_ERROR_SENDING_FROM_COMMAND);  
 	}
 
@@ -813,7 +961,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND), m_responseTxt);
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, m_responseText));
         return(MK_ERROR_SENDING_RCPT_COMMAND);
 	}
 
@@ -846,8 +994,8 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 
     if(m_responseCode != 354)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_DATA_COMMAND), 
-			m_responseTxt ? m_responseTxt : "");
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_DATA_COMMAND, 
+			m_responseText ? m_responseText : ""));
         return(MK_ERROR_SENDING_DATA_COMMAND);
 	}
 #ifdef UNREADY_CODE
@@ -913,16 +1061,20 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 			m_totalMessageSize = stat_entry.st_size;
 	  }
 	else
-	  {
-			m_totalMessageSize = CE_URL_S->post_data_size;
-	  }
 #endif
+	  {
+		m_runningURL->GetBodySize(&m_totalMessageSize);
+	  }
+
 
     return(status);  
 }
 
 PRInt32 nsSmtpProtocol::SendPostData()
 {
+	// mscott: as a first pass, I'm writing everything at once and am not
+	// doing it in chunks...
+
     PRInt32 status = 0;
 	unsigned long curtime;
 
@@ -930,16 +1082,31 @@ PRInt32 nsSmtpProtocol::SendPostData()
 	 * positive if it needs to continue.
 	 */
 
-	SendData(m_MessageToPost);
-								  
-	cd->pause_for_read = TRUE;
+	// first, write out the message headers...
+	const char * headers = nsnull;
+	m_runningURL->GetHeaders(&headers);
+	if (headers)
+		SendData(headers);
 
-	if(status == 0)
+	// now send the body of the message....
+	const char * body = nsnull;
+	m_runningURL->GetBody(&body);
+	if (body)
+		SendData(body);
+								  
+	SetFlag(SMTP_PAUSE_FOR_READ);
+
+	// for now, we are always done at this point..we aren't making multiple calls
+	// to post data...
+
+	m_totalAmountWritten += status;
+
+//	if(status == 0)
 	{
 		/* normal done
 		 */
         PL_strcpy(m_dataBuf, CRLF "." CRLF);
-        TRACEMSG(("sending %s", cd->data_buffer));
+        TRACEMSG(("sending %s", m_dataBuf));
 		SendData(m_dataBuf);
 #ifdef UNREADY_CODE
 		NET_Progress(CE_WINDOW_ID,
@@ -984,7 +1151,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 
     if(m_responseCode != 250)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE), m_responseTxt ? m_responseTxt : "");
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, m_responseText ? m_responseText : ""));
         return(MK_ERROR_SENDING_MESSAGE);
 	}
 
@@ -997,7 +1164,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 }
 
 
-PRInt32 LoadUrl(nsIUrl * aURL)
+PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
@@ -1011,119 +1178,129 @@ PRInt32 LoadUrl(nsIUrl * aURL)
 		rv = aURL->QueryInterface(kISmtpURLIID, (void **) &smtpUrl);
 		if (NS_SUCCEEDED(rv) && smtpUrl)
 		{
+			m_runningURL = smtpUrl;
 
-#ifdef UNREADY_CODE
-	m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
-#endif
-	// we should be able to get the host name from the url...
+			#ifdef UNREADY_CODE
+			m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
+			#endif
+			
+			PRBool postMessage = PR_FALSE;
+			m_runningURL->IsPostMessage(&postMessage);
 
-	/* make a copy of the address
-	 */
-	if(CE_URL_S->method == URL_POST_METHOD)
-	{
-		int status=0;
-		char *addrs1 = 0;
-		char *addrs2 = 0;
-    	m_nextState = SMTP_START_CONNECT;
+			if(postMessage)
+			{
+				int status=0;
+				char *addrs1 = 0;
+				char *addrs2 = 0;
+    			m_nextState = SMTP_START_CONNECT;
 
-		/* Remove duplicates from the list, to prevent people from getting
-		   more than one copy (the SMTP host may do this too, or it may not.)
-		   This causes the address list to be parsed twice; this probably
-		   doesn't matter.
-		 */
-		addrs1 = MSG_RemoveDuplicateAddresses (CE_URL_S->address+7, 0, FALSE /*removeAliasesToMe*/);
+				/* Remove duplicates from the list, to prevent people from getting
+					more than one copy (the SMTP host may do this too, or it may not.)
+					This causes the address list to be parsed twice; this probably
+					doesn't matter.
+				*/
 
-		/* Extract just the mailboxes from the full RFC822 address list.
-		   This means that people can post to mailto: URLs which contain
-		   full RFC822 address specs, and we will still send the right
-		   thing in the SMTP RCPT command.
-		 */
-		if (addrs1 && *addrs1)
-		{
-			status = MSG_ParseRFC822Addresses (addrs1, 0, &addrs2);
-			FREEIF (addrs1);
-		}
+				char * addresses = nsnull;
+				nsIMsgRFC822Parser * parser = nsnull;
+				NS_NewRFC822Parser(&parser);
 
-		if (status < 0) return status;
+				m_runningURL->GetAllRecipients(&addresses);
 
-		if (status == 0 || addrs2 == 0)
-		  {
-			m_nextState = SMTP_ERROR_DONE;
-			ClearFlag(SMTP_PAUSE_FOR_READ);
-			status = MK_MIME_NO_RECIPIENTS;
-			CE_URL_S->error_msg = NET_ExplainErrorDetails(status);
-			return status;
-		  }
+				if (parser)
+				{
+					parser->RemoveDuplicateAddresses(addresses, nsnull, PR_FALSE, &addrs1);
 
-		CD_ADDRESS_COPY = addrs2;
-		CD_MAIL_TO_ADDRESS_PTR = CD_ADDRESS_COPY;
-		CD_MAIL_TO_ADDRESSES_LEFT = status;
-        return(NET_ProcessMailto(cur_entry));
-	}
-	else
-	{
-		/* parse special headers and stuff from the search data in the
-		   URL address.  This data is of the form
+					/* Extract just the mailboxes from the full RFC822 address list.
+					   This means that people can post to mailto: URLs which contain
+					   full RFC822 address specs, and we will still send the right
+					   thing in the SMTP RCPT command.
+					*/
+					if (addrs1 && *addrs1)
+					{
+						rv = parser->ParseRFC822Addresses(addrs1, nsnull, &addrs2, m_addressesLeft);
+						PR_FREEIF (addrs1);
+					}
 
-		    mailto:TO_FIELD?FIELD1=VALUE1&FIELD2=VALUE2
+					if (m_addressesLeft == 0 || addrs2 == nsnull) // hmm no addresses to send message to...
+					{
+						m_nextState = SMTP_ERROR_DONE;
+						ClearFlag(SMTP_PAUSE_FOR_READ);
+						status = MK_MIME_NO_RECIPIENTS;
+						m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(status));
+						return status;
+					}
 
-		   where TO_FIELD may be empty, VALUEn may (for now) only be
-		   one of "cc", "bcc", "subject", "newsgroups", "references",
-		   and "attachment".
+					m_addressCopy = addrs2;
+					m_addresses = m_addressCopy;
+					NS_RELEASE(parser); // release the RFC-822 parser...
+					PR_FREEIF(addresses); // free our original addresses string...
+				} // if parser
+			} // if post message
+			else
+			{
+				#ifdef UNREADY_CODE
+				/* parse special headers and stuff from the search data in the
+				  URL address.  This data is of the form
 
-		   "to" is allowed as a field/value pair as well, for consistency.
-		   */
-		HG15779
-		/*
-		   Each parameter may appear only once, but the order doesn't
-		   matter.  All values must be URL-encoded.
-		 */
-		char *from = 0;						/* internal only */
-		char *reply_to = 0;					/* internal only */
-		char *to = 0;
-		char *cc = 0;
-		char *bcc = 0;
-		char *fcc = 0;						/* internal only */
-		char *newsgroups = 0;
-		char *followup_to = 0;
-		char *html_part = 0;				/* internal only */
-		char *organization = 0;				/* internal only */
-		char *subject = 0;
-		char *references = 0;
-		char *attachment = 0;				/* internal only */
-		char *body = 0;
-		char *priority = 0;
-		char *newshost = 0;					/* internal only */
-		HG27293
+					mailto:TO_FIELD?FIELD1=VALUE1&FIELD2=VALUE2
 
-		char *newspost_url = 0;
-		PRBool forcePlaintText = PR_FALSE;
+					where TO_FIELD may be empty, VALUEn may (for now) only be
+					one of "cc", "bcc", "subject", "newsgroups", "references",
+					and "attachment".
 
-		// extract info from the url...
+					"to" is allowed as a field/value pair as well, for consistency.
+				*/
+				HG15779
+				/*
+					Each parameter may appear only once, but the order doesn't
+					matter.  All values must be URL-encoded.
+				*/
+				
+				char *from = 0;						/* internal only */
+				char *reply_to = 0;					/* internal only */
+				char *to = 0;
+				char *cc = 0;
+				char *bcc = 0;
+				char *fcc = 0;						/* internal only */
+				char *newsgroups = 0;
+				char *followup_to = 0;
+				char *html_part = 0;				/* internal only */
+				char *organization = 0;				/* internal only */
+				char *subject = 0;
+				char *references = 0;
+				char *attachment = 0;				/* internal only */
+				char *body = 0;
+				char *priority = 0;
+				char *newshost = 0;					/* internal only */
+				HG27293
 
+				char *newspost_url = 0;
+				PRBool forcePlaintText = PR_FALSE;
 
-		if(newshost)
-		  {
-			char *prefix = "news://";
-			char *slash = XP_STRRCHR (newshost, '/');
-			if (slash && HG50707)
-			  {
-				*slash = 0;
-				prefix = "snews://";
-			  }
-			newspost_url = (char *) XP_ALLOC (PL_strlen (prefix) +
+				// extract info from the url...
+				if(newshost)
+				{
+					char *prefix = "news://";
+					char *slash = XP_STRRCHR (newshost, '/');
+					if (slash && HG50707)
+					{
+						*slash = 0;
+						prefix = "snews://";
+					}
+					
+					newspost_url = (char *) XP_ALLOC (PL_strlen (prefix) +
 											  PL_strlen (newshost) + 10);
-			if (newspost_url)
-			  {
-				XP_STRCPY (newspost_url, prefix);
-				XP_STRCAT (newspost_url, newshost);
-				XP_STRCAT (newspost_url, "/");
-			  }
-		  }
+					if (newspost_url)
+					{
+						XP_STRCPY (newspost_url, prefix);
+						XP_STRCAT (newspost_url, newshost);
+						XP_STRCAT (newspost_url, "/");
+					}
+				}
 
-		/* Tell the message library and front end to pop up an edit window.
-		 */
-		cpane = MSG_ComposeMessage (CE_WINDOW_ID,
+			/* Tell the message library and front end to pop up an edit window.
+			*/
+			cpane = MSG_ComposeMessage (CE_WINDOW_ID,
 									from, reply_to, to, cc, bcc, fcc,
 									newsgroups, followup_to, organization,
 									subject, references, other_random_headers,
@@ -1131,57 +1308,72 @@ PRInt32 LoadUrl(nsIUrl * aURL)
 									HG18517, HG74130, force_plain_text,
 									html_part);
 
-		if (cpane && CE_URL_S->fe_data) {
-			/* Tell libmsg what to do after deliver the message */
-			MSG_SetPostDeliveryActionInfo (cpane, CE_URL_S->fe_data);
-		}
-		else if (cpane)
-		{
-			MWContext *context = MSG_GetContext(cpane);
-			INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(context);
-
-			/* Avoid a mailtourl defaults as an unicode mail. 
-			 * Set a encoding menu's charsetID of the current context for that case.
-			 */
-			if (IS_UNICODE_CSID(INTL_GetCSIDocCSID(csi)) || 
-				IS_UNICODE_CSID(INTL_GetCSIWinCSID(csi)))
-			{
-				INTL_ResetCharSetID(context, FE_DefaultDocCharSetID((MWContext *) CE_WINDOW_ID));
+			if (cpane && CE_URL_S->fe_data) {
+				/* Tell libmsg what to do after deliver the message */
+				MSG_SetPostDeliveryActionInfo (cpane, CE_URL_S->fe_data);
 			}
+			else if (cpane)
+			{
+				MWContext *context = MSG_GetContext(cpane);
+				INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(context);
+
+				/* Avoid a mailtourl defaults as an unicode mail. 
+				 * Set a encoding menu's charsetID of the current context for that case.
+				 */
+				if (IS_UNICODE_CSID(INTL_GetCSIDocCSID(csi)) || 
+					IS_UNICODE_CSID(INTL_GetCSIWinCSID(csi)))
+				{	
+					INTL_ResetCharSetID(context, FE_DefaultDocCharSetID((MWContext *) CE_WINDOW_ID));
+				}
+			}
+
+			FREEIF(from);
+			FREEIF(reply_to);
+			FREEIF(to);
+			FREEIF(cc);
+			FREEIF(bcc);
+			FREEIF(fcc);
+			FREEIF(newsgroups);
+			FREEIF(followup_to);
+			FREEIF(html_part);
+			FREEIF(organization);
+			FREEIF(subject);
+			FREEIF(references);
+			FREEIF(attachment);
+			FREEIF(body);
+			FREEIF(other_random_headers);
+			FREEIF(newshost);
+			FREEIF(priority);
+			FREEIF(newspost_url);
+
+			status = MK_NO_DATA;
+			PR_FREEIF(cd);	/* no one else is gonna do it! */
+			return(-1);
+			#endif
 		}
 
-		FREEIF(from);
-		FREEIF(reply_to);
-		FREEIF(to);
-		FREEIF(cc);
-		FREEIF(bcc);
-		FREEIF(fcc);
-		FREEIF(newsgroups);
-		FREEIF(followup_to);
-		FREEIF(html_part);
-		FREEIF(organization);
-		FREEIF(subject);
-		FREEIF(references);
-		FREEIF(attachment);
-		FREEIF(body);
-		FREEIF(other_random_headers);
-		FREEIF(newshost);
-		FREEIF(priority);
-		FREEIF(newspost_url);
 
-		status = MK_NO_DATA;
-		PR_FREEIF(cd);	/* no one else is gonna do it! */
-		return(-1);
-	  }
-
-
+		// okay now kick us off to the next state...
+		// our first state is a process state so drive the state machine...
+		PRBool transportOpen = PR_FALSE;
+		m_transport->IsTransportOpen(&transportOpen);
+		if (transportOpen == PR_FALSE)
+		{
+			m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
+		}
+		else  // the connection is already open so we should begin processing our new url...
+			 status = ProcessSmtpState(m_runningURL, nsnull, 0); 
+		return status;
+	}
+	}
 }
+	
 /*
  * returns negative if the transfer is finished or error'd out
  *
  * returns zero or more if the transfer needs to be continued.
  */
-PRInt32	ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length););
+ PRInt32 nsSmtpProtocol::ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
 	char	*mail_relay_host;
@@ -1190,195 +1382,132 @@ PRInt32	ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 le
 
     ClearFlag(SMTP_PAUSE_FOR_READ); /* already paused; reset */
 
-    while(!CD_PAUSE_FOR_READ)
+    while(!TestFlag(SMTP_PAUSE_FOR_READ))
       {
 
 		TRACEMSG(("In NET_ProcessSMTP with state: %d", m_nextState));
 
-        switch(m_nextState) {
-
-		case SMTP_RESPONSE:
-			net_smtp_response (cur_entry);
-			break;
-
-        case SMTP_START_CONNECT:
-			mail_relay_host = NET_MailRelayHost(CE_WINDOW_ID);
-			if (PL_strlen(mail_relay_host) == 0)
-			{
-				status = MK_MSG_NO_SMTP_HOST;
+        switch(m_nextState) 
+		{
+			case SMTP_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SmtpResponse(inputStream, length);
 				break;
-			}
-            status = NET_BeginConnect(NET_MailRelayHost(CE_WINDOW_ID), 
-										NULL,
-										"SMTP",
-										SMTP_PORT, 
-										&CE_SOCK, 
-										FALSE, 
-										&CD_TCP_CON_DATA, 
-										CE_WINDOW_ID,
-										&CE_URL_S->error_msg,
-										 cur_entry->socks_host,
-										 cur_entry->socks_port,
-										 0);
-            SetFlag(SMTP_PAUSE_FOR_READ);
-            if(status == MK_CONNECTED)
-              {
-                m_nextState = SMTP_RESPONSE;
-                m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-                FE_SetReadSelect(CE_WINDOW_ID, CE_SOCK);
-              }
-            else if(status > -1)
-              {
-                CE_CON_SOCK = CE_SOCK;  /* set con_sock so we can select on it */
-                FE_SetConnectSelect(CE_WINDOW_ID, CE_CON_SOCK);
-                m_nextState = SMTP_FINISH_CONNECT;
-              }
-            break;
 
-		case SMTP_FINISH_CONNECT:
-            status = NET_FinishConnect(NET_MailRelayHost(CE_WINDOW_ID), 
-										  "SMTP", 
-										  SMTP_PORT, 
-										  &CE_SOCK, 
-										  &CD_TCP_CON_DATA, 
-										  CE_WINDOW_ID,
-										  &CE_URL_S->error_msg,
-										  0);
-
-            SetFlag(SMTP_PAUSE_FOR_READ);
-            if(status == MK_CONNECTED)
-              {
-                m_nextState = SMTP_RESPONSE;
-                m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-                FE_ClearConnectSelect(CE_WINDOW_ID, CE_CON_SOCK);
-                CE_CON_SOCK = SOCKET_INVALID;  /* reset con_sock so we don't select on it */
-                FE_SetReadSelect(CE_WINDOW_ID, CE_SOCK);
-              }
-			else
-              {
-                /* unregister the old CE_SOCK from the select list
-                 * and register the new value in the case that it changes
-                 */
-                if(CE_CON_SOCK != CE_SOCK)
-                  {
-                    FE_ClearConnectSelect(CE_WINDOW_ID, CE_CON_SOCK);
-                    CE_CON_SOCK = CE_SOCK;
-                    FE_SetConnectSelect(CE_WINDOW_ID, CE_CON_SOCK);
-                  }
-              }
-            break;
-
+			case SMTP_START_CONNECT:
+				SetFlag(SMTP_PAUSE_FOR_READ);
+				m_nextState = SMTP_RESPONSE;
+				m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+				break;
+			case SMTP_FINISH_CONNECT:
+	            SetFlag(SMTP_PAUSE_FOR_READ);
+		        break;
+#ifdef UNREADY_CODE
 	   HG26788
-	   
-	   case SMTP_LOGIN_RESPONSE:
-            status = net_smtp_login_response(cur_entry);
-            break;
+#endif	   
+			case SMTP_LOGIN_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = LoginResponse(inputStream, length);
+				break;
+			case SMTP_EXTN_LOGIN_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = ExtensionLoginResponse(inputStream, length);
+				break;
 
-       case SMTP_EXTN_LOGIN_RESPONSE:
-            status = net_smtp_extension_login_response(cur_entry);
-            break;
+			case SMTP_SEND_HELO_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendHeloResponse(inputStream, length);
+				break;
+			case SMTP_SEND_EHLO_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendEhloResponse(inputStream, length);
+				break;
 
-	   case SMTP_SEND_HELO_RESPONSE:
-            status = net_smtp_send_helo_response(cur_entry);
-            break;
-
-	   case SMTP_SEND_EHLO_RESPONSE:
-		    status = net_smtp_send_ehlo_response(cur_entry);
-			break;
-
-	   case SMTP_AUTH_LOGIN_RESPONSE:
-		    status = net_smtp_auth_login_response(cur_entry);
-			break;
-
+			case SMTP_AUTH_LOGIN_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = AuthLoginResponse(inputStream, length);
+				break;
+#ifdef UNREADY_CODE
        HG12690
-			
-	   case SMTP_SEND_AUTH_LOGIN_USERNAME:
-		    status = net_smtp_auth_login_username(cur_entry);
-			break;
+#endif
+			 case SMTP_SEND_AUTH_LOGIN_USERNAME:
+				 status = AuthLoginUsername();
+				 break;
 
-	   case SMTP_SEND_AUTH_LOGIN_PASSWORD:
-		    status = net_smtp_auth_login_password(cur_entry);
-			break;
+			case SMTP_SEND_AUTH_LOGIN_PASSWORD:
+				status = AuthLoginPassword(); 
+				break;
 			
-	   case SMTP_SEND_VRFY_RESPONSE:
-			status = net_smtp_send_vrfy_response(cur_entry);
-            break;
+			case SMTP_SEND_VRFY_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendVerifyResponse();
+				break;
 			
-	   case SMTP_SEND_MAIL_RESPONSE:
-            status = net_smtp_send_mail_response(cur_entry);
-            break;
+			case SMTP_SEND_MAIL_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendMailResponse();
+				break;
 			
-	   case SMTP_SEND_RCPT_RESPONSE:
-            status = net_smtp_send_rcpt_response(cur_entry);
-            break;
+			case SMTP_SEND_RCPT_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendRecipientResponse();
+				break;
+							
+			case SMTP_SEND_DATA_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendDataResponse();
+				break;
 			
-	   case SMTP_SEND_DATA_RESPONSE:
-            status = net_smtp_send_data_response(cur_entry);
-            break;
+			case SMTP_SEND_POST_DATA:
+				status = SendPostData(); 
+				break;
 			
-	   case SMTP_SEND_POST_DATA:
-            status = net_smtp_send_post_data(cur_entry);
-            break;
-			
-	   case SMTP_SEND_MESSAGE_RESPONSE:
-            status = net_smtp_send_message_response(cur_entry);
-            break;
+			case SMTP_SEND_MESSAGE_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendMessageResponse();
+				break;
+			case SMTP_DONE:
+	            m_nextState = SMTP_FREE;
+				break;
         
-        case SMTP_DONE:
-			NET_BlockingWrite(CE_SOCK, "QUIT" CRLF, 6);
-            FE_ClearReadSelect(CE_WINDOW_ID, CE_SOCK);
-			net_graceful_shutdown(CE_SOCK, HG06474);
-            NETCLOSE(CE_SOCK);
-            m_nextState = SMTP_FREE;
-            break;
+			case SMTP_ERROR_DONE:
+	            m_nextState = SMTP_FREE;
+		        break;
         
-        case SMTP_ERROR_DONE:
-            if(CE_SOCK != SOCKET_INVALID)
-              {
-				if ( HG70187 )
-					NET_BlockingWrite(CE_SOCK, "QUIT" CRLF, 6);
-				FE_ClearReadSelect(CE_WINDOW_ID, CE_SOCK);
-				if ( HG70187 )
-					net_graceful_shutdown(CE_SOCK, HG06474);
-				FE_ClearConnectSelect(CE_WINDOW_ID, CE_SOCK);
-#ifdef XP_WIN
-				if(cd->calling_netlib_all_the_time)
-				{
-					net_call_all_the_time_count--;
-					cd->calling_netlib_all_the_time = FALSE;
-					if(net_call_all_the_time_count == 0)
-						FE_ClearCallNetlibAllTheTime(CE_WINDOW_ID);
-				}
-#endif /* XP_WIN */
-#if defined(XP_WIN) || (defined(XP_UNIX)&&defined(UNIX_ASYNC_DNS))
-                FE_ClearDNSSelect(CE_WINDOW_ID, CE_SOCK);
-#endif /* XP_WIN || XP_UNIX */
-                NETCLOSE(CE_SOCK);
-              }
-            m_nextState = SMTP_FREE;
-            break;
+			case SMTP_FREE:
+				// smtp is a one time use connection so kill it if we get here...
+				CloseConnection(); 
+	            return(-1); /* final end */
         
-        case SMTP_FREE:
-            FREEIF(m_dataBuf);
-            FREEIF(CD_ADDRESS_COPY);
-			FREEIF(m_responseTxt);
-			FREEIF(m_hostName);
-            if(CD_TCP_CON_DATA)
-                NET_FreeTCPConData(CD_TCP_CON_DATA);
-			if (cd->write_post_data_data)
-				net_free_write_post_data_object((struct WritePostDataData *) 
-												cd->write_post_data_data);
-            FREE(cd);
+			default: /* should never happen !!! */
+				TRACEMSG(("SMTP: BAD STATE!"));
+				m_nextState = SMTP_ERROR_DONE;
+				break;
+		}
 
-            return(-1); /* final end */
-        
-        default: /* should never happen !!! */
-            TRACEMSG(("SMTP: BAD STATE!"));
-            m_nextState = SMTP_ERROR_DONE;
-            break;
-        }
-
-        /* check for errors during load and call error 
+		/* check for errors during load and call error 
          * state if found
          */
         if(status < 0 && m_nextState != SMTP_FREE)
@@ -1387,11 +1516,12 @@ PRInt32	ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 le
             /* don't exit! loop around again and do the free case */
             ClearFlag(SMTP_PAUSE_FOR_READ);
           }
-      } /* while(!CD_PAUSE_FOR_READ) */
+      } /* while(!SMTP_PAUSE_FOR_READ) */
     
     return(status);
 }
 
+#ifdef UNREADY_CODE
 static void
 MessageSendingDone(URL_Struct* url, int status, MWContext* context)
 {
@@ -1458,3 +1588,5 @@ Subject: %s\n\
     return NET_GetURL(url, FO_PRESENT, context, MessageSendingDone);
     
 }
+
+#endif

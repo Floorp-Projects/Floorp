@@ -140,11 +140,10 @@ private:
     char       *m_responseText;   /* text returned from Smtp server */
 	char	   *m_hostName;
 
-	char	   *m_AddressCopy;
+	char	   *m_addressCopy;
 	char	   *m_addresses;
-	char	   *m_addressesLeft;
+	PRUint32	m_addressesLeft;
 	char	   *m_verifyAddress;
-	void	   *m_PostData;			// mscott: I'm going to try to get rid of this and be more explicit...
 	
 	SmtpAuthMethod m_authMethod;
 
@@ -205,8 +204,9 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
-
-//	PRInt32 ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
+	
+	// extract domain name from userName field in the url...
+	const char * GetUserDomainName();
 };
 
 #endif  // nsSmtpProtocol_h___
