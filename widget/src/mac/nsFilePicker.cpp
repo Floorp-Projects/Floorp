@@ -143,9 +143,34 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     */
   }
   
-  *retVal = userClicksOK;
+  *retval = userClicksOK;
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+//
+// myProc
+//
+// An event filter proc for NavServices so the dialogs will be movable-modals. However,
+// this doesn't seem to work as of yet...I'll play around with it some more.
+//
+//-------------------------------------------------------------------------
+pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data ) ;
+pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
+{
+	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
+	switch ( msg ) {
+		case kNavCBEvent:
+			switch ( cbRec->eventData.eventDataParms.event->what ) {
+				case updateEvt:
+					::BeginUpdate(window);
+					::EndUpdate(window);
+					break;
+			}
+			break;
+	}
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -196,7 +221,7 @@ nsFilePicker :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 			
 			if (anErr == noErr) {
 				*outSpec = theFSSpec;	// Return the FSSpec
-				mSelectResult = nsFileDlgResults_OK;
+				mSelectResult = returnOK;
 				
 				// Some housekeeping for Nav Services 
 				::NavDisposeReply(&reply);
@@ -262,7 +287,7 @@ nsFilePicker :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 			
 			if (anErr == noErr) {
 				*outSpec = theFSSpec;	// Return the FSSpec
-				mSelectResult = nsFileDlgResults_OK;
+				mSelectResult = returnOK;
 				
 				// Some housekeeping for Nav Services 
 				::NavDisposeReply(&reply);
@@ -281,31 +306,6 @@ nsFilePicker :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 
 } // GetFolder
 
-
-//-------------------------------------------------------------------------
-//
-// myProc
-//
-// An event filter proc for NavServices so the dialogs will be movable-modals. However,
-// this doesn't seem to work as of yet...I'll play around with it some more.
-//
-//-------------------------------------------------------------------------
-pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data ) ;
-pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
-{
-	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
-	switch ( msg ) {
-		case kNavCBEvent:
-			switch ( cbRec->eventData.eventDataParms.event->what ) {
-				case updateEvt:
-					::BeginUpdate(window);
-					::EndUpdate(window);
-					break;
-			}
-			break;
-	}
-}
-
 //-------------------------------------------------------------------------
 //
 // Set the list of filters
@@ -314,7 +314,7 @@ pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBack
 
 NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
                                           const PRUnichar **aTitles,
-                                          const PRUnichar **filters)
+                                          const PRUnichar **aFilters)
 {
 	mNumberOfFilters  = aNumberOfFilters;
 	mTitles           = aTitles;
@@ -504,8 +504,6 @@ NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
 
   mTitle = aTitle;
   mMode = aMode;
-
-	mWindowPtr = nsnull;
 
   return NS_OK;
 }
