@@ -100,46 +100,40 @@ void nsMarkupDocument::CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelecto
  */
 void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration)
 {
-  PRInt32    propId;
-  nsCSSValue value;
-  nsString   name;
-  nsString   str;
-
-
+  nsAutoString  list;
+  nsAutoString  decl;
 
   aConverter.BeginCSSDeclarationList();
-  for (propId = 0; propId < PROP_MAX; propId++)
-  {
-    switch(propId)
-    {
-      case PROP_BACKGROUND:
-      case PROP_BORDER:
-      case PROP_CLIP:
-      case PROP_FONT:
-      case PROP_LIST_STYLE:
-      case PROP_MARGIN:
-      case PROP_PADDING:
-      case PROP_BACKGROUND_POSITION:
-      case PROP_BORDER_TOP:
-      case PROP_BORDER_RIGHT:
-      case PROP_BORDER_BOTTOM:
-      case PROP_BORDER_LEFT:
-      case PROP_BORDER_COLOR:
-      case PROP_BORDER_STYLE:
-      case PROP_BORDER_WIDTH:
-        break;
+  aDeclaration.ToString(list);
 
-      default:
-        aDeclaration.GetValue(propId,value);
-        if (value.GetUnit() != eHTMLUnit_Null)
-        {
-          aConverter.BeginCSSDeclaration();
-          name = nsCSSProps::kNameTable[propId].name;
-          value.ToCSSString(str,propId);
-          aConverter.AddCSSDeclaration(name,str);
-          aConverter.EndCSSDeclaration();
-        }
+  PRInt32 start = 0;
+  PRInt32 semiColon = list.Find(';');
+
+  while (-1 < semiColon) {
+    decl.Truncate();
+    list.Mid(decl, start, semiColon - start);
+
+    if (0 == decl.Compare("/*", PR_FALSE, 2)) {
+      // XXX need to append comment
     }
+    else {
+      PRInt32 colon = decl.Find(':');
+      nsAutoString  property;
+      nsAutoString  value;
+
+      aConverter.BeginCSSDeclaration();
+      if (-1 < colon) {
+        decl.Left(property, colon);
+        property.StripWhitespace();
+        decl.Right(value, (decl.Length() - colon) - 2);
+        aConverter.AddCSSDeclaration(property, value);
+      }
+
+      aConverter.EndCSSDeclaration();
+    }
+
+    start = ++semiColon;
+    semiColon = list.Find(';', start);
   }
   aConverter.EndCSSDeclarationList();
 }
