@@ -576,9 +576,14 @@ class NS_COM NS_ConvertUCS2toUTF8
 
       explicit NS_ConvertUCS2toUTF8( const nsAReadableString& aString );
 
-      operator const char*() const
+      const char* get() const
         {
-          return GetBuffer();
+          return mStr;
+        }
+
+      operator const char*() const  // to be deprecated, prefer |get()|
+        {
+          return get();
         }
 
     protected:
