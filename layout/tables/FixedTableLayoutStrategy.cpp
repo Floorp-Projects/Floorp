@@ -76,7 +76,11 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   nscoord totalColWidth = 0;  // the sum of the widths of the columns 
 
   nscoord* colWidths = new PRBool[mNumCols];
-  nsCRT::memset(colWidths, -1, mNumCols*sizeof(nscoord));
+  nsCRT::memset(colWidths, WIDTH_NOT_SET, mNumCols*sizeof(nscoord));
+
+  nscoord* propInfo = new PRBool[mNumCols];
+  nsCRT::memset(propInfo, 0, mNumCols*sizeof(nscoord));
+  nscoord propTotal = 0;
 
   // for every column, determine its specified width
   for (colX = 0; colX < mNumCols; colX++) { 
@@ -100,6 +104,11 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
       // Only apply percentages if we're unconstrained.
       float percent = colPosition->mWidth.GetPercentValue();
       colWidths[colX] = NSToCoordRound(percent * (float)availWidth); 
+    }
+    else if (eStyleUnit_Proportional == colPosition->mWidth.GetUnit() &&
+      colPosition->mWidth.GetIntValue() > 0) {
+      propInfo[colX] = colPosition->mWidth.GetIntValue();
+      propTotal += propInfo[colX];
     }
     else { // get width from the cell
       nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
@@ -133,29 +142,42 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
     remainingWidth = 100;
   }
 
-  if (tableIsFixedWidth && (0 < remainingWidth)) {
-    if (mNumCols > specifiedCols) {
-      // allocate the extra space to the columns which have no width specified
-      nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)mNumCols) - ((float)specifiedCols)));
+  if (0 < remainingWidth) {
+    if (propTotal > 0) {
       for (colX = 0; colX < mNumCols; colX++) {
-        if (-1 == colWidths[colX]) {
-          colWidths[colX] = colAlloc;
-          totalColWidth += colAlloc; 
+        if (propInfo[colX] > 0) {
+          // We're proportional
+          float percent = ((float)propInfo[colX])/((float)propTotal);
+          colWidths[colX] = NSToCoordRound(percent * (float)remainingWidth);
+          totalColWidth += colWidths[colX];
           lastColAllocated = colX;
         }
-      }
+      }  
     }
-    else { // allocate the extra space to the columns which have width specified
-      float divisor = (float)totalColWidth;
-      for (colX = 0; colX < mNumCols; colX++) {
-        if (colWidths[colX] > 0) {
-          nscoord colAlloc = NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
-          colWidths[colX] += colAlloc;
-          totalColWidth += colAlloc; 
-          lastColAllocated = colX;
+    else if (tableIsFixedWidth) {
+      if (mNumCols > specifiedCols) {
+        // allocate the extra space to the columns which have no width specified
+        nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)mNumCols) - ((float)specifiedCols)));
+        for (colX = 0; colX < mNumCols; colX++) {
+          if (-1 == colWidths[colX]) {
+            colWidths[colX] = colAlloc;
+            totalColWidth += colAlloc; 
+            lastColAllocated = colX;
+          }
         }
       }
-    }  
+      else { // allocate the extra space to the columns which have width specified
+        float divisor = (float)totalColWidth;
+        for (colX = 0; colX < mNumCols; colX++) {
+          if (colWidths[colX] > 0) {
+            nscoord colAlloc = NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
+            colWidths[colX] += colAlloc;
+            totalColWidth += colAlloc; 
+            lastColAllocated = colX;
+          }
+        }
+      }  
+    }
   }
 
   nscoord overAllocation = (availWidth >= 0) 
@@ -178,6 +200,10 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   // clean up
   if (nsnull != colWidths) {
     delete [] colWidths;
+  }
+
+  if (nsnull != propInfo) {
+    delete [] propInfo;
   }
   
   return PR_TRUE;
