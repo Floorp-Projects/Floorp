@@ -148,7 +148,7 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   result = mUndoStack.GetSize(&sz);
 
-  if (mMaxLevelsOfUndo > 0 && sz > mMaxLevelsOfUndo) {
+  if (mMaxLevelsOfUndo > 0 && sz >= mMaxLevelsOfUndo) {
     nsTransactionItem *overflow = 0;
 
     result = mUndoStack.PopBottom(&overflow);
@@ -303,7 +303,7 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 
   result = mUndoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result)) {
+  if (!NS_SUCCEEDED(result) || !tx) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -330,7 +330,7 @@ nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 
   result = mRedoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result)) {
+  if (!NS_SUCCEEDED(result) || !tx) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -363,14 +363,14 @@ nsresult
 nsTransactionManager::AddListener(nsITransactionListener *aListener)
 {
   // XXX: Need to add listener support.
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 {
   // XXX: Need to add listener support.
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
