@@ -20,8 +20,7 @@
 #include "nsMessage.h"
 
 nsMessage::nsMessage(void)
-  : nsRDFResource(), mFolder(nsnull),
-    mMsgHdr(nsnull)
+  : nsRDFResource(), mFolder(nsnull)
 {
 
 
@@ -29,12 +28,28 @@ nsMessage::nsMessage(void)
 
 nsMessage::~nsMessage(void)
 {
-	NS_IF_RELEASE(mFolder);
-	NS_IF_RELEASE(mMsgHdr);
+	//Member variables are either nsCOMPtr's or ptrs we don't want to own.
 }
 
+NS_IMPL_ADDREF_INHERITED(nsMessage, nsRDFResource)
+NS_IMPL_RELEASE_INHERITED(nsMessage, nsRDFResource)                        
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMessage, nsRDFResource, nsIMessage)
+NS_IMETHODIMP nsMessage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+	*aInstancePtr = nsnull;
+	if (aIID.Equals(nsIMessage::GetIID()) || aIID.Equals(nsIDBMessage::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIDBMessage*, this);
+	}              
+	if(*aInstancePtr)
+	{
+		AddRef();
+		return NS_OK;
+	}
+
+	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
+}
 
 NS_IMETHODIMP nsMessage::GetProperty(const char *propertyName, nsString &resultProperty)
 {
@@ -411,29 +426,24 @@ NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **folder)
 
 NS_IMETHODIMP nsMessage::SetMsgFolder(nsIMsgFolder *folder)
 {
-	NS_IF_RELEASE(mFolder);
 	mFolder = folder;
-	if(mFolder)
-		NS_ADDREF(mFolder);
+	//We don't want to own folder, so don't AddRef
 	return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMessage::SetMsgDBHdr(nsIMsgDBHdr *hdr)
 {
-	NS_IF_RELEASE(mMsgHdr);
-	mMsgHdr = hdr;
-	if(mMsgHdr)
-		NS_ADDREF(mMsgHdr);
+	mMsgHdr = dont_QueryInterface(hdr);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMessage::GetMsgDBHdr(nsIMsgDBHdr **hdr)
 {
 	*hdr = mMsgHdr;
-	if(mMsgHdr)
+	if(*hdr)
 	{
-		NS_ADDREF(mMsgHdr);
+		NS_ADDREF(*hdr);
 		return NS_OK;
 	}
 	else

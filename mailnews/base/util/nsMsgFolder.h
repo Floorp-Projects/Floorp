@@ -30,6 +30,7 @@
 #include "nsRDFResource.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
+#include "nsCOMPtr.h"
 
  /* 
   * MsgFolder
@@ -86,42 +87,7 @@ public:
   NS_IMETHOD SetMaster(MSG_Master *master);
 #endif
 
-#ifdef DOES_FOLDEROPERATIONS
-  NS_IMETHOD StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
-                                         MSG_Pane* sourcePane, 
-                                         nsMsgDatabase *sourceDB,
-                                         nsMsgKeyArray *srcArray,
-                                         int32 srcCount,
-                                         MWContext *currentContext,
-                                         MSG_UrlQueue *urlQueue,
-                                         PRBool deleteAfterCopy,
-                                         nsMsgKey nextKey = nsMsgKey_None);
 
-    
-  NS_IMETHOD BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
-                                   nsMsgDatabase *sourceDB,
-                                   nsMsgKeyArray *srcArray, 
-                                   MSG_UrlQueue *urlQueue,
-                                   int32 srcCount,
-                                   MessageCopyInfo *copyInfo);
-
-
-  NS_IMETHOD FinishCopyingMessages(MWContext *context,
-                                    MSG_FolderInfo * srcFolder, 
-                                    MSG_FolderInfo *dstFolder, 
-                                    nsMsgDatabase *sourceDB,
-                                    nsMsgKeyArray **ppSrcArray, 
-                                    int32 srcCount,
-                                    msg_move_state *state);
-
-
-  NS_IMETHOD CleanupCopyMessagesInto(MessageCopyInfo **info);
-
-  NS_IMETHOD SaveMessages(nsMsgKeyArray *, const char *fileName, 
-                          MSG_Pane *pane, nsMsgDatabase *msgDB,
-                          int(*doneCB)(void *, int status) = NULL, void *state = NULL,
-                          PRBool addMozillaStatus = TRUE);
-#endif
 
   NS_IMETHOD BuildFolderURL(char ** url);
 
@@ -145,7 +111,7 @@ public:
   NS_IMETHOD CreateSubfolder(const char *folderName);
 
   NS_IMETHOD Rename(const char *name);
-  NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32*);
+  NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32*);
 
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *containsChild);
   NS_IMETHOD FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** aParent);
@@ -286,8 +252,9 @@ protected:
                                          unknown; -2 means unknown but we already
                                          tried to find out.) */
   PRInt32 mNumTotalMessages;         /* count of existing messages. */
-  nsISupportsArray *mSubFolders;
-	nsISupportsArray *mListeners;
+  nsCOMPtr<nsISupportsArray> mSubFolders;
+	nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
+													 //ownership issues, listeners can't be AddRef'd
 #ifdef HAVE_MASTER
   MSG_Master  *mMaster;
 #endif
@@ -296,6 +263,7 @@ protected:
   PRUint8 mDepth;
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
+																 //Due to ownership issues, this won't be AddRef'd.
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;

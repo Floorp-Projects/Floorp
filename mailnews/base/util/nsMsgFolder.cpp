@@ -30,6 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
@@ -49,9 +50,6 @@ nsMsgFolder::nsMsgFolder(void)
 {
 //  NS_INIT_REFCNT(); done by superclass
 
-#ifdef HAVE_MASTER
-  mMaster = NULL;
-#endif
 
   mSemaphoreHolder = NULL;
 
@@ -60,7 +58,7 @@ nsMsgFolder::nsMsgFolder(void)
 #endif
 	mNumPendingUnreadMessages = 0;
 	mNumPendingTotalMessages  = 0;
-	NS_NewISupportsArray(&mSubFolders);
+	NS_NewISupportsArray(getter_AddRefs(mSubFolders));
 
 	mIsCachable = TRUE;
 
@@ -70,17 +68,15 @@ nsMsgFolder::nsMsgFolder(void)
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
     if (NS_SUCCEEDED(rv))
 	{
-		nsIRDFDataSource* datasource = nsnull;
-
-		if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource)))
+		nsCOMPtr<nsIRDFDataSource> datasource;
+		rv = rdfService->GetDataSource("rdf:mailnewsfolders", getter_AddRefs(datasource));
+		if(NS_SUCCEEDED(rv))
 		{
-			nsIFolderListener *folderListener;
-			if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
+			nsCOMPtr<nsIFolderListener> folderListener(do_QueryInterface(datasource, &rv));
+			if(NS_SUCCEEDED(rv))
 			{
 				AddFolderListener(folderListener);
-				NS_RELEASE(folderListener);
 			}
-			NS_RELEASE(datasource);
 		}
 	}
 }
@@ -93,15 +89,13 @@ nsMsgFolder::~nsMsgFolder(void)
 
 		for (int i = count - 1; i >= 0; i--)
 			mSubFolders->RemoveElementAt(i);
-
-		NS_RELEASE(mSubFolders);
 	}
 
   if (mListeners) {
       for (PRInt32 i = mListeners->Count() - 1; i >= 0; --i) {
           mListeners->RemoveElementAt(i);
       }
-		NS_RELEASE(mListeners);
+	delete mListeners;
   }
 
 }
@@ -117,16 +111,14 @@ static nsresult
 nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
            nsISupportsArray* *result)
 {
-  nsISupportsArray* f;
-  nsresult rv = NS_NewISupportsArray(&f);
+  nsCOMPtr<nsISupportsArray> f;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(f));
   if (NS_FAILED(rv)) return rv;
-  NS_ADDREF(f);
   for (PRUint32 i = 0; i < array->Count(); i++) {
-    nsISupports* element = (*array)[i];
+    nsCOMPtr<nsISupports> element = getter_AddRefs((*array)[i]);
     if (filter(element, data)) {
       nsresult rv = f->AppendElement(element);
       if (NS_FAILED(rv)) {
-        NS_RELEASE(f);
         return rv;
       }
     }
@@ -159,12 +151,11 @@ nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
 
 NS_IMETHODIMP nsMsgFolder::AddFolderListener(nsIFolderListener * listener)
 {
-	nsresult rv;
   if (! mListeners)
 	{
-		rv = NS_NewISupportsArray(&mListeners);
-    if (!NS_SUCCEEDED(rv))
-      return rv;
+		mListeners = new nsVoidArray();
+		if(!mListeners)
+			return NS_ERROR_OUT_OF_MEMORY;
   }
   mListeners->AppendElement(listener);
   return NS_OK;
@@ -228,203 +219,18 @@ NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url
 }
 #endif
 
-#ifdef HAVE_MASTER
-NS_IMETHODIMP nsMsgFolder::SetMaster(MSG_Master *master)
-{
-	mMaster = master;
-	return NS_OK;
-}
-#endif
-
-#ifdef DOES_FOLDEROPERATIONS
-NS_IMETHODIMP
-nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
-                                        MSG_Pane* sourcePane, 
-                                        nsMsgDatabase *sourceDB,
-                                        nsMsgKeyArray *srcArray,
-                                        int32 srcCount,
-                                        MWContext *currentContext,
-                                        MSG_UrlQueue *urlQueue,
-                                        PRBool deleteAfterCopy,
-                                        nsMsgKey nextKey = nsMsgKey_None)
-{
-  // General note: If either the source or destination folder is an IMAP folder then we add the copy info struct
-	// to the end of the current context's chain of copy info structs then fire off an IMAP URL.
-	// However, local folders don't work this way! We must add the copy info struct to the URL queue where it will be fired
-	// at its leisure. 
-
-	MessageCopyInfo *copyInfo = (MessageCopyInfo *) XP_ALLOC(sizeof(MessageCopyInfo));
-  
-  if (copyInfo)
-  {
-		XP_BZERO (copyInfo, sizeof(MessageCopyInfo));
-		copyInfo->srcFolder = this;
-		copyInfo->dstFolder = dstFolder;
-		copyInfo->nextCopyInfo = NULL;
-		copyInfo->dstIMAPfolderUpdated=FALSE;
-		copyInfo->offlineFolderPositionOfMostRecentMessage = 0;
-		copyInfo->srcDB = sourceDB;
-		copyInfo->srcArray  = srcArray;
-		copyInfo->srcCount  = srcCount;
-  
-		copyInfo->moveState.ismove     = deleteAfterCopy;
-		copyInfo->moveState.sourcePane = sourcePane;
-		copyInfo->moveState.nextKeyToLoad = nextKeyToLoad;
-		copyInfo->moveState.urlForNextKeyLoad = NULL;
-		copyInfo->moveState.moveCompleted = FALSE;
-		copyInfo->moveState.finalDownLoadMessageSize = 0;
-		copyInfo->moveState.imap_connection = 0;
-		copyInfo->moveState.haveUploadedMessageSize = FALSE;
-      
-    nsresult openErr = NS_OK;
-    PRBool wasCreated;
-    if (dstFolder->GetType() == FOLDER_MAIL)
-			openErr = MailDB::Open (dstFolder->GetMailFolderInfo()->GetPathname(), FALSE, &copyInfo->moveState.destDB, FALSE);
-    else if (dstFolder->GetType() == FOLDER_IMAPMAIL && !IsNews())
-      openErr = ImapMailDB::Open (dstFolder->GetMailFolderInfo()->GetPathname(), FALSE, &copyInfo->moveState.destDB, 
-                                    sourcePane->GetMaster(), &wasCreated);
-
-                  
-    if (!dstFolder->GetMailFolderInfo() || (openErr != NS_OK))
-        copyInfo->moveState.destDB = NULL;
-      
-      // let the front end know that we are starting a long update
-    sourcePane->StartingUpdate(MSG_NotifyNone, 0, 0);
-      
-    if ((this->GetType() == FOLDER_IMAPMAIL) || (dstFolder->GetType() == FOLDER_IMAPMAIL))
-    {
-			// add this copyinfo struct to the end
-			if (currentContext->msgCopyInfo != NULL)
-			{
-        MessageCopyInfo *endingNode = currentContext->msgCopyInfo;
-        while (endingNode->nextCopyInfo != NULL)
-        	endingNode = endingNode->nextCopyInfo;
-        endingNode->nextCopyInfo = copyInfo;
-			}
-			else
-		   	currentContext->msgCopyInfo = copyInfo;
-	    // BeginCopyMessages will fire an IMAP url.  The IMAP
-      // module will call FinishCopyMessages so that the whole
-      // shebang is handled as one IMAP url.  Previously the copy
-      // happened with a mailbox url and IMAP url running together
-      // in the same context.  This worked on mac only.
-      nsresult copyErr = BeginCopyingMessages(dstFolder, sourceDB, srcArray,urlQueue,srcCount,copyInfo);
-      if (NS_OK != copyErr)
-      {
-      CleanupCopyMessagesInto(&currentContext->msgCopyInfo);
-      
-      if (/* !NET_IsOffline() && */((int32) copyErr < -1) )
-#if 0
-        FE_Alert (sourcePane->GetContext(), XP_GetString(copyErr));
-#else
-        printf("%s\n", XP_GetString(copyErr));
-#endif
-      }
-		}
-    else
-    {
-			// okay, add this URL to our URL queue.
-			URL_Struct *url_struct = NET_CreateURLStruct("mailbox:copymessages", NET_DONT_RELOAD);
-			if (url_struct) 
-			{
-				MSG_UrlQueue::AddLocalMsgCopyUrlToPane(copyInfo, url_struct, PostMessageCopyUrlExitFunc, sourcePane, FALSE);
-			}
-		}
-  }
-	return NS_OK;
-}
-
-    
-NS_IMETHODIMP nsMsgFolder::BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
-                                                nsMsgDatabase *sourceDB,
-                                                nsMsgKeyArray *srcArray, 
-                                                MSG_UrlQueue *urlQueue,
-                                                int32 srcCount,
-                                                MessageCopyInfo *copyInfo)
-{
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsMsgFolder::FinishCopyingMessages(MWContext *context,
-                                                 MSG_FolderInfo * srcFolder, 
-                                                 MSG_FolderInfo *dstFolder, 
-                                                 nsMsgDatabase *sourceDB,
-                                                 nsMsgKeyArray **ppSrcArray, 
-                                                 int32 srcCount,
-                                                 msg_move_state *state)
-{
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsMsgFolder::CleanupCopyMessagesInto (MessageCopyInfo **info)
-{
-	if (!info || !*info)
-	return;
-
-	MSG_Pane *sourcePane = (*info)->moveState.sourcePane;
-
-	PRBool searchPane = sourcePane ? sourcePane->GetPaneType() == MSG_SEARCHPANE : FALSE;
-	
-  if ((*info)->moveState.destDB != NULL)
-  {
-    (*info)->moveState.destDB->SafeClose((*info)->moveState.destDB);
-    (*info)->moveState.destDB = NULL;
-  }
-  if ((*info)->dstFolder->TestSemaphore(this))
-		(*info)->dstFolder->ReleaseSemaphore(this);
-
-	// if we were a search pane, and an error occurred, close the view on this action..
-	if (sourcePane != NULL && searchPane)
-		((MSG_SearchPane *) sourcePane)->CloseView((*info)->srcFolder);
-		
-    
-  // tell the fe that we are finished with
-  // out backend driven update.  They can
-  // now do things like load the next message.
-  
-  // now that an imap copy message is at most 2 urls, we can end the
-  // the update here.  Now this is this only ending update and resource
-  // cleanup for message copying  
-  sourcePane->EndingUpdate(MSG_NotifyNone, 0, 0);
-	
-	// tell the FE that we're done copying so they can re-enable 
-	// selection if they've decided to disable it during the copy
-	
-	// I don't think we want to do this if we are a search pane but i haven't been able to 
-	// justify why yet!!
-
-	if (!searchPane)
-		FE_PaneChanged(sourcePane, TRUE, MSG_PaneNotifyCopyFinished, 0);
-
-  // EndingUpdate may have caused an interruption of this context and cleaning up the 
-  // url queue may have deleted this  MessageCopyInfo already
-  if (*info)
-  {
-		MessageCopyInfo *deleteMe = *info;
-		*info = deleteMe->nextCopyInfo;        // but nextCopyInfo == NULL. this causes the fault later on 
-		XP_FREE(deleteMe);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::SaveMessages(nsMsgKeyArray *, const char *fileName, 
-                                        MSG_Pane *pane, nsMsgDatabase *msgDB,
-                                        int (*doneCB)(void *, int status) = NULL, void *state = NULL,
-                                        PRBool addMozillaStatus = TRUE)
-{
-  DownloadArticlesToFolder::SaveMessages(array, fileName, pane, this, msgDB, doneCB, state, addMozillaStatus);
-	return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(char ** name)
 {
   char *cmName = mName.ToNewCString();
-  if (name) *name = PL_strdup(cmName);
-  delete[] cmName;
-  return NS_OK;
+	if(cmName)
+	{
+		if (name) *name = PL_strdup(cmName);
+		delete[] cmName;
+	  return NS_OK;
+	}
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsMsgFolder::SetPrettyName(char *name)
@@ -463,9 +269,14 @@ NS_IMETHODIMP nsMsgFolder::Clear(void)
 NS_IMETHODIMP nsMsgFolder::GetName(char **name)
 {
   char *cmName = mName.ToNewCString();
-  if (name) *name = PL_strdup(cmName);
-  delete[] cmName;
-  return NS_OK;
+	if(cmName)
+	{
+		if (name) *name = PL_strdup(cmName);
+		delete[] cmName;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsMsgFolder::SetName(char * name)
@@ -506,11 +317,10 @@ NS_IMETHODIMP
 nsMsgFolder::GetVisibleSubFolders(nsIEnumerator* *result) 
 {
   nsresult rv;
-  nsISupportsArray* vFolders;
-  rv = nsFilterBy(mSubFolders, nsCanBeInFolderPane, nsnull, &vFolders);
+  nsCOMPtr<nsISupportsArray> vFolders;
+  rv = nsFilterBy(mSubFolders, nsCanBeInFolderPane, nsnull, getter_AddRefs(vFolders));
   if (NS_FAILED(rv)) return rv;
   rv = vFolders->Enumerate(result);
-  NS_RELEASE(vFolders);
   return rv;
 }
 
@@ -569,17 +379,16 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder **folder, PRBool deleteS
 {
 	nsresult status = NS_OK;
 
-	nsIMsgFolder *child = nsnull;
+	nsCOMPtr<nsIMsgFolder> child;
 
 	// first, find the folder we're looking to delete
 	for (PRUint32 i = 0; i < mSubFolders->Count() && *folder; i++)
 	{
-		nsISupports *supports = mSubFolders->ElementAt(i);
-		if(supports)
-		{
-			if(NS_SUCCEEDED(status = supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		child = do_QueryInterface(supports, &status);
+		if(NS_SUCCEEDED(status))
 			{
-				if (*folder == child)
+				if (*folder == child.get())
 				{
 					// maybe delete disk storage for it, and its subfolders
 					status = child->RecursiveDelete(deleteStorage);	
@@ -593,7 +402,6 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder **folder, PRBool deleteS
 						mMaster->BroadcastFolderDeleted (child);
 #endif
             mSubFolders->RemoveElement(child);
-						NS_RELEASE(*folder);	// stop looking since will set *folder to nsnull
 					}
 				}
 				else
@@ -607,11 +415,9 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder **folder, PRBool deleteS
 						status = child->PropagateDelete (folder, deleteStorage);
 					}
 				}
-				NS_RELEASE(child);
 			}
-			NS_RELEASE(supports);
-		}
 	}
+
 	
 	return status;
 }
@@ -627,10 +433,10 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 	
 	while (mSubFolders->Count() > 0)
 	{
-		nsISupports *supports = mSubFolders->ElementAt(0);
-		nsIMsgFolder *child = nsnull;
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(0));
+		nsCOMPtr<nsIMsgFolder> child(do_QueryInterface(supports, &status));
 
-		if(NS_SUCCEEDED(status = supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
+		if(NS_SUCCEEDED(status))
 		{
 			status = child->RecursiveDelete(deleteStorage);  // recur
 
@@ -640,9 +446,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 			mMaster->BroadcastFolderDeleted (child);
 #endif
 			mSubFolders->RemoveElement(child);  // unlink it from this's child list
-			NS_RELEASE(child);
 		}
-		NS_RELEASE(supports);  // free memory
 	}
 
 	// now delete the disk storage for _this_
@@ -673,7 +477,7 @@ NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32* outPos)
+NS_IMETHODIMP nsMsgFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32* outPos)
 {
 	return NS_OK;
 
@@ -681,16 +485,14 @@ NS_IMETHODIMP nsMsgFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32* outPos
 
 NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const char *name, PRBool* containsChild)
 {
-	nsIMsgFolder *child;
+	nsCOMPtr<nsISupports> child;
 	
 	if(containsChild)
 	{
 		*containsChild = PR_FALSE;
-		if(NS_SUCCEEDED(GetChildNamed(name, (nsISupports**)&child)))
+		if(NS_SUCCEEDED(GetChildNamed(name, getter_AddRefs(child))))
 		{
 			*containsChild = child != nsnull;
-			if(child)
-				NS_RELEASE(child);
 		}
 		return NS_OK;
 	}
@@ -703,42 +505,44 @@ NS_IMETHODIMP nsMsgFolder::FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** 
 	if(!aParent)
 		return NS_ERROR_NULL_POINTER;
 
+	nsresult rv;
+
 	*aParent = nsnull;
 
 	PRUint32 count = mSubFolders->Count();
+	nsCOMPtr<nsISupports> supports;
+	nsCOMPtr<nsIMsgFolder> child;
 
 	for (PRUint32 i = 0; i < count && *aParent == NULL; i++)
-  {
-		nsISupports *supports = mSubFolders->ElementAt(i);
-		nsIMsgFolder *child = nsnull;
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
+	{
+		supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		child = do_QueryInterface(supports, &rv);
+		if(NS_SUCCEEDED(rv) && child)
 		{
-			if (aFolder == child)
+			if (aFolder == child.get())
 			{
 				*aParent = this;
 				NS_ADDREF(*aParent);
+				return NS_OK;
 			}
-
-			NS_RELEASE(child);
 		}
-		NS_RELEASE(supports);
 	}
 
-  for (PRUint32 j = 0; j < count && *aParent == NULL; j++)
-  {
+	for (PRUint32 j = 0; j < count && *aParent == NULL; j++)
+	{
 
-   	nsISupports *supports = mSubFolders->ElementAt(j);
-		nsIMsgFolder *child = nsnull;
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
+		supports = getter_AddRefs(mSubFolders->ElementAt(j));
+		child = do_QueryInterface(supports, &rv);
+		if(NS_SUCCEEDED(rv) && child)
 		{
-			child->FindParentOf(aFolder, aParent);
-			NS_RELEASE(child);
+			rv = child->FindParentOf(aFolder, aParent);
+			if(NS_SUCCEEDED(rv))
+				return rv;
 		}
-		NS_RELEASE(supports);
 
 	}
 
-	return NS_OK;
+	return rv;
 
 }
 
@@ -746,28 +550,29 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf(nsIMsgFolder *child, PRBool deep, PRBool *
 {
 	if(!isParent)
 		return NS_ERROR_NULL_POINTER;
+	
+	nsresult rv = NS_OK;
 
 	PRUint32 count = mSubFolders->Count();
 
-  for (PRUint32 i = 0; i < count; i++)
-  {
-		nsISupports *supports = mSubFolders->ElementAt(i);
-		nsIMsgFolder *folder;
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+	for (PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(supports, &rv));
+		if(NS_SUCCEEDED(rv))
 		{
-			if (folder == child )
+			if (folder.get() == child )
 				*isParent = PR_TRUE;
 			else if(deep)
 			{
 				folder->IsParentOf(child, deep, isParent);
 			}
 		}
-		NS_RELEASE(supports);
 		if(*isParent)
 			return NS_OK;
     }
 	*isParent = PR_FALSE;
-	return NS_OK;
+	return rv;
 
 }
 
@@ -785,6 +590,8 @@ NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, nsIMs
 
 		//allocate string big enough for prefix, 256, and '\0'
 		char *uniqueName = (char*)PR_MALLOC(prefixSize + 4);
+		if(!uniqueName)
+			return NS_ERROR_OUT_OF_MEMORY;
 		PR_snprintf(uniqueName, prefixSize + 4, "%s%d",prefix,count);
 		PRBool containsChild;
 		PRBool otherContainsChild = PR_FALSE;
@@ -843,28 +650,24 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRUint32 *numUnread)
 	if(!numUnread)
 		return NS_ERROR_NULL_POINTER;
 
+	nsresult rv;
 	PRUint32 total = mNumUnreadMessages;
-  if (deep)
-  {
-		nsIMsgFolder *folder;
+	if (deep)
+	{
+		nsCOMPtr<nsIMsgFolder> folder;
 		PRUint32 count = mSubFolders->Count();
 
-    for (PRUint32 i = 0; i < count; i++)
-    {
-			nsISupports *supports = mSubFolders->ElementAt(i);
-
-			if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		for (PRUint32 i = 0; i < count; i++)
+		{
+			nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+			folder = do_QueryInterface(supports, &rv);
+			if(NS_SUCCEEDED(rv))
 			{
-				if (folder)
-				{
-					PRUint32 num;
-					folder->GetNumUnread(deep, &num);
-					if (num >= 0) // it's legal for counts to be negative if we don't know
-						total += num;
-				}
-				NS_RELEASE(folder);
+				PRUint32 num;
+				folder->GetNumUnread(deep, &num);
+				if (num >= 0) // it's legal for counts to be negative if we don't know
+					total += num;
 			}
-			NS_RELEASE(supports);
 		}
 	}
   *numUnread = total;
@@ -877,28 +680,24 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRUint32 *totalMessages
 	if(!totalMessages)
 		return NS_ERROR_NULL_POINTER;
 
+	nsresult rv;
 	PRUint32 total = mNumTotalMessages;
-  if (deep)
-  {
-    nsIMsgFolder *folder;
+	if (deep)
+	{
+		nsCOMPtr<nsIMsgFolder> folder;
 		PRUint32 count = mSubFolders->Count();
 
-    for (PRUint32 i = 0; i < count; i++)
-    {
-			nsISupports *supports = mSubFolders->ElementAt(i);
-
-			if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		for (PRUint32 i = 0; i < count; i++)
+		{
+			nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+			folder = do_QueryInterface(supports, &rv);
+			if(NS_SUCCEEDED(rv))
 			{
-				if (folder)
-				{
-					PRUint32 num;
-					folder->GetTotalMessages (deep, &num);
-          if (num >= 0) // it's legal for counts to be negative if we don't know
-						total += num;
-					NS_RELEASE(folder);
-				}
+				PRUint32 num;
+				folder->GetTotalMessages (deep, &num);
+				if (num >= 0) // it's legal for counts to be negative if we don't know
+					total += num;
 			}
-			NS_RELEASE(supports);
 		}
 	}
   *totalMessages = total;
@@ -1021,7 +820,7 @@ NS_IMETHODIMP nsMsgFolder::GetFlags(PRUint32 *_retval)
 }
 
 NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **result,
-																							PRUint32 resultsize,	PRUint32 *numFolders)
+											PRUint32 resultsize, PRUint32 *numFolders)
 {
 	PRUint32 num = 0;
 	if ((flags & mFlags) == flags) {
@@ -1029,12 +828,14 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
 			result[num] = this;
 		}
 		num++;
-  }
+	}
 
-	nsIMsgFolder *folder = nsnull;
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder;
 	for (PRUint32 i=0; i < (PRUint32)mSubFolders->Count(); i++) {
-		nsISupports *supports = mSubFolders->ElementAt(i);
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		folder = do_QueryInterface(supports, &rv);
+		if(NS_SUCCEEDED(rv))
 		{
 			// CAREFUL! if NULL is passed in for result then the caller
 			// still wants the full count!  Otherwise, the result should be at most the
@@ -1053,16 +854,12 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
 			}
 			else
 			{
-				NS_RELEASE(folder);
-				NS_RELEASE(supports);
 				break;
 			}
-			NS_RELEASE(folder);
 		}
-		NS_RELEASE(supports);
 	}
 
-  *numFolders = num;
+	*numFolders = num;
 	return NS_OK;
 }
 
@@ -1071,14 +868,14 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
   // the application of flags in GetExpansionArray is subtly different
   // than in GetFoldersWithFlag 
 
+	nsresult rv;
 	for (PRUint32 i = 0; i < mSubFolders->Count(); i++)
 	{
-		nsISupports *supports = mSubFolders->ElementAt(i);
-		nsIMsgFolder *folder = nsnull;
-
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+		if(NS_SUCCEEDED(rv))
 		{
-			((nsISupportsArray*)expansionArray)->InsertElementAt(folder, expansionArray->Count());
+			expansionArray->InsertElementAt(folder, expansionArray->Count());
 			PRUint32 flags;
 			folder->GetFlags(&flags);
 			if (!(flags & MSG_FOLDER_FLAG_ELIDED))
@@ -1225,9 +1022,9 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 	nsresult result= NS_OK;
 	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
     {
-        nsIDBFolderInfo   *folderInfo;
-        nsIMsgDatabase       *db;
-        result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db));
+        nsCOMPtr<nsIDBFolderInfo> folderInfo;
+        nsIMsgDatabase       *db = nsnull; //Not making an nsCOMPtr because we want to call close, not release
+        result = NS_SUCCEEDED(GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), &db));
         if(result)
         {
 			mIsCachable = TRUE;
@@ -1245,15 +1042,15 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
 				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
 
-        // folderInfo->GetCSID(&mCsid);
+				// folderInfo->GetCSID(&mCsid);
         
 				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
 					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
             }
 
-            if (db)
-                db->Close(PR_FALSE);
         }
+        if (db)
+	        db->Close(PR_FALSE);
     }
 
 	return result;
@@ -1266,8 +1063,7 @@ NS_IMETHODIMP nsMsgFolder::AcquireSemaphore(nsISupports *semHolder)
 
 	if (mSemaphoreHolder == NULL)
 	{
-		mSemaphoreHolder = semHolder;
-		mSemaphoreHolder->AddRef();
+		mSemaphoreHolder = semHolder;	//Don't AddRef due to ownership issues.
 	}
 	else
 		rv = NS_MSG_FOLDER_BUSY;
@@ -1280,8 +1076,6 @@ NS_IMETHODIMP nsMsgFolder::ReleaseSemaphore(nsISupports *semHolder)
 {
 	if (!mSemaphoreHolder || mSemaphoreHolder == semHolder)
 	{
-		if(mSemaphoreHolder)
-			mSemaphoreHolder->Release();
 		mSemaphoreHolder = NULL;
 	}
 	return NS_OK;
@@ -1421,17 +1215,16 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
 {
-	nsISupports *supports;
-	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, (void**)&supports)))
+	nsCOMPtr<nsISupports> supports;
+	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, getter_AddRefs(supports))))
 	{
-		PRUint32 i;
+		PRInt32 i;
 		for(i = 0; i < mListeners->Count(); i++)
 		{
-			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+			//Folderlistener's aren't refcounted.
+			nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
 			listener->OnItemPropertyChanged(supports, property, oldValue, newValue);
-			NS_RELEASE(listener);
 		}
-		NS_RELEASE(supports);
 	}
 
 	return NS_OK;
@@ -1441,12 +1234,12 @@ nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char
 nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
 {
 
-	PRUint32 i;
+	PRInt32 i;
 	for(i = 0; i < mListeners->Count(); i++)
 	{
+		//Folderlistener's aren't refcounted.
 		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 		listener->OnItemAdded(this, item);
-		NS_RELEASE(listener);
 	}
 
 	return NS_OK;
@@ -1456,12 +1249,12 @@ nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
 nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
 {
 
-	PRUint32 i;
+	PRInt32 i;
 	for(i = 0; i < mListeners->Count(); i++)
 	{
+		//Folderlistener's aren't refcounted.
 		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 		listener->OnItemRemoved(this, item);
-		NS_RELEASE(listener);
 	}
 
 	return NS_OK;

@@ -20,6 +20,7 @@
 #include "nsString.h"
 #include "nsIEnumerator.h"
 #include "nsIMsgFolder.h"
+#include "nsCOMPtr.h"
 
 //These are utility functions that can used throughout the mailnews code
 
@@ -34,12 +35,13 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 class nsMessageFromMsgHdrEnumerator: public nsIEnumerator
 {
 protected:
-	nsIEnumerator *mSrcEnumerator;
-	nsIMsgFolder *mFolder;
+	nsCOMPtr<nsIEnumerator> mSrcEnumerator;
+	nsCOMPtr<nsIMsgFolder> mFolder;
 
 public:
 	NS_DECL_ISUPPORTS
 	nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *folder);
+	nsMessageFromMsgHdrEnumerator(){} //Default constructor that does nothing so nsComPtr will work.
 	virtual ~nsMessageFromMsgHdrEnumerator();
 
 	NS_IMETHOD First(void);

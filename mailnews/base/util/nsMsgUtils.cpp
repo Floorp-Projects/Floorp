@@ -81,21 +81,15 @@ nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcE
 															 nsIMsgFolder *folder)
 {
     NS_INIT_REFCNT();
-	mSrcEnumerator = srcEnumerator;
-	if(mSrcEnumerator)
-		NS_ADDREF(mSrcEnumerator);
 
-	mFolder = folder;
-	if(mFolder)
-		NS_ADDREF(mFolder);
+	mSrcEnumerator = dont_QueryInterface(srcEnumerator);
+	mFolder = dont_QueryInterface(folder);
 
 }
 
 nsMessageFromMsgHdrEnumerator::~nsMessageFromMsgHdrEnumerator()
 {
-	NS_IF_RELEASE(mSrcEnumerator);
-	NS_IF_RELEASE(mFolder);
-
+	//member variables are nsCOMPtr's
 }
 
 NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::First(void)

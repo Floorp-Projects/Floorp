@@ -28,9 +28,10 @@
 #include "msgCore.h"
 #include "nsIMessage.h" /* include the interface we are going to support */
 #include "nsRDFResource.h"
+#include "nsCOMPtr.h"
 
 
-class nsMessage: public nsRDFResource, public nsIMessage
+class nsMessage: public nsRDFResource, public nsIDBMessage
 {
 public: 
 	nsMessage(void);
@@ -92,8 +93,6 @@ public:
 
 	//nsIMessage
 	NS_IMETHOD GetMsgFolder(nsIMsgFolder **folder);
-
-	//other useful methods
 	NS_IMETHOD SetMsgFolder(nsIMsgFolder *folder);
 
 	NS_IMETHOD SetMsgDBHdr(nsIMsgDBHdr *hdr);
@@ -101,7 +100,7 @@ public:
 
 protected:
 	nsIMsgFolder *mFolder;
-	nsIMsgDBHdr *mMsgHdr;
+	nsCOMPtr<nsIMsgDBHdr> mMsgHdr;
 
 };
 
