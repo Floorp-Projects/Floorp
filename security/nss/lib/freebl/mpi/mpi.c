@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.21 2000/08/31 02:51:23 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.22 2000/08/31 04:59:05 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -3523,6 +3523,13 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 
 /* }}} */
 
+#if defined(SOLARIS)
+/* This trick works on Sparc V8 CPUs with the Workshop compilers. */
+#define MP_MUL_DxD(a, b, Phi, Plo) \
+  { unsigned long long product = (unsigned long long)a * b; \
+    Plo = (mp_digit)product; \
+    Phi = (mp_digit)(product >> MP_DIGIT_BIT); }
+#else
 #define MP_MUL_DxD(a, b, Phi, Plo) \
   { mp_digit a0b1, a1b0; \
     Plo = (a & MP_HALF_DIGIT_MAX) * (b & MP_HALF_DIGIT_MAX); \
@@ -3538,6 +3545,7 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
     if (Plo < a1b0) \
       ++Phi; \
   }
+#endif
 
 #if !defined(MP_ASSEMBLY_MULTIPLY)
 /* c = a * b */
