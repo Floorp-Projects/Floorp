@@ -132,7 +132,7 @@ OBJS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
     $(MAKE_INSTALL) nssifail.txt $(DIST)\bin\res
 
