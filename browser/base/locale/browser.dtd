@@ -39,7 +39,11 @@
 <!ENTITY pageSourceCmd.commandkey "u">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY pageInfoCmd.accesskey "I">
+#ifdef XP_MACOSX
+<!ENTITY pageInfoCmd.commandkey "i">
+#else
 <!ENTITY pageInfoCmd.commandkey "j">
+#endif
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "F">
 
