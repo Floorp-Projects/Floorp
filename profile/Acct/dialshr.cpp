@@ -332,7 +332,7 @@ BOOL SetDisconnectRegistry(HKEY topkey, char *keyname, DWORD disconnectTime)
 void SetAutoDisconnect(DWORD disconnectTime)
 {
 	HKEY    hKey;
-	DWORD   dwDisposition;
+//	DWORD   dwDisposition;
 	long    result;
 	DWORD	dwValue;
 
@@ -1793,7 +1793,7 @@ char* findDialerData( char** dialerData, char* name )
 //static void fillAccountParameters( char** dialerData, ACCOUNTPARAMS* account )
 static void fillAccountParameters( ACCOUNTPARAMS* account )
 {
-	char*		value;
+//	char*		value;
 /*	
 	value = findDialerData( dialerData, "AccountName" );
 	strcpy( account->ISPName, value ? value : "My Account" ); 
@@ -1926,7 +1926,7 @@ static void fillLocationParameters( LOCATIONPARAMS* location )
 
 {
 
-	char*		value;
+//	char*		value;
 /*	
 	// modem name
 	value = findDialerData( dialerData, "ModemName" );
@@ -2735,30 +2735,68 @@ static BOOL createPhoneBookEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& l
 // 3. when optionally register Navigator in existing account path
 //********************************************************************************
 //BOOL DialerConfig( char** dialerDataArray )
-BOOL DialerConfig( char* accountname  )
+BOOL DialerConfig( char* charData)
 {
 	gHwndParent = GetActiveWindow();
 	
+	char* modems;
+	modems=GetModemConfig();	
+	printf("this is the modem value %s \n",modems);
+	printf("this is the full data value %s \n",charData);
+
 	ACCOUNTPARAMS		account;
 	LOCATIONPARAMS		location;
 
-	strcpy( account.ISPName,accountname ); 
+    nsString data(charData);
+    
+	// Set the gathered info into an array
+	SetDataArray(data);
+    
+	char* phone = GetValue("phone");
+    char* loginname = GetValue("loginname");
+    char* loginpass = GetValue("loginpass");
+    char* passagain = GetValue("passagain");
+    char* domainname = GetValue("domainname");
+    char* dnsp = GetValue("dnsp");
+    char* dnss = GetValue("dnss");
+	printf("this is after phone data %s \n",phone);
+
+	printf("this is the loginnamae%s \n",loginname);
+
+	strcpy( account.ISPName,loginname ); 
 	
+	strcpy( account.DNS,dnsp );
+
+	strcpy( account.ISPPhoneNum, phone);
+
+	strcpy( location.ModemName,modems);
+
+	strcpy( account.DNS2,dnss );
+	strcpy( account.DomainName,domainname );
+	strcpy( account.Password,loginpass );
+	// script file name
+/*
+	strcpy( account.ISPName,"Samplew" ); 
+
 
 	strcpy( account.DNS,"208.12.38.38" );
 
 
-	strcpy( account.ISPPhoneNum, "9373333");
+	strcpy( account.ISPPhoneNum, "9613356");
 
-	strcpy( location.ModemName,"Sportster 28800 External" );
 
-//	strcpy( location->ModemType,"RASDT_Modem" );
+//	strcpy( location.ModemName,"Sportster 28800 External" );
+	strcpy( location.ModemName,modems);
+
+	
+*/	
+	//	strcpy( location->ModemType,"RASDT_Modem" );
 	// dial type
 
 	location.DialType = 1;
 	// outside line access
 
-	strcpy( location.OutsideLineAccess,"9" );
+//	strcpy( location.OutsideLineAccess,"9" );
 	// disable call waiting?
 
 	strcpy( location.UserAreaCode,"650" );
@@ -2769,8 +2807,7 @@ BOOL DialerConfig( char* accountname  )
 	//	if ( !dialerDataArray )
 //		return FALSE;
 
-	MessageBox(NULL, "Inside DialerConfig", "NSCP", MB_OK);
-
+//	MessageBox(NULL, "Inside DialerConfig", "NSCP", MB_OK);
 
 	// now we try to get values from the JS array and put them into corresponding 
 	// account and location parameters
@@ -2789,7 +2826,7 @@ BOOL DialerConfig( char* accountname  )
 		if ( getMsgString( buf, IDS_NO_RNA_REGSERVER ) )
 		displayErrMsgWnd( buf, MB_OK | MB_ICONEXCLAMATION, gHwndParent );
 	}
-
+	printf ("Connectoid has been created \n");
 #if 0
 // This was active in the 4.x code base, why is it not active here?
 
@@ -4233,4 +4270,47 @@ char* GetValue(char *name)
     return nsnull;
 } 
 
+// Gets the number of Modems
+// Location: Common/Profiles
+char* GetModemConfig(void)
+{
+	char**                  modemResults;
+	int             numDevices;
+	int             i;
+	nsString                 str, tmp, returnData;
+
+	if ( !::GetModemList( &modemResults, &numDevices ) )
+	{
+		if ( modemResults != NULL )
+		{
+			for ( i = 0; i < numDevices; i++ )
+			{
+				if ( modemResults[ i ] != NULL )
+					delete []modemResults[ i ];
+			}
+			delete []modemResults;
+		}
+		return NULL;
+	}
+
+	// copy all entries to the array
+//	returnData[ 0 ] = 0x00;
+	returnData ="";
+/*
+	// pile up account names in a single array, separated by a ()
+	for ( i = 0; i < numDevices; i++ ) 
+	{   
+		tmp = modemResults[ i ];
+		str += tmp;
+		str += "()";  
+		delete []modemResults[ i ];
+	}
+//	strcpy( returnData, (const char*)str ); */
+	returnData = modemResults[0];
+//	returnData = tmp;
+	printf("this is the modem inside the modemconfig %s \n", returnData.ToNewCString());
+	delete []modemResults;
+
+return returnData.ToNewCString();
+}
 

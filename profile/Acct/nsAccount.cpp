@@ -21,7 +21,6 @@
 //#include <afxext.h>         // MFC extensions
 
 
-//#include "muc.h"
 #include "dialshr.h"
 
 #include "nsIAccount.h"
@@ -148,7 +147,7 @@ public:
     NS_IMETHOD SetDialerConfig(char* returnData);
 
 	//**NS_IMETHOD PEPluginFunc( long selectorCode, void* paramBlock, void* returnData ); 
-    char* GetModemConfig(void);
+//    char* GetModemConfig(void);
 
 };
 
@@ -292,155 +291,40 @@ NS_IMETHODIMP nsAccount::GetAcctConfig(nsString returnData)
 }
 
 
-// Gets the number of Modems
-// Location: Common/Profiles
-char* nsAccount::GetModemConfig(void)
-{
-	char**                  modemResults;
-	int             numDevices;
-	int             i;
-	nsString                 str, tmp, returnData;
-
-	if ( !::GetModemList( &modemResults, &numDevices ) )
-	{
-		if ( modemResults != NULL )
-		{
-			for ( i = 0; i < numDevices; i++ )
-			{
-				if ( modemResults[ i ] != NULL )
-					delete []modemResults[ i ];
-			}
-			delete []modemResults;
-		}
-		return NULL;
-	}
-
-	// copy all entries to the array
-//	returnData[ 0 ] = 0x00;
-	returnData ="";
-/*
-	// pile up account names in a single array, separated by a ()
-	for ( i = 0; i < numDevices; i++ ) 
-	{   
-		tmp = modemResults[ i ];
-		str += tmp;
-		str += "()";  
-		delete []modemResults[ i ];
-	}
-//	strcpy( returnData, (const char*)str ); */
-	returnData = modemResults[0];
-//	returnData = tmp;
-	printf("this is the modem %s \n", returnData.ToNewCString());
-	delete []modemResults;
-
-return returnData.ToNewCString();
-}
-
 NS_IMETHODIMP nsAccount::SetDialerConfig(char* returnData)
 {
+	OSVERSIONINFO*  lpOsVersionInfo = new OSVERSIONINFO;
+	lpOsVersionInfo->dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
+
+	if ( GetVersionEx( lpOsVersionInfo ) ) 
+		gPlatformOS = (int)lpOsVersionInfo->dwPlatformId;
+	else
+		gPlatformOS = VER_PLATFORM_WIN32_WINDOWS;  // Make reasonable assumption
+
+	switch ( gPlatformOS )
+	{
+		case VER_PLATFORM_WIN32_WINDOWS: //win95
+			if( !LoadRasFunctions( "rasapi32.dll" ) )
+				return FALSE;
+		break;
+	
+		case VER_PLATFORM_WIN32_NT:             // win nt
+			if( !LoadRasFunctionsNT( "rasapi32.dll" ) )
+				return FALSE;
+		break;
+
+		default:
+		break;
+	} 
+
 		long returnCode;
 		nsresult rv=NS_OK;
 		returnCode = (long) DialerConfig(returnData);
 		printf("this is the dialer config \n");
-		char* modems;
-		modems=nsAccount::GetModemConfig(void);	
-		printf("this is the modem value %s \n",modems);
 return rv;
 }
 
-/**
-NS_IMETHODIMP PEPluginFunc( long selectorCode, void* paramBlock, void* returnData )
-{
-	
-	nsresult rv=NS_OK;
-	long    returnCode = 0;
-	BOOL    flag = TRUE;
-	char    acctStr[ MAX_PATH ];
-	BOOL	cdun = FALSE;
-//	gDLL = gMUCDLL.m_hInstance;
 
-	switch ( selectorCode )
-	{
-		// fill in the version in paramBlock
-//		case kGetPluginVersion:
-//			*(long*)returnData = 0x00010001;
-//		break;
-		//get dun info
-		case kCheckEnv:
-			cdun=CheckEnvironment();
-			if(cdun==TRUE) 
-			{
-				(*(int*)(paramBlock))=1;
-			}
-			else
-			{
-				(*(int*)(paramBlock))=0;
-			}
-		break;
-		// get account list
-//		case kSelectAcctConfig:
-//			*(int*)paramBlock = nsAccount::GetAcctConfig(nsString returnData );
-//		break;
-
-		// get modem list
-//		case kSelectModemConfig:
-//			*(int*)paramBlock = nsAccount::GetModemConfig( nsString returnData );
-//		break;
-
-		case kSelectDialOnDemand:
-			// kludge: dealing with dogbert PR3 bug
-			if ( *(int*)paramBlock == 1 )
-				strcpy( acctStr, (char*)returnData );
-			else if( *(int*)returnData == 1 )
-			{
-				strcpy( acctStr, (char *)paramBlock );
-				if( strcmp( acctStr, "None" ) == 0 )
-					flag = FALSE;
-			}
-			else
-			{
-				strcpy( acctStr, "" );
-				flag = FALSE;
-			}
-			switch ( gPlatformOS )
-			{
-				case VER_PLATFORM_WIN32_WINDOWS: //win95
-					EnableDialOnDemand95( acctStr, flag );
-				break;
-	
-				case VER_PLATFORM_WIN32_NT:             // win nt
-					EnableDialOnDemandNT( acctStr, flag );
-				break;
-							
-				default:
-				break;
-			}
-		break;
-		case kConfigureDialer:
-//			returnCode = (long) DialerConfig( (char**)paramBlock );
-			returnCode = (long) DialerConfig();
-
-			break;
-		
-		case kConnect:
-			returnCode = ( DialerConnect() == TRUE ? 0 : -1 );
-		break;
-		
-		case kHangup:
-			DialerHangup();
-			returnCode = 0;
-		break;
-
-		default:
-			returnCode = 0;
-		break;
-	}
-	
-	return rv;
-
-}
-
-**/
 
 /***************************************************************************************/
 /***********                           Account FACTORY                      ************/
