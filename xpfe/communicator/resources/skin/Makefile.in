@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE = \
+		$(srcdir)/button.css \
 		$(srcdir)/communicator.css \
 		$(NULL)
 
