@@ -402,7 +402,8 @@ function GetRDFProperty(aRes, aProp)
 function SubscribeOnClick(event)
 {
   // we only care about button 0 (left click) events
-  if (event.button != 0 || event.originalTarget.localName != "treechildren") return;
+  if (event.button != 0 || event.originalTarget.localName != "treechildren")
+   return;
  
   var row = {}, col = {}, obj = {};
   gSubscribeTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, obj);
@@ -414,9 +415,12 @@ function SubscribeOnClick(event)
     // that isn't a container
     if (!gSubscribeTree.view.isContainer(row.value)) {
       ReverseStateFromNode(row.value);
+      return;
     } 
-    else {
-      if (obj.value == "twisty") {
+  }
+  else if (event.detail == 1)
+  {
+    if (obj.value == "twisty") {
         if (gSubscribeTree.view.isContainerOpen(row.value)) {
           var uri = gSubscribeTree.builderView.getResourceAtIndex(row.value).Value;
 
@@ -426,13 +430,12 @@ function SubscribeOnClick(event)
 
           gSubscribableServer.startPopulatingWithUri(msgWindow, true /* force to server */, uri);
         }
-      }
     }
-  }
-  else {
-    // if the user single clicks on the subscribe check box, we handle it here
-    if (col.value == "subscribedColumn")
-      ReverseStateFromNode(row.value);
+    else {
+      // if the user single clicks on the subscribe check box, we handle it here
+      if (col.value == "subscribedColumn")
+        ReverseStateFromNode(row.value);
+    }
   }
 }
 
