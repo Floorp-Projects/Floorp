@@ -61,6 +61,8 @@ interface nsIDownloadManager : nsISupports {
   const short DOWNLOAD_CANCELED         = 3;
   const short DOWNLOAD_PAUSED           = 4;
 
+  const short DOWNLOAD_TYPE_DOWNLOAD    = 0;
+
   // Methods called by clients to carry out various managing functions
 
   /**
@@ -82,11 +84,13 @@ interface nsIDownloadManager : nsISupports {
    *
    * @return The newly created download item with the passed-in properties.
    */
-  nsIDownload addDownload(in nsIURI aSource,
+  nsIDownload addDownload(in short aDownloadType, 
+                          in nsIURI aSource,
                           in nsILocalFile aTarget,
                           in wstring aDisplayName,
+                          in wstring aIconURL,
                           in nsIMIMEInfo aMIMEInfo,
-                          in long long startTime,
+                          in long long aStartTime,
                           in nsIWebBrowserPersist aPersist);
 
   /**

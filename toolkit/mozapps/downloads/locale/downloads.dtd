@@ -20,6 +20,7 @@
 <!ENTITY remove.label                     "Remove">
 <!ENTITY pause.label                      "Pause">
 <!ENTITY resume.label                     "Resume">
+<!ENTITY installing.label                 "Installing...">
 
 <!ENTITY starting.label                   "Starting...">
 <!ENTITY failed.label                     "Failed">

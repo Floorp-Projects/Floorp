@@ -50,7 +50,7 @@ interface nsIXPInstallManagerUI : nsISupports {
   const short INSTALL_INSTALLING      = 6;
   const short INSTALL_FINISHED        = 7;
 
-  void addDownload(in nsIDownload aDownload);
+  const short DOWNLOAD_TYPE_INSTALL   = 1;
 
   readonly attribute nsIXPIProgressDialog xpiProgress;
 

@@ -207,9 +207,11 @@ var gDownloadObserver = {
       XPInstallDownloadManager.addDownloads(params, installObserver);
       break;  
     case "xpinstall-dialog-close":
-      var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
-      gCanAutoClose = mgr.hasActiveXPIOperations;
-      autoClose();
+      if (gDownloadManager) {
+        var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
+        gCanAutoClose = mgr.hasActiveXPIOperations;
+        autoClose();
+      }
       break;          
     }
   }
@@ -518,8 +520,8 @@ var XPInstallDownloadManager = {
       // MIME Info
       var mimeInfo = mimeService.getFromTypeAndExtension(null, url.fileExtension);
       
-      var download = gDownloadManager.addDownload(uri, localTarget, displayName, mimeInfo, 0, null);
-      xpinstallManager.addDownload(download);
+      var download = gDownloadManager.addDownload(uri, localTarget, displayName, mimeInfo, 0, null,
+                                                  Components.interfaces.nsIXPInstallManagerUI.DOWNLOAD_TYPE_INSTALL);
       
       // Advance the enumerator
       var certName = aParams.GetString(i++);

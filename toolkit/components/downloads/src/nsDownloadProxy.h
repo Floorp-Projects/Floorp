@@ -68,7 +68,9 @@ public:
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     if (NS_FAILED(rv)) return rv;
     
-    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aPersist, getter_AddRefs(mInner));
+    rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource, aTarget, 
+                         aDisplayName, nsnull, aMIMEInfo, aStartTime, aPersist, 
+                         getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);

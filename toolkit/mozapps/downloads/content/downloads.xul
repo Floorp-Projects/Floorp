@@ -145,10 +145,13 @@
           <binding subject="?download"
                   predicate="http://home.netscape.com/NC-rdf#ProgressPercent"
                   object="?progress-percent"/>
+          <binding subject="?download"
+                  predicate="http://home.netscape.com/NC-rdf#IconURL"
+                  object="?icon"/>
         </bindings>            
         <action>
           <download uri="?download" context="downloadContextMenu"
-                    image="moz-icon:?file" file="?file" target="?target" state="?state"
+                    image="?icon" file="?file" target="?target" state="?state"
                     animated="?animated" status="?status" progress="?progress-percent"/>
         </action>
       </rule>
