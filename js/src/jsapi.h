@@ -1142,6 +1142,31 @@ JS_CompareStrings(JSString *str1, JSString *str2);
 /************************************************************************/
 
 /*
+ * Locale specific string conversion callback.
+ */
+
+struct JSLocaleCallbacks {
+    JSLocaleToUpperCase     localeToUpperCase;
+    JSLocaleToLowerCase     localeToLowerCase;
+    JSLocaleCompare         localeCompare;
+};
+
+
+
+/*
+ * Establish locale callbacks. The pointer must persist as long as the JSContext.
+ * Setting to NULL resorts to default behaviour.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks);
+
+/* Return the address of the current locale callbacks struct. May be NULL. */
+extern JS_PUBLIC_API(JSLocaleCallbacks *) 
+JS_GetLocaleCallbacks(JSContext *cx);
+
+/************************************************************************/
+
+/*
  * Error reporting.
  */
 

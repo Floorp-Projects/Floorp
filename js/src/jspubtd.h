@@ -114,6 +114,7 @@ typedef struct JSScript          JSScript;
 typedef struct JSString          JSString;
 typedef struct JSXDRState	 JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
+typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 
 #ifndef CRT_CALL
 #ifdef XP_OS2_VACPP
@@ -266,6 +267,17 @@ typedef JSBool
 (* CRT_CALL JSArgumentFormatter)(JSContext *cx, const char *format,
 				 JSBool fromJS, jsval **vpp, va_list *app);
 #endif
+
+typedef JSBool 
+(* CRT_CALL JSLocaleToUpperCase)(JSContext *cx, JSString *src, jsval *rval);
+
+typedef JSBool
+(* CRT_CALL JSLocaleToLowerCase)(JSContext *cx, JSString *src, jsval *rval);
+
+typedef JSBool
+(* CRT_CALL JSLocaleCompare)(JSContext *cx, JSString *src1, JSString *src2, jsval *rval);
+
+
 
 JS_END_EXTERN_C
 

@@ -165,6 +165,7 @@ struct JSAtomState {
     JSAtom              *setAtom;
     JSAtom              *toSourceAtom;
     JSAtom              *toStringAtom;
+    JSAtom              *toLocaleStringAtom;
     JSAtom              *valueOfAtom;
     JSAtom              *evalAtom;
 

@@ -243,6 +243,10 @@ struct JSContext {
 
     /* Delay JS_SetVersion scanner effects until they're needed. */
     JSVersion           scannerVersion;
+
+    /* Locale specific callbacks for string conversion. */
+    JSLocaleCallbacks   *localeCallbacks;
+
 };
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */

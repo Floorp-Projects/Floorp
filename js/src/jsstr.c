@@ -552,6 +552,24 @@ str_toLowerCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
+str_toLocaleLowerCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+		jsval *rval)
+{
+    JSString *str;
+/*
+ *  Forcibly ignore the first (or any) argument and return toLowerCase(),
+ *  ECMA has reserved that argument, presumbaly for defining the locale.
+ */
+    if (cx->localeCallbacks && cx->localeCallbacks->localeToLowerCase) {
+        str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+        if (!str)
+	    return JS_FALSE;
+        return cx->localeCallbacks->localeToLowerCase(cx, str, rval);
+    }
+    return str_toLowerCase(cx, obj, 0, argv, rval);
+}
+
+static JSBool
 str_toUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		jsval *rval)
 {
@@ -576,6 +594,47 @@ str_toUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     }
     *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSBool
+str_toLocaleUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+		jsval *rval)
+{
+    JSString *str;
+/*
+ *  Forcibly ignore the first (or any) argument and return toLowerCase(),
+ *  ECMA has reserved that argument, presumbaly for defining the locale.
+ */
+    if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
+        str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+        if (!str)
+	    return JS_FALSE;
+        return cx->localeCallbacks->localeToUpperCase(cx, str, rval);
+    }
+    return str_toUpperCase(cx, obj, 0, argv, rval);
+}
+
+static JSBool
+str_localeCompare(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str, *thatStr;
+
+    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+    if (!str)
+	return JS_FALSE;
+    argv[-1] = STRING_TO_JSVAL(str);
+
+    if (argc == 0)
+        *rval = JSVAL_ZERO;
+    else {
+        thatStr = js_ValueToString(cx, argv[0]);
+        if (!thatStr)
+            return JS_FALSE;
+        if (cx->localeCallbacks && cx->localeCallbacks->localeCompare)
+            return cx->localeCallbacks->localeCompare(cx, str, thatStr, rval);
+        *rval = INT_TO_JSVAL(js_CompareStrings(str, thatStr));
+    }
     return JS_TRUE;
 }
 
@@ -2014,51 +2073,54 @@ str_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    {"quote",           str_quote,              0,0,0},
-    {js_toSource_str,   str_toSource,           0,0,0},
+    {"quote",               str_quote,              0,0,0},
+    {js_toSource_str,       str_toSource,           0,0,0},
 #endif
 
     /* Java-like methods. */
-    {js_toString_str,   str_toString,           0,0,0},
-    {js_valueOf_str,    str_valueOf,            0,0,0},
-    {"substring",       str_substring,          2,0,0},
-    {"toLowerCase",     str_toLowerCase,        0,0,0},
-    {"toUpperCase",     str_toUpperCase,        0,0,0},
-    {"charAt",          str_charAt,             1,0,0},
-    {"charCodeAt",      str_charCodeAt,         1,0,0},
-    {"indexOf",         str_indexOf,            2,0,0},
-    {"lastIndexOf",     str_lastIndexOf,        2,0,0},
+    {js_toString_str,       str_toString,           0,0,0},
+    {js_valueOf_str,        str_valueOf,            0,0,0},
+    {"substring",           str_substring,          2,0,0},
+    {"toLowerCase",         str_toLowerCase,        0,0,0},
+    {"toUpperCase",         str_toUpperCase,        0,0,0},
+    {"charAt",              str_charAt,             1,0,0},
+    {"charCodeAt",          str_charCodeAt,         1,0,0},
+    {"indexOf",             str_indexOf,            2,0,0},
+    {"lastIndexOf",         str_lastIndexOf,        2,0,0},
+    {"toLocaleLowerCase",   str_toLocaleLowerCase,  0,0,0},
+    {"toLocaleUpperCase",   str_toLocaleUpperCase,  0,0,0},
+    {"localeCompare",       str_localeCompare,      1,0,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
-    {"match",           str_match,              1,0,0},
-    {"search",          str_search,             1,0,0},
-    {"replace",         str_replace,            2,0,0},
-    {"split",           str_split,              1,0,0},
-    {"substr",          str_substr,             2,0,0},
+    {"match",               str_match,              1,0,0},
+    {"search",              str_search,             1,0,0},
+    {"replace",             str_replace,            2,0,0},
+    {"split",               str_split,              1,0,0},
+    {"substr",              str_substr,             2,0,0},
 #ifdef NOTYET
-    {"unpack",          str_unpack,             1,0,0},
+    {"unpack",              str_unpack,             1,0,0},
 #endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",          str_concat,             0,0,0},
-    {"slice",           str_slice,              0,0,0},
+    {"concat",              str_concat,             0,0,0},
+    {"slice",               str_slice,              0,0,0},
 #endif
 
     /* HTML string methods. */
-    {"bold",            str_bold,               0,0,0},
-    {"italics",         str_italics,            0,0,0},
-    {"fixed",           str_fixed,              0,0,0},
-    {"fontsize",        str_fontsize,           1,0,0},
-    {"fontcolor",       str_fontcolor,          1,0,0},
-    {"link",            str_link,               1,0,0},
-    {"anchor",          str_anchor,             1,0,0},
-    {"strike",          str_strike,             0,0,0},
-    {"small",           str_small,              0,0,0},
-    {"big",             str_big,                0,0,0},
-    {"blink",           str_blink,              0,0,0},
-    {"sup",             str_sup,                0,0,0},
-    {"sub",             str_sub,                0,0,0},
+    {"bold",                str_bold,               0,0,0},
+    {"italics",             str_italics,            0,0,0},
+    {"fixed",               str_fixed,              0,0,0},
+    {"fontsize",            str_fontsize,           1,0,0},
+    {"fontcolor",           str_fontcolor,          1,0,0},
+    {"link",                str_link,               1,0,0},
+    {"anchor",              str_anchor,             1,0,0},
+    {"strike",              str_strike,             0,0,0},
+    {"small",               str_small,              0,0,0},
+    {"big",                 str_big,                0,0,0},
+    {"blink",               str_blink,              0,0,0},
+    {"sup",                 str_sup,                0,0,0},
+    {"sub",                 str_sub,                0,0,0},
     {0,0,0,0,0}
 };
 

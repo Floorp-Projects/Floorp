@@ -1553,9 +1553,9 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool
-date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
-		    jsval *argv, jsval *rval)
+static JSBool 
+date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
+		    jsval *argv, jsval *rval, char *format)
 {
     char buf[100];
     JSString *str;
@@ -1571,17 +1571,8 @@ date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
 	jsdouble local = LocalTime(*date);
 	new_explode(local, &split, JS_FALSE);
 
-	/* let PRMJTime format it.  Use '%#c' for windows, because '%c' is
-	 * backward-compatible and non-y2k with msvc; '%#c' requests that a
-	 * full year be used in the result string.
-	 */
-	result_len = PRMJ_FormatTime(buf, sizeof buf,
-#if defined(_WIN32) && !defined(__MWERKS__)
-				   "%#c",
-#else
-				   "%c",
-#endif
-				   &split);
+	/* let PRMJTime format it.	 */
+	result_len = PRMJ_FormatTime(buf, sizeof buf, format, &split);
 
 	/* If it failed, default to toString. */
 	if (result_len == 0)
@@ -1593,6 +1584,47 @@ date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
 	return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
+}
+
+static JSBool
+date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
+		    jsval *argv, jsval *rval)
+{
+    /* Use '%#c' for windows, because '%c' is
+     * backward-compatible and non-y2k with msvc; '%#c' requests that a
+     * full year be used in the result string.
+     */
+    return date_toLocaleHelper(cx, obj, argc, argv, rval, 
+#if defined(_WIN32) && !defined(__MWERKS__)
+				   "%#c"
+#else
+				   "%c"
+#endif
+				   );
+}
+
+static JSBool
+date_toLocaleDateString(JSContext *cx, JSObject *obj, uintN argc,
+		    jsval *argv, jsval *rval)
+{
+    /* Use '%#x' for windows, because '%x' is
+     * backward-compatible and non-y2k with msvc; '%#x' requests that a
+     * full year be used in the result string.
+     */
+    return date_toLocaleHelper(cx, obj, argc, argv, rval,
+#if defined(_WIN32) && !defined(__MWERKS__)
+				   "%#x"
+#else
+				   "%x"
+#endif
+				   );
+}
+
+static JSBool
+date_toLocaleTimeString(JSContext *cx, JSObject *obj, uintN argc,
+		    jsval *argv, jsval *rval)
+{
+    return date_toLocaleHelper(cx, obj, argc, argv, rval, "%X");
 }
 
 #if JS_HAS_TOSOURCE
@@ -1686,49 +1718,51 @@ static JSFunctionSpec date_static_methods[] = {
 };
 
 static JSFunctionSpec date_methods[] = {
-    {"getTime",           date_getTime,           0,0,0 },
-    {"getTimezoneOffset", date_getTimezoneOffset, 0,0,0 },
-    {"getYear",           date_getYear,           0,0,0 },
-    {"getFullYear",       date_getFullYear,       0,0,0 },
-    {"getUTCFullYear",    date_getUTCFullYear,    0,0,0 },
-    {"getMonth",          date_getMonth,          0,0,0 },
-    {"getUTCMonth",       date_getUTCMonth,       0,0,0 },
-    {"getDate",           date_getDate,           0,0,0 },
-    {"getUTCDate",        date_getUTCDate,        0,0,0 },
-    {"getDay",            date_getDay,            0,0,0 },
-    {"getUTCDay",         date_getUTCDay,         0,0,0 },
-    {"getHours",          date_getHours,          0,0,0 },
-    {"getUTCHours",       date_getUTCHours,       0,0,0 },
-    {"getMinutes",        date_getMinutes,        0,0,0 },
-    {"getUTCMinutes",     date_getUTCMinutes,     0,0,0 },
-    {"getSeconds",        date_getUTCSeconds,     0,0,0 },
-    {"getUTCSeconds",     date_getUTCSeconds,     0,0,0 },
-    {"getMilliseconds",   date_getUTCMilliseconds,0,0,0 },
-    {"getUTCMilliseconds",date_getUTCMilliseconds,0,0,0 },
-    {"setTime",           date_setTime,           1,0,0 },
-    {"setYear",           date_setYear,           1,0,0 },
-    {"setFullYear",       date_setFullYear,       3,0,0 },
-    {"setUTCFullYear",    date_setUTCFullYear,    3,0,0 },
-    {"setMonth",          date_setMonth,          2,0,0 },
-    {"setUTCMonth",       date_setUTCMonth,       2,0,0 },
-    {"setDate",           date_setDate,           1,0,0 },
-    {"setUTCDate",        date_setUTCDate,        1,0,0 },
-    {"setHours",          date_setHours,          4,0,0 },
-    {"setUTCHours",       date_setUTCHours,       4,0,0 },
-    {"setMinutes",        date_setMinutes,        3,0,0 },
-    {"setUTCMinutes",     date_setUTCMinutes,     3,0,0 },
-    {"setSeconds",        date_setSeconds,        2,0,0 },
-    {"setUTCSeconds",     date_setUTCSeconds,     2,0,0 },
-    {"setMilliseconds",   date_setMilliseconds,   1,0,0 },
-    {"setUTCMilliseconds",date_setUTCMilliseconds,1,0,0 },
-    {"toGMTString",       date_toGMTString,       0,0,0 },
-    {"toUTCString",       date_toGMTString,       0,0,0 },
-    {"toLocaleString",    date_toLocaleString,    0,0,0 },
+    {"getTime",             date_getTime,           0,0,0 },
+    {"getTimezoneOffset",   date_getTimezoneOffset, 0,0,0 },
+    {"getYear",             date_getYear,           0,0,0 },
+    {"getFullYear",         date_getFullYear,       0,0,0 },
+    {"getUTCFullYear",      date_getUTCFullYear,    0,0,0 },
+    {"getMonth",            date_getMonth,          0,0,0 },
+    {"getUTCMonth",         date_getUTCMonth,       0,0,0 },
+    {"getDate",             date_getDate,           0,0,0 },
+    {"getUTCDate",          date_getUTCDate,        0,0,0 },
+    {"getDay",              date_getDay,            0,0,0 },
+    {"getUTCDay",           date_getUTCDay,         0,0,0 },
+    {"getHours",            date_getHours,          0,0,0 },
+    {"getUTCHours",         date_getUTCHours,       0,0,0 },
+    {"getMinutes",          date_getMinutes,        0,0,0 },
+    {"getUTCMinutes",       date_getUTCMinutes,     0,0,0 },
+    {"getSeconds",          date_getUTCSeconds,     0,0,0 },
+    {"getUTCSeconds",       date_getUTCSeconds,     0,0,0 },
+    {"getMilliseconds",     date_getUTCMilliseconds,0,0,0 },
+    {"getUTCMilliseconds",  date_getUTCMilliseconds,0,0,0 },
+    {"setTime",             date_setTime,           1,0,0 },
+    {"setYear",             date_setYear,           1,0,0 },
+    {"setFullYear",         date_setFullYear,       3,0,0 },
+    {"setUTCFullYear",      date_setUTCFullYear,    3,0,0 },
+    {"setMonth",            date_setMonth,          2,0,0 },
+    {"setUTCMonth",         date_setUTCMonth,       2,0,0 },
+    {"setDate",             date_setDate,           1,0,0 },
+    {"setUTCDate",          date_setUTCDate,        1,0,0 },
+    {"setHours",            date_setHours,          4,0,0 },
+    {"setUTCHours",         date_setUTCHours,       4,0,0 },
+    {"setMinutes",          date_setMinutes,        3,0,0 },
+    {"setUTCMinutes",       date_setUTCMinutes,     3,0,0 },
+    {"setSeconds",          date_setSeconds,        2,0,0 },
+    {"setUTCSeconds",       date_setUTCSeconds,     2,0,0 },
+    {"setMilliseconds",     date_setMilliseconds,   1,0,0 },
+    {"setUTCMilliseconds",  date_setUTCMilliseconds,1,0,0 },
+    {"toGMTString",         date_toGMTString,       0,0,0 },
+    {"toUTCString",         date_toGMTString,       0,0,0 },
+    {js_toLocaleString_str, date_toLocaleString,    0,0,0 },
+    {"toLocaleDateString",  date_toLocaleDateString,0,0,0 },
+    {"toLocaleTimeString",  date_toLocaleTimeString,0,0,0 },
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,     date_toSource,          0,0,0 },
+    {js_toSource_str,       date_toSource,          0,0,0 },
 #endif
-    {js_toString_str,     date_toString,          0,0,0 },
-    {js_valueOf_str,      date_valueOf,           0,0,0 },
+    {js_toString_str,       date_toString,          0,0,0 },
+    {js_valueOf_str,        date_valueOf,           0,0,0 },
     {0,0,0,0,0}
 };
 

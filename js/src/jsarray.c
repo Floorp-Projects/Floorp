@@ -311,7 +311,7 @@ JSClass js_ArrayClass = {
 
 static JSBool
 array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
-	       jsval *rval)
+	       jsval *rval, JSBool localeString)
 {
     JSBool ok;
     jsval v;
@@ -321,6 +321,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
     const jschar *sepstr;
     JSString *str;
     JSHashEntry *he;
+    JSObject *obj2;
 
     ok = js_GetLengthProperty(cx, obj, &length);
     if (!ok)
@@ -383,9 +384,18 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 
 	if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
 	    str = cx->runtime->emptyString;
-	} else {
-	    str = (literalize ? js_ValueToSource : js_ValueToString)(cx, v);
+        } else {
+            if (localeString) {
+                if (!js_ValueToObject(cx, v, &obj2))
+                    goto doneBad;
+                if (!js_TryMethod(cx, obj2, cx->runtime->atomState.toLocaleStringAtom, 0, NULL, &v))
+                    goto doneBad;
+                str = JSVAL_TO_STRING(v);
+            }
+            else
+                str = (literalize ? js_ValueToSource : js_ValueToString)(cx, v);
 	    if (!str) {
+  doneBad:
 		ok = JS_FALSE;
 		goto done;
 	    }
@@ -459,7 +469,7 @@ static JSBool
 array_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	       jsval *rval)
 {
-    return array_join_sub(cx, obj, &comma_space, JS_TRUE, rval);
+    return array_join_sub(cx, obj, &comma_space, JS_TRUE, rval, JS_FALSE);
 }
 #endif
 
@@ -475,7 +485,18 @@ array_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      */
     literalize = (cx->version == JSVERSION_1_2);
     return array_join_sub(cx, obj, literalize ? &comma_space : &comma,
-			  literalize, rval);
+			  literalize, rval, JS_FALSE);
+}
+
+static JSBool
+array_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+	       jsval *rval)
+{
+    /*
+     *  Passing comma_space here as the separator. Need a way to get a 
+     *  locale specific version.
+     */
+    return array_join_sub(cx, obj, &comma_space, JS_FALSE, rval, JS_TRUE);
 }
 
 static JSBool
@@ -484,12 +505,12 @@ array_join(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
 
     if (argc == 0)
-	return array_join_sub(cx, obj, &comma, JS_FALSE, rval);
+	return array_join_sub(cx, obj, &comma, JS_FALSE, rval, JS_FALSE);
     str = js_ValueToString(cx, argv[0]);
     if (!str)
 	return JS_FALSE;
     argv[0] = STRING_TO_JSVAL(str);
-    return array_join_sub(cx, obj, str, JS_FALSE, rval);
+    return array_join_sub(cx, obj, str, JS_FALSE, rval, JS_FALSE);
 }
 
 #if !JS_HAS_MORE_PERL_FUN
@@ -1282,27 +1303,28 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   array_toSource,         0,0,0},
+    {js_toSource_str,       array_toSource,         0,0,0},
 #endif
-    {js_toString_str,   array_toString,         0,0,0},
+    {js_toString_str,       array_toString,         0,0,0},
+    {js_toLocaleString_str, array_toLocaleString,   0,0,0},
 
     /* Perl-ish methods. */
-    {"join",            array_join,             1,0,0},
-    {"reverse",         array_reverse,          0,0,0},
-    {"sort",            array_sort,             1,0,0},
+    {"join",                array_join,             1,0,0},
+    {"reverse",             array_reverse,          0,0,0},
+    {"sort",                array_sort,             1,0,0},
 #ifdef NOTYET
-    {"pack",            array_pack,             1,0,0},
+    {"pack",                array_pack,             1,0,0},
 #endif
-    {"push",            array_push,             1,0,0},
-    {"pop",             array_pop,              0,0,0},
-    {"shift",           array_shift,            0,0,0},
-    {"unshift",         array_unshift,          1,0,0},
-    {"splice",          array_splice,           1,0,0},
+    {"push",                array_push,             1,0,0},
+    {"pop",                 array_pop,              0,0,0},
+    {"shift",               array_shift,            0,0,0},
+    {"unshift",             array_unshift,          1,0,0},
+    {"splice",              array_splice,           1,0,0},
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",          array_concat,           0,0,0},
-    {"slice",           array_slice,            0,0,0},
+    {"concat",              array_concat,           0,0,0},
+    {"slice",               array_slice,            0,0,0},
 #endif
 
     {0,0,0,0,0}
