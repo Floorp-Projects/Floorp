@@ -31,6 +31,7 @@ CPPSRCS =                       \
     nsCRT.cpp                   \
     nsDeque.cpp                 \
     nsRBTree.cpp                \
+    nsSizeofHandler.cpp		\
     nsString.cpp                \
     nsUnicharBuffer.cpp         \
     nsUnicharInputStream.cpp    \
