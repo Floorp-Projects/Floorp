@@ -27,7 +27,7 @@ tree[class="addressingWidget"] treeitem > treerow  > treecell > box > image {
 	vertical-align: middle;
 	padding:2px;
 	border:none;
-	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
+	list-style-image: url("chrome://messenger/skin/abcard.gif");
 	user-focus: ignore;
 }
 

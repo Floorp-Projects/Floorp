@@ -179,3 +179,73 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
   list-style-image: none !important;                                             
                                                                                                                                                
 }    
+
+/*** Styles for abSelectAddressesDialog.xul ***/
+
+box[orient="horizontal"] > splitter {
+	border-right	: 1px solid #000000;
+}
+
+box[orient="vertical"] > splitter {
+	border-top	: 1px solid #000000;
+}
+
+#3PaneBox {
+	border-top		: 1px solid #000000; 
+	border-bottom	: 1px solid #000000;
+	border-left		: 1px solid #000000;
+}
+
+#dirTreeBox {
+	width			: 180px;
+	height			: 100%; 
+	background-color: #FFFFFF;
+	border-right	: 1px solid #000000;
+}
+
+#dirTree { // Tree that lists different Address Books
+	height			: 100px;
+	min-width		: 10px;
+}
+
+#results-bucket-tree-box {
+	border-right	: 1px solid #000000;
+}
+
+#resultsTreeBox {
+	background-color: #FFFFFF; 
+	border-bottom	: 1px solid #000000;
+}
+
+#resultsTree {
+	height			: 100px; 
+	min-width		: 10px;
+}
+
+#addToBucketButtonBox { // Row of "To" "CC" and "Bcc" buttons
+	padding			: 0.3em; 
+	min-width		: 10px;
+}
+
+#bucketBox {
+	height			: 170px;
+	border-top		: 1px solid #000000;
+}
+
+#addressBucket {
+	height			: 100px; 
+	min-width		: 10px;
+}
+
+#rightColumnButtonBox { // Column with "New", "Edit" and "Remove" buttons
+	padding			: .5em; 
+	padding-right	: 0px;
+}
+
+.3rd-column-spring {  // Vertical Springs between 3rd column buttons
+	height			: 10px;
+}
+
+.middle-button-spring {  // Springs between To, CC, and BCC buttons
+	width			: 10px;
+}

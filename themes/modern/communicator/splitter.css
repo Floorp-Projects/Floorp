@@ -129,3 +129,25 @@ splitter.gray-horizontal-splitter #endcap {
 	min-width: 8px;
 	width: 8px;
 }
+
+splitter.gray-vertical-splitter { 
+	min-height: 8px;
+	background-color: #CCCCCC;
+	border: none;
+	padding: 0px;
+}
+
+splitter.gray-vertical-splitter grippy { 
+	margin: 0px;
+	border: 2px solid #CCCCCC;
+	padding: 0px;
+	background-color: #6699CC;
+	list-style-image: none;
+}
+splitter.gray-vertical-splitter grippy:hover { 
+	background-color: #003366;
+}
+
+splitter.gray-vertical-splitter grippy:active { 
+	background-color: #003366;
+}
