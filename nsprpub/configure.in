@@ -1788,8 +1788,6 @@ mips-sony-newsos*)
 *-os2*)
     AC_DEFINE(XP_OS2)
     AC_DEFINE(XP_PC)
-    AC_DEFINE(BSD_SELECT)
-    AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     LIB_SUFFIX=lib
     DLL_SUFFIX=dll
     RC=rc.exe
@@ -1803,7 +1801,6 @@ mips-sony-newsos*)
     if test -n "$GNU_CC"; then
         AC_DEFINE(XP_OS2_EMX)
         AC_DEFINE(OS2)
-        AC_DEFINE(TCPV40HDRS)
         AR=emxomfar
         AR_FLAGS='r $@'
         CFLAGS="$CFLAGS -Wall -Zomf"
@@ -1827,7 +1824,6 @@ mips-sony-newsos*)
     elif test "$VACPP" = "yes"; then
         AC_DEFINE(XP_OS2_VACPP)
         AC_DEFINE(OS2,4)
-        AC_DEFINE(TCPV40HDRS)
         AC_DEFINE(_X86_)
         OBJ_SUFFIX=obj
         AS=alp
