@@ -27,3 +27,6 @@ just like requiring named arguments.
 
 Make the DBI Results Frame return array refs and not arrays (will
 require rather large changes throughout PLIF).
+
+
+Make getSettings return a boolean instead of raising an exception.
