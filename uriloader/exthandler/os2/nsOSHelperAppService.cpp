@@ -1189,24 +1189,96 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 
   rv = thePrefsService->CopyCharPref(prefName.get(), getter_Copies(prefString));
   if (NS_FAILED(rv) || prefString.IsEmpty()) {
+    char szAppFromINI[CCHMAXPATH] = "\0";
+    char szParamsFromINI[CCHMAXPATH];
     /* Special case http, https, and ftp - if we get here, pass them to the shell */
     if ((uProtocol == NS_LITERAL_CSTRING("http")) ||
         (uProtocol == NS_LITERAL_CSTRING("https")) ||
         (uProtocol == NS_LITERAL_CSTRING("ftp"))) {
-      char szBrowser[CCHMAXPATH];
-
-      PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultBrowserExe",
-                          "",
-                          szBrowser,
-                          sizeof(szBrowser)) ;
-      if (szBrowser[0]) {
-        applicationName = szBrowser;
-        parameters = urlSpec;
-      } else {
-        return NS_ERROR_FAILURE;
+      if (uProtocol == NS_LITERAL_CSTRING("ftp")) {
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultFTPExe",
+                              "",
+                              szAppFromINI,
+                              sizeof(szAppFromINI)) ;
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultFTPParameters",
+                              "",
+                              szParamsFromINI,
+                              sizeof(szParamsFromINI)) ;
       }
+      /* If we didn't get a default ftp or it's http or https */
+      if ((uProtocol == NS_LITERAL_CSTRING("http")) ||
+          (uProtocol == NS_LITERAL_CSTRING("https")) ||
+          (szAppFromINI[0] == '\0')) {
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultBrowserExe",
+                              "",
+                              szAppFromINI,
+                              sizeof(szAppFromINI));
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultParameters",
+                              "",
+                              szParamsFromINI,
+                              sizeof(szParamsFromINI));
+        // DefaultParameters is the correct OS/2 way.
+        // In the configapps application, it writes
+        // DefaultBrowserParameters as well, so let's
+        // support it
+        if (szParamsFromINI[0] = '\0') {
+          PrfQueryProfileString(HINI_USER,
+                                "WPURLDEFAULTSETTINGS",
+                                "DefaultBrowserParameters",
+                                "",
+                                szParamsFromINI,
+                                sizeof(szParamsFromINI));
+        }
+      }
+    } else if ((uProtocol == NS_LITERAL_CSTRING("mailto")) ||
+               (uProtocol == NS_LITERAL_CSTRING("news"))) {
+      if (uProtocol == NS_LITERAL_CSTRING("news")) {
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultNewsExe",
+                              "",
+                              szAppFromINI,
+                              sizeof(szAppFromINI)) ;
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultNewsParameters",
+                              "",
+                              szParamsFromINI,
+                              sizeof(szParamsFromINI)) ;
+      }
+      /* If we didn't get a default news or it's mailto */
+      if ((uProtocol == NS_LITERAL_CSTRING("mailto")) ||
+          (szAppFromINI[0] == '\0')) {
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultMailExe",
+                              "",
+                              szAppFromINI,
+                              sizeof(szAppFromINI));
+        PrfQueryProfileString(HINI_USER,
+                              "WPURLDEFAULTSETTINGS",
+                              "DefaultMailParameters",
+                              "",
+                              szParamsFromINI,
+                              sizeof(szParamsFromINI));
+      }
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (szAppFromINI[0]) {
+      applicationName = szAppFromINI;
+      parameters = szParamsFromINI;
+      parameters += " ";
+      parameters += urlSpec;
     } else {
       return NS_ERROR_FAILURE;
     }
