@@ -96,7 +96,7 @@ int main()
         printf("\t1 + 1 = %d\n", out);
     else
         printf("\tFAILED");
-    if(NS_SUCCEEDED(test->AddTwoLLs(1LL,1LL,&out64)))
+    if(NS_SUCCEEDED(test->AddTwoLLs(1,1,&out64)))
         printf("\t1L + 1L = %dL\n", out);
     else
         printf("\tFAILED");
@@ -104,7 +104,7 @@ int main()
         printf("\t2 * 2 = %d\n", out);
     else
         printf("\tFAILED");
-    if(NS_SUCCEEDED(test->MultTwoLLs(2LL,2LL,&out64)))
+    if(NS_SUCCEEDED(test->MultTwoLLs(2,2,&out64)))
         printf("\t2L * 2L = %dL\n", out);
     else
         printf("\tFAILED");
@@ -131,11 +131,11 @@ int main()
     else
         printf("\tFAILED");
 
-    var[0].val.i64 = 1LL;
+    var[0].val.i64 = 1;
     var[0].type = nsXPTType::T_I64;
     var[0].flags = 0;
 
-    var[1].val.i64 = 1LL;
+    var[1].val.i64 = 1;
     var[1].type = nsXPTType::T_I64;
     var[1].flags = 0;
 
@@ -167,11 +167,11 @@ int main()
     else
         printf("\tFAILED");
 
-    var[0].val.i64 = 2LL;
+    var[0].val.i64 = 2;
     var[0].type = nsXPTType::T_I64;
     var[0].flags = 0;
 
-    var[1].val.i64 = 2LL;
+    var[1].val.i64 = 2;
     var[1].type = nsXPTType::T_I64;
     var[1].flags = 0;
 
