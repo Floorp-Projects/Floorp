@@ -36,6 +36,7 @@ IDLSRCS= \
 	EditorAppCore.idl   \
 	PrefsCore.idl       \
 	SignonCore.idl       \
+	CookieCore.idl       \
 	WalletCore.idl       \
 	RDFCore.idl         \
 	Toolbar.idl         \

@@ -44,7 +44,7 @@
 #include "mkparse.h"
 #include "mkaccess.h"
 #include "net_xp_file.h"
-#include "cookies.h"
+//#include "cookies.h"
 #include "httpauth.h"
 #include "prefapi.h"
 #include "shist.h"
@@ -76,6 +76,7 @@ extern int XP_UNIDENTIFIED_PROXY_SERVER;
 extern int XP_PROXY_AUTH_REQUIRED_FOR;
 extern int XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY;
 extern int XP_FORTEZZA_PROXY_AUTH;
+/*
 extern int MK_ACCESS_COOKIES_THE_SERVER;
 extern int MK_ACCESS_COOKIES_WISHES; 
 #if defined(CookieManagement)
@@ -137,8 +138,8 @@ extern int MK_ACCESS_TL_RPH3;
 
 #define MAX_NUMBER_OF_COOKIES  300
 #define MAX_COOKIES_PER_SERVER 20
-#define MAX_BYTES_PER_COOKIE   4096  /* must be at least 1 */
-
+#define MAX_BYTES_PER_COOKIE   4096  // must be at least 1 
+*/
 /*
  * Authentication information for servers and proxies is kept
  * on separate lists, but both lists consist of net_AuthStruct's.
@@ -148,7 +149,7 @@ HG73943
 
 PRIVATE XP_List * net_auth_list = NULL;
 PRIVATE XP_List * net_proxy_auth_list = NULL;
-
+/*
 PRIVATE Bool cookies_changed = FALSE;
 #if defined(CookieManagement)
 PRIVATE Bool cookie_permissions_changed = FALSE;
@@ -158,7 +159,7 @@ PRIVATE Bool cookie_remember_checked = FALSE;
 PRIVATE NET_CookieBehaviorEnum net_CookieBehavior = NET_Accept;
 PRIVATE Bool net_WarnAboutCookies = FALSE;
 PRIVATE char *net_scriptName = (char *)0;
-
+*/
 /*
  * Different schemes supported by the client.
  * Order means the order of preference between authentication schemes.
@@ -1015,7 +1016,7 @@ NET_AskForAuthString(MWContext *context,
  * The following routines support the 
  * Set-Cookie: / Cookie: headers
  */
-
+/*
 PRIVATE XP_List * net_cookie_list=0;
 #if defined(CookieManagement)
 PRIVATE XP_List * net_cookie_permission_list=0;
@@ -1030,25 +1031,29 @@ typedef struct _net_CookieStruct {
 	time_t expires;
 	time_t last_accessed;
 	HG26237
-	Bool   is_domain;   /* is it a domain instead of an absolute host? */
+	Bool   is_domain;   // is it a domain instead of an absolute host? 
 } net_CookieStruct;
+*/
 
+/*
 #if defined(CookieManagement)
 typedef struct _net_CookiePermissionStruct {
     char * host;
     Bool permission;
 #ifdef TRUST_LABELS
-    XP_List * TrustList; /* a list of trust label entries */
+    XP_List * TrustList; // a list of trust label entries
 #endif
 } net_CookiePermissionStruct;
-
+*/
+/*
 typedef struct _net_DeferCookieStruct {
     MWContext * context;
     char * cur_url;
     char * set_cookie_header;
     time_t timeToExpire;
 } net_DeferCookieStruct;
-
+*/
+/*
 #ifdef TRUST_LABELS
 void ParseTrustLabelInfo
 	(char *Buf, net_CookiePermissionStruct * cookie_permission);
@@ -1059,20 +1064,20 @@ void AddTrustLabelInfo( char *CookieName, TrustLabel *trustlabel );
 
 typedef struct {
     char * CookieName;
-    int purpose; /* the purpose rating has a series of bits set */
-    int recipient; /* the recipient value */
-    Bool bIdentifiable; /* true if the related cookie puts to identifiable information */
-    char * by; /* the by field from the trust label */
-    char * CookieSet; /* when the cookie was set into cookies.txt */
+    int purpose; // the purpose rating has a series of bits set 
+    int recipient; // the recipient value 
+    Bool bIdentifiable; // true if the related cookie puts to identifiable information 
+    char * by; // the by field from the trust label 
+    char * CookieSet; // when the cookie was set into cookies.txt 
 } TrustEntry;
 #endif
 
 #endif
-
+*/
 /* Routines and data to protect the cookie list so it
 **   can be accessed by mulitple threads
 */
-
+/*
 #include "prthread.h"
 #include "prmon.h"
 
@@ -1090,7 +1095,7 @@ net_lock_cookie_list(void)
 
     while(TRUE) {
 
-	/* no current owner or owned by this thread */
+	// no current owner or owned by this thread 
 	PRThread * t = PR_CurrentThread();
 	if(cookie_lock_owner == NULL || cookie_lock_owner == t) {
 	    cookie_lock_owner = t;
@@ -1100,19 +1105,21 @@ net_lock_cookie_list(void)
 	    return;
 	}
 
-	/* owned by someone else -- wait till we can get it */
+	// owned by someone else -- wait till we can get it 
 	PR_Wait(cookie_lock_monitor, PR_INTERVAL_NO_TIMEOUT);
 
     }
 }
+*/
 
+/*
 PRIVATE void
 net_unlock_cookie_list(void)
 {
    PR_EnterMonitor(cookie_lock_monitor);
 
 #ifdef DEBUG
-    /* make sure someone doesn't try to free a lock they don't own */
+    // make sure someone doesn't try to free a lock they don't own 
     PR_ASSERT(cookie_lock_owner == PR_CurrentThread());
 #endif
 
@@ -1125,7 +1132,9 @@ net_unlock_cookie_list(void)
     PR_ExitMonitor(cookie_lock_monitor);
 
 }
+*/
 
+/*
 #if defined(CookieManagement)
 static PRMonitor * defer_cookie_lock_monitor = NULL;
 static PRThread  * defer_cookie_lock_owner = NULL;
@@ -1142,7 +1151,7 @@ net_lock_defer_cookie_list(void)
 
     while(TRUE) {
 
-	/* no current owner or owned by this thread */
+	// no current owner or owned by this thread 
 	PRThread * t = PR_CurrentThread();
 	if(defer_cookie_lock_owner == NULL || defer_cookie_lock_owner == t) {
 	    defer_cookie_lock_owner = t;
@@ -1152,19 +1161,20 @@ net_lock_defer_cookie_list(void)
 	    return;
 	}
 
-	/* owned by someone else -- wait till we can get it */
+	// owned by someone else -- wait till we can get it 
 	PR_Wait(defer_cookie_lock_monitor, PR_INTERVAL_NO_TIMEOUT);
 
     }
 }
-
+*/
+/*
 PRIVATE void
 net_unlock_defer_cookie_list(void)
 {
    PR_EnterMonitor(defer_cookie_lock_monitor);
 
 #ifdef DEBUG
-    /* make sure someone doesn't try to free a lock they don't own */
+    // make sure someone doesn't try to free a lock they don't own 
     PR_ASSERT(defer_cookie_lock_owner == PR_CurrentThread());
 #endif
 
@@ -1177,7 +1187,9 @@ net_unlock_defer_cookie_list(void)
     PR_ExitMonitor(defer_cookie_lock_monitor);
 
 }
+*/
 
+/*
 static PRMonitor * cookie_permission_lock_monitor = NULL;
 static PRThread  * cookie_permission_lock_owner = NULL;
 static int cookie_permission_lock_count = 0;
@@ -1193,7 +1205,7 @@ net_lock_cookie_permission_list(void)
 
     while(TRUE) {
 
-	/* no current owner or owned by this thread */
+	// no current owner or owned by this thread 
 	PRThread * t = PR_CurrentThread();
 	if(cookie_permission_lock_owner == NULL || cookie_permission_lock_owner == t) {
 	    cookie_permission_lock_owner = t;
@@ -1203,19 +1215,21 @@ net_lock_cookie_permission_list(void)
 	    return;
 	}
 
-	/* owned by someone else -- wait till we can get it */
+	// owned by someone else -- wait till we can get it 
 	PR_Wait(cookie_permission_lock_monitor, PR_INTERVAL_NO_TIMEOUT);
 
     }
 }
+*/
 
+/*
 PRIVATE void
 net_unlock_cookie_permission_list(void)
 {
    PR_EnterMonitor(cookie_permission_lock_monitor);
 
 #ifdef DEBUG
-    /* make sure someone doesn't try to free a lock they don't own */
+    // make sure someone doesn't try to free a lock they don't own 
     PR_ASSERT(cookie_permission_lock_owner == PR_CurrentThread());
 #endif
 
@@ -1228,7 +1242,9 @@ net_unlock_cookie_permission_list(void)
     PR_ExitMonitor(cookie_permission_lock_monitor);
 
 }
+*/
 
+/*
 PRIVATE int
 net_SaveCookiePermissions(char * filename);
 
@@ -1237,10 +1253,9 @@ net_FreeCookiePermission
     (net_CookiePermissionStruct * cookie_permission, Bool save)
 {
 
-    /*
-     * This routine should only be called while holding the
-     * cookie permission list lock
-     */
+    // This routine should only be called while holding the
+    // cookie permission list lock
+     
 
     if(!cookie_permission) {
 	return;
@@ -1249,7 +1264,7 @@ net_FreeCookiePermission
     PR_FREEIF(cookie_permission->host);
 
 #ifdef TRUST_LABELS
-    /* free the entries on the trust list */
+    // free the entries on the trust list 
     if ( cookie_permission->TrustList ) {
         TrustEntry * TEntry;
         XP_List *Tptr = cookie_permission->TrustList;
@@ -1257,7 +1272,7 @@ net_FreeCookiePermission
             PR_FREEIF(TEntry->CookieName);
             PR_FREEIF(TEntry->by);
             PR_FREEIF(TEntry->CookieSet);
-            /* before removing the current entry get the ptr to the next one */
+            // before removing the current entry get the ptr to the next one 
             Tptr = Tptr->prev;
             XP_ListRemoveObject(cookie_permission->TrustList, TEntry);
         }
@@ -1271,15 +1286,16 @@ net_FreeCookiePermission
 	net_SaveCookiePermissions(NULL);
     }
 }
-
+*/
 /* blows away all cookie permissions currently in the list */
+/*
 PRIVATE void
 net_RemoveAllCookiePermissions()
 {
     net_CookiePermissionStruct * victim;
     XP_List * cookiePermissionList;
 
-    /* check for NULL or empty list */
+    // check for NULL or empty list 
     net_lock_cookie_permission_list();
     cookiePermissionList = net_cookie_permission_list;
 
@@ -1298,11 +1314,12 @@ net_RemoveAllCookiePermissions()
     net_unlock_cookie_permission_list();
 }
 #endif
-
+*/
 
 /* This should only get called while holding the cookie-lock
 **
 */
+/*
 PRIVATE void
 net_FreeCookie(net_CookieStruct * cookie)
 {
@@ -1310,10 +1327,9 @@ net_FreeCookie(net_CookieStruct * cookie)
 	if(!cookie)
 		return;
 #ifdef TRUST_LABELS
-        /*
-         * delete the reference to the cookie in the cookie permission list
-         * which contains the trust label for the cookie
-         */
+        // delete the reference to the cookie in the cookie permission list
+        //which contains the trust label for the cookie
+        
         DeleteCookieFromPermissions(cookie->host, cookie->name );
 #endif
 	XP_ListRemoveObject(net_cookie_list, cookie);
@@ -1327,8 +1343,8 @@ net_FreeCookie(net_CookieStruct * cookie)
 
 	cookies_changed = TRUE;
 }
-
-
+*/
+/*
 PUBLIC void
 NET_DeleteCookie(char* cookieURL)
 {
@@ -1353,18 +1369,19 @@ NET_DeleteCookie(char* cookieURL)
     PR_FREEIF(cookieURL2);
     net_unlock_cookie_list();
 }
-
+*/
 
 /* blows away all cookies currently in the list, then blows away the list itself
  * nulling it after it's free'd
  */
+/*
 PRIVATE void
 net_RemoveAllCookies()
 {
 	net_CookieStruct * victim;
 	XP_List * cookieList;
 
-	/* check for NULL or empty list */
+	// check for NULL or empty list 
 	net_lock_cookie_list();
 	cookieList = net_cookie_list;
 	if(XP_ListIsEmpty(cookieList)) {
@@ -1380,7 +1397,9 @@ net_RemoveAllCookies()
 	net_cookie_list = NULL;
 	net_unlock_cookie_list();
 }
+*/
 
+/*
 PUBLIC void
 NET_RemoveAllCookies()
 {
@@ -1421,10 +1440,12 @@ net_remove_oldest_cookie(void)
 	  }
 	net_unlock_cookie_list();
 }
+*/
 
 /* Remove any expired cookies from memory 
 ** This routine should only be called while holding the cookie list lock
 */
+/*
 PRIVATE void
 net_remove_expired_cookies(void)
 {
@@ -1437,21 +1458,23 @@ net_remove_expired_cookies(void)
 
     while((cookie_s = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0)
       {
-		/* Don't get rid of expire time 0 because these need to last for 
-		 * the entire session. They'll get cleared on exit.
-		 */
+		// Don't get rid of expire time 0 because these need to last for 
+		 // the entire session. They'll get cleared on exit.
+		 //
 		if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
 			net_FreeCookie(cookie_s);
-			/* Reset the list_ptr to the beginning of the list.
-			 * Do this because list_ptr's object was just freed
-			 * by the call to net_FreeCookie struct, even
-			 * though it's inefficient.
-			 */
+			// Reset the list_ptr to the beginning of the list.
+			 // Do this because list_ptr's object was just freed
+			 // by the call to net_FreeCookie struct, even
+			 // though it's inefficient.
+		
 			list_ptr = net_cookie_list;
 		}
 	  }
 }
+*/
 
+/*
 PRIVATE XP_List * net_dormant_cookie_list=0;
 Bool net_anonymous = FALSE;
 
@@ -1467,6 +1490,8 @@ NET_AnonymizeCookies()
     }
 }
 
+
+
 PUBLIC void
 NET_UnanonymizeCookies()
 {
@@ -1479,26 +1504,17 @@ NET_UnanonymizeCookies()
 	net_anonymous = FALSE;
     }
 }
-
+*/
 /*
  * Determine whether or not to suppress the referer field for anonymity.
  * The first time this function is called on behalf of a given window
  * after a mode change (into or out of anonymous mode), the returned value is
  * true.
  */
+
 PUBLIC Bool
 NET_SupressRefererForAnonymity(MWContext *window_id) {
-   MWContext *outermost_window = window_id;
-   Bool result;
-   if (!window_id) {
-      return FALSE;
-   }
-   while (outermost_window->grid_parent) {
-      outermost_window = outermost_window->grid_parent;
-   }
-   result = (window_id->anonymous != net_anonymous);
-   window_id->anonymous = net_anonymous;
-   return result;
+   return FALSE;
 }
 
 /* checks to see if the maximum number of cookies per host
@@ -1506,6 +1522,7 @@ NET_SupressRefererForAnonymity(MWContext *window_id) {
  * case
  * This routine should only be called while holding the cookie lock
  */
+/*
 PRIVATE void
 net_CheckForMaxCookiesFromHost(const char * cur_host)
 {
@@ -1534,11 +1551,12 @@ net_CheckForMaxCookiesFromHost(const char * cur_host)
         net_FreeCookie(oldest_cookie);
 	  }
 }
-
+*/
 
 /* search for previous exact match
 ** This routine should only be called while holding the cookie lock
 */
+/*
 PRIVATE net_CookieStruct *
 net_CheckForPrevCookie(char * path,
                    char * hostname,
@@ -1557,8 +1575,9 @@ net_CheckForPrevCookie(char * path,
     }
     return(NULL);
 }
-
+*/
 /* cookie utility functions */
+/*
 PRIVATE void
 NET_SetCookieBehaviorPref(NET_CookieBehaviorEnum x)
 {
@@ -1572,7 +1591,8 @@ NET_SetCookieBehaviorPref(NET_CookieBehaviorEnum x)
 #endif
 	}
 }
-
+*/
+/*
 PRIVATE void
 NET_SetCookieWarningPref(Bool x)
 {
@@ -1639,18 +1659,18 @@ NET_CookieScriptPrefChanged(const char * newpref, void * data)
     NET_SetCookieScriptPref(s);
     return PREF_NOERROR;
 }
- 
+*/
+/*
 #if defined(CookieManagement)
 
-/*
- * search if permission already exists
- */
+ // search if permission already exists
+ 
 PRIVATE net_CookiePermissionStruct *
 net_CheckForCookiePermission(char * hostname) {
     XP_List * list_ptr;
     net_CookiePermissionStruct * cookie_s;
 
-    /* ignore leading period in host name */
+    // ignore leading period in host name 
     while (hostname && (*hostname == '.')) {
 	hostname++;
     }
@@ -1667,6 +1687,7 @@ net_CheckForCookiePermission(char * hostname) {
     net_unlock_cookie_permission_list();
     return(NULL);
 }
+*/
 
 /*
  * return:
@@ -1674,6 +1695,7 @@ net_CheckForCookiePermission(char * hostname) {
  *   0 if cookie permission does not exist for host
  *  -1 if cookie permission exists for host and indicates host can't set cookies
  */
+/*
 PUBLIC int
 NET_CookiePermission(char* URLName) {
     net_CookiePermissionStruct * cookiePermission;
@@ -1684,10 +1706,10 @@ NET_CookiePermission(char* URLName) {
 	return 0;
     }
 
-    /* remove protocol from URL name */
+    // remove protocol from URL name 
     host = NET_ParseURL(URLName, GET_HOST_PART);
 
-    /* remove port number from URL name */
+    // remove port number from URL name 
     colon = PL_strchr(host, ':');
     if(colon) {
         *colon = '\0';
@@ -1707,9 +1729,10 @@ NET_CookiePermission(char* URLName) {
 }
 
 #endif
-
+*/
 /* called from mkgeturl.c, NET_InitNetLib(). This sets the module local cookie pref variables
    and registers the callbacks */
+/*
 PUBLIC void
 NET_RegisterCookiePrefCallbacks(void)
 {
@@ -1736,13 +1759,14 @@ NET_RegisterCookiePrefCallbacks(void)
 	NET_SetCookieScriptPref(s);
 	PREF_RegisterCallback(pref_scriptName, NET_CookieScriptPrefChanged, NULL);
 }
-
+*/
 /* returns TRUE if authorization is required
 ** 
 **
 ** IMPORTANT:  Now that this routine is mutli-threaded it is up
 **             to the caller to free any returned string
 */
+/*
 PUBLIC char *
 NET_GetCookie(MWContext * context, char * address)
 {
@@ -1757,18 +1781,18 @@ NET_GetCookie(MWContext * context, char * address)
 	int host_length;
 	int domain_length;
 
-	/* return string to build */
+	// return string to build 
 	char * rv=0;
 
-	/* disable cookie's if the user's prefs say so
-	 */
+	// disable cookie's if the user's prefs say so
+	
 	if(NET_GetCookieBehaviorPref() == NET_DontUse)
 		return NULL;
 
 	HG98476
 
-	/* search for all cookies
-	 */
+	// search for all cookies
+
 	net_lock_cookie_list();
 	list_ptr = net_cookie_list;
     while((cookie_s = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0)
@@ -1776,19 +1800,19 @@ NET_GetCookie(MWContext * context, char * address)
 		if(!cookie_s->host)
 			continue;
 
-		/* check the host or domain first
-		 */
+		// check the host or domain first
+		
 		if(cookie_s->is_domain)
 		  {
 			char *cp;
 			domain_length = PL_strlen(cookie_s->host);
 
-			/* calculate the host length by looking at all characters up to
-			 * a colon or '\0'.  That way we won't include port numbers
-			 * in domains
-			 */
+			// calculate the host length by looking at all characters up to
+			 // a colon or '\0'.  That way we won't include port numbers
+			//in domains
+			
 			for(cp=host; *cp != '\0' && *cp != ':'; cp++)
-				; /* null body */ 
+				; // null body  
 
 			host_length = cp - host;
 			if(domain_length > host_length 
@@ -1797,47 +1821,47 @@ NET_GetCookie(MWContext * context, char * address)
 								domain_length))
 			  {
 				HG20476
-				/* no match. FAIL 
-				 */
+				//no match. FAIL 
+		
 				continue;
 			  }
 			
 		  }
 		else if(PL_strcasecmp(host, cookie_s->host))
 		  {
-			/* hostname matchup failed. FAIL
-			 */
+			//hostname matchup failed. FAIL
+	
 			continue;
 		  }
 
-        /* shorter strings always come last so there can be no
-         * ambiquity
-         */
+        // shorter strings always come last so there can be no
+         // ambiquity
+      
         if(cookie_s->path && !PL_strncmp(path,
                                          cookie_s->path,
                                          PL_strlen(cookie_s->path)))
           {
 
-			/* if the cookie is secure and the path isn't
-			 * dont send it
-			 */
+			// if the cookie is secure and the path isn't
+			// dont send it
+			
 			HG83764
 			
-			/* check for expired cookies
-			 */
+			// check for expired cookies
+			//
 			if( cookie_s->expires && (cookie_s->expires < cur_time) )
 			  {
-				/* expire and remove the cookie 
-				 */
+				//expire and remove the cookie 
+				
 		   		net_FreeCookie(cookie_s);
 
-				/* start the list parsing over :(
-				 * we must also start the string over
-				 */
+				// start the list parsing over :(
+				//we must also start the string over
+				
 				PR_FREEIF(rv);
 				rv = NULL;
 				list_ptr = net_cookie_list;
-				first = TRUE; /* reset first */
+				first = TRUE; // reset first 
 				continue;
 			  }
 
@@ -1853,9 +1877,9 @@ NET_GetCookie(MWContext * context, char * address)
             	StrAllocCat(name, "=");
 
 #ifdef PREVENT_DUPLICATE_NAMES
-				/* make sure we don't have a previous
-				 * name mapping already in the string
-				 */
+				// make sure we don't have a previous
+				 // name mapping already in the string
+			//
 				if(!rv || !PL_strstr(rv, name))
 			      {	
             	    StrAllocCat(rv, name);
@@ -1864,7 +1888,7 @@ NET_GetCookie(MWContext * context, char * address)
 #else
             	StrAllocCat(rv, name);
                 StrAllocCat(rv, cookie_s->cookie);
-#endif /* PREVENT_DUPLICATE_NAMES */
+#endif // PREVENT_DUPLICATE_NAMES 
 			  }
 			else
 			  {
@@ -1874,19 +1898,19 @@ NET_GetCookie(MWContext * context, char * address)
 	  }
 
 #if defined(MOZ_BRPROF)
-    /*
-     * Okay, this is a horrible hack. It looks for a URL with
-     * 'iiop/BRPROF' in it (our little browsing profile reader), and
-     * if it finds it, it uploads the browsing profile cookie.
-     *
-     * The _real_ way to do this would be to
-     *
-     * 1) See if the user has enabled the preference to even allow us
-     *    to send out the cookie to _anyone_.
-     *
-     * 2) See if the specific site has asked for and received
-     *    permission to be sent the cookie.
-     */
+  
+     // Okay, this is a horrible hack. It looks for a URL with
+     // 'iiop/BRPROF' in it (our little browsing profile reader), and
+     //if it finds it, it uploads the browsing profile cookie.
+    //
+     // The _real_ way to do this would be to
+    //
+     // 1) See if the user has enabled the preference to even allow us
+     //    to send out the cookie to _anyone_.
+     //
+     // 2) See if the specific site has asked for and received
+     //    permission to be sent the cookie.
+     //
     if (PL_strstr(address, "iiop/BRPROF")) {
       extern PRBool BP_GetProfile(char* *aProfileCookie);
       char* profile;
@@ -1905,19 +1929,19 @@ NET_GetCookie(MWContext * context, char * address)
 	PR_Free(path);
 	PR_Free(host);
 
-	/* may be NULL */
+	// may be NULL 
 	return(rv);
 }
-
+*/
+/*
 #if defined(CookieManagement)
 void
 net_AddCookiePermission
 	(net_CookiePermissionStruct * cookie_permission, Bool save ) {
 
-    /*
-     * This routine should only be called while holding the
-     * cookie permission list lock
-     */
+    // This routine should only be called while holding the
+    // cookie permission list lock
+   //
     if (cookie_permission) {
 	XP_List * list_ptr = net_cookie_permission_list;
 	if(!net_cookie_permission_list) {
@@ -1931,7 +1955,7 @@ net_AddCookiePermission
 	}
 
 #ifdef alphabetize
-	/* add it to the list in alphabetical order */
+	// add it to the list in alphabetical order 
 	{
 	    net_CookiePermissionStruct * tmp_cookie_permission;
 	    Bool permissionAdded = FALSE;
@@ -1953,7 +1977,7 @@ net_AddCookiePermission
 	    }
 	}
 #else
-	/* add it to the end of the list */
+	// add it to the end of the list 
 	XP_ListAddObjectToEnd (net_cookie_permission_list, cookie_permission);
 #endif
 
@@ -1963,7 +1987,9 @@ net_AddCookiePermission
 	}
     }
 }
+*/
 
+/*
 MODULE_PRIVATE PRBool
 net_CookieIsFromHost(net_CookieStruct *cookie_s, char *host) {
     if (!cookie_s || !(cookie_s->host)) {
@@ -1975,16 +2001,16 @@ net_CookieIsFromHost(net_CookieStruct *cookie_s, char *host) {
 
         domain_length = PL_strlen(cookie_s->host);
 
-        /* calculate the host length by looking at all characters up to
-         * a colon or '\0'.  That way we won't include port numbers
-         * in domains
-         */
+        // calculate the host length by looking at all characters up to
+        // a colon or '\0'.  That way we won't include port numbers
+        // in domains
+         //
         for(cp=host; *cp != '\0' && *cp != ':'; cp++) {
-            ; /* null body */
+            ; // null body 
         }
         host_length = cp - host;
 
-        /* compare the tail end of host to cook_s->host */
+        // compare the tail end of host to cook_s->host
         return (domain_length <= host_length &&
                 PL_strncasecmp(cookie_s->host,
                     &host[host_length - domain_length],
@@ -1993,8 +2019,10 @@ net_CookieIsFromHost(net_CookieStruct *cookie_s, char *host) {
         return PL_strcasecmp(host, cookie_s->host) == 0;
     }
 }
+*/
 
 /* find out how many cookies this host has already set */
+/*
 PRIVATE int
 net_CookieCount(char * host) {
     int count = 0;
@@ -2012,7 +2040,8 @@ net_CookieCount(char * host) {
 
     return count;
 }
-
+*/
+/*
 PUBLIC int
 NET_CookieCount(char * URLName) {
     char * host;
@@ -2023,26 +2052,27 @@ NET_CookieCount(char * URLName) {
 	return 0;
     }
 
-    /* remove protocol from URL name */
+    // remove protocol from URL name 
     host = NET_ParseURL(URLName, GET_HOST_PART);
 
-    /* remove port number from URL name */
+    // remove port number from URL name 
     colon = PL_strchr(host, ':');
     if(colon) {
         *colon = '\0';
     }
 
-    /* get count */
+    // get count 
     count = net_CookieCount(host);
 
-    /* free up allocated string and return */
+    // free up allocated string and return 
     if(colon) {
         *colon = ':';
     }
     PR_Free(host);
     return count;
 }
-
+*/
+/*
 PRBool net_IntSetCookieStringInUse = FALSE;
 
 PRIVATE void
@@ -2070,7 +2100,8 @@ net_DeferCookie(
 	XP_ListAddObject(net_defer_cookie_list, defer_cookie);
 	net_unlock_defer_cookie_list();
 }
-
+*/
+/*
 PRIVATE void
 net_IntSetCookieString(MWContext * context,
 					char * cur_url,
@@ -2097,11 +2128,11 @@ net_UndeferCookies() {
 	PR_Free(defer_cookie);
 }
 #endif
-
+*/
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
 */
-
+/*
 PRIVATE void
 net_IntSetCookieString(MWContext * context,
 					char * cur_url,
@@ -2127,9 +2158,9 @@ net_IntSetCookieString(MWContext * context,
 		return;
 	}
 
-	/* Only allow cookies to be set in the listed contexts. We
-	 * don't want cookies being set in html mail. 
-	 */
+	// Only allow cookies to be set in the listed contexts. We
+	 // don't want cookies being set in html mail. 
+	 
 	type = context->type;
 	if(!( (type == MWContextBrowser)
 		|| (type == MWContextHTMLHelp)
@@ -2146,10 +2177,10 @@ net_IntSetCookieString(MWContext * context,
 	}
 
 #if defined(CookieManagement)
-	/* Don't enter this routine if it is already in use by another
-	   thread.  Otherwise the "remember this decision" result of the
-	   other cookie (which came first) won't get applied to this cookie.
-	 */
+	// Don't enter this routine if it is already in use by another
+	// thread.  Otherwise the "remember this decision" result of the
+	// other cookie (which came first) won't get applied to this cookie.
+	
 	if (net_IntSetCookieStringInUse) {
 		PR_Free(cur_path);
 		PR_Free(cur_host);
@@ -2160,37 +2191,37 @@ net_IntSetCookieString(MWContext * context,
 #endif
 
 	HG87358
-	/* terminate at any carriage return or linefeed */
+	// terminate at any carriage return or linefeed 
 	for(ptr=set_cookie_header; *ptr; ptr++)
 		if(*ptr == LF || *ptr == CR) {
 			*ptr = '\0';
 			break;
 		}
 
-	/* parse path and expires attributes from header if
- 	 * present
-	 */
+	// parse path and expires attributes from header if
+ 	 //present
+	//
 	semi_colon = PL_strchr(set_cookie_header, ';');
 
 	if(semi_colon)
 	  {
-		/* truncate at semi-colon and advance 
-		 */
+		// truncate at semi-colon and advance 
+		//
 		*semi_colon++ = '\0';
 
-		/* there must be some attributes. (hopefully)
-		 */
+		// there must be some attributes. (hopefully)
+	//
 		HG83476
 
-		/* look for the path attribute
-		 */
+		// look for the path attribute
+		 //
 		ptr = PL_strcasestr(semi_colon, "path=");
 
 		if(ptr) {
-			/* allocate more than we need */
+			// allocate more than we need 
 			StrAllocCopy(path_from_header, XP_StripLine(ptr+5));
-			/* terminate at first space or semi-colon
-			 */
+			// terminate at first space or semi-colon
+		//
 			for(ptr=path_from_header; *ptr != '\0'; ptr++)
 				if(NET_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
 					*ptr = '\0';
@@ -2198,13 +2229,13 @@ net_IntSetCookieString(MWContext * context,
 				  }
 		  }
 
-		/* look for the URI or URL attribute
-		 *
-		 * This might be a security hole so I'm removing
-		 * it for now.
-		 */
+		// look for the URI or URL attribute
+		 
+		 // This might be a security hole so I'm removing
+		 // it for now.
+		 
 
-		/* look for a domain */
+		// look for a domain 
         ptr = PL_strcasestr(semi_colon, "domain=");
 
         if(ptr) {
@@ -2212,34 +2243,34 @@ net_IntSetCookieString(MWContext * context,
 			char *dot, *colon;
 			int domain_length, cur_host_length;
 
-            /* allocate more than we need */
+            // allocate more than we need 
 			StrAllocCopy(domain_from_header, XP_StripLine(ptr+7));
 
-            /* terminate at first space or semi-colon
-             */
+            // terminate at first space or semi-colon
+             //
             for(ptr=domain_from_header; *ptr != '\0'; ptr++)
                 if(NET_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
                     *ptr = '\0';
                     break;
                   }
 
-            /* verify that this host has the authority to set for
-             * this domain.   We do this by making sure that the
-             * host is in the domain
-             * We also require that a domain have at least two
-             * periods to prevent domains of the form ".com"
-             * and ".edu"
-			 *
-			 * Also make sure that there is more stuff after
-			 * the second dot to prevent ".com."
-             */
+            // verify that this host has the authority to set for
+            // this domain.   We do this by making sure that the
+             // host is in the domain
+             // We also require that a domain have at least two
+             // periods to prevent domains of the form ".com"
+             // and ".edu"
+			//
+			// Also make sure that there is more stuff after
+		// the second dot to prevent ".com."
+           
             dot = PL_strchr(domain_from_header, '.');
 			if(dot)
                 dot = PL_strchr(dot+1, '.');
 
 			if(!dot || *(dot+1) == '\0') {
-				/* did not pass two dot test. FAIL
-				 */
+				// did not pass two dot test. FAIL
+				
 				PR_Free(domain_from_header);
 				PR_Free(cur_path);
 				PR_Free(cur_host);
@@ -2251,9 +2282,9 @@ net_IntSetCookieString(MWContext * context,
 				return;
 			  }
 
-			/* strip port numbers from the current host
-			 * for the domain test
-			 */
+			// strip port numbers from the current host
+			 // for the domain test
+			
 			colon = PL_strchr(cur_host, ':');
 			if(colon)
 			   *colon = '\0';
@@ -2261,8 +2292,8 @@ net_IntSetCookieString(MWContext * context,
 			domain_length   = PL_strlen(domain_from_header);
 			cur_host_length = PL_strlen(cur_host);
 
-			/* check to see if the host is in the domain
-			 */
+			// check to see if the host is in the domain
+			//
 			if(domain_length > cur_host_length
 				|| PL_strcasecmp(domain_from_header, 
 							   &cur_host[cur_host_length-domain_length]))
@@ -2279,15 +2310,15 @@ net_IntSetCookieString(MWContext * context,
 				return;
               }
 
-/*
- * check that portion of host not in domain does not contain a dot
- *    This satisfies the fourth requirement in section 4.3.2 of the cookie
- *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
- *    It prevents host of the form x.y.co.nz from setting cookies in the
- *    entire .co.nz domain.  Note that this doesn't really solve the problem,
- *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
- *    cookies for the entire .co.nz domain.
- */
+
+ // check that portion of host not in domain does not contain a dot
+ //    This satisfies the fourth requirement in section 4.3.2 of the cookie
+ //   spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
+ //    It prevents host of the form x.y.co.nz from setting cookies in the
+ //    entire .co.nz domain.  Note that this doesn't really solve the problem,
+ //    it justs makes it more unlikely.  Sites such as y.co.nz can still set
+ //    cookies for the entire .co.nz domain.
+ //
 
 			cur_host[cur_host_length-domain_length] = '\0';
 			dot = XP_STRCHR(cur_host, '.');
@@ -2305,8 +2336,8 @@ net_IntSetCookieString(MWContext * context,
 				return;
 			}
 
-			/* all tests passed, copy in domain to hostname field
-			 */
+			// all tests passed, copy in domain to hostname field
+			
 			StrAllocCopy(host_from_header, domain_from_header);
 			is_domain = TRUE;
 
@@ -2315,16 +2346,16 @@ net_IntSetCookieString(MWContext * context,
 			PR_Free(domain_from_header);
           }
 
-		/* now search for the expires header 
-		 * NOTE: that this part of the parsing
-		 * destroys the original part of the string
-		 */
+		// now search for the expires header 
+		// NOTE: that this part of the parsing
+		// destroys the original part of the string
+		 //
 		ptr = PL_strcasestr(semi_colon, "expires=");
 
 		if(ptr) {
 			char *date =  ptr+8;
-			/* terminate the string at the next semi-colon
-			 */
+			// terminate the string at the next semi-colon
+		
 			for(ptr=date; *ptr != '\0'; ptr++)
 				if(*ptr == ';') {
 					*ptr = '\0';
@@ -2340,9 +2371,9 @@ net_IntSetCookieString(MWContext * context,
 	  }
 
 	if(!path_from_header) {
-        /* strip down everything after the last slash
-         * to get the path.
-         */
+       // strip down everything after the last slash
+        // to get the path.
+        
         char * slash = PL_strrchr(cur_path, '/');
         if(slash)
             *slash = '\0';
@@ -2357,11 +2388,11 @@ net_IntSetCookieString(MWContext * context,
 	else
 		PR_Free(cur_host);
 
-	/* keep cookies under the max bytes limit */
+	// keep cookies under the max bytes limit 
 	if(PL_strlen(set_cookie_header) > MAX_BYTES_PER_COOKIE)
 		set_cookie_header[MAX_BYTES_PER_COOKIE-1] = '\0';
 
-	/* separate the name from the cookie */
+	// separate the name from the cookie 
 	equal = PL_strchr(set_cookie_header, '=');
 
 	if(equal) {
@@ -2374,7 +2405,7 @@ net_IntSetCookieString(MWContext * context,
 		StrAllocCopy(name_from_header, "");
 	  }
 
-    /* If there's a script, call it now */
+    // If there's a script, call it now 
     script_name = NET_GetCookieScriptPref();
     if( (const char *)0 != script_name ) {
         JSCFCookieData *cd;
@@ -2387,8 +2418,8 @@ net_IntSetCookieString(MWContext * context,
             PR_FREEIF(host_from_header);
             PR_FREEIF(name_from_header);
             PR_FREEIF(cookie_from_header);
-            /* FREEIF(cur_path); */
-            /* FREEIF(cur_host); */
+            // FREEIF(cur_path);
+            // FREEIF(cur_host);
 #if defined(CookieManagement)
             net_IntSetCookieStringInUse = FALSE;
             net_UndeferCookies();
@@ -2407,12 +2438,11 @@ net_IntSetCookieString(MWContext * context,
         cd->prompt = NET_GetCookieWarningPref();
         cd->preference = NET_GetCookieBehaviorPref();
 
-	/*
-	 * This is only safe to do from the mozilla thread
-	 *   since it might do file I/O and uses the preferences
-	 *   global context + objects.
-	 */
-        /* XXX:  This is probably not correct, but it will fix the build for now... */
+	//This is only safe to do from the mozilla thread
+	 //   since it might do file I/O and uses the preferences
+	//   global context + objects.
+	 //
+        // XXX:  This is probably not correct, but it will fix the build for now... 
         result= JSCF_Execute(context, script_name, cd, &changed);
 		if( result != JSCF_error) {
 			if( changed ) {
@@ -2435,7 +2465,7 @@ net_IntSetCookieString(MWContext * context,
 			  if( cd->expires != expires )
 				  expires = cd->expires;
 			  if( cd->domain != is_domain )
-				  /* lets hope the luser remembered to change the domain field */
+				  //lets hope the luser remembered to change the domain field 
 				  is_domain = cd->domain;
 			  HG27398
 			}
@@ -2446,8 +2476,8 @@ net_IntSetCookieString(MWContext * context,
 					PR_FREEIF(name_from_header);
 					PR_FREEIF(cookie_from_header);
 					PR_Free(cd);
-					/* FREEIF(cur_path); */
-					/* FREEIF(cur_host); */
+					// FREEIF(cur_path);
+					// FREEIF(cur_host); 
 #if defined(CookieManagement)
 					net_IntSetCookieStringInUse = FALSE;
 					net_UndeferCookies();
@@ -2485,10 +2515,10 @@ net_IntSetCookieString(MWContext * context,
  
 
 	if( (NET_GetCookieWarningPref() || ask) && !accept ) {
-		/* the user wants to know about cookies so let them
-		 * know about every one that is set and give them
-		 * the choice to accept it or not
-		 */
+		// the user wants to know about cookies so let them
+		 // know about every one that is set and give them
+		 //the choice to accept it or not
+		 //
 		char * new_string=0;
 #if defined(CookieManagement)
 		int count;
@@ -2496,7 +2526,7 @@ net_IntSetCookieString(MWContext * context,
 		StrAllocCopy
 		    (remember_string, XP_GetString(MK_ACCESS_COOKIES_REMEMBER));
 
-		/* find out how many cookies this host has already set */
+		// find out how many cookies this host has already set 
 		count = net_CookieCount(host_from_header);
 		net_lock_cookie_list();
 		prev_cookie = net_CheckForPrevCookie
@@ -2549,10 +2579,10 @@ net_IntSetCookieString(MWContext * context,
 		StrAllocCat(new_string, XP_GetString(MK_ACCESS_COOKIES_SET_IT));
 #endif
 
-		/* 
-		 * Who knows what thread we are on.  Only the mozilla thread
-		 *   is allowed to post dialogs so, if need be, go over there
-		 */
+		//
+		// Who knows what thread we are on.  Only the mozilla thread
+		 //  is allowed to post dialogs so, if need be, go over there
+		 //
 #if defined(CookieManagement)
 
 	    {
@@ -2571,11 +2601,11 @@ net_IntSetCookieString(MWContext * context,
                     if (cookie_permission) {
                         net_lock_cookie_permission_list();
                         StrAllocCopy(host_from_header2, host_from_header);
-                        /* ignore leading periods in host name */
+                        //ignore leading periods in host name 
                         while (host_from_header2 && (*host_from_header2 == '.')) {
                             host_from_header2++;
                         }
-                        cookie_permission->host = host_from_header2; /* set host string */
+                        cookie_permission->host = host_from_header2; // set host string 
                         cookie_permission->permission = userHasAccepted;
 #ifdef TRUST_LABELS
                         cookie_permission->TrustList = NULL;
@@ -2611,13 +2641,12 @@ net_IntSetCookieString(MWContext * context,
 	TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
 					cookie_from_header, host_from_header, path_from_header));
 
-	/* 
-	 * We have decided we are going to insert a cookie into the list
-	 *   Get the cookie lock so that we can munge on the list
-	 */
+	// We have decided we are going to insert a cookie into the list
+	//   Get the cookie lock so that we can munge on the list
+	//
 	net_lock_cookie_list();
 
-	/* limit the number of cookies from a specific host or domain */
+	// limit the number of cookies from a specific host or domain 
 	net_CheckForMaxCookiesFromHost(host_from_header);
 
 	if(XP_ListCount(net_cookie_list) > MAX_NUMBER_OF_COOKIES-1)
@@ -2645,8 +2674,8 @@ net_IntSetCookieString(MWContext * context,
 		net_CookieStruct * tmp_cookie_ptr;
 		size_t new_len;
 
-        /* construct a new cookie_struct
-         */
+        // construct a new cookie_struct
+        //
         prev_cookie = PR_NEW(net_CookieStruct);
         if(!prev_cookie) {
 			PR_FREEIF(path_from_header);
@@ -2661,8 +2690,8 @@ net_IntSetCookieString(MWContext * context,
 			return;
           }
     
-        /* copy
-         */
+        //copy
+        //
         prev_cookie->cookie  = cookie_from_header;
         prev_cookie->name    = name_from_header;
         prev_cookie->path    = path_from_header;
@@ -2689,9 +2718,9 @@ net_IntSetCookieString(MWContext * context,
 			  }
 		  }		
 
-		/* add it to the list so that it is before any strings of
-		 * smaller length
-		 */
+		// add it to the list so that it is before any strings of
+		// smaller length
+	//
 		bCookieAdded = FALSE;
 		new_len = PL_strlen(prev_cookie->path);
 		while((tmp_cookie_ptr = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0) { 
@@ -2702,34 +2731,32 @@ net_IntSetCookieString(MWContext * context,
 			  }
 		  }
 		if ( !bCookieAdded ) {
-			/* no shorter strings found in list */
+			// no shorter strings found in list 
 			XP_ListAddObjectToEnd(net_cookie_list, prev_cookie);
 		}
 	  }
 
-	/* At this point we know a cookie has changed. Write the cookies to file. */
+	//At this point we know a cookie has changed. Write the cookies to file.
 	cookies_changed = TRUE;
 	NET_SaveCookies(NULL);
 	net_unlock_cookie_list();
 #ifdef TRUST_LABELS
     {
         TrustLabel *trustlabel;
-        /*
-         * At this point the cookie was added to
-         * the cookie list.  So see if there is a trust label that
-         * matches the cookie and if so add the trust label to the
-         * cookie permission list.  Existing trust label entries in 
-		 * the permission list replaced with this latest entry.
-         */
+        // At this point the cookie was added to
+        // the cookie list.  So see if there is a trust label that
+         // matches the cookie and if so add the trust label to the
+         // cookie permission list.  Existing trust label entries in 
+		 // the permission list replaced with this latest entry.
+         //
             if ( MatchCookieToLabel2(
                     cur_url, prev_cookie->name,
                     prev_cookie->path, prev_cookie->host, &trustlabel ) ) {
-                /*
-                 * found a match - add the trust info to the proper
-                 * entry in the cookie permission list
-                 */
+                // found a match - add the trust info to the proper
+                 // entry in the cookie permission list
+                 //
                 AddTrustLabelInfo( prev_cookie->name, trustlabel );
-                /* update the disk file */
+                // update the disk file //
                 cookie_permissions_changed = TRUE;
                 net_SaveCookiePermissions(NULL);
             }
@@ -2741,21 +2768,27 @@ net_IntSetCookieString(MWContext * context,
 #endif
 	return;
 }
+*/
 
+/*
 PUBLIC void
 NET_SetCookieString(MWContext * context, 
 					char * cur_url,
 					char * set_cookie_header) {
     net_IntSetCookieString(context, cur_url, set_cookie_header, 0);
 }
+*/
 
 /* Determines whether the inlineHost is in the same domain as the currentHost. For use with rfc 2109
  * compliance/non-compliance. */
+/*
 #ifdef TRUST_LABELS
 PUBLIC int
 #else
 PRIVATE int
 #endif
+*/
+/*
 NET_SameDomain(char * currentHost, char * inlineHost)
 {
 	char * dot = 0;
@@ -2765,7 +2798,7 @@ NET_SameDomain(char * currentHost, char * inlineHost)
 	if(!currentHost || !inlineHost)
 		return 0;
 
-	/* case insensitive compare */
+	// case insensitive compare 
 	if(PL_strcasecmp(currentHost, inlineHost) == 0)
 		return 1;
 
@@ -2775,16 +2808,16 @@ NET_SameDomain(char * currentHost, char * inlineHost)
 	if(!currentDomain || !inlineDomain)
 		return 0;
 	
-	/* check for at least two dots before continuing, if there are
-	   not two dots we don't have enough information to determine
-	   whether or not the inlineDomain is within the currentDomain */
+	// check for at least two dots before continuing, if there are
+	// not two dots we don't have enough information to determine
+	 // whether or not the inlineDomain is within the currentDomain 
 	dot = PL_strchr(inlineDomain, '.');
 	if(dot)
 		dot = PL_strchr(dot+1, '.');
 	else
 		return 0;
 
-	/* handle .com. case */
+	// handle .com. case 
 	if(!dot || (*(dot+1) == '\0') )
 		return 0;
 
@@ -2792,7 +2825,7 @@ NET_SameDomain(char * currentHost, char * inlineHost)
 		return 1;
 	return 0;
 }
-
+*/
 /* This function wrapper wraps NET_SetCookieString for the purposes of 
 ** determining whether or not a cookie is inline (we need the URL struct, 
 ** and outputFormat to do so).  this is called from NET_ParseMimeHeaders 
@@ -2800,6 +2833,7 @@ NET_SameDomain(char * currentHost, char * inlineHost)
 ** This routine does not need to worry about the cookie lock since all of
 **   the work is handled by sub-routines
 */
+/*
 PUBLIC void
 NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 							URL_Struct * URL_s,
@@ -2807,11 +2841,11 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 							char * cur_url,
 							char * set_cookie_header)
 {
-	/* If the outputFormat is not PRESENT (the url is not going to the screen), and not
-	*  SAVE AS (shift-click) then 
-	*  the cookie being set is defined as inline so we need to do what the user wants us
-	*  to based on his preference to deal with foreign cookies. If it's not inline, just set
-	*  the cookie. */
+	// If the outputFormat is not PRESENT (the url is not going to the screen), and not
+	//  SAVE AS (shift-click) then 
+	//  the cookie being set is defined as inline so we need to do what the user wants us
+	//  to based on his preference to deal with foreign cookies. If it's not inline, just set
+	//  the cookie. 
 	char *ptr=NULL, *date=NULL;
 	time_t gmtCookieExpires=0, expires=0;
 
@@ -2819,7 +2853,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	{
 		if (NET_GetCookieBehaviorPref() == NET_DontAcceptForeign)
 		{
-			/* the user doesn't want foreign cookies, check to see if its foreign */
+			// the user doesn't want foreign cookies, check to see if its foreign 
 			char * curSessionHistHost = 0;
 			char * theColon = 0;
 			char * curHost = NET_ParseURL(cur_url, GET_HOST_PART);
@@ -2834,7 +2868,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 				return;
 			}
 
-			/* strip ports */
+			// strip ports 
 			theColon = PL_strchr(curHost, ':');
 			if(theColon)
 			   *theColon = '\0';
@@ -2842,7 +2876,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 			if(theColon)
 				*theColon = '\0';
 
-			/* if it's foreign, get out of here after a little clean up */
+			// if it's foreign, get out of here after a little clean up 
 			if(!NET_SameDomain(curHost, curSessionHistHost))
 			{
 				PR_FREEIF(curHost);	
@@ -2854,12 +2888,12 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 		}
 	}
 
-	/* Determine when the cookie should expire. This is done by taking the difference between 
-	   the server time and the time the server wants the cookie to expire, and adding that 
-	   difference to the client time. This localizes the client time regardless of whether or
-	   not the TZ environment variable was set on the client. */
+	//Determine when the cookie should expire. This is done by taking the difference between 
+	//the server time and the time the server wants the cookie to expire, and adding that 
+	//  difference to the client time. This localizes the client time regardless of whether or
+	 // not the TZ environment variable was set on the client.
 
-	/* Get the time the cookie is supposed to expire according to the attribute*/
+	// Get the time the cookie is supposed to expire according to the attribute
 	ptr = PL_strcasestr(set_cookie_header, "expires=");
 	if(ptr)
 	{
@@ -2884,20 +2918,22 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 		else
 		{
 			gmtCookieExpires = expires - URL_s->server_date + time(NULL);
-			/* if overflow */
+			// if overflow 
 			if( gmtCookieExpires < time(NULL) )
-				gmtCookieExpires = (((unsigned) (~0) << 1) >> 1); /* max int */
+				gmtCookieExpires = (((unsigned) (~0) << 1) >> 1); // max int 
 		}
 	}
 
 	net_IntSetCookieString(context, cur_url, set_cookie_header, gmtCookieExpires);
 }
+*/
 
 #if defined(CookieManagement)
 /* saves the HTTP cookies permissions to disk
  * the parameter passed in on entry is ignored
  * returns 0 on success -1 on failure.
  */
+/*
 PRIVATE int
 net_SaveCookiePermissions(char * filename)
 {
@@ -2937,9 +2973,9 @@ net_SaveCookiePermissions(char * filename)
 	return -1;
     }
 
-    /* format shall be:
-     * host \t permission <optional trust label information >
-     */
+    // format shall be:
+    // host \t permission <optional trust label information >
+   //
     while((cookie_permission_s = (net_CookiePermissionStruct *)
 	    XP_ListNextObject(list_ptr)) != NULL) {
 	len = NET_XP_FileWrite(cookie_permission_s->host, -1, fp);
@@ -2958,7 +2994,7 @@ net_SaveCookiePermissions(char * filename)
 	}
 
 #ifdef TRUST_LABELS
-        /* save the trust label information */
+        // save the trust label information 
         SaveTrustLabelData( cookie_permission_s, fp );
 #endif
 	len = NET_XP_FileWrite(LINEBREAK, -1, fp);
@@ -2969,7 +3005,7 @@ net_SaveCookiePermissions(char * filename)
 	}
     }
 
-    /* save current state of cookie nag-box's checkmark */
+    // save current state of cookie nag-box's checkmark 
     NET_XP_FileWrite("@@@@", -1, fp);
     NET_XP_FileWrite("\t", 1, fp);
     if (cookie_remember_checked) {
@@ -2984,14 +3020,14 @@ net_SaveCookiePermissions(char * filename)
     net_unlock_cookie_permission_list();
     return(0);
 }
-
+*/
 /* reads the HTTP cookies permission from disk
  * the parameter passed in on entry is ignored
  * returns 0 on success -1 on failure.
  *
  */
-#define PERMISSION_LINE_BUFFER_SIZE 4096
-
+//#define PERMISSION_LINE_BUFFER_SIZE 4096
+/*
 PRIVATE int
 net_ReadCookiePermissions(char * filename)
 {
@@ -3005,10 +3041,10 @@ net_ReadCookiePermissions(char * filename)
     if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_READ)))
 	return(-1);
 
-    /* format is:
-     * host \t permission <optional trust label information>
-     * if this format isn't respected we move onto the next line in the file.
-     */
+    // format is:
+     // host \t permission <optional trust label information>
+    // if this format isn't respected we move onto the next line in the file.
+    //
 
     net_lock_cookie_permission_list();
     while(NET_XP_FileReadLine(buffer, PERMISSION_LINE_BUFFER_SIZE, fp)) {
@@ -3016,37 +3052,35 @@ net_ReadCookiePermissions(char * filename)
 	    continue;
 	}
 
-        XP_StripLine(buffer); /* remove '\n' from end of the line */
+        XP_StripLine(buffer); // remove '\n' from end of the line 
 
         host = buffer;
-        /* isolate the host field which is the first field on the line */
+        // isolate the host field which is the first field on the line 
         if( !(p = PL_strchr(host, '\t')) ) {
-            continue; /* no permission field */
+            continue; /* no permission field 
         }
         *p++ = '\0';
         if(*p == CR || *p == LF || *p == 0) {
-            continue; /* no permission field */
+            continue; // no permission field 
 	}
 
-        /* ignore leading periods in host name */
+        // ignore leading periods in host name 
         while (host && (*host == '.')) {
             host++;
 	}
 
-	/*
-         * the first part of the permission file is valid -
-         * allocate a new permission struct and fill it in
-         */
+	// the first part of the permission file is valid -
+        // allocate a new permission struct and fill it in
+         //
         cookie_permission = PR_NEW(net_CookiePermissionStruct);
         if (cookie_permission) {
             host_from_header2 = PL_strdup(host);
             cookie_permission->host = host_from_header2;
 
-            /*
-             *  Now handle the permission field.
-             * a host value of "@@@@" is a special code designating the
-             * state of the cookie nag-box's checkmark
-	     */
+          //  Now handle the permission field.
+            // a host value of "@@@@" is a special code designating the
+             // state of the cookie nag-box's checkmark
+	     //
             permission_value = (!PL_strncmp(p, "TRUE", sizeof("TRUE")-1));
             if (!PL_strcmp(host, "@@@@")) {
                 cookie_remember_checked = permission_value;
@@ -3054,26 +3088,25 @@ net_ReadCookiePermissions(char * filename)
                 cookie_permission->permission = permission_value;
 			
 #ifdef TRUST_LABELS
-                /*
-                 * pick up the trust label information from the line
-                 * and add it to the permission struct
-                 */
+               // pick up the trust label information from the line
+                // and add it to the permission struct
+                //
                 cookie_permission->TrustList = NULL;
                 ParseTrustLabelInfo(p, cookie_permission);
 #endif
 
-                /* add the permission entry */
+                // add the permission entry 
                 net_AddCookiePermission( cookie_permission, FALSE );
             }
-        } /* end if (cookie_permission) */
-    } /* while(NET_XP_FileReadLine( */
+        } // end if (cookie_permission) 
+    } // while(NET_XP_FileReadLine( 
 
     net_unlock_cookie_permission_list();
     NET_XP_FileClose(fp);
     cookie_permissions_changed = FALSE;
     return(0);
 }
-
+*/
 #endif
 
 /* saves out the HTTP cookies to disk
@@ -3083,6 +3116,8 @@ net_ReadCookiePermissions(char * filename)
  * returns 0 on success -1 on failure.
  *
  */
+
+/*
 PUBLIC int
 NET_SaveCookies(char * filename)
 {
@@ -3127,21 +3162,19 @@ NET_SaveCookies(char * filename)
 		return -1;
 	}
 
-	/* format shall be:
- 	 *
-	 * host \t is_domain \t path \t secure \t expires \t name \t cookie
-	 *
-	 * is_domain is TRUE or FALSE
-	 * secure is TRUE or FALSE  
-	 * expires is a time_t integer
-	 * cookie can have tabs
-	 */
+	// format shall be:
+ 	 // host \t is_domain \t path \t secure \t expires \t name \t cookie
+	 //is_domain is TRUE or FALSE
+	// secure is TRUE or FALSE  
+	 // expires is a time_t integer
+	// cookie can have tabs
+	 //
     while((cookie_s = (net_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL)
       {
 		if(cookie_s->expires < cur_date)
-			continue;  /* don't write entry if cookie has expired 
-						* or has no expiration date
-						*/
+			continue;  // don't write entry if cookie has expired 
+					// or has no expiration date
+						//
 
 		len = NET_XP_FileWrite(cookie_s->host, -1, fp);
 		if (len < 0)
@@ -3188,13 +3221,14 @@ NET_SaveCookies(char * filename)
 	net_unlock_cookie_list();
     return(0);
 }
-
+*/
 /* This isn't needed any more */
+/*
 PRIVATE void
 NET_InitRDFCookieResources (void)
 {
 }
-
+*/
 /* reads HTTP cookies from disk
  *
  * on entry pass in the name of the file to read
@@ -3203,8 +3237,8 @@ NET_InitRDFCookieResources (void)
  *
  *
  */
-#define LINE_BUFFER_SIZE 4096
-
+//#define LINE_BUFFER_SIZE 4096
+/*
 PUBLIC int
 NET_ReadCookies(char * filename)
 {
@@ -3226,16 +3260,16 @@ NET_ReadCookies(char * filename)
 	net_lock_cookie_list();
 	list_ptr = net_cookie_list;
 
-    /* format is:
-     *
-     * host \t is_domain \t path \t xxx \t expires \t name \t cookie
-     *
-     * if this format isn't respected we move onto the next line in the file.
-     * is_domain is TRUE or FALSE	-- defaulting to FALSE
-     * xxx is TRUE or FALSE   -- should default to TRUE
-     * expires is a time_t integer
-     * cookie can have tabs
-     */
+    // format is:
+    //
+     // host \t is_domain \t path \t xxx \t expires \t name \t cookie
+     //
+     // if this format isn't respected we move onto the next line in the file.
+     // is_domain is TRUE or FALSE	-- defaulting to FALSE
+     // xxx is TRUE or FALSE   -- should default to TRUE
+     // expires is a time_t integer
+    // cookie can have tabs
+     //
     while(NET_XP_FileReadLine(buffer, LINE_BUFFER_SIZE, fp))
       {
 		added_to_list = FALSE;
@@ -3281,11 +3315,11 @@ NET_ReadCookies(char * filename)
 		if(*cookie == CR || *cookie == LF || *cookie == 0)
 			continue;
 
-		/* remove the '\n' from the end of the cookie */
+		// remove the '\n' from the end of the cookie
 		XP_StripLine(cookie);
 
-        /* construct a new cookie_struct
-         */
+        // construct a new cookie_struct
+         //
         new_cookie = PR_NEW(net_CookieStruct);
         if(!new_cookie)
           {
@@ -3295,8 +3329,8 @@ NET_ReadCookies(char * filename)
 
 		memset(new_cookie, 0, sizeof(net_CookieStruct));
     
-        /* copy
-         */
+        //copy
+         //
         StrAllocCopy(new_cookie->cookie, cookie);
         StrAllocCopy(new_cookie->name, name);
         StrAllocCopy(new_cookie->path, path);
@@ -3320,9 +3354,9 @@ NET_ReadCookies(char * filename)
 			  }
 		  }		
 
-		/* add it to the list so that it is before any strings of
-		 * smaller length
-		 */
+		// add it to the list so that it is before any strings of
+		 // smaller length
+		 //
 		new_len = PL_strlen(new_cookie->path);
 		while((tmp_cookie_ptr = (net_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL)
 		  { 
@@ -3334,7 +3368,7 @@ NET_ReadCookies(char * filename)
 			  }
 		  }
 
-		/* no shorter strings found in list */	
+		// no shorter strings found in list 
 		if(!added_to_list)
 		    XP_ListAddObjectToEnd(net_cookie_list, new_cookie);
 	  }
@@ -3346,7 +3380,7 @@ NET_ReadCookies(char * filename)
 
     return(0);
 }
-
+*/
 
 /* --- New stuff: General auth utils (currently used only by proxy auth) --- */
 
@@ -3853,12 +3887,12 @@ NET_AskForProxyAuth(MWContext * context,
 
 
 #if defined(CookieManagement)
-
+/*
 #include "htmldlgs.h"
 extern int XP_CERT_PAGE_STRINGS;
 extern int SA_REMOVE_BUTTON_LABEL;
 
-/* return TRUE if "number" is in sequence of comma-separated numbers */
+// return TRUE if "number" is in sequence of comma-separated numbers 
 Bool net_InSequence(char* sequence, int number) {
     char* ptr;
     char* endptr;
@@ -3866,34 +3900,34 @@ Bool net_InSequence(char* sequence, int number) {
     Bool retval = FALSE;
     int i;
 
-    /* not necessary -- routine will work even with null sequence */
+    // not necessary -- routine will work even with null sequence 
     if (!*sequence) {
 	return FALSE;
     }
 
     for (ptr = sequence ; ptr ; ptr = endptr) {
 
-	/* get to next comma */
+	// get to next comma 
         endptr = PL_strchr(ptr, ',');
 
-        /* if comma found, process it */
+        // if comma found, process it 
         if (endptr) {
 
-            /* restore last comma-to-null back to comma */
+            // restore last comma-to-null back to comma 
             if (undo) {
                 *undo = ',';
             }
 
-            /* set the comma to a null */
+            // set the comma to a null 
             undo = endptr;
             *endptr++ = '\0';
 
-            /* compare the number before the comma with "number" */
+            // compare the number before the comma with "number" 
             if (*ptr) {
                 i = atoi(ptr);
                 if (i == number) {
 
-                    /* "number" was in the sequence so return TRUE */
+                    // "number" was in the sequence so return TRUE 
                     retval = TRUE;
                     break;
                 }
@@ -3901,13 +3935,15 @@ Bool net_InSequence(char* sequence, int number) {
         }
     }
 
-    /* restore last comma-to-null back to comma */
+    // restore last comma-to-null back to comma 
     if (undo) {
         *undo = ',';
     }
     return retval;
 }
+*/
 
+/*
 PR_STATIC_CALLBACK(PRBool)
 net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 						unsigned int button)
@@ -3924,24 +3960,23 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 
     buttonName = XP_FindValueInArgs("button", argv, argc);
     if (button != XP_DIALOG_OK_BUTTON) {
-	/* OK button not pressed (must be cancel button that was pressed) */
+	// OK button not pressed (must be cancel button that was pressed) 
 	return PR_FALSE;
     }
 
-    /* OK was pressed, do the deletions */
+    // OK was pressed, do the deletions 
 
-    /* get the comma-separated sequence of cookies to be deleted */
+    // get the comma-separated sequence of cookies to be deleted
     gone = XP_FindValueInArgs("goneC", argv, argc);
     PR_ASSERT(gone);
     if (!gone) {
 	return PR_FALSE;
     }
 
-    /*
-     * walk through the cookie list, deleting the designated cookies
-     * Note: we can't delete cookie while "list" is pointing to it because
-     * that would destroy "list".  So we do a lazy deletion
-     */
+   // walk through the cookie list, deleting the designated cookies
+    // Note: we can't delete cookie while "list" is pointing to it because
+    // that would destroy "list".  So we do a lazy deletion
+     //
     net_lock_cookie_list();
     list = net_cookie_list;
     cookieNumber = 0;
@@ -3962,18 +3997,17 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
     }
     net_unlock_cookie_list();
 
-    /* get the comma-separated sequence of permissions to be deleted */
+    // get the comma-separated sequence of permissions to be deleted 
     gone = XP_FindValueInArgs("goneP", argv, argc);
     PR_ASSERT(gone);
     if (!gone) {
 	return PR_FALSE;
     }
 
-    /*
-     * walk through the cookie permission list, deleting the designated permissions
-     * Note: we can't delete permissions while "list" is pointing to it because
-     * that would destroy "list".  So we do a lazy deletion
-     */
+    // walk through the cookie permission list, deleting the designated permissions
+    // Note: we can't delete permissions while "list" is pointing to it because
+    // that would destroy "list".  So we do a lazy deletion
+    //
     net_lock_cookie_permission_list();
     list = net_cookie_permission_list;
     cookieNumber = 0;
@@ -3996,13 +4030,15 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
     net_unlock_cookie_permission_list();
     return PR_FALSE;
 }
+*/
 
+/*
 PRIVATE Bool
 CookieCompare (net_CookieStruct * cookie1, net_CookieStruct * cookie2) {
     char * host1 = cookie1->host;
     char * host2 = cookie2->host;
 
-    /* get rid of leading period on host name, if any */
+    // get rid of leading period on host name, if any 
     if (*host1 == '.') {
 	host1++;
     }
@@ -4010,7 +4046,7 @@ CookieCompare (net_CookieStruct * cookie1, net_CookieStruct * cookie2) {
 	host2++;
     }
 
-    /* make decision based on host name if they are unequal */
+    // make decision based on host name if they are unequal 
     if (PL_strcmp (host1, host2) < 0) {
 	return -1;
     }
@@ -4018,15 +4054,17 @@ CookieCompare (net_CookieStruct * cookie1, net_CookieStruct * cookie2) {
 	return 1;
     }
 
-    /* if host names are equal, make decision based on cookie name */
+    // if host names are equal, make decision based on cookie name 
     return (PL_strcmp (cookie1->name, cookie2->name));
 }
+*/
 
 /*
  * find the next cookie that is alphabetically after the specified cookie
  *    ordering is based on hostname and the cookie name
  *    if specified cookie is NULL, find the first cookie alphabetically
  */
+/*
 PRIVATE net_CookieStruct *
 NextCookieAfter(net_CookieStruct * cookie, int * cookieNum) {
     XP_List *cookie_list=net_cookie_list;
@@ -4049,7 +4087,8 @@ NextCookieAfter(net_CookieStruct * cookie, int * cookieNum) {
     *cookieNum = lowestCookieNum;
     return lowestCookie;
 }
-
+*/
+/*
 typedef struct _CookieViewerDialog CookieViewerDialog;
 
 struct _CookieViewerDialog {
@@ -4058,7 +4097,7 @@ struct _CookieViewerDialog {
     PRBool dialogUp;
     XPDialogState *state;
 };
-
+*/
 #ifdef TRUST_LABELS
 /* Purpose: given a cookie name look in the list containing the cookperm.txt
  * file and locate a matching trust label.  If a matching trust label
@@ -4071,6 +4110,7 @@ struct _CookieViewerDialog {
  * History:
  *  9/9/98 Paul Chek - switch recipient from a range to a single value 
  */
+/*
 char *GetTrustLabelString(char *CookieName)
 {
     XP_List * list_ptr, *Tptr;
@@ -4082,22 +4122,20 @@ char *GetTrustLabelString(char *CookieName)
     char *szBy = NULL;
     int i, j;
 
-/*
- * here's how we would like to write the code but it doesn't compile on the mac 
- *
- *   int PurposeIds[] = {MK_ACCESS_TL_PPH0, MK_ACCESS_TL_PPH1,
- *                       MK_ACCESS_TL_PPH2, MK_ACCESS_TL_PPH3,
- *                       MK_ACCESS_TL_PPH4, MK_ACCESS_TL_PPH5};
- *   int RecpIds[] = { MK_ACCESS_TL_RPH0, MK_ACCESS_TL_RPH1, 
- *                     MK_ACCESS_TL_RPH2, MK_ACCESS_TL_RPH3};
-*/
+// here's how we would like to write the code but it doesn't compile on the mac 
+ //
+//   int PurposeIds[] = {MK_ACCESS_TL_PPH0, MK_ACCESS_TL_PPH1,
+ //                       MK_ACCESS_TL_PPH2, MK_ACCESS_TL_PPH3,
+ //                       MK_ACCESS_TL_PPH4, MK_ACCESS_TL_PPH5};
+ //   int RecpIds[] = { MK_ACCESS_TL_RPH0, MK_ACCESS_TL_RPH1, 
+ //                     MK_ACCESS_TL_RPH2, MK_ACCESS_TL_RPH3};
+//
 
-#define NumPurposeBits 6 /* number of bits in the recipient value */
-    /* array of msg Ids for the purpose values */
+#define NumPurposeBits 6 // number of bits in the recipient value 
     int PurposeIds[NumPurposeBits];
 
-#define NumRecpBits 4 /* number of bits in the recipient value */
-    /* the list of msg Ids for the recipient value. */
+#define NumRecpBits 4 // number of bits in the recipient value 
+    // the list of msg Ids for the recipient value. 
     int RecpIds[NumRecpBits];
 
 #if NumPurposeBits > NumRecpBits
@@ -4105,7 +4143,7 @@ char *GetTrustLabelString(char *CookieName)
 #else
 #define NumStrs  NumRecpBits
 #endif
-    /* this array holds strings used in formatting the message */
+    // this array holds strings used in formatting the message 
     char *szTempStrs[ NumStrs ];
 
     PurposeIds[0] = MK_ACCESS_TL_PPH0;
@@ -4123,18 +4161,18 @@ char *GetTrustLabelString(char *CookieName)
 
 
     if( CookieName ) {
-        /* look thru the cookie permission list for a matching trust label */
+        //look thru the cookie permission list for a matching trust label //
         net_lock_cookie_permission_list();
         list_ptr = net_cookie_permission_list;
         while( szTemp == NULL &&
                 (cookperm = (net_CookiePermissionStruct *) XP_ListNextObject(list_ptr))!=0) {
-            /* look thru the trust list for this cookie */
+            //look thru the trust list for this cookie //
             if (cookperm->TrustList ) {
                 Tptr = cookperm->TrustList;
                 while( (TEntry = (TrustEntry *)XP_ListNextObject(Tptr))) {
                     if( TEntry->CookieName
                             && !PL_strcmp(CookieName, TEntry->CookieName)) {
-                        /* this permission entry matches the given cookie */
+                        // this permission entry matches the given cookie//
                         szTemp = (char*)PR_Malloc(BUFLEN);
                         break;
                     }
@@ -4143,29 +4181,27 @@ char *GetTrustLabelString(char *CookieName)
         }
         net_unlock_cookie_permission_list();
 
-        /* was a match found?? */
+        // was a match found?? 
         if (szTemp) {
-            /* yes convert the ratings info into user strings */
+            // yes convert the ratings info into user strings //
 
             for( j=0; j<NumStrs; j++) {
                 szTempStrs[j] = NULL;
             }
 
-            /*
-             * count the number of purpose bits set AND
-             *  make a list of the phrases to use
-             */
+            // count the number of purpose bits set AND
+             //  make a list of the phrases to use
+             //
             for (j=0,i=0; i<NumPurposeBits; i++) {
                if ((TEntry->purpose>>i) & 1) {
-                    /* this bit is set get the associated phrase */
+                    //this bit is set get the associated phrase 
                     szTempStrs[j++] = PL_strdup( XP_GetString( PurposeIds[i] ) );
                 }
             }
-            /*
-             * build the purpose string 
-             * For translation purposes I am using strings 
-             * of the form "This information is used for %1$s, %2$s and %3$s."
-             * and inserting the additional phrases in the formating.*/
+          // build the purpose string 
+            // For translation purposes I am using strings 
+             // of the form "This information is used for %1$s, %2$s and %3$s."
+             // and inserting the additional phrases in the formating.
             switch ( j ) {
                 case 1:
                     PR_snprintf(szTemp, BUFLEN,
@@ -4223,18 +4259,18 @@ char *GetTrustLabelString(char *CookieName)
                     );
                     break;
 
-            } /* switch ( j ) */
-            /* I did things this way to avoid buffer overflow problems */
+            } // switch ( j )
+            // I did things this way to avoid buffer overflow problems 
             szPurpose = PL_strdup( szTemp );
-            /* free the temporary strings */
+            // free the temporary strings 
             for( j=0; j<NumStrs; j++) {
                 PR_FREEIF(szTempStrs[j]);
                 szTempStrs[j] = NULL;
             }
 
-            /* second, build the recipient phrase list.  The recipients value as
-			 * ossolated between allowing a range of values (0:2) and a single
-			 * value, thats the reason for the ifdef'd code. */
+           // second, build the recipient phrase list.  The recipients value as
+			 // ossolated between allowing a range of values (0:2) and a single
+			// value, thats the reason for the ifdef'd code. 
 #ifndef RECIPIENT_RANGE
 			szTempStrs[0] = PL_strdup( XP_GetString( RecpIds[ TEntry->recipient] ) );
 			PR_snprintf(szTemp, BUFLEN,
@@ -4244,14 +4280,14 @@ char *GetTrustLabelString(char *CookieName)
 			PR_FREEIF(szTempStrs[0]);
             szRecipient = PL_strdup( szTemp );
 #else
-			/* is just a single bit set and is that bit 0 ?*/
-			/* if  RECIPIENT_RANGE is defined you will need to 
-			 * include these lines in allxpstr.h
-			 *	ResDef(MK_ACCESS_TL_RECP2, (TRUST_LABEL_BASE + 17),
-			 *	"It is %1$s and %2$s." )
-			 *	ResDef(MK_ACCESS_TL_RECP3, (TRUST_LABEL_BASE + 18),
-			 *	"It is %1$s, %2$s and %3$s." )
-			 */
+			// is just a single bit set and is that bit 0 ?
+			// if  RECIPIENT_RANGE is defined you will need to 
+			 // include these lines in allxpstr.h
+			 //	ResDef(MK_ACCESS_TL_RECP2, (TRUST_LABEL_BASE + 17),
+			 //	"It is %1$s and %2$s." )
+			 //	ResDef(MK_ACCESS_TL_RECP3, (TRUST_LABEL_BASE + 18),
+			 //	"It is %1$s, %2$s and %3$s." )
+			 ///
             if ( TEntry->recipient == 1 ) {
                 szTempStrs[0] = PL_strdup( XP_GetString( MK_ACCESS_TL_RPH0 ) );
                 PR_snprintf(szTemp, BUFLEN,
@@ -4259,23 +4295,21 @@ char *GetTrustLabelString(char *CookieName)
                     szTempStrs[0]
                 );
             } else {
-                /*
-                 * if bits other than bit 0 are set then dont 
-                 * output the "used only by this site" text
-                 *
-                 * count the number of purpose bits set AND
-                 *  make a list of the phrases to use
-                 */
+                // if bits other than bit 0 are set then dont 
+                 // output the "used only by this site" text
+                 //
+                 // count the number of purpose bits set AND
+                 //  make a list of the phrases to use
+                 ///
                 for (j=0,i=1; i<NumRecpBits; i++) {
                     if ((TEntry->recipient>>i) & 1) {
-                        /* this bit is set get the associated phrase */
+                        // this bit is set get the associated phrase 
                         szTempStrs[j++] = PL_strdup( XP_GetString( RecpIds[i] ) );
                     }
                 }
-                /*
-                 * format the recipient string according to the 
-                 * number of bits set
-                 */
+                // format the recipient string according to the 
+                // number of bits set
+                 //
                 switch ( j ) {
                     case 1:
                         PR_snprintf(szTemp, BUFLEN,
@@ -4301,18 +4335,18 @@ char *GetTrustLabelString(char *CookieName)
                         );
                         break;
 
-                } /* switch ( j ) */
+                } // switch ( j ) 
             }
-            /* I did things this way to avoid buffer overflow problems */
+            // I did things this way to avoid buffer overflow problems 
             szRecipient = PL_strdup( szTemp );
-            /* free the temporary strings */
+            // free the temporary strings 
             for( j=0; j<NumStrs; j++) {
                 PR_FREEIF(szTempStrs[j]);
                 szTempStrs[j] = NULL;
             }
 #endif
 
-            /* construct the by string */
+            //construct the by string 
             if (TEntry->by) {
                 PR_snprintf(szTemp, BUFLEN, XP_GetString(MK_ACCESS_TL_BY), TEntry->by);
                 szBy = PL_strdup( szTemp );
@@ -4320,16 +4354,15 @@ char *GetTrustLabelString(char *CookieName)
                 szBy = PL_strdup( " " );
             }
 
-            /*
-             * construct the entire trust label statement.
-             * WATCHOUT: you can only execute four XP_GetString calls
-             * in this format string.
-             */
+            // construct the entire trust label statement.
+            // WATCHOUT: you can only execute four XP_GetString calls
+            // in this format string.
+             //
             PR_snprintf(szTemp, BUFLEN,
-                "%s " /* identifiable text */
-                "%s " /* purpose string */
-                "%s " /* receipent */
-                "%s",  /* by string */
+                "%s " // identifiable text 
+                "%s " // purpose string 
+                "%s " /// receipent 
+                "%s",  // by string 
                 (TEntry->bIdentifiable
                     ? XP_GetString(MK_ACCESS_TL_ID1)
                     : XP_GetString(MK_ACCESS_TL_ID0)),
@@ -4342,18 +4375,18 @@ char *GetTrustLabelString(char *CookieName)
 
     return szTemp;
 }
-
-
+*/
+/*
 #define STR_TRUST_LABEL "(TrustLabel"
-/* these structures describe the layout of the trust label information in 
- *  the cookperm.txt.  The structures are used for both reading and writing the 
- *  file.
- */
+// these structures describe the layout of the trust label information in 
+ //  the cookperm.txt.  The structures are used for both reading and writing the 
+//  file.
+//
 enum {TYPE_QUOTED_STRING, TYPE_INT};
 typedef struct {
-    char *szMatchStr; /* the string to look for coming in */
-    int ValueType; /* what kind of thing the value is */
-    int DataOffset; /* where in the TrustEntry struct to store the value */                    
+    char *szMatchStr; // the string to look for coming in 
+    int ValueType; // what kind of thing the value is 
+    int DataOffset; // where in the TrustEntry struct to store the value                     
 } ParseItem;
 
 static ParseItem ParseData[] = {
@@ -4362,20 +4395,21 @@ static ParseItem ParseData[] = {
     {"id", TYPE_INT, offsetof(TrustEntry, bIdentifiable)},
     {"recipient", TYPE_INT, offsetof(TrustEntry, recipient)},
     {"by", TYPE_QUOTED_STRING, offsetof(TrustEntry, by)},
-    /* the timestamp is the date and time when the cookie was set.   
-     * It is in the form "14 Apr 89 03:20 GMT".   Use PR_ParseTimeString
-     * to parse it into a PR_Exploded time.
-     */
+    //the timestamp is the date and time when the cookie was set.   
+     // It is in the form "14 Apr 89 03:20 GMT".   Use PR_ParseTimeString
+    // to parse it into a PR_Exploded time.
+     //
     {"timestamp", TYPE_QUOTED_STRING, offsetof(TrustEntry, CookieSet)}
 };
 #define NUM_ITEMS  sizeof(ParseData) / sizeof( ParseItem)
-
+*/
 /******************************************************
  * Purpose:  parse all the trust label string from a line in
  * cookperm.txt and store the result in a net_CookiePermissionStruct.
  *
  * This is a simple table driven parser.  
  ******************************************************/
+/*
 PRIVATE
 void ParseTrustLabelInfo
     (char *Buf, net_CookiePermissionStruct * cookie_permission)
@@ -4387,38 +4421,36 @@ void ParseTrustLabelInfo
     char *pCopy = NULL;
     TrustEntry *TEntry;
 
-    /*
-     * Look for the trust label information which is in the form
-     *   "(TrustLabel" - must be the first token
-     *     "cookie:"<cookie name>
-     *     "purpose:"<purpose value>
-     *     "id:"<"0"|"1">
-     *     "recipient:"<recipient value>
-     *     "by:"<by value>
-     *     "timestamp:"<timestamp>
-     *    ")"								- must be the last token
-     * purpose value == a hex value corresponding to the purpose value to set
-     * recipient value == a hex value corresponding to the recipient value to set
-     * by value == a text string enclosed in double quotes
-     * timestamp == time when the cookie was set: format is quoted string in any of the 
-     * formats that PR_Time will accept.
-     * cookie name == the name of the cookie enclosed in quotes
-     *
-     * The middle tokens can be in any order.
-     */
+    // Look for the trust label information which is in the form
+     //   "(TrustLabel" - must be the first token
+     //     "cookie:"<cookie name>
+     //     "purpose:"<purpose value>
+     //     "id:"<"0"|"1">
+     //     "recipient:"<recipient value>
+     //     "by:"<by value>
+     //     "timestamp:"<timestamp>
+     //    ")"								- must be the last token
+     // purpose value == a hex value corresponding to the purpose value to set
+     // recipient value == a hex value corresponding to the recipient value to set
+     // by value == a text string enclosed in double quotes
+     // timestamp == time when the cookie was set: format is quoted string in any of the 
+     // formats that PR_Time will accept.
+     // cookie name == the name of the cookie enclosed in quotes
+     //
+     // The middle tokens can be in any order.
+     ///
 
-    /*
-     * Do I have a well formed trust label string ??
-     * - can I find a beginning and an end??
-     */
+   // Do I have a well formed trust label string ??
+    // - can I find a beginning and an end??
+    //
     p = Buf;
     while ((p=strcasestr(p, (char *)STR_TRUST_LABEL)) && (pEnd=strchr(p,')'))) {
         p += PL_strlen(STR_TRUST_LABEL);
 
-        /* Allocate a new trust Entry */
+        // Allocate a new trust Entry 
         TEntry = PR_NEW(TrustEntry);
         if (TEntry) {
-            /* init the elements */
+            // init the elements 
             TEntry->CookieName = NULL;
             TEntry->purpose = 0;
             TEntry->recipient = 0;
@@ -4426,40 +4458,38 @@ void ParseTrustLabelInfo
             TEntry->by = NULL;
             TEntry->CookieSet = NULL;
 
-            /*
-             * isolate this trust label string for parsing, I must make a copy
-             * of the incoming string because the tokenizer will add nulls to it.
-             * Also allocate one more byte than I really need so that the tokenizer
-             * can write an extra Null at the end.
-             */
+            // isolate this trust label string for parsing, I must make a copy
+             // of the incoming string because the tokenizer will add nulls to it.
+             // Also allocate one more byte than I really need so that the tokenizer
+             // can write an extra Null at the end.
+            //
             len = pEnd-p+1;
             pCopy = XP_ALLOC(len + 1);
             if (!pCopy) return;
             XP_MEMCPY(pCopy, p, len-1);
             pCopy[len] = '\0';
 
-            /* get the first token from the copy */
+            // get the first token from the copy 
             pToken = XP_STRTOK_R(pCopy, " :", &pSub);
             while (pToken) {
                 if (pToken != ")") {
                     for ( i=0; i<NUM_ITEMS; i++ ) {
-                        /* Is this token one that we are interested in ?? */
+                        // Is this token one that we are interested in ?? 
                         if (PL_strcasecmp(pToken, ParseData[i].szMatchStr) == 0) {
-                            /* yes - extract its associated value and store it */
+                            // yes - extract its associated value and store it 
                             switch(ParseData[i].ValueType) {
                                 case TYPE_QUOTED_STRING:
-                                    /*
-                                     * since I allow white space INSIDE the
-                                     * quoted string, AND I want the next token
-                                     * to contain all the stuff inside the
-                                     * quoted string; I need to eat all the
-                                     * whitespace between the : and the
-                                     * next "
-                                     */
+                                    /// since I allow white space INSIDE the
+                                     // quoted string, AND I want the next token
+                                     // to contain all the stuff inside the
+                                     // quoted string; I need to eat all the
+                                     // whitespace between the : and the
+                                     // next "
+                                     ///
                                     while(*pSub == ' ' || *pSub == '\t') {
                                         pSub++;
                                     }
-                                    /* get next token which should be " */
+                                    // get next token which should be " 
                                     pToken = XP_STRTOK_R(nil, "\"", &pSub );
                                     if (pToken) {
                                         pChar = (char *)((void *)(TEntry))
@@ -4471,10 +4501,9 @@ void ParseTrustLabelInfo
                                     }
                                     break;
                                 case TYPE_INT:
-                                    /*
-                                     * get the next token which should be some
-                                     * number
-                                     */
+                                    // get the next token which should be some
+                                     // number
+                                     //
                                     pToken = XP_STRTOK_R(nil, " ", &pSub );
                                     if (pToken) {
                                         pChar = (char *)((void *)(TEntry))
@@ -4485,18 +4514,18 @@ void ParseTrustLabelInfo
                                     }
                                     break;
                             }
-                            break;           /* break out of the for loop */
+                            break;           // break out of the for loop 
                         }
                     }
                 } else {
-                    /* all done */
+                    // all done 
                     break;
                 }
-                pToken = XP_STRTOK_R(nil, " :", &pSub );     /* get the next token */
-            } /* end while */
+                pToken = XP_STRTOK_R(nil, " :", &pSub );     // get the next token 
+            } // end while 
             PR_FREEIF( pCopy );
 
-            /* Does the trust list exist in this entry, if not create it */
+            // Does the trust list exist in this entry, if not create it 
             if(!cookie_permission->TrustList) {
                 cookie_permission->TrustList = XP_ListNew();
                 if(!cookie_permission->TrustList) {
@@ -4504,15 +4533,16 @@ void ParseTrustLabelInfo
                 }
             }
 
-            /* add the entry to the list in the permission entry */
+            // add the entry to the list in the permission entry 
             XP_ListAddObjectToEnd( cookie_permission->TrustList, TEntry );
 
-        } /* end if (TEntry) */
-        /* set up for the next entry */
+        } //end if (TEntry) 
+        // set up for the next entry 
         p = ++pEnd;
-    } /* end while ((p=strcasestr( */
+    } // end while ((p=strcasestr( 
     return;
 }
+*/
 
 /****************************************************************
 * Purpose: Write the trust label information from the permission
@@ -4521,6 +4551,7 @@ void ParseTrustLabelInfo
 * History:
 *  Paul Chek - initial creation
 ****************************************************************/
+/*
 PRIVATE
 void SaveTrustLabelData
 	( net_CookiePermissionStruct * cookie_permission, XP_File fp )
@@ -4534,26 +4565,25 @@ void SaveTrustLabelData
     int T2Size = 50;
     int len, i;
 
-    /*
-     * do an initial allocation for szTemp2.  Whenever a quoted string 
-     * is processed the size of szTemp2 is tested to make sure it is big enough,
-     * if it is not it is resized.
-     */
+   // do an initial allocation for szTemp2.  Whenever a quoted string 
+    // is processed the size of szTemp2 is tested to make sure it is big enough,
+     // if it is not it is resized.
+     //
     szTemp2 = XP_ALLOC( T2Size );
     if ( fp && cookie_permission && cookie_permission->TrustList && szTemp2 ) {
-        /* there is trust label information, write it */
+        // there is trust label information, write it 
         Tptr = cookie_permission->TrustList;
         while( (TEntry = (TrustEntry *)XP_ListNextObject(Tptr))) {
-            /* build the string up one piece at a time, its slower but safer */
+            // build the string up one piece at a time, its slower but safer 
             szTemp = NULL;
             StrAllocCopy( szTemp, "  "STR_TRUST_LABEL);
-            /* march thru the Parsing table and output the TrustLabel information */
+            // march thru the Parsing table and output the TrustLabel information 
             for ( i=0; i<NUM_ITEMS; i++ ) {
                 switch(ParseData[i].ValueType) {
                     case TYPE_QUOTED_STRING:
                         pChar = (char **)(((char *)TEntry)+ ParseData[i].DataOffset);
                         if ( PL_strlen( *pChar ) ) {
-                            /* make sure szTemp2 is big enough. */
+                            // make sure szTemp2 is big enough. 
                             len = PL_strlen( ParseData[i].szMatchStr ) + PL_strlen(*pChar) + 3;
                             if ( T2Size <= len ) {
                                 T2Size = len +50;
@@ -4564,7 +4594,7 @@ void SaveTrustLabelData
                                 ParseData[i].szMatchStr, *pChar );
                                 StrAllocCat( szTemp, szTemp2 ); 
                             } else {
-                               /* error reallocating szTemp2, blast out */
+                               // error reallocating szTemp2, blast out 
                                PR_FREEIF( szTemp );
                                return;
                             }
@@ -4578,17 +4608,17 @@ void SaveTrustLabelData
                         StrAllocCat( szTemp, szTemp2 ); 
                         break;
                 }
-            } /* end for */
-            StrAllocCat( szTemp, " )" ); /* add the termination paren */
+            } // end for
+            StrAllocCat( szTemp, " )" ); // add the termination paren 
 
-            /* write a single trust label string */
+            // write a single trust label string 
             NET_XP_FileWrite(szTemp, -1, fp);
             PR_FREEIF( szTemp );
-        } /* end while( (TEntry =  */ 
+        } // end while( (TEntry =  
         PR_FREEIF( szTemp2 );
     }
 }
-
+*/
 /****************************************************************
 * Purpose:  search for a TrustEntry in the trust list of a cookie 
 * permission entry.
@@ -4596,6 +4626,7 @@ void SaveTrustLabelData
 * History:
 *  Paul Chek - initial creation
 ****************************************************************/
+/*
 PRIVATE
 Bool FindTrustEntry( char *CookieName, XP_List *TList, TrustEntry **TheEntry )
 {
@@ -4606,7 +4637,7 @@ Bool FindTrustEntry( char *CookieName, XP_List *TList, TrustEntry **TheEntry )
         TPtr = TList;
         while( (TEntry = (TrustEntry *)XP_ListNextObject(TPtr))) {
             if (PL_strcasecmp(CookieName, TEntry->CookieName) == 0) {
-                /* the entry was found */
+                // the entry was found 
                 *TheEntry = TEntry;
                 Status = TRUE;
                 break;
@@ -4615,13 +4646,14 @@ Bool FindTrustEntry( char *CookieName, XP_List *TList, TrustEntry **TheEntry )
     }
     return Status;
 }
-
+*/
 /****************************************************************
 * Purpose: given a TrustLabel struct sat up the corresponding TrustEntry
 *
 * History:
 *  Paul Chek - initial creation
 ****************************************************************/
+/*
 PRIVATE
 void CopyTrustEntry( char *CookieName, TrustEntry *TEntry, TrustLabel *trustlabel )
 {
@@ -4638,16 +4670,15 @@ void CopyTrustEntry( char *CookieName, TrustEntry *TEntry, TrustLabel *trustlabe
         TEntry->bIdentifiable = trustlabel->ID;
         TEntry->by = PL_strdup( trustlabel->szBy );
 
-        /*
-         * format an ASCII timestamp for when the cookie was set.  Use a 
-         *format that PR_ParseTimeString supports. "22-AUG-1993 10:59 PM"
-         */ 
+        // format an ASCII timestamp for when the cookie was set.  Use a 
+         //format that PR_ParseTimeString supports. "22-AUG-1993 10:59 PM"
+         // 
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
         PR_FormatTimeUSEnglish(line, 400, "%d-%b-%Y %I:%M %p", &now);
         TEntry->CookieSet  = PL_strdup( line );
 	}
 }
-
+*/
 /****************************************************************
 * Purpose: look in the permissions list to see if there is 
 * trust label information for the cookie.  If so delete it.
@@ -4655,6 +4686,7 @@ void CopyTrustEntry( char *CookieName, TrustEntry *TEntry, TrustLabel *trustlabe
 * History:
 *  Paul Chek - initial creation
 ****************************************************************/
+/*
 PRIVATE
 void DeleteCookieFromPermissions( char *CookieHost, char *CookieName )
 {
@@ -4662,29 +4694,29 @@ void DeleteCookieFromPermissions( char *CookieHost, char *CookieName )
     TrustEntry *TEntry;
     net_CookiePermissionStruct * cookie_permission;
 
-    /* lock the permission list */
+    // lock the permission list 
     TmpList=net_cookie_permission_list;
     net_lock_cookie_permission_list();
     while ( (cookie_permission=(net_CookiePermissionStruct *)XP_ListNextObject(TmpList)) ) {
-        /* is this the corect host for the cookie */
+        // is this the corect host for the cookie */
         if (PL_strcasecmp(CookieHost, cookie_permission->host) == 0) {
-            /* yes - see if there is a trust label entry for the cookie */
+            // yes - see if there is a trust label entry for the cookie 
             if ( FindTrustEntry( CookieName, cookie_permission->TrustList, &TEntry ) ) {
-                /* yes there is - delete it */
+                // yes there is - delete it */
                 XP_ListRemoveObject( cookie_permission->TrustList, TEntry);
-                /* free the strings in the entry */
+                // free the strings in the entry 
                 PR_FREEIF(TEntry->CookieName);
                 PR_FREEIF(TEntry->by);
                 PR_FREEIF(TEntry->CookieSet);
             }
-            /* dont need to look in the list anymore cause there is only one entry per host */
+            // dont need to look in the list anymore cause there is only one entry per host 
             break;			
         }
     }
     net_unlock_cookie_permission_list();
 
 }
-
+*/
 /****************************************************************
 * Purpose: given a TrustLabel struct containing the trust label
 *			info that matches a particular cookie add the trust
@@ -4693,32 +4725,33 @@ void DeleteCookieFromPermissions( char *CookieHost, char *CookieName )
 * History:
 *  Paul Chek - initial creation
 ****************************************************************/
+/*
 PRIVATE
 void AddTrustLabelInfo( char *CookieName, TrustLabel *trustlabel )
 {
     XP_List *TmpList;
     TrustEntry *TEntry;
 	net_CookiePermissionStruct * cookie_permission;
-	/* lock the permission list */
+	// lock the permission list //
     TmpList=net_cookie_permission_list;
     net_lock_cookie_permission_list();
     while ( (cookie_permission=(net_CookiePermissionStruct *)XP_ListNextObject(TmpList)) ) {
-		/* is this the corect host for the cookie */
+		// is this the corect host for the cookie 
 		if (PL_strcasecmp(trustlabel->domainName, cookie_permission->host) == 0) {
-			/* OK - we have found the entry for this host.  Look thru the trust list 
-			   to see if we have an existing entry for this cookie.  If so replace it.
-			   If not add a new entry
-			*/
+		// OK - we have found the entry for this host.  Look thru the trust list 
+			 //  to see if we have an existing entry for this cookie.  If so replace it.
+			 //  If not add a new entry
+		//
 			if ( FindTrustEntry( CookieName, cookie_permission->TrustList, &TEntry ) ) {
-				/* the entry exists modify it */
+			//the entry exists modify it 
 				CopyTrustEntry( CookieName, TEntry, trustlabel );
 			} else {
-				/* the entry does NOT exist - add a new one */
+				// the entry does NOT exist - add a new one 
 				TEntry = PR_NEWZAP( TrustEntry ); 
 				if ( TEntry ) {
-					/* yes - build the entry for the cookie */
+					// yes - build the entry for the cookie 
 					CopyTrustEntry( CookieName, TEntry, trustlabel );
-					/* Does the trust list exist in this entry, if not create it */
+					// Does the trust list exist in this entry, if not create it
 					if(!cookie_permission->TrustList) {
 						cookie_permission->TrustList = XP_ListNew();
 						if(!cookie_permission->TrustList) {
@@ -4726,22 +4759,23 @@ void AddTrustLabelInfo( char *CookieName, TrustLabel *trustlabel )
 						}
 					}
 
-					/* add it to the list */
+					// add it to the list 
 					XP_ListAddObjectToEnd(cookie_permission->TrustList, TEntry);
-					break;		  /* all done */	
+					break;		  // all done
 				}
 			}
 		}
 	}
     net_unlock_cookie_permission_list();
 }
-
+*/
 #endif
 
 /*
  * return a string that has each " of the argument sting
  * replaced with \" so it can be used inside a quoted string
  */
+ 
 PRIVATE char*
 net_FixQuoted(char* s) {
     char * result;
@@ -4767,7 +4801,7 @@ net_FixQuoted(char* s) {
 /* pinkerton - if we don't do this, it won't compile because it runs out of registers */
 #pragma global_optimizer on
 #endif
-
+/*
 PRIVATE void
 net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 {
@@ -4803,7 +4837,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
     StrAllocCopy (view_cookies, XP_GetString(MK_ACCESS_VIEW_COOKIES));
     StrAllocCopy (view_sites, XP_GetString(MK_ACCESS_VIEW_SITES));
 
-    /* generate initial section of html file */
+    // generate initial section of html file 
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "<HTML>\n"
 "<HEAD>\n"
@@ -4826,7 +4860,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
     FLUSH_BUFFER
 
 
-    /* fill in initial 0's for deleted_cookies and deleted_sites arrays */
+    //fill in initial 0's for deleted_cookies and deleted_sites arrays 
     count = XP_ListCount(net_cookie_list);
     for (i=1; i<count; i++) {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -4913,13 +4947,13 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	);
     FLUSH_BUFFER
 
-    /* Get rid of any expired cookies now so user doesn't
-     * think/see that we're keeping cookies in memory.
-     */
+    // Get rid of any expired cookies now so user doesn't
+     // think/see that we're keeping cookies in memory.
+     //
     net_lock_cookie_list();
     net_remove_expired_cookies();
 
-    /* Generate the html for the cookie properties (alphabetical order) */
+    // Generate the html for the cookie properties (alphabetical order) 
     cookie_list=net_cookie_list;
     cookie = NULL;
     while (cookie = NextCookieAfter(cookie, &cookieNum)) {
@@ -4991,17 +5025,17 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	PR_FREEIF(yes_or_no);
 	PR_FREEIF(expires);
 	PR_FREEIF(expireDate);
-	/* caveat: It would have been simpler to not allocate and free the
-	 * above strings but rather just use the XP_GetString(...) parameters
-	 * in the call to PR_snprintf.	However there are only four buffers
-	 * that XP_GetString uses and it keeps recycling them.	Since the
-	 * above would require more than four parameters which are calls to
-	 * XP_GetString, some of the returned buffers would be overwritten
-         * before they could be used.  Hence the simpler approach wouldn't work
-	 */
+	// caveat: It would have been simpler to not allocate and free the
+	 // above strings but rather just use the XP_GetString(...) parameters
+	 // in the call to PR_snprintf.	However there are only four buffers
+	 // that XP_GetString uses and it keeps recycling them.	Since the
+	 // above would require more than four parameters which are calls to
+	 // XP_GetString, some of the returned buffers would be overwritten
+         // before they could be used.  Hence the simpler approach wouldn't work
+	 //
 
 #ifdef TRUST_LABELS
-        /* add an entry that contains the trust label information */
+        // add an entry that contains the trust label information 
         szTrustLabel = GetTrustLabelString( cookie->name );
         if ( szTrustLabel ) {
             g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -5019,7 +5053,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
         FLUSH_BUFFER
     }
 
-    /* generate next section of html file */
+    // generate next section of html file 
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      }\n"
 "      top.frames[prop_frame].document.close();\n"
@@ -5030,7 +5064,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	);
     FLUSH_BUFFER
 
-    /* generate index frame only if full viewer */
+    // generate index frame only if full viewer
 
     if (!host) {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -5062,7 +5096,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	FLUSH_BUFFER
     }
 
-    /* generate next section of html file */
+    // generate next section of html file 
     if (!host) {
 	StrAllocCopy (heading, XP_GetString(MK_ACCESS_COOKIES_ACCEPTED));
     } else {
@@ -5092,7 +5126,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
     FLUSH_BUFFER
     PR_FREEIF(heading);
 
-    /* generate the html for the list of cookies in alphabetical order */
+    // generate the html for the list of cookies in alphabetical order 
     cookie_list=net_cookie_list;
     cookie = NULL;
     while (cookie = NextCookieAfter(cookie, &cookieNum)) {
@@ -5116,7 +5150,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
     }
     net_unlock_cookie_list();
 
-    /* generate next section of html file */
+    // generate next section of html file 
     StrAllocCopy (heading, XP_GetString(MK_ACCESS_COOKIES_PERMISSION));
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[list_frame].document.write(\n"
@@ -5180,7 +5214,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
     PR_FREEIF(heading);
     FLUSH_BUFFER
 
-    /* generate the html for the list of cookie permissions */
+    // generate the html for the list of cookie permissions 
     cookieNum = 0;
     cookie_permission_list=net_cookie_permission_list;
     net_lock_cookie_permission_list();
@@ -5203,7 +5237,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
     }
     net_unlock_cookie_permission_list();
 
-    /* generate next section of html file */
+    // generate next section of html file 
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[list_frame].document.write(\n"
 "                  \"</SELECT>\" +\n"
@@ -5238,15 +5272,15 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	);
     FLUSH_BUFFER
 
-    /* transfer what we have so far into strings->args[0] */
+    // transfer what we have so far into strings->args[0] 
     if (buffer2) {
 	XP_SetDialogString(strings, 0, buffer2);
 	buffer2 = NULL;
     }
 
-    /* Note: strings->args[1] will later be filled in with value of handle */
+    //Note: strings->args[1] will later be filled in with value of handle 
 
-    /* generate remainder of html, it will go into strings->arg[2] */
+    // generate remainder of html, it will go into strings->arg[2] 
     g += PR_snprintf(buffer+g, BUFLEN-g,
 ">\" +\n"
 "          \"<INPUT TYPE=HIDDEN NAME=goneC SIZE=-1>\" +\n"
@@ -5343,12 +5377,12 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	);
     FLUSH_BUFFER
 
-    /* free some strings that are no longer needed */
+    // free some strings that are no longer needed //
     PR_FREEIF(view_cookies);
     PR_FREEIF(view_sites);
     PR_FREEIF(buffer);
 
-    /* put html just generated into strings->arg[2] and invoke HTML dialog */
+    // put html just generated into strings->arg[2] and invoke HTML dialog //
     if (buffer2) {
       XP_SetDialogString(strings, 2, buffer2);
       buffer2 = NULL;
@@ -5364,21 +5398,23 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 
     return;
 }
-
+*/
+/*
 PUBLIC void
 NET_CookieViewerReturn() {
 }
-
+*/
+/*
 PUBLIC void
 NET_DisplayCookieInfoOfSiteAsHTML(MWContext * context, char * URLName)
 {
     char * host;
     char * colon;
 
-    /* remove protocol from URL name */
+    // remove protocol from URL name 
     host = NET_ParseURL(URLName, GET_HOST_PART);
 
-    /* remove port number from URL name */
+    // remove port number from URL name 
     colon = PL_strchr(host, ':');
     if(colon) {
         *colon = '\0';
@@ -5386,17 +5422,17 @@ NET_DisplayCookieInfoOfSiteAsHTML(MWContext * context, char * URLName)
 
     net_DisplayCookieInfoAsHTML(context, host);
 
-    /* free up allocated string and return */
+    // free up allocated string and return 
     if(colon) {
         *colon = ':';
     }
     PR_Free(host);
 }
+*/
 
 PUBLIC void
 NET_DisplayCookieInfoAsHTML(MWContext * context)
 {
-    net_DisplayCookieInfoAsHTML(context, NULL);
 }
 
 
@@ -5406,9 +5442,11 @@ NET_DisplayCookieInfoAsHTML(MWContext * context)
 #endif
 
 #else
+/*
 PUBLIC void
 NET_DisplayCookieInfoAsHTML(MWContext * context)
 {
 }
+*/
 #endif
 

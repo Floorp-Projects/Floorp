@@ -53,8 +53,6 @@ public:
 
   NS_IMETHOD    WalletSamples()=0;
 
-  NS_IMETHOD    CookieViewer()=0;
-
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
@@ -91,7 +89,6 @@ public:
   NS_IMETHOD    WalletChangePassword();  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin);  \
   NS_IMETHOD    WalletSamples();  \
-  NS_IMETHOD    CookieViewer();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
@@ -117,7 +114,6 @@ public:
   NS_IMETHOD    WalletChangePassword() { return _to WalletChangePassword(); }  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin) { return _to WalletQuickFillin(aWin); }  \
   NS_IMETHOD    WalletSamples() { return _to WalletSamples(); }  \
-  NS_IMETHOD    CookieViewer() { return _to CookieViewer(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to SetWebShellWindow(aWin); }  \

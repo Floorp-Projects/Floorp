@@ -759,72 +759,40 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     return NS_OK;
 }
 
-#ifdef CookieManagement
+extern void
+COOKIE_DisplayCookieInfoAsHTML();
+
+extern void
+COOKIE_GetCookieListForViewer (nsString& aCookieList);
+
+extern void
+COOKIE_GetPermissionListForViewer (nsString& aPermissionList);
+
+extern void
+COOKIE_CookieViewerReturn(nsAutoString results);
+
 NS_IMETHODIMP
-nsNetlibService::NET_DisplayCookieInfoAsHTML(){
-    ::NET_DisplayCookieInfoAsHTML(NULL);
+nsNetlibService::Cookie_DisplayCookieInfoAsHTML(){
+    ::COOKIE_DisplayCookieInfoAsHTML();
     return NS_OK;
 }
 
-#ifndef HTMLDialogs
-NS_IMETHODIMP nsNetlibService::NET_CookieViewerReturn(){
-    ::NET_CookieViewerReturn();
-    return NS_OK;
-}
-#endif
-
-#ifdef PrivacySiteInfo
-NS_IMETHODIMP
-nsNetlibService::NET_DisplayCookieInfoOfSiteAsHTML(char * URLName){
-    ::NET_DisplayCookieInfoOfSiteAsHTML(NULL, URLName);
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsNetlibService::NET_CookiePermission(char* URLName, PRInt32* permission){
-    *permission = ::NET_CookiePermission(URLName);
+NS_IMETHODIMP nsNetlibService::Cookie_CookieViewerReturn(nsAutoString results){
+    ::COOKIE_CookieViewerReturn(results);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNetlibService::NET_CookieCount(char* URLName, PRInt32* count){
-    *count = ::NET_CookieCount(URLName);
+NS_IMETHODIMP nsNetlibService::Cookie_GetCookieListForViewer(nsString& aCookieList){
+    ::COOKIE_GetCookieListForViewer(aCookieList);
     return NS_OK;
 }
 
-#endif
-#endif
-
-NS_IMETHODIMP
-nsNetlibService::NET_AnonymizeCookies(){
-#ifdef CookieManagement
-    ::NET_AnonymizeCookies();
-#endif
+NS_IMETHODIMP nsNetlibService::Cookie_GetPermissionListForViewer(nsString& aPermissionList){
+    ::COOKIE_GetPermissionListForViewer(aPermissionList);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNetlibService::NET_UnanonymizeCookies(){
-#ifdef CookieManagement
-    ::NET_UnanonymizeCookies();
-#endif
-    return NS_OK;
-}
 
-NS_IMETHODIMP
-nsNetlibService::SI_AnonymizeSignons(){
-#ifdef SingleSignon
-    ::SI_AnonymizeSignons();
-#endif
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNetlibService::SI_UnanonymizeSignons(){
-#ifdef SingleSignon
-    ::SI_UnanonymizeSignons();
-#endif
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsNetlibService::GetProxyHTTP(nsString& aProxyHTTP) {

@@ -44,4 +44,6 @@ include $(topsrcdir)/config/rules.mk
 install::
 	$(INSTALL) $(srcdir)/WalletPreview.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/SignonViewer.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/CookieViewer.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/cookie.properties $(DIST)/bin/res
 	$(INSTALL) $(srcdir)/wallet.properties $(DIST)/bin/res

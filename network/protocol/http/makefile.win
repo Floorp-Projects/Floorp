@@ -47,6 +47,7 @@ OBJS=   \
 
 CPP_OBJS= \
         .\$(OBJDIR)\nsGetBrowsingProfile.obj    \
+		.\$(OBJDIR)\nsCookie.obj		\
         $(NULL)
 
 CSRCS =	\
@@ -56,6 +57,7 @@ CSRCS =	\
 
 CPPSRCS = \
         nsGetBrowsingProfile.cpp        \
+		nsCookie.cpp        \
         $(NULL)
 
 LIBRARY_NAME=httpurl 
@@ -89,6 +91,9 @@ LINCS= \
     -I$(PUBLIC)\xpcom   \
     -I$(PUBLIC)\brprof  \
     -I$(PUBLIC)\raptor  \
+    -I$(PUBLIC)\netlib  \
+    -I$(PUBLIC)\intl  \
+    -I$(PUBLIC)\locale  \
     $(NULL)
 #!endif
 

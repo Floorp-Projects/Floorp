@@ -571,11 +571,15 @@
 
   function CookieViewer()
   {
-    if (appCore != null) {
-      dump("CookieViewer\n");
-      appCore.cookieViewer();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
+    var cookieCore = XPAppCoresManager.Find("CookieCore");
+    if (!cookieCore) {
+      cookieCore = new CookieCore();
+      if (cookieCore) {
+      cookieCore.Init("CookieCore");
+      }
+    }
+    if (cookieCore) {
+      cookieCore.ShowWindow(window);
     }
   }
 
