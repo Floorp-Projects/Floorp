@@ -2913,9 +2913,13 @@ nsFontWin*
 nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName)
 {
   for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
-    if (aName->EqualsIgnoreCase(((nsFontWin*)mLoadedFonts[i])->mName)) {
+    // woah, this seems bad
+    const nsACString& fontName =
+      nsDependentCString(((nsFontWin*)mLoadedFonts[i])->mName);
+    if (aName->Equals(NS_ConvertASCIItoUCS2(((nsFontWin*)mLoadedFonts[i])->mName),
+                                            nsCaseInsensitiveStringComparator()))
       return nsnull;
-    }
+
   }
   nsFontWin* font = LoadFont(aDC, aName);
   if (font && font->HasGlyph(aChar)) {
@@ -4664,9 +4668,11 @@ nsFontWin*
 nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
 {
   for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
-    if (aName->EqualsIgnoreCase(((nsFontWinA*)mLoadedFonts[i])->mName)) {
+
+    if (aName->Equals(NS_ConvertASCIItoUCS2(((nsFontWin*)mLoadedFonts[i])->mName),
+                                            nsCaseInsensitiveStringComparator()))
       return nsnull;
-    }
+
   }
   nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, aName);
   if (font && font->HasGlyph(aChar)) {

@@ -141,8 +141,7 @@ void txMozillaXMLOutput::endElement(const String& aName, const PRInt32 aNsID)
 #ifdef DEBUG
     nsAutoString nodeName;
     mCurrentNode->GetNodeName(nodeName);
-    if (!nodeName.EqualsIgnoreCase(aName.getConstNSString()))
-    NS_ASSERTION(nodeName.EqualsIgnoreCase(aName.getConstNSString()),
+    NS_ASSERTION(nodeName.Equals(aName.getConstNSString(), nsCaseInsensitiveStringComparator()),
                  "Unbalanced startElement and endElement calls!");
 #endif
 
@@ -198,7 +197,11 @@ void txMozillaXMLOutput::endElement(const String& aName, const PRInt32 aNsID)
             // Add this script element to the array of loading script elements.
             nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = do_QueryInterface(mCurrentNode, &rv);
             NS_ASSERTION(NS_SUCCEEDED(rv), "Need script element");
-            mScriptElements.AppendElement(scriptElement);
+            if (!mScriptElements)
+                rv = NS_NewISupportsArray(getter_AddRefs(mScriptElements));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create array");
+            if (NS_SUCCEEDED(rv))
+                mScriptElements->AppendElement(scriptElement);
 
             // Add the script element to the tree.
             nsCOMPtr<nsIDocument> document = do_QueryInterface(mScriptParent);
@@ -239,8 +242,9 @@ nsresult txMozillaXMLOutput::getRootContent(nsIContent** aReturn)
 
 PRBool txMozillaXMLOutput::isDone()
 {
-    PRUint32 scriptCount;
-    mScriptElements.Count(&scriptCount);
+    PRUint32 scriptCount = 0;
+    if (mScriptElements)
+        mScriptElements->Count(&scriptCount);
     return (scriptCount == 0);
 }
 
@@ -267,9 +271,11 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
 
 void txMozillaXMLOutput::removeScriptElement(nsIDOMHTMLScriptElement *aElement)
 {
-    PRInt32 index = mScriptElements.IndexOf(aElement);
-    if (index > -1)
-        mScriptElements.RemoveElementAt(index);
+    if (mScriptElements) {
+        PRInt32 index = mScriptElements->IndexOf(aElement);
+        if (index > -1)
+            mScriptElements->RemoveElementAt(index);
+    }
 }
 
 void txMozillaXMLOutput::setOutputDocument(nsIDOMDocument* aDocument)

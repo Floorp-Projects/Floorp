@@ -931,7 +931,7 @@ public:
                                     nsIRenderingContext** aContext);
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
-  NS_IMETHOD GoToAnchor(const nsString& aAnchorName);
+  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName);
 
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
                                  PRIntn   aVPercent, 
@@ -3828,7 +3828,7 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-PresShell::GoToAnchor(const nsString& aAnchorName)
+PresShell::GoToAnchor(const nsAString& aAnchorName)
 {
   nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
@@ -3898,7 +3898,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
         nsAutoString value;
         if (element && NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("name"), value))) {
-          if (value.EqualsWithConversion(aAnchorName)) {
+          if (value.Equals(aAnchorName)) {
             content = do_QueryInterface(element);
             break;
           }
@@ -3961,7 +3961,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
     nsCompatibility compatMode;
     mPresContext->GetCompatibilityMode(&compatMode);
    
-    if ((aAnchorName.EqualsIgnoreCase("top")) &&
+    if ((NS_LossyConvertUCS2toASCII(aAnchorName).EqualsIgnoreCase("top")) &&
         (compatMode == eCompatibility_NavQuirks) && 
         (mViewManager)) { 
       // Get the viewport scroller

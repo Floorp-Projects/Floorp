@@ -141,7 +141,7 @@ NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAReadableString& aCharset1, const 
    if(NS_SUCCEEDED(res)) {
       res = this->GetPreferred(aCharset2, name2);
       if(NS_SUCCEEDED(res)) {
-          *oResult = (name1.EqualsIgnoreCase(name2)) ? PR_TRUE : PR_FALSE;
+        *oResult = name1.Equals(name2, nsCaseInsensitiveStringComparator());
       }
    }
    

@@ -43,6 +43,7 @@
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
 #include "nsIWin32Locale.h"
+#include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prmem.h"
@@ -62,14 +63,14 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
 
   // use cached info if match with stored locale
   if (NULL == locale) {
-    if (mLocale.Length() && mLocale.EqualsIgnoreCase(mAppLocale)) {
+    if (mLocale.Equals(mAppLocale, nsCaseInsensitiveStringComparator())) {
       return NS_OK;
     }
   }
   else {
     res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-      if (mLocale.Length() && mLocale.EqualsIgnoreCase(nsString(aLocaleUnichar))) {
+      if (mLocale.Equals(nsDependentString(aLocaleUnichar), nsCaseInsensitiveStringComparator())) {
         nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }

@@ -219,7 +219,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
     if (domWindow) {
       nsAutoString ourName;
       domWindow->GetName(ourName);
-      if (name.EqualsIgnoreCase(ourName)) {
+      if (name.Equals(ourName, nsCaseInsensitiveStringComparator())) {
         *aFoundItem = mWebBrowser->mDocShellAsItem;
         NS_IF_ADDREF(*aFoundItem);
         return NS_OK;

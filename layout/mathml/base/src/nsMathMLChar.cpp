@@ -33,6 +33,7 @@
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
@@ -849,7 +850,7 @@ StretchyFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     nsGlyphTable* glyphTable = gGlyphTableList->TableAt(i);
     nsAutoString fontName;
     glyphTable->GetPrimaryFontName(fontName);
-    if (fontName.EqualsIgnoreCase(aFamily) &&
+    if (fontName.Equals(aFamily, nsCaseInsensitiveStringComparator()) &&
         glyphTable->Has(currPresContext, currChar)) {
       currList->AppendElement(glyphTable); // the table is retained
       return PR_TRUE; // don't stop
@@ -947,7 +948,7 @@ PreferredFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   for (i = 0; i < count; i++) {
     glyphTable = gGlyphTableList->TableAt(i);
     glyphTable->GetPrimaryFontName(fontName);
-    if (fontName.EqualsIgnoreCase(aFamily)) {
+    if (fontName.Equals(aFamily, nsCaseInsensitiveStringComparator())) {
       found = PR_TRUE;
       break;
     }
@@ -959,7 +960,7 @@ PreferredFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     for (i = 0; i < count; i++) {
       glyphTable = gGlyphTableList->AdditionalTableAt(i);
       glyphTable->GetPrimaryFontName(fontName);
-      if (fontName.EqualsIgnoreCase(aFamily)) {
+      if (fontName.Equals(aFamily, nsCaseInsensitiveStringComparator())) {
         found = PR_TRUE;
         break;
       }

@@ -33,7 +33,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
-#include "nsIFileChannel.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include <windows.h>
@@ -178,9 +177,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if ( extIndex >= 0) {
       nsAutoString ext;
       mDefault.Right(ext, mDefault.Length() - extIndex);
-      // Should we test for ".cgi", ".asp", ".jsp" and other "generated" html pages?
-      if ( ext.EqualsIgnoreCase(".htm")  || 
-           ext.EqualsIgnoreCase(".html") || 
+      // Should we test for ".cgi", ".asp", ".jsp" and other
+      // "generated" html pages?
+
+      if ( ext.EqualsIgnoreCase(".htm")  ||
+           ext.EqualsIgnoreCase(".html") ||
            ext.EqualsIgnoreCase(".shtml") ) {
         // This is supposed to append ".htm" if user doesn't supply an extension
         //XXX Actually, behavior is sort of weird:

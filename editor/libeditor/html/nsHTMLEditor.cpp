@@ -2767,7 +2767,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAReadableString& aTagName, nsI
 
       } else {
         currentNode->GetNodeName(currentTagName);
-        if (currentTagName.EqualsIgnoreCase(TagName))
+        if (currentTagName.Equals(TagName, nsCaseInsensitiveStringComparator()))
         {
 NODE_FOUND:
           bNodeFound = PR_TRUE;
@@ -3991,7 +3991,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
     {
       nsAutoString tag, value;
       element->GetTagName(tag);
-      if (propName.EqualsIgnoreCase(tag))
+      if (propName.Equals(tag, nsCaseInsensitiveStringComparator()))
       {
         PRBool found = PR_FALSE;
         if (aAttribute && 0!=aAttribute->Length())
@@ -4006,7 +4006,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
             else
             {
               nsString tString(*aValue);
-              if (tString.EqualsIgnoreCase(value)) {
+              if (tString.Equals(value, nsCaseInsensitiveStringComparator())) {
                 found = PR_TRUE;
               }
               else {  // we found the prop with the attribute, but the value doesn't match

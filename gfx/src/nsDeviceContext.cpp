@@ -465,7 +465,7 @@ PRUint32 FontAliasKey::HashCode(void) const
 
 PRBool FontAliasKey::Equals(const nsHashKey *aKey) const
 {
-  return mString.EqualsIgnoreCase(((FontAliasKey*)aKey)->mString);
+  return mString.Equals(((FontAliasKey*)aKey)->mString, nsCaseInsensitiveStringComparator());
 }
 
 nsHashKey* FontAliasKey::Clone(void) const

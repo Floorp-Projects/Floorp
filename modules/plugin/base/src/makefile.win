@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  intl \
 		  uconv \
+		  unicharutil \
 		  dom \
 		  content \
 		  layout \
@@ -82,6 +83,7 @@ CACHELIBNAME=netcache.lib
 LLIBS = \
  $(DIST)\lib\gkgfx.lib \
  $(DIST)\lib\xpcom.lib \
+ $(DIST)\lib\unicharutil_s.lib   \
  $(LIBNSPR)  
 
 WIN_LIBS = \

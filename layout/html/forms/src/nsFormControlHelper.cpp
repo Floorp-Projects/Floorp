@@ -219,18 +219,14 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
 
   if (NS_CONTENT_ATTR_NOT_THERE != result) {
 
-    nsAutoString wrapHard; wrapHard.AssignWithConversion(kTextControl_Wrap_Hard);
-    nsAutoString wrapPhysical; wrapPhysical.AssignWithConversion(kTextControl_Wrap_Physical);
-    if (wrap.EqualsIgnoreCase(wrapHard)) {
+    if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Hard)) {
       aWrapProp = eHTMLTextWrap_Hard;
       return result;
     }
 
-    nsAutoString wrapSoft; wrapSoft.AssignWithConversion(kTextControl_Wrap_Soft);
-    nsAutoString wrapVirtual; wrapVirtual.AssignWithConversion(kTextControl_Wrap_Virtual);
-    if (wrap.EqualsIgnoreCase(wrapSoft) ||
-        wrap.EqualsIgnoreCase(wrapVirtual) ||
-        wrap.EqualsIgnoreCase(wrapPhysical)) {
+    if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Soft) ||
+        wrap.EqualsIgnoreCase(kTextControl_Wrap_Virtual) ||
+        wrap.EqualsIgnoreCase(kTextControl_Wrap_Physical)) {
       aWrapProp = eHTMLTextWrap_Soft;
       return result;
     }

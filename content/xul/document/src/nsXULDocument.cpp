@@ -2272,7 +2272,6 @@ nsXULDocument::SelectAll()
     nsIContent * end   = nsnull;
     nsIContent * body  = nsnull;
 
-    nsAutoString bodyStr; bodyStr.Assign(NS_LITERAL_STRING("BODY"));
     PRInt32 i, n;
     mRootContent->ChildCount(n);
     for (i=0;i<n;i++) {
@@ -2280,7 +2279,12 @@ nsXULDocument::SelectAll()
         mRootContent->ChildAt(i, child);
         nsCOMPtr<nsIAtom> atom;
         child->GetTag(*getter_AddRefs(atom));
-        if (bodyStr.EqualsIgnoreCase(atom)) {
+
+        nsAutoString atomValue;
+        atom->ToString(atomValue);
+
+        ToUpperCase(atomValue);
+        if (NS_LITERAL_STRING("BODY").Equals(atomValue)) {
             body = child;
             break;
         }
