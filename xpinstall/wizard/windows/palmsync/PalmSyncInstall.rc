@@ -79,13 +79,13 @@ BEGIN
     IDS_APP_TITLE_UNINSTALL "%s Address Book Palm Sync Uninstall"
     IDS_CONDUIT_TITLE       "%s Address Book"
     IDC_PALMSYNCINSTALL     "PALMSYNCINSTALL"
-    IDS_ERR_GENERAL         "Error in installing the %s Address Book Palm Sync Conduit"
-    IDS_ERR_LOADING_CONDMGR "Error in loading the Conduit Manager while installing the %s Address Book Palm Sync Conduit"
+    IDS_ERR_GENERAL         "Error in (un)installing the %s Address Book Palm Sync Conduit"
+    IDS_ERR_LOADING_CONDMGR "Error in loading the Conduit Manager while (un)installing the %s Address Book Palm Sync Conduit"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERR_HSAPI_NOT_FOUND "Could not find the HSAPI.dll while installing the %s Address Book Palm Sync Conduit"
+    IDS_ERR_HSAPI_NOT_FOUND "Could not find the HSAPI.dll while (un)installing the %s Address Book Palm Sync Conduit"
     IDS_ERR_CONDUIT_NOT_FOUND 
                             "Could not find the %s Address Book Palm Sync Conduit to install"
     IDS_ERR_HOTSYNC_IN_PROGRESS 

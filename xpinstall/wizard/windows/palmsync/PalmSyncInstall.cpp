@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <Winreg.h>
 
 #include "CondMgr.h"
 #include "HSAPI.h"
@@ -73,9 +74,28 @@ typedef int (WINAPI *CmRestoreHotSyncSettingsPtr)(BOOL bToDefaults);
 typedef int (WINAPI *CmSetCreatorRemotePtr)(const char *pCreator, const TCHAR *pRemote);
 typedef int (WINAPI *CmSetCreatorNamePtr)(const char *pCreator, const TCHAR *pConduitName);
 typedef int (WINAPI *CmSetCreatorTitlePtr)(const char *pCreator, const TCHAR *pConduitTitle);
+typedef int (WINAPI *CmSetCreatorFilePtr)(const char *pCreator, const TCHAR *pConduitFile);
+typedef int (WINAPI *CmSetCreatorDirectoryPtr)(const char *pCreator, const TCHAR *pConduitDirectory);
+
 typedef int (WINAPI *CmSetCreatorPriorityPtr)(const char *pCreator, DWORD dwPriority);
 typedef int (WINAPI *CmSetCreatorIntegratePtr)(const char *pCreator, DWORD dwIntegrate);
 typedef int (WINAPI *CmSetCreatorValueDwordPtr)(const char *pCreator, TCHAR *pValue, DWORD dwValue);
+typedef int (WINAPI *CmSetCreatorValueStringPtr)(const char *pCreator, TCHAR *pValueName, TCHAR *value);
+typedef int (WINAPI *CmSetCorePathPtr) (const char *pPath);
+typedef int (WINAPI *CmSetHotSyncExePathPtr) (const char *pPath);
+typedef int (WINAPI *CmSetCreatorModulePtr) (const char *pCreatorID, const TCHAR *pModule);
+
+typedef int (WINAPI *CmGetCreatorNamePtr)(const char *pCreator, TCHAR *pConduitName, int *pSize);
+typedef int (WINAPI *CmGetCreatorTitlePtr)(const char *pCreator, TCHAR *pConduitTitle, int *pSize);
+typedef int (WINAPI *CmGetCreatorPriorityPtr)(const char *pCreator, DWORD *dwPriority);
+typedef int (WINAPI *CmGetCreatorTypePtr)(const char *pCreator);
+typedef int (WINAPI *CmGetCreatorIntegratePtr)(const char *pCreator, DWORD *dwIntegrate);
+typedef int (WINAPI *CmGetCreatorValueDwordPtr)(const char *pCreator, TCHAR *pValueName, DWORD dwValue, DWORD dwDefault);
+typedef int (WINAPI *CmGetCreatorValueStringPtr)(const char *pCreator, TCHAR *pValueName, TCHAR *pValue, int *pSize, TCHAR *pDefault);
+typedef int (WINAPI *CmGetCreatorFilePtr) (const TCHAR *pCreatorID, TCHAR *pFile, int *piSize);
+typedef int (WINAPI *CmGetCreatorDirectoryPtr) (const TCHAR *pCreatorID, TCHAR *pFile, int *piSize);
+typedef int (WINAPI *CmGetCreatorModulePtr) (const char *pCreatorID, TCHAR *pModule, int *piSize);
+typedef int (WINAPI *CmGetCreatorRemotePtr)(const char *pCreator, const TCHAR *pRemote, int*pSize);
 
 // Define any HSAPI function pointer types
 typedef int (WINAPI *HsCheckApiStatusPtr)(void);
@@ -129,7 +149,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     if (installDir)
       installDir += 2; // advance past "/p", e.g., "/pC:/program files/mozilla/dist/bin"
 
-    if(!strcmp(lpCmdLine,"/u")) // un-install
+    if(!strcmpi(lpCmdLine,"/u")) // un-install
     {
         ConstructMessage(hInstance, IDS_APP_TITLE_UNINSTALL, appTitle);
         ConstructMessage(hInstance, IDS_CONFIRM_UNINSTALL, msgStr);
@@ -139,15 +159,17 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             if(!res)
                 res = IDS_SUCCESS_UNINSTALL;
         }
+        else
+          return TRUE;;
     }
-    else if (!strcmp(lpCmdLine,"/us")) // silent un-install
+    else if (!strcmpi(lpCmdLine,"/us")) // silent un-install
     {
         res = UninstallConduit();
         if(!res)
             return TRUE; // success
         return res;
     }
-    else if (!strcmp(lpCmdLine,"/s")) // silent install
+    else if (!strcmpi(lpCmdLine,"/s")) // silent install
     {
         res = InstallConduit(hInstance, installDir);
         if(!res)
@@ -165,10 +187,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                 res = IDS_SUCCESS_INSTALL;
         }
     }
-
-    // if user hits no
-    if(res == -1)
-        return TRUE;
 
     if(res > IDS_ERR_MAX || res < IDS_ERR_GENERAL)
         res = IDS_ERR_GENERAL;
@@ -393,6 +411,25 @@ int UnregisterMozPalmSyncDll()
     return IDS_ERR_UNREGISTERING_MOZ_DLL;
 }
 
+
+char *mystrsep(char **stringp, char delim)
+{
+  char *endStr = strchr(*stringp, delim);
+  char *retStr;
+  if (endStr)
+  {
+    bool foundDelim = (*endStr == delim);
+    *endStr = '\0';
+    retStr = *stringp;
+    *stringp = endStr + !!foundDelim;
+  }
+  else
+    return NULL;
+  return retStr;
+}
+
+char oldSettingsStr[500];
+
 // installs our Conduit
 int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
 { 
@@ -402,7 +439,8 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
     // Prepare the full path of the conduit.
     // Applications should not place conduits in the Palm Desktop directory.
     // The Palm Desktop installer only manages the Palm Desktop conduits.
-    TCHAR   szConduitPath[_MAX_PATH];
+
+    TCHAR szConduitPath[_MAX_PATH];
     if (!installDir)
     {
       if(!GetModuleFileName(NULL, szConduitPath, _MAX_PATH))
@@ -415,6 +453,7 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
     }
     else
       strncpy(szConduitPath, installDir, sizeof(szConduitPath) - 1);
+
 
     // take care of any possible string overwrites
     if((strlen(szConduitPath) + strlen(DIRECTORY_SEPARATOR_STR) + strlen(CONDUIT_FILENAME)) > _MAX_PATH)
@@ -437,10 +476,22 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
     
     // Get the Palm Desktop Installation directory
     TCHAR   szPalmDesktopDir[_MAX_PATH];
-    unsigned long size=_MAX_PATH;
+    unsigned long desktopSize=_MAX_PATH;
+    
+    // old conduit settings - MAX_PATH is arbitrarily long...
+    TCHAR szOldCreatorName[_MAX_PATH];
+    TCHAR szOldRemote[_MAX_PATH];
+    TCHAR szOldCreatorTitle[_MAX_PATH];
+    TCHAR szOldCreatorFile[_MAX_PATH];
+    TCHAR szOldCreatorDirectory[_MAX_PATH];
+    DWORD oldPriority;
+    DWORD oldIntegrate;
+    int   oldType;
+
     // Load the Conduit Manager DLL.
     HINSTANCE hConduitManagerDLL;
-    if( (dwReturnCode=GetPalmDesktopInstallDirectory(szPalmDesktopDir, &size)) == 0 ) {
+    if( (dwReturnCode=GetPalmDesktopInstallDirectory(szPalmDesktopDir, &desktopSize)) == 0 ) 
+    {
         if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, szPalmDesktopDir)) != 0 )
             // load it from local dir if present by any chance
             if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
@@ -465,7 +516,21 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
     lpfnCmSetCreatorIntegrate = (CmSetCreatorIntegratePtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorIntegrate");
     CmRemoveConduitByCreatorIDPtr   lpfnCmRemoveConduitByCreatorID;
     lpfnCmRemoveConduitByCreatorID = (CmRemoveConduitByCreatorIDPtr) GetProcAddress(hConduitManagerDLL, "CmRemoveConduitByCreatorID");
-    
+    CmSetCreatorValueStringPtr lpfnCmSetCreatorValueString = (CmSetCreatorValueStringPtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorValueString");
+
+    CmGetCreatorRemotePtr   lpfnCmGetCreatorRemote;
+    lpfnCmGetCreatorRemote = (CmGetCreatorRemotePtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorRemote");
+    CmGetCreatorNamePtr lpfnCmGetCreatorName;
+    lpfnCmGetCreatorName = (CmGetCreatorNamePtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorName");
+    CmGetCreatorTitlePtr lpfnCmGetCreatorTitle;
+    lpfnCmGetCreatorTitle = (CmGetCreatorTitlePtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorTitle");
+    CmGetCreatorPriorityPtr lpfnCmGetCreatorPriority;
+    lpfnCmGetCreatorPriority = (CmGetCreatorPriorityPtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorPriority");
+    CmGetCreatorIntegratePtr    lpfnCmGetCreatorIntegrate;
+    lpfnCmGetCreatorIntegrate = (CmGetCreatorIntegratePtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorIntegrate");
+    CmGetCreatorTypePtr lpfnCmGetCreatorType = (CmGetCreatorTypePtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorType");
+    CmGetCreatorFilePtr lpfnCmGetCreatorFile = (CmGetCreatorFilePtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorFile");
+    CmGetCreatorDirectoryPtr lpfnCmGetCreatorDirectory = (CmGetCreatorDirectoryPtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorDirectory");
     if( (lpfnCmInstallCreator == NULL) 
         || (lpfnCmSetCreatorRemote == NULL)
         || (lpfnCmSetCreatorName == NULL)
@@ -477,7 +542,27 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
         // Return error code.
         return(IDS_ERR_LOADING_CONDMGR);
     }
-    
+ 
+    // get settings for old conduit
+    int remoteBufSize = sizeof(szOldRemote);
+    (*lpfnCmGetCreatorRemote) (CREATOR, szOldRemote, &remoteBufSize);
+    int creatorBufSize = sizeof(szOldCreatorName);
+    (*lpfnCmGetCreatorName)(CREATOR, szOldCreatorName, &creatorBufSize);
+    int creatorTitleBufSize = sizeof(szOldCreatorTitle);
+    (*lpfnCmGetCreatorTitle)(CREATOR, szOldCreatorTitle, &creatorTitleBufSize);
+    int creatorFileBufSize = sizeof(szOldCreatorFile);
+    int creatorDirectoryBufSize = sizeof(szOldCreatorDirectory);
+    (*lpfnCmGetCreatorFile)(CREATOR, szOldCreatorFile, &creatorFileBufSize);
+    (*lpfnCmGetCreatorDirectory)(CREATOR, szOldCreatorDirectory, &creatorDirectoryBufSize);
+    (*lpfnCmGetCreatorPriority)(CREATOR, &oldPriority);
+    (*lpfnCmGetCreatorIntegrate)(CREATOR, &oldIntegrate);
+    oldType = (*lpfnCmGetCreatorType) (CREATOR);
+
+    // if not set by previous pass through here
+    if (!oldSettingsStr[0])
+      _snprintf(oldSettingsStr, sizeof(oldSettingsStr), "%s,%s,%s,%s,%s,%d,%d,%d", szOldRemote, szOldCreatorName, 
+        szOldCreatorTitle, szOldCreatorFile, szOldCreatorDirectory, oldType, oldPriority, oldIntegrate);
+
     // Load the HSAPI DLL.
     HINSTANCE hHsapiDLL;
     if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, szPalmDesktopDir)) != 0 )
@@ -510,6 +595,7 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
     }
     if( dwReturnCode == 0 )
     {
+        (*lpfnCmSetCreatorValueString) (CREATOR, "oldConduitSettings", oldSettingsStr);
         dwReturnCode = (*lpfnCmSetCreatorName)(CREATOR, szConduitPath);
         if( dwReturnCode != 0 ) return dwReturnCode;
         TCHAR title[MAX_LOADSTRING];
@@ -523,6 +609,7 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
         if( dwReturnCode != 0 ) return dwReturnCode;
         // Applications should always set Integrate to 0
         dwReturnCode = (*lpfnCmSetCreatorIntegrate)(CREATOR, (DWORD)0);
+        (*lpfnCmSetCreatorValueString) (CREATOR, "oldConduitSettings", oldSettingsStr);
     }
     
     // Re-start HotSync if it was running before
@@ -540,26 +627,44 @@ int UninstallConduit()
 
     // Get the Palm Desktop Installation directory
     TCHAR   szPalmDesktopDir[_MAX_PATH];
-    unsigned long size=_MAX_PATH;
+    unsigned long desktopSize=_MAX_PATH;
     // Load the Conduit Manager DLL.
     HINSTANCE hConduitManagerDLL;
-    if( (dwReturnCode=GetPalmDesktopInstallDirectory(szPalmDesktopDir, &size)) == 0 ) {
+    if( (dwReturnCode=GetPalmDesktopInstallDirectory(szPalmDesktopDir, &desktopSize)) == 0 )
+    {
         if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, szPalmDesktopDir)) != 0 )
             // load it from local dir if present by any chance
             if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
                 return(dwReturnCode);
     }
-    else // if registery key not load it from local dir if present by any chance
-        if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
-        return(dwReturnCode);
+    // if registery key not load it from local dir if present by any chance
+    else if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
+          return(dwReturnCode);
     
     // Prepare to uninstall the conduit using Conduit Manager functions
     CmRemoveConduitByCreatorIDPtr   lpfnCmRemoveConduitByCreatorID;
     lpfnCmRemoveConduitByCreatorID = (CmRemoveConduitByCreatorIDPtr) GetProcAddress(hConduitManagerDLL, "CmRemoveConduitByCreatorID");
     if( (lpfnCmRemoveConduitByCreatorID == NULL) )
         return(IDS_ERR_LOADING_CONDMGR);
+        CmSetCorePathPtr lpfnCmSetCorePath = (CmSetCorePathPtr) GetProcAddress(hConduitManagerDLL, "CmSetCorePath");
+    CmSetHotSyncExePathPtr lpfnCmSetHotSyncExePath = (CmSetHotSyncExePathPtr) GetProcAddress(hConduitManagerDLL, "CmSetHotSyncExecPath");
     CmRestoreHotSyncSettingsPtr lpfnCmRestoreHotSyncSettings;
     lpfnCmRestoreHotSyncSettings = (CmRestoreHotSyncSettingsPtr) GetProcAddress(hConduitManagerDLL, "CmRestoreHotSyncSettings");
+    CmGetCreatorValueStringPtr lpfnCmGetCreatorValueString = (CmGetCreatorValueStringPtr) GetProcAddress(hConduitManagerDLL, "CmGetCreatorValueString");
+    CmInstallCreatorPtr lpfnCmInstallCreator;
+    lpfnCmInstallCreator = (CmInstallCreatorPtr) GetProcAddress(hConduitManagerDLL, "CmInstallCreator");
+    CmSetCreatorRemotePtr   lpfnCmSetCreatorRemote;
+    lpfnCmSetCreatorRemote = (CmSetCreatorRemotePtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorRemote");
+    CmSetCreatorNamePtr lpfnCmSetCreatorName;
+    lpfnCmSetCreatorName = (CmSetCreatorNamePtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorName");
+    CmSetCreatorTitlePtr lpfnCmSetCreatorTitle;
+    lpfnCmSetCreatorTitle = (CmSetCreatorTitlePtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorTitle");
+    CmSetCreatorPriorityPtr lpfnCmSetCreatorPriority;
+    lpfnCmSetCreatorPriority = (CmSetCreatorPriorityPtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorPriority");
+    CmSetCreatorIntegratePtr    lpfnCmSetCreatorIntegrate;
+    lpfnCmSetCreatorIntegrate = (CmSetCreatorIntegratePtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorIntegrate");
+    CmSetCreatorFilePtr lpfnCmSetCreatorFile = (CmSetCreatorFilePtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorFile");
+    CmSetCreatorDirectoryPtr lpfnCmSetCreatorDirectory = (CmSetCreatorDirectoryPtr) GetProcAddress(hConduitManagerDLL, "CmSetCreatorDirectory");
     if( (lpfnCmRestoreHotSyncSettings == NULL) )
         return(IDS_ERR_LOADING_CONDMGR);
     
@@ -568,7 +673,7 @@ int UninstallConduit()
     if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, szPalmDesktopDir)) != 0 )
         // load it from local dir if present by any chance
         if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, ".")) != 0 )
-        return(dwReturnCode);
+          return(dwReturnCode);
         
     // Shutdown the HotSync Process if it is running
     if( (bHotSyncRunning=IsHotSyncRunning(hHsapiDLL)) )
@@ -580,22 +685,83 @@ int UninstallConduit()
         ShutdownHotSync(hHsapiDLL);
     }
     
+    TCHAR oldConduitSettings[500];
+    int strSize = sizeof(oldConduitSettings);
+    dwReturnCode = (*lpfnCmGetCreatorValueString)(CREATOR, "oldConduitSettings", oldConduitSettings, &strSize, "");
+
     // Actually uninstall the conduit
     dwReturnCode = (*lpfnCmRemoveConduitByCreatorID)(CREATOR);
-    if(dwReturnCode >= 0) {
+
+    if(dwReturnCode >= 0) 
+    {
         // uninstall Mozilla Palm Sync Support Proxy Dll
-        UnregisterMozPalmSyncDll();
-        dwReturnCode = (*lpfnCmRestoreHotSyncSettings)(TRUE);
+        dwReturnCode = UnregisterMozPalmSyncDll();
+//        dwReturnCode = (*lpfnCmRestoreHotSyncSettings)(TRUE);
     }
+
+    if (dwReturnCode >= 0)
+    {
+      char * szOldCreatorName;
+      char *szOldRemote;
+      char *szOldCreatorTitle;
+      char *szOldCreatorFile;
+      char *szOldCreatorDirectory;
+      char *oldIntStr;
+      DWORD oldPriority;
+      DWORD oldIntegrate;
+      int   oldType;
+
+      char *strPtr = oldConduitSettings;
+      szOldRemote = mystrsep(&strPtr, ',');
+      szOldCreatorName = mystrsep(&strPtr, ',');
+      szOldCreatorTitle = mystrsep(&strPtr, ',');
+      szOldCreatorFile = mystrsep(&strPtr, ',');
+      szOldCreatorDirectory = mystrsep(&strPtr, ',');
+      oldIntStr = mystrsep(&strPtr, ',');
+      oldType = (oldIntStr) ? atoi(oldIntStr) : 0;
+      oldIntStr = mystrsep(&strPtr, ',');
+      oldPriority = (oldIntStr) ? atoi(oldIntStr) : 0;
+      oldIntStr = mystrsep(&strPtr, ',');
+      oldIntegrate = (oldIntStr) ? atoi(oldIntStr) : 0;
+
+      dwReturnCode = (*lpfnCmInstallCreator)(CREATOR, oldType);
+      if( dwReturnCode == 0 )
+      {
+          dwReturnCode = (*lpfnCmSetCreatorName)(CREATOR, szOldCreatorName);
+          if( dwReturnCode != 0 ) return dwReturnCode;
+          // Construct conduit title (the one displayed in HotSync Mgr's Custom...list)..
+          dwReturnCode = (*lpfnCmSetCreatorTitle)(CREATOR, szOldCreatorTitle);
+          if( dwReturnCode != 0 ) return dwReturnCode;
+          dwReturnCode = (*lpfnCmSetCreatorRemote)(CREATOR, szOldRemote);
+          if( dwReturnCode != 0 ) return dwReturnCode;
+          dwReturnCode = (*lpfnCmSetCreatorFile)(CREATOR, szOldCreatorFile);
+          if( dwReturnCode != 0 ) return dwReturnCode;
+          dwReturnCode = (*lpfnCmSetCreatorDirectory)(CREATOR, szOldCreatorDirectory);
+          if( dwReturnCode != 0 ) return dwReturnCode;
+          dwReturnCode = (*lpfnCmSetCreatorPriority)(CREATOR, oldPriority);
+          if( dwReturnCode != 0 ) return dwReturnCode;
+          // Applications should always set Integrate to 0
+          dwReturnCode = (*lpfnCmSetCreatorIntegrate)(CREATOR, oldIntegrate);
+      }
+    }
+
+//    if (lpfnCmSetCorePath)
+//      (*lpfnCmSetCorePath)(szPalmDesktopDir);
+//    if (lpfnCmSetHotSyncExePath)
+//      (*lpfnCmSetHotSyncExePath)(szPalmHotSyncInstallDir);
     
     // this registry key is set by the RestoreHotSyncSettings to point incorrectly to Mozilla dir
     // this should point to the Palm directory to enable sync with Palm Desktop.
+#if 0
     HKEY key;
     LONG rc = RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\U.S. Robotics\\Pilot Desktop\\Core",
                                 0, KEY_ALL_ACCESS, &key);
     if(rc == ERROR_SUCCESS)
-        ::RegSetValueEx(key, "Path", 0, REG_SZ, (const BYTE *) szPalmDesktopDir, size);
+        ::RegSetValueEx(key, "Path", 0, REG_SZ, (const BYTE *) szPalmDesktopDir, desktopSize);
  
+    if(rc == ERROR_SUCCESS)
+        ::RegSetValueEx(key, "HotSyncPath", 0, REG_SZ, (const BYTE *) szPalmHotSyncInstallDir, installSize);
+#endif
     // Re-start HotSync if it was running before
     if( bHotSyncRunning )
         StartHotSync(hHsapiDLL);
