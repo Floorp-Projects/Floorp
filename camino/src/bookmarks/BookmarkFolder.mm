@@ -760,6 +760,8 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) itemAddedNote:(BookmarkItem *)theItem atIndex:(unsigned)anIndex
 {
+  if (![BookmarkItem allowNotifications]) return;
+  
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:theItem,BookmarkFolderChildKey,
     [NSNumber numberWithUnsignedInt:anIndex],BookmarkFolderChildIndexKey,nil];
@@ -769,6 +771,8 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) itemRemovedNote:(BookmarkItem *)theItem
 {
+  if (![BookmarkItem allowNotifications]) return;
+  
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   NSDictionary *dict = [NSDictionary dictionaryWithObject:theItem forKey:BookmarkFolderChildKey];
   NSNotification *note = [NSNotification notificationWithName:BookmarkFolderDeletionNotification object:self userInfo:dict];

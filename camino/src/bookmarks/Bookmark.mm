@@ -506,6 +506,9 @@ static void doHTTPUpdateCallBack(CFReadStreamRef stream, CFStreamEventType type,
 
 -(BOOL) readNativeDictionary:(NSDictionary *)aDict
 {
+  //gather the redundant update notifications
+  [self setAccumulateUpdateNotifications:YES];
+  
   [self setTitle:[aDict objectForKey:BMTitleKey]];
   [self setDescription:[aDict objectForKey:BMDescKey]];
   [self setKeyword:[aDict objectForKey:BMKeywordKey]];
@@ -513,14 +516,23 @@ static void doHTTPUpdateCallBack(CFReadStreamRef stream, CFStreamEventType type,
   [self setLastVisit:[aDict objectForKey:BMLastVisitKey]];
   [self setNumberOfVisits:[[aDict objectForKey:BMNumberVisitsKey] unsignedIntValue]];
   [self setStatus:[[aDict objectForKey:BMStatusKey] unsignedIntValue]];
+  
+  //fire an update notification
+  [self setAccumulateUpdateNotifications:NO];
   return YES;
 }
  
 -(BOOL) readSafariDictionary:(NSDictionary *)aDict
 {
+  //gather the redundant update notifications
+  [self setAccumulateUpdateNotifications:YES];
+  
   NSDictionary *uriDict = [aDict objectForKey:SafariURIDictKey];
   [self setTitle:[uriDict objectForKey:SafariBookmarkTitleKey]];
   [self setUrl:[aDict objectForKey:SafariURLStringKey]];
+  
+  //fire an update notification
+  [self setAccumulateUpdateNotifications:NO];
   return YES;
 }
 
@@ -535,10 +547,14 @@ static void doHTTPUpdateCallBack(CFReadStreamRef stream, CFStreamEventType type,
       elementInfoPtr = (CFXMLElementInfo *)CFXMLNodeGetInfoPtr(myNode);
       if (elementInfoPtr) {
         NSDictionary* attribDict = (NSDictionary*)elementInfoPtr->attributes;
+        //gather the redundant update notifications
+        [self setAccumulateUpdateNotifications:YES];
         [self setTitle:[[attribDict objectForKey:CaminoNameKey] stringByRemovingAmpEscapes]];
         [self setKeyword:[[attribDict objectForKey:CaminoKeywordKey] stringByRemovingAmpEscapes]];
         [self setDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
         [self setUrl:[[attribDict objectForKey:CaminoURLKey] stringByRemovingAmpEscapes]];
+        //fire an update notification
+        [self setAccumulateUpdateNotifications:NO];
       } else {
         NSLog(@"Bookmark:readCaminoXML - elementInfoPtr null, load failed");
         return NO;

@@ -84,6 +84,9 @@ NSString *CaminoTrueKey = @"true";
 
 
 @implementation BookmarkItem
+
+static BOOL gSuppressAllUpdates = NO;
+
 //Initialization
 -(id) init
 {
@@ -96,7 +99,8 @@ NSString *CaminoTrueKey = @"true";
     mUUID = nil;
     // if we set the icon here, we will get a memory leak.  so don't.
     // subclass will provide icon.
-    mIcon = NULL; 
+    mIcon = NULL;
+    mAccumulateItemChangeUpdates = NO;
   }
   return self;
 }
@@ -221,13 +225,39 @@ NSString *CaminoTrueKey = @"true";
   [aIcon retain];
   [mIcon release];
   mIcon = aIcon;
+  
+  if (![BookmarkItem allowNotifications]) return;
   NSNotification *note = [NSNotification notificationWithName:BookmarkIconChangedNotification
                                                        object:self userInfo:nil];
   [[NSNotificationCenter defaultCenter] postNotification:note];
 }
 
+// Prevents all NSNotification posting from any BookmarkItem.
+// Useful for suppressing all the pointless notifications during load.
++(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates
+{
+  gSuppressAllUpdates = suppressUpdates;
+}
+
++(BOOL) allowNotifications
+{
+  return !gSuppressAllUpdates;
+}
+
+// Helps prevent spamming from itemUpdatedNote:
+// calling with YES will prevent itemUpdatedNote from doing anything
+// and calling with NO will restore itemUpdatedNote and then call it.
+-(void) setAccumulateUpdateNotifications:(BOOL)accumulateUpdates
+{
+  mAccumulateItemChangeUpdates = accumulateUpdates;
+  if (!mAccumulateItemChangeUpdates)
+    [self itemUpdatedNote];   //fire an update to cover the updates that weren't sent
+}
+
 -(void) itemUpdatedNote
 {
+  if (gSuppressAllUpdates || mAccumulateItemChangeUpdates) return;
+  
   NSNotification *note = [NSNotification notificationWithName:BookmarkItemChangedNotification object:self userInfo:nil];
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc postNotification:note];

@@ -123,6 +123,10 @@ static unsigned gFirstUserCollection = 0;
     [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
     [self setRootBookmarks:root];
     [root release];
+    // Turn off the posting of update notifications while reading in bookmarks.
+    // All interested parties haven't been init'd yet, and/or will recieve the
+    // managerStartedNotification when setup is actually complete.
+    [BookmarkItem setSuppressAllUpdateNotifications:YES];
     if (![self readBookmarks]) {
       // one of two things happened. we are importing off an old xml file
       // for startup, OR we totally muffed reading the bookmarks.  we'll hope
@@ -150,6 +154,7 @@ static unsigned gFirstUserCollection = 0;
         [aFolder setTitle:NSLocalizedString(@"Bookmark Toolbar",@"Bookmark Toolbar")];
       }
     }
+    [BookmarkItem setSuppressAllUpdateNotifications:NO];
     // setup special folders
     [self setupSmartCollections];
     mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];

@@ -50,6 +50,7 @@
   NSString* mKeyword; 
   NSString* mUUID;
   NSImage* mIcon;
+  BOOL mAccumulateItemChangeUpdates;
 }
 
 // Setters/Getters
@@ -71,6 +72,9 @@
 -(BOOL) isChildOfItem:(BookmarkItem *)anItem;
 
 // Notificaiton of Change
++(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates;
++(BOOL) allowNotifications;
+-(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates;
 -(void) itemUpdatedNote; //right now, just on title & icon - for BookmarkButton & BookmarkMenu notes
 
 // Methods called on startup for both bookmark & folder
