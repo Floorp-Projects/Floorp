@@ -67,6 +67,8 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD AddNewComponentsObject(JSContext* aJSContext,
                                       JSObject* aGlobalJSObj);
 
+    NS_IMETHOD CreateComponentsObject(nsIXPCComponents** aComponentsObj);
+
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
@@ -82,6 +84,7 @@ class nsXPConnect : public nsIXPConnect
                                     nsIXPConnectWrappedNative** aWrapper);
 
     NS_IMETHOD DebugDump(int depth);
+    NS_IMETHOD DebugDumpObject(nsISupports* p, int depth);
 
     // non-interface implementation
 public:
@@ -748,12 +751,6 @@ private:
     nsXPCClasses*    mClasses;
     ComponentsScriptable* mScriptable;
 };
-
-/***************************************************************************/
-// module level stuff
-
-void
-xpc_RegisterSelf();
 
 /***************************************************************************/
 

@@ -28,6 +28,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME=xpconnect
 MODULE=xpconnect
+IS_COMPONENT =  1
 
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 

@@ -139,6 +139,7 @@ class nsIXPConnect : public nsISupports
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_IID)
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj,
@@ -150,8 +151,14 @@ public:
                           JSBool AddComponentsObject,
                           nsIXPConnectWrappedNative** aWrapper) = 0;
 
+    // Creates a new Components object, builds a wrapper for it, and adds
+    // it as the 'Components' property of the JSObject passed in.
     NS_IMETHOD AddNewComponentsObject(JSContext* aJSContext,
                                       JSObject* aGlobalJSObj) = 0;
+
+    // Creates a new Components object (with no wrapper)
+    NS_IMETHOD CreateComponentsObject(nsIXPCComponents** aComponentsObj) = 0;
+
 
     // XXX add 'AbandonJSContext' method and all that implies?
 
@@ -170,25 +177,8 @@ public:
                                     nsIXPConnectWrappedNative** aWrapper) = 0;
 
     NS_IMETHOD DebugDump(int depth) = 0;
+    NS_IMETHOD DebugDumpObject(nsISupports* p, int depth) = 0;
     // XXX other methods?
 };
-
-JS_BEGIN_EXTERN_C
-// XXX Add support for this to be a service?
-XPC_PUBLIC_API(nsIXPConnect*)
-XPC_GetXPConnect();
-
-XPC_PUBLIC_API(nsIXPCComponents*)
-XPC_GetXPConnectComponentsObject();
-
-#ifdef DEBUG
-XPC_PUBLIC_API(void)
-XPC_Dump(nsISupports* p, int depth);
-#define XPC_DUMP(x,d) XPC_Dump(x,d)
-#else
-#define XPC_DUMP(x,d) ((void)0)
-#endif
-
-JS_END_EXTERN_C
 
 #endif /* nsIXPConnect_h___ */

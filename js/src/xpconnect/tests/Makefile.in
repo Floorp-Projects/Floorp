@@ -40,12 +40,12 @@ LIBS		= 		\
 	-L$(DIST)/bin \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom       \
-	-lxpconnect \
 	-lxpt \
 	-lxptinfo \
 	-lxptcall \
 	-lxptcmd \
 	-lreg       \
+	-lraptorbase \
 	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NSPR_LIBS) 	\
 	$(NULL)

@@ -33,9 +33,11 @@
 
 #include "xpctest.h"
 
-
 #include "nsIAllocator.h"
+#include "nsIGenericFactory.h"
+#include "nsSpecialSystemDirectory.h"	// For exe dir
 
+static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
@@ -49,10 +51,43 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 #endif
 #endif
 
-static void RegAllocator()
+static void SetupRegistry()
 {
-    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL,
-                                    PR_FALSE, PR_FALSE);
+  // Autoregistration happens here. The rest of RegisterComponent() calls should happen
+  // only for dlls not in the components directory.
+
+  // Create exeDir/"components"
+  nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  sysdir += "components";
+  const char *componentsDir = sysdir.GetCString(); // native path
+  if (componentsDir != NULL)
+  {
+#ifdef XP_PC
+      /* The PC version of the directory from filePath is of the form
+       *	/y|/moz/mozilla/dist/bin/components
+       * We need to remove the initial / and change the | to :
+       * for all this to work with NSPR.	  
+       */
+#endif /* XP_PC */
+//      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
+
+#ifdef XP_MAC
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+#else
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
+#endif	/* XP_MAC */
+      // XXX Look for user specific components
+      // XXX UNIX: ~/.mozilla/components
+  }
+
+//    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL,
+//                                          XPCOM_DLL, PR_FALSE, PR_FALSE);
+
+    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, "allocator", 
+                                          XPCOM_DLL, PR_TRUE, PR_TRUE);
+
+    nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL, 
+                                          XPCOM_DLL, PR_FALSE, PR_FALSE);
 }
 
 
@@ -481,6 +516,17 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     printf(message);
 }
 
+static nsIXPConnect* GetXPConnect()
+{
+    nsIXPConnect* result;
+
+    if(NS_SUCCEEDED(nsServiceManager::GetService(
+                        nsIXPConnect::GetCID(), nsIXPConnect::GetIID(),
+                        (nsISupports**) &result, NULL)))
+        return result;
+    return NULL;
+}        
+
 extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
 
 int main()
@@ -492,7 +538,7 @@ int main()
     gErrFile = stderr;
     gOutFile = stdout;
 
-    RegAllocator();
+    SetupRegistry();
 
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
@@ -503,7 +549,7 @@ int main()
 
     JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
-    nsIXPConnect* xpc = XPC_GetXPConnect();
+    nsIXPConnect* xpc = GetXPConnect();
     if(!xpc)
     {
         printf("XPC_GetXPConnect() returned NULL!\n");
@@ -555,7 +601,7 @@ int main()
     for(char** p = txt; *p; p++)
         JS_EvaluateScript(jscontext, glob, *p, strlen(*p), "builtin", 1, &rval);
 
-    XPC_DUMP(xpc, 20);
+//    XPC_DUMP(xpc, 20);
 
 #else
 
@@ -665,7 +711,7 @@ int main()
                             "expected result" : "WRONG RESULT" );
 
                     // dump to log test...
-                    XPC_DUMP(xpc, 50);
+//                    XPC_DUMP(xpc, 50);
 
                     NS_RELEASE(methods);
                     NS_RELEASE(wrapper3);
@@ -714,7 +760,7 @@ int main()
 //    XPC_LOG_ALWAYS((""));
 //    XPC_LOG_ALWAYS(("after running JS_GC..."));
 //    XPC_LOG_ALWAYS((""));
-    XPC_DUMP(xpc, 3);
+//    XPC_DUMP(xpc, 3);
 
 #endif
 
@@ -765,7 +811,7 @@ DumpSymbol(JSHashEntry *he, int i, void *arg)
 JS_BEGIN_EXTERN_C
 void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
 void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
-void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
-void Dxpc(int depth) {Dobj(XPC_GetXPConnect(), depth);}
+//void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
+//void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
 JS_END_EXTERN_C
 #endif

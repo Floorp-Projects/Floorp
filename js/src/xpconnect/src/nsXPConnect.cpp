@@ -161,8 +161,6 @@ nsXPConnect::nsXPConnect()
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    xpc_RegisterSelf();
-
     nsXPCWrappedNativeClass::OneTimeInit();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
     mArbitraryScriptable = new nsXPCArbitraryScriptable();
@@ -272,7 +270,7 @@ nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
         return NS_ERROR_FAILURE;
     }
 
-    nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
+    nsIXPCComponents* comp = new nsXPCComponents();
     if(!comp)
     {
         XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - could create component object"));
@@ -296,6 +294,17 @@ nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
     NS_RELEASE(comp);
     return success ? NS_OK : NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsXPConnect::CreateComponentsObject(nsIXPCComponents** aComponentsObj)
+{
+    if(!aComponentsObj)
+        return NS_ERROR_NULL_POINTER;
+
+    if(!(*aComponentsObj = new nsXPCComponents()))
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}        
 
 XPCContext*
 nsXPConnect::NewContext(JSContext* cx, JSObject* global,
@@ -429,25 +438,16 @@ nsXPConnect::DebugDump(int depth)
     return NS_OK;
 }
 
-XPC_PUBLIC_API(nsIXPConnect*)
-XPC_GetXPConnect()
+NS_IMETHODIMP
+nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
 {
-    // temp test...
-//    nsXPCWrappedJS* p = new nsXPCWrappedJS();
-//    p->Stub5();
-    return nsXPConnect::GetXPConnect();
-}
-
 #ifdef DEBUG
-XPC_PUBLIC_API(void)
-XPC_Dump(nsISupports* p, int depth)
-{
     if(!depth)
-        return;
+        return NS_OK;        
     if(!p)
     {
         XPC_LOG_ALWAYS(("*** Cound not dump object with NULL address"));
-        return;
+        return NS_OK;        
     }
 
     nsIXPConnect* xpc;
@@ -492,7 +492,6 @@ XPC_Dump(nsISupports* p, int depth)
     }
     else
         XPC_LOG_ALWAYS(("*** Cound not dump the nsISupports @ %x", p));
-
-}
 #endif
-
+    return NS_OK;        
+}        

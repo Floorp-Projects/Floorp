@@ -38,7 +38,6 @@ LIBS		= 		\
 	-L$(DIST)/bin \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom       \
-	-lxpconnect \
 	-lxpt \
 	-lxptinfo \
 	-lxptcall \
