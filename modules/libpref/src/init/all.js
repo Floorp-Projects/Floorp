@@ -507,3 +507,5 @@ pref("custtoolbar.Composer.Formatting_Toolbar.open", true);
 pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCALE%/sidebar-rdf/%SIDEBAR_VERSION%/all-panels.rdf");
 
 pref("prefs.converted-to-utf8",false);
+
+pref("browser.throbber.url","http://www.mozilla.org");
