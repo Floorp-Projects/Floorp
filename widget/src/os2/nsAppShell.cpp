@@ -299,10 +299,10 @@ extern "C" nsresult NS_CreateAppshell( nsIAppShell **aAppShell)
    *aAppShell = pManager->GetAppshell();
 
    // only do this the very first time
-   if (gModuleData == nsnull)
+   if (gWidgetModuleData == nsnull)
    {
-      gModuleData = new nsWidgetModuleData();
-      gModuleData->Init(*aAppShell);
+      gWidgetModuleData = new nsWidgetModuleData();
+      gWidgetModuleData->Init(*aAppShell);
    }
 
    return NS_OK;

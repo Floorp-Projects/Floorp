@@ -102,7 +102,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     DIRPICKER dp = { { 0 }, 0, TRUE, 0 }; // modal dialog
 
     HWND ret = FS_PickDirectory(HWND_DESKTOP, mWnd,
-                                gModuleData->hModResources, &dp);
+                                gWidgetModuleData->hModResources, &dp);
 
     if (ret && dp.lReturn == DID_OK) {
       result = PR_TRUE;
@@ -119,7 +119,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     PRInt32 l = (mFilterList.Length()+2)*2;
     char *filterBuffer = (char*) nsMemory::Alloc(l);
-    int len = gModuleData->WideCharToMultiByte(0,
+    int len = gWidgetModuleData->WideCharToMultiByte(0,
                                           mFilterList.get(),
                                           mFilterList.Length(),
                                           filterBuffer,
@@ -155,7 +155,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     // Store the current directory in mDisplayDirectory
     char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
-    VERIFY(gModuleData->GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
+    VERIFY(gWidgetModuleData->GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
     mDisplayDirectory->InitWithPath(newCurrentDirectory);
     nsMemory::Free( newCurrentDirectory );
 

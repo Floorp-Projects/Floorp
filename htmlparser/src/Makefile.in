@@ -34,14 +34,6 @@ MODULE_NAME	= nsParserModule
 SHORT_LIBNAME	= gkparser
 REQUIRES	= xpcom string necko util uconv expat layout dom unicharutil pref nkcache
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS	= expat_s xmltok_s 
-
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
-endif
-
-else
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libxmltok_s.$(LIB_SUFFIX) \
@@ -50,9 +42,6 @@ SHARED_LIBRARY_LIBS = \
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS += $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
 endif
-
-endif
-
 
 CPPSRCS		= \
 		nsDTDUtils.cpp \

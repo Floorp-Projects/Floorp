@@ -198,7 +198,7 @@ nsGfxModuleData::~nsGfxModuleData()
   ::WinReleasePS( hpsScreen);
 }
 
-nsGfxModuleData gModuleData;
+nsGfxModuleData gGfxModuleData;
 
 int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
 {

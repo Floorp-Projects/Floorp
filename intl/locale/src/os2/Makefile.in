@@ -28,7 +28,7 @@ LIBRARY_NAME	= nslocale
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLocaleModule
-EXTRA_DSO_LIBS	= nslocale_s
+REQUIRES	= xpcom string unicharutil pref uconv
 
 
 CPPSRCS		= \
@@ -40,14 +40,15 @@ CPPSRCS		= \
 		nsLocaleModule.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = $(EXTRA_DSO_LIBS) \
+EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-EXTRA_DSO_LDOPTS += libuls.$(LIB_SUFFIX) ../libnslocale_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += libuls.lib
+SHARED_LIBRARY_LIBS += ../libnslocale_s.lib
 else
-EXTRA_DSO_LDOPTS += -llibuni
+SHARED_LIBRARY_LIBS += -llibuni -L.. -lnslocale_s
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -33,21 +33,6 @@ REQUIRES	= js xpcom string windowwatcher jsconsole find embed_base dom txtsvc
 
 CPPSRCS		= nsModule.cpp
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS	= \
-	windowwatcher_s \
-	jsconsole_s \
-	appstartupnotifier_s \
-	find_s \
-	$(NULL)
-
-
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
-endif
-
-else
-
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libwindowwatcher_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libappstartupnotifier_s.$(LIB_SUFFIX) \
@@ -57,8 +42,6 @@ SHARED_LIBRARY_LIBS = \
 
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
-endif
-
 endif
 
 LOCAL_INCLUDES	= \

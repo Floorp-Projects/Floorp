@@ -147,9 +147,9 @@ static NS_IMETHODIMP nsWidgetModuleDataConstructor (nsISupports *aOuter, REFNSII
   // pointer and call its init method. This object is only
   // instantiated in the embedding case - for the retail
   // browser this is done in NS_CreateAppshell
-  gModuleData = new nsWidgetModuleData();
-  gModuleData->Init(nsnull);
-  inst = (nsISupports*)gModuleData;
+  gWidgetModuleData = new nsWidgetModuleData();
+  gWidgetModuleData->Init(nsnull);
+  inst = (nsISupports*)gWidgetModuleData;
 
   if (inst == NULL)
   {

@@ -232,7 +232,7 @@ else
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
-	so_locations _gen _stubs $(wildcard *.res) \
+	$(EXE_DEF_FILE) so_locations _gen _stubs $(wildcard *.res) \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 ALL_TRASH_DIRS = \
 	$(GARBAGE_DIRS)
@@ -641,9 +641,9 @@ alltags:
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in
+$(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) $(EXE_DEF_FILE) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(LD) -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) /ST:0x1000000
+	$(LD) -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(EXE_DEF_FILE) /ST:0x1000000
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
@@ -743,7 +743,10 @@ endif
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 
 else # OS2
-ifdef SHARED_LIBRARY
+ifdef SHARED_LIBRARY_LIBS
+SUB_LOBJS	= $(SHARED_LIBRARY_LIBS)
+endif
+
 $(DEF_FILE): $(DEF_OBJS)
 	rm -f $@
 	@cmd /C "echo LIBRARY $(LIBRARY_NAME) INITINSTANCE TERMINSTANCE >$(DEF_FILE)"
@@ -761,17 +764,17 @@ else
 	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
 endif
 	$(ADD_TO_DEF_FILE)
+
 $(IMPORT_LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
 	$(MAKE_DEF_FILE)
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
-else
-$(LIBRARY): $(OBJS)
+
+$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
 	rm -f $@
-	$(AR) $(AR_FLAGS) $(LIBOBJS)
+	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
-endif
 endif
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
