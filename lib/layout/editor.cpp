@@ -578,7 +578,7 @@ class CEditPublishData {
 // Characters that are not allowed in the destination URL for publishing.
 // RFC 1808 and RFC 2068, we are erring on the safe side and allowing
 // some potentially illegal URLs.
-#define ED_BAD_PUBLISH_URL_CHARS "# <>\""
+#define ED_BAD_PUBLISH_URL_CHARS "%# <>\""
 
 // Return a STATIC string, don't free.
 PRIVATE int edt_CheckPublishURL(char *pURL) {
@@ -629,7 +629,7 @@ PRIVATE int edt_CheckPublishURL(char *pURL) {
 //  so supplied URL string may be changed
 // MAC AND UNIX -- REMOVE IFDEFs AFTER CHANGING FE CALLS TO USE ppURL
 #ifdef XP_WIN
-XP_Bool EDT_CheckPublishURL( MWContext *pContext, char **ppURL)
+ED_PublishError EDT_CheckPublishURL( MWContext *pContext, char **ppURL)
 {
   char *pURL = *ppURL;
 #else
@@ -637,7 +637,7 @@ XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
 {
 #endif
 
-  XP_Bool bRetVal = TRUE;
+  ED_PublishError iRetVal = ED_PUBLISH_OK;
 
   int xpStrId = edt_CheckPublishURL(pURL);
 
@@ -669,10 +669,13 @@ XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
               return EDT_CheckPublishURL(pContext, pURL);
 #endif
           }
+          // Let user edit their mistakes
+          // We don't know if the error was in location part or filename
+          else return ED_PUBLISH_ERROR_FILENAME;
       }
       else if( xpStrId == XP_EDT_PUBLISH_NO_EXTENSION )
       {
-          // Ask user if they want to replace bad chars with '_'
+          // Ask user if they want to append missing extension: ".html"
           if( FE_Confirm(pContext, message) )
           {
 #ifdef XP_WIN
@@ -683,7 +686,8 @@ XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
               XP_FREEIF(message);
               // Prevent infinite loop if we had an allocation error
               if( !pNewLocation )
-                return FALSE;
+                return ED_PUBLISH_ERROR_FILENAME;
+
               // Check for any other errors
               return EDT_CheckPublishURL(pContext, ppURL);
 #else
@@ -691,13 +695,19 @@ XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
               return FALSE;
 #endif              
           }
+          else return ED_PUBLISH_ERROR_FILENAME;
       }
       else
       {
           // Report the error, but give the user the option of trying to publish anyway.
           StrAllocCat(message,"\n\n");
           StrAllocCat(message,XP_GetString(XP_EDT_PUBLISH_ERROR_BODY));
-          bRetVal = FE_Confirm(pContext,message);
+          if( !FE_Confirm(pContext,message) )
+          {
+            // The only other filename-specific error is no filename at all
+            iRetVal = (xpStrId == XP_EDT_PUBLISH_NO_FILE) ? 
+                        ED_PUBLISH_ERROR_FILENAME : ED_PUBLISH_ERROR_LOCATION;
+          }
       }
       XP_FREEIF(message);
     }
@@ -706,7 +716,7 @@ XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
     }
   }    
 
-  return bRetVal;
+  return iRetVal;
 }
 
 ED_FileError EDT_PublishFile( MWContext * pContext,

@@ -8584,8 +8584,22 @@ void CEditTextElement::PartialStreamOut( IStreamOut *pOut, CEditSelection& selec
     
         pOut->WriteInt( m_color.GetAsLong() );
     
-        if( m_tf & TF_HREF ){
-            pOut->WriteZString( m_href->hrefStr );
+        if( m_tf & TF_HREF )
+        {
+            // Must make URLs absolute when copying
+            CEditBuffer *pBuffer = GetEditBuffer();
+            char *pAbsolute = NULL;
+            if( pBuffer )
+                pAbsolute = NET_MakeAbsoluteURL(LO_GetBaseURL(pBuffer->m_pContext), m_href->hrefStr);
+
+            if( pAbsolute )
+            {
+                pOut->WriteZString( pAbsolute );
+                XP_FREE(pAbsolute);
+            }
+            else
+                pOut->WriteZString( m_href->hrefStr );
+
             pOut->WriteZString( m_href->pExtra );
         }
 

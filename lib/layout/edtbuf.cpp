@@ -8130,41 +8130,9 @@ char* CEditBuffer::GetAllDocumentTargetsInFile(char *pHref)
 // The UNIX/MAC code is XP and should really be used for
 // windows also.  We're just scared to change it this late
 // in the cycle. Bug 50888
-#ifdef XP_WIN
-    // First check if URL is a local file that exists
-    XP_StatStruct stat;
-    XP_Bool bFreeFilename = FALSE;
+// cmanske: 10/6/98 Tested the XP code and it seems to work fine in Windows
 
-#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_OS2)
-    if ( -1 != XP_Stat(pHref, &stat, xpURL) &&
-        stat.st_mode & S_IFREG ) {
-#else
-    if ( -1 != XP_Stat(pHref, &stat, xpURL) &&
-        stat.st_mode & _S_IFREG ) {
-#endif
-        // We can use unprocessed URL,
-        //   and we don't need to free it
-        pFilename = pHref;
-    }
-    else {
-        // We probably have a URL,
-        //  get absolute URL path then convert to local format
-        char *pAbsolute = NET_MakeAbsoluteURL( pCurrentURL, pHref );
-
-        if( !pAbsolute ||
-            !XP_ConvertUrlToLocalFile(pAbsolute, &pFilename) ){
-            if( pFilename ) XP_FREE(pFilename);
-            if( pAbsolute ) XP_FREE(pAbsolute);
-            return NULL;
-        }
-        XP_FREE(pAbsolute);
-        // We need to free the filename made for us
-        bFreeFilename = TRUE;
-    }
-
-#else
     // pFilename is in xpURL format.
-
     // First check if URL is a local file that exists
     char *pURL = XP_PlatformFileToURL(pHref);
     if (pURL && XP_ConvertUrlToLocalFile(pURL,NULL)) {
@@ -8189,20 +8157,11 @@ char* CEditBuffer::GetAllDocumentTargetsInFile(char *pHref)
     if (!pFilename) {
       return NULL;
     }
-#endif
 
     // Open local file
     XP_File file = XP_FileOpen( pFilename, xpURL, XP_FILE_READ );
     if( !file ) {
-
-        // Same story as above. Should use the non-windows version.
-#ifdef XP_WIN
-        if( pFilename && bFreeFilename ){
-            XP_FREE(pFilename);
-        }
-#else
         XP_FREEIF(pFilename);
-#endif
         return NULL;
     }
 
@@ -8292,15 +8251,7 @@ FIND_TAG:
         }
     }
     XP_FileClose(file);
-
-// Same story as above. Should use the non-windows version.
-#ifdef XP_WIN
-    if( pFilename && bFreeFilename ){
-        XP_FREE(pFilename);
-    }
-#else
     XP_FREEIF(pFilename);
-#endif
 
     pBuf[iCur] = 0;
 
