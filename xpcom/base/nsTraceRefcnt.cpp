@@ -300,14 +300,26 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
       if (ok < 0)
         break;
 
-      int len = strlen(info.dli_sname);
+      const char * symbol = info.dli_sname;
+
+      int len = strlen(symbol);
       if (! len)
         break; // XXX Lazy. We could look at the filename or something.
 
+      char demangled[4096] = "\0";
+
+      DemangleSymbol(symbol,demangled,sizeof(demangled));
+
+      if (demangled && strlen(demangled))
+      {
+        symbol = demangled;
+        len = strlen(symbol);
+      }
+        
       if (len + 12 >= aBufLen) // 12 == strlen("+0x12345678 ")
         break;
 
-      strcpy(cp, info.dli_sname);
+      strcpy(cp, symbol);
       cp += len;
 
       *cp++ = '+';
@@ -484,3 +496,49 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     printf("%s(%d) %p Release %d %s\n", aFile, aLine, aPtr, aRefCnt, sb);
   }
 }
+
+// This thing is exported by libiberty.a (-liberty)
+// Yes, this is a gcc only hack
+#if defined(MOZ_DEMANGLE_UNDEFINED_SYMBOLS)
+extern "C" char * cplus_demangle(const char *,int);
+#include <stdlib.h> // for free()
+#endif // MOZ_DEMANGLE_UNDEFINED_SYMBOLS
+
+#ifdef __linux__
+NS_COM void 
+nsTraceRefcnt::DemangleSymbol(const char * aSymbol, 
+                              char * aBuffer,
+                              int aBufLen)
+{
+  NS_ASSERTION(nsnull != aSymbol,"null symbol");
+  NS_ASSERTION(nsnull != aBuffer,"null buffer");
+  NS_ASSERTION(aBufLen >= 32 ,"pulled 32 out of you know where");
+
+  aBuffer[0] = '\0';
+
+#if defined(MOZ_DEMANGLE_UNDEFINED_SYMBOLS)
+  /* See demangle.h in the gcc source for the voodoo */
+  char * demangled = cplus_demangle(aSymbol,3);
+
+  if (demangled)
+  {
+    strncpy(aBuffer,demangled,aBufLen);
+
+    free(demangled);
+  }
+#endif // MOZ_DEMANGLE_UNDEFINED_SYMBOLS
+}
+#else // __linux__
+NS_COM void 
+nsTraceRefcnt::DemangleSymbol(const char * aSymbol, 
+                              char * aBuffer,
+                              int aBufLen)
+{
+  NS_ASSERTION(nsnull != aSymbol,"null symbol");
+  NS_ASSERTION(nsnull != aDemangledSymbol,"null out param");
+
+  // lose
+  *aDemangledSymbol = nsnull;
+}
+#endif // __linux__
+
