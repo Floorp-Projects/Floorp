@@ -46,6 +46,7 @@ static NS_DEFINE_IID(kCMenuManagerCID, NS_MENU_MANAGER_CID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kCXPFCToolbarCID, NS_XPFC_TOOLBAR_CID);
 static NS_DEFINE_IID(kCXPFCDialogCID, NS_XPFC_DIALOG_CID);
+static NS_DEFINE_IID(kCUserCID, NS_USER_CID);
 static NS_DEFINE_IID(kCXPFCButtonCID, NS_XPFC_BUTTON_CID);
 static NS_DEFINE_IID(kCXPButtonCID, NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCXPItemCID, NS_XP_ITEM_CID);
@@ -101,6 +102,7 @@ void main(int argc, char **argv)
     nsRepository::RegisterFactory(kCXPItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCBoxLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCListLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCUserCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
 	result = nsRepository::CreateInstance(kCShellInstanceCID,
 										  NULL,

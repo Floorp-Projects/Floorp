@@ -1,25 +1,24 @@
-# 
+#
 #           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
 #              NETSCAPE COMMUNICATIONS CORPORATION
-# Copyright (C) 1996 Netscape Communications Corporation.  All Rights
+# Copyright © 1996, 1997 Netscape Communications Corporation.  All Rights
 # Reserved.  Use of this Source Code is subject to the terms of the
 # applicable license agreement from Netscape Communications Corporation.
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ..
-DEPTH  = ..
 
-DIRS =  core canvas command dialog layout network observer util parser chrome shell toolkit widget user
+#
+#  Override TARGETS variable so that only static libraries
+#  are specifed as dependencies within rules.mk.
+#
 
-LIBRARY_NAME = xpfc
+CFLAGS         +=-D_IMPL_NS_XPFC  -DNSPR20
+INCLUDES       += -I../inc -I$(GDEPTH)/include
 
-EXPORTS = \
-	$(NULL)
+LIBRARY_NAME      = xpfc_user
+LIBRARY_VERSION   = 10
 
-PRIVATE_EXPORTS = \
-	$(NULL)
+ARCHIVE_ONLY = 1
 
-MODULE = xpfc
-
-REQUIRES = xpcom raptor
+TARGETS = $(LIBRARY)

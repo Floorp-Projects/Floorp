@@ -7,12 +7,7 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ..
-DEPTH  = ..
-
-DIRS =  core canvas command dialog layout network observer util parser chrome shell toolkit widget user
-
-LIBRARY_NAME = xpfc
+GDEPTH = ../../..
 
 EXPORTS = \
 	$(NULL)
@@ -22,4 +17,9 @@ PRIVATE_EXPORTS = \
 
 MODULE = xpfc
 
-REQUIRES = xpcom raptor
+CPPSRCS = \
+    nsUser.cpp \
+	$(NULL)
+
+REQUIRES = xpcom raptor netlib
+
