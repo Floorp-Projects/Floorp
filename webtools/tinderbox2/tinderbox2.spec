@@ -1,9 +1,14 @@
 %define _prefix /export/home/tinderbox2
 %define _cgi_prefix /home/httpd/cgi-bin
 
+# auto generate the version number based on the output of the date
+# command.
+
+%define _version %(eval "date '+%Y%m%e'")
+
 Summary: Development Monitoring Tool
 Name: tinderbox2
-Version: 20010214
+Version: %{_version}
 Release: 1
 Copyright: MPL
 Group: Development/Tools

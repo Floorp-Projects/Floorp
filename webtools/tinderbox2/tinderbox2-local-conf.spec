@@ -1,8 +1,13 @@
 %define _prefix /export/home/tinderbox2
 
+# auto generate the version number based on the output of the date
+# command.
+
+%define _version %(eval "date '+%Y%m%e'")
+
 Summary: Development monitoring tool
 Name: tinderbox2-local-conf
-Version: 20010214
+Version: %{_version}
 Release: 1
 Copyright: MPL
 Group: Development/Tools
