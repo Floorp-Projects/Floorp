@@ -43,8 +43,8 @@ import java.io.*;
  *
  * @author Norris Boyd
  */
-public class Shell extends ScriptableObject {
-
+public class Shell extends GlobalScope
+{
     /**
      * Main entry point.
      *
@@ -56,42 +56,40 @@ public class Shell extends ScriptableObject {
     public static void main(String args[]) {
         // Associate a new Context with this thread
         Context cx = Context.enter();
-
-        // A bit of shorthand: since Shell extends ScriptableObject,
-        // we can make it the global object.
-        global = new Shell();
-
-        // Initialize the standard objects (Object, Function, etc.)
-        // This must be done before scripts can be executed.
-        cx.initStandardObjects(global);
-
-        // Define some global functions particular to the shell. Note
-        // that these functions are not part of ECMA.
-        String[] names = { "print", "quit", "version", "load", "help" };
         try {
-            global.defineFunctionProperties(names, Shell.class,
-                                            ScriptableObject.DONTENUM);
-        } catch (PropertyException e) {
-            throw new Error(e.getMessage());
+            // Initialize the standard objects (Object, Function, etc.)
+            // This must be done before scripts can be executed.
+            Shell shell = new Shell();
+            cx.initStandardObjects(shell);
+
+            // Define some global functions particular to the shell. Note
+            // that these functions are not part of ECMA.
+            String[] names = { "print", "quit", "version", "load", "help" };
+            try {
+                shell.defineFunctionProperties(names, Shell.class,
+                                               ScriptableObject.DONTENUM);
+            } catch (PropertyException e) {
+                throw new Error(e.getMessage());
+            }
+
+            args = processOptions(cx, args);
+
+            // Set up "arguments" in the global scope to contain the command
+            // line arguments after the name of the script to execute
+            Object[] array = args;
+            if (args.length > 0) {
+                int length = args.length - 1;
+                array = new Object[length];
+                System.arraycopy(args, 1, array, 0, length);
+            }
+            Scriptable argsObj = cx.newArray(shell, array);
+            shell.defineProperty("arguments", argsObj,
+                                 ScriptableObject.DONTENUM);
+
+            shell.processSource(cx, args.length == 0 ? null : args[0]);
+        } finally {
+            Context.exit();
         }
-
-        args = processOptions(cx, args);
-
-        // Set up "arguments" in the global scope to contain the command
-        // line arguments after the name of the script to execute
-        Object[] array = args;
-        if (args.length > 0) {
-            int length = args.length - 1;
-            array = new Object[length];
-            System.arraycopy(args, 1, array, 0, length);
-        }
-        Scriptable argsObj = cx.newArray(global, array);
-        global.defineProperty("arguments", argsObj,
-                              ScriptableObject.DONTENUM);
-
-        processSource(cx, args.length == 0 ? null : args[0]);
-
-        cx.exit();
     }
 
     /**
@@ -121,24 +119,12 @@ public class Shell extends ScriptableObject {
     }
 
     /**
-     * Return name of this class, the global object.
-     *
-     * This method must be implemented in all concrete classes
-     * extending ScriptableObject.
-     *
-     * @see org.mozilla.javascript.Scriptable#getClassName
-     */
-    public String getClassName() {
-        return "global";
-    }
-
-    /**
      * Print a usage message.
      */
-    public static void usage(String s) {
+    private static void usage(String s) {
         p("Didn't understand \"" + s + "\".");
         p("Valid arguments are:");
-        p("-version 100|110|120|130");
+        p("-version 100|110|120|130|140|150");
         System.exit(1);
     }
 
@@ -147,7 +133,7 @@ public class Shell extends ScriptableObject {
      *
      * This method is defined as a JavaScript function.
      */
-    public static void help(String s) {
+    public void help() {
         p("");
         p("Command                Description");
         p("=======                ===========");
@@ -197,7 +183,8 @@ public class Shell extends ScriptableObject {
      *
      * This method is defined as a JavaScript function.
      */
-    public static void quit() {
+    public void quit()
+    {
         quitting = true;
     }
 
@@ -226,8 +213,9 @@ public class Shell extends ScriptableObject {
     public static void load(Context cx, Scriptable thisObj,
                             Object[] args, Function funObj)
     {
-        for (int i=0; i < args.length; i++) {
-            processSource(cx, cx.toString(args[i]));
+        Shell shell = (Shell)GlobalScope.get(thisObj);
+        for (int i = 0; i < args.length; i++) {
+            shell.processSource(cx, cx.toString(args[i]));
         }
     }
 
@@ -239,7 +227,8 @@ public class Shell extends ScriptableObject {
      * @param filename the name of the file to compile, or null
      *                 for interactive mode.
      */
-    public static void processSource(Context cx, String filename) {
+    private void processSource(Context cx, String filename)
+    {
         if (filename == null) {
             BufferedReader in = new BufferedReader
                 (new InputStreamReader(System.in));
@@ -271,7 +260,7 @@ public class Shell extends ScriptableObject {
                         if (cx.stringIsCompilableUnit(source))
                             break;
                     }
-                    Object result = cx.evaluateString(global, source,
+                    Object result = cx.evaluateString(this, source,
                                                       sourceName, startline,
                                                       null);
                     if (result != cx.getUndefinedValue()) {
@@ -315,7 +304,7 @@ public class Shell extends ScriptableObject {
                 // Here we evalute the entire contents of the file as
                 // a script. Text is printed only if the print() function
                 // is called.
-                cx.evaluateReader(global, in, filename, 1, null);
+                cx.evaluateReader(this, in, filename, 1, null);
             }
             catch (WrappedException we) {
                 System.err.println(we.getWrappedException().toString());
@@ -346,7 +335,6 @@ public class Shell extends ScriptableObject {
         System.out.println(s);
     }
 
-    static Shell global;
-    static boolean quitting;
+    private boolean quitting;
 }
 
