@@ -274,13 +274,14 @@ void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
 
 void nsMsgMailboxParser::UpdateProgressPercent ()
 {
-	if (m_statusFeedback && m_graph_progress_total != 0)
-	{
-          // prevent overflow by dividing both by 100
-          PRUint32 progressTotal = m_graph_progress_total / 100;
-          PRUint32 progressReceived = m_graph_progress_received / 100;
-		m_statusFeedback->ShowProgress((100 *(progressReceived))  / progressTotal);	
-	}
+  if (m_statusFeedback && m_graph_progress_total != 0)
+  {
+    // prevent overflow by dividing both by 100
+    PRUint32 progressTotal = m_graph_progress_total / 100;
+    PRUint32 progressReceived = m_graph_progress_received / 100;
+    if (progressTotal > 0)
+      m_statusFeedback->ShowProgress((100 *(progressReceived))  / progressTotal);	
+  }
 }
 
 int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
