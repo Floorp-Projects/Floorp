@@ -221,7 +221,7 @@ nsFontMetricsMac :: GetSubscriptOffset(nscoord& aResult)
 {
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
-  aResult = NSToCoordRound(- float(mMaxDescent / 2) + dev2app);
+  aResult = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
   return NS_OK;
 }
 
