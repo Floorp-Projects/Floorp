@@ -803,7 +803,7 @@ public:
     virtual ~nsCAutoString();
 
     nsCAutoString();
-    nsCAutoString(const nsCAutoString& aString);
+    nsCAutoString(const nsCString& );
     nsCAutoString(const char* aString,PRInt32 aLength=-1);
     nsCAutoString(const CBufDescriptor& aBuffer);
 
