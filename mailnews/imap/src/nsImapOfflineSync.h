@@ -27,17 +27,17 @@
 #include "nsIMsgDatabase.h"
 #include "nsIUrlListener.h"
 #include "nsIMsgOfflineImapOperation.h"
-
+#include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h"
 
 class nsImapOfflineSync : public nsIUrlListener {
 public:												// set to one folder to playback one folder only
-	nsImapOfflineSync(nsIMsgFolder *singleFolderOnly = nsnull);
+	nsImapOfflineSync(nsIMsgWindow *window, nsIMsgFolder *singleFolderOnly = nsnull);
 	virtual ~nsImapOfflineSync();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLLISTENER
-	nsresult		ProcessNextOperation();
+	nsresult		ProcessNextOperation(); // this kicks off playback
 	
 	PRInt32		GetCurrentUIDValidity() { return mCurrentUIDValidity; }
 	void		SetCurrentUIDValidity(PRInt32 uidvalidity) { mCurrentUIDValidity = uidvalidity; }
@@ -46,7 +46,7 @@ public:												// set to one folder to playback one folder only
 	PRBool		ProcessingStaleFolderUpdate() { return m_singleFolderToUpdate != nsnull; }
 
 	PRBool		CreateOfflineFolder(nsIMsgFolder *folder);
-
+  void      SetWindow(nsIMsgWindow *window);
 private:
 	PRBool		CreateOfflineFolders();
 	void 		AdvanceToNextFolder();
@@ -62,6 +62,7 @@ private:
 	
 	nsCOMPtr <nsIMsgFolder>	m_currentFolder;
 	nsCOMPtr <nsIMsgFolder> m_singleFolderToUpdate;
+  nsCOMPtr <nsIMsgWindow> m_window;
 	nsMsgKeyArray				m_CurrentKeys;
 	PRUint32					m_KeyIndex;
 	nsCOMPtr <nsIMsgDatabase>				m_currentDB;
