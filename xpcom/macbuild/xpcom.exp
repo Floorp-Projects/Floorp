@@ -1,5 +1,5 @@
 #ToString__4nsIDCFv		# nsID::ToString() const
-#Parse__4nsIDFPc		# nsID::Parse(char*)
+Parse__4nsIDFPc		# nsID::Parse(char*)
 #__vt__5IDKey		# IDKey::__vt
 #monitor__12NSRepository		# NSRepository::monitor
 #factories__12NSRepository		# NSRepository::factories
@@ -9,14 +9,14 @@
 #FreeLibraries__12NSRepositoryFv		# NSRepository::FreeLibraries()
 #UnregisterFactory__12NSRepositoryFRC4nsIDPCc		# NSRepository::UnregisterFactory(const nsID&,const char*)
 #UnregisterFactory__12NSRepositoryFRC4nsIDP10nsIFactory		# NSRepository::UnregisterFactory(const nsID&,nsIFactory*)
-#RegisterFactory__12NSRepositoryFRC4nsIDPCcii		# NSRepository::RegisterFactory(const nsID&,const char*,int,int)
-#RegisterFactory__12NSRepositoryFRC4nsIDP10nsIFactoryi		# NSRepository::RegisterFactory(const nsID&,nsIFactory*,int)
-#CreateInstance2__12NSRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# NSRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
-#CreateInstance__12NSRepositoryFRC4nsIDP11nsISupportsRC4nsIDPPv		# NSRepository::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
+RegisterFactory__12NSRepositoryFRC4nsIDPCcii		# NSRepository::RegisterFactory(const nsID&,const char*,int,int)
+RegisterFactory__12NSRepositoryFRC4nsIDP10nsIFactoryi		# NSRepository::RegisterFactory(const nsID&,nsIFactory*,int)
+CreateInstance2__12NSRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# NSRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
+CreateInstance__12NSRepositoryFRC4nsIDP11nsISupportsRC4nsIDPPv		# NSRepository::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
 #Initialize__12NSRepositoryFv		# NSRepository::Initialize()
 #checkInitialized__12NSRepositoryFv		# NSRepository::checkInitialized()
 #__dt__5IDKeyFv		# IDKey::~IDKey()
-#FindFactory__12NSRepositoryFRC4nsIDPP10nsIFactory		# NSRepository::FindFactory(const nsID&,nsIFactory**)
+FindFactory__12NSRepositoryFRC4nsIDPP10nsIFactory		# NSRepository::FindFactory(const nsID&,nsIFactory**)
 #__vt__9nsHashKey		# nsHashKey::__vt
 Enumerate__11nsHashtableFPFP9nsHashKeyPv_i		# nsHashtable::Enumerate(int (*)(nsHashKey*, void*))
 Clone__11nsHashtableFv		# nsHashtable::Clone()
@@ -27,15 +27,15 @@ __dt__11nsHashtableFv		# nsHashtable::~nsHashtable()
 __ct__11nsHashtableFUi		# nsHashtable::nsHashtable(unsigned int)
 __dt__9nsHashKeyFv		# nsHashKey::~nsHashKey()
 __ct__9nsHashKeyFv		# nsHashKey::nsHashKey()
-#Warning__7nsDebugFPCcPCci		# nsDebug::Warning(const char*,const char*,int)
-#Error__7nsDebugFPCcPCci		# nsDebug::Error(const char*,const char*,int)
-#NotReached__7nsDebugFPCcPCci		# nsDebug::NotReached(const char*,const char*,int)
-#NotYetImplemented__7nsDebugFPCcPCci		# nsDebug::NotYetImplemented(const char*,const char*,int)
-#Assertion__7nsDebugFPCcPCcPCci		# nsDebug::Assertion(const char*,const char*,const char*,int)
+Warning__7nsDebugFPCcPCci		# nsDebug::Warning(const char*,const char*,int)
+Error__7nsDebugFPCcPCci		# nsDebug::Error(const char*,const char*,int)
+NotReached__7nsDebugFPCcPCci		# nsDebug::NotReached(const char*,const char*,int)
+NotYetImplemented__7nsDebugFPCcPCci		# nsDebug::NotYetImplemented(const char*,const char*,int)
+Assertion__7nsDebugFPCcPCcPCci		# nsDebug::Assertion(const char*,const char*,const char*,int)
 PostCondition__7nsDebugFPCcPCcPCci		# nsDebug::PostCondition(const char*,const char*,const char*,int)
 PreCondition__7nsDebugFPCcPCcPCci		# nsDebug::PreCondition(const char*,const char*,const char*,int)
 #Break__7nsDebugFPCci		# nsDebug::Break(const char*,int)
-#Abort__7nsDebugFPCci		# nsDebug::Abort(const char*,int)
+Abort__7nsDebugFPCci		# nsDebug::Abort(const char*,int)
 #__vt__17SupportsArrayImpl		# SupportsArrayImpl::__vt
 #__vt__16nsISupportsArray		# nsISupportsArray::__vt
 #__vt__11nsISupports		# nsISupports::__vt
@@ -43,7 +43,7 @@ PreCondition__7nsDebugFPCcPCcPCci		# nsDebug::PreCondition(const char*,const cha
 #Count__17SupportsArrayImplCFv		# SupportsArrayImpl::Count() const
 #__vc__17SupportsArrayImplCFi		# SupportsArrayImpl::operator [](int) const
 #AppendElement__17SupportsArrayImplFP11nsISupports		# SupportsArrayImpl::AppendElement(nsISupports*)
-#NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsArray**)
+NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsArray**)
 #EnumerateBackwards__17SupportsArrayImplFPFP11nsISupportsPv_iPv		# SupportsArrayImpl::EnumerateBackwards(int (*)(nsISupports*, void*),void*)
 #EnumerateForwards__17SupportsArrayImplFPFP11nsISupportsPv_iPv		# SupportsArrayImpl::EnumerateForwards(int (*)(nsISupports*, void*),void*)
 #Compact__17SupportsArrayImplFv		# SupportsArrayImpl::Compact()
