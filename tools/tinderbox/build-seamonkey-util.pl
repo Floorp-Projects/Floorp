@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.140 $ ';
+$::UtilsVersion = '$Revision: 1.141 $ ';
 
 package TinderUtils;
 
@@ -1919,15 +1919,15 @@ sub BloatTest2 {
 
     if($Settings::TestsPhoneHome) {
       my $leaks_testname       = "trace_malloc_leaks";
-      my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">Lk:" . $newstats->{'leaks'} . "B</a>\n\n";
+      my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">Lk:" . PrintSize($newstats->{'leaks'}) . "B</a>\n\n";
       print_log $leaks_string;
 
       my $maxheap_testname       = "trace_malloc_maxheap";
-      my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">MH:" . $newstats->{'mhs'} . "B</a>\n\n";
+      my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">MH:" . PrintSize($newstats->{'mhs'}) . "B</a>\n\n";
       print_log $maxheap_string;
 
       my $allocs_testname       = "trace_malloc_allocs";
-      my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . $newstats->{'allocs'} . "B</a>\n\n";
+      my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . PrintSize($newstats->{'allocs'}) . "B</a>\n\n";
       print_log $allocs_string;
 
       # Send results to server.
