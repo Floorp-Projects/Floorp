@@ -100,7 +100,7 @@
     
     (production :full-postfix-expression (:const-dot-expression) full-postfix-expression-const-dot-expression)
     (production :full-postfix-expression (:full-postfix-subexpression) full-postfix-expression-full-postfix-subexpression)
-
+    
     (production :full-postfix-subexpression (:primary-expression) full-postfix-subexpression-primary-expression)
     (production :full-postfix-subexpression (:expression-qualified-identifier) full-postfix-subexpression-expression-qualified-identifier)
     (production :full-postfix-subexpression (:full-new-expression) full-postfix-subexpression-full-new-expression)
@@ -121,28 +121,28 @@
     (production :short-new-subexpression (:bracket-expression) short-new-subexpression-new-full)
     (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
     
-
+    
     (production :bracket-expression (:const-expression) bracket-expression-const-expression)
     (production :bracket-expression (:bracket-subexpression) bracket-expression-bracket-subexpression)
     
     (production :bracket-subexpression (:bracket-expression :brackets) bracket-subexpression-brackets)
     (production :bracket-subexpression (:bracket-subexpression :dot-operator) bracket-subexpression-dot-operator)
-
+    
     (production :const-expression (:dot-expression) const-expression-dot-expression)
     (production :const-expression (:const-dot-expression) const-expression-const-dot-expression)
-
+    
     (production :const-dot-expression (const :dot-expression) const-dot-expression-dot-expression)
-
+    
     (production :dot-expression (:primary-expression) dot-expression-primary-expression)
     (production :dot-expression (:qualified-identifier) dot-expression-qualified-identifier)
     (production :dot-expression (:full-new-expression) dot-expression-full-new-expression)
     (production :dot-expression (:dot-expression :dot-operator) dot-expression-dot-operator)
-
-
+    
+    
     (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier)
     
     (production :brackets ([ :argument-list ]) brackets-argument-list)
-
+    
     (production :arguments (\( :argument-list \)) arguments-argument-list)
     
     (production :argument-list () argument-list-none)
@@ -423,8 +423,8 @@
     (? js2
       (%subsection "Include Statement")
       (production :include-statement (include :no-line-break (:list-expression allow-in)) include-statement-include))
-
-
+    
+    
     (%section "Definitions")
     (production (:annotated-definition :omega) (:attributes (:definition :omega)) annotated-definition-attribute-and-definition)
     
@@ -437,7 +437,7 @@
     (production :attribute (private) attribute-private)
     (production :attribute (public) attribute-public)
     (production :attribute (static) attribute-static)
-     
+    
     (production (:definition :omega) (:import-definition (:semicolon :omega)) definition-import-definition)
     (production (:definition :omega) (:export-definition (:semicolon :omega)) definition-export-definition)
     (production (:definition :omega) (:variable-definition (:semicolon :omega)) definition-variable-definition)
@@ -513,7 +513,7 @@
     (production :all-parameters (:parameter) all-parameters-parameter)
     (production :all-parameters (:parameter \, :all-parameters) all-parameters-parameter-and-more)
     (production :all-parameters (:optional-named-rest-parameters) all-parameters-optional-named-rest-parameters)
-
+    
     (production :optional-named-rest-parameters (:optional-parameter) optional-named-rest-parameters-optional-parameter)
     (production :optional-named-rest-parameters (:optional-parameter \, :optional-named-rest-parameters) optional-named-rest-parameters-optional-parameter-and-more)
     (production :optional-named-rest-parameters (\| :named-rest-parameters) optional-named-rest-parameters-named-rest-parameters)
@@ -547,19 +547,15 @@
     
     
     (%subsection "Class Definition")
-    (production (:class-definition :omega) (class :identifier :superclass :implements-list :block) class-definition-definition)
+    (production (:class-definition :omega) (class :identifier :inheritance :block) class-definition-definition)
     (production (:class-definition :omega) (class :identifier (:semicolon :omega)) class-definition-declaration)
     
-    (production :superclass () superclass-none)
-    (production :superclass (extends (:type-expression allow-in)) superclass-one)
-    
-    (production :implements-list () implements-list-none)
-    (production :implements-list (implements :type-expression-list) implements-list-one)
-    
-    (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
-    (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more)
-    
+    (production :inheritance () inheritance-none)
+    (production :inheritance (extends (:type-expression allow-in)) inheritance-extends)
     (? js2
+      (production :inheritance (implements :type-expression-list) inheritance-implements)
+      (production :inheritance (extends (:type-expression allow-in) implements :type-expression-list) inheritance-extends-implements)
+      
       (%subsection "Interface Definition")
       (production (:interface-definition :omega) (interface :identifier :extends-list :block) interface-definition-definition)
       (production (:interface-definition :omega) (interface :identifier (:semicolon :omega)) interface-definition-declaration))
@@ -571,12 +567,8 @@
     (production :extends-list () extends-list-none)
     (production :extends-list (extends :type-expression-list) extends-list-one)
     
-    
-    ;(%subsection "Attribute Definition")
-    ;(production :attribute-definition (attribute :no-line-break :identifier =) attribute-definition-none)
-    ;(production :attribute-definition (default =) attribute-definition-default)
-    ;(production :attribute-definition (:attribute-definition :attribute) attribute-definition-identifier)
-    ;(production :attribute-definition (:attribute-definition namespace \( (:type-expression allow-in) \)) attribute-definition-namespace)
+    (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
+    (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more)
     
     
     (%section "Language Declaration")
