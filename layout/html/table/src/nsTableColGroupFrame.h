@@ -40,9 +40,9 @@
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsTableColFrame.h"
+#include "nsTablePainter.h"
 
 class nsTableColFrame;
-class nsTableFrame;
 
 enum nsTableColGroupType {
   eColGroupContent            = 0, // there is real col group content associated   
@@ -183,6 +183,21 @@ public:
   static void ResetColIndices(nsIFrame*       aFirstColGroup,
                               PRInt32         aFirstColIndex,
                               nsIFrame*       aStartColFrame = nsnull);
+
+  /**
+   * Gets inner border widths before collapsing with cell borders
+   * Caller must get left border from previous column
+   * GetContinuousBCBorderWidth will not overwrite aBorder.left
+   * see nsTablePainter about continuous borders
+   */
+  void GetContinuousBCBorderWidth(float     aPixelsToTwips,
+                                  nsMargin& aBorder);
+  /**
+   * Set full border widths before collapsing with cell borders
+   * @param aForSide - side to set; only accepts top and bottom
+   */
+  void SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                  BCPixelSize aPixelValue);
 protected:
   nsTableColGroupFrame();
 
@@ -221,6 +236,10 @@ protected:
   PRInt32 mColCount;
   // the starting column index this col group represents. Must be >= 0. 
   PRInt32 mStartColIndex;
+
+  // border width in pixels
+  BCPixelSize mTopContBorderWidth;
+  BCPixelSize mBottomContBorderWidth;
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame()

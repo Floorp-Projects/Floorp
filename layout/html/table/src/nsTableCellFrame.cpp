@@ -40,6 +40,7 @@
 #include "nsTableCellFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableRowGroupFrame.h"
+#include "nsTablePainter.h"
 #include "nsReflowPath.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -376,30 +377,23 @@ nsTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
                                 nsIRenderingContext&      aRenderingContext,
                                 const nsRect&             aDirtyRect,
                                 PRUint32&                 aFlags,
-                                const nsStyleTableBorder& aCellTableStyle,
                                 const nsStyleBorder&      aStyleBorder,
                                 const nsStylePadding&     aStylePadding,
-                                PRBool                    aVisibleBackground,
-                                PRBool&                   aPaintChildren)
+                                const nsStyleTableBorder& aCellTableStyle)
 {
-  if (aVisibleBackground) {
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, aStyleBorder, aStylePadding,
-                                    PR_TRUE);
-    // draw the border only when there is content or showing empty cells
-    if (!GetContentEmpty() || NS_STYLE_TABLE_EMPTY_CELLS_SHOW == aCellTableStyle.mEmptyCells) {
-      PRIntn skipSides = GetSkipSides();
-      nsCSSRendering::PaintBorder(&aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, aStyleBorder, mStyleContext, skipSides);
-    }
+  nsRect rect(0, 0, mRect.width, mRect.height);
+  nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, aStyleBorder, aStylePadding,
+                                  PR_TRUE);
+  PRIntn skipSides = GetSkipSides();
+  if (NS_STYLE_TABLE_EMPTY_CELLS_SHOW == aCellTableStyle.mEmptyCells ||
+      !GetContentEmpty()) {
+    nsCSSRendering::PaintBorder(&aPresContext, aRenderingContext, this,
+                                aDirtyRect, rect, aStyleBorder, mStyleContext, skipSides);
   }
-
-  // tell Paint to paint the children
-  aPaintChildren = PR_TRUE;
 }
 
-NS_METHOD 
+NS_IMETHODIMP
 nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
@@ -412,10 +406,9 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  PRBool paintChildren   = PR_TRUE;
+  PRBool paintChildren = PR_TRUE;
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PRBool paintBackground = PR_FALSE;
     const nsStyleBorder*      myBorder       = nsnull;
     const nsStylePadding*     myPadding      = nsnull;
     const nsStyleTableBorder* cellTableStyle = nsnull;
@@ -425,19 +418,20 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
       myPadding = GetStylePadding();
       cellTableStyle = GetStyleTableBorder();
 
-      // paint the background when the cell is not empty or when showing empty cells or background
-      paintBackground = (!GetContentEmpty()                                             ||
-                         NS_STYLE_TABLE_EMPTY_CELLS_SHOW == cellTableStyle->mEmptyCells || 
-                         NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND == cellTableStyle->mEmptyCells);
-    }
-  
-    PaintUnderlay(*aPresContext, aRenderingContext, aDirtyRect, aFlags, *cellTableStyle,
-                  *myBorder, *myPadding, paintBackground, paintChildren);
+      // draw the border & background only when there is content or showing empty cells
+      if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != cellTableStyle->mEmptyCells ||
+          !GetContentEmpty()) {
+        PaintUnderlay(*aPresContext, aRenderingContext, aDirtyRect, aFlags,
+                      *myBorder, *myPadding, *cellTableStyle);
+      }
 
-    if (vis->IsVisible()) {
       const nsStyleBackground* myColor = GetStyleBackground();
       DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
     }
+
+    paintChildren = !(aFlags & NS_PAINT_FLAG_TABLE_CELL_BG_PASS);
+    //flags were for us; remove them for our children
+    aFlags &= ~ (NS_PAINT_FLAG_TABLE_CELL_BG_PASS | NS_PAINT_FLAG_TABLE_BG_PAINT);
   }
 
 #ifdef DEBUG
@@ -931,7 +925,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   const nsStylePosition* pos = GetStylePosition();
 
   // calculate the min cell width
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord smallestMinWidth = 0;
   if (eCompatibility_NavQuirks == compatMode) {
     if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
@@ -1332,14 +1326,14 @@ nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
                                   nsIRenderingContext&      aRenderingContext,
                                   const nsRect&             aDirtyRect,
                                   PRUint32&                 aFlags,
-                                  const nsStyleTableBorder& aCellTableStyle,
                                   const nsStyleBorder&      aStyleBorder,
                                   const nsStylePadding&     aStylePadding,
-                                  PRBool                    aVisibleBackground,
-                                  PRBool&                   aPaintChildren)
+                                  const nsStyleTableBorder& aCellTableStyle)
 {
-  // Draw the background only during pass1.
-  if (aVisibleBackground && !(aFlags & BORDER_COLLAPSE_BACKGROUNDS)) { 
+  if (!(aFlags & NS_PAINT_FLAG_TABLE_BG_PAINT)
+      /*direct call; not table-based paint*/ ||
+      (aFlags & NS_PAINT_FLAG_TABLE_CELL_BG_PASS)
+      /*table cell background only pass*/) {
     // make border-width reflect border-collapse assigned border
     GET_PIXELS_TO_TWIPS(&aPresContext, p2t);
     nsMargin borderWidth;
@@ -1363,7 +1357,4 @@ nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
                                     PR_TRUE);
     // borders are painted by nsTableFrame
   }
-
-  // don't paint the children if it's pass1
-  aPaintChildren = (aFlags & BORDER_COLLAPSE_BACKGROUNDS);  
 }

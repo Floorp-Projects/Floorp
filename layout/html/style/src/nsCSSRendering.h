@@ -140,7 +140,8 @@ public:
                               const nsRect& aBorderArea,
                               const nsStyleBorder& aBorder,
                               const nsStylePadding& aPadding,
-                              PRBool aUsePrintSettings);
+                              PRBool aUsePrintSettings,
+                              nsRect* aBGClipRect = nsnull);
 
   /**
    * Same as |PaintBackground|, except using the provided style context
@@ -155,7 +156,9 @@ public:
                                     const nsStyleBackground& aColor,
                                     const nsStyleBorder& aBorder,
                                     const nsStylePadding& aPadding,
-                                    PRBool aUsePrintSettings=PR_FALSE);
+                                    PRBool aUsePrintSettings = PR_FALSE,
+                                    nsRect* aBGClipRect = nsnull);
+
   /**
    * Called by the presShell when painting is finished, so we can clear our
    * inline background data cache.

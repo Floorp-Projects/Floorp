@@ -88,11 +88,11 @@ nsTableCellMap::nsTableCellMap(nsTableFrame&   aTableFrame,
   NS_ASSERTION(orderedRowGroups.Count() == (PRInt32) numRowGroups,"problem in OrderRowGroups");
 
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
-    nsTableRowGroupFrame* rgFrame = 
-      aTableFrame.GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
+    nsTableRowGroupFrame* rgFrame =
+      nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
     if (rgFrame) {
-      nsTableRowGroupFrame* prior = (0 == rgX) 
-        ? nsnull : aTableFrame.GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX - 1));
+      nsTableRowGroupFrame* prior = (0 == rgX)
+        ? nsnull : nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX - 1));
       InsertGroupCellMap(*rgFrame, prior);
     }
   }

@@ -2716,7 +2716,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 const nsRect& aBorderArea,
                                 const nsStyleBorder& aBorder,
                                 const nsStylePadding& aPadding,
-                                PRBool aUsePrintSettings)
+                                PRBool aUsePrintSettings,
+                                nsRect* aBGClipRect)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
@@ -2744,7 +2745,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                           aDirtyRect, aBorderArea, *color, aBorder,
-                          aPadding, aUsePrintSettings);
+                          aPadding, aUsePrintSettings, aBGClipRect);
     return;
   }
 
@@ -2787,7 +2788,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
-                        aBorder, aPadding, aUsePrintSettings);
+                        aBorder, aPadding, aUsePrintSettings, aBGClipRect);
 }
 
 void
@@ -2799,7 +2800,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
                                       const nsStyleBackground& aColor,
                                       const nsStyleBorder& aBorder,
                                       const nsStylePadding& aPadding,
-                                      PRBool aUsePrintSettings)
+                                      PRBool aUsePrintSettings,
+                                      nsRect* aBGClipRect)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
@@ -2825,14 +2827,20 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
   }
 
-  // The background is rendered over the 'background-clip' area.
-  nsRect bgClipArea(aBorderArea);
-  if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
-    NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
-                 "unknown background-clip value");
-    nsMargin border;
-    aBorder.GetBorder(border);
-    bgClipArea.Deflate(border);
+  nsRect bgClipArea;
+  if (aBGClipRect) {
+    bgClipArea = *aBGClipRect;
+  }
+  else {
+    // The background is rendered over the 'background-clip' area.
+    bgClipArea = aBorderArea;
+    if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
+      NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
+                   "unknown background-clip value");
+      nsMargin border;
+      aBorder.GetBorder(border);
+      bgClipArea.Deflate(border);
+    }
   }
 
   // The actual dirty rect is the intersection of the 'background-clip'
@@ -3186,41 +3194,41 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
   // first do the horizontal case
   nscoord x0, x1;
+  // For scrolling attachment, the anchor is within the 'background-clip'
+  // For fixed attachment, the anchor is within the bounds of the nearest
+  // scrolling ancestor (or the viewport)
+  x0 = (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) ?
+       bgClipArea.x : 0;
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     // When tiling in the x direction, adjust the starting position of the
     // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
     // will be a negative value used to adjust the starting coordinate.
-    x0 = bgClipArea.x + anchor.x + ((dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth) * tileWidth;
+    x0 += anchor.x + 
+          ((dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth) * tileWidth;
     x1 = x0 + ((dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) / tileWidth) * tileWidth;
   }
   else {
-    // For scrolling attachment, the anchor is within the 'background-clip'
-    // For fixed attachment, the anchor is within the bounds of the nearest
-    // scrolling ancestor (or the viewport)
-    x0 = anchor.x;
-    if (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) {
-      x0 += bgClipArea.x;
-    }
+    x0 += anchor.x;
     x1 = x0 + tileWidth;
   }
 
   // now do all that again with the vertical case
   nscoord y0, y1;
+  // For scrolling attachment, the anchor is within the 'background-clip'
+  // For fixed attachment, the anchor is within the bounds of the nearest
+  // scrolling ancestor (or the viewport)
+  y0 = (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) ?
+       bgClipArea.y : 0;
   if (repeat & NS_STYLE_BG_REPEAT_Y) {
     // When tiling in the y direction, adjust the starting position of the
     // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
     // will be a negative value used to adjust the starting coordinate.
-    y0 = bgClipArea.y + anchor.y + ((dirtyRect.y - (bgClipArea.y + anchor.y)) / tileHeight) * tileHeight;
+    y0 += anchor.y + 
+          ((dirtyRect.y - (bgClipArea.y + anchor.y)) / tileHeight) * tileHeight;
     y1 = y0 + ((dirtyRect.y + dirtyRect.height - y0 + tileHeight - 1) / tileHeight) * tileHeight;
   }
   else {
-    // For scrolling attachment, the anchor is within the 'background-clip'
-    // For fixed attachment, the anchor is within the bounds of the nearest
-    // scrolling ancestor (or the viewport)
-    y0 = anchor.y;
-    if (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) {
-      y0 += bgClipArea.y;
-    }
+    y0 += anchor.y;
     y1 = y0 + tileHeight;
   }
 

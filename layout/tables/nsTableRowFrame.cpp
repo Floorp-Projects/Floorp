@@ -538,7 +538,25 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
-  // Standards mode background painting removed.  See bug 4510
+
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
+      //direct (not table-called) background paint
+      !(aFlags & (NS_PAINT_FLAG_TABLE_BG_PAINT | NS_PAINT_FLAG_TABLE_CELL_BG_PASS))) {
+    //Quirks inherits bg into cells & paints them there
+    if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode()) {
+      nsTableFrame* tableFrame;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+      NS_ASSERTION(tableFrame, "null table frame");
+
+      TableBackgroundPainter painter(tableFrame,
+                                     TableBackgroundPainter::eOrigin_TableRow,
+                                     aPresContext, aRenderingContext,
+                                     aDirtyRect);
+      nsresult rv = painter.PaintRow(this);
+      if (NS_FAILED(rv)) return rv;
+      aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
+    }
+  }
 
   PRUint8 overflow = GetStyleDisplay()->mOverflow;
   PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
@@ -547,7 +565,8 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
   }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
+                aWhichLayer, aFlags);
   if (clip) {
     PRBool clipState;
     aRenderingContext.PopState(clipState);
@@ -862,8 +881,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
         PRInt32 cellColIndex;
         cellFrame->GetColIndex(cellColIndex);
         cellColSpan = aTableFrame.GetEffectiveColSpan(*cellFrame);
-   
-        x += cellSpacingX;
+
         // If the adjacent cell is in a prior row (because of a rowspan) add in the space
         if ((iter.IsLeftToRight() && (prevColIndex != (cellColIndex - 1))) ||
             (!iter.IsLeftToRight() && (prevColIndex != cellColIndex + cellColSpan))) {
@@ -1034,10 +1052,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
     }
     ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, kidFrame);
     kidFrame = iter.Next(); // Get the next child
-    // if this was the last child, and it had a colspan>1, add in the cellSpacing for the colspan
-    // if the last kid wasn't a colspan, then we still have the colspan of the last real cell
-    if (!kidFrame && (cellColSpan > 1))
-      x += cellSpacingX;
+    x += cellSpacingX;
   }
 
   // just set our width to what was available. The table will calculate the width and not use our value.
@@ -1522,6 +1537,24 @@ nsTableRowFrame::GetUnpaginatedHeight(nsIPresContext* aPresContext)
     return *value;
   else 
     return 0;
+}
+
+void nsTableRowFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                                 BCPixelSize aPixelValue)
+{
+  switch (aForSide) {
+    case NS_SIDE_RIGHT:
+      mRightContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_TOP:
+      mTopContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_LEFT:
+      mLeftContBorderWidth = aPixelValue;
+      return;
+    default:
+      NS_ERROR("invalid NS_SIDE arg");
+  }
 }
 
 /* ----- global methods ----- */

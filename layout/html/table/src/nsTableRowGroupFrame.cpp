@@ -94,7 +94,7 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)this;
     return NS_OK;
   }
-  else if (aIID.Equals(NS_GET_IID(nsILineIteratorNavigator))) 
+  else if (aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)))
   { // note there is no addref here, frames are not addref'd
     *aInstancePtr = (void*)(nsILineIteratorNavigator*)this;
     return NS_OK;
@@ -204,7 +204,25 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
-  // Standards mode background painting removed.  See bug 4510
+
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
+      //direct (not table-called) background paint
+      !(aFlags & (NS_PAINT_FLAG_TABLE_BG_PAINT | NS_PAINT_FLAG_TABLE_CELL_BG_PASS))) {
+    //Quirks inherits bg into cells & paints them there
+    if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode()) {
+      nsTableFrame* tableFrame;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+      NS_ASSERTION(tableFrame, "null table frame");
+
+      TableBackgroundPainter painter(tableFrame,
+                                     TableBackgroundPainter::eOrigin_TableRowGroup,
+                                     aPresContext, aRenderingContext,
+                                     aDirtyRect);
+      nsresult rv = painter.PaintRowGroup(this);
+      if (NS_FAILED(rv)) return rv;
+      aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
+    }
+  }
 
   PRUint8 overflow = GetStyleDisplay()->mOverflow;
   PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
@@ -213,7 +231,8 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
   }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
+                aWhichLayer, aFlags);
   if (clip) {
     PRBool clipState;
     aRenderingContext.PopState(clipState);
@@ -286,9 +305,9 @@ nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 // aKidRect is relative to the upper-left origin of our frame
 void 
 nsTableRowGroupFrame::PlaceChild(nsIPresContext*        aPresContext,
-																 nsRowGroupReflowState& aReflowState,
-																 nsIFrame*              aKidFrame,
-																 nsHTMLReflowMetrics&   aDesiredSize)
+                                 nsRowGroupReflowState& aReflowState,
+                                 nsIFrame*              aKidFrame,
+                                 nsHTMLReflowMetrics&   aDesiredSize)
 {
   // Place and size the child
   FinishReflowChild(aKidFrame, aPresContext, nsnull, aDesiredSize, 0, aReflowState.y, 0);
@@ -1852,6 +1871,24 @@ nsTableRowGroupFrame::GetBCBorderWidth(float     aPixelsToTwips,
   }
 
   return &aBorder;
+}
+
+void nsTableRowGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                                      BCPixelSize aPixelValue)
+{
+  switch (aForSide) {
+    case NS_SIDE_RIGHT:
+      mRightContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_BOTTOM:
+      mBottomContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_LEFT:
+      mLeftContBorderWidth = aPixelValue;
+      return;
+    default:
+      NS_ERROR("invalid NS_SIDE argument");
+  }
 }
 
 //nsILineIterator methods for nsTableFrame
