@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Johnny Stenback <jst@netscape.com> (original author)
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -44,6 +45,10 @@ interface nsIDOM3Node : nsISupports
 {
   // Introduced in DOM Level 3:
   readonly attribute DOMString        baseURI;
+  // Introduced in DOM Level 3:
+  unsigned short     compareTreePosition(in nsIDOMNode other);
+  // Introduced in DOM Level 3:
+  boolean            isSameNode(in nsIDOMNode other);
   // Introduced in DOM Level 3:
   DOMString          lookupNamespacePrefix(in DOMString namespaceURI);
   // Introduced in DOM Level 3:

@@ -389,12 +389,31 @@ nsXULAttribute::IsSupported(const nsAString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// nsIDOM3Node interface
+
 NS_IMETHODIMP
 nsXULAttribute::GetBaseURI(nsAString &aURI)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsXULAttribute::CompareTreePosition(nsIDOMNode* aOther,
+                                    PRUint16* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULAttribute::IsSameNode(nsIDOMNode* aOther,
+                           PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 NS_IMETHODIMP
 nsXULAttribute::LookupNamespacePrefix(const nsAString& aNamespaceURI,
