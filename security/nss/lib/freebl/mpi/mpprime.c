@@ -23,6 +23,7 @@
  * All Rights Reserved.
  *
  * Contributor(s):
+ *	Netscape Communications Corporation
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -316,7 +317,7 @@ mp_err  mpp_pprime(mp_int *a, int nt)
     
     if(mp_cmp_d(&z, 1) == 0 || mp_cmp(&z, &amo) == 0) {
       res = MP_YES;
-      goto CLEANUP;
+      continue;
     }
     
     for(;;) {
