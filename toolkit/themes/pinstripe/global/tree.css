@@ -40,19 +40,34 @@ tree {
   background-color: #FFFFFF;
 }
 
+/* ::::: tree focusring ::::: */
+
+.focusring > .tree-rows > .tree-bodybox {
+  border: 1px solid transparent;  
+}
+
+.focusring:focus > .tree-rows > .tree-bodybox {
+  border: 1px solid -moz-mac-focusring;
+}
+
+
 /* ::::: tree rows ::::: */
 
 treechildren::-moz-tree-row {
-  -moz-appearance: treeitem;
-  border-top: 1px solid -moz-Field;
+  border-top: 1px solid -moz-field;
   height: 18px;
+  background-color: #fff;
 }
 
-treechildren::-moz-tree-row(selected) {
+treechildren::-moz-tree-row(odd) {
+ background-color: #f0f0f0;
+}
+
+treechildren::-moz-tree-row(selected), treechildren::-moz-tree-row(odd, selected) {
   background-color: #D0D0D0;
 }
 
-treechildren::-moz-tree-row(focus) {
+treechildren::-moz-tree-row(selected, focus), treechildren::-moz-tree-row(odd, selected, focus) {
   /* background-color: Highlight; */
   background-color: #3874D1;
   color: #FFFFFF;
@@ -100,13 +115,17 @@ treechildren::-moz-tree-separator {
 
 /* ::::: drop feedback ::::: */
 
+treechildren::-moz-tree-cell(primary, dropOn) {
+  background-color: #A1A1A1 !important;
+  color: #FFF !important;
+  background-image: none;
+}
 treechildren::-moz-tree-cell-text(primary, dropOn) {
-  background-color: Highlight;
-  color: HighlightText;
+  color: #FFF !important;
 }
 
 treechildren::-moz-tree-drop-feedback {
-  background-color: Highlight;
+  background-color: #A1A1A1;
   width: 50px;
   height: 2px;
   margin-left: 5px;
