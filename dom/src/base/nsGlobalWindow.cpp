@@ -113,7 +113,6 @@
 #include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsIFrameSelection.h"
-#include "nsISidebar.h"         // XXX for sidebar HACK, see bug 20721
 #include "nsIPrompt.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
@@ -453,11 +452,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
     // Let go of the cached principal since we no longer need it.
     mDocumentPrincipal = nsnull;
-  }
-
-  if (mSidebar) {
-    mSidebar->SetWindow(nsnull);
-    mSidebar = nsnull;
   }
 
   if (mFirstDocumentLoad) {
@@ -1169,29 +1163,6 @@ GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
   NS_IF_ADDREF(*aContent = domWindow);
 
   return NS_OK;
-}
-
-// XXX for sidebar HACK, see bug 20721
-NS_IMETHODIMP
-GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
-{
-  nsresult rv = NS_OK;
-
-  if (!mSidebar) {
-    mSidebar = do_CreateInstance(NS_SIDEBAR_CONTRACTID, &rv);
-
-    if (mSidebar) {
-      nsIDOMWindowInternal *win = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
-      /* no addref */
-      mSidebar->SetWindow(win);
-    }
-  }
-
-  *aSidebar = mSidebar;
-  NS_IF_ADDREF(*aSidebar);
-
-  return rv;
-
 }
 
 NS_IMETHODIMP

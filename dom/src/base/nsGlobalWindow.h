@@ -78,7 +78,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMPkcs11.h"
-#include "nsISidebar.h"
 #include "nsIPrincipal.h"
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
@@ -283,7 +282,6 @@ protected:
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
-  nsCOMPtr<nsISidebar>          mSidebar;
   JSObject*                     mJSObject;
   nsRefPtr<NavigatorImpl>       mNavigator;
   nsRefPtr<ScreenImpl>          mScreen;

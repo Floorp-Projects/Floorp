@@ -154,7 +154,6 @@ protected:
             id == sParent_id       ||
             id == sScrollbars_id   ||
             id == sContent_id      ||
-            id == sSidebar_id      ||
             id == sMenubar_id      ||
             id == sToolbar_id      ||
             id == sLocationbar_id  ||
@@ -207,7 +206,6 @@ protected:
   static jsval sConstructor_id;
   static jsval s_content_id;
   static jsval sContent_id;
-  static jsval sSidebar_id;
   static jsval sMenubar_id;
   static jsval sToolbar_id;
   static jsval sLocationbar_id;

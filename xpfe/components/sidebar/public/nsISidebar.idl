@@ -24,13 +24,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindowInternal;
-
 [scriptable, uuid(577CB745-8CAF-11d3-AAEF-00805F8A4905)]
 interface nsISidebar : nsISupports
 {
-
-    void setWindow (in nsIDOMWindowInternal aWindow);
     void addPanel(in wstring aTitle, in string aContentURL,
                   in string aCustomizeURL);
     void addPersistentPanel(in wstring aTitle, in string aContentURL,
