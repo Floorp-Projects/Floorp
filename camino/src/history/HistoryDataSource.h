@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author)
  *   Simon Woodside <sbwoodside@yahoo.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

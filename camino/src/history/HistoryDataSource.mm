@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Simon Woodside <sbwoodside@yahoo.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -686,6 +687,15 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
     mTreeBuilder = [[HistoryByDateTreeBuilder alloc] initWithItems:mHistoryItems  sortSelector:[self selectorForSortColumn] descending:mSortDescending];
   
   [self notifyChanged:nil itemOnly:NO];
+}
+
+- (void)startBatching
+{
+}
+
+- (void)endBatching
+{
+  [self loadLazily];
 }
 
 - (void)itemAdded:(HistorySiteItem*)item

@@ -180,10 +180,6 @@ protected:
   static void   FireSyncTimer(nsITimer *aTimer, void *aClosure);
 
   //
-  // row-oriented stuff
-  //
-  
-  //
   // AddPage-oriented stuff
   //
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
@@ -204,6 +200,9 @@ protected:
 
   nsresult HistoryItemFromRow(nsIMdbRow* inRow, nsIHistoryItem** outItem);
 
+  nsresult StartBatching();
+  nsresult EndBatching();
+  
   // 
   // observer utilities
   // 

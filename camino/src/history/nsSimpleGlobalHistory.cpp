@@ -769,14 +769,7 @@ nsSimpleGlobalHistory::RemovePageInternal(const char *aSpec)
   mdb_err err = mTable->CutRow(mEnv, row);
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
 
-  // if there are batches in progress, we don't want to notify
-  // observers that we're deleting items. the caller promises
-  // to handle whatever UI updating is necessary when we're finished.  
-  if (!mBatchesInProgress)
-  {
-    // get the resource so we can do the notification
-    NotifyObserversItemRemoved(row);
-  }
+  NotifyObserversItemRemoved(row);
 
   // not a fatal error if we can't cut all column
   err = row->CutAllColumns(mEnv);
@@ -804,6 +797,25 @@ nsSimpleGlobalHistory::HistoryItemFromRow(nsIMdbRow* inRow, nsIHistoryItem** out
 #pragma mark -
 
 nsresult
+nsSimpleGlobalHistory::StartBatching()
+{
+  if (mBatchesInProgress == 0)
+    NotifyObserversBatchingStarted();
+
+  ++mBatchesInProgress;
+}
+
+nsresult
+nsSimpleGlobalHistory::EndBatching()
+{
+  --mBatchesInProgress;
+  NS_ASSERTION(mBatchesInProgress >= 0, "Batch count went negative");
+
+  if (mBatchesInProgress == 0)
+    NotifyObserversBatchingFinished();
+}
+
+nsresult
 nsSimpleGlobalHistory::NotifyObserversHistoryLoaded()
 {
   PRUint32 numObservers;
@@ -823,10 +835,11 @@ nsSimpleGlobalHistory::NotifyObserversHistoryLoaded()
 nsresult
 nsSimpleGlobalHistory::NotifyObserversItemLoaded(nsIMdbRow* inRow, PRBool inFirstVisit)
 {
-  nsresult rv;
+  if (mBatchesInProgress > 0)
+    return NS_OK;
   
   nsCOMPtr<nsIHistoryItem> historyItem;
-  rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
+  nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRUint32 numObservers;
@@ -848,11 +861,12 @@ nsSimpleGlobalHistory::NotifyObserversItemLoaded(nsIMdbRow* inRow, PRBool inFirs
 nsresult
 nsSimpleGlobalHistory::NotifyObserversItemRemoved(nsIMdbRow* inRow)
 {
-  nsresult rv;
-  
+  if (mBatchesInProgress > 0)
+    return NS_OK;
+
   // we assume that the row is still valid at this point
   nsCOMPtr<nsIHistoryItem> historyItem;
-  rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
+  nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 numObservers;
@@ -874,11 +888,12 @@ nsSimpleGlobalHistory::NotifyObserversItemRemoved(nsIMdbRow* inRow)
 nsresult
 nsSimpleGlobalHistory::NotifyObserversItemTitleChanged(nsIMdbRow* inRow)
 {
-  nsresult rv;
+  if (mBatchesInProgress > 0)
+    return NS_OK;
   
   // we assume that the row is still valid at this point
   nsCOMPtr<nsIHistoryItem> historyItem;
-  rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
+  nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 numObservers;
@@ -1299,7 +1314,7 @@ nsSimpleGlobalHistory::RemoveAllPages()
 {
   nsresult rv;
 
-  rv = RemoveMatchingRows(matchAllCallback, nsnull, PR_TRUE);
+  rv = RemoveMatchingRows(matchAllCallback, nsnull, PR_FALSE);
   if (NS_FAILED(rv)) return rv;
   
   // Reset the file byte order.
@@ -1312,7 +1327,7 @@ nsSimpleGlobalHistory::RemoveAllPages()
 nsresult
 nsSimpleGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
                                     void *aClosure,
-                                    PRBool notify)
+                                    PRBool inNotify)
 {
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   if (!mTable) return NS_OK;
@@ -1322,7 +1337,8 @@ nsSimpleGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->GetCount(mEnv, &count);
   if (err != 0) return NS_ERROR_FAILURE;
 
-//  BeginUpdateBatch();
+  if (!inNotify)
+    StartBatching();
 
   // Begin the batch.
   int marker;
@@ -1347,19 +1363,8 @@ nsSimpleGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
     if (!(aMatchFunc)(row, aClosure))
       continue;
 
-    if (notify)
-    {
-      // What's the URL? We need to know to properly notify our RDF
-      // observers.
-      mdbYarn yarn;
-      err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
-      if (err != 0)
-        continue;
-      
-      // const char* startPtr = (const char*) yarn.mYarn_Buf;
-      // nsCAutoString uri(Substring(startPtr, startPtr+yarn.mYarn_Fill));
-      // XXX notify?
-    }
+    if (inNotify)
+      NotifyObserversItemRemoved(row);
 
     // Officially cut the row *now*, before notifying any observers:
     // that way, any re-entrant calls won't find the row.
@@ -1380,7 +1385,8 @@ nsSimpleGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->EndBatchChangeHint(mEnv, &marker);
   NS_ASSERTION(err == 0, "error ending batch");
 
-//  EndUpdateBatch();
+  if (!inNotify)
+    EndBatching();
 
   return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -2091,11 +2097,11 @@ nsSimpleGlobalHistory::Commit(eCommitType commitType)
   return NS_OK;
 }
 
-// if notify is true, we'll notify rdf of deleted rows.
+// if notify is true, we'll notify observers of deleted rows.
 // If we're shutting down history, then (maybe?) we don't
 // need or want to notify rdf.
 nsresult
-nsSimpleGlobalHistory::ExpireEntries(PRBool notify)
+nsSimpleGlobalHistory::ExpireEntries(PRBool inNotify)
 {
   PRTime expirationDate;
   PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
@@ -2109,7 +2115,7 @@ nsSimpleGlobalHistory::ExpireEntries(PRBool notify)
   expiration.history = this;
   expiration.expirationDate = expirationDate;
   
-  return RemoveMatchingRows(matchExpirationCallback, (void *)&expiration, notify);
+  return RemoveMatchingRows(matchExpirationCallback, (void *)&expiration, inNotify);
 }
 
 void
