@@ -208,6 +208,17 @@ public:
   NS_IMETHOD DrawImage(imgIContainer *aImage,
     const nsRect & aSrcRect, const nsRect & aDestRect);
 
+  /*
+   *    Tiles an image over an area
+   *    @param aImage Image to tile
+   *    @param aXImageStart x location where the origin (0,0) of the image starts
+   *    @param aYImageStart y location where the origin (0,0) of the image starts
+   *    @param aTargetRect  area to draw to
+   *
+   */
+  NS_IMETHOD DrawTile(imgIContainer *aImage,
+    nscoord aXImageStart, nscoord aYImageStart, const nsRect *aTargetRect);
+
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
