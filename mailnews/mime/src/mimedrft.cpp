@@ -1591,7 +1591,23 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 
   nsFileSpec *tmpSpec = nsnull;
   if (newAttachment->real_name)
-    tmpSpec = nsMsgCreateTempFileSpec(newAttachment->real_name);
+  {
+  	//Need some convertion to native file system character set
+  	nsAutoString outStr;
+  	char * fileName = nsnull;
+  	nsresult rv = ConvertToUnicode(msgCompHeaderInternalCharset(), newAttachment->real_name, outStr);
+  	if (NS_SUCCEEDED(rv))
+  	{
+  		rv = ConvertFromUnicode(msgCompFileSystemCharset(), outStr, &fileName);
+  		if (NS_FAILED(rv))
+  			fileName = PL_strdup(newAttachment->real_name);
+   	}
+   	else
+  		fileName = PL_strdup(newAttachment->real_name);
+
+    tmpSpec = nsMsgCreateTempFileSpec(fileName);
+  	PR_FREEIF(fileName);
+  }
   else
   {
     char *ptr = PL_strchr(newAttachment->type, '/');
