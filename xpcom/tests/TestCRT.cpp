@@ -80,10 +80,12 @@ static Test tests[] = {
 };
 #define NUM_TESTS (sizeof(tests) / sizeof(tests[0]))
 
-void main()
+int main()
 {
   Test* tp = tests;
   for (PRIntn i = 0; i < NUM_TESTS; i++, tp++) {
     Check(tp->s1, tp->s2, tp->n);
   }
+
+  return 0;
 }
