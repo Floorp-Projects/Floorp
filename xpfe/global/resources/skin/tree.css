@@ -24,8 +24,8 @@ tree.inset {
 }
 
 treeitem[selected="true"] > treerow { 
-	color: black;
-	background-color: #CCCCCC;
+	color: white;
+	background-color: #336699;
 }
 
 treecell { 
