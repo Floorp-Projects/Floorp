@@ -1728,7 +1728,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
   PRInt16       attrCount=aToken->GetAttributeCount();
   eHTMLTags     theParent=mBodyContext->Last();
-  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(theNode,theChildTag,attrCount,PR_FALSE);
+  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(theNode,theChildTag,attrCount);
 
   if(NS_OK==result) {
     result=WillHandleStartTag(aToken,theChildTag,*theNode);
@@ -1978,7 +1978,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   //Begin by dumping any attributes (bug 143512)
   PRInt16     attrCount=aToken->GetAttributeCount();
-  CollectAttributes(nsnull,theChildTag,attrCount,PR_TRUE);
+  CollectAttributes(nsnull,theChildTag,attrCount);
 
   switch(theChildTag) {
 
@@ -2391,7 +2391,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
-nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 aCount,PRBool aDiscardAttributes){
+nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 aCount){
   int attr=0;
 
   nsresult result=NS_OK;
@@ -2416,7 +2416,7 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 
 
         mLineNumber += theToken->GetNewlineCount();
 
-        if(!aDiscardAttributes) {
+        if(aNode) {
           // Sanitize the key for it might contain some non-alpha-non-digit characters
           // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
           // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
