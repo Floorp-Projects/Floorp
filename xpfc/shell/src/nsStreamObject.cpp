@@ -31,6 +31,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCStreamObject, NS_STREAM_OBJECT_CID);
+static NS_DEFINE_IID(kIStreamListenerIID,  NS_ISTREAMLISTENER_IID);
 
 nsStreamObject::nsStreamObject()
 {
