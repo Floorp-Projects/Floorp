@@ -43,7 +43,7 @@ nsSSLSocketProvider::~nsSSLSocketProvider()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsSSLSocketProvider, nsISocketProvider, nsISSLSocketProvider);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSSLSocketProvider, nsISocketProvider, nsISSLSocketProvider);
 
 NS_METHOD
 nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

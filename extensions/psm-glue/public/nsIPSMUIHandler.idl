@@ -27,7 +27,7 @@
 interface nsIPSMUIHandler : nsISupports
 {
     void DisplayURI(in long width, in long height, in string urlStr);
-    void PromptForFile(in string prompt, in string fileRegEx, in boolean shouldFileExist, out string outFile);
+    void PromptForFile(in wstring prompt, in string fileRegEx, in boolean shouldFileExist, out string outFile);
 };
 
 %{C++

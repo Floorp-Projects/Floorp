@@ -62,6 +62,7 @@
 #endif
 
 
+static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -112,7 +113,7 @@ nsPSMComponent::CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aR
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_ISUPPORTS1 (nsPSMComponent, nsIPSMComponent); 
+NS_IMPL_THREADSAFE_ISUPPORTS1 (nsPSMComponent, nsIPSMComponent); 
 
 #define INIT_NUM_PREFS 100
 /* preference types */
@@ -487,11 +488,29 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
 
         if (mControl == nsnull)
         {
-           char* filePath = nsnull;
-
+            char* filePath = nsnull;
+            
             NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
             if(NS_SUCCEEDED(rv))
-                 handler->PromptForFile("Please find the Personal Security Manager application", PSM_FILE_NAME, PR_TRUE, &filePath);
+            {
+                NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
+                if (NS_FAILED(rv)) return rv;
+            
+                nsILocale* locale = nsnull;
+                nsCOMPtr<nsIStringBundle> stringBundle;
+
+                rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, locale, getter_AddRefs(stringBundle));
+                if (NS_FAILED(rv)) return rv;
+
+                PRUnichar *ptrv = nsnull;
+                rv = stringBundle->GetStringFromName( nsString("FindText").GetUnicode(), &ptrv);
+                if (NS_FAILED(rv)) return rv;                
+                
+                handler->PromptForFile(ptrv, PSM_FILE_NAME, PR_TRUE, &filePath);
+
+                nsAllocator::Free(ptrv);
+
+            }
             if (! filePath)
                 return NS_ERROR_FAILURE;
 

@@ -134,7 +134,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
                                    PR_ntohs(addr->inet.port),
                                    ipBuffer,
                                    (hostName ? hostName : ipBuffer),
-                                   CM_TRUE, 
+                                   CM_FALSE, 
                                    nsnull);
     if (CMTSuccess == status)
     {
@@ -286,7 +286,7 @@ nsPSMSocketInfo::~nsPSMSocketInfo()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsPSMSocketInfo, nsIPSMSocketInfo);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMSocketInfo, nsIPSMSocketInfo);
 
 NS_IMETHODIMP
 nsPSMSocketInfo::GetControlPtr(CMT_CONTROL * *aControlPtr)
