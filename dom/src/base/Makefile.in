@@ -31,6 +31,8 @@ REQUIRES = xpcom raptor dom js netlib
 DEFINES += -D_IMPL_NS_DOM
 
 CPPSRCS =			 \
+	nsBarProps.cpp           \
+	nsJSBarProp.cpp          \
 	nsJSEnvironment.cpp	 \
 	nsJSWindow.cpp           \
 	nsJSNavigator.cpp        \
