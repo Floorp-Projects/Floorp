@@ -1,0 +1,125 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+/* This is the interface to the embeddable prompt service; the service
+   that implements nsIPrompt. Its interface is designed to be just
+   nsIPrompt, each method modified to take a parent window parameter.
+   See nsIPrompt for all documentation and ancillary documentation.
+
+   One note: in all cases, the parent window parameter can be null.
+   However, these windows are all intended to have parents. So when
+   no parent is specified, the implementation should try hard to find
+   a suitable foster parent. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+
+[scriptable, uuid(1630C61A-325E-49ca-8759-A31B16C47AA5)]
+interface nsIPromptService : nsISupports
+{
+%{C++
+  enum {eMsg=0, eCheckboxMsg=1, eIconURL=2, eTitleMessage=3, eEditfield1Msg=4,
+        eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7,
+        eButton0Text=8, eButton1Text=9, eButton2Text=10, eButton3Text=11,
+        eDialogTitle=12};
+  enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2,
+        eNumberEditfields=3, eEditField1Password=4};
+%}
+
+  void alert(in nsIDOMWindow parent,
+              in wstring dialogTitle,
+              in wstring text);
+
+  void alertCheck(in nsIDOMWindow parent,
+                  in wstring dialogTitle,
+                  in wstring text,
+                  in wstring checkMsg,
+                  out boolean checkValue);
+
+  boolean confirm(in nsIDOMWindow parent,
+                  in wstring dialogTitle,
+                  in wstring text);
+
+  boolean confirmCheck(in nsIDOMWindow parent,
+                        in wstring dialogTitle,
+                        in wstring text,
+                        in wstring checkMsg,
+                        out boolean checkValue);
+
+  boolean prompt(in nsIDOMWindow parent,
+                  in wstring dialogTitle,
+                  in wstring text,
+                  in wstring passwordRealm,
+                  in PRUint32 savePassword,
+                  in wstring defaultText, 
+                  out wstring result);
+
+  boolean promptUsernameAndPassword(in nsIDOMWindow parent,
+                                    in wstring dialogTitle,
+                                    in wstring text,
+                                    in wstring passwordRealm,
+                                    in PRUint32 savePassword,
+                                    out wstring user, 
+                                    out wstring pwd);
+
+  boolean promptPassword(in nsIDOMWindow parent,
+                          in wstring dialogTitle,
+                          in wstring text,
+                          in wstring passwordRealm,
+                          in PRUint32 savePassword,
+                          out wstring pwd);
+  
+  boolean select(in nsIDOMWindow parent,
+                  in wstring dialogTitle,
+                  in wstring text,
+                  in  PRUint32 count,
+                  [array, size_is(count)] in wstring selectList,
+                  out long outSelection);
+
+  void universalDialog(in nsIDOMWindow parent,
+                        in wstring titleMessage,
+                        in wstring dialogTitle,
+                        in wstring text,
+                        in wstring checkboxMsg,
+                        in wstring button0Text,
+                        in wstring button1Text,
+                        in wstring button2Text,
+                        in wstring button3Text,
+                        in wstring editfield1Msg,
+                        in wstring editfield2Msg,
+                        inout wstring editfield1Value,
+                        inout wstring editfield2Value,
+                        in wstring iconURL,
+                        inout boolean checkboxState,
+                        in PRInt32 numberButtons,
+                        in PRInt32 numberEditfields,
+                        in PRInt32 editField1Password,
+                        out PRInt32 buttonPressed);
+};
+
+%{C++
+// {1630C61A-325E-49ca-8759-A31B16C47AA5}
+#define NS_PROMPTSERVICE_IID \
+ {0x1630C61A, 0x325E, 0x49ca, {0x87, 0x59, 0xA3, 0x1B, 0x16, 0xC4, 0x7A, 0xA5}}
+%}
+

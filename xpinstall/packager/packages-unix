@@ -212,7 +212,6 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 bin/components/libxremote_client.so
-bin/components/promptservice.xpt
 bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
 bin/components/libxmlextras.so
