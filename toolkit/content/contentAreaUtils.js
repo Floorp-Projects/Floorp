@@ -424,9 +424,9 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     // logic to check for existing files, so we need to do that here.
     //
     // Note - this code is identical to that in
-    //   browser/components/downloads/content/nsHelperAppDlg.js.
+    //   mozilla/toolkit/mozapps/downloads/src/nsHelperAppDlg.js.in
     // If you are updating this code, update that code too! We can't share code
-    // here since that code is called in a js component. 
+    // here since that code is called in a js component.
     while (file.exists()) {
       var parts = /.+-(\d+)(\..*)?$/.exec(file.leafName);
       if (parts) {
