@@ -58,6 +58,8 @@
 #include "nsIObserverService.h"
 #include "nsILineInputStream.h"
 
+#include "nsCOMArray.h"
+#include "nsArrayEnumerator.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -77,11 +79,17 @@
 static const char kCookieFileName[] = "cookies.txt";
 
 static const PRUint32 kLazyWriteTimeout = 5000; //msec
-static const PRUint32 kLazyNotifyTimeout = 1000; //msec
 
-static const PRInt32 kMaxNumberOfCookies = 300;
-static const PRInt32 kMaxCookiesPerHost = 20;
+static const PRUint32 kMaxNumberOfCookies = 300;
+static const PRUint32 kMaxCookiesPerHost = 20;
 static const PRUint32 kMaxBytesPerCookie = 4096;
+
+// this constant augments those defined on nsICookie, and indicates
+// the cookie should be rejected because of an error (rather than
+// something the user can control). this is used for notifying about
+// rejected cookies, since we only want to notify of rejections where
+// the user can do something about it (e.g. whitelist the site).
+static const nsCookieStatus STATUS_REJECTED_WITH_ERROR = 5;
 
 // the following P3P constants are used to mangle one enumerated type into
 // another. we may be able to clean up the p3pservice to use consistent
@@ -130,6 +138,52 @@ struct nsCookieAttributes
   PRBool isSession;
   PRBool isSecure;
   PRBool isDomain;
+};
+
+// stores linked list iteration state, and provides a rudimentary
+// list traversal method
+struct nsListIter
+{
+  nsListIter() {}
+
+  nsListIter(nsCookieEntry *aEntry)
+   : entry(aEntry)
+   , prev(nsnull)
+   , current(aEntry ? aEntry->Head() : nsnull) {}
+
+  nsListIter(nsCookieEntry *aEntry,
+             nsCookie      *aPrev,
+             nsCookie      *aCurrent)
+   : entry(aEntry)
+   , prev(aPrev)
+   , current(aCurrent) {}
+
+  nsListIter& operator++() { prev = current; current = current->Next(); return *this; }
+
+  nsCookieEntry *entry;
+  nsCookie      *prev;
+  nsCookie      *current;
+};
+
+// stores temporary data for enumerating over the hash entries,
+// since enumeration is done using callback functions
+struct nsEnumerationData
+{
+  nsEnumerationData(nsInt64 aCurrentTime,
+                    PRInt64 aOldestTime)
+   : currentTime(aCurrentTime)
+   , oldestTime(aOldestTime)
+   , iter(nsnull, nsnull, nsnull) {}
+
+  // the current time
+  nsInt64 currentTime;
+
+  // oldest lastAccessed time in the cookie list. use aOldestTime = LL_MAXINT
+  // to enable this search, LL_MININT to disable it.
+  nsInt64 oldestTime;
+
+  // an iterator object that points to the desired cookie
+  nsListIter iter;
 };
 
 /******************************************************************************
@@ -231,14 +285,14 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCoo
   PR_LOG(sCookieLog, PR_LOG_DEBUG,("\n"));
 }
 
-// inline wrappers to make passing in nsAStrings easier
-inline void
+// inline wrappers to make passing in nsAFlatCStrings easier
+static inline void
 LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, const char *aReason)
 {
   LogFailure(aSetCookie, aHostURI, aCookieString.get(), aReason);
 }
 
-inline void
+static inline void
 LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, nsCookie *aCookie)
 {
   LogSuccess(aSetCookie, aHostURI, aCookieString.get(), aCookie);
@@ -248,6 +302,43 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 #define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
 #define COOKIE_LOGSUCCESS(a, b, c, d) /* nothing */
 #endif
+
+/******************************************************************************
+ * nsCookieService impl:
+ * private list sorting callbacks
+ ******************************************************************************/
+
+// comparison function for sorting cookies by path length:
+// returns < 0 if the first element has a greater path length than the second element,
+//           0 if they both have the same path length,
+//         > 0 if the second element has a greater path length than the first element.
+PR_STATIC_CALLBACK(int)
+compareCookiesByPath(const void *aElement1,
+                     const void *aElement2,
+                     void       *aData)
+{
+  const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
+  const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
+
+  return cookie2->Path().Length() - cookie1->Path().Length();
+}
+
+// comparison function for sorting cookies by lastAccessed time:
+// returns < 0 if the first element was used more recently than the second element,
+//           0 if they both have the same last-use time,
+//         > 0 if the second element was used more recently than the first element.
+PR_STATIC_CALLBACK(int)
+compareCookiesByLRU(const void *aElement1,
+                    const void *aElement2,
+                    void       *aData)
+{
+  const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
+  const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
+
+  // we may have overflow problems returning the result directly, so we need branches
+  nsInt64 difference = cookie2->LastAccessed() - cookie1->LastAccessed();
+  return (difference > nsInt64(0)) ? 1 : (difference < nsInt64(0)) ? -1 : 0;
+}
 
 /******************************************************************************
  * nsCookieService impl:
@@ -271,6 +362,12 @@ nsCookieService::GetSingleton()
   // cycles have already been completed and would result in serious leaks.
   // See bug 209571.
   gCookieService = new nsCookieService();
+  if (gCookieService) {
+    NS_ADDREF(gCookieService);
+    if (NS_FAILED(gCookieService->Init())) {
+      NS_RELEASE(gCookieService);
+    }
+  }
 
   return gCookieService;
 }
@@ -288,11 +385,18 @@ NS_IMPL_ISUPPORTS5(nsCookieService,
                    nsISupportsWeakReference)
 
 nsCookieService::nsCookieService()
- : mCookieChanged(PR_FALSE)
+ : mCookieCount(0)
+ , mCookieChanged(PR_FALSE)
  , mCookieIconVisible(PR_FALSE)
 {
-  // AddRef now, so we don't cross XPCOM boundaries with a zero refcount
-  NS_ADDREF_THIS();
+}
+
+nsresult
+nsCookieService::Init()
+{
+  if (!mHostTable.Init()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // cache and init the preferences observer
   InitPrefObservers();
@@ -314,6 +418,8 @@ nsCookieService::nsCookieService()
 
   mP3PService = do_GetService(NS_COOKIECONSENT_CONTRACTID);
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
+
+  return NS_OK;
 }
 
 nsCookieService::~nsCookieService()
@@ -322,8 +428,6 @@ nsCookieService::~nsCookieService()
 
   if (mWriteTimer)
     mWriteTimer->Cancel();
-  if (mNotifyTimer)
-    mNotifyTimer->Cancel();
 
   // clean up memory
   RemoveAllFromMemory();
@@ -343,10 +447,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
     if (mWriteTimer) {
       mWriteTimer->Cancel();
       mWriteTimer = 0;
-    }
-    if (mNotifyTimer) {
-      mNotifyTimer->Cancel();
-      mNotifyTimer = 0;
     }
 
     if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
@@ -442,8 +542,10 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
 
   // check default prefs
   nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull);
-  // for GetCookie(), we don't update the UI icon if cookie was rejected.
-  if (cookieStatus == nsICookie::STATUS_REJECTED) {
+  // for GetCookie(), we don't fire rejection notifications.
+  switch (cookieStatus) {
+  case nsICookie::STATUS_REJECTED:
+  case STATUS_REJECTED_WITH_ERROR:
     return NS_OK;
   }
 
@@ -458,13 +560,10 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
   }
   // trim trailing dots
   hostFromURI.Trim(".");
+  // insert a leading dot, so we begin the hash lookup with the
+  // equivalent domain cookie host
+  hostFromURI.Insert(NS_LITERAL_CSTRING("."), 0);
   ToLowerCase(hostFromURI);
-
-  // initialize variables used in the list traversal
-  nsInt64 currentTime = NOW_IN_SECONDS;
-  nsCookie *cookieInList;
-  // initialize string for return data
-  nsCAutoString cookieData;
 
   // check if aHostURI is using an https secure protocol.
   // if it isn't, then we can't send a secure cookie over the connection.
@@ -474,85 +573,89 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
     isSecure = PR_FALSE;
   }
 
-  // begin mCookieList traversal
-  PRInt32 count = mCookieList.Count();
+  nsCookie *cookie;
+  nsAutoVoidArray foundCookieList;
+  nsInt64 currentTime = NOW_IN_SECONDS;
+  const char *currentDot = hostFromURI.get();
+  const char *nextDot = currentDot + 1;
+
+  // begin hash lookup, walking up the subdomain levels.
+  // we use nextDot to make sure we have at least one embedded dot remaining.
+  while (nextDot) {
+    nsCookieEntry *entry = mHostTable.GetEntry(currentDot);
+    cookie = entry ? entry->Head() : nsnull;
+    for (; cookie; cookie = cookie->Next()) {
+      // if the cookie is secure and the host scheme isn't, we can't send it
+      if (cookie->IsSecure() && !isSecure) {
+        continue;
+      }
+
+      // calculate cookie path length, excluding trailing '/'
+      PRUint32 cookiePathLen = cookie->Path().Length();
+      if (cookiePathLen > 0 && cookie->Path().Last() == '/') {
+        --cookiePathLen;
+      }
+
+      // the cookie linked list is in order of path length; longest to shortest.
+      // if the nsIURI path is shorter than the cookie path, then we know the path
+      // isn't on the cookie path.
+      if (!StringBeginsWith(pathFromURI, Substring(cookie->Path(), 0, cookiePathLen))) {
+        continue;
+      }
+
+      if (pathFromURI.Length() > cookiePathLen &&
+          !ispathdelimiter(pathFromURI.CharAt(cookiePathLen))) {
+        /*
+         * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
+         * '/' is the "standard" case; the '?' test allows a site at host/abc?def
+         * to receive a cookie that has a path attribute of abc.  this seems
+         * strange but at least one major site (citibank, bug 156725) depends
+         * on it.  The test for # and ; are put in to proactively avoid problems
+         * with other sites - these are the only other chars allowed in the path.
+         */
+        continue;
+      }
+
+        // check if the cookie has expired
+      if (!cookie->IsSession() && cookie->Expiry() <= currentTime) {
+        continue;
+      }
+
+      // all checks passed - add to list and update lastAccessed stamp of cookie
+      foundCookieList.AppendElement(cookie);
+      cookie->SetLastAccessed(currentTime);
+    }
+
+    currentDot = nextDot;
+    nextDot = strchr(currentDot + 1, '.');
+  }
+
+  // return cookies in order of path length; longest to shortest.
+  // this is required per RFC2109.
+  foundCookieList.Sort(compareCookiesByPath, nsnull);
+
+  nsCAutoString cookieData;
+  PRInt32 count = foundCookieList.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
-
-    // if the cookie is secure and the host scheme isn't, we can't send it
-    if (cookieInList->IsSecure() && !isSecure) {
-      continue;
-    }
-
-    // check if the host is in the cookie's domain
-    // (taking into account whether it's a domain cookie)
-    if (!IsInDomain(cookieInList->Host(), hostFromURI, cookieInList->IsDomain())) {
-      continue;
-    }
-
-    // calculate cookie path length, excluding trailing '/'
-    PRUint32 cookiePathLen = cookieInList->Path().Length();
-    if (cookiePathLen > 0 && cookieInList->Path().Last() == '/') {
-      --cookiePathLen;
-    }
-
-    // the cookie list is in order of path length; longest to shortest.
-    // if the nsIURI path is shorter than the cookie path, then we know the path
-    // isn't on the cookie path.
-    if (!StringBeginsWith(pathFromURI, Substring(cookieInList->Path(), 0, cookiePathLen))) {
-      continue;
-    }
-
-    if (pathFromURI.Length() > cookiePathLen &&
-        !ispathdelimiter(pathFromURI.CharAt(cookiePathLen))) {
-      /*
-       * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
-       * '/' is the "standard" case; the '?' test allows a site at host/abc?def
-       * to receive a cookie that has a path attribute of abc.  this seems
-       * strange but at least one major site (citibank, bug 156725) depends
-       * on it.  The test for # and ; are put in to proactively avoid problems
-       * with other sites - these are the only other chars allowed in the path.
-       */
-      continue;
-    }
-
-    // check if the cookie has expired, and remove if so.
-    // note that we do this *after* previous tests passed - so we're only removing
-    // the ones that are relevant to this particular search.
-    if (!cookieInList->IsSession() && cookieInList->Expiry() <= currentTime) {
-      mCookieList.RemoveElementAt(i--); // decrement i so next cookie isn't skipped
-      NS_RELEASE(cookieInList);
-      --count; // update the count
-      mCookieChanged = PR_TRUE;
-      continue;
-    }
-
-    // all checks passed - update lastAccessed stamp of cookie
-    cookieInList->SetLastAccessed(currentTime);
+    cookie = NS_STATIC_CAST(nsCookie*, foundCookieList.ElementAt(i));
 
     // check if we have anything to write
-    if (!cookieInList->Name().IsEmpty() || !cookieInList->Value().IsEmpty()) {
+    if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
       // if we've already added a cookie to the return list, append a "; " so
       // that subsequent cookies are delimited in the final list.
       if (!cookieData.IsEmpty()) {
         cookieData += NS_LITERAL_CSTRING("; ");
       }
 
-      // NOTE: we used to have an #ifdef PREVENT_DUPLICATE_NAMES here,
-      // which would prevent multiple cookies with the same name being sent (i.e.
-      // only the first instance is sent). This wasn't invoked in our previous code,
-      // and RFC2109 implicitly allows duplicate names, so I've removed it.
-
-      if (!cookieInList->Name().IsEmpty()) {
-        // we have a cookie->name and cookie->cookie - write both
-        cookieData += cookieInList->Name() + NS_LITERAL_CSTRING("=") + cookieInList->Value();
+      if (!cookie->Name().IsEmpty()) {
+        // we have a name and value - write both
+        cookieData += cookie->Name() + NS_LITERAL_CSTRING("=") + cookie->Value();
       } else {
-        // just write cookie->cookie
-        cookieData += cookieInList->Value();
+        // just write value
+        cookieData += cookie->Value();
       }
     }
-  } // for()
+  }
 
   // it's wasteful to alloc a new string; but we have no other choice, until we
   // fix the callers to use nsACStrings.
@@ -597,10 +700,11 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
 
   // check default prefs
   nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader);
-  // update UI icon, and return, if cookie was rejected.
-  // should we be doing this just for p3p?
-  if (cookieStatus == nsICookie::STATUS_REJECTED) {
-    UpdateCookieIcon();
+  // fire a notification if cookie was rejected (but not if there was an error)
+  switch (cookieStatus) {
+  case nsICookie::STATUS_REJECTED:
+    NotifyRejected(aHostURI);
+  case STATUS_REJECTED_WITH_ERROR:
     return NS_OK;
   }
   // get the site's p3p policy now (common to all cookies)
@@ -627,7 +731,6 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
 
   // write out the cookie file
   LazyWrite();
-  LazyNotify();
   return NS_OK;
 }
 
@@ -654,42 +757,54 @@ nsCookieService::DoLazyWrite(nsITimer *aTimer,
   service->mWriteTimer = 0;
 }
 
+// notify observers that a cookie was rejected due to the users' prefs.
 void
-nsCookieService::LazyNotify()
+nsCookieService::NotifyRejected(nsIURI *aHostURI)
 {
-  // this algorithm is slightly different than the one used to write cookies.
-  // here we are concerned with update frequency of the UI (yes, yes, this
-  // code really shouldn't have to worry about the UI!)... so, we do not
-  // further delay an already delayed notification.
+  if (mObserverService) {
+    mObserverService->NotifyObservers(aHostURI, "cookie-rejected", nsnull);
+    // the cookieIcon notification is now deprecated, in favor of cookie-rejected.
+    // we still need this until consumers can be switched over.
+    mObserverService->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
+  }
+  mCookieIconVisible = PR_TRUE;
+}
 
-  if (!mNotifyTimer) {
-    mNotifyTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mNotifyTimer) {
-      mNotifyTimer->InitWithFuncCallback(DoLazyNotify, this, kLazyNotifyTimeout,
-                                         nsITimer::TYPE_ONE_SHOT);
+// notify observers that the cookie list changed. there are four possible
+// values for aData:
+// "deleted" means a cookie was deleted. aCookie is the deleted cookie.
+// "added"   means a cookie was added. aCookie is the added cookie.
+// "changed" means a cookie was altered. aCookie is the new cookie.
+// "cleared" means the entire cookie list was cleared. aCookie is null.
+void
+nsCookieService::NotifyChanged(nsICookie2      *aCookie,
+                               const PRUnichar *aData)
+{
+  mCookieChanged = PR_TRUE;
+
+  if (mObserverService) {
+    mObserverService->NotifyObservers(aCookie, "cookie-changed", aData);
+    // the cookieChanged notification is now deprecated. use cookie-changed instead.
+    mObserverService->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
+  }
+
+  // the cookieIcon notification is now deprecated, but we still need
+  // this until consumers can be fixed. to see if cookies have been
+  // downgraded or flagged, listen to cookie-changed directly.
+  if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("added").get()) ||
+      !nsCRT::strcmp(aData, NS_LITERAL_STRING("changed").get())) {
+    nsCookieStatus status;
+    aCookie->GetStatus(&status);
+    if (status == nsICookie::STATUS_DOWNGRADED ||
+        status == nsICookie::STATUS_FLAGGED) {
+      mCookieIconVisible = PR_TRUE;
+      if (mObserverService)
+        mObserverService->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
     }
   }
 }
 
-void
-nsCookieService::DoLazyNotify(nsITimer *aTimer,
-                              void     *aClosure)
-{
-  nsCookieService *service = NS_REINTERPRET_CAST(nsCookieService*, aClosure);
-  if (service->mObserverService)
-    service->mObserverService->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
-  service->mNotifyTimer = 0;
-}
-
-void
-nsCookieService::UpdateCookieIcon()
-{
-  mCookieIconVisible = PR_TRUE;
-  if (mObserverService) {
-    mObserverService->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
-  }
-}
-
+// this method is deprecated. listen to the cookie-changed notification instead.
 NS_IMETHODIMP
 nsCookieService::GetCookieIconIsVisible(PRBool *aIsVisible)
 {
@@ -768,68 +883,6 @@ nsCookieService::ReadPrefs()
 
 /******************************************************************************
  * nsICookieManager impl:
- * nsCookieEnumerator
- ******************************************************************************/
-
-class nsCookieEnumerator : public nsISimpleEnumerator
-{
-  public:
-    NS_DECL_ISUPPORTS
-
-    // note: mCookieCount is initialized just once in the ctor. While it might
-    // appear that the cookie list can change while the cookiemanager is running,
-    // the cookieservice is actually on the same thread, so it can't. Note that
-    // a new nsCookieEnumerator is created each time the cookiemanager is loaded.
-    // So we only need to get the count once. If we ever change the cookieservice to
-    // run on a different thread, then something to the effect of a lock will be
-    // required. see bug 191682 for details.
-    nsCookieEnumerator(const nsVoidArray &aCookieList)
-     : mCookieList(aCookieList)
-     , mCookieCount(aCookieList.Count())
-     , mCookieIndex(0)
-    {
-    }
-
-    NS_IMETHOD
-    HasMoreElements(PRBool *aResult) 
-    {
-      *aResult = mCookieIndex < mCookieCount;
-      return NS_OK;
-    }
-
-    NS_IMETHOD
-    GetNext(nsISupports **aResult) 
-    {
-      if (mCookieIndex >= mCookieCount) {
-        *aResult = nsnull;
-        NS_ERROR("bad cookie index");
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      // cast the nsCookie to an nsICookie
-      nsICookie *cookieInList = NS_STATIC_CAST(nsICookie*, NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(mCookieIndex++)));
-      NS_ASSERTION(cookieInList, "corrupt cookie list");
-
-      *aResult = cookieInList;
-      NS_ADDREF(cookieInList);
-
-      return NS_OK;
-    }
-
-    virtual ~nsCookieEnumerator() 
-    {
-    }
-
-  protected:
-    const nsVoidArray &mCookieList;
-    PRInt32           mCookieCount;
-    PRInt32           mCookieIndex;
-};
-
-NS_IMPL_ISUPPORTS1(nsCookieEnumerator, nsISimpleEnumerator)
-
-/******************************************************************************
- * nsICookieManager impl:
  * nsICookieManager
  ******************************************************************************/
 
@@ -837,25 +890,30 @@ NS_IMETHODIMP
 nsCookieService::RemoveAll()
 {
   RemoveAllFromMemory();
+  NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
   Write();
   return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+COMArrayCallback(nsCookieEntry *aEntry,
+                 void          *aArg)
+{
+  for (nsCookie *cookie = aEntry->Head(); cookie; cookie = cookie->Next()) {
+    NS_STATIC_CAST(nsCOMArray<nsICookie>*, aArg)->AppendObject(cookie);
+  }
+  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
 nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
 {
-  PRInt32 temp;
-  RemoveExpiredCookies(NOW_IN_SECONDS, temp);
+  RemoveExpiredCookies(NOW_IN_SECONDS);
 
-  nsCookieEnumerator* enumerator = new nsCookieEnumerator(mCookieList);
-  if (!enumerator) {
-    *aEnumerator = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsCOMArray<nsICookie> cookieList(mCookieCount);
+  mHostTable.EnumerateEntries(COMArrayCallback, &cookieList);
 
-  NS_ADDREF(enumerator);
-  *aEnumerator = enumerator;
-  return NS_OK;
+  return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
 
 NS_IMETHODIMP
@@ -888,46 +946,27 @@ nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aPath,
                         PRBool           aBlocked)
 {
-  nsCookie *cookieInList;
+  nsListIter matchIter;
+  if (FindCookie(PromiseFlatCString(aHost),
+                 PromiseFlatCString(aName),
+                 PromiseFlatCString(aPath),
+                 matchIter)) {
+    nsRefPtr<nsCookie> cookie = matchIter.current;
+    RemoveCookieFromList(matchIter);
+    NotifyChanged(cookie, NS_LITERAL_STRING("deleted").get());
 
-  // step through all cookies, searching for indicated one
-  PRInt32 count = mCookieList.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
+    // check if we need to add the host to the permissions blacklist.
+    if (aBlocked && mPermissionService) {
+      nsCAutoString host(NS_LITERAL_CSTRING("http://") + cookie->RawHost());
+      nsCOMPtr<nsIURI> uri;
+      NS_NewURI(getter_AddRefs(uri), host);
 
-    if (cookieInList->Path().Equals(aPath) &&
-        cookieInList->Host().Equals(aHost) &&
-        cookieInList->Name().Equals(aName)) {
-      // check if we need to add the host to the permissions blacklist.
-      // we should push this portion into the UI, it shouldn't live here in the backend.
-      if (aBlocked && mPermissionService) {
-        nsCAutoString buf;
-        NS_NAMED_LITERAL_CSTRING(httpPrefix, "http://");
-
-        // remove leading dot from host
-        if (cookieInList->IsDomain())
-          buf = httpPrefix + Substring(cookieInList->Host(), 1, cookieInList->Host().Length() - 1);
-        else
-          buf = httpPrefix + cookieInList->Host();
-
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), buf);
-
-        if (uri)
-          mPermissionService->SetAccess(uri, nsICookiePermission::ACCESS_DENY);
-      }
-
-      mCookieList.RemoveElementAt(i);
-      NS_RELEASE(cookieInList);
-      mCookieChanged = PR_TRUE;
-      // we might want to eventually push this Write() call into the UI,
-      // to just write once on cookiemanager close.
-      Write();
-      break;
+      if (uri)
+        mPermissionService->SetAccess(uri, nsICookiePermission::ACCESS_DENY);
     }
-  }
 
+    LazyWrite();
+  }
   return NS_OK;
 }
 
@@ -935,40 +974,6 @@ nsCookieService::Remove(const nsACString &aHost,
  * nsCookieService impl:
  * private file I/O functions
  ******************************************************************************/
-
-// comparison function for sorting cookies by path length:
-// returns < 0 if the first element has a greater path length than the second element,
-//           0 if they both have the same path length,
-//         > 0 if the second element has a greater path length than the first element.
-PR_STATIC_CALLBACK(int)
-compareCookiesByPath(const void *aElement1,
-                     const void *aElement2,
-                     void       *aData)
-{
-  const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
-  const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
-  NS_ASSERTION(cookie1 && cookie2, "corrupt cookie list");
-
-  return cookie2->Path().Length() - cookie1->Path().Length();
-}
-
-// comparison function for sorting cookies by lastAccessed time:
-// returns < 0 if the first element was used more recently than the second element,
-//           0 if they both have the same last-use time,
-//         > 0 if the second element was used more recently than the first element.
-PR_STATIC_CALLBACK(int)
-compareCookiesByLRU(const void *aElement1,
-                    const void *aElement2,
-                    void       *aData)
-{
-  const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
-  const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
-  NS_ASSERTION(cookie1 && cookie2, "corrupt cookie list");
-
-  // we may have overflow problems returning the result directly, so we need branches
-  nsInt64 difference = cookie2->LastAccessed() - cookie1->LastAccessed();
-  return (difference > nsInt64(0)) ? 1 : (difference < nsInt64(0)) ? -1 : 0;
-}
 
 nsresult
 nsCookieService::Read()
@@ -984,10 +989,6 @@ nsCookieService::Read()
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  // presize mCookieList to the maximum size, to avoid excessive malloc's.
-  // we'll compact it when we're done reading
-  mCookieList.SizeTo(kMaxNumberOfCookies);
 
   static NS_NAMED_LITERAL_CSTRING(kTrue, "TRUE");
 
@@ -1058,7 +1059,7 @@ nsCookieService::Read()
       continue;
     }
 
-    // create a new nsCookie and assign the data
+    // create a new nsCookie and assign the data.
     newCookie =
       new nsCookie(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
                    Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
@@ -1080,17 +1081,21 @@ nsCookieService::Read()
     lastAccessedCounter -= nsInt64(1);
 
     // add new cookie to the list
-    mCookieList.AppendElement(newCookie);
-    NS_ADDREF(newCookie);
+    AddCookieToList(newCookie);
   }
-
-  // compact the array, now that we're done reading data
-  mCookieList.Compact();
-  // sort the list in order of descending path length
-  mCookieList.Sort(compareCookiesByPath, nsnull);
 
   mCookieChanged = PR_FALSE;
   return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+cookieListCallback(nsCookieEntry *aEntry,
+                   void          *aArg)
+{
+  for (nsCookie *cookie = aEntry->Head(); cookie; cookie = cookie->Next()) {
+    NS_STATIC_CAST(nsVoidArray*, aArg)->AppendElement(cookie);
+  }
+  return PL_DHASH_NEXT;
 }
 
 nsresult
@@ -1128,8 +1133,8 @@ nsCookieService::Write()
 
   // create a new nsVoidArray to hold the cookie list, and sort it
   // such that least-recently-used cookies come last
-  nsVoidArray sortedCookieList;
-  sortedCookieList = mCookieList;
+  nsVoidArray sortedCookieList(mCookieCount);
+  mHostTable.EnumerateEntries(cookieListCallback, &sortedCookieList);
   sortedCookieList.Sort(compareCookiesByLRU, nsnull);
 
   bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &rv);
@@ -1145,38 +1150,36 @@ nsCookieService::Write()
    * note 2: cookies are written in order of lastAccessed time:
    *         most-recently used come first; least-recently-used come last.
    */
-  nsCookie *cookieInList;
+  nsCookie *cookie;
   nsInt64 currentTime = NOW_IN_SECONDS;
   char dateString[22];
   PRUint32 dateLen;
-  PRInt32 count = sortedCookieList.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, sortedCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
+  for (PRUint32 i = 0; i < mCookieCount; ++i) {
+    cookie = NS_STATIC_CAST(nsCookie*, sortedCookieList.ElementAt(i));
 
     // don't write entry if cookie has expired, or is a session cookie
-    if (cookieInList->IsSession() || cookieInList->Expiry() <= currentTime) {
+    if (cookie->IsSession() || cookie->Expiry() <= currentTime) {
       continue;
     }
 
-    bufferedOutputStream->Write(cookieInList->Host().get(), cookieInList->Host().Length(), &rv);
-    if (cookieInList->IsDomain()) {
+    bufferedOutputStream->Write(cookie->Host().get(), cookie->Host().Length(), &rv);
+    if (cookie->IsDomain()) {
       bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
     } else {
       bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
     }
-    bufferedOutputStream->Write(cookieInList->Path().get(), cookieInList->Path().Length(), &rv);
-    if (cookieInList->IsSecure()) {
+    bufferedOutputStream->Write(cookie->Path().get(), cookie->Path().Length(), &rv);
+    if (cookie->IsSecure()) {
       bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
     } else {
       bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
     }
-    dateLen = PR_snprintf(dateString, sizeof(dateString), "%lld", PRInt64(cookieInList->Expiry()));
+    dateLen = PR_snprintf(dateString, sizeof(dateString), "%lld", PRInt64(cookie->Expiry()));
     bufferedOutputStream->Write(dateString, dateLen, &rv);
     bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
-    bufferedOutputStream->Write(cookieInList->Name().get(), cookieInList->Name().Length(), &rv);
+    bufferedOutputStream->Write(cookie->Name().get(), cookie->Name().Length(), &rv);
     bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
-    bufferedOutputStream->Write(cookieInList->Value().get(), cookieInList->Value().Length(), &rv);
+    bufferedOutputStream->Write(cookie->Value().get(), cookie->Value().Length(), &rv);
     bufferedOutputStream->Write(kNew, sizeof(kNew) - 1, &rv);
   }
 
@@ -1199,8 +1202,6 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsCookieStatus     aStatus,
                                    nsCookiePolicy     aPolicy)
 {
-  nsresult rv;
-
   // keep a |const char*| version of the unmodified aCookieHeader,
   // for logging purposes
   const char *cookieHeader = aCookieHeader.get();
@@ -1267,6 +1268,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                      &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
+      NotifyRejected(aHostURI);
       return newCookie;
     }
 
@@ -1275,86 +1277,77 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     cookie->SetExpiry(cookieAttributes.expiryTime);
   }
 
-  // add the cookie to the list
-  rv = AddInternal(cookie, NOW_IN_SECONDS, aHostURI, cookieHeader);
-  if (NS_FAILED(rv)) {
-    // no need to log a failure here, AddInternal() does it for us
-    return newCookie;
-  }
-
-  // notify observers if the cookie was downgraded or flagged (only for p3p
-  // at this point). this occurs only if the cookie was set successfully.
-  if (aStatus == nsICookie::STATUS_DOWNGRADED ||
-      aStatus == nsICookie::STATUS_FLAGGED) {
-    UpdateCookieIcon();
-  }
-
-  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, cookieHeader, cookie);
+  // add the cookie to the list. AddInternal() takes care of logging.
+  AddInternal(cookie, NOW_IN_SECONDS, aHostURI, cookieHeader);
   return newCookie;
 }
 
 // this is a backend function for adding a cookie to the list, via SetCookie.
 // also used in the cookie manager, for profile migration from IE.
-// returns NS_OK if aCookie was added to the list; NS_ERROR otherwise.
-nsresult
+// it either replaces an existing cookie; or adds the cookie to the hashtable,
+// and deletes a cookie (if maximum number of cookies has been
+// reached). also performs list maintenance by removing expired cookies.
+void
 nsCookieService::AddInternal(nsCookie   *aCookie,
                              nsInt64    aCurrentTime,
                              nsIURI     *aHostURI,
                              const char *aCookieHeader)
 {
-  // find a position to insert the cookie at (and delete a cookie from, if necessary).
-  // also removes expired cookies from the list, for maintenance purposes.
-  PRInt32 insertPosition, deletePosition;
-  PRBool foundCookie = FindPosition(aCookie, insertPosition, deletePosition, aCurrentTime);
+  nsListIter matchIter;
+  const PRBool foundCookie =
+    FindCookie(aCookie->Host(), aCookie->Name(), aCookie->Path(), matchIter);
 
-  // store the cookie
+  nsRefPtr<nsCookie> oldCookie;
   if (foundCookie) {
-    nsCookie *prevCookie = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(insertPosition));
-    NS_ASSERTION(prevCookie, "corrupt cookie list");
-    NS_RELEASE(prevCookie);
+    oldCookie = matchIter.current;
+    RemoveCookieFromList(matchIter);
 
-    // check if the server wants to delete the cookie
+    // check if the cookie has expired
     if (!aCookie->IsSession() && aCookie->Expiry() <= aCurrentTime) {
-      // delete previous cookie
-      mCookieList.RemoveElementAt(insertPosition);
-
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
-      mCookieChanged = PR_TRUE;
-      return NS_ERROR_FAILURE;
-
-    } else {
-      // replace previous cookie
-      mCookieList.ReplaceElementAt(aCookie, insertPosition);
-      NS_ADDREF(aCookie);
+      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+      return;
     }
 
   } else {
     // check if cookie has already expired
     if (!aCookie->IsSession() && aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
-      return NS_ERROR_FAILURE;
+      return;
     }
 
-    // add the cookie, which means we might have to delete an old cookie
-    if (deletePosition != -1) {
-      nsCookie *deleteCookie = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(deletePosition));
-      NS_ASSERTION(deleteCookie, "corrupt cookie list");
+    // check if we have to delete an old cookie.
+    nsEnumerationData data(aCurrentTime, LL_MAXINT);
+    if (CountCookiesFromHost(aCookie, data) >= kMaxCookiesPerHost) {
+      // remove the oldest cookie from host
+      oldCookie = data.iter.current;
+      RemoveCookieFromList(data.iter);
 
-      mCookieList.RemoveElementAt(deletePosition);
-      NS_RELEASE(deleteCookie);
+    } else if (mCookieCount >= kMaxNumberOfCookies) {
+      // try to make room, by removing expired cookies
+      RemoveExpiredCookies(aCurrentTime);
 
-      // adjust insertPosition if we removed a cookie before it
-      if (insertPosition > deletePosition) {
-        --insertPosition;
+      // check if we still have to get rid of something
+      if (mCookieCount >= kMaxNumberOfCookies) {
+        // find the position of the oldest cookie, and remove it
+        data.oldestTime = LL_MAXINT;
+        FindOldestCookie(data);
+        oldCookie = data.iter.current;
+        RemoveCookieFromList(data.iter);
       }
     }
 
-    mCookieList.InsertElementAt(aCookie, insertPosition);
-    NS_ADDREF(aCookie);
+    // if we deleted an old cookie, notify consumers
+    if (oldCookie)
+      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
   }
 
-  mCookieChanged = PR_TRUE;
-  return NS_OK;
+  // add the cookie to head of list
+  AddCookieToList(aCookie);
+  NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
+                                     : NS_LITERAL_STRING("added").get());
+
+  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, aCookieHeader, aCookie);
 }
 
 /******************************************************************************
@@ -1825,13 +1818,13 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
   }
   if (NS_FAILED(rv) || NS_FAILED(rv2)) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "couldn't get scheme of host URI");
-    return nsICookie::STATUS_REJECTED;
+    return STATUS_REJECTED_WITH_ERROR;
   }
 
   // don't let ftp sites get/set cookies (could be a security issue)
   if (currentURIScheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "ftp sites cannot read cookies");
-    return nsICookie::STATUS_REJECTED;
+    return STATUS_REJECTED_WITH_ERROR;
   }
 
   // check the permission list first; if we find an entry, it overrides
@@ -2078,43 +2071,33 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
 void
 nsCookieService::RemoveAllFromMemory()
 {
-  nsCookie *cookieInList;
-  for (PRInt32 i = mCookieList.Count(); i--;) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
-    NS_RELEASE(cookieInList);
-  }
-  mCookieList.SizeTo(0);
+  // clearing the hashtable will call each nsCookieEntry's dtor,
+  // which releases all their respective children.
+  mHostTable.Clear();
+  mCookieCount = 0;
   mCookieChanged = PR_TRUE;
 }
 
-// removes any expired cookies from memory, and finds the oldest cookie in the list
-void
-nsCookieService::RemoveExpiredCookies(nsInt64 aCurrentTime,
-                                      PRInt32 &aOldestPosition)
+PLDHashOperator PR_CALLBACK
+removeExpiredCallback(nsCookieEntry *aEntry,
+                      void          *aArg)
 {
-  aOldestPosition = -1;
-
-  nsCookie *cookieInList;
-  nsInt64 oldestTime = LL_MAXINT;
-
-  for (PRInt32 i = mCookieList.Count(); i--;) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
-
-    if (!cookieInList->IsSession() && cookieInList->Expiry() <= aCurrentTime) {
-      mCookieList.RemoveElementAt(i);
-      NS_RELEASE(cookieInList);
-      mCookieChanged = PR_TRUE;
-      --aOldestPosition;
-      continue;
-    }
-
-    if (oldestTime > cookieInList->LastAccessed()) {
-      oldestTime = cookieInList->LastAccessed();
-      aOldestPosition = i;
-    }
+  const nsInt64 &currentTime = *NS_STATIC_CAST(nsInt64*, aArg);
+  for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ) {
+    if (!iter.current->IsSession() && iter.current->Expiry() <= currentTime)
+      // remove from list. this takes care of updating the iterator for us
+      nsCookieService::gCookieService->RemoveCookieFromList(iter);
+    else
+      ++iter;
   }
+  return PL_DHASH_NEXT;
+}
+
+// removes any expired cookies from memory
+void
+nsCookieService::RemoveExpiredCookies(nsInt64 aCurrentTime)
+{
+  mHostTable.EnumerateEntries(removeExpiredCallback, &aCurrentTime);
 }
 
 // find whether a previous cookie has been set, and count the number of cookies from
@@ -2127,116 +2110,133 @@ nsCookieService::FindMatchingCookie(nsICookie2 *aCookie,
 {
   NS_ENSURE_ARG_POINTER(aCookie);
 
-  *aFoundCookie = PR_FALSE;
-  *aCountFromHost = 0;
-  nsInt64 currentTime = NOW_IN_SECONDS;
-
-  // cast aCookie to an nsCookie*, for faster access to its members
+  // we don't care about finding the oldest cookie here, so disable the search
+  nsEnumerationData data(NOW_IN_SECONDS, LL_MININT);
   nsCookie *cookie = NS_STATIC_CAST(nsCookie*, aCookie);
 
-  const nsAFlatCString &host = cookie->Host();
-  const nsAFlatCString &path = cookie->Path();
-  const nsAFlatCString &name = cookie->Name();
-
-  nsCookie *cookieInList;
-  PRInt32 count = mCookieList.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
-
-    // only count session or non-expired cookies
-    if (IsInDomain(cookieInList->Host(), host, cookieInList->IsDomain()) &&
-        (cookieInList->IsSession() || cookieInList->Expiry() > currentTime)) {
-      ++*aCountFromHost;
-
-      // check if we've found the previous cookie
-      if (path.Equals(cookieInList->Path()) &&
-          host.Equals(cookieInList->Host()) &&
-          name.Equals(cookieInList->Name())) {
-        *aFoundCookie = PR_TRUE;
-      }
-    }
-  }
-
+  *aCountFromHost = CountCookiesFromHost(cookie, data);
+  *aFoundCookie = FindCookie(cookie->Host(), cookie->Name(), cookie->Path(), data.iter);
   return NS_OK;
 }
 
-// find a position to store a cookie (either replacing an existing cookie, or adding
-// to end of list), and a cookie to delete (if maximum number of cookies has been
-// exceeded). also performs list maintenance by removing expired cookies.
-// returns whether a previous cookie already exists,
-// aInsertPosition is the position to insert the new cookie;
-// aDeletePosition is the position to delete (-1 if not required).
-PRBool
-nsCookieService::FindPosition(nsCookie *aCookie,
-                              PRInt32  &aInsertPosition,
-                              PRInt32  &aDeletePosition,
-                              nsInt64  aCurrentTime)
+// count the number of cookies from this host, and find the oldest cookie
+// from this host.
+PRUint32
+nsCookieService::CountCookiesFromHost(nsCookie          *aCookie,
+                                      nsEnumerationData &aData)
 {
-  aDeletePosition = -1;
-  aInsertPosition = -1;
-  PRBool foundCookie = PR_FALSE;
+  PRUint32 countFromHost = 0;
 
-  // list maintenance: remove expired cookies, and find the position of the
-  // oldest cookie while we're at it - required if we have kMaxNumberOfCookies
-  // and need to remove one.
-  PRInt32 oldestPosition;
-  RemoveExpiredCookies(aCurrentTime, oldestPosition);
+  nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aCookie->RawHost());
 
-  nsCookie *cookieInList;
-  nsInt64 oldestTimeFromHost = LL_MAXINT;
-  PRInt32 oldestPositionFromHost;
-  PRInt32 countFromHost = 0;
-  const nsAFlatCString &host = aCookie->Host();
-  const nsAFlatCString &path = aCookie->Path();
-  const nsAFlatCString &name = aCookie->Name();
+  const char *currentDot = hostWithDot.get();
+  const char *nextDot = currentDot + 1;
+  while (nextDot) {
+    nsCookieEntry *entry = mHostTable.GetEntry(currentDot);
+    for (nsListIter iter(entry); iter.current; ++iter) {
+      // only count session or non-expired cookies
+      if (iter.current->IsSession() || iter.current->Expiry() > aData.currentTime) {
+        ++countFromHost;
 
-  PRInt32 count = mCookieList.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
-    NS_ASSERTION(cookieInList, "corrupt cookie list");
-
-    // check if we've passed the location where we might find a previous cookie.
-    // mCookieList is sorted in order of descending path length,
-    // so since we're enumerating forwards, we look for aCookie path length
-    // to become greater than cookieInList path length.
-    // if we've found a position to insert the cookie at (either replacing a 
-    // previous cookie, or inserting at a new position), we don't need to keep looking.
-    if (aInsertPosition == -1 &&
-        path.Length() > cookieInList->Path().Length()) {
-      aInsertPosition = i;
+        // check if we've found the oldest cookie so far
+        if (aData.oldestTime > iter.current->LastAccessed()) {
+          aData.oldestTime = iter.current->LastAccessed();
+          aData.iter = iter;
+        }
+      }
     }
 
-    if (IsInDomain(cookieInList->Host(), host, cookieInList->IsDomain())) {
-      ++countFromHost;
+    currentDot = nextDot;
+    nextDot = strchr(currentDot + 1, '.');
+  }
 
-      if (oldestTimeFromHost > cookieInList->LastAccessed()) {
-        oldestTimeFromHost = cookieInList->LastAccessed();
-        oldestPositionFromHost = i;
-      }
+  return countFromHost;
+}
 
-      if (aInsertPosition == -1 &&
-          path.Equals(cookieInList->Path()) &&
-          host.Equals(cookieInList->Host()) &&
-          name.Equals(cookieInList->Name())) {
-        aInsertPosition = i;
-        foundCookie = PR_TRUE;
-      }
+// find an exact previous match.
+PRBool
+nsCookieService::FindCookie(const nsAFlatCString &aHost,
+                            const nsAFlatCString &aName,
+                            const nsAFlatCString &aPath,
+                            nsListIter           &aIter)
+{
+  nsCookieEntry *entry = mHostTable.GetEntry(aHost.get());
+  for (aIter = nsListIter(entry); aIter.current; ++aIter) {
+    if (aPath.Equals(aIter.current->Path()) &&
+        aName.Equals(aIter.current->Name())) {
+      return PR_TRUE;
     }
   }
 
-  // if we didn't find a position to insert at, put it at the end of the list
-  if (aInsertPosition == -1) {
-    aInsertPosition = count;
+  return PR_FALSE;
+}
+
+// removes a cookie from the hashtable, and update the iterator state.
+void
+nsCookieService::RemoveCookieFromList(nsListIter &aIter)
+{
+  if (!aIter.prev && !aIter.current->Next()) {
+    // we're removing the last element in the list - so just remove the entry
+    // from the hash. note that the entryclass' dtor will take care of
+    // releasing this last element for us!
+    mHostTable.RawRemoveEntry(aIter.entry);
+    aIter.current = nsnull;
+
+  } else {
+    // just remove the element from the list, and increment the iterator
+    nsCookie *next = aIter.current->Next();
+    NS_RELEASE(aIter.current);
+    if (aIter.prev) {
+      // element to remove is not the head
+      aIter.current = aIter.prev->Next() = next;
+    } else {
+      // element to remove is the head
+      aIter.current = aIter.entry->Head() = next;
+    }
   }
 
-  // choose which cookie to delete (oldest cookie, or oldest cookie from this host),
-  // if we have to.
-  if (countFromHost >= kMaxCookiesPerHost) {
-    aDeletePosition = oldestPositionFromHost;
-  } else if (count >= kMaxNumberOfCookies) {
-    aDeletePosition = oldestPosition;
+  --mCookieCount;
+  mCookieChanged = PR_TRUE;
+}
+
+void
+nsCookieService::AddCookieToList(nsCookie *aCookie)
+{
+  nsCookieEntry *entry = mHostTable.PutEntry(aCookie->Host().get());
+
+  // addref the element now, so if we fail we can release it.
+  // this allows a caller to pass in a zero-refcount element
+  // so they can avoid excess addrefs/releases.
+  NS_ADDREF(aCookie);
+  if (!entry) {
+    NS_RELEASE(aCookie);
+    NS_ERROR("can't insert element into a null entry!");
+    return;
   }
 
-  return foundCookie;
+  aCookie->Next() = entry->Head();
+  entry->Head() = aCookie;
+  ++mCookieCount;
+  mCookieChanged = PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+findOldestCallback(nsCookieEntry *aEntry,
+                   void          *aArg)
+{
+  nsEnumerationData *data = NS_STATIC_CAST(nsEnumerationData*, aArg);
+  for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ++iter) {
+    // check if we've found the oldest cookie so far
+    if (data->oldestTime > iter.current->LastAccessed()) {
+      data->oldestTime = iter.current->LastAccessed();
+      data->iter = iter;
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsCookieService::FindOldestCookie(nsEnumerationData &aData)
+{
+  mHostTable.EnumerateEntries(findOldestCallback, &aData);
 }

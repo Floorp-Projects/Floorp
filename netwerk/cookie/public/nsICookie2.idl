@@ -50,6 +50,13 @@ interface nsICookie2 : nsICookie
 {
 
     /**
+     * the host (possibly fully qualified) of the cookie,
+     * without a leading dot to represent if it is a
+     * domain cookie.
+     */
+    readonly attribute AUTF8String rawHost;
+
+    /**
      * true if the cookie is a session cookie
      * (note: if true, the expiry time is undefined).
      */

@@ -94,7 +94,8 @@ nsCookie::nsCookie(const nsACString &aName,
                    PRBool           aIsSecure,
                    nsCookieStatus   aStatus,
                    nsCookiePolicy   aPolicy)
- : mExpiry(aExpiry)
+ : mNext(nsnull)
+ , mExpiry(aExpiry)
  , mLastAccessed(aLastAccessed)
  , mRefCnt(0)
  , mIsSession(aIsSession != PR_FALSE)
@@ -123,6 +124,7 @@ nsCookie::~nsCookie()
 NS_IMETHODIMP nsCookie::GetName(nsACString &aName)         { aName = Name();            return NS_OK; }
 NS_IMETHODIMP nsCookie::GetValue(nsACString &aValue)       { aValue = Value();          return NS_OK; }
 NS_IMETHODIMP nsCookie::GetHost(nsACString &aHost)         { aHost = Host();            return NS_OK; }
+NS_IMETHODIMP nsCookie::GetRawHost(nsACString &aHost)      { aHost = RawHost();         return NS_OK; }
 NS_IMETHODIMP nsCookie::GetPath(nsACString &aPath)         { aPath = Path();            return NS_OK; }
 NS_IMETHODIMP nsCookie::GetExpiry(PRInt64 *aExpiry)        { *aExpiry = Expiry();       return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsSession(PRBool *aIsSession)   { *aIsSession = IsSession(); return NS_OK; }

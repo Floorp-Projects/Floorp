@@ -48,9 +48,11 @@
 
 #include "nsCookie.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTHashtable.h"
 
 struct nsCookieAttributes;
+struct nsListIter;
+struct nsEnumerationData;
 class nsICookieConsent;
 class nsICookiePermission;
 class nsIPrefBranch;
@@ -61,6 +63,85 @@ class nsIChannel;
 class nsITimer;
 class nsIFile;
 class nsInt64;
+
+// hash entry class
+class nsCookieEntry : public PLDHashEntryHdr
+{
+  public:
+    // Hash methods
+    typedef const char* KeyType;
+    typedef const char* KeyTypePointer;
+
+    // do nothing with aHost - we require mHead to be set before we're live!
+    nsCookieEntry(KeyTypePointer aHost)
+     : mHead(nsnull)
+    {
+    }
+
+    nsCookieEntry(const nsCookieEntry& toCopy)
+    {
+      // if we end up here, things will break. nsTHashtable shouldn't
+      // allow this, since we set ALLOW_MEMMOVE to true.
+      NS_NOTREACHED("nsCookieEntry copy constructor is forbidden!");
+    }
+
+    ~nsCookieEntry()
+    {
+      // walk the linked list, and de-link everything by releasing & nulling.
+      // this allows the parent host entry to be deleted by the hashtable.
+      // note: we know mHead cannot be null here - we always set mHead to a
+      // valid nsCookie (if it were null, the hashtable wouldn't be able to find
+      // this entry, because the key string is provided by mHead).
+      nsCookie *current = mHead, *next;
+      do {
+        next = current->Next();
+        NS_RELEASE(current);
+      } while ((current = next));
+    }
+
+    KeyType GetKey() const
+    {
+      return HostPtr();
+    }
+
+    KeyTypePointer GetKeyPointer() const
+    {
+      return HostPtr();
+    }
+
+    PRBool KeyEquals(KeyTypePointer aKey) const
+    {
+      return !strcmp(HostPtr(), aKey);
+    }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey)
+    {
+      return aKey;
+    }
+
+    static PLDHashNumber HashKey(KeyTypePointer aKey)
+    {
+      // PL_DHashStringKey doesn't use the table parameter, so we can safely
+      // pass nsnull
+      return PL_DHashStringKey(nsnull, aKey);
+    }
+
+    enum { ALLOW_MEMMOVE = PR_TRUE };
+
+    // get methods
+    inline const nsDependentCString Host() const { return mHead->Host(); }
+
+    // linked list management helper
+    inline nsCookie*& Head() { return mHead; }
+
+    inline KeyTypePointer HostPtr() const
+    {
+      return mHead->Host().get();
+    }
+
+  private:
+    nsCookie *mHead;
+};
 
 /******************************************************************************
  * nsCookieService:
@@ -83,6 +164,7 @@ class nsCookieService : public nsICookieService
     nsCookieService();
     virtual ~nsCookieService();
     static nsCookieService*       GetSingleton();
+    nsresult                      Init();
 
   protected:
     void                          InitPrefObservers();
@@ -90,11 +172,12 @@ class nsCookieService : public nsICookieService
     nsresult                      Read();
     nsresult                      Write();
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
-    nsresult                      AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
+    void                          AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
+    void                          RemoveCookieFromList(nsListIter &aIter);
+    void                          AddCookieToList(nsCookie *aCookie);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentSingleFragmentCSubstring &aTokenString, nsDependentSingleFragmentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
-    static PRBool                 IsFromMailNews(const nsAFlatCString &aScheme);
     static PRBool                 IsInDomain(const nsACString &aDomain, const nsACString &aHost, PRBool aIsDomain = PR_TRUE);
     static PRBool                 IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI);
     static nsCookiePolicy         GetP3PPolicy(PRInt32 aPolicy);
@@ -105,19 +188,17 @@ class nsCookieService : public nsICookieService
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     PRBool                        GetExpiry(nsCookieAttributes &aCookie, nsInt64 aServerTime, nsInt64 aCurrentTime, nsCookieStatus aStatus);
     void                          RemoveAllFromMemory();
-    void                          RemoveExpiredCookies(nsInt64 aCurrentTime, PRInt32 &aOldestPosition);
-    PRBool                        FindPosition(nsCookie *aCookie, PRInt32 &aInsertPosition, PRInt32 &aDeletePosition, nsInt64 aCurrentTime);
-    void                          UpdateCookieIcon();
+    void                          RemoveExpiredCookies(nsInt64 aCurrentTime);
+    PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
+    void                          FindOldestCookie(nsEnumerationData &aData);
+    PRUint32                      CountCookiesFromHost(nsCookie *aCookie, nsEnumerationData &aData);
+    void                          NotifyRejected(nsIURI *aHostURI);
+    void                          NotifyChanged(nsICookie2 *aCookie, const PRUnichar *aData);
 
     // Use LazyWrite to save the cookies file on a timer. It will write
     // the file only once if repeatedly hammered quickly.
     void                          LazyWrite();
     static void                   DoLazyWrite(nsITimer *aTimer, void *aClosure);
-
-    // Use LazyNotify to broadcast the "cookieChanged" notification at
-    // a reasonable frequency.
-    void                          LazyNotify();
-    static void                   DoLazyNotify(nsITimer *aTimer, void *aClosure);
 
   protected:
     // cached members
@@ -129,8 +210,8 @@ class nsCookieService : public nsICookieService
 
     // impl members
     nsCOMPtr<nsITimer>            mWriteTimer;
-    nsCOMPtr<nsITimer>            mNotifyTimer;
-    nsVoidArray                   mCookieList;
+    nsTHashtable<nsCookieEntry>   mHostTable;
+    PRUint32                      mCookieCount;
     PRPackedBool                  mCookieChanged;
     PRPackedBool                  mCookieIconVisible;
 
@@ -160,6 +241,9 @@ class nsCookieService : public nsICookieService
     // private static member, used to cache a ptr to nsCookieService,
     // so we can make nsCookieService a singleton xpcom object.
     static nsCookieService        *gCookieService;
+
+    // this callback needs access to member functions
+    friend PLDHashOperator PR_CALLBACK removeExpiredCallback(nsCookieEntry *aEntry, void *aArg);
 };
 
 #define NS_COOKIEMANAGER_CID {0xaaab6710,0xf2c,0x11d5,{0xa5,0x3b,0x0,0x10,0xa4,0x1,0xeb,0x10}}

@@ -41,8 +41,24 @@
  * used to persistenly store permissions for different object types (cookies, 
  * images etc) on a site-by-site basis.
  *
- * This service broadcasts a PERM_CHANGE_NOTIFICATION notification
- * when any permission changes. You can add yourself as an observer.
+ * This service broadcasts the following notification when the permission list
+ * is changed:
+ *
+ * topic  : "perm-changed" (PERM_CHANGE_NOTIFICATION)
+ *          broadcast whenever the permission list changes in some way. there
+ *          are four possible data strings for this notification; one
+ *          notification will be broadcast for each change, and will involve
+ *          a single permission.
+ * subject: an nsIPermission interface pointer representing the permission object
+ *          that changed.
+ * data   : "deleted"
+ *          a permission was deleted. the subject is the deleted permission.
+ *          "added"
+ *          a permission was added. the subject is the added permission.
+ *          "changed"
+ *          a permission was changed. the subject is the new permission.
+ *          "cleared"
+ *          the entire permission list was cleared. the subject is null.
  */
 
 #include "nsISupports.idl"

@@ -49,6 +49,8 @@
 #include "nsTHashtable.h"
 #include "nsString.h"
 
+class nsIPermission;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This allow us 8 types of permissions, with 256 values for each
@@ -160,13 +162,18 @@ private:
 
   nsresult AddInternal(const nsAFlatCString &aHost,
                        PRInt32  aTypeIndex,
-                       PRUint32 aPermission);
+                       PRUint32 aPermission,
+                       PRBool   aNotify);
   PRInt32 GetTypeIndex(const char *aTypeString,
                        PRBool      aAdd);
 
   nsresult Read();
   nsresult Write();
-  nsresult NotifyObservers(const nsACString &aHost);
+  void     NotifyObserversWithPermission(const nsACString &aHost,
+                                         const char       *aType,
+                                         PRUint32          aPermission,
+                                         const PRUnichar  *aData);
+  void     NotifyObservers(nsIPermission *aPermission, const PRUnichar *aData);
   nsresult RemoveAllFromMemory();
   nsresult GetHostPort(nsIURI *aURI, nsACString &aResult);
   void     RemoveTypeStrings();
