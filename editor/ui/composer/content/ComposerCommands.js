@@ -163,7 +163,6 @@ function SetupComposerWindowCommands()
   }
 
   // File-related commands
-  commandManager.registerCommand("cmd_newEditor",      nsNewEditorCommand);
   commandManager.registerCommand("cmd_open",           nsOpenCommand);
   commandManager.registerCommand("cmd_save",           nsSaveCommand);
   commandManager.registerCommand("cmd_saveAs",         nsSaveAsCommand);
@@ -487,20 +486,6 @@ function CloseWindow()
     window.editorShell.CloseWindowWithoutSaving();
   }
 }
-
-//-----------------------------------------------------------------------------------
-var nsNewEditorCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return true;    // we can always do this
-  },
-
-  doCommand: function(aCommand)
-  {
-    NewEditorWindow();
-  }
-};
 
 //-----------------------------------------------------------------------------------
 var nsOpenRemoteCommand =
