@@ -5061,6 +5061,27 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                 PRUint32 stringLen,
                                 const char* string)
 {
+    // print a load error on bad status
+    if (NS_FAILED(aStatus))
+    {
+      if (aLoader)
+      {
+        nsCOMPtr<nsIChannel> channel;
+        aLoader->GetChannel(getter_AddRefs(channel));
+        if (channel)
+        {
+          nsCOMPtr<nsIURI> uri;
+          channel->GetURI(getter_AddRefs(uri));
+          if (uri)
+          {
+            char* uriSpec;
+            uri->GetSpec(&uriSpec);
+            printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+          }
+        }
+      }
+    }
+    
     // This is the completion routine that will be called when a
     // transcluded script completes. Compile and execute the script
     // if the load was successful, then continue building content
