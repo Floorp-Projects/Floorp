@@ -628,7 +628,6 @@ function OnLoadMessenger()
   verifyAccounts(null);
     
   HideAccountCentral();
-  loadStartPage();
   InitMsgWindow();
   messenger.SetWindow(window, msgWindow);
 
