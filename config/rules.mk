@@ -236,7 +236,10 @@ JDK_STUB_DIR		= _stubs
 XPIDL_GEN_DIR		= _xpidlgen
 
 ifdef MOZ_UPDATE_XTERM
-UPDATE_TITLE = echo "]2;gmake: $@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$$d";
+# Its good not to have a newline at the end of the titlebar string because it
+# makes the make -s output easier to read.  Echo -n does not work on all
+# platforms, but we can trick sed into doing it.
+UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$$d!" $(topsrcdir)/config/xterm.str;
 endif
 
 ifdef DIRS
