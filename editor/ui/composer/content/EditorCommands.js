@@ -438,18 +438,6 @@ function EditorExecuteScript(fileSpec)
       // XXX by the readLine() implementation.
 
       tmpBuf.value = null;
-
-      // XXX There is a bug in the nsIFileSpec implementation.
-      // XXX the didTruncate value actually returns a bool
-      // XXX that indicates if the read successfully read
-      // XXX a line that fit into the buffer.
-      // XXX That is, it returns true if everything fit
-      // XXX and false if it didn't ... the reverse of what
-      // XXX the args name suggests.
-      // XXX
-      // XXX Remove the following line when this bug gets fixed.
-
-      didTruncate.value = !didTruncate.value;
     }
 
     eval(buf.value);
