@@ -179,6 +179,6 @@ endif
 
 export:: $(BUILD_DATE)
 
-$(BUILD_DATE): gbdate.pl
+$(BUILD_DATE):: gbdate.pl $(wildcard $(SHARED_LIBRARY_LIBS))
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
