@@ -17,8 +17,8 @@
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -40,3 +40,4 @@ CFLAGS		+= -DJS_THREADSAFE
 ifeq ($(OS_ARCH),BSD_OS)
 OS_LIBS		+= -lgcc
 endif
+

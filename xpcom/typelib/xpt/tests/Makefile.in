@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
@@ -22,19 +23,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+CPP_PROG_LINK	= 1
 
 SIMPLE_PROGRAMS	= PrimitiveTest SimpleTypeLib
 
 CSRCS		= PrimitiveTest.c SimpleTypeLib.c
 
-# This fixes cout & ostream undefines for gcc 2.7.2.3.
-CPP_PROG_LINK = 1
-
-LIBS		= 		\
-		  -L$(DIST)/bin \
-		  -lxpcom 	\
-		  $(NSPR_LIBS)	\
-		  $(NULL)
+LIBS		= -L$(DIST)/bin -lxpcom $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

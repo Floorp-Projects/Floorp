@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
@@ -22,6 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+INTERNAL_TOOLS	= 1
 
 SIMPLE_PROGRAMS	= xpt_dump xpt_link
 
@@ -38,21 +40,19 @@ endif
 # Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
 # when libxpt changes.
 ifdef CROSS_COMPILE
-EXTRA_DEPS = $(wildcard $(DIST)/lib/libhostxpt.*)
+EXTRA_DEPS	= $(wildcard $(DIST)/lib/libhostxpt.*)
 else
-EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
+EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
 endif
-
-# Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
-export:: libs install
-
-# We are building a build tool
-INTERNAL_TOOLS = 1
 
 include $(topsrcdir)/config/rules.mk
 
 ifdef CROSS_COMPILE
 ifdef HOST_NSPR_MDCPUCFG
-CFLAGS += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+CFLAGS		+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
+
+# Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
+export:: libs install
+

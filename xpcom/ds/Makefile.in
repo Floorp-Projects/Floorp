@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,108 +13,103 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+MODULE		= xpcom
+XPIDL_MODULE	= xpcom_ds
+LIBRARY_NAME	= xpcomds_s
 
-LIBRARY_NAME = xpcomds_s
+REQUIRES	= xpcom uconv unicharutil
 
-MODULE = xpcom
+CPPSRCS		= \
+		nsArena.cpp \
+		nsAtomTable.cpp \
+		nsAVLTree.cpp \
+		nsByteBuffer.cpp \
+		nsCRT.cpp \
+		nsConjoiningEnumerator.cpp \
+		nsDeque.cpp \
+		nsEmptyEnumerator.cpp \
+		nsEnumeratorUtils.cpp \
+		nsHashtable.cpp \
+		nsHashtableEnumerator.cpp \
+		nsObserver.cpp \
+		nsObserverList.cpp \
+		nsObserverService.cpp \
+		nsPageMgr.cpp \
+		nsProperties.cpp \
+		nsQuickSort.cpp \
+		nsSizeOfHandler.cpp \
+		nsStr.cpp \
+		nsString.cpp \
+		nsString2.cpp \
+		nsSupportsArray.cpp \
+		nsSupportsArrayEnumerator.cpp \
+		nsSupportsPrimitives.cpp \
+		nsUnicharBuffer.cpp \
+		nsVariant.cpp \
+		nsVoidArray.cpp \
+		nsXPIDLString.cpp \
+		plvector.cpp \
+		nsTextFormater.cpp \
+		$(NULL)
 
-XPIDL_MODULE = xpcom_ds
+EXPORTS		= \
+		nsAVLTree.h \
+		nsCppSharedAllocator.h \
+		nsCRT.h \
+		nsDeque.h \
+		nsEnumeratorUtils.h \
+		nsHashtable.h \
+		nsHashtableEnumerator.h \
+		nsIArena.h \
+		nsIByteBuffer.h \
+		nsIObserverList.h \
+		nsIPageManager.h \
+		nsIProperties.h \
+		nsISimpleEnumerator.h \
+		nsISizeOfHandler.h \
+		nsIUnicharBuffer.h \
+		nsIVariant.h \
+		nsInt64.h \
+		nsQuickSort.h \
+		nsStr.h \
+		nsString.h \
+		nsString2.h \
+		nsSupportsPrimitives.h \
+		nsTime.h \
+		nsUnitConversion.h \
+		nsVector.h \
+		nsVoidArray.h \
+		nsXPIDLString.h \
+		plvector.h \
+		nsTextFormater.h \
+		$(NULL)			
 
-XPIDLSRCS =			\
-	nsIAtom.idl	   \
-    nsICollection.idl	   \
-	nsIEnumerator.idl	   \
-    nsIObserver.idl        \
-    nsIObserverService.idl \
-	nsISupportsArray.idl	\
-	nsISupportsPrimitives.idl	\
-	$(NULL)
+XPIDLSRCS	= \
+		nsIAtom.idl \
+		nsICollection.idl \
+		nsIEnumerator.idl \
+		nsIObserver.idl \
+		nsIObserverService.idl \
+		nsISupportsArray.idl \
+		nsISupportsPrimitives.idl \
+		$(NULL)
 
-CPPSRCS =				\
-	nsArena.cpp                   \
-	nsAtomTable.cpp               \
-	nsAVLTree.cpp                 \
-	nsByteBuffer.cpp              \
-	nsCRT.cpp                     \
-	nsConjoiningEnumerator.cpp    \
-	nsDeque.cpp                   \
-	nsEmptyEnumerator.cpp         \
-	nsEnumeratorUtils.cpp         \
-	nsHashtable.cpp               \
-	nsHashtableEnumerator.cpp     \
-	nsObserver.cpp                \
-	nsObserverList.cpp            \
-	nsObserverService.cpp         \
-	nsPageMgr.cpp                 \
-	nsProperties.cpp              \
-	nsQuickSort.cpp               \
-	nsSizeOfHandler.cpp           \
-	nsStr.cpp                     \
-	nsString.cpp                  \
-	nsString2.cpp                 \
-	nsSupportsArray.cpp           \
-	nsSupportsArrayEnumerator.cpp \
-	nsSupportsPrimitives.cpp      \
-	nsUnicharBuffer.cpp           \
-	nsVariant.cpp                 \
-	nsVoidArray.cpp               \
-	nsXPIDLString.cpp             \
-	plvector.cpp                  \
-	nsTextFormater.cpp                  \
-	$(NULL)
-
-EXPORTS = \
-	nsAVLTree.h                \
-	nsCppSharedAllocator.h		 \
-	nsCRT.h                    \
-	nsDeque.h                  \
-	nsEnumeratorUtils.h        \
-	nsHashtable.h              \
-	nsHashtableEnumerator.h    \
-	nsIArena.h                 \
-	nsIByteBuffer.h            \
-	nsIObserverList.h          \
-	nsIPageManager.h           \
-	nsIProperties.h            \
-	nsISimpleEnumerator.h      \
-	nsISizeOfHandler.h         \
-	nsIUnicharBuffer.h         \
-	nsIVariant.h               \
-	nsInt64.h                  \
-	nsQuickSort.h              \
-	nsStr.h                    \
-	nsString.h                 \
-	nsString2.h                \
-	nsSupportsPrimitives.h     \
-	nsTime.h                   \
-	nsUnitConversion.h         \
-	nsVector.h                 \
-	nsVoidArray.h              \
-	nsXPIDLString.h            \
-	plvector.h                 \
-	nsTextFormater.h                \
-	$(NULL)			
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-DEFINES += -D_IMPL_NS_COM -D_IMPL_NS_BASE
-
-REQUIRES = xpcom uconv unicharutil
-
-MKSHLIB :=
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
 

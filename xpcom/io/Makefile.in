@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,73 +13,67 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+MODULE		= xpcom
+XPIDL_MODULE	= xpcom_io
+LIBRARY_NAME	= xpcomio_s
 
-LIBRARY_NAME = xpcomio_s
+REQUIRES	= xpcom uconv unicharutil
 
-MODULE = xpcom
+CPPSRCS		= \
+		nsEscape.cpp \
+		nsFileSpec.cpp \
+		nsFileSpecStreaming.cpp \
+		nsFileStream.cpp \
+		nsFileSpecImpl.cpp \
+		nsIFileStream.cpp \
+		nsIStringStream.cpp \
+		nsSegmentedBuffer.cpp \
+		nsPipe2.cpp \
+		nsSpecialSystemDirectory.cpp \
+		nsUnicharInputStream.cpp \
+		$(NULL)
 
-XPIDL_MODULE = xpcom_io
+EXPORTS		= \
+		nsEscape.h \
+		nsFileSpec.h \
+		nsFileSpecStreaming.h \
+		nsFileStream.h \
+		nsIFileStream.h \
+		nsIStringStream.h \
+		nsIUnicharInputStream.h \
+		nsSpecialSystemDirectory.h \
+		$(NULL)			
 
-XPIDLSRCS =			  \
-	nsIPipe.idl		  \
-	nsIFileSpec.idl		  \
-        nsIBaseStream.idl	  \
-        nsIInputStream.idl	  \
-        nsIOutputStream.idl	  \
-        nsIBufferInputStream.idl  \
-        nsIBufferOutputStream.idl \
-	$(NULL)
+XPIDLSRCS	= \
+		nsIPipe.idl \
+		nsIFileSpec.idl \
+		nsIBaseStream.idl \
+		nsIInputStream.idl \
+		nsIOutputStream.idl \
+		nsIBufferInputStream.idl \
+		nsIBufferOutputStream.idl \
+		$(NULL)
 
-CPPSRCS =			     \
-	nsEscape.cpp                 \
-	nsFileSpec.cpp               \
-	nsFileSpecStreaming.cpp      \
-	nsFileStream.cpp             \
-	nsFileSpecImpl.cpp           \
-	nsIFileStream.cpp            \
-	nsIStringStream.cpp          \
-	nsSegmentedBuffer.cpp        \
-	nsPipe2.cpp                  \
-	nsSpecialSystemDirectory.cpp \
-	nsUnicharInputStream.cpp     \
-	$(NULL)
-
-EXPORTS = \
-	nsEscape.h                 \
-	nsFileSpec.h               \
-	nsFileSpecStreaming.h      \
-	nsFileStream.h             \
-	nsIFileStream.h            \
-	nsIStringStream.h          \
-	nsIUnicharInputStream.h    \
-	nsSpecialSystemDirectory.h \
-	$(NULL)			
-
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-DEFINES += -D_IMPL_NS_COM -D_IMPL_NS_BASE
-
-ifeq ($(OS_ARCH), Linux)
-DEFINES += -D_BSD_SOURCE
-endif
-
-REQUIRES = xpcom uconv unicharutil
-
-MKSHLIB :=
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
+
+ifeq ($(OS_ARCH), Linux)
+DEFINES		+= -D_BSD_SOURCE
+endif
 

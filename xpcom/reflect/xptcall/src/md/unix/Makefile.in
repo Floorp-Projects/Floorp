@@ -17,161 +17,149 @@
 
 DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= xptcmd
 MODULE		= xpcom
+LIBRARY_NAME	= xptcmd
+
+#
+# The default is this buildable, but non-functioning code.
+#
+CPPSRCS		= xptcinvoke_unsupported.cpp xptcstubs_unsupported.cpp
 
 include $(topsrcdir)/config/config.mk
 
-# the default is this buildable non-functioning code
-CPPSRCS		= \
-		  xptcinvoke_unsupported.cpp \
-		  xptcstubs_unsupported.cpp \
-		  $(NULL)
-
+######################################################################
+# i386 and beyond
+######################################################################
+#
 # Lots of Unixish x86 flavors
+#
 ifneq (,$(filter SunOS Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
-CPPSRCS		= \
-		  xptcinvoke_unixish_x86.cpp \
-		  xptcstubs_unixish_x86.cpp \
-		  $(NULL)
+CPPSRCS		= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
 endif
-
+#
 # BeOS/Intel (uses the same unixish_x86 code)
-ifeq ($(OS_ARCH),BeOS)
-ifeq ($(OS_TEST),BePC)
-CPPSRCS		= \
-		  xptcinvoke_unixish_x86.cpp \
-		  xptcstubs_unixish_x86.cpp \
-		  $(NULL)
+#
+ifeq ($(OS_ARCH)$(OS_TEST),BeOSBePC)
+CPPSRCS		= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
-endif
-
+#
 # Neutrino/Intel (uses the same unixish_x86 code)
+#
 ifeq ($(OS_TARGET)$(OS_TEST),NTOx86)
-CPPSRCS		= \
-		  xptcinvoke_unixish_x86.cpp \
-		  xptcstubs_unixish_x86.cpp \
-		  $(NULL)
+CPPSRCS		= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
 
-# Solaris/sparc
-ifeq ($(OS_ARCH),SunOS)
-ifneq (86,$(findstring 86,$(OS_TEST)))
-CPPSRCS		= \
-		  xptcinvoke_sparc_solaris.cpp \
-		  xptcstubs_sparc_solaris.cpp \
-		  $(NULL)
-ASFILES		= \
-		  xptcinvoke_asm_sparc_solaris_GCC.s \
-		  xptcstubs_asm_sparc_solaris.s \
-		  $(NULL)
-endif
-endif
-
-ifeq ($(OS_ARCH),Linux)
-# Linux/sparc
-ifeq ($(OS_TEST),sparc)
-CPPSRCS		= \
-		  xptcinvoke_sparc_solaris.cpp \
-		  xptcstubs_sparc_solaris.cpp \
-		  $(NULL)
-ASFILES		= \
-		  xptcinvoke_asm_sparc_linux.s \
-		  xptcstubs_asm_sparc_solaris.s \
-		  $(NULL)
-endif
+######################################################################
+# Alpha
+######################################################################
+#
 # Linux/Alpha
-ifeq ($(OS_TEST),alpha)
-CPPSRCS		= \
-		  xptcinvoke_linux_alpha.cpp \
-		  xptcstubs_linux_alpha.cpp \
-		  $(NULL)
+#
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxalpha)
+CPPSRCS		= xptcinvoke_linux_alpha.cpp xptcstubs_linux_alpha.cpp
 endif
-# Linux/ARM
-ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
-CPPSRCS		= \
-		  xptcinvoke_arm.cpp \
-		  xptcstubs_arm.cpp \
-		  $(NULL)
-endif
+#
+# OpenVMS/Alpha
+#
+ifeq ($(OS_ARCH)$(CPU_ARCH),OpenVMSAlpha)
+CPPSRCS		= xptcinvoke_openvms_alpha.cpp xptcstubs_openvms_alpha.cpp
+ASFILES		= xptcinvoke_asm_openvms_alpha.s xptcstubs_asm_openvms_alpha.s
 endif
 
+######################################################################
+# ARM
+######################################################################
+#
+# Linux/ARM
+#
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+CPPSRCS		= xptcinvoke_arm.cpp xptcstubs_arm.cpp
+endif
+endif
+#
+# NetBSD/ARM
+#
+#ifeq ($(OS_ARCH),NetBSD)
+#ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+#CPPSRCS		= xptcinvoke_arm.cpp xptcstubs_arm.cpp
+#endif
+#endif
+
+######################################################################
+# HPPA
+######################################################################
+#
 # HP-UX/PA32
+#
 # for gas and gcc, check comment in xptcinvoke_asm_pa32.s
 ifeq ($(OS_ARCH),HP-UX)
 ifneq ($(CC),gcc)
-CPPSRCS		= \
-		  xptcinvoke_pa32.cpp \
-		  xptcstubs_pa32.cpp \
-		  $(NULL)
-ASFILES		= \
-		  xptcstubs_asm_pa32.s \
-		  xptcinvoke_asm_pa32.s \
-		  $(NULL)
+CPPSRCS		= xptcinvoke_pa32.cpp xptcstubs_pa32.cpp
+ASFILES		= xptcstubs_asm_pa32.s xptcinvoke_asm_pa32.s
 endif
 endif
 
-# AIX/PPC
-ifeq ($(OS_ARCH),AIX)
-CPPSRCS		= \
-		  xptcinvoke_ppc_aix.cpp \
-		  xptcstubs_ppc_aix.cpp \
-		  $(NULL)
-ASFILES		= \
-		  xptcinvoke_asm_ppc_aix.s \
-		  xptcstubs_asm_ppc_aix.s \
-		  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),NetBSD)
+######################################################################
+# M68k
+######################################################################
+#
 # NetBSD/m68k
+#
+ifeq ($(OS_ARCH),NetBSD)
 ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
-CPPSRCS		= \
-		  xptcinvoke_netbsd_m68k.cpp \
-		  xptcstubs_netbsd_m68k.cpp \
-		  $(NULL)
+CPPSRCS		= xptcinvoke_netbsd_m68k.cpp xptcstubs_netbsd_m68k.cpp
 endif
-# NetBSD/ARM
-#ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
-#CPPSRCS		= \
-#		  xptcinvoke_arm.cpp \
-#		  xptcstubs_arm.cpp \
-#		  $(NULL)
-#endif
 endif
 
-# IRIX
+######################################################################
+# MIPS
+######################################################################
+#
+# IRIX/MIPS
+#
 ifeq ($(OS_ARCH),IRIX)
 ifneq ($(basename $(OS_RELEASE)),5)
-CPPSRCS		= \
-		  xptcinvoke_irix.cpp \
-		  xptcstubs_irix.cpp \
-		  $(NULL)
-ASFILES		= \
-		  xptcinvoke_asm_irix.s \
-		  xptcstubs_asm_irix.s \
-		  $(NULL)
+CPPSRCS		= xptcinvoke_irix.cpp xptcstubs_irix.cpp
+ASFILES		= xptcinvoke_asm_irix.s xptcstubs_asm_irix.s
 endif
 endif
 
-# OpenVMS (Alpha only at this point)
-ifeq ($(OS_ARCH),OpenVMS)
-ifeq ($(CPU_ARCH),Alpha)
-CPPSRCS		= \
-		  xptcinvoke_openvms_alpha.cpp \
-		  xptcstubs_openvms_alpha.cpp \
-		  $(NULL)
-ASFILES		= \
-		  xptcinvoke_asm_openvms_alpha.s \
-		  xptcstubs_asm_openvms_alpha.s \
-		  $(NULL)
+######################################################################
+# PowerPC
+######################################################################
+#
+# AIX/PPC
+#
+ifeq ($(OS_ARCH),AIX)
+CPPSRCS		= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
+ASFILES		= xptcinvoke_asm_ppc_aix.s xptcstubs_asm_ppc_aix.s
+endif
+
+######################################################################
+# SPARC
+######################################################################
+#
+# Linux/SPARC
+#
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxsparc)
+CPPSRCS		= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+ASFILES		= xptcinvoke_asm_sparc_linux.s xptcstubs_asm_sparc_solaris.s
+endif
+#
+# Solaris/SPARC
+#
+ifeq ($(OS_ARCH),SunOS)
+ifneq (86,$(findstring 86,$(OS_TEST)))
+CPPSRCS		= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+ASFILES		= xptcinvoke_asm_sparc_solaris_GCC.s xptcstubs_asm_sparc_solaris.s
 endif
 endif
 
@@ -197,7 +185,6 @@ xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_i
 	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; else true; fi
 endif
 
-
 ifeq ($(OS_ARCH),OpenVMS)
 # Our assembler wants the include file to be of assembler syntax, not C/C++
 # syntax, so we have to massage it slightly.
@@ -219,3 +206,4 @@ xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_as
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(srcdir)/xptcstubs_asm_openvms_alpha.s
 	@rm -f $$HOME/xptcstubsdef_asm.vms
 endif
+
