@@ -37,7 +37,7 @@
 		class = "dialog"
         > 
 
-    <html:script language="javascript" src="xpistatus.js"/>
+    <html:script language="javascript" src="chrome://xpinstall/content/xpistatus.js"/>
   
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">
