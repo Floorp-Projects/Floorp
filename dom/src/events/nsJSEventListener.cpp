@@ -78,11 +78,11 @@ nsresult nsJSEventListener::ProcessEvent(nsIDOMEvent* aEvent)
   mEventChars = mEventString.ToNewCString();
 
   if (!JS_LookupProperty(mContext, mJSObj, mEventChars, &funval)) {
-    delete mEventChars;
+    delete[] mEventChars;
     return NS_ERROR_FAILURE;
   }
 
-  delete mEventChars;
+  delete[] mEventChars;
 
   if (JS_TypeOfValue(mContext, funval) != JSTYPE_FUNCTION) {
     return NS_OK;
