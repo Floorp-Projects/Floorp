@@ -1393,6 +1393,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_LBUTTONDOWN:
+		        //XXX temporary to get editor working until focus setup
+            SetFocus();
             //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             break;
