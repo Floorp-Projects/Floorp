@@ -58,12 +58,8 @@ public:
 
     nsIComponentManager* mCompMgr; // weak ref, should make it strong?
     nsCOMPtr<nsIRegistry> mRegistry;
-    nsIXPConnect* mXPC;
-    /* XXXshaver nsCOMPtr<nsIXPConnect> mXPC; */
-    nsIJSRuntimeService* mRuntimeService;
-    /* XXXshaver nsCOMPtr<nsIJSRuntimeService> mRuntimeService; */
-    nsIJSContextStack* mContextStack;
-    /* XXXshaver nsCOMPtr<nsIJSContextStack> mContextStack; */
+    nsCOMPtr<nsIXPConnect> mXPC;
+    nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
 
     JSObject  *mSuperGlobal;
     JSRuntime *mRuntime;
