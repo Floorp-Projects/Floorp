@@ -77,7 +77,8 @@ sub gcc_parser {
 
     chomp; # Yum, yum
 
-    my ($filename, $line, undef, $warning_text) = split /:\s*/;
+    my ($filename, $line, $warning_text);
+    ($filename, $line, undef, $warning_text) = split /:\s*/;
     $filename =~ s/.*\///;
     
     my $dir = find_dir($find, $build_dir, $filename);
