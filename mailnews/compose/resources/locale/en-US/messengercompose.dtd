@@ -113,7 +113,7 @@
 <!ENTITY quoteCmd.accesskey "Q">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
 <!ENTITY selectAddressCmd.key "">
-<!ENTITY selectAddressCmd.accesskey "c">
+<!ENTITY selectAddressCmd.accesskey "A">
 
 <!ENTITY checkSpellingCmd.label "Check Spelling...">
 <!ENTITY checkSpellingCmd.key "K">

@@ -273,8 +273,6 @@
                         type="checkbox"/>
             </menupopup>
           </menu>
-          <menuseparator/>
-          <menu id = "maileditCharsetMenu" />
         </menupopup>
       </menu>
   
@@ -314,6 +312,7 @@
               <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" id="priotity_highest"/>
             </menupopup>
           </menu>
+          <menu id="maileditCharsetMenu" />
           <menu id="fccMenu" label="&fileCarbonCopyCmd.label;" 
              accesskey="&fileCarbonCopyCmd.accesskey;" 
              sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
