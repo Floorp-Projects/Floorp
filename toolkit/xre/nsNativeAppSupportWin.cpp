@@ -724,7 +724,7 @@ nsNativeAppSupportWin::StartDDE() {
                     NS_ERROR_FAILURE );
 
     // Allocate DDE strings.
-    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
+    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, (char*) gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
 
     // Next step is to register a DDE service.
