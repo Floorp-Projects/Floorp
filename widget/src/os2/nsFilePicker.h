@@ -63,10 +63,10 @@ public:
   NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
-  NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
-  NS_IMETHOD GetDefaultExtension(PRUnichar * *aDefaultExtension);
-  NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
+  NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
+  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
+  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
+  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
@@ -75,18 +75,17 @@ public:
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
-  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
+  NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
 protected:
   /* method from nsBaseFilePicker */
-  NS_IMETHOD InitNative(nsIWidget *aParent,
-                        const PRUnichar *aTitle,
-                        PRInt16 aMode);
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
+                          PRInt16 aMode);
 
 
   void GetFilterListArray(nsString& aFilterList);
   static void GetFileSystemCharset(nsCString & fileSystemCharset);
-  char * ConvertToFileSystemCharset(const PRUnichar *inString);
+  char * ConvertToFileSystemCharset(const nsAString& inString);
   PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
   HWND                   mWnd;

@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -74,49 +74,43 @@ nsBaseFilePicker::~nsBaseFilePicker()
 }
 
 /* XXX aaaarrrrrrgh! */
-NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindowInternal *dw, nsIWidget **aResult)
+nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  *aResult = nsnull;
-
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(dw);
   if (sgo) {
     nsIDocShell *docShell = sgo->GetDocShell();
     
     if (docShell) {
-
       nsCOMPtr<nsIPresShell> presShell;
-      rv = docShell->GetPresShell(getter_AddRefs(presShell));
+      nsresult rv = docShell->GetPresShell(getter_AddRefs(presShell));
 
       if (NS_SUCCEEDED(rv) && presShell) {
         nsIView *view;
         rv = presShell->GetViewManager()->GetRootView(view);
               
         if (NS_SUCCEEDED(rv)) {
-          *aResult = view->GetWidget();
-          NS_IF_ADDREF(*aResult);
+          return view->GetWidget();
         }
       }
     }
   }
-  return rv;
+
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindowInternal *aParent,
-                                     const PRUnichar *aTitle,
+NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
+                                     const nsAString& aTitle,
                                      PRInt16 aMode)
 {
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = DOMWindowToWidget(aParent, getter_AddRefs(widget));
+  NS_PRECONDITION(aParent, "Null parent passed to filepicker, no file "
+                  "picker for you!");
+  nsIWidget *widget = DOMWindowToWidget(aParent);
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-  if (NS_SUCCEEDED(rv)) {
-    return InitNative(widget, aTitle, aMode);
-  } else {
-    return InitNative(nsnull, aTitle, aMode);
-  }
+  InitNative(widget, aTitle, aMode);
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -168,7 +162,7 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
     stringBundle->GetStringFromName(NS_LITERAL_STRING("appsTitle").get(), getter_Copies(title));
     // Pass the magic string "..apps" to the platform filepicker, which it
     // should recognize and do the correct platform behavior for.
-    AppendFilter(title, NS_LITERAL_STRING("..apps").get());
+    AppendFilter(title, NS_LITERAL_STRING("..apps"));
   }
   return NS_OK;
 }

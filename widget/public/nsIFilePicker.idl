@@ -41,10 +41,10 @@
 
 interface nsILocalFile;
 interface nsIFileURL;
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(c47de916-1dd1-11b2-8141-82507fa02b21)]
+[scriptable, uuid(80faf095-c807-4558-a2cc-185ed70754ea)]
 interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
@@ -67,12 +67,13 @@ interface nsIFilePicker : nsISupports
  /**
   * Initialize the file widget.
   *
-  * @param      parent   nsIDOMWindowInternal parent.  This dialog should be dependent on this parent.
+  * @param      parent   nsIDOMWindow parent.  This dialog will be dependent
+  *                      on this parent. parent must be non-null.
   * @param      title    The title for the file widget
   * @param      mode     load, save, or get folder
   *
   */
-  void init(in nsIDOMWindowInternal parent, in wstring title, in short mode);
+  void init(in nsIDOMWindow parent, in AString title, in short mode);
 
  /**
   * Append to the  filter list with things from the predefined list
@@ -89,22 +90,22 @@ interface nsIFilePicker : nsISupports
   * @param      filter   extensions to filter -- semicolon and space separated
   *
   */
-  void appendFilter(in wstring title,
-                    in wstring filter);
+  void appendFilter(in AString title,
+                    in AString filter);
 
  /**
   * The filename that should be suggested to the user as a default.
   *
   * @throws NS_ERROR_FAILURE on attempts to get
   */
-  attribute wstring defaultString;
+  attribute AString defaultString;
 
  /**
   * The extension that should be associated with files of the type we
   * want to work with.  On some platforms, this extension will be
   * automatically appended to filenames the user enters, if needed.  
   */
-  attribute wstring defaultExtension;
+  attribute AString defaultExtension;
   
  /**
   * The filter which is currently selected in the File Picker dialog

@@ -34,7 +34,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsDOMCID.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -1689,7 +1689,7 @@ alertUser(const PRUnichar *message)
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIPrompt> prompter;
   if (wwatch)
-  wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
   if (prompter) {
     nsPSMUITracker tracker;
@@ -1734,12 +1734,21 @@ nsP12Runnable::Run()
     return rv;
   }
 
+  nsCOMPtr<nsIWindowWatcher> wwatch =
+    (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMWindow> window;
+  wwatch->GetActiveWindow(getter_AddRefs(window));
+
   nsString filePickMessage;
   nssComponent->GetPIPNSSBundleString("chooseP12BackupFileDialog",
                                       filePickMessage);
-  filePicker->Init(nsnull, filePickMessage.get(), nsIFilePicker::modeSave);
-  filePicker->AppendFilter(NS_LITERAL_STRING("PKCS12").get(),
-                           NS_LITERAL_STRING("*.p12").get());
+  rv = filePicker->Init(window, filePickMessage, nsIFilePicker::modeSave);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  filePicker->AppendFilter(NS_LITERAL_STRING("PKCS12"),
+                           NS_LITERAL_STRING("*.p12"));
   filePicker->AppendFilters(nsIFilePicker::filterAll);
 
   PRInt16 dialogReturn;

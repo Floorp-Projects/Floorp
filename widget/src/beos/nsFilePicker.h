@@ -70,96 +70,92 @@
 class nsFilePicker : public nsBaseFilePicker
 {
 public:
-	nsFilePicker();
-	virtual ~nsFilePicker();
+  nsFilePicker();
+  virtual ~nsFilePicker();
 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-	// nsIFilePicker (less what's in nsBaseFilePicker)
-	NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
-	NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
-	NS_IMETHOD GetDefaultExtension(PRUnichar * *aDefaultExtension);
-	NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
-	NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
-	NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
-	NS_IMETHOD GetFile(nsILocalFile * *aFile);
-	NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
-	NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-	NS_IMETHOD Show(PRInt16 *_retval);
-	NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
+  // nsIFilePicker (less what's in nsBaseFilePicker)
+  NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
+  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
+  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
+  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
+  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
+  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetFile(nsILocalFile * *aFile);
+  NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
+  NS_IMETHOD Show(PRInt16 *_retval);
+  NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
 protected:
-	// method from nsBaseFilePicker
-	NS_IMETHOD InitNative(nsIWidget *aParent,
-	                      const PRUnichar *aTitle,
-	                      PRInt16 aMode);
+  // method from nsBaseFilePicker
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
+                          PRInt16 aMode);
 
 
-	void GetFilterListArray(nsString& aFilterList);
-	//  static void GetFileSystemCharset(nsString & fileSystemCharset);
-	//  char * ConvertToFileSystemCharset(const PRUnichar *inString);
-	//  PRUnichar * ConvertFromFileSystemCharset(const char *inString);
+  void GetFilterListArray(nsString& aFilterList);
 
-	BWindow*                      mParentWindow;
-	nsString                      mTitle;
-	PRInt16                       mMode;
-	nsCString                     mFile;
-	nsString                      mDefault;
-	nsString                      mFilterList;
-	nsIUnicodeEncoder*            mUnicodeEncoder;
-	nsIUnicodeDecoder*            mUnicodeDecoder;
-	nsCOMPtr<nsILocalFile>        mDisplayDirectory;
-	PRInt16                       mSelectedType;
-	nsCOMPtr <nsISupportsArray>   mFiles;
+  BWindow*                      mParentWindow;
+  nsString                      mTitle;
+  PRInt16                       mMode;
+  nsCString                     mFile;
+  nsString                      mDefault;
+  nsString                      mFilterList;
+  nsIUnicodeEncoder*            mUnicodeEncoder;
+  nsIUnicodeDecoder*            mUnicodeDecoder;
+  nsCOMPtr<nsILocalFile>        mDisplayDirectory;
+  PRInt16                       mSelectedType;
+  nsCOMPtr <nsISupportsArray>   mFiles;
 
 #ifdef FILEPICKER_SAVE_LAST_DIR
-	static char                      mLastUsedDirectory[];
+  static char                      mLastUsedDirectory[];
 #endif
 };
 
 class nsFilePanelBeOS : public BLooper, public BFilePanel
 {
 public:
-	nsFilePanelBeOS(file_panel_mode mode,
-	                uint32 node_flavors,
-	                bool allow_multiple_selection,
-	                bool modal,
-	                bool hide_when_done);
-	virtual ~nsFilePanelBeOS();
+  nsFilePanelBeOS(file_panel_mode mode,
+                  uint32 node_flavors,
+                  bool allow_multiple_selection,
+                  bool modal,
+                  bool hide_when_done);
+  virtual ~nsFilePanelBeOS();
 
-	virtual void MessageReceived(BMessage *message);
-	virtual void WaitForSelection();
+  virtual void MessageReceived(BMessage *message);
+  virtual void WaitForSelection();
 
-	virtual bool IsOpenSelected() {
-		return (SelectedActivity() == OPEN_SELECTED);
-	}
-	virtual bool IsSaveSelected() {
-		return (SelectedActivity() == SAVE_SELECTED);
-	}
-	virtual bool IsCancelSelected() {
-		return (SelectedActivity() == CANCEL_SELECTED);
-	}
-	virtual uint32 SelectedActivity();
+  virtual bool IsOpenSelected() {
+    return (SelectedActivity() == OPEN_SELECTED);
+  }
+  virtual bool IsSaveSelected() {
+    return (SelectedActivity() == SAVE_SELECTED);
+  }
+  virtual bool IsCancelSelected() {
+    return (SelectedActivity() == CANCEL_SELECTED);
+  }
+  virtual uint32 SelectedActivity();
 
-	virtual BList *OpenRefs() { return &mOpenRefs; }
-	virtual BString SaveFileName() { return mSaveFileName; }
-	virtual entry_ref SaveDirRef() { return mSaveDirRef; }
+  virtual BList *OpenRefs() { return &mOpenRefs; }
+  virtual BString SaveFileName() { return mSaveFileName; }
+  virtual entry_ref SaveDirRef() { return mSaveDirRef; }
 
-	enum {
-	    NOT_SELECTED    = 0,
-	    OPEN_SELECTED   = 1,
-	    SAVE_SELECTED   = 2,
-	    CANCEL_SELECTED = 3
-	};
+  enum {
+      NOT_SELECTED    = 0,
+      OPEN_SELECTED   = 1,
+      SAVE_SELECTED   = 2,
+      CANCEL_SELECTED = 3
+  };
 
 protected:
 
-	sem_id wait_sem ;
-	uint32 mSelectedActivity;
-	bool mIsSelected;
-	BString mSaveFileName;
-	entry_ref mSaveDirRef;
-	BList mOpenRefs;
+  sem_id wait_sem ;
+  uint32 mSelectedActivity;
+  bool mIsSelected;
+  BString mSaveFileName;
+  entry_ref mSaveDirRef;
+  BList mOpenRefs;
 };
 
 #endif // nsFilePicker_h__

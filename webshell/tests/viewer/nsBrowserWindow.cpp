@@ -1080,7 +1080,7 @@ static PRBool GetFileFromFileSelector(nsIDOMWindowInternal* aParentWindow,
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
 
   if (filePicker) {
-    rv = filePicker->Init(aParentWindow, NS_LITERAL_STRING("Open HTML").get(),
+    rv = filePicker->Init(aParentWindow, NS_LITERAL_STRING("Open HTML"),
                           nsIFilePicker::modeOpen);
     if (NS_SUCCEEDED(rv)) {
       filePicker->AppendFilters(nsIFilePicker::filterAll | nsIFilePicker::filterHTML |

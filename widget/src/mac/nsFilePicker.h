@@ -67,10 +67,10 @@ public:
   NS_DECL_ISUPPORTS
    
     // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
-  NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
-  NS_IMETHOD GetDefaultExtension(PRUnichar * *aDefaultExtension);
-  NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
+  NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
+  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
+  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
+  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
@@ -79,14 +79,12 @@ public:
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
-  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter);
+  NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
 protected:
 
-  NS_IMETHOD InitNative(nsIWidget *aParent, const PRUnichar *aTitle, PRInt16 aMode);
-
-  NS_IMETHOD            OnOk();
-  NS_IMETHOD            OnCancel();
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
+                          PRInt16 aMode);
 
     // actual implementations of get/put dialogs using NavServices
   PRInt16 GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
@@ -113,7 +111,6 @@ protected:
                                                 NavCallBackUserData callbackUD,
                                                 NavFilterModes filterMode ) ;
                                                 
-  PRBool                 mWasCancelled;
   PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
   PRInt16                mMode;
