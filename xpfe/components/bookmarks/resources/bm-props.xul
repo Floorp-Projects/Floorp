@@ -37,8 +37,12 @@
         onload="Init()" style="width: 30em;"
         ondialogaccept="return Commit();">
  
-  <stringbundle id="bundle_bookmark" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+  <stringbundleset>
+    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  </stringbundleset>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
  
   <keyset id="keyset"/>  
@@ -55,7 +59,7 @@
         <hbox align="start">
           <image class="message-icon"/>
           <separator class="thin" orient="vertical"/>
-          <description flex="1">&generaldesc.label;</description>
+          <description id="bookmarkDescription" flex="1"/>
         </hbox>
    
         <separator class="thin"/>

@@ -140,9 +140,9 @@ BookmarksToolbar.prototype = {
       const kPromptSvcIID = Components.interfaces.nsIPromptService;
       const kPromptSvc = Components.classes[kPromptSvcContractID].getService(kPromptSvcIID);
       
-      var defaultValue  = gBookmarksShell.getLocaleString("ile_newfolder");
-      var dialogTitle   = gBookmarksShell.getLocaleString("newfolder_dialog_title");
-      var dialogMsg     = gBookmarksShell.getLocaleString("newfolder_dialog_msg");
+      var defaultValue  = BookmarksUtils.getLocaleString("ile_newfolder");
+      var dialogTitle   = BookmarksUtils.getLocaleString("newfolder_dialog_title");
+      var dialogMsg     = BookmarksUtils.getLocaleString("newfolder_dialog_msg");
       var stringValue   = { value: defaultValue };
       if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
         var relativeNode = aSelectedItem || gBookmarksShell.element;
@@ -168,7 +168,7 @@ BookmarksToolbar.prototype = {
       dummyButton = gBookmarksShell.createBookmarkFolderDecorations(dummyButton);
       dummyButton.setAttribute("class", "button-toolbar bookmark-item");
 
-      dummyButton.setAttribute("label", gBookmarksShell.getLocaleString("ile_newfolder") + "  ");
+      dummyButton.setAttribute("label", BookmarksUtils.getLocaleString("ile_newfolder") + "  ");
       // By default, create adjacent to the selected button. If there is no button after
       // the selected button, or the target is the toolbar itself, just append. 
       var bIsButton = aSelectedItem.localName == "button" || aSelectedItem.localName == "menubutton";

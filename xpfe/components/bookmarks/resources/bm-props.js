@@ -54,8 +54,8 @@ var gProperties = [NC_NAMESPACE_URI + "Name",
 var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                     .getService(Components.interfaces.nsIRDFService);
 
-var RDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                     .getService(Components.interfaces.nsIRDFContainerUtils);
+var RDFCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                      .getService(Components.interfaces.nsIRDFContainerUtils);
 
 var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 
@@ -65,6 +65,34 @@ function Init()
 {
   var x;
   gBookmarkURL = window.arguments[0];
+  var resource = RDF.GetResource(gBookmarkURL);
+
+  // Check the description
+  var primaryType = BookmarksUtils.resolveType(resource).split("#")[1];
+  if (primaryType == "Folder") {
+    if (resource.Value == "NC:PersonalToolbarFolder")
+      primaryType = "PersonalToolbarFolder";
+    else {
+      var folderGroupArc = RDF.GetResource(NC_NAMESPACE_URI+"FolderGroup");
+      var isFolderGroup  = Bookmarks.GetTarget(resource, folderGroupArc, true);
+      if (isFolderGroup)
+        primaryType = "FolderGroup";
+    }
+  }
+  var description = BookmarksUtils.getLocaleString("description_"+primaryType);
+  
+  var newBookmarkFolder = BookmarksUtils.getNewBookmarkFolder();
+  var newSearchFolder   = BookmarksUtils.getNewSearchFolder();
+
+  if (resource == newBookmarkFolder && resource == newSearchFolder)
+    description = description+" "+BookmarksUtils.getLocaleString("description_NewBookmarkAndSearchFolder")
+  else if (resource == newBookmarkFolder )
+    description = description+" "+BookmarksUtils.getLocaleString("description_NewBookmarkFolder")
+  else if (resource == newSearchFolder)
+    description = description+" "+BookmarksUtils.getLocaleString("description_NewSearchFolder");
+
+  var textNode = document.createTextNode(description);
+  document.getElementById("bookmarkDescription").appendChild(textNode);
 
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
@@ -72,9 +100,7 @@ function Init()
   for (var i = 0; i < gFields.length; ++i) {
     var field = document.getElementById(gFields[i]);
 
-    var value = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
-                                    RDF.GetResource(gProperties[i]),
-                                    true);
+    var value = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
 
     if (value)
       value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -90,9 +116,8 @@ function Init()
   propsWindow.setAttribute("title", title);
 
   // check bookmark schedule
-  value = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
-                              RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule"),
-                              true);
+  var scheduleArc = RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule");
+  value = Bookmarks.GetTarget(resource, scheduleArc, true);
 
   if (value) {
     value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -164,9 +189,9 @@ function Init()
   }
 
   // if its a container, disable some things
-  var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(gBookmarkURL));
+  var isContainerFlag = RDFCU.IsContainer(Bookmarks, RDF.GetResource(gBookmarkURL));
   if (!isContainerFlag) {
-    // XXX To do: the "RDFC.IsContainer" call above only works for RDF sequences;
+    // XXX To do: the "RDFCU.IsContainer" call above only works for RDF sequences;
     //            if its not a RDF sequence, we should to more checking to see if
     //            the item in question is really a container of not.  A good example
     //            of this is the "File System" container.
@@ -191,11 +216,10 @@ function Init()
   dayRangeChange(document.getElementById("dayRange"));
 
   // set initial focus
-  var name = document.getElementById("name");
-  name.focus();
-  name.select();
-}
+  nameNode.focus();
+  nameNode.select();
 
+}
 
 
 function Commit()
@@ -267,11 +291,9 @@ function Commit()
         endHourRange = temp;
       }
 
-      var bookmarkBundle;
       var duration = document.getElementById("duration").value;
       if (!duration) {
-        bookmarkBundle = document.getElementById("bundle_bookmark");
-        alert (bookmarkBundle.getString("pleaseEnterADuration"));
+        alert(BookmarksUtils.getLocaleString("pleaseEnterADuration"));
         return false;
       }
 
@@ -286,8 +308,7 @@ function Commit()
         methods.push("open");
 
       if (methods.length == 0) {
-        bookmarkBundle = document.getElementById("bundle_bookmark");
-        alert (bookmarkBundle.getString("pleaseSelectANotification"));
+        alert(BookmarksUtils.getLocaleString("pleaseSelectANotification"));
         return false;
       }
 

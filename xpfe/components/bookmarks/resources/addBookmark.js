@@ -301,23 +301,16 @@ function createNewFolder ()
 
 function useDefaultFolder ()
 {
-  const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
   var bookmarkView = document.getElementById("bookmarks-view");
-  var sources = kBMDS.GetSources(bookmarkView.rdf.GetResource(NC_NS + "FolderType"), bookmarkView.rdf.GetResource("NC:NewBookmarkFolder"), true);
-  var folder = null;
-  if (sources.hasMoreElements()) {
-    folder = sources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-  }
+  var folder = BookmarksUtils.getNewBookmarkFolder();
   var ind = bookmarkView.treeBuilder.getIndexOfResource(folder);
   if (ind != -1) {
     bookmarkView.tree.focus();
     bookmarkView.treeBoxObject.selection.select(ind);
-    gCreateInFolder = folder.Value;
-  }
-  else {
+  } else {
     bookmarkView.treeBoxObject.selection.clearSelection();
-    gCreateInFolder = "NC:BookmarksRoot";
   }
+  gCreateInFolder = folder.Value;
 }
 
 var gOldNameValue = "";

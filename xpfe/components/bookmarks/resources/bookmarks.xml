@@ -69,32 +69,6 @@
           return this._bookmarksDS;
         ]]></getter>
       </property>
-      <method name="resolveType">
-        <parameter name="aResource"/>
-        <body><![CDATA[
-          try {
-            aResource.QueryInterface(Components.interfaces.nsIRDFResource);
-          }
-          catch(ex) {
-            // Not actually a resource, assume resource URI
-            aResource = this.rdf.GetResource(aResource);
-          }
-          var res = aResource;
-          var typeArc = this.rdf.GetResource(this.RDF_NS + "type");
-          var type = this.db.GetTarget(res, typeArc, true);
-          try {
-            return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
-          }
-          catch (e) {
-            try { 
-              return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-            }
-            catch (e) {
-              return null;
-            }
-          }
-        ]]></body>
-      </method>
       <method name="flushBMDatasource">
         <body><![CDATA[
           var remoteDS = this.bookmarksDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
@@ -438,7 +412,7 @@
         <parameter name="aIndex" />
         <body><![CDATA[
           try {
-            return this.resolveType(this.treeBuilder.getResourceAtIndex(aIndex));
+            return BookmarksUtils.resolveType(this.treeBuilder.getResourceAtIndex(aIndex));
           }
           catch(ex) {
             return null;
@@ -818,7 +792,7 @@
             var rParent = parentID[i] ? this.mOuter.rdf.GetResource(parentID[i]) : null;
 
             const kBMDS = this.mOuter.bookmarksDS;
-            var bmType = this.mOuter.resolveType(rSource);
+            var bmType = BookmarksUtils.resolveType(rSource);
             var rType = this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type");
             if (!bmType) 
               kBMDS.Assert(rSource, rType, rBookmark, true);
@@ -1338,7 +1312,7 @@
       <method name="getAllCmds">
         <parameter name="aNodeID"/>
         <body><![CDATA[
-          var type = this.resolveType(aNodeID);
+          var type = BookmarksUtils.resolveType(aNodeID);
           if (!type) {
             if (aNodeID == "NC:PersonalToolbarFolder" || aNodeID == "NC:BookmarksRoot")
               type = "http://home.netscape.com/NC-rdf#Folder";
@@ -1476,7 +1450,7 @@
             //       string bundle for this command name. Otherwise, <xul:stringbundle/>
             //       will throw, we'll catch & stifle the error, and look up the command
             //       name in the datasource. 
-            return this._bundle.GetStringFromName("cmd_" + cmdName);
+            return BookmarksUtils.getLocaleString("cmd_" + cmdName);
           }
           catch (e) {
             // XXX - WORK TO DO HERE! (rjc will cry if we don't fix this) 
