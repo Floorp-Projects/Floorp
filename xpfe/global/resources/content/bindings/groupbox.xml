@@ -34,13 +34,11 @@
 
   <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
-      <xul:box inherits="orient,align,pack,dir" align="center" pack="center">
-        <children>
-          <xul:image class="caption-icon" inherits="src=image"/>
-          <xul:label class="caption-text" flex="1"
-                     inherits="default,value=label,crop,accesskey"/>
-        </children>
-      </xul:box>
+      <children>
+        <xul:image class="caption-icon" inherits="src=image"/>
+        <xul:label class="caption-text" flex="1"
+                   inherits="default,value=label,crop,accesskey"/>
+      </children>
     </content>
   </binding>
 
