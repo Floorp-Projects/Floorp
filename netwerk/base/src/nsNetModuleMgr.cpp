@@ -156,7 +156,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
         }
 
         if (!PL_strcmp(aTopic, topic)) {
-            delete [] topic;
+            nsCRT::free(topic);
             topic = nsnull;
             // found a match, add it to the list
             rv = topicEntries->AppendElement(NS_STATIC_CAST(nsISupports*, entry));
@@ -167,7 +167,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
                 return rv;
             }
         }
-        delete [] topic;
+        nsCRT::free(topic);
         topic = nsnull;
         NS_RELEASE(entry);
     }

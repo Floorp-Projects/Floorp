@@ -814,7 +814,7 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 						isCollationKey = PR_TRUE;
 					}
 				}
-				delete []collationSortProp;
+				nsCRT::free(collationSortProp);
 			}
 			if (!(*target))
 			{
@@ -836,7 +836,7 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 						{
 						}
 					}
-					delete []sortProp;
+					nsCRT::free(sortProp);
 				}
 			}
 		}
@@ -1206,7 +1206,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 	if (uri)
 	{
 		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
-		delete [] uri;
+		nsCRT::free(uri);
 		if (NS_FAILED(rv))	return(rv);
 	}
 
@@ -1468,7 +1468,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (uri)
 	{
 		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
-		delete [] uri;
+		nsCRT::free(uri);
 		if (NS_FAILED(rv))	return(rv);
 	}
 	
