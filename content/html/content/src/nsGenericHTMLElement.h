@@ -894,13 +894,20 @@ public:
   NS_IMETHOD_(PRUint32) GetChildCount() const;
   NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
   NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument);
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+
+  // Child list modification hooks
+  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
+    return mChildren.InsertElementAt(aKid, aIndex);
+  }
+  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
+    return mChildren.ReplaceElementAt(aKid, aIndex);
+  }
+  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
+    return mChildren.AppendElement(aKid);
+  }
+  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
+    return mChildren.RemoveElementAt(aIndex);
+  }
 
   /** The list of children */
   nsSmallVoidArray mChildren;
