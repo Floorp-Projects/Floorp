@@ -100,6 +100,8 @@ function loadElements()
       currProfile = profileList;
   }
 
+  dump("profile list = " + profileList + "\n");
+
   // remove existing nodes...
   var profilekids = document.getElementById( "profilekids" );
   while( profilekids.hasChildNodes() )
