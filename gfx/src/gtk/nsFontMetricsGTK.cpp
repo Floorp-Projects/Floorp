@@ -288,7 +288,7 @@ void nsFontMetricsGTK::RealizeFont()
     /* mHeight is already multipled by f */
     float height;
     height = fontInfo->ascent + fontInfo->descent;
-    mUnderlineOffset = -NSToIntRound(MAX (2, floor (0.1 * height + 0.5)) * f);
+    mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
   }
 
 
