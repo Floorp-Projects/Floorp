@@ -1775,11 +1775,15 @@ its_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-its_resolve(JSContext *cx, JSObject *obj, jsval id)
+its_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+            JSObject **objp)
 {
     if (its_noisy) {
-        fprintf(gOutFile, "resolving its property %s\n",
-               JS_GetStringBytes(JS_ValueToString(cx, id)));
+        fprintf(gOutFile, "resolving its property %s, flags {%s,%s,%s}\n",
+               JS_GetStringBytes(JS_ValueToString(cx, id)),
+               (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
+               (flags & JSRESOLVE_ASSIGNING) ? "assigning" : "",
+               (flags & JSRESOLVE_DETECTING) ? "detecting" : "");
     }
     return JS_TRUE;
 }
@@ -1800,9 +1804,10 @@ its_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSClass its_class = {
-    "It", 0,
+    "It", JSCLASS_NEW_RESOLVE,
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
-    its_enumerate,    its_resolve,      its_convert,      its_finalize
+    its_enumerate,    (JSResolveOp)its_resolve,
+                                        its_convert,      its_finalize
 };
 
 JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
