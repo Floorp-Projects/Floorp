@@ -730,18 +730,18 @@ nsPresContext::SetShell(nsIPresShell* aShell)
 
       if (mLangService) {
         doc->AddCharSetObserver(this);
-        UpdateCharSet(doc->GetDocumentCharacterSet().get());
+        UpdateCharSet(doc->GetDocumentCharacterSet());
       }
     }
   }
 }
 
 void
-nsPresContext::UpdateCharSet(const char* aCharSet)
+nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
 {
   if (mLangService) {
     NS_IF_RELEASE(mLangGroup);
-    mLangGroup = mLangService->LookupCharSet(aCharSet).get();  // addrefs
+    mLangGroup = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
 
     if (mLangGroup == nsLayoutAtoms::Japanese && mEnableJapaneseTransform) {
       mLanguageSpecificTransformType =
@@ -762,7 +762,6 @@ nsPresContext::UpdateCharSet(const char* aCharSet)
   }
 #ifdef IBMBIDI
   //ahmed
-  mCharset=aCharSet;
 
   switch (GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
 
@@ -776,7 +775,7 @@ nsPresContext::UpdateCharSet(const char* aCharSet)
 
     case IBMBIDI_TEXTTYPE_CHARSET:
     default:
-      SetVisualMode(IsVisualCharset(mCharset));
+      SetVisualMode(IsVisualCharset(aCharSet));
   }
 #endif // IBMBIDI
 }
@@ -787,7 +786,7 @@ nsPresContext::Observe(nsISupports* aSubject,
                         const PRUnichar* aData)
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
-    UpdateCharSet(NS_LossyConvertUCS2toASCII(aData).get());
+    UpdateCharSet(NS_LossyConvertUCS2toASCII(aData));
     mDeviceContext->FlushFontCache();
     ClearStyleDataAndReflow();
 
@@ -1114,7 +1113,10 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
     SetVisualMode(PR_FALSE);
   }
   else {
-    SetVisualMode(IsVisualCharset(mCharset) );
+    nsIDocument* doc = mShell->GetDocument();
+    if (doc) {
+      SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
+    }
   }
   if (mShell && aForceReflow) {
     ClearStyleDataAndReflow();
