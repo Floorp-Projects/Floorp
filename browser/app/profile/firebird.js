@@ -46,7 +46,7 @@ pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=");
 
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.misc", "rv:1.2b");
+pref("general.useragent.misc", "rv:1.3a");
 pref("general.useragent.vendor", "Phoenix");
 pref("general.useragent.vendorSub", "0.4");
 
