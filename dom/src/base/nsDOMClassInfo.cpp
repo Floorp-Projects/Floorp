@@ -338,7 +338,7 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
   { #_name,                                                                   \
-    _helper::doCreate,                                                        \
+    { _helper::doCreate },                                                    \
     nsnull,                                                                   \
     nsnull,                                                                   \
     nsnull,                                                                   \
