@@ -43,6 +43,7 @@
 
 #ifdef XP_UNIX
 #include <termios.h>
+#include <unistd.h>
 #endif
 
 #ifdef _WINDOWS

@@ -100,6 +100,13 @@ ifeq ($(OS_ARCH), Linux)
 endif
 
 #
+# Always set CPU_TAG on OpenVMS.
+#
+ifeq ($(OS_ARCH), OpenVMS)
+	CPU_TAG = _$(CPU_ARCH)
+endif
+
+#
 #  At this time, the COMPILER_TAG value is actually assigned.
 #
 

@@ -32,12 +32,17 @@ endif
 
 RANLIB			= /bin/true
 
-CPU_ARCH_TAG		= _$(CPU_ARCH)
+CPU_ARCH		:= $(shell uname -Wh)
 
 OS_CFLAGS              = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
                          -DGENERIC_PTHREAD_REDEFINES -DNO_UDSOCK
 OS_CXXFLAGS            = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
                          -DGENERIC_PTHREAD_REDEFINES -DNO_UDSOCK
+
+# Maybe this should go into rules.mk or something?
+ifdef NSPR_INCLUDE_DIR
+INCLUDES += -I$(NSPR_INCLUDE_DIR)
+endif
 
 #
 # XCFLAGS are the only CFLAGS that are used during a link operation. Defining

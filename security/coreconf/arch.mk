@@ -146,6 +146,11 @@ ifeq ($(OS_ARCH),OS_2)
 	OS_RELEASE := $(shell uname -v)
 endif
 
+ifneq (,$(findstring OpenVMS,$(OS_ARCH)))
+	OS_ARCH = OpenVMS
+	OS_RELEASE := $(shell uname -v)
+endif
+
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
