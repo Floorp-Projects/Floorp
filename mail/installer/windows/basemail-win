@@ -36,11 +36,15 @@ thunderbird\components\jsd3250.dll
 thunderbird\components\xpinstal.dll  
 thunderbird\mozz.dll
 
+; Optional offline extension
+[offline]
+thunderbird\chrome\offline.jar
+
 [mail]
 
 thunderbird\xpicleanup.exe
 thunderbird\thunderbird.exe
-thunderbird\LICENSE
+thunderbird\LICENSE.txt
 thunderbird\README.txt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -229,4 +229,4 @@ README_FILE = $(topsrcdir)/README.txt
 
 libs::
 	$(INSTALL) $(README_FILE) $(DIST)/bin
-	$(INSTALL) $(topsrcdir)/LICENSE $(DIST)/bin
+	$(INSTALL) $(topsrcdir)/mail/LICENSE.txt $(DIST)/bin

@@ -254,6 +254,7 @@ C2=Component Uninstaller
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
 C5=Component US region pack
+C6=Component Offline
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ; C8=Component QFA
@@ -648,17 +649,16 @@ Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE|MAIN_COMPONENT
 Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 FileCount=$FileCount$
 
-;[Component ADT]
-;Description Short=Developer Tools
+[Component Offline]
+Description Short=Offline Support
 ;*** LOCALIZE ME BABY ***
-;Description Long=Tools for web developers including an error console, the Document Inspector and a JavaScript Debugger. 
-;Archive=adt.xpi
-;$InstallSize$:adt
-;$InstallSizeArchive$:adt.xpi
-;Attributes=FORCE_UPGRADE|VISIBLE
-;Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
-;Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
-;FileCount=$FileCount$
+Description Long=Adds Offline support to $ProductName$ Mail. 
+Archive=offline.xpi
+$InstallSize$:offline
+$InstallSizeArchive$:offline.xpi
+Attributes=FORCE_UPGRADE|VISIBLE
+Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
+FileCount=$FileCount$
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller

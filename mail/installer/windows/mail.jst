@@ -58,7 +58,7 @@ function createShortcuts()
   fTemp                = fProgram + "$MainExeFile$";
   fileExe              = getFolder("file:///", fTemp);
   fileReadme           = getFolder("file:///", fProgram + "readme.txt");
-  fileLicense          = getFolder("file:///", fProgram + "license");
+  fileLicense          = getFolder("file:///", fProgram + "license.txt");
   scExeDesc            = "$ProductName$";
   scReadmeDesc         = "Readme";
   scLicenseDesc        = "License";
@@ -275,19 +275,71 @@ function updateMapi()
     winreg.createKey(subkey      + "\\DefaultIcon", "");
     winreg.setValueString(subkey + "\\DefaultIcon", "", sfpMainExePath + ",0");
 
+    // Register mailto protocol handler
+
     winreg.createKey(subkey      + "\\protocols", "");
     winreg.createKey(subkey      + "\\protocols\\mailto", "");
     winreg.setValueString(subkey + "\\protocols\\mailto", "", "URL:MailTo Protocol");
-
+    winreg.setValueString(subkey + "\\protocols\\mailto", "URL Protocol", "");
     winreg.createKey(subkey      + "\\protocols\\mailto\\shell", "");
     winreg.createKey(subkey      + "\\protocols\\mailto\\shell\\open", "");
     winreg.createKey(subkey      + "\\protocols\\mailto\\shell\\open\\command", "");
-    winreg.setValueString(subkey + "\\protocols\\mailto\\shell\\open\\command", "", sfpMainExePath + " \"%1\"");
+    winreg.setValueString(subkey + "\\protocols\\mailto\\shell\\open\\command", "", sfpMainExePath + " -compose \"%1\"");
+    winreg.createKey(subkey      + "\\protocols\\mailto\\DefaultIcon", "");
+    winreg.setValueString(subkey + "\\protocols\\mailto\\DefaultIcon", sfpMainExePath + ",0");
 
+    // register shell open command for Mozilla Thunderbird product key under \Mail
     winreg.createKey(subkey      + "\\shell", "");
     winreg.createKey(subkey      + "\\shell\\open", "");
     winreg.createKey(subkey      + "\\shell\\open\\command", "");
     winreg.setValueString(subkey + "\\shell\\open\\command", "", sfpMainExePath);
+
+    // Register Thunderbird as a News Reader
+    subkey  = "SOFTWARE\\Clients\\News\\$ProductName$";
+    winreg.createKey(subkey, "");
+    winreg.setValueString(subkey, "", mailDefaultDescription);
+    winreg.setValueString(subkey, "DLLPath", sfpProgramMozMapi32File);
+
+    winreg.createKey(subkey      + "\\DefaultIcon", "");
+    winreg.setValueString(subkey + "\\DefaultIcon", "", sfpMainExePath + ",0");
+
+    // register shell open command for Mozilla Thunderbird product key under \News
+    winreg.createKey(subkey      + "\\shell", "");
+    winreg.createKey(subkey      + "\\shell\\open", "");
+    winreg.createKey(subkey      + "\\shell\\open\\command", "");
+    winreg.setValueString(subkey + "\\shell\\open\\command", "", sfpMainExePath);
+
+    // Register News protocol handlers (news, snews, nntp)
+    winreg.createKey(subkey      + "\\protocols", "");
+    winreg.createKey(subkey      + "\\protocols\\news", "");
+    winreg.setValueString(subkey + "\\protocols\\news", "", "URL:News Protocol");
+    winreg.setValueString(subkey + "\\protocols\\news", "URL Protocol", "");
+    winreg.createKey(subkey      + "\\protocols\\news\\shell", "");
+    winreg.createKey(subkey      + "\\protocols\\news\\shell\\open", "");
+    winreg.createKey(subkey      + "\\protocols\\news\\shell\\open\\command", "");
+    winreg.setValueString(subkey + "\\protocols\\news\\shell\\open\\command", "", sfpMainExePath + " -mail \"%1\"");
+    winreg.createKey(subkey      + "\\protocols\\news\\DefaultIcon", "");
+    winreg.setValueString(subkey + "\\protocols\\news\\DefaultIcon", sfpMainExePath + ",0");
+
+    winreg.createKey(subkey      + "\\protocols\\nntp", "");
+    winreg.setValueString(subkey + "\\protocols\\nntp", "", "URL:NNTP Protocol");
+    winreg.setValueString(subkey + "\\protocols\\nntp", "URL Protocol", "");
+    winreg.createKey(subkey      + "\\protocols\\nntp\\shell", "");
+    winreg.createKey(subkey      + "\\protocols\\nntp\\shell\\open", "");
+    winreg.createKey(subkey      + "\\protocols\\nntp\\shell\\open\\command", "");
+    winreg.setValueString(subkey + "\\protocols\\nntp\\shell\\open\\command", "", sfpMainExePath + " -mail \"%1\"");
+    winreg.createKey(subkey      + "\\protocols\\nntp\\DefaultIcon", "");
+    winreg.setValueString(subkey + "\\protocols\\nntp\\DefaultIcon", sfpMainExePath + ",0");
+
+    winreg.createKey(subkey      + "\\protocols\\snews", "");
+    winreg.setValueString(subkey + "\\protocols\\snews", "", "URL:Snews Protocol");
+    winreg.setValueString(subkey + "\\protocols\\snews", "URL Protocol", "");
+    winreg.createKey(subkey      + "\\protocols\\snews\\shell", "");
+    winreg.createKey(subkey      + "\\protocols\\snews\\shell\\open", "");
+    winreg.createKey(subkey      + "\\protocols\\snews\\shell\\open\\command", "");
+    winreg.setValueString(subkey + "\\protocols\\snews\\shell\\open\\command", "", sfpMainExePath + " -mail \"%1\"");
+    winreg.createKey(subkey      + "\\protocols\\snews\\DefaultIcon", "");
+    winreg.setValueString(subkey + "\\protocols\\snews\\DefaultIcon", sfpMainExePath + ",0");
 
     // Register MapiProxy.dll
     mapiProxyFile = getFolder("Program", "MapiProxy.dll");
@@ -397,10 +449,7 @@ function updateWinReg()
 }
 
 function upgradeCleanup()
-{
-  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
-  // need to be cleaned up.
-  
+{ 
   // For now, since we're new, we have no such files. 
 }
 
@@ -520,11 +569,6 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "components\\xpti.dat");
     logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
     logComment("Installing: "    + fProgram + "components\\compreg.dat");
-    logComment("Create Folder: " + fProgram + "components\\Netscape");
-    logComment("Create Folder: " + fProgram + "components\\Netscape\\MozillaTrunk");
-    logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\manifest.ini");
-    logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\permdata.box");
-    logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\Talkback.ini");
     logComment("Create Folder: " + fProgram + "chrome");
     logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
     logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
@@ -555,6 +599,7 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols []");
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto []");
     logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\DefaultIcon []");
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell []");
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open []");
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command []");
@@ -563,6 +608,42 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell\\open []");
     logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell\\open\\command []");
     logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell\\open\\command []");
+
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$ []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$ []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$ [DLLPath]");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\DefaultIcon []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\DefaultIcon []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news\\DefaultIcon []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news\\shell []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news\\shell\\open []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news\\shell\\open\\command []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\news\\shell\\open\\command []");
+
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews\\DefaultIcon []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews\\shell []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews\\shell\\open []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews\\shell\\open\\command []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\snews\\shell\\open\\command []");
+
+
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp\\DefaultIcon []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp\\shell []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp\\shell\\open []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp\\shell\\open\\command []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\protocols\\nntp\\shell\\open\\command []");
+
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\shell []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\shell\\open []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\shell\\open\\command []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\News\\$ProductName$\\shell\\open\\command []");
 
     err = getLastError();
     if (err == SUCCESS)
