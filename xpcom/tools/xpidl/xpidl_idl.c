@@ -23,7 +23,7 @@
 #include "xpidl.h"
 
 FILE *typelib_file = NULL;
-FILE *invoke_file = NULL;
+FILE *doc_file = NULL;
 FILE *header_file = NULL;
 
 nodeHandler *nodeDispatch[TREESTATE_NUM] = { NULL };
@@ -466,7 +466,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     state.includes = stack.includes;
     state.include_path = include_path;
     nodeDispatch[TREESTATE_HEADER] = headerDispatch();
-    nodeDispatch[TREESTATE_INVOKE] = invokeDispatch();
+    nodeDispatch[TREESTATE_TYPELIB] = typelibDispatch();
     nodeDispatch[TREESTATE_DOC] = docDispatch();
     if (generate_headers) {
         if (strcmp(basename, "-")) {
@@ -489,8 +489,8 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         if (!ok)
             return 0;
     }
-    if (generate_invoke) {
-        state.mode = TREESTATE_INVOKE;
+    if (generate_typelib) {
+        state.mode = TREESTATE_TYPELIB;
         state.tree = top;
         if (!process_tree(&state))
             return 0;

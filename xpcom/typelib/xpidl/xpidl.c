@@ -26,13 +26,13 @@ gboolean enable_debug      = FALSE;
 gboolean enable_warnings   = FALSE;
 gboolean verbose_mode      = FALSE;
 gboolean generate_docs     = FALSE;
-gboolean generate_invoke   = FALSE;
+gboolean generate_typelib  = FALSE;
 gboolean generate_headers  = FALSE;
 gboolean generate_nothing  = FALSE;
 
 static char xpidl_usage_str[] = 
-"Usage: %s [-i] [-d] [-h] [-w] [-v] [-I path] [-n] [-o basename] filename.idl\n"
-"       -i generate InterfaceInfo data (filename.int) (NYI)\n"
+"Usage: %s [-t] [-d] [-h] [-w] [-v] [-I path] [-n] [-o basename] filename.idl\n"
+"       -t generate typelib data       (filename.xpt) (NYI)\n"
 "       -d generate HTML documentation (filename.html) (NYI)\n"
 "       -h generate C++ headers	       (filename.h)\n"
 "       -w turn on warnings (recommended)\n"
@@ -68,12 +68,12 @@ main(int argc, char *argv[])
           case 'd':
             generate_docs = TRUE;
             break;
-          case 'i':
-            generate_invoke = TRUE;
+          case 't':
+            generate_typelib = TRUE;
             break;
           case 'h':
-                generate_headers = TRUE;
-                break;
+            generate_headers = TRUE;
+            break;
           case 'w':
             enable_warnings = TRUE;
             break;
@@ -114,8 +114,8 @@ main(int argc, char *argv[])
         }
     }
     
-    if (!(generate_docs || generate_invoke || generate_headers)) {
-        fprintf(stderr, "ERROR: must specify one of -i, -d, -h\n");
+    if (!(generate_docs || generate_typelib || generate_headers)) {
+        fprintf(stderr, "ERROR: must specify one of -t, -d, -h\n");
         xpidl_usage(argc, argv);
         return 1;
     }
