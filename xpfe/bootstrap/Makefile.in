@@ -264,7 +264,7 @@ endif
 nsStaticComponents.cpp: nsStaticComponents.cpp.in Makefile Makefile.in $(FINAL_LINK_COMP_NAMES)
 	rm -f $@
 	cat $< | \
-	sed -e "s|@DECLARE_COMPONENTS@|$(foreach m,$(_COMPONENT_LIST),DECL_MODULE($(m));)|" | \
-	sed -e "s|@COMPONENT_LIST@|$(foreach m, $(_COMPONENT_LIST),MODULE($(m)),)|" \
+	sed -e "s|%DECLARE_COMPONENTS%|$(foreach m,$(_COMPONENT_LIST),DECL_MODULE($(m));)|" | \
+	sed -e "s|%COMPONENT_LIST%|$(foreach m, $(_COMPONENT_LIST),MODULE($(m)),)|" \
 	> $@
 

@@ -35,10 +35,10 @@ NSGETMODULE_ENTRY_POINT(name) (nsIComponentManager *aCompMgr,  \
                                nsIFile *aLocation,             \
                                nsIModule **aResult)
 
-@DECLARE_COMPONENTS@
+%DECLARE_COMPONENTS%
 
 static nsStaticModuleInfo StaticModuleInfo[] = {
-	@COMPONENT_LIST@
+	%COMPONENT_LIST%
 };
 
 nsresult PR_CALLBACK
