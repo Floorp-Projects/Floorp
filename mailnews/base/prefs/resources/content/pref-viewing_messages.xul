@@ -84,12 +84,6 @@
                 prefstring="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
       <checkbox class="iconic" id="displayGlyph" label="&convertEmoticons.label;"
                 prefstring="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
-      <hbox align="center" class="indent">
-           <label value="&example1.label;"/>
-           <image class="smileface"/>
-           <label value="&example2.label;"/>
-      </hbox>
-    
     </vbox>
   </groupbox>
 
