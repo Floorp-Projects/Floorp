@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -10,53 +10,51 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author(s):
- *   Chris Waterson <waterson@netscape.com>
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
- *
  */
+#ifndef nsXULAtoms_h___
+#define nsXULAtoms_h___
 
-/*
-
-  Header file used to include the commonly-used atoms in the XUL
-  code. Actual atom additions and removal should be performed on
-  nsXULAtoms.inc.
-
- */
-
-
-#ifndef nsXULAtoms_h__
-#define nsXULAtoms_h__
-
+#include "prtypes.h"
 #include "nsIAtom.h"
 
-#ifdef NS_XULATOM
-#undef NS_XULATOM
-#endif
+class nsINameSpaceManager;
 
-#define NS_XULATOM(__atom) static nsIAtom* __atom
-#define NS_XULATOM2(__atom, __value) static nsIAtom* __atom
-
+/**
+ * This class wraps up the creation and destruction of the standard
+ * set of xul atoms used during normal xul handling. This object
+ * is created when the first xul content object is created, and
+ * destroyed when the last such content object is destroyed.
+ */
 class nsXULAtoms {
-protected:
-    static nsrefcnt gRefCnt;
-
 public:
-    static nsrefcnt AddRef();
-    static nsrefcnt Release();
 
-#include "nsXULAtoms.inc"
+  static void AddRefAtoms();
+  static void ReleaseAtoms();
 
-    static nsIAtom* Template; // XXX because |template| is a keyword
+  // XUL namespace ID, good for the life of the nsXULAtoms object
+  static PRInt32  nameSpaceID;
+
+  /* Declare all atoms
+
+     The atom names and values are stored in nsCSSAtomList.h and
+     are brought to you by the magic of C preprocessing
+
+     Add new atoms to nsCSSAtomList and all support logic will be auto-generated
+   */
+#define XUL_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsXULAtomList.h"
+#undef XUL_ATOM
+
 };
 
-
-#endif
+#endif /* nsXULAtoms_h___ */

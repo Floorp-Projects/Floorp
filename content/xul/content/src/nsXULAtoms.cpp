@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -10,70 +10,65 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author(s):
- *   Chris Waterson <waterson@netscape.com>
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
- *
  */
 
-/*
-
-  Back-end for commonly used XUL atoms.
-
- */
-
+#include "nsString.h"
+#include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 
-#ifdef NS_XULATOM
-#undef NS_XULATOM
-#undef NS_XULATOM2
-#endif
+static const char kXULNameSpace[] = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-#define NS_XULATOM(__atom) nsIAtom* nsXULAtoms::__atom
-#define NS_XULATOM2(__atom, __value) nsIAtom* nsXULAtoms::__atom
-#include "nsXULAtoms.inc"
+PRInt32  nsXULAtoms::nameSpaceID;
 
-nsrefcnt nsXULAtoms::gRefCnt = 0;
-nsIAtom* nsXULAtoms::Template;
+// define storage for all atoms
+#define XUL_ATOM(_name, _value) nsIAtom* nsXULAtoms::_name;
+#include "nsXULAtomList.h"
+#undef XUL_ATOM
 
-nsrefcnt
-nsXULAtoms::AddRef()
-{
-    if (++gRefCnt == 1) {
-#undef NS_XULATOM
-#undef NS_XULATOM2
-#define NS_XULATOM(__atom) __atom = NS_NewAtom(#__atom)
-#define NS_XULATOM2(__atom, __value) __atom = NS_NewAtom(__value)
-#include "nsXULAtoms.inc"
 
-        Template = NS_NewAtom("template");
+static nsrefcnt gRefCnt = 0;
+static nsINameSpaceManager* gNameSpaceManager;
+
+void nsXULAtoms::AddRefAtoms() {
+
+  if (gRefCnt == 0) {
+    /* XUL Atoms registers the XUL name space ID because it's a convenient
+       place to do this, if you don't want a permanent, "well-known" ID.
+    */
+    if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager))) {
+//    gNameSpaceManager->CreateRootNameSpace(namespace);
+      nsAutoString nameSpace; nameSpace.AssignWithConversion(kXULNameSpace);
+      gNameSpaceManager->RegisterNameSpace(nameSpace, nameSpaceID);
+    } else {
+      NS_ASSERTION(0, "failed to create xul atoms namespace manager");
     }
 
-    return gRefCnt;
+    // now register the atoms
+#define XUL_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#include "nsXULAtomList.h"
+#undef XUL_ATOM
+  }
+  ++gRefCnt;
 }
 
+void nsXULAtoms::ReleaseAtoms() {
 
-nsrefcnt
-nsXULAtoms::Release()
-{
-    if (--gRefCnt == 0) {
-#undef NS_XULATOM
-#undef NS_XULATOM2
-#define NS_XULATOM(__atom) NS_RELEASE(__atom)
-#define NS_XULATOM2(__atom, __value) NS_RELEASE(__atom)
-#include "nsXULAtoms.inc"
+  NS_PRECONDITION(gRefCnt != 0, "bad release of xul atoms");
+  if (--gRefCnt == 0) {
+#define XUL_ATOM(_name, _value) NS_RELEASE(_name);
+#include "nsXULAtomList.h"
+#undef XUL_ATOM
 
-        NS_RELEASE(Template);
-    }
-
-    return gRefCnt;
+    NS_IF_RELEASE(gNameSpaceManager);
+  }
 }
-
