@@ -244,6 +244,7 @@ layout/xul/content/Makefile
 layout/xul/content/src/Makefile
 layout/xbl/Makefile
 layout/xbl/public/Makefile
+layout/xbl/src/Makefile
 # lib/liblayer/Makefile
 # lib/liblayer/include/Makefile
 # lib/liblayer/src/Makefile
