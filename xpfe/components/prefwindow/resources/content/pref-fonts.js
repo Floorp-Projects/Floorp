@@ -266,15 +266,19 @@ function selectLanguage()
     for( var i = 0; i < fontTypes.length; i++ )
       {
         // build and populate the font list for the newly chosen font type
+        var strFontFaces = enumerator.EnumerateFonts(languageList.value, fontTypes[i], fontCount);
+        var strDefaultFontFace = strFontFaces[0];
         var selectElement = new listElement( fontTypes[i] );
         selectElement.clearList();
-        selectElement.appendStrings( enumerator.EnumerateFonts( languageList.value, fontTypes[i], fontCount ) );
+        selectElement.appendStrings(strFontFaces);
+        //the first font face name returned by the enumerator is our last resort
+        var defaultListSelection = selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0];
 
         if( languageData[languageList.value] )
           {
             // data exists for this language, pre-select items based on this information
             var dataElements = selectElement.listElement.getElementsByAttribute( "value", languageData[languageList.value].types[fontTypes[i]] );
-            var selectedItem = dataElements.length ? dataElements[0] : null;
+            var selectedItem = dataElements.length ? dataElements[0] : defaultListSelection;
             if (!gNoFontsForThisLang)
               {
                 selectElement.listElement.selectedItem = selectedItem;
@@ -296,7 +300,7 @@ function selectLanguage()
                 var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
                 var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
                 var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
-                selectedItem = dataEls.length ? dataEls[0] : null;
+                selectedItem = dataEls.length ? dataEls[0] : defaultListSelection;
                 if (selectedItem)
                   {
                     selectElement.listElement.value = selectVal;
