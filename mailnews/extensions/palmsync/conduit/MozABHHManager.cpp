@@ -127,7 +127,8 @@ long MozABHHManager::GetInfoBlock(CDbGenInfo &info, BOOL bSortInfo)
     if (retval)
         return retval;
 
-    _tcscpy((char*)info.m_FileName, m_szName);
+    _tcsncpy((char*)info.m_FileName, m_szName, sizeof(info.m_FileName)-1);
+    info.m_FileName[sizeof(info.m_FileName)-1] = '\0';
     memset(info.m_pBytes, 0, info.m_TotalBytes);
 
     if (!bSortInfo) {
@@ -192,7 +193,8 @@ long MozABHHManager::SetName( char *pName)
     if (wLen >= sizeof(m_szName))
         return GEN_ERR_DATA_TOO_LARGE;
 
-    strcpy(m_szName, pName);
+    strncpy(m_szName, pName, sizeof(m_szName)-1);
+    m_szName[sizeof(m_szName)-1] = '\0';
     return 0;
 }
 
@@ -330,7 +332,8 @@ long MozABHHManager::OpenDB(BOOL bCreate)
         createInfo.m_Type        = m_dwType; 
         createInfo.m_Flags       = (eDbFlags) m_wFlags;
         createInfo.m_CardNo     = m_CardNum;  
-        strcpy(createInfo.m_Name, m_szName);
+        strncpy(createInfo.m_Name, m_szName, sizeof(createInfo.m_Name)-1);
+        createInfo.m_Name[sizeof(createInfo.m_Name)-1] = '\0';
         createInfo.m_Version    = m_wVersion;
 
         if ((retval = SyncCreateDB(createInfo)) == SYNCERR_NONE)

@@ -148,10 +148,8 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             if (NS_FAILED(rv))
                 break;
             // add to the list
-            m_ServerDescList->lpszABName = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * (abName.Length()+1));
-            wcscpy(m_ServerDescList->lpszABName, abName.get());
-            m_ServerDescList->lpszABUrl = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * (abUrl.Length()+1));
-            wcscpy(m_ServerDescList->lpszABUrl, abUrl.get());
+            CopyUnicodeString(&(m_ServerDescList->lpszABName), abName);
+            CopyUnicodeString(&(m_ServerDescList->lpszABUrl), abUrl);
         }
         else {
             // we need to convert the description from UTF-8 to Unicode and then to ASCII
@@ -166,11 +164,8 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
                 break;
             nsCAutoString abUrl = NS_LossyConvertUCS2toASCII(abUUrl);
 
-            m_ServerDescList->lpszABName = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (abName.Length()+1));
-            strcpy((char*)m_ServerDescList->lpszABName, abName.get());
-
-            m_ServerDescList->lpszABUrl = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (abUrl.Length()+1));
-            strcpy((char*)m_ServerDescList->lpszABUrl, abUrl.get());
+            CopyCString(&(m_ServerDescList->lpszABName), abName);
+            CopyCString(&(m_ServerDescList->lpszABUrl), abUrl);
         }
         m_ServerDescList++;
 
@@ -191,7 +186,6 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
     
     return S_OK;
 }
-
 
 // Synchronize the Address Book represented by the aCategoryId and/or corresponding aABName in Mozilla
 STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
@@ -305,5 +299,28 @@ STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId
   return S_OK;
 }
 
+
+void CPalmSyncImp::CopyUnicodeString(LPTSTR *destStr, nsString srcStr)
+{
+  if (!destStr)
+    return;
+
+  PRInt32 length = srcStr.Length()+1;
+  *destStr = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * length);
+  wcsncpy(*destStr, srcStr.get(), length-1);
+  (*destStr)[length-1] = '\0';
+}
+
+void CPalmSyncImp::CopyCString(LPTSTR *destStr, nsCString srcStr)
+{
+  if (!destStr)
+    return;
+
+  PRInt32 length = sizeof(char) * (srcStr.Length()+1);
+  *destStr = (LPTSTR) CoTaskMemAlloc(length);
+  char *sp = (char *)*destStr;
+  strncpy(sp, srcStr.get(), length-1);
+  sp[length-1] = '\0';
+}
 
 

@@ -41,6 +41,7 @@
 #include <windows.h>
 #include "IPalmSync.h"
 #include "nspr.h"
+#include "nsString.h"
 
 const CLSID CLSID_CPalmSyncImp = { 0xb20b4521, 0xccf8, 0x11d6, { 0xb8, 0xa5, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
 
@@ -93,6 +94,8 @@ private :
     lpnsMozABDesc m_ServerDescList;
     BOOL * m_FirstTimeSyncList;
     long * m_CatIDList;
+    void CopyUnicodeString(LPTSTR *destStr, nsString srcStr);
+    void CopyCString(LPTSTR *destStr, nsCString srcStr);
 };
 
 #endif // MSG_MAPI_IMP_H

@@ -215,7 +215,8 @@ long CMozABConduitSync::GetRemoteDBInfo(int iIndex)
             m_remoteDB->m_Creator  = m_rSyncProperties.m_Creator; 
             m_remoteDB->m_DbFlags  = eRecord; // todo
             m_remoteDB->m_DbType   = m_rSyncProperties.m_DbType; 
-            strcpy(m_remoteDB->m_Name, m_rSyncProperties.m_RemoteName[iIndex]);
+            strncpy(m_remoteDB->m_Name, m_rSyncProperties.m_RemoteName[iIndex], sizeof(m_remoteDB->m_Name)-1);
+            m_remoteDB->m_Name[sizeof(m_remoteDB->m_Name)-1] = '\0';
             m_remoteDB->m_Version   = 0;
             m_remoteDB->m_CardNum   = 0;
             m_remoteDB->m_ModNumber = 0;

@@ -94,6 +94,8 @@ private:
 
     void CopyValue(PRBool isUnicode, nsString & attribValue, LPTSTR * result);
     PRBool CompareValue(PRBool isUnicode, LPTSTR cardValue, nsString & attribValue);
+    void SplitHomeAddresses(nsABCOMCardStruct * card, PRBool isUnicode);
+    void JoinHomeAddresses(PRBool isUnicode, nsABCOMCardStruct * card);
 };
 
 #endif

@@ -44,6 +44,14 @@
 #include "nsAddrDatabase.h"
 #include "prdtoa.h"
 
+#define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.SetLength(0);\
+                                        if((char*) s) d=NS_ConvertASCIItoUCS2((char*)s);\
+                                        if (convertCRLF) \
+                                          d.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(" ").get());
+
+#define CONVERT_CRLF_TO_SPACE(d, s) d.Assign(s); \
+                                    d.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(" ").get());
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsAbIPCCard, nsAbCardProperty, nsIAbMDBCard)
 
 nsAbIPCCard::nsAbIPCCard()
@@ -115,42 +123,114 @@ nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
     mCategoryId = srcCard->dwCategoryId;
     mStatus = srcCard->dwStatus;
 
-    SetFirstName(srcCard->firstName);
-    SetLastName(srcCard->lastName);
-    SetDisplayName(srcCard->displayName);
-    SetNickName(srcCard->nickName);
-    SetPrimaryEmail(srcCard->primaryEmail);
-    SetSecondEmail(srcCard->secondEmail);
+    // Each palm address field is allowed to have multiple lines
+    // so replace CRLFs with spaces (since other than Notes field
+    // moz only displays fields in a single line).
+    nsAutoString str;
+    CONVERT_CRLF_TO_SPACE(str, srcCard->firstName);
+    SetFirstName(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->lastName);
+    SetLastName(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->displayName);
+    SetDisplayName(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->nickName);
+    SetNickName(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->primaryEmail);
+    SetPrimaryEmail(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->secondEmail);
+    SetSecondEmail(str.get());
+
     SetPreferMailFormat(srcCard->preferMailFormat);
-    SetWorkPhone(srcCard->workPhone);
-    SetHomePhone(srcCard->homePhone);
-    SetFaxNumber(srcCard->faxNumber);
-    SetPagerNumber(srcCard->pagerNumber);
-    SetCellularNumber(srcCard->cellularNumber);
-    SetHomeAddress(srcCard->homeAddress);
-    SetHomeAddress2(srcCard->homeAddress2);
-    SetHomeCity(srcCard->homeCity);
-    SetHomeState(srcCard->homeState);
-    SetHomeZipCode(srcCard->homeZipCode);
-    SetHomeCountry(srcCard->homeCountry);
-    SetWorkAddress(srcCard->workAddress);
-    SetWorkAddress2(srcCard->workAddress2);
-    SetWorkCity(srcCard->workCity);
-    SetWorkState(srcCard->workState);
-    SetWorkZipCode(srcCard->workZipCode);
-    SetWorkCountry(srcCard->workCountry);
-    SetJobTitle(srcCard->jobTitle);
-    SetDepartment(srcCard->department);
-    SetCompany(srcCard->company);
-    SetWebPage1(srcCard->webPage1);
-    SetWebPage2(srcCard->webPage2);
-    SetBirthYear(srcCard->birthYear);
-    SetBirthMonth(srcCard->birthMonth);
-    SetBirthDay(srcCard->birthDay);
-    SetCustom1(srcCard->custom1);
-    SetCustom2(srcCard->custom2);
-    SetCustom3(srcCard->custom3);
-    SetCustom4(srcCard->custom4);
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workPhone);
+    SetWorkPhone(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->homePhone);
+    SetHomePhone(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->faxNumber);
+    SetFaxNumber(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->pagerNumber);
+    SetPagerNumber(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->cellularNumber);
+    SetCellularNumber(str.get());
+
+    // See if home address contains multiple lines.
+    SplitHomeAddresses(srcCard, PR_TRUE);
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->homeCity);
+    SetHomeCity(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->homeState);
+    SetHomeState(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->homeZipCode);
+    SetHomeZipCode(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->homeCountry);
+    SetHomeCountry(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workAddress);
+    SetWorkAddress(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workAddress2);
+    SetWorkAddress2(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workCity);
+    SetWorkCity(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workState);
+    SetWorkState(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workZipCode);
+    SetWorkZipCode(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->workCountry);
+    SetWorkCountry(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->jobTitle);
+    SetJobTitle(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->department);
+    SetDepartment(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->company);
+    SetCompany(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->webPage1);
+    SetWebPage1(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->webPage2);
+    SetWebPage2(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->birthYear);
+    SetBirthYear(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->birthMonth);
+    SetBirthMonth(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->birthDay);
+    SetBirthDay(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->custom1);
+    SetCustom1(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->custom2);
+    SetCustom2(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->custom3);
+    SetCustom3(str.get());
+
+    CONVERT_CRLF_TO_SPACE(str, srcCard->custom4);
+    SetCustom4(str.get());
+
     SetNotes(srcCard->notes);
     SetLastModifiedDate(srcCard->lastModifiedDate);
     SetIsMailList(srcCard->isMailList);
@@ -158,8 +238,6 @@ nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
 
     return NS_OK;
 }
-
-#define CONVERT_ASSIGNTO_UNICODE(d, s)   d.SetLength(0); if((char*) s) d=NS_ConvertASCIItoUCS2((char*)s);
 
 nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
 {
@@ -171,114 +249,114 @@ nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
 
     nsAutoString str;
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->firstName);
+    // Each palm address field is allowed to have multiple lines
+    // so replace CRLFs with spaces (since other than Notes field
+    // moz only displays fields in a single line).
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->firstName, PR_TRUE);
     SetFirstName(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->lastName);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->lastName, PR_TRUE);
     SetLastName(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->displayName);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->displayName, PR_TRUE);
     SetDisplayName(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->nickName);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->nickName, PR_TRUE);
     SetNickName(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->primaryEmail);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->primaryEmail, PR_TRUE);
     SetPrimaryEmail(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->secondEmail);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->secondEmail, PR_TRUE);
     SetSecondEmail(str.get());
 
     SetPreferMailFormat(srcCard->preferMailFormat);
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workPhone);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workPhone, PR_TRUE);
     SetWorkPhone(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homePhone);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homePhone, PR_TRUE);
     SetHomePhone(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->faxNumber);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->faxNumber, PR_TRUE);
     SetFaxNumber(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->pagerNumber);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->pagerNumber, PR_TRUE);
     SetPagerNumber(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->cellularNumber);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->cellularNumber, PR_TRUE);
     SetCellularNumber(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeAddress);
-    SetHomeAddress(str.get());
+    // See if home address contains multiple lines.
+    SplitHomeAddresses(srcCard, PR_FALSE);
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeAddress2);
-    SetHomeAddress2(str.get());
-
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeCity);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeCity, PR_TRUE);
     SetHomeCity(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeState);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeState, PR_TRUE);
     SetHomeState(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeZipCode);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeZipCode, PR_TRUE);
     SetHomeZipCode(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeCountry);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeCountry, PR_TRUE);
     SetHomeCountry(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workAddress);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workAddress, PR_TRUE);
     SetWorkAddress(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workAddress2);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workAddress2, PR_TRUE);
     SetWorkAddress2(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workCity);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workCity, PR_TRUE);
     SetWorkCity(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workState);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workState, PR_TRUE);
     SetWorkState(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workZipCode);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workZipCode, PR_TRUE);
     SetWorkZipCode(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workCountry);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workCountry, PR_TRUE);
     SetWorkCountry(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->jobTitle);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->jobTitle, PR_TRUE);
     SetJobTitle(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->department);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->department, PR_TRUE);
     SetDepartment(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->company);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->company, PR_TRUE);
     SetCompany(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->webPage1);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->webPage1, PR_TRUE);
     SetWebPage1(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->webPage2);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->webPage2, PR_TRUE);
     SetWebPage2(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->birthYear);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->birthYear, PR_TRUE);
     SetBirthYear(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->birthMonth);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->birthMonth, PR_TRUE);
     SetBirthMonth(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->birthDay);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->birthDay, PR_TRUE);
     SetBirthDay(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom1);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom1, PR_TRUE);
     SetCustom1(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom2);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom2, PR_TRUE);
     SetCustom2(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom3);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom3, PR_TRUE);
     SetCustom3(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom4);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->custom4, PR_TRUE);
     SetCustom4(str.get());
 
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->notes);
+    CONVERT_ASSIGNTO_UNICODE(str, srcCard->notes, PR_FALSE);
     SetNotes(str.get());
 
     SetLastModifiedDate(srcCard->lastModifiedDate);
@@ -286,6 +364,33 @@ nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
     SetMailListURI(srcCard->mailListURI);
 
     return NS_OK;
+}
+
+void nsAbIPCCard::SplitHomeAddresses(nsABCOMCardStruct * card, PRBool isUnicode)
+{
+  // If the address contains more than one line then split it into two 
+  // (since moz only allows two address lines) and make sure all CRLFs
+  // are converted to spaces in the 2nd address line. Lines are ended
+  // with CRLF (done by moz conduit) and 'card->homeAddress2 is never used.
+  PRInt32 idx;
+  nsAutoString str;
+  if (isUnicode)
+    str.Assign(card->homeAddress);
+  else
+    CONVERT_ASSIGNTO_UNICODE(str, card->homeAddress, PR_FALSE);
+
+  nsAutoString addr1, addr2;
+  if ((idx = str.Find( "\x0D\x0A")) != kNotFound)
+  {
+    str.Left(addr1, idx);
+    str.Right( addr2, str.Length() - idx - 2);  // need to minus string lenght of CRLF.
+    addr2.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(", ").get());
+
+    SetHomeAddress(addr1.get());
+    SetHomeAddress2(addr2.get());
+  }
+  else
+    SetHomeAddress(str.get());
 }
 
 
@@ -600,7 +705,7 @@ PRBool nsAbIPCCard::CompareValue(PRBool isUnicode, LPTSTR cardValue, nsString & 
         }
         else {
             nsAutoString str;
-            CONVERT_ASSIGNTO_UNICODE(str, cardValue);
+            CONVERT_ASSIGNTO_UNICODE(str, cardValue, PR_TRUE);
             if (Compare(str, attribValue, nsCaseInsensitiveStringComparator()))
                 return PR_FALSE;
         }
@@ -676,21 +781,25 @@ void nsAbIPCCard::CopyValue(PRBool isUnicode, nsString & attribValue, LPTSTR * r
 {
     *result = NULL;
     if(attribValue.Length() && attribValue.get()) {
+        PRInt32 length;
         if(isUnicode) {                                 
-            PRUnichar * Str = (PRUnichar *) CoTaskMemAlloc(sizeof(PRUnichar) * attribValue.Length()+1);
-            wcscpy(Str, attribValue.get());
+            length = attribValue.Length()+1;
+            PRUnichar * Str = (PRUnichar *) CoTaskMemAlloc(sizeof(PRUnichar) * length);
+            wcsncpy(Str, attribValue.get(), length-1);
+            Str[length-1] = '\0';
             *result = Str;
         } 
         else { 
             nsCAutoString cStr; 
             cStr = NS_LossyConvertUCS2toASCII(attribValue);
-            char * str = (char *) CoTaskMemAlloc(cStr.Length()+1);
-            strcpy(str, cStr.get()); 
+            length = cStr.Length()+1;
+            char * str = (char *) CoTaskMemAlloc(length);
+            strncpy(str, cStr.get(), length-1);
+            str[length-1] = '\0';
             *result = (LPTSTR) str;
         } 
     }
 }
-
 
 nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * card)
 {
@@ -713,8 +822,8 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     CopyValue(isUnicode, m_FaxNumber, &card->faxNumber);
     CopyValue(isUnicode, m_PagerNumber, &card->pagerNumber);
     CopyValue(isUnicode, m_CellularNumber, &card->cellularNumber);
-    CopyValue(isUnicode, m_HomeAddress, &card->homeAddress);
-    CopyValue(isUnicode, m_HomeAddress2, &card->homeAddress2);
+    // See if home address contains multiple lines.
+    JoinHomeAddresses(isUnicode, card);
     CopyValue(isUnicode, m_HomeCity, &card->homeCity);
     CopyValue(isUnicode, m_HomeState, &card->homeState);
     CopyValue(isUnicode, m_HomeZipCode, &card->homeZipCode);
@@ -746,6 +855,66 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     card->mailListURI = ToNewCString(m_MailListURI);
 
     return NS_OK;
+}
+
+void nsAbIPCCard::JoinHomeAddresses(PRBool isUnicode, nsABCOMCardStruct * card)
+{
+  // If the two address lines in a moz card are not empty
+  // then join the lines into a single line separated by
+  // '\x0A'. This is the format expected by Palm.
+  PRUint32 strLength= m_HomeAddress.Length() + m_HomeAddress2.Length();
+  if(!strLength)
+    return;
+
+  // Allocate space for 'strLength' plus one for null and one for "\x0A".
+  strLength += 2;
+  if(isUnicode)
+  { 
+    PRUnichar * uniStr = (PRUnichar *) CoTaskMemAlloc(sizeof(PRUnichar) * (strLength));
+    if(m_HomeAddress.Length())
+    {
+      wcsncpy(uniStr, m_HomeAddress.get(), strLength-1);
+      uniStr[strLength-1] = '\0';
+      if(m_HomeAddress2.Length())
+      {
+        wcsncat(uniStr, (const wchar_t *)"\x0A", strLength-1);
+        wcsncat(uniStr, m_HomeAddress2.get(), strLength-1);
+        uniStr[strLength-1] = '\0';
+      }
+    }
+    else
+    {
+      wcsncpy(uniStr, m_HomeAddress2.get(), strLength-1);
+      uniStr[strLength-1] = '\0';
+    }
+
+    card->homeAddress = uniStr;
+  } 
+  else
+  { 
+    char * str = (char *) CoTaskMemAlloc(strLength);
+    nsCAutoString cStr;
+    if(m_HomeAddress.Length())
+    {
+      cStr = NS_LossyConvertUCS2toASCII(m_HomeAddress); 
+      strncpy(str, cStr.get(), strLength-1);
+      str[strLength-1] = '\0';
+      if(m_HomeAddress2.Length())
+      {
+        cStr = NS_LossyConvertUCS2toASCII(m_HomeAddress2);
+        strncat(str, "\x0A", strLength-1);
+        strncat(str, cStr.get(), strLength-1);
+        str[strLength-1] = '\0';
+      }
+    }
+    else
+    {
+      cStr = NS_LossyConvertUCS2toASCII(m_HomeAddress2);
+      strncpy(str, cStr.get(), strLength-1);
+      str[strLength-1] = '\0';
+    }
+    card->homeAddress = (LPTSTR) str;
+  } 
 }
 
 
