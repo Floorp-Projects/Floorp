@@ -614,7 +614,7 @@ function editNewEvent( calendarEvent, server )
 
 function addEventDialogResponse( calendarEvent, Server )
 {
-   gICalLib.addEvent( calendarEvent, Server );
+   refreshRemoteCalendarAndRunFunction( calendarEvent, Server, "addEvent" );
 }
 
 
@@ -679,7 +679,7 @@ function editToDo( calendarToDo )
 
 function modifyEventDialogResponse( calendarEvent, Server )
 {
-   gICalLib.modifyEvent( calendarEvent, Server );
+   refreshRemoteCalendarAndRunFunction( calendarEvent, Server, "modifyEvent" );
 }
 
 
@@ -714,6 +714,47 @@ function editEventCommand()
 }
 
 
+function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToRun )
+{
+   var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( Server )
+   
+   if( calendarServer )
+   {
+      if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#remote" ) == "true" &&
+          calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true"
+        )
+      {
+         var onResponseExtra = function( )
+         {
+            //add the event
+            eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
+   
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+            
+            //publish the changes back to the server
+            if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
+               gCalendarWindow.calendarManager.publishCalendar( calendarServer );
+         }
+   
+         //refresh the calendar file.
+         gCalendarWindow.calendarManager.retrieveAndSaveRemoteCalendar( calendarServer, onResponseExtra );
+      }
+      else
+      {
+         eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
+   
+         gCalendarWindow.clearSelectedEvent( calendarEvent );
+      }
+   }
+   else
+   {
+      eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
+   
+      gCalendarWindow.clearSelectedEvent( calendarEvent );
+   }
+}
+
+
 /**
 *  This is called from the unifinder's delete command
 */
@@ -734,16 +775,15 @@ function deleteEventCommand( DoNotConfirm )
 
       if ( calendarEvent.title != "" ) {
          if( !DoNotConfirm ) {        
-            if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
-               gICalLib.deleteEvent( calendarEvent.id );
-
-               gCalendarWindow.clearSelectedEvent( calendarEvent );
+            if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) 
+            {
+               refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
             }
          }
          else
          {
-            gICalLib.deleteEvent( calendarEvent.id );
-
+            refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
+            
             gCalendarWindow.clearSelectedEvent( calendarEvent );
          }
       }
@@ -751,14 +791,14 @@ function deleteEventCommand( DoNotConfirm )
       {
          if( !DoNotConfirm ) {        
             if ( confirm( confirmDeleteUntitledEvent ) ) {
-               gICalLib.deleteEvent( calendarEvent.id );
+               refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
 
                gCalendarWindow.clearSelectedEvent( calendarEvent );
             }
          }
          else
          {
-            gICalLib.deleteEvent( calendarEvent.id );
+            refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
 
             gCalendarWindow.clearSelectedEvent( calendarEvent );
          }

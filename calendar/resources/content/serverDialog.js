@@ -125,6 +125,8 @@ function loadCalendarServerDialog()
 
    document.getElementById( "server-password-textbox" ).value = gCalendarObject.password;
 
+   document.getElementById( "server-publish-checkbox" ).checked = gCalendarObject.publishAutomatically;
+
    if( gCalendarObject.remote == true )
       document.getElementById( "server-path-textbox" ).value = gCalendarObject.remotePath;
    else
@@ -134,6 +136,8 @@ function loadCalendarServerDialog()
    
    var firstFocus = document.getElementById( "server-name-textbox" );
    firstFocus.focus();
+
+   sizeToContent();
 }
 
 
@@ -151,6 +155,8 @@ function onOKCommand()
    gCalendarObject.username = document.getElementById( "server-username-textbox" ).value;
 
    gCalendarObject.password = document.getElementById( "server-password-textbox" ).value;
+
+   gCalendarObject.publishAutomatically = document.getElementById( "server-publish-checkbox" ).checked;
 
    //TODO: check that the gCalendarObject.path is actually a file, if its not, create it.
    

@@ -59,7 +59,9 @@
    onload="loadCalendarServerDialog()"
    persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:nc="http://home.netscape.com/NC-rdf#">
+   width="600"
+	height="270"
+	xmlns:nc="http://home.netscape.com/NC-rdf#">
     
    
    <!-- Javascript includes -->
@@ -137,6 +139,15 @@
                             <description>&calendar.server.dialog.password.label;</description>
                         </hbox>
                         <textbox flex="1" id="server-password-textbox"/>
+                    </row>
+						  
+						  <!-- Password -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end"/>
+                        <hbox>
+									<checkbox id="server-publish-checkbox"/>
+									<description flex="1">&calendar.server.dialog.publish.label;</description>
+								</hbox>
                     </row>
                   </rows>
                </grid> 

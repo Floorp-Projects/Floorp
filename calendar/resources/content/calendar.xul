@@ -112,7 +112,8 @@
    <command id="export_command" oncommand="saveEventsToFile()"/>
    
    <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
-   <command id="publish_events_command" oncommand="publishCalendarData()"/>
+   <command id="publish_calendar" oncommand="gCalendarWindow.calendarManager.publishCalendar()"/>
+	<command id="publish_events_command" oncommand="publishCalendarData()"/>
    
    <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
    
@@ -250,6 +251,7 @@
    <menuitem label="&calendar.context.editserver.label;"     observes="edit_server_command"/>
    <menuitem label="&calendar.context.deleteserver.label;"     observes="delete_server_command"/>
    <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
+	<menuitem label="Publish Calendar" observes="publish_calendar"/>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" value="">

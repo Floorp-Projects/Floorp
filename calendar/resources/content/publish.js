@@ -84,7 +84,6 @@ function calendarPublish(aDataString, newLocation, fileName, login, password, co
   }
 }
 
-// XXX WARNING: I DIDN'T TEST THIS!!!!!
 function calendarUploadFile(aSourceFilename, newLocation, fileName, login, password, contentType)
 {
    try
@@ -97,8 +96,6 @@ function calendarUploadFile(aSourceFilename, newLocation, fileName, login, passw
          return;
       }
 
-       //void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
-   
        output_file_to_channel(protocolChannel, aSourceFilename, contentType);
        protocolChannel.asyncOpen(gPublishingListener, null);
        dump("done\n");
@@ -122,11 +119,14 @@ function output_string_to_channel( aChannel, aDataString, contentType )
 
 function output_file_to_channel( aChannel, aFilePath, contentType )
 {
+   include('chrome://calendar/content/jslib/io/io.js');
+   
    var uploadChannel = aChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
-   var file = createInstance('@mozilla.org/file/local;1', 'nsILocalFile');
-
-   file.initWithPath( aFilePath );
-   uploadChannel.setUploadFile(file, contentType, -1);
+   
+   var thisFile = new File( aFilePath );
+   thisFile.open( "r" );
+   var theFileContents = thisFile.read();
+   output_string_to_channel( aChannel, theFileContents, contentType );
 }
 
 
