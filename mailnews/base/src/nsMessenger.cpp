@@ -80,6 +80,9 @@
 #include "nsMsgStatusFeedback.h"
 
 #include "nsIContentViewer.h" 
+#include "nsIPref.h"
+#include "nsLayoutCID.h"
+#include "nsIPresContext.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -92,6 +95,10 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID); 
 static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
+static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
+static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 
 class nsMessenger : public nsIMessenger
 {
@@ -344,8 +351,10 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
   mWindow = aWin;
   NS_ADDREF(aWin);
 
+#ifdef DEBUG
   /* rhp - Needed to access the webshell to drive message display */
   printf("nsMessenger::SetWindow(): Getting the webShell of interest...\n");
+#endif
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) 
@@ -1089,7 +1098,9 @@ nsMessenger::SendUnsentMessages()
 																					(void **)getter_AddRefs(pMsgSendLater)); 
 	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
 	{ 
+#ifdef DEBUG
 		printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
+#endif
 
     SendLaterListener *sendLaterListener = new SendLaterListener();
     if (!sendLaterListener)
@@ -1122,7 +1133,10 @@ nsMessenger::LoadFirstDraft()
 																					(void **)getter_AddRefs(pMsgDraft)); 
 	if (NS_SUCCEEDED(rv) && pMsgDraft) 
 	{ 
-		printf("We succesfully obtained a nsIMsgDraft interface....\n");     
+#ifdef DEBUG
+		printf("We succesfully obtained a nsIMsgDraft interface....\n");
+#endif
+
 
     // This should really pass in a URI, but for now, just to test, we can pass in nsnull
     pMsgDraft->OpenDraftMsg(nsnull, nsnull); 
@@ -1133,31 +1147,39 @@ nsMessenger::LoadFirstDraft()
 
 NS_IMETHODIMP nsMessenger::DoPrint()
 {
+#ifdef DEBUG_seth
   printf("nsMessenger::DoPrint()\n");
+#endif
 
   nsresult rv = NS_ERROR_FAILURE;
-  nsIContentViewer *viewer;
+  nsCOMPtr<nsIContentViewer> viewer;
 
   if (!mWebShell) {
+#ifdef DEBUG_seth
 	printf("can't print, there is no webshell\n");
+#endif
 	return rv;
   }
 
-  mWebShell->GetContentViewer(&viewer);
+  mWebShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (viewer) {
     rv = viewer->Print();
-    NS_RELEASE(viewer);
   }
+#ifdef DEBUG_seth
   else {
 	printf("failed to get the viewer for printing\n");
   }
+#endif
   
   return rv;
 }
 
 NS_IMETHODIMP nsMessenger::DoPrintPreview()
 {
+  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_seth
   printf("nsMessenger::DoPrintPreview()\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+  return rv;  
 }
