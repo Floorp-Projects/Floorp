@@ -53,6 +53,8 @@ REQUIRES	= xpcom \
 		  content_xsl \
 		  intl \
 		  windowwatcher \
+		  imglib2 \
+		  gfx2 \
 		  $(NULL)
 
 CPPSRCS		= \

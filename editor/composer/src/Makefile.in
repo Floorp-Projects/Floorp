@@ -55,6 +55,8 @@ REQUIRES        = xpcom \
                   chrome \
                   exthandler \
                   mimetype \
+                  imglib2 \
+                  gfx2 \
                   $(NULL)
 
 CPPSRCS  = \

@@ -43,7 +43,7 @@ imgContainer::imgContainer() :
   mCurrentFrameIsFinishedDecoding(PR_FALSE),
   mDoneDecoding(PR_FALSE),
   mAnimating(PR_FALSE),
-  mAnimationMode(0),
+  mAnimationMode(kNormalAnimMode),
   mLoopCount(-1)
 {
   NS_INIT_ISUPPORTS();
@@ -279,7 +279,21 @@ NS_IMETHODIMP imgContainer::GetAnimationMode(PRUint16 *aAnimationMode)
 
 NS_IMETHODIMP imgContainer::SetAnimationMode(PRUint16 aAnimationMode)
 {
+  NS_ASSERTION(aAnimationMode == imgIContainer::kNormalAnimMode ||
+               aAnimationMode == imgIContainer::kDontAnimMode ||
+               aAnimationMode == imgIContainer::kLoopOnceAnimMode, "Wrong Animation Mode is being set!");
+
+  if (mAnimationMode == kNormalAnimMode && 
+      (aAnimationMode == kDontAnimMode || aAnimationMode == kLoopOnceAnimMode)) {
+    StopAnimation();
+  } else if (aAnimationMode == kNormalAnimMode && 
+             (mAnimationMode == kDontAnimMode || mAnimationMode == kLoopOnceAnimMode)) {
+    mAnimationMode = aAnimationMode;
+    StartAnimation();
+    return NS_OK;
+  }
   mAnimationMode = aAnimationMode;
+
   return NS_OK;
 }
 
@@ -287,7 +301,7 @@ NS_IMETHODIMP imgContainer::SetAnimationMode(PRUint16 aAnimationMode)
 /* void startAnimation () */
 NS_IMETHODIMP imgContainer::StartAnimation()
 {
-  if (mAnimationMode == 1)      // don't animate
+  if (mAnimationMode == kDontAnimMode)      // don't animate
   {
     mAnimating = PR_FALSE;
     return NS_OK;
@@ -407,7 +421,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
   } else if (mDoneDecoding){
     if ((numFrames-1) == mCurrentAnimationFrameIndex) {
       // If animation mode is "loop once", it's time to stop animating
-      if (mAnimationMode == 2 || mLoopCount == 0) {
+      if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
         this->StopAnimation();
         return;
       }
@@ -469,8 +483,8 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
   PRInt32 nextFrameIndex = aNextFrame;
   PRInt32 prevFrameIndex = aPrevFrame;
   
-  if(nextFrameIndex >= numFrames) nextFrameIndex = numFrames-1;
-  if(prevFrameIndex >= numFrames) prevFrameIndex = numFrames-1;
+  if(PRUint32(nextFrameIndex) >= numFrames) nextFrameIndex = numFrames-1;
+  if(PRUint32(prevFrameIndex) >= numFrames) prevFrameIndex = numFrames-1;
   
   nsCOMPtr<gfxIImageFrame> prevFrame;
   inlinedGetFrameAt(prevFrameIndex, getter_AddRefs(prevFrame));
@@ -619,7 +633,6 @@ void imgContainer::FillWithColor(gfxIImageFrame *aFrame, gfx_color color)
 {
   if(!aFrame) return;
 
-  nsresult res;
   aFrame->LockImageData();
 
   PRUint32 bpr;
@@ -740,7 +753,7 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
       { 
         
         for(PRUint32 y=overlayYOffset, i=0; 
-            i<heightOverlay && y<heightComposite; 
+            i<PRUint32(heightOverlay) && y<PRUint32(heightComposite);
             y++, i++) {
 
           PRInt32 offset;
@@ -759,7 +772,7 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
 #endif
           PRUint8* overlayLine = overlayAlphaData + offset;
           for (PRUint32 x=overlayXOffset, j=0; 
-               j<widthOverlay && x<widthComposite; 
+               j<PRUint32(widthOverlay) && x<PRUint32(widthComposite); 
                x++, j++) {
               
             if (overlayLine[j>>3] & (1<<((7-j)&0x7)))

@@ -149,8 +149,8 @@ nsPresContext::nsPresContext()
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
-  mImageAnimationMode = eImageAnimation_Normal;
-  mImageAnimationModePref = eImageAnimation_Normal;
+  mImageAnimationMode = imgIContainer::kNormalAnimMode;
+  mImageAnimationModePref = imgIContainer::kNormalAnimMode;
 
   mStopped = PR_FALSE;
   mStopChrome = PR_TRUE;
@@ -522,11 +522,11 @@ nsPresContext::GetUserPreferences()
   nsresult rv = mPrefs->CopyCharPref("image.animation_mode", &animatePref);
   if (NS_SUCCEEDED(rv) && animatePref) {
     if (!nsCRT::strcmp(animatePref, "normal"))
-      mImageAnimationModePref = eImageAnimation_Normal;
+      mImageAnimationModePref = imgIContainer::kNormalAnimMode;
     else if (!nsCRT::strcmp(animatePref, "none"))
-      mImageAnimationModePref = eImageAnimation_None;
+      mImageAnimationModePref = imgIContainer::kDontAnimMode;
     else if (!nsCRT::strcmp(animatePref, "once"))
-      mImageAnimationModePref = eImageAnimation_LoopOnce;
+      mImageAnimationModePref = imgIContainer::kLoopOnceAnimMode;
     nsMemory::Free(animatePref);
   }
 
@@ -710,7 +710,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
           if (!isChrome && !isRes)
             mImageAnimationMode = mImageAnimationModePref;
           else
-            mImageAnimationMode = eImageAnimation_Normal;
+            mImageAnimationMode = imgIContainer::kNormalAnimMode;
         }
 
         if (mLangService) {
@@ -826,7 +826,7 @@ nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetImageAnimationMode(nsImageAnimation* aModeResult)
+nsPresContext::GetImageAnimationMode(PRUint16* aModeResult)
 {
   NS_PRECONDITION(aModeResult, "null out param");
   *aModeResult = mImageAnimationMode;
@@ -862,7 +862,7 @@ PR_STATIC_CALLBACK(PRBool) set_animation_mode(nsHashKey *aKey, void *aData, void
 //
 // Walks content and set the animation mode
 // this is a way to turn on/off image animations
-void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, nsImageAnimation aMode)
+void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode)
 {
   nsCOMPtr<nsIDOMHTMLImageElement> imgContent(do_QueryInterface(aParent));
   if (imgContent) {
@@ -890,8 +890,12 @@ void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, nsImageAnima
 }
 
 NS_IMETHODIMP
-nsPresContext::SetImageAnimationMode(nsImageAnimation aMode)
+nsPresContext::SetImageAnimationMode(PRUint16 aMode)
 {
+  NS_ASSERTION(aMode == imgIContainer::kNormalAnimMode ||
+               aMode == imgIContainer::kDontAnimMode ||
+               aMode == imgIContainer::kLoopOnceAnimMode, "Wrong Animation Mode is being set!");
+
   // This hash table contains a list of background images
   // so iterate over it and set the mode
   mImageLoaders.Enumerate(set_animation_mode, (void*)aMode);
