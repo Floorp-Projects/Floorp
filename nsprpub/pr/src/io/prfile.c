@@ -203,7 +203,7 @@ static PRStatus PR_CALLBACK PipeSync(PRFileDesc *fd)
 	return PR_SUCCESS;
 }
 
-static PRStatus PR_CALLBACK FileInfo(PRFileDesc *fd, PRFileInfo *info)
+static PRStatus PR_CALLBACK FileGetInfo(PRFileDesc *fd, PRFileInfo *info)
 {
 	PRInt32 rv;
 
@@ -214,7 +214,7 @@ static PRStatus PR_CALLBACK FileInfo(PRFileDesc *fd, PRFileInfo *info)
 	return PR_SUCCESS;
 }
 
-static PRStatus PR_CALLBACK FileInfo64(PRFileDesc *fd, PRFileInfo64 *info)
+static PRStatus PR_CALLBACK FileGetInfo64(PRFileDesc *fd, PRFileInfo64 *info)
 {
 #ifdef XP_MAC
 #pragma unused( fd, info )
@@ -276,8 +276,8 @@ static PRIOMethods _pr_fileMethods = {
     FileSync,
     FileSeek,
     FileSeek64,
-    FileInfo,
-    FileInfo64,
+    FileGetInfo,
+    FileGetInfo64,
     (PRWritevFN)_PR_InvalidInt,		
     (PRConnectFN)_PR_InvalidStatus,		
     (PRAcceptFN)_PR_InvalidDesc,		
