@@ -920,6 +920,9 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 void
 nsMenuFrame::Execute()
 {
+  // Get our own content node and hold on to it to keep it from going away.
+  nsCOMPtr<nsIContent> content = dont_QueryInterface(mContent);
+  
   // First hide all of the open menus.
   if (mMenuParent)
     mMenuParent->HideChain();
@@ -930,8 +933,13 @@ nsMenuFrame::Execute()
   event.message = NS_MENU_ACTION;
   mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
 
+  // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
+  // was executed.
+  nsCOMPtr<nsIDocument> doc;
+  content->GetDocument(*getter_AddRefs(doc));
+
   // Now properly close them all up.
-  if (mMenuParent)
+  if (doc && mMenuParent)
     mMenuParent->DismissChain();
 }
 
