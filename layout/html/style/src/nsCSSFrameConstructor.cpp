@@ -115,6 +115,7 @@
 #include "nsDocument.h"
 #include "nsToolbarItemFrame.h"
 #include "nsXULCheckboxFrame.h"
+#include "nsIScrollable.h"
 
 #ifdef DEBUG
 static PRBool gNoisyContentUpdates = PR_FALSE;
@@ -2566,21 +2567,35 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // As long as the webshell doesn't prohibit it, and the device supports
   // it, create a scroll frame that will act as the scolling mechanism for
   // the viewport.
-  nsISupports* container;
-  if (nsnull != aPresContext) {
-    aPresContext->GetContainer(&container);
-    if (nsnull != container) {
-      nsIWebShell* webShell = nsnull;
-      container->QueryInterface(kIWebShellIID, (void**) &webShell);
-      if (nsnull != webShell) {
-        PRInt32 scrolling = -1;
-        webShell->GetScrolling(scrolling);
-        if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
-          isScrollable = PR_FALSE;
+  //
+  // Threre are three possible values stored in the docshell:
+  //  1) NS_STYLE_OVERFLOW_HIDDEN = no scrollbars
+  //  2) NS_STYLE_OVERFLOW_AUTO = scrollbars appear if needed
+  //  3) NS_STYLE_OVERFLOW_SCROLL = scrollbars always
+  // Only need to create a scroll frame/view for cases 2 and 3.
+  // Currently OVERFLOW_SCROLL isn't honored, as
+  // scrollportview::SetScrollPref is not implemented.
+  PRInt32 nameSpaceID; // Never create scrollbars for XUL documents
+  if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
+      nameSpaceID == nsXULAtoms::nameSpaceID) {
+    isScrollable = PR_FALSE;
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsISupports> container;
+    if (nsnull != aPresContext) {
+      aPresContext->GetContainer(getter_AddRefs(container));
+      if (nsnull != container) {
+        nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(container, &rv);
+        if (NS_SUCCEEDED(rv) && scrollableContainer) {
+          PRInt32 scrolling = -1;
+          // XXX We should get prefs for X and Y and deal with these independently!
+          scrollableContainer->GetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
+          if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
+            isScrollable = PR_FALSE;
+          }
+          // XXX NS_STYLE_OVERFLOW_SCROLL should create 'always on' scrollbars
         }
-        NS_RELEASE(webShell);
       }
-      NS_RELEASE(container);
     }
   }
 
