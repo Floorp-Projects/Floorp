@@ -77,13 +77,17 @@ CNsIWebNav::~CNsIWebNav()
 // Url table for web navigation
 NavElement UrlTable[] = {
    {"http://www.intel.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
-   {"http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_MASK},
    {"http://www.oracle.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
    {"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
+   {"ftp://ftp.netscape.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY},
    {"ftp://ftp.mozilla.org/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
-   {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
+   {"https://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY},
+   {"about:plugins", nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE},
+   {"javascript:", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"file://C|/Program Files", nsIWebNavigation::LOAD_FLAGS_NONE}
 };
-
 
 
 void CNsIWebNav::OnStartTests(UINT nMenuID)
@@ -110,13 +114,14 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 			GoToIndexTest();
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_LOADURI :
-			LoadUriandReload();
+			LoadUriTest(UrlTable[0].theUri, UrlTable[0].theFlag);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_RELOAD  :
 			ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_STOP    :
-			StopUriTest("http://www.microsoft.com/");
+			StopUriTest("file://C|/Program Files",
+						 nsIWebNavigation::STOP_ALL);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_GETDOCUMENT :
 			GetDocumentTest();
@@ -133,14 +138,63 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 
 }
 
-void CNsIWebNav::LoadUriandReload()
+void CNsIWebNav::RunAllTests()
+{
+   int i=0;
+
+   if (qaWebNav)
+	   QAOutput("We have the web nav object.", 2);
+   else {
+	   QAOutput("We don't have the web nav object. No tests performed.", 2);
+	   return;
+   }
+
+   // canGoBack attribute test
+   CanGoBackTest();
+
+   // GoBack test
+   GoBackTest();
+
+   // canGoForward attribute test
+   CanGoForwardTest();
+
+   // GoForward test
+   GoForwardTest();
+
+   // GotoIndex test
+   GoToIndexTest();
+
+   // LoadURI() & reload tests
+
+   QAOutput("Run a few LoadURI() tests.", 2);
+
+ 	
+   LoadUriandReload(11);
+
+ 
+	// Stop() tests
+   StopUriTest("http://www.microsoft.com", nsIWebNavigation::STOP_ALL);
+   StopUriTest("https://www.microsoft.com/", nsIWebNavigation::STOP_NETWORK);
+   StopUriTest("ftp://ftp.microsoft.com/", nsIWebNavigation::STOP_CONTENT);
+
+   // document test
+   GetDocumentTest();
+   
+   // uri test
+   GetCurrentURITest();
+
+   // session history test
+   GetSHTest();
+}
+
+void CNsIWebNav::LoadUriandReload(int URItotal)
 {
    int i=0;
    // LoadURI() & reload tests
 
-   QAOutput("Run a few LoadURI() tests.", 2);
+   QAOutput("Run a few LoadURI() and Reload() tests.", 2);
 	
-   for (i=0; i < 6; i++)
+   for (i=0; i < URItotal; i++)
    {
        LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
        switch (i)
@@ -170,80 +224,9 @@ void CNsIWebNav::LoadUriandReload()
 
 }
 
-
-void CNsIWebNav::RunAllTests()
-{
-   int i=0;
-
-   if ( qaWebNav)
-	   QAOutput("We have the web nav object.", 2);
-   else {
-	   QAOutput("We don't have the web nav object. No tests performed.", 2);
-	   return;
-   }
-
-   // canGoBack attribute test
-   CanGoBackTest();
-
-   // GoBack test
-   GoBackTest();
-
-   // canGoForward attribute test
-   CanGoForwardTest();
-
-   // GoForward test
-   GoForwardTest();
-
-   // GotoIndex test
-   GoToIndexTest();
-
-   // LoadURI() & reload tests
-
-   QAOutput("Run a few LoadURI() tests.", 2);
-
- 	
-   for (i=0; i < 5; i++)
-   {
-       LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
-       switch (i)
-       {
-       case 0:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
-           break;
-       case 1:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
-           break;
-       case 2:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
-           break;
-       // simulate shift-reload
-       case 3:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
-                      nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
-           break;
-       case 4:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
-           break;
-       }
-   }
-
- 
-	// Stop() test
-   StopUriTest("http://www.microsoft.com/");
-
-   // document test
-   GetDocumentTest();
-   
-   // uri test
-   GetCurrentURITest();
-
-   // session history test
-   GetSHTest();
-}
-
-
 // ***********************************************************************
 // Individual nsIWebNavigation tests
+
 
 void CNsIWebNav::CanGoBackTest()
 {
@@ -361,8 +344,6 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
       strcpy(theFlagName, "LOAD_FLAGS_CHARSET_CHANGE");
       break;
   case nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY:
-//      strcpy(theFlagName, "nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | "
-//                          "nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY");
       strcpy(theFlagName, "cache & proxy");
       break;
   } 
@@ -372,17 +353,26 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
    RvTestResult(rv, theTotalString, 2);
 }
 
-void CNsIWebNav::StopUriTest(char *theUrl)
+void CNsIWebNav::StopUriTest(char *theUrl, const unsigned long theFlag)
 {
    char theTotalString[200];
+   char flagString[100];
+
+   if (theFlag == nsIWebNavigation::STOP_ALL)
+	   strcpy(flagString, "STOP_ALL");
+   else if (theFlag == nsIWebNavigation::STOP_NETWORK)
+	   strcpy(flagString, "STOP_NETWORK");
+   else
+	   strcpy(flagString, "STOP_CONTENT");
 
    qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
                      nsIWebNavigation::LOAD_FLAGS_NONE,
                      nsnull,
                      nsnull,
                      nsnull);
-   rv = qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
-   sprintf(theTotalString, "%s%s%s", "Stop(): ", theUrl, " test");
+
+   rv = qaWebNav->Stop(theFlag);
+   sprintf(theTotalString, "%s%s%s%s", "Stop(): ", theUrl, " test: ", flagString);
    RvTestResult(rv, theTotalString, 2);
 }
 

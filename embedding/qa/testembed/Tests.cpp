@@ -659,6 +659,33 @@ void CTests::OnToolsTestYourMethod2()
 {
 	// place your test code here
 
+		// nsIWebProgress test cases
+
+		// get webProg object
+	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
+	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
+	if (!qaWebProgress)
+		QAOutput("Didn't get web progress object.", 2);
+	else
+		QAOutput("We got web progress object.", 2);
+
+		// addWebProgListener
+	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
+	rv = qaWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
+	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
+
+		// removeWebProgListener
+	rv = qaWebProgress->RemoveProgressListener(listener);
+	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 2);
+
+		// getTheDOMWindow
+	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
+	rv = qaWebProgress->GetDOMWindow(getter_AddRefs(qaDOMWindow));
+	if (!qaWebProgress)
+		QAOutput("Didn't get DOM Window object.", 2);
+	else
+		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
+
 }
 
 // ***********************************************************************
