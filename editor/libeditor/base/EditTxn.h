@@ -20,8 +20,7 @@
 #define EditTxn_h__
 
 #include "nsITransaction.h"
-
-class nsIDOMNode;
+#include "nsCOMPtr.h"
 
 #define EDIT_TXN_IID \
 {/* c5ea31b0-ac48-11d2-86d8-000064657374 */ \
@@ -31,6 +30,8 @@ class nsIDOMNode;
 /**
  * base class for all document editing transactions.
  * provides default concrete behavior for all nsITransaction methods.
+ * EditTxns optionally have a name.  This name is for internal purposes only, 
+ * it is never seen by the user or by any external entity.
  */
 class EditTxn : public nsITransaction
 {

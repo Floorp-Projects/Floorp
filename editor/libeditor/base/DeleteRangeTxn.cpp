@@ -167,7 +167,8 @@ NS_IMETHODIMP DeleteRangeTxn::Undo(void)
     nsCOMPtr<nsIDOMSelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) {
-      result = selection->Collapse(mStartParent, mStartOffset);
+      selection->Collapse(mStartParent, mStartOffset);
+      selection->Extend(mEndParent, mEndOffset);
     }
   }
 

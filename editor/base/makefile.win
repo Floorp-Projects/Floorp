@@ -33,6 +33,7 @@ CPPSRCS =				\
       ChangeAttributeTxn.cpp \
       InsertTextTxn.cpp      \
       DeleteTextTxn.cpp      \
+      PlaceholderTxn.cpp     \
       CreateElementTxn.cpp   \
       InsertElementTxn.cpp   \
       DeleteElementTxn.cpp   \
@@ -67,6 +68,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\ChangeAttributeTxn.obj  \
   .\$(OBJDIR)\InsertTextTxn.obj       \
   .\$(OBJDIR)\DeleteTextTxn.obj       \
+  .\$(OBJDIR)\PlaceholderTxn.obj      \
   .\$(OBJDIR)\CreateElementTxn.obj    \
   .\$(OBJDIR)\InsertElementTxn.obj    \
   .\$(OBJDIR)\DeleteElementTxn.obj    \

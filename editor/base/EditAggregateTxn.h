@@ -71,10 +71,10 @@ public:
     */
   NS_IMETHOD GetTxnAt(PRInt32 aIndex, EditTxn **aTxn);
 
-  /** set the name assigned to this aggregate txn */
+  /** set the name assigned to this txn */
   NS_IMETHOD SetName(nsIAtom *aName);
 
-  /** get the name assigned to this aggregate txn */
+  /** get the name assigned to this txn */
   NS_IMETHOD GetName(nsIAtom **aName);
 
 protected:
@@ -82,7 +82,6 @@ protected:
   //XXX: if this was an nsISupportsArray, it would handle refcounting for us
   nsVoidArray * mChildren;
   nsCOMPtr<nsIAtom> mName;
-
 };
 
 #endif

@@ -153,26 +153,6 @@ NS_IMETHODIMP EditAggregateTxn::AppendChild(EditTxn *aTxn)
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP EditAggregateTxn::SetName(nsIAtom *aName)
-{
-  mName = do_QueryInterface(aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
-{
-  if (aName)
-  {
-    if (mName)
-    {
-      *aName = mName;
-      NS_ADDREF(*aName);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_NULL_POINTER;
-}
-
 NS_IMETHODIMP EditAggregateTxn::GetCount(PRInt32 *aCount)
 {
   if (!aCount) {
@@ -203,6 +183,28 @@ NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
   NS_ADDREF(*aTxn);
   return NS_OK;
 }
+
+
+NS_IMETHODIMP EditAggregateTxn::SetName(nsIAtom *aName)
+{
+  mName = do_QueryInterface(aName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
+{
+  if (aName)
+  {
+    if (mName)
+    {
+      *aName = mName;
+      NS_ADDREF(*aName);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
 
 
 
