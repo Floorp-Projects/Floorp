@@ -150,6 +150,9 @@ nsFrameList::AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList)
       }
     }
   }
+#ifdef DEBUG
+  CheckForLoops();
+#endif
 }
 
 void
@@ -168,6 +171,9 @@ nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
       aFrame->SetParent(aParent);
     }
   }
+#ifdef DEBUG
+  CheckForLoops();
+#endif
 }
 
 PRBool
@@ -236,6 +242,9 @@ nsFrameList::InsertFrame(nsIFrame* aParent,
       aNewFrame->SetParent(aParent);
     }
   }
+#ifdef DEBUG
+  CheckForLoops();
+#endif
 }
 
 void
@@ -271,6 +280,9 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
       lastNewFrame->SetNextSibling(nextFrame);
     }
   }
+#ifdef DEBUG
+  CheckForLoops();
+#endif
 }
 
 PRBool
@@ -302,6 +314,9 @@ nsFrameList::DoReplaceFrame(nsIFrame* aParent,
   if (aParent) {
     aNewFrame->SetParent(aParent);
   }
+#ifdef DEBUG
+  CheckForLoops();
+#endif
   return PR_TRUE;
 }
 
@@ -364,6 +379,9 @@ nsFrameList::PullFrame(nsIFrame* aParent,
       pulledFrame->SetParent(aParent);
     }
   }
+#ifdef DEBUG
+  CheckForLoops();
+#endif
   return pulledFrame;
 }
 
@@ -591,5 +609,33 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
     frame = frame->GetNextSibling();
   }
   return nearestFrame;
+}
+#endif
+
+#ifdef DEBUG
+void
+nsFrameList::CheckForLoops()
+{
+  if (!mFirstChild) {
+    return;
+  }
+  
+  // Simple algorithm to find a loop in a linked list -- advance pointers
+  // through it at speeds of 1 and 2, and if they ever get to be equal bail
+  nsIFrame *first = mFirstChild, *second = mFirstChild;
+  do {
+    first = first->GetNextSibling();
+    second = second->GetNextSibling();
+    if (!second) {
+      break;
+    }
+    second = second->GetNextSibling();
+    if (first == second) {
+      // Loop detected!  Since second advances faster, they can't both be null;
+      // we would have broken out of the loop long ago.
+      NS_ERROR("loop in frame list.  This will probably hang soon.");
+      break;
+    }                           
+  } while (first && second);
 }
 #endif
