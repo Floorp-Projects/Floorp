@@ -1521,6 +1521,7 @@ GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
       }
     }
   }
+  return result;
 }
 
 void 
