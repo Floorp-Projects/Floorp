@@ -592,19 +592,20 @@ var BookmarksCommand = {
     this.doBookmarksCommand(rTarget, NC_NS_CMD+"import", args);
     var countAfter = parseInt(BookmarksUtils.getProperty(rTarget, RDF_NS+"nextVal"));
 
-    var transaction = new Bookmarktransaction("insert");
+    var transaction = new BookmarkImportTransaction("import");
     for (var index = countBefore; index < countAfter; index++) {
-      var nChildArc  = RDF.GetResource(RDF_NS+"_"+String(index));
-      var rChild     = BMDS.GetTarget(rTarget, nChildArc, true);
-      transaction.item  .push(rChild);
-      transaction.parent.push(rTarget);
-      transaction.index .push(index);
-      transaction.isPerformed.push(true);
+      var nChildArc = RDF.GetResource(RDF_NS+"_"+String(index));
+      var rChild    = BMDS.GetTarget(rTarget, nChildArc, true);
+      transaction.item   .push(rChild);
+      transaction.parent .push(rTarget);
+      transaction.index  .push(index);
+      transaction.isValid.push(true);
     }
-    transaction.length = transaction.item.length;
-    transaction.update();
-    aTransactionSet.push(transaction);
-    aTransaction.type = "import";
+    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    if (!isCancelled) {
+      gBMtxmgr.doTransaction(transaction);
+      BookmarksUtils.flushDataSource();
+    }    
   },
 
   exportBookmarks: function ()
@@ -681,12 +682,13 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
+    var length   = aSelection.length;
+    if (length == 0)
+      return false;
     var isValidTarget = BookmarksUtils.isValidTargetContainer(aTarget.parent)
-    var length = aSelection.length;
-    if (length > 0) {
-      var item0 = aSelection.item[0].Value;
-      var type0 = aSelection.type[0];
-    }
+    var item0    = aSelection.item[0].Value;
+    var type0    = aSelection.type[0];
+    var isNotRef = !aSelection.isRef;
     switch(aCommand) {
     case "cmd_undo":
     case "cmd_redo":
@@ -714,19 +716,19 @@ var BookmarksController = {
       var hasFlavours = clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
       return hasFlavours;
     case "cmd_bm_copy":
-      return length > 0;
+      return isNotRef;
     case "cmd_bm_cut":
     case "cmd_bm_delete":
-      return length > 0 && aSelection.containsMutable;
+      return isNotRef && aSelection.containsMutable;
     case "cmd_bm_selectAll":
       return true;
     case "cmd_bm_open":
     case "cmd_bm_expandfolder":
     case "cmd_bm_managefolder":
-      return length == 1;
+      return isNotRef && length == 1;
     case "cmd_bm_openinnewwindow":
     case "cmd_bm_openinnewtab":
-    return length > 0;
+    return true;
     case "cmd_bm_find":
     case "cmd_bm_import":
     case "cmd_bm_export":
@@ -734,26 +736,26 @@ var BookmarksController = {
     case "cmd_bm_newbookmark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return isValidTarget && length <= 1;
+      return isValidTarget && length == 1;
     case "cmd_bm_properties":
     case "cmd_bm_rename":
-      return length == 1;
+      return isNotRef && length == 1;
     case "cmd_bm_setnewbookmarkfolder":
-      if (length != 1) 
+      if (!isNotRef || length != 1) 
         return false;
       return item0 != "NC:NewBookmarkFolder"     &&
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_setpersonaltoolbarfolder":
-      if (length != 1)
+      if (!isNotRef || length != 1)
         return false
       return item0 != "NC:PersonalToolbarFolder" && type0 == "Folder";
     case "cmd_bm_setnewsearchfolder":
-      if (length != 1)
+      if (!isNotRef || length != 1)
         return false
       return item0 != "NC:NewSearchFolder"       && 
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_movebookmark":
-      return length > 0;
+      return isNotRef;
     default:
       return false;
     }
@@ -883,7 +885,7 @@ var BookmarksUtils = {
   DROP_ON    : Components.interfaces.nsITreeView.inDropOn,
   DROP_AFTER : Components.interfaces.nsITreeView.inDropAfter,
 
-  any : function (aArray)
+  any: function (aArray)
   {
     for (var i=0; i<aArray.length; ++i)
       if (aArray[i]) return true;
@@ -1704,6 +1706,59 @@ BookmarkMoveTransaction.prototype =
 
   undoTransaction     : function () {},
   redoTransaction     : function () {},
+  merge               : function (aTransaction) {return false},
+  QueryInterface      : function (aUID)         {return this},
+  getHelperForLanguage: function (aCount)       {return null},
+  getInterfaces       : function (aCount)       {return null},
+  canCreateWrapper    : function (aIID)         {return "AllAccess"}
+
+}
+
+function BookmarkImportTransaction (aAction)
+{
+  this.wrappedJSObject = this;
+  this.txmgr   = BookmarksUtils.getTransactionManager();
+  this.type    = "import";
+  this.action  = aAction;
+  this.item    = [];
+  this.parent  = [];
+  this.index   = [];
+  this.isValid = [];
+}
+
+BookmarkImportTransaction.prototype =
+{
+
+  isTransient: false,
+  RDFC       : RDFC,
+  BMDS       : BMDS,
+
+  doTransaction: function ()
+  {
+  },
+
+  undoTransaction: function ()
+  {
+    dump("undo ")
+    dumpTXN(this)
+    for (var i=this.item.length-1; i>=0; i--) {
+      if (this.isValid[i]) {
+        this.RDFC.Init(this.BMDS, this.parent[i]);
+        this.RDFC.RemoveElementAt(this.index[i], true);
+      }
+    }
+  },
+   
+  redoTransaction: function ()
+  {
+    for (var i=0; i<this.item.length; ++i) {
+      if (this.isValid[i]) {
+        this.RDFC.Init(this.BMDS, this.parent[i]);
+        this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
+      }
+    }
+  },
+
   merge               : function (aTransaction) {return false},
   QueryInterface      : function (aUID)         {return this},
   getHelperForLanguage: function (aCount)       {return null},

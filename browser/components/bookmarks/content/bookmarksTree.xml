@@ -348,8 +348,10 @@ dump("error in refresh sort:"+e)
           selection.item       = [];
           selection.parent     = [];
           selection.isExpanded = [];
-          selection.treeIndex  = [];
+          selection.isRef      = false;
           var rangeCount = this.treeBoxObject.selection.getRangeCount();
+          // workaround for bug 171547: if rowCount==0, rangeCount==1
+          if (this.treeBuilder.rowCount > 0)
           for (var k = 0; k < rangeCount; ++k) {
             var rangeMin = {};
             var rangeMax = {};
@@ -364,9 +366,12 @@ dump("error in refresh sort:"+e)
             }
           }
           if (selection.item.length == 0) {
-            selection = { item      : [RDF.GetResource("NC:BookmarksRoot")],
+            // if no item is selected, let's select the ref.
+            // but we have to keep track of it.
+            selection = { item      : [this.getRootResource()],
                           parent    : [null],
-                          isExpanded: [true]
+                          isExpanded: [true],
+                          isRef     : true
                         }
           }
           selection.length = selection.item.length;
@@ -443,9 +448,7 @@ dump("error in refresh sort:"+e)
           if (!isFolderGroup && selection.isContainer[0]) {
             if (this.clickCount == 1) {
               if (row.value >= 0) {
-dump("row:"+row+"\n")
                 this.treeBoxObject.view.toggleOpenState(row.value);
-dump("after\n")
               }
             }
             if (selection.protocol[0] == "file")
@@ -513,6 +516,7 @@ dump("after\n")
             observer.beginUpdateBatch(this.db);
             BookmarksController.doCommand(aCommand, selection, target);
             observer.endUpdateBatch(this.db);
+            this.mOuter.treeBoxObject.selection.currentIndex=-1;
             this.mOuter.tree.builder.rebuild();
             this.mOuter.updateTreeSelection();
           }
