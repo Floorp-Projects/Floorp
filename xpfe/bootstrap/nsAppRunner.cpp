@@ -80,6 +80,7 @@
 #include "nsWindowCreator.h"
 #include "nsIWindowWatcher.h"
 #include "nsProcess.h"
+#include "nsILocalFile.h"
 
 #ifdef MOZ_XPINSTALL
 #include "InstallCleanupDefines.h"
