@@ -694,7 +694,7 @@ nsresult nsMailboxUrl::SetRef(const char *aNewRef)
 nsresult nsMailboxUrl::GetHostPort(PRUint32 *result) const
 {
     NS_LOCK_INSTANCE();
-    *result = -1;
+    *result = 0xFFFFFFFF;
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }

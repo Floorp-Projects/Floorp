@@ -933,7 +933,7 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 									 char **ret_name)
 {
 	char	*s;
-	nsresult ret;
+	nsresult ret=NS_OK;
 
 	if (!header || header->length == 0)
 		return NS_OK;
