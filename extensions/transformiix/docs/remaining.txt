@@ -2,7 +2,7 @@ TransforMiiX (TM)
 (C) Copyright 1999 The MITRE Corporation, Keith Visco. All rights reserved.
 
 
-Last updated: 2000/02/17
+Last updated: 2000/03/22
 
 The current "target" XSLT version is the 19991116 XSLT Recommendation, which
 can be found at http://www.w3.org/TR/1999/REC-xslt-19991116. 
@@ -12,6 +12,8 @@ What's Remaining?
 
 -- Network support for URI handling
   -- currently I only implemented the file:/// protocol
+  -- Note: Peter Van der Beken is currently working on integrating the
+     URIUtils into Mozilla
 
 -- I18N support for sorting and numbering
 
@@ -22,14 +24,17 @@ What's Remaining?
 
 -- finish XPath function implementations
    -- see examples/functions.html for a list of available functions
+   -- Note: Olivier Gerardin is currently working on the number functions.
 
--- XSLT additional functions
+-- XSLT extension functions
    -- document(), etc.
 
 -- Add support for xsl:key
 
 -- convert result-ns, and indent-result to new xsl:output
    -- some of this has been done
+
+-- Add support for disable-output-escaping for xsl:text
 
 -- clean up Namespace handling
 
