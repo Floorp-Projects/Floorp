@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <errno.h>
 
 #include "nsWidget.h"
