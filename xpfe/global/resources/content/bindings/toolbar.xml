@@ -96,7 +96,7 @@
               collapsedGrippy.setAttribute("tooltip", aToolbar.getAttribute("grippytooltip"));
               collapsedGrippy.setAttribute("tooltiptext", aToolbar.getAttribute("grippytooltiptext"));
               collapsedGrippy.setAttribute("id", "moz_tb_collapsed_" + aToolbar.id);
-              collapsedGrippy.collapsed = true;
+              collapsedGrippy.setAttribute("moz_grippy_collapsed", "true");
               collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
               var collapsedTrayHolder = this.findNodeByAttribute("tbattr", "collapsed-tray-holder");
               if (collapsedTrayHolder.getAttribute("moz-collapsed") == "true")
