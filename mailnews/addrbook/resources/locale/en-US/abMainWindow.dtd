@@ -97,6 +97,7 @@ Rights Reserved.
 <!ENTITY stopButton.tooltip                             "Stop the current transfer"> 
 <!ENTITY searchButton.tooltip                           "Search the selected address book"> 
 <!ENTITY throbber.tooltip                               "Go to the &vendorShortName; home page">
+<!ENTITY advancedButton.tooltip                         "Advanced address search">
 <!-- Sidebar -->  
 <!ENTITY addressbook-sidebar-header.label               "Address Books">  
 

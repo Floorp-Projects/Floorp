@@ -438,7 +438,7 @@ Rights Reserved.
 <!--Tooltips-->
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY mailToolbar.tooltip "Mail Toolbar">
-<!ENTITY advancedButton.tooltip "Search Messages...">
+<!ENTITY advancedButton.tooltip "Advanced message search">
 <!ENTITY clearButton.tooltip "Clear the search criteria and show all messages">
 <!ENTITY getMsgButton.tooltip "Get new messages">
 <!ENTITY newMsgButton.tooltip "Create a new message">
