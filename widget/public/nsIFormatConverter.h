@@ -32,6 +32,8 @@ class nsIFormatConverter : public nsISupports {
 
   public:
 
+    static const nsIID& GetIID() { static nsIID iid = NS_IFORMATCONVERTER_IID; return iid; }
+
   /**
     * Get the list of the "input" data flavors, in otherwords, the flavors  
     * that this converter can convert "from" (the incoming data to the converter)
