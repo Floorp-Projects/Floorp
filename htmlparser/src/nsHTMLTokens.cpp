@@ -48,6 +48,7 @@
 #include "nsHTMLEntities.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsScanner.h"
 
 

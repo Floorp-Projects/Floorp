@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  util \
 		  uconv \
+		  unicharutil \
 		  expat \
 		  layout \
 		  dom \

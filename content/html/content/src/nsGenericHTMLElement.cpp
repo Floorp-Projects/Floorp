@@ -88,6 +88,7 @@
 #include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
