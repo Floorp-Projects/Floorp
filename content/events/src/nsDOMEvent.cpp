@@ -1637,6 +1637,7 @@ nsDOMEvent::AllocateEvent(const nsAString& aEventType)
   else {
     mEvent = new nsEvent();
   }
+  mEvent->time = PR_Now();
 }
   
 nsresult
