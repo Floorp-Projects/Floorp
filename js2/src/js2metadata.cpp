@@ -138,6 +138,20 @@ namespace MetaData {
                 ValidateStmt(cxt, env, i->stmt2);
             }
             break;
+        case StmtNode::For:
+            {
+                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                if (f->initializer)
+                    ValidateStmt(cxt, env, f->initializer);
+                if (f->expr2)
+                    ValidateExpression(cxt, env, f->expr2);
+                if (f->expr3)
+                    ValidateExpression(cxt, env, f->expr3);
+                targetList.push_back(p);
+                ValidateStmt(cxt, env, f->stmt);
+                targetList.pop_back();
+            }
+            break;
         case StmtNode::While:
         case StmtNode::DoWhile:
             {
@@ -152,9 +166,10 @@ namespace MetaData {
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                 bool found = false;
-                for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); (si != end); si++) {
                     if (g->name) {
                         // Make sure the name is on the targetList as a viable break target...
+                        // (only label statements can introduce names)
                         if ((*si)->getKind() == StmtNode::label) {
                             LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
                             if (l->name == *g->name) {
@@ -166,17 +181,34 @@ namespace MetaData {
                     }
                     else {
                         // anything at all will do
-                        if ((*si)->getKind() == StmtNode::label) {
-                            LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                            g->tgtID = &l->labelID;
+                        switch ((*si)->getKind()) {
+                        case StmtNode::label:
+                            {
+                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                g->tgtID = &l->labelID;
+                            }
+                            break;
+                        case StmtNode::While:
+                        case StmtNode::DoWhile:
+                            {
+                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                g->tgtID = &w->breakLabelID;
+                            }
+                            break;
+                        case StmtNode::For:
+                        case StmtNode::ForIn:
+                            {
+                                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                                g->tgtID = &f->breakLabelID;
+                            }
+                            break;
+                       case StmtNode::Switch:
+                            {
+                                SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(p);
+                                g->tgtID = &s->breakLabelID;
+                            }
+                            break;
                         }
-                        else
-                        if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
-                            UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                            g->tgtID = &w->breakLabelID;
-                        }
-                        else
-                            ASSERT(false);  // XXX for, forin && switch
                         found = true;
                         break;
                     }
@@ -203,16 +235,23 @@ namespace MetaData {
                     }
                     else {
                         // only some non-label statements will do
-                        if ((*si)->getKind() != StmtNode::label) {
-                            if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
+                        switch ((*si)->getKind()) {
+                        case StmtNode::While:
+                        case StmtNode::DoWhile:
+                            {
                                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                g->tgtID = &w->continueLabelID;
+                                g->tgtID = &w->breakLabelID;
                             }
-                            else
-                                ASSERT(false);  // XXX for, forin ( && not switch )
-                            found = true;
                             break;
+                        case StmtNode::For:
+                        case StmtNode::ForIn:
+                            {
+                                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                                g->tgtID = &f->breakLabelID;
+                            }
                         }
+                        found = true;
+                        break;
                     }
                 }
                 if (!found) 
@@ -516,9 +555,10 @@ namespace MetaData {
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                env->addFrame(b->compileFrame);
+                BlockFrame *runtimeFrame = new BlockFrame(b->compileFrame);
+                env->addFrame(runtimeFrame);
                 bCon->emitOp(ePushFrame, p->pos);
-                bCon->addFrame(b->compileFrame);
+                bCon->addFrame(runtimeFrame);
                 StmtNode *bp = b->statements;
                 while (bp) {
                     EvalStmt(env, phase, bp);
@@ -567,25 +607,54 @@ namespace MetaData {
                 bCon->emitBranch(eBranch, *g->tgtID, p->pos);
             }
             break;
+        case StmtNode::For:
+            {
+                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                f->breakLabelID = bCon->getLabel();
+                f->continueLabelID = bCon->getLabel();
+                BytecodeContainer::LabelID loopTop = bCon->getLabel();
+                BytecodeContainer::LabelID testLocation = bCon->getLabel();
+
+                if (f->initializer)
+                    EvalStmt(env, phase, f->initializer);
+                if (f->expr2)
+                    bCon->emitBranch(eBranch, testLocation, p->pos);
+                bCon->setLabel(loopTop);
+                targetList.push_back(p);
+                EvalStmt(env, phase, f->stmt);
+                targetList.pop_back();
+                bCon->setLabel(f->continueLabelID);
+                if (f->expr3) {
+                    Reference *r = EvalExprNode(env, phase, f->expr3);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
+                }
+                bCon->setLabel(testLocation);
+                if (f->expr2) {
+                    Reference *r = EvalExprNode(env, phase, f->expr2);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
+                    bCon->emitBranch(eBranchTrue, loopTop, p->pos);
+                }
+                else
+                    bCon->emitBranch(eBranch, loopTop, p->pos);
+                bCon->setLabel(f->breakLabelID);
+            }
+            break;
         case StmtNode::While:
             {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
                 w->breakLabelID = bCon->getLabel();
                 w->continueLabelID = bCon->getLabel();
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
-
-                targetList.push_back(p);
-
                 bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
                 bCon->setLabel(loopTop);
+                targetList.push_back(p);
                 EvalStmt(env, phase, w->stmt);
+                targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
                 Reference *r = EvalExprNode(env, phase, w->expr);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 bCon->setLabel(w->breakLabelID);
-
-                targetList.pop_back();
             }
             break;
         case StmtNode::DoWhile:
@@ -594,29 +663,15 @@ namespace MetaData {
                 w->breakLabelID = bCon->getLabel();
                 w->continueLabelID = bCon->getLabel();
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
-
+                bCon->setLabel(loopTop);
                 targetList.push_back(p);
-
-                bCon->setLabel(loopTop);
                 EvalStmt(env, phase, w->stmt);
-                bCon->setLabel(w->continueLabelID);
-                Reference *r = EvalExprNode(env, phase, w->expr);
-                if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
-                bCon->setLabel(w->breakLabelID);
-
-                
-                
-                bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
-                bCon->setLabel(loopTop);
-                EvalStmt(env, phase, w->stmt);
-                bCon->setLabel(w->continueLabelID);
-                Reference *r = EvalExprNode(env, phase, w->expr);
-                if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
-                bCon->setLabel(w->breakLabelID);
-
                 targetList.pop_back();
+                bCon->setLabel(w->continueLabelID);
+                Reference *r = EvalExprNode(env, phase, w->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
+                bCon->setLabel(w->breakLabelID);
             }
             break;
         case StmtNode::Return:
@@ -1468,7 +1523,7 @@ doBinary:
             StaticBinding *sb;
             StaticBinding *m = sbi->second;
             if (m->content->cloneContent == NULL) {
-                m->content->cloneContent = new Variable();
+                m->content->cloneContent = m->content->clone();
             }
             sb = new StaticBinding(m->qname, m->content->cloneContent);
             sb->xplicit = m->xplicit;
@@ -2445,8 +2500,8 @@ readClassProperty:
         PondScum *p = freeHeader;
         PondScum *pre = NULL;
         while (p) {
-            ASSERT(p->size > 0);
-            if (p->size >= sz) {
+            ASSERT(p->getSize() > 0);
+            if (p->getSize() >= sz) {
                 if (pre)
                     pre->owner = p->owner;
                 else
@@ -2466,10 +2521,10 @@ readClassProperty:
         }
         p = (PondScum *)pondTop;
         p->owner = this;
-        p->size = sz;
+        p->setSize(sz);
         pondTop += sz;
 #ifdef DEBUG
-        memset((p + 1), 0xB7, p->size - sizeof(PondScum));
+        memset((p + 1), 0xB7, sz - sizeof(PondScum));
 #endif
         return (p + 1);
     }
@@ -2478,10 +2533,10 @@ readClassProperty:
     void Pond::returnToPond(PondScum *p)
     {
         p->owner = (Pond *)freeHeader;
-        p->size &= 0x7FFFFFFF;      // might have lingering mark from previous gc
+        p->resetMark();      // might have lingering mark from previous gc
         uint8 *t = (uint8 *)(p + 1);
 #ifdef DEBUG
-        memset(t, 0xB7, p->size - sizeof(PondScum));
+        memset(t, 0xB7, p->getSize() - sizeof(PondScum));
 #endif
         freeHeader = p;
     }
@@ -2493,7 +2548,7 @@ readClassProperty:
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
             p->resetMark();
-            t += p->size;
+            t += p->getSize();
         }
         if (nextPond)
             nextPond->resetMarks();
@@ -2507,7 +2562,7 @@ readClassProperty:
             PondScum *p = (PondScum *)t;
             if (!p->isMarked())
                 returnToPond(p);
-            t += p->size;
+            t += p->getSize();
         }
         if (nextPond)
             nextPond->moveUnmarkedToFreeList();
@@ -2586,6 +2641,31 @@ readClassProperty:
 
  /************************************************************************************
  *
+ *  ParameterFrame
+ *
+ ************************************************************************************/
+
+    void ParameterFrame::instantiate(Environment *env)
+    {
+        env->instantiateFrame(pluralFrame, this);
+    }
+
+
+ /************************************************************************************
+ *
+ *  BlockFrame
+ *
+ ************************************************************************************/
+
+    void BlockFrame::instantiate(Environment *env)
+    {
+        if (pluralFrame)
+            env->instantiateFrame(pluralFrame, this);
+    }
+
+
+/************************************************************************************
+ *
  *  JS2Object
  *
  ************************************************************************************/
@@ -2606,8 +2686,10 @@ readClassProperty:
         for (std::vector<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
             PondScum *p = **i;
             if (p) {
-                ASSERT(p->owner && (p->size >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
+                ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
                 p->mark();
+                // now examine the object contained in the PondScum and mark
+                // all gc objects referenced from it
             }
         }
         pond.moveUnmarkedToFreeList();
@@ -2625,7 +2707,7 @@ readClassProperty:
     void JS2Object::unalloc(void *t)
     {
         PondScum *p = (PondScum *)t - 1;
-        ASSERT(p->owner && (p->size >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
+        ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
         p->owner->returnToPond(p);
     }
 

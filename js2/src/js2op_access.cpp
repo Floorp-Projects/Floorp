@@ -109,6 +109,7 @@
             Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             meta->env.addFrame(f);
+            f->instantiate(&meta->env);
         }
         break;
 

@@ -73,11 +73,18 @@ enum ObjectKind {
 class PondScum {
 public:    
     void resetMark()        { size &= 0x7FFFFFFF; }
-    void mark()             { size = -size; }
-    bool isMarked()         { return (size < 0); }
+    void mark()             { size |= 0x80000000; }
+    bool isMarked()         { return ((size & 0x80000000) != 0); }
+    uint32 getSize()        { return size & 0x3FFFFFFF; }
+    void setSize(uint32 sz) { ASSERT((sz & 0xC000000) == 0); size = (sz & 0x3FFFFFFF); }
 
-    Pond *owner;
-    int32 size;
+    Pond *owner;    // for a piece of scum in use, this points to it's own Pond
+                    // otherwise it's a link to the next item on the free list
+private:
+    uint32 size;    // The high bit is used as the gc mark flag
+                    // The next highest bit indicates that the object is a JS2Object
+                    // or just raw memory (with the implication of not containing
+                    // pointers to gc-able data)
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
@@ -236,7 +243,9 @@ class StaticMember : public Member {
 public:
     StaticMember(MemberKind kind) : Member(kind) { }
 
-    StaticMember *cloneContent; // Used during cloning operation    
+    StaticMember *cloneContent; // Used during cloning operation to prevent cloning of duplicates (i.e. once
+                                // a clone exists for this member it's stored here and used for any other
+                                // bindings that refer to this member.)
 
     virtual StaticMember *clone()       { ASSERT(false); return NULL; }
 };
@@ -381,12 +390,16 @@ class Frame : public JS2Object {
 public:
     enum Plurality { Singular, Plural };
 
-    Frame(ObjectKind kind) : JS2Object(kind), nextFrame(NULL) { }
+    Frame(ObjectKind kind) : JS2Object(kind), nextFrame(NULL), pluralFrame(NULL) { }
+    Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), nextFrame(NULL), pluralFrame(pluralFrame) { }
 
     StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
     StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
 
+    virtual void instantiate(Environment *env)  { ASSERT(false); }
+
     Frame *nextFrame;
+    Frame *pluralFrame;                         // for a singular frame, this the plural frame from which it will be instantiated
 };
 
 
@@ -418,6 +431,8 @@ public:
     uint32 slotCount;
 
     const StringAtom &name;
+
+    virtual void instantiate(Environment * /* env */)  { }      // nothing to do
 
 };
 
@@ -597,7 +612,7 @@ public:
 class ParameterFrame : public Frame {
 public:
     ParameterFrame(js2val thisObject, bool prototype) : Frame(ParameterKind), thisObject(thisObject), prototype(prototype) { }    
-    ParameterFrame() : Frame(ParameterKind) { }
+    ParameterFrame(ParameterFrame *pluralFrame) : Frame(ParameterKind, pluralFrame) { }
 
     Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;
@@ -605,13 +620,18 @@ public:
                                     // available because this function hasn't been called yet.
 
     bool prototype;                 // true if this function is not an instance method but defines this anyway
+
+    virtual void instantiate(Environment *env);
 };
 
 class BlockFrame : public Frame {
 public:
     BlockFrame() : Frame(BlockKind) { }
+    BlockFrame(BlockFrame *pluralFrame) : Frame(BlockKind, pluralFrame) { }
 
     Plurality plurality;
+
+    virtual void instantiate(Environment *env);
 };
 
 
@@ -713,6 +733,7 @@ public:
 
 typedef std::vector<StmtNode *> TargetList;
 typedef std::vector<StmtNode *>::iterator TargetListIterator;
+typedef std::vector<StmtNode *>::reverse_iterator TargetListReverseIterator;
 
 struct MemberDescriptor {
     StaticMember *staticMember;

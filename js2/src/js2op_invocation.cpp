@@ -97,9 +97,9 @@
                             runtimeThis = OBJECT_TO_JS2VAL(g);
                     }
                 }
-                Frame *runtimeFrame = new ParameterFrame();
+                Frame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 meta->env.addFrame(runtimeFrame);
-                meta->env.instantiateFrame(fWrap->compileFrame, runtimeFrame);
+                runtimeFrame->instantiate(&meta->env);
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                 
                 jsr(fWrap->bCon);

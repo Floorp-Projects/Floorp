@@ -608,6 +608,10 @@ namespace JavaScript {
                 StmtNode(pos, kind), initializer(initializer), expr2(expr2), expr3(expr3), stmt(stmt) {ASSERT(stmt);}
 
         void print(PrettyPrinter &f, bool noSemi) const;
+#ifdef EPIMETHEUS
+        MetaData::LabelID breakLabelID;
+        MetaData::LabelID continueLabelID;
+#endif
     };
 
     struct SwitchStmtNode: ExprStmtNode {
@@ -617,6 +621,9 @@ namespace JavaScript {
                 ExprStmtNode(pos, Switch, expr), statements(statements) {}
 
         void print(PrettyPrinter &f, bool noSemi) const;
+#ifdef EPIMETHEUS
+        MetaData::LabelID breakLabelID;
+#endif
     };
 
     struct GoStmtNode: StmtNode {
