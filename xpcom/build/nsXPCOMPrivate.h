@@ -76,38 +76,40 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
 
 
 // PUBLIC
-typedef nsresult (* InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
-typedef nsresult (* ShutdownFunc)(nsIServiceManager* servMgr);
-typedef nsresult (* GetServiceManagerFunc)(nsIServiceManager* *result);
-typedef nsresult (* GetComponentManagerFunc)(nsIComponentManager* *result);
-typedef nsresult (* GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
-typedef nsresult (* GetMemoryManagerFunc)(nsIMemory* *result);
-typedef nsresult (* NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
-typedef nsresult (* NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
+typedef nsresult   (* InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
+typedef nsresult   (* ShutdownFunc)(nsIServiceManager* servMgr);
+typedef nsresult   (* GetServiceManagerFunc)(nsIServiceManager* *result);
+typedef nsresult   (* GetComponentManagerFunc)(nsIComponentManager* *result);
+typedef nsresult   (* GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
+typedef nsresult   (* GetMemoryManagerFunc)(nsIMemory* *result);
+typedef nsresult   (* NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
+typedef nsresult   (* NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 
-typedef nsresult (* GetDebugFunc)(nsIDebug* *result);
-typedef nsresult (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
+typedef nsresult   (* GetDebugFunc)(nsIDebug* *result);
+typedef nsresult   (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 
-typedef nsresult (* StringContainerInitFunc)(nsStringContainer&);
-typedef void     (* StringContainerFinishFunc)(nsStringContainer&);
-typedef PRUint32 (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
-typedef nsresult (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
-typedef nsresult (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
-typedef nsresult (* StringCopyFunc)(nsAString &, const nsAString &);
+typedef nsresult   (* StringContainerInitFunc)(nsStringContainer&);
+typedef void       (* StringContainerFinishFunc)(nsStringContainer&);
+typedef PRUint32   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
+typedef PRUnichar* (* StringCloneDataFunc)(const nsAString&);
+typedef nsresult   (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
+typedef nsresult   (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
+typedef nsresult   (* StringCopyFunc)(nsAString &, const nsAString &);
 
-typedef nsresult (* CStringContainerInitFunc)(nsCStringContainer&);
-typedef void     (* CStringContainerFinishFunc)(nsCStringContainer&);
-typedef PRUint32 (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
-typedef nsresult (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
-typedef nsresult (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
-typedef nsresult (* CStringCopyFunc)(nsACString &, const nsACString &);
+typedef nsresult   (* CStringContainerInitFunc)(nsCStringContainer&);
+typedef void       (* CStringContainerFinishFunc)(nsCStringContainer&);
+typedef PRUint32   (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
+typedef char*      (* CStringCloneDataFunc)(const nsACString&);
+typedef nsresult   (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
+typedef nsresult   (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
+typedef nsresult   (* CStringCopyFunc)(nsACString &, const nsACString &);
 
-typedef nsresult (* CStringToUTF16)(const nsACString &, PRUint32, const nsAString &);
-typedef nsresult (* UTF16ToCString)(const nsAString &, PRUint32, const nsACString &);
+typedef nsresult   (* CStringToUTF16)(const nsACString &, PRUint32, const nsAString &);
+typedef nsresult   (* UTF16ToCString)(const nsAString &, PRUint32, const nsACString &);
 
 // PRIVATE
-typedef nsresult (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
-typedef nsresult (* UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
+typedef nsresult   (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
+typedef nsresult   (* UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
 
 typedef struct XPCOMFunctions{
     PRUint32 version;
@@ -144,7 +146,9 @@ typedef struct XPCOMFunctions{
     CStringCopyFunc cstringCopy;
     CStringToUTF16 cstringToUTF16;
     UTF16ToCString utf16ToCString;
-
+    StringCloneDataFunc stringCloneData;
+    CStringCloneDataFunc cstringCloneData;
+   
 } XPCOMFunctions;
 
 typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);

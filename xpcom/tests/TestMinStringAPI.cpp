@@ -51,6 +51,7 @@ static PRBool test_basic_1()
 
     const char *ptr;
     PRUint32 len;
+    char *clone;
 
     NS_CStringGetData(s, &ptr);
     if (ptr == nsnull || *ptr != '\0')
@@ -71,6 +72,14 @@ static PRBool test_basic_1()
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
+
+    clone = NS_CStringCloneData(s);
+    if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+    nsMemory::Free(clone);
 
     nsCStringContainer temp;
     NS_CStringContainerInit(temp);
@@ -101,6 +110,7 @@ static PRBool test_basic_2()
 
     const PRUnichar *ptr;
     PRUint32 len;
+    PRUnichar *clone;
 
     NS_StringGetData(s, &ptr);
     if (ptr == nsnull || *ptr != '\0')
@@ -121,6 +131,14 @@ static PRBool test_basic_2()
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
+
+    clone = NS_StringCloneData(s);
+    if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+    nsMemory::Free(clone);
 
     nsStringContainer temp;
     NS_StringContainerInit(temp);

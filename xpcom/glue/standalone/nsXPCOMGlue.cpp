@@ -288,6 +288,14 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
     return xpcomFunctions.stringGetData(aStr, aBuf, aTerm);
 }
 
+extern "C" NS_COM PRUnichar *
+NS_StringCloneData(const nsAString &aStr)
+{
+    if (!xpcomFunctions.stringCloneData)
+        return nsnull;
+    return xpcomFunctions.stringCloneData(aStr);
+}
+
 extern "C" NS_COM nsresult
 NS_StringSetData(nsAString &aStr, const PRUnichar *aBuf, PRUint32 aCount)
 {
@@ -338,6 +346,14 @@ NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
         return 0;
     }
     return xpcomFunctions.cstringGetData(aStr, aBuf, aTerm);
+}
+
+extern "C" NS_COM char *
+NS_CStringCloneData(const nsACString &aStr)
+{
+    if (!xpcomFunctions.cstringCloneData)
+        return nsnull;
+    return xpcomFunctions.cstringCloneData(aStr);
 }
 
 extern "C" NS_COM nsresult

@@ -860,7 +860,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
     }
 
     // these functions were added post 1.6 (need to check size of |functions|)
-    if (functions->size > offsetof(XPCOMFunctions, utf16ToCString)) {
+    if (functions->size > offsetof(XPCOMFunctions, cstringCloneData)) {
         GET_FUNC(stringContainerInit,    StringContainerInitFunc,        "NS_StringContainerInit");
         GET_FUNC(stringContainerFinish,  StringContainerFinishFunc,      "NS_StringContainerFinish");
         GET_FUNC(stringGetData,          StringGetDataFunc,              "NS_StringGetData");
@@ -875,6 +875,8 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
         GET_FUNC(cstringCopy,            CStringCopyFunc,                "NS_CStringCopy");
         GET_FUNC(cstringToUTF16,         CStringToUTF16,                 "NS_CStringToUTF16");
         GET_FUNC(utf16ToCString,         UTF16ToCString,                 "NS_UTF16ToCString");
+        GET_FUNC(stringCloneData,        StringCloneDataFunc,            "NS_StringCloneData");
+        GET_FUNC(cstringCloneData,       CStringCloneDataFunc,           "NS_CStringCloneData");
     }
 
     rv = NS_OK;
