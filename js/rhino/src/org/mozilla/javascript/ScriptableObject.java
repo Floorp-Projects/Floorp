@@ -1235,9 +1235,12 @@ public abstract class ScriptableObject implements Scriptable {
         if (slots == null)
             return;
         for (int i=0; i < slots.length; i++) {
-            if (slots[i] == null || slots[i] == REMOVED)
+            Slot slot = slots[i];
+            if (slot == null || slot == REMOVED)
                 continue;
-            slots[i].attributes |= attribute;
+            if ((slot.flags & slot.HAS_SETTER) != 0 && attribute == READONLY)
+                continue;
+            slot.attributes |= attribute;
         }
     }
     

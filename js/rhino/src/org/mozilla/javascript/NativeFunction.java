@@ -862,7 +862,10 @@ public class NativeFunction extends ScriptableObject implements Function {
             linep[0] = 1;
         }
         Object securityDomain = cx.getSecurityDomainForStackDepth(4);
-        Scriptable global = ScriptableObject.getTopLevelScope(ctorObj);
+        Scriptable scope = cx.ctorScope;
+        if (scope == null)
+            scope = ctorObj;
+        Scriptable global = ScriptableObject.getTopLevelScope(scope);
         
         // Compile the function with opt level of -1 to force interpreter
         // mode.

@@ -1604,8 +1604,8 @@ public class Interpreter extends LabelTable {
                         for (i = count - 1; i >= 0; i--)
                             outArgs[i] = stack[stackTop--];
                         lhs = stack[stackTop];
-                        stack[stackTop] = ScriptRuntime.newObject(cx, 
-                                                            lhs, outArgs);
+                        stack[stackTop] = ScriptRuntime.newObject(cx, lhs, 
+                                                                  outArgs, scope);
                         pc += 2;                                                            
                         break;
                     case TokenStream.TYPEOF :

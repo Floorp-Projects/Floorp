@@ -27,9 +27,7 @@ import java.util.Hashtable;
 import java.util.Vector;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.text.Format;
 import java.text.MessageFormat;
-
 import java.lang.reflect.*;
 
 /**
@@ -107,42 +105,77 @@ public final class Context {
      *      Context cx = Context.enter();
      *      ...
      *      cx.evaluateString(...);
-     *      cx.exit();
+     *      Context.exit();
      * </pre>
      * @return a Context associated with the current thread
      * @see org.mozilla.javascript.Context#getCurrentContext
      * @see org.mozilla.javascript.Context#exit
      */
     public static Context enter() {
+        return enter(null);
+    }
+    
+    /**
+     * Get a Context associated with the current thread, using
+     * the given Context if need be.
+     * <p>
+     * The same as <code>enter()</code> except that <code>cx</code>
+     * is associated with the current thread and returned if 
+     * the current thread has no associated context and <code>cx</code>
+     * is not associated with any other thread.
+     * @param cx a Context to associate with the thread if possible
+     * @return a Context associated with the current thread
+     */
+    public static Context enter(Context cx) {
+        // There's some duplication of code in this method to avoid
+        // unnecessary synchronizations.
         Thread t = Thread.currentThread();
-        Context cx = (Context) threadContexts.get(t);
-        if (cx == null) {
-            cx = new Context();
-            cx.currentThread = t;
-            threadContexts.put(t, cx);
+        Context current = (Context) threadContexts.get(t);
+        if (current != null) {
+            synchronized (current) {
+                current.enterCount++;
+            }
+            return current;
         }
-        synchronized (cx) {
-            cx.enterCount++;
+        if (cx != null) {
+            synchronized (cx) {
+                if (cx.currentThread == null) {
+                    cx.currentThread = t;
+                    threadContexts.put(t, cx);
+                    cx.enterCount++;
+                    return cx;
+                }
+            }
         }
-        return cx;
-    }     
+        current = new Context();
+        current.currentThread = t;
+        threadContexts.put(t, current);
+        current.enterCount = 1;
+        return current;
+     }
         
     /**
      * Exit a block of code requiring a Context.
      *
-     * Calling <code>exit()</code> will disassociate the Context with the 
-     * current thread if the matching call to <code>enter()</code>
-     * had created a new Context. 
+     * Calling <code>exit()</code> will remove the association between
+     * the current thread and a Context if the prior call to 
+     * <code>enter()</code> on this thread newly associated a Context 
+     * with this thread.
      * Once the current thread no longer has an associated Context,
      * it cannot be used to execute JavaScript until it is again associated
      * with a Context.
      *
      * @see org.mozilla.javascript.Context#enter
      */
-    public synchronized void exit() {
-        if (--enterCount == 0) {
-            threadContexts.remove(currentThread);
-            currentThread = null;
+    public static void exit() {
+        Context cx = getCurrentContext();
+        if (cx != null) {
+            synchronized (cx) {
+                if (--cx.enterCount == 0) {
+                    threadContexts.remove(cx.currentThread);
+                    cx.currentThread = null;
+                }
+            }
         }
     }
 
@@ -1500,7 +1533,7 @@ public final class Context {
          * single 's.
          */
         // TODO: MessageFormat is not available on pJava
-        Format formatter = new MessageFormat(formatString);
+        MessageFormat formatter = new MessageFormat(formatString);
         return formatter.format(arguments);
     }
 
@@ -1698,9 +1731,15 @@ public final class Context {
         Object result = null;
         if (securitySupport != null) {
             Class[] classes = securitySupport.getClassContext();
-            int depth1 = depth + 1;
-            if (0 <= depth1 && depth1 < classes.length) {
+            if (depth != -1) {
+                int depth1 = depth + 1;
                 result = getSecurityDomainFromClass(classes[depth1]);
+            } else {
+                for (int i=1; i < classes.length; i++) {
+                    result = getSecurityDomainFromClass(classes[i]);
+                    if (result != null)
+                        break;
+                }
             }
         }
         if (result != null)
@@ -1737,6 +1776,7 @@ public final class Context {
     Hashtable iterating;
             
     Object interpreterSecurityDomain;
+    Scriptable ctorScope;
 
     int version;
     int errorCount;

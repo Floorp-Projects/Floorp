@@ -69,7 +69,10 @@ public class NativeScript extends NativeFunction implements Script {
         String source = args.length == 0
                         ? ""
                         : ScriptRuntime.toString(args[0]);
-        return compile(ctorObj, source);
+        Scriptable scope = cx.ctorScope;
+        if (scope == null)
+            scope = ctorObj;
+        return compile(scope, source);
     }
 
     public static Script compile(Scriptable scope, String source) {

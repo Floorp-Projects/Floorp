@@ -57,8 +57,7 @@ public interface Function extends Scriptable {
      * expected to create a new object and return it.
      *
      * @param cx the current Context for this thread
-     * @param scope the scope to execute the function relative to. This
-     *              set to the value returned by getParentScope() except
+     * @param scope an enclosing scope of the caller except
      *              when the function is called from a closure.
      * @param args the array of arguments
      * @return the allocated object

@@ -535,7 +535,7 @@ public class ScriptRuntime {
         return result;
     }
 
-    public static Scriptable newObject(Context cx, Scriptable scope,
+    public static Scriptable newObject(Context cx, Scriptable scope, 
                                        String constructorName, Object[] args)
     {
         Exception re = null;
@@ -1257,7 +1257,7 @@ public class ScriptRuntime {
                 
         if (isCall)
             return call(cx, fun, thisArg, args);
-        return newObject(cx, fun, args);
+        return newObject(cx, fun, args, scope);
     }
     
     public static Object callSpecial(Context cx, Object fun, 
@@ -1276,14 +1276,16 @@ public class ScriptRuntime {
      *
      * See ECMA 11.2.2
      */
-    public static Scriptable newObject(Context cx, Object fun, Object[] args)
+    public static Scriptable newObject(Context cx, Object fun,
+                                       Object[] args, Scriptable scope)
         throws JavaScriptException
     {
         Function f;
         try {
             f = (Function) fun;
-            if (f != null)
-                return f.construct(cx, f.getParentScope(), args);
+            if (f != null) {
+                return f.construct(cx, scope, args);
+           }
             // else fall through to error
         } catch (ClassCastException e) {
             // fall through to error

@@ -113,8 +113,17 @@ public class JavaAdapter extends ScriptableObject {
             throw new RuntimeException("unexpected IOException");
         }
         byte[] bytes = out.toByteArray();
-        classLoader.defineClass(genName, bytes);
-        Class c = classLoader.loadClass(genName, true);
+        SecuritySupport ss = cx.getSecuritySupport();
+        Class c;
+        if (ss != null)  {
+            Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
+            c = ss.defineClass(genName, bytes, securityDomain);
+        } else {
+            if (classLoader == null)
+                classLoader = new MyClassLoader();
+            classLoader.defineClass(genName, bytes);
+            c = classLoader.loadClass(genName, true);
+        }
         Class[] ctorParms = { FlattenedObject.class };
         Object[] ctorArgs = { obj };
         Object v = c.getConstructor(ctorParms).newInstance(ctorArgs);
@@ -488,5 +497,5 @@ public class JavaAdapter extends ScriptableObject {
     }
     
     private static int serial;
-    private static MyClassLoader classLoader = new MyClassLoader();
+    private static MyClassLoader classLoader;
 }

@@ -67,7 +67,7 @@ public class Main extends ScriptableObject {
 
         // Initialize the standard objects (Object, Function, etc.)
         // This must be done before scripts can be executed.
-        cx.initStandardObjects(sharedGlobal, true);
+        cx.initStandardObjects(sharedGlobal, false);
         
 		
         // Define some global functions particular to the shell. Note

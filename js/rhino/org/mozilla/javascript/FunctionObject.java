@@ -429,9 +429,18 @@ public class FunctionObject extends NativeFunction {
         throws JavaScriptException
     {
         if (method == null || parmsLength == VARARGS_CTOR) {
-            Scriptable result = method != null
-                ? (Scriptable) callVarargs(cx, null, args, true)
-                : (Scriptable) call(cx, scope, null, args);
+            Scriptable result;
+            if (method != null) {
+                // Ugly: allow variable-arg constructors that need access to the 
+                // scope to get it from the Context. Cleanest solution would be
+                // to modify the varargs form, but that would require users with 
+                // the old form to change their code.
+                cx.ctorScope = scope;
+                result = (Scriptable) callVarargs(cx, null, args, true);
+                cx.ctorScope = null;
+            } else {
+                result = (Scriptable) call(cx, scope, null, args);
+            }
 
             if (result.getPrototype() == null)
                 result.setPrototype(getClassPrototype());
