@@ -24,7 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+LIBRARY_NAME = widgetgtk
+else
 LIBRARY_NAME = widgetunix
+endif
 
 MODULE=raptor 
 
