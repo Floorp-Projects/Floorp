@@ -5224,7 +5224,7 @@ case "$target" in
 *-*-os2*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-aix4.3*)
+*-aix4.3*|*-aix5*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
 *-openvms*)
@@ -6458,7 +6458,7 @@ done
 
 
 case $target in
-*-aix4.3*)
+*-aix4.3*|*-aix5*)
 	;;
 *)
 	for ac_hdr in sys/cdefs.h
@@ -7507,7 +7507,7 @@ EOF
  
 			;;
 
-	    *-aix4.3*)
+	    *-aix4.3*|*-aix5*)
 			cat >> confdefs.h <<\EOF
 #define _REENTRANT 1
 EOF
