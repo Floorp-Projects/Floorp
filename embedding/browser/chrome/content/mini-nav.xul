@@ -42,12 +42,26 @@ Contributor(s): ______________________________________. -->
 
   <!-- Context menu -->
   <popupset>
-    <popup id="context"
-           oncreate="InitContextMenu(this)">
-      <menuitem id="context-back" value="Back" accesskey="" oncommand="BrowserBack()"/>
-      <menuitem id="context-forward" value="Forward" accesskey="" oncommand="BrowserForward()"/>
-      <menuitem id="context-stop" value="Stop" accesskey="" oncommand="BrowserStop()"/>
-      <menuitem id="context-reload" value="Reload" accesskey="" oncommand="BrowserReload()"/>
+    <popup id="context" oncreate="InitContextMenu(this)">
+      <menuitem id="context-back" value="&backCmd.label;"
+          accesskey="" oncommand="BrowserBack()"/>
+      <menuitem id="context-forward" value="&forwardCmd.label;"
+          accesskey="" oncommand="BrowserForward()"/>
+      <menuitem id="context-stop" value="&stopCmd.label;"
+          accesskey="" oncommand="BrowserStop()"/>
+      <menuitem id="context-reload" value="&reloadCmd.label;"
+          accesskey="" oncommand="BrowserReload()"/>
+      
+      <!-- The following DEBUG MENU ITEMS can be removed -->
+      <menuseparator/>
+      <menu value="Debug">
+        <menupopup>
+          <menuitem id="command-handler" value="CommandHandler::Exec" oncommand="CHExecTest()"/>
+          <menuitem id="command-handler" value="CommandHandler::Query" oncommand="CHQueryTest()"/>
+        </menupopup>
+      </menu>
+      <!-- End DEBUG MENU ITEMS -->
+
     </popup>
   </popupset>
 

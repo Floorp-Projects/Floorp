@@ -22,7 +22,34 @@
 
 var appCore = null;
 var locationFld = null;
+var commandHandler = null;
 
+
+function nsCommandHandler()
+{
+}
+
+nsCommandHandler.prototype = 
+{
+  QueryInterface : function(iid)
+    {
+      if (iid.equals(Components.interfaces.nsICommandHandler))
+      {
+        return this;
+      }
+      throw Components.results.NS_NOINTERFACE;
+    },
+
+    exec : function(command, params)
+      {
+      }
+    query : function(command, params, result)
+      {
+        result = "";
+      }
+}
+
+//
 
 function nsXULBrowserWindow()
 {
@@ -30,39 +57,39 @@ function nsXULBrowserWindow()
 
 nsXULBrowserWindow.prototype = 
 {
-	QueryInterface : function(iid)
-		{
-		if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
-			return this;
-		throw Components.results.NS_NOINTERFACE;
-		},
-	setJSStatus : function(status)
-		{
-		},
-	setJSDefaultStatus : function(status)
-		{
-		},
-	setDefaultStatus : function(status)
-		{
-		},
-	setOverLink : function(link)
-		{
-		},
+  QueryInterface : function(iid)
+    {
+    if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+    },
+  setJSStatus : function(status)
+    {
+    },
+  setJSDefaultStatus : function(status)
+    {
+    },
+  setDefaultStatus : function(status)
+    {
+    },
+  setOverLink : function(link)
+    {
+    },
   onProgress : function (channel, current, max)
-  {
-  },
-	onStatusChange : function(channel, status)
-	{
-	},
-	onLocationChange : function(location)
-  {
-		if(!locationFld)
-			locationFld = document.getElementById("urlbar");
+    {
+    },
+  onStatusChange : function(channel, status)
+    {
+    },
+  onLocationChange : function(location)
+    {
+      if(!locationFld)
+        locationFld = document.getElementById("urlbar");
 
-		// We should probably not do this if the value has changed since the user 
-		// searched
-		locationFld.setAttribute("value", location);
-  }
+      // We should probably not do this if the value has changed since the user 
+      // searched
+      locationFld.setAttribute("value", location);
+    }
 }
 
 
@@ -73,6 +100,7 @@ function Startup()
   // Create the browser instance component.
   createBrowserInstance();
 
+
   window._content.appCore= appCore;
   if (appCore == null) {
     // Give up.
@@ -80,6 +108,16 @@ function Startup()
   }
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
+
+  // create the embedding command handler
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var commandHandlerInit = Components
+      .classes["component://netscape/embedding/browser/nsCommandHandler"]
+      .createInstance(Components.interfaces.nsICommandHandlerInit);
+
+  // Attach it to the window
+  commandHandlerInit.window = window;
+  commandHandler = commandHandlerInit.QueryInterface(Components.interfaces.nsICommandHandler);
 
   gURLBar = document.getElementById("urlbar");
 }
@@ -94,14 +132,28 @@ function Shutdown()
 function createBrowserInstance()
 {
   appCore = Components
-              .classes[ "component://netscape/appshell/component/browser/instance" ]
-                .createInstance( Components.interfaces.nsIBrowserInstance );
+      .classes[ "component://netscape/appshell/component/browser/instance" ]
+      .createInstance( Components.interfaces.nsIBrowserInstance );
   if ( !appCore ) {
       alert( "Error creating browser instance\n" );
   }
 }
 
+function CHExecTest()
+{
+  if (commandHandler != null)
+  {
+    commandHandler.exec("hello", "xxx");
+  }
+}
 
+function CHQueryTest()
+{
+  if (commandHandler != null)
+  {
+    var result = commandHandler.query("hello", "xxx");
+  }
+}
 
 function InitContextMenu(xulMenu)
 {
