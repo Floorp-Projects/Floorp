@@ -380,11 +380,22 @@ class Signature {
 // A base class for Instance and Local members for convenience.
 class Member {
 public:
-    enum MemberKind { Forbidden, DynamicVariableKind, Variable, ConstructorMethod, Setter, Getter, InstanceVariableKind, InstanceMethodKind, InstanceGetterKind, InstanceSetterKind };
+    enum MemberKind { 
+            ForbiddenMember, 
+            DynamicVariableMember, 
+            FrameVariableMember, 
+            VariableMember, 
+            ConstructorMethodMember, 
+            SetterMember, 
+            GetterMember, 
+            InstanceVariableMember, 
+            InstanceMethodMember, 
+            InstanceGetterMember, 
+            InstanceSetterMember };
     
-    Member(MemberKind kind) : kind(kind)    { }
+    Member(MemberKind kind) : memberKind(kind)    { }
     virtual ~Member()                       { }
-    MemberKind kind;
+    MemberKind memberKind;
 
 
     virtual void mark()                     { }
@@ -412,8 +423,9 @@ public:
 
 class Variable : public LocalMember {
 public:
-    Variable() : LocalMember(Member::Variable), type(NULL), value(JS2VAL_VOID), immutable(false), vb(NULL) { }
-    Variable(JS2Class *type, js2val value, bool immutable) : LocalMember(LocalMember::Variable), type(type), value(value), immutable(immutable), vb(NULL) { }
+    Variable() : LocalMember(Member::VariableMember), type(NULL), value(JS2VAL_VOID), immutable(false), vb(NULL) { }
+    Variable(JS2Class *type, js2val value, bool immutable) 
+        : LocalMember(LocalMember::VariableMember), type(type), value(value), immutable(immutable), vb(NULL) { }
 
     virtual LocalMember *clone()   { return new Variable(type, value, immutable); }
     
@@ -430,8 +442,8 @@ public:
 
 class DynamicVariable : public LocalMember {
 public:
-    DynamicVariable() : LocalMember(Member::DynamicVariableKind), value(JS2VAL_UNDEFINED), sealed(false) { }
-    DynamicVariable(js2val value, bool sealed) : LocalMember(Member::DynamicVariableKind), value(value), sealed(sealed) { }
+    DynamicVariable() : LocalMember(Member::DynamicVariableMember), value(JS2VAL_UNDEFINED), sealed(false) { }
+    DynamicVariable(js2val value, bool sealed) : LocalMember(Member::DynamicVariableMember), value(value), sealed(sealed) { }
 
     js2val value;                   // This variable's current value
                                     // XXX may be an uninstantiated function at compile time
@@ -441,10 +453,20 @@ public:
     virtual void mark()                { GCMARKVALUE(value); }
 };
 
+class FrameVariable : public LocalMember {
+public:
+    FrameVariable(uint16 frameSlot) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), sealed(false) { } 
+
+    uint16 frameSlot;
+
+    bool sealed;                    // true if this variable cannot be deleted using the delete operator
+    virtual LocalMember *clone()       { return new FrameVariable(frameSlot); }
+};
+
 class ConstructorMethod : public LocalMember {
 public:
-    ConstructorMethod() : LocalMember(Member::ConstructorMethod), value(JS2VAL_VOID) { }
-    ConstructorMethod(js2val value) : LocalMember(Member::ConstructorMethod), value(value) { }
+    ConstructorMethod() : LocalMember(Member::ConstructorMethodMember), value(JS2VAL_VOID) { }
+    ConstructorMethod(js2val value) : LocalMember(Member::ConstructorMethodMember), value(value) { }
 
     js2val value;           // This constructor itself (a callable object)
 
@@ -453,7 +475,7 @@ public:
 
 class Getter : public LocalMember {
 public:
-    Getter() : LocalMember(Member::Getter), type(NULL), code(NULL) { }
+    Getter() : LocalMember(Member::GetterMember), type(NULL), code(NULL) { }
 
     JS2Class *type;         // The type of the value read from this getter
     Invokable *code;        // calling this object does the read
@@ -463,7 +485,7 @@ public:
 
 class Setter : public LocalMember {
 public:
-    Setter() : LocalMember(Member::Setter), type(NULL), code(NULL) { }
+    Setter() : LocalMember(Member::SetterMember), type(NULL), code(NULL) { }
 
     JS2Class *type;         // The type of the value written into the setter
     Invokable *code;        // calling this object does the write
@@ -494,7 +516,8 @@ public:
 
 class InstanceMember : public Member {
 public:
-    InstanceMember(MemberKind kind, Multiname *multiname, bool final, bool enumerable) : Member(kind), multiname(multiname), final(final), enumerable(enumerable) { }
+    InstanceMember(MemberKind kind, Multiname *multiname, bool final, bool enumerable) 
+        : Member(kind), multiname(multiname), final(final), enumerable(enumerable) { }
     virtual ~InstanceMember()   { }
 
 
@@ -508,7 +531,8 @@ public:
 
 class InstanceVariable : public InstanceMember {
 public:
-    InstanceVariable(Multiname *multiname, JS2Class *type, bool immutable, bool final, bool enumerable, uint32 slotIndex) : InstanceMember(InstanceVariableKind, multiname, final, enumerable), type(type), immutable(immutable), slotIndex(slotIndex) { }
+    InstanceVariable(Multiname *multiname, JS2Class *type, bool immutable, bool final, bool enumerable, uint32 slotIndex) 
+        : InstanceMember(InstanceVariableMember, multiname, final, enumerable), type(type), immutable(immutable), slotIndex(slotIndex) { }
     Invokable *evalInitialValue;    // A function that computes this variable's initial value
     JS2Class *type;                 // Type of values that may be stored in this variable
     bool immutable;                 // true if this variable's value may not be changed once set
@@ -519,7 +543,8 @@ public:
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod(Multiname *multiname, SimpleInstance *fInst, bool final, bool enumerable) : InstanceMember(InstanceMethodKind, multiname, final, enumerable), fInst(fInst) { }
+    InstanceMethod(Multiname *multiname, SimpleInstance *fInst, bool final, bool enumerable) 
+        : InstanceMember(InstanceMethodMember, multiname, final, enumerable), fInst(fInst) { }
     Signature type;                 // This method's signature
 //    Invokable *code;              // This method itself (a callable object); null if this method is abstract
     SimpleInstance *fInst;
@@ -530,7 +555,8 @@ public:
 
 class InstanceGetter : public InstanceMember {
 public:
-    InstanceGetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable) : InstanceMember(InstanceGetterKind, multiname, final, enumerable), code(code), type(type) { }
+    InstanceGetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable)
+        : InstanceMember(InstanceGetterMember, multiname, final, enumerable), code(code), type(type) { }
     Invokable *code;                // A callable object which does the read or write; null if this method is abstract
     JS2Class *type;                 // Type of values that may be stored in this variable
 
@@ -539,7 +565,8 @@ public:
 
 class InstanceSetter : public InstanceMember {
 public:
-    InstanceSetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable) : InstanceMember(InstanceSetterKind, multiname, final, enumerable), code(code), type(type) { }
+    InstanceSetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable) 
+        : InstanceMember(InstanceSetterMember, multiname, final, enumerable), code(code), type(type) { }
     Invokable *code;                // A callable object which does the read or write; null if this method is abstract
     JS2Class *type;                 // Type of values that may be stored in this variable
 
@@ -619,17 +646,17 @@ public:
 class NonWithFrame : public Frame {
 public:
 
-    NonWithFrame(ObjectKind kind) : Frame(kind), temps(NULL), pluralFrame(NULL) { }
-    NonWithFrame(ObjectKind kind, NonWithFrame *pluralFrame) : Frame(kind), temps(NULL), pluralFrame(pluralFrame) { }
+    NonWithFrame(ObjectKind kind) : Frame(kind), slots(NULL), pluralFrame(NULL) { }
+    NonWithFrame(ObjectKind kind, NonWithFrame *pluralFrame) : Frame(kind), slots(NULL), pluralFrame(pluralFrame) { }
 
-    LocalBindingMap localBindings;        // Map of qualified names to members defined in this frame
+    LocalBindingMap localBindings;              // Map of qualified names to members defined in this frame
 
-    std::vector<js2val> *temps;               // temporaries allocted in this frame
-    uint16 allocateTemp();
+    std::vector<js2val> *slots;                 // temporaries allocted in this frame
+    uint16 allocateSlot();
 
     virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
 
-    NonWithFrame *pluralFrame;                // for a singular frame, this is the plural frame from which it will be instantiated
+    NonWithFrame *pluralFrame;                  // for a singular frame, this is the plural frame from which it will be instantiated
 
     virtual void markChildren();
     virtual ~NonWithFrame();
@@ -769,7 +796,7 @@ public:
 
     BytecodeContainer   *bCon;
     NativeCode          *code;
-    bool                unchecked;      // true if the function is untyped, non-method, normal
+    bool                unchecked;          // true if the function is untyped, non-method, normal
     ParameterFrame      *compileFrame;
     Environment         *env;
 };
@@ -780,13 +807,13 @@ class SimpleInstance : public JS2Object {
 public:
     SimpleInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
-    LocalBindingMap     localBindings;
+    LocalBindingMap     localBindings;      // Map of qualified names to local properties (including dynamic properties, if any)
     js2val              super;              // Optional link to the next object in this instance's prototype chain
-    bool sealed;
+    bool                sealed;             // If true, no more local properties may be added to this instance
     JS2Class            *type;              // This instance's type
     Slot                *slots;             // A set of slots that hold this instance's fixed property values
 
-    FunctionWrapper *fWrap;
+    FunctionWrapper     *fWrap;
 
     virtual void markChildren();
     virtual ~SimpleInstance();

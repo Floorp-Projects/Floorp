@@ -742,8 +742,12 @@ namespace MetaData {
 
         case eSlotWrite:
             return -1;      // write the value, don't preserve it
-        case eSlotRead:     // push the value
-            return 1;
+        case eSlotRead:
+            return 1;       // push the value
+        case eSlotDelete:   
+            return 1;       // push boolean result
+        case eSlotRef:      
+            return 2;       // push base & value
 
         case eLexicalInit:
             return -1;      // pop the value

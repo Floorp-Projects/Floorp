@@ -579,18 +579,19 @@ namespace MetaData {
             else
                 return false;
         }
-        switch (m->kind) {
-        case Member::Forbidden:
-        case Member::DynamicVariableKind:
-        case Member::Variable:
-        case Member::ConstructorMethod:
-        case Member::Setter:
-        case Member::Getter:
+        switch (m->memberKind) {
+        case Member::ForbiddenMember:
+        case Member::DynamicVariableMember:
+        case Member::FrameVariableMember:
+        case Member::VariableMember:
+        case Member::ConstructorMethodMember:
+        case Member::SetterMember:
+        case Member::GetterMember:
             return meta->readLocalMember(checked_cast<LocalMember *>(m), phase, rval);
-        case Member::InstanceVariableKind:
-        case Member::InstanceMethodKind:
-        case Member::InstanceGetterKind:
-        case Member::InstanceSetterKind:
+        case Member::InstanceVariableMember:
+        case Member::InstanceMethodMember:
+        case Member::InstanceGetterMember:
+        case Member::InstanceSetterMember:
             if ( (JS2VAL_IS_OBJECT(*base) && (JS2VAL_TO_OBJECT(*base)->kind != ClassKind))
                     || lookupKind->isPropertyLookup())
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
@@ -712,18 +713,19 @@ namespace MetaData {
             }
             return false;
         }
-        switch (m->kind) {
-        case Member::Forbidden:
-        case Member::DynamicVariableKind:
-        case Member::Variable:
-        case Member::ConstructorMethod:
-        case Member::Setter:
-        case Member::Getter:
+        switch (m->memberKind) {
+        case Member::ForbiddenMember:
+        case Member::DynamicVariableMember:
+        case Member::FrameVariableMember:
+        case Member::VariableMember:
+        case Member::ConstructorMethodMember:
+        case Member::SetterMember:
+        case Member::GetterMember:
             return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, false);
-        case Member::InstanceVariableKind:
-        case Member::InstanceMethodKind:
-        case Member::InstanceGetterKind:
-        case Member::InstanceSetterKind:
+        case Member::InstanceVariableMember:
+        case Member::InstanceMethodMember:
+        case Member::InstanceGetterMember:
+        case Member::InstanceSetterMember:
             if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind))
                     || lookupKind->isPropertyLookup())
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
@@ -756,16 +758,25 @@ namespace MetaData {
         Member *m = meta->findCommonMember(&base, multiname, WriteAccess, false);
         if (m == NULL)
             return false;
-        switch (m->kind) {
-        case Member::Forbidden:
+        switch (m->memberKind) {
+        case Member::ForbiddenMember:
             meta->reportError(Exception::propertyAccessError, "It is forbidden", meta->engine->errorPos());
             return false;
-        case Member::DynamicVariableKind:
+        case Member::FrameVariableMember:
+            {
+                if (checked_cast<FrameVariable *>(m)->sealed) {
+                    *result = false;
+                    return true;
+                }
+                goto VariableMemberCommon;
+            }
+        case Member::DynamicVariableMember:
             {
                 if (checked_cast<DynamicVariable *>(m)->sealed) {
                     *result = false;
                     return true;
                 }
+VariableMemberCommon:
                 // XXX if findCommonMember returned the Binding instead, we wouldn't have to rediscover it here...
                 JS2Object *container = JS2VAL_TO_OBJECT(meta->toObject(base));
                 LocalBindingMap *lMap;
@@ -793,16 +804,16 @@ namespace MetaData {
                 *result = true;
                 return true;
             }
-        case Member::Variable:
-        case Member::ConstructorMethod:
-        case Member::Setter:
-        case Member::Getter:
+        case Member::VariableMember:
+        case Member::ConstructorMethodMember:
+        case Member::SetterMember:
+        case Member::GetterMember:
             *result = false;
             return true;
-        case Member::InstanceVariableKind:
-        case Member::InstanceMethodKind:
-        case Member::InstanceGetterKind:
-        case Member::InstanceSetterKind:
+        case Member::InstanceVariableMember:
+        case Member::InstanceMethodMember:
+        case Member::InstanceGetterMember:
+        case Member::InstanceSetterMember:
             if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind)) || lookupKind->isPropertyLookup()) {
                 *result = false;
                 return true;

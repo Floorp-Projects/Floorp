@@ -878,7 +878,7 @@ namespace MetaData {
 */
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
-                uint16 swVarIndex = (checked_cast<NonWithFrame *>(env->getTopFrame()))->allocateTemp();
+                uint16 swVarIndex = (checked_cast<NonWithFrame *>(env->getTopFrame()))->allocateSlot();
                 BytecodeContainer::LabelID defaultLabel = NotALabel;
 
                 Reference *r = SetupExprNode(env, phase, sw->expr, &exprType);
@@ -1125,7 +1125,7 @@ namespace MetaData {
                 VariableBinding *vb = vs->bindings;
                 while (vb)  {
                     if (vb->member) {   // static or instance variable
-                        if (vb->member->kind == Member::Variable) {
+                        if (vb->member->memberKind == Member::VariableMember) {
                             Variable *v = checked_cast<Variable *>(vb->member);
                             JS2Class *type = getVariableType(v, CompilePhase, p->pos);
                             if (JS2VAL_IS_FUTURE(v->value)) {   // it's a const, execute the initializer
@@ -1176,7 +1176,7 @@ namespace MetaData {
                             }
                         }
                         else {
-                            ASSERT(vb->member->kind == Member::InstanceVariableKind);
+                            ASSERT(vb->member->memberKind == Member::InstanceVariableMember);
                             InstanceVariable *v = checked_cast<InstanceVariable *>(vb->member);
                             JS2Class *t;
                             if (vb->type)
@@ -2777,7 +2777,7 @@ doUnary:
                         for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
                             LocalBindingEntry::NamespaceBinding &ns = *i;
                             if ((ns.second->accesses & access) 
-                                    && (ns.second->content->kind != LocalMember::Forbidden)
+                                    && (ns.second->content->memberKind != LocalMember::ForbiddenMember)
                                     && multiname->listContains(ns.first))
                                 reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                         }
@@ -2817,7 +2817,7 @@ doUnary:
                             for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
                                 LocalBindingEntry::NamespaceBinding &ns = *i;
                                 if ((ns.second->accesses & access) && (ns.first == *nli)) {
-                                    ASSERT(ns.second->content->kind == LocalMember::Forbidden);
+                                    ASSERT(ns.second->content->memberKind == LocalMember::ForbiddenMember);
                                     foundEntry = true;
                                     break;
                                 }
@@ -2907,20 +2907,20 @@ doUnary:
             if (!requestedMultiname.subsetOf(definedMultiname))
                 reportError(Exception::definitionError, "Illegal definition", pos);
             bool goodKind;
-            switch (m->kind) {
-            case Member::InstanceVariableKind:
-                goodKind = (mOverridden->kind == Member::InstanceVariableKind);
+            switch (m->memberKind) {
+            case Member::InstanceVariableMember:
+                goodKind = (mOverridden->memberKind == Member::InstanceVariableMember);
                 break;
-            case Member::InstanceGetterKind:
-                goodKind = ((mOverridden->kind == Member::InstanceVariableKind)
-                                || (mOverridden->kind == Member::InstanceGetterKind));
+            case Member::InstanceGetterMember:
+                goodKind = ((mOverridden->memberKind == Member::InstanceVariableMember)
+                                || (mOverridden->memberKind == Member::InstanceGetterMember));
                 break;
-            case Member::InstanceSetterKind:
-                goodKind = ((mOverridden->kind == Member::InstanceVariableKind)
-                                || (mOverridden->kind == Member::InstanceSetterKind));
+            case Member::InstanceSetterMember:
+                goodKind = ((mOverridden->memberKind == Member::InstanceVariableMember)
+                                || (mOverridden->memberKind == Member::InstanceSetterMember));
                 break;
-            case Member::InstanceMethodKind:
-                goodKind = (mOverridden->kind == Member::InstanceMethodKind);
+            case Member::InstanceMethodMember:
+                goodKind = (mOverridden->memberKind == Member::InstanceMethodMember);
                 break;
             }
             if (mOverridden->final || !goodKind)
@@ -2978,9 +2978,9 @@ doUnary:
     // will shadow a parameter with the same name for compatibility with ECMAScript Edition 3. 
     // If there are multiple function definitions, the initial value is the last function definition. 
     
-    DynamicVariable *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar)
+    LocalMember *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar)
     {
-        DynamicVariable *result;
+        LocalMember *result;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameEnd);
         ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));
@@ -3019,7 +3019,7 @@ rescan:
             }
             else
                 lbe = *lbeP;
-            result = new DynamicVariable();
+            result = new FrameVariable(regionalFrame->allocateSlot());
             LocalBinding *sb = new LocalBinding(ReadWriteAccess, result, true);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
         }
@@ -3028,9 +3028,11 @@ rescan:
                 reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
             else {
                 if ((bindingResult->accesses != ReadWriteAccess)
-                        || (bindingResult->content->kind != LocalMember::DynamicVariableKind))
+                        || ((bindingResult->content->memberKind != LocalMember::DynamicVariableMember)
+                              && (bindingResult->content->memberKind != LocalMember::FrameVariableMember))
                     reportError(Exception::definitionError, "Illegal redefinition of {0}", p->pos, id);
-                result = checked_cast<DynamicVariable *>(bindingResult->content);
+
+                result = bindingResult->content;
             }
             // At this point a hoisted binding of the same var already exists, so there is no need to create another one
         }
@@ -3329,7 +3331,7 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
 
 
         // A 'forbidden' member, used to mark hidden bindings
-        forbiddenMember = new LocalMember(Member::Forbidden, true);
+        forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
 
         // needed for class instance variables etc...
         NamespaceList publicNamespaceList;
@@ -3645,7 +3647,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         js2val superVal = getSuperObject(baseObj);
         if (!JS2VAL_IS_NULL(superVal) && !JS2VAL_IS_UNDEFINED(superVal)) {
             m = findCommonMember(&superVal, multiname, access, flat);
-            if ((m != NULL) && flat && (m->kind == Member::DynamicVariableKind))
+            if ((m != NULL) && flat 
+                        && ((m->memberKind == Member::DynamicVariableMember)
+                                || (m->memberKind == Member::FrameVariableMember)))
                 m = NULL;
         }
         return m;
@@ -3654,8 +3658,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     bool JS2Metadata::readInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval)
     {
         InstanceMember *m = getDerivedInstanceMember(c, mBase, ReadAccess);
-        switch (m->kind) {
-        case Member::InstanceVariableKind:
+        switch (m->memberKind) {
+        case Member::InstanceVariableMember:
             {
                 InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
                 if ((phase == CompilePhase) && !mv->immutable)
@@ -3675,8 +3679,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     bool JS2Metadata::writeInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, js2val newValue)
     {
         InstanceMember *m = getDerivedInstanceMember(c, mBase, WriteAccess);
-        switch (m->kind) {
-        case Member::InstanceVariableKind:
+        switch (m->memberKind) {
+        case Member::InstanceVariableMember:
             {
                 InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
                 Slot *s = findSlot(containerVal, mv);
@@ -3693,11 +3697,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     bool JS2Metadata::readLocalMember(LocalMember *m, Phase phase, js2val *rval)
     {
-        switch (m->kind) {
-        case LocalMember::Forbidden:
+        switch (m->memberKind) {
+        case LocalMember::ForbiddenMember:
             reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
             break;
-        case LocalMember::Variable:
+        case LocalMember::VariableMember:
             {
                 Variable *v = checked_cast<Variable *>(m); 
                 if ((phase == CompilePhase) && !v->immutable)
@@ -3705,20 +3709,18 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 *rval = v->value;
                 return true;
             }
-        case LocalMember::DynamicVariableKind:
+        case LocalMember::DynamicVariableMember:
             if (phase == CompilePhase) 
                 reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
             *rval = (checked_cast<DynamicVariable *>(m))->value;
             return true;
-        case LocalMember::ConstructorMethod:
-            {
-                if (phase == CompilePhase)
-                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-                *rval = (checked_cast<ConstructorMethod *>(m))->value;
-                return true;
-            }
-        case LocalMember::Getter:
-        case LocalMember::Setter:
+        case LocalMember::ConstructorMethodMember:
+            if (phase == CompilePhase)
+                reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+            *rval = (checked_cast<ConstructorMethod *>(m))->value;
+            return true;
+        case LocalMember::GetterMember:
+        case LocalMember::SetterMember:
             break;
         }
         NOT_REACHED("Bad member kind");
@@ -3728,12 +3730,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Write a value to the local member
     bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, bool initFlag) // phase not used?
     {
-        switch (m->kind) {
-        case LocalMember::Forbidden:
-        case LocalMember::ConstructorMethod:
+        switch (m->memberKind) {
+        case LocalMember::ForbiddenMember:
+        case LocalMember::ConstructorMethodMember:
             reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
             break;
-        case LocalMember::Variable:
+        case LocalMember::VariableMember:
             {
                 Variable *v = checked_cast<Variable *>(m);
                 if (!initFlag
@@ -3746,11 +3748,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 v->value = v->type->implicitCoerce(this, newValue);
             }
             return true;
-        case LocalMember::DynamicVariableKind:
+        case LocalMember::DynamicVariableMember:
             (checked_cast<DynamicVariable *>(m))->value = newValue;
             return true;
-        case LocalMember::Getter:
-        case LocalMember::Setter:
+        case LocalMember::GetterMember:
+        case LocalMember::SetterMember:
             break;
         }
         NOT_REACHED("Bad member kind");
@@ -4272,14 +4274,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  *
  ************************************************************************************/
 
-    // Allocate a new temporary variable in this frame and stick it
+    // Allocate a new value slot in this frame and stick it
     // on the list (which may need to be created) for gc tracking.
-    uint16 NonWithFrame::allocateTemp()
+    uint16 NonWithFrame::allocateSlot()
     {
-        if (temps == NULL)
-            temps = new std::vector<js2val>;
-        uint16 result = (uint16)(temps->size());
-        temps->push_back(JS2VAL_VOID);
+        if (slots == NULL)
+            slots = new std::vector<js2val>;
+        uint16 result = (uint16)(slots->size());
+        slots->push_back(JS2VAL_VOID);
         return result;
     }
 
@@ -4293,6 +4295,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
             delete lbe;
         }
+        if (slots)
+            delete slots;
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
@@ -4306,8 +4310,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ns.second->content->mark();
             }
         }            
-        if (temps) {
-            for (std::vector<js2val>::iterator i = temps->begin(), end = temps->end(); (i != end); i++)
+        if (slots) {
+            for (std::vector<js2val>::iterator i = slots->begin(), end = slots->end(); (i != end); i++)
                 GCMARKVALUE(*i);
         }
     }
@@ -4374,7 +4378,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         for (i = 0; (i < argCount); i++) {
             if (i < plural->positionalCount) {
                 ASSERT(plural->positional[i]->cloneContent);
-                ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
+                ASSERT(plural->positional[i]->cloneContent->memberKind == Member::VariableMember);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
             }
             meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, argBase[i]);
@@ -4382,7 +4386,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         while (i++ < length) {
             if (i < plural->positionalCount) {
                 ASSERT(plural->positional[i]->cloneContent);
-                ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
+                ASSERT(plural->positional[i]->cloneContent->memberKind == Member::VariableMember);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = JS2VAL_UNDEFINED;
             }
             meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);

@@ -1149,3 +1149,48 @@
             baseVal = JS2VAL_VOID;
         }
         break;
+
+    case eFrameSlotPostInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
+            a = (*f->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            (*f->slots)[slotIndex] = allocNumber(num + 1.0);
+            pushNumber(num);
+        }
+        break;
+    case eFrameSlotPostDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
+            a = (*f->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            (*f->slots)[slotIndex] = allocNumber(num - 1.0);
+            pushNumber(num);
+        }
+        break;
+    case eFrameSlotPreInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
+            a = (*f->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num + 1.0);
+            (*f->slots)[slotIndex] = a;
+        }
+        break;
+    case eFrameSlotPreDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
+            a = (*f->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num - 1.0);
+            (*f->slots)[slotIndex] = a;
+        }
+        break;

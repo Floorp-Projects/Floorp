@@ -263,7 +263,16 @@
             pc += sizeof(short);
             NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
             a = pop();
-            (*f->temps)[slotIndex] = a;
+            (*f->slots)[slotIndex] = a;
+        }
+        break;
+
+    case eFrameSlotDelete:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
+            // XXX some kind of code here?
         }
         break;
 
@@ -272,7 +281,7 @@
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
             NonWithFrame *f = checked_cast<NonWithFrame *>(meta->env->getTopFrame());
-            push((*f->temps)[slotIndex]);
+            push((*f->slots)[slotIndex]);
         }
         break;
 
