@@ -1809,36 +1809,22 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;
-  if (mDisplayContent) {
-    nsAutoString value;
-    mDisplayContent->Text()->AppendTo(value);
-
-    PRBool shouldSetValue = PR_FALSE;
-    if (value.IsEmpty()) {
-      shouldSetValue = PR_TRUE;
-    } else {
-       shouldSetValue = value != textToDisplay;
-       REFLOW_DEBUG_MSG3("**** CBX::RedisplayText  Old[%s]  New[%s]\n",
-                         NS_LossyConvertUCS2toASCII(value).get(),
-                         NS_LossyConvertUCS2toASCII(textToDisplay).get());
-    }
-    if (shouldSetValue && mEventQueueService) {
-      // Don't call ActuallyDisplayText(aText,PR_TRUE) directly here since that
-      // could cause recursive frame construction. See bug 283117 and the comment in
-      // HandleRedisplayTextEvent() below.
-      nsCOMPtr<nsIEventQueue> eventQueue;
-      rv = mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                                    getter_AddRefs(eventQueue));
-      if (eventQueue) {
-        RedisplayTextEvent* event = new RedisplayTextEvent(this, textToDisplay);
-        if (event) {
-          rv = eventQueue->PostEvent(event);
-          if (NS_FAILED(rv)) {
-            PL_DestroyEvent(event);
-          }
-        } else {
-          rv = NS_ERROR_OUT_OF_MEMORY;
+  if (mDisplayContent && mEventQueueService) {
+    // Don't call ActuallyDisplayText(aText,PR_TRUE) directly here since that
+    // could cause recursive frame construction. See bug 283117 and the comment in
+    // HandleRedisplayTextEvent() below.
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    rv = mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                                  getter_AddRefs(eventQueue));
+    if (eventQueue) {
+      RedisplayTextEvent* event = new RedisplayTextEvent(this, textToDisplay);
+      if (event) {
+        rv = eventQueue->PostEvent(event);
+        if (NS_FAILED(rv)) {
+          PL_DestroyEvent(event);
         }
+      } else {
+        rv = NS_ERROR_OUT_OF_MEMORY;
       }
     }
   }
