@@ -18,11 +18,12 @@
 
 /* entry point wrappers. */
 
-#include "xptcprivate.h"
-
 #if defined(XP_MAC)
 #pragma export on
 #endif
+
+#include "xptcprivate.h"
+
 // This method is never called and is only here so the compiler
 // will generate a vtbl for this class. 
 // *Needed by the Irix implementation.*
