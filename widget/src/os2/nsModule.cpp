@@ -327,7 +327,7 @@ char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText,
 
    // Have converter, now get it to work...
 
-   UniChar *ucsString = (UniChar*) pText;
+   UniChar *ucsString = NS_REINTERPRET_CAST(UniChar *,pText);
    size_t   ucsLen = UniStrlen( ucsString) + 1;
    size_t   cplen = ulSize;
    size_t   cSubs = 0;
