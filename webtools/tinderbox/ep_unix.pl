@@ -21,39 +21,42 @@
 # Scan a line and see if it has an error
 #
 sub has_error {
-    $line =~ /fatal error/  # link error
-    || $line =~ /^C /   # cvs merge conflict
-    || $line =~ / Error: /   # C error
-    || $line =~ / error\([0-9]*\)\:/   # C error
-    || ($line =~ /gmake/ && $line =~ / Error /)
-    || $line =~ /\[checkout aborted\]/ #cvs error
-    || $line =~ /\: cannot find module/ #cvs error
-
+  local $_ = $_[0];
+  /fatal error/ # . . . . . . . . . Link error
+    or /^C /  # . . . . . . . . . . cvs merge conflict
+    or / Error: / # . . . . . . . . C error
+    or / error\([0-9]*\)\:/ # . . . C error
+    or (/gmake/ and / Error /)  # . 
+    or /\[checkout aborted\]/   # . cvs error
+    or /\: cannot find module/  # . cvs error
     ;
 }
 
 
 sub has_warning {                                    
-    $line =~ /^[A-Za-z0-9_]+\.[A-Za-z0-9]+\:[0-9]+\:/ 
-    || $line =~ /^\"[A-Za-z0-9_]+\.[A-Za-z0-9]+\"\, line [0-9]+\:/ 
-;
+  local $_ = $_[0];
+  /^[A-Za-z0-9_]+\.[A-Za-z0-9]+\:[0-9]+\:/ 
+    or /^\"[A-Za-z0-9_]+\.[A-Za-z0-9]+\"\, line [0-9]+\:/ 
+    ;
 }
 
 sub has_errorline {
-    local( $line ) = @_;
-    if( $line =~ /^(([A-Za-z0-9_]+\.[A-Za-z0-9]+)\:([0-9]+)\:)/ ){
-        $error_file = $1;
-        $error_file_ref = $2;
-        $error_line = $3;
-        $error_guess = 1;
-        return 1;
-    }
-    if ( $line =~ /^(\"([A-Za-z0-9_]+\.[A-Za-z0-9]+)\"\, line ([0-9]+)\:)/  ){
-        $error_file = $1;
-        $error_file_ref = $2;
-        $error_line = $3;
-        $error_guess = 1;
-        return 1;
-    }
-    return 0;
+  local $_ = $_[0];
+  my $out  = $_[1];
+
+  if (/^(([A-Za-z0-9_]+\.[A-Za-z0-9]+):([0-9]+):)/) {
+    $out->{error_file}     = $1;
+    $out->{error_file_ref} = $2;
+    $out->{error_line}     = $3;
+    $out->{error_guess}    = 1;
+    return 1;
+  }
+  if (/^("([A-Za-z0-9_]+\.[A-Za-z0-9]+)", line ([0-9]+):)/) {
+    $out->{error_file}     = $1;
+    $out->{error_file_ref} = $2;
+    $out->{error_line}     = $3;
+    $out->{error_guess}    = 1;
+    return 1;
+  }
+  return 0;
 }

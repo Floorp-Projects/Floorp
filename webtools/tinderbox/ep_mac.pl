@@ -21,28 +21,31 @@
 # Scan a line and see if it has an error
 #
 sub has_error {
-    $line =~ /fatal error/  # link error
-    || $line =~ /Error  /   # C error
-    || $line =~ /\[checkout aborted\]/ #cvs error
-    || $line =~ /Couldn\'t find project file / # CW project error
-    || $line =~ /Can\'t create / # CW project error
-    || $line =~ /Can\'t open / # CW project error
-    || $line =~ /Can\'t find / # CW project error
-;
+  local $_ = $_[0];
+  /fatal error/                       # Link error
+    or /Error  /                      # C error
+    or /\[checkout aborted\]/         # cvs error
+    or /Couldn\'t find project file / # CW project error
+    or /Can\'t create /               # CW project error
+    or /Can\'t open /                 # CW project error
+    or /Can\'t find /                 # CW project error
+    ;
 }
 
 sub has_warning {                                    
-    $line =~ /^[A-Za-z0-9_]+\.[A-Za-z0-9]+\ line [0-9]+/ ;
+  $_[0] =~ /^[A-Za-z0-9_]+\.[A-Za-z0-9]+\ line [0-9]+/;
 }
 
 sub has_errorline {
-    local( $line ) = @_;
-    if( $line =~ /^(([A-Za-z0-9_]+\.[A-Za-z0-9]+) line ([0-9]+))/ ){
-        $error_file = $1;
-        $error_file_ref = $2;
-        $error_line = $3;
-        $error_guess = 1;
-        return 1;
-    }
-    return 0;
+  local $_ = $_[0];
+  my $out  = $_[1];
+
+  if (/^(([A-Za-z0-9_]+\.[A-Za-z0-9]+) line ([0-9]+))/) {
+    $out->{error_file}     = $1;
+    $out->{error_file_ref} = $2;
+    $out->{error_line}     = $3;
+    $out->{error_guess}    = 1;
+    return 1;
+  }
+  return 0;
 }

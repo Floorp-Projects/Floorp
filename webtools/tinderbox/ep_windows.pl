@@ -21,53 +21,55 @@
 # Scan a line and see if it has an error
 #
 sub has_error {
-    $line =~ /fatal error/  # link error
-    || $line =~ / error /   # C error
-    || $line =~ /^C /   # cvs merge conflict
-    || $line =~ /error C/   # C error
-    || $line =~ /Creating new precompiled header/   # Wastes time.
-    || $line =~ /error:/    # java error
-    || $line =~ /jmake.MakerFailedException:/    # java error
-    || $line =~ /Unknown host /    # cvs error
-    || $line =~ /: build failed\;/    # nmake error
-    || ($line =~ /gmake/ && $line =~ / Error /)
-    || $line =~ /\[checkout aborted\]/ #cvs error
-    || $line =~ /\: cannot find module/ #cvs error
+  local $_ = $_[0];
+  /fatal error/  # . . . . . . . . . . . . . Link error
+    or / error / # . . . . . . . . . . . . . C error
+    or /error C/ # . . . . . . . . . . . . . C error
+    or /Creating new precompiled header/ # . Wastes time
+    or /error:/  # . . . . . . . . . . . . . Java error
+    or /jmake.MakerFailedException:/ # . . . Java error
+    or /: build failed\;/  # . . . . . . . . nmake error
+    or /^C / # . . . . . . . . . . . . . . . cvs merge conflict
+    or /Unknown host / # . . . . . . . . . . cvs error
+    or /\[checkout aborted\]/  # . . . . . . cvs error
+    or /\: cannot find module/ # . . . . . . cvs error
 ;
 }
 
 
 sub has_warning {
-    $line =~ /: warning/  # link error
-    || $line =~ / error /   # C error
+  local $_ = $_[0];
+  /: warning/    # Link error
+    or / error / # C error
 ;
 }
 
 sub has_errorline {
-    local( $line ) = @_;
-    $error_file = ''; #'NS\CMD\WINFE\CXICON.cpp';
-    $error_line = 0;
+  local $_ = $_[0];
+  my $out  = $_[1];
 
-    if( $line =~ m@(ns([\\/][a-z0-9\._]+)*)@i ){
-        $error_file = $1;
-        $error_file_ref = lc $error_file;
-        $error_file_ref =~ s@\\@/@g;
+  $out->{error_line} = 0;
 
-        $line =~ m/\(([0-9]+)\)/;
-        $error_line = $1;
-        return 1;
-    }
+  if(/(mozilla([\\\/][-a-z0-9\._]+)*)/i) {
+    $out->{error_file}     = $1;
+    $out->{error_file_ref} = lc $1;
+    $out->{error_file_ref} =~ s|\\|/|g;
 
-    if( $line =~ m@(^([A-Za-z0-9_]+\.[A-Za-z])+\(([0-9]+)\))@ ){
-        $error_file = $1;
-        $error_file_ref = lc $2;
-        $error_line = $3;
-        $error_guess=1;
-        $error_file_ref =~ s@\\@/@g;
+    /\(([0-9]+)\)/ and $out->{error_line} = $1;
 
-        return 1;
-    }
+    return 1;
+  }
 
-    return 0;
+  if( $line =~ m@(^([A-Za-z0-9_]+\.[A-Za-z])+\(([0-9]+)\))@ ){
+    $out->{error_file}     = $1;
+    $out->{error_file_ref} = lc $2;
+    $out->{error_line}     = $3;
+    $out->{error_guess}    = 1;
+    $out->{error_file_ref} =~ s@\\@/@g;
+    
+    return 1;
+  }
+
+  return 0;
 }
 

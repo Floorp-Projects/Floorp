@@ -297,50 +297,48 @@ sub output_summary_line {
 
 
 sub output_log_line {
-    my( $line ) = $_[0];
-    my( $has_error, $dur, $dur_min,$dur_sec, $dur_str, $logline );
+  my $line = $_[0];
 
-    $has_error = &has_error( $line );
-    $has_warning = &has_warning( $line );
+  my $has_error   = &has_error($line);
+  my $has_warning = &has_warning($line);
 
-    $line =~ s/&/&amp;/g;
-    $line =~ s/</&lt;/g;
+  $line =~ s/&/&amp;/g;
+  $line =~ s/</&lt;/g;
 
-    $logline = '';
+  my $logline = '';
 
-    if( ($has_error || $has_warning) && &has_errorline( $line ) ) {
-        $q = quotemeta( $error_file );
-        #$goto_line = ($error_line ? 10 > $error_line - 10 : 1 );
-        $goto_line = ($error_line > 10 ? $error_line - 10 : 1 );
-        $cvsblame = ($error_guess ? "cvsguess.cgi" : "cvsblame.cgi"); 
-        $line =~ s@$q@<a href=../bonsai/$cvsblame?file=$error_file_ref&rev=$cvs_branch&mark=$error_line#$goto_line $source_target>$error_file</a>@
-    }
+  my %out = ();
 
+  if (($has_error or $has_warning) and &has_errorline($line, \%out)) {
+    $q = quotemeta( $out{error_file} );
+    $goto_line = $out{error_line} > 10 ? $out{error_line} - 10 : 1;
+    $cvsblame = $out{error_guess} ? "cvsguess.cgi" : "cvsblame.cgi"; 
+    $line =~ s@$q@<a href=../bonsai/$cvsblame?file=$out{error_file_ref}&rev=$cvs_branch&mark=$out{error_line}#$goto_line>$out{error_file}</a>@
+  }
 
-    if( $has_error ){
-        if( ! $last_was_error ) {
-            $logline .= "<a name=\"err$next_err\"></a>";
-            $next_err++;
-            $logline .= "<a href=\"#err$next_err\">NEXT</a> ";
-        }
-        else {
-            $logline .= "     ";
-        }
-
-        $logline .= "<font color=\"000080\">$line</font>";
-        
-        $last_was_error = 1;
-    }
-    elsif( $has_warning ){
-        $logline .= "     ";
-        $logline .= "<font color=000080>$line</font>";
+  if ($has_error) {
+    if ($last_was_error) {
+      $logline .= "     ";
     }
     else {
-        $logline .= "     $line";
-        $last_was_error = 0;
+      $logline .= "<a name=\"err$next_err\"></a>";
+      $next_err++;
+      $logline .= "<a href=\"#err$next_err\">NEXT</a> ";
     }
+    $logline .= "<font color=\"000080\">$line</font>";
+        
+    $last_was_error = 1;
+  }
+  elsif ($has_warning) {
+    $logline .= "     ";
+    $logline .= "<font color=000080>$line</font>";
+  }
+  else {
+    $logline .= "     $line";
+    $last_was_error = 0;
+  }
 
-    &push_log_line( $logline );
+  &push_log_line($logline);
 }
 
 
