@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.23 $ 
-# $Date: 2003/01/19 17:22:54 $ 
+# $Revision: 1.24 $ 
+# $Date: 2003/04/20 20:23:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -395,13 +395,15 @@ sub parse_params {
 # call the function like this 
 #
 # Link(
-#	  "statuslinetxt"=>"", 
-#	  "windowtxt"=>"", 
-#	  "linktxt"=>"", 
-#	  "name"=>"", 
-#	  "href"=>"",
+#	  "linktxt"=>"text to usually show", 
+#         "alt_linktxt" => Alternative text to display if there 
+#                           is no popup library installed and the text 
+#                           should be different from the normal linktxt
+#	  "name"=>"so that other links can point here", 
+#	  "href"=>"where this link will go to",
+#	  "windowtxt"=>"the contents of the popup window", 
 #
-# (arguments with defaults)
+# (These are deprecated: arguments with defaults)
 #
 #	  "windowtitle"=>"", 
 #	  "windowheight"=>"", 
