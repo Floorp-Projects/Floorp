@@ -358,38 +358,49 @@ print "
 <TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80></TEXTAREA><BR>";
 
 
-if ($::usergroupset ne '0') {
-    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " .
-            "from groups where bit & $::usergroupset != 0 " .
-            "and isbuggroup != 0 " . 
+if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
+    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0), " .
+            "(bit & $::usergroupset != 0) from groups where isbuggroup != 0 " .
             # Include active groups as well as inactive groups to which
             # the bug already belongs.  This way the bug can be removed
             # from an inactive group but can only be added to active ones.
-            "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
+            "and ((isactive = 1 and (bit & $::usergroupset != 0)) or " .
+            "(bit & $bug{'groupset'} != 0)) " . 
             "order by description");
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
+    my $inAllGroups = 1;
     while (MoreSQLData()) {
-      my ($bit, $name, $description, $ison) = (FetchSQLData());
+      my ($bit, $name, $description, $ison, $ingroup) = (FetchSQLData());
       # For product groups, we only want to display the checkbox if either
       # (1) The bit is already set, or
-      # (2) It's the group for this product.
-      # All other product groups will be skipped.  Non-product bug groups
-      # will still be displayed.
-      if($ison || ($name eq $bug{'product'}) || (!defined $::proddesc{$name})) {
+      # (2) The user is in the group, but either:
+      #     (a) The group is a product group for the current product, or
+      #     (b) The group name isn't a product name
+      # This measns that all product groups will be skipped, but non-product
+      # bug groups will still be displayed.
+      if($ison || ($ingroup && (($name eq $bug{'product'}) ||
+                                (!defined $::proddesc{$name})))) {
         if(!$groupFound) {
           print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-          print "<font size=\"-1\">(Leave all boxes unchecked to make this a public bug.)</font><br><br>\n";
+          print "<font size=\"-1\">(Unchecking all boxes makes this a public bug.)</font><br><br>\n";
           $groupFound = 1;
+        }
+        if(!$ingroup) {
+            $inAllGroups = 0;
         }
         # Modifying this to use checkboxes instead
         my $checked = $ison ? " CHECKED" : "";
+        my $disabled = $ingroup ? "" : " DISABLED=\"disabled\"";
         # indent these a bit
         print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"bit-$bit\" value=1$checked>\n";
+        print "<input type=checkbox name=\"bit-$bit\" value=1$checked$disabled>\n";
         print "$description<br>\n";
       }
+    }
+    if (!$inAllGroups) {
+        print "<b>Only members of a group can change the visibility of a bug for that group</b><br>";
     }
 
     # If the bug is restricted to a group, display checkboxes that allow
