@@ -115,6 +115,7 @@ sub JarIt
     if (!($args eq "")) {
 	my $cwd = getcwd;
 	my $err = 0; 
+        #print("in $cwd; zip -u $destPath/$jarfile $args\n");
         system("zip -u $destPath/$jarfile $args") == 0 or
 	    $err = $? >> 8;
 	zipErrorCheck($err);
@@ -126,8 +127,6 @@ sub JarIt
 	    $err = $? >> 8;
 	zipErrorCheck($err);
     }
-
-    Cleanup();
 }
 
 sub MkDirs
@@ -316,3 +315,5 @@ while (<STDIN>) {
         die "bad jar rule head at: $_";
     }
 }
+
+Cleanup();
