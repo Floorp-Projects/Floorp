@@ -3421,7 +3421,7 @@ MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin
 
 dnl Check if Thai Rendering Extension needs to be enabled
 if test -n "$SUNCTL"; then
-  MOZ_EXTENSIONS_DEFAULT = "$MOZ_EXTENSIONS_DEFAULT ctl"
+  MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
 fi
 
 MOZ_ARG_WITH_STRING(extensions,
