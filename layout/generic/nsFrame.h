@@ -223,6 +223,7 @@ public:
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
   NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;

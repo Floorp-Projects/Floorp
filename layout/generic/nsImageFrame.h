@@ -59,6 +59,8 @@ public:
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
 protected:
   virtual ~nsImageFrame();

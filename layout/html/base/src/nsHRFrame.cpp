@@ -33,6 +33,7 @@
 #include "nsIDOMHTMLHRElement.h"
 #include "nsIDeviceContext.h"
 #include "nsStyleUtil.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
@@ -51,6 +52,8 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
 protected:
   PRBool GetNoShade();
@@ -252,4 +255,23 @@ HRuleFrame::GetNoShade()
     NS_RELEASE(hr);
   }
   return result;
+}
+
+NS_IMETHODIMP
+HRuleFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::hrFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HRuleFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = sizeof(*this);
+  return NS_OK;
 }

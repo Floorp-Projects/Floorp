@@ -50,6 +50,7 @@ public:
                           nsIFrame*       aOldFrame,
                           nsIFrame*       aNewFrame);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   // nsIHTMLReflow overrides
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,

@@ -50,6 +50,13 @@ public:
     return mArray.Count();
   }
 
+  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
+    if (aResult) {
+      mArray.SizeOf(aHandler, aResult);
+      *aResult += sizeof(this) - sizeof(mArray);
+    }
+  }
+
   nsIFrame* operator[](PRInt32 aIndex) const {
     return (nsIFrame*) mArray[aIndex];
   }

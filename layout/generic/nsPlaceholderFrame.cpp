@@ -113,3 +113,13 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPlaceholderFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = sizeof(*this);
+  return NS_OK;
+}

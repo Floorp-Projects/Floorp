@@ -31,6 +31,7 @@ public:
                   nsIFrame*        aPrevInFlow);
   
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   // Flow member functions.
   NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;

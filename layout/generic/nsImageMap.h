@@ -62,6 +62,8 @@ public:
 
   void Draw(nsIPresContext& aCX, nsIRenderingContext& aRC);
 
+  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+
   // nsISupports
   NS_DECL_ISUPPORTS
 

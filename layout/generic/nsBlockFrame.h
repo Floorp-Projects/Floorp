@@ -40,7 +40,9 @@ class nsFirstLineFrame;
  */
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x80000000
 #define NS_BLOCK_IS_HTML_PARAGRAPH        0x40000000
+#ifdef BLOCK_DOES_FIRST_LINE
 #define NS_BLOCK_HAS_FIRST_LINE_STYLE     0x20000000
+#endif
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x10000000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
@@ -99,6 +101,7 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD VerifyTree() const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
@@ -145,7 +148,9 @@ protected:
 
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
 
+#ifdef BLOCK_DOES_FIRST_LINE
   nsIStyleContext* GetFirstLineStyle(nsIPresContext* aPresContext);
+#endif
 
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
@@ -171,12 +176,11 @@ protected:
                                 nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
-  void MarkEmptyLines(nsIPresContext* aPresContext);
-
   nsresult AddFrames(nsIPresContext* aPresContext,
                      nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
+#ifdef BLOCK_DOES_FIRST_LINE
   nsresult AddFirstLineFrames(nsIPresContext* aPresContext,
                               nsFirstLineFrame* aLineFrame,
                               nsIFrame* aFrameList,
@@ -185,16 +189,18 @@ protected:
   nsIFrame* TakeKidsFromLineFrame(nsFirstLineFrame* aLineFrame,
                                   nsIFrame* aFromKid);
 
-  void FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame);
-
-  nsresult DoRemoveFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aDeletedFrame);
-
   nsresult RemoveFirstLineFrame(nsIPresContext* aPresContext,
                                 nsFirstLineFrame* aLineFrame,
                                 nsIFrame* aDeletedFrame);
 
   nsresult WrapFramesInFirstLineFrame(nsIPresContext* aPresContext);
+#endif
+
+  void FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
+  nsresult DoRemoveFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aDeletedFrame);
+
 
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 

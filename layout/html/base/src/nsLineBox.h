@@ -23,16 +23,13 @@
 #include "nsPlaceholderFrame.h"
 #include "nsILineIterator.h"
 
-// bits in nsLineBox.mFlags
+// bits in nsLineBox.mState
 #define LINE_IS_DIRTY                 0x1
 #define LINE_IS_BLOCK                 0x2
-#define LINE_WAS_DIRTY                0x4
-#define LINE_NEED_DID_REFLOW          0x8
-#define LINE_TOP_MARGIN_IS_AUTO       0x10
-#define LINE_BOTTOM_MARGIN_IS_AUTO    0x20
-#define LINE_OUTSIDE_CHILDREN         0x40
-#define LINE_ISA_EMPTY_LINE           0x80
-#define LINE_IS_FIRST_LINE            0x100
+#ifdef BLOCK_DOES_FIRST_LINE
+#define LINE_IS_FIRST_LINE            0x4
+#endif
+#define LINE_WAS_DIRTY                0x8
 
 class nsISpaceManager;
 class nsLineBox;
@@ -50,17 +47,6 @@ public:
   }
 
   nscoord GetHeight() const { return mBounds.height; }
-
-  PRBool IsEmptyLine() const {
-    return 0 != (mState & LINE_ISA_EMPTY_LINE);
-  }
-
-  void SetIsEmptyLine(PRBool aSetting) {
-    if (aSetting)
-      mState |= aSetting;
-    else
-      mState &= ~aSetting;
-  }
 
   //----------------------------------------------------------------------
   // XXX old junk
@@ -106,6 +92,7 @@ public:
     }
   }
 
+#ifdef BLOCK_DOES_FIRST_LINE
   PRBool IsFirstLine() const {
     return 0 != (LINE_IS_FIRST_LINE & mState);
   }
@@ -118,6 +105,7 @@ public:
       mState &= ~LINE_IS_FIRST_LINE;
     }
   }
+#endif
 
   void MarkDirty() {
     mState |= LINE_IS_DIRTY;
@@ -143,34 +131,6 @@ public:
     return 0 != (LINE_WAS_DIRTY & mState);
   }
 
-  void SetNeedDidReflow() {
-    mState |= LINE_NEED_DID_REFLOW;
-  }
-
-  void ClearNeedDidReflow() {
-    mState &= ~LINE_NEED_DID_REFLOW;
-  }
-
-  PRBool NeedsDidReflow() {
-    return 0 != (LINE_NEED_DID_REFLOW & mState);
-  }
-
-#ifdef XXX_need_line_outside_children
-  void SetOutsideChildren() {
-    mState |= LINE_OUTSIDE_CHILDREN;
-  }
-
-  void ClearOutsideChildren() {
-    mState &= ~LINE_OUTSIDE_CHILDREN;
-  }
-
-  PRBool OutsideChildren() const {
-    return 0 != (LINE_OUTSIDE_CHILDREN & mState);
-  }
-#endif
-
-  PRUint16 GetState() const { return mState; }
-
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
 
   PRInt32 IndexOf(nsIFrame* aFrame) const;
@@ -185,7 +145,7 @@ public:
 
   nsIFrame* mFirstChild;
   PRUint16 mChildCount;
-  PRUint16 mState;
+  PRUint8 mState;
   PRUint8 mBreakType;
   nsRect mBounds;
   nsRect mCombinedArea;

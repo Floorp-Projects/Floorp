@@ -82,6 +82,8 @@ public:
     return mFlags.mHaveComputedSize;
   }
 
+  PRUint32 GetDataSize() const;
+
 protected:
   static nsresult ImageLoadCB(nsIPresContext* aPresContext,
                               nsIFrameImageLoader* aLoader,

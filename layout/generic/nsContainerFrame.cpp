@@ -667,3 +667,13 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (aResult) {
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}

@@ -192,8 +192,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+#ifdef BLOCK_DOES_FIRST_LINE
   // AppendFrames/InsertFrames/RemoveFrame are implemented to forward
   // the method call to the parent frame.
+#endif
   NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
@@ -208,6 +210,7 @@ public:
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
 
+#ifdef BLOCK_DOES_FIRST_LINE
   // These methods are used by the parent frame to actually modify the
   // child frames of the line frame. These methods do not generate
   // reflow commands.
@@ -221,9 +224,14 @@ public:
   nsresult RemoveFrame2(nsIPresContext* aPresContext,
                         nsIFrame*       aOldFrame);
 
-  void RemoveFramesFrom(nsIFrame* aFrame);
+#endif
+  // Take frames starting at aFrame until the end of the frame-list
+  // away from this frame. The caller is presumed to keep them alive.
+  void StealFramesFrom(nsIFrame* aFrame);
 
-  void RemoveAllFrames() {
+  // Take all of the frames away from this frame. The caller is
+  // presumed to keep them alive.
+  void StealAllFrames() {
     mFrames.SetFrames(nsnull);
   }
 
@@ -250,6 +258,7 @@ class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,

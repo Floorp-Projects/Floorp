@@ -193,4 +193,15 @@ nsSplittableFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
     IndentBy(out, aIndent);
     fprintf(out, "<prev-in-flow va=\"%ld\"/>\n", PRUptrdiff(mPrevInFlow));
   }
+
+}
+
+NS_IMETHODIMP
+nsSplittableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (aResult) {
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
 }

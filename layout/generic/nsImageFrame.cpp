@@ -55,6 +55,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIStyleSet.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -857,5 +858,28 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::imageFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+// Note: this doesn't factor in:
+// -- the mImageMap (it might be shared)
+NS_IMETHODIMP
+nsImageFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRUint32 sum = sizeof(*this) - sizeof(mImageLoader) +
+    mImageLoader.GetDataSize();
+  *aResult = sum;
   return NS_OK;
 }

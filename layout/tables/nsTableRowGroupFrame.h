@@ -154,6 +154,8 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /** set aCount to the number of child rows (not necessarily == number of child frames) */

@@ -205,6 +205,15 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
     ll.EndLineReflow();
   }
   else {
+// XXX currently the block code sets this up; see comment in
+// ReflowInlineFrames
+#if XXX
+    // Only the first-in-flow frame of a first-letter frame gets the
+    // special first-letter reflow treatment.
+    if (!mPrevInFlow) {
+      rs.mLineLayout->SetFirstLetterStyleOK(PR_TRUE);
+    }
+#endif
     htmlReflow->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
   }
 

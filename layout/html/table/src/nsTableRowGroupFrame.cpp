@@ -1561,3 +1561,15 @@ nsTableRowGroupFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("TableRowGroup", aResult);
 }
 
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (aResult) {
+    PRUint32 sum = sizeof(*this);
+    // XXX write me
+    *aResult = sum;
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}

@@ -627,9 +627,27 @@ InitializeScrollFrame(nsIPresContext*          aPresContext,
 
   // Methods support creating block frames and their children
 
-  nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext,
-                                       nsIContent* aContent,
-                                       nsIStyleContext* aStyleContext);
+  static nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext,
+                                              nsIContent* aContent,
+                                              nsIStyleContext* aStyleContext);
+
+  static nsIStyleContext* GetFirstLineStyle(nsIPresContext* aPresContext,
+                                            nsIContent* aContent,
+                                            nsIStyleContext* aStyleContext);
+
+  static PRBool HaveFirstLetterStyle(nsIPresContext* aPresContext,
+                                     nsIContent* aContent,
+                                     nsIStyleContext* aStyleContext);
+
+  static PRBool HaveFirstLineStyle(nsIPresContext* aPresContext,
+                                   nsIContent* aContent,
+                                   nsIStyleContext* aStyleContext);
+
+  static void HaveSpecialBlockStyle(nsIPresContext* aPresContext,
+                                    nsIContent* aContent,
+                                    nsIStyleContext* aStyleContext,
+                                    PRBool* aHaveFirstLetterStyle,
+                                    PRBool* aHaveFirstLineStyle);
 
   PRBool ShouldCreateFirstLetterFrame(nsIPresContext* aPresContext,
                                       nsIContent*      aContent,
@@ -678,6 +696,29 @@ InitializeScrollFrame(nsIPresContext*          aPresContext,
                                       nsFrameItems& aFrameItems,
                                       nsFrameItems& aFloatingItems,
                                       nsIStyleContext* aStyleContext);
+
+  nsresult WrapFramesInFirstLineFrame(nsIPresContext*          aPresContext,
+                                      nsFrameConstructorState& aState,
+                                      nsIContent*              aContent,
+                                      nsIFrame*                aFrame,
+                                      nsFrameItems&            aFrameItems);
+
+  nsresult AppendFirstLineFrames(nsIPresContext*          aPresContext,
+                                 nsFrameConstructorState& aState,
+                                 nsIContent*              aContent,
+                                 nsIFrame*                aBlockFrame,
+                                 nsFrameItems&            aFrameItems);
+
+  nsresult InsertFirstLineFrames(nsIPresContext*          aPresContext,
+                                 nsFrameConstructorState& aState,
+                                 nsIContent*              aContent,
+                                 nsIFrame*                aBlockFrame,
+                                 nsIFrame**               aParentFrame,
+                                 nsIFrame*                aPrevSibling,
+                                 nsFrameItems&            aFrameItems);
+
+  nsresult MaybeCreateContainerFrame(nsIPresContext* aPresContext,
+                                     nsIContent* aContainer);
 
 protected:
   nsIDocument*        mDocument;
