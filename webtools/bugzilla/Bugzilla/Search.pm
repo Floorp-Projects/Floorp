@@ -264,8 +264,8 @@ sub init {
                     # Treat [Bug creation] differently because we need to look
                     # at bugs.creation_ts rather than the bugs_activity table.
                     my @l;
-                    push(@l, "creation_ts >= $sql_chfrom") if($sql_chfrom);
-                    push(@l, "creation_ts <= $sql_chto") if($sql_chto);
+                    push(@l, "bugs.creation_ts >= $sql_chfrom") if($sql_chfrom);
+                    push(@l, "bugs.creation_ts <= $sql_chto") if($sql_chto);
                     $bug_creation_clause = "(" . join(' AND ', @l) . ")";
                 } else {
                     push(@list, "\nactcheck.fieldid = " . &::GetFieldID($f));
