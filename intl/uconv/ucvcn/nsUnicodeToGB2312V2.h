@@ -24,6 +24,7 @@
 #define nsUnicodeToGB2312V2_h___
 
 #include "nsUCvCnSupport.h"
+#include "gbku.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312V2 [declaration]
@@ -63,7 +64,8 @@ protected:
   };  // just make it not abstract;
 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
-
+protected:
+  nsGBKConvUtil mUtil;
 };
 
 #endif /* nsUnicodeToGB2312V2_h___ */

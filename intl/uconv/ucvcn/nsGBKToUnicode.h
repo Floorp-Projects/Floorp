@@ -22,7 +22,10 @@
 #ifndef nsGBK2312ToUnicode_h___
 #define nsGBK2312ToUnicode_h___
 
+#include "nsCOMPtr.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsUCvCnSupport.h"
+#include "gbku.h"
 
 //----------------------------------------------------------------------
 // Class nsGBKToUnicode [declaration]
@@ -41,21 +44,42 @@ public:
   /**
    * Class constructor.
    */
-  nsGBKToUnicode(){};
+  nsGBKToUnicode()
+  {
+    mExtensionDecoder = nsnull;
+    m4BytesDecoder = nsnull;
+  };
 
 protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
-  NS_IMETHOD ConvertNoBuff(const char* aSrc,
-											   PRInt32 * aSrcLength,
-											   PRUnichar *aDest,
-											   PRInt32 * aDestLength);
+  NS_IMETHOD ConvertNoBuff(const char* aSrc, PRInt32 * aSrcLength, PRUnichar *aDest, PRInt32 * aDestLength);
 
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
 
+protected:
+  nsGBKConvUtil mUtil;
+  nsCOMPtr<nsIUnicodeDecoder> mExtensionDecoder;
+  nsCOMPtr<nsIUnicodeDecoder> m4BytesDecoder;
 
+  virtual void CreateExtensionDecoder();
+  virtual void Create4BytesDecoder();
+  PRBool TryExtensionDecoder(const char* aSrc, PRUnichar* aDest);
+  PRBool Try4BytesDecoder(const char* aSrc, PRUnichar* aDest);
+
+};
+
+
+class nsGB18030ToUnicode : public nsGBKToUnicode
+{
+public:
+  nsGB18030ToUnicode() {};
+  virtual ~nsGB18030ToUnicode() {};
+protected:
+  virtual void CreateExtensionDecoder();
+  virtual void Create4BytesDecoder();
 };
 
 #endif /* nsGBK2312ToUnicode_h___ */

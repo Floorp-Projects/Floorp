@@ -56,6 +56,7 @@ protected:
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
 
+  nsGBKConvUtil mUtil;
 };
   
 
