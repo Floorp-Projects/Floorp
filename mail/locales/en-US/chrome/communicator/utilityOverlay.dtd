@@ -46,7 +46,7 @@
 <!ENTITY preferencesCmd.label				"Options...">
 <!ENTITY preferencesCmd.accesskey			"O"> 
 <!ENTITY preferencesCmdUnix.label       "Preferences">
-<!ENTITY preferencesCmdUnix.accesskey     "P"> 
+<!ENTITY preferencesCmdUnix.accesskey     "n"> 
 
 <!ENTITY findTypeTextCmd.label "Find Text As You Type">
 <!ENTITY findTypeTextCmd.accesskey "x">

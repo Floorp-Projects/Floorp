@@ -122,7 +122,7 @@
 <!ENTITY preferencesCmd.key                             "O">
 <!ENTITY preferencesCmd.accesskey                       "O">
 <!ENTITY preferencesCmdUnix.label                       "Preferences">
-<!ENTITY preferencesCmdUnix.accesskey                   "P"> 
+<!ENTITY preferencesCmdUnix.accesskey                   "n"> 
 
 <!-- Help Menu -->
 <!ENTITY helpMenu.label                                 "Help">
