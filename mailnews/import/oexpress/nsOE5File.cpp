@@ -285,6 +285,10 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 					last2[0] = 13;
 					last2[1] = 10;
 				}
+				else {
+					last2[0] = 0;
+					last2[1] = 0;
+				}
 				rv = WriteMessageBuffer( pDestination, pBuffer, block[2], last2);
 				if (NS_FAILED( rv))
 					break;
@@ -336,19 +340,59 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 	return( rv);
 }
 
+
+#define ISFROMLINE( pChar, i)	(*(pChar + i) == 'F') && (*(pChar + i + 1) == 'r') && \
+								(*(pChar + i + 2) == 'o') && (*(pChar + i + 3) == 'm') && \
+								(*(pChar + i + 4) == ' ')
+
+
 nsresult nsOE5File::WriteMessageBuffer( nsIFileSpec *stream, char *pBuffer, PRUint32 size, char *last2)
 {
 	if (!size)
 		return( NS_OK);
 
-	/*
-		FIXME: Escape from lines!
-	*/
-
 	PRInt32		written;
-	nsresult	rv;
+	nsresult	rv = NS_OK;
 
-	// FIXME: Do I need to check the return value of written???
+	//check the very beginning of the buffer to make sure it's not a from
+	// line
+	if ((size > 4) && ((last2[0] = 0x0D) && (last2[1] == 0x0A)) || (last2[1] == 0x0D)) {
+		if ((last2[1] == 0x0D) && (size > 5) && (*pBuffer == 0x0A) && ISFROMLINE( pBuffer, 1)) {
+			rv = stream->Write( pBuffer, 1, &written);
+			pBuffer++;
+			size--;
+			if (NS_SUCCEEDED( rv))
+				rv = stream->Write( ">", 1, &written);
+		}
+		else if ((last2[0] == 0x0D) && ISFROMLINE( pBuffer, 0)) {
+			rv = stream->Write( ">", 1, &written);				
+		}
+		if (NS_FAILED( rv))
+			return( rv);
+	}
+	
+	// examine the rest of the buffer for from problems!
+	PRUint32		cnt = 0;
+	char *			pChar = pBuffer;
+	while (cnt < (size - 6)) {
+		if ((*pChar == 0x0D) && (*(pChar + 1) == 0x0A) && ISFROMLINE( pChar, 2)) {			
+			rv = stream->Write( pBuffer, cnt + 2, &written);
+			pBuffer += (cnt + 2);
+			size -= (cnt + 2);
+			pChar += 2;
+			cnt = 0;
+			if (NS_SUCCEEDED( rv)) {
+				rv = stream->Write( ">", 1, &written);
+			}
+			if (NS_FAILED( rv))
+				return( rv);
+		}
+		else {
+			cnt++;
+			pChar++;
+		}
+	}
+	
 	rv = stream->Write( pBuffer, (PRInt32) size, &written);
 
 	if (NS_SUCCEEDED( rv)) {
