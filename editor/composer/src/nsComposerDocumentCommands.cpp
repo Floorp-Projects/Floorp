@@ -78,8 +78,7 @@ GetPresContextFromEditor(nsIEditor *aEditor, nsIPresContext **aResult)
   if (NS_FAILED(rv)) return rv;
   if (!selCon) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presShell = do_QueryInterface(selCon);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresContext> presContext;
