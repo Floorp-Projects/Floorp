@@ -117,6 +117,7 @@ static JSContextItem*
 PCB_NewContextItem() {
     JSContextItem *ret;
     ret = (JSContextItem*)calloc(1, sizeof(JSContextItem));
+    return ret;
 }
 
 static JSContextItem*
@@ -612,7 +613,56 @@ JS_eval(cx, bytes, ...)
                               0, &rval)){
             cxitem = PCB_FindContextItem(cx);
             if (!cxitem || cxitem->dieFromErrors)
-                croak("Perl eval failed");
+                croak("JS script evaluation failed");
+            XSRETURN_UNDEF;
+        } 
+        RETVAL = rval; 
+    }
+    OUTPUT:
+    RETVAL
+
+
+JSScript *
+JS_compileScript(cx, bytes, ...)
+    JSContext *cx
+    char *bytes
+    PREINIT:
+    JSContextItem *cxitem;
+    char *filename = NULL;
+    CODE:
+    {
+        if (items > 2) { filename = SvPV(ST(2), PL_na); };
+        /* Call on the global object */
+        if(!(RETVAL = JS_CompileScript(cx, JS_GetGlobalObject(cx), 
+                                       bytes, strlen(bytes), 
+                                       filename ? filename : "Perl", 
+                                       0)))
+            {
+                cxitem = PCB_FindContextItem(cx);
+                if (!cxitem || cxitem->dieFromErrors)
+                    croak("JS script compilation failed");
+                XSRETURN_UNDEF;
+            }
+    }
+    OUTPUT:
+    RETVAL
+
+jsval
+JS_exec(cx, script)
+    JSContext *cx
+    JSScript *script
+    PREINIT:
+    JSContextItem *cxitem;
+    char *filename = NULL;
+    CODE:
+    {
+        jsval rval;
+        /* Call on the global object */
+        if(!JS_ExecuteScript(cx, JS_GetGlobalObject(cx), 
+                             script, &rval)) {
+            cxitem = PCB_FindContextItem(cx);
+            if (!cxitem || cxitem->dieFromErrors)
+                croak("JS script evaluation failed");
             XSRETURN_UNDEF;
         }
         RETVAL = rval;
@@ -620,6 +670,13 @@ JS_eval(cx, bytes, ...)
     }
     OUTPUT:
     RETVAL
+
+void
+JS_destroyScript(cx, script)
+     JSContext *cx
+     JSScript *script
+    CODE:
+    JS_DestroyScript(cx, script);
 
 # __PH__
 void
