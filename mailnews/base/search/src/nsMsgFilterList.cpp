@@ -25,12 +25,8 @@
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
 
-const int16 kFileVersion = 6;
-const int16 kFileVersionOldMoveTarget = 5;
-#if defined(XP_WIN) || defined(XP_OS2)
-const int16 kFileVersionAbsPath = 3;
-#endif
-const int16 kFileVersionOldStream = 2;
+const int16 kFileVersion = 7;
+const int16 k45Version = 6;
 
 
 nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)

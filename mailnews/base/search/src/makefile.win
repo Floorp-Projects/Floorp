@@ -22,7 +22,7 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgsearch
 MODULE= mailnews
-REQUIRES=
+
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -31,6 +31,7 @@ CPPSRCS=    nsMsgFilterService.cpp\
 			nsMsgFilter.cpp\
 			nsMsgSearchTerm.cpp\
 			nsMsgBodyHandler.cpp\
+			nsMsgLocalSearch.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
@@ -38,6 +39,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgFilter.obj\
 			.\$(OBJDIR)\nsMsgSearchTerm.obj\
 			.\$(OBJDIR)\nsMsgBodyHandler.obj\
+#			.\$(OBJDIR)\nsMsgLocalSearch.obj\
 			$(NULL)
 
 
@@ -51,7 +53,8 @@ LINCS=-I$(PUBLIC)\xpcom \
 	 -I$(PUBLIC)\mime \
 	 -I$(PUBLIC)\locale \
 	 -I$(PUBLIC)\pref \
-	 -I$(PUBLIC)\js
+	 -I$(PUBLIC)\js \
+	 -I$(PUBLIC)\netlib 
 
 
 LCFLAGS = \

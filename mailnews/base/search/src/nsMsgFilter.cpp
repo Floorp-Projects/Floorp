@@ -220,6 +220,10 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 }
 
 
+NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, char *headers, PRUint32 headersSize)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
 {
@@ -436,8 +440,10 @@ nsMsgRuleActionType nsMsgFilter::GetActionForFilingStr(nsString2 &actionStr)
 	return nsMsgFilterActionNone;
 }
 
+#ifdef DEBUG
 void nsMsgFilter::Dump()
 {
 	printf("filter %s type = %c desc = %s\n", m_filterName.GetBuffer(), m_type + '0', m_description.GetBuffer());
 }
+#endif
 

@@ -21,6 +21,8 @@
 
 #include "MailNewsTypes.h"
 #include "nsString2.h"
+#include "nsIMsgHeaderParser.h"
+#include "nsCOMPtr.h"
 
 class nsIMsgDatabase;
 class nsIMsgFolder;
@@ -193,6 +195,83 @@ public:
 	nsMsgScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgScopeTerm*) nsVoidArray::ElementAt(i); }
 };
 
+//-----------------------------------------------------------------------------
+// nsMsgSearchBoolExpression is a class added to provide AND/OR terms in search queries. 
+//	A nsMsgSearchBoolExpression contains either a search term or two nsMsgSearchBoolExpressions and
+//    a boolean operator.
+// I (mscott) am placing it here for now....
+//-----------------------------------------------------------------------------
+
+/* CBoolExpresion --> encapsulates one or more search terms by internally representing 
+       the search terms and their boolean operators as a binary expression tree. Each node 
+	   in the tree consists of either (1) a boolean operator and two nsMsgSearchBoolExpressions or 
+	   (2) if the node is a leaf node then it contains a search term. With each search term 
+	   that is part of the expression we also keep track of either an evaluation value (XP_BOOL)
+	   or a character string. Evaluation values are used for offline searching. The character 
+	   string is used to store the IMAP/NNTP encoding of the search term. This makes evaluating
+	   the expression (for offline) or generating a search encoding (for online) easier.
+
+  For IMAP/NNTP: nsMsgSearchBoolExpression has/assumes knowledge about how AND and OR search terms are
+                 combined according to IMAP4 and NNTP protocol. That is the only piece of IMAP/NNTP
+				 knowledge it is aware of. 
+
+   Order of Evaluation: Okay, the way in which the boolean expression tree is put together 
+		directly effects the order of evaluation. We currently support left to right evaluation. 
+		Supporting other order of evaluations involves adding new internal add term methods. 
+ */
+
+class nsMsgSearchBoolExpression 
+{
+public:
+
+	// create a leaf node expression
+	nsMsgSearchBoolExpression(nsMsgSearchTerm * newTerm, PRBool EvaluationValue = PR_TRUE, char * encodingStr = NULL);         
+	nsMsgSearchBoolExpression(nsMsgSearchTerm * newTerm, char * encodingStr);
+
+	// create a non-leaf node expression containing 2 expressions and a boolean operator
+	nsMsgSearchBoolExpression(nsMsgSearchBoolExpression *, nsMsgSearchBoolExpression *, nsMsgSearchBooleanOp boolOp); 
+	
+	nsMsgSearchBoolExpression();
+	~nsMsgSearchBoolExpression();  // recursively destroys all sub expressions as well
+
+	// accesors
+	nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchTerm * newTerm, PRBool EvaluationValue = TRUE);  // Offline
+	nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchTerm * newTerm, char * encodingStr); // IMAP/NNTP
+
+	PRBool OfflineEvaluate();  // parses the expression tree and all expressions underneath 
+								// this node using each EvaluationValue at each leaf to determine 
+								// if the end result is TRUE or FALSE.
+	PRInt32 CalcEncodeStrSize();  // assuming the expression is for online searches, 
+								// determine the length of the resulting IMAP/NNTP encoding string
+	PRInt32 GenerateEncodeStr(nsString2 * buffer); // fills pre-allocated memory in buffer with 
+															// the IMAP/NNTP encoding for the expression
+															// returns # bytes added to the buffer
+
+protected:
+	// if we are a leaf node, all we have is a search term and a Evaluation value 
+	// for that search term
+	nsMsgSearchTerm * m_term;
+	PRBool m_evalValue;
+	nsString2 m_encodingStr;     // store IMAP/NNTP encoding for the search term if applicable
+
+	// if we are not a leaf node, then we have two other expressions and a boolean operator
+	nsMsgSearchBoolExpression * m_leftChild;
+	nsMsgSearchBoolExpression * m_rightChild;
+	nsMsgSearchBooleanOp m_boolOp;
+
+
+	// internal methods
+
+	// the idea is to separate the public interface for adding terms to the expression tree from 
+	// the order of evaluation which influences how we internally construct the tree. Right now, 
+	// we are supporting left to right evaluation so the tree is constructed to represent that by 
+	// calling leftToRightAddTerm. If future forms of evaluation need to be supported, add new methods 
+	// here for proper tree construction.
+	nsMsgSearchBoolExpression * leftToRightAddTerm(nsMsgSearchTerm * newTerm, PRBool EvaluationValue, char * encodingStr); 
+};
+
+
+
 // nsMsgResultElement specifies a single search hit.
 
 //---------------------------------------------------------------------------
@@ -258,17 +337,17 @@ public:
 	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMessage * msg, nsIMsgDatabase * db);
-	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMessage * msg, nsIMsgDatabase *db,
+	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, nsIMessage * msg, nsIMsgDatabase * db);
+	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, const char *charset, nsIMessage * msg, nsIMsgDatabase *db,
 											char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
 											PRUint32 headersSize, /* size of the NULL terminated list of headers */
 											PRBool ForFilters /* true if we are filtering */);
-	nsresult MatchString (nsString2 *, PRInt16 csid, PRBool body = FALSE);
+	nsresult MatchString (nsString2 *, const char *charset, PRBool body = FALSE);
 	nsresult MatchDate (time_t);
 	nsresult MatchStatus (PRUint32);
 	nsresult MatchPriority (nsMsgPriority);
 	nsresult MatchSize (PRUint32);
-	nsresult MatchRfc822String(const char *, int16 csid);
+	nsresult MatchRfc822String(const char *, const char *charset);
 	nsresult MatchAge (time_t);
 
 	nsresult EnStreamNew (nsString2 &stream);
@@ -284,6 +363,9 @@ public:
 
 	static char *	EscapeQuotesInStr(const char *str);
 	PRBool MatchAllBeforeDeciding ();
+
+	nsCOMPtr<nsIMsgHeaderParser> m_headerAddressParser;
+
 	nsMsgSearchAttribute m_attribute;
 	nsMsgSearchOperator m_operator;
 	nsMsgSearchValue m_value;
@@ -295,6 +377,8 @@ protected:
 	nsMsgSearchAttribute ParseAttribute(char *inStream);
 	nsMsgSearchOperator	ParseOperator(char *inStream);
 	nsresult		ParseValue(char *inStream);
+	nsresult		InitHeaderAddressParser();
+
 };
 
 
@@ -310,7 +394,7 @@ typedef struct nsMsgSearchMenuItem
 
 //---------------------------------------------------------------------------
 // MSG_BodyHandler: used to retrive lines from POP and IMAP offline messages.
-// This is a helper class used by MSG_SearchTerm::MatchBody
+// This is a helper class used by nsMsgSearchTerm::MatchBody
 //---------------------------------------------------------------------------
 class nsMsgBodyHandler
 {

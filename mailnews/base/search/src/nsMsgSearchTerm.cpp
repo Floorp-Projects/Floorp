@@ -61,7 +61,7 @@ nsresult NS_MsgGetAttributeFromString(const char *string, int16 *attrib)
 	{
 		if (!PL_strcasecmp(string, SearchAttribEntryTable[idxAttrib].attribName))
 		{
-			found = TRUE;
+			found = PR_TRUE;
 			*attrib = SearchAttribEntryTable[idxAttrib].attrib;
 			break;
 		}
@@ -128,7 +128,7 @@ nsresult NS_MsgGetOperatorFromString(const char *string, int16 *op)
 		// enums are defined (starts at 0, numItems at end)
 		if (!PL_strcasecmp(string, SearchOperatorEntryTable[idxOp].opName))
 		{
-			found = TRUE;
+			found = PR_TRUE;
 			*op = SearchOperatorEntryTable[idxOp].op;
 			break;
 		}
@@ -148,7 +148,7 @@ nsresult NS_MsgGetStringForOperator(int16 op, const char **string)
 		// enums are defined (starts at 0, numItems at end)
 		if (op == SearchOperatorEntryTable[idxOp].op)
 		{
-			found = TRUE;
+			found = PR_TRUE;
 			*string = SearchOperatorEntryTable[idxOp].opName;
 			break;
 		}
@@ -469,7 +469,7 @@ nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 	PRBool quoteVal = PR_FALSE;
 	if (*inStream == '"')
 	{
-		quoteVal = TRUE;
+		quoteVal = PR_TRUE;
 		inStream++;
 	}
 
@@ -572,7 +572,7 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
-nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, int16 foldcsid,
+nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
 														nsIMessage *msg, nsIMsgDatabase* db, char * headers, PRUint32 headersSize, PRBool ForFiltering)
 {
 	nsresult err = NS_COMFALSE;
@@ -591,7 +591,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 
 	char * buf = (char *) PR_Malloc(kBufSize);
 	if (buf)
 	{
-		PRBool searchingHeaders = TRUE;
+		PRBool searchingHeaders = PR_TRUE;
 		while (searchingHeaders && bodyHan->GetNextLine(buf, kBufSize))
 		{
 			char * buf_end = buf + PL_strlen(buf);
@@ -617,7 +617,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 
 				if (headerValue < buf_end && *headerValue) // make sure buf has info besides just the header
 				{
 					nsString2 headerStr = headerValue;
-					nsresult err2 = MatchString(&headerStr, foldcsid);  // match value with the other info...
+					nsresult err2 = MatchString(&headerStr, charset);  // match value with the other info...
 					if (err != err2) // if we found a match
 					{
 						searchingHeaders = PR_FALSE;   // then stop examining the headers
@@ -641,7 +641,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 
 	}
 }
 
-nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, int16 foldcsid,
+nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
 										   nsIMessage *msg, nsIMsgDatabase* db)
 {
 	nsresult err = NS_COMFALSE;
@@ -668,7 +668,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRU
 		int16 win_csid = INTL_DocToWinCharSetID(foldcsid);
 		int16 mail_csid = INTL_DefaultMailCharSetID(win_csid);    // to default mail_csid (e.g. JIS for Japanese)
 		if ((nsnull != conv) && INTL_GetCharCodeConverter(mail_csid, win_csid, conv)) 
-			getConverter = TRUE;
+			getConverter = PR_TRUE;
 
 		// Change the sense of the loop so we don't bail out prematurely
 		// on negative terms. i.e. opDoesntContain must look at all lines
@@ -712,14 +712,14 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRU
 				}
 				if (*compare && *compare != CR && *compare != LF)
 				{
-					err = MatchString (compare, win_csid, TRUE);
+					err = MatchString (compare, win_csid, PR_TRUE);
 					lines++; 
 				}
 				if (compare != buf)
 					XP_FREEIF(compare);
 			}
 			else 
-				endOfFile = TRUE;
+				endOfFile = PR_TRUE;
 		}
 
 		if(conv) 
@@ -735,7 +735,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRU
 
 
 // returns NS_COMFALSE when strings don't match, NS_OK if they do.
-nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, int16 csid, PRBool body)
+nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *charset, PRBool body)
 {
 	nsresult err = NS_COMFALSE;
 	nsString2 n_str(eOneByte);
@@ -824,15 +824,16 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, int16 csid, PRB
 PRBool nsMsgSearchTerm::MatchAllBeforeDeciding ()
 {
 	if (m_operator == nsMsgSearchOpDoesntContain || m_operator == nsMsgSearchOpIsnt)
-		return TRUE;
+		return PR_TRUE;
 	return PR_FALSE;
 }
 
 
-nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, int16 csid)
+nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset)
 {
-	nsresult err = NS_ERROR_NOT_IMPLEMENTED;
-#ifdef DO_RFC822
+	nsresult err = InitHeaderAddressParser();
+	if (!NS_SUCCEEDED(err))
+		return err;
 	// Isolate the RFC 822 parsing weirdnesses here. MSG_ParseRFC822Addresses
 	// returns a catenated string of null-terminated strings, which we walk
 	// across, tring to match the target string to either the name OR the address
@@ -847,31 +848,35 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, int16 csid)
 	else
 		err = errContinueLoop = NS_COMFALSE;
 
-	int count = MSG_ParseRFC822Addresses (string, &names, &addresses);
-	if (count > 0)
+	PRUint32 count;
+	err = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, count) ;
+
+	if (NS_SUCCEEDED(err) && count > 0)
 	{
 		NS_ASSERTION(names, "couldn't get names");
 		NS_ASSERTION(addresses, "couldn't get addresses");
 		if (!names || !addresses)
 			return err;
 
-		nsString2 walkNames = names;
-		nsString2 walkAddresses = addresses;
-
+		nsString2 walkNames(names, eOneByte);
+		nsString2 walkAddresses(addresses, eOneByte);
+		PRInt32 namePos = 0;
+		PRInt32 addressPos = 0;
 		for (int i = 0; i < count && err == errContinueLoop; i++)
 		{
-			err = MatchString (&walkNames, csid);
+			err = MatchString (&walkNames, charset);
 			if (errContinueLoop == err)
-				err = MatchString (&walkAddresses, csid);
+				err = MatchString (&walkAddresses, charset);
 
-			walkNames += PL_strlen(walkNames) + 1;
-			walkAddresses += PL_strlen(walkAddresses) + 1;
+			namePos += walkNames.Length() + 1;
+			addressPos += walkAddresses.Length() + 1;
+			walkNames = names + namePos;
+			walkAddresses = addresses + addressPos;;
 		}
 
 		PR_FREEIF(names);
 		PR_FREEIF(addresses);
 	}
-#endif // DO_RFC822
 	return err;
 }
 
@@ -1010,7 +1015,7 @@ nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch)
 	PRBool matches = PR_FALSE;
 
 	if (statusToMatch & m_value.u.msgStatus)
-		matches = TRUE;
+		matches = PR_TRUE;
 
 	switch (m_operator)
 	{
@@ -1057,6 +1062,23 @@ nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch)
 		NS_ASSERTION(PR_FALSE, "invalid match operator");
 	}
 	return err;
+}
+
+// Lazily initialize the rfc822 header parser we're going to use to do
+// header matching.
+nsresult nsMsgSearchTerm::InitHeaderAddressParser()
+{
+	nsresult res = NS_OK;
+	NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
+    
+	if (!m_headerAddressParser)
+	{
+		res = nsComponentManager::CreateInstance(kMsgHeaderParserCID,
+                                       nsnull,
+                                       nsIMsgHeaderParser::GetIID(),
+                                       (void **) getter_AddRefs(m_headerAddressParser));
+	}
+	return res;
 }
 
 //-----------------------------------------------------------------------------

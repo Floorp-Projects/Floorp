@@ -69,6 +69,8 @@ public:
 	*/
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value)= 0;
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) = 0;
+
+	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, char *headers, PRUint32 headersSize) = 0;
 	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header) = 0;
 };
 
