@@ -259,8 +259,8 @@ public:
 	void SetCheck(int nCheck);
 	int  GetCheck(void);
 
-	void SetPicturesOnly(int bPicturesOnly);
-	void SetButtonMode(int nToolbarStyle);
+	virtual void SetPicturesOnly(int bPicturesOnly);
+	virtual void SetButtonMode(int nToolbarStyle);
 	void SetState(BTN_STATE eState) { m_eState = eState; }
 	void SetMenuShowing(BOOL bMenuShowing) {m_bMenuShowing = bMenuShowing; }
 

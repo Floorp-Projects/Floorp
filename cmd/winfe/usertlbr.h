@@ -128,6 +128,11 @@ public:
 
 	virtual BOOL NeedsUpdate();
 
+	// button mode is defined solely in the RDF
+	virtual void SetPicturesOnly(int bPicturesOnly);
+	virtual void SetButtonMode(int nToolbarStyle);
+	int          GetButtonMode(void);
+
 protected:
 	virtual void DrawPicturesAndTextMode(HDC hDC, CRect rect);
     virtual BOOL CreateRightMouseMenu(void);

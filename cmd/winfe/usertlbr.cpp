@@ -195,6 +195,7 @@ int CRDFToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButt
 	if(bResult)
 	{
 		SetNode(pNode);
+		SetButtonMode(nToolbarStyle);
 		UpdateIconInfo();		
 		if (m_menu.m_hMenu == NULL || (m_menu.m_hMenu != NULL && !IsMenu(m_menu.m_hMenu)))
           m_menu.CreatePopupMenu();
@@ -1159,6 +1160,31 @@ BOOL CRDFToolbarButton::NeedsUpdate()
 		return TRUE;
 	}
 	return FALSE;
+}
+
+// override CToolbarButton behaviour.  RDF buttons take on new styles only if the RDF is ambivalent.
+void CRDFToolbarButton::SetPicturesOnly(int bPicturesOnly)
+{
+	if (GetButtonMode() < 0)
+		CRDFToolbarButtonBase::SetPicturesOnly(bPicturesOnly);
+}
+
+// returns the button mode specified in the RDF, or -1 if none.
+int CRDFToolbarButton::GetButtonMode(void)
+{
+	char *data;
+	HT_GetNodeData(m_Node, gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, (void **)&data);
+	return data ? CRDFToolbar::StyleFromHTDescriptor(data) : -1;
+}
+
+// override CToolbarButton behaviour.  RDF buttons take on new styles only if the RDF is ambivalent.
+void CRDFToolbarButton::SetButtonMode(int nToolbarStyle)
+{
+	int	style = GetButtonMode();
+	if (style < 0)
+		style = nToolbarStyle;
+
+	CRDFToolbarButtonBase::SetButtonMode(style);
 }
 
 void CRDFToolbarButton::LoadComplete(HT_Resource r)
