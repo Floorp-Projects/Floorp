@@ -55,7 +55,7 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementOBserver.h"
+#include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsIDocument.h"
