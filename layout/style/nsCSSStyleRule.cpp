@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
+#include "nsCSSRule.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsICSSStyleSheet.h"
@@ -41,11 +42,10 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
 
-//#define DEBUG_REFS
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
+static NS_DEFINE_IID(kICSSRuleIID, NS_ICSS_RULE_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
@@ -116,8 +116,9 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
   return PR_FALSE;
 }
 
-nsAttrSelector::nsAttrSelector(const nsString& aAttr)
-  : mAttr(nsnull),
+nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
+  : mNameSpace(aNameSpace),
+    mAttr(nsnull),
     mFunction(NS_ATTR_FUNC_SET),
     mCaseSensitive(1),
     mValue(),
@@ -126,9 +127,10 @@ nsAttrSelector::nsAttrSelector(const nsString& aAttr)
   mAttr = NS_NewAtom(aAttr);
 }
 
-nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue,
-                               PRBool aCaseSensitive)
-  : mAttr(nsnull),
+nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
+                               const nsString& aValue, PRBool aCaseSensitive)
+  : mNameSpace(aNameSpace),
+    mAttr(nsnull),
     mFunction(aFunction),
     mCaseSensitive(aCaseSensitive),
     mValue(aValue),
@@ -138,7 +140,8 @@ nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const n
 }
 
 nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
-  : mAttr(aCopy.mAttr),
+  : mNameSpace(aCopy.mNameSpace),
+    mAttr(aCopy.mAttr),
     mFunction(aCopy.mFunction),
     mCaseSensitive(aCopy.mCaseSensitive),
     mValue(aCopy.mValue),
@@ -160,7 +163,8 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
     return PR_TRUE;
   }
   if (nsnull != aOther) {
-    if ((mAttr == aOther->mAttr) && 
+    if ((mNameSpace == aOther->mNameSpace) &&
+        (mAttr == aOther->mAttr) && 
         (mFunction == aOther->mFunction) && 
         (mCaseSensitive == aOther->mCaseSensitive) &&
         mValue.Equals(aOther->mValue)) {
@@ -338,26 +342,26 @@ void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass)
   }
 }
 
-void nsCSSSelector::AddAttribute(const nsString& aAttr)
+void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr)
 {
   if (0 < aAttr.Length()) {
     nsAttrSelector** list = &mAttrList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
     }
-    *list = new nsAttrSelector(aAttr);
+    *list = new nsAttrSelector(aNameSpace, aAttr);
   }
 }
 
-void nsCSSSelector::AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue,
-                                 PRBool aCaseSensitive)
+void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
+                                 const nsString& aValue, PRBool aCaseSensitive)
 {
   if (0 < aAttr.Length()) {
     nsAttrSelector** list = &mAttrList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
     }
-    *list = new nsAttrSelector(aAttr, aFunc, aValue, aCaseSensitive);
+    *list = new nsAttrSelector(aNameSpace, aAttr, aFunc, aValue, aCaseSensitive);
   }
 }
 
@@ -417,8 +421,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
+//  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+//  NS_IMETHOD HashValue(PRUint32& aValue) const;
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
@@ -454,6 +458,7 @@ CSSImportantRule::~CSSImportantRule(void)
 
 NS_IMPL_ISUPPORTS(CSSImportantRule, kIStyleRuleIID);
 
+#if 0
 NS_IMETHODIMP
 CSSImportantRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
@@ -467,6 +472,7 @@ CSSImportantRule::HashValue(PRUint32& aValue) const
   aValue = PRUint32(mDeclaration);
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 CSSImportantRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
@@ -522,9 +528,9 @@ class DOMCSSDeclarationImpl : public nsDOMCSSDeclaration
 {
 public:
   DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
-  ~DOMCSSDeclarationImpl();
+  ~DOMCSSDeclarationImpl(void);
 
-  virtual void DropReference();
+  virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
@@ -543,12 +549,12 @@ DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
   mRule = aRule;
 }
 
-DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl()
+DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl(void)
 {
 }
 
 void 
-DOMCSSDeclarationImpl::DropReference()
+DOMCSSDeclarationImpl::DropReference(void)
 {
   mRule = nsnull;
 }
@@ -623,23 +629,18 @@ DOMCSSDeclarationImpl::GetBaseURL(nsIURL** aURL)
 
 // -- nsCSSStyleRule -------------------------------
 
-class CSSStyleRuleImpl : public nsICSSStyleRule, 
+class CSSStyleRuleImpl : public nsCSSRule,
+                         public nsICSSStyleRule, 
                          public nsIDOMCSSStyleRule, 
                          public nsIScriptObjectOwner {
 public:
-  void* operator new(size_t size);
-  void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr);
-
   CSSStyleRuleImpl(const nsCSSSelector& aSelector);
   CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy); 
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
+//  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+//  NS_IMETHOD HashValue(PRUint32& aValue) const;
   // Strength is an out-of-band weighting, useful for mapping CSS ! important
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
@@ -660,7 +661,8 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
-  NS_IMETHOD Clone(nsICSSStyleRule*& aClone) const;
+  NS_IMETHOD GetType(PRInt32& aType) const;
+  NS_IMETHOD Clone(nsICSSRule*& aClone) const;
 
   NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
@@ -688,91 +690,38 @@ private:
   CSSStyleRuleImpl& operator=(const CSSStyleRuleImpl& aCopy); 
 
 protected:
-  virtual ~CSSStyleRuleImpl();
+  virtual ~CSSStyleRuleImpl(void);
 
 protected:
-  PRUint32 mInHeap : 1;
-  PRUint32 mRefCnt : 31;
-
   nsCSSSelector           mSelector;
   nsString                mSelectorText;
   nsICSSDeclaration*      mDeclaration;
   PRInt32                 mWeight;
   CSSImportantRule*       mImportantRule;
-  nsICSSStyleSheet*       mSheet;                         
   DOMCSSDeclarationImpl*  mDOMDeclaration;                          
   void*                   mScriptObject;                           
-#ifdef DEBUG_REFS
-  PRInt32 mInstance;
-#endif
 };
 
 
-void* CSSStyleRuleImpl::operator new(size_t size)
-{
-  CSSStyleRuleImpl* rv = (CSSStyleRuleImpl*) ::operator new(size);
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    nsCRT::memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 1;
-  return (void*) rv;
-}
-
-void* CSSStyleRuleImpl::operator new(size_t size, nsIArena* aArena)
-{
-  CSSStyleRuleImpl* rv = (CSSStyleRuleImpl*) aArena->Alloc(PRInt32(size));
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    nsCRT::memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 0;
-  return (void*) rv;
-}
-
-void CSSStyleRuleImpl::operator delete(void* ptr)
-{
-  CSSStyleRuleImpl* rule = (CSSStyleRuleImpl*) ptr;
-  if (nsnull != rule) {
-    if (rule->mInHeap) {
-      ::operator delete(ptr);
-    }
-  }
-}
-
-
-#ifdef DEBUG_REFS
-static PRInt32 gInstanceCount;
-static const PRInt32 kInstrument = 1075;
-#endif
-
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
-  : mSelector(aSelector), mSelectorText(), mDeclaration(nsnull), 
-    mWeight(0), mImportantRule(nsnull)
+  : nsCSSRule(),
+    mSelector(aSelector), mSelectorText(), mDeclaration(nsnull), 
+    mWeight(0), mImportantRule(nsnull),
+    mDOMDeclaration(nsnull),
+    mScriptObject(nsnull)
 {
-  NS_INIT_REFCNT();
-  mDOMDeclaration = nsnull;
-  mScriptObject = nsnull;
-#ifdef DEBUG_REFS
-  mInstance = gInstanceCount++;
-  fprintf(stdout, "%d of %d + CSSStyleRule\n", mInstance, gInstanceCount);
-#endif
 }
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
-  : mSelector(aCopy.mSelector),
+  : nsCSSRule(aCopy),
+    mSelector(aCopy.mSelector),
     mSelectorText(aCopy.mSelectorText),
     mDeclaration(nsnull),
     mWeight(aCopy.mWeight),
     mImportantRule(nsnull),
-    mSheet(aCopy.mSheet),
     mDOMDeclaration(nsnull),
     mScriptObject(nsnull)
 {
-  NS_INIT_REFCNT();
-
   nsCSSSelector* copySel = aCopy.mSelector.mNext;
   nsCSSSelector* ourSel = &mSelector;
 
@@ -786,15 +735,10 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
     aCopy.mDeclaration->Clone(mDeclaration);
   }
   // rest is constructed lazily on existing data
-
-#ifdef DEBUG_REFS
-  mInstance = gInstanceCount++;
-  fprintf(stdout, "%d of %d + CSSStyleRule\n", mInstance, gInstanceCount);
-#endif
 }
 
 
-CSSStyleRuleImpl::~CSSStyleRuleImpl()
+CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
   nsCSSSelector*  next = mSelector.mNext;
 
@@ -811,39 +755,13 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl()
   if (nsnull != mDOMDeclaration) {
     mDOMDeclaration->DropReference();
   }
-#ifdef DEBUG_REFS
-  --gInstanceCount;
-  fprintf(stdout, "%d of %d - CSSStyleRule\n", mInstance, gInstanceCount);
-#endif
 }
 
-#ifdef DEBUG_REFS
-nsrefcnt CSSStyleRuleImpl::AddRef(void)                                
-{                                    
-  if (mInstance == kInstrument) {
-    fprintf(stdout, "%d AddRef CSSStyleRule\n", mRefCnt + 1);
-  }
-  return ++mRefCnt;                                          
-}
-
-nsrefcnt CSSStyleRuleImpl::Release(void)                         
-{                                                      
-  if (mInstance == kInstrument) {
-    fprintf(stdout, "%d Release CSSStyleRule\n", mRefCnt - 1);
-  }
-  if (--mRefCnt == 0) {                                
-    NS_DELETEXPCOM(this);
-    return 0;                                          
-  }                                                    
-  return mRefCnt;                                      
-}
-#else
-NS_IMPL_ADDREF(CSSStyleRuleImpl)
-NS_IMPL_RELEASE(CSSStyleRuleImpl)
-#endif
+NS_IMPL_ADDREF_INHERITED(CSSStyleRuleImpl, nsCSSRule);
+NS_IMPL_RELEASE_INHERITED(CSSStyleRuleImpl, nsCSSRule);
 
 nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
-                                            void** aInstancePtrResult)
+                                          void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
@@ -851,6 +769,11 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kICSSStyleRuleIID)) {
     *aInstancePtrResult = (void*) ((nsICSSStyleRule*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kICSSRuleIID)) {
+    *aInstancePtrResult = (void*) ((nsICSSRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -887,7 +810,7 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-
+#if 0
 NS_IMETHODIMP CSSStyleRuleImpl::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
   nsICSSStyleRule* iCSSRule;
@@ -931,6 +854,7 @@ CSSStyleRuleImpl::HashValue(PRUint32& aValue) const
   aValue = (PRUint32)this;
   return NS_OK;
 }
+#endif
 
 // Strength is an out-of-band weighting, useful for mapping CSS ! important
 NS_IMETHODIMP
@@ -1041,18 +965,13 @@ nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 NS_IMETHODIMP
 CSSStyleRuleImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
+  return nsCSSRule::GetStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP
 CSSStyleRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 {
-  // We don't reference count this up reference. The style sheet
-  // will tell us when it's going away or when we're detached from
-  // it.
-  mSheet = aSheet;
+  nsCSSRule::SetStyleSheet(aSheet);
   if (nsnull != mImportantRule) { // we're responsible for this guy too
     mImportantRule->mSheet = aSheet;
   }
@@ -1199,11 +1118,18 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, nsc
 }
 
 NS_IMETHODIMP
-CSSStyleRuleImpl::Clone(nsICSSStyleRule*& aClone) const
+CSSStyleRuleImpl::GetType(PRInt32& aType) const
+{
+  aType = nsICSSRule::STYLE_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSStyleRuleIID, (void **)&aClone);
+    return clone->QueryInterface(kICSSRuleIID, (void **)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -2366,11 +2292,36 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
   }
 }
 
-
+static void ListNameSpace(FILE* out, nsINameSpaceManager*& aManager, PRInt32 aNameSpaceID)
+{
+  if (kNameSpaceID_Unknown == aNameSpaceID) {
+    fputs("*|", out);
+  }
+  else if (kNameSpaceID_None == aNameSpaceID) {
+    fputs("|", out);
+  }
+  else if (kNameSpaceID_None < aNameSpaceID) {
+    nsAutoString  buffer;
+    if (! aManager) {
+      NS_NewNameSpaceManager(&aManager);
+    }
+    if (aManager) {
+      aManager->GetNameSpaceURI(aNameSpaceID, buffer);
+    }
+    else {
+      buffer = "{namespace ID: ";
+      buffer.Append(aNameSpaceID, 10);
+      buffer.Append("}");
+    }
+    fputs(buffer, out);
+    fputs("|", out);
+  }
+}
 
 static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
 {
   nsAutoString buffer;
+  nsINameSpaceManager*  nameSpaceMgr = nsnull;
 
   if (0 != aSelector->mOperator) {
     buffer.Truncate();
@@ -2378,11 +2329,7 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
     buffer.Append(" ");
     fputs(buffer, out);
   }
-  if (kNameSpaceID_None < aSelector->mNameSpace) {
-    buffer.Append(aSelector->mNameSpace, 10);
-    fputs(buffer, out);
-    fputs("\\:", out);
-  }
+  ListNameSpace(out, nameSpaceMgr, aSelector->mNameSpace);
   if (nsnull != aSelector->mTag) {
     aSelector->mTag->ToString(buffer);
     fputs(buffer, out);
@@ -2411,6 +2358,7 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
   nsAttrSelector* attr = aSelector->mAttrList;
   while (nsnull != attr) {
     fputs("[", out);
+    ListNameSpace(out, nameSpaceMgr, attr->mNameSpace);
     attr->mAttr->ToString(buffer);
     fputs(buffer, out);
     if (NS_ATTR_FUNC_SET != attr->mFunction) {
@@ -2424,6 +2372,7 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
     fputs("]", out);
     attr = attr->mNext;
   }
+  NS_IF_RELEASE(nameSpaceMgr);
 }
 
 NS_IMETHODIMP
