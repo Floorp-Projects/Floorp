@@ -823,15 +823,15 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
   if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content))) && content){
+    nsCOMPtr<nsIContent> parent;
+    nsCOMPtr<nsIContent> parent2;
+    if (NS_FAILED(content->GetParent(*getter_AddRefs(parent))) || !parent)
+      return NS_ERROR_FAILURE;
+    if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
+      return NS_ERROR_FAILURE;
     domNode = do_QueryInterface(content);
-    nsCOMPtr<nsIDOMNode> parent;
-    nsCOMPtr<nsIDOMNode> parent2;
-    if (NS_FAILED(domNode->GetParentNode(getter_AddRefs(parent))) || !parent)
-      return NS_ERROR_FAILURE;
-    if (NS_FAILED(parent->GetParentNode(getter_AddRefs(parent2))) || !parent2)
-      return NS_ERROR_FAILURE;
-    parent = nsCOMPtr<nsIDOMNode>();//just force a release now even though we dont have to.
-    parent2 = nsCOMPtr<nsIDOMNode>();
+    parent = nsCOMPtr<nsIContent>();//just force a release now even though we dont have to.
+    parent2 = nsCOMPtr<nsIContent>();
 
     nsIFrame *frame;
     nsIFrame *anchor;
