@@ -352,11 +352,11 @@ endsWith (const char* pattern, const char* uuid)
   short l1 = strlen(pattern);
   short l2 = strlen(uuid);
   short index;
-  if (l2 < l1) return false;  
+  if (l2 < l1) return PR_FALSE;  
   for (index = 1; index <= l1; index++) {
-    if (pattern[l1-index] != uuid[l2-index]) return false;
+    if (pattern[l1-index] != uuid[l2-index]) return PR_FALSE;
   }  
-  return true;
+  return PR_TRUE;
 }
 
 nsresult
