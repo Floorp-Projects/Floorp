@@ -113,7 +113,7 @@ BEGIN
                     TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
                     TVS_TRACKSELECT | WS_BORDER | WS_TABSTOP,271,16,100,211
     GROUPBOX        "Tests",IDC_STATIC,265,7,112,303
-    COMBOBOX        IDC_URL,45,7,117,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_URL,45,7,117,52,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     PUSHBUTTON      "<",IDC_BACKWARD,203,7,25,13
     PUSHBUTTON      ">",IDC_FORWARD,234,7,25,13
@@ -189,6 +189,13 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_CBROWSE             REGISTRY DISCARDABLE    "Cbrowse.rgs"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

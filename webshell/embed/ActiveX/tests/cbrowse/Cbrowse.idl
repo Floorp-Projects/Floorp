@@ -1,0 +1,19 @@
+
+	// Cbrowse.idl : IDL source for Cbrowse.exe
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (Cbrowse.tlb) and marshalling code.
+import "oaidl.idl";
+import "ocidl.idl";
+[
+	uuid(5B209213-F756-11D2-A27F-000000000000),
+	version(1.0),
+	helpstring("Cbrowse 1.0 Type Library")
+]
+library CbrowseLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+};
+
+	

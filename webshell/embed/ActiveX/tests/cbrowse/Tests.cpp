@@ -319,6 +319,22 @@ TestResult __cdecl tstNavigate2(BrowserInfo &cInfo)
 	return trFailed;
 }
 
+TestResult __cdecl tstScriptTest(BrowserInfo &cInfo)
+{
+	CActiveScriptSiteInstance *pSite = NULL;
+	CActiveScriptSiteInstance::CreateInstance(&pSite);
+	
+	if (pSite)
+	{
+		pSite->AddRef();
+		pSite->AttachVBScript();
+		pSite->ParseScriptText(_T("i=1"));
+		pSite->PlayScript();
+		pSite->Release();
+	}
+	return trPassed;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 Test aBasic[] =
@@ -347,12 +363,18 @@ Test aOther[] =
 	{ _T("Print Page"), _T("Print the test URL page"), NULL }
 };
 
+Test aScripts[] =
+{
+	{ _T("Script test"), _T("Test that the scripting engine is sane"), tstScriptTest }
+};
+
 TestSet aTestSets[] =
 {
 	{ _T("Basic"), _T("Basic sanity tests"), 5, aBasic },
 	{ _T("Browsing"), _T("Browsing and navigation tests"), 1, aBrowsing },
 	{ _T("DHTML"), _T("Test the DOM"), 3, aDHTML },
-	{ _T("Other"), _T("Other tests"), 1, aOther }
+	{ _T("Other"), _T("Other tests"), 1, aOther },
+	{ _T("Scripts"), _T("Script tests"), 1, aScripts }
 };
 
 int nTestSets = sizeof(aTestSets) / sizeof(aTestSets[0]);

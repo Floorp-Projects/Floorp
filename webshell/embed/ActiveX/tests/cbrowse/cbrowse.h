@@ -13,6 +13,7 @@
 #endif
 
 #include "resource.h"		// main symbols
+#include "Cbrowse_i.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CBrowseApp:
@@ -29,6 +30,7 @@ public:
 	//{{AFX_VIRTUAL(CBrowseApp)
 	public:
 	virtual BOOL InitInstance();
+		virtual int ExitInstance();
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -38,6 +40,13 @@ public:
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+
+/*
+	BOOL m_bATLInited;
+private:
+	BOOL InitATL();
+*/
 };
 
 
