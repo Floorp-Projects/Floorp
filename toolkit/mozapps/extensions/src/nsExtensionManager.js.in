@@ -40,7 +40,7 @@ const nsIUpdateService                = Components.interfaces.nsIUpdateService;
 const nsIUpdateItem                   = Components.interfaces.nsIUpdateItem;
 
 const PREF_EM_APP_ID                  = "app.id";
-const PREF_EM_APP_VERSION             = "app.version";
+const PREF_EM_APP_EXTENSIONS_VERSION  = "app.extensions.version";
 const PREF_EM_APP_BUILDID             = "app.build_id";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT               = "update.extensions.count";
@@ -161,35 +161,27 @@ const ROOT_THEME        = "urn:mozilla:theme:root";
 function getItemPrefix(aItemType)
 {
   var prefix = "";
-  switch (aItemType) {
-  case nsIUpdateItem.TYPE_EXTENSION:
+  if (aItemType & nsIUpdateItem.TYPE_EXTENSION) 
     prefix = PREFIX_EXTENSION;
-    break;
-  case nsIUpdateItem.TYPE_THEME:
+  else if (aItemType & nsIUpdateItem.TYPE_THEME)
     prefix = PREFIX_THEME;
-    break;
-  }
   return prefix;
 }
 
 function getItemRoot(aItemType)
 {
   var root = "";
-  switch (aItemType) {
-  case nsIUpdateItem.TYPE_EXTENSION:
+  if (aItemType & nsIUpdateItem.TYPE_EXTENSION) 
     root = ROOT_EXTENSION;
-    break;
-  case nsIUpdateItem.TYPE_THEME:
+  else if (aItemType & nsIUpdateItem.TYPE_THEME)
     root = ROOT_THEME;
-    break;
-  }
   return root;
 }
 
 function getItemRoots(aItemType)
 {    
   var roots = [];
-  if (aItemType == nsIUpdateItem.TYPE_ADDON)
+  if (aItemType & nsIUpdateItem.TYPE_ADDON)
     roots = roots.concat([getItemRoot(nsIUpdateItem.TYPE_EXTENSION), 
                           getItemRoot(nsIUpdateItem.TYPE_THEME)]);
   else
@@ -1680,9 +1672,9 @@ nsExtensionManager.prototype = {
     }
     
     if (file.exists()) {
-      if (aItemType == nsIUpdateItem.TYPE_EXTENSION)
+      if (aItemType & nsIUpdateItem.TYPE_EXTENSION)
         this.installExtension(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
-      else if (aItemType == nsIUpdateItem.TYPE_THEME)
+      else if (aItemType & nsIUpdateItem.TYPE_THEME)
         this.installTheme(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
     }
     else
@@ -1826,7 +1818,7 @@ nsExtensionManager.prototype = {
     // now is the same one that was started last time. 
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    var currAppVersion = pref.getCharPref(PREF_EM_APP_VERSION);
+    var currAppVersion = pref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
     try {
       var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
     }
@@ -1843,9 +1835,9 @@ nsExtensionManager.prototype = {
         for (var i = 0; i < items.length; ++i) {
           // Now disable the extension so it won't hurt anything. 
           var itemType = getItemType(this._ds._getResourceForItem(items[i].id).Value);
-          if (itemType == nsIUpdateItem.TYPE_EXTENSION)
+          if (itemType & nsIUpdateItem.TYPE_EXTENSION)
             this.disableExtension(items[i].id);
-          else if (itemType == nsIUpdateItem.TYPE_THEME) {
+          else if (itemType & nsIUpdateItem.TYPE_THEME) {
             var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                                .getService(Components.interfaces.nsIXULChromeRegistry);
             var pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -2263,7 +2255,7 @@ nsExtensionManager.prototype = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
-    var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
+    var appVersion = pref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
 
     if (aItems.length == 0) {
       var addonType = nsIUpdateItem.TYPE_ADDON;
@@ -2680,12 +2672,14 @@ nsExtensionItemUpdater.prototype = {
     var version = aDatasource.GetTarget(extensionRes, versionArc, true);
     if (!version) { // Report an error if the update manifest is incomplete
       this.onDatasourceError(aItem, "malformed-rdf");
+      // XXXben show console message
       return;
     }
     version = version.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     var updateLink = aDatasource.GetTarget(extensionRes, updateLinkArc, true);
     if (!updateLink) { // Report an error if the update manifest is incomplete
       this.onDatasourceError(aItem, "malformed-rdf");
+      // XXXben show console message
       return;
     }
     updateLink = updateLink.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -2832,7 +2826,7 @@ nsExtensionsDataSource.prototype = {
       
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
+    var appVersion = pref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
 
     var targets = aDS.GetTargets(aSource, this._emR("targetApplication"), true);
@@ -2871,7 +2865,7 @@ nsExtensionsDataSource.prototype = {
           var itemType = getItemType(e.Value);
           var id = stripPrefix(e.Value, itemType);
           var item = Components.classes["@mozilla.org/updates/item;1"]
-                              .createInstance(Components.interfaces.nsIUpdateItem);
+                               .createInstance(Components.interfaces.nsIUpdateItem);
           item.init(id, this._getItemProperty(e, "version"),
                     this._getItemProperty(e, "name"),
                     -1, "", "", this._getItemProperty(e, "updateURL"), 
@@ -2912,7 +2906,7 @@ nsExtensionsDataSource.prototype = {
             item.init(id, this.getItemProperty(id, "version"),
                       this.getItemProperty(id, "name"),
                       -1, "", "", 
-                      this.getItemProperty(id, "updateURL"), aType);
+                      this.getItemProperty(id, "updateURL"), getItemType(roots[i]));
             items.push(item);
           }
         }
@@ -3455,7 +3449,7 @@ nsExtensionsDataSource.prototype = {
       
     if (aProperty.EqualsNode(this._emR("iconURL"))) {
       var itemType = getItemType(aSource.Value);
-      if (itemType == nsIUpdateItem.TYPE_EXTENSION) {
+      if (itemType & nsIUpdateItem.TYPE_EXTENSION) {
         var hasIconURL = this._composite.hasArcOut(aSource, aProperty);
         // If the download entry doesn't have a IconURL property, use a
         // generic icon URL instead.
@@ -3478,7 +3472,7 @@ nsExtensionsDataSource.prototype = {
           }
         }
       }
-      else if (itemType == nsIUpdateItem.TYPE_THEME) {
+      else if (itemType & nsIUpdateItem.TYPE_THEME) {
         var res = this._getThemeJARURL(aSource, "icon.png", "chrome://mozapps/skin/extensions/themeGeneric.png");
         if (res)
           return res;
@@ -3486,7 +3480,7 @@ nsExtensionsDataSource.prototype = {
     }
     else if (aProperty.EqualsNode(this._emR("previewImage"))) {
       var itemType = getItemType(aSource.Value);
-      if (itemType == nsIUpdateItem.TYPE_THEME) {
+      if (itemType & nsIUpdateItem.TYPE_THEME) {
         var res = this._getThemeJARURL(aSource, "preview.png", null);
         if (res)
           return res;

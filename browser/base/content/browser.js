@@ -539,6 +539,9 @@ function delayedStartup()
     shell.shouldCheckDefaultBrowser = checkEveryTime.value;
   }
 #endif
+
+  var updatePanel = document.getElementById("statusbar-updates");
+  updatePanel.init();
 }
 
 function Shutdown()

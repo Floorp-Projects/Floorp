@@ -73,6 +73,7 @@ pref("update.extensions.autoUpdate", false);
 
 pref("update.interval", 604800000); // every 7 days
 pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
+pref("update.showSlidingNotification", true); // windows-only slide-up taskbar notification
 
 // These prefs relate to the number and severity of updates available. This is a 
 // cache that the browser notification mechanism uses to determine if it should show

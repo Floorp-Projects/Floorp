@@ -43,9 +43,14 @@ const nsIUpdateItem                     = Components.interfaces.nsIUpdateItem;
 const nsIUpdateService                  = Components.interfaces.nsIUpdateService;
 const nsIExtensionManager               = Components.interfaces.nsIExtensionManager;
 
-const PREF_APP_ID                       = "app.id";
-const PREF_UPDATE_APP_UPDATESAVAILABLE  = "update.app.updatesAvailable";
-const PREF_UPDATE_EXTENSIONS_ENABLED    = "update.extensions.enabled";
+const PREF_APP_ID                           = "app.id";
+const PREF_UPDATE_EXTENSIONS_ENABLED        = "update.extensions.enabled";
+const PREF_UPDATE_APP_UPDATESAVAILABLE      = "update.app.updatesAvailable";
+const PREF_UPDATE_APP_UPDATEVERSION         = "update.app.updateVersion";
+const PREF_UPDATE_APP_UPDATEDESCRIPTION     = "update.app.updateDescription";
+const PREF_UPDATE_APP_UPDATEURL             = "update.app.updateURL";
+
+const PREF_UPDATE_EXTENSIONS_COUNT          = "update.extensions.count";
 
 var gSourceEvent = null;
 var gUpdateTypes = null;
@@ -64,6 +69,7 @@ var gUpdateWizard = {
   shouldAutoCheck: false,
   
   updatingApp: false,
+  remainingExtensionUpdateCount: 0,
   
   init: function ()
   {
@@ -83,11 +89,6 @@ var gUpdateWizard = {
     }
     
     gMismatchPage.init();
-  },
-  
-  uninit: function ()
-  {
-    gUpdatePage.uninit();
   },
   
   onWizardFinish: function ()
@@ -121,10 +122,82 @@ var gUpdateWizard = {
                           .createInstance(Components.interfaces.nsISupportsString);
       url.data = updates.appUpdateURL;
       ary.AppendElement(url);
-      ww.openWindow(null, "chrome://browser/content/browser.xul",
-                    "_blank", "chrome,all,dialog=no", ary);
+      
+      function obs(aWindow) 
+      { 
+        this._win = aWindow;
+      }
+      obs.prototype = {
+        _win: null,
+        notify: function (aTimer)
+        {
+          this._win.focus();
+        }
+      };
+      
+      var win = ww.openWindow(null, "chrome://browser/content/browser.xul",
+                              "_blank", "chrome,all,dialog=no", ary);
+      var timer = Components.classes["@mozilla.org/timer;1"]
+                            .createInstance(Components.interfaces.nsITimer);
+      timer.initWithCallback(new obs(win), 100, 
+                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 #endif
+
+      // Clear the "app update available" pref as an interim amnesty assuming
+      // the user actually does install the new version. If they don't, a subsequent
+      // update check will poke them again.
+      this.clearAppUpdatePrefs();
     }
+    else {
+      // Downloading and Installed Extension
+      this.clearExtensionUpdatePrefs();
+    }
+
+    // Send an event to refresh any FE notification components. 
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    var userEvt = Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER;
+    os.notifyObservers(null, "Update:Ended", userEvt.toString());
+  },
+  
+  clearAppUpdatePrefs: function ()
+  {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+                         
+    // Set the "applied app updates this session" pref so that the update service
+    // does not display the update notifier for application updates anymore this
+    // session, to give the user a one-cycle amnesty to install the newer version.
+    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                            .getService(Components.interfaces.nsIUpdateService);
+    updates.appUpdatesAvailable = false;
+
+    // Unset prefs used by the update service to signify application updates
+    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATESAVAILABLE))
+      pref.clearUserPref(PREF_UPDATE_APP_UPDATESAVAILABLE);
+    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATEVERSION))
+      pref.clearUserPref(PREF_UPDATE_APP_UPDATEVERSION);
+    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATEURL))
+      pref.clearUserPref(PREF_UPDATE_APP_UPDATEDESCRIPTION);
+    if (pref.prefHasUserValue(PREF_UPDATE_APP_UPDATEURL)) 
+      pref.clearUserPref(PREF_UPDATE_APP_UPDATEURL);
+  },
+  
+  clearExtensionUpdatePrefs: function ()
+  {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+                         
+    // Set the "applied extension updates this session" pref so that the 
+    // update service does not display the update notifier for extension
+    // updates anymore this session (the updates will be applied at the next
+    // start).
+    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                            .getService(Components.interfaces.nsIUpdateService);
+    updates.extensionUpdatesAvailable = this.remainingExtensionUpdateCount;
+    
+    if (pref.prefHasUserValue(PREF_UPDATE_EXTENSIONS_COUNT)) 
+      pref.clearUserPref(PREF_UPDATE_EXTENSIONS_COUNT);
   },
   
   _setUpButton: function (aButtonID, aButtonKey, aDisabled)
@@ -208,7 +281,6 @@ var gMismatchPage = {
 
 var gUpdatePage = {
   _completeCount: 0,
-  _updateState: 0,
   _messages: ["Update:Extension:Started", 
               "Update:Extension:Ended", 
               "Update:Extension:Item-Started", 
@@ -235,8 +307,6 @@ var gUpdatePage = {
                             .getService(Components.interfaces.nsIUpdateService);
     updates.checkForUpdatesInternal(gUpdateWizard.items, gUpdateWizard.items.length, 
                                     gUpdateTypes, gSourceEvent);
-
-    this._updateState = nsIUpdateService.UPDATED_NONE;
   },
   
   uninit: function ()
@@ -319,6 +389,7 @@ var gUpdatePage = {
     }
 
     if (canFinish) {    
+      gUpdatePage.uninit();
       if (gUpdateWizard.itemsToUpdate.length > 0 || gUpdateWizard.appUpdatesAvailable)
         document.getElementById("checking").setAttribute("next", "found");
       document.documentElement.advance();
@@ -350,7 +421,7 @@ var gFoundPage = {
       // If we have an App entry in the list, check it and uncheck
       // the others since the two are mutually exclusive installs.
       updateitem.type = item.type;
-      if (item.type == nsIUpdateItem.TYPE_APP) {
+      if (item.type & nsIUpdateItem.TYPE_APP) {
         updateitem.checked = true;
         this._appUpdateExists = true;
         this._appSelected = true;
@@ -373,7 +444,7 @@ var gFoundPage = {
   {
     var i;
     if (this._appUpdateExists) {
-      if (aEvent.target.type == nsIUpdateItem.TYPE_APP) {
+      if (aEvent.target.type & nsIUpdateItem.TYPE_APP) {
         for (i = 0; i < this._nonAppItems.length; ++i) {
           var nonAppItem = this._nonAppItems[i];
           nonAppItem.checked = !aEvent.target.checked;
@@ -421,11 +492,13 @@ var gInstallingPage = {
     // Get XPInstallManager and kick off download/install 
     // process, registering us as an observer. 
     var items = [];
+    
+    gUpdateWizard.remainingExtensionUpdateCount = gUpdateWizard.itemsToUpdate.length;
 
     var foundList = document.getElementById("foundList");
     for (var i = 0; i < foundList.childNodes.length; ++i) {
       var item = foundList.childNodes[i];
-      if (item.type != nsIUpdateItem.TYPE_APP) {
+      if (!(item.type & nsIUpdateItem.TYPE_APP) && item.checked) {
         items.push(item.url);
         this._objs.push({ name: item.name });
       }
@@ -460,6 +533,8 @@ var gInstallingPage = {
         this._objs[aIndex].error = aValue;
         this._errors = true;
       }
+      else 
+        --gUpdateWizard.remainingExtensionUpdateCount;
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       document.getElementById("installing").setAttribute("next", this._errors ? "errors" : "finished");

@@ -18,15 +18,40 @@
         <xul:label xbl:inherits="value=updateCount" flex="1" crop="right"/>
       </xul:hbox>
     </content>
-    <implementation implements="nsIAlertListener">
-      <constructor>
+    <implementation implements="nsIObserver">
+      <destructor>
       <![CDATA[
-        this.refreshData(null);
-      ]]>
-      </constructor>
+        var os = Components.classes["@mozilla.org/observer-service;1"]
+                           .getService(Components.interfaces.nsIObserverService);
+        os.removeObserver(this, "Update:Ended");       
+      ]]>  
+      </destructor>
+      
+      <method name="init">
+        <body>
+        <![CDATA[
+          var os = Components.classes["@mozilla.org/observer-service;1"]
+                             .getService(Components.interfaces.nsIObserverService);
+          os.addObserver(this, "Update:Ended", false);
+          
+          this.refreshData();
+        ]]>
+        </body>
+      </method>
+      
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body>
+        <![CDATA[
+          if (aTopic == "Update:Ended")
+            this.refreshData();
+        ]]>
+        </body>
+      </method>
       
       <method name="refreshData">
-        <parameter name="aSourceEvent"/>
         <body>
         <![CDATA[
           var updates = Components.classes["@mozilla.org/updates/update-service;1"]
@@ -37,7 +62,11 @@
           var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                               .getService(Components.interfaces.nsIStringBundleService);
           var updateStrings = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
-          var key = "updatesAvailableTooltip-" + this.severity;
+          var key;
+          if (this.updateCount > 0)
+            key = "updatesAvailableTooltip-" + this.severity;
+          else
+            key = "updatesCheckForUpdatesTooltip";
           var tooltip = updateStrings.GetStringFromName(key);
           this.setAttribute("tooltiptext", tooltip);
         ]]>

@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// XXXben - document these files
 
 #include "nsISupports.idl"
 
@@ -93,6 +94,10 @@ interface nsIUpdateService : nsISupports
   readonly attribute string appUpdateVersion;
   readonly attribute wstring appUpdateDescription;
   readonly attribute wstring appUpdateURL;
+
+  // these are per-session settings
+  attribute boolean appUpdatesAvailable;
+  attribute long extensionUpdatesAvailable;
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
