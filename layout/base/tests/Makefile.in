@@ -46,7 +46,7 @@ LIBS = \
 	-lpwcac \
 	-lnetcache \
 	-lnetwork \
-	$(DIST)/bin/components/libraptorhtml.so \
+	$(DIST)/bin/components/libraptorhtml.$(DLL_SUFFIX) \
 	-lpref \
 	-lsecfree \
 	-lraptorgfx \
