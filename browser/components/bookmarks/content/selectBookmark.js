@@ -65,8 +65,7 @@ function updateOK()
       url = BookmarksUtils.getProperty(selection.item[i], NC_NS+"URL", ds)
       if (url)
         gUrls.push(url);
-    } else if (type == "Folder" || type == "PersonalToolbarFolder" ||
-               type == "FolderGroup") {
+    } else if (type == "Folder" || type == "PersonalToolbarFolder") {
       RDFC.Init(ds, selection.item[i]);
       var children = RDFC.GetElements();
       while (children.hasMoreElements()) {

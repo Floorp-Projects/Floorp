@@ -521,7 +521,7 @@
           }
           var selection = this._selection;
           
-          if (selection.type[0] != "FolderGroup" && selection.isContainer[0]) {
+          if (selection.isContainer[0]) {
             if (this.clickCount == 1 && !modifKey) {
               this.treeBoxObject.view.toggleOpenState(row);
               if (selection.protocol[0] != "file")
@@ -835,21 +835,6 @@
                 </treeitem>
               </treechildren>
             </rule>
-            <rule nc:FolderGroup="true">
-              <treechildren>
-                <treeitem uri="rdf:*">
-                  <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                    <treecell properties="group" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                    <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                    <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                    <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
-                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </rule>
             <rule>
               <treechildren>
                 <treeitem uri="rdf:*">
@@ -941,15 +926,6 @@
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator">
                   <treecell properties="separator" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </rule>
-          <rule nc:FolderGroup="true">
-            <treechildren>
-              <treeitem uri="rdf:*">
-                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <treecell properties="group hidetwisty" label="rdf:http://home.netscape.com/NC-rdf#Name" />
                 </treerow>
               </treeitem>
             </treechildren>

@@ -290,13 +290,6 @@ var BookmarksCommand = {
                   "bm_delete", "bm_separator",
                   "bm_properties"];
       break;
-    case "FolderGroup":
-      commands = ["bm_open", "bm_expandfolder", "bm_separator",
-                  "bm_newfolder", "bm_separator",
-                  "bm_cut", "bm_copy", "bm_paste", "bm_separator",
-                  "bm_delete", "bm_separator",
-                  "bm_properties"];
-      break;
     case "PersonalToolbarFolder":
       commands = ["bm_newfolder", "bm_separator",
                   "bm_cut", "bm_copy", "bm_paste", "bm_separator",
@@ -526,7 +519,7 @@ var BookmarksCommand = {
       }      
       else if (type == "Bookmark" || type == "")
         this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
-      else if (type == "FolderGroup" || type == "Folder" || type == "PersonalToolbarFolder")
+      else if (type == "Folder" || type == "PersonalToolbarFolder")
         this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
     }
   },
@@ -1087,16 +1080,8 @@ var BookmarksUtils = {
     if (type == "Folder") {
       if (this.isPersonalToolbarFolder(aResource))
         type = "PersonalToolbarFolder";
-      else if (this.isFolderGroup(aResource))
-        type = "FolderGroup";
     }
     return type;
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns true if aResource is a folder group
-  isFolderGroup: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true";
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1151,15 +1136,12 @@ var BookmarksUtils = {
 
   /////////////////////////////////////////////////////////////////////////////
   // Returns a cloned folder a aFolder (with a different uri). folderType and 
-  // other properties are recursively dropped except the 'folder group' one.
+  // other properties are recursively dropped
   cloneFolder: function (aFolder) 
   {
     var rName = this.getProperty(aFolder, NC_NS+"Name");    
     var newFolder;
-    if (this.isFolderGroup(aFolder))
-      newFolder = BMSVC.createGroup(rName);
-    else
-      newFolder = BMSVC.createFolder(rName);
+    newFolder = BMSVC.createFolder(rName);
     
     // Now need to append kiddies. 
     try {
@@ -1206,8 +1188,7 @@ var BookmarksUtils = {
       if (item == "NC:BookmarksRoot")
         isImmutable = true;
       else if (type != "Bookmark" && type != "BookmarkSeparator" && 
-               type != "Folder"   && type != "FolderGroup" && 
-               type != "PersonalToolbarFolder")
+               type != "Folder"   && type != "PersonalToolbarFolder")
         isImmutable = true;
       else if (parent) {
         var parentProtocol = parent.Value.split(":")[0];
@@ -1287,18 +1268,12 @@ var BookmarksUtils = {
     // don't insert items in an invalid container
     // 'file:' and 'find:' items have a 'Bookmark' type
     var type = BookmarksUtils.resolveType(aFolder);
-    if (type != "Folder" && type != "FolderGroup" && type != "PersonalToolbarFolder")
+    if (type != "Folder" && type != "PersonalToolbarFolder")
       return false;
 
     // bail if we just check the container
     if (!aSelection)
       return true;
-
-    // don't insert folders in a group folder except for 'file:' pseudo folders
-    if (type == "FolderGroup")
-      for (var i=0; i<aSelection.length; ++i)
-        if (aSelection.isContainer[i] && aSelection.protocol[i] != "file")
-          return false;
 
     // check that the selected folder is not the selected item nor its child
     if (this.isContainerChildOrSelf(aFolder, aSelection))
