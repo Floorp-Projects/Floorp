@@ -86,6 +86,15 @@ public class ElementImpl_getAttributeNS_String_String_3 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
                 String nuri = null;
                 String lname = null;
                 String s = e.getAttributeNS(nuri, lname);

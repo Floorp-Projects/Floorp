@@ -86,13 +86,26 @@ public class ElementImpl_getAttributeNodeNS_String_String_3 extends BWBaseTest i
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "dummyattr";
-		String val = "1";
-		e.setAttributeNS(nuri, lname, val);
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri = "http://www.foo.org/";
+                String lname = "myattr";
+		String val = "ATTRVAL";
                 Node n = e.getAttributeNodeNS(nuri, lname);
-		if (n == null || n.getNodeType() != Node.ATTRIBUTE_NODE || !((Attr)n).getValue().equals(val)) {
-	                TestLoader.logErrPrint("Element 'getAttributeNS' returned incorrect value ");
+		if (n == null)
+                {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' returned null value instead of  " + val);
+        	        return BWBaseTest.FAILED;
+                }
+		if (n.getNodeType() != Node.ATTRIBUTE_NODE || !((Attr)n).getValue().equals(val)) {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' returned value " + ((Attr)n).getValue() + " instead of " + val);
         	        return BWBaseTest.FAILED;
 		}
              }

@@ -27,8 +27,10 @@
  */
 
 #include "WindowControlImpl.h"
+
+#include "WindowControlActionEvents.h"
+
 #include "ns_util.h"
-#include "nsActions.h"
 
 #include "nsIThread.h" // for PRThread
 
@@ -85,11 +87,10 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->webShell = nsnull;
     initContext->docShell = nsnull;
     initContext->baseWindow = nsnull;
-    initContext->sHistory = nsnull;
     initContext->webNavigation = nsnull;
     initContext->presShell = nsnull;
-    initContext->embeddedThread = nsnull;
-    initContext->actionQueue = nsnull;
+    //    initContext->embeddedThread = nsnull;
+    //    initContext->actionQueue = nsnull;
     initContext->env = env;
     initContext->nativeEventThread = nsnull;
     initContext->stopThread = FALSE;
@@ -103,6 +104,12 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     util_InitializeShareInitContext(&(initContext->shareContext));
 
 #ifdef XP_UNIX
+    /***** Uncomment this to debug on unix
+    pid_t pid = getpid();
+    printf("++++++++++++++++debug: edburns: pid is: %d\n", pid);
+    sleep(7);
+    **************/ 
+
     initContext->gtkWinPtr = 
         (int)::util_GetGTKWinPtrFromCanvas(env, aBrowserControlImpl);
 #else
@@ -132,7 +139,7 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
 		::util_ThrowExceptionToJava(env, "Exception: Can't destroy initContext");
 		return;
 	}
-    initContext->actionQueue = nsnull;
+    //    initContext->actionQueue = nsnull;
     delete initContext;
 }
 

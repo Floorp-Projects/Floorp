@@ -40,6 +40,7 @@ public final static String LAST_VISIT_DATE = "LastVisitDate";
 public final static String NAME = "Name";
 public final static String URL = "URL";
 public final static String DESCRIPTION = "Description";
+public final static String IS_FOLDER = "IsFolder";
 
 public Properties getProperties();
 

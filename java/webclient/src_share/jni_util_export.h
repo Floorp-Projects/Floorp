@@ -190,6 +190,26 @@ typedef JNIEXPORT void (JNICALL * fpStoreIntoPropertiesObjectType)
 
 /**
 
+ * Called after webclient has called fpCreatePropertiesObjectType when
+ * webclient wants to get values from the properties object.
+
+ * @param env not used
+
+ * @param propertiesObject obtained from fpCreatePropertiesObjectType
+
+ * @param name the name of the property
+
+ * @returns the return value from the properties object
+
+ */
+
+
+typedef JNIEXPORT jobject (JNICALL * fpGetFromPropertiesObjectType) 
+    (JNIEnv *env, jobject propertiesObject, jobject name, jobject reserved);
+
+
+/**
+
  * This function must be called at app initialization.
 
  * @see fpInstanceOfType
@@ -257,6 +277,16 @@ JNIEXPORT void JNICALL util_SetClearPropertiesObjectFunction(fpDestroyProperties
  */
 
 JNIEXPORT void JNICALL util_SetStoreIntoPropertiesObjectFunction(fpStoreIntoPropertiesObjectType fp);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpGetFromPropertiesObjectType
+
+ */
+
+JNIEXPORT void JNICALL util_SetGetFromPropertiesObjectFunction(fpGetFromPropertiesObjectType fp);
 
 
 
@@ -329,6 +359,17 @@ extern fpClearPropertiesObjectType externalClearPropertiesObject;
  */
 
 extern fpStoreIntoPropertiesObjectType externalStoreIntoPropertiesObject;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetGetFromPropertiesObjectFunction
+
+ */
+
+extern fpGetFromPropertiesObjectType externalGetFromPropertiesObject;
+
 
 /**
 

@@ -24,8 +24,6 @@
  *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
-
-
 #include <limits.h>
 #include "CBrowserContainer.h"
 #include "nsCWebBrowser.h"
@@ -38,27 +36,27 @@
 
 #include "dom_util.h"
 
+#include "PromptActionEvents.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
+jobject gPromptProperties = nsnull;
 
-#define WC_ITOA(intVal, buf, radix) sprintf(buf, "%d", intVal)
-#else
-#define WC_ITOA(intVal, buf, radix) itoa(intVal, buf, radix)
-#endif
-
+PRInt32 CBrowserContainer::mInstanceCount = 0;
 
 CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
                                      WebShellInitContext *yourInitContext) :
     m_pOwner(pOwner), mJNIEnv(env), mInitContext(yourInitContext), 
-    mDocTarget(nsnull), mMouseTarget(nsnull), mDomEventTarget(nsnull), 
-    inverseDepth(-1), properties(nsnull), currentDOMEvent(nsnull)
+    mDocTarget(nsnull), mMouseTarget(nsnull), mPrompt(nsnull),
+    mDomEventTarget(nsnull), inverseDepth(-1), 
+    properties(nsnull), currentDOMEvent(nsnull)
 {
   	NS_INIT_REFCNT();
     // initialize the string constants (including properties keys)
     if (!util_StringConstantsAreInitialized()) {
-        util_InitStringConstants(env);
+        util_InitStringConstants();
     }
+    mInstanceCount++;
 }
 
 
@@ -77,6 +75,7 @@ CBrowserContainer::~CBrowserContainer()
     }
     properties = nsnull;
     currentDOMEvent = nsnull;
+    mInstanceCount--;
 }
 
 
@@ -171,7 +170,65 @@ NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dial
                                                            PRUnichar **pwd, 
                                                            PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    // if the user hasn't given us a prompt, oh well
+    if	 (!mPrompt) {
+        return NS_OK;
+    }
+
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    wsPromptUsernameAndPasswordEvent *actionEvent = nsnull;
+
+    wsStringStruct strings[3] = { 
+        {dialogTitle, nsnull},
+        {text, nsnull},
+        {passwordRealm, nsnull} };
+
+    rv = ::util_CreateJstringsFromUnichars(strings, 3);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: PromptUserNameAndPassword: can't create jstrings from Unichars");
+        goto PUAP_CLEANUP;
+    }
+
+
+    // PENDING(edburns): uniformly apply checks for this throughout the
+    // code
+    PR_ASSERT(mInitContext);
+    PR_ASSERT(mInitContext->initComplete); 
+
+    // try to initialize the properties object for basic auth and cookies
+    if (!gPromptProperties) {
+        gPromptProperties = 
+            ::util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext));
+        if (!gPromptProperties) {
+            printf("Error: can't create properties object for authentitication");
+            rv = NS_ERROR_NULL_POINTER;
+            goto PUAP_CLEANUP;
+        }
+    }
+    else {
+        ::util_ClearPropertiesObject(env, gPromptProperties, (jobject) 
+                                     &(mInitContext->shareContext));
+    }
+    
+    if (!(actionEvent = new wsPromptUsernameAndPasswordEvent(mInitContext, mPrompt, 
+                                          strings, savePassword,
+                                          user, pwd, _retval))) {
+        ::util_ThrowExceptionToJava(env, "Exception: PromptUserNameAndPassword: can't create wsPromptUsernameAndPasswordEvent");
+        rv = NS_ERROR_NULL_POINTER;
+        goto PUAP_CLEANUP;
+    }
+    // the out params to this method are set in wsPromptUsernameAndPasswordEvent::handleEvent()
+    ::util_PostSynchronousEvent(mInitContext, 
+                                (PLEvent *) *actionEvent);
+    rv = NS_OK;
+ PUAP_CLEANUP:
+
+    ::util_DeleteJstringsFromUnichars(strings, 3);
+
+    return rv;
 }
 
 /* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
@@ -191,10 +248,101 @@ NS_IMETHODIMP CBrowserContainer::Select(const PRUnichar *inDialogTitle, const PR
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void universalDialog (in wstring inTitleMessage, in wstring inDialogTitle, in wstring inMsg, in wstring inCheckboxMsg, in wstring inButton0Text, in wstring inButton1Text, in wstring inButton2Text, in wstring inButton3Text, in wstring inEditfield1Msg, in wstring inEditfield2Msg, inout wstring inoutEditfield1Value, inout wstring inoutEditfield2Value, in wstring inIConURL, inout boolean inoutCheckboxState, in PRInt32 inNumberButtons, in PRInt32 inNumberEditfields, in PRInt32 inEditField1Password, out PRInt32 outButtonPressed); */
-NS_IMETHODIMP CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage, const PRUnichar *inDialogTitle, const PRUnichar *inMsg, const PRUnichar *inCheckboxMsg, const PRUnichar *inButton0Text, const PRUnichar *inButton1Text, const PRUnichar *inButton2Text, const PRUnichar *inButton3Text, const PRUnichar *inEditfield1Msg, const PRUnichar *inEditfield2Msg, PRUnichar **inoutEditfield1Value, PRUnichar **inoutEditfield2Value, const PRUnichar *inIConURL, PRBool *inoutCheckboxState, PRInt32 inNumberButtons, PRInt32 inNumberEditfields, PRInt32 inEditField1Password, PRInt32 *outButtonPressed)
+NS_IMETHODIMP 
+CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage, 
+                                   const PRUnichar *inDialogTitle, 
+                                   const PRUnichar *inMsg, 
+                                   const PRUnichar *inCheckboxMsg, 
+                                   const PRUnichar *inButton0Text, 
+                                   const PRUnichar *inButton1Text, 
+                                   const PRUnichar *inButton2Text, 
+                                   const PRUnichar *inButton3Text, 
+                                   const PRUnichar *inEditfield1Msg, 
+                                   const PRUnichar *inEditfield2Msg, 
+                                   PRUnichar **inoutEditfield1Value, 
+                                   PRUnichar **inoutEditfield2Value, 
+                                   const PRUnichar *inIConURL, 
+                                   PRBool *inoutCheckboxState, 
+                                   PRInt32 inNumberButtons, 
+                                   PRInt32 inNumberEditfields, 
+                                   PRInt32 inEditField1Password, 
+                                   PRInt32 *outButtonPressed)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    printf("debug: edburns: CBrowserContainer::UniversalDialog()\n");
+    nsresult rv = NS_ERROR_FAILURE;
+    
+    // if the user hasn't given us a prompt, oh well
+    if	 (!mPrompt) {
+        return NS_OK;
+    }
+    
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    wsPromptUniversalDialogEvent *actionEvent = nsnull;
+
+    wsStringStruct strings[10] = { 
+        {inTitleMessage, nsnull},
+        {inDialogTitle, nsnull},
+        {inMsg, nsnull},
+        {inCheckboxMsg, nsnull},
+        {inButton0Text, nsnull},
+        {inButton1Text, nsnull},
+        {inButton2Text, nsnull},
+        {inButton3Text, nsnull},
+        {inEditfield1Msg, nsnull},
+        {inEditfield2Msg, nsnull} };
+
+    rv = ::util_CreateJstringsFromUnichars(strings, 10);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: UniversalDialog: can't create jstrings from Unichars");
+        goto UD_CLEANUP;
+    }
+
+
+    // PENDING(edburns): uniformly apply checks for this throughout the
+    // code
+    PR_ASSERT(mInitContext);
+    PR_ASSERT(mInitContext->initComplete); 
+
+    // try to initialize the properties object for basic auth and cookies
+    if (!gPromptProperties) {
+        gPromptProperties = 
+            ::util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext));
+        if (!gPromptProperties) {
+            printf("Error: can't create properties object for authentitication");
+            rv = NS_ERROR_NULL_POINTER;
+            goto UD_CLEANUP;
+        }
+    }
+    else {
+        ::util_ClearPropertiesObject(env, gPromptProperties, (jobject) 
+                                     &(mInitContext->shareContext));
+    }
+    
+    if (!(actionEvent = new wsPromptUniversalDialogEvent(mInitContext, 
+                                                         mPrompt, 
+                                                         strings, 
+                                                         inoutEditfield1Value,
+                                                         inoutEditfield2Value,
+                                                         inoutCheckboxState,
+                                                         inNumberButtons, 
+                                                         inNumberEditfields, 
+                                                         inEditField1Password,
+                                                         outButtonPressed))) {
+        ::util_ThrowExceptionToJava(env, "Exception: UniversalDialog: can't create wsPromptUniversalDialogEvent");
+        rv = NS_ERROR_NULL_POINTER;
+        goto UD_CLEANUP;
+    }
+    // the out params to this method are set in wsPromptUsernameAndPasswordEvent::handleEvent()
+    ::util_PostSynchronousEvent(mInitContext, (PLEvent *) *actionEvent);
+
+    rv = NS_OK;
+ UD_CLEANUP:
+
+    ::util_DeleteJstringsFromUnichars(strings, 10);
+
+    return rv;
+
 }
 
 
@@ -1020,6 +1168,24 @@ NS_IMETHODIMP CBrowserContainer::AddDocumentLoadListener(jobject target)
     return rv;
 }
 
+NS_IMETHODIMP CBrowserContainer::SetPrompt(jobject target)
+{
+    nsresult rv = NS_OK;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+    if (mPrompt) {
+        ::util_DeleteGlobalRef(env, mPrompt);
+        mPrompt = nsnull;
+    }
+    if (nsnull == (mPrompt = ::util_NewGlobalRef(env, target))) {
+        ::util_ThrowExceptionToJava(env, "Exception: Navigation.nativeSetPrompt(): can't create NewGlobalRef\n\tfor argument");
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    
+    return rv;
+}
+
+
 NS_IMETHODIMP CBrowserContainer::RemoveMouseListener()
 {
     nsresult rv = NS_OK;
@@ -1045,7 +1211,12 @@ NS_IMETHODIMP CBrowserContainer::RemoveDocumentLoadListener()
     return rv;
 }
 
-
+NS_IMETHODIMP CBrowserContainer::GetInstanceCount(PRInt32 *outCount)
+{
+    PR_ASSERT(outCount);
+    *outCount = mInstanceCount;
+    return NS_OK;
+}
 
 NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
 {

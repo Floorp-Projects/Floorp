@@ -27,6 +27,9 @@
 
 package org.mozilla.webclient;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public interface Navigation
 {
 
@@ -40,8 +43,22 @@ public static int LOAD_NORMAL = 0;
 public static int LOAD_FORCE_RELOAD = 1 << 9;
 
 public void loadURL(String absoluteURL);
+public void loadFromStream(InputStream stream, String uri,
+                           String contentType, int contentLength,
+                           Properties loadInfo);
 public void refresh(long loadFlags);
 public void stop();
+
+/**
+
+ * Gives this Navigation instance the ability to call back the custom
+ * app when a site with basic authentication, cookies, etc, is
+ * encountered.  The custom app can choose to put up appropriate modal
+ * UI.
+
+ */
+
+public void setPrompt(Prompt yourPrompt);
 
 } 
 // end of interface CurrentPage

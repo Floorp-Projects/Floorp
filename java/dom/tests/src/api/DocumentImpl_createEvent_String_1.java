@@ -83,12 +83,10 @@ public class DocumentImpl_createEvent_String_1 extends BWBaseTest implements Exe
       if (d != null)
       {
        try {
-             Event me = d.createEvent("MouseEvent");
-	     Event ke = d.createEvent("KeyEvent");
-	     Event he = d.createEvent("HTMLEvent");
-             if (me == null || ke == null || he == null) {
+             Event me = d.createEvent("UIEvents");
+             if (me == null) {
 		TestLoader.logErrPrint("DocumentEvent returned null ...");
-		System.out.println("DocumentEvent returned null: me="+me+" ke="+ke+" he="+he);
+		//System.out.println("DocumentEvent returned null: me="+me+" ke="+ke+" he="+he);
 	        return BWBaseTest.FAILED;
 	     }
         } catch (Exception e) {

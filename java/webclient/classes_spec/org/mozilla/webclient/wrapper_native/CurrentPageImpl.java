@@ -108,12 +108,12 @@ public void findInPage(String stringToFind, boolean forward, boolean matchCase)
     }
 }
             
-public void findNextInPage(boolean forward)
+public void findNextInPage()
 {
     myFactory.throwExceptionIfNotInitialized();
     
     synchronized(myBrowserControl) {
-        nativeFindNextInPage(nativeWebShell, forward);
+        nativeFindNextInPage(nativeWebShell);
     }
 }
             
@@ -151,62 +151,67 @@ public Properties getPageInfo()
             
 public String getSource()
 {
-    String result = null;
     myFactory.throwExceptionIfNotInitialized();
-
-    /*    synchronized(myBrowserControl) {
-        result = nativeGetSource();
+    String HTMLContent = null;
+    String currURL = getCurrentURL();
+    System.out.println("\nThe Current URL is -- " + currURL);
+    try {
+        URL aURL = new URL(currURL);
+        URLConnection connection = aURL.openConnection();
+        connection.connect();
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        boolean more = true;
+        while (more)
+            {
+                String line = in.readLine();
+                if (line == null) more = false;
+                else
+                    {
+                        HTMLContent = HTMLContent + line;
+                    }
+            }
     }
-    */
-    throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getSource has not yet been implemented.\n");
-
-    //    return result;
+    catch (Throwable e)
+        {
+            System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
+        }
+    
+    return HTMLContent;
 }
  
-public byte [] getSourceBytes(boolean viewMode)
+public byte [] getSourceBytes()
 {
     byte [] result = null;
     myFactory.throwExceptionIfNotInitialized();
     
-        synchronized(myBrowserControl) {
-        result = nativeGetSourceBytes(nativeWebShell, viewMode);
-    }
     
-
-    //throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getSourceBytes has not yet been implemented.\n Will be available after Webclient M3 Release\n");
-    
-    // PENDING (Ashu) - This should work - but it does not get anything from URl
-    // and hangs up from time to time. Have to Debug. In M15, other native solution
-    // will also be available using DocShell::viewMode
-
-    /*
     String HTMLContent = null;
-    String URL = getCurrentURL();
-    System.out.println("\nThe Current URL is -- " + URL);
+    String currURL = getCurrentURL();
+    System.out.println("\nThe Current URL is -- " + currURL);
     try {
-      Socket s = new Socket("sunweb.central",80);
-      BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-      boolean more = true;
-      while (more)
-	{
-	  String line = in.readLine();
-	  if (line == null) more = false;
-	  else
-	    {
-	      HTMLContent = HTMLContent + line;
-	      System.out.println(line);
-	    }
-	}
+        URL aURL = new URL(currURL);
+        URLConnection connection = aURL.openConnection();
+        connection.connect();
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        boolean more = true;
+        while (more)
+            {
+                String line = in.readLine();
+                if (line == null) more = false;
+                else
+                    {
+                        HTMLContent = HTMLContent + line;
+                    }
+            }
     }
-      catch (Throwable e)
-	{
-	  System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
-	}
-    */
+    catch (Throwable e)
+ 	{
+        System.out.println("Error occurred while establishing connection -- \n ERROR - " + e);
+ 	}
+    result = HTMLContent.getBytes();
     return result;
-    
 }
-            
+
 public void resetFind()
 {
     myFactory.throwExceptionIfNotInitialized();
@@ -233,17 +238,19 @@ native public void nativeCopyCurrentSelectionToSystemClipboard(int webShellPtr);
             
 native public void nativeFindInPage(int webShellPtr, String stringToFind, boolean forward, boolean matchCase);
             
-native public void nativeFindNextInPage(int webShellPtr, boolean forward);
+native public void nativeFindNextInPage(int webShellPtr);
             
 native public String nativeGetCurrentURL(int webShellPtr);
             
 native public Document nativeGetDOM(int webShellPtr);
 
 // webclient.PageInfo getPageInfo();
-            
-native public String nativeGetSource();
+
+/* PENDING(ashuk): remove this from here and in the motif directory            
+ * native public String nativeGetSource();
  
-native public byte [] nativeGetSourceBytes(int webShellPtr, boolean viewMode);
+ * native public byte [] nativeGetSourceBytes(int webShellPtr, boolean viewMode);
+ */
             
 native public void nativeResetFind(int webShellPtr);
             
@@ -261,7 +268,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.10 2000/11/03 01:26:59 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.11 2001/04/02 21:13:57 ashuk%eng.sun.com Exp $");
     
 }
 

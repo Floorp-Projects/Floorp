@@ -22,10 +22,10 @@
 
 #include "BookmarksImpl.h"
 
+#include "RDFActionEvents.h"
+
 #include "rdf_util.h"
 #include "ns_util.h"
-#include "nsActions.h"
-
 
 #include "nsCOMPtr.h"
 #include "nsISimpleEnumerator.h"

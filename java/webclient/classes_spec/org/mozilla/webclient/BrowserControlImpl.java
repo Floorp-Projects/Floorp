@@ -70,6 +70,7 @@ private WindowControl windowControl = null;
 private Navigation navigation = null;
 private History history = null;
 private static Bookmarks bookmarks = null;
+private static Preferences prefs = null;
 
 //
 // Constructors and Initializers    
@@ -126,8 +127,8 @@ void delete()
     ((ImplObject)windowControl).delete();
     windowControl = null;
 
-    // since bookmarks is static, we must not deallocate it here.  That
-    // is done in the static method appTerminate
+    // since bookmarks and prefs are static, we must not deallocate them
+    // here.  That is done in the static method appTerminate
 
 }
 
@@ -151,6 +152,10 @@ static void appTerminate() throws Exception
     if (null != bookmarks) {
         ((ImplObject)bookmarks).delete();
         bookmarks = null;
+    }
+    if (null != prefs) {
+        ((ImplObject)prefs).delete();
+        prefs = null;
     }
 
     wrapperFactory.terminate();
@@ -269,6 +274,13 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
         }
         return bookmarks;
     }
+    if (PREFERENCES_NAME.equals(interfaceName)) {
+        if (null == prefs) {
+            prefs = (Preferences) 
+                wrapperFactory.newImpl(PREFERENCES_NAME, this);
+        }
+        return prefs;
+    }
     // extensibility mechanism: just see if wrapperFactory can make one!
     return wrapperFactory.newImpl(interfaceName, this);
 }
@@ -284,7 +296,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.3 2000/07/22 02:48:23 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.4 2001/04/02 21:13:43 ashuk%eng.sun.com Exp $");
     
 }
 

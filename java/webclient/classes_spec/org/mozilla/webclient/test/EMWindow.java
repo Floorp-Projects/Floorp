@@ -48,19 +48,22 @@ import org.mozilla.util.Assert;
 
 import org.w3c.dom.Document;
 
+import java.io.File;
+import java.io.FileInputStream;
+
 /**
  *
 
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.24 2000/11/03 03:16:46 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.25 2001/04/02 21:13:48 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
-public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener, MouseListener {
+public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener, MouseListener, Prompt, PrefChangedCallback {
     static final int defaultWidth = 640;
     static final int defaultHeight = 480;
 
@@ -73,6 +76,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     private Navigation navigation = null;
 	private CurrentPage	    currentPage;
 	private History	        history;
+    private static Preferences     prefs;
 	private Bookmarks	    bookmarks;
     private BookmarksFrame bookmarksFrame = null;
 	private TreeModel	    bookmarksTree;
@@ -81,14 +85,20 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 	private Panel			statusPanel;
 	private Panel			buttonsPanel;
     private FindDialog           findDialog = null;
+private PasswordDialog           passDialog = null;
+private UniversalDialog           uniDialog = null;
     private MenuBar             menuBar;
+    private Menu                historyMenu;
+    private MenuItem backMenuItem;
+    private MenuItem forwardMenuItem;
+    private HistoryActionListener historyActionListener = null;
+    private Menu                bookmarksMenu;
     private Label          statusLabel;
     private String currentURL;
 
   private Document       currentDocument = null;
 
   private EmbeddedMozilla creator;
-  private boolean viewMode = true;
 
     private Component forwardButton;
     private Component backButton;
@@ -127,7 +137,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
        		MenuItem closeItem = new MenuItem("Close");
        		MenuItem findItem = new MenuItem("Find");
        		MenuItem findNextItem = new MenuItem("Find Next");
-		MenuItem sourceItem = new MenuItem("View Page Source");
+		MenuItem sourceItem = new MenuItem("View Page Source as String");
 		MenuItem pageInfoItem = new MenuItem("View Page Info");
 		MenuItem selectAllItem = new MenuItem("Select All");
         MenuItem copyItem = new MenuItem("Copy");
@@ -143,6 +153,39 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
        		findItem.addActionListener(this);
        		searchMenu.add(findNextItem);
        		findNextItem.addActionListener(this);
+
+        historyMenu = new Menu("History");
+          backMenuItem = new MenuItem("Back");
+          backMenuItem.addActionListener(this);
+          historyMenu.add(backMenuItem);
+          forwardMenuItem = new MenuItem("Forward");
+          forwardMenuItem.addActionListener(this);
+          historyMenu.add(forwardMenuItem);
+          menuBar.add(historyMenu);
+
+        bookmarksMenu = new Menu("Bookmarks");
+          MenuItem addBookmark = new MenuItem("Add Current Page");
+          addBookmark.addActionListener(this);
+          bookmarksMenu.add(addBookmark);
+
+          addBookmark = new MenuItem("Add Current Page In New Folder");
+          addBookmark.addActionListener(this);
+          bookmarksMenu.add(addBookmark);
+
+          MenuItem manageBookmarks = new MenuItem("Manage Bookmarks...");
+          manageBookmarks.addActionListener(this);
+          bookmarksMenu.add(manageBookmarks);
+          menuBar.add(bookmarksMenu);
+
+        Menu streamMenu = new Menu("Stream");
+          MenuItem streamFromFile = new MenuItem("Load Stream From File...");
+          streamFromFile.addActionListener(this);
+          streamMenu.add(streamFromFile);
+          MenuItem randomStream = new MenuItem("Load Random HTML InputStream");
+          randomStream.addActionListener(this);
+          streamMenu.add(randomStream);
+          menuBar.add(streamMenu);
+
 		viewMenu.add(sourceItem);
 		sourceItem.addActionListener(this);
        		viewMenu.add(pageInfoItem);
@@ -171,15 +214,19 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         stopButton.setEnabled(false);
 		refreshButton = makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
         refreshButton.setEnabled(false);
-	makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
-	//	makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
+        makeItem(buttonsPanel, "DOMViewer",    4, 0, 1, 1, 0.0, 0.0);
 
 		// Create the control panel
 		controlPanel = new Panel();
         controlPanel.setLayout(new BorderLayout());
         
         // Add the URL field, and the buttons panel
-		controlPanel.add(urlField,     BorderLayout.CENTER);
+        Panel centerPanel = new Panel();
+        centerPanel.setLayout(new BorderLayout());
+        centerPanel.add(urlField, BorderLayout.NORTH);
+
+        //		controlPanel.add(urlField,     BorderLayout.CENTER);
+		controlPanel.add(centerPanel,     BorderLayout.CENTER);
 		controlPanel.add(buttonsPanel, BorderLayout.WEST);
 
         // create the status panel
@@ -229,7 +276,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         // Create the Context Menus
         add(popup);
 
-        popup.add(popup_ViewSource = new MenuItem("View Source"));
+        popup.add(popup_ViewSource = new MenuItem("View Source as ByteArray"));
         popup.add(popup_SelectAll = new MenuItem("Select All"));
         
         contextListener = new PopupActionListener();
@@ -243,11 +290,30 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		try {
             navigation = (Navigation)
                 browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+            navigation.setPrompt(this);
             currentPage = (CurrentPage)
                 browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
             history = (History)
                 browserControl.queryInterface(BrowserControl.HISTORY_NAME);
-            
+            prefs = (Preferences)
+                browserControl.queryInterface(BrowserControl.PREFERENCES_NAME);
+            prefs.registerPrefChangedCallback(this, 
+                                              "network.cookie.warnAboutCookies",
+                                              "This IS the Closure!");
+            prefs.setPref("network.cookie.warnAboutCookies", "true");
+            prefs.setPref("browser.cache.disk_cache_size", "0");
+     
+            // pull out the proxies, and make java aware of them
+            Properties prefsProps = prefs.getPrefs();
+            String proxyHost = (String) prefsProps.get("network.proxy.http");
+            String proxyPort = (String) prefsProps.get("network.proxy.http_port");
+            if (null != proxyHost && null != proxyPort) {
+                System.setProperty("http.proxyHost", proxyHost);
+                System.setProperty("http.proxyPort", proxyPort);
+            }
+             
+            //prefsProps = prefs.getPrefs();
+            //prefsProps.list(System.out);  // This works, try it!
         }
 		catch (Exception e) {
 		    System.out.println(e.toString());
@@ -267,6 +333,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             System.out.println("debug: edburns: got Bookmarks instance");
 
             bookmarksTree = bookmarks.getBookmarks();
+
             /*********
 
             TreeNode bookmarksRoot = (TreeNode) bookmarksTree.getRoot();
@@ -295,11 +362,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             *****/
 
             /**********
-            BookmarkEntry folder = bookmarks.newBookmarkFolder("newFolder");
 
-            bookmarks.addBookmark(null, folder);
 
-            BookmarkEntry entry = bookmarks.newBookmarkEntry("http://yoyo.com");
             System.out.println("debug: edburns: got new entry");
 
             Properties entryProps = entry.getProperties();
@@ -352,55 +416,69 @@ public void actionPerformed (ActionEvent evt)
     
     try {
         
-        // deal with the menu item commands
-        if (evt.getSource() instanceof MenuItem) {
-            if (command.equals("New Window")) {
-                creator.CreateEMWindow();
+        if (command.equals("New Window")) {
+            creator.CreateEMWindow();
+        }
+        else if (command.equals("Close")) {
+            System.out.println("Got windowClosing");
+            System.out.println("destroying the BrowserControl");
+            EMWindow.this.delete();
+            // should close the BrowserControlCanvas
+            creator.DestroyEMWindow(winNum);
+        }
+        else if (command.equals("Find")) {
+            if (null == findDialog) {
+                Frame f = new Frame();
+                f.setSize(350,150);
+                findDialog = new FindDialog(this, this, 
+                                            "Find in Page", "Find  ", 
+                                            "", 20, false);
+                findDialog.setModal(false);
             }
-            else if (command.equals("Close")) {
-                System.out.println("Got windowClosing");
-                System.out.println("destroying the BrowserControl");
-                EMWindow.this.delete();
-				// should close the BrowserControlCanvas
-                creator.DestroyEMWindow(winNum);
-            }
-            else if (command.equals("Find")) {
-				if (null == findDialog) {
-                    Frame f = new Frame();
-                    f.setSize(350,150);
-                    findDialog = new FindDialog(this, this, 
-                                                "Find in Page", "Find  ", 
-                                                "", 20, false);
-                    findDialog.setModal(false);
-	       		}
-				findDialog.setVisible(true);
-                //		currentPage.findInPage("Sun", true, true);
-            }
-            else if (command.equals("Find Next")) {
-                currentPage.findNextInPage(false);
-            }
-            else if (command.equals("View Page Source")) {
-                currentPage.getSourceBytes(viewMode);
-                viewMode = !viewMode;
-            }
-            else if (command.equals("View Page Info")) {
-                currentPage.getPageInfo();
-            }
-            else if (command.equals("Select All")) {
-                currentPage.selectAll();
-            }
-            else if (command.equals("Copy")) {
-                currentPage.copyCurrentSelectionToSystemClipboard();
-            }
-	    }
-        // deal with the button bar commands
+            findDialog.setVisible(true);
+            //		currentPage.findInPage("Sun", true, true);
+        }
+        else if (command.equals("Find Next")) {
+            currentPage.findNextInPage();
+        }
+        else if (command.equals("View Page Source as String")) {
+            String sou = currentPage.getSource();
+            System.out.println("+++++++++++ Page Source is +++++++++++\n\n" + sou);
+        }
+        else if (command.equals("View Page Info")) {
+            currentPage.getPageInfo();
+        }
+        else if (command.equals("Select All")) {
+            currentPage.selectAll();
+        }
+        else if (command.equals("Copy")) {
+            currentPage.copyCurrentSelectionToSystemClipboard();
+        }
 	    else if(command.equals("Stop")) {
             navigation.stop();
         }
         else if (command.equals("Refresh")) {
             navigation.refresh(Navigation.LOAD_NORMAL);
         }
-        else if (command.equals("Bookmarks")) {
+        else if (command.equals("Add Current Page")) {
+            if (null == bookmarksTree) {
+                bookmarksTree = bookmarks.getBookmarks();
+            }
+            BookmarkEntry entry = 
+                bookmarks.newBookmarkEntry(urlField.getText());
+            bookmarks.addBookmark(null, entry);
+        }        
+        else if (command.equals("Add Current Page In New Folder")) {
+            if (null == bookmarksTree) {
+                bookmarksTree = bookmarks.getBookmarks();
+            }
+            BookmarkEntry folder = bookmarks.newBookmarkFolder("newFolder");
+            bookmarks.addBookmark(null, folder);
+            BookmarkEntry entry = 
+                bookmarks.newBookmarkEntry(urlField.getText());
+            bookmarks.addBookmark(folder, entry);
+        }        
+        else if (command.equals("Manage Bookmarks...")) {
             if (null == bookmarksTree) {
                 bookmarksTree = bookmarks.getBookmarks();
             }
@@ -413,6 +491,33 @@ public void actionPerformed (ActionEvent evt)
             }
             bookmarksFrame.setVisible(true);
         }
+        else if (command.equals("Load Stream From File...")) {
+            FileDialog fileDialog = new FileDialog(this, "Pick an HTML file",
+                                                   FileDialog.LOAD);
+            fileDialog.show();
+            String file = fileDialog.getFile();
+            String directory = fileDialog.getDirectory();
+            
+            if ((null != file) && (null != directory) &&
+                (0 < file.length()) && (0 < directory.length())) {
+                String absPath = directory + file;
+                
+                FileInputStream fis = new FileInputStream(absPath);
+                File tFile = new File(absPath);
+                
+                System.out.println("debug: edburns: file: " + absPath);
+                
+                navigation.loadFromStream(fis, "file:///hello.html",
+                                          "text/html", (int) tFile.length(), 
+                                          null);
+            }
+        }        
+        else if (command.equals("Load Random HTML InputStream")) {
+            RandomHTMLInputStream rhis = new RandomHTMLInputStream(3);
+            System.out.println("debug: edburns: created RandomHTMLInputStream");
+            navigation.loadFromStream(rhis, "http://randomstream.com/",
+                                      "text/html", -1, null);
+        }        
         else if (command.equals("DOMViewer")) {
             if (null == domViewer) {
                 domViewer = new DOMViewerFrame("DOM Viewer", creator);
@@ -434,6 +539,8 @@ public void actionPerformed (ActionEvent evt)
                 history.forward();
             }
         }
+        else if (command.equals(" ")) {
+        }
         else {
             navigation.loadURL(urlField.getText());
         }
@@ -445,6 +552,9 @@ public void actionPerformed (ActionEvent evt)
 
 
 public void dialogDismissed(Dialog d) {
+    if (d == passDialog || d == uniDialog) {
+        return;
+    }
   if(findDialog.wasClosed()) {
     System.out.println("Find Dialog Closed");
   }
@@ -508,6 +618,10 @@ private Component makeItem (Panel p, Object arg, int x, int y, int w, int h, dou
          
          p.add(comp);
          gbl.setConstraints(comp, c);
+
+         if (((String)arg).equals(" ")) {
+             b.setEnabled(false);
+         }
      }
      return comp;
 } // makeItem()
@@ -543,7 +657,10 @@ public void eventDispatched(WebclientEvent event)
         case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
             stopButton.setEnabled(false);
             backButton.setEnabled(history.canBack());
+            backMenuItem.setEnabled(history.canBack());
             forwardButton.setEnabled(history.canForward());
+            forwardMenuItem.setEnabled(history.canForward());
+            populateHistoryMenu();
             statusLabel.setText("Done.");
             currentDocument = currentPage.getDOM();
             // add the new document to the domViewer
@@ -553,6 +670,55 @@ public void eventDispatched(WebclientEvent event)
 
             break;
         }
+    }
+}
+
+/**
+
+ * This method exercises the rest of the history API that isn't
+ * exercised elsewhere in the browser.
+
+ */
+
+private void populateHistoryMenu()
+{
+    int i = 0;
+    int histLen = 0;
+    int curIndex = 0;
+    String curUrl;
+    MenuItem curItem;
+    historyMenu.removeAll();
+
+    if (null == historyActionListener) {
+        historyActionListener = new HistoryActionListener();
+        if (null == historyActionListener) {
+            return;
+        }
+    }
+
+    // add back these MenuItems
+    historyMenu.add(backMenuItem);
+    historyMenu.add(forwardMenuItem);
+
+    // now populate the menu with history items
+    histLen = history.getHistoryLength();
+    curIndex = history.getCurrentHistoryIndex();
+    for (i = 0; i < histLen; i++) {
+        // PENDING(put in code to truncate unruly long URLs)
+        curUrl = history.getURLForIndex(i);
+
+        // It's important that we prepend the index.  This is used in
+        // the actionListener to load by index.
+
+        if (i == curIndex) {
+            curUrl = Integer.toString(i) + " * " + curUrl;
+        }
+        else {
+            curUrl = Integer.toString(i) + " " + curUrl;
+        }
+        curItem = new MenuItem(curUrl);
+        curItem.addActionListener(historyActionListener);
+        historyMenu.add(curItem);
     }
 }
 
@@ -626,14 +792,134 @@ public void mouseReleased(java.awt.event.MouseEvent e)
 {
 }
 
+//
+// Prompt methods
+// 
+
+public boolean promptUsernameAndPassword(String dialogTitle,
+                                  String text,
+                                  String passwordRealm,
+                                  int savePassword,
+                                  Properties fillThis)
+{
+    if (null == fillThis) {
+        return false;
+    }
+    if (null == passDialog) {
+        if (dialogTitle.equals("")) {
+            dialogTitle = "Basic Authentication Test";
+        }
+        passDialog = new PasswordDialog(this, this, 
+                                        dialogTitle, text, passwordRealm, 
+                                        20, true, fillThis);
+        if (null == passDialog) {
+            return false;
+        }
+        passDialog.setModal(true);
+    }
+    passDialog.setVisible(true);
+    
+    return passDialog.wasOk();
+}
+
+public boolean universalDialog(String titleMessage,
+                               String dialogTitle,
+                               String text,
+                               String checkboxMsg,
+                               String button0Text,
+                               String button1Text,
+                               String button2Text,
+                               String button3Text,
+                               String editfield1Msg,
+                               String editfield2Msg,
+                               int numButtons,
+                               int numEditfields,
+                               boolean editfield1Password,
+                               Properties fillThis)
+{
+    System.out.println("titleMessage " + titleMessage);
+    System.out.println("dialogTitle " + dialogTitle);
+    System.out.println("text " + text);
+    System.out.println("checkboxMsg " + checkboxMsg);
+    System.out.println("button0Text " + button0Text);
+    System.out.println("button1Text " + button1Text);
+    System.out.println("button2Text " + button2Text);
+    System.out.println("button3Text " + button3Text);
+    System.out.println("editfield1Msg " + editfield1Msg);
+    System.out.println("editfield2Msg " + editfield2Msg);
+    System.out.println("numButtons " + numButtons);
+    System.out.println("numEditfields " + numEditfields);
+    System.out.println("editfield1Password " + editfield1Password);
+        
+    fillThis.put("editfield1Value", "edit1");
+    fillThis.put("editfield2Value", "edit2");
+    fillThis.put("checkboxState", "true");
+    if (null == fillThis) {
+        return false;
+    }
+    if (null == uniDialog) {
+        if (dialogTitle.equals("")) {
+            dialogTitle = "Universal Dialog";
+        }
+        uniDialog = new UniversalDialog(this, this, dialogTitle);
+        if (null == uniDialog) {
+            return false;
+        }
+        uniDialog.setParms(titleMessage, dialogTitle, text, checkboxMsg, 
+                           button0Text, button1Text, button2Text, 
+                           editfield1Msg, editfield2Msg, numButtons, 
+                           numEditfields, editfield1Password, fillThis);
+        uniDialog.setModal(true);
+    }
+    
+    uniDialog.setVisible(true);
+
+    return true;
+}
+
+//
+// PrefChangedCallback
+//
+public int prefChanged(String prefName, Object closure)
+{
+    System.out.println("prefChanged: " + prefName + " closure: " + closure);
+    return 0;
+}
+
+class HistoryActionListener implements ActionListener
+{
+
+public void actionPerformed(ActionEvent event)
+{
+    String command = event.getActionCommand();
+
+    if (null == command) {
+        return;
+    }
+
+    // pull out the leading integer
+    Integer index;
+    int space = command.indexOf((int)' ');
+    if (-1 == space) {
+        return;
+    }
+
+    index = new Integer(command.substring(0, space));
+
+    EMWindow.this.history.setCurrentHistoryIndex(index.intValue());
+}
+
+}
+
 class PopupActionListener implements ActionListener {
 public void actionPerformed(ActionEvent event) {
     String command = event.getActionCommand();
-    if (command.equals("View Source"))
+    if (command.equals("View Source as ByteArray"))
         {
-            System.out.println("I will now View Soure");
-            EMWindow.this.currentPage.getSourceBytes(EMWindow.this.viewMode);
-            EMWindow.this.viewMode = !EMWindow.this.viewMode;
+            System.out.println("I will now View Source");
+            byte source[] = EMWindow.this.currentPage.getSourceBytes();
+            String sou = new String(source);
+            System.out.println("+++++++++++ Page Source is +++++++++++\n\n" + sou);
         }
     else if (command.equals("Select All"))
         {

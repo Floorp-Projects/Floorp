@@ -87,13 +87,28 @@ public class ElementImpl_setAttributeNS_String_String_String_9 extends BWBaseTes
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri  = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "dummyattr";
-                String val   = "1";
-                e.setAttributeNS(nuri, lname, val);
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri  = "http://www.foo.org/";
+                String qname = "foo:myattr";
+                String lname = "myattr";
+                String val   = "MYVAL";
+                e.setAttributeNS(nuri, qname, val);
 		String s = e.getAttributeNS(nuri, lname);
-		if (s == null || !s.equals(val)) {
-	                TestLoader.logErrPrint("'setAttributeNS' didn't set attribute correctly");
+		if (s == null) {
+	                TestLoader.logErrPrint("'setAttributeNS' returned null attirbute value");
+        	        return BWBaseTest.FAILED;
+		}
+
+		if (!s.equals(val)) {
+	                TestLoader.logErrPrint("'setAttributeNS' set attribute to " + s + "  instead of " + val);
         	        return BWBaseTest.FAILED;
 		}
              }

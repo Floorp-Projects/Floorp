@@ -23,6 +23,8 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 #//
 #// Makefile to build the java portion of the java wrapper to mozilla
+#// Assumes that all necesssary classes for webclient have already been 
+#// compiled into $(DIST)\classes
 #//
 #//------------------------------------------------------------------------
 
@@ -57,7 +59,13 @@ JAR_WEBCLIENT_CLASSES = \
 JDIRS = $(JAR_WEBCLIENT_CLASSES)
 !endif
 
-WEBCLIENT_JAR_NAME=webclient(VERSION_NUMBER).jar
+!ifdef PACKAGE_BUILD
+PACKAGE_VER = 1_0
+#PENDING(edburns): jar name should be defined elewhere!
+WEBCLIENT_JAR_NAME=webclient_$(PACKAGE_VER).jar
+PACKAGE_DIR = $(DIST)\javadev
+PACKAGE_LIB = $(PACKAGE_DIR)\lib
+!endif
 
 JAVAC_PROG=$(JDKHOME)\bin\javac
 
@@ -81,3 +89,19 @@ JAVAC_CLASSPATH=$(JAVAC_CLASSPATH);$(CLASSPATH)
 include <$(DEPTH)\config\javarules.mak>
 include <$(DEPTH)\config\rules.mak>
 
+install:: jarEmUp
+
+jarEmup:
+!ifdef PACKAGE_BUILD
+	-mkdir $(DIST)\javadev
+	chmod 775 $(DIST)\javadev
+	-mkdir $(DIST)\javadev\lib
+	chmod 775 $(DIST)\javadev\lib
+	rm -f $(PACKAGE_LIB)\$(WEBCLIENT_JAR_NAME)
+	jar -cvfM0 $(PACKAGE_LIB)\$(WEBCLIENT_JAR_NAME) -C $(DIST)\..\classes org 
+!endif
+
+clobber_all::
+!ifdef PACKAGE_BUILD
+	rm -f $(PACKAGE_LIB)\$(WEBCLIENT_JAR_NAME)
+!endif

@@ -44,7 +44,6 @@
 #include "nsIDocShell.h" // so we can save our nsIDocShell
 #include "nsIBaseWindow.h" // to get methods like SetVisibility
 #include "nsIWebNavigation.h" // for all Navigation commands
-#include "nsISHistory.h" // for session history
 #include "nsIPresShell.h"
 #include "nsIThread.h" // for PRThread
 #include "nsIWebShell.h" // for nsIWebShell
@@ -63,6 +62,13 @@
 #endif
 //
 
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
+
+#define WC_ITOA(intVal, buf, radix) sprintf(buf, "%d", intVal)
+#else
+#define WC_ITOA(intVal, buf, radix) itoa(intVal, buf, radix)
+#endif
+
 //
 // local classes
 //
@@ -80,12 +86,11 @@ struct WebShellInitContext {
 	nsCOMPtr<nsIWebShell> webShell;
     nsCOMPtr<nsIDocShell> docShell;
     nsCOMPtr<nsIBaseWindow> baseWindow;
-  nsCOMPtr<nsISHistory> sHistory;
   nsCOMPtr<nsIWebNavigation> webNavigation;
   nsCOMPtr<nsIPresShell> presShell;
   nsCOMPtr<nsIWebBrowser> webBrowser;
-	PLEventQueue	*	actionQueue;
-	PRThread		*	embeddedThread;
+    //	PLEventQueue	*	actionQueue;
+    //	PRThread		*	embeddedThread;
     JNIEnv          *   env;
     jobject             nativeEventThread;
 	int					stopThread;
@@ -152,6 +157,25 @@ void    util_PostEvent (WebShellInitContext * initContext, PLEvent * event);
  */
 
 void *  util_PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event);
+
+typedef struct _wsStringStruct {
+    const PRUnichar *uniStr;
+    jstring jStr;
+} wsStringStruct;
+
+/**
+
+ * @param strings wsStringStruct [].  A null terminated array of
+ * wsStringStruct instances.  On return, the jStr of each element is the
+ * new jstring.  Call util_DeleteJstringsFromUnichars to deallocate.
+
+ */
+
+nsresult util_CreateJstringsFromUnichars(wsStringStruct *strings, 
+                                         PRInt32 arrayLen);
+
+nsresult util_DeleteJstringsFromUnichars(wsStringStruct *strings, 
+                                         PRInt32 arrayLen);
 
 // hack functions to get around mozilla oddities
 #ifdef XP_UNIX

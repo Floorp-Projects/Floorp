@@ -25,13 +25,16 @@ package org.mozilla.webclient.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.RangeException;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.Navigation;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
+import org.mozilla.webclient.Prompt;
 
-import java.awt.Rectangle;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class NavigationImpl extends ImplObjectNative implements Navigation
 {
@@ -84,6 +87,29 @@ public void loadURL(String absoluteURL)
     }
 }
 
+public void loadFromStream(InputStream stream, String uri,
+                           String contentType, int contentLength,
+                           Properties loadInfo)
+{
+    ParameterCheck.nonNull(stream);
+    ParameterCheck.nonNull(uri);
+    ParameterCheck.nonNull(contentType);
+    if (contentLength < -1 || contentLength == 0) {
+        throw new RangeException("contentLength value " + contentLength +
+                                 " is out of range.  It is should be either -1 or greater than 0.");
+    }
+
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert(-1 != nativeWebShell);
+    
+    synchronized(myBrowserControl) {
+        nativeLoadFromStream(nativeWebShell, stream,
+                             uri, contentType, contentLength,
+                             loadInfo);
+    }
+}
+
+
 public void refresh(long loadFlags)
 {
     ParameterCheck.noLessThan(loadFlags, 0);
@@ -105,15 +131,35 @@ public void stop()
     }
 }
 
+public void setPrompt(Prompt yourPrompt)
+{
+    ParameterCheck.nonNull(yourPrompt);
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert(-1 != nativeWebShell);
+    
+    synchronized(myBrowserControl) {
+        nativeSetPrompt(nativeWebShell, yourPrompt);
+    }
+
+}
+
 // 
 // Native methods
 //
 
 public native void nativeLoadURL(int webShellPtr, String absoluteURL);
 
+public native void nativeLoadFromStream(int webShellPtr, InputStream stream,
+                                        String uri, 
+                                        String contentType, 
+                                        int contentLength,
+                                        Properties loadInfo);
+
 public native void nativeRefresh(int webShellPtr, long loadFlags);
 
 public native void nativeStop(int webShellPtr);
+
+public native void nativeSetPrompt(int webShellPtr, Prompt yourPrompt);
 
 // ----VERTIGO_TEST_START
 
@@ -127,7 +173,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.3 2000/07/22 02:48:26 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.4 2001/04/02 21:13:59 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

@@ -32,6 +32,16 @@ DIRS=  \
 	classes		\
 	$(NULL)
 
+
+rm_java:
+ifeq ($(PACKAGE_BUILD),)
+	rm -Rf $(topsrcdir)/dist/classes/org/mozilla/util
+endif # PACKAGE_BUILD
+
+
+clobber_all::rm_java
+
+
 include $(topsrcdir)/config/rules.mk
 
 

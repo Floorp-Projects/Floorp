@@ -27,7 +27,7 @@ CMyDialog::CMyDialog(WebShellInitContext *yourInitContext) : m_initContext(yourI
 {
     // initialize the string constants (including properties keys)
     if (!util_StringConstantsAreInitialized()) {
-        util_InitStringConstants(m_initContext->env);
+        util_InitStringConstants();
     }
 }
 

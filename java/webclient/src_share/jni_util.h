@@ -76,10 +76,24 @@ extern jobject SHIFT_KEY;
 extern jobject META_KEY;
 extern jobject BUTTON_KEY;
 extern jobject CLICK_COUNT_KEY;
+extern jobject USER_NAME_KEY;
+extern jobject PASSWORD_KEY;
+extern jobject EDIT_FIELD_1_KEY;
+extern jobject EDIT_FIELD_2_KEY;
+extern jobject CHECKBOX_STATE_KEY;
+extern jobject BUTTON_PRESSED_KEY;
 extern jobject TRUE_VALUE;
 extern jobject FALSE_VALUE;
 extern jobject ONE_VALUE;
 extern jobject TWO_VALUE;
+extern jobject BM_ADD_DATE_VALUE;
+extern jobject BM_LAST_MODIFIED_DATE_VALUE;
+extern jobject BM_LAST_VISIT_DATE_VALUE;
+extern jobject BM_NAME_VALUE;
+extern jobject BM_URL_VALUE;
+extern jobject BM_DESCRIPTION_VALUE;
+extern jobject BM_IS_FOLDER_VALUE;
+
 
 /**
 
@@ -168,6 +182,15 @@ typedef enum {
   NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES
 } DOM_MOUSE_LISTENER_EVENT_MASK_NAMES;
 
+// BookmarkEntry string constants, must coincide with java
+#define BM_ADD_DATE "AddDate"
+#define BM_LAST_MODIFIED_DATE "LastModifiedDate"
+#define BM_LAST_VISIT_DATE "LastVisitDate"
+#define BM_NAME "Name"
+#define BM_URL "URL"
+#define BM_DESCRIPTION "Description"
+#define BM_IS_FOLDER "IsFolder"
+
 extern jlong DocumentLoader_maskValues [NUMBER_OF_DOCUMENT_LOADER_MASK_NAMES];
 extern char *DocumentLoader_maskNames [NUMBER_OF_DOCUMENT_LOADER_MASK_NAMES + 1];
 
@@ -201,7 +224,7 @@ void    util_DeallocateShareInitContext(void *initContext);
 
  */ 
 
-jboolean util_InitStringConstants(JNIEnv *env);
+jboolean util_InitStringConstants();
 jboolean util_StringConstantsAreInitialized();
 
 void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
@@ -239,6 +262,9 @@ jthrowable util_ExceptionOccurred(JNIEnv *env);
 jint util_GetJavaVM(JNIEnv *env, JavaVM **vm);
 
 jclass util_FindClass(JNIEnv *env, const char *fullyQualifiedClassName);
+
+jobject util_CallStaticObjectMethodlongArg(JNIEnv *env, jclass clazz, 
+                                    jmethodID methodID, jlong longArg);
 
 jfieldID util_GetStaticFieldID(JNIEnv *env, jclass clazz, 
                                const char *fieldName, 
@@ -292,6 +318,35 @@ void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
                                     jobject name, jobject value, 
                                     jobject reserved);
 
+/**
+
+ * A JNI wrapper to get a value for a name out of a PropertiesObject
+ * created by CreatePropertiesObject
+
+ */
+
+jobject util_GetFromPropertiesObject(JNIEnv *, jobject propertiesObject,
+                                     jobject name, jobject reserved);
+
+/**
+   
+ * A JNI wrapper to get a boolean value for a name out of a PropertiesObject
+ * created by CreatePropertiesObject
+ 
+ */
+
+jboolean util_GetBoolFromPropertiesObject(JNIEnv *, jobject propertiesObject,
+                                          jobject name, jobject reserved);
+
+/**
+   
+ * A JNI wrapper to get an int value for a name out of a PropertiesObject
+ * created by CreatePropertiesObject
+ 
+ */
+
+jint util_GetIntFromPropertiesObject(JNIEnv *, jobject propertiesObject,
+                                     jobject name, jobject reserved);
 
 //
 // Functions provided by the browser specific native code

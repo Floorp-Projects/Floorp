@@ -42,6 +42,8 @@ fpClearPropertiesObjectType externalClearPropertiesObject = nsnull; // jni_util_
 
 fpStoreIntoPropertiesObjectType externalStoreIntoPropertiesObject = nsnull; // jni_util_export.h
 
+fpGetFromPropertiesObjectType externalGetFromPropertiesObject = nsnull; // jni_util_export.h
+
 JNIEXPORT const char * JNICALL util_GetStringUTFChars(JNIEnv *env, 
                                                       jstring inString)
 {
@@ -189,6 +191,11 @@ JNIEXPORT void JNICALL util_SetClearPropertiesObjectFunction(fpClearPropertiesOb
 JNIEXPORT void JNICALL util_SetStoreIntoPropertiesObjectFunction(fpStoreIntoPropertiesObjectType fp)
 {
     externalStoreIntoPropertiesObject = fp;
+}
+
+JNIEXPORT void JNICALL util_SetGetFromPropertiesObjectFunction(fpGetFromPropertiesObjectType fp)
+{
+    externalGetFromPropertiesObject = fp;
 }
 
 JNIEXPORT void JNICALL 

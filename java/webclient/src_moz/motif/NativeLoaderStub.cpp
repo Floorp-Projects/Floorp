@@ -39,6 +39,7 @@
 #include <jni.h>
 // JNI Headers
 #include "BookmarksImpl.h"
+#include "PreferencesImpl.h"
 #include "CurrentPageImpl.h"
 #include "HistoryImpl.h"
 #include "ISupportsPeer.h"
@@ -111,13 +112,17 @@ void (* nativeProcessEvents) (JNIEnv *, jobject, jint);
 // from BookmarksImpl.h
 jint (* nativeGetBookmarks) (JNIEnv *, jobject, jint);
 jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jint, jstring, jboolean);
+// from PreferencesImpl.h
+void (* nativeSetUnicharPref) (JNIEnv *, jobject, jint, jstring, jstring);
+void (* nativeSetIntPref) (JNIEnv *, jobject, jint, jstring, jint);
+void (* nativeSetBoolPref) (JNIEnv *, jobject, jint, jstring, jboolean);
+jobject (* nativeGetPrefs) (JNIEnv *env, jobject obj, jint webShellPtr, jobject props);
+void (* nativeRegisterPrefChangedCallback) (JNIEnv *env, jobject obj, jint webShellPtr, jobject callback, jstring prefName, jobject closure);
 // from CurrentPageImpl.h
 void (* nativeCopyCurrentSelectionToSystemClipboard) (JNIEnv *, jobject, jint);
 void (* nativeFindInPage) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean);
-void (* nativeFindNextInPage) (JNIEnv *, jobject, jint, jboolean);
+void (* nativeFindNextInPage) (JNIEnv *, jobject, jint);
 jstring (* nativeGetCurrentURL) (JNIEnv *, jobject, jint);
-jstring (* nativeGetSource) (JNIEnv *, jobject);
-jbyteArray (* nativeGetSourceBytes) (JNIEnv *, jobject, jint, jboolean);
 void (* nativeResetFind) (JNIEnv *, jobject, jint);
 void (* nativeSelectAll) (JNIEnv *, jobject, jint);
 jobject (* nativeGetDOM) (JNIEnv *, jobject, jint);
@@ -140,8 +145,10 @@ void (* nativeAddRef) (JNIEnv *, jobject, jint);
 void (* nativeRelease) (JNIEnv *, jobject, jint);
 // from NavigationImpl.h
 void (* nativeLoadURL) (JNIEnv *, jobject, jint, jstring);
+void (* nativeLoadFromStream) (JNIEnv *, jobject, jint, jobject, jstring, jstring, jint, jobject);
 void (* nativeRefresh) (JNIEnv *, jobject, jint, jlong);
 void (* nativeStop) (JNIEnv *, jobject, jint);
+void (* nativeSetPrompt) (JNIEnv *, jobject, jint, jobject);
 // from RDFEnumeration.h
 void (* nativeFinalize) (JNIEnv *, jobject, jint);
 jboolean (* nativeHasMoreElements) (JNIEnv *, jobject, jint, jint);
@@ -150,7 +157,8 @@ jint (* nativeNextElement) (JNIEnv *, jobject, jint, jint);
 jint (* nativeGetChildAt) (JNIEnv *, jobject, jint, jint, jint);
 jint (* nativeGetChildCount) (JNIEnv *, jobject, jint, jint);
 jint (* nativeGetIndex) (JNIEnv *, jobject, jint, jint, jint);
-void (* nativeInsertElementAt) (JNIEnv *, jobject, jint, jint, jint, jint);
+void (* nativeInsertElementAt) (JNIEnv *, jobject, jint, jint, jint, jobject, jint);
+jint (* nativeNewFolder) (JNIEnv *, jobject, jint, jint, jobject);
 jboolean (* nativeIsContainer) (JNIEnv *, jobject, jint, jint);
 jboolean (* nativeIsLeaf) (JNIEnv *, jobject, jint, jint);
 jstring (* nativeToString) (JNIEnv *, jobject, jint, jint);
@@ -228,8 +236,12 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeGetIndex) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeInsertElementAt = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt");
+  nativeInsertElementAt = (void (*) (JNIEnv *, jobject, jint, jint, jint, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt");
   if (!nativeInsertElementAt) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+  nativeNewFolder = (jint (*) (JNIEnv *, jobject, jint, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeNewFolder");
+  if (!nativeNewFolder) {
     printf("got dlsym error %s\n", dlerror());
   }
   nativeIsContainer = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsContainer");
@@ -262,12 +274,20 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeLoadURL) {
     printf("got dlsym error %s\n", dlerror());
   }
+  nativeLoadFromStream = (void (*) (JNIEnv *, jobject, jint, jobject, jstring, jstring, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeLoadFromStream");
+  if (!nativeLoadFromStream) {
+      printf("got dlsym error %s\n", dlerror());
+  }
   nativeRefresh = (void (*) (JNIEnv *, jobject, jint, jlong)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeRefresh");
   if (!nativeRefresh) {
     printf("got dlsym error %s\n", dlerror());
   }
   nativeStop = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeStop");
   if (!nativeStop) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+  nativeSetPrompt = (void (*) (JNIEnv *, jobject, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeSetPrompt");
+  if (!nativeSetPrompt) {
     printf("got dlsym error %s\n", dlerror());
   }
 
@@ -341,20 +361,12 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeFindInPage) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeFindNextInPage = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage");
+  nativeFindNextInPage = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage");
   if (!nativeFindNextInPage) {
     printf("got dlsym error %s\n", dlerror());
   }
   nativeGetCurrentURL = (jstring (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetCurrentURL");
   if (!nativeGetCurrentURL) {
-    printf("got dlsym error %s\n", dlerror());
-  }
-  nativeGetSource = (jstring (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource");
-  if (!nativeGetSource) {
-    printf("got dlsym error %s\n", dlerror());
-  }
-  nativeGetSourceBytes = (jbyteArray (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes");
-  if (!nativeGetSourceBytes) {
     printf("got dlsym error %s\n", dlerror());
   }
   nativeResetFind = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeResetFind");
@@ -379,7 +391,26 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeNewRDFNode) {
     printf("got dlsym error %s\n", dlerror());
   }
-
+  nativeSetUnicharPref = (void (*) (JNIEnv *, jobject, jint, jstring, jstring)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetUnicharPref");
+  if (!nativeSetUnicharPref) {
+      printf("got dlsym error %s\n", dlerror());
+  }
+  nativeSetIntPref = (void (*) (JNIEnv *, jobject, jint, jstring, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetIntPref");
+  if (!nativeSetIntPref) {
+      printf("got dlsym error %s\n", dlerror());
+  }
+  nativeSetBoolPref = (void (*) (JNIEnv *, jobject, jint, jstring, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetBoolPref");
+  if (!nativeSetBoolPref) {
+      printf("got dlsym error %s\n", dlerror());
+  }
+  nativeGetPrefs = (jobject (*) (JNIEnv *env, jobject obj, jint webShellPtr, jobject props)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeGetPrefs");
+  if (!nativeGetPrefs) {
+      printf("got dlsym error %s\n", dlerror());
+  }
+  nativeRegisterPrefChangedCallback = (void (*) (JNIEnv *env, jobject obj, jint webShellPtr, jobject callback, jstring prefName, jobject closure)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeRegisterPrefChangedCallback");
+  if (!nativeRegisterPrefChangedCallback) {
+      printf("got dlsym error %s\n", dlerror());
+  }
   nativeAddListener = (void (*) (JNIEnv *, jobject, jint, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener");
   if (!nativeAddListener) {
     printf("got dlsym error %s\n", dlerror());
@@ -488,6 +519,48 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_
   return (* nativeNewRDFNode) (env, obj, webShellPtr, url, isFolder);
 }
 
+// PreferencesImpl.h
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetUnicharPref
+(JNIEnv *env, jobject obj, jint webShellPtr, jstring prefName, 
+ jstring prefValue)
+{
+    (* nativeSetUnicharPref) (env, obj, webShellPtr, prefName, prefValue);
+}
+
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetIntPref
+(JNIEnv *env, jobject obj, jint webShellPtr, jstring prefName, jint prefValue)
+{
+    (* nativeSetIntPref) (env, obj, webShellPtr, prefName, prefValue);
+}
+
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetBoolPref
+(JNIEnv *env, jobject obj, jint webShellPtr, jstring prefName, 
+ jboolean prefValue)
+{
+    (* nativeSetBoolPref) (env, obj, webShellPtr, prefName, prefValue);
+}
+
+JNIEXPORT jobject JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeGetPrefs
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject props)
+{
+    return (* nativeGetPrefs) (env, obj, webShellPtr, props);
+}
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeRegisterPrefChangedCallback
+(JNIEnv *env, jobject obj, jint webShellPtr, 
+ jobject callback, jstring prefName, jobject closure)
+{
+    (* nativeRegisterPrefChangedCallback) (env, obj, webShellPtr, callback,
+                                           prefName, closure);
+}
 
 // CurrentPageImpl
 /*
@@ -516,8 +589,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
-(JNIEnv * env, jobject obj, jint webShellPtr, jboolean myboolean) {
-  (* nativeFindNextInPage) (env, obj, webShellPtr, myboolean);
+(JNIEnv * env, jobject obj, jint webShellPtr) {
+  (* nativeFindNextInPage) (env, obj, webShellPtr);
 }
 
 /*
@@ -528,26 +601,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetCurrentURL
 (JNIEnv *env, jobject obj, jint webShellPtr) {
   return (* nativeGetCurrentURL) (env, obj, webShellPtr);
-}
-
-/*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
- * Method:    nativeGetSource
- * Signature: ()Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
-(JNIEnv * env, jobject obj) {
-  return (* nativeGetSource) (env, obj);
-}
-
-/*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
- * Method:    nativeGetSourceBytes
- * Signature: ()[B
- */
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv * env, jobject obj, jint webShellPtr, jboolean mode) {
-  return (* nativeGetSourceBytes) (env, obj, webShellPtr, mode);
 }
 
 /*
@@ -755,6 +808,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_NavigationImpl
+ * Method:    nativeLoadFromStream
+ * Signature: (ILjava/io/InputStream;Ljava/lang/String;Ljava/lang/String;ILjava/util/Properties;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeLoadFromStream
+  (JNIEnv *env, jobject obj, jint webShellPtr, jobject javaStream, 
+   jstring absoluteUrl, jstring contentType, jint contentLength, 
+   jobject loadProperties)
+{
+    (* nativeLoadFromStream) (env, obj, webShellPtr, javaStream, absoluteUrl, 
+                              contentType, contentLength, loadProperties);
+}
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_NavigationImpl
  * Method:    nativeRefresh
  * Signature: (IJ)V
  */
@@ -773,6 +839,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
   (* nativeStop) (env, obj, webShellPtr);
 }
 
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeSetPrompt
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject userPrompt)
+{
+    (* nativeSetPrompt) (env, obj, webShellPtr, userPrompt);
+}
 
 
 // RDFEnumeration
@@ -857,10 +929,20 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetIndex
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
 (JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
- jint childRDFNode, jint childIndex) {
+ jint childRDFNode, jobject childProps, jint childIndex) {
   (* nativeInsertElementAt) (env, obj, webShellPtr, parentRDFNode, 
-                             childRDFNode, childIndex);
+                             childRDFNode, childProps, childIndex);
 }
+
+JNIEXPORT jint JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeNewFolder
+(JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
+ jobject childProps)
+{
+    return (* nativeNewFolder) (env, obj, webShellPtr, 
+                                parentRDFNode, childProps);
+}
+
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_RDFTreeNode

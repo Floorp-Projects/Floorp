@@ -85,8 +85,17 @@ public class ElementImpl_hasAttributeNS_String_String_0 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } 
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
 		if (e.hasAttributeNS(null, null)) ;
-                TestLoader.logErrPrint("Element 'hasAttributeNS didn't throw exception... ");
+                TestLoader.logErrPrint("Element 'hasAttributeNS didn't throw exception for URI set to null and localname set to null... ");
                 return BWBaseTest.FAILED;
         } catch (Exception r) {
              String msg = "Caught Exception " + r ; 

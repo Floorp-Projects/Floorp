@@ -109,4 +109,13 @@ org.mozilla.dom.test.NodeImpl_supports_String_String_0
 org.mozilla.dom.test.NodeImpl_supports_String_String_1
 org.mozilla.dom.test.NodeImpl_supports_String_String_2
 org.mozilla.dom.test.NodeImpl_supports_String_String_3
-
+org.mozilla.dom.test.NamedNodeMapImpl_getNamedItemNS_String_String_0
+org.mozilla.dom.test.NamedNodeMapImpl_getNamedItemNS_String_String_1
+org.mozilla.dom.test.NamedNodeMapImpl_getNamedItemNS_String_String_2
+org.mozilla.dom.test.NamedNodeMapImpl_getNamedItemNS_String_String_3
+org.mozilla.dom.test.NamedNodeMapImpl_removeNamedItemNS_String_String_0
+org.mozilla.dom.test.NamedNodeMapImpl_removeNamedItemNS_String_String_1
+org.mozilla.dom.test.NamedNodeMapImpl_removeNamedItemNS_String_String_2
+org.mozilla.dom.test.NamedNodeMapImpl_removeNamedItemNS_String_String_3
+org.mozilla.dom.test.NamedNodeMapImpl_setNamedItemNS_Node_0
+org.mozilla.dom.test.NamedNodeMapImpl_setNamedItemNS_Node_1

@@ -22,10 +22,11 @@
 
 #include "RDFTreeNode.h"
 
+#include "RDFActionEvents.h"
+
 #include "rdf_util.h"
 #include "rdf_progids.h"
 #include "ns_util.h"
-#include "nsActions.h"
 
 #include "nsIServiceManager.h"
 
@@ -216,10 +217,11 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
 (JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
- jint childRDFNode, jint childIndex)
+ jint childRDFNode, jobject childProps, jint childIndex)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
     void	*	voidResult = nsnull;
+    jobject propsGlobalRef;
     
 	if (initContext == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeInsertElementAt");
@@ -228,18 +230,58 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
     if (!initContext->initComplete) {
         ::util_ThrowExceptionToJava(env, "Exception: can't InsertElementAt");
     }
+    propsGlobalRef = ::util_NewGlobalRef(env, childProps);
     wsRDFInsertElementAtEvent *actionEvent = 
         new wsRDFInsertElementAtEvent(initContext,
                                       (PRUint32) parentRDFNode,
                                       (PRUint32) childRDFNode,
+                                      (void *) propsGlobalRef,
                                       (PRUint32) childIndex);
     PLEvent	   	* event       = (PLEvent*) *actionEvent;
     
     voidResult = ::util_PostSynchronousEvent(initContext, event);
+    ::util_DeleteGlobalRef(env, propsGlobalRef);
     if (NS_FAILED((nsresult) voidResult)) {
 		::util_ThrowExceptionToJava(env, "Exception: Can't InsertElementAt");
 	}
     return;
+}
+
+JNIEXPORT jint JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeNewFolder
+(JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
+ jobject childProps)
+{
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    void	*	voidResult = nsnull;
+    jobject propsGlobalRef;
+    jint retVal = 0;
+    
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeNewFolder");
+	}
+    
+    if (!initContext->initComplete || !childProps) {
+        ::util_ThrowExceptionToJava(env, "Exception: can't NewFolder");
+    }
+    propsGlobalRef = ::util_NewGlobalRef(env, childProps);
+    if (!propsGlobalRef) {
+        ::util_ThrowExceptionToJava(env, "Exception: can't NewFolder");
+    }
+    
+    wsRDFNewFolderEvent *actionEvent = 
+        new wsRDFNewFolderEvent(initContext,
+                                (PRUint32) parentRDFNode,
+                                (void *) propsGlobalRef,
+                                (PRUint32 *) &retVal);
+    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+    
+    voidResult = ::util_PostSynchronousEvent(initContext, event);
+    ::util_DeleteGlobalRef(env, propsGlobalRef);
+    if (NS_FAILED((nsresult) voidResult)) {
+		::util_ThrowExceptionToJava(env, "Exception: Can't do NewFolder");
+	}
+    return retVal;
 }
 
 

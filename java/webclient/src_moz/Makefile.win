@@ -34,15 +34,26 @@ OBJS =                              \
     .\$(OBJDIR)\dom_util.obj  \
     .\$(OBJDIR)\nsActions.obj  \
     .\$(OBJDIR)\CurrentPageImpl.obj  \
+    .\$(OBJDIR)\CurrentPageActionEvents.obj  \
     .\$(OBJDIR)\HistoryImpl.obj  \
+    .\$(OBJDIR)\HistoryActionEvents.obj  \
     .\$(OBJDIR)\BookmarksImpl.obj  \
     .\$(OBJDIR)\WrapperFactoryImpl.obj  \
     .\$(OBJDIR)\WindowControlImpl.obj  \
+    .\$(OBJDIR)\WindowControlActionEvents.obj  \
+    .\$(OBJDIR)\InputStreamShim.obj  \
     .\$(OBJDIR)\NavigationImpl.obj  \
+    .\$(OBJDIR)\NavigationActionEvents.obj  \
     .\$(OBJDIR)\CBrowserContainer.obj  \
+    .\$(OBJDIR)\PromptActionEvents.obj  \
+    .\$(OBJDIR)\NativeEventThreadActionEvents.obj  \
     .\$(OBJDIR)\NativeEventThread.obj  \
     .\$(OBJDIR)\RDFEnumeration.obj  \
     .\$(OBJDIR)\RDFTreeNode.obj  \
+    .\$(OBJDIR)\RDFActionEvents.obj  \
+    .\$(OBJDIR)\wsRDFObserver.obj  \
+    .\$(OBJDIR)\PreferencesImpl.obj  \
+    .\$(OBJDIR)\PreferencesActionEvents.obj  \
     .\$(OBJDIR)\ISupportsPeer.obj  \
     $(NULL)
 
@@ -120,21 +131,68 @@ INCS = \
 
 # generate the jni header
 
+!ifdef PACKAGE_BUILD
+PERCENT=%
+PACKAGE_VER = 1_0
+#PENDING(edburns): jar name should be defined elewhere!
+WEBCLIENT_JAR_NAME=webclient_$(PACKAGE_VER).jar
+PACKAGE_DIR = $(DIST)\javadev
+PACKAGE_LIB = $(PACKAGE_DIR)\lib
+PACKAGE_EXAMPLE = $(PACKAGE_DIR)\example
+!endif
+
+PATH_SAVE=$(PATH)
+
 buildRunems:
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 !ifdef BAL_INTERFACE
 !else
+!ifndef PACKAGE_BUILD
 	@echo +++ Creating runem.bat.  Use this to run the test browser.
 	rm -f runem.bat
 	@echo $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
+!else
+	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
+	@rm -f runem_win_commercial.bat
+	@set MOZILLA_FIVE_HOME=
+	@set PATH=
+	@set JDKHOME=
+	@echo copy %MOZILLA_FIVE_HOME%\javadev\lib\javadom.dll %MOZILLA_FIVE_HOME%\components>> runem_win_commercial.bat
+	@echo set PATH=%MOZILLA_FIVE_HOME%\javadev\lib;%MOZILLA_FIVE_HOME%;%MOZILLA_FIVE_HOME%\components;%PATH%>> runem_win_commercial.bat
+	@echo set CLASSPATH=%MOZILLA_FIVE_HOME%\javadev\lib\$(WEBCLIENT_JAR_NAME)>> runem_win_commercial.bat
+	@echo %JDKHOME%\bin\java org.mozilla.webclient.test.EmbeddedMozilla %MOZILLA_FIVE_HOME% %1% >> runem_win_commercial.bat
+	@set PATH=$(PATH_SAVE)
+	-mkdir $(PACKAGE_EXAMPLE)
+	chmod 775 $(PACKAGE_EXAMPLE)
+	cp $(DIST)\bin\webclient.dll $(PACKAGE_LIB)\webclient.dll
+	cp $(DIST)\bin\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
+	cp $(DIST)\bin\components\javadom.dll $(PACKAGE_LIB)\javadom.dll
+	chmod 775 $(PACKAGE_LIB)\webclient.dll
+	chmod 775 $(PACKAGE_LIB)\javadomjni.dll
+	chmod 775 $(PACKAGE_LIB)\javadom.dll
+	cp -f $(DEPTH)\java\webclient\src_moz\runem_win_commercial.bat $(PACKAGE_EXAMPLE)\runem.bat
+	chmod 775  $(PACKAGE_EXAMPLE)\runem.bat
+	cp -f $(DEPTH)\java\webclient\src_moz\install_win32.js $(DIST)\install.js
+	cd $(DIST)
+	zip -r $(DLLNAME)_$(PACKAGE_VER)_win32.xpi install.js javadev
+!endif
 !endif
 
-install:: $(DLL) buildRunems
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(DLL) buildRunems 
+
 
 clobber_all:: clobber
+!ifdef PACKAGE_BUILD
+	rm -rf $(DIST)\javadev
+	rm -f $(DIST)\$(DLLNAME)_$(PACKAGE_VER).xpi
+	rm -f $(DIST)\install.js
+!endif
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
+!ifdef PACKAGE_BUILD
+	rm -f runem_win_commercial.bat
+!else
 	rm -f runem.bat
-
+!endif

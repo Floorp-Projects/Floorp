@@ -48,7 +48,7 @@ CPPSRCS		= \
 	org_mozilla_dom_TextImpl.cpp \
 	org_mozilla_dom_events_EventImpl.cpp \
 	org_mozilla_dom_events_UIEventImpl.cpp \
-	org_mozilla_dom_events_MouseEventImpl.cpp 
+	org_mozilla_dom_events_MouseEventImpl.cpp
 
 include $(topsrcdir)/config/config.mk
 
@@ -79,6 +79,8 @@ JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
 
 export::
 	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
+
+clobber_all:: clobber
 
 clobber::
 	rm -f org_*.h

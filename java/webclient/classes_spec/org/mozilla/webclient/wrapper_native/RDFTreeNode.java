@@ -27,8 +27,12 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import java.util.Enumeration;
+import java.util.Properties;
+
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.MutableTreeNode;
+
+import org.mozilla.webclient.BookmarkEntry;
 
 public abstract class RDFTreeNode extends ISupportsPeer implements MutableTreeNode
 {
@@ -48,10 +52,11 @@ public abstract class RDFTreeNode extends ISupportsPeer implements MutableTreeNo
 
 // Relationship Instance Variables
 
-private int nativeRDFNode = -1;
+protected int nativeRDFNode = -1;
 
 private RDFTreeNode parent;
 
+Properties properties = null;
 
 /** 
       
@@ -84,6 +89,16 @@ protected RDFTreeNode(int yourNativeWebShell,
 // General Methods
 //
 
+public Properties getProperties()
+{
+    if ((null == properties) &&
+        (null == (properties = new Properties()))) {
+        throw new IllegalStateException("Can't create properties table");
+    }
+    
+    return properties;
+}
+
 //
 // Abstract Methods
 //
@@ -111,7 +126,9 @@ private void setNativeRDFNode(int yourNativeRDFNode)
 
 protected void finalize() throws Throwable
 {
-    nativeRelease(nativeRDFNode);
+    if (-1 != nativeRDFNode) {
+        nativeRelease(nativeRDFNode);
+    }
     super.finalize();
 }
 
@@ -199,11 +216,16 @@ public boolean isLeaf()
 
     return nativeIsLeaf(nativeWebShell, nativeRDFNode);
 }
-    
 
 // 
 // Methods from MutableTreeNode
 //
+
+/**
+ 
+ * Unfortunately, we have to handle folders and bookmarks differently.
+
+ */
 
 public void insert(MutableTreeNode child, int index)
 {
@@ -212,13 +234,29 @@ public void insert(MutableTreeNode child, int index)
     }
     Assert.assert(-1 != nativeRDFNode);
     RDFTreeNode childNode = (RDFTreeNode) child;
-    Assert.assert(-1 != childNode.getNativeRDFNode());
-    int childNativeRDFNode = childNode.getNativeRDFNode();
-
-    // hook up the child to its native peer
-    nativeInsertElementAt(nativeWebShell, nativeRDFNode, 
-			  childNativeRDFNode, index);
-
+    
+    if (childNode.isFolder()) {
+        Assert.assert(-1 == childNode.getNativeRDFNode());
+        Assert.assert(null != childNode.getProperties());
+        int childNativeRDFNode;
+        
+        // hook up the child to its native peer
+        childNativeRDFNode = nativeNewFolder(nativeWebShell, nativeRDFNode, 
+                                             childNode.getProperties());
+    
+        // hook up the child to its native peer
+        childNode.setNativeRDFNode(childNativeRDFNode);
+    }
+    else {
+        Assert.assert(-1 != childNode.getNativeRDFNode());
+        int childNativeRDFNode = childNode.getNativeRDFNode();
+        
+        // hook up the child to its native peer
+        nativeInsertElementAt(nativeWebShell, nativeRDFNode, 
+                              childNativeRDFNode, childNode.getProperties(), 
+                              index);
+    }
+        
     // hook up the child to its java parent
     childNode.setParent(this);
     
@@ -252,6 +290,24 @@ public void setUserObject(Object object)
 }
 
 //
+// methods on this
+//
+public boolean isFolder()
+{
+    boolean result = false;
+    if (-1 == nativeRDFNode) {
+        if (null != getProperties()) {
+            result = (null != getProperties().get(BookmarkEntry.IS_FOLDER));
+        }
+    }
+    else {
+        result = nativeIsContainer(nativeWebShell, getNativeRDFNode());
+    }
+    return result;
+}
+
+
+//
 // Native methods
 //
 
@@ -272,7 +328,11 @@ public native int nativeGetIndex(int webShellPtr, int nativeRDFNode,
 public native String nativeToString(int webShellPtr, int nativeRDFNode);
 public native void nativeInsertElementAt(int webShellPtr, 
                                          int parentNativeRDFNode,
-                                         int childNativeRDFNode, int index);
+                                         int childNativeRDFNode, 
+                                         Properties childProps, int index);
+public native int nativeNewFolder(int webShellPtr, int parentRDFNode, 
+                                  Properties childProps);
+
 
 // ----VERTIGO_TEST_START
 
@@ -286,7 +346,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("RDFTreeNode");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: RDFTreeNode.java,v 1.2 2000/11/03 03:16:50 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: RDFTreeNode.java,v 1.3 2001/04/02 21:13:59 ashuk%eng.sun.com Exp $");
 
 }
 

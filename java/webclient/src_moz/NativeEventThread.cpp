@@ -53,6 +53,7 @@
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsRepository.h"
 #include "nsIServiceManager.h" // for do_GetService
+#include "nsISHistory.h" // for sHistory
 #include "nsIPref.h" // for preferences
 #include "nsIThread.h" // for PRThread
 #include "nsIDocShell.h"
@@ -62,7 +63,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 //nsIWebShell is included in ns_util.h
-
+#include "NativeEventThreadActionEvents.h"
 
 #include "prlog.h" // for PR_ASSERT
 
@@ -70,6 +71,12 @@
 #include <unistd.h>
 #include "gdksuperwin.h"
 #include "gtkmozarea.h"
+
+extern "C" {
+    static int	    wc_x_error			 (Display     *display, 
+                                          XErrorEvent *error);
+}
+
 #endif
 
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
@@ -117,6 +124,29 @@ extern const char * gBinDir; // defined in WrapperFactoryImpl.cpp
 // Local functions
 //
 
+#ifdef XP_UNIX
+static int
+wc_x_error (Display	 *display,
+            XErrorEvent *error)
+{
+    if (error->error_code)
+        {
+            char buf[64];
+            
+            XGetErrorText (display, error->error_code, buf, 63);
+            
+            fprintf (stderr, "Webclient-Gdk-ERROR **: %s\n  serial %ld error_code %d request_code %d minor_code %d\n",
+                     buf, 
+                     error->serial, 
+                     error->error_code, 
+                     error->request_code,
+                     error->minor_code);
+        }
+    
+    return 0;
+}
+#endif
+
 /**
 
  * Called from InitMozillaStuff().
@@ -127,7 +157,7 @@ int processEventLoop(WebShellInitContext * initContext);
 
 /**
 
- * Called from Java nativeInitialize to create the webshell, history
+ * Called from Java nativeInitialize to create the webshell 
  * and other mozilla things, then start the event loop.
 
  */
@@ -138,11 +168,11 @@ nsresult InitMozillaStuff (WebShellInitContext * arg);
 // Local data
 //
 
-nsISHistory *gHistory = nsnull;
 nsIComponentManager *gComponentManager = nsnull;
 static PRBool	gFirstTime = PR_TRUE;
-
-
+PLEventQueue	*	gActionQueue = nsnull;
+PRThread		*	gEmbeddedThread = nsnull;
+nsISHistory *gHistory = nsnull;
 
 char * errorMessages[] = {
 	"No Error",
@@ -199,7 +229,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
                                     "NULL webShellPtr passed to nativeProcessEvents.");
         return;
     }
-    processEventLoop(initContext);
+
+    void* threadId = PR_GetCurrentThread();
+    if (threadId == (void *) gEmbeddedThread) {
+        //        printf("--------- Thread ID ---- %p\n",gEmbeddedThread);
+        processEventLoop(initContext);
+    }
 }
 
 /**
@@ -378,20 +413,20 @@ int processEventLoop(WebShellInitContext * initContext)
 #endif
     ::PR_Sleep(PR_INTERVAL_NO_WAIT);
     
-    if ((initContext->initComplete) && (initContext->actionQueue)) {
+    if ((initContext->initComplete) && (gActionQueue)) {
         
-        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        PL_ENTER_EVENT_QUEUE_MONITOR(gActionQueue);
         
-        if (::PL_EventAvailable(initContext->actionQueue)) {
+        if (::PL_EventAvailable(gActionQueue)) {
             
-            PLEvent * event = ::PL_GetEvent(initContext->actionQueue);
+            PLEvent * event = ::PL_GetEvent(gActionQueue);
             
             if (event != nsnull) {
                 ::PL_HandleEvent(event);
             }
         }
         
-        PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        PL_EXIT_EVENT_QUEUE_MONITOR(gActionQueue);
         
     }
     if (initContext->stopThread) {
@@ -437,13 +472,13 @@ void DoMozInitialization(WebShellInitContext * initContext)
         nsresult rv = nsnull;
         JNIEnv *   env = initContext->env;
         const char * BinDir = gBinDir;
-
+        
         rv = NS_NewLocalFile(BinDir, PR_TRUE, &pathFile);
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, "call to NS_NewLocalFile failed.");
             return;
         }
-    
+        
         // It is vitally important to call NS_InitEmbedding before calling
         // anything else.
         NS_InitEmbedding(pathFile, nsnull);
@@ -458,7 +493,7 @@ void DoMozInitialization(WebShellInitContext * initContext)
             PR_SetLogFile(webclientLogFile);
             // If this fails, it just goes to stdout/stderr
         }
-
+        
         gComponentManager->RegisterComponentLib(kSHistoryCID, nsnull, 
                                                 nsnull, APPSHELL_DLL, 
                                                 PR_FALSE, PR_FALSE);
@@ -469,10 +504,40 @@ void DoMozInitialization(WebShellInitContext * initContext)
             ::util_ThrowExceptionToJava(env, "Can't get the profile manager.");
             return;
         }
-        char *argv[1];
+        PRInt32 numProfiles=0;
+        rv = profile->GetProfileCount(&numProfiles);
+        char *argv[3];
+        int i, argc = 0;
         argv[0] = strdup(gBinDir);
-        rv = cmdLine->Initialize(1, argv);
-        nsCRT::free(argv[0]);
+        if (numProfiles > 1) {
+            PRUnichar * Names;
+            rv = profile->GetProfileList(&Names);
+            // PENDING(edburns): fix for 70656.  Really we should have a way
+            // for the embedding app to specify which profile to use.  
+            // For now we just get the name of the first profile.
+            argv[1] = strdup("-p");
+            char * temp = new char[100]; // de-allocated in following for loop
+            for (i = 0; i<100; i++) {
+                if ((char) Names[i] != ',')
+                    temp[i] = (char) Names[i];
+                else {
+                    temp[i] = '\0';
+                    break;
+                }
+            }
+            nsCRT::free(Names);
+            argv[2] = temp;
+            argc = 3;
+            printf("debug: edburns: argv[1]: %s argv[2]: %s\n", argv[1],
+                   argv[2]);
+        }
+        else {
+            argc = 1;
+        }
+        rv = cmdLine->Initialize(argc, argv);
+        for (i = 0; i < argc; i++) {
+            nsCRT::free(argv[i]);
+        }
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, "Can't initialize nsICmdLineService.");
             return;
@@ -495,69 +560,70 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     
     PR_ASSERT(gComponentManager);
 
-    nsCOMPtr<nsIEventQueueService> 
-        aEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    if (gFirstTime) {
+        printf ("\n\nCreating Event Queue \n\n");
+        nsCOMPtr<nsIEventQueueService> 
+            aEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
     
-    // if we get here, we know that aEventQService is not null.
-    if (!aEventQService) {
-        rv = NS_ERROR_FAILURE;
-        return rv;
-    }
+        // if we get here, we know that aEventQService is not null.
+        if (!aEventQService) {
+            rv = NS_ERROR_FAILURE;
+            return rv;
+        }
     
     //TODO Add tracing from nspr.
     
 #if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", 
-                initContext));
-    }
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", initContext));
+        }
 #endif
     
-    // Create the Event Queue for the UI thread...
-    if (!aEventQService) {
-        initContext->initFailCode = kEventQueueError;
-        return rv;
-    }
+        // Create the Event Queue for the UI thread...
+        if (!aEventQService) {
+            initContext->initFailCode = kEventQueueError;
+            return rv;
+        }
     
-    // Create the event queue.
-    rv = aEventQService->CreateThreadEventQueue();
-    initContext->embeddedThread = PR_GetCurrentThread();
+        // Create the event queue.
+        rv = aEventQService->CreateThreadEventQueue();
+        gEmbeddedThread = PR_GetCurrentThread();
     
-    // Create the action queue
-    if (initContext->embeddedThread) {
-        
-        if (initContext->actionQueue == nsnull) {
-            printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
+        // Create the action queue
+        if (gEmbeddedThread) {
             
-            // We need to do something different for Unix
-            nsIEventQueue * EQueue = nsnull;
+            if (gActionQueue == nsnull) {
+                printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
             
-            rv = aEventQService->GetThreadEventQueue(initContext->embeddedThread, 
+                // We need to do something different for Unix
+                nsIEventQueue * EQueue = nsnull;
+            
+                rv = aEventQService->GetThreadEventQueue(gEmbeddedThread, 
                                                      &EQueue);
-            if (NS_FAILED(rv)) {
-                initContext->initFailCode = kCreateWebShellError;
-                return rv;
-            }
+                if (NS_FAILED(rv)) {
+                    initContext->initFailCode = kCreateWebShellError;
+                    return rv;
+                }
             
 #ifdef XP_UNIX
-            gdk_input_add(EQueue->GetEventQueueSelectFD(),
-                          GDK_INPUT_READ,
-                          event_processor_callback,
-                          EQueue);
+                gdk_input_add(EQueue->GetEventQueueSelectFD(),
+                              GDK_INPUT_READ,
+                              event_processor_callback,
+                              EQueue);
 #endif
             
-            PLEventQueue * plEventQueue = nsnull;
+                PLEventQueue * plEventQueue = nsnull;
             
-            EQueue->GetPLEventQueue(&plEventQueue);
-            initContext->actionQueue = plEventQueue;
+                EQueue->GetPLEventQueue(&plEventQueue);
+                gActionQueue = plEventQueue;
+            }
+        }
+        else {
+            initContext->initFailCode = kCreateWebShellError;
+            return NS_ERROR_UNEXPECTED;
         }
     }
-    else {
-        initContext->initFailCode = kCreateWebShellError;
-        return NS_ERROR_UNEXPECTED;
-    }
-    
+
     // Setup Prefs obj and read default prefs
     if (gFirstTime) {
         nsCOMPtr<nsIPref> mPrefs(do_GetService(kPrefCID));
@@ -570,7 +636,9 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
         gFirstTime = PR_FALSE;
     }
     PRBool allowPlugins = PR_TRUE;
-    
+
+
+    /*    
     // Create the WebBrowser.
     nsCOMPtr<nsIWebBrowser> webBrowser = nsnull;
     webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
@@ -641,26 +709,10 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     nsCOMPtr<nsIDocumentLoaderObserver> observer(do_QueryInterface(initContext->browserContainer));
     initContext->docShell->SetDocLoaderObserver(observer);
     
-    if (nsnull == gHistory) {
-        rv = gComponentManager->CreateInstance(kSHistoryCID, nsnull, 
-                                               kISHistoryIID, 
-                                               (void**)&gHistory);
-        if (NS_FAILED(rv)) {
-            initContext->initFailCode = kHistoryWebShellError;
-            return rv;
-        }
-    }
-    
 	printf("Creation Done.....\n");
     // Get the WebNavigation Object from the DocShell
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(initContext->docShell));
     initContext->webNavigation = webNav;
-    
-    // Set the History
-    //    initContext->webNavigation->SetSessionHistory(gHistory);
-    
-    // Save the sessionHistory in the initContext
-    //    initContext->sHistory = gHistory;
     
     printf("Show the webBrowser\n");
     // Show the webBrowser
@@ -672,12 +724,27 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     
     initContext->initComplete = TRUE;
    
+    */
+
+    wsRealizeBrowserEvent * actionEvent = new wsRealizeBrowserEvent(initContext);
+    PLEvent			* event       = (PLEvent*) *actionEvent;      
+    ::util_PostSynchronousEvent(initContext, event);
+
+
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, 
                ("InitMozillaStuff(%lx): enter event loop\n", initContext));
     }
 #endif
+
+#ifdef XP_UNIX
+
+    // The gdk_x_error function exits in some cases, we don't 
+    // want that.
+    XSetErrorHandler(wc_x_error);
+#endif
+
     // Just need to loop once to clear out events before returning
     processEventLoop(initContext);
     

@@ -60,6 +60,7 @@ endif
 
 JAVAH_CLS= \
 	"-o BookmarksImpl.h org.mozilla.webclient.wrapper_native.BookmarksImpl" \
+	"-o PreferencesImpl.h org.mozilla.webclient.wrapper_native.PreferencesImpl" \
 	"-o CurrentPageImpl.h org.mozilla.webclient.wrapper_native.CurrentPageImpl" \
 	"-o HistoryImpl.h org.mozilla.webclient.wrapper_native.HistoryImpl" \
 	"-o WrapperFactoryImpl.h org.mozilla.webclient.wrapper_native.WrapperFactoryImpl" \
@@ -73,6 +74,7 @@ JAVAH_CLS= \
 
 JAVAH_FILES=\
 	BookmarksImpl.h \
+	PreferencesImpl.h \
 	CurrentPageImpl.h \
 	HistoryImpl.h \
 	WrapperFactoryImpl.h \

@@ -87,7 +87,7 @@ public void copyCurrentSelectionToSystemClipboard();
             
 public void findInPage(String stringToFind, boolean forward, boolean matchCase);
             
-public void findNextInPage(boolean forward);
+public void findNextInPage();
             
 public String getCurrentURL();
             
@@ -97,7 +97,7 @@ public Properties getPageInfo();
             
 public String getSource();
  
-public byte [] getSourceBytes(boolean viewMode);
+public byte [] getSourceBytes();
             
 public void resetFind();
             

@@ -87,11 +87,20 @@ public class ElementImpl_setAttributeNS_String_String_String_6 extends BWBaseTes
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri  = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = null;
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri  = "http://www.foo.org/";
+                String qname = null;
                 String val   = null;
-                e.setAttributeNS(nuri, lname, val);
-                TestLoader.logErrPrint("setAttributeNS didn't throw exception ...");
+                e.setAttributeNS(nuri, qname, val);
+                TestLoader.logErrPrint("setAttributeNS didn't throw exception for qualifiedname=null and Value=null ...");
                 return BWBaseTest.FAILED;
              }
         } catch (Exception r) {

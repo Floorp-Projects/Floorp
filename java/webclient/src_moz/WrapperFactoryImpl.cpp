@@ -43,6 +43,7 @@ const char *gImplementedInterfaces[] = {
         "webclient.History",
         "webclient.EventRegistration",
         "webclient.Bookmarks",
+        "webclient.Preferences",
         nsnull
         };
 
@@ -71,7 +72,6 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeTerminate
 (JNIEnv *env, jobject obj)
 {
     gComponentManager = nsnull;
-    gHistory = nsnull;
     nsCRT::free((char *) gBinDir);
     gBinDir = nsnull;
 }

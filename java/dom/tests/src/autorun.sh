@@ -68,7 +68,7 @@ title()
    echo "################################################"
    echo
    echo "NOTE: You need to copy files test.html and"
-   echo "      testxml.html to DOCUMENT_ROOT dir. of"
+   echo "      test.xml to DOCUMENT_ROOT dir. of"
    echo "      your Web-Server on this machine."
    echo
    echo
@@ -138,14 +138,14 @@ checkRun()
 
 ##################################################################
 #
-# check Document Root and check if files test.html and testxml.html
+# check Document Root and check if files test.html and test.xml
 # exists in thos directories
 #
 ##################################################################
 #checkDocRoot()
 #{
 #  echo
-#echo "You need to copy files test.html and testxml.html to your DOCUMENT_ROOT"
+#echo "You need to copy files test.html and test.xml to your DOCUMENT_ROOT"
 #echo "of your Web-Server"
 #echo
 #echo "This test assumes that you have set up you WebServer and copied the"
@@ -172,7 +172,7 @@ checkRun()
 #
 #
 #echo
-#echo "Checking if the files test.html and testxml.html exists in DOCUMENT_ROOT..."
+#echo "Checking if the files test.html and test.xml exists in DOCUMENT_ROOT..."
 #if [ ! -f "$docroot/test.html" 
 #then
 #  echo "Could not find 'test.html' in DOCUMENT_ROOT directory"
@@ -181,10 +181,10 @@ checkRun()
 #  exit 1
 #fi
 #
-#if [ ! -f "$docroot/testxml.html" ]
+#if [ ! -f "$docroot/test.xml" ]
 #then
-#   echo "Could not find 'testxml.html' in DOCUMENT_ROOT directory"
-#  echo "Please copy testxml.html to DOCUMENT_ROOT and rerun this script"
+#   echo "Could not find 'test.xml' in DOCUMENT_ROOT directory"
+#  echo "Please copy test.xml to DOCUMENT_ROOT and rerun this script"
 #  echo
 #  exit 1
 #fi
@@ -311,7 +311,7 @@ constructLogFooter()
 
 ##################################################################
 #
-# check Document Root and check if files test.html and testxml.html
+# check Document Root and check if files test.html and test.xml
 # exists in thos directories
 #
 ##################################################################
@@ -492,10 +492,10 @@ fi
 
 if [ "$runtype" = "2" ]
 then
-  DOCFILE="$DOCROOT/testxml.html"
+  DOCFILE="$DOCROOT/test.xml"
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/testxml.html";
+	DOCFILE="$DOCROOT/test.xml";
   else
 	DOCFILE="$DOCROOT/TestLoaderXML.html";
   fi
@@ -641,7 +641,7 @@ do
 
  if [ "$runtype" = "3" ]
  then
-     DOCFILE="$DOCROOT/testxml.html"
+     DOCFILE="$DOCROOT/test.xml"
      filename="$curdir/BWTestClass.lst.xml.ORIG"
      constructHTML
      appendEntries

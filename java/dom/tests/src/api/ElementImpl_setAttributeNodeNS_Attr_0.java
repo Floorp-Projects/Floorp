@@ -87,8 +87,17 @@ public class ElementImpl_setAttributeNodeNS_Attr_0 extends BWBaseTest implements
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else  {
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
                 Attr anode = e.setAttributeNodeNS(null);
-                TestLoader.logErrPrint("Document setAttributeNodeNS didn't throw exception...");
+                TestLoader.logErrPrint("Document setAttributeNodeNS didn't throw exception for null attribute...");
                 return BWBaseTest.FAILED;
              }
         } catch (Exception r) {

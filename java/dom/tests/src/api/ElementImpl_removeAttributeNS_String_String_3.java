@@ -86,10 +86,27 @@ public class ElementImpl_removeAttributeNS_String_String_3 extends BWBaseTest im
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "dummyattr";
-		e.setAttributeNS(nuri, lname, "1");
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri = "http://www.foo.org/";
+                String lname = "myattr";
+		String retval= "ATTRVAL";
                 e.removeAttributeNS(nuri, lname);
+		String s  = e.getAttributeNS(nuri, lname);
+                if ((s == null) || !(s.equals("")))
+		{
+	              TestLoader.logErrPrint("Element 'removeAttributeNS' failedto remove attribute myattr ");
+                      return BWBaseTest.FAILED;
+	
+		}
+
              }
         } catch (Exception r) {
              String msg = "Caught Exception " + r ; 

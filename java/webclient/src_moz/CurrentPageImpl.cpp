@@ -31,56 +31,22 @@
 
 #include "CurrentPageImpl.h"
 
+#include "CurrentPageActionEvents.h"
+
 #include "ns_util.h"
 #include "rdf_util.h"
-#include "nsActions.h"
 
-#include "nsLayoutCID.h"
 #include "nsCRT.h"
-#include "nsIPresShell.h"
-#include "nsCOMPtr.h"
-#include "nsISupports.h"
-#include "nsIFindComponent.h"
-#include "nsISearchContext.h"
-#include "nsIDocShell.h"
-#include "nsIDocumentViewer.h"
-#include "nsIDocument.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
-#include "nsIContentViewer.h"
-#include "nsIServiceManager.h"
-#include "nsIContentViewer.h"
-#include "nsIContentViewerEdit.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIInterfaceRequestor.h"
-
-static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    nsIContentViewer* contentViewer ;
-    nsresult rv = nsnull;
-    rv = initContext->docShell->GetContentViewer(&contentViewer);
-    if (NS_FAILED(rv) || contentViewer==nsnull )  {
-        initContext->initFailCode = kGetContentViewerError;
-        ::util_ThrowExceptionToJava(env, "Exception: cant get ContentViewer from DocShell");
-        return;
-    }
     
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
-
     if (initContext->initComplete) {
-           wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(contentViewerEdit);
-           PLEvent			* event       = (PLEvent*) *actionEvent;      
-           ::util_PostEvent(initContext, event);
+        wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(initContext);
+        PLEvent			* event       = (PLEvent*) *actionEvent;      
+        ::util_PostEvent(initContext, event);
     }	
  
 }
@@ -97,92 +63,20 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
   
-  //First get the FindComponent object
-  nsresult rv;
-  
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv) || nsnull == findComponent)  {
-        initContext->initFailCode = kFindComponentError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");
-        return;
-  }
-
-  nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
-  if (initContext->docShell != nsnull) {
-      nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
-      nsCOMPtr<nsIURI> url = nsnull;
-
-      rv = initContext->webNavigation->GetCurrentURI(getter_AddRefs(url));
-      if (NS_FAILED(rv) || nsnull == url)  {
-          ::util_ThrowExceptionToJava(env, "Exception: NULL URL passed to Find call");
-          return;
-      } 
-
-      if (interfaceRequestor != nsnull) {
-          rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(domWindowInternal));
-          if (NS_FAILED(rv) || nsnull == domWindowInternal)  {
-              initContext->initFailCode = kGetDOMWindowError;
-              ::util_ThrowExceptionToJava(env, "Exception: cant get DOMWindow from DocShell");
-              return;
-          }
-      }
-      else
-          {
-              initContext->initFailCode = kFindComponentError;
-              ::util_ThrowExceptionToJava(env, "Exception: cant get InterfaceRequestor from DocShell");
-              return;
-          }
-  }
-  else
-      {
-          initContext->initFailCode = kFindComponentError;
-          ::util_ThrowExceptionToJava(env, "Exception: DocShell is not initialized");
-          return;
-      }
-
-  nsCOMPtr<nsISupports> searchContext;
-  rv = findComponent->CreateContext(domWindowInternal, nsnull, getter_AddRefs(searchContext));
-  if (NS_FAILED(rv))  {
-        initContext->initFailCode = kSearchContextError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't create SearchContext for Find");
-        return;
-  }
-
-  nsCOMPtr<nsISearchContext> srchcontext;
-  rv = searchContext->QueryInterface(NS_GET_IID(nsISearchContext), getter_AddRefs(srchcontext));
-  if (NS_FAILED(rv))  {
-        initContext->initFailCode = kSearchContextError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't create SearchContext for Find");
-        return;
-  }
-
-  PRUnichar * aString;
-  srchcontext->GetSearchString(& aString);
-
-  PRUnichar * srchString = (PRUnichar *) ::util_GetStringChars(env, searchString);
-
-  // Check if String is NULL
-  if (nsnull == srchString) {
-      ::util_ThrowExceptionToJava(env, "Exception: NULL String passed to Find call");
+  jstring searchStringGlobalRef = (jstring) ::util_NewGlobalRef(env, searchString);
+  if (!searchStringGlobalRef) {
+      initContext->initFailCode = kFindComponentError;
+      ::util_ThrowExceptionToJava(env, "Exception: Can't create global ref for search string");
       return;
   }
 
-  srchcontext->SetSearchString(srchString);
-  srchcontext->SetSearchBackwards(!forward);
-  srchcontext->SetCaseSensitive(matchCase);
-
-  // Pass searchContext to findComponent for the actual find call
-  PRBool found = PR_TRUE;
-
   if (initContext->initComplete) {
-     wsFindEvent * actionEvent = new wsFindEvent(findComponent, srchcontext);
+     wsFindEvent * actionEvent = new wsFindEvent(initContext, searchStringGlobalRef, 
+                                                 forward, matchCase);
       PLEvent			* event       = (PLEvent*) *actionEvent;      
       ::util_PostEvent(initContext, event);
     }
 
-  // Save in initContext struct for future findNextInPage calls
-  initContext->searchContext = srchcontext;
 
 }
 
@@ -194,40 +88,20 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
-(JNIEnv *env, jobject obj, jint webShellPtr, jboolean forward)
+(JNIEnv *env, jobject obj, jint webShellPtr)
 {
 
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
   //First get the FindComponent object
-  nsresult rv;
   
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
-  if (NS_FAILED(rv))  {
-        initContext->initFailCode = kFindComponentError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");
-        return;
-  }
-
-  // Get the searchContext from the initContext struct
-  nsCOMPtr<nsISearchContext> searchContext = initContext->searchContext;
-
-  if (nsnull == searchContext) {
-     initContext->initFailCode = kSearchContextError;
-        ::util_ThrowExceptionToJava(env, "Exception: NULL SearchContext received for FindNext");
-        return;
-  }
-
-  // Set the forward flag as per input parameter
-  searchContext->SetSearchBackwards(!forward);
-
   // Pass searchContext to findComponent for the actual find call
   PRBool found = PR_TRUE;
 
-  if (initContext->initComplete) {
-     wsFindEvent * actionEvent = new wsFindEvent(findComponent, searchContext);
+  if (initContext->initComplete && initContext->searchContext) {
+      wsFindEvent * actionEvent = new wsFindEvent(initContext);
       PLEvent			* event       = (PLEvent*) *actionEvent;      
       ::util_PostEvent(initContext, event);
-    }
+  }
 
 }
 
@@ -252,22 +126,11 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 	}
 
 	if (initContext->initComplete) {
-	  //        nsISessionHistory *yourHistory;
-	nsISHistory* yourHistory;
-        nsresult rv;
-        
-        rv = initContext->webNavigation->GetSessionHistory(&yourHistory);
-        
-        if (NS_FAILED(rv)) {
-            ::util_ThrowExceptionToJava(env, "Exception: can't get SessionHistory from webNavigation");
-            return urlString;
-        }
-
-		wsGetURLEvent	* actionEvent = new wsGetURLEvent(yourHistory);
+		wsGetURLEvent	* actionEvent = new wsGetURLEvent(initContext);
         PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
-
+        
 		charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
-
+        
 		if (charResult != nsnull) {
 			urlString = ::util_NewStringUTF(env, (const char *) charResult);
 		}
@@ -275,10 +138,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 			::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned NULL");
 			return nsnull;
 		}
-
+        
         nsCRT::free(charResult);
 	}
-
+    
 	return urlString;
 }
 
@@ -310,7 +173,11 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 		::util_ThrowExceptionToJava(env, "Exception: Can't get DOM Node.");
 		return nsnull;
 	}
-    result = env->CallStaticObjectMethod(clazz, mid, documentLong);
+
+    wsGetDOMEvent * actionEvent = new wsGetDOMEvent(env, clazz, mid, documentLong);
+    PLEvent			* event       = (PLEvent*) *actionEvent;      
+    result = (jobject) ::util_PostSynchronousEvent(initContext, event);
+
     
     return result;
 }
@@ -321,6 +188,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
  * Method:    nativeGetSource
  * Signature: ()Ljava/lang/String;
  */
+
+/* PENDING(ashuk): remove this from here and in the motif directory
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
 (JNIEnv * env, jobject jobj)
 {
@@ -328,12 +197,16 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
     
     return result;
 }
+*/
+
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSourceBytes
  * Signature: ()[B
  */
+
+/* PENDING(ashuk): remove this from here and in the motif directory
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
 (JNIEnv * env, jobject jobj, jint webShellPtr, jboolean viewMode)
 {
@@ -346,12 +219,14 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentP
           new wsViewSourceEvent(initContext->docShell, ((JNI_TRUE == viewMode)? PR_TRUE : PR_FALSE));
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-      ::util_PostSynchronousEvent(initContext, event);
+      ::util_PostEvent(initContext, event);
   }
 
     jbyteArray result = nsnull;
     return result;
 }
+*/
+
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
@@ -376,21 +251,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
-        WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-        nsIContentViewer* contentViewer ;
-        nsresult rv = nsnull;
-        rv = initContext->docShell->GetContentViewer(&contentViewer);
-        if (NS_FAILED(rv) || contentViewer==nsnull)  {
-            initContext->initFailCode = kGetContentViewerError;
-            ::util_ThrowExceptionToJava(env, "Exception: cant get ContentViewer from DocShell");
-            return;
-        }
-
-        nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
-
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 	if (initContext->initComplete) {
-           wsSelectAllEvent * actionEvent = new wsSelectAllEvent(contentViewerEdit);
-           PLEvent			* event       = (PLEvent*) *actionEvent;      
-           ::util_PostEvent(initContext, event);
-        }	
+        wsSelectAllEvent * actionEvent = new wsSelectAllEvent(initContext);
+        PLEvent			* event       = (PLEvent*) *actionEvent;      
+        ::util_PostEvent(initContext, event);
+    }	
 }

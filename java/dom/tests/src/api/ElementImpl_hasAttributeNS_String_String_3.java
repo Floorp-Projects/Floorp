@@ -85,12 +85,19 @@ public class ElementImpl_hasAttributeNS_String_String_3 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              }
-		String nsuri = "xmlns:edi='http://ec.com/schema'";	
-		String lname = "dummyattr";
-		String val = "1";
-		e.setAttributeNS(nsuri, lname, val);
-                if (e.hasAttributeNS(nsuri, val) == false) {
-	                TestLoader.logErrPrint("Element 'hasAttributeNS returned incorrect value... ");
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+		String nsuri = "http://www.foo.org/";
+		String lname = "myattr";
+                if (!(e.hasAttributeNS(nsuri, lname))) {
+	                TestLoader.logErrPrint("Element 'hasAttributeNS returned false instead of true... ");
         	        return BWBaseTest.FAILED;
 		}
         } catch (Exception r) {

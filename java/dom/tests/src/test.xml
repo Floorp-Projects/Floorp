@@ -1,29 +1,17 @@
-<?xml version="1.0"?>
-
-<!DOCTYPE html [ 
-<!ENTITY Myimage SYSTEM "Image.gif" NDATA GIF>
-<!NOTATION GIF SYSTEM "/usr/dist/local/exe/xv">
-
-<!ELEMENT head (title, script, base)>
-
-<!ELEMENT title (#PCDATA)>
-<!ELEMENT script (#PCDATA)>
-
-<!ELEMENT base EMPTY>
-<!ATTLIST base
-target CDATA #IMPLIED>
-
-<!ELEMENT body (#PCDATA)>
-<!ATTLIST body
-name    CDATA   #IMPLIED
-id      CDATA   #IMPLIED
-bgcolor CDATA   #IMPLIED >
-
-<!ENTITY myentity  "New Entity">
-]>
-
-<html>
-<body name="hello_body" id="body_tag_id">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+  <head>
+    <title>Virtual Library</title>
+  </head>
+<body name="hello_body">
+<EMBED type="application/dom-pluglet" width="0" height="0">
+</EMBED>
 Hello
+
+<foo:mytag foo:myattr="ATTRVAL" foo:coredom="LEVEL2" xmlns:foo="http://www.foo.org/">
+</foo:mytag>
+
 </body>
 </html>

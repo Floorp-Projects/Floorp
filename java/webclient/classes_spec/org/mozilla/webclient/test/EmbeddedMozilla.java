@@ -38,7 +38,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.4 2000/04/20 18:15:42 edburns%acm.org Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.5 2001/04/02 21:13:48 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -68,7 +68,7 @@ public void CreateEMWindow()
 {
   System.out.println("Creating new EmbeddedMozilla window");
   EMWindow aEMWindow ;
-  aEMWindow = new EMWindow("EmbeddedMozila#" + count+1,
+  aEMWindow = new EMWindow("EmbeddedMozila#" + (int)(count+1),
                                  binDir, url, count, this);
   count++;
 }
@@ -93,7 +93,7 @@ public static void main(String [] arg)
         printUsage();
         System.exit(-1);
     }
-    String urlArg =(2 == arg.length) ? arg[1] : "file:///E|/Projects/tmp/5105.html";
+    String urlArg =(2 == arg.length) ? arg[1] : "http://www.mozilla.org/projects/blackwood/webclient/";
 
     // set class vars used in EmbeddedMozilla ctor 
     binDir = arg[0];

@@ -40,8 +40,12 @@ nsCOMPtr<nsIRDFDataSource> gBookmarksDataSource = nsnull;
 nsCOMPtr<nsIRDFResource> kNC_BookmarksRoot = nsnull;
 nsCOMPtr<nsIRDFResource> kNC_Name = nsnull;
 nsCOMPtr<nsIRDFResource> kNC_URL = nsnull;
+nsCOMPtr<nsIRDFResource> kNC_parent = nsnull;
 nsCOMPtr<nsIRDFResource> kNC_Folder = nsnull;
 nsCOMPtr<nsIRDFResource> kRDF_type = nsnull;
+
+nsCOMPtr<nsIRDFResource> kNewFolderCommand;
+nsCOMPtr<nsIRDFResource> kNewBookmarkCommand;
 
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -63,6 +67,17 @@ nsresult rdf_InitRDFUtils()
         if (NS_FAILED(rv)) {
             return rv;
         }
+#ifdef _WIN32
+
+        // PENDING(edburns): HACK workaround for bug 59530.  This
+        // workaround forces the nsBookmarksService to leak so that it
+        // never gets destructed, thus the timer never gets canceled and
+        // thus the fact that the static nsCOMPtr instance has gone away
+        // doesn't matter.
+
+        nsIBookmarksService *raw = (nsIBookmarksService *) gBookmarks.get();
+        raw->AddRef();
+#endif
     }
 
     if (nsnull == gBookmarksDataSource) {
@@ -115,6 +130,13 @@ nsresult rdf_InitRDFUtils()
             return rv;
         }
     }
+    if (nsnull == kNC_parent) {
+        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#parent", 
+                               getter_AddRefs(kNC_parent));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
     if (nsnull == kNC_Folder) {
       rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Folder", 
                             getter_AddRefs(kNC_Folder));
@@ -130,6 +152,20 @@ nsresult rdf_InitRDFUtils()
 	return rv;
       }
     }     
+    if (nsnull == kNewFolderCommand) {
+        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#command?cmd=newfolder", 
+                               getter_AddRefs(kNewFolderCommand));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+    if (nsnull == kNewBookmarkCommand) {
+        rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#command?cmd=newbookmark", 
+                               getter_AddRefs(kNewBookmarkCommand));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
 
     rdf_inited = PR_TRUE;
     return rv;

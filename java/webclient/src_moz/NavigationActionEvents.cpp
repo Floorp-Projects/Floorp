@@ -1,0 +1,258 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is RaptorCanvas.
+ *
+ * The Initial Developer of the Original Code is Kirk Baker and
+ * Ian Wilkinson. Portions created by Kirk Baker and Ian Wilkinson are
+ * Copyright (C) 1999 Kirk Baker and Ian Wilkinson. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Kirk Baker <kbaker@eb.com>
+ *               Ian Wilkinson <iw@ennoble.com>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
+ *               Mark Lin <mark.lin@eng.sun.com>
+ *               Mark Goddard
+ *               Ed Burns <edburns@acm.org>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
+ */
+
+/*
+ * NavigationActionEvents.cpp
+ */
+
+#include "NavigationActionEvents.h"
+
+#include "ns_util.h"
+#include "InputStreamShim.h"
+#include "nsNetUtil.h"
+
+/*
+ * wsLoadURLEvent
+ */
+
+wsLoadURLEvent::wsLoadURLEvent(nsIWebNavigation* webNavigation, PRUnichar * urlString, PRInt32 urlLength) :
+        nsActionEvent(),
+        mWebNavigation(webNavigation),
+        mURL(nsnull)
+{
+        mURL = new nsString(urlString, urlLength);
+}
+
+
+void *
+wsLoadURLEvent::handleEvent ()
+{
+  void* threadId = PR_GetCurrentThread();
+  printf ("+++++++++++++++++++++ Thread Id ---- %p\n\n", threadId);
+
+  if (mWebNavigation && mURL) {
+      nsresult rv = mWebNavigation->LoadURI(mURL->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+  }
+  return nsnull;
+} // handleEvent()
+
+wsLoadURLEvent::~wsLoadURLEvent ()
+{
+  if (mURL != nsnull)
+    delete mURL;
+}
+
+
+wsLoadFromStreamEvent::wsLoadFromStreamEvent(WebShellInitContext *yourInitCx, 
+                                             void *globalStream,
+                                             nsString &uriToCopy,
+                                             const char *contentTypeToCopy,
+                                             PRInt32 contentLength, 
+                                             void *globalLoadProperties) :
+    nsActionEvent(), mInitContext(yourInitCx), mUriString(uriToCopy),
+    mContentType(PL_strdup(contentTypeToCopy)), 
+    mProperties(globalLoadProperties), mShim(nsnull)
+{
+    mShim = new InputStreamShim((jobject) globalStream, contentLength);
+    NS_IF_ADDREF(mShim);
+}
+
+wsLoadFromStreamEvent::wsLoadFromStreamEvent(WebShellInitContext *yourInitCx,
+                                             InputStreamShim *yourShim) :
+    nsActionEvent(), mInitContext(yourInitCx), mUriString(nsnull),
+    mContentType(nsnull), mProperties(nsnull), mShim(yourShim)
+{
+}
+
+/**
+
+ * This funky handleEvent allows the java InputStream to be read from
+ * the correct thread (the NativeEventThread), while, on a separate
+ * thread, mozilla's LoadFromStream reads from our nsIInputStream.  This
+ * is accomplished using a "shim" class, InputStreamShim.
+ * InputStreamShim is an nsIInputStream, but it also maintains
+ * information on how to read from the java InputStream.  The important
+ * thing is that InputStreamShim::doReadFromJava() is called on
+ * NativeEventThread() until all the data is read.  This is accomplished
+ * by having this wsLoadFromStream instance copy itself and re-enqueue
+ * itself, if there is more data to read.  
+
+ */
+
+void *
+wsLoadFromStreamEvent::handleEvent ()
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsresult readFromJavaStatus = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIURI> uri;
+    wsLoadFromStreamEvent *repeatEvent = nsnull;
+    
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    // we must have both mInitContext and mShim to do anything
+    if (!mInitContext || !mShim) {
+        return (void *) rv;
+    }
+
+    // Try to read as much as possible off the java InputStream
+    // into the shim's internal buffer.
+
+    // see InputShimStream::doReadFromJava() for the meaning of the
+    // return values.  They are very important.
+    readFromJavaStatus = mShim->doReadFromJava();
+    if (NS_ERROR_FAILURE == readFromJavaStatus) {
+        NS_IF_RELEASE(mShim);
+        return (void *) readFromJavaStatus;
+    }
+    
+    // if this is the first time handleEvent has been called for this
+    // InputStreamShim instance.
+    
+    if (mContentType) {
+        rv = NS_NewURI(getter_AddRefs(uri), mUriString);
+        if (!uri) {
+            return (void *) rv;
+        }
+        
+        // PENDING(edburns): turn the mProperties jobject into an
+        // nsIDocShellLoadInfo instance.
+        
+        // Kick off a LoadStream.  This will cause
+        // InputStreamShim::Read() to be called, 
+        
+        rv = mInitContext->docShell->LoadStream(mShim, uri, mContentType, 
+                                                mShim->getContentLength(), 
+                                                nsnull);
+        if (mProperties) {
+            JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+            ::util_DeleteGlobalRef(env, (jobject) mProperties);
+            mProperties = nsnull;
+        }
+        
+        // make it so we don't issue multiple LoadStream calls 
+        // for this InputStreamShim instance.
+        
+        nsCRT::free(mContentType);
+        mContentType = nsnull;
+    }
+    
+    // if there is more data
+    if (NS_OK == readFromJavaStatus){
+        // and we can create a copy of ourselves
+        if (repeatEvent = new wsLoadFromStreamEvent(mInitContext, mShim)) {
+            // do the loop
+            ::util_PostEvent(mInitContext, (PLEvent *) *repeatEvent);
+            rv = NS_OK;
+        }
+        else {
+            NS_IF_RELEASE(mShim);
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    if (NS_ERROR_NOT_AVAILABLE == readFromJavaStatus) {
+        NS_IF_RELEASE(mShim);
+        rv = NS_OK;
+    }
+    
+    return (void *) rv;
+} // handleEvent()
+
+wsLoadFromStreamEvent::~wsLoadFromStreamEvent ()
+{
+    nsCRT::free(mContentType);
+    mContentType = nsnull;
+}
+
+
+/*
+ * wsStopEvent
+ */
+
+wsStopEvent::wsStopEvent(nsIWebNavigation* webNavigation) :
+        nsActionEvent(),
+        mWebNavigation(webNavigation)
+{
+}
+
+
+void *
+wsStopEvent::handleEvent ()
+{
+        if (mWebNavigation) {
+                nsresult rv = mWebNavigation->Stop();
+        }
+        return nsnull;
+} // handleEvent()
+
+
+
+// Added by Mark Goddard OTMP 9/2/1999
+
+/*
+ * wsRefreshEvent
+ */
+
+wsRefreshEvent::wsRefreshEvent(nsIWebNavigation* webNavigation, PRInt32 reloadType) :
+        nsActionEvent(),
+        mWebNavigation(webNavigation),
+	mReloadType(reloadType)
+{
+
+}
+
+
+void *
+wsRefreshEvent::handleEvent ()
+{
+        if (mWebNavigation) {
+                nsresult rv = mWebNavigation->Reload(mReloadType);
+                return (void *) rv;
+        }
+        return nsnull;
+} // handleEvent()
+
+
+
+wsSetPromptEvent::wsSetPromptEvent(wcIBrowserContainer* aBrowserContainer,
+                                   jobject aUserPrompt) :
+        nsActionEvent(),
+        mBrowserContainer(aBrowserContainer),
+        mUserPrompt(aUserPrompt)
+{
+
+}
+
+void *
+wsSetPromptEvent::handleEvent ()
+{
+        if (mBrowserContainer && mUserPrompt) {
+            mBrowserContainer->SetPrompt(mUserPrompt);
+        }
+        return nsnull;
+} // handleEvent()

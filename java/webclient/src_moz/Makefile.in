@@ -22,6 +22,30 @@ topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/webclient/src_moz
 VPATH		= $(topsrcdir)/java/webclient/src_moz
 
+# IMPORTANT: on Linux, if building webclient with a non-debug mozilla
+# tree, the libwidget_gtk.so binary produced will not work with
+# webclient.  Namely, the symbol handle_gdk_event__FP9_GdkEventPv will
+# be defined locally, not globaly, as is required.  For the webclient
+# 1.0 release, we're going to bundle a libwidget_gtk.so with the xpi.
+# If you want to do a non-debug build of your own, you must make sure
+# yor libwidget_gtk.so is linked without these options:
+
+# -DNDEBUG -DTRIMMED
+
+# and with these options
+
+# -DNDEBUG -DDEBUG_edburns
+
+# If your libwidget_gtk.so has this symbol:
+
+# 0003b2d0 T handle_gdk_event__FP9_GdkEventPv
+
+# with the capital T, you're ok.  The version of libwidget_gtk.so used
+# in the webclient 1.0 bundle is available at:
+# <http://www.mozilla.org/projects/blackwood/webclient/bin/1.0/libwidget_gtk.so>.
+# to build WEBCLIENT_PACKAGE_BUILD on linux, grab libwidget_gtk.so from
+# the above URL and put it in the same directory as this file.
+
 # We don't need to build the stubs in the BAL case.
 ifeq ($(BAL_INTERFACE),)
 DIRS = motif
@@ -45,14 +69,25 @@ CPPSRCS = \
 	rdf_util.cpp \
 	BookmarksImpl.cpp \
 	CBrowserContainer.cpp \
+	PromptActionEvents.cpp  \
 	CurrentPageImpl.cpp \
+	CurrentPageActionEvents.cpp \
 	HistoryImpl.cpp \
+	HistoryActionEvents.cpp \
 	ISupportsPeer.cpp \
 	NativeEventThread.cpp \
+	NativeEventThreadActionEvents.cpp \
 	NavigationImpl.cpp \
+	NavigationActionEvents.cpp \
+	InputStreamShim.cpp \
 	RDFEnumeration.cpp \
 	RDFTreeNode.cpp \
+	RDFActionEvents.cpp \
+	wsRDFObserver.cpp \
 	WindowControlImpl.cpp \
+	WindowControlActionEvents.cpp \
+	PreferencesImpl.cpp \
+	PreferencesActionEvents.cpp \
 	WrapperFactoryImpl.cpp \
 	motif/MotifBrowserControlCanvas.cpp \
 	motif/gtkmozilla.cpp \
@@ -103,10 +138,51 @@ PACKAGE_LIB=$(PACKAGE_DIR)/lib
 PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
 endif # PACKAGE_BUILD
 
-clobber_all::
+ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
+PACKAGE_VER = 1_0
+PACKAGE_DIR = $(DIST)/javadev
+PACKAGE_LIB = $(PACKAGE_DIR)/lib
+PACKAGE_EXAMPLE = $(PACKAGE_DIR)/example
+endif # WEBCLIENT_PACKAGE_BUILD
+
+
 
 buildRunems:
 ifeq ($(BAL_INTERFACE),)
+ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
+	@echo +++ Creating Commercial Package. Use runem to run the test browser.
+	@echo +++ Checking for special libwidget_gtk.so.
+ifeq ($(OS_ARCH),Linux)
+	@if test ! -f libwidget_gtk.so ; then echo "You don't have libwidget_gtk.so, see the IMPORTANT section in Makefile.in!!!"; stopbuild; else echo "Found libwidget_gtk.so, continuing."; fi ;
+	chmod 775 libwidget_gtk.so
+	cp -f libwidget_gtk.so $(PACKAGE_LIB)
+endif
+	rm -f runem_unix_commercial
+	@echo "#!/bin/csh -x" >> runem_unix_commercial
+	@echo ln -s -f "$$"MOZILLA_FIVE_HOME/javadev/lib/libjavadom.so "$$"MOZILLA_FIVE_HOME/components/libjavadom.so >> runem_unix_commercial
+	@echo setenv CLASSPATH "$$"MOZILLA_FIVE_HOME/javadev/lib/$(LIBRARY_NAME)_$(PACKAGE_VER).jar>> runem_unix_commercial
+	@echo setenv LD_LIBRARY_PATH "$$"MOZILLA_FIVE_HOME'"':'"'"$$"MOZILLA_FIVE_HOME/components'"':'"'"$$"MOZILLA_FIVE_HOME/javadev/lib'"':'"'"$$"LD_LIBRARY_PATH>> runem_unix_commercial
+	@echo "$$"JDKHOME/bin/java org.mozilla.webclient.test.EmbeddedMozilla "$$"MOZILLA_FIVE_HOME "$$"1 >> runem_unix_commercial
+	mkdir -p $(PACKAGE_EXAMPLE)
+	chmod 775 $(PACKAGE_EXAMPLE)
+	cp -f $(DIST)/bin/lib$(LIBRARY_NAME).so $(PACKAGE_LIB)
+	cp -f $(DIST)/bin/lib$(LIBRARY_NAME)stub.so $(PACKAGE_LIB)
+	cp -f $(DIST)/bin/libjavadomjni.so $(PACKAGE_LIB)
+	cp -f $(DIST)/bin/components/libjavadom.so $(PACKAGE_LIB)
+	chmod 775 $(PACKAGE_LIB)/lib$(LIBRARY_NAME).so
+	chmod 775 $(PACKAGE_LIB)/lib$(LIBRARY_NAME)stub.so
+	chmod 775 $(PACKAGE_LIB)/libjavadomjni.so
+	chmod 775 $(PACKAGE_LIB)/libjavadom.so
+	cp -f $(DEPTH)/java/webclient/src_moz/runem_unix_commercial $(PACKAGE_EXAMPLE)/runem
+
+	chmod 775  $(PACKAGE_EXAMPLE)/runem
+	cp -f $(DEPTH)/java/webclient/src_moz/install_win32.js $(DIST)/install.js
+ifeq ($(OS_ARCH),Linux)
+	cd $(DIST); zip -r $(LIBRARY_NAME)_$(PACKAGE_VER)_linux.xpi install.js javadev
+else
+	cd $(DIST); zip -r $(LIBRARY_NAME)_$(PACKAGE_VER)_solaris.xpi install.js javadev
+endif
+endif
 ifeq ($(PACKAGE_BUILD),)
 	@echo +++ Creating runem.  Use this to run the test browser.
 	rm -f runem
@@ -123,6 +199,12 @@ else
 	cp $(topsrcdir)/dist/bin/libplugletjni.so $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
 	cp $(topsrcdir)/dist/bin/components/libpluglet.so $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
 	cp $(topsrcdir)/dist/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libjavaSample.so $(PACKAGE_LIB)/libjavaSample.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libbcTest.so $(PACKAGE_LIB)/libbcTest.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libbcxpcomstubs.so $(PACKAGE_LIB)/libbcxpcomstubs.so.$(VERSION_NUMBER)
 	rm -f $(topsrcdir)/dist/bin/libwebclientstub.so
 	rm -f $(topsrcdir)/dist/lib/libwebclientstub.so
 	rm -f $(topsrcdir)/dist/bin/libwebclient.so
@@ -136,6 +218,12 @@ else
 	rm -f $(topsrcdir)/dist/lib/components/libpluglet.so
 	rm -f $(topsrcdir)/dist/bin/components/libjavadom.so
 	rm -f $(topsrcdir)/dist/lib/components/libjavadom.so
+	rm -f $(topsrcdir)/dist/bin/components/libbcorb.so
+	rm -f $(topsrcdir)/dist/bin/components/libbcjavastubs.so
+	rm -f $(topsrcdir)/dist/bin/components/libjavaloader.so
+	rm -f $(topsrcdir)/dist/bin/components/libjavaSample.so
+	rm -f $(topsrcdir)/dist/bin/components/libbcTest.so
+	rm -f $(topsrcdir)/dist/bin/components/libbcxpcomstubs.so	
 	chmod 555 $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libwc_share.a.$(VERSION_NUMBER)
@@ -143,6 +231,18 @@ else
 	chmod 555 $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
 	chmod 555 $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libbcorb.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libbcjavastubs.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libjavaloader.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libjavaSample.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libbcTest.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libbcxpcomstubs.so.$(VERSION_NUMBER)
+	if test ! -d $(PACKAGE_LIB)/libbcorb.so ; then ln -s libbcorb.so.$(VERSION_NUMBER)  $(PACKAGE_LIB)/libbcorb.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libbcjavastubs.so ; then ln -s libbcjavastubs.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libbcjavastubs.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libjavaloader.so ; then ln -s libjavaloader.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavaloader.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libjavaSample.so ; then ln -s libjavaSample.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavaSample.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libbcTest.so ; then ln -s libbcTest.so.$(VERSION_NUMBER)  $(PACKAGE_LIB)/libbcTest.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libbcxpcomstubs.so ; then ln -s libbcxpcomstubs.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libbcxpcomstubs.so ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libwc_share.a ; then ln -s libwc_share.a.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwc_share.a ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libwebclientstub.so ; then ln -s libwebclientstub.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclientstub.so ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB)/libwebclient.so ; then ln -s libwebclient.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclient.so ; else true ; fi ;
@@ -158,3 +258,11 @@ endif # BAL_INTERFACE
 
 install:: buildRunems
 
+
+clobber_all:: clobber
+ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
+	rm -f runem_unix_commercial
+	rm -rf $(DIST)/javadev
+	rm -f $(DIST)/$(LIBRARY_NAME)_$(PACKAGE_VER)*.xpi
+	rm -f $(DIST)/install.js
+endif

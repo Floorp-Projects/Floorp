@@ -80,5 +80,7 @@ JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
 export::
 	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
 
+clobber_all:: clobber
+
 clobber::
 	rm -f org_*.h

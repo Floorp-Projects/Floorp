@@ -64,13 +64,44 @@ PACKAGE_DIR=$(topsrcdir)/dist/javadev
 PACKAGE_LIB=$(PACKAGE_DIR)/lib
 endif # PACKAGE_BUILD
 
+ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
+PACKAGE_VER = 1_0
+PACKAGE_DIR = $(DIST)/javadev
+PACKAGE_LIB = $(PACKAGE_DIR)/lib
+PACKAGE_EXAMPLE = $(PACKAGE_DIR)/example
+endif # WEBCLIENT_PACKAGE_BUILD
+
 JAVA_SOURCEPATH=$(topsrcdir)/java/webclient/classes_spec
 JAVAC_FLAGS=-classpath $(CLASSPATH):$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
+rm_java:
+ifeq ($(PACKAGE_BUILD),)
+	rm -Rf $(topsrcdir)/dist/classes/org/mozilla/webclient
+else
+	rm -Rf $(topsrcdir)/dist/javadev
+endif # PACKAGE_BUILD
+ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
+	rm -Rf $(topsrcdir)/dist/javadev
+endif
+
+
+clobber_all::rm_java
 
 
 install:: jarEmUp
 
 jarEmUp:
+ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
+	if test ! -d $(PACKAGE_DIR) ; then mkdir $(PACKAGE_DIR) ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB) ; then mkdir $(PACKAGE_LIB) ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/webclient_$(PACKAGE_VER).jar ; then rm -f $(PACKAGE_LIB)/webclient_$(PACKAGE_VER).jar ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/webclient.jar ; then rm -f $(PACKAGE_LIB)/webclient.jar ; else true ; fi ;
+	cd $(topsrcdir)/dist/classes ; \
+	jar -cvfM0 webclient_$(PACKAGE_VER).jar org ; \
+	mv webclient_$(PACKAGE_VER).jar  ../javadev/lib ;
+	cd $(topsrcdir)/dist/javadev/lib ; \
+	ln -s webclient_$(PACKAGE_VER).jar $(PACKAGE_LIB)/webclient.jar ;
+endif
 ifneq ($(PACKAGE_BUILD),)
 	if test ! -d $(PACKAGE_DIR) ; then mkdir $(PACKAGE_DIR) ; else true ; fi ;
 	if test ! -d $(PACKAGE_LIB) ; then mkdir $(PACKAGE_LIB) ; else true ; fi ;

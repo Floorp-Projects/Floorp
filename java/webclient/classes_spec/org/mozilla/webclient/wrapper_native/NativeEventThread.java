@@ -46,6 +46,13 @@ public class NativeEventThread extends Thread
 {
 
 //
+// Class variables
+//
+
+private static Object firstThread = null;
+
+
+//
 // Attribute ivars
 //
 
@@ -110,6 +117,10 @@ public NativeEventThread(String threadName, BrowserControl yourBrowserControl)
 {
     super(threadName);
     ParameterCheck.nonNull(yourBrowserControl);
+
+    if (null == firstThread) {
+        firstThread = this;
+    }
 
     browserControl = yourBrowserControl;
 
@@ -206,6 +217,13 @@ public void run()
     }
 
     while (true) {
+        try {
+            Thread.sleep(1);
+        }
+        catch (Exception e) {
+            System.out.println("NativeEventThread.run(): Exception: " + e + 
+                               " while sleeping: " + e.getMessage());
+        }
         synchronized (this) {
 
             // this has to be inside the synchronized block!
@@ -222,7 +240,9 @@ public void run()
                 return;
             }
 
-            nativeProcessEvents(nativeWebShell);
+            if (this == firstThread) {
+                nativeProcessEvents(nativeWebShell);
+            }
             
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();

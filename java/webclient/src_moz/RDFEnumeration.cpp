@@ -22,10 +22,11 @@
 
 #include "RDFEnumeration.h"
 
+#include "RDFActionEvents.h"
+
 #include "rdf_util.h"
 #include "rdf_progids.h"
 #include "ns_util.h"
-#include "nsActions.h"
 
 #include "nsIRDFContainer.h"
 #include "nsIServiceManager.h"

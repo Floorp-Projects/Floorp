@@ -86,10 +86,19 @@ public class ElementImpl_getElementsByTagNameNS_String_String_0 extends BWBaseTe
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
                 String nuri = null;
                 String lname = null;
-                NodeList nl = e.getElementsByTagNameNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'getElementsByTagNameNS' didn't throw exception... ");
+                nl = e.getElementsByTagNameNS(nuri, lname);
+                TestLoader.logErrPrint("Element 'getElementsByTagNameNS' didn't throw exception for URI set to null and localname set to null... ");
                 return BWBaseTest.FAILED;
              }
         } catch (Exception r) {

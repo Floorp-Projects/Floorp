@@ -82,23 +82,26 @@ public class ElementImpl_setAttributeNodeNS_Attr_1 extends BWBaseTest implements
       if (d != null)
       {
         try {
-             Element e = d.getDocumentElement();
-                String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "dummyattr";
-		String val = "1";
-		Attr a = d.createAttribute(lname);
-		a.setValue(val);
-	     if (e == null || a == null) {
-                TestLoader.logErrPrint("Document Element is  NULL or can't create new attribute..");
-                return BWBaseTest.FAILED;
-             } else {
-		e.setAttributeNodeNS(a);
-                Node n = e.getAttributeNodeNS(nuri, lname);
-		if (n == null || n.getNodeType() != Node.ATTRIBUTE_NODE || !((Attr)n).getValue().equals(val)) {
-	                TestLoader.logErrPrint("Element 'getAttributeNS' returned incorrect value ");
+                Element e    = d.getDocumentElement();
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri  = "http://www.foo.org/";
+                String lname = "myattr";
+		String val   = "ATTRVAL";
+                Attr getattr = e.getAttributeNodeNS(nuri, lname);
+		Attr retattr = (Attr)e.setAttributeNodeNS(getattr);
+		if (retattr != null)
+	        {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' did not return null for an already existing Attribute myattr ");
         	        return BWBaseTest.FAILED;
 		}
-             }
         } catch (Exception r) {
              String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);

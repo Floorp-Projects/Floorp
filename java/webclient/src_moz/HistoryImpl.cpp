@@ -27,9 +27,10 @@
 
 #include "HistoryImpl.h"
 
+#include "HistoryActionEvents.h"
+
 #include "ns_util.h"
 
-#include "nsActions.h"
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
@@ -50,7 +51,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
           new wsBackEvent(initContext->webNavigation);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-      ::util_PostSynchronousEvent(initContext, event);
+      ::util_PostEvent(initContext, event);
     }
 
     return;
@@ -119,7 +120,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_na
           new wsForwardEvent(initContext->webNavigation);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
       
-      ::util_PostSynchronousEvent(initContext, event);
+      ::util_PostEvent(initContext, event);
     }
 
     return;
@@ -195,16 +196,8 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetCurrentHistoryIn
     }
 
     if (initContext->initComplete) {
-      nsISHistory* sHistory;
-      nsresult rv = initContext->webNavigation->GetSessionHistory(&sHistory);
-    
-      if ( NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Exception: couldn't get History for passing to raptorWebShellGetHistoryIndex");
-	return result;
-      }
-
       wsGetHistoryIndexEvent	* actionEvent = 
-          new wsGetHistoryIndexEvent(sHistory);
+          new wsGetHistoryIndexEvent(initContext);
       PLEvent	   		* event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -221,7 +214,6 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeSetCurrentHistoryIn
 {
     JNIEnv	*	pEnv = env;
     jobject		jobj = obj;
-    void	*	voidResult = nsnull;
     
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
     
@@ -235,7 +227,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeSetCurrentHistoryIn
           new wsGoToEvent(initContext->webNavigation, historyIndex);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
       
-      voidResult = ::util_PostSynchronousEvent(initContext, event);
+      ::util_PostEvent(initContext, event);
     }
     
     return;
@@ -258,16 +250,8 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryLength
     }
 
     if (initContext->initComplete) {
-      nsISHistory* sHistory;
-      nsresult rv = initContext->webNavigation->GetSessionHistory(&sHistory);
-      
-      if ( NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Exception: couldn't get History for passing to raptorWebShellGetHistoryIndex");
-	return result;
-      }
-   
       wsGetHistoryLengthEvent	* actionEvent = 
-          new wsGetHistoryLengthEvent(sHistory);
+          new wsGetHistoryLengthEvent(initContext);
       PLEvent	   	        * event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -294,30 +278,21 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
     }
 
     if (initContext->initComplete) {
-      nsISHistory* sHistory;
-      nsresult rv = initContext->webNavigation->GetSessionHistory(&sHistory);
-      
-      if ( NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Exception: couldn't get History for passing to raptorWebShellGetHistoryIndex");
-	return nsnull;
-      }
-      
-      wsGetURLForIndexEvent * actionEvent = 
-	new wsGetURLForIndexEvent(initContext->sHistory,
-				  historyIndex);
-      PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
-      
-      charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
-      
-      if (charResult != nsnull) {
-	urlString = ::util_NewStringUTF(env, (const char *) charResult);
-      }
-      else {
-	::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned nsnull");
-	return nsnull;
-      }
-      
-      nsCRT::free(charResult);
+        wsGetURLForIndexEvent * actionEvent = 
+            new wsGetURLForIndexEvent(initContext, historyIndex);
+        PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
+        
+        charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
+        
+        if (charResult != nsnull) {
+            urlString = ::util_NewStringUTF(env, (const char *) charResult);
+        }
+        else {
+            ::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned nsnull");
+            return nsnull;
+        }
+        
+        nsCRT::free(charResult);
     }
     
     return urlString;

@@ -140,6 +140,10 @@ public Object newImpl(String interfaceName,
             result = new BookmarksImpl(this, browserControl);
             return result;
         }
+        if (BrowserControl.PREFERENCES_NAME == interfaceName) {
+            result = new PreferencesImpl(this, browserControl);
+            return result;
+        }
     }
 
     return result;
@@ -222,7 +226,7 @@ public static void main(String [] args)
     WrapperFactory me = new WrapperFactoryImpl();
     Log.setApplicationName("WrapperFactoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.3 2000/11/02 23:33:13 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.4 2001/04/02 21:13:59 ashuk%eng.sun.com Exp $");
 
     
 }

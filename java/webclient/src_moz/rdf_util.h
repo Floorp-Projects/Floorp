@@ -46,8 +46,12 @@ extern nsCOMPtr<nsIRDFDataSource> gBookmarksDataSource;
 extern nsCOMPtr<nsIRDFResource> kNC_BookmarksRoot;
 extern nsCOMPtr<nsIRDFResource> kNC_Name;
 extern nsCOMPtr<nsIRDFResource> kNC_URL;
+extern nsCOMPtr<nsIRDFResource> kNC_parent;
 extern nsCOMPtr<nsIRDFResource> kNC_Folder;
 extern nsCOMPtr<nsIRDFResource> kRDF_type;
+
+extern nsCOMPtr<nsIRDFResource> kNewFolderCommand;
+extern nsCOMPtr<nsIRDFResource> kNewBookmarkCommand;
 
 nsresult rdf_InitRDFUtils();
 void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource);

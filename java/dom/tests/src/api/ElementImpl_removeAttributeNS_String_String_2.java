@@ -86,10 +86,19 @@ public class ElementImpl_removeAttributeNS_String_String_2 extends BWBaseTest im
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "";
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri = "http://www.foo.org/";
                 String lname = null;
                 e.removeAttributeNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'removeAttributeNS' didn't throw exception... ");
+                TestLoader.logErrPrint("Element 'removeAttributeNS' didn't throw exception for localname set to null... ");
                 return BWBaseTest.FAILED;
              }
         } catch (Exception r) {

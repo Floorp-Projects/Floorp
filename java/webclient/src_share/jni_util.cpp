@@ -41,6 +41,7 @@ JavaVM *gVm = nsnull; // declared in ns_globals.h, which is included in
 
 static jmethodID gPropertiesInitMethodID = nsnull;
 static jmethodID gPropertiesSetPropertyMethodID = nsnull;
+static jmethodID gPropertiesGetPropertyMethodID = nsnull;
 static jmethodID gPropertiesClearMethodID = nsnull;
 
 
@@ -60,10 +61,24 @@ jobject SHIFT_KEY;
 jobject META_KEY;
 jobject BUTTON_KEY;
 jobject CLICK_COUNT_KEY;
+jobject USER_NAME_KEY;
+jobject PASSWORD_KEY;
+jobject EDIT_FIELD_1_KEY;
+jobject EDIT_FIELD_2_KEY;
+jobject CHECKBOX_STATE_KEY;
+jobject BUTTON_PRESSED_KEY;
 jobject TRUE_VALUE;
 jobject FALSE_VALUE;
 jobject ONE_VALUE;
 jobject TWO_VALUE;
+jobject BM_ADD_DATE_VALUE;
+jobject BM_LAST_MODIFIED_DATE_VALUE;
+jobject BM_LAST_VISIT_DATE_VALUE;
+jobject BM_NAME_VALUE;
+jobject BM_URL_VALUE;
+jobject BM_DESCRIPTION_VALUE;
+jobject BM_IS_FOLDER_VALUE;
+
 
 jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
 jstring MOUSE_LISTENER_CLASSNAME;
@@ -103,11 +118,10 @@ void    util_DeallocateShareInitContext(void *yourInitContext)
     // right now there is nothing to deallocate
 }
 
-jboolean util_InitStringConstants(JNIEnv *env)
+jboolean util_InitStringConstants()
 {
-	if (nsnull == gVm) { // declared in jni_util.h
-        ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
-    }
+    util_Assert(gVm);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
     if (nsnull == (SCREEN_X_KEY = 
                    ::util_NewGlobalRef(env, (jobject) 
@@ -160,6 +174,42 @@ jboolean util_InitStringConstants(JNIEnv *env)
                                                            "ClickCount")))) {
         return JNI_FALSE;
     }
+    if (nsnull == (USER_NAME_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "userName")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (PASSWORD_KEY =  
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "password")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (EDIT_FIELD_1_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "editfield1Value")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (EDIT_FIELD_2_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "editfield12Value")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (CHECKBOX_STATE_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "checkboxState")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BUTTON_PRESSED_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "buttonPressed")))) {
+        return JNI_FALSE;
+    }
     if (nsnull == (TRUE_VALUE = 
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, "true")))) {
@@ -178,6 +228,48 @@ jboolean util_InitStringConstants(JNIEnv *env)
     if (nsnull == (TWO_VALUE = 
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, "2")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_ADD_DATE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_ADD_DATE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_LAST_MODIFIED_DATE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_LAST_MODIFIED_DATE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_LAST_VISIT_DATE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_LAST_VISIT_DATE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_NAME_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_NAME)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_URL_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_URL)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_DESCRIPTION_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_DESCRIPTION)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BM_IS_FOLDER_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           BM_IS_FOLDER)))) {
         return JNI_FALSE;
     }
     if (nsnull == (DOCUMENT_LOAD_LISTENER_CLASSNAME = (jstring)
@@ -373,6 +465,19 @@ jclass util_FindClass(JNIEnv *env, const char *fullyQualifiedClassName)
     return result;
 }
 
+
+jobject util_CallStaticObjectMethodlongArg(JNIEnv *env, jclass clazz, 
+                                    jmethodID methodID, jlong longArg)
+{
+    jobject result = nsnull;
+#ifdef BAL_INTERFACE
+#else
+    result = env->CallStaticObjectMethod(clazz, methodID, longArg);
+#endif
+    return result;
+}
+
+
 jfieldID util_GetStaticFieldID(JNIEnv *env, jclass clazz, 
                                const char *fieldName, 
                                const char *signature)
@@ -466,18 +571,17 @@ jobject util_CreatePropertiesObject(JNIEnv *env, jobject initContextObj)
 #else
     util_Assert(initContextObj);
     ShareInitContext *initContext = (ShareInitContext *) initContextObj;
+    jclass propertiesClass = nsnull;
 
-    if (nsnull == initContext->propertiesClass) {
-        if (nsnull == (initContext->propertiesClass =
-                       ::util_FindClass(env, "java/util/Properties"))) {
-            return result;
-        }
+    if (nsnull == (propertiesClass =
+                   ::util_FindClass(env, "java/util/Properties"))) {
+        return result;
     }
 
     if (nsnull == gPropertiesInitMethodID) {
-        util_Assert(initContext->propertiesClass);
+        util_Assert(propertiesClass);
         if (nsnull == (gPropertiesInitMethodID = 
-                       env->GetMethodID(initContext->propertiesClass, 
+                       env->GetMethodID(propertiesClass, 
                                         "<init>", "()V"))) {
             return result;
         }
@@ -485,7 +589,7 @@ jobject util_CreatePropertiesObject(JNIEnv *env, jobject initContextObj)
     util_Assert(gPropertiesInitMethodID);
     
     result = ::util_NewGlobalRef(env, 
-                                 env->NewObject(initContext->propertiesClass, 
+                                 env->NewObject(propertiesClass, 
                                                 gPropertiesInitMethodID));
 
 #endif
@@ -515,11 +619,16 @@ void util_ClearPropertiesObject(JNIEnv *env, jobject propertiesObject,
 #else
     util_Assert(initContextObj);
     ShareInitContext *initContext = (ShareInitContext *) initContextObj;
+    jclass propertiesClass = nsnull;
+
+    if (nsnull == (propertiesClass =
+                   ::util_FindClass(env, "java/util/Properties"))) {
+        return;
+    }
     
     if (nsnull == gPropertiesClearMethodID) {
-        util_Assert(initContext->propertiesClass);
         if (nsnull == (gPropertiesClearMethodID = 
-                       env->GetMethodID(initContext->propertiesClass, "clear", "()V"))) {
+                       env->GetMethodID(propertiesClass, "clear", "()V"))) {
             return;
         }
     }
@@ -542,11 +651,16 @@ void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
 #else
     util_Assert(initContextObj);
     ShareInitContext *initContext = (ShareInitContext *) initContextObj;
+    jclass propertiesClass = nsnull;
+
+    if (nsnull == (propertiesClass =
+                   ::util_FindClass(env, "java/util/Properties"))) {
+        return;
+    }
     
     if (nsnull == gPropertiesSetPropertyMethodID) {
-        util_Assert(initContext->propertiesClass);
         if (nsnull == (gPropertiesSetPropertyMethodID = 
-                       env->GetMethodID(initContext->propertiesClass, 
+                       env->GetMethodID(propertiesClass, 
                                         "setProperty",
                                         "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;"))) {
             return;
@@ -560,6 +674,128 @@ void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
 
     
 #endif
+}
+
+jobject util_GetFromPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                     jobject name, jobject initContextObj)
+{
+    jobject result = nsnull;
+#ifdef BAL_INTERFACE
+    if (nsnull != externalGetFromPropertiesObject) {
+        result = externalGetFromPropertiesObject(env, propertiesObject, name,
+                                                 initContextObj);
+    }
+#else
+    util_Assert(initContextObj);
+    ShareInitContext *initContext = (ShareInitContext *) initContextObj;
+    jclass propertiesClass = nsnull;
+
+    if (nsnull == (propertiesClass =
+                   ::util_FindClass(env, "java/util/Properties"))) {
+        return result;
+    }
+    
+    if (nsnull == gPropertiesGetPropertyMethodID) {
+        if (nsnull == (gPropertiesGetPropertyMethodID = 
+                       env->GetMethodID(propertiesClass, 
+                                        "getProperty",
+                                        "(Ljava/lang/String;)Ljava/lang/String;"))) {
+            return result;
+        }
+    }
+    util_Assert(gPropertiesGetPropertyMethodID);
+
+    result = env->CallObjectMethod(propertiesObject, 
+                                   gPropertiesGetPropertyMethodID, name);
+#endif
+    return result;
+}
+
+jboolean util_GetBoolFromPropertiesObject(JNIEnv *env, 
+                                          jobject propertiesObject,
+                                          jobject name, jobject reserved)
+{
+    jboolean result = JNI_FALSE;
+    jstring stringResult = nsnull;
+    
+    if (nsnull == (stringResult = (jstring) 
+                   util_GetFromPropertiesObject(env, propertiesObject, 
+                                                name, reserved))) {
+        return result;
+    }
+#ifdef BAL_INTERFACE
+        // PENDING(edburns): make it so there is a way to convert from
+        // string to boolean
+#else
+    jclass clazz;
+    jmethodID valueOfMethodID;
+    jmethodID booleanValueMethodID;
+    jobject boolInstance;
+    if (nsnull == (clazz = ::util_FindClass(env, "java/lang/Boolean"))) {
+        return result;
+    }
+    if (nsnull == (valueOfMethodID = 
+                   env->GetStaticMethodID(clazz,"valueOf",
+                                          "(Ljava/lang/String;)Ljava/lang/Boolean;"))) {
+        return result;
+    }
+    if (nsnull == (boolInstance = env->CallStaticObjectMethod(clazz, 
+                                                      valueOfMethodID, 
+                                                      stringResult))) {
+        return result;
+    }
+    // now call booleanValue
+    if (nsnull == (booleanValueMethodID = env->GetMethodID(clazz, 
+                                                           "booleanValue",
+                                                           "()Z"))) {
+        return result;
+    }
+    result = env->CallBooleanMethod(boolInstance, booleanValueMethodID);
+#endif        
+    
+    return result;
+}
+
+jint util_GetIntFromPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                     jobject name, jobject reserved)
+{
+    jint result = -1;
+    jstring stringResult = nsnull;
+
+    if (nsnull == (stringResult = (jstring) 
+                   util_GetFromPropertiesObject(env, propertiesObject, name,
+                                                reserved))) {
+        return result;
+    }
+#ifdef BAL_INTERFACE
+        // PENDING(edburns): make it so there is a way to convert from
+        // string to int
+#else
+    jclass clazz;
+    jmethodID valueOfMethodID, intValueMethodID;
+    jobject integer;
+    if (nsnull == (clazz = ::util_FindClass(env, "java/lang/Integer"))) {
+        return result;
+    }
+    if (nsnull == (valueOfMethodID = 
+                   env->GetStaticMethodID(clazz, "valueOf",
+                                          "(Ljava/lang/String;)Ljava/lang/Integer;"))) {
+        return result;
+    }
+    if (nsnull == (integer = env->CallStaticObjectMethod(clazz, 
+                                                         valueOfMethodID, 
+                                                         stringResult))) {
+        return result;
+    }
+    // now call intValue
+    if (nsnull == (intValueMethodID = env->GetMethodID(clazz, "intValue",
+                                                       "()I"))) {
+        return result;
+    }
+    result = env->CallIntMethod(integer, intValueMethodID);
+#endif        
+
+    return result;
 }
 
 JNIEXPORT jvalue JNICALL

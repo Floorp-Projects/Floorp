@@ -86,10 +86,19 @@ public class ElementImpl_getAttributeNS_String_String_2 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "xmlns:edi='http://ec.com/schema'";
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri = "http://www.foo.org/";
                 String lname = null;
                 String s = e.getAttributeNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'getAttributeNS' didn't throw exception ");
+                TestLoader.logErrPrint("Element 'getAttributeNS' did not throw Exception for localname set to null");
                 return BWBaseTest.FAILED;
              }
         } catch (Exception r) {

@@ -122,6 +122,8 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
+clobber_all:: clobber
+
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib

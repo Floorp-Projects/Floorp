@@ -86,13 +86,26 @@ public class ElementImpl_getAttributeNS_String_String_0 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "xmlns:edi='http://ecommerce.com/schema'";
-                String lname = "dummyattr";
-		String val = "1";
-		e.setAttributeNS(nuri, lname, val);
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri = "http://www.foo.org/";
+                String lname = "myattr";
+		String retval = "ATTRVAL";
                 String s = e.getAttributeNS(nuri, lname);
-		if (s == null || !s.equals(val)) {
-	                TestLoader.logErrPrint("Element 'getAttributeNS' returned incorrect value: "+s+" != "+val);
+		if (s == null) {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' returned null instad of " + retval);
+        	        return BWBaseTest.FAILED;
+                }
+
+                if (!s.equals(retval)) {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' returned incorrect value: "+s+" != "+ retval);
         	        return BWBaseTest.FAILED;
 		}
              }

@@ -86,9 +86,18 @@ public class ElementImpl_getElementsByTagNameNS_String_String_3 extends BWBaseTe
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "body";
-                NodeList nl = e.getElementsByTagNameNS(nuri, lname);
+
+               String uri = "http://www.foo.org/";
+               String name = "*";
+               NodeList nl = e.getElementsByTagNameNS(uri, name);
+               if (nl != null) {
+                   Node n = (Node)nl.item(0);
+                   e = (Element)n;
+               }
+
+                String nuri = "http://www.foo.org/";
+                String lname = "myattr";
+                nl = e.getElementsByTagNameNS(nuri, lname);
 		if (nl == null) {
 	                TestLoader.logErrPrint("Element 'getElementsByTagNameNS' returned incorrect value ");
         	        return BWBaseTest.FAILED;

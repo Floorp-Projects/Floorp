@@ -44,6 +44,7 @@ public class BookmarksImpl extends ImplObjectNative implements Bookmarks
 //
 // Constants
 //
+private static final String NC_NS = "http://home.netscape.com/NC-rdf#";
 
 //
 // Class Variables
@@ -176,29 +177,40 @@ public BookmarkEntry newBookmarkEntry(String url)
     getBookmarks();
     int newNode;
 
-    System.out.println("debug: edburns: BookmarksImpl.newBookmarkEntry: url:" + url);
     if (-1 != (newNode = nativeNewRDFNode(nativeWebShell, url, false))) {
         result = new BookmarkEntryImpl(nativeWebShell,
                                        newNode, null);
         // use put instead of setProperty for jdk1.1.x compatibility.
+        result.getProperties().put(BookmarkEntry.NAME, url);
         result.getProperties().put(BookmarkEntry.URL, url);
     }
     
     return result;
 }
 
+/**
+
+ * Due to the vagaries of the mozilla RDF implementation, folders and
+ * bookmark entries are handled differently.  For Folders, we don't
+ * create a nativeRDFNode at the outset.  Rather, we just create the
+ * properties table and stock it with the known keys, then wait for the
+ * nativeRDFNode to be created en addBookmark.
+
+ */
+
 public BookmarkEntry newBookmarkFolder(String name)
 {
     ParameterCheck.nonNull(name);
     BookmarkEntry result = null;
     getBookmarks();
-    int newNode;
-
-    System.out.println("debug: edburns: BookmarksImpl.newBookmarkFolder: name:" + name);
-    if (-1 != (newNode = nativeNewRDFNode(nativeWebShell, name, true))) {
-        result = new BookmarkEntryImpl(nativeWebShell, newNode, null);
-        result.getProperties().put(BookmarkEntry.NAME, name);
+    
+    if (null == (result = new BookmarkEntryImpl(nativeWebShell, -1, null))) {
+        throw new NullPointerException("Can't create bookmark folder for: " + 
+                                       name);
     }
+    result.getProperties().put(BookmarkEntry.NAME, name);
+    result.getProperties().put(BookmarkEntry.URL, NC_NS + "$" + name);
+    result.getProperties().put(BookmarkEntry.IS_FOLDER, name);
     
     return result;
 }
@@ -230,7 +242,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarksImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.7 2000/11/03 03:16:49 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.8 2001/04/02 21:13:56 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
