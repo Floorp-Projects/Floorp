@@ -398,6 +398,10 @@ private:
   FindPluginEnabledForType(const char* aMimeType, nsPluginTag* &aPlugin);
 
   nsresult
+  PostStartupMessageForType(const char* aMimeType, 
+                            nsIPluginInstanceOwner* aOwner);
+
+  nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
   nsresult

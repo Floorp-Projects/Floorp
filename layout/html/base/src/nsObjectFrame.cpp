@@ -145,6 +145,8 @@ public:
                     PRUint32 aHeadersDataLen);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
+
+  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
   
   NS_IMETHOD GetDocument(nsIDocument* *aDocument);
 
@@ -2063,34 +2065,43 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
 {
   nsresult  rv = NS_ERROR_FAILURE;
+  
+  rv = this->ShowStatus(NS_ConvertUTF8toUCS2(aStatusMsg).get());
+  
+  return rv;
+}
 
-  if (nsnull != mContext)
-  {
-    nsCOMPtr<nsISupports> cont;
+NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
+{
+  nsresult  rv = NS_ERROR_FAILURE;
 
-    rv = mContext->GetContainer(getter_AddRefs(cont));
-
-    if ((NS_OK == rv) && (nsnull != cont))
-    {
-      nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
-      if (docShellItem)
-      {
-        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-        docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
-
-        if(treeOwner)
-        {
-        nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
-
-        if(browserChrome)
-          {
-          nsAutoString  msg; msg.AssignWithConversion(aStatusMsg);
-          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, msg.get());
-          }
-        }
-      }
-    }
+  if (!mContext) {
+    return rv;
   }
+  nsCOMPtr<nsISupports> cont;
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  
+  rv = mContext->GetContainer(getter_AddRefs(cont));
+  if (NS_FAILED(rv) || !cont) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont, &rv));
+  if (NS_FAILED(rv) || !docShellItem) {
+    return rv;
+  }
+
+  rv = docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (NS_FAILED(rv) || !treeOwner) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner, &rv));
+  if (NS_FAILED(rv) || !browserChrome) {
+    return rv;
+  }
+  rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, 
+                                aStatusMsg);
 
   return rv;
 }

@@ -45,6 +45,23 @@
 #include "nsIPluginHost.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+
+// All these interfaces are necessary just to get the damn
+// nsIWebBrowserChrome to send the "Starting Java" message to the status
+// bar.
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIPresContext.h"
+#include "nsIPresContext.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIInterfaceRequestor.h"
+
+#include "nsIStringBundle.h"
+
 #include "nsIPref.h"
 #include "lcglue.h"
 
@@ -66,6 +83,8 @@ extern "C" int XP_JAVA_NO_CLASSES;
 extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
@@ -95,6 +114,7 @@ static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 
+#define PLUGIN_REGIONAL_URL "chrome://global-region/locale/region.properties"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +178,47 @@ nsJVMManager::GetJavaEnabled(PRBool* outEnabled)
 NS_METHOD
 nsJVMManager::ShowJavaConsole(void)
 {
+    nsresult rv;
+    nsCOMPtr<nsIWebBrowserChrome> chrome;
+    nsAutoString  msg; 
+    
+    if (!fStartupMessagePosted) {
+        PRUnichar *messageUni;
+        nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
+        nsCOMPtr<nsIStringBundle> regionalBundle;
+        
+        rv = this->GetChrome(getter_AddRefs(chrome));
+        if (NS_SUCCEEDED(rv) && chrome && strings) {
+            rv = strings->CreateBundle(PLUGIN_REGIONAL_URL, 
+                                       getter_AddRefs(regionalBundle));
+            if (NS_SUCCEEDED(rv) && regionalBundle) {
+                // pluginStartupMessage is something like "Starting
+                // plugin for type"
+                rv = regionalBundle->GetStringFromName(NS_LITERAL_STRING("pluginStartupMessage").get(), 
+                                                       &messageUni);
+                if (NS_SUCCEEDED(rv) && messageUni) {
+                    msg = messageUni;
+                    nsMemory::Free((void *)messageUni);
+                    
+                    msg.AppendWithConversion(" ", 1);
+                    msg.AppendWithConversion("application/x-java-vm", 
+                                             PL_strlen("application/x-java-vm"));
+                    chrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, 
+                                      msg.get());
+                }
+            }
+        }
+    } // !fStartupMessagePosted
+
     JVM_ShowConsole();
+    // clear the startup message, if one was posted
+    if (!fStartupMessagePosted && chrome) {
+        msg.Truncate();
+        chrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, 
+                          msg.get());
+        fStartupMessagePosted = PR_TRUE;
+    }
+        
     return NS_OK;
 }
     
@@ -302,7 +362,8 @@ nsJVMManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 nsJVMManager::nsJVMManager(nsISupports* outer)
     : fJVM(NULL), fStatus(nsJVMStatus_Enabled),
       fRegisteredJavaPrefChanged(PR_FALSE), fDebugManager(NULL), fJSJavaVM(NULL),
-      fClassPathAdditions(new nsVoidArray()), fClassPathAdditionsString(NULL)
+      fClassPathAdditions(new nsVoidArray()), fClassPathAdditionsString(NULL),
+      fStartupMessagePosted(PR_FALSE)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -763,6 +824,61 @@ nsJVMManager::EnsurePrefCallbackRegistered(void)
             // else, we leave it with the value it had at construction
         }
     }
+}
+
+nsresult
+nsJVMManager::GetChrome(nsIWebBrowserChrome **theChrome)
+{
+    NS_ENSURE_ARG_POINTER(theChrome);
+
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIWindowWatcher> windowWatcher;
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIDocShell> docShell;
+    nsCOMPtr<nsIScriptGlobalObject> scriptObject;
+    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsIDocShellTreeItem> treeItem;
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    nsCOMPtr<nsISupports> cont;
+    nsCOMPtr<nsIWebBrowserChrome> chrome;
+
+    windowWatcher =
+        do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+    if (!windowWatcher) {
+        return rv;
+    }
+    rv = windowWatcher->GetActiveWindow(getter_AddRefs(domWindow));
+    if (!domWindow) {
+        return rv;
+    }
+    scriptObject = do_QueryInterface(domWindow, &rv);
+    if (!scriptObject) {
+        return rv;
+    }
+    rv = scriptObject->GetDocShell(getter_AddRefs(docShell));
+    if (!docShell) {
+        return rv;
+    }
+    rv = docShell->GetPresContext(getter_AddRefs(presContext));
+    if (!presContext) {
+        return rv;
+    }
+    rv = presContext->GetContainer(getter_AddRefs(cont));
+    if (!cont) {
+        return rv;
+    }
+    treeItem = do_QueryInterface(cont, &rv);
+    if (!treeItem) {
+        return rv;
+    }
+    rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (!treeOwner) {
+        return rv;
+    }
+    chrome = do_GetInterface(treeOwner, &rv);
+    *theChrome = (nsIWebBrowserChrome *) chrome.get();
+    NS_IF_ADDREF(*theChrome);
+    return rv;
 }
 
 nsJVMStatus
