@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=bootstrap appshell browser
+DIRS=AppCores bootstrap appshell browser
 
 include <$(DEPTH)\layout\config\rules.mak>
