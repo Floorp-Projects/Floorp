@@ -279,7 +279,7 @@
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
                ondragover="return( false );" contextmenu="calendarlist-context-menu">
                <listhead>
-                  <listheader label="Calendars"/>
+                  <listheader flex="1" crop="end" label="Calendars"/>
                </listhead>
                <listcols>
                   <listcol flex="1"/>
@@ -292,10 +292,10 @@
          </splitter>
          <vbox id="left-hand-below-splitter" flex="1" persist="height">
             <box align="left">
-               <label style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
+               <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
             </box>
             <box align="center">
-               <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" oncommand="toDoUnifinderRefesh( event )" persist="checked"/>
+               <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" flex="1" crop="end" oncommand="toDoUnifinderRefresh( event )" persist="checked"/>
             </box>
 
             <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
@@ -359,24 +359,26 @@
          
          <vbox flex="1">
             <vbox id="bottom-events-box" persist="height">
-               <box align="center">
-                  <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
-                  <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
-               </box>
-               <box align="center">
-                  <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
-                  <menulist id="event-filter-menulist" persist="selectedIndex">
-                      <menupopup id="event-filter-menupopup" oncommand="unifinderShowFutureEventsOnly( event );" persist="selectedIndex">
-                          <menuitem id="event-filter-all" label="All Events" value="all" persist="selected"/>
-                          <menuitem id="event-filter-today" label="Today's Events" value="today" persist="selected"/>
-                          <menuitem id="event-filter-week" label="Events This Week" value="week" persist="selected"/>
-                          <menuitem id="event-filter-2weeks" label="Events Next 2 Weeks" value="2weeks" persist="selected"/>
-                          <menuitem id="event-filter-month" label="Events In The Next Month" value="month" persist="selected"/>
-                          <menuitem id="event-filter-future" label="All Future Events" value="future" persist="selected"/>
-                      </menupopup>
-                  </menulist>
-               </box>
-               
+               <hbox>
+                  <box align="center">
+                     <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
+                     <menulist id="event-filter-menulist" persist="selectedIndex">
+                         <menupopup id="event-filter-menupopup" oncommand="unifinderShowFutureEventsOnly( event );" persist="selectedIndex">
+                             <menuitem id="event-filter-all" label="All Events" value="all" persist="selected"/>
+                             <menuitem id="event-filter-today" label="Today's Events" value="today" persist="selected"/>
+                             <menuitem id="event-filter-week" label="Events This Week" value="week" persist="selected"/>
+                             <menuitem id="event-filter-2weeks" label="Events Next 2 Weeks" value="2weeks" persist="selected"/>
+                             <menuitem id="event-filter-month" label="Events In The Next Month" value="month" persist="selected"/>
+                             <menuitem id="event-filter-future" label="All Future Events" value="future" persist="selected"/>
+                         </menupopup>
+                     </menulist>
+                  </box>
+                  
+                  <box align="center" flex="1">
+                     <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
+                     <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
+                  </box>
+               </hbox>
                <tree id="unifinder-search-results-listbox" flex="1" seltype="multiple" enableColumnDrag="false">
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
@@ -399,13 +401,12 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren tooltip="savetip" onmousemove="changeToolTipTextForEvent( event )" onpopupshowing="return( false );" 
+                  <treechildren tooltip="savetip" onmousemove="changeToolTipTextForEvent( event )"
                     onclick="unifinderClickEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
-                    onfocus="focusFirstItemIfNoSelection( );"
-                    context="taskitem-context-menu">
+                    onfocus="focusFirstItemIfNoSelection( );">
                  </treechildren>
                </tree>
             </vbox>

@@ -118,39 +118,4 @@ calendarPreferences.prototype.getPref = function( Preference )
    return( ThisPref );
 }
 
-function getCharPref (prefObj, prefName, defaultValue)
-{
-    try
-    {
-        return prefObj.getCharPref (prefName);
-    }
-    catch (e)
-    {
-        return defaultValue;
-    }
-}
-
-function getIntPref (prefObj, prefName, defaultValue)
-{
-    try
-    {
-        return prefObj.getIntPref (prefName);
-    }
-    catch (e)
-    {
-        return defaultValue;
-    }
-}
-
-function getBoolPref (prefObj, prefName, defaultValue)
-{
-    try
-    {
-        return prefObj.getBoolPref (prefName);
-    }
-    catch (e)
-    {
-        return defaultValue;
-    }
-}
 

@@ -251,16 +251,28 @@ function loadCalendarEventDialog()
    /* Server stuff */
    var serverList = opener.gCalendarWindow.calendarManager.calendars;
    
-
    var oldMenulist = document.getElementById( "server-menulist-menupopup" );
    while( oldMenulist.hasChildNodes() )
       oldMenulist.removeChild( oldMenulist.lastChild );
    
-   for (var i = 0; i < serverList.length ; i++)
+   if( args.mode == "new" )
    {
-      if( serverList[i].remote != true )
-         document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+      for (var i = 0; i < serverList.length ; i++)
+      {
+         if( serverList[i].remote != true )
+            document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+      }
    }
+   else
+   {
+      for (var i = 0; i < serverList.length ; i++)
+      {
+         document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+         if( serverList[i].remote == true && serverList[i].path == gEvent.parent.server )
+            document.getElementById( "ok" ).setAttribute( "disabled", "true" );
+      }
+   }
+   //if the server 
    
    document.getElementById( "server-field" ).selectedIndex = 0;
    //the next line seems to crash Mozilla

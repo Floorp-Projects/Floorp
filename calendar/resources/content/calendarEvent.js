@@ -448,6 +448,7 @@ CalendarEventDataSource.prototype.getAllEvents = function( )
 
 CalendarEventDataSource.prototype.getEventsForRange = function( StartDate, EndDate )
 {
+   dump( "\n->get events from "+StartDate+"\n"+EndDate );
    var eventList = this.gICalLib.getFirstEventsForRange( StartDate, EndDate );
    
    var eventArray = new Array();
@@ -455,7 +456,7 @@ CalendarEventDataSource.prototype.getEventsForRange = function( StartDate, EndDa
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
-      
+      dump( "\n->event is "+tmpevent );
       eventArray[ eventArray.length ] = tmpevent;
    }
    eventArray.sort( this.orderRawEventsByDate );

@@ -478,3 +478,58 @@ function contextChangePriority( Priority, event )
       }
    }
 }
+
+function changeToolTipTextForToDo( event )
+{
+   var toDoItem = getToDoFromEvent( event );
+
+   var Html = document.getElementById( "savetip" );
+
+   while( Html.hasChildNodes() )
+   {
+      Html.removeChild( Html.firstChild ); 
+   }
+   
+   var HolderBox = document.createElement( "vbox" );
+
+   if( toDoItem )
+   {
+      showTooltip = true; //needed to show the tooltip.
+         
+      if (toDoItem.title)
+      {
+         var TitleHtml = document.createElement( "description" );
+         var TitleText = document.createTextNode( "Title: "+toDoItem.title );
+         TitleHtml.appendChild( TitleText );
+         HolderBox.appendChild( TitleHtml );
+      }
+   
+      var DateHtml = document.createElement( "description" );
+      var startDate = new Date( toDoItem.start.getTime() );
+      var DateText = document.createTextNode( "Start Date: "+gCalendarWindow.dateFormater.getFormatedDate( startDate ) );
+      DateHtml.appendChild( DateText );
+      HolderBox.appendChild( DateHtml );
+   
+      DateHtml = document.createElement( "description" );
+      var dueDate = new Date( toDoItem.due.getTime() );
+      DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
+      DateHtml.appendChild( DateText );
+      HolderBox.appendChild( DateHtml );
+   
+      if (toDoItem.description)
+      {
+         var DescriptionHtml = document.createElement( "description" );
+         var DescriptionText = document.createTextNode( "Description: "+toDoItem.description );
+         DescriptionHtml.appendChild( DescriptionText );
+         HolderBox.appendChild( DescriptionHtml );
+      }
+      
+      Html.appendChild( HolderBox );
+   } 
+   else
+   {
+      showTooltip = false; //Don't show the tooltip
+   }
+}
+
+

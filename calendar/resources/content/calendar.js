@@ -644,121 +644,9 @@ function closeCalendar()
 }
 
 
-function changeToolTipTextForToDo( event )
-{
-   var toDoItem = getToDoFromEvent( event );
-
-   var Html = document.getElementById( "savetip" );
-
-   while( Html.hasChildNodes() )
-   {
-      Html.removeChild( Html.firstChild ); 
-   }
-   
-   var HolderBox = document.createElement( "vbox" );
-
-   if( toDoItem )
-   {
-      showTooltip = true; //needed to show the tooltip.
-         
-      if (toDoItem.title)
-      {
-         var TitleHtml = document.createElement( "description" );
-         var TitleText = document.createTextNode( "Title: "+toDoItem.title );
-         TitleHtml.appendChild( TitleText );
-         HolderBox.appendChild( TitleHtml );
-      }
-   
-      var DateHtml = document.createElement( "description" );
-      var startDate = new Date( toDoItem.start.getTime() );
-      var DateText = document.createTextNode( "Start Date: "+gCalendarWindow.dateFormater.getFormatedDate( startDate ) );
-      DateHtml.appendChild( DateText );
-      HolderBox.appendChild( DateHtml );
-   
-      DateHtml = document.createElement( "description" );
-      var dueDate = new Date( toDoItem.due.getTime() );
-      DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
-      DateHtml.appendChild( DateText );
-      HolderBox.appendChild( DateHtml );
-   
-      if (toDoItem.description)
-      {
-         var DescriptionHtml = document.createElement( "description" );
-         var DescriptionText = document.createTextNode( "Description: "+toDoItem.description );
-         DescriptionHtml.appendChild( DescriptionText );
-         HolderBox.appendChild( DescriptionHtml );
-      }
-      
-      Html.appendChild( HolderBox );
-   } 
-   else
-   {
-      showTooltip = false; //Don't show the tooltip
-   }
-}
-
-function changeToolTipTextForEvent( event )
-{
-   var thisEvent = getCalendarEventFromEvent( event );
-   
-   var Html = document.getElementById( "savetip" );
-
-   while( Html.hasChildNodes() )
-   {
-      Html.removeChild( Html.firstChild ); 
-   }
-   
-   if( !thisEvent )
-   {
-      showTooltip = false;
-      return;
-   }
-      
-   showTooltip = true;
-   
-   var HolderBox = getPreviewText( thisEvent );
-   
-   Html.appendChild( HolderBox );
-}
-
 /**
 *  Called when a user hovers over an element and the text for the mouse over is changed.
 */
-
-function getPreviewText( calendarEvent )
-{
-	var HolderBox = document.createElement( "vbox" );
-
-   if (calendarEvent.title)
-   {
-      var TitleHtml = document.createElement( "description" );
-      var TitleText = document.createTextNode( "Title: "+calendarEvent.title );
-      TitleHtml.appendChild( TitleText );
-      HolderBox.appendChild( TitleHtml );
-   }
-
-   var DateHtml = document.createElement( "description" );
-   var startDate = new Date( calendarEvent.start.getTime() );
-   var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
-   DateHtml.appendChild( DateText );
-   HolderBox.appendChild( DateHtml );
-
-   DateHtml = document.createElement( "description" );
-   var endDate = new Date( calendarEvent.end.getTime() );
-   DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
-   DateHtml.appendChild( DateText );
-   HolderBox.appendChild( DateHtml );
-
-   if (calendarEvent.description)
-   {
-      var DescriptionHtml = document.createElement( "description" );
-      var DescriptionText = document.createTextNode( "Description: "+calendarEvent.description );
-      DescriptionHtml.appendChild( DescriptionText );
-      HolderBox.appendChild( DescriptionHtml );
-   }
-
-   return ( HolderBox );
-}
 
 /**
 *  Called when a user hovers over an element and the text for the mouse over is changed.
@@ -859,7 +747,49 @@ function publishCalendarData()
    calendarPublish(calendarString, Server, FilePath, UserName, Password, "text/calendar");
 }
 
+/*
+** A little function to see if we can show the tooltip
+*/
 function checkTooltip()
 {
+   //returns true if you can show the tooltip
+   //or false if the tooltip should not be shown
    return( showTooltip );
+}
+
+
+function getCharPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getCharPref (prefName);
+    }
+    catch (e)
+    {
+        return defaultValue;
+    }
+}
+
+function getIntPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getIntPref (prefName);
+    }
+    catch (e)
+    {
+        return defaultValue;
+    }
+}
+
+function getBoolPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getBoolPref (prefName);
+    }
+    catch (e)
+    {
+        return defaultValue;
+    }
 }

@@ -44,7 +44,6 @@
 *   This is a hacked in interface to the unifinder. We will need to 
 *   improve this to make it usable in general.
 */
-
 const UnifinderTreeName = "unifinder-search-results-listbox";
 
 function calendarUnifinderInit( )
@@ -53,12 +52,8 @@ function calendarUnifinderInit( )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         /* 
-         This no longer works since we moved to a tree 
-         */
-         
          var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
-         
+            
          SearchTree.setAttribute( "suppressonselect", "true" );
 
          SearchTree.treeBoxObject.selection.select( -1 );
@@ -79,22 +74,6 @@ function calendarUnifinderInit( )
                }
             }
          }
-         /*SearchTree.clearSelection();
-         
-         if( EventSelectionArray.length > 0 )
-         {
-            for( i = 0; i < EventSelectionArray.length; i++ )
-            {
-               var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
-               
-               //you need this for when an event is added. It doesn't yet exist.
-               if( SearchTreeItem )
-                  SearchTree.addItemToSelection( SearchTreeItem );
-            }
-         }
-         dump( "\nAllow on select now!" );
-         SearchTree.removeAttribute( "suppressonselect" );
-         */
       }
    }
       
@@ -257,10 +236,6 @@ function getCalendarEventFromEvent( event )
 
 function unifinderClickEvent( event )
 {
-   // only change checkbox on left mouse-button click
-   if( event.button != 0)
-      return;
-      
    var tree = document.getElementById( UnifinderTreeName );
    var ThisEvent = getCalendarEventFromEvent( event );
    var ArrayOfEvents = new Array( ThisEvent );
@@ -646,3 +621,65 @@ function getNextOrPreviousRecurrence( calendarEvent )
       
    return eventStartDate;
 }
+
+
+function changeToolTipTextForEvent( event )
+{
+   var thisEvent = getCalendarEventFromEvent( event );
+   
+   var Html = document.getElementById( "savetip" );
+
+   while( Html.hasChildNodes() )
+   {
+      Html.removeChild( Html.firstChild ); 
+   }
+   
+   if( !thisEvent )
+   {
+      showTooltip = false;
+      return;
+   }
+      
+   showTooltip = true;
+   
+   var HolderBox = getPreviewText( thisEvent );
+   
+   Html.appendChild( HolderBox );
+}
+
+function getPreviewText( calendarEvent )
+{
+	var HolderBox = document.createElement( "vbox" );
+
+   if (calendarEvent.title)
+   {
+      var TitleHtml = document.createElement( "description" );
+      var TitleText = document.createTextNode( "Title: "+calendarEvent.title );
+      TitleHtml.appendChild( TitleText );
+      HolderBox.appendChild( TitleHtml );
+   }
+
+   var DateHtml = document.createElement( "description" );
+   var startDate = new Date( calendarEvent.start.getTime() );
+   var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   DateHtml = document.createElement( "description" );
+   var endDate = new Date( calendarEvent.end.getTime() );
+   DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   if (calendarEvent.description)
+   {
+      var DescriptionHtml = document.createElement( "description" );
+      var DescriptionText = document.createTextNode( "Description: "+calendarEvent.description );
+      DescriptionHtml.appendChild( DescriptionText );
+      HolderBox.appendChild( DescriptionHtml );
+   }
+
+   return ( HolderBox );
+}
+
+

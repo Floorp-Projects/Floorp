@@ -336,9 +336,12 @@ function onError( )
 
 function removeCalendar( event )
 {
+   dump( "\nbutton is "+event.button );
    if (event.button != 0) 
-      return;
-
+   {
+      return( false );
+   }
+      
    if( event.currentTarget.checked )
       gCalendarWindow.calendarManager.addCalendar( event.currentTarget.calendarObject );
    else
