@@ -424,6 +424,8 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		/* LATIN2 */
 		{CS_LATIN2,		CS_LATIN2,		0, NULL,			0},
 		{CS_LATIN2,		CS_ASCII,		0, NULL,			0},
+		{CS_LATIN2,		CS_CP_1250,		0, (CCCFunc)One2OneCCC,	0},
+		{CS_CP_1250,	CS_LATIN2,		0, (CCCFunc)One2OneCCC,	0},
 
 		/* CYRILLIC */
 		{CS_KOI8_R,		CS_KOI8_R,		0, NULL,			0},	
@@ -433,6 +435,8 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/* GREEK */
 		{CS_8859_7,		CS_8859_7,		0, NULL,			0},	
+		{CS_8859_7,		CS_CP_1253,		0, (CCCFunc)One2OneCCC,	0},
+		{CS_CP_1253,	CS_8859_7,		0, (CCCFunc)One2OneCCC,	0},
 
 		/* TURKISH */
 		{CS_8859_9,		CS_8859_9,		0, NULL,			0},	
