@@ -197,7 +197,7 @@ PRInt32 BulletFrame::GetListItemOrdinal(nsIPresContext* aCX,
     if (eHTMLUnit_Integer == value.GetUnit()) {
       ordinal = value.GetIntValue();
       if (nsnull != state) {
-        state->nextListOrdinal = ordinal + 1;
+        state->mNextListOrdinal = ordinal + 1;
       }
       goto done;
     }
@@ -205,7 +205,7 @@ PRInt32 BulletFrame::GetListItemOrdinal(nsIPresContext* aCX,
 
   // Get ordinal from block reflow state
   if (nsnull != state) {
-    ordinal = state->nextListOrdinal;
+    ordinal = state->mNextListOrdinal;
     if (ordinal < 0) {
       // This is the first list item and the list container doesn't
       // have a "start" attribute. Get the starting ordinal value
@@ -219,7 +219,7 @@ PRInt32 BulletFrame::GetListItemOrdinal(nsIPresContext* aCX,
         break;
       }
     }
-    state->nextListOrdinal = ordinal + 1;
+    state->mNextListOrdinal = ordinal + 1;
   }
 
  done:
@@ -518,26 +518,23 @@ nsListItemFrame::GetListContainerReflowState(nsIPresContext* aCX)
   nsBlockReflowState* state = nsnull;
   nsIFrame* parent = mGeometricParent;
   while (nsnull != parent) {
-    nsIHTMLFrameType* ft;
-    nsresult status = parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
+    void* ft;
+    nsresult status = parent->QueryInterface(kBlockFrameCID, &ft);
     if (NS_OK == status) {
-      nsHTMLFrameType type = ft->GetFrameType();
-      if (eHTMLFrame_Block == type) {
-        // The parent is a block. See if its content object is a list
-        // container. Only UL, OL, MENU or DIR can be list containers.
-        // XXX need something more flexible, say style?
-        nsIContent* parentContent;
+      // The parent is a block. See if its content object is a list
+      // container. Only UL, OL, MENU or DIR can be list containers.
+      // XXX need something more flexible, say style?
+      nsIContent* parentContent;
          
-        parent->GetContent(parentContent);
-        nsIAtom* tag = parentContent->GetTag();
-        NS_RELEASE(parentContent);
-        if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
-            (tag == nsHTMLAtoms::menu) || (tag == nsHTMLAtoms::dir)) {
-          NS_RELEASE(tag);
-          break;
-        }
+      parent->GetContent(parentContent);
+      nsIAtom* tag = parentContent->GetTag();
+      NS_RELEASE(parentContent);
+      if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
+          (tag == nsHTMLAtoms::menu) || (tag == nsHTMLAtoms::dir)) {
         NS_RELEASE(tag);
+        break;
       }
+      NS_RELEASE(tag);
     }
     parent->GetGeometricParent(parent);
   }
@@ -547,6 +544,29 @@ nsListItemFrame::GetListContainerReflowState(nsIPresContext* aCX)
     NS_RELEASE(shell);
   }
   return state;
+}
+
+void
+nsListItemFrame::InsertBullet(nsIFrame* aBullet)
+{
+  mFirstChild = aBullet;
+  mChildCount++;
+  if (nsnull == mLines) {
+    mLines = new nsLineData();
+    mLines->mFirstChild = aBullet;
+    mLines->mChildCount = 1;
+    mLines->mFirstContentOffset = 0;
+    mLines->mLastContentOffset = 0;
+    mLines->mLastContentIsComplete = PR_TRUE;
+  }
+  else {
+    mLines->mChildCount++;
+    mLines->mFirstChild = aBullet;
+  }
+  mLines->mHasBullet = PR_TRUE;
+#ifdef NS_DEBUG
+  mLines->Verify();
+#endif
 }
 
 /**
@@ -579,8 +599,7 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
         // Inside bullets get placed on the list immediately so that
         // the regular reflow logic can place them.
         bullet = CreateBullet(aCX);
-        mFirstChild = bullet;
-        mChildCount++;
+        InsertBullet(bullet);
       } else {
         // We already have a first child. It's the bullet (check?)
         // so we don't need to do anything here
@@ -593,6 +612,9 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
         // Pull bullet off list (we'll put it back later)
         bullet = mFirstChild;
         bullet->GetNextSibling(mFirstChild);
+        mLines->mFirstChild = mFirstChild;
+        mLines->mChildCount--;
+        mLines->mHasBullet = PR_FALSE;
         mChildCount--;
       }
     }
@@ -600,9 +622,9 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
 
   // Let base class do things first
   nsBlockReflowState state;
-  SetupState(aCX, state, aMaxSize, aMaxElementSize, aSpaceManager);
-  state.firstChildIsInsideBullet = insideBullet;
-  DoResizeReflow(aCX, state, aDesiredRect, aStatus);
+  InitializeState(aCX, aSpaceManager, aMaxSize, aMaxElementSize, state);
+  state.mFirstChildIsInsideBullet = insideBullet;
+  DoResizeReflow(state, aMaxSize, aDesiredRect, aStatus);
 
   // Now place the bullet and put it at the head of the list of children
   if (!insideBullet && (nsnull != bullet)) {
@@ -612,19 +634,12 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
     // information for the first line.
     PlaceOutsideBullet(bullet, aCX);
     bullet->SetNextSibling(mFirstChild);
-    mFirstChild = bullet;
-    mChildCount++;
-    if (nsnull == mLines) {
-      mLines = new PRInt32[1];
-      mLines[0] = 1;
-      mNumLines = 1;
-    } else {
-      mLines[0]++;
-    }
+    InsertBullet(bullet);
   }
   return NS_OK;
 }
 
+#if XXX
 // XXX we may need to grow to accomodate the bullet
 NS_METHOD nsListItemFrame::IncrementalReflow(nsIPresContext* aCX,
                                              nsISpaceManager* aSpaceManager,
@@ -634,8 +649,10 @@ NS_METHOD nsListItemFrame::IncrementalReflow(nsIPresContext* aCX,
                                              ReflowStatus& aStatus)
 {
   aStatus = frComplete;
+  // XXX
   return NS_OK;
 }
+#endif
 
 NS_METHOD nsListItemFrame::CreateContinuingFrame(nsIPresContext* aCX,
                                                  nsIFrame* aParent,

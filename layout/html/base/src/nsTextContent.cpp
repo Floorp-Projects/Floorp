@@ -34,6 +34,7 @@
 #include "nsITimer.h"
 #include "nsBlockFrame.h"
 #include "prtime.h"
+#include "nsVoidArray.h"
 #include "prprf.h"
 #include "nsIDOMText.h"
 
@@ -151,7 +152,7 @@ protected:
                          nsSize* aMaxElementSize,
                          nsStyleFont& aFont,
                          PRInt32 aStartingOffset,
-                         nsBlockReflowState* aState);
+                         nsLineLayout* aLineState);
 
   ReflowStatus ReflowNormal(nsIPresContext* aCX,
                             nsReflowMetrics& aDesiredSize,
@@ -160,7 +161,7 @@ protected:
                             nsStyleFont& aFont,
                             nsStyleText& aTextStyle,
                             PRInt32 aStartingOffset,
-                            nsBlockReflowState* aState);
+                            nsLineLayout* aLineState);
 
 public:
   PRInt32 mContentOffset;
@@ -665,23 +666,13 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
   }
 
   // Get cached state for containing block frame
-  nsBlockReflowState* state = nsnull;
-  nsIFrame* parent = mGeometricParent;
-  while (nsnull != parent) {
-    nsIHTMLFrameType* ft;
-    nsresult status = parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
-    if (NS_OK == status) {
-      nsHTMLFrameType type = ft->GetFrameType();
-      if (eHTMLFrame_Block == type) {
-        break;
-      }
+  nsLineLayout* lineLayoutState = nsnull;
+  nsBlockReflowState* state = nsBlockFrame::FindBlockReflowState(aCX, this);
+  if (nsnull != state) {
+    lineLayoutState = state->mCurrentLine;
+    if (nsnull != lineLayoutState) {
+      lineLayoutState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
     }
-    parent->GetGeometricParent(parent);
-  }
-  if (nsnull != parent) {
-    nsIPresShell* shell = aCX->GetShell();
-    state = (nsBlockReflowState*) shell->GetCachedData(parent);
-    NS_RELEASE(shell);
   }
 
   nsStyleFont* font =
@@ -703,13 +694,14 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
   if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
     // Use a specialized routine for pre-formatted text
     aStatus = ReflowPre(aCX, aDesiredSize, aMaxSize,
-                       aMaxElementSize, *font, startingOffset, state);
+                        aMaxElementSize, *font, startingOffset,
+                        lineLayoutState);
   } else {
     // Use normal wrapping routine for non-pre text (this includes
     // text that is not wrapping)
     aStatus = ReflowNormal(aCX, aDesiredSize, aMaxSize,
                            aMaxElementSize, *font, *text,
-                           startingOffset, state);
+                           startingOffset, lineLayoutState);
   }
 
 #ifdef NOISY
@@ -731,7 +723,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
                         nsStyleFont& aFont,
                         nsStyleText& aTextStyle,
                         PRInt32 aStartingOffset,
-                        nsBlockReflowState* aState)
+                        nsLineLayout* aLineState)
 {
   Text* txt = (Text*) mContent;
   const PRUnichar* cp = txt->mText + aStartingOffset;
@@ -749,8 +741,8 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
-  if (nsnull != aState) {
-    if (!aState->allowLeadingWhitespace) {
+  if (nsnull != aLineState) {
+    if (aLineState->mSkipLeadingWhiteSpace) {
       skipWhitespace = PR_TRUE;
       mFlags |= TEXT_SKIP_LEADING_WS;
     }
@@ -769,6 +761,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   nscoord maxWidth = aMaxSize.width;
   nscoord maxWordWidth = 0;
   const PRUnichar* lastWordEnd = cpStart;
+  const PRUnichar* lastWordStart = cpStart;
   PRBool hasMultibyte = PR_FALSE;
   PRBool endsInWhitespace = PR_FALSE;
   while (cp < end) {
@@ -798,6 +791,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
         hasMultibyte = PR_TRUE;
       }
       const PRUnichar* wordStart = cp - 1;
+      lastWordStart = wordStart;
       while (cp < end) {
         ch = *cp;
         if (ch >= 256) {
@@ -840,13 +834,14 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
 
-  if (nsnull != aState) {
+  if (nsnull != aLineState) {
     if (0 == x) {
       // Since we collapsed into nothingness (all our whitespace
-      // is ignored) leave the aState->allowLeadingWhitespace
+      // is ignored) leave the aState->mSkipLeadingWhiteSpace
       // flag alone since it doesn't want leading whitespace
-    } else {
-      aState->allowLeadingWhitespace = !endsInWhitespace;
+    }
+    else {
+      aLineState->mSkipLeadingWhiteSpace = endsInWhitespace;
     }
   }
 
@@ -889,7 +884,7 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
                      nsSize* aMaxElementSize,
                      nsStyleFont& aFont,
                      PRInt32 aStartingOffset,
-                     nsBlockReflowState* aState)
+                     nsLineLayout* aLineState)
 {
   Text* txt = (Text*) mContent;
   const PRUnichar* cp = txt->mText + aStartingOffset;
@@ -903,16 +898,16 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
   PRBool hasMultibyte = PR_FALSE;
   PRUint16 tabs = 0;
   PRIntn col = 0;
-  if (nsnull != aState) {
-    col = aState->column;
+  if (nsnull != aLineState) {
+    col = aLineState->mColumn;
   }
   mColumn = (PRUint16) col;
   nscoord spaceWidth = widths[' '];
   while (cp < end) {
     PRUnichar ch = *cp++;
     if (ch == '\n') {
-      if (nsnull != aState) {
-        aState->breakAfterChild = PR_TRUE;
+      if (nsnull != aLineState) {
+        aLineState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
       }
       break;
     }
@@ -937,8 +932,8 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
     }
     col++;
   }
-  if (nsnull != aState) {
-    aState->column = col;
+  if (nsnull != aLineState) {
+    aLineState->mColumn = col;
   }
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;

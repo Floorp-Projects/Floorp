@@ -20,158 +20,101 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIFloaterContainer.h"
-#include "nsIHTMLFrameType.h"
 #include "nsIRunaround.h"
+#include "nsISpaceManager.h"
+#include "nsLineLayout.h"
 #include "nsVoidArray.h"
-struct BlockBandData;
+
 struct nsMargin;
 struct nsStyleDisplay;
 struct nsStyleFont;
 struct nsStyleText;
+class nsBlockFrame;
+struct nsBandData;
 
-/**
- * Block frames have some state which needs to be made
- * available to child frames for proper reflow. This structure
- * describes that state.
- */
+struct nsBlockBandData : public nsBandData {
+  // Trapezoid's used during band processing
+  nsBandTrapezoid data[12];
+
+  // Bounding rect of available space between any left and right floaters
+  nsRect          availSpace;
+
+  nsBlockBandData() {
+    size = 12;
+    trapezoids = data;
+  }
+
+  /**
+   * Computes the bounding rect of the available space, i.e. space
+   * between any left and right floaters Uses the current trapezoid
+   * data, see nsISpaceManager::GetBandData(). Also updates member
+   * data "availSpace".
+   */
+  void ComputeAvailSpaceRect();
+};
+
 struct nsBlockReflowState {
-  // True if this is the first line of text in a block container
-  PRPackedBool firstLine;
-
-  // True if leading whitespace is allowed to show
-  PRPackedBool allowLeadingWhitespace;
-
-  // This is set when some child frame needs a break after it's placed
-  PRPackedBool breakAfterChild;
-
-  // This is set when a child needs a break before it's placed. Note
-  // that this value is set by a child AFTER we have called it's
-  // ResizeReflow method.
-  PRPackedBool breakBeforeChild;
-
-  // This is set when the first child should be treated specially
-  // because it's an inside list item bullet.
-  // XXX this can go away once we have a way for the bullet's style
-  // molecule to *not* be the same as it's parent's
-  PRPackedBool firstChildIsInsideBullet;
-
-  // For pre-formatted text, this is our current column
-  PRIntn column;
-
-  // The next list ordinal value
-  PRInt32 nextListOrdinal;
-
-  //----------------------------------------------------------------------
-  // State from here on down is not to be used by block child frames!
-
-  // Space manager to use
-  nsISpaceManager* spaceManager;
-
-  // Block's style context
-  nsIStyleContext* styleContext;
-  nsStyleText* styleText;
-  nsStyleFont* styleFont;
-  nsStyleDisplay* styleDisplay;
-
-  // Block's available size (computed from the block's parent)
-  nsSize availSize;
-
-  // Current band of available space. Used for doing runaround
-  BlockBandData* currentBand;
-
-  // Pointer to a max-element-size (nsnull if none required)
-  nsSize* maxElementSize;
-
-  // The maximum x-most of our lines and block-level elements. This is used to
-  // compute our desired size, and includes our left border/padding. For block-
-  // level elements this also includes the block's right margin.
-  nscoord kidXMost;
-
-  // Current reflow position
-  nscoord y;
-
-  // Current line state
-  nscoord x;                            // inline elements only. not include border/padding
-  PRBool  isInline;                     // whether the current is inline or block
-  nsVoidArray lineLengths;              // line length temporary storage
-  PRIntn currentLineNumber;             // index into mLines
-  nsIFrame* lineStart;                  // frame starting the line
-  PRInt32 lineLength;                   // length of line
-  nscoord* ascents;                     // ascent information for each child
-  nscoord maxAscent;                    // max ascent for this line
-  nscoord maxDescent;                   // max descent for this line
-  nscoord lineWidth;                    // current width of line
-#if 0
-  nscoord maxPosTopMargin;              // maximum positive top margin
-  nscoord maxNegTopMargin;              // maximum negative top margin
-#else
-  nscoord topMargin;                    // current top margin
-#endif
-  nscoord maxPosBottomMargin;           // maximum positive bottom margin
-  nscoord maxNegBottomMargin;           // maximum negative bottom margin
-  nsSize lineMaxElementSize;            // max element size for current line
-  PRBool lastContentIsComplete;         // reflow status of last child on line
-  nsVoidArray floaterToDo;              // list of floaters to place below current line
-
-  PRInt32 maxAscents;                   // size of ascent buffer
-  nscoord ascentBuf[20];
-
-  PRPackedBool needRelativePos;         // some kid in line needs relative pos
-
-  // Previous line state that we carry forward to the next line
-  nsIFrame* prevLineLastFrame;
-  nscoord prevLineHeight;               // height of the previous line
-  nscoord prevMaxPosBottomMargin;       // maximum posative bottom margin
-  nscoord prevMaxNegBottomMargin;       // maximum negative bottom margin
-  PRBool prevLineLastContentIsComplete;
-
-  // Sanitized version of mol->borderPadding; if this block frame is a
-  // pseudo-frame then the margin will be zero'd.
-  nsMargin borderPadding;
-
-  PRPackedBool justifying;              // we are justifying
-
-  // Status from last PlaceAndReflowChild
-  nsIFrame::ReflowStatus reflowStatus;
-
-  // Flags for whether the max size is unconstrained
-  PRBool  unconstrainedWidth;
-  PRBool  unconstrainedHeight;
-
   nsBlockReflowState();
-
   ~nsBlockReflowState();
 
-  void Init(const nsSize& aMaxSize, nsSize* aMaxElementSize,
-            nsIStyleContext* aStyleContext, nsISpaceManager* aSpaceManager);
+  nsresult Initialize(nsIPresContext* aPresContext,
+                      nsISpaceManager* aSpaceManager,
+                      const nsSize& aMaxSize,
+                      nsSize* aMaxElementSize,
+                      nsBlockFrame* aBlock);
 
-  void AddAscent(nscoord aAscent);
-  void AdvanceToNextLine(nsIFrame* aPrevLineLastFrame, nscoord aPrevLineHeight);
+  nsIPresContext* mPresContext;
 
-#ifdef NS_DEBUG
-  void DumpLine();
-  void DumpList();
-#endif
+  nsBlockFrame* mBlock;
+  PRBool mBlockIsPseudo;
+
+  // Current line being reflowed
+  nsLineLayout* mCurrentLine;
+
+  // Previous line's last child frame
+  nsIFrame* mPrevKidFrame;
+
+  // Layout position information
+  nscoord mX;
+  nscoord mY;
+  nsSize mAvailSize;
+  PRPackedBool mUnconstrainedWidth;
+  PRPackedBool mUnconstrainedHeight;
+  nsSize* mMaxElementSizePointer;
+  nscoord mKidXMost;
+
+  // Bottom margin information from the previous line
+  nscoord mPrevMaxNegBottomMargin;
+  nscoord mPrevMaxPosBottomMargin;
+
+  // Block frame border+padding information
+  nsMargin mBorderPadding;
+
+  // Space manager and current band information
+  nsISpaceManager* mSpaceManager;
+  nsBlockBandData mCurrentBand;
+
+  // Array of floaters to place below current line
+  nsVoidArray mPendingFloaters;
+
+  PRInt32 mNextListOrdinal;
+  PRPackedBool mFirstChildIsInsideBullet;
 };
 
 //----------------------------------------------------------------------
+
+/* 94e8e410-de21-11d1-89bf-006008911b81 */
+#define NS_BLOCKFRAME_CID \
+ {0x94e8e410, 0xde21, 0x11d1, {0x89, 0xbf, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81}}
 
 /**
  * <h2>Block Reflow</h2>
  *
  * The block frame reflow machinery performs "2D" layout. Inline
  * elements are flowed into logical lines (left to right or right to
- * left) and the lines are stacked vertically. Block elements are
- * flowed onto their own line after flushing out any preceeding line.<p>
- *
- * After a line is ready to be flushed out, vertical alignment is
- * performed. Vertical alignment may require the line to consume more
- * vertical space than is available thus causing the entire line to
- * be pushed. <p>
- *
- * After vertical alignment is done, horizontal alignment (including
- * justification) is performed. Finally, relative positioning is done
- * on any elements that require it. <p>
+ * left) and the lines are stacked vertically. nsLineLayout is used
+ * for this part of the process. Block elements are flowed directly by
+ * the block reflow logic after flushing out any preceeding line.<p>
  *
  * During reflow, the block frame will make available to child frames
  * it's reflow state using the presentation shell's cached data
@@ -186,144 +129,155 @@ struct nsBlockReflowState {
  *
  * <h3>Assertions</h3>
  * <b>mLastContentIsComplete</b> always reflects the state of the last
- * child frame on our chlid list.
+ * child frame on our chlid list. 
  */
-class nsBlockFrame : public nsHTMLContainerFrame, public nsIHTMLFrameType,
-                     public nsIRunaround, public nsIFloaterContainer
+
+// XXX we don't use nsContainerFrame mOverFlowList!!! wasted memory
+
+class nsBlockFrame : public nsHTMLContainerFrame,
+                     public nsIRunaround,
+                     public nsIFloaterContainer
 {
 public:
   /**
    * Create a new block frame that maps the given piece of content.
    */
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
+  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
                            PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
+  // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsISpaceManager* aSpaceManager,
-                          const nsSize& aMaxSize,
-                          nsRect& aDesiredRect,
-                          nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
-                               nsISpaceManager* aSpaceManager,
-                               const nsSize& aMaxSize,
-                               nsRect& aDesiredRect,
-                               nsReflowCommand& aReflowCommand,
-                               ReflowStatus& aStatus);
-
-  NS_IMETHOD ContentAppended(nsIPresShell* aShell,
+  // nsIFrame
+  NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
-                             nsIContent* aContainer);
-
+                             nsIContent*     aContainer);
+  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInParent);
+  NS_IMETHOD ContentReplaced(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aOldChild,
+                             nsIContent*     aNewChild,
+                             PRInt32         aIndexInParent);
+  NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
+                            nsIPresContext* aPresContext,
+                            nsIContent*     aContainer,
+                            nsIContent*     aChild,
+                            PRInt32         aIndexInParent);
+  NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
+                              nsReflowMetrics& aMetrics);
   NS_IMETHOD IsSplittable(SplittableType& aIsSplittable) const;
-
   NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame* aParent,
-                                   nsIFrame*& aContinuingFrame);
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD VerifyTree() const;
 
-  virtual PRBool AddFloater(nsIPresContext* aCX,
-                            nsIFrame* aFloater,
+  // nsIRunaround
+  NS_IMETHOD ResizeReflow(nsIPresContext*         aPresContext,
+                          nsISpaceManager*        aSpaceManager,
+                          const nsSize&           aMaxSize,
+                          nsRect&                 aDesiredRect,
+                          nsSize*                 aMaxElementSize,
+                          nsIFrame::ReflowStatus& aStatus);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*         aPresContext,
+                               nsISpaceManager*        aSpaceManager,
+                               const nsSize&           aMaxSize,
+                               nsRect&                 aDesiredRect,
+                               nsReflowCommand&        aReflowCommand,
+                               nsIFrame::ReflowStatus& aStatus);
+
+  // nsIFloaterContainer
+  virtual PRBool AddFloater(nsIPresContext*   aPresContext,
+                            nsIFrame*         aFloater,
                             PlaceholderFrame* aPlaceholder);
-  virtual void PlaceFloater(nsIPresContext* aCX,
-                            nsIFrame* aFloater,
+  virtual void PlaceFloater(nsIPresContext*   aPresContext,
+                            nsIFrame*         aFloater,
                             PlaceholderFrame* aPlaceholder);
 
-  NS_IMETHOD ListTag(FILE* out = stdout) const;
+  // nsBlockFrame
+  nsresult ReflowInlineChild(nsIFrame*        aKidFrame,
+                             nsIPresContext*  aPresContext,
+                             nsReflowMetrics& aDesiredSize,
+                             const nsSize&    aMaxSize,
+                             nsSize*          aMaxElementSize,
+                             ReflowStatus&    aStatus);
 
-  virtual nsHTMLFrameType GetFrameType() const;
+  nsresult ReflowBlockChild(nsIFrame*        aKidFrame,
+                            nsIPresContext*  aPresContext,
+                            nsISpaceManager* aSpaceManager,
+                            const nsSize&    aMaxSize,
+                            nsRect&          aDesiredRect,
+                            nsSize*          aMaxElementSize,
+                            ReflowStatus&    aStatus);
+
+  nsLineData* GetFirstLine();
+
+  static nsBlockReflowState* FindBlockReflowState(nsIPresContext* aPresContext,
+                                                  nsIFrame* aFrame);
 
 protected:
   nsBlockFrame(nsIContent* aContent,
-               PRInt32 aIndexInParent,
-               nsIFrame* aParent);
+               PRInt32     aIndexInParent,
+               nsIFrame*   aParent);
 
   virtual ~nsBlockFrame();
 
   virtual PRIntn GetSkipSides() const;
 
-  PRBool MoreToReflow(nsIPresContext* aCX);
+  virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
 
-  nscoord GetTopMarginFor(nsIPresContext* aCX,
-                          nsBlockReflowState& aState,
-                          nsIFrame* aKidFrame,
-                          nsIStyleContext* aKidSC,
-                          PRBool aIsInline);
-
-  PRBool AdvanceToNextLine(nsIPresContext* aPresContext,
+  nsresult InitializeState(nsIPresContext*     aPresContext,
+                           nsISpaceManager*    aSpaceManager,
+                           const nsSize&       aMaxSize,
+                           nsSize*             aMaxElementSize,
                            nsBlockReflowState& aState);
 
-  void AddInlineChildToLine(nsIPresContext* aCX,
-                            nsBlockReflowState& aState,
-                            nsIFrame* aKidFrame,
-                            nsReflowMetrics& aKidSize,
-                            nsSize* aKidMaxElementSize,
-                            nsIStyleContext* aKidSC);
+  nsresult DoResizeReflow(nsBlockReflowState& aState,
+                          const nsSize&       aMaxSize,
+                          nsRect&             aDesiredRect,
+                          ReflowStatus&       aStatus);
 
-  void AddBlockChild(nsIPresContext* aCX,
-                     nsBlockReflowState& aState,
-                     nsIFrame* aKidFrame,
-                     nsRect& aKidRect,
-                     nsSize* aKidMaxElementSize,
-                     nsIStyleContext* aKidSC);
+  void DestroyLines();
 
-  void GetAvailSize(nsSize& aResult,
-                    nsBlockReflowState& aState,
-                    nsIStyleContext* aKidSC,
-                    PRBool aIsInline);
+  void DrainOverflowList();
 
-  PRIntn PlaceAndReflowChild(nsIPresContext* aCX,
-                             nsBlockReflowState& aState,
-                             nsIFrame* kidFrame,
-                             nsIStyleContext* aKidSC);
+  nsLineData* CreateLineForOverflowList(nsIFrame* aOverflowList);
 
-  void PushKids(nsBlockReflowState& aState);
+  nsresult VerifyLines(PRBool aFinalCheck) const;
 
-  void SetupState(nsIPresContext* aCX, nsBlockReflowState& aState,
-                  const nsSize& aMaxSize, nsSize* aMaxElementSize,
-                  nsISpaceManager* aSpaceManager);
-
-  nsresult DoResizeReflow(nsIPresContext* aPresContext,
-                          nsBlockReflowState& aState,
-                          nsRect& aDesiredRect,
-                          ReflowStatus& aStatus);
-
-  PRBool ReflowMappedChildren(nsIPresContext* aPresContext,
-                              nsBlockReflowState& aState);
-
-  PRBool PullUpChildren(nsIPresContext* aCX,
-                        nsBlockReflowState& aState);
-
-  ReflowStatus ReflowAppendedChildren(nsIPresContext* aPresContext,
-                                      nsBlockReflowState& aState);
-
-  void JustifyLines(nsIPresContext* aPresContext, nsBlockReflowState& aState);
+  nsresult PlaceLine(nsBlockReflowState& aState,
+                     nsLineLayout&       aLineLayout,
+                     nsLineData*         aLine);
 
   PRBool IsLeftMostChild(nsIFrame* aFrame);
 
-  void  GetAvailableSpaceBand(nsBlockReflowState& aState, nscoord aY);
-
-  void PlaceBelowCurrentLineFloaters(nsIPresContext* aCX,
-                                     nsBlockReflowState& aState,
+  void PlaceFloater(nsIPresContext*     aPresContext,
+                    nsIFrame*           aFloater,
+                    PlaceholderFrame*   aPlaceholder,
+                    nsBlockReflowState& aState);
+  void PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
                                      nscoord aY);
 
-  void ClearFloaters(nsBlockReflowState& aState, PRUint32 aClear);
+  nsresult GetAvailableSpace(nsBlockReflowState& aState, nscoord aY);
 
-#ifdef NS_DEBUG
-  void DumpFlow() const;
-#endif
+  PRBool MoreToReflow(nsBlockReflowState& aState);
 
-  /**
-   * Array of lines lengths. For each logical line of children, this array
-   * contains a count of the number of children on the line.
-   */
-  PRInt32* mLines;
-  PRInt32 mNumLines;
-  nsBlockReflowState* mCurrentState;
+  nsresult PushLines(nsBlockReflowState& aState,
+                     nsLineData*         aLine);
+
+  nsresult ReflowMapped(nsBlockReflowState& aState);
+
+  nsresult ReflowUnmapped(nsBlockReflowState& aState);
+
+  nsLineData* mLines;
 };
 
 #endif /* nsBlockFrame_h___ */

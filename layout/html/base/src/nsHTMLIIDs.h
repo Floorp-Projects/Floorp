@@ -21,6 +21,6 @@
 #include "nsISupports.h"
 
 extern const nsIID kIHTMLContentIID;
-extern const nsIID kIHTMLFrameTypeIID;
+extern const nsIID kBlockFrameCID;
 
 #endif /* nsHTMLIIDs_h___ */

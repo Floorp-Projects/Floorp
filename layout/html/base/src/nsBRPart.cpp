@@ -28,8 +28,10 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIStyleContext.h"
 #include "nsIFontMetrics.h"
+#include "nsIRenderingContext.h"
 
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
+static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
 class BRFrame : public nsFrame
 {
@@ -37,6 +39,10 @@ public:
   BRFrame(nsIContent* aContent,
           PRInt32 aIndexInParent,
           nsIFrame* aParentFrame);
+
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
   NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
@@ -60,13 +66,34 @@ BRFrame::~BRFrame()
 {
 }
 
+NS_METHOD BRFrame::Paint(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect)
+{
+  if (nsIFrame::GetShowFrameBorders()) {
+    nsStyleColor* color = (nsStyleColor*)
+      mStyleContext->GetData(kStyleColorSID);
+    float p2t = aPresContext.GetPixelsToTwips();
+    aRenderingContext.SetColor(color->mColor);
+    aRenderingContext.FillRect(0, 0, nscoord(5 * p2t), mRect.height);
+  }
+  return NS_OK;
+}
+
 NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetrics& aMetrics)
 {
   // We have no width, but we're the height of the default font
   nsStyleFont* font =
     (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
   nsIFontMetrics* fm = aPresContext->GetMetricsFor(font->mFont);
+
   aMetrics.width = 0;
+  if (nsIFrame::GetShowFrameBorders()) {
+    // Reserve a tiny bit of space so that our frame won't be zero
+    // sized so we get a chance to paint.
+    aMetrics.width = 1;
+  }
+
   aMetrics.height = fm->GetHeight();
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
@@ -81,27 +108,15 @@ NS_METHOD BRFrame::ResizeReflow(nsIPresContext* aPresContext,
                                 ReflowStatus& aStatus)
 {
   // Get cached state for containing block frame
-  nsBlockReflowState* state = nsnull;
-  nsIFrame* parent = mGeometricParent;
-  while (nsnull != parent) {
-    nsIHTMLFrameType* ft;
-    nsresult status = parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
-    if (NS_OK == status) {
-      nsHTMLFrameType type = ft->GetFrameType();
-      if (eHTMLFrame_Block == type) {
-        break;
-      }
-    }
-    parent->GetGeometricParent(parent);
-  }
-  if (nsnull != parent) {
-    nsIPresShell* shell = aPresContext->GetShell();
-    state = (nsBlockReflowState*) shell->GetCachedData(parent);
-    NS_RELEASE(shell);
-  }
+  nsLineLayout* lineLayoutState = nsnull;
+  nsBlockReflowState* state =
+    nsBlockFrame::FindBlockReflowState(aPresContext, this);
   if (nsnull != state) {
-    // XXX <BR clear=...>
-    state->breakAfterChild = PR_TRUE;
+    lineLayoutState = state->mCurrentLine;
+    if (nsnull != lineLayoutState) {
+      lineLayoutState->mReflowResult =
+        NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+    }
   }
 
   GetReflowMetrics(aPresContext, aDesiredSize);

@@ -28,20 +28,13 @@ public:
                            PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
+  // nsIFrame
   NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
                           nsISpaceManager* aSpaceManager,
                           const nsSize& aMaxSize,
                           nsRect& aDesiredRect,
                           nsSize* aMaxElementSize,
                           ReflowStatus& aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext* aCX,
-                               nsISpaceManager* aSpaceManager,
-                               const nsSize& aMaxSize,
-                               nsRect& aDesiredRect,
-                               nsReflowCommand& aReflowCommand,
-                               ReflowStatus& aStatus);
-
   NS_IMETHOD CreateContinuingFrame(nsIPresContext* aCX,
                                    nsIFrame* aParent,
                                    nsIFrame*& aContinuingFrame);
@@ -61,6 +54,8 @@ protected:
   virtual ~nsListItemFrame();
 
   nsIFrame* CreateBullet(nsIPresContext* aCX);
+
+  void InsertBullet(nsIFrame* aBullet);
 
   virtual void PaintChildren(nsIPresContext& aCX,
                              nsIRenderingContext& aRenderingContext,

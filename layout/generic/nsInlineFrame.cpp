@@ -592,42 +592,6 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
         // FALLTHROUGH
 
       case NS_STYLE_DISPLAY_INLINE:
-        // XXX temporary hack to make plain BR's in inlines "work"
-        // get style for break-before-after; get break-type (line, page, etc.)
-        {
-          nsIAtom* tag = kid->GetTag();
-          if (nsHTMLAtoms::br == tag) {
-            // Set break-after flag so we stop mapping children (we
-            // will end up being continued if there are more children)
-            breakAfter = PR_TRUE;
-
-            // Get cached state for containing block frame
-            // XXX how about QueryInterface(kIHTMLBlockFrameIID)? DOH!
-            nsBlockReflowState* state = nsnull;
-            nsIFrame* parent = mGeometricParent;
-            while (nsnull != parent) {
-              nsIHTMLFrameType* ft;
-              nsresult status =
-                parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
-              if (NS_OK == status) {
-                nsHTMLFrameType type = ft->GetFrameType();
-                if (eHTMLFrame_Block == type) {
-                  break;
-                }
-              }
-              parent->GetGeometricParent(parent);
-            }
-            if (nsnull != parent) {
-              nsIPresShell* shell = aPresContext->GetShell();
-              state = (nsBlockReflowState*) shell->GetCachedData(parent);
-              // XXX Of course this won't work if the inline span is nested
-              // in another inline span!
-              state->breakAfterChild = PR_TRUE;
-              NS_RELEASE(shell);
-            }
-          }
-          NS_IF_RELEASE(tag);
-        }
         kidDel = kid->GetDelegate(aPresContext);
         kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
         NS_RELEASE(kidDel);

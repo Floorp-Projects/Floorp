@@ -91,9 +91,9 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
 {
   // Get cached state for containing block frame
   nsBlockReflowState* state = nsnull;
+#if XXX
   nsIFrame* parent = mGeometricParent;
   while (nsnull != parent) {
-    nsIHTMLFrameType* ft;
     nsresult status = parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
     if (NS_OK == status) {
       nsHTMLFrameType type = ft->GetFrameType();
@@ -108,6 +108,7 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
     state = (nsBlockReflowState*) shell->GetCachedData(parent);
     NS_RELEASE(shell);
   }
+#endif
 
   // By default, we have no area
   aDesiredSize.width = 0;
@@ -170,8 +171,10 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   case TYPE_LINE:
     if (0 != width) {
+#if XXX
       state->breakBeforeChild = PR_TRUE;
       state->breakAfterChild = PR_TRUE;
+#endif
       aDesiredSize.height = nscoord(width * p2t);
       aDesiredSize.ascent = aDesiredSize.height;
     }

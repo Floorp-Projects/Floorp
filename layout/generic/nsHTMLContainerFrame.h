@@ -42,14 +42,6 @@ public:
                           nsIFrame** aFrame,
                           PRInt32& aCursor);
 
-#if 0
-  virtual ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsISpaceManager* aSpaceManager,
-                                         nsReflowCommand& aReflowCommand);
-#endif
-
 protected:
   virtual ~nsHTMLContainerFrame();
 
@@ -59,32 +51,6 @@ protected:
                    const nsString& aBase,
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec);
-
-#if 0
-  virtual ReflowStatus ReflowAppended(nsIPresContext*  aPresContext,
-                                      nsReflowMetrics& aDesiredSize,
-                                      const nsSize&    aMaxSize,
-                                      nsISpaceManager* aSpaceManager,
-                                      nsReflowCommand& aReflowCommand);
-
-  virtual ReflowStatus ReflowInserted(nsIPresContext*  aPresContext,
-                                      nsReflowMetrics& aDesiredSize,
-                                      const nsSize&    aMaxSize,
-                                      nsISpaceManager* aSpaceManager,
-                                      nsReflowCommand& aReflowCommand);
-
-  virtual ReflowStatus ReflowDeleted(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsISpaceManager* aSpaceManager,
-                                     nsReflowCommand& aReflowCommand);
-
-  virtual ReflowStatus ReflowChanged(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsISpaceManager* aSpaceManager,
-                                     nsReflowCommand& aReflowCommand);
-#endif
 };
 
 #endif /* nsHTMLContainerFrame_h___ */
