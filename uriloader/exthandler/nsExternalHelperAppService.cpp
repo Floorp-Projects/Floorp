@@ -483,7 +483,9 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
   
     // Build uri for the mimetype resource.
     nsCString contentTypeNodeName (NC_CONTENT_NODE_PREFIX);
-    contentTypeNodeName.Append(aContentType);
+    nsCAutoString contentType(aContentType);
+    ToLowerCase(contentType);
+    contentTypeNodeName.Append(contentType);
 
     // Get the mime type resource.
     nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
@@ -493,7 +495,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
     // we need a way to determine if this content type resource is really in the graph or not...
     // ...Test that there's a #value arc from the mimetype resource to the mimetype literal string.
     nsCOMPtr<nsIRDFLiteral> mimeLiteral;
-    nsAutoString mimeType; mimeType.AssignWithConversion(aContentType);
+    NS_ConvertUTF8toUCS2 mimeType(contentType);
     rv = rdf->GetLiteral( mimeType.get(), getter_AddRefs( mimeLiteral ) );
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -505,9 +507,9 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
        // create a mime info object and we'll fill it in based on the values from the data source
        nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID, &rv));
        NS_ENSURE_SUCCESS(rv, rv);
-       rv = FillTopLevelProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
+       rv = FillTopLevelProperties(contentType.get(), contentTypeNodeResource, rdf, mimeInfo);
        NS_ENSURE_SUCCESS(rv, rv);
-       rv = FillContentHandlerProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
+       rv = FillContentHandlerProperties(contentType.get(), contentTypeNodeResource, rdf, mimeInfo);
 
        *aMIMEInfo = mimeInfo;
        NS_IF_ADDREF(*aMIMEInfo);
@@ -536,7 +538,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ConvertUTF8toUCS2 extension(aFileExtension);
-    ToUpperCase(extension);
+    ToLowerCase(extension);
     nsCOMPtr<nsIRDFLiteral> extensionLiteral;
     rv = rdf->GetLiteral(extension.get(), getter_AddRefs( extensionLiteral));
     NS_ENSURE_SUCCESS(rv, rv);

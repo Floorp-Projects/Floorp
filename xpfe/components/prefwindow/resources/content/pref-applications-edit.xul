@@ -73,7 +73,7 @@
         var info = window.arguments[0].mLauncher.MIMEInfo;
 
         // Get mime type from which we can construct a HandlerInfo...
-        var mimeType = info.MIMEType;
+        var mimeType = info.MIMEType.toLowerCase();
 
         // Construct what we need from mime type URI.
         getDS();
@@ -193,6 +193,7 @@
         return false;
       }
       getDS();
+      gMIMEField.value = gMIMEField.value.toLowerCase();
       // figure out if this mime type already exists. 
       if (gMIMEField.value != gOldMIME) {
         var exists = mimeHandlerExists(gMIMEField.value);
@@ -222,7 +223,7 @@
       // set description, editable, and extensions
       handlerInfo.description = gOldDesc
       handlerInfo.isEditable = true;
-      var extensions = gOldExtensions.split(" ");
+      var extensions = gOldExtensions.toLowerCase().split(" ");
       for (var i = 0; i < extensions.length; i++) {
         var currExtension = extensions[i];
         handlerInfo.addExtension(currExtension);

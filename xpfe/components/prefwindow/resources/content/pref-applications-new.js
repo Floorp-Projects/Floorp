@@ -101,6 +101,8 @@ function onOK()
   
   gDS = gRDF.GetDataSource(ioService.getURLSpecFromFile(file));
 
+  gMIMEField.value = gMIMEField.value.toLowerCase();
+	
   // figure out if this mime type already exists. 
   var exists = mimeHandlerExists(gMIMEField.value);
   if (exists) {
@@ -123,7 +125,7 @@ function onOK()
   handlerInfo.mimeType = gMIMEField.value;
   handlerInfo.description = gDescriptionField.value;
   
-  var extensionString = gExtensionField.value.replace(/[*.;]/g, "");
+  var extensionString = gExtensionField.value.replace(/[*.;]/g, "").toLowerCase();
   var extensions = extensionString.split(" ");
   for (var i = 0; i < extensions.length; i++) {
     var currExtension = extensions[i];
