@@ -448,15 +448,15 @@ nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName,
                                             const nsString& aNameSpace, 
                                             nsIDOMElement** aReturn)
 {
-  PRInt32 nsID = kNameSpaceID_None;
+  PRInt32 namespaceID = kNameSpaceID_None;
   nsresult rv = NS_OK;
 
   if ((0 < aNameSpace.Length() && (nsnull != mNameSpaceManager))) {
-    mNameSpaceManager->GetNameSpaceID(aNameSpace, nsID);
+    mNameSpaceManager->GetNameSpaceID(aNameSpace, namespaceID);
   }
 
   nsIContent* content;
-  if (nsID == kNameSpaceID_HTML) {
+  if (namespaceID == kNameSpaceID_HTML) {
     nsIHTMLContent* htmlContent;
     
     rv = NS_CreateHTMLElement(&htmlContent, aTagName);
@@ -470,7 +470,7 @@ nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName,
     rv = NS_NewXMLElement(&xmlContent, tag);
     NS_RELEASE(tag);
     if (NS_OK == rv) {
-      xmlContent->SetNameSpaceID(nsID);
+      xmlContent->SetNameSpaceID(namespaceID);
     }
     content = (nsIXMLContent*)xmlContent;
   }

@@ -1469,8 +1469,8 @@ void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
   }
   indent[aIndent] = 0;
 
-  printf("%s**START BASIC STRATEGY DUMP** table=%X cols=%X numCols=%d",
-    indent, mTableFrame, mCols, mNumCols);
+  printf("%s**START BASIC STRATEGY DUMP** table=%p cols=%X numCols=%d",
+         indent, mTableFrame, mCols, mNumCols);
   printf("\n%s minConWidth=%d maxConWidth=%d cellSpacing=%d propRatio=%.2f navQuirks=%d",
     indent, mMinTableContentWidth, mMaxTableContentWidth, mCellSpacingTotal, mMinToDesProportionRatio, mIsNavQuirksMode);
   printf(" **END BASIC STRATEGY DUMP** \n");

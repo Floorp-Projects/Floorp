@@ -75,7 +75,6 @@
 static char kNameSpaceSeparator = ':';
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "xml-stylesheet";
-static char kCSSType[] = "text/css";
 
 #ifdef XSL
 static char kXSLType[] = "text/xsl";
@@ -457,14 +456,14 @@ GetAttributeValueAt(const nsIParserNode& aNode,
         PRBool ok = PR_FALSE;
         PRInt32 slen = aResult.Length();
         while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aResult.CharAt(index);
-          if (e == ';') {
+          PRUnichar ch = aResult.CharAt(index);
+          if (ch == ';') {
             index++;
             ok = PR_TRUE;
             break;
           }
-          if ((e >= '0') && (e <= '9')) {
-            *cp++ = char(e);
+          if ((ch >= '0') && (ch <= '9')) {
+            *cp++ = char(ch);
             index++;
             continue;
           }
@@ -498,16 +497,16 @@ GetAttributeValueAt(const nsIParserNode& aNode,
         PRBool ok = PR_FALSE;
         PRInt32 slen = aResult.Length();
         while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aResult.CharAt(index);
-          if (e == ';') {
+          PRUnichar ch = aResult.CharAt(index);
+          if (ch == ';') {
             index++;
             ok = PR_TRUE;
             break;
           }
-          if (((e >= '0') && (e <= '9')) ||
-              ((e >= 'A') && (e <= 'Z')) ||
-              ((e >= 'a') && (e <= 'z'))) {
-            *cp++ = char(e);
+          if (((ch >= '0') && (ch <= '9')) ||
+              ((ch >= 'A') && (ch <= 'Z')) ||
+              ((ch >= 'a') && (ch <= 'z'))) {
+            *cp++ = char(ch);
             index++;
             continue;
           }
@@ -1607,7 +1606,7 @@ nsXMLContentSink::StartLayout()
 
     // Get initial scroll preference and save it away; disable the
     // scroll bars.
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
       nsIPresShell* shell = mDocument->GetShellAt(i);
       if (nsnull != shell) {
@@ -1679,8 +1678,8 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
         nsAutoString val;
         PRBool isUndefined;
 
-        nsresult result = context->EvaluateString(aScript, url, aLineNo, 
-                                                  val, &isUndefined);
+        (void) context->EvaluateString(aScript, url, aLineNo, 
+                                       val, &isUndefined);
       
         NS_IF_RELEASE(docURL);
       

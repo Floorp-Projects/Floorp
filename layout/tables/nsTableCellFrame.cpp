@@ -658,8 +658,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     kidSize.width = kidReflowState.availableWidth;
   }
   if (0 == kidSize.height) {
-    const nsStylePosition* pos;
-    GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
     if ((pos->mHeight.GetUnit() != eStyleUnit_Coord) &&
         (pos->mHeight.GetUnit() != eStyleUnit_Percent)) {
       // Standard mode should probably be 0 pixels high instead of 1
