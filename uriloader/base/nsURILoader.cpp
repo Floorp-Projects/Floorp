@@ -482,16 +482,6 @@ NS_INTERFACE_MAP_BEGIN(nsURILoader)
    NS_INTERFACE_MAP_ENTRY(nsIURILoader)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP nsURILoader::GetStringForCommand(nsURILoadCommand aCommand, char **aStringVersion) 
-{
-  if (aCommand == nsIURILoader::viewSource)
-    *aStringVersion = nsCRT::strdup("view-source");
-  else // for now, default everything else to view normal
-    *aStringVersion = nsCRT::strdup("view");
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsURILoader::RegisterContentListener(nsIURIContentListener * aContentListener)
 {
   nsresult rv = NS_OK;
