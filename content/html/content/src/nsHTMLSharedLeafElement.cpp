@@ -231,10 +231,6 @@ nsHTMLSharedLeafElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP_(PRBool)
 nsHTMLSharedLeafElement::IsContentOfType(PRUint32 aFlags)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::wbr)) {
-    return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
-  }
-
   return nsGenericHTMLLeafElement::IsContentOfType(aFlags);
 }
 
