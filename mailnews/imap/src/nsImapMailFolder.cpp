@@ -1842,11 +1842,19 @@ nsImapMailFolder::SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelVal
 {
   NS_ENSURE_ARG(aMessages);
 
-  nsCAutoString messageIds;
-  nsMsgKeyArray keysToLabel;
-  nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keysToLabel);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return StoreImapFlags((aLabel << 9), PR_TRUE, keysToLabel.GetArray(), keysToLabel.GetSize());
+  nsresult rv = nsMsgDBFolder::SetLabelForMessages(aMessages, aLabel);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCAutoString messageIds;
+    nsMsgKeyArray keysToLabel;
+    nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keysToLabel);
+    NS_ENSURE_SUCCESS(rv, rv);
+    StoreImapFlags((aLabel << 9), PR_TRUE, keysToLabel.GetArray(), keysToLabel.GetSize());
+    rv = GetDatabase(nsnull);
+    if (NS_SUCCEEDED(rv))
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3552,6 +3560,9 @@ NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
   nsresult rv = NS_ERROR_NULL_POINTER;  // if no window...
   if (window) 
   {
+#ifdef DEBUG_bienvenu
+    m_adminUrl.Assign("http://www.netscape.com");
+#endif
     if (!m_adminUrl.IsEmpty())
     {
       nsCOMPtr <nsIDocShell> docShell;
@@ -5049,6 +5060,7 @@ nsImapMailFolder::GetMessageId(nsIImapUrl * aUrl,
   }  
   return rv;
 }
+
 
 NS_IMETHODIMP
 nsImapMailFolder::AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -6567,6 +6579,10 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
       rv = messages->Count(&count);
       if (NS_FAILED(rv)) return rv;
 
+      // make sure database is open to set special flags below
+      if (!mDatabase)
+        GetDatabase(nsnull);
+
       // check if any msg hdr has special flags or properties set
       // that we need to set on the dest hdr
       for (i = 0; i < count; i++)
@@ -6576,6 +6592,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
         {
           nsMsgLabelValue label;
           nsXPIDLCString junkScore, junkScoreOrigin;
+          nsMsgPriorityValue priority;
           msgDBHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
           msgDBHdr->GetStringProperty("junkscoreorigin", getter_Copies(junkScoreOrigin));
           if (!junkScore.IsEmpty()) // ignore already scored messages.
@@ -6588,6 +6605,13 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
             nsCAutoString labelStr;
             labelStr.AppendInt(label);
             mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "label", labelStr.get(), 0);
+          }
+	  msgDBHdr->GetPriority(&priority);
+	  if(priority != 0)
+          {
+            nsCAutoString priorityStr;
+            priorityStr.AppendInt(priority);
+            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "priority", priorityStr.get(), 0);
           }
         }
       }
