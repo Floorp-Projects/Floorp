@@ -20,41 +20,27 @@
 
 blockquote[type=cite] {
   padding: 0em .5em .5em 1em !important;
-  border-right: medium double #0000ff !important;
-  border-left: medium double #0000ff !important;
+  border-right: 2px  solid blue !important;
+  border-left: 2px solid blue !important;
 }
 
-blockquote[type=cite] blockquote {
-  border-right: medium double teal !important;
-  border-left: medium double teal !important;
+blockquote[type=cite] blockquote[type=cite] {
+  border-right: 2px solid maroon !important;
+  border-left: 2px solid maroon !important;
 }
 
-blockquote[type=cite] blockquote blockquote {
-  border-right: medium double maroon !important;
-  border-left: medium double maroon !important;
+blockquote[type=cite] blockquote[type=cite] blockquote[type=cite] {
+  border-right: 2px solid teal !important;
+  border-left: 2px solid teal !important;
 }
 
-blockquote[type=cite] blockquote blockquote blockquote {
-  border-right: medium double purple !important;
-  border-left: medium double purple !important;
+blockquote[type=cite] blockquote[type=cite] blockquote[type=cite] blockquote[type=cite] {
+  border-right: 2px solid purple !important;
+  border-left: 2px solid purple !important;
 }
 
-blockquote[type=cite] blockquote blockquote blockquote blockquote {
-  border-right: medium double #00CC00 !important;
-  border-left: medium double #00CC00 !important;
+blockquote[type=cite] blockquote[type=cite] blockquote[type=cite] blockquote[type=cite] blockquote[type=cite] {
+  border-right: 2px solid green !important;
+  border-left: 2px solid green !important;
 }
 
-blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote {
-  border-right: medium double #ee00bb !important;
-  border-left: medium double #ee00bb !important;
-}
-
-blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blockquote {
-  border-right: medium double navy !important;
-  border-left: medium double navy !important;
-}
-
-blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blockquote blockquote {
-  border-right: medium double #00eecc !important;
-  border-left: medium double #00eecc !important;
-} 
