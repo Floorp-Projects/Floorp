@@ -997,15 +997,17 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
             data->mData.Assign(aData);
           }
           else {  // don't store empty string
-            (*lastPtr)->mNext = data->mNext;
+            *lastPtr = data->mNext;
             data->mNext = nsnull;
             delete data;
           }
           found = PR_TRUE;
+          break;
         }
         lastPtr = &(data->mNext);
-        data = data->mNext;
-      } while (data && !found);
+        data = *lastPtr;
+      } while (data);
+
       if (!aData.IsEmpty() && !found) {
         // didn't find, append
         *lastPtr = new nsDocHeaderData(aHeaderField, aData);
