@@ -235,16 +235,86 @@
 
     case eIs:
         {
-            a = pop();  // catch variable type
-            b = pop();  // exception object
-            JS2Class *c = meta->objectType(b);
-            if (!JS2VAL_IS_OBJECT(a))
+            b = pop();
+            a = pop();      // doing a is b
+
+            if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::badValueError, "Type expected", errorPos());
-            JS2Object *obj = JS2VAL_TO_OBJECT(a);
+            JS2Object *obj = JS2VAL_TO_OBJECT(b);
             if (obj->kind != ClassKind)
                  meta->reportError(Exception::badValueError, "Type expected", errorPos());
             JS2Class *isClass = checked_cast<JS2Class *>(obj);
-            push(c == isClass);
+            push(BOOLEAN_TO_JS2VAL(meta->objectType(a) == isClass));
+        }
+        break;
+
+    case eInstanceof:   // XXX prototype version
+        {
+            b = pop();
+            a = pop();      // doing a instanceof b
+
+            if (!JS2VAL_IS_OBJECT(b))
+                meta->reportError(Exception::typeError, "Object expected for instanceof", errorPos());
+            JS2Object *obj = JS2VAL_TO_OBJECT(b);
+            if ((obj->kind == PrototypeInstanceKind)
+                    && (checked_cast<PrototypeInstance *>(obj)->type == meta->functionClass)) {
+                // XXX this is [[hasInstance]] from ECMA3
+                if (!JS2VAL_IS_OBJECT(a))
+                    push(JS2VAL_FALSE);
+                else {
+                    if (JS2VAL_TO_OBJECT(a)->kind != PrototypeInstanceKind)
+                        meta->reportError(Exception::typeError, "PrototypeInstance expected for instanceof", errorPos());
+                    JS2Object *a_protoObj = checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(a))->parent;
+
+                    js2val b_protoVal;
+                    JS2Object *b_protoObj = NULL;
+                    Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
+                    LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
+                                                            // fail if 'prototype' hasn't been defined
+                                                            // XXX (prototype should always exist for functions)
+                    if (meta->readProperty(&a, &mn, &lookup, RunPhase, &b_protoVal)) {
+                        if (!JS2VAL_IS_OBJECT(b_protoVal))
+                            meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
+                        b_protoObj = JS2VAL_TO_OBJECT(b_protoVal);
+                    }
+                    bool result = false;
+                    while (a_protoObj) {
+                        if (b_protoObj == a_protoObj) {
+                            result = true;
+                            break;
+                        }
+                        a_protoObj = checked_cast<PrototypeInstance *>(a_protoObj)->parent;
+                    }
+                    push(BOOLEAN_TO_JS2VAL(result));
+                }
+            }
+            else {  // XXX also support a instanceof <<class>> since some of these are
+                    // the ECMA3 builtins.
+                if (obj->kind == ClassKind) {
+                    if (!JS2VAL_IS_OBJECT(a))
+                        push(JS2VAL_FALSE);
+                    else {
+                        if (JS2VAL_TO_OBJECT(a)->kind != PrototypeInstanceKind)
+                            meta->reportError(Exception::typeError, "PrototypeInstance expected for instanceof", errorPos());
+                        JS2Object *a_protoObj = checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(a))->parent;
+
+                        JS2Object *b_protoObj = checked_cast<JS2Class *>(obj)->prototype;
+
+                        bool result = false;
+                        while (a_protoObj) {
+                            if (b_protoObj == a_protoObj) {
+                                result = true;
+                                break;
+                            }
+                            a_protoObj = checked_cast<PrototypeInstance *>(a_protoObj)->parent;
+                        }
+                        push(BOOLEAN_TO_JS2VAL(result));
+                    }
+                }
+                else
+                    meta->reportError(Exception::typeError, "Function or Class expected in instanceOf", errorPos());
+            }
+
         }
         break;
 

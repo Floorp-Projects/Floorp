@@ -488,6 +488,7 @@ namespace MetaData {
         { eNew,  "New", U16 },               // <argCount:u16>
         { eCall,  "Call", U16 },              // <argCount:u16>
         { eTypeof,  "Typeof", 0 },
+        { eInstanceof,  "Instanceof", 0 },
         { eIs,  "Is", 0 },
 
         { ePopv,  "Popv", 0 },
@@ -633,6 +634,7 @@ namespace MetaData {
             return 0;
 
         case eIs:           // pop expr, pop type, push boolean
+        case eInstanceof:
             return 1;
 
         case eCoerce:       // pop value, push coerced value (type is arg)

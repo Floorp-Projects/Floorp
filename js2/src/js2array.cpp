@@ -76,7 +76,7 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length)
 
 js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
-    js2val thatValue = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+    js2val thatValue = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thatValue));
     if (argc > 0) {
         if (argc == 1) {
@@ -107,7 +107,9 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
 
 static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (meta->objectType(thisValue) != meta->arrayClass)
+    if (!JS2VAL_IS_OBJECT(thisValue) 
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
+            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
         meta->reportError(Exception::typeError, "Array.prototype.toString called on a non Array", meta->engine->errorPos());
 
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thisValue));
@@ -137,7 +139,9 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
 
 static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (meta->objectType(thisValue) != meta->arrayClass)
+    if (!JS2VAL_IS_OBJECT(thisValue) 
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
+            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
         meta->reportError(Exception::typeError, "Array.prototype.toString called on a non Array", meta->engine->errorPos());
 
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thisValue));
@@ -204,7 +208,7 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
 {
     js2val E = thisValue;
 
-    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
     uint32 n = 0;
     uint32 i = 0;
@@ -354,7 +358,7 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     ASSERT(JS2VAL_IS_OBJECT(thisValue));
     JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
 
-    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
 
     uint32 length = getLength(meta, thisObj);
@@ -580,7 +584,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
         uint32 length = getLength(meta, thisObj);
 
-        js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+        js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
         ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
 
         int32 arg0 = meta->toInteger(argv[0]);
@@ -803,6 +807,15 @@ void initArrayObject(JS2Metadata *meta)
     publicNamespaceList.push_back(meta->publicNamespace);
 
     meta->arrayClass->construct = Array_Constructor;
+    meta->arrayClass->prototype = new ArrayInstance(meta->objectClass->prototype, meta->arrayClass);
+
+    // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
+    meta->env->addFrame(meta->arrayClass);
+        Variable *v = new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(meta->arrayClass->prototype), true);
+        meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
+        meta->defineLocalMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+    meta->env->removeTopFrame();
 
     PrototypeFunction *pf = &arrayProtos[0];
     while (pf->name) {

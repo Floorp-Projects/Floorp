@@ -128,6 +128,7 @@ enum JS2Op {
     eNew,               // <argCount:u16>
     eCall,              // <argCount:u16>
     eTypeof,
+    eInstanceof,
     eIs,
 
     ePopv,

@@ -579,7 +579,7 @@ public:
 
     JS2Object   *parent;        // If this instance was created by calling new on a prototype function,
                                 // the value of the function’s prototype property at the time of the call;
-                                // none otherwise.
+                                // none otherwise. (aka [[prototype]], aka __prototype__)
     JS2Class    *type;          // XXX used to determine [[class]] value 
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
@@ -639,12 +639,12 @@ public:
     virtual ~FunctionInstance()          { }
 };
 
-// Array instances are simple instances created by the Array class, they 
+// Array instances are PrototypeInstances created by the Array class, they 
 // maintain the value of the 'length' property when 'indexable' elements
 // are added.
-class ArrayInstance : public SimpleInstance {
+class ArrayInstance : public PrototypeInstance {
 public:
-    ArrayInstance(JS2Class *type) : SimpleInstance(type) { }
+    ArrayInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
     virtual ~ArrayInstance()             { }
@@ -925,6 +925,7 @@ typedef FrameList::iterator FrameListIterator;
 class Environment : public JS2Object {
 public:
     Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
+    virtual ~Environment()                  { }
 
     JS2Class *getEnclosingClass();
     FrameListIterator getRegionalFrame();

@@ -1593,6 +1593,8 @@ namespace MetaData {
         case ExprNode::logicalAndEquals:
         case ExprNode::logicalXorEquals:
         case ExprNode::logicalOrEquals:
+        case ExprNode::comma:
+        case ExprNode::Instanceof:
 
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
@@ -1656,19 +1658,12 @@ namespace MetaData {
                 }
             }
             break;
-        case ExprNode::comma:
+        case ExprNode::functionLiteral:
             {
-                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                ValidateExpression(cxt, env, b->op1);
-                ValidateExpression(cxt, env, b->op2);
+                FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
+                f->obj = validateStaticFunction(&f->function, JS2VAL_INACCESSIBLE, true, true, cxt, env);
             }
             break;
-        case ExprNode::functionLiteral:
-			{
-				FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
-				f->obj = validateStaticFunction(&f->function, JS2VAL_INACCESSIBLE, true, true, cxt, env);
-			}
-			break;
         default:
             NOT_REACHED("Not Yet Implemented");
         } // switch (p->getKind())
@@ -2273,9 +2268,19 @@ doUnary:
                 SetupExprNode(env, phase, b->op2, exprType);
             }
             break;
+        case ExprNode::Instanceof:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                Reference *rVal = SetupExprNode(env, phase, b->op1, exprType);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                rVal = SetupExprNode(env, phase, b->op2, exprType);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eInstanceof, p->pos);
+            }
+            break;
         case ExprNode::functionLiteral:
-			{
-				FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
+            {
+                FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
                 CompilationData *oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
                 env->addFrame(f->function.fWrap->compileFrame);
                 SetupStmt(env, phase, f->function.body);
@@ -2283,8 +2288,8 @@ doUnary:
                 bCon->emitOp(eReturnVoid, p->pos);
                 env->removeTopFrame();
                 restoreCompilationUnit(oldData);
-			}
-			break;
+            }
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }
@@ -3293,9 +3298,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         //
         //  ToString(ToUint32(name)) == name
         //
-        ASSERT(dynamicProperties);
         const DynamicPropertyMap::value_type e(*name, newValue);
-        dynamicProperties->insert(e);
+        dynamicProperties.insert(e);
 
         const char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
@@ -4628,7 +4632,7 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+        js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
         ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argumentsVal));
 	uint32 i;
         for (i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {

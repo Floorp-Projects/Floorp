@@ -57,35 +57,35 @@ namespace MetaData {
 
     js2val Function_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
-		if (argc) {
-			const String &srcLoc = widenCString("Function constructor source");
-			const String *bodyStr = meta->toString(argv[argc - 1]);
-			String functionExpr(widenCString("("));
-			if (argc > 1) {
-				for (uint32 i = 0; i < (argc - 1); i++) {
-					functionExpr += *meta->toString(argv[i]);
-					if (i < (argc - 2))
-						functionExpr += ",";
-				}					
-			}
-			functionExpr += widenCString("){") + *bodyStr + widenCString("}");
+        if (argc) {
+            const String &srcLoc = widenCString("Function constructor source");
+            const String *bodyStr = meta->toString(argv[argc - 1]);
+            String functionExpr(widenCString("("));
+            if (argc > 1) {
+                for (uint32 i = 0; i < (argc - 1); i++) {
+                    functionExpr += *meta->toString(argv[i]);
+                    if (i < (argc - 2))
+                        functionExpr += ",";
+                }                                       
+            }
+            functionExpr += widenCString("){") + *bodyStr + widenCString("}");
 
-			Arena a;
-			Pragma::Flags flags = Pragma::js1;		// XXX get flags from meta/context ?
-			Parser parser(meta->world, a, flags, functionExpr, srcLoc);
+            Arena a;
+            Pragma::Flags flags = Pragma::js1;          // XXX get flags from meta/context ?
+            Parser parser(meta->world, a, flags, functionExpr, srcLoc);
             FunctionExprNode *fnExpr = parser.parseFunctionExpression(meta->engine->errorPos());
-			ASSERT(parser.lexer.peek(true).hasKind(Token::end));
-			ASSERT(fnExpr);     // otherwise, an exception would have been thrown out of here
-			JS2Class *exprType;
-			meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
-			meta->SetupExprNode(meta->env, RunPhase, fnExpr, &exprType);
+            ASSERT(parser.lexer.peek(true).hasKind(Token::end));
+            ASSERT(fnExpr);     // otherwise, an exception would have been thrown out of here
+            JS2Class *exprType;
+            meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
+            meta->SetupExprNode(meta->env, RunPhase, fnExpr, &exprType);
             ASSERT(fnExpr);
             return OBJECT_TO_JS2VAL(fnExpr->obj);
-		}
+        }
         else {  // construct an empty function wrapper
             js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta->functionClass->prototype, meta->functionClass));
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
-		    fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true));
+            fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true));
             return thatValue;
         }
     }

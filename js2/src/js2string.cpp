@@ -170,7 +170,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
         return RegExp_exec(meta, regexp, &S, 1);                
     }
     else {
-        PrototypeInstance *A = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
+        PrototypeInstance *A = new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
@@ -405,7 +405,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 {
     const String *S = meta->toString(thisValue);
 
-    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+    js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
 
     uint32 lim;
