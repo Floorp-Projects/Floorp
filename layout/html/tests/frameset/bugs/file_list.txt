@@ -1,4 +1,4 @@
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0003943_noscript.html
+#file:///s|/mozilla/layout/html/tests/frameset/bugs/0003943_noscript.html
 file:///s|/mozilla/layout/html/tests/frameset/bugs/0004849.html
 file:///s|/mozilla/layout/html/tests/frameset/bugs/0005437.html	
 file:///s|/mozilla/layout/html/tests/frameset/bugs/0016346_noscroll.html
