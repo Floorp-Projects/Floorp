@@ -156,6 +156,10 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 
   mRenderingSurface = new nsDrawingSurfaceUnix();
 
+#ifdef MITSHM
+  mRenderingSurface->shmImage = nsnull;
+#endif
+
   mRenderingSurface->display =  (Display *)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
   mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
@@ -665,10 +669,12 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   surface->depth    = mRenderingSurface->depth;
 
 #ifdef MITSHM
+
   surface->shmInfo = mRenderingSurface->shmInfo;
   surface->shmImage = mRenderingSurface->shmImage;
   mRenderingSurface->shmInfo.shmaddr = nsnull;
   mRenderingSurface->shmImage = nsnull;
+
 #endif
 
   return ((nsDrawingSurface)surface);
