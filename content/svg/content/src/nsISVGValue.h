@@ -57,16 +57,21 @@ class nsISVGValueObserver;
   XXX Observers
 */
 
-// {79293232-F695-4bda-9FC7-C2679647B790}
+// {d8299a5e-af9a-4bad-9845-fb1b6e2eed19}
 #define NS_ISVGVALUE_IID \
-{ 0x79293232, 0xf695, 0x4bda, { 0x9f, 0xc7, 0xc2, 0x67, 0x96, 0x47, 0xb7, 0x90 } }
+{ 0xd8299a5e, 0xaf9a, 0x4bad, { 0x98, 0x45, 0xfb, 0x1b, 0x6e, 0x2e, 0xed, 0x19 } }
 
 
 class nsISVGValue : public nsISupports
 {
 public:
+  enum modificationType {
+    mod_other = 0,
+    mod_context
+  };
+
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGVALUE_IID)
-  
+
   NS_IMETHOD SetValueString(const nsAString& aValue)=0;
   NS_IMETHOD GetValueString(nsAString& aValue)=0;
 
@@ -82,6 +87,6 @@ NS_CreateSVGGenericStringValue(const nsAString& aValue, nsISVGValue** aResult);
 
 nsresult
 NS_CreateSVGStringProxyValue(nsISVGValue* proxiedValue, nsISVGValue** aResult);
-                             
+
 #endif // __NS_ISVGVALUE_H__
 

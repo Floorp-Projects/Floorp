@@ -328,15 +328,17 @@ NS_IMETHODIMP nsSVGPointList::AppendItem(nsIDOMSVGPoint *newItem, nsIDOMSVGPoint
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGPointList::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGPointList::WillModifySVGObservable(nsISVGValue* observable,
+                                        modificationType aModType)
 {
-  WillModify();
+  WillModify(aModType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGPointList::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGPointList::DidModifySVGObservable (nsISVGValue* observable,
+                                        modificationType aModType)
 {
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }

@@ -222,8 +222,10 @@ public:
                     PRUint32 aFlags = 0);
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -858,14 +860,16 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGOuterSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                            nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGOuterSVGFrame::DidModifySVGObservable(nsISVGValue* observable,
+                                           nsISVGValue::modificationType aModType)
 {
   mNeedsReflow = PR_TRUE;
   if (mRedrawSuspendCount==0) {

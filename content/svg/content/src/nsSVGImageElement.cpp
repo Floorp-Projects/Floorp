@@ -84,7 +84,8 @@ public:
   virtual void ParentChainChanged();
 
   // nsISVGValueObserver specializations:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue *observable);
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue *observable,
+                                    nsISVGValue::modificationType aModType);
 
 protected:
   void GetSrc(nsAString& src);
@@ -364,7 +365,8 @@ void nsSVGImageElement::GetSrc(nsAString& src)
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable)
+nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable,
+                                          nsISVGValue::modificationType aModType)
 {
   nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(aObservable);
 
@@ -386,6 +388,6 @@ nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable)
     ImageURIChanged(href);
   }
 
-  return nsSVGImageElementBase::DidModifySVGObservable(aObservable);
+  return nsSVGImageElementBase::DidModifySVGObservable(aObservable, aModType);
 }
 

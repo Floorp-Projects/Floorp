@@ -557,15 +557,17 @@ NS_IMETHODIMP nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGMatrix **_retv
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGTransformList::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGTransformList::WillModifySVGObservable(nsISVGValue* observable,
+                                            modificationType aModType)
 {
-  WillModify();
+  WillModify(aModType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGTransformList::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGTransformList::DidModifySVGObservable (nsISVGValue* observable,
+                                            modificationType aModType)
 {
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }

@@ -553,15 +553,24 @@ nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGElement::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGElement::WillModifySVGObservable(nsISVGValue* observable,
+                                      nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable)
+nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
+                                     nsISVGValue::modificationType aModType)
 {
+  // Return without setting DOM attributes as markup attributes if the
+  // attribute's element is being inserted into an SVG document fragment,
+  // which provides a context which percentage lengths are relative to.
+  // Bug 274886
+  if (aModType == nsISVGValue::mod_context)
+    return NS_OK;
+
   PRUint32 i, count = mMappedAttributes.AttrCount();
   const nsAttrValue* attrValue = nsnull;
   for (i = 0; i < count; ++i) {

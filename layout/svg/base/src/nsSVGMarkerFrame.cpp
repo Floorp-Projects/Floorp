@@ -254,9 +254,10 @@ nsresult nsSVGMarkerFrame::Init()
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGMarkerFrame::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGMarkerFrame::DidModifySVGObservable(nsISVGValue* observable,
+                                         nsISVGValue::modificationType aModType)
 {
-  return nsSVGDefsFrame::DidModifySVGObservable(observable);
+  return nsSVGDefsFrame::DidModifySVGObservable(observable, aModType);
 }
 
 //----------------------------------------------------------------------

@@ -52,9 +52,9 @@ protected:
 
   // to be called by subclass whenever value is being modified.
   // nested calls will be ignored, so calls need to be balanced
-  void WillModify();
-  void DidModify();
-  
+  void WillModify(modificationType aModType = mod_other);
+  void DidModify(modificationType aModType = mod_other);
+
   friend class nsSVGValueAutoNotifier;
   
 public:
@@ -68,12 +68,13 @@ public:
   NS_STDCALL_FUNCPROTO(nsresult,
                        SVGObserverNotifyFunction,
                        nsISVGValueObserver, DidModifySVGObservable,
-                       (nsISVGValue*));
+                       (nsISVGValue*, nsISVGValue::modificationType));
 
 protected:
   // implementation helpers
   void ReleaseObservers();
-  void NotifyObservers(SVGObserverNotifyFunction f);
+  void NotifyObservers(SVGObserverNotifyFunction f,
+                       modificationType aModType);
   PRInt32 GetModifyNestCount() { return mModifyNestCount; }
 private:
   virtual void OnDidModify(){}; // hook that will be called before observers are notified
@@ -88,13 +89,23 @@ private:
 class nsSVGValueAutoNotifier
 {
 public:
-  nsSVGValueAutoNotifier(nsSVGValue* val)
-    : mVal(val) { mVal->WillModify(); }
+  nsSVGValueAutoNotifier(nsSVGValue* aVal,
+                         nsISVGValue::modificationType aModType =
+                         nsISVGValue::mod_other)
+    : mVal(aVal)
+    , mModType(aModType)
+  {
+    mVal->WillModify(mModType);
+  }
+
   ~nsSVGValueAutoNotifier()
-    { mVal->DidModify(); }
+  {
+    mVal->DidModify(mModType);
+  }
 
 private:
   nsRefPtr<nsSVGValue> mVal;
+  nsISVGValue::modificationType mModType;
 };
 
 #endif //__NS_SVGVALUE_H__

@@ -63,31 +63,32 @@ nsSVGValue::ReleaseObservers()
 }
 
 void
-nsSVGValue::NotifyObservers(SVGObserverNotifyFunction f)
+nsSVGValue::NotifyObservers(SVGObserverNotifyFunction f,
+                            modificationType aModType)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     nsIWeakReference* wr = NS_STATIC_CAST(nsIWeakReference*,mObservers.ElementAt(i));
     nsCOMPtr<nsISVGValueObserver> observer = do_QueryReferent(wr);
-    if(observer)
-       (NS_STATIC_CAST(nsISVGValueObserver*,observer)->*f)(this);
+    if (observer)
+       (NS_STATIC_CAST(nsISVGValueObserver*,observer)->*f)(this, aModType);
   }
 }
 
 void
-nsSVGValue::WillModify()
+nsSVGValue::WillModify(modificationType aModType)
 {
   if (++mModifyNestCount == 1)
-    NotifyObservers(&nsISVGValueObserver::WillModifySVGObservable);
+    NotifyObservers(&nsISVGValueObserver::WillModifySVGObservable, aModType);
 }
 
 void
-nsSVGValue::DidModify()
+nsSVGValue::DidModify(modificationType aModType)
 {
   NS_ASSERTION(mModifyNestCount>0, "unbalanced Will/DidModify calls");
   if (--mModifyNestCount == 0) {
     OnDidModify();
-    NotifyObservers(&nsISVGValueObserver::DidModifySVGObservable);
+    NotifyObservers(&nsISVGValueObserver::DidModifySVGObservable, aModType);
   }
 }
 

@@ -73,13 +73,15 @@ NS_INTERFACE_MAP_END
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGCoordCtxHolder::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGCoordCtxHolder::WillModifySVGObservable(nsISVGValue* observable,
+                                             nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGCoordCtxHolder::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGCoordCtxHolder::DidModifySVGObservable(nsISVGValue* observable,
+                                            nsISVGValue::modificationType aModType)
 {
   Update();
   return NS_OK;

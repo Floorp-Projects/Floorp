@@ -108,8 +108,10 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
 protected:
   // nsSVGElement overrides
@@ -1236,7 +1238,8 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable,
+                                         nsISVGValue::modificationType aModType)
 {
 #ifdef DEBUG
   printf("viewport/viewbox/preserveAspectRatio will be changed\n");
@@ -1246,7 +1249,8 @@ nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable)
 
 
 NS_IMETHODIMP
-nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
+                                         nsISVGValue::modificationType aModType)
 {
   // either viewport, viewbox or preserveAspectRatio have changed
   // invalidate viewbox -> viewport xform & inform frames

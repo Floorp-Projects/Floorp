@@ -346,14 +346,16 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                                nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
+                                                nsISVGValue::modificationType aModType)
 {
   // the observables we're listening in on affect the canvastm by
   // default. We can specialize in the subclasses when needed.

@@ -124,8 +124,10 @@ public:
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsISVGTextContentMetrics
   NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
@@ -422,14 +424,16 @@ nsSVGTextFrame::ReplaceFrame(nsPresContext* aPresContext,
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGTextFrame::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGTextFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                        nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
+                                        nsISVGValue::modificationType aModType)
 {  
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms = GetTransform();
   if (SameCOMIdentity(observable, transforms)) {

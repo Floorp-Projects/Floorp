@@ -109,8 +109,10 @@ public:
   NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference

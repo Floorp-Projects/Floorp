@@ -221,8 +221,10 @@ public:
   NS_DECL_ISUPPORTS
   
   // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
 
   // nsIDOMSVGRect specializations:
   NS_IMETHOD SetX(float aX);
@@ -285,19 +287,21 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGRect)
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGViewBox::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGViewBox::WillModifySVGObservable(nsISVGValue* observable,
+                                      modificationType aModType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGViewBox::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGViewBox::DidModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType)
 {
   NS_ASSERTION(!mIsSet, "inconsistent state");
-  WillModify();
+  WillModify(aModType);
   mViewportWidth->GetValue(&mWidth);
   mViewportHeight->GetValue(&mHeight);  
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }
 

@@ -77,8 +77,10 @@ public:
   NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
   
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -296,16 +298,18 @@ nsSVGLengthList::SetContext(nsSVGCoordCtx *context)
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGLengthList::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGLengthList::WillModifySVGObservable(nsISVGValue* observable,
+                                         modificationType aModType)
 {
-  WillModify();
+  WillModify(aModType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGLengthList::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGLengthList::DidModifySVGObservable(nsISVGValue* observable,
+                                        modificationType aModType)
 {
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }
 

@@ -71,7 +71,8 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVGMARKERFRAME_CID)
 
   // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
+                                    nsISVGValue::modificationType aModType);
 
   void PaintMark(nsISVGRendererCanvas *aCanvas,
                  nsSVGPathGeometryFrame *aParent,

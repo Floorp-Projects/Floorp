@@ -80,8 +80,10 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
 protected:
   
@@ -521,7 +523,8 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGMarkerElement::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGMarkerElement::WillModifySVGObservable(nsISVGValue* observable,
+                                            nsISVGValue::modificationType aModType)
 {
 #ifdef DEBUG
   printf("markerelement - viewport/viewbox/preserveAspectRatio will be changed\n");
@@ -531,7 +534,8 @@ nsSVGMarkerElement::WillModifySVGObservable(nsISVGValue* observable)
 
 
 NS_IMETHODIMP
-nsSVGMarkerElement::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGMarkerElement::DidModifySVGObservable (nsISVGValue* observable,
+                                            nsISVGValue::modificationType aModType)
 {
 #ifdef DEBUG
   printf("markerelement - viewport/viewbox/preserveAspectRatio have been changed\n");

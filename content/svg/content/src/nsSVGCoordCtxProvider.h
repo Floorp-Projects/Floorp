@@ -66,8 +66,10 @@ private:
   NS_DECL_ISUPPORTS
   
   // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   void SetContextRect(nsIDOMSVGRect* ctxRect);
   void SetMMPerPx(float mmPerPxX, float mmPerPxY);
