@@ -30,6 +30,10 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
+#include "imgIRequest.h"
+#include "imgIContainer.h"
+#include "nsIImageFrame.h"
+#include "nsIImageRequest.h"
 
 // --- image -----
 
@@ -54,6 +58,40 @@ nsLinkableAccessible(aDOMNode, aShell)
     }
   }
 }
+
+NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
+{
+  // The state is a bitfield, get our inherited state, then logically OR it with STATE_ANIMATED if this
+  // is an animated image.
+
+  nsLinkableAccessible::GetAccState(_retval);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  nsIFrame *frame = nsnull;
+  if (content && shell) 
+    shell->GetPrimaryFrameFor(content, &frame);
+
+  nsCOMPtr<nsIImageFrame> imageFrame(do_QueryInterface(frame));
+
+  nsCOMPtr<imgIRequest> imageRequest;
+  if (imageFrame) 
+    imageFrame->GetImageRequest(getter_AddRefs(imageRequest));
+  
+  nsCOMPtr<imgIContainer> imgContainer;
+  if (imageRequest) 
+    imageRequest->GetImage(getter_AddRefs(imgContainer));
+
+  if (imgContainer) {
+    PRUint32 numFrames;
+    imgContainer->GetNumFrames(&numFrames);
+    if (numFrames > 1)
+      *_retval |= STATE_ANIMATED;
+  }
+
+  return NS_OK;
+}
+
 
 /* wstring getAccName (); */
 NS_IMETHODIMP nsHTMLImageAccessible::GetAccName(nsAWritableString& _retval)
