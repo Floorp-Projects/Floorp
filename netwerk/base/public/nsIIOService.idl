@@ -18,11 +18,14 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nscore.h"     // for PRUnichar
+%}
+
 interface nsIProtocolHandler;
 interface nsIURI;
 interface nsIEventSinkGetter;
 interface nsIChannel;
-interface nsIString;
 
 [scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
 interface nsIIOService : nsISupports
@@ -68,35 +71,35 @@ interface nsIIOService : nsISupports
      * Get the application name string that will be used as part
      * of a HTTP request.
      */
-    readonly attribute nsIString AppCodeName;
+    readonly attribute wstring AppCodeName;
   
     /**
      * Get the application version string that will be used as part
      * of a HTTP request.
      */
-    readonly attribute nsIString AppVersion;
+    readonly attribute wstring AppVersion;
 
     /**
      * Get the application name.
      */
-    readonly attribute nsIString AppName;
+    readonly attribute wstring AppName;
 
     /**
      * Get the translation of the application. The value for language
      * is usually a 2-letter code such as "en" and occasionally a 
      * five-character code to indicate a language subtype, such as "zh_CN". 
      */
-    readonly attribute nsIString Language;
+    readonly attribute wstring Language;
 
     /**
      * Get the current platform (machine type).
      */
-    readonly attribute nsIString Platform;
+    readonly attribute wstring Platform;
 
     /**
      * Get the HTTP advertised user agent string.
      */
-    readonly attribute nsIString UserAgent;
+    readonly attribute wstring UserAgent;
 
 };
 

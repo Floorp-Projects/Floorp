@@ -25,6 +25,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
+#include "prprf.h"
 #include <ctype.h>      // for isalpha
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
@@ -158,22 +159,21 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     rv = aURI->GetScheme(&scheme);
     if (NS_FAILED(rv)) return rv;
 
-    nsIProtocolHandler* handler;
-    rv = GetProtocolHandler(scheme, &handler);
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
     nsCRT::free(scheme);
     if (NS_FAILED(rv)) return rv;
 
-    nsIEventQueue* eventQ;
+    nsCOMPtr<nsIEventQueue> eventQ;
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-    }
+    if (NS_FAILED(rv)) return rv;
+    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                            getter_AddRefs(eventQ));
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
     rv = handler->NewChannel(verb, aURI, eventSinkGetter, eventQ,
                              &channel);
-    NS_RELEASE(handler);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -190,51 +190,78 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
     nsIURI* uri;
     rv = NewURI(aSpec, aBaseURI, &uri);
     if (NS_FAILED(rv)) return rv;
-    return NewChannelFromURI(verb, uri, eventSinkGetter, result);
+    rv = NewChannelFromURI(verb, uri, eventSinkGetter, result);
+    NS_RELEASE(uri);
+    return rv;
 }
 
 NS_IMETHODIMP
-nsIOService::MakeAbsolute(const char *aRelativeSpec,
+nsIOService::MakeAbsolute(const char *aSpec,
                           nsIURI *aBaseURI,
                           char **result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    char* scheme;
+    rv = GetScheme(aSpec, &scheme);
+    if (NS_FAILED(rv)) {
+        if (aBaseURI)
+            rv = aBaseURI->GetScheme(&scheme);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
+    nsCRT::free(scheme);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = handler->MakeAbsolute(aSpec, aBaseURI, result);
+    return rv;
 }
 
 NS_IMETHODIMP
-nsIOService::GetAppCodeName(nsIString * *aAppCodeName)
+nsIOService::GetAppCodeName(PRUnichar* *aAppCodeName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aAppCodeName = mAppCodeName.ToNewUnicode();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::GetAppVersion(nsIString * *aAppVersion)
+nsIOService::GetAppVersion(PRUnichar* *aAppVersion)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aAppVersion = mAppVersion.ToNewUnicode();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::GetAppName(nsIString * *aAppName)
+nsIOService::GetAppName(PRUnichar* *aAppName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aAppName = mAppName.ToNewUnicode();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::GetLanguage(nsIString * *aLanguage)
+nsIOService::GetLanguage(PRUnichar* *aLanguage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aLanguage = mAppLanguage.ToNewUnicode();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::GetPlatform(nsIString * *aPlatform)
+nsIOService::GetPlatform(PRUnichar* *aPlatform)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aPlatform = mAppPlatform.ToNewUnicode();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::GetUserAgent(nsIString * *aUserAgent)
+nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX this should load the http module and ask for the user agent string from it.
+    char buf[200];
+    PR_snprintf(buf, 200, "%.100s/%.90s", mAppCodeName.GetBuffer(), mAppVersion.GetBuffer());
+    nsAutoString2 aUA(buf);
+    *aUserAgent = aUA.ToNewUnicode();
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
