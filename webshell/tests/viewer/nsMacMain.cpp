@@ -238,6 +238,7 @@ nsNativeBrowserWindow::InitNativeWindow()
     WindowPtr       wind = (WindowPtr)mWindow->GetNativeData(NS_NATIVE_DISPLAY);
     if (!wind) return NS_ERROR_NULL_POINTER;
 
+    SetPortWindowPort(wind);
     ::SetWRefCon(wind, (long)this);
     return NS_OK;
 }
