@@ -1,0 +1,60 @@
+<?xml version="1.0"?> 
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
+
+<dialog id="commonDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        onload="commonDialogOnLoad();"
+        ondialogaccept="return commonDialogOnAccept();"
+        ondialogextra1="return commonDialogOnExtra1();"
+        ondialogextra2="return commonDialogOnExtra2();"
+        buttonpack="center"
+        style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"> 
+    
+  <script type="application/x-javascript" src="chrome://global/content/commonDialog.js"/>
+
+  <hbox flex="1">
+    <hbox align="start">
+      <image id="info.icon" class="spaced"/>
+    </hbox>
+    
+    <vbox flex="1" style="max-width: 45em;">
+      <!-- text -->
+      <description id="info.header" class="header"/>
+      <vbox id="info.box"/>
+
+      <!-- textboxes -->
+      <vbox id="loginContainer" hidden="true">
+        <label id="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
+        <textbox id="loginTextbox"/>
+        <separator class="thin"/>
+      </vbox>
+      <vbox id ="password1Container" hidden="true">
+        <label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
+        <textbox type="password" id="password1Textbox"/>
+        <separator class="thin"/>
+      </vbox>
+      <vbox id="password2Container" hidden="true">
+        <label id="password2Label" value="&editfield2.label;" control="password2Textbox"/>
+        <textbox type="password" id="password2Textbox"/>
+        <separator class="thin"/>
+      </vbox>
+  
+      <!-- checkbox -->
+      <hbox id="checkboxContainer" collapsed="true">
+        <checkbox id="checkbox" oncommand="onCheckboxClick(this);"/>
+      </hbox>
+    </vbox>
+  </hbox>
+
+  <separator class="thin"/>
+  
+  <!-- This method is called inline because it may unset hidden="true" on the
+       above boxes, causing their frames to be build and bindings to load.  
+       So, by calling this inline, we guarantee the textboxes and checkboxes 
+       above will have their bindings before initButtons is called, and the
+       dialog will be intrinsically sized correctly. -->
+  <script type="application/x-javascript">showControls();</script>
+</dialog>
