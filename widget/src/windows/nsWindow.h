@@ -350,7 +350,7 @@ protected:
     ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
     virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode);
 
-    virtual PRBool          DispatchFocus(PRUint32 aEventType);
+    virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
     virtual PRBool          OnScroll(UINT scrollCode, int cPos);
     virtual HBRUSH          OnControlColor();
 

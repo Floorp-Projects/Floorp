@@ -2763,6 +2763,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     static PRBool getWheelInfo = PR_TRUE;
     nsPaletteInfo palInfo;
     *aRetValue = 0;
+    PRBool isMozWindowTakingFocus = PR_TRUE;
 
     // Uncomment this to see all windows messages
     // first param showss all events 
@@ -3142,7 +3143,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // notified when a child window that doesn't have this handler proc
           // (read as: windows created by plugins like Adobe Acrobat)
           // has been activated via clicking.
-          DispatchFocus(NS_PLUGIN_ACTIVATE);
+          DispatchFocus(NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus);
             break;
         }
 
@@ -3154,18 +3155,23 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
 
       case WM_SETFOCUS:
-        result = DispatchFocus(NS_GOTFOCUS);
+        result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
         if(gJustGotActivate) {
           gJustGotActivate = PR_FALSE;
-          result = DispatchFocus(NS_ACTIVATE);
+          result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
         break;
 
       case WM_KILLFOCUS:
-        result = DispatchFocus(NS_LOSTFOCUS);
+        char className[19];
+        ::GetClassName((HWND)wParam, className, 19);
+        if(strcmp(className, WindowClass()))
+          isMozWindowTakingFocus = PR_FALSE;
+
+        result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
         if(gJustGotDeactivate) {
           gJustGotDeactivate = PR_FALSE;
-          result = DispatchFocus(NS_DEACTIVATE);
+          result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
         } 
         break;
 
@@ -4195,17 +4201,19 @@ PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aA
 // Deal with focus messages
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
+PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus)
 {
   // call the event callback 
   if (mEventCallback) {
-    nsGUIEvent event;
-    event.eventStructType = NS_GUI_EVENT;
+    nsFocusEvent event;
+    event.eventStructType = NS_FOCUS_EVENT;
     InitEvent(event, aEventType);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
     event.point.x = 0;
     event.point.y = 0;
+
+    event.isMozWindowTakingFocus = isMozWindowTakingFocus;
 
     nsPluginEvent pluginEvent;
 
