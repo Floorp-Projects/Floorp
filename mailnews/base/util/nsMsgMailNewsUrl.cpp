@@ -86,6 +86,8 @@ nsresult nsMsgMailNewsUrl::GetUrlState(PRBool * aRunningUrl)
 
 nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 {
+  if (m_runningUrl == aRunningUrl) // we already knew this.
+    return NS_OK;
 	m_runningUrl = aRunningUrl;
 	nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
 
