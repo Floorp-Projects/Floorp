@@ -227,8 +227,7 @@ class nsScanner {
                          PRBool addTerminal)
       {
         return ReadUntil(aString,
-                         NS_STATIC_CAST(const nsAReadableCString&,
-                                        nsLiteralCString(aTerminalSet)),
+                         nsLocalCString(aTerminalSet),
                          addTerminal);
       }
 
