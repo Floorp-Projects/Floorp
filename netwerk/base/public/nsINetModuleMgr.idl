@@ -31,7 +31,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(ff9ead40-0ef2-11d3-9de6-0010a4053fd0)]
-interface nsINetModuleMgr : nsISupports {
+interface nsINetModuleMgr : nsISupports, nsIObserverService {
 	
     // Register the external module to receive notifications.
     // 

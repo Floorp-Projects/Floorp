@@ -27,7 +27,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(8D9430E0-0FB4-11d3-9DE6-0010A4053FD0)]
-interface nsIHttpNotify : nsISupports {
+interface nsIHttpNotify : nsISupports, nsIObserver {
     // Once all http headers have been downloaded and parsed out of the
     // stream, this method is called. 
     //
