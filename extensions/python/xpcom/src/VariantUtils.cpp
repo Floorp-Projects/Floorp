@@ -2183,7 +2183,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			val_use = PyUnicode_FromObject(val);
 			NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromObject didnt return a Unicode object!");
 			const PRUnichar *sz = PyUnicode_AS_UNICODE(val_use);
-			ws->Assign(sz);
+			ws->Assign(sz, PyUnicode_GET_SIZE(val_use));
 		}
 		break;
 		}
@@ -2200,7 +2200,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			val_use = PyObject_Str(val);
 			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
 			const char *sz = PyString_AS_STRING(val_use);
-			ws->Assign(sz);
+			ws->Assign(sz, PyString_Size(val_use));
 		}
 		break;
 		}
@@ -2221,7 +2221,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			}
 			NS_ABORT_IF_FALSE(PyString_Check(val_use), "must have a string object!");
 			const char *sz = PyString_AS_STRING(val_use);
-			ws->Assign(sz);
+			ws->Assign(sz, PyString_Size(val_use));
 		}
 		break;
 		}

@@ -48,6 +48,9 @@ interface nsIPythonTestInterface : nsISupports
     attribute wchar                     wchar_value; // PRUnichar 
     attribute string                    string_value; // char *
     attribute wstring                   wstring_value; // PRUnichar* 
+    attribute AString                   astring_value; // nsAString & 
+    attribute ACString                  acstring_value; // nsACString & 
+    attribute AUTF8String               utf8string_value; // nsAUTF8String & 
     attribute nsIIDRef                  iid_value; // an IID
     attribute nsIPythonTestInterface    interface_value; // A specific interface
     attribute nsISupports               isupports_value; // A generic interface

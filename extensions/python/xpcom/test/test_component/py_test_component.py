@@ -43,6 +43,9 @@ class PythonTestComponent:
         self.wchar_value = "b"
         self.string_value = "cee"
         self.wstring_value = "dee"
+        self.astring_value = "astring"
+        self.acstring_value = "acstring"
+        self.utf8string_value = "utf8string"
         self.iid_value = self._reg_clsid_
         self.interface_value = None
         self.isupports_value = None
