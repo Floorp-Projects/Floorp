@@ -90,13 +90,17 @@ private:
   nsIDOMNode   *mEndParent;
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
-  nsIDOMNode   *mCachedStartNode;
-  nsIDOMNode   *mCachedEndNode;
-  nsVoidArray  *mStartAncestors;
-  nsVoidArray  *mEndAncestors;
-  nsVoidArray  *mStartAncestorOffsets;
-  nsVoidArray  *mEndAncestorOffsets;
+  nsVoidArray  *mStartAncestors;       // just keeping these around to avoid reallocing the arrays.
+  nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
+  nsVoidArray  *mStartAncestorOffsets; //
+  nsVoidArray  *mEndAncestorOffsets;   //
 
+  // no copy's or assigns
+  nsRange(const nsRange&);
+  nsRange& operator=(const nsRange&);
+  
+  // helper routines
+  
   PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
@@ -105,7 +109,9 @@ private:
   PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
                              nsIDOMNode* aEndN, PRInt32 aEndOff);
                        
-  PRBool        IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset);
+  nsresult      IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult);
+  
+  nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
   
   PRInt32       IndexOf(nsIDOMNode* aNode);
   
@@ -138,8 +144,6 @@ nsRange::nsRange()
   mStartOffset = 0;
   mEndParent = nsnull;
   mEndOffset = 0;
-  mCachedStartNode = nsnull;
-  mCachedEndNode = nsnull;
   mStartAncestors = nsnull;
   mEndAncestors = nsnull;
   mStartAncestorOffsets = nsnull;
@@ -259,34 +263,28 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     else return PR_TRUE;
   }
   
-  // lazy refreshing of cached ancestor data
-  if (!mStartAncestors || (mCachedStartNode != aStartN))
+  // lazy allocation of ancestor data
+  if (!mStartAncestors)
   {
-    if (mStartAncestors)
-    {
-      delete mStartAncestors;
-      delete mStartAncestorOffsets;
-    }
   	mStartAncestors = new nsVoidArray();
   	mStartAncestorOffsets = new nsVoidArray();
-    numStartAncestors = GetAncestorsAndOffsets(aStartN,aStartOffset,mStartAncestors,mStartAncestorOffsets);
-    mCachedStartNode = aStartN;
-  }
-  else numStartAncestors = mStartAncestors->Count();
-  
-  if (!mEndAncestors || (mCachedEndNode != aEndN))
-  {
-    if (mEndAncestors)
-    {
-      delete mEndAncestors;
-      delete mEndAncestorOffsets;
-    }
   	mEndAncestors = new nsVoidArray();
   	mEndAncestorOffsets = new nsVoidArray();
-    numEndAncestors = GetAncestorsAndOffsets(aEndN,aEndOffset,mEndAncestors,mEndAncestorOffsets);
-    mCachedEndNode = aEndN;
+    if (!mStartAncestors || mStartAncestorOffsets || mEndAncestors || mEndAncestorOffsets)
+    {
+      NS_NOTREACHED("nsRange::IsIncreasing");
+      return PR_FALSE;
+    }
   }
-  else numEndAncestors = mEndAncestors->Count();
+  else
+  {
+    mStartAncestors->Clear();
+    mStartAncestorOffsets->Clear();
+    mEndAncestors->Clear();
+    mEndAncestorOffsets->Clear();
+  }
+  numStartAncestors = GetAncestorsAndOffsets(aStartN,aStartOffset,mStartAncestors,mStartAncestorOffsets);
+  numEndAncestors = GetAncestorsAndOffsets(aEndN,aEndOffset,mEndAncestors,mEndAncestorOffsets);
   
   --numStartAncestors; // adjusting for 0-based counting 
   --numEndAncestors; 
@@ -309,12 +307,141 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   else  return PR_TRUE;
 }
 
-PRBool nsRange::IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset)
+nsresult nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult)
 {
-  // XXX NEED IMPLEMENTATION!
-  return PR_TRUE;
+  PRInt32  compareResult = 0;
+  nsresult res;
+  res = ComparePointToRange(aParent, aOffset, &compareResult);
+  if (compareResult) *aResult = PR_FALSE;
+  else *aResult = PR_TRUE;
+  return res;
 }
   
+// returns -1 if point is before range, 0 if point is in range, 1 if point is after range
+nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult)
+{
+  // check arguments
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  
+  // no trivial cases please
+  if (!aParent) return NS_ERROR_NULL_POINTER;
+  
+  // our rnage is in a good state?
+  if (!mIsPositioned) return NS_ERROR_NOT_INITIALIZED;
+  
+  // check common case first
+  if ((aParent == mStartParent) && (aParent == mEndParent))
+  {
+    if (aOffset<mStartOffset)
+    {
+      *aResult = -1;
+      return NS_OK;
+    }
+    if (aOffset>mEndOffset)
+    {
+      *aResult = 1;
+      return NS_OK;
+    }
+    *aResult = 0;
+    return NS_OK;
+  }
+  
+  // ok, do it the hard way
+  nsVoidArray *pointAncestors = new nsVoidArray();
+  nsVoidArray *pointAncestorOffsets = new nsVoidArray();
+  PRInt32     numPointAncestors = 0;
+  PRInt32     numStartAncestors = 0;
+  PRInt32     numEndAncestors = 0;
+  PRInt32     commonNodeStartOffset = 0;
+  PRInt32     commonNodeEndOffset = 0;
+  
+  if (!pointAncestors || !pointAncestorOffsets)
+  {
+    NS_NOTREACHED("nsRange::ComparePointToRange");
+    delete pointAncestors;
+    delete pointAncestorOffsets;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  // lazy allocation of ancestor data
+  if (!mStartAncestors)
+  {
+  	mStartAncestors = new nsVoidArray();
+  	mStartAncestorOffsets = new nsVoidArray();
+  	mEndAncestors = new nsVoidArray();
+  	mEndAncestorOffsets = new nsVoidArray();
+    if (!mStartAncestors || mStartAncestorOffsets || mEndAncestors || mEndAncestorOffsets)
+    {
+      // my kingdom for exceptions
+      NS_NOTREACHED("nsRange::ComparePointToRange");
+      delete pointAncestors;
+      delete pointAncestorOffsets;
+      delete mStartAncestors;
+      delete mStartAncestorOffsets;
+      delete mEndAncestors;
+      delete mEndAncestorOffsets;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  else
+  {
+    mStartAncestors->Clear();
+    mStartAncestorOffsets->Clear();
+    mEndAncestors->Clear();
+    mEndAncestorOffsets->Clear();
+  }
+  numStartAncestors = GetAncestorsAndOffsets(mStartParent,mStartOffset,mStartAncestors,mStartAncestorOffsets);
+  numEndAncestors   = GetAncestorsAndOffsets(mEndParent,mEndOffset,mEndAncestors,mEndAncestorOffsets);
+  numPointAncestors = GetAncestorsAndOffsets(aParent,aOffset,pointAncestors,pointAncestorOffsets);
+  
+  // walk down the arrays until we either find that the point is outside, or we hit the
+  // end of one of the range endpoint arrays, in which case the point is inside.  If we
+  // hit the end of the point array and NOT of the range endopint arrays, then the point
+  // is before the range (a bit of a special case, that)
+  
+  --numStartAncestors; // adjusting for 0-based counting 
+  --numEndAncestors; 
+  --numPointAncestors;
+  // back through the ancestors, starting from the root
+  while (mStartAncestors->ElementAt(numStartAncestors) == pointAncestors->ElementAt(numEndAncestors))
+  {
+    if ((PRInt32)pointAncestorOffsets->ElementAt(numPointAncestors) < 
+           (PRInt32)mStartAncestorOffsets->ElementAt(numStartAncestors))
+    {
+      *aResult = -1;
+      break;
+    }
+    if ((PRInt32)pointAncestorOffsets->ElementAt(numPointAncestors) > 
+           (PRInt32)mEndAncestorOffsets->ElementAt(numEndAncestors))
+    {
+      *aResult = 1;
+      break;
+    }
+    
+    --numStartAncestors;
+    --numEndAncestors;
+    --numPointAncestors;
+    
+    if ((numStartAncestors < 0) || (numEndAncestors < 0))
+    {
+      *aResult = 0;
+      break;
+    }
+    if (numPointAncestors < 0)
+    {
+      *aResult = -1;
+      break;
+    }
+  }
+
+  // clea up
+  delete pointAncestors;
+  delete pointAncestorOffsets;
+  
+  return NS_OK;
+}
+  
+// At the moment nobody is using this - maybe we can get rid of it.
 PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
 {
   nsIDOMNode *parentNode;
@@ -414,8 +541,6 @@ PRInt32 nsRange::GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
   
   // insert all the ancestors
   // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
-  // NOTE: this implementation implicitly assumes that the nsIContent pointers are also nsIDOMNode pointers,
-  // since the consumers of these arrays are going to treat the aAncestorNodes array as an array of nsIDOMNode pointers.
   contentNode->GetParent(contentParent);
   while(contentParent)
   {
