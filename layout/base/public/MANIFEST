@@ -25,6 +25,7 @@ nsINameSpaceManager.h
 nsIPageSequenceFrame.h
 nsIPresContext.h
 nsIPresShell.h
+nsIPresState.h
 nsIReflowCommand.h
 nsISpaceManager.h
 nsFrameList.h
