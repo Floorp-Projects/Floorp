@@ -2175,7 +2175,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // I am unclear whether I should process these like this (rods)
             if (mIsControlDown && !mIsAltDown &&
                 (wParam >= 0x01 && wParam <= 0x1A)) {  // a-z
-              wParam += 0x40;
+              wParam += 0x40; // 64 decimal
+            } else if (!mIsControlDown && mIsAltDown &&
+                      (wParam >= 0x61 && wParam <= 0x7A)) {  // a-z
+              wParam -= 0x20; // 32 decimal
             }
 
 			      if (!mIMEIsComposing)
