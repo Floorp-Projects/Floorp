@@ -4,6 +4,7 @@ nsIRDFContainer.h
 nsIRDFContainerUtils.h
 nsIRDFContentSink.h
 nsIRDFDataSource.h
+nsIRDFLiteral.h
 nsIRDFNode.h
 nsIRDFObserver.h
 nsIRDFPurgeableDataSource.h
