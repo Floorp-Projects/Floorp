@@ -35,6 +35,7 @@ OBJS =                           \
 
 LLIBS=                          \
     $(DIST)\lib\baseembed_s.lib \
+    $(DIST)\lib\appfilelocprovider_s.lib \
     $(DIST)\lib\gkgfxwin.lib   \
     $(DIST)\lib\xpcom.lib       \
     $(LIBNSPR)		            \
