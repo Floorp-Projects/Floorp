@@ -65,7 +65,7 @@
 #include "nsITimerCallback.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
-#define DEBUG_TABLE 1
+//#define DEBUG_TABLE 1
 
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
@@ -2151,7 +2151,6 @@ nsRangeList::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
     cellNode = do_QueryInterface(aStartCell);
     result = CreateAndAddRange(cellNode, 0);
   }
-printf(" DONE\n");
   return result;
 }
 
