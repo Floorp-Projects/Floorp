@@ -353,9 +353,18 @@ calDateTime::ToIcalTime(icaltimetype *icalt)
     if (icalt->is_utc) {
         icalt->zone = icaltimezone_get_utc_timezone();
     } else if (mTimezone.IsEmpty()) {
-        icalt->zone = NULL;
+        icalt->zone = nsnull;
     } else {
-        NS_WARNING("Non-UTC and Non-Floating DateTime; this seems bad.");
+        nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
+        nsCOMPtr<calIIcalComponent> tz;
+        ics->GetTimezone(mTimezone, getter_AddRefs(tz));
+        if (tz) {
+            icalcomponent *zonecomp = tz->GetIcalComponent();
+            icalt->zone = icalcomponent_get_timezone(zonecomp, mTimezone.get());
+        } else {
+            NS_WARNING("Specified timezone not found; generating floating time!");
+            icalt->zone = nsnull;
+        }
     }
 }
 
