@@ -2,339 +2,399 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
-]
->
-#
-#Contributors:
-#  David Tenser <david.tenser@comhem.se> (original author)
-
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+  R.J. Keller <rlk@trfenv.com>
+-->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>&brandFullName; Keyboard Shortcuts</title>
-	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
+  <title>&brandFullName; Keyboard Shortcuts</title>
+  <link rel="stylesheet" type="text/css"
+    href="chrome://help/skin/helpFileLayout.css"/>
 </head>
 
 <body>
 
 <h1>&brandShortName; Keyboard Shortcuts</h1>
 
-<p>This is a list of the most common keyboard shortcuts in &brandFullName; compared
-with the shortcuts to equivalent actions in Internet Explorer and Opera.</p>
+<p>This is a list of the most common keyboard shortcuts in &brandFullName;
+  compared with the shortcuts to equivalent actions in Internet Explorer and
+  Opera.</p>
 
 <table border="1" width="100%">
   <thead>
     <tr>
-	    <th>Command</th>
-	    <th>&brandShortName;</th>
-	    <th>Internet Explorer</th>
-	    <th>Opera</th>
+      <th>Command</th>
+      <th>&brandShortName;</th>
+      <th>Internet Explorer</th>
+      <th>Opera</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-		<td>Add Bookmark</td>
-    	<td><kbd>Ctrl</kbd>+<kbd>D</kbd></td>
-    	<td><kbd>Ctrl</kbd>+<kbd>D</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>T</kbd></td>
+      <td>Add Bookmark</td>
+      <td><kbd>Ctrl</kbd>+<kbd>D</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>D</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>T</kbd></td>
     </tr>
     <tr>
-	    <td>Back</td>
-	    <td><kbd>Backspace</kbd><br />
-          <kbd>Alt</kbd>+<kbd>Left Arrow</kbd></td>
-	    <td><kbd>Backspace</kbd><br />
-	      <kbd>Alt</kbd>+<kbd>Left Arrow</kbd></td>
-	    <td><kbd>Backspace</kbd><br />
-    	  <kbd>Alt</kbd>+<kbd>Left Arrow</kbd><br />
-   	      <kbd>Ctrl</kbd>+<kbd>Left Arrow</kbd><br />
-   		  <kbd>Z</kbd></td>
+      <td>Back</td>
+      <td><kbd>Backspace</kbd><br />
+        <kbd>Alt</kbd>+<kbd>Left Arrow</kbd></td>
+      <td><kbd>Backspace</kbd><br />
+        <kbd>Alt</kbd>+<kbd>Left Arrow</kbd></td>
+      <td><kbd>Backspace</kbd><br />
+        <kbd>Alt</kbd>+<kbd>Left Arrow</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>Left Arrow</kbd><br />
+        <kbd>Z</kbd></td>
     </tr>
     <tr>
-	    <td>Bookmarks</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>B</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>I</kbd></td>
-	    <td><kbd>F4</kbd></td>
+      <td>Bookmarks</td>
+      <td><kbd>Ctrl</kbd>+<kbd>B</kbd>
+        <span class="win"><br/>
+        <kbd>Ctrl</kbd>+<kbd>I</kbd></span></td>
+      <td><kbd>Ctrl</kbd>+<kbd>I</kbd></td>
+      <td><kbd>F4</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>1</kbd></td>
     </tr>
     <tr>
-    	<td>Caret Browsing</td>
-	    <td><kbd>F7</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Caret Browsing</td>
+      <td><kbd>F7</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Close Window</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>W</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>W</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>W</kbd></td>
+      <td>Close Tab</td>
+      <td><kbd>Ctrl</kbd>+<kbd>W</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>F4</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>W</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>F4</kbd></td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Complete .com Address</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td>
-	    <td>&nbsp;</td>
+      <td>Close Window</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd><br/>
+        <kbd>Alt</kbd>+<kbd>F4</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>W</kbd><br/>
+        <kbd>Alt</kbd>+<kbd>F4</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>W</kbd><br/>
+        <kbd>Alt</kbd>+<kbd>F4</kbd></td>
     </tr>
     <tr>
-	    <td>Complete .net Address</td>
-	    <td><kbd>Shift</kbd>+<kbd>Enter</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Complete .com Address</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td>
+      <td><kbd>Enter</kbd></td>
     </tr>
     <tr>
-	    <td>Complete .org Address</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Complete .net Address</td>
+      <td><kbd>Shift</kbd>+<kbd>Enter</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Copy</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
+      <td>Complete .org Address</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Cut</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
+      <td>Copy</td>
+      <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
     </tr>
     <tr>
-	    <td>Decrease Text Size</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>-</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>9</kbd></td>
+      <td>Cut</td>
+      <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
     </tr>
     <tr>
-	    <td>Delete</td>
-	    <td><kbd>Delete</kbd></td>
-	    <td><kbd>Delete</kbd></td>
-	    <td><kbd>Delete</kbd></td>
+      <td>Decrease Text Size</td>
+      <td><kbd>Ctrl</kbd>+<kbd>-</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>9</kbd></td>
     </tr>
     <tr>
-	    <td>Downloads</td>
-            <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Delete</td>
+      <td><kbd>Delete</kbd></td>
+      <td><kbd>Delete</kbd></td>
+      <td><kbd>Delete</kbd></td>
     </tr>
     <tr>
-	    <td>Find Again</td>
-	    <td><kbd>F3</kbd><br/>
-	      <kbd>Ctrl</kbd>+<kbd>G</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>F3</kbd></td>
+      <td>Delete Selected Autocomplete Entry</td>
+      <td><kbd>Shift</kbd>+<kbd>Del</kbd></td>
+      <td><kbd>Del</kbd></td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Find As You Type<br />
-	      Link</td>
-	    <td><kbd>'</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Downloads</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>5</kbd></td>
     </tr>
     <tr>
-	    <td>Find As You Type<br />
-	      Text</td>
-	    <td><kbd>/</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Find Again</td>
+      <td><kbd>F3</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>G</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>F3</kbd></td>
     </tr>
     <tr>
-	    <td>Find on this page</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>F</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>F</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>F</kbd></td>
+      <td>Find As You Type Link</td>
+      <td><kbd>'</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>,</kbd><br/>
+        <kbd>Shift</kbd>+<kbd>/</kbd></td>
     </tr>
     <tr>
-	    <td>Forward</td>
-	    <td><kbd>Shift</kbd>+<kbd>Backspace</kbd><br />
-	      <kbd>Alt</kbd>+<kbd>Right Arrow</kbd></td>
-	    <td><kbd>Shift</kbd>+<kbd>Backspace</kbd><br />
-	      <kbd>Alt</kbd>+<kbd>Right Arrow</kbd></td>
-	    <td><kbd>Shift</kbd>+<kbd>Backspace</kbd><br />
-	      <kbd>Alt</kbd>+<kbd>Right Arrow</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>Right Arrow</kbd><br />
-	      <kbd>X</kbd></td>
+      <td>Find As You Type Text</td>
+      <td><kbd>/</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Full Screen</td>
-	    <td><kbd>F11</kbd></td>
-	    <td><kbd>F11</kbd></td>
-	    <td><kbd>F11</kbd></td>
+      <td>Find Previous</td>
+      <td><kbd>Shift</kbd>+<kbd>F3</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Shift</kbd>+<kbd>F3</kbd></td>
     </tr>
     <tr>
-	    <td>History</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>H</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>H</kbd></td>
-	    <td>&nbsp;</td>
+      <td>Find in This Page</td>
+      <td><kbd>Ctrl</kbd>+<kbd>F</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>F</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>F</kbd></td>
     </tr>
     <tr>
-	    <td>Home</td>
-	    <td><kbd>Alt</kbd>+<kbd>Home</kbd></td>
-	    <td><kbd>Alt</kbd>+<kbd>Home</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Space</kbd></td>
+      <td>Forward</td>
+      <td><kbd>Shift</kbd>+<kbd>Backspace</kbd><br />
+        <kbd>Alt</kbd>+<kbd>Right Arrow</kbd></td>
+      <td><kbd>Shift</kbd>+<kbd>Backspace</kbd><br />
+        <kbd>Alt</kbd>+<kbd>Right Arrow</kbd></td>
+      <td><kbd>Shift</kbd>+<kbd>Backspace</kbd><br />
+        <kbd>Alt</kbd>+<kbd>Right Arrow</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>Right Arrow</kbd><br />
+        <kbd>X</kbd></td>
     </tr>
     <tr>
-	    <td>Increase Text Size</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>+</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>0</kbd></td>
+      <td>Full Screen</td>
+      <td><kbd>F11</kbd></td>
+      <td><kbd>F11</kbd></td>
+      <td><kbd>F11</kbd></td>
     </tr>
     <tr>
-	    <td>Move To Next Frame</td>
-	    <td><kbd>F6</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>History</td>
+      <td><kbd>Ctrl</kbd>+<kbd>H</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>H</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>H</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>4</kbd></td>
+    </tr>
+    <tr class="unix">
+      <td>Remove End of Line</td>
+      <td><kbd>Ctrl</kbd>+<kbd>K</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Move To Previous Frame</td>
-	    <td><kbd>Shift</kbd>+<kbd>F6</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Home</td>
+      <td><kbd>Alt</kbd>+<kbd>Home</kbd></td>
+      <td><kbd>Alt</kbd>+<kbd>Home</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Space</kbd></td>
     </tr>
     <tr>
-	    <td>New Tab</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>T</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd></td>
+      <td>Increase Text Size</td>
+      <td><kbd>Ctrl</kbd>+<kbd>+</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>0</kbd></td>
     </tr>
     <tr>
-	    <td>Next Tab</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Tab</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>PageDown</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Move to Next Frame</td>
+      <td><kbd>F6</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>New Window</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>N</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>N</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>N</kbd></td>
+      <td>Move to Previous Frame</td>
+      <td><kbd>Shift</kbd>+<kbd>F6</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Open File</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
+      <td>Go to Bottom of Page</td>
+      <td><kbd>End</kbd></td>
+      <td><kbd>End</kbd></td>
+      <td><kbd>End</kbd></td>
     </tr>
     <tr>
-	    <td>Open Address in New Tab</td>
-	    <td><kbd>Alt</kbd>+<kbd>Enter</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Go to Top of Page</td>
+      <td><kbd>Home</kbd></td>
+      <td><kbd>Home</kbd></td>
+      <td><kbd>Home</kbd></td>
     </tr>
     <tr>
-	    <td>Page Info</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>
-<!-- XXXrlk: set win key to J and other key to I -->
-            J
-           </kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>New Tab</td>
+      <td><kbd>Ctrl</kbd>+<kbd>T</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd></td>
     </tr>
     <tr>
-	    <td>Page Source</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>U</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Next Tab</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Tab</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>PageDown</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Tab</kbd><br/>
+        <kbd>Alt</kbd>+<kbd>Page Down</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>F6</kbd><br/>
+        <kbd>2</kbd></td>
     </tr>
     <tr>
-	    <td>Paste</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
+      <td>New Window</td>
+      <td><kbd>Ctrl</kbd>+<kbd>N</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>N</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd></td>
     </tr>
     <tr>
-	    <td>Previous Tab</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>PageUp</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Open File</td>
+      <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>O</kbd></td>
     </tr>
     <tr>
-	    <td>Print</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>
+      <td>Open Address in New Tab</td>
+      <td><kbd>Alt</kbd>+<kbd>Enter</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Shift</kbd>+<kbd>Enter</kbd></td>
     </tr>
     <tr>
-	    <td>Redo</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
+      <td>Page Info</td>
+      <td><kbd>Ctrl</kbd>+<kbd class="win">J</kbd><kbd
+        class="noWin">I</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Ctrl</kbd>+<kbd>8</kbd></td>
     </tr>
     <tr>
-	    <td>Reload</td>
-	    <td><kbd>F5</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>R</kbd></td>
-	    <td><kbd>F5</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>R</kbd></td>
-	    <td><kbd>F5</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>R</kbd></td>
+      <td>Page Source</td>
+      <td><kbd>Ctrl</kbd>+<kbd>U</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>F3</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>F3</kbd></td>
     </tr>
     <tr>
-	    <td>Reload (override cache)</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>F5</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>
-	      </td>
-	    <td><kbd>Ctrl</kbd>+<kbd>F5</kbd></td>
-	    <td>&nbsp;</td>
+      <td>Paste</td>
+      <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
     </tr>
     <tr>
-	    <td>Restore Text Size</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>0</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>6</kbd></td>
+      <td>Previous Tab</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>PageUp</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd><br/>
+        <kbd>Alt</kbd>+<kbd>Page Up</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F6</kbd><br/>
+        <kbd>I</kbd></td>
     </tr>
     <tr>
-	    <td>Save Page As</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>S</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>S</kbd></td>
+      <td>Print</td>
+      <td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>P</kbd></td>
     </tr>
     <tr>
-	    <td>Select All</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
+      <td>Redo</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Y</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Y</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td>
     </tr>
     <tr>
-	    <td>Select Location Bar</td>
-	    <td><kbd>Alt</kbd>+<kbd>D</kbd><br />
-	      <kbd>F6</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>L</kbd></td>
-	    <td><kbd>Alt</kbd>+<kbd>D</kbd><br />
-	      <kbd>F6</kbd><br />
-	      <kbd>F4</kbd><br />
-	      <kbd>Ctrl</kbd>+<kbd>Tab</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>H</kbd><br />
-	      <kbd>F8</kbd></td>
+      <td>Reload</td>
+      <td><kbd>F5<br/></kbd>
+        <kbd>Ctrl</kbd>+<kbd>R</kbd></td>
+      <td><kbd>F5</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>R</kbd></td>
+      <td><kbd>F5</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>R</kbd></td>
     </tr>
     <tr>
-	    <td>Select Search Bar</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>K</kbd></td>
-	    <td>&nbsp;</td>
-	    <td><kbd>Shift</kbd>+<kbd>F8</kbd></td>
+      <td>Reload (override cache)</td>
+      <td><kbd>Ctrl</kbd>+<kbd>F5</kbd><br/>
+        <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>F5</kbd></td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
-	    <td>Select Tab (1 to 9)</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>(1 to 9)</kbd></td>
-	    <td>&nbsp;</td>
-	    <td>&nbsp;</td>
+      <td>Restore Text Size</td>
+      <td><kbd>Ctrl</kbd>+<kbd>0</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>6</kbd></td>
     </tr>
     <tr>
-	    <td>Stop</td>
-	    <td><kbd>Esc</kbd></td>
-	    <td><kbd>Esc</kbd></td>
-	    <td><kbd>Esc</kbd></td>
+      <td>Save Page As</td>
+      <td><kbd>Ctrl</kbd>+<kbd>S</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Ctrl</kbd>+<kbd>S</kbd></td>
     </tr>
     <tr>
-	    <td>Undo</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
-	    <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
+      <td>Select All</td>
+      <td><kbd class="noUnix">Ctrl</kbd><kbd class="unix">Alt</kbd>+<kbd>A</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
+    </tr>
+    <tr>
+      <td>Select Location Bar</td>
+      <td><kbd>Alt</kbd>+<kbd>D</kbd><br />
+        <kbd>F6</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>L</kbd></td>
+      <td><kbd>Alt</kbd>+<kbd>D</kbd><br />
+        <kbd>F6</kbd><br />
+        <kbd>F4</kbd><br />
+        <kbd>Ctrl</kbd>+<kbd>Tab</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>H</kbd><br />
+        <kbd>F8</kbd></td>
+    </tr>
+    <tr>
+      <td>Select Next Search Engine in Search Bar</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Down</kbd></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>Select Tab (1 to 9)</td>
+      <td><kbd>Ctrl</kbd>+(<kbd>1</kbd> to <kbd>9</kbd>)</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>Stop</td>
+      <td><kbd>Esc</kbd></td>
+      <td><kbd>Esc</kbd></td>
+      <td><kbd>Esc</kbd></td>
+    </tr>
+    <tr>
+      <td>Undo</td>
+      <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
+    </tr>
+    <tr>
+      <td>Web Search</td>
+      <td><kbd>Ctrl</kbd>+<kbd class="noUnix">E</kbd><kbd
+        class="unix">J</kbd></td>
+      <td>&nbsp;</td>
+      <td><kbd>Shift</kbd>+<kbd>F8</kbd></td>
     </tr>
   </tbody>
 </table>
 
-<div class="contentsBox"><em>05 October 2003</em></div>
-<p>Copyright &copy; 2003 Contributors to the Firebird Help Project.</p>
+<div class="contentsBox"><em>10 July 2004</em></div>
+<p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
 </html>

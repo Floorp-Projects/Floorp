@@ -4,10 +4,10 @@
     %brandDTD;
 ]
 >
-#
-#Contributors:
-#  David Tenser <david.tenser@comhem.se> (original author)
-
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+-->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Controlling Popups</title>
@@ -40,7 +40,7 @@ Popup blocking is turned on by default, so you don't have to worry about enablin
 to prevent popups from appearing in &brandShortName;.</p>
 
 <p>When blocking a popup, &brandShortName; displays an
-icon <img src="images/popup-blocked.png" width="18" height="20" alt=""/> in the
+icon <img src="chrome://browser/skin/Popup-blocked.png" width="16" height="16" alt=""/> in the
 status bar. You can use this icon to add a web site you're viewing to an exceptions
 list so that the site is allowed to display popups.</p>
 
@@ -68,13 +68,13 @@ already viewing it, open the Web Features Options by following these steps:
 From there, you can do the following things:
 <ul>
   <li><strong>Block Popup Windows</strong></li>
-  <li><strong>Allowed Sites</strong>: This is a list of sites that you want to allow
-    to display popups.
+  <li><strong>Exceptions dialog</strong>: This is a list of sites that you want to allow
+    to display popups. The dialog has the following options:
   <ul>
-    <li><strong>Add Site</strong>: Click this to add a Web site to the list.</li>
-    <li><strong>Remove Site</strong>: Click this to remove a Web site from the list.</li>
+    <li><strong>Allow</strong>: Click this to add a web site to the exceptions list.</li>
+    <li><strong>Remove Site</strong>: Click this to remove a web site from the exceptions list.</li>
     <li><strong>Remove All Sites</strong>: Click this to remove all of the web sites in
-      the current list.</li>
+      the exceptions list.</li>
   </ul>
   </li>
 </ul>
@@ -82,14 +82,12 @@ From there, you can do the following things:
 
 <h3>When a Popup Window Has Been Blocked</h3>
 
-<p>Every time a popup is blocked, an icon
-<img src="images/popup-blocked.png" width="18" height="20" alt=""/> is displayed in
+<p>Every time a popup is blocked, an icon is displayed in
 the &brandShortName; status bar to indicate that a popup has been blocked.</p>
 
 <p><strong>Using the popup control icon to add allowed web sites</strong>: You can use
 the popup control icon to quickly add a web site to the list of allowed web sites.
-Click the icon <img src="images/popup-blocked.png" width="18" height="20" alt=""/>
-to open a list of blocked web sites. The current web site is already selected.
+Click the icon to open a list of blocked web sites. The current web site is already selected.
 Click <em>Unblock Site</em> to add the web site to the list of allowed web sites.</p>
 
 <p><strong>Note</strong>: Blocking popups may not always work and may interfere with
@@ -97,6 +95,6 @@ some web sites. For more information about blocking popups, see
 <a href="#what_are_popups">What are Popups</a>.</p>
 
 <div class="contentsBox"><em>17 August 2003</em></div>
-<p>Copyright &copy; 2003 Contributors to the Firebird Help Project.</p>
+<p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>
