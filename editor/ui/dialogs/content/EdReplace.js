@@ -138,7 +138,7 @@ function onFindNext()
   if (!result)
   {
     var bundle = document.getElementById("findBundle");
-    window.alert(bundle.getString("notFoundWarning"));
+    AlertWithTitle(null, bundle.getString("notFoundWarning"));
     SetTextboxFocus(gReplaceDialog.findKey);
     gReplaceDialog.findInput.select();
     gReplaceDialog.findInput.focus();
