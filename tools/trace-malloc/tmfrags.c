@@ -134,7 +134,23 @@ typedef struct __struct_AnyArray
     unsigned mGrowBy;
 }
 AnyArray;
-typedef AnyArray HeapObjectArray;
+
+
+typedef int (*arrayMatchFunc)(void* inContext, AnyArray* inArray, void* inItem, unsigned inItemIndex)
+/*
+**  Callback function for the arrayIndexFn function.
+**  Used to determine an item match by customizable criteria.
+**
+**  inContext       The criteria and state of the search.
+**                  User specified/created.
+**  inArray         The array the item is in.
+**  inItem          The item to evaluate for match.
+**  inItemIndex     The index of this particular item in the array.
+**
+**  return int      0 to specify a match.
+**                  !0 to continue the search performed by arrayIndexFn.
+*/
+;
 
 
 typedef enum __enum_HeapEventType
@@ -164,14 +180,18 @@ typedef struct __struct_HeapHistory
 /*
 **  A marker as to what has happened.
 **
-**  mObject     What was before or after this event.
-**  mTimestamp  When history occurred.
-**  mTMRSerial  The historical state as known to the tmreader.
+**  mTimestamp      When history occurred.
+**  mTMRSerial      The historical state as known to the tmreader.
+**  mObjectIndex    Index to the object that was before or after this event.
+**                  The index as in the index according to all heap objects
+**                      kept in the TMState structure.
+**                  We use an index instead of a pointer as the array of
+**                      objects can change location in the heap.
 */
 {
-    HeapObject* mObject;
     unsigned mTimestamp;
     unsigned mTMRSerial;
+    unsigned mObjectIndex;
 }
 HeapHistory;
 
@@ -579,7 +599,7 @@ void* arrayItem(AnyArray* inArray, unsigned inIndex)
 unsigned arrayIndex(AnyArray* inArray, void* inItem, unsigned inStartIndex)
 /*
 **  Go through the array from the index specified looking for an item
-**      match.
+**      match based on byte for byte comparison.
 **  We allow specifying the start index in order to handle arrays with
 **      duplicate items.
 **
@@ -602,6 +622,36 @@ unsigned arrayIndex(AnyArray* inArray, void* inItem, unsigned inStartIndex)
         }
     }
 
+
+    return retval;
+}
+
+
+unsigned arrayIndexFn(AnyArray* inArray, arrayMatchFunc inFunc, void* inFuncContext, unsigned inStartIndex)
+/*
+**  Go through the array from the index specified looking for an item
+**      match based upon the return value of inFunc (0, Zero, is a match).
+**  We allow specifying the start index in order to facilitate looping over
+**      the array which could have multiple matches.
+**
+**  returns unsigned        >= inArray->mCount on failure.
+*/
+{
+    unsigned retval = (unsigned)-1;
+
+    if(NULL != inArray && NULL != inFunc && inStartIndex < inArray->mCount)
+    {
+        void* curItem = NULL;
+
+        for(retval = inStartIndex; retval < inArray->mCount; retval++)
+        {
+            curItem = arrayItem(inArray, retval);
+            if(0 == inFunc(inFuncContext, inArray, curItem, retval))
+            {
+                break;
+            }
+        }
+    }
 
     return retval;
 }
@@ -648,6 +698,28 @@ unsigned arrayAddItem(AnyArray* inArray, void* inItem)
 }
 
 
+HeapObject* initHeapObject(HeapObject* inObject)
+/*
+**  Function to init the heap object just right.
+**  Sets the unique ID to something unique.
+*/
+{
+    HeapObject* retval = inObject;
+
+    if(NULL != inObject)
+    {
+        static unsigned uniqueGenerator = 0;
+
+        memset(inObject, -1, sizeof(HeapObject));
+
+        inObject->mUniqueID = uniqueGenerator;
+        uniqueGenerator++;
+    }
+
+    return retval;
+}
+
+
 int simpleHeapEvent(TMState* inStats, HeapEventType inType, unsigned mTimestamp, unsigned inSerial, unsigned inHeapID, unsigned inSize)
 /*
 **  A new heap event will cause the creation of a new heap object.
@@ -655,9 +727,48 @@ int simpleHeapEvent(TMState* inStats, HeapEventType inType, unsigned mTimestamp,
 */
 {
     int retval = 0;
+    HeapObject newObject;
+
+    /*
+    **  Set the most basic object details.
+    */
+    initHeapObject(&inObject);
+    newObject.mHeapOffset = inHeapID;
+    newObject.mSize = inSize;
+    if(FREE == inType)
+    {
+        newObject.mType = FRAGMENT;
+    }
+    else if(ALLOC == inType)
+    {
+        newObject.mType = ALLOCATION;
+    }
+
+    /*
+    **  Add it to the heap object array.
+    */
 
     /*
     **  TODO GAB
+    **
+    **  First thing to do is to add the new object to the heap in order to
+    **      obtain a valid index.
+    **
+    **  Next, find all matches to this range of heap memory that this event
+    **      refers to, that are alive during this timestamp (no death yet).
+    **  Fill in the death event of those objects.
+    **  If the objects contain some portions outside of the range, then
+    **      new objects for those ranges need to be created that carry on
+    **      the same object type, have the index of the old object for birth,
+    **      and the serial of the old object, new timestamp of course.
+    **  The old object's death points to the new object, which tells why the
+    **      fragmentation took place.
+    **  The new object birth points to the old object only if a fragment.
+    **  An allocation only has a birth object when it is a realloc (complex)
+    **      heap event.
+    **
+    **  I believe this give us enough information to look up particular
+    **      details of the heap at any given time.
     */
 
     return retval;
