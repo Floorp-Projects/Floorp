@@ -53,6 +53,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "nsICookieConsent.h"
+#include "nsIURL.h"
+#include "nsIHttpChannel.h"
 
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
@@ -922,6 +924,11 @@ PUBLIC char *
 COOKIE_GetCookieFromHttp(char * address, char * firstAddress, 
                          nsIIOService* ioService) {
 
+#ifdef DEBUG_morse
+   printf("--- curURL=%s\n",address);
+   printf("--- 1stURL=%s\n",firstAddress);
+#endif
+
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       (!firstAddress || cookie_isForeign(address, firstAddress, ioService))) {
 
@@ -1377,8 +1384,18 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 }
 
 PUBLIC void
-COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
-  COOKIE_SetCookieStringFromHttp(curURL, nsnull, aPrompter, setCookieHeader, 0, ioService, aHttpChannel);
+COOKIE_SetCookieString(char * aURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+  nsCOMPtr<nsIURI> pFirstURL;
+  nsresult rv;
+  nsXPIDLCString firstSpec;
+
+  if (aHttpChannel) {
+    rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
+    if (NS_FAILED(rv)) return;
+    rv = pFirstURL->GetSpec(getter_Copies(firstSpec));
+    if (NS_FAILED(rv)) return;
+  }
+  COOKIE_SetCookieStringFromHttp(aURL, NS_CONST_CAST(char *, firstSpec.get()), aPrompter, setCookieHeader, 0, ioService, aHttpChannel);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -1391,6 +1408,11 @@ COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 
 PUBLIC void
 COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+
+#ifdef DEBUG_morse
+   printf("... curURL=%s\n",curURL);
+   printf("... 1stURL=%s\n",firstURL);
+#endif
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
