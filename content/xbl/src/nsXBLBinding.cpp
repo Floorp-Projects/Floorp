@@ -211,6 +211,12 @@ nsXBLBinding::nsXBLBinding(void)
     kInheritsAtom = NS_NewAtom("inherits");
     kTypeAtom = NS_NewAtom("type");
     kCapturerAtom = NS_NewAtom("capturer");
+
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeName) {
+        entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
+        ++entry;
+    }
   }
 }
 
@@ -396,7 +402,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
         if (mouse || key) {
           // Create a new nsXBLEventHandler.
           nsXBLEventHandler* handler;
-          NS_NewXBLEventHandler(mBoundElement, child, &handler);
+          NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
 
           // Figure out if we're using capturing or not.
           PRBool useCapture = PR_FALSE;

@@ -10,6 +10,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIJSEventListener.h"
+#include "nsIController.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -21,12 +22,15 @@ nsIAtom* nsXBLEventHandler::kControlAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kMetaAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kAltAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kValueAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kCommandAtom = nsnull;
 
-nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement)
+nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement,
+                                     const nsString& aEventName)
 {
   NS_INIT_REFCNT();
   mBoundElement = aBoundElement;
   mHandlerElement = aHandlerElement;
+  mEventName = aEventName;
   gRefCnt++;
   if (gRefCnt == 1) {
     kKeyCodeAtom = NS_NewAtom("keycode");
@@ -38,6 +42,7 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
     kAltAtom = NS_NewAtom("alt");
     kMetaAtom = NS_NewAtom("meta");
     kValueAtom = NS_NewAtom("value");
+    kCommandAtom = NS_NewAtom("command");
   }
 }
 
@@ -54,6 +59,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kAltAtom);
     NS_RELEASE(kMetaAtom);
     NS_RELEASE(kValueAtom);
+    NS_RELEASE(kCommandAtom);
   }
 }
 
@@ -67,6 +73,9 @@ nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
+  if (mEventName != "keyup")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
     ExecuteHandler(nsAutoString("keyup"), aKeyEvent);
@@ -75,6 +84,9 @@ nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+  if (mEventName != "keydown")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
     ExecuteHandler(nsAutoString("keydown"), aKeyEvent);
@@ -83,6 +95,9 @@ nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  if (mEventName != "keypress")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
     ExecuteHandler(nsAutoString("keypress"), aKeyEvent);
@@ -91,6 +106,9 @@ nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
    
 nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  if (mEventName != "mousedown")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("mousedown"), aMouseEvent);
@@ -99,6 +117,9 @@ nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
+  if (mEventName != "mouseup")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("mouseup"), aMouseEvent);
@@ -107,6 +128,9 @@ nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
+  if (mEventName != "click")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("click"), aMouseEvent);
@@ -115,6 +139,9 @@ nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
+  if (mEventName != "dblclick")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("dblclick"), aMouseEvent);
@@ -123,6 +150,9 @@ nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
+  if (mEventName != "mouseover")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("mouseover"), aMouseEvent);
@@ -131,6 +161,9 @@ nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
+  if (mEventName != "mouseout")
+    return NS_OK;
+
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("mouseout"), aMouseEvent);
@@ -235,14 +268,34 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 NS_IMETHODIMP
 nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent)
 {
-  // Look for a compiled handler on the element. 
-  nsCOMPtr<nsIAtom> eventName = getter_AddRefs(NS_NewAtom(aEventName));
-  nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(mHandlerElement);
-  if (!handlerOwner)
-    return NS_ERROR_FAILURE;
+  // This is a special-case optimization to make command handling fast.
+  // It isn't really a part of XBL, but it helps speed things up.
+  nsAutoString command;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kCommandAtom, command);
+  if (!command.IsEmpty()) {
+    // Instead of executing JS, let's get the controller for the bound
+    // element and call doCommand on it.
+    nsCOMPtr<nsIController> controller;
+    GetController(getter_AddRefs(controller));
 
+    if (controller) {
+      controller->DoCommand(command.GetUnicode());
+    }
+
+    return NS_OK;
+  }
+
+  // Look for a compiled handler on the element. 
+  // Should be compiled and bound with "on" in front of the name.
+  nsAutoString onEvent = "on";
+  onEvent += aEventName;
+  nsCOMPtr<nsIAtom> onEventAtom = getter_AddRefs(NS_NewAtom(onEvent));
+
+  nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(mHandlerElement);
+  
   void* handler = nsnull;
-  handlerOwner->GetCompiledEventHandler(eventName, &handler);
+  if (handlerOwner)
+    handlerOwner->GetCompiledEventHandler(onEventAtom, &handler);
 
   if (!handler) {
     // We've never compiled the event handler before.  Let's get it
@@ -276,7 +329,10 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
     void* scriptObject;
     owner->GetScriptObject(context, &scriptObject);
 
-    handlerOwner->CompileEventHandler(context, scriptObject, eventName, handlerText, &handler);
+    if (handlerOwner)
+      handlerOwner->CompileEventHandler(context, scriptObject, onEventAtom, handlerText, &handler);
+    else context->CompileEventHandler(scriptObject, onEventAtom, handlerText,
+                                      PR_TRUE, &handler);
   }
 
   // Now that the handler has been compiled, let's bind it to the 
@@ -294,7 +350,7 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   owner->GetScriptObject(boundContext, &scriptObject);
   
   // Temporarily bind it to the bound element
-  boundContext->BindCompiledEventHandler(scriptObject, eventName, handler);
+  boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
 
   // Execute it.
   nsCOMPtr<nsIDOMEventListener> eventListener;
@@ -302,7 +358,14 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   eventListener->HandleEvent(aEvent);
 
   // Now unbind it.
-  boundContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
+  boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, nsnull);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLEventHandler::GetController(nsIController** aResult)
+{
 
   return NS_OK;
 }
@@ -897,9 +960,10 @@ nsXBLEventHandler::IsMatchingCharCode(const PRUint32 aChar, const nsString& aKey
 
 nsresult
 NS_NewXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, 
+                      const nsString& aEventName,
                       nsXBLEventHandler** aResult)
 {
-  *aResult = new nsXBLEventHandler(aBoundElement, aHandlerElement);
+  *aResult = new nsXBLEventHandler(aBoundElement, aHandlerElement, aEventName);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);
