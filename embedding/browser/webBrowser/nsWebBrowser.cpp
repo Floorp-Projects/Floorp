@@ -77,6 +77,7 @@
 
 // for painting the background window
 #include "nsIRenderingContext.h"
+#include "nsIRegion.h"
 #include "nsILookAndFeel.h"
 
 // Printing Includes
@@ -1691,7 +1692,23 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
       nscolor oldColor;
       rc->GetColor(oldColor);
       rc->SetColor(browser->mBackgroundColor);
-      rc->FillRect(*paintEvent->rect);
+
+      nsIRegion *region = paintEvent->region;
+      if (region) {
+          nsRegionRectSet *rects = nsnull;
+          region->GetRects(&rects);
+          if (rects) {
+              for (PRUint32 i = 0; i < rects->mNumRects; ++i) {
+                  nsRect r(rects->mRects[i].x, rects->mRects[i].y,
+                           rects->mRects[i].width, rects->mRects[i].height);
+                  rc->FillRect(r);
+              }
+
+              region->FreeRects(rects);
+          }
+      } else if (paintEvent->rect) {
+          rc->FillRect(*paintEvent->rect);
+      }
       rc->SetColor(oldColor);
       break;
     }
