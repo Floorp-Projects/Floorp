@@ -56,18 +56,21 @@ public:
   void* operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW;
   void Destroy();
 
-  void AddRef() {
+  nsrefcnt AddRef() {
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "nsStyleContext", sizeof(nsStyleContext));
+    return mRefCnt;
   }
 
-  void Release() {
+  nsrefcnt Release() {
     --mRefCnt;
     NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
     if (mRefCnt == 0) {
       mRefCnt = 1;
       Destroy();
+      return 0;
     }
+    return mRefCnt;
   }
 
   nsStyleContext* GetParent() const { return mParent; }
