@@ -62,6 +62,9 @@ nsBrowserStatusFilter::nsBrowserStatusFilter()
 
 nsBrowserStatusFilter::~nsBrowserStatusFilter()
 {
+    if (mTimer) {
+        mTimer->Cancel();
+    }
 }
 
 //-----------------------------------------------------------------------------
