@@ -86,11 +86,11 @@ public:
                        nsReflowStatus& aReflowStatus);
 
   nscoord GetCarriedOutTopMargin() const {
-    return mCurrentSpan->mLastFrame->mCarriedOutTopMargin;
+    return mCarriedOutTopMargin;
   }
 
   nscoord GetCarriedOutBottomMargin() const {
-    return mCurrentSpan->mLastFrame->mCarriedOutBottomMargin;
+    return mCarriedOutBottomMargin;
   }
 
   nsresult AddBulletFrame(nsIFrame* aFrame,
@@ -238,6 +238,8 @@ protected:
   nscoord mBottomEdge;
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
+  nscoord mCarriedOutTopMargin;
+  nscoord mCarriedOutBottomMargin;
 
   nsTextRun* mReflowTextRuns;
   nsTextRun* mTextRun;
@@ -264,8 +266,6 @@ protected:
     nsRect mBounds;
     nsSize mMaxElementSize;
     nsRect mCombinedArea;
-    nscoord mCarriedOutTopMargin;
-    nscoord mCarriedOutBottomMargin;
 
     // From reflow-state
     nsMargin mMargin;
