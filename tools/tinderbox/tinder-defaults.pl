@@ -21,6 +21,7 @@ $AliveTest                = 1;
 $JavaTest                 = 0;
 $ViewerTest               = 0;
 $BloatTest                = 0;
+$BloatTest2               = 0;
 $DomToTextConversionTest  = 0;
 $MailNewsTest             = 0;  # Bit-rotted, currently not working.
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1

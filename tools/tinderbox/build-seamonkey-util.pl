@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.88 $ ';
+$::UtilsVersion = '$Revision: 1.89 $ ';
 
 package TinderUtils;
 
@@ -745,6 +745,7 @@ sub run_all_tests {
     # Create a new profile
     #
     if ($Settings::CleanProfile and $test_result eq 'success') {
+        print_log "Creating clean profile ...\n";
         system("rm -rf $build_dir/.mozilla");
         my $result = run_cmd($build_dir, $binary_dir,
                              $binary . " -CreateProfile $Settings::MozProfileName",
@@ -793,9 +794,14 @@ sub run_all_tests {
 							   0, 45);
     }
 
-    # Bloat test
+    # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
         $test_result = BloatTest($binary, $build_dir, $Settings::BloatTestTimeout);
+    }
+    
+    # New and improved bloat/leak test (based on trace-malloc)
+    if ($Settings::BloatTest2 and $test_result eq 'success') {
+        $test_result = BloatTest2($binary, $build_dir, $Settings::BloatTestTimeout);
     }
     
     # MailNews test needs this preference set:
@@ -1569,7 +1575,7 @@ sub PrintSize($) {
     } elsif ($size > 1000) {
         $rv = PrintNum($size / 1000.0) . "K";
     } else {
-        $rv = PrintNum($size) . "B";
+        $rv = PrintNum($size);
     }
 }
 
@@ -1579,8 +1585,11 @@ sub BloatTest2 {
     my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/bloattest2.log";
     my $malloc_log = "$build_dir/malloc.log";
+    my $sdleak_log = "$build_dir/sdleak.log";
+    my $old_sdleak_log = "$build_dir/sdleak.log.old";
     my $leakstats_log = "$build_dir/leakstats.log";
     my $old_leakstats_log = "$build_dir/leakstats.log.old";
+    my $sdleak_diff_log = "$build_dir/sdleak.diff.log";
     local $_;
 
     unless (-e "$binary_dir/bloaturls.txt") {
@@ -1588,7 +1597,9 @@ sub BloatTest2 {
         return 'testfailed';
     }
 
-    my $cmd = "$binary_basename -f bloaturls.txt --trace-malloc $malloc_log";
+    rename($sdleak_log, $old_sdleak_log);
+
+    my $cmd = "$binary_basename -f bloaturls.txt --trace-malloc $malloc_log --shutdown-leaks $sdleak_log";
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
                           $timeout_secs);
 
@@ -1607,7 +1618,7 @@ sub BloatTest2 {
 
     $cmd = "run-mozilla.sh ./leakstats $malloc_log";
     $result = run_cmd($build_dir, $binary_dir, $cmd, $leakstats_log,
-                          $timeout_secs);
+                      $timeout_secs);
     print_logfile($leakstats_log, "bloat test leakstats");
 
     my $newstats = ReadLeakstatsLog($leakstats_log);
@@ -1620,9 +1631,17 @@ sub BloatTest2 {
     my $leakchange = PercentChange($oldstats->{'leaks'}, $newstats->{'leaks'});
     my $mhschange = PercentChange($oldstats->{'mhs'}, $newstats->{'mhs'});
     print_log "TinderboxPrint:";
-    print_log "Lk:" . PrintSize($newstats->{'leaks'}) . "B,";
-    print_log "MH:" . PrintSize($newstats->{'mhs'}) . "B,";
-    print_log "A:" . PrintSize($newstats->{'allocs'}) . "\n";
+    print_log "<abbr title=\"Leaks: total bytes 'malloc'ed and not 'free'd\">Lk</abbr>:" . PrintSize($newstats->{'leaks'}) . "B,";
+    print_log "<abbr title=\"Maximum Heap: max (bytes 'malloc'ed - bytes 'free'd) over run\">MH</abbr>:" . PrintSize($newstats->{'mhs'}) . "B,";
+    print_log "<abbr title=\"Allocations: number of calls to 'malloc' and friends\">A</abbr>:" . PrintSize($newstats->{'allocs'}) . "\n";
+
+    if (-e $old_sdleak_log && -e $sdleak_log) {
+      print_logfile($old_leakstats_log, "previous run of bloat test leakstats");
+      $cmd = "$build_dir/mozilla/tools/trace-malloc/diffbloatdump.pl --depth=15 $old_sdleak_log $sdleak_log";
+      $result = run_cmd($build_dir, $binary_dir, $cmd, $sdleak_diff_log,
+                        $timeout_secs);
+      print_logfile($sdleak_diff_log, "leak stats differences");
+    }
     
     return 'success';
 }

@@ -16,6 +16,7 @@ $BuildTree  = 'MozillaTest';
 $AliveTest                = 1;
 $ViewerTest               = 0;
 $BloatTest                = 0;
+$BloatTest2               = 0;
 $DomToTextConversionTest  = 0;
 $EmbedTest                = 0;
 $MailNewsTest             = 0;
