@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.26 $';
+$Version = '$Revision: 1.27 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -57,18 +57,16 @@ sub InitVars {
 }
 
 sub SetupEnv {
-    umask(0);
-    $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-    $ENV{"DISPLAY"} = $DisplayServer;
-    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
-    $ENV{"TMPDIR"} = '.';
-}
-
-sub SetupPath {
     my($Path, $comptmp);
     $comptmp = '';
     $Path = $ENV{PATH};
     print "Path before: $Path\n";
+
+    umask(0);
+    $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+    $ENV{"DISPLAY"} = $DisplayServer;
+    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:/usr/lib/png:/usr/local/lib';
+    $ENV{"TMPDIR"} = '.';
 
     if ( $OS eq 'AIX' ) {
 	$ENV{'PATH'} = '/builds/local/bin:' . $ENV{'PATH'} . ':/usr/lpp/xlC/bin';
@@ -76,6 +74,15 @@ sub SetupPath {
 	$ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
 	$Compiler = 'xlC_r';
 	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+	if ( $OSVer eq '4.3' ) {
+	    $ENV{'PATH'} = '/usr/wpc/bin:' . $ENV{'PATH'};
+	    $ENV{"CC"} = "xlc_r";
+	    $ENV{"CXX"} = " xlC_r";
+	    $ENV{"CFLAGS"} = "-DAIX -DAIX4_3";
+	    $ENV{"LDFLAGS"} = "-brtl -bso";
+	    $ENV{"CXXFLAGS"} = "-DAIX -DAIX4_3";
+	    $ConfigureEnvArgs = 'CFLAGS="-DAIX -DAIX4_3" CXXFLAGS="-DAIX -DAIX4_3" LDFLAGS="-brtl -bso"';
+	}
     }
 
     if ( $OS eq 'BSD_OS' ) {
@@ -99,8 +106,6 @@ sub SetupPath {
 
     if ( $OS eq 'HP-UX' ) {
 	$ENV{'PATH'} = '/opt/ansic/bin:/opt/aCC/bin:/builds/local/bin:' . $ENV{'PATH'};
-	$ENV{'LPATH'} = '/usr/lib:' . $ENV{'LD_LIBRARY_PATH'} . ':/builds/local/lib';
-	$ENV{'SHLIB_PATH'} = $ENV{'LPATH'};
 	$ConfigureArgs .= '--disable-gtktest --x-includes=/usr/include/X11 --x-libraries=/usr/lib';
 	$ConfigureEnvArgs = 'CC="cc -Ae" CXX="aCC -ext"';
 	$Compiler = 'cc/aCC';
@@ -110,8 +115,6 @@ sub SetupPath {
 
     if ( $OS eq 'IRIX' ) {
 	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/opt/bin:/builds/local/bin:' . $ENV{'PATH'};
-	$ENV{'LD_LIBRARY_PATH'} .= ':/opt/lib:/builds/local/lib';
-	$ENV{'LD_LIBRARYN32_PATH'} = $ENV{'LD_LIBRARY_PATH'};
 	if ( $OSVer eq '5.2' ) {
 	    $ConfigureEnvArgs = 'CC=cc CXX="hcpp CC"';
 	} else {
@@ -127,9 +130,13 @@ sub SetupPath {
 
     if ( $OS eq 'NetBSD' ) {
 	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
-	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11R6/lib';
 	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	$Compiler = 'egcc';
+	$mail = '/usr/bin/mail';
+    }
+
+    if ( $OS eq 'OpenBSD' ) {
+	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
 	$mail = '/usr/bin/mail';
     }
 
@@ -142,7 +149,6 @@ sub SetupPath {
 
     if ( $OS eq 'OSF1' ) {
 	$ENV{'PATH'} = '/usr/gnu/bin:' . $ENV{'PATH'};
-	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
 	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
 	$Compiler = 'cc/cxx';
 	$MakeOverrides = 'SHELL=/usr/bin/ksh';
@@ -152,7 +158,6 @@ sub SetupPath {
 
     if ( $OS eq 'QNX' ) {
 	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
-	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
 	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
 	$ConfigureEnvArgs = 'CC=cc CXX=cc LIBS="-lunix" CONFIG_SHELL="/usr/local/bin/bash"';
 	$Compiler = 'cc';
@@ -160,10 +165,13 @@ sub SetupPath {
 	$mail = '/usr/bin/sendmail';
     }
 
+    if ( $OS eq 'SINIX' ) {
+	$ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
+    }
+
     if ( $OS eq 'SunOS' ) {
 	if ( $OSVerMajor eq '4' ) {
 	    $ENV{'PATH'} = '/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:' . $ENV{'PATH'};
-	    $ENV{'LD_LIBRARY_PATH'} = '/home/motif/usr/lib:' . $ENV{'LD_LIBRARY_PATH'};
 	    $ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 --x-libraries=/home/motif/usr/lib';
 	    $ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
 	    $Compiler = 'egcc';
@@ -172,7 +180,6 @@ sub SetupPath {
 	}
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
-	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
 	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	    $Compiler = 'egcc';
 	    # This may just be an NSPR bug, but if USE_PTHREADS is defined, then
@@ -181,13 +188,14 @@ sub SetupPath {
 	} else {
 	    # This is utterly lame....
 	    if ( $ENV{'HOST'} eq 'fugu' ) {
-		$ENV{'PATH'} = '/tools/ns/workshop/bin:/usrlocal/bin:' . $ENV{'PATH'};
 		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
+		$ENV{'PATH'} = '/tools/ns/workshop/bin:/usrlocal/bin:' . $ENV{'PATH'};
+		$ConfigureArgs .= '--disable-debug --enable-optimize';
 		$ConfigureEnvArgs = 'CC=cc CXX=CC';
 		$comptmp = `cc -V 2>&1 | head -1`;
 		chop($comptmp);
 		$Compiler = "cc/CC \($comptmp\)";
-		$NSPRArgs .= 'NS_USE_NATIVE=1';
+		$NSPRArgs .= 'BUILD_OPT=1 NS_USE_NATIVE=1';
 	    } else {
 		$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
 	    }
@@ -199,6 +207,41 @@ sub SetupPath {
 
     $Path = $ENV{PATH};
     print "Path After: $Path\n";
+}
+
+sub FinalizeLDLibPath {
+    $ENV{"LD_LIBRARY_PATH"} = $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName . '/dist/bin:' . $ENV{'LD_LIBRARY_PATH'};
+
+    if ( $OS eq 'HP-UX' ) {
+	$ENV{'LPATH'} = '/usr/lib:' . $ENV{'LD_LIBRARY_PATH'} . ':/builds/local/lib';
+	$ENV{'SHLIB_PATH'} = $ENV{'LPATH'};
+    }
+    if ( $OS eq 'IRIX' ) {
+	$ENV{'LD_LIBRARY_PATH'} .= ':/opt/lib:/builds/local/lib';
+	$ENV{'LD_LIBRARYN32_PATH'} = $ENV{'LD_LIBRARY_PATH'};
+    }
+    if ( $OS eq 'NetBSD' || $OS eq 'OpenBSD' ) {
+	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11R6/lib';
+    }
+    if ( $OS eq 'OSF1' ) {
+	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
+    }
+    if ( $OS eq 'QNX' ) {
+	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
+    }
+    if ( $OS eq 'SunOS' ) {
+	if ( $OSVerMajor eq '4' ) {
+	    $ENV{'LD_LIBRARY_PATH'} = '/home/motif/usr/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	}
+	if ( $CPU eq 'i86pc' ) {
+	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
+	} else {
+	    # This is utterly lame....
+	    if ( $ENV{'HOST'} eq 'fugu' ) {
+		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	    }
+	}
+    }
 }
 
 ##########################################################################
@@ -243,100 +286,71 @@ sub GetSystemInfo {
 	$OSVer = '5.0';
     }
 
+    if ( $OS eq 'SINIX-N' || $OS eq 'SINIX-Z' ) {
+	$OS = 'SINIX';
+    }
+
     if ( "$host" ne "" ) {
 	$BuildName = $host . ' ' . $OS . ' ' . $OSVer;
     }
 
-    #
-    # Defining ObjDir really ought to be done by first checking out
-    # mozilla/build/autoconf/config.guess, and then using it to do
-    # the definition once.
-    #
-
-    if ( $OS eq 'AIX' ) {
-	# Assumes 4.2.1 for now.
-	$ObjDir = 'obj-powerpc-ibm-aix4.2.1.0';
-    }
-
     if ( $OS eq 'BSD_OS' ) {
-	$ObjDir = 'obj-' . $CPU . '-pc-bsdi' . $OSVer;
 	$BuildName = $host . ' BSD/OS ' . $OSVer;
     }
 
     if ( $OS eq 'FreeBSD' ) {
-	$ObjDir = 'obj-' . $CPU . '-unknown-freebsd' . $OSVer;
-	$ObjDir =~ s/(bsd[0-9]\.[0-9])(-[A-Za-z0-9]*)$/$1/o;
 	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
     }
 
-    if ( $OS eq 'HP-UX' ) {
-	$ObjDir = 'obj-hppa1.1-hp-hpux' . $OSVer;
-	$ObjDir =~ s/hpux[AB]\./hpux/o;
-    }
-
     if ( $OS eq 'IRIX' ) {
-	$ObjDir = 'obj-mips-sgi-irix' . $OSVer;
 	$OSVerMajor = substr($OSVer, 0, 1);
     }
 
     if ( $OS eq 'Linux' ) {
 	if ( $CPU eq 'alpha' || $CPU eq 'sparc' ) {
-	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
 	} elsif ( $CPU eq 'arm32' || $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
-	    $ObjDir = 'obj-arm-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer;
 	    # This is here because I ran out of space on my netwinder. --briano.
 	    $ConfigureArgs .= '--disable-debug --enable-optimize';
 	} elsif ( $CPU eq 'ppc' ) {
-	    $ObjDir = 'obj-powerpc-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
 	} else {
-	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer;
 	}
     }
 
     if ( $OS eq 'NetBSD' ) {
 	if ( $CPU eq 'arm32' || $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
-	    $ObjDir = 'obj-arm-unknown-netbsd1.4.';
 	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer;
 	} else {
-	    $ObjDir = 'obj-' . $CPU . '-unknown-netbsd' . $OSVer;
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
 	}
     }
 
-    if ( $OS eq 'OSF1' ) {
-	# Assumes 4.0D for now.
-	$ObjDir = 'obj-alpha-dec-osf4.0d';
+    if ( $OS eq 'OpenBSD' ) {
+	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
     }
 
-    if ( $OS eq 'QNX' ) {
-	$ObjDir = 'obj-i386-pc-qnx4';
+    if ( $OS eq 'SINIX' ) {
+	if ( $CPU eq '386/AT' ) {
+	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer;
+	} else {
+	    $BuildName = $host . ' ' . $OS . '/mips ' . $OSVer;
+	}
     }
 
     if ( $OS eq 'SunOS' ) {
 	if ( $CPU eq 'i86pc' ) {
-	    $ObjDir = 'obj-i386-pc-solaris' . $OSVer;
 	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer;
 	} else {
-	    $ObjDir = 'obj-sparc-sun-';
 	    $OSVerMajor = substr($OSVer, 0, 1);
-	    if ( $OSVerMajor eq '4' ) {
-		$ObjDir .= 'sunos';
-	    } else {
-		$ObjDir .= 'solaris';
+	    if ( $OSVerMajor eq '5' ) {
 		$BuildName = $host . ' ' . $OS . '/sparc ' . $OSVer;
 	    }
-	    $ObjDir .= $OSVer;
 	}
-	$ObjDir =~ s/s5\./s2./o;
     }
 
-    if ( $UseObjDir == 0 ) {
-	$ObjDir = '';
-    }
     $BuildName .= ' ' . ($BuildDepend?'Depend':'Clobber');
     $DirName = $OS . '_' . $OSVer . '_' . ($BuildDepend?'depend':'clobber');
     $logfile = "${DirName}.log";
@@ -461,6 +475,8 @@ sub BuildIt {
 	    mkdir($BuildObjName, 0777);
 	    chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
 	}
+
+	&FinalizeLDLibPath;
 
 	print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
 	open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
@@ -772,7 +788,6 @@ sub RunSmokeTest {
 &ParseArgs;
 &GetSystemInfo;
 &SetupEnv;
-&SetupPath;
 &BuildIt;
 
 1;
