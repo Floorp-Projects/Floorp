@@ -139,6 +139,8 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\rock_gra.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\bg.jpg $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test10.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test11.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test12.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) throbber\anims00.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) throbber\anims01.gif $(DIST)\bin\res\throbber
@@ -183,6 +185,8 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\bg.jpg
 	rm -f $(DIST)\bin\res\throbber\anims00.gif
 	rm -f $(DIST)\bin\res\samples\test10.html
+	rm -f $(DIST)\bin\res\samples\test11.html
+	rm -f $(DIST)\bin\res\samples\test12.html
 	rm -f $(DIST)\bin\res\throbber\anims01.gif
 	rm -f $(DIST)\bin\res\throbber\anims02.gif
 	rm -f $(DIST)\bin\res\throbber\anims03.gif
