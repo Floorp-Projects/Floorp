@@ -154,11 +154,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         break;
     case eColor_highlight:
         // background of selected item
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
         break;
     case eColor_highlighttext:
         // text of selected item
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
         break;
     case eColor_inactiveborder:
         // inactive window border
@@ -259,16 +259,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         // default button border color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
         break;
-    case eColor__moz_gtk2_active:
-        // cell text background color, selected not focus
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_ACTIVE]);
-        break;
-    case eColor__moz_gtk2_activetext:
-        // cell text color, selected not focus
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_ACTIVE]);
-        break;
     case eColor__moz_gtk2_hovertext:
-        // hover text color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
         break;
     default:
