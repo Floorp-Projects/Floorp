@@ -42,7 +42,6 @@
 
 #include "nsEditorCID.h"
 #include "nsEditor.h"				// for gInstanceCount
-#include "nsHTMLEditor.h"
 #include "nsPlaintextEditor.h"
 
 #include "nsEditorController.h" //CID
@@ -52,6 +51,10 @@
 #include "nsIControllerContext.h"
 
 #include "nsIServiceManager.h"
+
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+#include "nsHTMLEditor.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -96,11 +99,13 @@ NS_IMETHODIMP nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
   return context->QueryInterface(aIID, aResult);
 }
 
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditorLog)
 #else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
+#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -111,12 +116,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 static const nsModuleComponentInfo components[] = {
     { "Text Editor", NS_TEXTEDITOR_CID,
       "@mozilla.org/editor/texteditor;1", nsPlaintextEditorConstructor, },
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "@mozilla.org/editor/htmleditor;1", nsHTMLEditorLogConstructor, },
 #else
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "@mozilla.org/editor/htmleditor;1", nsHTMLEditorConstructor, },
+#endif
 #endif
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "@mozilla.org/editor/editorcontroller;1",
