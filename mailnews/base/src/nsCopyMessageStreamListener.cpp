@@ -82,7 +82,7 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 			messageResource->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), (void**)message);
 		}
 	}
-	delete[] uri;
+	nsAllocator::Free(uri);
 
 	return rv;
 }
