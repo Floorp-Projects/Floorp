@@ -13,6 +13,7 @@ nsISupportsBase.h
 nsISupportsImpl.h
 nsISupportsUtils.h
 nsISupportsObsolete.h
+nsIWeakReferenceUtils.h
 nsTraceRefcnt.h
 nsWeakReference.h
 nsWeakPtr.h
