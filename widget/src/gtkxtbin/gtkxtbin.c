@@ -211,7 +211,11 @@ gtk_xtbin_init (GtkXtBin *xtbin)
     g_source_add (GDK_PRIORITY_EVENTS, TRUE, 
                   &xt_event_funcs, NULL, xtdisplay, NULL);	
     
+#ifdef VMS
+    cnumber = XConnectionNumber(xtdisplay);
+#else
     cnumber = ConnectionNumber(xtdisplay);
+#endif
     xt_event_poll_fd.fd = cnumber;
     xt_event_poll_fd.events = G_IO_IN; 
     xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
