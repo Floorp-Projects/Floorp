@@ -862,6 +862,7 @@ protected:
 
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIDOMNSHTMLFrameElement,
+                                  public nsIFrameLoaderOwner,
                                   public nsIChromeEventHandler
 {
 public:
@@ -869,18 +870,7 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
-
-  static nsGenericHTMLFrameElement* FromContent(nsIContent *aContent)
-  {
-    if (aContent->IsContentOfType(eFRAME_ELEMENT))
-      return NS_STATIC_CAST(nsGenericHTMLFrameElement*, aContent);
-    return nsnull;
-  }
-
-  nsFrameLoader* GetFrameLoader()
-  {
-    return mFrameLoader;
-  }
+  virtual ~nsGenericHTMLFrameElement();
 
   // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -890,6 +880,9 @@ public:
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
+
+  // nsIFrameLoaderOwner
+  NS_DECL_NSIFRAMELOADEROWNER
 
   // nsIContent
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
@@ -904,7 +897,6 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   // nsIDOMNSHTMLElement 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
@@ -917,7 +909,7 @@ protected:
   nsresult LoadSrc();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
 
-  nsRefPtr<nsFrameLoader> mFrameLoader;
+  nsCOMPtr<nsIFrameLoader> mFrameLoader;
 };
 
 //----------------------------------------------------------------------

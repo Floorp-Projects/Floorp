@@ -517,9 +517,7 @@ public:
     /** svg elements */
     eSVG                 = 0x00000040,
     /** comment nodes */
-    eCOMMENT             = 0x00000080,
-    /** frame elements (frame, iframe) */
-    eFRAME_ELEMENT       = 0x00000100
+    eCOMMENT             = 0x00000080
   };
 
   /**

@@ -83,10 +83,7 @@
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-nsFrameLoader::~nsFrameLoader()
-{
-  Destroy();
-}
+NS_IMPL_ISUPPORTS1(nsFrameLoader, nsIFrameLoader)
 
 nsresult
 nsFrameLoader::LoadFrame()
@@ -282,7 +279,7 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
   if (mOwnerContent) {
@@ -308,6 +305,7 @@ nsFrameLoader::Destroy()
   }
 
   mDocShell = nsnull;
+  return NS_OK;
 }
 
 nsresult
