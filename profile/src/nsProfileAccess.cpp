@@ -626,7 +626,7 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
         else
             mNumProfiles--;
 
-        if (mCurrentProfile.Equals(profileName))
+        if (mCurrentProfile.EqualsWithConversion(profileName))
         {
             mCurrentProfile.SetLength(0);
         }
@@ -709,7 +709,7 @@ nsProfileAccess::FindProfileIndex(const PRUnichar* profileName)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if(profileItem->profileName.Equals(profileName))
+        if(profileItem->profileName.EqualsWithConversion(profileName))
         {
             retval = index;
             break;
@@ -991,7 +991,7 @@ nsProfileAccess::ProfileExists(const PRUnichar *profileName)
     for (PRInt32 index=0; index < mCount; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
-        if (profileItem->profileName.Equals(profileName))
+        if (profileItem->profileName.EqualsWithConversion(profileName))
         {
             exists = PR_TRUE;
             break;
