@@ -156,7 +156,7 @@
                 </menu>            
                 <menuseparator/>
                 <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="Browser:Stop" key="key_stop"/>
-                <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" command="Browser:Reload"/>
+                <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
                 <menuseparator/>
                 <menu id="viewTextZoomMenu" label="&textSize.label;" accesskey="&textSize.accesskey;">
                   <menupopup>                    

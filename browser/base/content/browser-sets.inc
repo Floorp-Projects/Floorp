@@ -150,7 +150,8 @@
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
-    <command id="Browser:Reload"  oncommand="BrowserReload();"/>
+    <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload()" disabled="true"/>
+    <command id="Browser:ReloadSkipCache"  oncommand="BrowserReloadSkipCache()" disabled="true"/>
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
@@ -282,10 +283,10 @@
 #endif
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
-    <key keycode="VK_F5" oncommand="BrowserReload();"/>
-    <key keycode="VK_F5" modifiers="accel" oncommand="BrowserReloadSkipCache();"/>
-    <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
-    <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
+    <key keycode="VK_F5" command="Browser:Reload"/>
+    <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
+    <key key="&reloadCmd.commandkey;" command="Browser:Reload" modifiers="accel" id="key_reload"/>
+    <key key="&reloadCmd.commandkey;" command="Browser:ReloadSkipCache" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
 #ifndef XP_WIN
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
@@ -304,7 +305,7 @@
     <key id="viewBookmarksSidebarWinKb" key="&bookmarksSidebarWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
 
-    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+    <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 #ifdef XP_MACOSX
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
 #else

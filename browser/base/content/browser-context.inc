@@ -115,7 +115,7 @@
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
-                oncommand="BrowserReload();"/>
+                command="Browser:Reload"/>
       <menuitem id="context-stop"
                 label="&stopCmd.label;"
                 accesskey="&stopCmd.accesskey;"
