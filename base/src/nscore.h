@@ -58,9 +58,9 @@ typedef PRUcs2 PRUnichar;
 
 #ifdef NS_WIN32
 #define NS_IMPORT _declspec(dllimport)
-#define NS_IMPORT_(type) _declspec(dllimport) type __stdcall
+#define NS_IMPORT_(type) type _declspec(dllimport) __stdcall
 #define NS_EXPORT _declspec(dllexport)
-#define NS_EXPORT_(type) _declspec(dllexport) type __stdcall
+#define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
 #else
 /* XXX do something useful? */
 #define NS_IMPORT
