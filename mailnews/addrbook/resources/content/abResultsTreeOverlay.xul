@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+
+<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abResultsTreeOverlay.dtd">
+
+
+<overlay xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+	<tree id="resultsTree"
+		  class="abResults" 
+		  flex="100%"
+		  rdf:datasources="rdf:addressdirectory rdf:addresscard"
+		  onchange="top.ResultsPaneSelectionChange()"
+		  ondblclick="top.EditCard()"
+		  rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
+
+		<template>
+			<rule>
+				<treechildren>
+					<treeitem uri="...">
+						<treerow >
+							<treecell>
+								<treeindentation />
+								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DisplayName" align="left" />
+							</treecell>
+							<treecell>
+								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail" align="right" style="list-style-image: none;" />
+								</treecell>
+							<treecell>
+								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#WorkPhone" align="right" style="list-style-image: none;" />
+							</treecell>
+						</treerow>
+					</treeitem>
+				</treechildren>
+			</rule>
+		</template>
+
+		<treecol style="width:20%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#DisplayName"/>
+		<treecol style="width:21%" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+		<treecol style="width:20%" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+		
+		<treehead>
+			<treerow>
+				<treecell>&nameColumn.label;</treecell>
+				<treecell>&emailColumn.label;</treecell>
+				<treecell>&phoneColumn.label;</treecell>
+			</treerow>
+		</treehead>
+
+	</tree>
+
+</overlay>

@@ -1,0 +1,138 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://addressbook/content/abDirTreeOverlay.xul"?>
+<?xul-overlay href="chrome://addressbook/content/abResultsTreeOverlay.xul"?>
+
+
+<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abSelectAddressesDialog.dtd">
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&selectAddressWindow.title;"
+        class="dialog"
+        width="640" height="480"
+        style="width:100%; height:100%; padding:0px"
+        onload="OnLoadSelectAddress()"
+        align="vertical">
+
+<html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
+<html:script language="JavaScript" src="chrome://addressbook/content/abSelectAddressesDialog.js"/>
+<html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
+<!--
+<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
+-->
+	<!-- Thin box across top, show names containing & stop, search buttons -->
+	<box align="horizontal" style="width:100%; padding:0px; padding-top:2px; padding-bottom:2px">
+		<html:div flex="100%" style="vertical-align: middle;">
+			<html:label for="searchtext" tabindex="0">&search.label;</html:label>
+			<html:input type="text" id="searchtext" flex="100%"/>
+		</html:div>
+		
+		<spring style="width: 1em;"/>
+		
+		<titledbutton id="stop" value="&stopButton.label;" class="push" onclick="SelectAddressStopButton()"/>	
+		<spring style="width:5px"/>
+		<titledbutton id="search" value="&searchButton.label;" class="push" onclick="SelectAddressSearchButton()"/>	
+	</box>
+
+	<!-- Main box, 3 pane and majority of buttons -->
+	<box align="horizontal" flex="100%">
+		<!-- 3 Pane box -->
+		<box align="horizontal" flex="100%" style="border-top:solid black 1px; border-bottom:solid black 1px">
+			
+			<!-- dir tree -->
+			<box align="horizontal"
+				 style="width:200px; height:100%; background-color:white; border-right:solid black 1px">
+				<tree id="dirTree"/>
+			</box>
+				
+			<splitter/>
+
+			<!-- Box that holds results pane, (to,cc,bcc buttons), and address bucket -->
+			<box align="vertical" flex="100%" style="border-left:solid black 1px; border-right:solid black 1px">
+				<!-- Box that holds results pane and (to,cc,bcc buttons) -->
+				<box align="vertical" flex="100%">
+					<!-- results tree -->
+					<box flex="100%" align="vertical"
+						 style="background-color:white; border-bottom:solid black 1px">
+						<tree id="resultsTree"/>
+					</box>
+					
+					<!-- Box that holds (to,cc,bcc buttons) -->
+					<box align="horizontal" style="padding:0.3em; border-bottom:solid black 1px">
+						<spring flex="50%"/>
+						<titledbutton id="toButton" value="&toButton.label;" class="push" onclick="SelectAddressToButton()"/>	
+						<spring style="width:10px"/>
+						<titledbutton id="ccButton" value="&ccButton.label;" class="push" onclick="SelectAddressCcButton()"/>	
+						<spring style="width:10px"/>
+						<titledbutton id="bccButton" value="&bccButton.label;" class="push" onclick="SelectAddressBccButton()"/>	
+						<spring flex="50%"/>
+					</box>
+				</box>
+				
+				<splitter collapse="after"/>
+				
+				<!-- Address bucket -->
+				<box align="vertical" style="height:170px; background-color:white; border-top:solid black 1px">
+					<tree id="addressBucket" flex="100%">
+						<treecol style="width:100%"/>
+
+						<treechildren id="bucketBody">
+							<treeitem>
+								<treerow>
+									<treecell/>
+								</treerow>
+							</treeitem>
+						</treechildren>
+					</tree>
+				</box>
+				
+			</box>
+		</box>
+		
+		<!-- Box with buttons on right edge of window -->
+		<box align="vertical" style="padding: .5em; padding-right: 0px">
+			<box align="vertical" flex="50%">
+				<spring style="height:10px"/>
+				<titledbutton id="new" value="&newButton.label;" class="push" onclick="SelectAddressNewButton()"/>	
+				<spring style="height:10px"/>
+				<titledbutton id="edit" value="&editButton.label;" class="push" onclick="SelectAddressEditButton()"/>	
+				<spring style="height:10px"/>
+				<titledbutton id="view" value="&viewButton.label;" class="push" onclick="SelectAddressViewButton()"/>
+				<spring flex="100%"/>
+			</box>
+			<box align="vertical" flex="50%">
+				<spring flex="50%"/>
+				<titledbutton id="remove" value="&removeButton.label;" class="push" onclick="RemoveSelectedFromBucket()"/>	
+				<spring flex="50%"/>
+			</box>
+		</box>
+	</box>
+
+	<!-- OK & Cancel buttons -->
+	<box id="okCancelButtons"/>
+
+</window>

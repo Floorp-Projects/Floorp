@@ -1,0 +1,54 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://addressbook/content/abCardOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abNewCardDialog.dtd">
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		title="&editcardWindow.title;"
+		onload="OnLoadNewCard()"
+		class="dialog"
+		width="400" height="600"
+		style="padding:0px"
+		align="vertical">
+
+
+	<box align="horizontal">
+		<html:label for="chooseAddressBook">&chooseAddressBook.label;</html:label>
+		<html:select id="chooseAddressBook">
+			<html:option>Personal Address Book</html:option>
+		</html:select>
+		<spring flex="100%"/>
+	</box>
+	
+	<spring style="height:1em"/>
+		
+	<box id="editcard"/>
+	
+	<box id="okCancelButtons"/>
+
+</window>
+
