@@ -423,20 +423,26 @@ public class ScriptRuntime {
     /* Work around Microsoft Java VM bugs. */
     private final static boolean MSJVM_BUG_WORKAROUNDS = true;
 
+    public static String escapeString(String s)
+    {
+        return escapeString(s, '"');
+    }
+
     /**
      * For escaping strings printed by object and array literals; not quite
      * the same as 'escape.'
      */
-    public static String escapeString(String s) {
-
+    public static String escapeString(String s, char escapeQuote)
+    {
+        if (!(escapeQuote == '"' || escapeQuote == '\'')) Kit.codeBug();
         StringBuffer sb = null;
 
         for(int i = 0, L = s.length(); i != L; ++i) {
             int c = s.charAt(i);
 
-            if (' ' <= c && c <= '~' && c != '"' && c != '\\') {
+            if (' ' <= c && c <= '~' && c != escapeQuote && c != '\\') {
                 // an ordinary print character (like C isprint()) and not "
-                // or \ . Note single quote ' is not escaped
+                // or \ .
                 if (sb != null) {
                     sb.append((char)c);
                 }
@@ -456,7 +462,6 @@ public class ScriptRuntime {
                 case '\r':  escape = 'r';  break;
                 case '\t':  escape = 't';  break;
                 case 0xb:   escape = 'v';  break; // Java lacks \v.
-                case '"':   escape = '"';  break;
                 case ' ':   escape = ' ';  break;
                 case '\\':  escape = '\\'; break;
             }
@@ -464,6 +469,9 @@ public class ScriptRuntime {
                 // an \escaped sort of character
                 sb.append('\\');
                 sb.append((char)escape);
+            } else if (c == escapeQuote) {
+                sb.append('\\');
+                sb.append(escapeQuote);
             } else {
                 int hexSize;
                 if (c < 256) {
@@ -483,8 +491,21 @@ public class ScriptRuntime {
                 }
             }
         }
-
         return (sb == null) ? s : sb.toString();
+    }
+
+    static boolean isValidIdentifierName(String s)
+    {
+        int L = s.length();
+        if (L == 0)
+            return false;
+        if (!Character.isJavaIdentifierStart(s.charAt(0)))
+            return false;
+        for (int i = 1; i != L; ++i) {
+            if (!Character.isJavaIdentifierPart(s.charAt(i)))
+                return false;
+        }
+        return true;
     }
 
     /**

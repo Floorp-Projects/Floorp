@@ -706,12 +706,25 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                     if (i > 0)
                         result.append(", ");
                     Object id = ids[i];
-                    result.append(id);
+                    Object value;
+                    if (id instanceof Integer) {
+                        int intId = ((Integer)id).intValue();
+                        value = this.get(intId, this);
+                        result.append(intId);
+                    } else {
+                        String strId = (String)id;
+                        value = this.get(strId, this);
+                        if (ScriptRuntime.isValidIdentifierName(strId)) {
+                            result.append(strId);
+                        } else {
+                            result.append('\'');
+                            result.append(
+                                ScriptRuntime.escapeString(strId, '\''));
+                            result.append('\'');
+                        }
+                    }
                     result.append(':');
-                    Object p = (id instanceof String)
-                        ? this.get((String) id, this)
-                        : this.get(((Integer) id).intValue(), this);
-                    result.append(ScriptRuntime.uneval(cx, scope, p));
+                    result.append(ScriptRuntime.uneval(cx, scope, value));
                 }
             }
         } finally {
