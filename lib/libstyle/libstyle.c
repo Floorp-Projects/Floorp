@@ -22,7 +22,7 @@
 #include "xp_mcom.h"
 #include "jsspriv.h"
 #include "jssrules.h"
-#include "jsscope.h"
+/* #include "jsscope.h" */
 #include "jsatom.h"
 
 #ifndef NSPR20
