@@ -55,8 +55,8 @@
       <separator />
       <menuitem name="Select All" onclick="EditorSelectAll()"/>
       <separator />
-      <menuitem name=".Find..." onclick="EditorFind(true)"/>
-      <menuitem name=".Find Again" onclick="EditorFind(false)"/>
+      <menuitem name="Find..." onclick="EditorFind()"/>
+      <menuitem name="Find Again" onclick="EditorFindNext()"/>
     </menu>
 
     <menu name="View">
@@ -133,6 +133,7 @@
       <separator />
       <menuitem name="Test Selection" onclick="EditorTestSelection()"/>
       <menuitem name="Test Document" onclick="EditorTestDocument()"/>
+      <menuitem name="Run Unit Tests" onclick="EditorUnitTests()"/>
     </menu>
     <menu name="Help">
       <menuitem name=".About" onclick=""/>
@@ -161,7 +162,7 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_AlignPopup.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" class="popup" onclick="CheckSpelling()"/>
