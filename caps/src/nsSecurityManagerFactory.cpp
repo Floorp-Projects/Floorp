@@ -363,8 +363,8 @@ RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = catman->AddCategoryEntry("app-startup", "service",
-                                  NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+    rv = catman->AddCategoryEntry("app-startup", "Script Security Manager",
+                                  "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                   PR_TRUE, PR_TRUE,
                                   getter_Copies(previous));
     NS_ENSURE_SUCCESS(rv, rv);
