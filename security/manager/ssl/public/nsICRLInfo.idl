@@ -35,15 +35,53 @@
 
 #include "nsISupports.idl"
 
+/**
+ * Information on a Certificate Revocation List (CRL)
+ * issued by a Aertificate Authority (CA).
+ */
 [scriptable, uuid(c185d920-4a3e-11d5-ba27-00108303b117)]
 interface nsICRLInfo : nsISupports {
-  readonly attribute AString org;
-  readonly attribute AString orgUnit;
+
+  /**
+   *  The issuing CA's organization.
+   */
+  readonly attribute AString organization;
+
+  /**
+   *  The issuing CA's organizational unit.
+   */
+  readonly attribute AString organizationalUnit;
+
+  /**
+   *  The time this CRL was created at.
+   */
   readonly attribute PRTime  lastUpdate;
+
+  /**
+   *  The time the suggested next update for this CRL.
+   */
   readonly attribute PRTime  nextUpdate;
+
+  /**
+   *  lastUpdate formatted as a human readable string
+   *  formatted according to the environment locale.
+   */
   readonly attribute AString lastUpdateLocale;
+
+  /**
+   *  nextUpdate formatted as a human readable string
+   *  formatted according to the environment locale.
+   */
   readonly attribute AString nextUpdateLocale;
+
+  /**
+   *  The key identifying the CRL in the database.
+   */
   readonly attribute AString nameInDb;
+
+  /**
+   *  The URL this CRL was last fetched from.
+   */
   readonly attribute AUTF8String lastFetchURL;
 };
 

@@ -238,8 +238,8 @@ CreateFromDER(unsigned char *data,
   return rv; 
 }
 
-nsNSSASN1Sequence::nsNSSASN1Sequence() : mProcessObjects(PR_TRUE),
-                                         mShowObjects(PR_TRUE)
+nsNSSASN1Sequence::nsNSSASN1Sequence() : mIsValidContainer(PR_TRUE),
+                                         mIsExpanded(PR_TRUE)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -324,36 +324,34 @@ nsNSSASN1Sequence::SetDisplayValue(const nsAString &aDisplayValue)
   return NS_OK;
 }
 
-/* attribute boolean processObjects; */
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetProcessObjects(PRBool *aProcessObjects)
+nsNSSASN1Sequence::GetIsValidContainer(PRBool *aIsValidContainer)
 {
-  NS_ENSURE_ARG_POINTER(aProcessObjects);
-  *aProcessObjects = mProcessObjects;
+  NS_ENSURE_ARG_POINTER(aIsValidContainer);
+  *aIsValidContainer = mIsValidContainer;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSASN1Sequence::SetProcessObjects(PRBool aProcessObjects)
+nsNSSASN1Sequence::SetIsValidContainer(PRBool aIsValidContainer)
 {
-  mProcessObjects = aProcessObjects;
-  SetShowObjects(mProcessObjects);
-  return NS_OK;
-}
-
-/* attribute boolean showObjects; */
-NS_IMETHODIMP 
-nsNSSASN1Sequence::GetShowObjects(PRBool *aShowObjects)
-{
-  NS_ENSURE_ARG_POINTER(aShowObjects);
-  *aShowObjects = mShowObjects;
+  mIsValidContainer = aIsValidContainer;
+  SetIsExpanded(mIsValidContainer);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::SetShowObjects(PRBool aShowObjects)
+nsNSSASN1Sequence::GetIsExpanded(PRBool *aIsExpanded)
 {
-  mShowObjects = aShowObjects;
+  NS_ENSURE_ARG_POINTER(aIsExpanded);
+  *aIsExpanded = mIsExpanded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSASN1Sequence::SetIsExpanded(PRBool aIsExpanded)
+{
+  mIsExpanded = aIsExpanded;
   return NS_OK;
 }
 

@@ -44,7 +44,7 @@ function setWindowName()
   for(var x=0; x<numberOfCerts;x++)
   {
      dbkey = gParams.GetString(x+1);
-     certs[x] = certdb.getCertByDBKey(dbkey , null);
+     certs[x] = certdb.findCertByDBKey(dbkey , null);
   }
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");

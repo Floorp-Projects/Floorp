@@ -295,7 +295,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     PRUint32 tempInt = 0;
-    if (NS_SUCCEEDED(x509Proxy->GetPurposes(&tempInt, temp1)) && !temp1.IsEmpty()) {
+    if (NS_SUCCEEDED(x509Proxy->GetUsagesString(PR_FALSE, &tempInt, temp1)) && !temp1.IsEmpty()) {
       details.Append(NS_LITERAL_STRING("  "));
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoPurposes").get(), info))) {
         details.Append(info);
@@ -646,90 +646,6 @@ nsNSSCertificate::GetMd5Fingerprint(nsAString &_md5Fingerprint)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetIssuedDate(nsAString &_issuedDate)
-{
-  _issuedDate.Truncate();
-  nsresult rv;
-  PRTime beforeTime;
-  nsCOMPtr<nsIX509CertValidity> validity;
-  rv = this->GetValidity(getter_AddRefs(validity));
-  if (NS_FAILED(rv)) return rv;
-  rv = validity->GetNotBefore(&beforeTime);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsAutoString date;
-  dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
-                              beforeTime, date);
-  _issuedDate = date;
-  return NS_OK;
-}
-
-nsresult
-nsNSSCertificate::GetSortableDate(PRTime aTime, nsAString &_aSortableDate)
-{
-  PRExplodedTime explodedTime;
-  PR_ExplodeTime(aTime, PR_GMTParameters, &explodedTime);
-  char datebuf[20]; // 4 + 2 + 2 + 2 + 2 + 2 + 1 = 15
-  if (0 != PR_FormatTime(datebuf, sizeof(datebuf), "%Y%m%d%H%M%S", &explodedTime)) {
-    _aSortableDate = NS_ConvertASCIItoUCS2(nsDependentCString(datebuf));
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetIssuedDateSortable(nsAString &_issuedDate)
-{
-  _issuedDate.Truncate();
-  nsresult rv;
-  PRTime beforeTime;
-  nsCOMPtr<nsIX509CertValidity> validity;
-  rv = this->GetValidity(getter_AddRefs(validity));
-  if (NS_FAILED(rv)) return rv;
-  rv = validity->GetNotBefore(&beforeTime);
-  if (NS_FAILED(rv)) return rv;
-  return GetSortableDate(beforeTime, _issuedDate);
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetExpiresDate(nsAString &_expiresDate)
-{
-  _expiresDate.Truncate();
-  nsresult rv;
-  PRTime afterTime;
-  nsCOMPtr<nsIX509CertValidity> validity;
-  rv = this->GetValidity(getter_AddRefs(validity));
-  if (NS_FAILED(rv)) return rv;
-  rv = validity->GetNotAfter(&afterTime);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsAutoString date;
-  dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
-                              afterTime, date);
-  _expiresDate = date;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetExpiresDateSortable(nsAString &_expiresDate)
-{
-  _expiresDate.Truncate();
-  nsresult rv;
-  PRTime afterTime;
-  nsCOMPtr<nsIX509CertValidity> validity;
-  rv = this->GetValidity(getter_AddRefs(validity));
-  if (NS_FAILED(rv)) return rv;
-  rv = validity->GetNotAfter(&afterTime);
-  if (NS_FAILED(rv)) return rv;
-  return GetSortableDate(afterTime, _expiresDate);
-}
-
-NS_IMETHODIMP
 nsNSSCertificate::GetTokenName(nsAString &aTokenName)
 {
   aTokenName.Truncate();
@@ -757,25 +673,6 @@ nsNSSCertificate::GetTokenName(nsAString &aTokenName)
       if (NS_SUCCEEDED(rv))
         aTokenName = tok;
     }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetUsesOCSP(PRBool *aUsesOCSP)
-{
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
- 
-  PRInt32 ocspEnabled; 
-  prefService->GetIntPref("security.OCSP.enabled", &ocspEnabled);
-  if (ocspEnabled == 2) {
-    *aUsesOCSP = PR_TRUE;
-  } else if (ocspEnabled == 1) {
-    nsXPIDLCString ocspLocation;
-    ocspLocation.Adopt(CERT_GetOCSPAuthorityInfoAccessLocation(mCert));
-    *aUsesOCSP = (ocspLocation) ? PR_TRUE : PR_FALSE;
-  } else {
-    *aUsesOCSP = PR_FALSE;
   }
   return NS_OK;
 }
@@ -927,22 +824,19 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
 }
 
 
-/*
- * void getUsages(out PRUint32 verified,
- *                out PRUint32 count, 
- *                [retval, array, size_is(count)] out wstring usages);
- */
 NS_IMETHODIMP
-nsNSSCertificate::GetUsages(PRUint32 *_verified,
-                            PRUint32 *_count,
-                            PRUnichar ***_usages)
+nsNSSCertificate::GetUsagesArray(PRBool ignoreOcsp,
+                                 PRUint32 *_verified,
+                                 PRUint32 *_count,
+                                 PRUnichar ***_usages)
 {
   nsresult rv;
-  PRUnichar *tmpUsages[13];
+  const int max_usages = 13;
+  PRUnichar *tmpUsages[max_usages];
   char *suffix = "";
   PRUint32 tmpCount;
   nsUsageArrayHelper uah(mCert);
-  rv = uah.GetUsageArray(suffix, 13, _verified, &tmpCount, tmpUsages);
+  rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
   if (tmpCount > 0) {
     *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * tmpCount);
     for (PRUint32 i=0; i<tmpCount; i++) {
@@ -957,19 +851,21 @@ nsNSSCertificate::GetUsages(PRUint32 *_verified,
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetPurposes(PRUint32   *_verified,
-                              nsAString &_purposes)
+nsNSSCertificate::GetUsagesString(PRBool ignoreOcsp,
+                                  PRUint32   *_verified,
+                                  nsAString &_usages)
 {
   nsresult rv;
-  PRUnichar *tmpUsages[13];
+  const int max_usages = 13;
+  PRUnichar *tmpUsages[max_usages];
   char *suffix = "_p";
   PRUint32 tmpCount;
   nsUsageArrayHelper uah(mCert);
-  rv = uah.GetUsageArray(suffix, 13, _verified, &tmpCount, tmpUsages);
-  _purposes.Truncate();
+  rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
+  _usages.Truncate();
   for (PRUint32 i=0; i<tmpCount; i++) {
-    if (i>0) _purposes.Append(NS_LITERAL_STRING(","));
-    _purposes.Append(tmpUsages[i]);
+    if (i>0) _usages.Append(NS_LITERAL_STRING(","));
+    _usages.Append(tmpUsages[i]);
     nsMemory::Free(tmpUsages[i]);
   }
   return NS_OK;
@@ -989,7 +885,7 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
   GetOIDText(&algID->algorithm, nssComponent, text);
   if (!algID->parameters.len || algID->parameters.data[0] == nsIASN1Object::ASN1_NULL) {
     sequence->SetDisplayValue(text);
-    sequence->SetProcessObjects(PR_FALSE);
+    sequence->SetIsValidContainer(PR_FALSE);
   } else {
     nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
     printableItem->SetDisplayValue(text);
@@ -1493,7 +1389,7 @@ nsNSSCertificate::GetASN1Structure(nsIASN1Object * *aASN1Structure)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::IsSameCert(nsIX509Cert *other, PRBool *result)
+nsNSSCertificate::Equals(nsIX509Cert *other, PRBool *result)
 {
   NS_ENSURE_ARG(other);
   NS_ENSURE_ARG(result);

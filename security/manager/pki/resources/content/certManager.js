@@ -85,7 +85,7 @@ function LoadCerts()
     enableBackupAllButton.setAttribute("enabled",true);
   }
 
-  if (certdb.ocspOn) {
+  if (certdb.isOcspOn) {
     document.getElementById('ocsp_info').removeAttribute("hidden");
   }
 }

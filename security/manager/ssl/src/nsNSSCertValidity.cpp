@@ -101,6 +101,26 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeLocalTime(nsAString &aNotBeforeLoc
   return NS_OK;
 }
 
+NS_IMETHODIMP nsX509CertValidity::GetNotBeforeLocalDay(nsAString &aNotBeforeLocalDay)
+{
+  if (!mTimesInitialized)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString date;
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(mNotBefore, PR_LocalTimeParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                                      &explodedTime, date);
+  aNotBeforeLocalDay = date;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsX509CertValidity::GetNotBeforeGMT(nsAString &aNotBeforeGMT)
 {
   if (!mTimesInitialized)
@@ -149,6 +169,25 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterLocalTime(nsAString &aNotAfterLocal
   dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                                       &explodedTime, date);
   aNotAfterLocaltime = date;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsX509CertValidity::GetNotAfterLocalDay(nsAString &aNotAfterLocalDay)
+{
+  if (!mTimesInitialized)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString date;
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(mNotAfter, PR_LocalTimeParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                                      &explodedTime, date);
+  aNotAfterLocalDay = date;
   return NS_OK;
 }
 

@@ -70,7 +70,7 @@ nsSecurityWarningDialogs::Init()
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *canceled)
+nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval)
 {
   nsresult rv;
 
@@ -78,12 +78,12 @@ nsSecurityWarningDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx, PRBool
                    NS_LITERAL_STRING("EnterSecureMessage").get(),
                    NS_LITERAL_STRING("EnterSecureShowAgain").get());
 
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return rv;
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *canceled)
+nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval)
 {
   nsresult rv;
 
@@ -91,12 +91,12 @@ nsSecurityWarningDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *
                    NS_LITERAL_STRING("WeakSecureMessage").get(),
                    NS_LITERAL_STRING("WeakSecureShowAgain").get());
 
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return rv;
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *canceled)
+nsSecurityWarningDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval)
 {
   nsresult rv;
 
@@ -104,13 +104,13 @@ nsSecurityWarningDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx, PRBool 
                    NS_LITERAL_STRING("LeaveSecureMessage").get(),
                    NS_LITERAL_STRING("LeaveSecureShowAgain").get());
 
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return rv;
 }
 
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx, PRBool *canceled)
+nsSecurityWarningDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval)
 {
   nsresult rv;
 
@@ -118,7 +118,7 @@ nsSecurityWarningDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx, PRBool *can
                    NS_LITERAL_STRING("MixedContentMessage").get(),
                    NS_LITERAL_STRING("MixedContentShowAgain").get());
 
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return rv;
 }
 

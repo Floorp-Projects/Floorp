@@ -29,40 +29,78 @@
 interface nsIInterfaceRequestor;
 
 /**
- * nsISecurityWarningDialogs - functions that
- *   display warnings for transitions between secure
- *   and insecure pages, posts to insecure servers etc.
+ * Functions that display warnings for transitions between secure
+ * and insecure pages, posts to insecure servers etc.
  */
 [scriptable, uuid(1c399d06-1dd2-11b2-bc58-c87cbcacdb78)]
 interface nsISecurityWarningDialogs : nsISupports
 {
   /**
-   * alertEnteringSecure
+   *  Inform the user that a transition 
+   *    from an insecure page 
+   *    to a secure page
+   *  is happening.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user confirms to continue
    */
-  boolean alertEnteringSecure(in nsIInterfaceRequestor ctx);
+  boolean confirmEnteringSecure(in nsIInterfaceRequestor ctx);
 
   /**
-   * alertEnteringWeak
+   *  Inform the user that a transition 
+   *    from an insecure page 
+   *    or from a secure page
+   *    to a weak security page
+   *  is happening.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user confirms to continue
    */
-  boolean alertEnteringWeak(in nsIInterfaceRequestor ctx);
+  boolean confirmEnteringWeak(in nsIInterfaceRequestor ctx);
 
   /**
-   * alertLeavingSecure
+   *  Inform the user that a transition 
+   *    from a secure page 
+   *    to an insecure page
+   *  is happening.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user confirms to continue
    */
-  boolean alertLeavingSecure(in nsIInterfaceRequestor ctx);
+  boolean confirmLeavingSecure(in nsIInterfaceRequestor ctx);
 
   /**
-   * alertMixedMode
+   *  Inform the user the currently displayed page
+   *  contains some secure and some insecure page components.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user decides to show insecure objects.
    */
-  boolean alertMixedMode(in nsIInterfaceRequestor ctx);
+  boolean confirmMixedMode(in nsIInterfaceRequestor ctx);
 
   /**
-   * confirmPostToInsecure
+   *  Inform the user that information is being submitted
+   *  to an insecure page.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user confirms to submit.
    */
   boolean confirmPostToInsecure(in nsIInterfaceRequestor ctx);
 
   /**
-   * confirmPostToInsecureFromSecure
+   *  Inform the user: Although the currently displayed
+   *  page was loaded using a secure connection, and the UI probably
+   *  currently indicates a secure page, 
+   *  that information is being submitted to an insecure page.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user confirms to submit.
    */
   boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
 };

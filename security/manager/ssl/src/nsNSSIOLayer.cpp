@@ -1270,14 +1270,13 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
      this in future - need to define a proper ui for this situation
   */
   case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-
-    rv = badCertHandler->UnknownIssuer(csi, callBackCert, &addType, &retVal);
+    rv = badCertHandler->ConfirmUnknownIssuer(csi, callBackCert, &addType, &retVal);
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
     {
       nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url.get(), "could not find valid URL in ssl socket");
-      rv = badCertHandler->MismatchDomain(csi, url,
+      rv = badCertHandler->ConfirmMismatchDomain(csi, url,
                                           callBackCert, &retVal);
       if (NS_SUCCEEDED(rv) && retVal) {
         rv = CERT_AddOKDomainName(peerCert, url);
@@ -1285,7 +1284,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     }
     break;
   case SEC_ERROR_EXPIRED_CERTIFICATE:
-    rv = badCertHandler->CertExpired(csi, callBackCert, & retVal);
+    rv = badCertHandler->ConfirmCertExpired(csi, callBackCert, & retVal);
     if (rv == SECSuccess && retVal) {
       // XXX We need an NSS API for this equivalent functionality.
       //     Having to reach inside the cert is evil.
@@ -1296,10 +1295,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     {
       nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url, "could not find valid URL in ssl socket");
-      rv = badCertHandler->CrlNextupdate(csi, url, callBackCert);
-      if (NS_SUCCEEDED(rv) && retVal) {
-        rv = CERT_AddOKDomainName(peerCert, url.get());
-      }
+      rv = badCertHandler->NotifyCrlNextupdate(csi, url, callBackCert);
       retVal = PR_FALSE;
     }
     break;

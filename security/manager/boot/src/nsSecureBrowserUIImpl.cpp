@@ -1030,19 +1030,19 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
       {
         case lis_no_security:
         case lis_broken_security:
-          AlertLeavingSecure();
+          ConfirmLeavingSecure();
           break;
 
         case lis_mixed_security:
-          AlertMixedMode();
+          ConfirmMixedMode();
           break;
 
         case lis_low_security:
-          AlertEnteringWeak();
+          ConfirmEnteringWeak();
           break;
 
         case lis_high_security:
-          AlertEnteringSecure();
+          ConfirmEnteringSecure();
           break;
       }
     }
@@ -1308,68 +1308,68 @@ GetNSSDialogs(nsISecurityWarningDialogs **result)
   return CallQueryInterface(proxiedResult, result);
 }
 
-void nsSecureBrowserUIImpl::
-AlertEnteringSecure()
+PRBool nsSecureBrowserUIImpl::
+ConfirmEnteringSecure()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
 
   GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return;
+  if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  PRBool canceled;
-  dialogs->AlertEnteringSecure(ctx, &canceled);
+  PRBool confirms;
+  dialogs->ConfirmEnteringSecure(ctx, &confirms);
 
-  return;
+  return confirms;
 }
 
-void nsSecureBrowserUIImpl::
-AlertEnteringWeak()
+PRBool nsSecureBrowserUIImpl::
+ConfirmEnteringWeak()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
 
   GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return;
+  if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  PRBool canceled;
-  dialogs->AlertEnteringWeak(ctx, &canceled);
+  PRBool confirms;
+  dialogs->ConfirmEnteringWeak(ctx, &confirms);
 
-  return;
+  return confirms;
 }
 
-void nsSecureBrowserUIImpl::
-AlertLeavingSecure()
+PRBool nsSecureBrowserUIImpl::
+ConfirmLeavingSecure()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
 
   GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return;
+  if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  PRBool canceled;
-  dialogs->AlertLeavingSecure(ctx, &canceled);
+  PRBool confirms;
+  dialogs->ConfirmLeavingSecure(ctx, &confirms);
 
-  return;
+  return confirms;
 }
 
-void nsSecureBrowserUIImpl::
-AlertMixedMode()
+PRBool nsSecureBrowserUIImpl::
+ConfirmMixedMode()
 {
   nsCOMPtr<nsISecurityWarningDialogs> dialogs;
 
   GetNSSDialogs(getter_AddRefs(dialogs));
-  if (!dialogs) return;
+  if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  PRBool canceled;
-  dialogs->AlertMixedMode(ctx, &canceled);
+  PRBool confirms;
+  dialogs->ConfirmMixedMode(ctx, &confirms);
 
-  return;
+  return confirms;
 }
 
 /**
