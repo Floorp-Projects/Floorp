@@ -48,6 +48,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
+#include "nsCOMPtr.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -289,7 +290,7 @@ protected:
   nsIFrame* mCurrentEventFrame;
   nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
   nsIFrame* mAnchorEventFrame; //keeps track of which frame has focus. 
-  nsISelection *mSelection;
+  nsCOMPtr <nsISelection>mSelection;
   FrameHashTable* mPlaceholderMap;
 };
 
@@ -430,7 +431,6 @@ PresShell::~PresShell()
     mDocument->DeleteShell(this);
     NS_RELEASE(mDocument);
   }
-  NS_IF_RELEASE(mSelection);
   mRefCnt = 0;
   delete mPlaceholderMap;
 }
@@ -472,40 +472,31 @@ PresShell::Init(nsIDocument* aDocument,
   mStyleSet = aStyleSet;
   NS_ADDREF(aStyleSet);
 
-  nsICollection *selection;
-  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull, kICollectionIID, (void **) &selection);
+  nsCOMPtr<nsICollection>selection;
+  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull, kICollectionIID, getter_AddRefs(selection));
   if (!NS_SUCCEEDED(result))
     return result;
   selection->Clear();//clear all old selection
-  nsICollection *collection = nsnull;
-  nsIDOMRange *range = nsnull;
-  if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, (void **)&range))){ //create an irange
-    nsIDocument *doc = GetDocument();
-    nsIDOMDocument *domDoc = nsnull;
-    if (doc && NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID,(void **)&domDoc))){
-      nsIDOMElement *domElement = nsnull;
-      if (NS_SUCCEEDED(domDoc->GetDocumentElement(&domElement))) {//get the first element from the dom
-        nsIDOMNode *domNode;
-        if (NS_SUCCEEDED(domElement->QueryInterface(kIDOMNodeIID,(void **)&domNode))) {//get the node interface for the range object
+  nsCOMPtr<nsIDOMRange>range;
+  if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
+    nsCOMPtr<nsIDocument>doc(GetDocument());
+    nsCOMPtr<nsIDOMDocument>domDoc(doc);
+    if (domDoc){
+      nsCOMPtr<nsIDOMElement> domElement;
+      if (NS_SUCCEEDED(domDoc->GetDocumentElement(getter_AddRefs(domElement)))) {//get the first element from the dom
+        nsCOMPtr<nsIDOMNode>domNode(domElement);
+        if (domNode) {//get the node interface for the range object
           range->SetStart(domNode,0);
           range->SetEnd(domNode,0);
-          nsISupports *rangeISupports;
-          if (NS_SUCCEEDED(range->QueryInterface(kISupportsIID,(void **)&rangeISupports))) {
+          nsCOMPtr<nsISupports>rangeISupports(range);
+          if (rangeISupports) {
             selection->AddItem(rangeISupports);
-            NS_IF_RELEASE(rangeISupports);
           }
-          NS_IF_RELEASE(domNode);
         }
-        NS_IF_RELEASE(domElement);
       }
-      NS_IF_RELEASE(domDoc);
-      NS_IF_RELEASE(doc);
     }
-    NS_IF_RELEASE(range);//allready referenced in the selection now.
   }
-  selection->QueryInterface(kISelectionIID, (void **)&mSelection);
-  NS_RELEASE(selection);
-
+  mSelection = selection;
   return NS_OK;
 }
 
@@ -696,13 +687,15 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
+    if (mSelection)
+      mSelection->ResetSelection(mRootFrame);
+
     // XXX if debugging then we should assert that the cache is empty
   } else {
 #ifdef NOISY
     printf("PresShell::ResizeReflow: null root frame\n");
 #endif
   }
-
   ExitReflowLock();
 
   return NS_OK; //XXX this needs to be real. MMP
