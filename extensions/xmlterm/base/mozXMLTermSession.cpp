@@ -167,9 +167,7 @@ mozXMLTermSession::mozXMLTermSession() :
 
 mozXMLTermSession::~mozXMLTermSession()
 {
-  if (mInitialized) {
-    Finalize();
-  }
+  Finalize();
 }
 
 
@@ -190,6 +188,8 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
   mXMLTerminal = aXMLTerminal;    // containing XMLTerminal; no addref
   mPresShell = aPresShell;        // presentation shell; no addref
   mDOMDocument = aDOMDocument;    // DOM document; no addref
+
+  mInitialized = PR_TRUE;
 
   mScreenRows = nRows;
   mScreenCols = nCols;
@@ -247,8 +247,6 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
   result = AppendOutput(prefaceText, nullStyle, PR_TRUE);
 #endif
 
-  mInitialized = PR_TRUE;
-
   XMLT_LOG(mozXMLTermSession::Init,31,("exiting\n"));
   return result;
 }
@@ -257,6 +255,13 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
 // De-initialize XMLTermSession
 NS_IMETHODIMP mozXMLTermSession::Finalize(void)
 {
+
+  if (!mInitialized)
+    return NS_OK;
+
+  XMLT_LOG(mozXMLTermSession::Finalize,30,("\n"));
+
+  mInitialized = PR_FALSE;
 
   mScreenNode = nsnull;
 
@@ -281,7 +286,7 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
   mPresShell = nsnull;
   mDOMDocument = nsnull;
 
-  mInitialized = PR_FALSE;
+  XMLT_LOG(mozXMLTermSession::Finalize,32,("END\n"));
 
   return NS_OK;
 }

@@ -126,9 +126,7 @@ mozXMLTerminal::mozXMLTerminal() :
 
 mozXMLTerminal::~mozXMLTerminal()
 {
-  if (mInitialized) {
-    Finalize();
-  }
+  Finalize();
 }
 
 
@@ -232,8 +230,11 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
   if (!aDocShell)
       return NS_ERROR_NULL_POINTER;
 
-  if (mDocShell)
+  if (mInitialized)
     return NS_ERROR_ALREADY_INITIALIZED;
+
+  // Initialization flag
+  mInitialized = PR_TRUE;
 
   mDocShell = aDocShell;          // containing docshell; no addref
 
@@ -251,9 +252,6 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
   mCommand.SetLength(0);
   mPromptExpr.SetLength(0);
   mInitInput = args;
-
-  // Initialization completed
-  mInitialized = PR_TRUE;
 
   if ((aURL != nsnull) && (*aURL != 0)) {
     // Load URL and activate XMLTerm after loading
@@ -294,6 +292,13 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
 // De-initialize XMLTerminal
 NS_IMETHODIMP mozXMLTerminal::Finalize(void)
 {
+  if (!mInitialized)
+    return NS_OK;
+
+  XMLT_LOG(mozXMLTerminal::Finalize,20,("\n"));
+
+  mInitialized = PR_FALSE;
+
   if (mXMLTermSession) {
     // Finalize XMLTermSession object and delete it (it is not ref. counted)
     mXMLTermSession->Finalize();
@@ -349,7 +354,7 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
   mPresShell = nsnull;
   mXMLTermShell = nsnull;
 
-  mInitialized = PR_FALSE;
+  XMLT_LOG(mozXMLTerminal::Finalize,22,("END\n"));
 
   return NS_OK;
 }
