@@ -19,8 +19,6 @@
 //
 // simon
 
-#if defined(_WIN32) || defined(LINUX) || defined(FREEBSD)
-
 #ifndef _X86WIN32_EXCEPTION_H_
 #define _X86WIN32_EXCEPTION_H_
 
@@ -79,4 +77,3 @@ void printContext(LogModuleObject &f, Context* context);
 //--------------------------------------------------------------------------------
 
 #endif // _X86WIN32_EXCEPTION_H_
-#endif // _WIN32

@@ -15,12 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-// x86Win32_Exception.cpp
+
 //
 // simon
 // bjorn
-
-#if defined(_WIN32) || defined(LINUX) || defined (FREEBSD)
 
 #include "SysCalls.h"
 #include "prprf.h"
@@ -90,8 +88,8 @@ extern "C" SYSCALL_FUNC(JavaObject&) x86NewExceptionInstance(StandardClass class
 
 
 //--------------------------------------------------------------------------------
-// LINUX/FREEBSD specific -- FIX make another file for this
-#if defined( LINUX ) || defined( FREEBSD )
+// Non MSVC code -- FIX make another file for this
+#ifdef __GNUC__
 
 extern "C"
 {
@@ -438,5 +436,3 @@ Uint8* findExceptionHandler(Context* context)
 	return pHandler;
 }
 
-//--------------------------------------------------------------------------------
-#endif	// _WIN32 || LINUX
