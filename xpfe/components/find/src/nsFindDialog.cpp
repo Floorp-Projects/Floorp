@@ -51,13 +51,13 @@ nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr)
         *anInstancePtr = 0;
 
         // Check for interfaces we support and cast this appropriately.
-        if ( anIID.Equals( nsIXULWindowCallbacks::GetIID() ) ) {
+        if ( anIID.Equals( ::nsIXULWindowCallbacks::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsIXULWindowCallbacks*)this);
             NS_ADDREF_THIS();
-        } else if ( anIID.Equals( nsIDocumentObserver::GetIID() ) ) {
+        } else if ( anIID.Equals( ::nsIDocumentObserver::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsIDocumentObserver*)this);
             NS_ADDREF_THIS();
-        } else if ( anIID.Equals( nsISupports::GetIID() ) ) {
+        } else if ( anIID.Equals( ::nsISupports::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsISupports*)(nsIDocumentObserver*)this);
             NS_ADDREF_THIS();
         } else {
