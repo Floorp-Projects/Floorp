@@ -135,6 +135,17 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
+{
+  if(!mBaseWindow)
+    return NS_ERROR_FAILURE;
+
+  const char *text = aTitle.ToNewCString();
+  XStoreName(gDisplay, mBaseWindow, text);
+  delete [] text;
+  return NS_OK;
+}
+
 ChildWindow::ChildWindow(): nsWindow()
 {
   name = "nsChildWindow";
