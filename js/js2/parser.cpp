@@ -17,6 +17,7 @@
 // Copyright (C) 1998 Netscape Communications Corporation. All
 // Rights Reserved.
 
+#include "numerics.h"
 #include "parser.h"
 #include "world.h"
 
@@ -65,9 +66,9 @@ JS::String JS::Reader::extract(uint32 begin, uint32 end) const
 }
 
 
-// Begin accumulating characters into the recordString.  Each character passed
-// to recordChar() is added to the end of the recordString.  Recording ends when
-// endRecord() or beginLine() is called.
+// Begin accumulating characters into the recordString, whose initial value is
+// ignored and cleared.  Each character passed to recordChar() is added to the end
+// of the recordString.  Recording ends when endRecord() or beginLine() is called.
 // Recording is significantly optimized when the characters passed to readChar()
 // are the same characters as read by get().  In this case the record String does
 // not get allocated until endRecord() is called or a discrepancy appears between
@@ -150,93 +151,189 @@ JS::String JS::StringReader::sourceFile() const
 //
 
 
-void JS::Token::setChars(const String &s)
-{
-	chars = static_cast<auto_ptr<String> >(new String(s));
-}
+static const char *const JS::Token::kindNames[] = {
+  // Special
+	"[End]",			// Token::End
+	"[Identifier]",		// Token::Id
+	"[Numeral]",		// Token::Num
+	"[String]",			// Token::Str
+	"[Unit]",			// Token::Unit
+	"[RegExp]",			// Token::RegExp
 
+  // Punctuators
+	"(",				// Token::OpenParenthesis
+	")",				// Token::CloseParenthesis
+	"[",				// Token::OpenBracket
+	"]",				// Token::CloseBracket
+	"{",				// Token::OpenBrace
+	"}",				// Token::CloseBrace
+	",",				// Token::Comma
+	";",				// Token::Semicolon
+	".",				// Token::Dot
+	"..",				// Token::DoubleDot
+	"...",				// Token::TripleDot
+	"->",				// Token::Arrow
+	":",				// Token::Colon
+	"::",				// Token::DoubleColon
+	"#",				// Token::Pound
+	"@",				// Token::At
+	"++",				// Token::Increment
+	"--",				// Token::Decrement
+	"~",				// Token::Complement
+	"!",				// Token::Not
+	"*",				// Token::Times
+	"/",				// Token::Divide
+	"%",				// Token::Modulo
+	"+",				// Token::Plus
+	"-",				// Token::Minus
+	"<<",				// Token::LeftShift
+	">>",				// Token::RightShift
+	">>>",				// Token::LogicalRightShift
+	"&&",				// Token::LogicalAnd
+	"^^",				// Token::LogicalXor
+	"||",				// Token::LogicalOr
+	"&",				// Token::And
+	"^",				// Token::Xor
+	"|",				// Token::Or
+	"=",				// Token::Assignment
+	"*=",				// Token::TimesEquals
+	"/=",				// Token::DivideEquals
+	"%=",				// Token::ModuloEquals
+	"+=",				// Token::PlusEquals
+	"-=",				// Token::MinusEquals
+	"<<=",				// Token::LeftShiftEquals
+	">>=",				// Token::RightShiftEquals
+	">>>=",				// Token::LogicalRightShiftEquals
+	"&&=",				// Token::LogicalAndEquals
+	"^^=",				// Token::LogicalXorEquals
+	"||=",				// Token::LogicalOrEquals
+	"&=",				// Token::AndEquals
+	"^=",				// Token::XorEquals
+	"|=",				// Token::OrEquals
+	"==",				// Token::Equal
+	"!=",				// Token::NotEqual
+	"<",				// Token::LessThan
+	"<=",				// Token::LessThanOrEqual
+	">",				// Token::GreaterThan
+	">=",				// Token::GreaterThanOrEqual
+	"===",				// Token::Identical
+	"!==",				// Token::NotIdentical
+	"?",				// Token::Question
 
-struct KeywordInit {
-	const char *name;					// Null-terminated ASCII name of keyword
-	JS::Token::Kind tokenKind;			// Keyword's number
-};
-
-static KeywordInit keywordInits[] = {
   // Reserved words
-	{"abstract", JS::Token::Abstract},
-	{"abstract", JS::Token::Abstract},
-	{"break", JS::Token::Break},
-	{"case", JS::Token::Case},
-	{"catch", JS::Token::Catch},
-	{"class", JS::Token::Class},
-	{"const", JS::Token::Const},
-	{"continue", JS::Token::Continue},
-	{"debugger", JS::Token::Debugger},
-	{"default", JS::Token::Default},
-	{"delete", JS::Token::Delete},
-	{"do", JS::Token::Do},
-	{"else", JS::Token::Else},
-	{"enum", JS::Token::Enum},
-	{"eval", JS::Token::Eval},
-	{"export", JS::Token::Export},
-	{"extends", JS::Token::Extends},
-	{"false", JS::Token::False},
-	{"final", JS::Token::Final},
-	{"finally", JS::Token::Finally},
-	{"for", JS::Token::For},
-	{"function", JS::Token::Function},
-	{"goto", JS::Token::Goto},
-	{"if", JS::Token::If},
-	{"implements", JS::Token::Implements},
-	{"import", JS::Token::Import},
-	{"in", JS::Token::In},
-	{"instanceof", JS::Token::Instanceof},
-	{"native", JS::Token::Native},
-	{"new", JS::Token::New},
-	{"null", JS::Token::Null},
-	{"package", JS::Token::Package},
-	{"private", JS::Token::Private},
-	{"protected", JS::Token::Protected},
-	{"public", JS::Token::Public},
-	{"return", JS::Token::Return},
-	{"static", JS::Token::Static},
-	{"super", JS::Token::Super},
-	{"switch", JS::Token::Switch},
-	{"synchronized", JS::Token::Synchronized},
-	{"this", JS::Token::This},
-	{"throw", JS::Token::Throw},
-	{"throws", JS::Token::Throws},
-	{"transient", JS::Token::Transient},
-	{"true", JS::Token::True},
-	{"try", JS::Token::Try},
-	{"typeof", JS::Token::Typeof},
-	{"var", JS::Token::Var},
-	{"volatile", JS::Token::Volatile},
-	{"while", JS::Token::While},
-	{"with", JS::Token::With},
+	"abstract",			// Token::Abstract
+	"break",			// Token::Break
+	"case",				// Token::Case
+	"catch",			// Token::Catch
+	"class",			// Token::Class
+	"const",			// Token::Const
+	"continue",			// Token::Continue
+	"debugger",			// Token::Debugger
+	"default",			// Token::Default
+	"delete",			// Token::Delete
+	"do",				// Token::Do
+	"else",				// Token::Else
+	"enum",				// Token::Enum
+	"eval",				// Token::Eval
+	"export",			// Token::Export
+	"extends",			// Token::Extends
+	"false",			// Token::False
+	"final",			// Token::Final
+	"finally",			// Token::Finally
+	"for",				// Token::For
+	"function",			// Token::Function
+	"goto",				// Token::Goto
+	"if",				// Token::If
+	"implements",		// Token::Implements
+	"import",			// Token::Import
+	"in",				// Token::In
+	"instanceof",		// Token::Instanceof
+	"native",			// Token::Native
+	"new",				// Token::New
+	"null",				// Token::Null
+	"package",			// Token::Package
+	"private",			// Token::Private
+	"protected",		// Token::Protected
+	"public",			// Token::Public
+	"return",			// Token::Return
+	"static",			// Token::Static
+	"super",			// Token::Super
+	"switch",			// Token::Switch
+	"synchronized",		// Token::Synchronized
+	"this",				// Token::This
+	"throw",			// Token::Throw
+	"throws",			// Token::Throws
+	"transient",		// Token::Transient
+	"true",				// Token::True
+	"try",				// Token::Try
+	"typeof",			// Token::Typeof
+	"var",				// Token::Var
+	"volatile",			// Token::Volatile
+	"while",			// Token::While
+	"with",				// Token::With
+
   // Non-reserved words
-	{"box", JS::Token::Box},
-	{"constructor", JS::Token::Constructor},
-	{"field", JS::Token::Field},
-	{"get", JS::Token::Get},
-	{"language", JS::Token::Language},
-	{"local", JS::Token::Local},
-	{"method", JS::Token::Method},
-	{"override", JS::Token::Override},
-	{"set", JS::Token::Set},
-	{"version", JS::Token::Version}
+	"box",				// Token::Box
+	"constructor",		// Token::Constructor
+	"field",			// Token::Field
+	"get",				// Token::Get
+	"language",			// Token::Language
+	"local",			// Token::Local
+	"method",			// Token::Method
+	"override",			// Token::Override
+	"set",				// Token::Set
+	"version"			// Token::Version
 };
 
 
 // Initialize the keywords in the given world.
-void JS::initKeywords(World &world)
+void JS::Token::initKeywords(World &world)
 {
-	KeywordInit *ki = keywordInits;
-	KeywordInit *kiEnd = keywordInits + sizeof(keywordInits)/sizeof(KeywordInit);
-	for (; ki != kiEnd; ++ki)
-		world.identifiers[widenCString(ki->name)].tokenKind = ki->tokenKind;
+	const char *const*keywordName = kindNames + KeywordsBegin;
+	for (Kind kind = KeywordsBegin; kind != KeywordsEnd; kind = Kind(kind+1))
+		world.identifiers[widenCString(*keywordName++)].tokenKind = kind;
 }
 
+
+// Append a description of the token to dst.
+void JS::Token::print(String &dst, bool debug) const
+{
+	switch (kind) {
+	  case Id:
+		if (debug)
+			dst += "[Id]";
+		dst += *identifier;
+		break;
+
+	  case Num:
+		if (debug) {
+			dst += "[Num ";
+			dst += value;
+			dst += ']';
+		}
+		dst += chars;
+		break;
+
+	  case Unit:
+		if (debug)
+			dst += "[Unit]";
+	  case Str:
+		dst += '"';
+		dst += chars;
+		dst += '"';
+		break;
+
+	  case RegExp:
+		dst += '/';
+		dst += *identifier;
+		dst += '/';
+		dst += chars;
+		break;
+
+	  default:
+		dst += kind;
+	}
+}
 
 
 // Create a new Lexer using the provided Reader and interning identifiers, keywords, and regular
@@ -438,7 +535,8 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
 }
 
 
-// Read an identifier into s.  Return true if an escape code has been encountered.
+// Read an identifier into s.  The initial value of s is ignored and cleared.
+// Return true if an escape code has been encountered.
 // If allowLeadingDigit is true, allow the first character of s to be a digit, just like any
 // continuing identifier character.
 bool JS::Lexer::lexIdentifier(String &s, bool allowLeadingDigit)
@@ -476,7 +574,7 @@ bool JS::Lexer::lexNumeral()
 {
 	int radix = 10;
 	int hasDecimalPoint = 0;
-	String s;
+	String &s = nextToken->chars;
 	uint digit;
 
 	reader.beginRecording(s);
@@ -530,18 +628,21 @@ bool JS::Lexer::lexNumeral()
 	// At this point the reader is just past the character ch, which is the first non-formatting character
 	// that is not part of the number.
 	reader.endRecording();
-	nextToken->setChars(s);
+	const char16 *sBegin = s.data();
+	const char16 *sEnd = sBegin + s.size();
+	const char16 *numEnd;
+	nextToken->value = stringToDouble(sBegin, sEnd, numEnd);
+	ASSERT(numEnd == sEnd);
 	reader.unget();
 	ASSERT(ch == reader.peek());
 	return isIdContinuing(char16orEOFToChar16(ch)) || ch == '\\';
 }
 
 
-// Read a string literal into a String and return that String.
+// Read a string literal into s.  The initial value of s is ignored and cleared.
 // The opening quote has already been read into separator.
-JS::String JS::Lexer::lexString(char16 separator)
+void JS::Lexer::lexString(String &s, char16 separator)
 {
-	String s;
 	char16orEOF ch;
 
 	reader.beginRecording(s);
@@ -556,12 +657,11 @@ JS::String JS::Lexer::lexString(char16 separator)
 		}
 	}
 	reader.endRecording();
-	return s;
 }
 
 
 // Read a regular expression literal.  Store the regular expression in nextToken->identifier
-// and the flags in nextToken->flags.
+// and the flags in nextToken->chars.
 // The opening slash has already been read.
 void JS::Lexer::lexRegExp()
 {
@@ -586,9 +686,7 @@ void JS::Lexer::lexRegExp()
 	reader.endRecording();
 	nextToken->identifier = &world.identifiers[s];
 	
-	String flags;
-	lexIdentifier(flags, true);
-	nextToken->setChars(flags);
+	lexIdentifier(nextToken->chars, true);
 }
 
 
@@ -599,245 +697,256 @@ void JS::Lexer::lexToken(bool preferRegExp)
 	Token &t = *nextToken;
 	t.lineBreak = false;
 	t.identifier = 0;
-	t.chars.reset();
-	t.value = 0;
+	//clear(t.chars);	// Don't really need to waste time clearing this string here
+	t.value = 0.0;
 	Token::Kind kind;
 
-  next:
-	char16orEOF ch = reader.get();
-	char16orEOF ch2;
-	CharInfo chi(char16orEOFToChar16(ch));
-
-	switch (cGroup(chi)) {
-      case CharInfo::FormatGroup:
-      case CharInfo::WhiteGroup:
-    	goto next;
-
-      case CharInfo::IdGroup:
-    	t.charPos = reader.charPos() - 1;
-      readIdentifier:
-    	{
-	    	reader.unget();
-	    	String s;
-    		bool hasEscape = lexIdentifier(s, false);
-	    	t.identifier = &world.identifiers[s];
-	    	kind = hasEscape ? Token::Id : t.identifier->tokenKind;
-    	}
-    	break;
-
-      case CharInfo::NonIdGroup:
-      case CharInfo::IdContinueGroup:
-    	t.charPos = reader.charPos() - 1;
-    	switch (ch) {
-		  case '(':
-			kind = Token::OpenParenthesis;	// (
-			break;
-		  case ')':
-			kind = Token::CloseParenthesis;	// )
-			break;
-		  case '[':
-			kind = Token::OpenBracket;		// [
-			break;
-		  case ']':
-			kind = Token::CloseBracket;		// ]
-			break;
-		  case '{':
-			kind = Token::OpenBrace;		// {
-			break;
-		  case '}':
-			kind = Token::CloseBrace;		// }
-			break;
-		  case ',':
-			kind = Token::Comma;			// ,
-			break;
-		  case ';':
-			kind = Token::Semicolon;		// ;
-			break;
-		  case '.':
-			kind = Token::Dot;				// .
-			ch2 = getChar();
-			if (isASCIIDecimalDigit(char16orEOFToChar16(ch2))) {
-				reader.backUpTo(t.charPos);
-				goto number;				// decimal point
-			} else if (ch2 == '.') {
-				kind = Token::DoubleDot;	// ..
-				if (testChar('.'))
-					kind = Token::TripleDot; // ...
-			} else
-				reader.unget();
-			break;
-		  case ':':
-			kind = Token::Colon;			// :
-			if (testChar(':'))
-				kind = Token::DoubleColon;	// ::
-			break;
-		  case '#':
-			kind = Token::Pound;			// #
-			break;
-		  case '@':
-			kind = Token::At;				// @
-			break;
-		  case '?':
-			kind = Token::Question;			// ?
-			break;
-
-		  case '~':
-			kind = Token::Complement;		// ~
-			break;
-		  case '!':
-			kind = Token::Not;				// !
-			if (testChar('=')) {
-				kind = Token::NotEqual;		// !=
-				if (testChar('='))
-					kind = Token::NotIdentical; // !==
-			}
-			break;
-
-		  case '*':
-			kind = Token::Times;			// * *=
-		  tryAssignment:
-			if (testChar('='))
-				kind = Token::Kind(kind + Token::TimesEquals - Token::Times);
-			break;
-
-		  case '/':
-			kind = Token::Divide;			// /
-			ch = getChar();
-			if (ch == '/') {				// // comment
-				do {
-					ch = reader.get();
-					if (ch == char16eof)
-						goto endOfInput;
-				} while (!isLineBreak(char16orEOFToChar16(ch)));
-				goto endOfLine;
-			} else if (ch == '*') {			// /* comment */
-				ch = 0;
-				do {
-					ch2 = ch;
-					ch = getChar();
-					if (isLineBreak(char16orEOFToChar16(ch))) {
-						reader.beginLine();
-						++lineNum;
-						t.lineBreak = true;
-					}
-					if (ch == char16eof)
-						syntaxError("Unterminated /* comment");
-				} while (ch != '/' || ch2 != '*');
-				goto next;
-			} else {
-				reader.unget();
-				if (preferRegExp) {			// Regular expression
-					kind = Token::RegExp;
-					lexRegExp();
-				} else
-					 goto tryAssignment;	// /=
-			}
-			break;
-
-		  case '%':
-			kind = Token::Modulo;			// %
-			goto tryAssignment;				// %=
-
-		  case '+':
-			kind = Token::Plus;				// +
-			if (testChar('+'))
-				kind = Token::Increment;	// ++
-			else
-				goto tryAssignment;			// +=
-			break;
-
-		  case '-':
-			kind = Token::Minus;			// -
-			ch = getChar();
-			if (ch == '-')
-				kind = Token::Decrement;	// --
-			else if (ch == '>')
-				kind = Token::Arrow;		// ->
-			else {
-				reader.unget();
-				goto tryAssignment;			// -=
-			}
-			break;
-	
-		  case '&':
-			kind = Token::And;				// & && &= &&=
-		  logical:
-			if (testChar(char16orEOFToChar16(ch)))
-				kind = Token::Kind(kind - Token::And + Token::LogicalAnd);
-			goto tryAssignment;
-		  case '^':
-			kind = Token::Xor;				// ^ ^^ ^= ^^=
-			goto logical;
-		  case '|':
-			kind = Token::Or;				// | || |= ||=
-			goto logical;
-
-		  case '=':
-			kind = Token::Assignment;		// =
-			if (testChar('=')) {
-				kind = Token::Equal;		// ==
-				if (testChar('='))
-					kind = Token::Identical; // ===
-			}
-			break;
-
-		  case '<':
-			kind = Token::LessThan;			// <
-			if (testChar('<')) {
-				kind = Token::LeftShift;	// <<
-				goto tryAssignment;			// <<=
-			}
-		  comparison:
-			if (testChar('='))				// <= >=
-				kind = Token::Kind(kind + Token::LessThanOrEqual - Token::LessThan);
-			break;
-		  case '>':
-			kind = Token::GreaterThan;		// >
-			if (testChar('>')) {
-				kind = Token::RightShift;	// >>
-				if (testChar('>'))
-					kind = Token::LogicalRightShift; // >>>
-				goto tryAssignment;			// >>= >>>=
-			}
-			goto comparison;
-
-		  case '\\':
-			goto readIdentifier;			// An identifier that starts with an escape
-
-		  case '\'':
-		  case '"':
-			kind = Token::Str;				// 'string' "string"
-			t.setChars(lexString(char16orEOFToChar16(ch)));
-			break;
-
-		  case '0':
-		  case '1':
-		  case '2':
-		  case '3':
-		  case '4':
-		  case '5':
-		  case '6':
-		  case '7':
-		  case '8':
-		  case '9':
-			reader.unget();					// Number
-		  number:
-			kind = Token::Num;
-			lexNumeral();
-			break;
-
-		  case char16eof:
+	if (lexingUnit) {
+		lexIdentifier(t.chars, false);
+		ASSERT(t.chars.size());
+		kind = Token::Unit;				// unit
+		lexingUnit = false;
+	} else {
+	  next:
+		char16orEOF ch = reader.get();
+		if (ch == char16eof) {
 		  endOfInput:
 			kind = Token::End;
-    	}
-    	break;
+		} else {
+			char16orEOF ch2;
+			CharInfo chi(char16orEOFToChar16(ch));
 
-      case CharInfo::LineBreakGroup:
-      endOfLine:
-		reader.beginLine();
-		++lineNum;
-		t.lineBreak = true;
-		goto next;
+			switch (cGroup(chi)) {
+		      case CharInfo::FormatGroup:
+		      case CharInfo::WhiteGroup:
+		    	goto next;
+
+		      case CharInfo::IdGroup:
+		    	t.charPos = reader.charPos() - 1;
+		      readIdentifier:
+		    	{
+			    	reader.unget();
+			    	String s;
+		    		bool hasEscape = lexIdentifier(s, false);
+			    	t.identifier = &world.identifiers[s];
+			    	kind = hasEscape ? Token::Id : t.identifier->tokenKind;
+		    	}
+		    	break;
+
+		      case CharInfo::NonIdGroup:
+		      case CharInfo::IdContinueGroup:
+		    	t.charPos = reader.charPos() - 1;
+		    	switch (ch) {
+				  case '(':
+					kind = Token::OpenParenthesis;	// (
+					break;
+				  case ')':
+					kind = Token::CloseParenthesis;	// )
+					break;
+				  case '[':
+					kind = Token::OpenBracket;		// [
+					break;
+				  case ']':
+					kind = Token::CloseBracket;		// ]
+					break;
+				  case '{':
+					kind = Token::OpenBrace;		// {
+					break;
+				  case '}':
+					kind = Token::CloseBrace;		// }
+					break;
+				  case ',':
+					kind = Token::Comma;			// ,
+					break;
+				  case ';':
+					kind = Token::Semicolon;		// ;
+					break;
+				  case '.':
+					kind = Token::Dot;				// .
+					ch2 = getChar();
+					if (isASCIIDecimalDigit(char16orEOFToChar16(ch2))) {
+						reader.backUpTo(t.charPos);
+						goto number;				// decimal point
+					} else if (ch2 == '.') {
+						kind = Token::DoubleDot;	// ..
+						if (testChar('.'))
+							kind = Token::TripleDot; // ...
+					} else
+						reader.unget();
+					break;
+				  case ':':
+					kind = Token::Colon;			// :
+					if (testChar(':'))
+						kind = Token::DoubleColon;	// ::
+					break;
+				  case '#':
+					kind = Token::Pound;			// #
+					break;
+				  case '@':
+					kind = Token::At;				// @
+					break;
+				  case '?':
+					kind = Token::Question;			// ?
+					break;
+
+				  case '~':
+					kind = Token::Complement;		// ~
+					break;
+				  case '!':
+					kind = Token::Not;				// !
+					if (testChar('=')) {
+						kind = Token::NotEqual;		// !=
+						if (testChar('='))
+							kind = Token::NotIdentical; // !==
+					}
+					break;
+
+				  case '*':
+					kind = Token::Times;			// * *=
+				  tryAssignment:
+					if (testChar('='))
+						kind = Token::Kind(kind + Token::TimesEquals - Token::Times);
+					break;
+
+				  case '/':
+					kind = Token::Divide;			// /
+					ch = getChar();
+					if (ch == '/') {				// // comment
+						do {
+							ch = reader.get();
+							if (ch == char16eof)
+								goto endOfInput;
+						} while (!isLineBreak(char16orEOFToChar16(ch)));
+						goto endOfLine;
+					} else if (ch == '*') {			// /* comment */
+						ch = 0;
+						do {
+							ch2 = ch;
+							ch = getChar();
+							if (isLineBreak(char16orEOFToChar16(ch))) {
+								reader.beginLine();
+								++lineNum;
+								t.lineBreak = true;
+							}
+							if (ch == char16eof)
+								syntaxError("Unterminated /* comment");
+						} while (ch != '/' || ch2 != '*');
+						goto next;
+					} else {
+						reader.unget();
+						if (preferRegExp) {			// Regular expression
+							kind = Token::RegExp;
+							lexRegExp();
+						} else
+							 goto tryAssignment;	// /=
+					}
+					break;
+
+				  case '%':
+					kind = Token::Modulo;			// %
+					goto tryAssignment;				// %=
+
+				  case '+':
+					kind = Token::Plus;				// +
+					if (testChar('+'))
+						kind = Token::Increment;	// ++
+					else
+						goto tryAssignment;			// +=
+					break;
+
+				  case '-':
+					kind = Token::Minus;			// -
+					ch = getChar();
+					if (ch == '-')
+						kind = Token::Decrement;	// --
+					else if (ch == '>')
+						kind = Token::Arrow;		// ->
+					else {
+						reader.unget();
+						goto tryAssignment;			// -=
+					}
+					break;
+			
+				  case '&':
+					kind = Token::And;				// & && &= &&=
+				  logical:
+					if (testChar(char16orEOFToChar16(ch)))
+						kind = Token::Kind(kind - Token::And + Token::LogicalAnd);
+					goto tryAssignment;
+				  case '^':
+					kind = Token::Xor;				// ^ ^^ ^= ^^=
+					goto logical;
+				  case '|':
+					kind = Token::Or;				// | || |= ||=
+					goto logical;
+
+				  case '=':
+					kind = Token::Assignment;		// =
+					if (testChar('=')) {
+						kind = Token::Equal;		// ==
+						if (testChar('='))
+							kind = Token::Identical; // ===
+					}
+					break;
+
+				  case '<':
+					kind = Token::LessThan;			// <
+					if (testChar('<')) {
+						kind = Token::LeftShift;	// <<
+						goto tryAssignment;			// <<=
+					}
+				  comparison:
+					if (testChar('='))				// <= >=
+						kind = Token::Kind(kind + Token::LessThanOrEqual - Token::LessThan);
+					break;
+				  case '>':
+					kind = Token::GreaterThan;		// >
+					if (testChar('>')) {
+						kind = Token::RightShift;	// >>
+						if (testChar('>'))
+							kind = Token::LogicalRightShift; // >>>
+						goto tryAssignment;			// >>= >>>=
+					}
+					goto comparison;
+
+				  case '\\':
+					goto readIdentifier;			// An identifier that starts with an escape
+
+				  case '\'':
+				  case '"':
+					kind = Token::Str;				// 'string' "string"
+					lexString(t.chars, char16orEOFToChar16(ch));
+					break;
+
+				  case '0':
+				  case '1':
+				  case '2':
+				  case '3':
+				  case '4':
+				  case '5':
+				  case '6':
+				  case '7':
+				  case '8':
+				  case '9':
+					reader.unget();					// Number
+				  number:
+					kind = Token::Num;
+					lexingUnit = lexNumeral();
+					break;
+
+				  default:
+					syntaxError("Bad character");
+		    	}
+		    	break;
+
+		      case CharInfo::LineBreakGroup:
+		      endOfLine:
+				reader.beginLine();
+				++lineNum;
+				t.lineBreak = true;
+				goto next;
+			}
+		}
 	}
 	t.kind = kind;
 	t.lineNum = lineNum;
