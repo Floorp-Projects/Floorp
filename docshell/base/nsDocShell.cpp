@@ -113,7 +113,6 @@
 #include "nsIStyleContext.h"
 
 // for embedding
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserChromeFocus.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
@@ -1415,7 +1414,6 @@ nsDocShell::TabToTreeOwner(PRBool aForward, PRBool* aTookFocus)
     return NS_OK;
 }
 
-
 //*****************************************************************************
 // nsDocShell::nsIDocShellTreeItem
 //*****************************************************************************   
@@ -2350,7 +2348,7 @@ NS_IMETHODIMP
 nsDocShell::GetDocument(nsIDOMDocument ** aDocument)
 {
     NS_ENSURE_ARG_POINTER(aDocument);
-    NS_ENSURE_STATE(mContentViewer);
+    NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
 
     return mContentViewer->GetDOMDocument(aDocument);
 }

@@ -35,6 +35,7 @@
 #include "nsIWebBrowserChrome.h"
 
 class nsXULWindow;
+class nsSiteWindow2;
 
 class nsContentTreeOwner : public nsIDocShellTreeOwner,
                                   public nsIBaseWindow,
@@ -42,6 +43,7 @@ class nsContentTreeOwner : public nsIDocShellTreeOwner,
                                   public nsIWebBrowserChrome
 {
 friend class nsXULWindow;
+friend class nsSiteWindow2;
 
 public:
    NS_DECL_ISUPPORTS
@@ -61,7 +63,8 @@ protected:
    NS_IMETHOD ApplyChromeFlags();
 
 protected:
-   nsXULWindow*      mXULWindow;
+   nsXULWindow      *mXULWindow;
+   nsSiteWindow2    *mSiteWindow2;
    PRBool            mPrimary;
    PRBool            mContentTitleSetting;
    PRUint32          mChromeFlags;

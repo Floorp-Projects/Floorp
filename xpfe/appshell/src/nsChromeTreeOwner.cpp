@@ -26,6 +26,7 @@
 
 // Helper Classes
 #include "nsString.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIDocShellTreeItem.h"
@@ -81,6 +82,8 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
   if(aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
     return mXULWindow->GetInterface(aIID, aSink);
   if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
+    return mXULWindow->GetInterface(aIID, aSink);
+  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2)))
     return mXULWindow->GetInterface(aIID, aSink);
   if (aIID.Equals(NS_GET_IID(nsIXULWindow)))
     return mXULWindow->QueryInterface(aIID, aSink);
