@@ -13,6 +13,7 @@
                         "close", "titlebar", "resizable", "scrollbars",
                         "menubar", "toolbar", "status", "location",
                         "chrome", "dialog", "modal", "dependent",
+                        "centerscreen",
                         "alwaysLowered", "alwaysRaised");
 
     function OpenWindow(extension) {
@@ -141,6 +142,11 @@
     <html:tr>
       <html:td>
         <html:input type="checkbox" id="dependent"/>dependent
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
+        <html:input type="checkbox" id="centerscreen"/>centered
       </html:td>
     </html:tr>
   </html:table>
