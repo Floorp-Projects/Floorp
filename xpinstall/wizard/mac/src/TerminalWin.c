@@ -54,8 +54,8 @@ ShowTerminalWin(void)
 		gCurrWin = kTerminalID; 
 		/* gControls->tw = (TermWin*) NewPtrClear(sizeof(TermWin)); */
 	
-		GetIndString(next, rStringList, sInstallBtn);
-		GetIndString(back, rStringList, sBackBtn);
+		GetResourcedString(next, rInstList, sInstallBtn);
+		GetResourcedString(back, rInstList, sBackBtn);
 	
 		// malloc and get control
 		rectH = Get1Resource('RECT', rStartMsgBox);
@@ -100,7 +100,7 @@ ShowTerminalWin(void)
                     gControls->tw->dlSettingsGB = GetNewControl(rDLSettingsGB, gWPtr);
                     if (gControls->tw->dlSettingsGB)
                     {
-                        GetIndString(dlSettingsGBTitle, rStringList, sDLSettings);
+                        GetResourcedString(dlSettingsGBTitle, rInstList, sDLSettings);
                         SetControlTitle(gControls->tw->dlSettingsGB, dlSettingsGBTitle);
                         ShowControl(gControls->tw->dlSettingsGB);
                     }
@@ -110,7 +110,7 @@ ShowTerminalWin(void)
                     gControls->tw->siteSelMsg = GetNewControl(rSiteSelMsg, gWPtr);
                     if (gControls->tw->siteSelMsg)
                     {
-                        GetIndString(siteSelMsgStr, rStringList, sSiteSelMsg);
+                        GetResourcedString(siteSelMsgStr, rInstList, sSiteSelMsg);
                         SetControlData(gControls->tw->siteSelMsg, kControlNoPart, 
                             kControlStaticTextTextTag, siteSelMsgStr[0], (Ptr)&siteSelMsgStr[1]); 
                         ShowControl(gControls->tw->siteSelMsg);
@@ -192,7 +192,7 @@ ShowTerminalWin(void)
 					return;
 				}
 				Str255 proxySettingsTitle;
-				GetIndString(proxySettingsTitle, rStringList, sProxySettings);
+				GetResourcedString(proxySettingsTitle, rInstList, sProxySettings);
 				SetControlTitle(gControls->tw->proxySettingsBtn, proxySettingsTitle);
 				ShowControl(gControls->tw->proxySettingsBtn);
             }
@@ -412,7 +412,13 @@ my_c2pstrcpy(const char *aCStr, Str255 aPStr)
 #define rProxyPortItem 4
 #define rProxyUserItem 5
 #define rProxyPswdItem 6
-
+#define rProxyStrOK			1
+#define rProxyStrCancel		2
+#define rProxyStrHostLab	7
+#define rProxyStrPortLab	8
+#define rProxyStrUserLab	9
+#define rProxyStrPswdLab	10
+ 
 void
 OpenProxySettings(void)
 {
@@ -422,9 +428,34 @@ OpenProxySettings(void)
     Rect itemBox;
     Str255 itemText, pswdBuf, blindPswdText;
     DialogPtr psDlg;
+    Boolean bDefault = true;
     
     /* show dialog */
     psDlg = GetNewDialog(rDlgProxySettg, NULL, (WindowPtr) -1);
+
+    /* show dialog title, button and lable from install.ini */
+    GetResourcedString(itemText, rInstList, sProxyDlg);
+    SetWTitle(psDlg, itemText);
+    GetDialogItem(psDlg, rProxyStrOK, &itemType, &item, &itemBox);
+    GetResourcedString(itemText, rInstList, sOKBtn);
+    SetControlTitle((ControlRecord **)item, itemText);
+    SetControlData((ControlRecord **)item, kControlNoPart, 
+            kControlPushButtonDefaultTag, sizeof(bDefault),(Ptr) &bDefault);
+    GetDialogItem(psDlg, rProxyStrCancel, &itemType, &item, &itemBox);
+    GetResourcedString(itemText, rInstList, sCancel);
+    SetControlTitle((ControlRecord **)item, itemText);
+    GetDialogItem(psDlg, rProxyStrHostLab, &itemType, &item, &itemBox);
+    GetResourcedString(itemText, rInstList, sProxyHost);
+    SetDialogItemText(item, itemText);
+    GetDialogItem(psDlg, rProxyStrPortLab, &itemType, &item, &itemBox);
+    GetResourcedString(itemText, rInstList, sProxyPort);
+    SetDialogItemText(item, itemText);
+    GetDialogItem(psDlg, rProxyStrUserLab, &itemType, &item, &itemBox);
+    GetResourcedString(itemText, rInstList, sProxyUsername);
+    SetDialogItemText(item, itemText);
+    GetDialogItem(psDlg, rProxyStrPswdLab, &itemType, &item, &itemBox);
+    GetResourcedString(itemText, rInstList, sProxyPassword);
+    SetDialogItemText(item, itemText);
 
     /* pre-populate text fields */
     if (gControls->opt->proxyHost)
