@@ -283,42 +283,40 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
       // margins this code is not yet complete. This code may need to
       // move to before reflowing the frame instead of after (because
       // of floater positioning).
-      nscoord remainder = mSpace.XMost() - (x + mMetrics.width + mMargin.right);
+      nscoord remainder = mSpace.XMost() -
+        (x + mMetrics.width + mMargin.right);
       if (remainder >= 0) {
         // The block frame didn't use all of the available space. Apply
         // auto margins.
-        const nsStyleSpacing* spacing = mSpacing;
-        if (nsnull != mSpacing) {
-          nsStyleUnit leftUnit = mSpacing->mMargin.GetLeftUnit();
-          nsStyleUnit rightUnit = mSpacing->mMargin.GetRightUnit();
-          if (eStyleUnit_Auto == leftUnit) {
-            if (eStyleUnit_Auto == rightUnit) {
-              // When both margins are auto, we center the block
-              x += remainder / 2;
-            }
-            else {
-              x += remainder;
-            }
+        nsStyleUnit leftUnit = mSpacing->mMargin.GetLeftUnit();
+        nsStyleUnit rightUnit = mSpacing->mMargin.GetRightUnit();
+        if (eStyleUnit_Auto == leftUnit) {
+          if (eStyleUnit_Auto == rightUnit) {
+            // When both margins are auto, we center the block
+            x += remainder / 2;
           }
-          else if (eStyleUnit_Auto != rightUnit) {
-            // When neither margin is auto then text-align applies
-            const nsStyleText* styleText = mOuterReflowState.mStyleText;
-            switch (styleText->mTextAlign) {
-            case NS_STYLE_TEXT_ALIGN_DEFAULT:
-            case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-              if (NS_STYLE_DIRECTION_RTL == mOuterReflowState.mDirection) {
-                // When given a default alignment, and a right-to-left
-                // direction, right align the frame.
-                x += remainder;
-              }
-              break;
-            case NS_STYLE_TEXT_ALIGN_RIGHT:
+          else {
+            x += remainder;
+          }
+        }
+        else if (eStyleUnit_Auto != rightUnit) {
+          // When neither margin is auto then text-align applies
+          const nsStyleText* styleText = mOuterReflowState.mStyleText;
+          switch (styleText->mTextAlign) {
+          case NS_STYLE_TEXT_ALIGN_DEFAULT:
+          case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+            if (NS_STYLE_DIRECTION_RTL == mOuterReflowState.mDirection) {
+              // When given a default alignment, and a right-to-left
+              // direction, right align the frame.
               x += remainder;
-              break;
-            case NS_STYLE_TEXT_ALIGN_CENTER:
-              x += remainder / 2;
-              break;
             }
+            break;
+          case NS_STYLE_TEXT_ALIGN_RIGHT:
+            x += remainder;
+            break;
+          case NS_STYLE_TEXT_ALIGN_CENTER:
+            x += remainder / 2;
+            break;
           }
         }
       }
