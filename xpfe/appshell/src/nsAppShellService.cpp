@@ -465,14 +465,11 @@ nsAppShellService::Quit()
 
   mShuttingDown = PR_TRUE;
 
-  // Shutdown native app support; doing this first will prevent new
-  // requests to open additional windows coming in.
-  if (mNativeAppSupport) {
-    mNativeAppSupport->Quit();
-    mNativeAppSupport = 0;
-  }
-
-  // Enumerate through each open window and close it
+  /* Enumerate through each open window and close it. It's important to do
+     this before we shut down anything else because this can control whether
+     we really quit at all. e.g. if one of these windows has an onunload
+     handler that opens a new window. Ugh. I know.
+  */
   if (mWindowMediator) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
     mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
@@ -498,6 +495,28 @@ nsAppShellService::Quit()
         window->Close();
       }
     }
+  }
+
+  /* did we close all windows? if not, we can't quit yet. but that's
+     alright, we started windows shutting down. when the last one goes,
+     we'll come back. */
+  if (mWindowMediator) {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+    mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+    if (windowEnumerator) {
+      PRBool more;
+      if (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
+        mShuttingDown = PR_FALSE;
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
+  // Shutdown native app support; doing this first will prevent new
+  // requests to open additional windows coming in.
+  if (mNativeAppSupport) {
+    mNativeAppSupport->Quit();
+    mNativeAppSupport = 0;
   }
 
   {
