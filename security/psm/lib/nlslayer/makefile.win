@@ -41,5 +41,5 @@ LIBRARY=.\$(OBJDIR)\$(DLLNAME).dll
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)
-
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 clobber::
