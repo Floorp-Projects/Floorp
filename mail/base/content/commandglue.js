@@ -993,23 +993,6 @@ function RemoveMailOfflineObserver()
   observerService.removeObserver(mailOfflineObserver,"network:offline-status-changed");
 }
 
-// This routine (getViewName) will become obsolete once all of the callers have been converted
-// to use openNewVirtualFolderDialogWithArgs
-function getViewName(okCallbackFunc, defaultViewName) 
-{
-  var preselectedURI = GetSelectedFolderURI();
-  var folderTree = GetFolderTree();
-
-  var name = GetFolderNameFromUri(preselectedURI, folderTree);
-  name += defaultViewName + "-view";
-  var dialog = window.openDialog(
-                          "chrome://messenger/content/virtualFolderName.xul",
-                          "newFolder",
-                          "chrome,titlebar,modal",
-                          {siblingFolderURI: preselectedURI, searchFolderURIs: preselectedURI, 
-                          okCallback: okCallbackFunc, name: name});
-}
-
 function getSearchTermString(searchTerms)
 {
   var searchIndex;

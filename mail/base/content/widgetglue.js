@@ -175,7 +175,7 @@ function MsgCompactFolder(isAll)
   }
 }
 
-function openNewVirtualFolderDialogWithArgs(defaultViewName, aSearchSession)
+function openNewVirtualFolderDialogWithArgs(defaultViewName, aSearchTerms)
 {
   var folderURI = GetSelectedFolderURI();
   var folderTree = GetFolderTree();
@@ -185,7 +185,7 @@ function openNewVirtualFolderDialogWithArgs(defaultViewName, aSearchSession)
   var dialog = window.openDialog("chrome://messenger/content/virtualFolderProperties.xul", "",
                                  "chrome,titlebar,modal,centerscreen",
                                  {preselectedURI:folderURI,
-                                  searchTermSession:aSearchSession,
+                                  searchTerms:aSearchTerms,
                                   newFolderName:name});
 }
 
