@@ -32,6 +32,120 @@ static const char kXMLNameSpaceURI[] = "http://www.w3.org/XML/1998/namespace";
 static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";  // XXX?? "urn:w3-org-ns:HTML"??
 
 //-----------------------------------------------------------
+// Name Space ID table support
+
+static PRInt32      gNameSpaceTableRefs;
+static nsHashtable* gURIToIDTable;
+static nsVoidArray* gURIArray;
+
+class NameSpaceURIKey : public nsHashKey {
+public:
+  NameSpaceURIKey(const nsString* aString)
+    : mString(aString)
+  { }
+
+  virtual ~NameSpaceURIKey(void)
+  { }
+
+  virtual PRUint32 HashValue(void) const
+  {
+#if 1 // case insensitive XXX should this be case sensitive???
+    PRUint32 hash = 0;
+    const PRUnichar* string = mString->GetUnicode();
+    PRUnichar ch;
+    while ((ch = *string++) != 0) {
+      // FYI: hash = hash*37 + ch
+      ch = nsCRT::ToLower(ch);
+      hash = ((hash << 5) + (hash << 2) + hash) + ch;
+    }
+    return hash;
+#else
+    if (nsnull != mString) {
+      return nsCRT::HashValue(mString->GetUnicode());
+    }
+    return 0;
+#endif
+  }
+
+  virtual PRBool Equals(const nsHashKey *aKey) const
+  {
+    const nsString* other = ((const NameSpaceURIKey*)aKey)->mString;
+    if (nsnull != mString) {
+      if (nsnull != other) {
+        return mString->EqualsIgnoreCase(*other); // XXX case sensitive?
+      }
+      return PR_FALSE;
+    }
+    return PRBool(nsnull == other);
+  }
+
+  virtual nsHashKey *Clone(void) const
+  {
+    return new NameSpaceURIKey(mString);
+  }
+
+  const nsString* mString;
+};
+
+static void AddRefTable()
+{
+  if (0 == gNameSpaceTableRefs++) {
+    NS_ASSERTION(nsnull == gURIToIDTable, "already have URI table");
+    NS_ASSERTION(nsnull == gURIArray, "already have URI array");
+
+    gURIToIDTable = new nsHashtable();
+    gURIArray = new nsVoidArray();
+
+    nsString* xmlns = new nsString(kXMLNSNameSpaceURI);
+    nsString* xml = new nsString(kXMLNameSpaceURI);
+    nsString* html = new nsString(kHTMLNameSpaceURI);
+    gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
+    gURIArray->AppendElement(xml);
+    gURIArray->AppendElement(html); 
+    NameSpaceURIKey xmlnsKey(xmlns);
+    NameSpaceURIKey xmlKey(xml);
+    NameSpaceURIKey htmlKey(html);
+    gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
+    gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
+    gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
+  }
+  NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
+  NS_ASSERTION(nsnull != gURIArray, "no URI array");
+}
+
+static void ReleaseTable()
+{
+  if (0 == --gNameSpaceTableRefs) {
+    delete gURIToIDTable;
+    PRInt32 index = gURIArray->Count();
+    while (0 < index--) {
+      nsString* str = (nsString*)gURIArray->ElementAt(index);
+      delete str;
+    }
+    delete gURIArray;
+    gURIToIDTable = nsnull;
+    gURIArray = nsnull;
+  }
+}
+
+static PRInt32 FindNameSpaceID(const nsString& aURI)
+{
+  NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
+  NameSpaceURIKey key(&aURI);
+  void* value = gURIToIDTable->Get(&key);
+  if (nsnull != value) {
+    return PRInt32(value);
+  }
+  return kNameSpaceID_Unknown;
+}
+
+static const nsString* FindNameSpaceURI(PRInt32 aID)
+{
+  NS_ASSERTION(nsnull != gURIArray, "no URI array");
+  return (const nsString*)gURIArray->ElementAt(aID - 1);
+}
+
+//-----------------------------------------------------------
 // Name Space 
 
 class NameSpaceImpl : public nsINameSpace {
@@ -61,6 +175,8 @@ public:
   NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) const;
 
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, const nsString& aURI,
+                                  nsINameSpace*& aChildNameSpace);
+  NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
                                   nsINameSpace*& aChildNameSpace);
 
 private:
@@ -220,119 +336,21 @@ NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsString& aURI,
   return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
 }
 
+NS_IMETHODIMP
+NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
+                                nsINameSpace*& aChildNameSpace)
+{
+  if (FindNameSpaceURI(aNameSpaceID)) {
+    NameSpaceImpl* child = new NameSpaceImpl(mManager, this, aPrefix, aNameSpaceID);
+
+    return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+  }
+  aChildNameSpace = nsnull;
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
 //-----------------------------------------------------------
 // Name Space Manager
-
-static PRInt32      gNameSpaceTableRefs;
-static nsHashtable* gURIToIDTable;
-static nsVoidArray* gURIArray;
-
-class NameSpaceURIKey : public nsHashKey {
-public:
-  NameSpaceURIKey(const nsString* aString)
-    : mString(aString)
-  { }
-
-  virtual ~NameSpaceURIKey(void)
-  { }
-
-  virtual PRUint32 HashValue(void) const
-  {
-#if 1 // case insensitive XXX should this be case sensitive???
-    PRUint32 hash = 0;
-    const PRUnichar* string = mString->GetUnicode();
-    PRUnichar ch;
-    while ((ch = *string++) != 0) {
-      // FYI: hash = hash*37 + ch
-      ch = nsCRT::ToLower(ch);
-      hash = ((hash << 5) + (hash << 2) + hash) + ch;
-    }
-    return hash;
-#else
-    if (nsnull != mString) {
-      return nsCRT::HashValue(mString->GetUnicode());
-    }
-    return 0;
-#endif
-  }
-
-  virtual PRBool Equals(const nsHashKey *aKey) const
-  {
-    const nsString* other = ((const NameSpaceURIKey*)aKey)->mString;
-    if (nsnull != mString) {
-      if (nsnull != other) {
-        return mString->EqualsIgnoreCase(*other); // XXX case sensitive?
-      }
-      return PR_FALSE;
-    }
-    return PRBool(nsnull == other);
-  }
-
-  virtual nsHashKey *Clone(void) const
-  {
-    return new NameSpaceURIKey(mString);
-  }
-
-  const nsString* mString;
-};
-
-static void AddRefTable()
-{
-  if (0 == gNameSpaceTableRefs++) {
-    NS_ASSERTION(nsnull == gURIToIDTable, "already have URI table");
-    NS_ASSERTION(nsnull == gURIArray, "already have URI array");
-
-    gURIToIDTable = new nsHashtable();
-    gURIArray = new nsVoidArray();
-
-    nsString* xmlns = new nsString(kXMLNSNameSpaceURI);
-    nsString* xml = new nsString(kXMLNameSpaceURI);
-    nsString* html = new nsString(kHTMLNameSpaceURI);
-    gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
-    gURIArray->AppendElement(xml);
-    gURIArray->AppendElement(html); 
-    NameSpaceURIKey xmlnsKey(xmlns);
-    NameSpaceURIKey xmlKey(xml);
-    NameSpaceURIKey htmlKey(html);
-    gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
-    gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
-    gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
-  }
-  NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
-  NS_ASSERTION(nsnull != gURIArray, "no URI array");
-}
-
-static void ReleaseTable()
-{
-  if (0 == --gNameSpaceTableRefs) {
-    delete gURIToIDTable;
-    PRInt32 index = gURIArray->Count();
-    while (0 < index--) {
-      nsString* str = (nsString*)gURIArray->ElementAt(index);
-      delete str;
-    }
-    delete gURIArray;
-    gURIToIDTable = nsnull;
-    gURIArray = nsnull;
-  }
-}
-
-static PRInt32 FindNameSpaceID(const nsString& aURI)
-{
-  NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
-  NameSpaceURIKey key(&aURI);
-  void* value = gURIToIDTable->Get(&key);
-  if (nsnull != value) {
-    return PRInt32(value);
-  }
-  return kNameSpaceID_Unknown;
-}
-
-static const nsString* FindNameSpaceURI(PRInt32 aID)
-{
-  NS_ASSERTION(nsnull != gURIArray, "no URI array");
-  return (const nsString*)gURIArray->ElementAt(aID - 1);
-}
 
 class NameSpaceManagerImpl : public nsINameSpaceManager {
 public:
