@@ -362,6 +362,7 @@ public class Main {
 	    	Object value = jse.getValue();
 	    	if (value instanceof ThreadDeath)
 	    		throw (ThreadDeath) value;
+            global.exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException",
                 jse.getMessage()));

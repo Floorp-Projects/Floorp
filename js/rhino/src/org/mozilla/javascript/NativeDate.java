@@ -1099,9 +1099,10 @@ public class NativeDate extends ScriptableObject {
     private static NativeDate checkInstance(Scriptable obj,
                                             Function funObj) {
         if (obj == null || !(obj instanceof NativeDate)) {
+            Context cx = Context.getCurrentContext();
             Object[] args = { ((NativeFunction) funObj).names[0] };
-            throw Context.reportRuntimeError(
-                Context.getMessage("msg.incompat.call", args));
+            String msg = Context.getMessage("msg.incompat.call", args);
+            throw NativeGlobal.constructError(cx, "TypeError", msg, funObj);
         }
         return (NativeDate) obj;
     }

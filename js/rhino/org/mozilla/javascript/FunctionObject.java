@@ -387,8 +387,8 @@ public class FunctionObject extends NativeFunction {
      * Implements Function.call.
      *
      * @see org.mozilla.javascript.Function#call
-     * @exception JavaScriptException if the underlying Java method or constructor
-     *            threw an exception
+     * @exception JavaScriptException if the underlying Java method or 
+     *            constructor threw an exception
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
@@ -401,19 +401,12 @@ public class FunctionObject extends NativeFunction {
             // OPT: cache "clazz"?
             Class clazz = method != null ? method.getDeclaringClass()
                                          : ctor.getDeclaringClass();
-            Scriptable p = thisObj;
-            while (p != null && !clazz.isInstance(p)) {
-                // Walk up the prototype chain to find an object to call the 
-                // method on
-                p = p.getPrototype();
-            }
-            if (p == null) {
+            if (!clazz.isInstance(thisObj)) {
                 // Couldn't find an object to call this on.
                 Object[] errArgs = { names[0] };
-                throw Context.reportRuntimeError(
-                    Context.getMessage("msg.incompat.call", errArgs));
+                String msg = Context.getMessage("msg.incompat.call", errArgs);
+                throw NativeGlobal.constructError(cx, "TypeError", msg, scope);
             }
-            thisObj = p;
         }
         Object[] invokeArgs;
         int i;
@@ -519,6 +512,8 @@ public class FunctionObject extends NativeFunction {
             Throwable target = e.getTargetException();
             if (target instanceof EvaluatorException)
                 throw (EvaluatorException) target;
+            if (target instanceof EcmaError)
+                throw (EcmaError) target;
             Scriptable scope = thisObj == null ? this : thisObj;
             throw JavaScriptException.wrapException(scope, target);
         }
