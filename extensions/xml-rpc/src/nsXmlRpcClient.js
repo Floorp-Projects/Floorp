@@ -14,13 +14,15 @@
  * Creations 2, Inc.  All Rights Reserved.
  *
  * Contributor(s): Martijn Pieters <mj@digicool.com> (original author)
+ *                 Samuel Sieb <samuel@sieb.net> brought it up to date with 
+ *                                               current APIs
  */
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.17 $
+ *  Version: $Revision: 1.18 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.17 2001/05/08 17:28:07 jst%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.18 2001/11/30 08:04:24 samuel%sieb.net Exp $
  */
 
 /*
@@ -94,94 +96,6 @@ nsXmlRpcClient.prototype = {
 
     get serverUrl() { return this._serverUrl; },
 
-    // BROKEN. Bug 37913
-    call: function(methodName, methodArgs, count) {
-        debug('call');
-        // Check for call in progress.
-        if (this._inProgress)
-            throw Components.Exception('Call in progress!');
-        
-        // Check for the server URL;
-        if (!this._serverUrl)
-            throw Components.Exception('Not initilized');
-
-        this._inProgress = true;
-
-        // Clear state.
-        this._status = null;
-        this._errorMsg = null;
-
-        debug('Arguments: ' + methodArgs);
-
-        // Generate request body
-        var xmlWriter = new XMLWriter();
-        this._generateRequestBody(xmlWriter, methodName, methodArgs);
-
-        var requestBody = xmlWriter.data;
-
-        debug('Request: ' + requestBody);
-
-        var channel = this._getChannel(requestBody);
-
-        debug('Do the deed.');
-
-        var input = channel.open(0, 0, 0);
-        input = toScriptableStream(input);
-        
-        var now = new Date()
-        // This is broken! See bug 11859
-        // yes, if we use asyncCall on ourselves, we still don't
-        // work. Valeski calls this an event pump blocking problem.
-        while (!input.available()) { // Wait for data
-            if (new Date() - now > 1 * 60 * 1000) {
-                this._inProgress = false;
-                throw Components.Exception('Connection timed out');
-            }
-        }
-        
-        this._reponseStatus = channel.responseStatus;
-        this._responseString = channel.responseString;
-
-        // Check for a 200 response.
-        if (channel.responseStatus != 200) {
-            this._status = Components.results.NS_ERROR_FAILURE;
-            this._errorMsg = 'Server returned unexpected status ' +
-                channel.responseStatus;
-            this._inProgress = false;
-            throw Components.Exception('Server returned unexpected status ' +
-                        channel.responseStatus);
-        }
-
-        // check content type
-        if (channel.contentType != 'text/xml') {
-            this._status = Components.results.NS_ERROR_FAILURE;
-            this._errorMsg = 'Server returned unexpected content-type ' +
-                channel.contentType;
-            this._inProgress = false;
-            throw Components.Exception('Server returned unexpected ' +
-                'content-type ' + channel.contentType);
-        }
-
-        debug('Viable response. Let\'s parse!');
-        debug('Content length = ' + channel.contentLength);
-        
-        try {
-            this._parseResponse(toScriptableStream(inStr),
-                channel.contentLength);
-            debug('Parse finished');
-            debug('Fault? ' + this._fault);
-            debug('Result? ' + this._result);
-        } catch(ex) {
-            this._status = ex.result;
-            this._errorMsg = ex.message;
-            throw ex;
-        } finally {
-            this._inProgress = false;
-        }
-
-        return this._result;
-    },
-
     // Internal copy of the status, so's we can throw it to the syncnronous
     // caller.
     _status: null,
@@ -228,27 +142,24 @@ nsXmlRpcClient.prototype = {
         // Set up channel.
         var ioService = getService('@mozilla.org/network/io-service;1',
             'nsIIOService');
-        var atomService = getService('@mozilla.org/atom-service;1',
-            'nsIAtomService');
 
         var chann = ioService.newChannelFromURI(this._serverUrl)
-            .QueryInterface(Components.interfaces.nsIHTTPChannel);
+            .QueryInterface(Components.interfaces.nsIHttpChannel);
 
         // Set the request method.
-        chann.SetRequestMethod(atomService.getAtom('POST'));
+        chann.requestMethod = 'POST';
 
         // Create a stream out of the request and attach it to the channel
         // Note: pending bug #37773, an extra \r\n needs to be added.
-        var handler = ioService.getProtocolHandler(this._serverUrl.scheme)
-            .QueryInterface(Components.interfaces.nsIHTTPProtocolHandler);
-        var postStream = handler.NewPostDataStream(false, '\r\n' + request,
-            handler.ENCODE_NORMAL);
-        chann.UploadStream = postStream;
-
-        // Set the request headers
-        chann.SetRequestHeader(atomService.getAtom('content-type'), 'text/xml');
-        chann.SetRequestHeader(atomService.getAtom('content-length'),
-            request.length);
+        // and pending bug 112479, we have to set the headers manually.
+        chann.setRequestHeader('content-type', 'text/xml');
+        chann.setRequestHeader('content-length', request.length);
+        request = "\r\n" + request;
+        var upload = chann.QueryInterface(Components.interfaces.nsIUploadChannel);
+        var postStream = createInstance('@mozilla.org/io/string-input-stream;1',
+            'nsIStringInputStream');
+        postStream.setData(request, request.length);
+        upload.setUploadStream(postStream, 'text/xml', -1);
 
         return chann;
     },
@@ -332,8 +243,8 @@ nsXmlRpcClient.prototype = {
 
             // Store request status and message.
             channel = channel
-                .QueryInterface(Components.interfaces.nsIHTTPChannel);
-            this._reponseStatus = channel.responseStatus;
+                .QueryInterface(Components.interfaces.nsIHttpChannel);
+            this._responseStatus = channel.responseStatus;
             this._responseString = channel.responseString;
 
             // Check for a 200 response.
@@ -822,8 +733,8 @@ XMLWriter.prototype = {
     },
     
     write: function(text) {
-        for (var i in text) {
-            var c = text.charAt(i);
+        for (var i = 0; i < text.length; i++) {
+            var c = text[i];
             switch (c) {
                 case '<':
                     this.data += '&lt;';

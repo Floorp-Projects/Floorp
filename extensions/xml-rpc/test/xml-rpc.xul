@@ -28,19 +28,6 @@ function callAsync() {
     xmlRpc.asyncCall(Listener, null, 'examples.getStateName', [stateCode], 1);
 }
 
-// Broken still. :(
-function callSync() {
-    dump('Call Sync\n');
-    var xmlRpc = getXmlRpc();
-    xmlRpc.init('http://betty.userland.com/RPC2');
-    var stateCode = xmlRpc.createType(xmlRpc.INT, {});
-    stateCode.data = document.getElementById('statecode').value;
-
-    result = xmlRpc.call('examples.getStateName', [stateCode], 1);
-    result = result.QueryInterface(Components.interfaces.nsISupportsString);
-    document.getElementById('statename').setAttribute('value', result.data);
-}
-
 var Listener = {
     onResult: function(client, ctxt, result) {
         result = result.QueryInterface(Components.interfaces.nsISupportsString);
@@ -69,7 +56,6 @@ var Listener = {
 <vbox>
 <spacer flex="1"/>
 <button label="Call Async." onclick="callAsync()"/>
-<button label="Call Sync." onclick="callSync()"/>
 <spacer flex="1"/>
 </vbox>
 </window>
