@@ -1634,9 +1634,8 @@ nsBookmarksService::Init()
 				char	*spec = nsnull;
 				if (NS_SUCCEEDED(rv = uri->GetSpec(&spec)) && (spec))
 				{
-					nsCOMPtr<nsILocale>		locale = nsnull;
 					if (NS_SUCCEEDED(rv = stringService->CreateBundle(spec,
-						locale, getter_AddRefs(mBundle))))
+						getter_AddRefs(mBundle))))
 					{
 					}
 					nsCRT::free(spec);

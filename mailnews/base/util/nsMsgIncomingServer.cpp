@@ -1276,8 +1276,7 @@ NS_IMETHODIMP nsMsgIncomingServer::DisplayOfflineMsg(nsIMsgWindow *aMsgWindow)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle(BASE_MSGS_URL, nsnull, 
-                              getter_AddRefs(bundle));
+  rv = bundleService->CreateBundle(BASE_MSGS_URL, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
   if (bundle)
   {

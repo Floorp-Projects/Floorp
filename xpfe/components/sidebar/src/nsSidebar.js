@@ -425,13 +425,7 @@ function getStringBundle(aURL)
 {
   var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
   stringBundleService = stringBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-  var appLocale;
-  var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
-  if (localeService)
-    localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
-  if (localeService)
-    appLocale = localeService.GetApplicationLocale();
-  var stringBundle = stringBundleService.CreateBundle(aURL, appLocale);
+  var stringBundle = stringBundleService.createBundle(aURL);
   if (stringBundle)
     return stringBundle.QueryInterface(Components.interfaces.nsIStringBundle);
 }

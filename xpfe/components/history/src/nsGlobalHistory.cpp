@@ -2075,7 +2075,7 @@ nsGlobalHistory::Init()
     do_GetService(kStringBundleServiceCID, &rv);
   
   if (NS_SUCCEEDED(rv)) {
-    rv = bundleService->CreateBundle("chrome://communicator/locale/history/history.properties", nsnull, getter_AddRefs(mBundle));
+    rv = bundleService->CreateBundle("chrome://communicator/locale/history/history.properties", getter_AddRefs(mBundle));
   }
 
   // register to observe profile changes

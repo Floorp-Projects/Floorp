@@ -85,7 +85,7 @@ nsLocalStringService::InitializeStringBundle()
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
 
-  rv = stringService->CreateBundle(LOCAL_MSGS_URL, nsnull, getter_AddRefs(mLocalStringBundle));
+  rv = stringService->CreateBundle(LOCAL_MSGS_URL, getter_AddRefs(mLocalStringBundle));
   return rv;
 }
 

@@ -1280,7 +1280,6 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
       if (NS_SUCCEEDED(rv) && bundleService) {
         nsCOMPtr<nsIStringBundle> bundle;
         rv = bundleService->CreateBundle("chrome://global/locale/keys.properties",
-                                         nsnull,
                                          getter_AddRefs(bundle));
 
         if (NS_SUCCEEDED(rv) && bundle) {

@@ -227,8 +227,7 @@ nsresult nsFolderCompactState::GetStatusFromMsgName(const char *statusMsgName, P
                       kStringBundleServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
-    res = sBundleService->CreateBundle(propertyURL, nsnull,
-                                             getter_AddRefs(stringBundle));
+    res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
   }
   if (stringBundle)
   {

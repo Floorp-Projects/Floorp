@@ -86,7 +86,7 @@ nsComposeStringService::InitializeStringBundle()
   nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
   NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(stringService->CreateBundle(COMPOSE_BE_URL, nsnull, getter_AddRefs(mComposeStringBundle)), 
+  NS_ENSURE_SUCCESS(stringService->CreateBundle(COMPOSE_BE_URL, getter_AddRefs(mComposeStringBundle)), 
                     NS_ERROR_FAILURE);
   return NS_OK;
 }

@@ -1793,9 +1793,7 @@ nsresult nsImapIncomingServer::GetStringBundle()
 		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
-			nsILocale   *locale = nsnull;
-
-			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
+			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
 		}
 	}
   return (m_stringBundle) ? NS_OK : res;

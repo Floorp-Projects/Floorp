@@ -258,7 +258,7 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
     nsCOMPtr<nsIStringBundle> stringBundle;
     NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(stringService->CreateBundle(HELPERAPP_DIALOG_URL, nsnull, getter_AddRefs(stringBundle)), 
+    NS_ENSURE_SUCCESS(stringService->CreateBundle(HELPERAPP_DIALOG_URL, getter_AddRefs(stringBundle)), 
                     NS_ERROR_FAILURE);
 
     nsXPIDLString windowTitle;

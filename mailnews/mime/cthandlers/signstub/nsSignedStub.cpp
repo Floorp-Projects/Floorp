@@ -215,7 +215,7 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
-			res = sBundleService->CreateBundle(propertyURL, nsnull, getter_AddRefs(stringBundle));
+			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
 		}
 	}
 

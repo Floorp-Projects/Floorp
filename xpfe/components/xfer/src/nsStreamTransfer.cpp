@@ -239,11 +239,9 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
             nsCID cid = NS_STRINGBUNDLESERVICE_CID;
             NS_WITH_SERVICE( nsIStringBundleService, bundleService, cid, &rv );
             if ( NS_SUCCEEDED( rv ) ) {
-                nsILocale *locale = 0;
                 nsIStringBundle *bundle;
                 PRUnichar *pString;
                 rv = bundleService->CreateBundle( "chrome://global/locale/downloadProgress.properties",
-                                                  locale, 
                                                   getter_AddRefs( &bundle ) );
                 if ( NS_SUCCEEDED( rv ) ) {
                     rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( "FilePickerTitle" ).GetUnicode(),
