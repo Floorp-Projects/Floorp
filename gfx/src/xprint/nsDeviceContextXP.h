@@ -62,7 +62,6 @@ public:
   NS_IMETHOD         GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   NS_IMETHOD         CheckFontExistence(const nsString& aFontName);
-  NS_IMETHOD         GetDepth(PRUint32& aDepth);
   NS_IMETHOD         ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD         GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
@@ -78,8 +77,9 @@ public:
 
   NS_IMETHOD         SetSpec(nsIDeviceContextSpec *aSpec);
 
-  XlibRgbHandle     *GetXlibRgbHandle() { return mPrintContext->GetXlibRgbHandle(); }  
-  Display           *GetDisplay();
+  XlibRgbHandle     *GetXlibRgbHandle() { XlibRgbHandle *h; mPrintContext->GetXlibRgbHandle(h); return h; }  
+  NS_IMETHOD         GetDepth(PRUint32 &depth) 
+                     { depth = xxlib_rgb_get_depth(GetXlibRgbHandle()); return NS_OK; }
   NS_IMETHOD         GetPrintContext(nsXPrintContext*& aContext);
 
   NS_IMETHOD         CreateFontCache();
@@ -88,9 +88,7 @@ protected:
   virtual         ~nsDeviceContextXp();
   void             DestroyXPContext();
 
-  nsXPrintContext      *mPrintContext;  
-  Display              *mDisplay;
-  Screen               *mScreen;
+  nsCOMPtr<nsXPrintContext>      mPrintContext;  
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
   nsCOMPtr<nsIDeviceContext>     mParentDeviceContext;
 };

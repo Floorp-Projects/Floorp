@@ -49,6 +49,15 @@
 #include "xlibrgb.h"
 
 /* #define NOISY_FONTS 1 */
+
+#ifdef USE_XPRINT 
+/* enable hack "fix" for bug 88554 ("Xprint module should avoid using GFX
+ * fonts unless there is no other option...") until bug 93771 ("Mozilla
+ * uses low-resolution bitmap fonts on high resolution X11 displays") get's
+ * fixed. */
+#define XPRINT_FONT_HACK 1
+#endif /* USE_XPRINT */
+
 #ifdef PR_LOGGING 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 #endif /* PR_LOGGING */
@@ -1025,27 +1034,29 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFont = new nsFont(aFont);
   mLangGroup = aLangGroup;
 
-/* enable hack "fix" for bug 88554 ("Xprint module should avoid using GFX
- * fonts unless there is no other option...") until bug 93771 ("Mozilla
- * uses low-resolution bitmap fonts on high resolution X11 displays") get's
- * fixed. */
-#ifdef _IMPL_NS_XPRINT
-#define XPRINT_FONT_HACK 1
-#endif /* _IMPL_NS_XPRINT */
-
+#ifdef USE_XPRINT 
 #ifdef XPRINT_FONT_HACK
-  nsString savedName = mFont->name;
-  mFont->name = NS_LITERAL_STRING("serif");
-#endif  /* XPRINT_FONT_HACK */
+  nsString *savedName;
 
-#ifdef _IMPL_NS_XPRINT
-  mDeviceContext = (nsDeviceContextXp *)aContext;
-#else
-  mDeviceContext = (nsDeviceContextXlib *)aContext;
-#endif /* _IMPL_NS_XPRINT */  
+  if(mPrinterMode)
+  {
+    savedName = &mFont->name;
+    mFont->name = NS_LITERAL_STRING("serif");
+  }  
+#endif  /* XPRINT_FONT_HACK */
+#endif /* USE_XPRINT */
+
+  mDeviceContext = aContext;
 
   if (!gXlibRgbHandle)
-    gXlibRgbHandle = mDeviceContext->GetXlibRgbHandle();
+  {
+#ifdef USE_XPRINT 
+    if (mPrinterMode)
+      gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXp   *,mDeviceContext)->GetXlibRgbHandle();
+    else  
+#endif /* USE_XPRINT */  
+      gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXlib *,mDeviceContext)->GetXlibRgbHandle();
+  }  
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
@@ -1142,9 +1153,13 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   RealizeFont();
 
+#ifdef USE_XPRINT
 #ifdef XPRINT_FONT_HACK
-  mFont->name = savedName;
+  if(mPrinterMode)
+    mFont->name = *savedName;
 #endif /* XPRINT_FONT_HACK */
+#endif /* USE_XPRINT */
+
   return NS_OK;
 }
 
@@ -1970,19 +1985,11 @@ public:
   virtual ~nsFontXlibNormal();
   
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
-#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsDrawingSurfaceXlib* aSurface,
+                         nsIDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength);
-#endif /* !_IMPL_NS_XPRINT */
 
-#ifdef USE_XPRINT
-  virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsXPrintContext* aSurface,
-                         nscoord aX, nscoord aY, 
-                         const PRUnichar* aString, PRUint32 aLength);
-#endif /* USE_XPRINT */
 #ifdef MOZ_MATHML
   virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
                                       PRUint32           aLength,
@@ -2027,10 +2034,9 @@ nsFontXlibNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   return textWidth;
 }
 
-#ifndef _IMPL_NS_XPRINT
 int
 nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
-                             nsDrawingSurfaceXlib* aSurface,
+                             nsIDrawingSurfaceXlib* aSurface,
                              nscoord aX, nscoord aY,
                              const PRUnichar* aString, PRUint32 aLength)
 {
@@ -2053,9 +2059,11 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
 
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0)) {
     xGC *gc = aContext->GetGC();
+    Drawable drawable; aSurface->GetDrawable(drawable);
+    XlibRgbHandle *xrgbh; aSurface->GetXlibRgbHandle(xrgbh);
     
-    XDrawString(aSurface->GetDisplay(),
-                aSurface->GetDrawable(),
+    XDrawString(xxlib_rgb_get_display(xrgbh),
+                drawable,
                 *gc,
                 aX, aY + mBaselineAdjust, p, len);
 
@@ -2071,8 +2079,10 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
     xGC *gc = aContext->GetGC();
     
     /* note the length must be divided by 2 for X*16 functions */
-    XDrawString16(aSurface->GetDisplay(),
-                  aSurface->GetDrawable(),
+    Drawable drawable; aSurface->GetDrawable(drawable);
+    XlibRgbHandle *xrgbh; aSurface->GetXlibRgbHandle(xrgbh);
+    XDrawString16(xxlib_rgb_get_display(xrgbh),
+                  drawable,
                   *gc,
                   aX, aY + mBaselineAdjust, (XChar2b *)p, len / 2);
                   
@@ -2087,68 +2097,6 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return textWidth;
 }
-#endif /* !_IMPL_NS_XPRINT */
-
-#ifdef USE_XPRINT
-int
-nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
-                             nsXPrintContext* aSurface,
-                             nscoord aX, nscoord aY,
-                             const PRUnichar* aString, PRUint32 aLength)
-{
-  if (!mFont) {
-    LoadFont();
-    if (!mFont)
-      return 0;
-  }
-
-  XChar2b buf[512];
-  char *p;
-  PRInt32 bufLen;
-  int textWidth;
-
-  ENCODER_BUFFER_ALLOC_IF_NEEDED(p, mCharSetInfo->mConverter,
-      aString, aLength, buf, sizeof(buf), bufLen);
-  
-  int len = mCharSetInfo->Convert(mCharSetInfo, mFont, aString, aLength,
-                                  p, bufLen);
-
-  if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0)) {
-    xGC *gc = aContext->GetGC();
-    
-    XDrawString(aSurface->GetDisplay(),
-                aSurface->GetDrawable(),
-                *gc,
-                aX, aY + mBaselineAdjust, p, len);
-
-    gc->Release();
-    textWidth = XTextWidth(mFont, p, len);
-  }
-  else
-  {
-    nsFontXlib *savedFont = aContext->GetCurrentFont();
-    aContext->SetCurrentFont(this);
-    aContext->UpdateGC();
-
-    xGC *gc = aContext->GetGC();
-    
-    /* note the length must be divided by 2 for X*16 functions */
-    XDrawString16(aSurface->GetDisplay(),
-                  aSurface->GetDrawable(),
-                  *gc,
-                  aX, aY + mBaselineAdjust, (XChar2b *)p, len / 2);
-                  
-    gc->Release();
-    textWidth = XTextWidth16(mFont, (XChar2b *)p, len / 2);
-
-    aContext->SetCurrentFont(savedFont);
-    aContext->UpdateGC();
-  }
-
-  ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
-  return textWidth;
-}
-#endif /* USE_XPRINT */
 
 #ifdef MOZ_MATHML
 nsresult
@@ -2208,18 +2156,11 @@ public:
   
   virtual PRBool GetXlibFontIs10646(void);
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
-#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsDrawingSurfaceXlib* aSurface,
+                         nsIDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength);
-#endif /* !_IMPL_NS_XPRINT */
-#ifdef USE_XPRINT
-  virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsXPrintContext* aSurface,
-                         nscoord aX, nscoord aY, 
-                         const PRUnichar* aString, PRUint32 aLength);
-#endif /* USE_XPRINT */
+
 #ifdef MOZ_MATHML
   virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
                                       PRUint32           aLength,
@@ -2316,10 +2257,9 @@ nsFontXlibSubstitute::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   return textWidth;
 }
 
-#ifndef _IMPL_NS_XPRINT
 int
 nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext, 
-                                 nsDrawingSurfaceXlib* aSurface,
+                                 nsIDrawingSurfaceXlib* aSurface,
                                  nscoord aX, nscoord aY,
                                  const PRUnichar* aString, PRUint32 aLength)
 {
@@ -2342,35 +2282,6 @@ nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext,
     nsMemory::Free(p);
   return textWidth;
 }
-#endif /* !_IMPL_NS_XPRINT */
-
-#ifdef USE_XPRINT
-int
-nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext, 
-                                 nsXPrintContext* aSurface,
-                                 nscoord aX, nscoord aY,
-                                 const PRUnichar* aString, PRUint32 aLength)
-{
-  PRUnichar buf[512];
-  PRUnichar *p = buf;
-  PRUint32 bufLen = sizeof(buf) / sizeof(PRUnichar);
-  if ((aLength * 2) > bufLen) {
-    PRUnichar *tmp;
-    tmp = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar) * (aLength * 2));
-    if (tmp) {
-      p = tmp;
-      bufLen = (aLength * 2);
-    }
-  }
-  
-  PRUint32 len = Convert(aString, aLength, p, bufLen);
-  int textWidth = mSubstituteFont->DrawString(aContext, aSurface,
-                                              aX, aY, p, len);
-  if (p != buf)
-    nsMemory::Free(p);
-  return textWidth;
-}
-#endif /* USE_XPRINT */
 
 #ifdef MOZ_MATHML
 // bounding metrics for a string 
@@ -2418,18 +2329,11 @@ public:
 
   virtual PRBool Init(nsFontXlib* aFont);
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
-#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsDrawingSurfaceXlib* aSurface,
+                         nsIDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY, const PRUnichar* aString, 
                          PRUint32 aLength);
-#endif /* !_IMPL_NS_XPRINT */
-#ifdef USE_XPRINT
-  virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsXPrintContext* aSurface,
-                         nscoord aX, nscoord aY, 
-                         const PRUnichar* aString, PRUint32 aLength);
-#endif /* USE_XPRINT */
+
 #ifdef MOZ_MATHML
   virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
                                       PRUint32           aLength,
@@ -2496,10 +2400,9 @@ nsFontXlibUserDefined::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   return textWidth;
 }
 
-#ifndef _IMPL_NS_XPRINT
 int
 nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
-                                  nsDrawingSurfaceXlib* aSurface,
+                                  nsIDrawingSurfaceXlib* aSurface,
                                   nscoord aX, nscoord aY,
                                   const PRUnichar* aString, PRUint32 aLength)
 {
@@ -2515,8 +2418,10 @@ nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
   xGC *gc = aContext->GetGC();
   NS_ASSERTION(((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0)) || 
                GetXlibFontIs10646(), "drawing 8bit instead of 16bit text data");
-  XDrawString(aSurface->GetDisplay(),
-              aSurface->GetDrawable(),
+  Drawable drawable; aSurface->GetDrawable(drawable);
+  XlibRgbHandle *xrgbh; aSurface->GetXlibRgbHandle(xrgbh);
+  XDrawString(xxlib_rgb_get_display(xrgbh),
+              drawable,
               *gc,
               aX, aY + mBaselineAdjust, p, len);
 
@@ -2526,40 +2431,6 @@ nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return textWidth;
 }
-#endif /* !_IMPL_NS_XPRINT */
-
-#ifdef USE_XPRINT
-int
-nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
-                                  nsXPrintContext* aSurface,
-                                  nscoord aX, nscoord aY,
-                                  const PRUnichar* aString, PRUint32 aLength)
-{
-  char buf[1024];
-  char *p;
-  PRInt32 bufLen;
-
-  ENCODER_BUFFER_ALLOC_IF_NEEDED(p, gUserDefinedConverter,
-      aString, aLength, buf, sizeof(buf), bufLen);
-
-  PRUint32 len = Convert(aString, aLength, p, bufLen);
-
-  xGC *gc = aContext->GetGC();
-  NS_ASSERTION(((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0)) || 
-               GetXlibFontIs10646(), "drawing 8bit instead of 16bit text data"); 
-  XDrawString(aSurface->GetDisplay(),
-              aSurface->GetDrawable(),
-              *gc,
-              aX, aY + mBaselineAdjust, p, len);
-
-  gc->Release();
-  int textWidth = XTextWidth(mFont, p, len);
-
-  ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
-  return textWidth;
-}
-
-#endif /* USE_XPRINT */
 
 #ifdef MOZ_MATHML
 nsresult
@@ -2634,9 +2505,10 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
                                     nsFontCharSetXlibInfo* aCharSet,
                                     PRUnichar aChar)
 {
-  nsFontXlib* font = nsnull;
- 
-#ifdef _IMPL_NS_XPRINT
+  nsFontXlib *font            = nsnull;
+  PRBool      use_scaled_font = PR_FALSE;
+  
+#ifdef USE_XPRINT
 /* gisburn: Small hack for Xprint:
  * Xprint usually operates at resolutions >= 300DPI. There are 
  * usually no "normal" bitmap fonts at those resolutions - only 
@@ -2644,11 +2516,12 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
  * usually look like scaleable bitmap fonts) are available.
  * Therefore: force use of scaleable fonts to get rid of 
  * manually scaled bitmap fonts...
- */ 
-  PRBool use_scaled_font = PR_TRUE;
-#else
-  PRBool use_scaled_font = PR_FALSE;
-#endif /* _IMPL_NS_XPRINT */
+ */
+ if (mPrinterMode)
+ {
+   use_scaled_font = PR_TRUE;
+ }
+#endif /* USE_XPRINT */
 
 // define a size such that a scaled font would always be closer
 // to the desired size than this
@@ -3395,15 +3268,19 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
  * Xprint printer-buildin fonts look like bitmap scaled fonts but are 
  * (scaleable) printer-buildin fonts in reality.
  */
-#ifndef _IMPL_NS_XPRINT
-      // if we have both an outline scaled font and a bitmap 
-      // scaled font pick the outline scaled font
-      if ((stretch->mScalable) && (!stretch->mOutlineScaled)
-          && (outline_scaled)) {
-        PR_smprintf_free(stretch->mScalable);
-        stretch->mScalable = nsnull;
+#ifdef USE_XPRINT
+      if(!nsFontMetricsXlib::mPrinterMode)
+#endif /* USE_XPRINT */      
+      {
+        // if we have both an outline scaled font and a bitmap 
+        // scaled font pick the outline scaled font
+        if ((stretch->mScalable) && (!stretch->mOutlineScaled)
+            && (outline_scaled)) {
+          PR_smprintf_free(stretch->mScalable);
+          stretch->mScalable = nsnull;
+        }
       }
-#endif /* !_IMPL_NS_XPRINT */
+      
       if (!stretch->mScalable) {
         stretch->mOutlineScaled = outline_scaled;
         if (outline_scaled) {
