@@ -1492,13 +1492,13 @@ nsresult nsWindow::MenuHasBeenSelected(
   // the position of the menu as a child of its parent
 
   PRBool isMenuItem = !(aFlags & MF_POPUP);
-  if(isMenuItem){
-	  printf("WM_MENUSELECT for menu item\n"); 
+  if(isMenuItem) {
+	  //printf("WM_MENUSELECT for menu item\n"); 
 	  //return NS_OK;
   }
   else
   {
-	  printf("WM_MENUSELECT for menu\n"); 
+	  //printf("WM_MENUSELECT for menu\n"); 
   }
 
   // uItem is the position of the item that was clicked
@@ -1506,8 +1506,8 @@ nsresult nsWindow::MenuHasBeenSelected(
 
   // if aNativeMenu is NULL then the menu is being deselected
   if (!aNativeMenu) {
-	    printf("... for deselect\n");
-    printf("///////////// Menu is NULL!\n");
+	  //printf("... for deselect\n");
+    //printf("///////////// Menu is NULL!\n");
     // check to make sure something had been selected
     //AdjustMenus(mHitMenu, nsnull, event);
 	nsIMenu * aNewMenu = nsnull;
@@ -1561,7 +1561,7 @@ nsresult nsWindow::MenuHasBeenSelected(
     }
     return NS_OK;
   } else { // The menu is being selected
-      printf("... for selection\n");
+    //printf("... for selection\n");
 	  void * voidData;
     mMenuBar->GetNativeData(voidData);
     HMENU nativeMenuBar = (HMENU)voidData;
@@ -1628,11 +1628,11 @@ nsresult nsWindow::MenuHasBeenSelected(
 
         // Skip if it is a menu item, otherwise, we get the menu by position
         if (!isMenuItem) {
-          printf("Getting submenu by position %d from parentMenu\n", aItemNum);
+          //printf("Getting submenu by position %d from parentMenu\n", aItemNum);
           nsISupports * item;
           parentMenu->GetItemAt((PRUint32)aItemNum, item);
           if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
-            printf("Item was not a menu! What are we doing here? Return early....\n");
+            //printf("Item was not a menu! What are we doing here? Return early....\n");
             return NS_ERROR_FAILURE;
           }
         }
@@ -1752,7 +1752,7 @@ nsresult nsWindow::MenuHasBeenSelected(
         }
         NS_RELEASE(parentMenu);
       } else {
-        printf("no menu was found. This is bad.\n");
+        //printf("no menu was found. This is bad.\n");
         // XXX need to assert here!
       }
     }
@@ -2248,7 +2248,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_LBUTTONDOWN:
-            SetFocus();
+            //SetFocus(); // this is bad
             //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             break;
