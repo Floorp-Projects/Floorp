@@ -2459,7 +2459,7 @@ function displayPageInfo()
 function displayPageReportFirstTime()
 {
     window.openDialog("chrome://browser/content/pageReportFirstTime.xul", "_blank",
-                      "modal");
+                      "dependent");
 }
 
 function displayPageReport()
