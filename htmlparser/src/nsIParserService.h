@@ -35,6 +35,8 @@ class nsIParserService : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERSERVICE_IID)
 
+  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const=0;
+
   NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const =0;
 
   NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const =0;

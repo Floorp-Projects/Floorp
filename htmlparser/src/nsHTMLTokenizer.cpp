@@ -580,7 +580,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
         const nsAReadableString& key=theToken->GetKey();
         const nsAReadableString& text=theToken->GetValue();
          // support XML like syntax to fix bugs like 44186
-        if((kForwardSlash==key.First()) && (0==text.Length())){
+        if(!key.IsEmpty() && kForwardSlash==key.CharAt(0) && text.IsEmpty()) {
           aToken->SetEmpty(PR_TRUE);
           isUsableAttr=!mDoXMLEmptyTags; 
         }

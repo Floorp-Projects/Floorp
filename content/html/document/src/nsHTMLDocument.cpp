@@ -3116,6 +3116,11 @@ nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc,
     // a depth-first search rather than build up a table.
     // Obviously, this may be inefficient for large documents.
     if (nsnull != mParser) {
+      
+      // Bug 69826 - Make sure to flush the content model if
+      // the document is still loading.     
+      FlushPendingNotifications(PR_FALSE); 
+      
       content = FindNamedItem(mRootContent, name, PR_FALSE);
     }
     else {

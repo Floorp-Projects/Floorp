@@ -52,6 +52,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
+
   NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const;
 
   NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const;
@@ -75,6 +77,19 @@ nsParserService::~nsParserService()
 
 NS_IMPL_ISUPPORTS(nsParserService, kIParserServiceIID)
   
+  
+NS_IMETHODIMP 
+nsParserService::HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const
+{
+  NS_ENSURE_ARG_POINTER(aAtom);
+    
+  nsAutoString tagName;
+  aAtom->ToString(tagName);
+  *aId = nsHTMLTags::LookupTag(tagName);
+ 
+  return NS_OK;
+}
+ 
 NS_IMETHODIMP 
 nsParserService::HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const
 {
