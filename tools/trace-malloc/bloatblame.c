@@ -256,8 +256,8 @@ static void connect_nodes(graphnode *from, graphnode *to, callsite *site)
             /*
              * Say the stack looks like this: ... => JS => js => JS => js.
              * We must avoid overcounting JS=>js because the first edge total
-             * includes second (because the lower site's total includes all
-             * its kids' totals).
+             * includes the second JS=>js edge's total (which is because the
+             * lower site's total includes all its kids' totals).
              */
             if (!to->low || to->low < from->low) {
                 edge[0].direct += site->direct;
