@@ -188,7 +188,8 @@ WindowPtr			whichwindow;
 nsWindow			*thewindow;
 nsRect 				rect;
 RgnHandle			updateregion;
-nsPaintEvent 		pevent;
+nsPaintEvent 	pevent;
+nsRefData				*theRefData;
  
  	::GetPort(&curport);
 	whichwindow = (WindowPtr)aTheEvent->message;
@@ -198,7 +199,9 @@ nsPaintEvent 		pevent;
 		SetPort(whichwindow);
 		BeginUpdate(whichwindow);
 		
-		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		theRefData = (nsRefData*)GetWRefCon (whichwindow);
+		thewindow = (nsWindow*)theRefData->GetTopWidget();
+
 		if(thewindow != nsnull)
 			{
 			updateregion = whichwindow->visRgn;
@@ -239,12 +242,14 @@ nsMacMessagePump::DoIdleWidgets()
 {
 WindowPtr			whichwindow;
 nsWindow			*thewindow;
+nsRefData				*theRefData;
 		
 	whichwindow = ::FrontWindow();
 	while(whichwindow)
 		{
 		// idle the widget
-		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		theRefData = (nsRefData*)GetWRefCon (whichwindow);
+		thewindow = (nsWindow*)theRefData->GetTopWidget();
 		
 		whichwindow = (WindowPtr)((WindowPeek)whichwindow)->nextWindow;
 		}
@@ -271,6 +276,7 @@ nsMouseEvent	mouseevent;
 nsSizeEvent 	event;
 nsRect				sizerect;
 Point					newPt;
+nsRefData			*theRefData;
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
@@ -285,7 +291,8 @@ Point					newPt;
 	if(whichwindow!=0)
 		{
 		SelectWindow(whichwindow);
-		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		theRefData = (nsRefData*)GetWRefCon (whichwindow);
+		thewindow = (nsWindow*)theRefData->GetTopWidget();
 			
 		if(thewindow != nsnull)
 			{
@@ -326,7 +333,9 @@ Point					newPt;
 				therect.top += 20;    /* Allow space for menu bar */
 				DragWindow(whichwindow, aTheEvent->where, &therect);
 				therect = whichwindow->portRect;
-				thewindow = (nsWindow *) GetWRefCon (whichwindow);
+				theRefData = (nsRefData*)GetWRefCon (whichwindow);
+				thewindow = (nsWindow*)theRefData->GetTopWidget();
+
 				if (thewindow != nsnull)
 					{
 					LocalToGlobal(&topLeft(therect));
@@ -371,7 +380,9 @@ Point					newPt;
 						ValidRect(&therect);
 						
 						// Resize layout objects
-						thewindow = (nsWindow *) GetWRefCon (whichwindow);
+						theRefData = (nsRefData*)GetWRefCon (whichwindow);
+						thewindow = (nsWindow*)theRefData->GetTopWidget();
+
 						if (thewindow != nsnull)
 						{
 							therect = whichwindow->portRect;
@@ -401,7 +412,8 @@ Point					newPt;
 			case inGoAway:
 				if(TrackGoAway(whichwindow,aTheEvent->where))
 					{
-					thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+					theRefData = (nsRefData*)GetWRefCon (whichwindow);
+					thewindow = (nsWindow*)theRefData->GetTopWidget();
 					if(thewindow)
 						{
 						thewindow->Destroy();
@@ -430,6 +442,7 @@ PRInt16				partcode;
 Point					hitPoint;
 nsWindow			*thewindow;
 nsMouseEvent	mouseevent;
+nsRefData			*theRefData;
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
@@ -457,7 +470,8 @@ nsMouseEvent	mouseevent;
 	if(whichwindow!=0)
 		{
 		SelectWindow(whichwindow);
-		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		theRefData = (nsRefData*)GetWRefCon (whichwindow);
+		thewindow = (nsWindow*)theRefData->GetTopWidget();
 			
 		if(thewindow != nsnull)
 			{
@@ -506,6 +520,7 @@ PRInt16				partcode;
 Point					hitPoint;
 nsWindow			*thewindow,*lastwindow;
 nsMouseEvent	mouseevent;
+nsRefData			*theRefData;
 
 
 	if (*(long*)&mMousePoint == *(long*)&aTheEvent->where)
@@ -526,7 +541,8 @@ nsMouseEvent	mouseevent;
 	if(whichwindow!=nsnull)
 		{
 		SetPort(whichwindow);
-		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		theRefData = (nsRefData*)GetWRefCon (whichwindow);
+		thewindow = (nsWindow*)theRefData->GetTopWidget();
 		}
 	if( (thewindow != nsnull))
 		{
@@ -711,14 +727,16 @@ nsTextWidget	*widget;
 void 
 nsMacMessagePump::DoMenu(EventRecord *aTheEvent, long menuResult)
 {
-	WindowPtr whichwindow;
-	nsMenuEvent theEvent;
-	nsWindow* raptorWindow = nsnull;
+WindowPtr 	whichwindow;
+nsMenuEvent theEvent;
+nsWindow* 	raptorWindow = nsnull;
+nsRefData		*theRefData;
 
 #if 1
 	whichwindow = FrontWindow();
 	if (whichwindow)
-	    raptorWindow = (nsWindow *) GetWRefCon (whichwindow);
+			theRefData = (nsRefData*)GetWRefCon (whichwindow);
+			raptorWindow = (nsWindow*)theRefData->GetTopWidget();
 #else
 	// XXX For some reason this returns null... which is bad...
 	raptorWindow = mToolkit->GetFocus();

@@ -271,8 +271,27 @@ public:
 
 // =============================================================================
 
+// =============================================================================
 
+// Class to pass data around in the mac windows refcon
 
+class nsRefData
+{
+
+protected:
+	void*		mParentWidget;						// top level widget, parent widget, etc.  nsWindow with no parent
+	void*		mCurrentWidget;						// store the current widget, for get native data
+	void*		mGeneralPointer;					// Place to store embedding applications data, guarenteed not to be used by widget code
+
+public:
+	void*		GetTopWidget() {return(mParentWidget);}
+	void*		GetCurWidget() {return(mCurrentWidget);}
+	void*		GetGenPointer() {return(mGeneralPointer);}
+	void		SetTopWidget(void* aParentWidget) {mParentWidget=aParentWidget;}
+	void		SetCurWidget(void*  aCurrentWidget) {mCurrentWidget=aCurrentWidget;}
+	void		SetGenPointer(void*  aGeneralPointer) {mGeneralPointer=aGeneralPointer;}
+
+};
 
 
 #endif // Window_h__
