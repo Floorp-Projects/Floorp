@@ -1122,35 +1122,47 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
                 NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
 
-      if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
-        // If it's a scroll frame, then hide the view. This means that
-        // child elements can't override their parent's visibility, but
-        // it's not practical to leave it visible in all cases because
-        // the scrollbars will be showing
-        nsIAtom*  frameType;
-        GetFrameType(&frameType);
-
-        if (frameType == nsLayoutAtoms::scrollFrame) {
+      if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+        viewIsVisible = PR_FALSE;
+      }
+      else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+        // If it has a widget, hide the view because the widget can't deal with it
+        nsIWidget* widget = nsnull;
+        mView->GetWidget(widget);
+        if (widget) {
           viewIsVisible = PR_FALSE;
-
-        } else {
-          // If we're a container element, then leave the view visible, but
-          // mark it as having transparent content. The reason we need to
-          // do this is that child elements can override their parent's
-          // hidden visibility and be visible anyway
-          nsIFrame* firstChild;
-  
-          FirstChild(nsnull, &firstChild);
-          if (firstChild) {
-            // Not a left frame, so the view needs to be visible, but marked
-            // as having transparent content
-            viewHasTransparentContent = PR_TRUE;
-          } else {
-            // Leaf frame so go ahead and hide the view
-            viewIsVisible = PR_FALSE;
-          }
+          NS_RELEASE(widget);
         }
-        NS_IF_RELEASE(frameType);
+        else {
+          // If it's a scroll frame, then hide the view. This means that
+          // child elements can't override their parent's visibility, but
+          // it's not practical to leave it visible in all cases because
+          // the scrollbars will be showing
+          nsIAtom*  frameType;
+          GetFrameType(&frameType);
+
+          if (frameType == nsLayoutAtoms::scrollFrame) {
+            viewIsVisible = PR_FALSE;
+
+          } else {
+            // If we're a container element, then leave the view visible, but
+            // mark it as having transparent content. The reason we need to
+            // do this is that child elements can override their parent's
+            // hidden visibility and be visible anyway
+            nsIFrame* firstChild;
+  
+            FirstChild(nsnull, &firstChild);
+            if (firstChild) {
+              // Not a left frame, so the view needs to be visible, but marked
+              // as having transparent content
+              viewHasTransparentContent = PR_TRUE;
+            } else {
+              // Leaf frame so go ahead and hide the view
+              viewIsVisible = PR_FALSE;
+            }
+          }
+          NS_IF_RELEASE(frameType);
+        }
       }
 
       // Make sure visibility is correct

@@ -408,30 +408,42 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
                   NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
 
-        if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
-          // If it's a container element, then leave the view visible, but
-          // mark it as having transparent content. The reason we need to
-          // do this is that child elements can override their parent's
-          // hidden visibility and be visible anyway
-          nsIContent* content;
+        if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+          viewIsVisible = PR_FALSE;
+        }
+        else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+          // If it has a widget, hide the view because the widget can't deal with it
+          nsIWidget* widget = nsnull;
+          view->GetWidget(widget);
+          if (widget) {
+            viewIsVisible = PR_FALSE;
+            NS_RELEASE(widget);
+          }
+          else {
+            // If it's a container element, then leave the view visible, but
+            // mark it as having transparent content. The reason we need to
+            // do this is that child elements can override their parent's
+            // hidden visibility and be visible anyway
+            nsIContent* content;
 
-          // Because this function is called before processing the content
-          // object's child elements, we can't tell if it's a leaf by looking
-          // at whether the frame has any child frames
-          aFrame->GetContent(&content);
-          if (content) {
-            PRBool  isContainer;
+            // Because this function is called before processing the content
+            // object's child elements, we can't tell if it's a leaf by looking
+            // at whether the frame has any child frames
+            aFrame->GetContent(&content);
+            if (content) {
+              PRBool  isContainer;
 
-            content->CanContainChildren(isContainer);
-            if (isContainer) {
-              // The view needs to be visible, but marked as having transparent
-              // content
-              viewHasTransparentContent = PR_TRUE;
-            } else {
-              // Go ahead and hide the view
-              viewIsVisible = PR_FALSE;
+              content->CanContainChildren(isContainer);
+              if (isContainer) {
+                // The view needs to be visible, but marked as having transparent
+                // content
+                viewHasTransparentContent = PR_TRUE;
+              } else {
+                // Go ahead and hide the view
+                viewIsVisible = PR_FALSE;
+              }
+              NS_RELEASE(content);
             }
-            NS_RELEASE(content);
           }
         }
 
