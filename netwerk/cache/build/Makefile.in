@@ -34,7 +34,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkfilecache_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkmemcache_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcomio_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
