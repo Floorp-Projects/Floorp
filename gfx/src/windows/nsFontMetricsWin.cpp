@@ -102,19 +102,19 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceCont
   // XXX this  need to check availability with the dc
   PRBool  aliased;
   if (aGenericFamily.EqualsIgnoreCase("serif")) {
-    aDC->GetLocalFontName("Times New Roman", aFontFace, aliased);
+    aDC->GetLocalFontName(nsString("Times New Roman"), aFontFace, aliased);
   }
   else if (aGenericFamily.EqualsIgnoreCase("sans-serif")) {
-    aDC->GetLocalFontName("Arial", aFontFace, aliased);
+    aDC->GetLocalFontName(nsString("Arial"), aFontFace, aliased);
   }
   else if (aGenericFamily.EqualsIgnoreCase("cursive")) {
-    aDC->GetLocalFontName("Script", aFontFace, aliased);
+    aDC->GetLocalFontName(nsString("Script"), aFontFace, aliased);
   }
   else if (aGenericFamily.EqualsIgnoreCase("fantasy")) {
-    aDC->GetLocalFontName("Arial", aFontFace, aliased);
+    aDC->GetLocalFontName(nsString("Arial"), aFontFace, aliased);
   }
   else if (aGenericFamily.EqualsIgnoreCase("monospace")) {
-    aDC->GetLocalFontName("Courier New", aFontFace, aliased);
+    aDC->GetLocalFontName(nsString("Courier New"), aFontFace, aliased);
   }
   else {
     aFontFace.Truncate();
