@@ -105,6 +105,7 @@ TestMemoryObjectCache()
     printf("\nTest ACCESS_READ_WRITE:\n");
     rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
                                  nsICache::ACCESS_READ_WRITE,
+                                 nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));
     if (NS_FAILED(rv)) {
         printf("OpenCacheEntry(ACCESS_READ_WRITE) failed: %x\n", rv);
@@ -125,6 +126,7 @@ TestMemoryObjectCache()
     
     rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
                                  nsICache::ACCESS_READ_WRITE,
+                                 nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));
     if (NS_FAILED(rv)) {
         printf("OpenCacheEntry(ACCESS_READ_WRITE #2) failed: %x", rv);
@@ -149,6 +151,7 @@ TestMemoryObjectCache()
     printf("\nTest ACCESS_WRITE:\n");
     rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
                                  nsICache::ACCESS_WRITE,
+                                 nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));
     if (NS_FAILED(rv)) {
         printf("OpenCacheEntry(ACCESS_WRITE) failed: %x", rv);
