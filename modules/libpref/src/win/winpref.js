@@ -61,10 +61,10 @@ pref("font.name-list.serif.ja", "MS PMincho, MS PGothic, MS Mincho, MS Gothic");
 pref("font.name-list.sans-serif.ja", "MS PGothic, MS PMincho, MS Gothic, MS Mincho");
 pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho");
 
-pref("font.name.serif.ko", "굴림"); // "Gulim" 
+pref("font.name.serif.ko", "바탕"); // "Batang" 
 pref("font.name.sans-serif.ko", "굴림"); // "Gulim" 
 pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
-pref("font.name-list.serif.ko", "Gulim"); 
+pref("font.name-list.serif.ko", "Batang, Gulim"); 
 pref("font.name-list.sans-serif.ko", "Gulim"); 
 pref("font.name-list.monospace.ko", "GulimChe"); 
 
