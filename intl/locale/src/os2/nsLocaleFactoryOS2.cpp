@@ -17,6 +17,17 @@
  *
  * Contributor(s): Henry Sobotka <sobotka@axess.com> 01/2000 review and update
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Fixed unitialized members in ctor.
+ *
  */
 
 #include "nscore.h"
@@ -51,7 +62,8 @@ nsLocaleFactoryOS2::nsLocaleFactoryOS2() : mSysLocale(nsnull),
   NS_INIT_REFCNT();
 }
 
-nsLocaleFactoryOS2::nsLocaleFactoryOS2(const nsCID &aClass)   
+nsLocaleFactoryOS2::nsLocaleFactoryOS2(const nsCID &aClass) : mSysLocale(nsnull), 
+                                           mAppLocale(nsnull)
 {   
   NS_INIT_ISUPPORTS();
   mClassID = aClass;
