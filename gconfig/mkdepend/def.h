@@ -26,11 +26,13 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
+#ifndef WIN32
 #include <X11/Xosdefs.h>
 #ifdef WIN32
 #include <X11/Xw32defs.h>
 #endif
 #include <X11/Xfuncproto.h>
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #ifndef X_NOT_POSIX

@@ -32,11 +32,9 @@ PROGRAM		= mkdepend
 
 include $(GDEPTH)/gconfig/config.mk
 
-ifeq ($(OS_ARCH),WINNT)
-PROGRAM		=
-endif
-
 DEFINES		+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\" -DNeedVarargsPrototypes
+
+LDFLAGS = /SUBSYSTEM:CONSOLE
 
 include $(GDEPTH)/gconfig/rules.mk
 
