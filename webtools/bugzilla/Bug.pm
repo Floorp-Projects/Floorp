@@ -262,6 +262,24 @@ sub initBug  {
   return $self;
 }
 
+sub dup_id {
+    my ($self) = @_;
+
+    return $self->{'dup_id'} if exists $self->{'dup_id'};
+
+    $self->{'dup_id'} = undef;
+    if ($self->{'resolution'} eq 'DUPLICATE') { 
+        my $dbh = Bugzilla->dbh;
+        $self->{'dup_id'} =
+          $dbh->selectrow_array(q{SELECT dupe_of 
+                                  FROM duplicates
+                                  WHERE dupe = ?},
+                                undef,
+                                $self->{'bug_id'});
+    }
+    return $self->{'dup_id'};
+}
+
 sub actual_time {
     my ($self) = @_;
 

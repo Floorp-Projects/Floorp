@@ -160,7 +160,12 @@
           <a href="bug_status.html">Resolution</a>:
         </b>
       </td>
-      <td>[% bug.resolution FILTER html %]</td>      
+      <td>
+        [% bug.resolution FILTER html %]
+        [% IF bug.resolution == "DUPLICATE" %]
+          of [% "bug ${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
+        [% END %]
+      </td>      
       <td>&nbsp;</td>
       
       <td align="right">

@@ -217,7 +217,7 @@ sub create {
                               my ($context, $bug) = @_;
                               return sub {
                                   my $text = shift;
-                                  return &::GetBugLink($text, $bug);
+                                  return &::GetBugLink($bug, $text);
                               };
                           },
                           1
