@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -25,112 +25,105 @@
 
 #include "Expr.h"
 
-/**
+/*
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
-**/
-//-- PredicateList Implementation --/
+ */
 
-PredicateList::PredicateList() {
-} //-- PredicateList
+PredicateList::PredicateList()
+{
+} // PredicateList
 
-/**
- * Destructor, will delete all Expressions in the list, so remove
- * any you may need
-**/
-PredicateList::~PredicateList() {
-    //cout << "-PredicateList() - start"<<endl;
-    ListIterator* iter = predicates.iterator();
-    while ( iter->hasNext() ) {
-        iter->next();
-        Expr* expr = (Expr*) iter->remove();
+/*
+ * Destructor, will delete all Expressions in the list
+ */
+PredicateList::~PredicateList()
+{
+    txListIterator iter(&predicates);
+    while (iter.hasNext()) {
+        iter.next();
+        Expr* expr = (Expr*)iter.remove();
         delete expr;
     }
-    delete iter;
-    //cout << "~PredicateList() - end"<<endl;
-} //-- ~PredicateList
+} // ~PredicateList
 
-/**
+/*
  * Adds the given Expr to the list
  * @param expr the Expr to add to the list
-**/
-void PredicateList::add(Expr* expr) {
+ */
+void PredicateList::add(Expr* expr)
+{
     predicates.add(expr);
-} //-- add
+} // add
 
-void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs) {
-    if ( !nodes ) return;
+void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs)
+{
+    NS_ASSERTION(nodes, "called evaluatePredicates with NULL NodeSet");
+    if (!nodes)
+        return;
 
-    ListIterator* iter = predicates.iterator();
-    NodeSet remNodes(nodes->size());
-
-    Stack* nsStack = cs->getNodeSetStack();
-    nsStack->push(nodes);
-    while ( iter->hasNext() ) {
-        int nIdx = 0;
-
-        Expr* expr = (Expr*) iter->next();
-        //-- filter each node currently in the NodeSet
+    cs->getNodeSetStack()->push(nodes);
+    NodeSet newNodes;
+    // optimize; set DuplicateChecking to MB_FALSE,
+    // restore original state later
+    // we only work with |Node|s already in the NodeSet, so they
+    // have been checked already, no need to check again in here.
+    MBool ndsCheckDupl = nodes->getDuplicateChecking();
+    nodes->setDuplicateChecking(MB_FALSE);
+    newNodes.setDuplicateChecking(MB_FALSE);
+    txListIterator iter(&predicates);
+    while (iter.hasNext()) {
+        Expr* expr = (Expr*)iter.next();
+        /*
+         * add nodes to newNodes that match the expression
+         * or, if the result is a number, add the node with the right
+         * position
+         */
+        newNodes.clear();
+        PRUint32 nIdx;
         for (nIdx = 0; nIdx < nodes->size(); nIdx++) {
-
             Node* node = nodes->get(nIdx);
-
-            //-- if expr evaluates to true using the node as it's context,
-            //-- then we can keep it, otherwise add to remove list
-            ExprResult* exprResult = expr->evaluate(node,cs);
-            if ( !exprResult ) {
-#if 0
-                // XXX DEBUG OUTPUT
-                cout << "ExprResult == null" << endl;
-#endif
+            ExprResult* exprResult = expr->evaluate(node, cs);
+            if (!exprResult)
+                break;
+            switch(exprResult->getResultType()) {
+                case ExprResult::NUMBER :
+                    // handle default, [position() == numberValue()]
+                    if ((double)(nIdx+1) == exprResult->numberValue())
+                        newNodes.add(node);
+                    break;
+                default:
+                    if (exprResult->booleanValue())
+                        newNodes.add(node);
+                    break;
             }
-            else {
-                switch(exprResult->getResultType()) {
-                    case ExprResult::NUMBER :
-                    {
-                        //-- handle default position()
-                        int position = nodes->indexOf(node)+1;
-                        if (( position <= 0 ) ||
-                            ( ((double)position) != exprResult->numberValue()))
-                            remNodes.add(node);
-
-                        break;
-                    }
-                    default:
-                        if (! exprResult->booleanValue() ) remNodes.add(node);
-                        break;
-                }
-                delete exprResult;
-            }
+            delete exprResult;
         }
-        //-- remove unmatched nodes
-        for (nIdx = 0; nIdx < remNodes.size(); nIdx++)
-            nodes->remove(remNodes.get(nIdx));
-        //-- clear remove list
-        remNodes.clear();
+        // Move new NodeSet to the current one
+        nodes->clear();
+        newNodes.copyInto(*nodes);
     }
-    nsStack->pop();
-    delete iter;
-} //-- evaluatePredicates
+    cs->getNodeSetStack()->pop();
+    // restore DuplicateChecking of NodeSet
+    nodes->setDuplicateChecking(ndsCheckDupl);
+} // evaluatePredicates
 
-/**
+/*
  * returns true if this predicate list is empty
-**/
-MBool PredicateList::isEmpty() {
+ */
+MBool PredicateList::isEmpty()
+{
     return (MBool)(predicates.getLength() == 0);
-} //-- isEmpty
+} // isEmpty
 
-void PredicateList::toString(String& dest) {
-
-    ListIterator* iter = predicates.iterator();
-
-    while ( iter->hasNext() ) {
-        Expr* expr = (Expr*) iter->next();
+void PredicateList::toString(String& dest)
+{
+    txListIterator iter(&predicates);
+    while (iter.hasNext()) {
+        Expr* expr = (Expr*) iter.next();
         dest.append("[");
         expr->toString(dest);
         dest.append("]");
     }
-    delete iter;
-
-} //-- toString
+} // toString
 
