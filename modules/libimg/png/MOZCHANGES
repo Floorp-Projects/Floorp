@@ -1,0 +1,12 @@
+
+Changes made to pristine png source by mozilla.org developers.
+
+2002/02/15  -- Synced with 1.0.9 tree
+Reapplied following changes:
+
+Bug 78649 - Wrapped stderr fprintfs inside DEBUG ifdef.
+	Affected files: pnggccrd.c, ipng.cpp, if.cpp
+
+Bug 81794 - crash/leak fix for pngrutil.c
+	Affected files: pngrutil.c
+
