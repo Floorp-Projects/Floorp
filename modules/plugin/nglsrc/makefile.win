@@ -83,7 +83,6 @@ LLIBS = \
  $(DIST)\lib\$(CACHELIBNAME) \
 !endif
  $(DIST)\lib\xppref32.lib \
- $(DIST)\lib\dbm32.lib \
  $(LIBNSPR)  
 
 WIN_LIBS = \

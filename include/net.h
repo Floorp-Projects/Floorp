@@ -46,7 +46,7 @@
 #endif
 
 /* larubbio */
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_WIN32)
 #include "mcom_db.h"
 #endif
 
