@@ -1387,9 +1387,9 @@ nsBoxFrame::GetFrameName(nsString& aResult) const
     if (content)
        content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
 
-    aResult = "Box[id=";
+    aResult.AssignWithConversion("Box[id=");
     aResult.Append(id);
-    aResult.Append("]");
+    aResult.AppendWithConversion("]");
     return NS_OK;
 }
 
@@ -1985,9 +1985,9 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                         childFrame->GetContent(getter_AddRefs(content));
 
                         if (content) {
-                            id = "";
-                            kClass = "";
-                            tagString = "";
+                            id.SetLength(0);
+                            kClass.SetLength(0);
+                            tagString.SetLength(0);
 
                             content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
                             id.ToCString(idValue,100);

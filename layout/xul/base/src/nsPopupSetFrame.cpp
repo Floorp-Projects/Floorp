@@ -376,9 +376,9 @@ nsPopupSetFrame::LayoutFinished(nsBoxLayoutState& aState)
     menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
 
     if (popupAnchor.IsEmpty())
-      popupAnchor = "bottomleft";
+      popupAnchor.AssignWithConversion("bottomleft");
     if (popupAlign.IsEmpty())
-      popupAlign = "topleft";
+      popupAlign.AssignWithConversion("topleft");
    
     nsIPresContext* presContext = aState.GetPresContext();
     ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(presContext, popupAnchor, popupAlign, mElementFrame, mXPos, mYPos);
@@ -483,7 +483,7 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
   // determine if this menu is a context menu and flag it
   nsIFrame* activeChild = GetActiveChild();
   nsCOMPtr<nsIMenuParent> childPopup ( do_QueryInterface(activeChild) );
-  if ( childPopup && aPopupType.Equals("context") )
+  if ( childPopup && aPopupType.EqualsWithConversion("context") )
     childPopup->SetIsContextMenu(PR_TRUE);
 
   // Now we'll have it in our child frame list.
@@ -523,7 +523,7 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
     nsAutoString value;
     childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                                value);
-    if (value.Equals("true")) {
+    if (value.EqualsWithConversion("true")) {
       // Ungenerate this element.
       childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
                                    PR_TRUE);
@@ -535,9 +535,9 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
   nsAutoString value;
   aPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                               value);
-  if (!value.Equals("true")) {
+  if (!value.EqualsWithConversion("true")) {
     // Generate this element.
-    aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true",
+    aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_ConvertASCIItoUCS2("true"),
                                 PR_TRUE);
   }
 }
@@ -582,7 +582,7 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
     // We wait until the last possible moment to show to avoid flashing, but we can just go
     // ahead and hide it here if we're told to (no additional stages necessary).
     if (aActivateFlag)
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, "true", PR_TRUE);
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
     else {
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);

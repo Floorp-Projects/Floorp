@@ -250,7 +250,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     if (!textStyle->WhiteSpaceIsSignificant()) {
       value.CompressWhitespace();
       if (value.Length() == 0) {
-        value = "  ";
+        value.AssignWithConversion("  ");
       }
     }
 
@@ -384,7 +384,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (!textStyle->WhiteSpaceIsSignificant()) {
     value.CompressWhitespace();
     if (value.Length() == 0) {
-      value = "  ";
+      value.AssignWithConversion("  ");
     }
   }
 
@@ -438,7 +438,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
     rv = ButtonLocalize("Browse", aString);
   }
   else {
-    aString = "  ";
+    aString.AssignWithConversion("  ");
     rv = NS_OK;
   }
   return rv;
@@ -478,7 +478,7 @@ nsGfxButtonControlFrame::ButtonLocalize(char* aKey, nsString& oVal)
   // Determine default label from string bundle
   if (NS_SUCCEEDED(rv) && bundle && aKey) {
     nsXPIDLString valUni;
-    nsAutoString key(aKey);
+    nsAutoString key; key.AssignWithConversion(aKey);
     rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
     if (NS_SUCCEEDED(rv) && valUni) {
       oVal.Assign(valUni);
@@ -503,7 +503,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsAutoString value;
     if (mTextContent && mContent) {
       if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
-        value = "";
+        value.SetLength(0);
       }
       rv = mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
     } else {

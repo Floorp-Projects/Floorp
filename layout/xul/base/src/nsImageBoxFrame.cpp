@@ -196,7 +196,7 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
   // that UpdateAttributes doesn't double start an image load.
   nsAutoString src;
   GetImageSource(src);
-  if (!src.Equals("")) {
+  if (!src.IsEmpty()) {
     mHasImage = PR_TRUE;
   }
   mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
@@ -215,7 +215,7 @@ nsImageBoxFrame::GetImageSource(nsString& aResult)
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, aResult);
 
   // if the new image is empty
-  if (aResult.Equals("")) {
+  if (aResult.IsEmpty()) {
     // get the list-style-image
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
@@ -244,7 +244,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
 
   // see if the source changed
   // get the old image src
-  nsAutoString oldSrc ="";
+  nsAutoString oldSrc;
   mImageLoader.GetURLSpec(oldSrc);
 
   // get the new image src
@@ -254,7 +254,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
    // see if the images are different
   if (!oldSrc.Equals(src)) {      
 
-        if (!src.Equals("")) {
+        if (!src.IsEmpty()) {
           mSizeFrozen = PR_FALSE;
           mHasImage = PR_TRUE;
         } else {
@@ -442,6 +442,6 @@ nsImageBoxFrame::CacheImageSize(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsImageBoxFrame::GetFrameName(nsString& aResult) const
 {
-  aResult = "ImageBox";
+  aResult.AssignWithConversion("ImageBox");
   return NS_OK;
 }

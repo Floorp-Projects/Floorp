@@ -460,7 +460,7 @@ nsAttributeContent::CopyText(nsString& aResult)
     aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.Assign(mText.Get1b(), mText.GetLength());
+    aResult.AssignWithConversion(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }

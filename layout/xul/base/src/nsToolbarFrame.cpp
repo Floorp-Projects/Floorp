@@ -175,8 +175,8 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
 
   // NOTE: the last Remove will delete the drag listener
   if ( receiver ) {
-    receiver->RemoveEventListener("dragover", mDragListener, PR_TRUE);
-    receiver->RemoveEventListener("dragexit", mDragListener, PR_TRUE);
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragListener, PR_TRUE);
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragListener, PR_TRUE);
   }
 }
 
@@ -205,8 +205,8 @@ nsToolbarFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
   // with enough info to determine where the drop would happen so that JS down the 
   // line can do the right thing.
   mDragListener = new nsToolbarDragListener(this, aPresContext);
-  receiver->AddEventListener("dragover", mDragListener, PR_TRUE);
-  receiver->AddEventListener("dragexit", mDragListener, PR_TRUE);
+  receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragListener, PR_TRUE);
+  receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragListener, PR_TRUE);
 
 #if 0 //TEMP_HACK_FOR_BUG_11291
   // Ok, this is a hack until Ender lands. We need to have a mouse listener on text widgets

@@ -63,7 +63,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "Deck";
+      aResult.AssignWithConversion("Deck");
       return NS_OK;
   }
 #endif

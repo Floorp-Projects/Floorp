@@ -424,7 +424,8 @@ nsLayoutModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 void
 nsLayoutModule::SetUserAgent( void )
 {
-  nsString productName(PRODUCT_NAME), productVersion(PRODUCT_VERSION);
+  nsString productName; productName.AssignWithConversion(PRODUCT_NAME);
+  nsString productVersion; productVersion.AssignWithConversion(PRODUCT_VERSION);
   nsresult rv = nsnull;
 
   nsCOMPtr<nsIHTTPProtocolHandler> theService(do_GetService(kHTTPHandlerCID,

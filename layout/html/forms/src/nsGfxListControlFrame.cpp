@@ -1343,10 +1343,10 @@ nsGfxListControlFrame::DisplaySelected(nsIContent* aContent)
    // The event state manager supports selected states. KMM
   
   if (PR_TRUE == mIsAllFramesHere) {
-    aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, "", PR_TRUE);
+    aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, nsAutoString(), PR_TRUE);
     //ForceRedraw();
   } else {
-    aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, "", PR_FALSE);
+    aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, nsAutoString(), PR_FALSE);
   }
 }
 
@@ -2229,7 +2229,7 @@ nsGfxListControlFrame::Reset(nsIPresContext* aPresContext)
   // Ok, so we were restored, now set the last known selections from the restore state.
   if (hasBeenRestored) {
     nsCOMPtr<nsISupports> supp;
-    mPresState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
+    mPresState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
 
     nsresult res = NS_ERROR_NULL_POINTER;
     if (!supp)
@@ -2408,7 +2408,7 @@ nsGfxListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 NS_IMETHODIMP 
 nsGfxListControlFrame::GetSelectedItem(nsString & aStr)
 {
-  aStr = "";
+  aStr.SetLength(0);
   nsresult rv = NS_ERROR_FAILURE; 
   nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
 
@@ -2898,7 +2898,7 @@ nsGfxListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
     if ((kNothingSelected == selectedIndex) && (mComboboxFrame)) {
       selectedIndex = 0;
     }
-    aValue.Append(selectedIndex, 10);
+    aValue.AppendInt(selectedIndex, 10);
   }
 
   return NS_OK;
@@ -3855,7 +3855,7 @@ nsGfxListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresSt
   }
   
   NS_NewPresState(aState);
-  (*aState)->SetStatePropertyAsSupports("selecteditems", value);
+  (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), value);
   return res;
 }
 

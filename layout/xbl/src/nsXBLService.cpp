@@ -225,7 +225,7 @@ nsXBLService::nsXBLService(void)
     static const char kXBLNameSpaceURI[]
         = "http://www.mozilla.org/xbl";
 
-    rv = gNameSpaceManager->RegisterNameSpace(kXBLNameSpaceURI, kNameSpaceID_XBL);
+    rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXBLNameSpaceURI), kNameSpaceID_XBL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XBL namespace");
     if (NS_FAILED(rv)) return;
 
@@ -272,7 +272,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 
   if (!binding) {
     nsCAutoString str = "Failed to locate XBL binding.  The invalid binding name is: ";
-    str += aURL;
+    str.AppendWithConversion(aURL);
     NS_ERROR(str);
     return NS_ERROR_FAILURE;
   }
@@ -403,7 +403,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
   if (!root)
     return NS_ERROR_FAILURE;
 
-  nsAutoString bindingName(ref);
+  nsAutoString bindingName; bindingName.AssignWithConversion( NS_STATIC_CAST(const char*, ref) );
 
   PRInt32 count;
   root->ChildCount(count);

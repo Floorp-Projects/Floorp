@@ -119,8 +119,7 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
     mChecked(PR_FALSE),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
-    mPresContext(nsnull),
-    mGroupName("")
+    mPresContext(nsnull)
 {
 
 } // cntr
@@ -237,7 +236,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     // This allows selective overriding for subcontent.
     nsAutoString value;
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-    if (value.Equals("true"))
+    if (value.EqualsWithConversion("true"))
       return result;
   }
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
@@ -302,7 +301,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
                              PR_TRUE);
       }
       else {
-        mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, nsAutoString("true"),
+        mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2("true"),
                              PR_TRUE);
       }
         
@@ -391,7 +390,7 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 {
   if (aActivateFlag) {
     // Highlight the menu.
-    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
   }
   else {
     // Unhighlight the menu.
@@ -432,7 +431,7 @@ nsMenuFrame::MarkAsGenerated()
     nsAutoString genVal;
     child->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
     if (genVal.IsEmpty())
-      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true", PR_TRUE);
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
   }
 
   return NS_OK;
@@ -452,7 +451,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
     // We wait until the last possible moment to show to avoid flashing, but we can just go
     // ahead and hide it here if we're told to (no additional stages necessary).
     if (aActivateFlag)
-      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, "true", PR_TRUE);
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
     else {
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
@@ -473,7 +472,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   if (aAttribute == nsXULAtoms::open) {
     aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
-    if (value.Equals("true"))
+    if (value.EqualsWithConversion("true"))
       OpenMenuInternal(PR_TRUE);
     else
       OpenMenuInternal(PR_FALSE);
@@ -495,9 +494,9 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     // Mark it as generated, which ensures a frame gets built.
     MarkAsGenerated();
 
-    domElement->SetAttribute("open", "true");
+    domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
   }
-  else domElement->RemoveAttribute("open");
+  else domElement->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
 
   return NS_OK;
 }
@@ -578,15 +577,15 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       
       if (onMenuBar) {
         if (popupAnchor.IsEmpty())
-          popupAnchor = "bottomleft";
+          popupAnchor.AssignWithConversion("bottomleft");
         if (popupAlign.IsEmpty())
-          popupAlign = "topleft";
+          popupAlign.AssignWithConversion("topleft");
       }
       else {
         if (popupAnchor.IsEmpty())
-          popupAnchor = "topright";
+          popupAnchor.AssignWithConversion("topright");
         if (popupAlign.IsEmpty())
-          popupAlign = "topleft";
+          popupAlign.AssignWithConversion("topleft");
       }
 
       menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
@@ -887,15 +886,15 @@ nsMenuFrame::LayoutFinished(nsBoxLayoutState& aState)
 
     if (onMenuBar) {
       if (popupAnchor.IsEmpty())
-          popupAnchor = "bottomleft";
+          popupAnchor.AssignWithConversion("bottomleft");
       if (popupAlign.IsEmpty())
-          popupAlign = "topleft";
+          popupAlign.AssignWithConversion("topleft");
     }
     else {
       if (popupAnchor.IsEmpty())
-        popupAnchor = "topright";
+        popupAnchor.AssignWithConversion("topright");
       if (popupAlign.IsEmpty())
-        popupAlign = "topleft";
+        popupAlign.AssignWithConversion("topleft");
     }
 
     nsIPresContext* presContext = aState.GetPresContext();
@@ -992,9 +991,9 @@ nsMenuFrame::Notify(nsITimer* aTimer)
   // Our timer has fired.
   if (aTimer == mOpenTimer.get()) {
     if (!mMenuOpen && mMenuParent) {
-      nsAutoString active = "";
+      nsAutoString active;
       mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-      if (active.Equals("true")) {
+      if (active.EqualsWithConversion("true")) {
         // We're still the active menu.
         OpenMenu(PR_TRUE);
       }
@@ -1011,7 +1010,7 @@ nsMenuFrame::IsDisabled()
 {
   nsAutoString disabled;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.Equals("true"))
+  if (disabled.EqualsWithConversion("true"))
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -1021,9 +1020,9 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value.Equals("checkbox"))
+  if (value.EqualsWithConversion("checkbox"))
     mType = eMenuType_Checkbox;
-  else if (value.Equals("radio")) {
+  else if (value.EqualsWithConversion("radio")) {
     mType = eMenuType_Radio;
 
     nsAutoString valueName;
@@ -1048,7 +1047,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                          value);
-  newChecked = (value.Equals("true"));
+  newChecked = (value.EqualsWithConversion("true"));
 
   if (newChecked == mChecked) {
     /* checked state didn't change */
@@ -1172,17 +1171,17 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   if (!keyElement)
     return;
   
-  nsAutoString keyAtom("key");
-  nsAutoString shiftAtom("shift");
-	nsAutoString altAtom("alt");
-	nsAutoString commandAtom("command");
-  nsAutoString controlAtom("control");
+  nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
+  nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
+	nsAutoString altAtom; altAtom.AssignWithConversion("alt");
+	nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
+  nsAutoString controlAtom; controlAtom.AssignWithConversion("control");
 
 	nsAutoString shiftValue;
 	nsAutoString altValue;
 	nsAutoString commandValue;
   nsAutoString controlValue;
-	nsAutoString keyChar = " ";
+	nsAutoString keyChar; keyChar.AssignWithConversion(" ");
 	
 	keyElement->GetAttribute(keyAtom, keyChar);
 	keyElement->GetAttribute(shiftAtom, shiftValue);
@@ -1191,11 +1190,11 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   keyElement->GetAttribute(controlAtom, controlValue);
 	  
   nsAutoString xulkey;
-  keyElement->GetAttribute(nsAutoString("xulkey"), xulkey);
-  if (xulkey.Equals("true")) {
+  keyElement->GetAttribute(NS_ConvertASCIItoUCS2("xulkey"), xulkey);
+  if (xulkey.EqualsWithConversion("true")) {
     // Set the default for the xul key modifier
 #ifdef XP_MAC
-    commandValue = "true";
+    commandValue.AssignWithConversion("true");
 #elif defined(XP_PC) || defined(NTO)
     controlValue = "true";
 #else 
@@ -1205,34 +1204,34 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   
   PRBool prependPlus = PR_FALSE;
 
-  if(!commandValue.IsEmpty() && !commandValue.Equals("false")) {
+  if(!commandValue.IsEmpty() && !commandValue.EqualsWithConversion("false")) {
     prependPlus = PR_TRUE;
-	  aAccelString += "Ctrl"; // Hmmm. Kinda defeats the point of having an abstraction.
+	  aAccelString.AppendWithConversion("Ctrl"); // Hmmm. Kinda defeats the point of having an abstraction.
   }
 
-  if(!controlValue.IsEmpty() && !controlValue.Equals("false")) {
+  if(!controlValue.IsEmpty() && !controlValue.EqualsWithConversion("false")) {
     prependPlus = PR_TRUE;
-	  aAccelString += "Ctrl";
+	  aAccelString.AppendWithConversion("Ctrl");
   }
 
-  if(!shiftValue.IsEmpty() && !shiftValue.Equals("false")) {
+  if(!shiftValue.IsEmpty() && !shiftValue.EqualsWithConversion("false")) {
     if (prependPlus)
-      aAccelString += "+";
+      aAccelString.AppendWithConversion("+");
     prependPlus = PR_TRUE;
-    aAccelString += "Shift";
+    aAccelString.AppendWithConversion("Shift");
   }
 
-  if (!altValue.IsEmpty() && !altValue.Equals("false")) {
+  if (!altValue.IsEmpty() && !altValue.EqualsWithConversion("false")) {
 	  if (prependPlus)
-      aAccelString += "+";
+      aAccelString.AppendWithConversion("+");
     prependPlus = PR_TRUE;
-    aAccelString += "Alt";
+    aAccelString.AppendWithConversion("Alt");
   }
 
   keyChar.ToUpperCase();
   if (!keyChar.IsEmpty()) {
     if (prependPlus)
-      aAccelString += "+";
+      aAccelString.AppendWithConversion("+");
     prependPlus = PR_TRUE;
     aAccelString += keyChar;
   }
@@ -1450,7 +1449,7 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
       if (!element) {
         nsAutoString value;
         menulist->GetValue(value);
-        if (value == "") {
+        if (value.IsEmpty()) {
           nsCOMPtr<nsIContent> child;
           GetMenuChildrenElement(getter_AddRefs(child));
           if (child) {

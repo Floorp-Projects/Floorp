@@ -181,7 +181,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
           sprintf(ch,"%d", current);
  
           // set the new position but don't notify anyone. We already know
-          scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsAutoString(ch), PR_FALSE);
+          scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
       }
   }
   
@@ -614,7 +614,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
   sprintf(ch,"%d", newpos);
 
   // set the new position
-  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsAutoString(ch), PR_TRUE);
+  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
 
   if (DEBUG_SLIDER)
      printf("Current Pos=%s\n",ch);

@@ -495,7 +495,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     // in the excludes list.
     nsAutoString excludes;
     content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-    if (!excludes.Equals("*")) {
+    if (!excludes.EqualsWithConversion("*")) {
       if (!excludes.IsEmpty()) {
         // Walk the children and ensure that all of them
         // are in the excludes array.
@@ -540,7 +540,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
       nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
       nsAutoString name;
       attr->GetName(name);
-      if (!name.Equals("excludes")) {
+      if (!name.EqualsWithConversion("excludes")) {
         nsAutoString value;
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
         element->GetAttribute(name, value);
@@ -616,7 +616,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
             PRBool useCapture = PR_FALSE;
             nsAutoString capturer;
             child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
-            if (capturer.Equals("true"))
+            if (capturer.EqualsWithConversion("true"))
               useCapture = PR_TRUE;
 
             // Add the event listener.
@@ -742,8 +742,9 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
         // and then define it as a property.
         if (!body.IsEmpty()) {
           void* myFunc;
+          nsCAutoString cname; cname.AssignWithConversion(name.GetUnicode());
           rv = context->CompileFunction(mScriptObject,
-                                        name,
+                                        cname,
                                         argCount,
                                         (const char**)args,
                                         body, 
@@ -769,7 +770,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           void* setFunc = nsnull;
           uintN attrs = 0;
 
-          if (readOnly.Equals("true"))
+          if (readOnly.EqualsWithConversion("true"))
             attrs |= JSPROP_READONLY;
 
           if (!getter.IsEmpty()) {
@@ -1139,7 +1140,7 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   nsAutoString element;
   aTag->ToString(element);
 
-  if (aList.Equals("*"))
+  if (aList.EqualsWithConversion("*"))
       return PR_TRUE; // match _everything_!
 
   PRInt32 indx = aList.Find(element);
@@ -1185,7 +1186,7 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
       nsCOMPtr<nsIAtom> attribute;
 
       // Figure out if this token contains a :. 
-      nsAutoString attr(token);
+      nsAutoString attr; attr.AssignWithConversion(token);
       PRInt32 index = attr.Find(":", PR_TRUE);
       if (index != -1) {
         // This attribute maps to something different.
@@ -1281,21 +1282,21 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
 PRBool
 nsXBLBinding::IsMouseHandler(const nsString& aName)
 {
-  return ((aName.Equals("click")) || (aName.Equals("dblclick")) || (aName.Equals("mousedown")) ||
-          (aName.Equals("mouseover")) || (aName.Equals("mouseout")) || (aName.Equals("mouseup")));
+  return ((aName.EqualsWithConversion("click")) || (aName.EqualsWithConversion("dblclick")) || (aName.EqualsWithConversion("mousedown")) ||
+          (aName.EqualsWithConversion("mouseover")) || (aName.EqualsWithConversion("mouseout")) || (aName.EqualsWithConversion("mouseup")));
 }
 
 PRBool
 nsXBLBinding::IsKeyHandler(const nsString& aName)
 {
-  return ((aName.Equals("keypress")) || (aName.Equals("keydown")) || (aName.Equals("keyup")));
+  return ((aName.EqualsWithConversion("keypress")) || (aName.EqualsWithConversion("keydown")) || (aName.EqualsWithConversion("keyup")));
 }
 
 PRBool
 nsXBLBinding::IsXULHandler(const nsString& aName)
 {
-  return ((aName.Equals("create")) || (aName.Equals("destroy")) || (aName.Equals("broadcast")) ||
-          (aName.Equals("command")) || (aName.Equals("commandupdate")) || (aName.Equals("close")));
+  return ((aName.EqualsWithConversion("create")) || (aName.EqualsWithConversion("destroy")) || (aName.EqualsWithConversion("broadcast")) ||
+          (aName.EqualsWithConversion("command")) || (aName.EqualsWithConversion("commandupdate")) || (aName.EqualsWithConversion("close")));
 }
 
 NS_IMETHODIMP
@@ -1304,7 +1305,7 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const
   nsAutoString val;
   aName->ToString(val);
   
-  nsAutoString eventStr("on");
+  nsAutoString eventStr; eventStr.AssignWithConversion("on");
   eventStr += val;
 
   nsCOMPtr<nsIAtom> eventName = getter_AddRefs(NS_NewAtom(eventStr));

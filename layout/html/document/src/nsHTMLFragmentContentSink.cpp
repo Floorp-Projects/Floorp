@@ -401,7 +401,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
   nsAutoString tag;
   nsresult result = NS_OK;
 
-  tag = aNode.GetText();
+  tag.Assign(aNode.GetText());
   if (tag.EqualsIgnoreCase(kSentinelStr)) {
     mHitSentinel = PR_TRUE;
   }
@@ -806,7 +806,7 @@ nsHTMLFragmentContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
             }
             *cp = '\0';
             PRInt32 ch;
-            nsAutoString str(cbuf);
+            nsAutoString str; str.AssignWithConversion(cbuf);
             dtd->ConvertEntityToUnicode(str, &ch);
             
             if (ch < 0) {

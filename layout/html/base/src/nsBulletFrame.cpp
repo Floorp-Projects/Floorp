@@ -289,12 +289,12 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
       case '7': case  '8':
         addOn.AppendWithConversion(bchars[romanPos]);
         for(n=0;n<(*dp-'5');n++) {
-          addOn.Append(achars[romanPos]);
+          addOn.AppendWithConversion(achars[romanPos]);
         }
         break;
       case '9':
-        addOn.Append(achars[romanPos]);
-        addOn.Append(achars[romanPos+1]);
+        addOn.AppendWithConversion(achars[romanPos]);
+        addOn.AppendWithConversion(achars[romanPos+1]);
         break;
       default:
         break;

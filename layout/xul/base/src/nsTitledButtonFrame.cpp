@@ -221,7 +221,6 @@ nsTitledButtonFrame::nsTitledButtonFrame(nsIPresShell* aShell):nsLeafBoxFrame(aS
                                                                mMinSize(0,0),
                                                                mAscent(0)
 {
-	mTitle = "";
 	mAlign = GetDefaultAlignment();
 	mCropType = CropRight;
 	mNeedsLayout = PR_TRUE;
@@ -295,7 +294,7 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
   // that UpdateAttributes doesn't double start an image load.
   nsAutoString src;
   GetImageSource(src);
-  if (!src.Equals("")) {
+  if (!src.IsEmpty()) {
     mHasImage = PR_TRUE;
   }
   mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
@@ -315,10 +314,10 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
   if (!accesskey.IsEmpty()) {    
 	  mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
 	  if (mAccesskeyIndex == -1) {
-		  nsString tmpstring = "(" ;
+		  nsString tmpstring; tmpstring.AssignWithConversion("(");
 		  accesskey.ToUpperCase();
 		  tmpstring += accesskey;
-		  tmpstring += ")";
+		  tmpstring.AppendWithConversion(")");
 		  PRUint32 offset = mTitle.RFind("...");
 		  if ( offset != kNotFound)
 			mTitle.Insert(tmpstring,offset);
@@ -347,7 +346,7 @@ nsTitledButtonFrame::GetImageSource(nsString& aResult)
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, aResult);
 
   // if the new image is empty
-  if (aResult.Equals("")) {
+  if (aResult.IsEmpty()) {
     // get the list-style-image
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
@@ -447,7 +446,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
 
   // see if the source changed
   // get the old image src
-  nsAutoString oldSrc ="";
+  nsAutoString oldSrc;
   mImageLoader.GetURLSpec(oldSrc);
 
   // get the new image src
@@ -457,7 +456,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
    // see if the images are different
   if (!oldSrc.Equals(src)) {      
 
-        if (!src.Equals("")) {
+        if (!src.IsEmpty()) {
           mSizeFrozen = PR_FALSE;
           mHasImage = PR_TRUE;
         } else {
@@ -562,7 +561,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext* aPresContext,
     nscoord center_x   = rect.x + rect.width/2;
     nscoord center_y   = rect.y + rect.height/2;
 
-    mCroppedTitle = "";
+    mCroppedTitle.SetLength(0);
 
     nscoord spacing = 0;
 
@@ -695,11 +694,11 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRen
    mTitleRect.width = aWidth;
  
    if (aWidth <= elipsisWidth) {
-       mCroppedTitle = "";
+       mCroppedTitle.SetLength(0);
        return;
    }
 
-   mCroppedTitle = ELIPSIS;
+   mCroppedTitle.AssignWithConversion(ELIPSIS);
 
    aWidth -= elipsisWidth;
 
@@ -752,7 +751,7 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRen
            if (i == 0) 
                break;
         
-           nsString copy = "";
+           nsString copy;
            mTitle.Right(copy, length-i-1);
            mCroppedTitle = mCroppedTitle + copy;
        } 
@@ -760,10 +759,10 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRen
 
        case CropCenter:
 
-       nsString elipsisLeft = ELIPSIS;
+       nsString elipsisLeft; elipsisLeft.AssignWithConversion(ELIPSIS);
 
        if (aWidth <= elipsisWidth) 
-         elipsisLeft = "";
+         elipsisLeft.SetLength(0);
        else
           aWidth -= elipsisWidth;
     
@@ -797,7 +796,7 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRen
            }
 
 
-           nsString copy = "";
+           nsString copy;
 
            if (i2 > i)
               mTitle.Mid(copy, i,i2-i);
@@ -1283,9 +1282,9 @@ nsTitledButtonFrame::MouseClicked (nsIPresContext* aPresContext)
 nsTitledButtonFrame::CheckState
 nsTitledButtonFrame :: StringToCheckState ( const nsString & aStateAsString )
 {
-  if ( aStateAsString.Equals(NS_STRING_TRUE) )
+  if ( aStateAsString.EqualsWithConversion(NS_STRING_TRUE) )
     return eOn;
-  else if ( aStateAsString.Equals(NS_STRING_FALSE) )
+  else if ( aStateAsString.EqualsWithConversion(NS_STRING_FALSE) )
     return eOff;
   
   // not true and not false means mixed
@@ -1303,19 +1302,19 @@ nsTitledButtonFrame :: CheckStateToString ( CheckState inState, nsString& outSta
 {
   switch ( inState ) {
     case eOn:
-      outStateAsString = NS_STRING_TRUE;
+      outStateAsString.AssignWithConversion(NS_STRING_TRUE);
 	  break;
 
     case eOff:
-      outStateAsString = NS_STRING_FALSE;
+      outStateAsString.AssignWithConversion(NS_STRING_FALSE);
       break;
  
     case eMixed:
-      outStateAsString = "2";
+      outStateAsString.AssignWithConversion("2");
       break;
 
     case eUnset:
-      outStateAsString = "";
+      outStateAsString.SetLength(0);
   }
 } // CheckStateToString
 
@@ -1551,8 +1550,8 @@ nsTitledButtonFrame::CacheSizes(nsBoxLayoutState& aBoxLayoutState)
 NS_IMETHODIMP
 nsTitledButtonFrame::GetFrameName(nsString& aResult) const
 {
-  aResult = "TitledButton[value=";
+  aResult.AssignWithConversion("TitledButton[value=");
   aResult += mTitle;
-  aResult += "]";
+  aResult.AppendWithConversion("]");
   return NS_OK;
 }

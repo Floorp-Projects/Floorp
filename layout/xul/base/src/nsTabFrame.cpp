@@ -105,17 +105,17 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
       parent->ChildAt(oldIndex, *getter_AddRefs(child));
 
       // set the old tab to be unselected
-      child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, "false", PR_TRUE);
+      child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, NS_ConvertASCIItoUCS2("false"), PR_TRUE);
 
       // set the new tab to be selected
-      mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, "true", PR_TRUE);
+      mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
    }
 
    // set the panels index
    char value[100];
    sprintf(value, "%d", index);
 
-   tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value, PR_TRUE);
+   tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, NS_ConvertASCIItoUCS2(value), PR_TRUE);
 
 }
 

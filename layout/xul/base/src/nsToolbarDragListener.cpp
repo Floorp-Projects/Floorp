@@ -201,8 +201,8 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
           nsCOMPtr<nsIDOMElement> domElement ( do_QueryInterface(content) );
           if ( domElement ) {
             nsAutoString value;
-            domElement->GetAttribute(nsAutoString("container"), value);  // can't use an atom here =(
-            isContainer = value.Equals("true");
+            domElement->GetAttribute(NS_ConvertASCIItoUCS2("container"), value);  // can't use an atom here =(
+            isContainer = value.EqualsWithConversion("true");
           }
           else
             NS_WARNING("Not a DOM element");        
@@ -292,10 +292,10 @@ nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
 
       	// need the cast, because on some platforms, PR[U]int32 != long, but we're using "%ld"
       sprintf(buffer, "%ld", NS_STATIC_CAST(long, xLoc));
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
+      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
       sprintf(buffer, "%ld", NS_STATIC_CAST(long, beforeIndex));
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, buffer, PR_FALSE );
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, onChild ? "true" : "false", PR_FALSE );
+      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(buffer), PR_FALSE );
+      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2(onChild ? "true" : "false"), PR_FALSE );
     }
     
     // cache the current drop location
@@ -343,9 +343,9 @@ nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
     // AttributeChanged() about that attribute.
     char buffer[10];
     sprintf(buffer, "%d", -1);
-    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
-    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, buffer, PR_FALSE );
-    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, "1", PR_TRUE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(buffer), PR_FALSE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, NS_ConvertASCIItoUCS2("1"), PR_TRUE );
     
     // reset the current drop location
     mCurrentDropLoc = -1;

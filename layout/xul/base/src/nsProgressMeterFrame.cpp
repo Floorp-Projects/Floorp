@@ -122,8 +122,8 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
       PRInt32 remainder = 100 - flex;
 
       nsAutoString leftFlex, rightFlex;
-      leftFlex.Append(flex);
-      rightFlex.Append(remainder);
+      leftFlex.AppendInt(flex);
+      rightFlex.AppendInt(remainder);
       progressBar->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
       progressRemainder->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
     }

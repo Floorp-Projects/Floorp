@@ -98,7 +98,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "Toolbar";
+      aResult.AssignWithConversion("Toolbar");
       return NS_OK;
   }
 

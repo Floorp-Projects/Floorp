@@ -112,26 +112,20 @@ void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame 
 void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
 {
   // Windows linebreaks: Map CRLF to LF:
-  aString.ReplaceSubstring("\r\n", "\n");
+  aString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"), NS_ConvertASCIItoUCS2("\n"));
 
   // Mac linebreaks: Map any remaining CR to LF:
-  aString.ReplaceSubstring("\r", "\n");
+  aString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"), NS_ConvertASCIItoUCS2("\n"));
 }
 
 PRBool nsFormControlHelper::GetBool(const nsString& aValue)
 {
-  if (aValue.Equals(NS_STRING_TRUE))
-    return(PR_TRUE);
-  else
-    return (PR_FALSE);
+  return aValue.EqualsWithConversion(NS_STRING_TRUE);
 }
 
 void nsFormControlHelper::GetBoolString(const PRBool aValue, nsString& aResult)
 {
-  if (PR_TRUE == aValue)
-    aResult = NS_STRING_TRUE;
-  else
-    aResult = NS_STRING_FALSE;
+  aResult.AssignWithConversion( aValue ? NS_STRING_TRUE : NS_STRING_FALSE );
 }
 
 
@@ -172,7 +166,7 @@ nsresult nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext,
 nsresult
 nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
 {
-  aOutValue = "";
+  aOutValue.SetLength(0);
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
   nsIHTMLContent* content = nsnull;
   aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
@@ -198,16 +192,16 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
 
   if (NS_CONTENT_ATTR_NOT_THERE != result) {
 
-    nsAutoString wrapHard(kTextControl_Wrap_Hard);
-    nsAutoString wrapPhysical(kTextControl_Wrap_Physical);
+    nsAutoString wrapHard; wrapHard.AssignWithConversion(kTextControl_Wrap_Hard);
+    nsAutoString wrapPhysical; wrapPhysical.AssignWithConversion(kTextControl_Wrap_Physical);
     if (wrap.EqualsIgnoreCase(wrapHard) ||
         wrap.EqualsIgnoreCase(wrapPhysical)) {
       aWrapProp = eHTMLTextWrap_Hard;
       return result;
     }
 
-    nsAutoString wrapSoft(kTextControl_Wrap_Soft);
-    nsAutoString wrapVirtual(kTextControl_Wrap_Virtual);
+    nsAutoString wrapSoft; wrapSoft.AssignWithConversion(kTextControl_Wrap_Soft);
+    nsAutoString wrapVirtual; wrapVirtual.AssignWithConversion(kTextControl_Wrap_Virtual);
     if (wrap.EqualsIgnoreCase(wrapSoft) ||
         wrap.EqualsIgnoreCase(wrapVirtual)) {
       aWrapProp = eHTMLTextWrap_Soft;
@@ -384,10 +378,10 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
   GetRepChars(aPresContext, char1, char2);
   int i;
   for (i = 0; i < aNumChars; i+=2) {
-    val += char1;  
+    val.AppendWithConversion(char1);  
   }
   for (i = 1; i < aNumChars; i+=2) {
-    val += char2;  
+    val.AppendWithConversion(char2);  
   }
   return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
 }

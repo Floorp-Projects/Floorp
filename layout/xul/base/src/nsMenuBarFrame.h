@@ -110,7 +110,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "MenuBar";
+      aResult.AssignWithConversion("MenuBar");
       return NS_OK;
   }
 
