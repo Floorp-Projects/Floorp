@@ -6800,7 +6800,7 @@ nsXULDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter->AddStartTag(NS_ConvertToString("section_body"), PR_TRUE);
 //HACKHACKHACK DOCTYPE NOT DONE FOR XULDOCUMENTS>ASSIGN IN HTML
   nsString hack;
-  hack.AssignWithConversion("DOCTYTPE html PUBLIC \"-//w3c//dtd html 4.0 transitional//en\"");
+  hack.AssignWithConversion("DOCTYPE html PUBLIC \"-//w3c//dtd html 4.0 transitional//en\"");
   converter->AddMarkupDeclaration(hack);
   
   nsCOMPtr<nsIDOMDocumentType> doctype;
