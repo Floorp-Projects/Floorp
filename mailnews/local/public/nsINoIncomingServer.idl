@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-[object, uuid(739b7fb0-5f37-11d3-896b-004005263078)]
+[scriptable, uuid(739b7fb0-5f37-11d3-896b-004005263078)]
 interface nsINoIncomingServer : nsISupports {
 };
 

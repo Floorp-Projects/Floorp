@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-[object, uuid(758a8970-e628-11d2-b7fc-00805f05ffa5)]
+[scriptable, uuid(758a8970-e628-11d2-b7fc-00805f05ffa5)]
 interface nsIPop3IncomingServer : nsISupports {
 
   attribute boolean leaveMessagesOnServer;
