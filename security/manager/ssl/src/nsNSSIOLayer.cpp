@@ -800,27 +800,15 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
     return PR_FAILURE;
   
   PRStatus status = PR_SUCCESS;
-  
-  // Due to limitations in NSPR 4.0, we must execute this entire connect
-  // as a blocking operation.
-  
-  PRSocketOptionData sockopt;
-  sockopt.option = PR_SockOpt_Nonblocking;
-  PR_GetSocketOption(fd, &sockopt);
-  PRBool oldBlockVal = sockopt.value.non_blocking;
-  
+
   nsNSSSocketInfo *infoObject = (nsNSSSocketInfo*)fd->secret;
   
-  sockopt.option = PR_SockOpt_Nonblocking;
-  sockopt.value.non_blocking = PR_FALSE;
-  PR_SetSocketOption(fd, &sockopt);
-  
   status = fd->lower->methods->connect(fd->lower, addr, 
-                                       PR_INTERVAL_NO_TIMEOUT);
+                                       timeout);
   if (status != PR_SUCCESS) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] Lower layer connect error: %d\n",
                                       (void*)fd, PR_GetError()));
-    goto loser;
+    return status;
   }
   
   PRBool forceHandshake, forTLSStepUp;
@@ -840,14 +828,6 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
       status = PR_FAILURE;
     }
   }
-
- loser:
-  // We put the Nonblocking bit back to the value it was when 
-  // we entered this function.
-  NS_ASSERTION(sockopt.option == PR_SockOpt_Nonblocking,
-               "sockopt.option was re-set to an unexpected value");
-  sockopt.value.non_blocking = oldBlockVal;
-  PR_SetSocketOption(fd, &sockopt);
 
   return status;
 }
