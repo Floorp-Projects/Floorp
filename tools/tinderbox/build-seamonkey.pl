@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.13 $ ';
+$Version = '$Revision: 1.14 $ ';
 
 
 sub PrintUsage {
@@ -706,6 +706,8 @@ sub RunBloatTest {
 
   # Turn on ref counting to track leaks (bloaty tool).
   $ENV{NSPR_LOG_MODULES} = "xpcomrefcnt:1";
+  $ENV{XPCOM_MEM_BLOAT_LOG} = "1";
+
 
   $Binary = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
   
