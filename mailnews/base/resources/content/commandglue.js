@@ -44,6 +44,7 @@ function FindMessenger()
 function OpenURL(url)
 {
   dump("\n\nOpenURL from XUL\n\n\n");
+  messenger.SetWindow(window);
   messenger.OpenURL(url);
 }
 
