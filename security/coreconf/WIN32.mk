@@ -95,7 +95,7 @@ ifdef MAPFILE
 DLLFLAGS += -DEF:$(MAPFILE)
 endif
 # Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = perl -e "open INFILE, \"< $(LIBRARY_NAME).def\" ; open OUTFILE, \"> $@ \"; print OUTFILE <INFILE>" 
+PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
 
 
 #
