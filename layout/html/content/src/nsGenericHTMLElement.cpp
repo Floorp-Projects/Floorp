@@ -2821,6 +2821,19 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
           }
         }
       }
+    } else if (aPresContext) {
+      // in NavQuirks mode, allow the empty string to set the background to empty
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      if (eCompatibility_NavQuirks == mode &&
+          eHTMLUnit_Empty == value.GetUnit()) {
+        nsAutoString spec;
+        nsStyleColor* color;
+        color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+        color->mBackgroundImage = spec;
+        color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+        color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+      }
     }
   }
 
