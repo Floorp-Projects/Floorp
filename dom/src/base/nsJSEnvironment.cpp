@@ -467,7 +467,8 @@ nsIScriptContext* nsJSEnvironment::GetNewContext()
 	return context;
 }
 
-extern "C" NS_DOM nsresult NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext)
+extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal, 
+                                                  nsIScriptContext **aContext)
 {
 	nsresult rv = NS_OK;
 	nsJSEnvironment *environment = nsJSEnvironment::GetScriptingEnvironment();

@@ -155,7 +155,7 @@ public:
  * Return a new Context
  *
  */
-extern "C" NS_DOM nsresult NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext);
+extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext);
 
 #endif // nsIScriptContext_h__
 
