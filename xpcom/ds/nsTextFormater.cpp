@@ -255,7 +255,7 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec, int radix,
     ** need to stop when we hit 10 digits. In the signed case, we can
     ** stop when the number is zero.
     */
-    cvt = cvtbuf + sizeof(cvtbuf);
+    cvt = &cvtbuf[0] + sizeof(cvtbuf);
     digits = 0;
     while (num) {
 	int digit = (((unsigned long)num) % radix) & 0xF;
@@ -297,7 +297,7 @@ static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
     ** stop when the number is zero.
     */
     LL_I2L(rad, radix);
-    cvt = cvtbuf + sizeof(cvtbuf);
+    cvt = &cvtbuf[0] + sizeof(cvtbuf);
     digits = 0;
     while (!LL_IS_ZERO(num)) {
 	PRInt32 digit;
@@ -405,7 +405,7 @@ static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, PRUnichar* aDes
   for(in=aSrc,state=0,ucs4=0;in < inend; in++)
   {
      if(0 == state) {
-        if( 0 == 0x80 & (*in)) {
+        if( 0 == (0x80 & (*in))) {
             needLen++;
         } else if( 0xC0 == (0xE0 & (*in))) {
             needLen++;
