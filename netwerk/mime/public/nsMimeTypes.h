@@ -112,7 +112,7 @@
 #define TEXT_JSSS                           "text/jsss"
 #define TEXT_XML                            "text/xml"
 #define TEXT_RDF                            "text/rdf"
-#define TEXT_XUL                            "text/xul"
+#define TEXT_XUL                            "application/vnd.mozilla.xul+xml"
 #define TEXT_RTF                            "text/rtf"
 #define TEXT_CPP                            "text/cpp"
 

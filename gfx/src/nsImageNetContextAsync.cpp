@@ -251,7 +251,7 @@ ImageConsumer::CanHandleContent(const char * aContentType,
   // if we had a webshell or doc shell around, we'd pass this call
   // through to it...but we don't =(
   if (!nsCRT::strcasecmp(aContentType, "message/rfc822"))
-    *aDesiredContentType = nsCRT::strdup("text/xul");
+    *aDesiredContentType = nsCRT::strdup("application/vnd.mozilla.xul+xml");
   // since we explicilty loaded the url, we always want to handle it!
   *aCanHandleContent = PR_TRUE;
     

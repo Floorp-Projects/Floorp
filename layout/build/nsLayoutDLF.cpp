@@ -75,8 +75,8 @@ static char* gXMLTypes[] = {
 
 static char* gRDFTypes[] = {
   "text/rdf",
-  "text/xul",
-  "text/cached-xul",
+  "application/vnd.mozilla.xul+xml",
+  "mozilla.application/cached-xul",
   0
 };
 

@@ -1778,7 +1778,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 
   // Create a dummy loader that will load a stub XUL document.
   nsCOMPtr<nsIDocumentLoaderFactory> factory;
-  rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/xul",
+  rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/vnd.mozilla.xul+xml",
                                           nsnull,
                                           NS_GET_IID(nsIDocumentLoaderFactory),
                                           getter_AddRefs(factory));
@@ -1793,7 +1793,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStreamListener> listener;
-  rv = factory->CreateInstance("view", channel, aLoadGroup, "text/xul",
+  rv = factory->CreateInstance("view", channel, aLoadGroup, "application/vnd.mozilla.xul+xml",
                                aContainer, aExtraInfo, getter_AddRefs(listener),
                                aDocViewerResult);
   if (NS_FAILED(rv)) return rv;

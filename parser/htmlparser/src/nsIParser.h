@@ -354,7 +354,7 @@ const PRUnichar kNullCh           = '\0';
 
 #define kHTMLTextContentType  "text/html"
 #define kXMLTextContentType   "text/xml"
-#define kXULTextContentType   "text/xul"
+#define kXULTextContentType   "application/vnd.mozilla.xul+xml"
 #define kRDFTextContentType   "text/rdf"
 #define kXIFTextContentType   "text/xif"
 #define kPlainTextContentType "text/plain"

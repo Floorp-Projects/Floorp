@@ -613,7 +613,7 @@ nsXULDocument::GetArena()
 NS_IMETHODIMP
 nsXULDocument::GetContentType(nsAWritableString& aContentType) const
 {
-    aContentType.Assign(NS_LITERAL_STRING("text/xul"));
+    aContentType.Assign(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml"));
     return NS_OK;
 }
 
@@ -707,7 +707,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     nsXPIDLCString contentType;
     aChannel->GetContentType(getter_Copies(contentType));
 
-    if (contentType && PL_strcmp(contentType, "text/cached-xul") == 0) {
+    if (contentType && 
+        PL_strcmp(contentType, "mozilla.application/cached-xul") == 0) {
         // Look in the chrome cache: we've got this puppy loaded
         // already.
         nsCOMPtr<nsIXULPrototypeDocument> proto;
