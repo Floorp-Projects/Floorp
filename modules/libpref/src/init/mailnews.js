@@ -111,7 +111,17 @@ pref("mail.pane_config",                    0);
 //
 // if the format is "", no mapit buttons will appear in the addressbook
 pref("mail.addr_book.mapit_url.format", "http://www.mapquest.com/maps/map.adp?country=@CO&address=@A1%20@A2&city=@CI&state=@ST&zipcode=@ZI");
-pref("mail.addr_book.lastnamefirst", 0); //0=displayname, 1=lastname first, 2=firstname first
+
+// the format for "mail.addr_book.quicksearchquery.format" is:
+// @V == the escaped value typed in the quick search bar in the addressbook
+//
+// note, changing this might require a change to SearchNameOrEmail.label
+// in messenger.dtd
+pref("mail.addr_book.quicksearchquery.format","?(or(PrimaryEmail,c,@V)(DisplayName,c,@V)(FirstName,c,@V)(LastName,c,@V))");
+
+// values for "mail.addr_book.lastnamefirst" are:
+//0=displayname, 1=lastname first, 2=firstname first
+pref("mail.addr_book.lastnamefirst", 0); 
 pref("mail.addr_book.displayName.autoGeneration", true);
 pref("mail.addr_book.displayName.lastnamefirst", false); // generate display names in last first order
 pref("mail.attach_vcard",                   false);
