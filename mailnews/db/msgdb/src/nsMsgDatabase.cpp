@@ -2939,7 +2939,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
   nsresult err;
   
   err = RowCellColumnToConstCharPtr(row, columnToken, &nakedString);
-  if (NS_SUCCEEDED(err) && nakedString && strlen(nakedString))
+  if (NS_SUCCEEDED(err))
   {
     GetMimeConverter();
     if (m_mimeConverter) 
