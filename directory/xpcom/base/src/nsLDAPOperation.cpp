@@ -246,6 +246,7 @@ nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
     this->mMsgId = ldap_url_search(this->mConnectionHandle, aURL, 
 				   aAttrsOnly);
     if (this->mMsgId == -1) {
+	// XXX
 	abort();
 #ifdef DEBUG
     char *s;
