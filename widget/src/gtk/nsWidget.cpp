@@ -26,7 +26,7 @@
 #include "nsILookAndFeel.h"
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
-#include "gtk_moz_window.h"
+
 #include <gdk/gdkx.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -1237,7 +1237,7 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 #undef TRACE_EVENTS_PAINT
 #undef TRACE_EVENTS_CROSSING
 
-#if defined(DEBUG_mcafee)
+#if defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
 #define TRACE_EVENTS 1
 #define TRACE_EVENTS_MOTION 1
 #endif
@@ -1367,7 +1367,7 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext)
   event.eventStructType = NS_DRAGDROP_EVENT;
 
   event.widget = this;
-  
+
 
   /* I think we need coordinate stuff here */
   /* Faking it for now. */
