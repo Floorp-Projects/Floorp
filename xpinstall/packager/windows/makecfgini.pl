@@ -128,7 +128,7 @@ sub OutputInstallSize()
 
   print "   calulating size for $inPath\n";
   $installSize    = `ds32.exe /L0 /A /S /C 32768 $inPath`;
-  $installSize    = int($installSize / 1000);
+  $installSize    = int($installSize / 1024);
   $installSize   += 1;
   return($installSize);
 }
@@ -151,7 +151,7 @@ sub OutputInstallSizeSystem()
         # calculate the size of component installed using ds32.exe in Kbytes
         print "   calulating size for $inPath\\$_\n";
         $installSizeSystem   += `ds32.exe /L0 /A /S /C 32768 $inPath\\$_`;
-        $installSizeSystem    = int($installSize / 1000);
+        $installSizeSystem    = int($installSize / 1024);
         $installSizeSystem   += 1;
       }
     }
