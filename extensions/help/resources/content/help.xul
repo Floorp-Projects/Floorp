@@ -115,7 +115,7 @@
     <!-- the two help panes (sidebar & content) -->
     <hbox flex="1">
 
-      <vbox id="helpsidebar-box">
+      <vbox id="helpsidebar-box" flex="10">
        <separator class="thin"/>
         <tabbox flex="1">
           <tabs>
@@ -124,51 +124,38 @@
           </tabs>
           <tabpanels flex="1">
             <hbox id="help-toc">
-              <tree id="help-toc-tree" ref="urn:root" flex="1*"
-                    datasources="chrome://help/locale/help-toc.rdf"
-                    containment="http://home.netscape.com/NC-rdf#subheadings"
-                    onselect="loadURI(this.selectedItems[0].firstChild.firstChild.getAttribute('helplink'));">>
-                <template>
-                  <rule>
-                    <conditions>
-                      <content uri="?uri"/>
-                      <triple subject="?uri"
-                              predicate="http://home.netscape.com/NC-rdf#subheadings"
-                              object="?subheadings" />
-                      <member container="?subheadings" child="?subheading"/>
-                    </conditions>
-                    <bindings>
-                      <binding subject="?subheading"
-                               predicate="http://home.netscape.com/NC-rdf#name"
-                               object="?name" />
-
-                      <binding subject="?subheading"
-                               predicate="http://home.netscape.com/NC-rdf#link"
-                               object="?link" />
-                    </bindings>
-
-                    <action>
-                      <treechildren>
-                        <treeitem uri="?subheading">
-                          <treerow>
-                            <treecell class="treecell-indent"
-                                      label="?name"
-                                      helplink="?link"/>
-                          </treerow>
-                        </treeitem>
-                      </treechildren>
-                    </action>
-                  </rule>
-                </template>
-
-                <treecolgroup>
-                  <treecol flex="1*" />
-                </treecolgroup>
-
-                <!-- because the outermost treechildren needs "flex='1'" -->
-                <treechildren flex="1*"/>
-
-              </tree>
+              <outliner id="help-toc-outliner" flex="1">
+                <outlinerbody datasources="chrome://help/locale/help-toc.rdf"
+                              flex="1" ref="urn:root"                              
+                              containment="http://home.netscape.com/NC-rdf#subheadings"
+                              onselect="selectItem();">
+           
+                  <template>
+                    <rule>
+                      <conditions>
+                        <outlinerrow uri="?uri"/>
+                        <triple subject="?uri"
+                                predicate="http://home.netscape.com/NC-rdf#subheadings"
+                                object="?subheadings" />
+                        <member container="?subheadings" child="?subheading"/>
+                      </conditions>
+                      <bindings>
+                        <binding subject="?subheading"
+                                 predicate="http://home.netscape.com/NC-rdf#name"
+                                 object="?name" />
+                      </bindings>
+                      <action>
+                        <outlinerrow uri="?subheading">
+                          <outlinercell ref="Column" label="?name"/>
+                        </outlinerrow>
+                      </action>
+                    </rule>
+                  </template>
+                </outlinerbody>
+                <outlinercols>
+                  <outlinercol flex="1" id="Column" primary="true" />
+                </outlinercols>
+              </outliner>
             </hbox>
 
             <hbox id="help-index">
@@ -189,7 +176,7 @@
       </splitter>
 
       <!-- this stuff lifted from navigator.xul -->
-      <vbox id="appcontent" flex="3">
+      <vbox id="appcontent" flex="5">
         <!-- this box is temporary, pending XBLified <browser> -->
         <hbox id="browser" flex="1">
           <!-- type attribute is used by frame construction to locate iframes

@@ -1,6 +1,10 @@
 //-------- global variables
 
 var gBrowser;
+var gRDF = null;
+var gBuilder = null;
+const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
+const kRDFIID = Components.interfaces.nsIRDFService;
 
 // The key object is used to define special context strings that, when appended to
 // the url for the help window itself, load specific content. For example, the uri:
@@ -160,38 +164,6 @@ function init()
   webProgress.addProgressListener(window.XULBrowserWindow);
 }
 
-// select the item in the tree called "Dialog Help" if the window was loaded from a dialog
-function setContext() {
-  var items = document.getElementsByAttribute("helplink", "chrome://help/locale/context_help.html");
-  if (items.length) {
-     var tree = document.getElementById("help-toc-tree");
-     try { tree.selectItem(items[0].parentNode.parentNode); } catch(ex) { dump("can't select in toc: " + ex + "\n"); }
-  }
-}
-
-function selectTOC(link_attr) {
-  var items = document.getElementsByAttribute("helplink", link_attr);
-  if (items.length) {
-     openTwistyTo(items[0]);
-     var tree = document.getElementById("help-toc-tree");
-     try { tree.selectItem(items[0].parentNode.parentNode); } catch(ex) { dump("can't select in toc: " + ex + "\n"); }
-  } 
-}
-
-// open parent nodes for the selected node
-// until you get to the top of the tree
-function openTwistyTo(selectedURINode)
-{
-  var parent = selectedURINode.parentNode;
-  var tree = document.getElementById("help-toc-tree");
-  if (parent == tree)
-    return;
- 
-  parent.setAttribute("open", "true");
-  openTwistyTo(parent);
-}
-
-
 function getWebNavigation()
 {
   return gBrowser.webNavigation;
@@ -220,6 +192,23 @@ function goForward()
 function goHome() {
   // load "Welcome" page
   loadURI("chrome://help/locale/welcome_help.html");
+}
+
+function selectItem() {
+  var outliner = document.getElementById("help-toc-outliner");
+  if (!gBuilder)
+    gBuilder = outliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+
+  var source = gBuilder.getResourceAtIndex(outliner.outlinerBoxObject.selection.currentIndex);
+  if (!gRDF)
+    gRDF = Components.classes[kRDFContractID].getService(kRDFIID);
+
+  var property = gRDF.GetResource("http://home.netscape.com/NC-rdf#link");
+  
+  var target = outliner.outlinerBoxObject.outlinerBody.database.GetTarget(source, property, true);
+  if (target)
+    target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  loadURI(target);
 }
 
 function print()
