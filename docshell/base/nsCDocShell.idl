@@ -26,7 +26,7 @@
 #include "nsIBaseWindow.idl"
 #include "nsIScrollable.idl"
 #include "nsITextScroll.idl"
-#include "nsIScriptContextOwner.idl"
+#include "nsIScriptGlobalObjectOwner.idl"
 
 /*
 nsCHTMLDocShell implements:
@@ -37,7 +37,7 @@ nsIDocShellTreeNode
 nsIBaseWindow
 nsIScrollable
 nsITextScroll
-nsIScriptContextOwner
+nsIScriptGlobalObjectOwner
 */
 
 %{ C++
