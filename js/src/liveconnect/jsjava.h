@@ -129,7 +129,7 @@ typedef struct JSJCallbacks {
 #else
     JSBool              (*enter_js_from_java)(JNIEnv *jEnv, char **errp);
 #endif
-    void                (*exit_js)(JNIEnv *jEnv);
+    void                (*exit_js)(JNIEnv *jEnv, JSContext *cx);
 
     /* Most LiveConnect errors are signaled by calling JS_ReportError(), but in
        some circumstances, the target JSContext for such errors is not
