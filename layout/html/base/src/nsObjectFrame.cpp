@@ -67,6 +67,7 @@
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
 #include "nsIPrintContext.h"
+#include "nsIDocShell.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -421,6 +422,24 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     return rv;
 
   mPresContext = aPresContext; // weak ref
+  
+  // This is way of ensure the previous document is gone. Important when reloading either 
+  // the page or refreshing plugins. In the case of an OBJECT frame,
+  // we want to flush out the prevous content viewer which will cause the previous document
+  // and plugins to be cleaned up. Then we can create our new plugin without the old instance
+  // hanging around.
+  nsCOMPtr<nsISupports> container;
+  mPresContext->GetContainer(getter_AddRefs(container));
+  if (container) {
+    nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
+    if (cvc) {
+      nsCOMPtr<nsIContentViewer> cv;
+      cvc->GetContentViewer(getter_AddRefs(cv));
+      if (cv)
+        cv->SetPreviousViewer(nsnull);
+    }
+  }
+  
   
   PRBool bImage = PR_FALSE;
 

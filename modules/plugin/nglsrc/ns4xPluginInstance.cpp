@@ -213,6 +213,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       // if WriteReady returned 0, the plugin is not ready to handle 
       // the data, return FAILURE for now
       if (numtowrite <= 0) {
+        NS_ASSERTION(numtowrite,"WriteReady returned Zero");
         rv = NS_ERROR_FAILURE;
         goto error;
       }
@@ -242,8 +243,10 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         goto error;
       }
 
-      amountRead -= numtowrite;
-      mPosition += numtowrite;
+      amountRead -= writeCount;
+      mPosition += writeCount;
+      if (amountRead > 0)
+        strncpy(mStreamBuffer,mStreamBuffer+writeCount,amountRead); 
     }
   }
 
@@ -471,8 +474,12 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
       return NS_ERROR_FAILURE;
   }
 
-  // check to see if we have a call back
-  if (callbacks->urlnotify != NULL && mNotifyData != nsnull)
+  // check to see if we have a call back and a
+  // XXX nasty hack for Shockwave Registration. 
+  //     we seem to crash doing URLNotify so just always exclude it.
+  //     See bug 85334.
+  if (callbacks->urlnotify != NULL && mNotifyData != nsnull &&
+      strcmp(mNPStream.url,"http://pinger.macromedia.com") < 0 )
   {
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
