@@ -189,6 +189,14 @@ bin\chrome\icons\default\findHistoryWindow.ico
 bin\chrome\icons\default\history-window.ico
 bin\chrome\icons\default\jsconsoleWindow.ico
 bin\chrome\icons\default\main-window.ico
+bin\chrome\icons\default\gif-file.ico
+bin\chrome\icons\default\html-file.ico
+bin\chrome\icons\default\misc-file.ico
+bin\chrome\icons\default\image-file.ico
+bin\chrome\icons\default\jpeg-file.ico
+bin\chrome\icons\default\script-file.ico
+bin\chrome\icons\default\xml-file.ico
+bin\chrome\icons\default\xul-file.ico
 ;-bin\chrome\comm\content\editor\EditorInitPage.html
 ;-bin\chrome\comm\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
