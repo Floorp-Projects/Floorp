@@ -821,36 +821,17 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       jobject java_stub = nsnull;
       if (xpcom_obj) {
-        java_stub = gBindings->GetJavaObject(mJavaEnv, xpcom_obj);
+        nsID iid;
+        rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo, aMethodIndex,
+                                  aDispatchParams, PR_FALSE, iid);
+        if (NS_FAILED(rv))
+          break;
 
-        if (java_stub == nsnull) {
-          // wrap xpcom instance
-          nsID iid;
-          rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                    aMethodIndex, aDispatchParams,
-                                    PR_FALSE, iid);
-          if (NS_FAILED(rv))
-            break;
-
-          JavaXPCOMInstance* inst;
-          rv = CreateJavaXPCOMInstance((nsISupports*) xpcom_obj, &iid, &inst);
-          if (NS_FAILED(rv))
-            break;
-
-          // create java stub
-          char* iface_name;
-          rv = inst->InterfaceInfo()->GetName(&iface_name);
-          if (NS_FAILED(rv))
-            break;
-          java_stub = CreateJavaWrapper(mJavaEnv, iface_name);
-
-          if (java_stub) {
-            // Associate XPCOM object w/ Java stub
-            rv = gBindings->AddBinding(mJavaEnv, java_stub, inst);
-            if (NS_FAILED(rv))
-              break;
-          }
-        }
+        // Get matching Java object for given xpcom object
+        rv = gBindings->GetJavaObject(mJavaEnv, xpcom_obj, iid, PR_FALSE,
+                                      &java_stub);
+        if (NS_FAILED(rv))
+          break;
       }
 
       if (!aParamInfo.IsOut()) {  // 'in'
