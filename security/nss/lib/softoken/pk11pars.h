@@ -472,8 +472,13 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
     }
 
     /* get the data structures */
-    slotInfo = 
-     (PK11PreSlotInfo *) PORT_ArenaAlloc(arena,count*sizeof(PK11PreSlotInfo));
+    if (arena) {
+	slotInfo = (PK11PreSlotInfo *) 
+			PORT_ArenaAlloc(arena,count*sizeof(PK11PreSlotInfo));
+    } else {
+	slotInfo = (PK11PreSlotInfo *) 
+			PORT_ZAlloc(count*sizeof(PK11PreSlotInfo));
+    }
     if (slotInfo == NULL) return NULL;
 
     for (slotIndex = slotParams, i = 0; *slotIndex && i < count ; i++) {
@@ -497,12 +502,12 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
 }
 
 #define MAX_FLAG_SIZE  sizeof("internal")+sizeof("FIPS")+sizeof("moduleDB")+\
-						sizeof("moduleDBOnly")
+				sizeof("moduleDBOnly")+sizeof(isCritical)
 static char *
-pk11_makeNSSFlags(PLArenaPool *arena,PRBool internal, PRBool isFIPS,
+pk11_mkNSSFlags(PRBool internal, PRBool isFIPS,
 		PRBool isModuleDB, PRBool isModuleDBOnly, PRBool isCritical)
 {
-    char *flags = (char *)PORT_ArenaAlloc(arena,MAX_FLAG_SIZE);
+    char *flags = (char *)PORT_ZAlloc(MAX_FLAG_SIZE);
     PRBool first = PR_TRUE;
 
     PORT_Memset(flags,0,MAX_FLAG_SIZE);
@@ -534,8 +539,7 @@ pk11_makeNSSFlags(PLArenaPool *arena,PRBool internal, PRBool isFIPS,
 }
 
 static char *
-pk11_makeCipherFlags(PLArenaPool *arena, unsigned long ssl0, 
-							unsigned long ssl1)
+pk11_makeCipherFlags(unsigned long ssl0, unsigned long ssl1)
 {
     char *cipher = NULL;
     char *ret = NULL;
@@ -574,14 +578,11 @@ pk11_makeCipherFlags(PLArenaPool *arena, unsigned long ssl0,
     }
 
     if (cipher == NULL) cipher = PR_smprintf("");
-    ret = PORT_ArenaStrdup(arena,cipher);
-    PR_smprintf_free(cipher);
-
-    return ret;
+    return cipher;
 }
 
 static char *
-pk11_makeSlotFlags(PLArenaPool *arena, unsigned long defaultFlags)
+pk11_makeSlotFlags(unsigned long defaultFlags)
 {
     char *flags=NULL;
     char *ret=NULL;
@@ -602,8 +603,7 @@ pk11_makeSlotFlags(PLArenaPool *arena, unsigned long defaultFlags)
 		    char *tmp;
 		    tmp = PR_smprintf("%s,%s",flags,string);
 		    PR_smprintf_free(flags);
-		    PR_smprintf_free(string);
-		    tmp = flags;
+		    flags = tmp;
 		} else {
 		    flags = PR_smprintf("%s",string);
 		}
@@ -612,19 +612,16 @@ pk11_makeSlotFlags(PLArenaPool *arena, unsigned long defaultFlags)
     }
 
     if (flags == NULL) flags = PR_smprintf("");
-    ret = PORT_ArenaStrdup(arena,flags);
-    PR_smprintf_free(flags);
 
-    return ret;
+    return flags;
 }
 
 #define PK11_MAX_ROOT_FLAG_SIZE  sizeof("hasRootCerts")+sizeof("hasRootTrust")
 
 static char *
-pk11_makeRootFlags(PLArenaPool *arena, PRBool hasRootCerts,
-							PRBool hasRootTrust)
+pk11_makeRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
 {
-    char *flags= (char *)PORT_ArenaAlloc(arena,PK11_MAX_ROOT_FLAG_SIZE);
+    char *flags= (char *)PORT_ZAlloc(PK11_MAX_ROOT_FLAG_SIZE);
     PRBool first = PR_TRUE;
 
     PORT_Memset(flags,0,PK11_MAX_ROOT_FLAG_SIZE);
@@ -638,5 +635,87 @@ pk11_makeRootFlags(PLArenaPool *arena, PRBool hasRootCerts,
 	first = PR_FALSE;
     }
     return flags;
+}
+
+static char *
+pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
+		  unsigned long timeout, unsigned char askpw_in,
+		  unsigned char hasRootCerts, unsigned char hasRootTrust) {
+    char *askpw,*flags,*rootFlags,*slotString;
+	
+    switch (askpw_in) {
+    case 0xff:
+	askpw = "every";
+	break;
+    case 1:
+	askpw = "timeout";
+	break;
+    default:
+	askpw = "any";
+	break;
+    }
+    flags = pk11_makeSlotFlags(defaultFlags);
+    rootFlags = pk11_makeRootFlags(hasRootCerts,hasRootTrust);
+    slotString = PR_smprintf("0x%08x=[slotFlags=%s askpw=%s timeout=%d rootFlags=%s]",slotID,flags,askpw,timeout,rootFlags);
+    PORT_Free(flags);
+    PORT_Free(rootFlags);
+    return slotString;
+}
+
+char *
+pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
+	  PRBool isModuleDB,  PRBool isModuleDBOnly, PRBool isCritical, 
+	  unsigned long trustOrder, unsigned long cipherOrder,
+				unsigned long ssl0, unsigned long ssl1) {
+    int slotLen, i;
+    char *slotParams, *ciphers, *nss, *nssFlags;
+
+    /* now let's build up the string
+     * first the slot infos
+     */
+    slotLen=0;
+    for (i=0; i < (int)slotCount; i++) {
+	slotLen += PORT_Strlen(slotStrings[i])+1;
+    }
+    slotLen += 1; /* space for the final NULL */
+
+    slotParams = (char *)PORT_ZAlloc(slotLen);
+    PORT_Memset(slotParams,0,slotLen);
+    for (i=0; i < (int)slotCount; i++) {
+	PORT_Strcat(slotParams,slotStrings[i]);
+	PORT_Strcat(slotParams," ");
+	PR_smprintf_free(slotStrings[i]);
+	slotStrings[i]=NULL;
+    }
+    
+    /*
+     * now the NSS structure
+     */
+    nssFlags = pk11_mkNSSFlags(internal,isFIPS,isModuleDB,isModuleDBOnly,
+							isCritical); 
+	/* for now only the internal module is critical */
+    ciphers = pk11_makeCipherFlags(ssl0, ssl1);
+    nss = PR_smprintf("trustOrder=%d cipherOrder=%d Flags='%s' slotParams={%s} ciphers='%s'",trustOrder,cipherOrder,nssFlags,slotParams,ciphers);
+    PORT_Free(nssFlags);
+    PR_smprintf_free(ciphers);
+
+    return nss;
+}
+char *
+pk11_mkNewModuleSpec(char *dllName, char *commonName, char *parameters, 
+								char *nss) {
+    char *moduleSpec;
+
+    if (dllName == NULL) dllName="";
+    if (nss == NULL) nss="";
+    /*
+     * now the final spec
+     */
+    if (parameters) {
+	moduleSpec = PR_smprintf("library=\"%s\" name=\"%s\" parameters=\"%s\" NSS=\"%s\"",dllName,commonName,parameters,nss);
+    } else {
+	moduleSpec = PR_smprintf("library=\"%s\" name=\"%s\" NSS=\"%s\"",dllName,commonName,nss);
+    }
+    return (moduleSpec);
 }
 

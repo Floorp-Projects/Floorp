@@ -741,7 +741,7 @@ PK11_HandlePasswordCheck(PK11SlotInfo *slot,void *wincx)
 void
 PK11_SlotDBUpdate(PK11SlotInfo *slot)
 {
-    SECMOD_AddPermDB(slot->module);
+    pk11_AddPermDB(slot->module);
 }
 
 /*

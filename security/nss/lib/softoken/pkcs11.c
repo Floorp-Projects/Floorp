@@ -2485,10 +2485,10 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, char *args)
 	return SECMOD_ReadPermDB(secmod,parameters,rw);
     case SECMOD_MODULE_DB_FUNCTION_ADD:
 	return (SECMOD_AddPermDB(secmod,args,rw) == SECSuccess) 
-							? &success: &fail;
+							? &success: NULL;
     case SECMOD_MODULE_DB_FUNCTION_DEL:
 	return (SECMOD_DeletePermDB(secmod,args,rw) == SECSuccess) 
-							? &success: &fail;
+							? &success: NULL;
     }
     return NULL;
 }

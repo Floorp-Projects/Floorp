@@ -44,6 +44,7 @@
 static  SECMODModuleList *modules = NULL;
 static  SECMODModuleList *modulesDB = NULL;
 static  SECMODModule *internalModule = NULL;
+static  SECMODModule *defaultDBModule = NULL;
 static SECMODListLock *moduleLock = NULL;
 
 extern SECStatus
@@ -242,6 +243,9 @@ SECMOD_AddModuleToList(SECMODModule *newModule) {
 
 SECStatus
 SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule) {
+    if (defaultDBModule == NULL) {
+	defaultDBModule = SECMOD_ReferenceModule(newModule);
+    }
     return secmod_AddModuleToList(&modulesDB,newModule);
 }
 
@@ -351,7 +355,7 @@ SECMOD_DeleteModule(char *name, int *type) {
 
 
     if (rv == SECSuccess) {
- 	SECMOD_DeletePermDB(mlp->module);
+ 	pk11_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
     }
     return rv;
@@ -406,6 +410,8 @@ SECMOD_DeleteInternalModule(char *name) {
 	   SECMOD_ReleaseWriteLock(moduleLock);
 	   return SECFailure; 
 	}
+	newModule->libraryParams = 
+	     PORT_ArenaStrdup(mlp->module->arena,mlp->module->libraryParams);
 	oldModule = internalModule;
 	internalModule = SECMOD_ReferenceModule(newModule);
 	SECMOD_AddModule(internalModule);
@@ -436,7 +442,11 @@ SECMOD_AddModule(SECMODModule *newModule) {
 	return rv;
     }
 
-    SECMOD_AddPermDB(newModule);
+    if (newModule->parent == NULL) {
+	newModule->parent = SECMOD_ReferenceModule(defaultDBModule);
+    }
+
+    pk11_AddPermDB(newModule);
     SECMOD_AddModuleToList(newModule);
 
     return SECSuccess;
@@ -538,10 +548,10 @@ SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
                 } /* for each slot of this module */
 
                 /* delete and re-add module in order to save changes to the module */
-                result = SECMOD_DeletePermDB(module);
+                result = pk11_DeletePermDB(module);
                 
                 if (result == SECSuccess) {          
-                    result = SECMOD_AddPermDB(module);
+                    result = pk11_AddPermDB(module);
                     if (result == SECSuccess) {
                         return SECSuccess;
                     }                    
