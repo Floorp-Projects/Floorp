@@ -270,8 +270,7 @@ nsRangeList::~nsRangeList()
     return;
   for (PRInt32 i=0;i < mRangeArray->Count(); i++)
   {
-    nsISupports *isupports = mRangeArray->ElementAt(i);
-    NS_IF_RELEASE(isupports);
+    mRangeArray->RemoveElementAt(i);
   }
 }
 
@@ -320,7 +319,7 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-
+ 
 nsresult
 nsRangeList::AddItem(nsISupports *aItem)
 {
@@ -328,9 +327,7 @@ nsRangeList::AddItem(nsISupports *aItem)
     return NS_ERROR_FAILURE;
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  nsISupports *isupports;
-  aItem->QueryInterface(kISupportsIID,(void **)&isupports);
-  mRangeArray->AppendElement(isupports);
+  mRangeArray->AppendElement(aItem);
   return NS_OK;
 }
 
@@ -347,8 +344,6 @@ nsRangeList::RemoveItem(nsISupports *aItem)
   {
     if (mRangeArray->ElementAt(i) == aItem)
     {
-      nsISupports *isupports = mRangeArray->ElementAt(i);
-      NS_RELEASE(isupports);
       mRangeArray->RemoveElementAt(i);
       return NS_OK;
     }
@@ -365,8 +360,6 @@ nsRangeList::Clear()
     return NS_ERROR_FAILURE;
   for (PRInt32 i = 0; i < mRangeArray->Count();i++)
   {
-    nsISupports *isupports = mRangeArray->ElementAt(i);
-    NS_RELEASE(isupports);
     mRangeArray->RemoveElementAt(i);
   }
   return NS_OK;
