@@ -130,6 +130,9 @@ CHyperTreeHeader::SetUpColumns ( HT_View inView )
 	if ( !foundHiddenColumn )
 		mLastVisibleColumn = mColumnCount;
 	mLastShowableColumn = mColumnCount;
+	if ( mLastVisibleColumn <= 0 )		// mLastVisibleColumn MUST NOT BE 0 or heap corruption will occur
+		mLastVisibleColumn = 1;
+
 	ConvertWidthsToAbsolute();
 	ComputeColumnPositions();
 	PositionColumnHeaders(true);
