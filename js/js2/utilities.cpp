@@ -1844,7 +1844,7 @@ void JS::Formatter::printVFormat8(const char *format, va_list args)
 
 	while (true) {
 		int n = vsnprintf(b.buffer, b.size, format, args);
-		if (n >= 0 && n < b.size) {
+		if (n >= 0 && static_cast<uint>(n) < b.size) {
 			printStr8(b.buffer, b.buffer + n);
 			return;
 		}

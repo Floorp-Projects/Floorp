@@ -73,8 +73,8 @@ ICodeGenerator::ICodeGenerator(World *world, JSScope *global, JSClass *aClass, I
         mWorld(world),
         mGlobal(global),
         mInstructionMap(new InstructionMap()),
-        mFlags(flags),
-        mClass(aClass)
+        mClass(aClass),
+        mFlags(flags)
 { 
     iCode = new InstructionStream();
     iCodeOwner = true;
@@ -206,7 +206,7 @@ TypedRegister ICodeGenerator::loadBoolean(bool value)
     return dest;
 }
 
-TypedRegister ICodeGenerator::newObject(RegisterList *args)
+TypedRegister ICodeGenerator::newObject(RegisterList */*args*/)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
     NewObject *instr = new NewObject(dest);
@@ -327,7 +327,7 @@ void ICodeGenerator::setStatic(JSClass *base, const StringAtom &name,
     iCode->push_back(instr);
 }
 
-TypedRegister ICodeGenerator::staticXcr(JSClass *base, const StringAtom &name, ICodeOp op)
+TypedRegister ICodeGenerator::staticXcr(JSClass *base, const StringAtom &name, ICodeOp /*op*/)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
     const JSSlot& slot = base->getStatic(name);
@@ -694,7 +694,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
 {
     ASSERT(p->getKind() == ExprNode::identifier);
 
-    JSType *vType = &Any_Type;
+    /*JSType *vType = &Any_Type;*/
     uint32 slotIndex;
     TypedRegister v;
 
@@ -834,6 +834,8 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
             NOT_REACHED("Bad lvalue kind");
         }
         break;
+    default:
+        NOT_REACHED("Bad use kind");
     }
     return ret;
 
@@ -1447,9 +1449,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             ret = genExpr(b->op1);
             if (b->op2->getKind() == ExprNode::identifier) {
                 TypedRegister t;
-                uint32 slotIndex;
+                /*uint32 slotIndex;*/
                 const StringAtom &name = (static_cast<IdentifierExprNode *>(b->op2))->name;
-                LValueKind lvk = resolveIdentifier(name, t, slotIndex);
+                /*LValueKind lvk = resolveIdentifier(name, t, slotIndex);*/
                 ASSERT(t.second == &Type_Type);
                 const JSValue &v = mGlobal->getVariable(name);
                 ASSERT(v.isType());
@@ -2063,7 +2065,8 @@ Formatter& ICodeGenerator::print(Formatter& f)
 
 Formatter& ICodeModule::print(Formatter& f)
 {
-    f << "ICM! " << (uint32)its_iCode->size() << "\n";
+    f << "ICM[" << mID << "] from source at '" << mFileName << "' " <<
+        (uint32)its_iCode->size() << " bytecodes\n";
     return VM::operator<<(f, *its_iCode);
 }
 
