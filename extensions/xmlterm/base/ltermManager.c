@@ -446,16 +446,16 @@ int lterm_open(int lterm, char *const argv[],
 
   /* Set up LtermOutput polling structure */
   lto->pollFD[POLL_INPUTBUF].fd = lts->readBUFFER;
-  lto->pollFD[POLL_INPUTBUF].POLL_EVENTS = POLLIN;
+  lto->pollFD[POLL_INPUTBUF].POLL_EVENTS = POLL_READ;
 
   if (lts->ptyMode) {
 #ifndef USE_NSPR_IO
     lto->pollFD[POLL_STDOUT].fd = lts->pty.ptyFD;
-    lto->pollFD[POLL_STDOUT].POLL_EVENTS = POLLIN;
+    lto->pollFD[POLL_STDOUT].POLL_EVENTS = POLL_READ;
 
     if (VALID_FILEDESC(lts->pty.errpipeFD)) {
       lto->pollFD[POLL_STDERR].fd = lts->pty.errpipeFD;
-      lto->pollFD[POLL_STDERR].POLL_EVENTS = POLLIN;
+      lto->pollFD[POLL_STDERR].POLL_EVENTS = POLL_READ;
       lto->nfds = POLL_COUNT;
     } else {
         lto->nfds = POLL_COUNT-1;
@@ -468,11 +468,11 @@ int lterm_open(int lterm, char *const argv[],
 
   } else {
     lto->pollFD[POLL_STDOUT].fd = ltp->processOUT;
-    lto->pollFD[POLL_STDOUT].POLL_EVENTS = POLLIN;
+    lto->pollFD[POLL_STDOUT].POLL_EVENTS = POLL_READ;
 
     if (VALID_FILEDESC(ltp->processERR)) {
       lto->pollFD[POLL_STDERR].fd = ltp->processERR;
-      lto->pollFD[POLL_STDERR].POLL_EVENTS = POLLIN;
+      lto->pollFD[POLL_STDERR].POLL_EVENTS = POLL_READ;
       lto->nfds = POLL_COUNT;
     } else {
       lto->nfds = POLL_COUNT-1;
