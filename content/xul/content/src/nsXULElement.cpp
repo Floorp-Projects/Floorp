@@ -2073,8 +2073,8 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             // We must have re-entered; discard the newly created
             // script object and use the one created during the
             // nesting instead.
-            JSContext* cx = NS_STATIC_CAST(JSContext*, aContext->GetNativeContext());
-            ::JS_SetPrivate(cx, NS_STATIC_CAST(JSObject*, scriptObject), nsnull);
+            JSContext* cx = (JSContext*) aContext->GetNativeContext();
+            ::JS_SetPrivate(cx, (JSObject*) scriptObject, nsnull);
 
             // Since we've eagerly cleared the transient script
             // object's native pointer, we now need to ``manually''
