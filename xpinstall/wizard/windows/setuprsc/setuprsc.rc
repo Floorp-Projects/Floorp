@@ -325,7 +325,7 @@ BEGIN
                             "Could not create folder: %sMake sure you have access to create the folder."
     IDS_STR_FILE_NUMBER     "File count:"
     IDS_STR_FILENAME        "Filename:"
-    IDS_MSG_SMARTUPDATE_START "Initializing SmartUpdate, please wait..."
+    IDS_MSG_SMARTUPDATE_START "Preparing Install, please wait..."
     IDS_MSG_CONFIGURING     "Configuring %s, please wait..."
     IDS_ERROR_XPI_INSTALL   "Error ocurred during installation"
     IDS_ERROR_SETUP_REQUIREMENT 

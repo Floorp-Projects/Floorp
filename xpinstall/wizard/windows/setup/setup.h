@@ -159,9 +159,9 @@ typedef struct stStruct
 {
   BOOL  bVisible;
   DWORD dwCItems;
-  DWORD dwCItemsSelected[MAX_BUF];
+  DWORD dwCItemsSelected[MAX_BUF]; /* components */
   DWORD dwAItems;
-  DWORD dwAItemsSelected[MAX_BUF];
+  DWORD dwAItemsSelected[MAX_BUF]; /* additions */
   LPSTR szDescriptionShort;
   LPSTR szDescriptionLong;
 } st;
@@ -278,6 +278,8 @@ struct sinfoComponent
   ULONGLONG       ullInstallSize;
   ULONGLONG       ullInstallSizeSystem;
   ULONGLONG       ullInstallSizeArchive;
+  long            lRandomInstallPercentage;
+  long            lRandomInstallValue;
   DWORD           dwAttributes;
   LPSTR           szArchiveName;
   LPSTR           szArchivePath;
