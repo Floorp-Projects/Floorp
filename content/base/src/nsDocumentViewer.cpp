@@ -544,7 +544,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                                 getter_AddRefs(mPresShell));
     NS_RELEASE(styleSet);
   if (NS_FAILED(rv)) return rv;
-  mPresShell->BeginObservingDocument();
+  //mPresShell->BeginObservingDocument();
 
       // Initialize our view manager
       nsRect bounds;
