@@ -37,18 +37,23 @@
   [% IF bug && bug_list && bug_list.size > 0 %]
     <link rel="Up" href="buglist.cgi?regetlastlist=1">
 
+    <link rel="First" href="show_bug.cgi?id=[% bug_list.first %]">
+    <link rel="Last" href="show_bug.cgi?id=[% bug_list.last %]">
+
     [% current_bug_idx = lsearch(bug_list, bug.bug_id) %]
 
-    [% IF current_bug_idx > 0 %]
-      <link rel="First" href="show_bug.cgi?id=[% bug_list.first %]">
-    [% prev_bug = current_bug_idx - 1 %]
-      <link rel="Prev" href="show_bug.cgi?id=[% bug_list.$prev_bug %]">
-    [% END %]
+    [% IF current_bug_idx != -1 %]
 
-    [% IF current_bug_idx + 1 < bug_list.size %]
-      [% next_bug = current_bug_idx + 1 %]
-      <link rel="Next" href="show_bug.cgi?id=[% bug_list.$next_bug %]">
-      <link rel="Last" href="show_bug.cgi?id=[% bug_list.last %]">
+      [% IF current_bug_idx > 0 %]
+      [% prev_bug = current_bug_idx - 1 %]
+        <link rel="Prev" href="show_bug.cgi?id=[% bug_list.$prev_bug %]">
+      [% END %]
+
+      [% IF current_bug_idx + 1 < bug_list.size %]
+        [% next_bug = current_bug_idx + 1 %]
+        <link rel="Next" href="show_bug.cgi?id=[% bug_list.$next_bug %]">
+      [% END %]
+
     [% END %]
   [% END %]
 
