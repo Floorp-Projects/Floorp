@@ -506,8 +506,7 @@ if ($action eq 'new') {
             SqlQuote($votestoconfirm) . "," .
             SqlQuote($defaultmilestone) . "," .
             SqlQuote($classification_id) . ")");
-    SendSQL("SELECT LAST_INSERT_ID()");
-    my $product_id = FetchOneColumn();
+    my $product_id = $dbh->bz_last_key('products', 'id');
 
     SendSQL("INSERT INTO versions ( " .
           "value, product_id" .
@@ -531,8 +530,7 @@ if ($action eq 'new') {
                 "VALUES (" .
                 SqlQuote($productgroup) . ", " .
                 SqlQuote("Access to bugs in the $product product") . ", 1, NOW())");
-        SendSQL("SELECT last_insert_id()");
-        my $gid = FetchOneColumn();
+        my $gid = $dbh->bz_last_key('groups', 'id');
         my $admin = GroupNameToId('admin');
         # If we created a new group, give the "admin" group priviledges
         # initially.

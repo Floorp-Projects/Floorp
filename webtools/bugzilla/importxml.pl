@@ -162,6 +162,7 @@ $xml =~ s/^.+(<\?xml version.+)$/$1/s;
 
 my $parser = new XML::Parser(Style => 'Tree');
 my $tree = $parser->parse($xml);
+my $dbh = Bugzilla->dbh;
 
 my $maintainer;
 if (defined $tree->[1][0]->{'maintainer'}) {
@@ -609,8 +610,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
                . join (",\n", @values)
                . "\n)\n";
   SendSQL($query);
-  SendSQL("select LAST_INSERT_ID()");
-  my $id = FetchOneColumn();
+  my $id = $dbh->bz_last_key('bugs', 'bug_id');
 
   if (defined $bug_fields{'cc'}) {
     foreach my $person (split(/[ ,]/, $bug_fields{'cc'})) {

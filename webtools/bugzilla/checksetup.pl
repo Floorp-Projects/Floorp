@@ -2232,9 +2232,7 @@ sub AddGroup {
                           VALUES (?, ?, ?, ?)');
     $sth->execute($name, $desc, $userregexp, 0);
 
-    $sth = $dbh->prepare("select last_insert_id()");
-    $sth->execute();
-    my ($last) = $sth->fetchrow_array();
+    my $last = $dbh->bz_last_key('groups', 'id');
     return $last;
 }
 
@@ -2459,9 +2457,8 @@ unless ($sth->rows) {
              'bugzilla.", "", 0, 0, 0)');
     # We could probably just assume that this is "1", but better
     # safe than sorry...
-    $sth = $dbh->prepare("SELECT LAST_INSERT_ID()");
-    $sth->execute;
-    my ($product_id) = $sth->fetchrow_array;
+    my $product_id = $dbh->bz_last_key('products', 'id');
+    
     $dbh->do(qq{INSERT INTO versions (value, product_id) VALUES ("other", $product_id)});
     # note: since admin user is not yet known, components gets a 0 for 
     # initialowner and this is fixed during final checks.
@@ -2801,9 +2798,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
                                  $dbh->quote($name) .
                                  ", " . $dbh->quote(bz_crypt('okthen')) . ", " . 
                                  "'Account created only to maintain database integrity')");
-                        $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
-                        $s2->execute();
-                        ($who) = ($s2->fetchrow_array());
+                        $who = $dbh->bz_last_key('profiles', 'userid');
                     }
                     next;
                 } else {
@@ -2850,9 +2845,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
         if (!$id) {
             $dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
                      "($q, $q)");
-            $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
-            $s2->execute();
-            ($id) = ($s2->fetchrow_array());
+            $id = $dbh->bz_last_key('fielddefs', 'fieldid');
         }
         $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
     }

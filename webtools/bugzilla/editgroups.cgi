@@ -274,8 +274,7 @@ if ($action eq 'new') {
             "1," .
             SqlQuote($regexp) . ", " . 
             $isactive . ", NOW())" );
-    SendSQL("SELECT last_insert_id()");
-    my $gid = FetchOneColumn();
+    my $gid = $dbh->bz_last_key('groups', 'id');
     my $admin = GroupNameToId('admin');
     # Since we created a new group, give the "admin" group all privileges
     # initially.

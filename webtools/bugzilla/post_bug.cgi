@@ -56,6 +56,8 @@ my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 
+my $dbh = Bugzilla->dbh;
+
 # do a match on the fields if applicable
 
 &Bugzilla::User::match_field ({
@@ -420,8 +422,7 @@ while (MoreSQLData()) {
 SendSQL($sql);
 
 # Get the bug ID back.
-SendSQL("select LAST_INSERT_ID()");
-my $id = FetchOneColumn();
+my $id = $dbh->bz_last_key('bugs', 'bug_id');
 
 # Add the group restrictions
 foreach my $grouptoadd (@groupstoadd) {

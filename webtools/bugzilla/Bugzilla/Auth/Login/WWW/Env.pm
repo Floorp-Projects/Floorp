@@ -116,9 +116,7 @@ sub login {
                                      "realname, disabledtext " .
                                      ") VALUES ( ?, ?, ?, '' )");
                 $sth->execute($env_email, '*', $env_realname);
-                $sth = $dbh->prepare("SELECT last_insert_id()");
-                $sth->execute();
-                $matched_userid = $sth->fetch->[0];
+                $matched_userid = $dbh->bz_last_key('profiles', 'userid');
             }
         }
     }

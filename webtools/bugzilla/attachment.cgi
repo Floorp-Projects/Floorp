@@ -869,7 +869,8 @@ sub insert
   my ($data) = @_;
 
   # Insert a new attachment into the database.
-
+  my $dbh = Bugzilla->dbh;
+  
   # Escape characters in strings that will be used in SQL statements.
   $filename = SqlQuote($filename);
   my $description = SqlQuote($::FORM{'description'});
@@ -886,8 +887,7 @@ sub insert
            VALUES ($::FORM{'bugid'}, $sql_timestamp, $filename, $description, $contenttype, $::FORM{'ispatch'}, $isprivate, $::userid, $thedata)");
 
   # Retrieve the ID of the newly created attachment record.
-  SendSQL("SELECT LAST_INSERT_ID()");
-  my $attachid = FetchOneColumn();
+  my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
 
   # Insert a comment about the new attachment into the database.
   my $comment = "Created an attachment (id=$attachid)\n$::FORM{'description'}\n";

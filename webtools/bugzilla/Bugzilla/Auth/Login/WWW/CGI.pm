@@ -72,7 +72,7 @@ sub login {
                  VALUES (?, ?, NOW())",
                  undef,
                  $userid, $ipaddr);
-        my $logincookie = $dbh->selectrow_array("SELECT LAST_INSERT_ID()");
+        my $logincookie = $dbh->bz_last_key('logincookies', 'cookie');
 
         # Remember cookie only if admin has told so
         # or admin didn't forbid it and user told to remember.

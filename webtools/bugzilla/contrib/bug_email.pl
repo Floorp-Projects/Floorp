@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.23 2005/02/08 16:51:03 travis%sedsystems.ca Exp $
+# $Id: bug_email.pl,v 1.24 2005/02/18 16:01:48 mkanat%kerio.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1151,8 +1151,7 @@ END
     if( ! $test ) {
 	SendSQL($query);
 
-	SendSQL("select LAST_INSERT_ID()");
-	$id = FetchOneColumn();
+	$id = Bugzilla->dbh->bz_last_key('bugs', 'bug_id');
 
 	my $long_desc_query = "INSERT INTO longdescs SET bug_id=$id, who=$userid, bug_when=\'$bug_when\', thetext=" . SqlQuote($comment);
 	SendSQL($long_desc_query);

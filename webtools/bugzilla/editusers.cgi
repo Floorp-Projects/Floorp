@@ -461,8 +461,7 @@ if ($action eq 'new') {
     #+++ send e-mail away
 
     print "OK, done.<br>\n";
-    SendSQL("SELECT last_insert_id()");
-    my ($newuserid) = FetchSQLData();
+    my $newuserid = $dbh->bz_last_key('profiles', 'userid');
 
     my $changeduser = new Bugzilla::User($newuserid);
     $changeduser->derive_groups();
