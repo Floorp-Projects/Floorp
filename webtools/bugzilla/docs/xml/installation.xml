@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.51 2003/07/02 19:07:01 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.52 2003/07/03 18:50:12 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -202,136 +202,133 @@ set-variable = max_allowed_packet=1M
       </tip>
 
 
-<!-- TODO: Fix indentation before checkin -->
-  <para>Perl Modules (minimum version):
-  <orderedlist>
+      <para>Perl Modules (minimum version):
+      <orderedlist>
 
-    <!-- TODO: Don't think we actually care about AppConfig anymore -->
-    <listitem>
-      <para>
-        <link linkend="install-modules-bundle-bugzilla">Bundle::Bugzilla</link>
-        (Will allow you to skip the rest)
+        <!-- TODO: Don't think we actually care about AppConfig anymore -->
+        <listitem>
+          <para>
+            <link linkend="install-modules-bundle-bugzilla">Bundle::Bugzilla</link>
+            (Will allow you to skip the rest)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-appconfig">AppConfig</link>
+            (&min-appconfig-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-cgi">CGI</link> 
+            (&min-cgi-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-data-dumper">Data::Dumper</link> 
+            (&min-data-dumper-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-date-format">Date::Format</link>
+            (&min-date-format-ver;)
+          </para>
+        </listitem>
+    
+        <listitem>
+          <para>
+            <link linkend="install-modules-dbi">DBI</link> 
+            (&min-dbi-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-dbd-mysql">DBD::mysql</link>
+            (&min-dbd-mysql-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-file-spec">File::Spec</link>
+            (&min-file-spec-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-file-temp">File::Temp</link>
+            (&min-file-temp-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-template">Template Toolkit</link>
+            (&min-template-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-text-wrap">Text::Wrap</link> 
+            (&min-text-wrap-ver;)
+          </para>
+        </listitem>
+      </orderedlist>
+
+      and, optionally:
+      <orderedlist>  
+        <listitem>
+          <para>
+            <link linkend="install-modules-gd">GD</link>
+            (&min-gd-ver;) for bug charting
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-chart-base">Chart::Base</link>
+            (&min-chart-base-ver;) for bug charting
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-xml-parser">XML::Parser</link>
+            (&min-xml-parser-ver;) for the XML interface
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-gd-graph">GD::Graph</link>
+            (&min-gd-graph-ver;) for bug charting
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-gd-text-align">GD::Text::Align</link>
+            (&min-gd-text-align-ver;) for bug charting
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-mime-parser">MIME::Parser</link>
+            (&min-mime-parser-ver;) for the email interface
+          </para>
+        </listitem>
+      </orderedlist>          
       </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-appconfig">AppConfig</link>
-        (&min-appconfig-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-cgi">CGI</link> 
-        (&min-cgi-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-data-dumper">Data::Dumper</link> 
-        (&min-data-dumper-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-date-format">Date::Format</link>
-        (&min-date-format-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-dbi">DBI</link> 
-        (&min-dbi-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-dbd-mysql">DBD::mysql</link>
-        (&min-dbd-mysql-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-file-spec">File::Spec</link>
-        (&min-file-spec-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-file-temp">File::Temp</link>
-        (&min-file-temp-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-template">Template Toolkit</link>
-        (&min-template-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-text-wrap">Text::Wrap</link> 
-        (&min-text-wrap-ver;)
-      </para>
-    </listitem>
-  </orderedlist>
-
-  and, optionally:
-  <orderedlist>  
-    <listitem>
-      <para>
-        <link linkend="install-modules-gd">GD</link>
-        (&min-gd-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-chart-base">Chart::Base</link>
-        (&min-chart-base-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-xml-parser">XML::Parser</link>
-        (&min-xml-parser-ver;) for the XML interface
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-gd-graph">GD::Graph</link>
-        (&min-gd-graph-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-gd-text-align">GD::Text::Align</link>
-        (&min-gd-text-align-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <link linkend="install-modules-mime-parser">MIME::Parser</link>
-        (&min-mime-parser-ver;) for the email interface
-      </para>
-    </listitem>
-  </orderedlist>          
-  </para>
-
-
 
 
     <section id="install-modules-bundle-bugzilla">
