@@ -31,7 +31,7 @@ CPPSRCS =                              \
         nsIOService.cpp                \
         nsSocketTransport.cpp          \
         nsSocketTransportService.cpp   \
-        nsStdURL.cpp              \
+        nsStandardUrl.cpp              \
         nsSimpleURI.cpp                \
 	nsNetModuleMgr.cpp             \
 	nsNetModRegEntry.cpp           \
