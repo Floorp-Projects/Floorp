@@ -148,7 +148,7 @@ nsCacheObject::nsCacheObject():
     m_ContentType(new char[1]),
     m_Etag(new char[1]),
     m_Filename(new char[1]),
-    m_Flags(INIT), 
+    m_State(INIT), 
     m_bIsCompleted(PR_FALSE),
     m_Module(-1),
     m_pInfo(0),
@@ -197,7 +197,7 @@ nsCacheObject::nsCacheObject(const nsCacheObject& another):
     m_ContentType(new char[PL_strlen(another.m_ContentType)+1]),
     m_Etag(new char[PL_strlen(another.m_Etag)+1]),
     m_Filename(new char[PL_strlen(another.m_Filename)+1]),
-    m_Flags(another.m_Flags),
+    m_State(another.m_State),
     m_bIsCompleted(another.m_bIsCompleted),
     m_PageServicesURL(new char[PL_strlen(another.m_PageServicesURL)+1]),
     m_PostDataLen(another.m_PostDataLen),
@@ -228,7 +228,7 @@ nsCacheObject::nsCacheObject(const char* i_url):
     m_ContentType(new char[1]),
     m_Etag(new char[1]),
     m_Filename(new char[1]),
-    m_Flags(INIT), 
+    m_State(INIT), 
     m_bIsCompleted(PR_FALSE),
     m_PageServicesURL(new char[1]),
     m_PostData(new char[1]),
@@ -338,7 +338,7 @@ void* nsCacheObject::Info(void) const
         pThis->m_info_size -= sizeof(void*); // m_info itself is not being serialized
         pThis->m_info_size -= sizeof(char*); // neither is m_PostData
         pThis->m_info_size -= sizeof(nsStream*); // nor the stream
-        pThis->m_info_size -= sizeof(PRBool); // bIsComplete. 
+        pThis->m_info_size -= sizeof(PRBool); // bIsCompleted. 
         //todo -optimize till here
 
         //Add the strings sizes
@@ -386,7 +386,6 @@ void* nsCacheObject::Info(void) const
         STUFF_STRING(m_Etag);
         STUFF_TIME(m_Expires);
         STUFF_STRING(m_Filename);
-        STUFF_NUMBER(m_Flags);
         STUFF_NUMBER(m_Hits);
         STUFF_TIME(m_LastAccessed);
         STUFF_TIME(m_LastModified);
@@ -396,10 +395,11 @@ void* nsCacheObject::Info(void) const
         /* There is a possibility of it not being a string! */
         if (m_PostData)
         {
-	        memcpy(cur_ptr, m_PostData, m_PostDataLen+1);
-	        cur_ptr += m_PostDataLen+1;
+            memcpy(cur_ptr, m_PostData, m_PostDataLen+1);
+            cur_ptr += m_PostDataLen+1;
         }
         STUFF_NUMBER(m_Size);
+        STUFF_NUMBER(m_State);
         STUFF_STRING(m_URL);
 
         // Important Assertion. Dont remove!
@@ -466,7 +466,6 @@ PRBool nsCacheObject::Info(void* i_data)
     RETRIEVE_STRING(m_Etag);
     RETRIEVE_TIME(m_Expires);
     RETRIEVE_STRING(m_Filename);
-    RETRIEVE_NUMBER(m_Flags);
     RETRIEVE_NUMBER(m_Hits);
     RETRIEVE_TIME(m_LastAccessed);
     RETRIEVE_TIME(m_LastModified);
@@ -482,10 +481,15 @@ PRBool nsCacheObject::Info(void* i_data)
     cur_ptr += m_PostDataLen +1;
 
     RETRIEVE_NUMBER(m_Size);
+    RETRIEVE_NUMBER(m_State);
     RETRIEVE_STRING(m_URL);
  
     // Most important assertion! Don't ever remove!
     PR_ASSERT(cur_ptr == max_ptr);
+
+    // Since we are reading off its info from an indexed entry
+    m_bIsCompleted = PR_TRUE;
+
     return PR_TRUE;
 }
 
@@ -538,7 +542,9 @@ PRUint32 nsCacheObject::Read(char* o_Buffer, PRUint32 len)
             {
                 m_pStream = pModule->GetStreamFor(this);
                 if (m_pStream)
+                {
                     return m_pStream->Read(o_Buffer, len);
+                }
             }
         }
         return 0;
