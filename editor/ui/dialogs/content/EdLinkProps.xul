@@ -79,7 +79,7 @@
     </groupbox>
   </vbox>
   <!-- from EdDialogOverlay -->
-  <hbox id="AdvancedEdit"/>
+  <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
   <hbox id="okCancelHelpButtonsRight"/> 
 </window>
