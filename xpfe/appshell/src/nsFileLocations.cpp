@@ -86,6 +86,12 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
             return PR_FALSE;
         
         profileService->Startup(nsnull);
+
+        PRBool available = PR_FALSE;
+        profileService->IsCurrentProfileAvailable(&available);
+        if (!available)
+            return PR_FALSE;
+
         int numProfiles = 0;
         profileService->GetProfileCount(&numProfiles);
         if (numProfiles == 0)
