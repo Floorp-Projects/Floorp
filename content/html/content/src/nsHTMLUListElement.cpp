@@ -218,9 +218,11 @@ nsHTMLUListElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::type) ||
-      (aAttribute == nsHTMLAtoms::compact)) {
+  if (aAttribute == nsHTMLAtoms::type) {
     *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (aAttribute == nsHTMLAtoms::compact) {
+    *aHint = NS_STYLE_HINT_CONTENT;
   }
   else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);

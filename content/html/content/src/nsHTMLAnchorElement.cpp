@@ -372,11 +372,11 @@ nsHTMLAnchorElement::GetStyleHintForAttributeChange(
       (aAttribute == nsHTMLAtoms::tabindex) ||
       (aAttribute == nsHTMLAtoms::target) ||
       (aAttribute == nsHTMLAtoms::type)) {
-    *aHint = NS_STYLE_HINT_NONE;
+    *aHint = NS_STYLE_HINT_CONTENT;
   }
   else if (aAttribute == nsHTMLAtoms::accesskey) {
     // XXX Notification needs to happen for this attribute
-    *aHint = NS_STYLE_HINT_NONE;
+    *aHint = NS_STYLE_HINT_CONTENT;
   }
   else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
