@@ -1,0 +1,136 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+</head>
+<body>
+&nbsp;
+<table CELLSPACING=0 CELLPADDING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+3>Block Layout</font></td>
+</tr>
+</table>
+
+<p>This document attempts to describe how "block" layout works in the mozilla
+layout engine.
+<p><tt>nsBlockFrame</tt> implements layout behavior that conforms to the
+CSS "block" display property. The primary responsibility of the block code
+is to manage "line layout". Line layout is the process where inline elements
+are placed on a "line" hozironatally (left to right or right to left if
+the CSS direction property is set rtl). In addition to line layout, blocks
+are responsible for placement of left and right floating elements, and
+handling "clear" semantics of child blocks or BR elements.
+<p>To manage the child frames, nsBlockFrame uses a singly linked list of
+nsLineBox's. nsLineBox's contain enough state to find all of the children
+that belong to the block, plus support incremental reflow [Currently there
+is too much state here - we waste memory].
+<br>&nbsp;
+<br>&nbsp;
+<table CELLSPACING=0 CELLPADDING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+2>Who's Who</font></td>
+</tr>
+</table>
+
+<p>Here is a list of the various classes involved in block layout:
+<p><b>nsBlockFrame</b>
+<p>The primary culprit.
+<p><b>nsBlockReflowState</b>
+<p>This helper class is used to augment the nsHTMLReflowState with other
+information needed by the block reflow logic during reflow. It is a temporary
+object that is designed to live on the processor stack.
+<p><b>nsBlockBandData</b>
+<p>Another helper class that wraps up management of a space manager (nsISpaceManager,
+nsSpaceManager) and nsBandData. It also assits in management of floating
+elements. While nsSpaceManager is policy free, nsBlockBandData provides
+specific HTML and CSS policy.
+<p><b>nsBlockReflowContext</b>
+<p>A helper class that encapsulates the logic needed to reflow a child
+block frame. This is used by the block code reflow a child block, as well
+as by the inline frame code to reflow an anonymous block, and by the block
+code to reflow floating elements (which are to be treated as blocks according
+to the CSS2 spec).
+<p><b>nsLineBox</b>
+<p>A data class used to store line information for the block frame code.
+Each line has a list of children (though the frames are linked together
+across lines to maintain the sibling list for nsIFrame::FirstChild) and
+some other state used to assit in incremental reflow.
+<p><b>nsLineLayout</b>
+<p>This class is the line layout engine. Its a passive entity in the sense
+that its the responsibility of the block/inline code to use the class (this
+is done so that the line layout engine doesn't have to manage child frame
+lists so that both nsBlockFrame and nsInlineFrame can use the class).
+<p><b>nsTextRun</b>
+<p>This is a data class used to store text run information. Tex turns are
+logically contiguous runs of text (they may or may not be structurally
+contiguous). The block frame stores a pointer to a list of nsTextRun's
+and during line layout provides the list to the nsLineLayout engine so
+that when text is reflowed the text layout code (nsTextFrame) can find
+related text to properly handle word breaking.
+<br><b></b>&nbsp;
+<table CELLSPACING=0 CELLPADDING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+2>Child Frame Management</font></td>
+</tr>
+</table>
+
+<p>When the blocks child list is modified (AppendFrames, InsertFrames,
+RemoveFrame) the block code updates its nsLineBox list. Since each nsLineBox
+is typed (some are marked "inline" and some are marked "block"), the update
+logic maintains the invaraint of "one block frame per block line". Most
+of the logic is straightforward, however there is some ugly code to manage
+"first-line" frames. First-line frames are used when CSS's ":first-line"
+style is selected for the block. When this is the case, the block code
+creates an "anonymous first line" frame to manage the first inline children
+(all of the inlines that preceed the first child block of the block).
+<p>When structural changes are made to the blocks children (append/insert/remove)
+the block code updates the line's and then marks the affected lines "dirty"
+(each nsLineBox has a dirty bit). After the structural changes are finished
+then the block will generate an incremental reflow command of type "ReflowDirty".
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+2>Basic Reflow&nbsp;Logic</font></td>
+</tr>
+</table>
+
+<p>The block's reflow engine uses the nsLineBox's dirty bit to determine
+what to reflow. For each line in the block, its dirty bit is examined.
+If the bit is not set then the line is considered "clean" and the block
+determines
+<b>where</b> the line is to be placed. For dirty lines, the
+line is reflowed and when finished, lines affected by the reflow are marked
+dirty. The loop proceeds until either there is no more space for placing
+lines, or there are no more lines (including draining lines from continuations).
+<p>For each line reflowed, there are two types of lines: block lines and
+inline lines. Block lines use ReflowBlockFrame to setup and reflow the
+single block child on the line. Inline lines use nsReflowInlineFrames to
+setup and reflow one or more inline frames on the line.
+<p>nsBlockReflowContext is a helper class used to reflow child block frames.
+nsLineLayout is a helper class used to reflow inline frames. See the document
+on line layout for more detail on how it works.
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+2>Floater Handling</font></td>
+</tr>
+</table>
+
+<p>When frames are created by the frame construction code, "placeholders"
+are made that remain in-the-flow while the floating element is moved out-of-flow.
+Block frames receive child floating frames and keep them on a floater list.
+Note that if an inline frame contains a floating element it to will recieve
+a placeholder frame, but the floating frame will go to the inline frames
+containing block.
+<p>During the reflow of an inline line, the line layout logic will become
+aware of reflowing a placeholder frame for a floating element. When it
+does, it will inform the containing block of the floater so that the block
+and reflow and then place the floating element. To assist in this process,
+the nsBlockReflowState (misnamed) and the nsBlockBandData classes are used
+by the block code to do the bulk of the work. These classes also assist
+heavily in handling of the CSS "clear" property and HTML BR elements.
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>
