@@ -37,7 +37,6 @@ DIRS= \
     timebomb \
     console \
     autocomplete \
-    download-manager \
     urlbarhistory \
     winhooks \
     urlwidget \
