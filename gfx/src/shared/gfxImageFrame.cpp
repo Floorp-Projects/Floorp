@@ -30,7 +30,11 @@ NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 gfxImageFrame::gfxImageFrame() :
   mTimeout(100),
   mInitalized(PR_FALSE),
-  mDisposalMethod(0)
+  mDisposalMethod(0),
+  mHasTransparentColor(PR_FALSE),
+  mHasBackgroundColor(PR_FALSE),
+  mBackgroundColor(0),
+  mTransparentColor(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -385,7 +389,7 @@ NS_IMETHODIMP gfxImageFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod
 /* attribute gfx_color backgroundColor; */
 NS_IMETHODIMP gfxImageFrame::GetBackgroundColor(gfx_color *aBackgroundColor)
 {
-  if (!mInitalized)
+  if (!mInitalized || !mHasBackgroundColor)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBackgroundColor = mBackgroundColor;
@@ -397,9 +401,28 @@ NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
     return NS_ERROR_NOT_INITIALIZED;
 
   mBackgroundColor = aBackgroundColor;
+  mHasBackgroundColor = PR_TRUE;
   return NS_OK;
 }
 
+/* attribute gfx_color transparentColor; */
+NS_IMETHODIMP gfxImageFrame::GetTransparentColor(gfx_color *aTransparentColor)
+{
+  if (!mInitalized || !mHasTransparentColor)
+    return NS_ERROR_NOT_INITIALIZED;
+    
+  *aTransparentColor = mTransparentColor;
+  return NS_OK;
+}
+NS_IMETHODIMP gfxImageFrame::SetTransparentColor(gfx_color aTransparentColor)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  mTransparentColor = aTransparentColor;
+  mHasTransparentColor = PR_TRUE;
+  return NS_OK;
+}
 
 
 

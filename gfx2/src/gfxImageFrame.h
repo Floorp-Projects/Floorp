@@ -63,6 +63,11 @@ private:
   PRPackedBool mInitalized;   // 8 bits
   gfx_format mFormat;         // 16 bits
   
+  PRBool mHasBackgroundColor;
   gfx_color mBackgroundColor;
+  
+  PRBool mHasTransparentColor;
+  gfx_color mTransparentColor;
+
   PRInt32   mDisposalMethod;
 };

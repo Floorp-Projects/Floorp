@@ -55,6 +55,7 @@ nsImageWin :: nsImageWin()
 
   mImageBits = nsnull;
   mHBitmap = nsnull;
+  mDIBSection = nsnull;
   mAlphaBits = nsnull;
   mAlphaDepth = nsnull;
   mColorMap = nsnull;
@@ -66,6 +67,7 @@ nsImageWin :: nsImageWin()
   mDIBTemp = PR_FALSE;
 
 	//CleanUp(PR_TRUE);
+  CleanUpDIBSection();
   CleanUpDDB();
   CleanUpDIB();
 
@@ -78,6 +80,7 @@ nsImageWin :: nsImageWin()
 nsImageWin :: ~nsImageWin()
 {
 	//CleanUp(PR_TRUE);
+  CleanUpDIBSection();
   CleanUpDDB();
   CleanUpDIB();
 
@@ -93,6 +96,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 {
 	mHBitmap = nsnull;
 	//CleanUp(PR_TRUE);
+  CleanUpDIBSection();
   CleanUpDDB();
   CleanUpDIB();
 
@@ -906,7 +910,6 @@ nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
 void
 nsImageWin::CleanUpDIB()
 {
-
   if (mImageBits != nsnull) {
     delete [] mImageBits;
     mImageBits = nsnull;
@@ -923,6 +926,16 @@ nsImageWin::CleanUpDIB()
   //mNumBytesPixel = 0;
 	mSizeImage = 0;
 
+}
+
+void
+nsImageWin::CleanUpDIBSection()
+{
+  if (mDIBSection != nsnull) {
+    ::DeleteObject(mDIBSection);
+    mDIBSection = nsnull;
+    mImageBits = nsnull;
+  }
 }
 
 /** ---------------------------------------------------
@@ -1217,26 +1230,46 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
   HDC dstMemDC = ::CreateCompatibleDC(nsnull);
 
   nsImageWin* imgWin = NS_STATIC_CAST(nsImageWin*, aDstImage); 
-  if(!imgWin->mHBitmap)
+  if (!imgWin->mHBitmap)
   {
-    if (imgWin->mSizeImage > 0){
-       if (imgWin->mAlphaDepth == 8) {
-         imgWin->CreateImageWithAlphaBits(dstMemDC);
-       } else {
-         void* bits;
-         imgWin->mHBitmap = CreateDIBSection(dstMemDC,(LPBITMAPINFO)imgWin->mBHead,DIB_RGB_COLORS,&bits,nsnull,nsnull);
-       }
-      imgWin->mIsOptimized = PR_TRUE;
-      imgWin->CleanUpDIB();
-    }
-  }
-  oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
+    if (imgWin->mSizeImage > 0) {
+      void* bits;
+      imgWin->mHBitmap = CreateDIBSection(dstMemDC,(LPBITMAPINFO)imgWin->mBHead,DIB_RGB_COLORS,&bits,nsnull,nsnull);
+      imgWin->mDIBSection = imgWin->mHBitmap;
+      oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
 
-    if (!IsOptimized() || nsnull==mHBitmap){
       rop = SRCCOPY;
 
-      if (nsnull != mAlphaBits){
-        if( 1==mAlphaDepth){
+      if (nsnull != imgWin->mAlphaBits) {
+        if ( 1==imgWin->mAlphaDepth) {
+	        MONOBITMAPINFO  bmi(imgWin->mAlphaWidth, imgWin->mAlphaHeight);
+
+	        ::StretchDIBits(dstMemDC, 0, 0, aDWidth, aDHeight,0, 0,mNaturalWidth, mNaturalHeight, imgWin->mAlphaBits,
+			                                  (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+	         rop = SRCPAINT;
+        }
+      }
+
+      if (8==imgWin->mAlphaDepth) {              
+        DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalHeight, mNaturalWidth);
+      } else {
+        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, imgWin->mImageBits,
+		      (LPBITMAPINFO)imgWin->mBHead, DIB_RGB_COLORS, rop);
+      }
+      imgWin->mIsOptimized = PR_TRUE;
+      imgWin->CleanUpDIB();
+      imgWin->mImageBits = (PRUint8*)bits;
+    }
+  } else
+    oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
+
+
+  /*if (!IsOptimized() || nsnull==mHBitmap) */
+  {
+      rop = SRCCOPY;
+
+      if (nsnull != mAlphaBits) {
+        if( 1==mAlphaDepth) {
 	        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
 	        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0,mNaturalWidth, mNaturalHeight, mAlphaBits,
@@ -1252,7 +1285,8 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
         ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mImageBits,
 		      (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
       }
-    }else{
+    }
+    /*else{
       rop = SRCCOPY;
       if( 1==mAlphaDepth && mAlphaBits){
 	      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
@@ -1273,9 +1307,11 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
         ::StretchBlt(dstMemDC, aDX, aDY, aDWidth, aDHeight, dstMemDC, 0, 0, mNaturalWidth, mNaturalHeight, rop);
       }
     }
+    */
 
    ::SelectObject(dstMemDC, oldDstBits);
    ::DeleteDC(dstMemDC);
+
    return NS_OK;
 }
 

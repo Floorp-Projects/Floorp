@@ -462,7 +462,8 @@ PRBool GIFInit(
   int (*PR_CALLBACK GIFCallback_EndImageFrame)(
     void* aClientData,
     PRUint32 aFrameNumber,
-    PRUint32 aDelayTimeout),
+    PRUint32 aDelayTimeout,
+    PRUint32 aDisposal),
   
   int (*PR_CALLBACK GIFCallback_SetupColorspaceConverter)(),
   
@@ -955,10 +956,15 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             gs->screen_bgcolor = q[5];
 
             gs->global_colormap_size = 2<<(q[4]&0x07);
-
+#ifdef DEBUG_saari
+            PRUint32 numberOfColors = 1L << ((q[4]&0x07)+1);
+              printf("%d\n", numberOfColors);
+            PRUint32 colorRes = (q[4]&0x70) >> 4;
+              printf("%d\n", colorRes);
+#endif
             /* A -ve value for cmap->num_colors indicates that the colors may
                be non-unique.*/
-            //cmap->num_colors = -gs->global_colormap_size;
+            //cmap->num_colors = (q[4]&0x07);
             //cmap->map = NULL;
 
             if(q[6])
@@ -1466,7 +1472,8 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                 (*gs->GIFCallback_EndImageFrame)(
                   gs->clientptr,
                   gs->images_decoded,
-                  gs->delay_time);
+                  gs->delay_time,
+                  gs->disposal_method);
                 
                                
 
@@ -1589,6 +1596,9 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
         case gif_error: 
             // ILTRACE(2,("il:gif: reached error state"));
+            if(gs->GIFCallback_EndGIF) {
+              int result = (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
+            }    
             return NS_ERROR_FAILURE; // XXX should be image lossage
             break;
 
