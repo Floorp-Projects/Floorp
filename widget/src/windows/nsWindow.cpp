@@ -1056,7 +1056,8 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 void nsWindow::SetFont(const nsFont &aFont)
 {
-    nsIFontCache* fontCache = mContext->GetFontCache();
+    nsIFontCache* fontCache;
+    mContext->GetFontCache(fontCache);
     nsIFontMetrics* metrics = fontCache->GetMetricsFor(aFont);
     HFONT hfont = metrics->GetFontHandle();
 
