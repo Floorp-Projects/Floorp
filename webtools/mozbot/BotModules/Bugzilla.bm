@@ -419,13 +419,13 @@ sub GotURI {
             # or we can pass cookies
             $self->say($event, $prefix .
                        "Bug $bug_link$bug->{'id'} " .
-                       substr($bug->{'severity'}, 0, 3) . ", " .
+                       substr($bug->{'severity'} || $bug->{'bug_severity'}, 0, 3) . ", " .
                        $bug->{'priority'} . ", " .
                        ($bug->{'target_milestone'} ? "$bug->{'target_milestone'}, " : "") .
-                       $bug->{'owner'} . ", " .
-                       substr($bug->{'status'}, 0, 4) .
+                       ($bug->{'owner'} || $bug->{'assigned_to'}) . ", " .
+                       substr($bug->{'status'} || $bug->{'bug_status'},  0, 4) .
                        ($bug->{'resolution'} ? " " . $bug->{'resolution'} : "") . ", " .
-                       substr($bug->{'summary'}, 0, 100));
+                       substr($bug->{'summary'} || $bug->{'short_desc'} || $bug->{'short_short_desc'}, 0, 100));
         } elsif ($bug->{'error'} eq 'NotFound') {
             unless($skipZaroo) {
                 $self->say($event, $prefix . "Bug $bug->{'id'} was not found.");
