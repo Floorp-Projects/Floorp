@@ -1950,9 +1950,14 @@
 
   <hbox id="remoteContentBar" class="msgNotificationBar" align="center">
     <image id="remoteContentImage"/>
-    <description flex="1" class="msgNotificationBarText">&remoteContenMessage.label;</description>
+    <description flex="1" class="msgNotificationBarText">&remoteContentMessage.label;</description>
     <spacer flex="1"/>
     <button label="&loadRemoteContentButton.label;" oncommand="LoadMsgWithRemoteContent()"/>
+  </hbox>
+
+  <hbox id="phishingBar" class="msgNotificationBar" align="center">
+    <image id="phishingBarImage"/>
+    <description flex="1" class="msgNotificationBarText">&phishingBarMessage.label;</description>
   </hbox>
 </deck>
 

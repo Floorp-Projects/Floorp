@@ -65,6 +65,7 @@ const kAllowRemoteContent = 2;
 const kMsgNotificationNoStatus = 0;
 const kMsgNotificationJunkBar = 1;
 const kMsgNotificationRemoteImages = 2;
+const kMsgNotificationPhishingBar = 3;
 
 var gMessengerBundle;
 var gPromptService;
@@ -2195,6 +2196,15 @@ var gMessageNotificationBar =
                                   kMsgNotificationRemoteImages : kMsgNotificationNoStatus);
   },
 
+  // aUrl is the nsIURI for the message currently loaded in the message pane
+  setPhishingMsg: function(aUrl)
+  {
+    // The Junk message takes precedence over the phishing message...so skip this step
+    // if the message is already marked as junk
+    if (this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar && isMsgEmailScam(aUrl))
+      this.updateMsgNotificationBar(kMsgNotificationPhishingBar);
+  },
+
   clearMsgNotifications: function()
   {
     this.updateMsgNotificationBar(kMsgNotificationNoStatus);
@@ -2252,6 +2262,8 @@ function OnMsgParsed(aUrl)
 {
   if ("onQuickSearchNewMsgLoaded" in this)
     onQuickSearchNewMsgLoaded();
+  
+  gMessageNotificationBar.setPhishingMsg(aUrl);
 }
 
 function OnMsgLoaded(aUrl)

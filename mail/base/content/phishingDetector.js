@@ -45,6 +45,35 @@ const kPhishingWithIPAddress = 1;
 const kPhishingWithMismatchedHosts = 2;
 
 //////////////////////////////////////////////////////////////////////////////
+// isEmailScam --> examines the message currently loaded in the message pane
+//                 and returns true if we think that message is an e-mail scam. 
+//                 Assumes the message has been completely loaded in the message pane (i.e. OnMsgParsed has fired)
+// aUrl: nsIURI object for the msg we want to examine...
+//////////////////////////////////////////////////////////////////////////////
+function isMsgEmailScam(aUrl)
+{
+  var isEmailScam = false; 
+  if (!aUrl)
+    return isEmailScam;
+ 
+  // Ignore nntp and RSS messages
+  var folder = aUrl.folder;
+  if (folder.server.type == 'nntp' || folder.server.type == 'rss')
+    return isEmailScam;
+
+  // loop through all of the link nodes in the message's DOM, looking for phishing URLs...
+  var msgDocument = document.getElementById('messagepane').contentDocument;
+
+  // examine all anchor tags...
+  var anchorNodes = msgDocument.getElementsByTagName("a");
+  for (var index = 0; index < anchorNodes.length && !isEmailScam; index++)
+    isEmailScam = isPhishingURL(anchorNodes[index], true);
+
+  // we'll add more checks here as our detector matures....
+  return isEmailScam;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // isPhishingURL --> examines the passed in linkNode and returns true if we think
 //                   the URL is an email scam.
 // aLinkNode: the link node to examine

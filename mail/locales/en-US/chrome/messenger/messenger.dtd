@@ -593,13 +593,16 @@
 <!ENTITY contextAddAllToAddressBook.accesskey "A">
 
 <!-- Junk Bar -->
-<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
+<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk.">
 <!ENTITY notJunkButton.label "This is Not Junk">
 <!ENTITY junkInfoButton.label "?">
 
 <!-- Remote Content Bar -->
-<!ENTITY remoteContenMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message." >
+<!ENTITY remoteContentMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message." >
 <!ENTITY loadRemoteContentButton.label "Show Images">
+
+<!-- Phshing bar Bar -->
+<!ENTITY phishingBarMessage.label "&brandShortName; thinks this message might be an email scam." >
 
 <!-- Search Bar -->
 <!ENTITY quickSearchCmd.key "k">
