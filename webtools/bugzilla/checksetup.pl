@@ -2108,7 +2108,8 @@ $table{whine_schedules} =
      run_day        varchar(32),
      run_time       varchar(32),
      run_next       datetime,
-     mailto_userid  mediumint       not null,
+     mailto         mediumint       not null,
+     mailto_type    smallint        not null default 0,
      
      index(run_next),
      index(eventid)';
@@ -4222,6 +4223,11 @@ AddField("profiles", "extern_id", "varchar(64)");
 # Add grant and request groups for flags
 AddField('flagtypes', 'grant_group_id', 'mediumint null');
 AddField('flagtypes', 'request_group_id', 'mediumint null');
+
+# 2004-01-03 - bug 253721 erik@dasbistro.com
+# mailto is no longer just userids
+RenameField('whine_schedules', 'mailto_userid', 'mailto');
+AddField('whine_schedules', 'mailto_type', 'smallint not null default 0');
 
 # 2005-01-29 - mkanat@kerio.com
 if (!GetFieldDef('longdescs', 'already_wrapped')) {

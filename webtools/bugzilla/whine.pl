@@ -75,7 +75,7 @@ my $sth_next_scheduled_event = $dbh->prepare(
 
 # get all pending schedules matching an eventid
 my $sth_schedules_by_event = $dbh->prepare(
-    "SELECT id, mailto_userid " .
+    "SELECT id, mailto_type, mailto " .
     "FROM whine_schedules " .
     "WHERE eventid=? AND run_next <= NOW()"
 );
@@ -245,18 +245,42 @@ sub get_next_event {
 
         # Add the users from those schedules to the list
         while (my $row = $sth_schedules_by_event->fetch) {
-            my ($sid, $mailto) = @{$row};
+            my ($sid, $mailto_type, $mailto) = @{$row};
 
             # Only bother doing any work if this user has whine permission
             if ($owner->in_group('bz_canusewhines')) {
-                if (not defined $user_objects{$mailto}) {
-                    if ($mailto == $owner_id) {
-                        $user_objects{$mailto} = $owner;
-                    }
-                    elsif ($whineatothers) {
-                        $user_objects{$mailto} = Bugzilla::User->new($mailto);
+
+                if ($mailto_type == MAILTO_USER) {
+                    if (not defined $user_objects{$mailto}) {
+                        if ($mailto == $owner_id) {
+                            $user_objects{$mailto} = $owner;
+                        }
+                        elsif ($whineatothers) {
+                            $user_objects{$mailto} = Bugzilla::User->new($mailto);
+                        }
                     }
                 }
+                elsif ($mailto_type == MAILTO_GROUP) {
+                    my $sth = $dbh->prepare("SELECT name FROM groups " .
+                                            "WHERE id=?");
+                    $sth->execute($mailto);
+                    my $groupname = $sth->fetch->[0];
+                    my $group_id = Bugzilla::Group::ValidateGroupName(
+                        $groupname, $owner);
+                    if ($group_id) {
+                        $sth = $dbh->prepare("SELECT user_id FROM " .
+                                             "user_group_map " .
+                                             "WHERE group_id=?");
+                        $sth->execute($group_id);
+                        for my $row (@{$sth->fetchall_arrayref}) {
+                            if (not defined $user_objects{$row->[0]}) {
+                                $user_objects{$row->[0]} =
+                                    Bugzilla::User->new($row->[0]);
+                            }
+                        }
+                    }
+                }
+
             }
 
             reset_timer($sid);

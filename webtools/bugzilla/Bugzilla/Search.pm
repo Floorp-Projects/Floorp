@@ -40,6 +40,7 @@ use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;
+use Bugzilla::Group;
 
 use Date::Format;
 use Date::Parse;
@@ -382,7 +383,7 @@ sub init {
         (
          "^(?:assigned_to|reporter|qa_contact),(?:notequals|equals|anyexact),%group\\.(\\w+)%" => sub {
              my $group = $1;
-             my $groupid = ValidateGroupName( $group, ($user));
+             my $groupid = Bugzilla::Group::ValidateGroupName( $group, ($user));
              $groupid || ThrowUserError('invalid_group_name',{name => $group});
              my @childgroups = @{$user->flatten_group_membership($groupid)};
              my $table = "user_group_map_$chartid";
@@ -419,7 +420,7 @@ sub init {
 
          "^(?:cc),(?:notequals|equals|anyexact),%group\\.(\\w+)%" => sub {
              my $group = $1;
-             my $groupid = ValidateGroupName( $group, ($user));
+             my $groupid = Bugzilla::Group::ValidateGroupName( $group, ($user));
              $groupid || ThrowUserError('invalid_group_name',{name => $group});
              my @childgroups = @{$user->flatten_group_membership($groupid)};
              my $chartseq = $chartid;
@@ -1493,24 +1494,6 @@ sub pronoun {
         return "bugs.qa_contact";
     }
     return 0;
-}
-
-# ValidateGroupName checks to see if ANY of the users in the provided list 
-# of user objects can see the named group.  It returns the group id if
-# successful and undef otherwise.
-sub ValidateGroupName {
-    my ($name, @users) = (@_);
-    my @visible = (-1);
-    foreach my $user (@users) {
-        $user && push @visible, @{$user->visible_groups_direct};
-    }
-    my $visible = join(', ', @visible);
-    my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare("SELECT id FROM groups " .
-                            "WHERE name = ? AND id IN($visible)");
-    $sth->execute($name);
-    my ($ret) = $sth->fetchrow_array();
-    return $ret;
 }
 
 # Validate that the query type is one we can deal with

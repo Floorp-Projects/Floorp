@@ -424,6 +424,9 @@ if ($action eq 'delete') {
         SendSQL("DELETE FROM group_group_map WHERE grantor_id = $gid");
         SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
         SendSQL("DELETE FROM group_control_map WHERE group_id = $gid");
+        SendSQL("DELETE FROM whine_schedules WHERE " .
+                "mailto_type = " . MAILTO_GROUP . " " .
+                "AND mailto = $gid");
         SendSQL("DELETE FROM groups WHERE id = $gid");
     }
 

@@ -25,7 +25,8 @@
   #     schedule: array of hashes containing schedule info:
   #         day:    value in day column
   #         time:   value selected in time column
-  #         mailto: recipient's email address
+  #         mailto_type: 0=user 1=group
+  #         mailto: recipient's id (profile or group)
   #     queries:  as with schedule, an anonymous array containing hashes of:
   #         name:  the named query's name
   #         title: title to be displayed on the results
@@ -158,6 +159,16 @@
               </td>
               <td align="left">
                 [% IF mail_others %]
+                  <input type="hidden" name="orig_mailto_type_[% schedule.id %]"
+                         value="[% schedule.mailto_type FILTER html %]">
+                  <select name="mailto_type_[% schedule.id %]">
+                    <option value="0" [% IF schedule.mailto_type == 0 %]
+                                        selected
+                                      [% END %]>User</option>
+                    <option value="1" [% IF schedule.mailto_type == 1 %]
+                                        selected
+                                      [% END %]>Group</option>
+                  </select>
                   <input type="hidden" name="orig_mailto_[% schedule.id %]"
                          value="[% schedule.mailto FILTER html %]">
                   <input type="text" name="mailto_[% schedule.id %]"

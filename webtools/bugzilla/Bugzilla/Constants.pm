@@ -62,6 +62,9 @@ use base qw(Exporter);
     GROUP_BLESS
     GROUP_VISIBLE
 
+    MAILTO_USER
+    MAILTO_GROUP
+
     DEFAULT_COLUMN_LIST
     DEFAULT_QUERY_NAME
 
@@ -205,6 +208,9 @@ use constant GRANT_REGEXP => 2;
 use constant GROUP_MEMBERSHIP => 0;
 use constant GROUP_BLESS => 1;
 use constant GROUP_VISIBLE => 2;
+
+use constant MAILTO_USER => 0;
+use constant MAILTO_GROUP => 1;
 
 # The default list of columns for buglist.cgi
 use constant DEFAULT_COLUMN_LIST => (

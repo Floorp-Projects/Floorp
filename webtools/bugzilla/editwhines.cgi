@@ -35,6 +35,7 @@ use vars qw( $vars );
 
 use Bugzilla::Constants;
 use Bugzilla::User;
+use Bugzilla::Group;
 # require the user to have logged in
 Bugzilla->login(LOGIN_REQUIRED);
 
@@ -67,7 +68,8 @@ my $sth; # database statement handle
 #  'schedule' - array ref containing hashes of:
 #       'day' - Day or range of days this schedule will be run
 #       'time' - time or interval to run
-#       'mailto' - person who will receive the results
+#       'mailto_type' - MAILTO_USER or MAILTO_GROUP
+#       'mailto' - person/group who will receive the results
 #       'id' - row ID for the schedule
 my $events = get_events($userid);
 
@@ -158,10 +160,10 @@ if ($cgi->param('update')) {
                 if ($cgi->param("add_schedule_$eventid")) {
                     # the schedule table must be locked before altering
                     $sth = $dbh->prepare("INSERT INTO whine_schedules " .
-                                         "(eventid, mailto_userid, " .
+                                         "(eventid, mailto_type, mailto, " .
                                          "run_day, run_time) " .
-                                         "VALUES (?, ?, 'Sun', 2)");
-                    $sth->execute($eventid, $userid);
+                                         "VALUES (?, ?, ?, 'Sun', 2)");
+                    $sth->execute($eventid, MAILTO_USER, $userid);
                 }
                 # add a query
                 elsif ($cgi->param("add_query_$eventid")) {
@@ -181,17 +183,19 @@ if ($cgi->param('update')) {
                                  "WHERE eventid=?");
             $sth->execute($eventid);
             my @scheduleids = ();
-            for (@{$sth->fetchall_arrayref}) {
-                push @scheduleids, $_->[0];
-            };
+            while (my ($sid) = $sth->fetchrow_array) {
+                push @scheduleids, $sid;
+            }
 
             # we need to double-check all of the user IDs in mailto to make
             # sure they exist
             my $arglist = {};   # args for match_field
             for my $sid (@scheduleids) {
-                $arglist->{"mailto_$sid"} = {
-                    'type' => 'single',
-                };
+                if ($cgi->param("mailto_type_$sid") == MAILTO_USER) {
+                    $arglist->{"mailto_$sid"} = {
+                        'type' => 'single',
+                    };
+                }
             }
             if (scalar %{$arglist}) {
                 &Bugzilla::User::match_field($arglist);
@@ -217,30 +221,58 @@ if ($cgi->param('update')) {
                     }
                 }
                 else {
-                    my $o_day    = $cgi->param("orig_day_$sid");
-                    my $day      = $cgi->param("day_$sid");
-                    my $o_time   = $cgi->param("orig_time_$sid");
-                    my $time     = $cgi->param("time_$sid");
-                    my $o_mailto = $cgi->param("orig_mailto_$sid");
-                    my $mailto   = $cgi->param("mailto_$sid");
+                    my $o_day         = $cgi->param("orig_day_$sid");
+                    my $day           = $cgi->param("day_$sid");
+                    my $o_time        = $cgi->param("orig_time_$sid");
+                    my $time          = $cgi->param("time_$sid");
+                    my $o_mailto      = $cgi->param("orig_mailto_$sid");
+                    my $mailto        = $cgi->param("mailto_$sid");
+                    my $o_mailto_type = lc $cgi->param("orig_mailto_type_$sid");
+                    my $mailto_type   = $cgi->param("mailto_type_$sid");
 
-                    $o_day    = '' unless length($o_day);
-                    $o_time   = '' unless length($o_time);
-                    $o_mailto = '' unless length($o_mailto);
-                    $day      = '' unless length($day);
-                    $time     = '' unless length($time);
-                    $mailto   = '' unless length($mailto);
+                    $o_day         = '' unless length($o_day);
+                    $o_time        = '' unless length($o_time);
+                    $o_mailto      = '' unless length($o_mailto);
+                    $o_mailto_type = '' unless length($o_mailto_type);
+                    $day           = '' unless length($day);
+                    $time          = '' unless length($time);
+                    $mailto        = '' unless length($mailto);
+                    $mailto_type   = '' unless length($mailto_type);
 
-                    my $mail_uid = $userid;
+                    my $mailto_id = $userid;
 
-                    # get a userid for the mailto address
-                    if ($can_mail_others and $mailto) {
-                        trick_taint($mailto);
-                        $mail_uid = DBname_to_id($mailto);
+                    # get an id for the mailto address
+                    if ($can_mail_others && $mailto) {
+                        if ($mailto_type == MAILTO_USER) {
+                            # detaint
+                            my $emailregexp = Param('emailregexp');
+                            $mailto =~ /($emailregexp)/;
+                            $mailto =~ $1;
+                            $mailto_id = DBname_to_id($mailto);
+                        }
+                        elsif ($mailto_type == MAILTO_GROUP) {
+                            # detaint the group parameter
+                            $mailto =~ /^([0-9a-z_\-\.]+)/i;
+                            my $group = $1;
+
+                            $mailto_id = Bugzilla::Group::ValidateGroupName(
+                                $group, ($user));
+                            $mailto_id || ThrowUserError(
+                                'invalid_group_name', {name => $group});
+                        }
+                        else {
+                            # bad value, so it will just mail to the whine
+                            # owner.  $mailto_id was already set above.
+                            $mailto_type = MAILTO_USER;
+                        }
                     }
 
+                    detaint_natural($mailto_type);
+
                     if ( ($o_day  ne $day) ||
-                         ($o_time ne $time) ){
+                         ($o_time ne $time) ||
+                         ($o_mailto != $mailto) ||
+                         ($o_mailto_type != $mailto_type) ){
 
                         trick_taint($day) if length($day);
                         trick_taint($time) if length($time);
@@ -248,10 +280,11 @@ if ($cgi->param('update')) {
                         # the schedule table must be locked
                         $sth = $dbh->prepare("UPDATE whine_schedules " .
                                              "SET run_day=?, run_time=?, " .
-                                             "mailto_userid=?, " .
+                                             "mailto_type=?, mailto=?, " .
                                              "run_next=NULL " .
                                              "WHERE id=?");
-                        $sth->execute($day, $time, $mail_uid, $sid);
+                        $sth->execute($day, $time, $mailto_type,
+                                      $mailto_id, $sid);
                     }
                 }
             }
@@ -262,9 +295,9 @@ if ($cgi->param('update')) {
                                  "WHERE eventid=?");
             $sth->execute($eventid);
             my @queries = ();
-            for (@{$sth->fetchall_arrayref}) {
-                push @queries, $_->[0];
-            };
+            while (my ($qid) = $sth->fetchrow_array) {
+                push @queries, $qid;
+            }
 
             for my $qid (@queries) {
                 if ($cgi->param("remove_query_$qid")) {
@@ -365,19 +398,30 @@ for my $event_id (keys %{$events}) {
     $events->{$event_id}->{'queries'} = [];
 
     # schedules
-    $sth = $dbh->prepare("SELECT run_day, run_time, profiles.login_name, id " .
+    $sth = $dbh->prepare("SELECT run_day, run_time, mailto_type, mailto, id " .
                          "FROM whine_schedules " .
-                         "LEFT JOIN profiles " .
-                         "ON whine_schedules.mailto_userid = " .
-                         "profiles.userid " .
                          "WHERE eventid=?");
     $sth->execute($event_id);
     for my $row (@{$sth->fetchall_arrayref}) {
+        my $mailto_type = $row->[2];
+        my $mailto = '';
+        if ($mailto_type == MAILTO_USER) {
+            my $mailto_user = new Bugzilla::User($row->[3]);
+            $mailto = $mailto_user->login;
+        }
+        elsif ($mailto_type == MAILTO_GROUP) {
+            $sth = $dbh->prepare("SELECT name FROM groups WHERE id=?");
+            $sth->execute($row->[3]);
+            $mailto = $sth->fetch->[0];
+            $mailto = "" unless Bugzilla::Group::ValidateGroupName(
+                                $mailto, ($user));
+        }
         my $this_schedule = {
-            'day'    => $row->[0],
-            'time'   => $row->[1],
-            'mailto' => $row->[2],
-            'id'     => $row->[3],
+            'day'         => $row->[0],
+            'time'        => $row->[1],
+            'mailto_type' => $mailto_type,
+            'mailto'      => $mailto,
+            'id'          => $row->[4],
         };
         push @{$events->{$event_id}->{'schedule'}}, $this_schedule;
     }
@@ -408,8 +452,8 @@ $sth = $dbh->prepare("SELECT name FROM namedqueries WHERE userid=?");
 $sth->execute($userid);
 
 $vars->{'available_queries'} = [];
-while (my $query = $sth->fetch) {
-    push @{$vars->{'available_queries'}}, $query->[0];
+while (my ($query) = $sth->fetchrow_array) {
+    push @{$vars->{'available_queries'}}, $query;
 }
 
 $template->process("whine/schedule.html.tmpl", $vars)
@@ -425,11 +469,11 @@ sub get_events {
                             "FROM whine_events " .
                             "WHERE owner_userid=?");
     $sth->execute($userid);
-    for (@{$sth->fetchall_arrayref}) {
-        $events->{$_->[0]} = {
-            'subject' => $_->[1],
-            'body'    => $_->[2],
-        }
+    while (my ($ev, $sub, $bod) = $sth->fetchrow_array) {
+        $events->{$ev} = {
+            'subject' => $sub,
+            'body' => $bod,
+        };
     }
     return $events;
 }
