@@ -513,8 +513,13 @@ if test "$OS_ARCH" = "AIX"; then
     OS_RELEASE=`uname -v`.`uname -r`
 fi
 
+if test "$OS_ARCH" = "FreeBSD"; then
+    OS_RELEASE=`echo $OS_RELEASE | sed 's/-.*//'`
+fi
+
 if test "$OS_ARCH" = "Linux"; then
     OS_RELEASE=`echo $OS_RELEASE | sed 's/-.*//'`
+    OS_RELEASE=`echo $OS_RELEASE | awk -F\. '{ print $1 "." $2 }'`
 fi
 
 if test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
