@@ -44,6 +44,9 @@
 #include "WizardUI.h"
 #include "Interpret.h"
 
+#ifdef TIMEBOMBDATE
+#include "timebomb.h"
+#endif
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -124,6 +127,32 @@ BOOL CWizardMachineApp::InitInstance()
 #endif
 
 	CWnd myWnd;
+
+#ifdef TIMEBOMBDATE
+  // TIMEBOMBDATE is a string in mmddyyyy.
+  // For example, for oct 1, 2002:  #define TIMEBOMBDATE "10012002" 
+  // Or put this in the wizardmachine (driver) makefile: CFLAGS=$(CFLAGS) -DTIMEBOMBDATE=\"10012002\"
+  // The timebomb code lives in timebomb.h in the ns tree.
+
+  CString strDate(TIMEBOMBDATE);
+  CString strMonth = strDate.Left(2);
+  CString strDay = strDate.Left(4).Right(2);
+  CString strYear = strDate.Right(4);
+
+  int iMonth = atoi(strMonth);
+  int iDay = atoi(strDay);
+  int iYear = atoi(strYear);
+
+  bool bFiddled;
+  bool bRun = ShouldRun(iMonth, iDay, iYear, bFiddled);  
+
+	if (!bRun)
+  {
+    AfxMessageBox("The pre-release version has expired.", MB_OK);
+		exit(2);  
+  }
+#endif
+
 
 	//Do initializations
 	//Check for comm existence
