@@ -467,6 +467,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 		rv = newPOPMailPath->CreateDir();
 		if (NS_FAILED(rv)) return rv;
 	}
+	rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newPOPMailPath, PR_FALSE); 
+	if (NS_FAILED(rv)) return rv;
+	
     m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
     rv = newPOPMailPath->AppendRelativeUnixPath(popServerName);
     if (NS_FAILED(rv)) return rv;
@@ -520,6 +523,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 	if (!exists)  {
 		newIMAPLocalMailPath->CreateDir();
 	}
+	rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newIMAPLocalMailPath, PR_FALSE); 
+	if (NS_FAILED(rv)) return rv;
+	
 	rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_LOCAL_MAIL_DIR_NAME);
 	if (NS_FAILED(rv)) return rv;
 	rv = newIMAPLocalMailPath->Exists(&exists);
@@ -566,6 +572,8 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 		rv = newIMAPMailPath->CreateDir();
 		if (NS_FAILED(rv)) return rv;
 	}
+	rv = m_prefs->SetFilePref(PREF_MAIL_IMAP_ROOT_DIR, newIMAPMailPath, PR_FALSE); 
+	if (NS_FAILED(rv)) return rv;
   }
   else {
     return NS_ERROR_UNEXPECTED;
@@ -609,7 +617,8 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 		rv = newNewsPath->CreateDir();
 		if (NS_FAILED(rv)) return rv;
 	}
-
+	rv = m_prefs->SetFilePref(PREF_NEWS_DIRECTORY, newNewsPath, PR_FALSE); 
+	if (NS_FAILED(rv)) return rv;
 #if 1 
   printf("TODO:  port / fix / turn on the code that checks for space before copying.\n");
 #else  
@@ -922,19 +931,19 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
 	// should we let them? no.  let's migrate them to
 	// <profile>/Mail and <profile>/ImapMail
 	// let's make all three platforms the same.
-	rv = (newPath)->FromFileSpec(newProfilePath);
+	rv = (newPath->FromFileSpec(newProfilePath);
 	if (NS_FAILED(rv)) return rv;
-	rv = (newPath)->AppendRelativeUnixPath(newDirName);
+	rv = newPath->AppendRelativeUnixPath(newDirName);
 	if (NS_FAILED(rv)) return rv;
 #else
 	nsXPIDLCString leafname;
-	rv = (newPath)->FromFileSpec(oldPath);
+	rv = newPath->FromFileSpec(oldPath);
 	if (NS_FAILED(rv)) return rv;
-	rv = (newPath)->GetLeafName(getter_Copies(leafname));
+	rv = newPath->GetLeafName(getter_Copies(leafname));
 	if (NS_FAILED(rv)) return rv;
 	nsCString newleafname((const char *)leafname);
 	newleafname += NEW_DIR_SUFFIX;
-	rv = (newPath)->SetLeafName(newleafname);
+	rv = newPath->SetLeafName(newleafname);
 	if (NS_FAILED(rv)) return rv;
 #endif /* XP_UNIX */
 
@@ -951,13 +960,13 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
    * isn't this fun?  
    */
   if (PL_strcmp(PREF_NEWS_DIRECTORY, pref) == 0) {
-    rv = (oldPath)->FromFileSpec(oldProfilePath);
-    rv = (oldPath)->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
+    rv = oldPath->FromFileSpec(oldProfilePath);
+    if (NS_FAILED(rv)) return rv;
+    rv = oldPath->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
+    if (NS_FAILED(rv)) return rv;
   }
 #endif /* XP_UNIX */
-  
-  m_prefs->SetFilePref(pref, newPath, PR_FALSE); 
-  return NS_OK;
+  return rv;
 }
 
 static PRBool
