@@ -29,8 +29,7 @@ install:: $(DLL)
 
 install:: $(DLL)
     $(MAKE_INSTALL) PSMTaskMenu.xul	$(DIST)\bin\chrome\global\content\default
-    $(MAKE_INSTALL) psm.js		$(DIST)\bin\chrome\global\content\default
-
+    
 clobber::
     rm $(DIST)\bin\chrome\navigator\content\default\NavSecurityOverlay.xul
     rm $(DIST)\bin\chrome\navigator\content\default\NavSecurityUI.js
