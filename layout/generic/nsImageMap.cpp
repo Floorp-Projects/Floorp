@@ -727,24 +727,7 @@ nsImageMap::nsImageMap() :
 
 nsImageMap::~nsImageMap()
 {
-  //Remove all our focus listeners
-  PRInt32 i, n = mAreas.Count();
-  for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas.ElementAt(i);
-    nsCOMPtr<nsIContent> areaContent;
-    area->GetArea(getter_AddRefs(areaContent));
-    if (areaContent) {
-      nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(areaContent));
-      if (rec) {
-        rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
-      }
-    }
-  }
-
-  FreeAreas();
-  if (mDocument) {
-    mDocument->RemoveObserver(this);
-  }
+  NS_ASSERTION(mAreas.Count() == 0, "Destroy was not called");
 }
 
 NS_IMPL_ISUPPORTS4(nsImageMap,
@@ -779,6 +762,15 @@ nsImageMap::FreeAreas()
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     frameManager->SetPrimaryFrameFor(area->mArea, nsnull);
+
+    nsCOMPtr<nsIContent> areaContent;
+    area->GetArea(getter_AddRefs(areaContent));
+    if (areaContent) {
+      nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(areaContent));
+      if (rec) {
+        rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
+      }
+    }
     delete area;
   }
   mAreas.Clear();
@@ -877,14 +869,6 @@ nsImageMap::AddArea(nsIContent* aArea)
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::shape, shape);
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
 
-  //Add focus listener to track area focus changes
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));
-  if (rec) {
-    rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
-  }
-
-  mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
-
   Area* area;
   if (shape.IsEmpty() ||
       shape.LowerCaseEqualsLiteral("rect") ||
@@ -908,6 +892,15 @@ nsImageMap::AddArea(nsIContent* aArea)
   }
   if (!area)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  //Add focus listener to track area focus changes
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));
+  if (rec) {
+    rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
+  }
+
+  mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
+
   area->ParseCoords(coords);
   mAreas.AppendElement(area);
   return NS_OK;
@@ -1082,17 +1075,8 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
 void
 nsImageMap::Destroy(void)
 {
-  //Remove all our focus listeners
-  PRInt32 i, n = mAreas.Count();
-  for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas.ElementAt(i);
-    nsCOMPtr<nsIContent> areaContent;
-    area->GetArea(getter_AddRefs(areaContent));
-    if (areaContent) {
-      nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(areaContent));
-      if (rec) {
-        rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
-      }
-    }
+  FreeAreas();
+  if (mDocument) {
+    mDocument->RemoveObserver(this);
   }
 }
