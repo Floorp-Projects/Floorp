@@ -442,7 +442,7 @@ dump("error in refresh sort:"+e)
               this.treeBoxObject.view.isContainer(row))
             return;
 
-          if (this.clickCount == 1 || modifKey && 
+          if ((this.clickCount == 1 || modifKey) && 
               !this.treeBoxObject.selection.isSelected(row)) {
             this.treeBoxObject.selection.select(row);
             this._selection = this.getTreeSelection();
