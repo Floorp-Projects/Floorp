@@ -2808,7 +2808,6 @@ function focusSearchBar()
   }
 }
 
-const IMAGEPERMISSION = 1;
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
@@ -3313,16 +3312,26 @@ nsContextMenu.prototype = {
         saveURL( this.imageURL, null, "SaveImageTitle", false );
     },
     toggleImageBlocking : function (aBlock) {
+      var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+      var permissionmanager =
+        Components.classes["@mozilla.org/permissionmanager;1"]
+          .getService(nsIPermissionManager);
+      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI);
+      uri.spec = this.imageURL;
+      permissionmanager.add(uri, 
+                            nsIPermissionManager.IMAGE_TYPE,
+                            aBlock ? nsIPermissionManager.DENY_ACTION : nsIPermissionManager.ALLOW_ACTION);
+    },
+    isImageBlocked : function() {
+      var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
       var permissionmanager =
         Components.classes["@mozilla.org/permissionmanager;1"]
           .getService(Components.interfaces.nsIPermissionManager);
-      permissionmanager.add(this.imageURL, !aBlock, IMAGEPERMISSION);
-    },
-    isImageBlocked : function() {
-       var permissionmanager =
-         Components.classes["@mozilla.org/permissionmanager;1"]
-           .getService(Components.interfaces.nsIPermissionManager);
-       return permissionmanager.testForBlocking(this.imageURL, IMAGEPERMISSION);
+      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI);
+      uri.spec = this.imageURL;
+       return permissionmanager.testPermission(uri, nsIPermissionManager.IMAGE_TYPE);
     },
     // Generate email address and put it on clipboard.
     copyEmail : function () {
