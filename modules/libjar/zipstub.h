@@ -25,7 +25,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#ifdef XP_MAC
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 
 #define PR_ASSERT         assert
 #define PR_Malloc         malloc
@@ -44,8 +48,13 @@
 #define PR_BEGIN_EXTERN_C       extern "C" {
 #define PR_END_EXTERN_C         }
 
+#ifdef XP_MAC
+#define PR_EXTERN(__type)       extern __declspec(export) __type
+#define PR_PUBLIC_API(__type)   __declspec(export) __type
+#else
 #define PR_EXTERN(__type)       extern _declspec(dllexport) __type
 #define PR_PUBLIC_API(__type)   _declspec(dllexport) __type
+#endif
 
 #define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
 
