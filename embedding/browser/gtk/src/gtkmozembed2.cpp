@@ -824,7 +824,7 @@ gtk_moz_embed_pop_startup(void)
 }
 
 void
-gtk_moz_embed_set_comp_path(char *aPath)
+gtk_moz_embed_set_comp_path(const char *aPath)
 {
   EmbedPrivate::SetCompPath(aPath);
 }
@@ -837,7 +837,7 @@ gtk_moz_embed_set_app_components(const nsModuleComponentInfo* aComps,
 }
 
 void
-gtk_moz_embed_set_profile_path(char *aDir, char *aName)
+gtk_moz_embed_set_profile_path(const char *aDir, const char *aName)
 {
   EmbedPrivate::SetProfilePath(aDir, aName);
 }

@@ -486,7 +486,7 @@ EmbedPrivate::PopStartup(void)
 
 /* static */
 void
-EmbedPrivate::SetCompPath(char *aPath)
+EmbedPrivate::SetCompPath(const char *aPath)
 {
   if (sCompPath)
     free(sCompPath);
@@ -507,7 +507,7 @@ EmbedPrivate::SetAppComponents(const nsModuleComponentInfo* aComps,
 
 /* static */
 void
-EmbedPrivate::SetProfilePath(char *aDir, char *aName)
+EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
 {
   if (sProfileDir) {
     nsMemory::Free(sProfileDir);
