@@ -57,7 +57,6 @@
 #include "nsIPrompt.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsINetSupportDialogService.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "nsIImapFlagAndUidState.h"
@@ -73,7 +72,6 @@
 #include "nsQuickSort.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);

@@ -37,7 +37,8 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgComposeStringBundle.h"
-#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
 typedef struct _findServerByKeyEntry {
     const char *key;
@@ -54,7 +55,6 @@ static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 static NS_DEFINE_CID(kCMailtoUrlCID, NS_MAILTOURL_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // foward declarations...
 nsresult
@@ -188,7 +188,12 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
             smtpUrl->SetNotificationCallbacks(aNotificationCallbacks);
             nsCOMPtr<nsIPrompt> smtpPrompt(do_GetInterface(aNotificationCallbacks));
             if (!smtpPrompt)
-                smtpPrompt = do_GetService(kNetSupportDialogCID);
+            {
+              nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+              if (wwatch)
+                wwatch->GetNewPrompter(0, getter_AddRefs(smtpPrompt));
+            }
+
             smtpUrl->SetPrompt(smtpPrompt);
 			url->RegisterListener(aUrlListener);
 		}

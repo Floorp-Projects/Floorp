@@ -50,7 +50,6 @@
 #include "nsTextFormatter.h"
 #include "nsIIOService.h"
 #include "nsIStringBundle.h"
-#include "nsINetSupportDialogService.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -64,8 +63,9 @@
 #include "nscore.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -1142,14 +1142,15 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
 
     if (!prompter)
     {
-        //-- Couldn't get prompter from the current window, so get the propmt service.
-        NS_WITH_SERVICE(nsIPrompt, backupPrompter, kNetSupportDialogCID, &res);
-        if (NS_FAILED(res)) 
-        {
-            *checkValue = 0;
-            return PR_FALSE;
-        }
-        prompter = backupPrompter;
+        //-- Couldn't get prompter from the current window, so get the prompt service.
+        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+        if (wwatch)
+          wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+    }
+    if (!prompter)
+    {
+        *checkValue = 0;
+        return PR_FALSE;
     }
     
     PRInt32 buttonPressed = 1; /* in case user exits dialog by clicking X */

@@ -55,7 +55,6 @@
 #include "nsImapUtils.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsINetSupportDialogService.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIEventQueueService.h"
 #include "nsIMsgMailNewsUrl.h"
@@ -63,6 +62,8 @@
 #include "nsMsgI18N.h"
 #include "nsAutoLock.h"
 #include "nsIImapMockChannel.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 // for the memory cache...
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
@@ -74,7 +75,6 @@
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE_CID);
@@ -1718,7 +1718,11 @@ nsImapIncomingServer::FEAlert(const PRUnichar* aString, nsIMsgWindow * aMsgWindo
     aMsgWindow->GetPromptDialog(getter_AddRefs(dialog));
 
   if (!dialog) // if we didn't get one, use the default....
-    dialog = do_GetService(kNetSupportDialogCID);
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  }
 
   if (dialog)
 	  rv = dialog->Alert(nsnull, aString);
@@ -1734,7 +1738,11 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
     aMsgWindow->GetPromptDialog(getter_AddRefs(dialog));
 
   if (!dialog) // if we didn't get one, use the default....
-    dialog = do_GetService(kNetSupportDialogCID);
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  }
 
 	if (aString)
 	{

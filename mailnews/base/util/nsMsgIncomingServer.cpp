@@ -47,7 +47,7 @@
 #include "nsIWebShellWindow.h"
 #include "nsIPrompt.h"
 #include "nsIWalletService.h"
-#include "nsINetSupportDialogService.h"
+#include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 
 #include "nsIRDFService.h"
@@ -61,7 +61,6 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 #define OFFLINE_STATUS_CHANGED_TOPIC "network:offline-status-changed"
@@ -704,8 +703,10 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
         }
         else
         {
-			dialog = do_GetService(kNetSupportDialogCID, &rv);
-			if (NS_FAILED(rv)) return rv;
+          nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+          if (wwatch)
+            wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+          if (!dialog) return NS_ERROR_FAILURE;
         }
 		if (NS_SUCCEEDED(rv) && dialog)
 		{

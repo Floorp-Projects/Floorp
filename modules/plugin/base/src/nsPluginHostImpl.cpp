@@ -67,8 +67,8 @@
 
 // for the dialog
 #include "nsIStringBundle.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 #include "nsHashtable.h"
 
 #include "nsILocale.h"
@@ -149,7 +149,6 @@ static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 
 // for the dialog
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -206,9 +205,12 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
     }
   }
 
-
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  nsCOMPtr<nsIPrompt> prompt(do_GetService(kNetSupportDialogCID));
+  nsCOMPtr<nsIPrompt> prompt;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
+
   nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
   nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
   nsCOMPtr<nsIStringBundle> bundle;
@@ -4384,7 +4386,11 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
   if(mDontShowBadPluginMessage)
     return rv;
   
-  nsCOMPtr<nsIPrompt> prompt(do_GetService(kNetSupportDialogCID));
+  nsCOMPtr<nsIPrompt> prompt;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
+
   nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
   nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
 

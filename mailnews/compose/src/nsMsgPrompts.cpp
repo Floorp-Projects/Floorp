@@ -22,13 +22,12 @@
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
 #include "nsMsgPrompts.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIMsgStringService.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsMsgCompCID.h"
-
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 nsresult
 nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID)
@@ -56,7 +55,11 @@ nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg)
     return NS_ERROR_INVALID_ARG;
   
   if (!prompt)
-    prompt = do_GetService(kNetSupportDialogCID);
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
+  }
   
   if (prompt)
     rv = prompt->Alert(nsnull, msg);
@@ -89,8 +92,12 @@ nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBo
     return NS_ERROR_INVALID_ARG;
   
   if (!dialog)
-    dialog = do_GetService(kNetSupportDialogCID);
-  
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  }
+
   if (dialog) 
   {
     rv = dialog->Confirm(nsnull, msg, &result);

@@ -42,11 +42,12 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIURL.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsFileStream.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-#include "nsINetSupportDialogService.h"
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
 #include "nsIFileSpec.h"
@@ -64,8 +65,6 @@
 #endif 
 
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
-
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #include "prlong.h"
 #include "prinrval.h"
@@ -3974,8 +3973,12 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
           /* save login if appropriate */
           if (currentFormNode == formNode) {
-            NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-            if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIPrompt> dialog;
+            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+            if (wwatch)
+              wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+
+            if (dialog) {
               SINGSIGN_RememberSignonData(dialog, URLName, signonData, window);
             }
           }

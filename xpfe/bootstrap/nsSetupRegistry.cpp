@@ -25,7 +25,6 @@
 #include "nsICmdLineService.h"
 #include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIEditor.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -86,7 +85,6 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID( kDialogParamBlockCID, NS_DialogParamBlock_CID );

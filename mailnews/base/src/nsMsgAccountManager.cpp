@@ -41,7 +41,6 @@
 #include "nscore.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "prprf.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIMsgFolderCache.h"
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
@@ -77,7 +76,6 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
-static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);

@@ -36,6 +36,7 @@
 // necko
 #include "nsMimeTypes.h"
 #include "nsIURL.h"
+#include "nsIPrompt.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
@@ -101,7 +102,6 @@
 // Save As
 #include "nsIFilePicker.h"
 #include "nsIStringBundle.h"
-#include "nsINetSupportDialogService.h"
 
 // Find / Find Again 
 #include "nsIFindComponent.h"
@@ -112,7 +112,6 @@ static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 
 /* This is the next generation string retrieval call */

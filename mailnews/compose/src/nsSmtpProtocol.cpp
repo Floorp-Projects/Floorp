@@ -34,7 +34,6 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsString.h"
 #include "nsTextFormatter.h"
@@ -70,7 +69,6 @@
 static PRLogModuleInfo *SMTPLogModule = nsnull;
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
-static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID); 
 
 extern "C" 
 {

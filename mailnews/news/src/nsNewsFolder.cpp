@@ -60,6 +60,7 @@
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsXPIDLString.h"
 
@@ -68,7 +69,6 @@
 #include "nsINntpUrl.h"
 #include "nsNewsSummarySpec.h"
 
-#include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 
 #include "nsReadableUtils.h"
@@ -85,7 +85,6 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // ###tw  This really ought to be the most
 // efficient file reading size for the current
@@ -1461,8 +1460,11 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
     }
 		else {
-			dialog = do_GetService(kNetSupportDialogCID, &rv);
-			if (NS_FAILED(rv)) return rv;
+                  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                  if (wwatch)
+                    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+
+                  if (!dialog) return NS_ERROR_FAILURE;
 		}
  
 		NS_ASSERTION(dialog,"we didn't get a net prompt");
@@ -1527,8 +1529,11 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
     }
 		else {
-			dialog = do_GetService(kNetSupportDialogCID, &rv);
-			if (NS_FAILED(rv)) return rv;
+                  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                  if (wwatch)
+                    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+
+                  if (!dialog) return NS_ERROR_FAILURE;
 		}
  
 		NS_ASSERTION(dialog,"we didn't get a net prompt");

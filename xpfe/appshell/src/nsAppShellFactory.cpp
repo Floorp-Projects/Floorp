@@ -26,7 +26,6 @@
 #include "nsAppShellCIDs.h"
 #include "nsICmdLineService.h"
 #include "nsIFileLocator.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIWindowMediator.h"
 #include "rdf.h"
 #include "nsICommonDialogs.h"
@@ -37,7 +36,6 @@
 
 #include "nsIAppShellService.h"
 #include "nsCommandLineService.h"  
-#include "nsNetSupportDialog.h"
 #include "nsAppShellService.h"
 #include "nsXPConnectFactory.h"
 #include "nsWindowMediator.h"
@@ -61,7 +59,6 @@ nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(XPConnectFactoryImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNetSupportDialog);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommonDialogs);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock);
@@ -84,11 +81,6 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_XPCONNECTFACTORY_CID,
     NULL,
     XPConnectFactoryImplConstructor,
-  },
-  { "Net Support Dialogs",
-    NS_NETSUPPORTDIALOG_CID,
-    NULL,
-    nsNetSupportDialogConstructor,
   },
   { "Window Mediator",
     NS_WINDOWMEDIATOR_CID,

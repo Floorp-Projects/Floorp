@@ -40,7 +40,6 @@
 #include "nsIPref.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"

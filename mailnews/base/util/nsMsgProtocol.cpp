@@ -32,12 +32,11 @@
 #include "nsIFileChannel.h"
 #include "nsFileStream.h"
 #include "nsIFileTransportService.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIDNSService.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIPrompt.h"
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 NS_IMPL_ISUPPORTS4(nsMsgProtocol, 

@@ -39,12 +39,13 @@
 #include "nsString.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
-#include "nsINetSupportDialogService.h"
 #include "nsMsgI18N.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -53,7 +54,6 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
@@ -310,8 +310,13 @@ nsAbSync::DisplayErrorMessage(const PRUnichar * msg)
   // If we failed before, fall back to the non-parented modal dialog
   if (NS_FAILED(rv))
   {
-    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrompt> dialog;
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+
+    if (!dialog)
+      return NS_ERROR_FAILURE;
     rv = dialog->Alert(nsnull, msg);
   }
 

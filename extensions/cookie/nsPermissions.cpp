@@ -28,13 +28,13 @@
 #include "nsUtils.h"
 #include "nsXPIDLString.h"
 #include "nsIFileSpec.h"
-#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 #include "nsVoidArray.h"
 #include "xp_core.h"
 #include "prmem.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static const char *kCookiesPermFileName = "cookperm.txt";
 
 typedef struct _permission_HostStruct {
@@ -62,8 +62,11 @@ permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar
 
   if (aPrompter)
     dialog = aPrompter;
-  else
-    dialog = do_GetService(kNetSupportDialogCID);
+  else {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  }
   if (!dialog) {
     *checkValue = 0;
     return PR_FALSE;

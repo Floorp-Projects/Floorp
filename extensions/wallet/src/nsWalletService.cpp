@@ -41,16 +41,15 @@
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIChannel.h"
+#include "nsIWindowWatcher.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 
 nsWalletlibService::nsWalletlibService()
@@ -373,8 +372,11 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *re
                             channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
                           if (interfaces)
                             interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
-                          if (!prompter)
-                            prompter = do_GetService(kNetSupportDialogCID);
+                          if (!prompter) {
+                            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                            if (wwatch)
+                              wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+                          }
                           if (prompter) {
                             SINGSIGN_RestoreSignonData(prompter, URLName, nameString, &valueString, elementNumber++);
                           }
