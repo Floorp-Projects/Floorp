@@ -216,6 +216,10 @@
 <!-- NEEDED ALARMS ERIC -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarOverlay.js"/>
 
+<!-- NEEDED FOR APPLICATION SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
 <!-- GENERAL CONTEXT MENU -->
 <popup id="context-menu"
        onpopuphidden="gNewDateVariable = null;"
