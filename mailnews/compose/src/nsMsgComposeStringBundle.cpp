@@ -41,8 +41,8 @@ nsComposeStringService::nsComposeStringService()
 nsComposeStringService::~nsComposeStringService()
 {}
 
-NS_IMPL_ADDREF(nsComposeStringService);
-NS_IMPL_RELEASE(nsComposeStringService);
+NS_IMPL_THREADSAFE_ADDREF(nsComposeStringService);
+NS_IMPL_THREADSAFE_RELEASE(nsComposeStringService);
 
 NS_INTERFACE_MAP_BEGIN(nsComposeStringService)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStringService)
