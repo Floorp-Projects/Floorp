@@ -166,8 +166,8 @@ nsIFrame* BRPart::CreateFrame(nsIPresContext* aPresContext,
 static nsHTMLTagContent::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
-  { "all", NS_STYLE_CLEAR_BOTH },
-  { "both", NS_STYLE_CLEAR_BOTH },
+  { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
+  { "both", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
   { 0 }
 };
 
