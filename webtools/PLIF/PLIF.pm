@@ -200,6 +200,11 @@ sub assert {
     }
 }
 
+sub debug {
+    my $self = shift;
+    $self->dump(7, @_);
+}
+
 sub notImplemented {
     my $self = shift;
     $self->error(0, 'Internal Error: Method not implemented');

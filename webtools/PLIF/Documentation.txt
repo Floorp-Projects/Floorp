@@ -205,6 +205,10 @@ five debugging aids:
    assert(condition, level, message) 
    Calls error() if condition is true.
 
+   debug(message)
+   Same as dump(7, message). According to the code, level 7 is
+   'typical checkpoints (e.g. someone tried to do some output)'.
+
    notImplemented()
    Calls error() with predefined arguments.
 
@@ -444,7 +448,8 @@ CHAPTER 7: WEAK REFERENCES
 | Service Without A Thought To Caching It and Why It Would Be Bad To
 | Do Otherwise.
 
-You no copy you go boom boom.
+You no copy you go boom boom and other stories of the lack of Perl 5.6
+on the author's development machine.
 
 ______________________________________
 CHAPTER 8: THE MAIN APPLICATION OBJECT
