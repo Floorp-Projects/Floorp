@@ -138,6 +138,8 @@ protected:
   nsIForm*                 mForm;
   PRInt32                  mType;
 
+  NS_IMETHOD GetPresContext(nsIPresContext ** aPresContext);
+
   PRBool IsImage() const {
     nsAutoString tmp;
     mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
@@ -438,14 +440,50 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
 }
 
 NS_IMETHODIMP
+nsHTMLInputElement::GetPresContext(nsIPresContext ** aPresContext)
+{
+  if (nsnull == aPresContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aPresContext = nsnull;
+  nsIDocument* doc; 
+  nsresult rv = GetDocument(doc);
+  if (nsnull != doc) {
+    nsIPresShell* presShell = doc->GetShellAt(0);
+    if (nsnull != presShell)  {
+      rv = presShell->GetPresContext(aPresContext);
+      NS_RELEASE(presShell);
+    }
+    NS_RELEASE(doc);
+  }
+
+  return rv;
+
+}
+
+NS_IMETHODIMP
 nsHTMLInputElement::Blur()
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
-     // Ask the frame to Deselect focus (i.e Blur).
-    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
-    return NS_OK;
+  nsIPresContext * context;
+  nsresult rv = GetPresContext(&context);
+  if (NS_SUCCEEDED(rv) && nsnull != context) {
+    nsIEventStateManager* esm;
+    if (NS_OK == context->GetEventStateManager(&esm)) {
+      nsIContent * focusedContent;
+      nsIContent * content;
+      rv = QueryInterface(nsIContent::GetIID(), (void **)&content);
+      if (NS_SUCCEEDED(rv) && nsnull != content) {
+        esm->GetFocusedContent(&focusedContent);
+        if (nsnull != focusedContent && content == focusedContent) {
+          rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+          NS_RELEASE(focusedContent);
+        }
+        NS_RELEASE(content);
+      }
+      NS_RELEASE(esm);
+    }
+    NS_RELEASE(context);
   }
   return rv;
 }
@@ -453,12 +491,13 @@ nsHTMLInputElement::Blur()
 NS_IMETHODIMP
 nsHTMLInputElement::Focus()
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    return NS_OK;
+  nsIPresContext * context;
+  nsresult rv = GetPresContext(&context);
+  if (NS_SUCCEEDED(rv) && nsnull != context) {
+    SetFocus(context);
+    NS_RELEASE(context);
   }
+
   return rv;
 
 }
@@ -477,14 +516,14 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     NS_RELEASE(esm);
   }
   
-  // XXX Should focus only this presContext
-  Focus();
-
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
+    return NS_OK;
   }
+
   return rv;
 }
 
@@ -492,7 +531,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   // XXX Should focus only this presContext
-  Blur();
+  //Blur();
   return NS_OK;
 }
 
@@ -551,6 +590,19 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
     switch (aEvent->message) {
+      case NS_FOCUS_CONTENT:
+      {
+        nsIFormControlFrame* formControlFrame = nsnull;
+        nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+        if (NS_SUCCEEDED(rv)) {
+          formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+          return NS_OK;
+        }
+        
+        //SetFocus(&aPresContext);
+      }
+      break;
+
       case NS_KEY_PRESS:
       {
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
