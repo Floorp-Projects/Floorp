@@ -79,9 +79,9 @@ nsRecyclingAllocator::nsRecycleTimerCallback(nsITimer *aTimer, void *aClosure)
 }
 
 
-nsRecyclingAllocator::nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAfter)
+nsRecyclingAllocator::nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAfter, const char *id)
     : mNBucket(nbucket), mRecycleTimer(nsnull), mRecycleAfter(recycleAfter), mTouched(0),
-      mNAllocations(0)
+      mNAllocations(0), mId(id)
 {
     NS_ASSERTION(mNBucket <= NS_MAX_BUCKETS, "Too many buckets. This will affect the allocator's performance.");
     if (mNBucket > NS_MAX_BUCKETS)
@@ -230,8 +230,8 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
     // Warn if we are failing over to malloc and not storing it
     // This says we have a misdesigned memory pool. The intent was
     // once the pool was full, we would never fail over to calloc.
-    printf("nsRecyclingAllocator::malloc %d - FAILOVER 0x%p Memory pool has sizes: ",
-           bytes, ptr);
+    printf("nsRecyclingAllocator(%s) malloc %d - FAILOVER 0x%p Memory pool has sizes: ",
+           mId, bytes, ptr);
     for (i = 0; i < mNBucket; i++)
     {
         printf("%d ", mMemBucket[i].size);
@@ -260,6 +260,15 @@ nsRecyclingAllocator::Free(void *ptr)
         }
     }
 
+#ifdef DEBUG_dp
+    // Warn if we are failing over to free
+    printf("nsRecyclingAllocator(%s) free - FAILOVER 0x%p Memory pool has sizes: ", mId, ptr);
+    for (i = 0; i < mNBucket; i++)
+    {
+        printf("%d ", mMemBucket[i].size);
+    }
+    printf("\n");
+#endif
     // Failover to free
     free(ptr);
 }
@@ -273,7 +282,7 @@ void
 nsRecyclingAllocator::FreeUnusedBuckets()
 {
 #ifdef DEBUG_dp
-    printf("DEBUG: nsRecyclingAllocator::FreeUnusedBuckets: ");
+    printf("DEBUG: nsRecyclingAllocator(%s) FreeUnusedBuckets: ", mId);
 #endif
     if (!mNAllocations)
         return;

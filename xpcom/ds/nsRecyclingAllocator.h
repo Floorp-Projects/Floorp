@@ -98,9 +98,17 @@ class NS_COM nsRecyclingAllocator {
     //             there is nothing to be freed.
     PRInt32 mNAllocations;
 
+    // mId: a string for identifying the user of nsRecyclingAllocator
+    //      User mainly for debug prints
+    const char *mId;
+
  public:
 
-    nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAfter = NS_DEFAULT_RECYCLE_TIMEOUT);
+    // nbucket : number of buckets to hold. Capped at NS_MAX_BUCKET
+    // recycleAfter : Try recycling allocated buckets after this many seconds
+    // id : a string used to identify debug prints. Will not be released.
+    nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAfter = NS_DEFAULT_RECYCLE_TIMEOUT,
+                         const char *id = NULL);
     ~nsRecyclingAllocator();
 
     // Allocation and free routines
