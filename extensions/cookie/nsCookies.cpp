@@ -124,6 +124,7 @@ PRIVATE char* cookie_P3P = nsnull;
 #define P3P_NoConsent        2
 #define P3P_ImplicitConsent  4
 #define P3P_ExplicitConsent  6
+#define P3P_NoIdentInfo      8
 
 #define P3P_Accept     'a'
 #define P3P_Downgrade  'd'
@@ -761,8 +762,8 @@ cookie_isForeign (char * curURL, char * firstURL) {
 }
 
 /*
- * returns P3P_NoPolicy, P3P_NoConsent, P3P_ImplicitConsent, or P3P_ExplicitConsent
- * based on site
+ * returns P3P_NoPolicy, P3P_NoConsent, P3P_ImplicitConsent,
+ * P3P_ExplicitConsent, or P3P_NoIdentInfo based on site
  */
 int
 P3P_SitePolicy(char * curURL) {
@@ -778,8 +779,14 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
   NS_ASSERTION(policy == P3P_NoPolicy ||
                policy == P3P_NoConsent ||
                policy == P3P_ImplicitConsent ||
-               policy == P3P_ExplicitConsent,
+               policy == P3P_ExplicitConsent ||
+               policy == P3P_NoIdentInfo,
                "invalid value for p3p policy");
+  if (policy == P3P_NoIdentInfo) {
+    /* if site does not collect identifiable info, then treat it as if it did and
+     * asked for explicit consent */
+    policy = P3P_ExplicitConsent;
+  }
   if (cookie_P3P && PL_strlen(cookie_P3P) == 8) {
     return (foreign ? cookie_P3P[policy+1] : cookie_P3P[policy]);
   } else {
