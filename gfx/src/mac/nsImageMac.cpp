@@ -27,41 +27,13 @@
 #include <Types.h>
 #include <QuickDraw.h>
 
+#include "nsGfxUtils.h"
+
 #include "nspr.h"
 
 #define IsFlagSet(a,b) (a & b)
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
-
-
-/** ------------------------------------------------------------
- *	Utility class for saving, locking, and restoring pixel state
- */
-
-class StPixelLocker
-{
-public:
-				
-										StPixelLocker(PixMapHandle thePixMap)
-										:	mPixMap(thePixMap)
-										{
-											mPixelState = ::GetPixelsState(mPixMap);
-											::LockPixels(mPixMap);
-										}
-										
-										~StPixelLocker()
-										{
-											::SetPixelsState(mPixMap, mPixelState);
-										}
-
-protected:
-
-
-		PixMapHandle		mPixMap;
-		GWorldFlags			mPixelState;
-
-};
-
 
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
@@ -234,7 +206,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 				break;
 				
 			case nsMaskRequirements_kNeeds8Bit:
-                        {
+        {
 				mAlphaDepth = 8;
 				
 				// make 8-bit grayscale color table
@@ -249,7 +221,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 					
 				::DisposeHandle((Handle)grayRamp);
 				break;
-                        }
+        }
 				
 			default:
 				NS_NOTREACHED("Uknown mask depth");
@@ -291,7 +263,6 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 {
 	PixMapHandle				imagePixMap;
 	Rect								srcRect, dstRect, maskRect;
-	nsDeviceContextMac	*theDevContext;
 
 	if (!mImageGWorld)
 		return NS_ERROR_FAILURE;
@@ -324,31 +295,66 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 	PixMapHandle		destPixels = GetGWorldPixMap(destPort);
 	NS_ASSERTION(destPixels, "No dest pixels!");
 	
-	// XXX printing???
-	
-	if(mAlphaGWorld)
+	// can only do this if we are NOT printing
+	nsDeviceContextMac	*theDevContext;
+	aContext.GetDeviceContext(theDevContext);
+	if (theDevContext->IsPrinter())		// we are printing
 	{
-		PixMapHandle		maskPixMap = GetGWorldPixMap(mAlphaGWorld);
-		StPixelLocker		pixelLocker(maskPixMap);
-		
-		// 1-bit masks?
-		
-#if !TARGET_CARBON
-		// can only do this if we are NOT printing
-		aContext.GetDeviceContext(theDevContext);
-
-		if(!theDevContext->IsPrinter()){
-#endif
-			::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
-#if !TARGET_CARBON
+		if (!mAlphaGWorld)
+		{
+			::CopyBits((BitMap*)*imagePixMap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
 		}
-#endif
-	}
-	else
-	{
-		::CopyBits((BitMap*)*imagePixMap, (BitMap*)*destPixels, &srcRect, &dstRect, ditherCopy, 0L);
-	}
+		else
+		{
+			GWorldPtr	tempGWorld;
+			
+			// if we have a mask, blit the transparent image into a new GWorld which is
+			// just white, and print that. This is marginally better than printing the
+			// image directly, since the transparent pixels come out black.
+			if (AllocateGWorld((**imagePixMap).packSize, nsnull, srcRect, &tempGWorld) == noErr)
+			{
+				PixMapHandle		tempPixMap = GetGWorldPixMap(tempGWorld);
+				if (tempPixMap)
+				{
+					StPixelLocker		tempPixLocker(tempPixMap);			// locks the pixels
+				
+					// copy from the destination into our temp GWorld, to get the background
+					::CopyBits((BitMap*)*destPixels, (BitMap*)*tempPixMap, &dstRect, &srcRect, srcCopy, nsnull);
+					
+					PixMapHandle		maskPixMap = GetGWorldPixMap(mAlphaGWorld);
+					StPixelLocker		maskLocker(maskPixMap);
 
+					if (mAlphaDepth > 1)
+						::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*tempPixMap, &srcRect, &maskRect, &srcRect, srcCopy, nsnull);
+					else
+						::CopyMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*tempPixMap, &srcRect, &maskRect, &srcRect);
+
+					// now copy to the screen
+					::CopyBits((BitMap*)*tempPixMap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
+				}
+				
+				DisposeGWorld(tempGWorld);	// do this after dtor of tempPixLocker!
+			}
+		}
+	}
+	else	// not printing
+	{	
+		if (!mAlphaGWorld)
+		{
+			::CopyBits((BitMap*)*imagePixMap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
+		}
+		else
+		{
+			PixMapHandle		maskPixMap = GetGWorldPixMap(mAlphaGWorld);
+			StPixelLocker		maskLocker(maskPixMap);
+			
+			if (mAlphaDepth > 1)
+				::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
+			else
+				::CopyMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect);
+		}
+	}
+	
 	return NS_OK;
 }
 
@@ -448,19 +454,15 @@ void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 	thePixels = ::GetGWorldPixMap(theGWorld);
 	::GetGWorld(&curPort, &curDev);
 
+	StPixelLocker	pixelLocker(thePixels);
+	
 	// Black the offscreen
-	if (LockPixels(thePixels))
-	{
-		::SetGWorld(theGWorld, nil);
+	::SetGWorld(theGWorld, nil);
+	::BackColor(whiteColor);
 
-		::BackColor(whiteColor);
-
-    Rect portRect;
-    ::GetPortBounds(reinterpret_cast<GrafPtr>(theGWorld), &portRect);
-		::EraseRect(&portRect);
-
-		::UnlockPixels(thePixels);
-	}
+  Rect portRect;
+  ::GetPortBounds(reinterpret_cast<GrafPtr>(theGWorld), &portRect);
+	::EraseRect(&portRect);
 
 	::SetGWorld(curPort, curDev);
 }
