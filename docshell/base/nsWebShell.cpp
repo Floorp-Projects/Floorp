@@ -1093,14 +1093,14 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   Stop();
 
-  rv = mDocLoader->LoadURL(urlSpec,       // URL string
-                           nsnull,         // Command
-                           this,           // Container
-                           aPostData,      // Post Data
-                           nsnull,         // Extra Info...
-                           this,           // Observer
-                           (PRInt32)aType, // reload type
-                           aLocalIP);   // load attributes.
+  rv = mDocLoader->LoadDocument(urlSpec,       // URL string
+                                nsnull,         // Command
+                                this,           // Container
+                                aPostData,      // Post Data
+                                nsnull,         // Extra Info...
+                                this,           // Observer
+                                (PRInt32)aType, // reload type
+                                aLocalIP);   // load attributes.
 
 
   return rv;
@@ -1196,13 +1196,13 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     // Stop any documents that are currently being loaded...
     mDocLoader->Stop();
 
-    rv = mDocLoader->LoadURL(urlSpec,        // URL string
-                             nsnull,         // Command
-                             this,           // Container
-                             nsnull,         // Post Data
-                             nsnull,         // Extra Info...
-                             this,           // Observer
-                             nsReload);      // the reload type
+    rv = mDocLoader->LoadDocument(urlSpec,        // URL string
+                                  nsnull,         // Command
+                                  this,           // Container
+                                  nsnull,         // Post Data
+                                  nsnull,         // Extra Info...
+                                  this,           // Observer
+                                  nsReload);      // the reload type
   }
   return rv;
 }
