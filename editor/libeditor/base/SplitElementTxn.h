@@ -67,6 +67,8 @@ public:
 
   virtual nsresult GetRedoString(nsString **aString);
 
+  virtual nsresult GetNewNode(nsIDOMNode **aNewNode);
+
 protected:
   
   /** the element to operate upon */

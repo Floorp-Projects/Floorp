@@ -23,6 +23,8 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 
+class nsISupportsArray;
+
 
 /**
  * The text editor implementation.<br>
@@ -45,9 +47,9 @@ public:
   virtual ~nsTextEditor();
 
 // Editing Operations
-  virtual nsresult SetTextProperties(nsVoidArray *aPropList);
-  virtual nsresult GetTextProperties(nsVoidArray *aPropList);
-  virtual nsresult RemoveTextProperties(nsVoidArray *aPropList);
+  virtual nsresult SetTextProperties(nsISupportsArray *aPropList);
+  virtual nsresult GetTextProperties(nsISupportsArray *aPropList);
+  virtual nsresult RemoveTextProperties(nsISupportsArray *aPropList);
   virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
   virtual nsresult InsertText(const nsString& aStringToInsert);
   virtual nsresult InsertBreak(PRBool aCtrlKey);
@@ -76,6 +78,15 @@ public:
   virtual nsresult Insert(nsIInputStream *aInputStream);
   virtual nsresult OutputText(nsIOutputStream *aOutputStream);
   virtual nsresult OutputHTML(nsIOutputStream *aOutputStream);
+
+
+protected:
+// Utility Methods
+  virtual nsresult SetTextPropertiesForNode(nsIDOMNode *aNode, 
+                                            nsIDOMNode *aParent,
+                                            PRInt32 aStartOffset,
+                                            PRInt32 aEndOffset,
+                                            nsIAtom *aPropName);
 
 // Data members
 protected:

@@ -183,3 +183,14 @@ nsresult CreateElementTxn::GetRedoString(nsString **aString)
   }
   return NS_OK;
 }
+
+nsresult CreateElementTxn::GetNewNode(nsIDOMNode **aNewNode)
+{
+  if (!aNewNode)
+    return NS_ERROR_NULL_POINTER;
+  if (!mNewNode)
+    return NS_ERROR_NOT_INITIALIZED;
+  *aNewNode = mNewNode;
+  NS_ADDREF(*aNewNode);
+  return NS_OK;
+}

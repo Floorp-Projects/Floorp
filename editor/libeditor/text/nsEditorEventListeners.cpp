@@ -23,8 +23,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
-
-
+#include "nsIEditProperty.h"
+#include "nsISupportsArray.h"
 #include "nsString.h"
 
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -225,36 +225,52 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      // hard-coded split node test:  works on first <P> in the document
-      case nsIDOMEvent::VK_S:
-        /*
+      // hard-coded ChangeTextAttributes test -- italics
+      case nsIDOMEvent::VK_I:
         if (PR_TRUE==ctrlKey)
         {
-          nsAutoString pTag("P");
-          nsCOMPtr<nsIDOMNode> currentNode;
-          nsCOMPtr<nsIDOMElement> element;
-          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, pTag, getter_AddRefs(currentNode))))
-          {
-            nsresult result;
-            SplitElementTxn *txn;
-            if (PR_FALSE==isShift)   // split the element so there are 0 children in the first half
-            {
-              result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)&txn);
-              if (txn)
-                txn->Init(mEditor, currentNode, -1);
-            }
-            else                    // split the element so there are 2 children in the first half
-            {
-              result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)&txn);
-              if (txn)
-               txn->Init(mEditor, currentNode, 1);
-            }
-            if (txn)
-              mEditor->Do(txn);        
-          }
           aProcessed=PR_TRUE;
+          if ((nsITextEditor *)nsnull!=mEditor.get())
+          {
+            nsCOMPtr<nsIEditProperty>prop;
+            nsresult result = NS_NewEditProperty(getter_AddRefs(prop));
+            if ((NS_SUCCEEDED(result)) && prop)
+            {
+              prop->Init(nsIEditProperty::italic, nsnull, PR_TRUE);
+              nsCOMPtr<nsISupportsArray>propList;
+              result = NS_NewISupportsArray(getter_AddRefs(propList));
+              if ((NS_SUCCEEDED(result)) && propList)
+              {
+                propList->AppendElement(prop);
+                mEditor->SetTextProperties(propList);
+              }
+            }
+          }
         }
-        */
+        break;
+
+      // hard-coded ChangeTextAttributes test -- bold
+      case nsIDOMEvent::VK_B:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if ((nsITextEditor *)nsnull!=mEditor.get())
+          {
+            nsCOMPtr<nsIEditProperty>prop;
+            nsresult result = NS_NewEditProperty(getter_AddRefs(prop));
+            if ((NS_SUCCEEDED(result)) && prop)
+            {
+              prop->Init(nsIEditProperty::bold, nsnull, PR_TRUE);
+              nsCOMPtr<nsISupportsArray>propList;
+              result = NS_NewISupportsArray(getter_AddRefs(propList));
+              if ((NS_SUCCEEDED(result)) && propList)
+              {
+                propList->AppendElement(prop);
+                mEditor->SetTextProperties(propList);
+              }
+            }
+          }
+        }
         break;
 
 

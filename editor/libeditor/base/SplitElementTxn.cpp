@@ -127,3 +127,14 @@ nsresult SplitElementTxn::GetRedoString(nsString **aString)
   }
   return NS_OK;
 }
+
+nsresult SplitElementTxn::GetNewNode(nsIDOMNode **aNewNode)
+{
+  if (!aNewNode)
+    return NS_ERROR_NULL_POINTER;
+  if (!mNewLeftNode)
+    return NS_ERROR_NOT_INITIALIZED;
+  *aNewNode = mNewLeftNode;
+  NS_ADDREF(*aNewNode);
+  return NS_OK;
+}

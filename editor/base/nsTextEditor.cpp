@@ -19,13 +19,17 @@
 #include "nsTextEditor.h"
 #include "nsIEditorSupport.h"
 #include "nsEditorEventListeners.h"
+#include "nsIEditProperty.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMRange.h"
 #include "nsIDOMNodeList.h"
 #include "nsEditorCID.h"
+#include "nsISupportsArray.h"
+#include "nsIEnumerator.h"
 
 #include "CreateElementTxn.h"
 
@@ -35,6 +39,7 @@
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIEditPropertyIID,     NS_IEDITPROPERTY_IID);
 
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
 static NS_DEFINE_IID(kIEditorIID,     NS_IEDITOR_IID);
@@ -122,7 +127,84 @@ nsresult nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc,
   return result;
 }
 
-nsresult nsTextEditor::SetTextProperties(nsVoidArray *aPropList)
+// this is a total hack for now.  We don't yet have a way of getting the style properties
+// of the current selection, so we can't do anything useful here except show off a little.
+nsresult nsTextEditor::SetTextProperties(nsISupportsArray *aPropList)
+{
+  if (!aPropList)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  if (mEditor)
+  {
+    nsCOMPtr<nsIDOMSelection>selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
+    {
+      mEditor->BeginTransaction();
+      PRInt32 count = aPropList->Count();
+      PRInt32 i=0;
+      for ( ; i<count; i++)
+      {
+        nsISupports *propAsSupports;
+        propAsSupports = aPropList->ElementAt(i);
+        if (propAsSupports)
+        {
+          nsCOMPtr<nsIEditProperty> prop;
+          result = propAsSupports->QueryInterface(kIEditPropertyIID, 
+                                                  getter_AddRefs(prop));
+          if ((NS_SUCCEEDED(result)) && prop)
+          {
+            nsCOMPtr<nsIAtom>propName;
+            result = prop->GetProperty(getter_AddRefs(propName));
+            if ((NS_SUCCEEDED(result)) && prop)
+            {
+              nsCOMPtr<nsIEnumerator> enumerator;
+              enumerator = do_QueryInterface(selection, &result);
+              if ((NS_SUCCEEDED(result)) && enumerator)
+              {
+                enumerator->First(); 
+                nsISupports *currentItem;
+                result = enumerator->CurrentItem(&currentItem);
+                if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+                {
+                  nsCOMPtr<nsIDOMRange> range(currentItem);
+                  nsCOMPtr<nsIDOMNode>commonParent;
+                  result = range->GetCommonParent(getter_AddRefs(commonParent));
+                  if ((NS_SUCCEEDED(result)) && commonParent)
+                  {
+                    PRInt32 startOffset, endOffset;
+                    range->GetStartOffset(&startOffset);
+                    range->GetEndOffset(&endOffset);
+                    nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
+                    range->GetStartParent(getter_AddRefs(startParent));
+                    range->GetEndParent(getter_AddRefs(endParent));
+                    if (startParent.get()==endParent.get()) {
+                      result = SetTextPropertiesForNode(startParent, commonParent, 
+                                                        startOffset, endOffset,
+                                                        propName);
+                      if (NS_SUCCEEDED(result))
+                      { // set the selection
+                        // don't want to actually do anything with selection, because
+                        // I'm still iterating through it.  Just want to create and remember
+                        // an nsIDOMRange, and later add the range to the selection after clearing it.
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          NS_RELEASE(propAsSupports);
+        }
+      }
+      mEditor->EndTransaction();
+    }
+  }
+  return result;
+}
+
+nsresult nsTextEditor::GetTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -132,17 +214,7 @@ nsresult nsTextEditor::SetTextProperties(nsVoidArray *aPropList)
   return result;
 }
 
-nsresult nsTextEditor::GetTextProperties(nsVoidArray *aPropList)
-{
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-}
-
-nsresult nsTextEditor::RemoveTextProperties(nsVoidArray *aPropList)
+nsresult nsTextEditor::RemoveTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -201,14 +273,26 @@ nsresult nsTextEditor::InsertBreak(PRBool aCtrlKey)
       nsCOMPtr<nsIDOMNode> node;
       PRInt32 offset;
       result = selection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
-      nsCOMPtr<nsIDOMNode> parentNode;
-      result = node->GetParentNode(getter_AddRefs(parentNode));
-      result = mEditor->SplitNode(node, offset);
-      // now get the node's offset in it's parent, and insert the new BR there
-      result = nsIEditorSupport::GetChildOffset(node, parentNode, offset);
-      nsAutoString tag("BR");
-      result = mEditor->CreateNode(tag, parentNode, offset);
-      selection->Collapse(parentNode, offset);
+      if ((NS_SUCCEEDED(result)) && node)
+      {
+        nsCOMPtr<nsIDOMNode> parentNode;
+        nsCOMPtr<nsIDOMNode> newNode;
+        result = node->GetParentNode(getter_AddRefs(parentNode));
+        if ((NS_SUCCEEDED(result)) && parentNode)
+        {
+          result = mEditor->SplitNode(node, offset, getter_AddRefs(newNode));
+          if (NS_SUCCEEDED(result))
+          { // now get the node's offset in it's parent, and insert the new BR there
+            result = nsIEditorSupport::GetChildOffset(node, parentNode, offset);
+            if (NS_SUCCEEDED(result))
+            {
+              nsAutoString tag("BR");
+              result = mEditor->CreateNode(tag, parentNode, offset, getter_AddRefs(newNode));
+              selection->Collapse(parentNode, offset);
+            }
+          }
+        }
+      }
     }
     if (PR_TRUE==beganTransaction) {
       result = mEditor->EndTransaction();
@@ -431,3 +515,42 @@ nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
+nsresult nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode, 
+                                                nsIDOMNode *aParent,
+                                                PRInt32 aStartOffset,
+                                                PRInt32 aEndOffset,
+                                                nsIAtom *aPropName)
+{
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>newTextNode;  // this will be the middle text node
+  result = mEditor->SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
+  if (NS_SUCCEEDED(result))
+  {
+    result = mEditor->SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
+    if (NS_SUCCEEDED(result))
+    {
+      nsAutoString tag;
+      if (nsIEditProperty::bold==aPropName) {
+        tag = "b";
+      }
+      else if (nsIEditProperty::italic==aPropName) {
+        tag = "i";
+      }
+      PRInt32 offsetInParent;
+      result = nsIEditorSupport::GetChildOffset(aNode, aParent, offsetInParent);
+      if (NS_SUCCEEDED(result))
+      {
+        nsCOMPtr<nsIDOMNode>newStyleNode;
+        result = mEditor->CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
+        if (NS_SUCCEEDED(result))
+        {
+          result = mEditor->DeleteNode(newTextNode);
+          if (NS_SUCCEEDED(result)) {
+            result = mEditor->InsertNode(newTextNode, newStyleNode, 0);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
