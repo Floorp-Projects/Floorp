@@ -28,12 +28,10 @@
 #include "nsCOMPtr.h"
 
 #include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
 #include "nsIEventQueueService.h"
+#include "nsIThread.h"
 
 
-
-static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
@@ -144,27 +142,27 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
 
     *aProxyObject = nsnull;
 
+    // post to primordial thread event queue if no queue specified
     if (postQ == nsnull)
     {
-        // Get app shell service.
-        nsresult rv;
-        
-        NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
+        nsresult             rv;
+        nsCOMPtr<nsIThread>  mainIThread;
+        PRThread            *mainThread;
 
-        PRThread *aThread;
-        rv = appShell->GetPrimordialThread(&aThread);
-        
+        // Get the primordial thread
+        rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
+        if ( NS_FAILED( rv ) )
+            return NS_ERROR_UNEXPECTED;
+
+        rv = mainIThread->GetPRThread(&mainThread);
         if ( NS_FAILED( rv ) )
             return NS_ERROR_UNEXPECTED;
 
         NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-        
         if ( NS_FAILED( rv ) )
             return NS_ERROR_UNEXPECTED;
         
-        rv = eventQService->GetThreadEventQueue(aThread, &postQ);
+        rv = eventQService->GetThreadEventQueue(mainThread, &postQ);
         
         if ( NS_FAILED( rv ) )
             return NS_ERROR_UNEXPECTED;

@@ -21,6 +21,7 @@
 //#include <stdio.h>
 
 PRUintn nsThread::kIThreadSelfIndex = 0;
+static nsIThread *gMainThread = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -236,6 +237,28 @@ nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
     NS_ADDREF(thread);
     *result = thread;
     return NS_OK;
+}
+
+NS_COM nsresult
+nsIThread::SetMainThread()
+{
+  // strictly speaking, it could be set twice. but practically speaking,
+  // it's almost certainly an error if it is
+  if (gMainThread != 0)
+    return NS_ERROR_FAILURE;
+  return GetCurrent(&gMainThread);
+}
+
+NS_COM nsresult
+nsIThread::GetMainThread(nsIThread **result)
+{
+  if (gMainThread == 0)
+    return NS_ERROR_FAILURE;
+  if (*result == 0)
+    return NS_ERROR_NULL_POINTER;
+  *result = gMainThread;
+  NS_ADDREF(gMainThread);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

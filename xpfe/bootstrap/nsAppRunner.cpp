@@ -26,6 +26,7 @@
 
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
+#include "nsIThread.h"
 #include "nsIAppShellService.h"
 #include "nsIAppShellComponent.h"
 #include "nsAppShellCIDs.h"
@@ -117,6 +118,7 @@ int main(int argc, char* argv[])
   nsresult rv;
   
   nsICmdLineService *  cmdLineArgs = nsnull;
+  NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
 
   char *  urlstr=nsnull;
   //char *   progname = nsnull;
