@@ -12,9 +12,9 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.3 $ 
-# $Date: 2001/01/06 01:32:03 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/03/19 23:35:13 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
 
@@ -901,8 +901,29 @@ sub parse_mail_body {
     }
 
   } # while
-       
-       
+
+  # We always want to see the very last line of the build, wether or
+  # not the build failed.  So treat the last line like an error and
+  # print the context surronding it.
+
+  my ($lines_context) = min( ($lines_since_error - $Error_Parse::LINES_AFTER_ERROR - 2),
+                             $Error_Parse::LINES_BEFORE_ERROR);
+  my ($context_index) = max($#lastlines - $lines_context, 0);
+  my ($lines_skiped)  = max ( $lines_since_error - 
+                              ($Error_Parse::LINES_BEFORE_ERROR + $Error_Parse::LINES_AFTER_ERROR+1), 
+                              0);
+      
+  print ERROR_PICK $line;
+
+  if ($lines_skiped) {
+    print BRIEF ("\n<i><font size=\"+1\">".
+                 " Skipping $lines_skiped Lines...".
+                 "</font></i>\n\n");
+    
+  }
+  
+  print BRIEF @lastlines[$context_index .. $#lastlines];
+
   my ($last_errline) = ("</pre><p>".
                         "<font size=\"+1\">".
                         HTMLPopUp::Link(
