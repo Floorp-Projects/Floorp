@@ -268,10 +268,8 @@
 
 #ifndef NSCAP_NO_NEW_CASTS
   #define NSCAP_REINTERPRET_CAST(T,x)  reinterpret_cast<T>(x)
-  #define NSCAP_STATIC_CAST(T,x)  static_cast<T>(x)
 #else
   #define NSCAP_REINTERPRET_CAST(T,x)  ((T)(x))
-  #define NSCAP_STATIC_CAST(T,x)  ((T)(x))
 #endif
 
 #ifndef NSCAP_NO_BOOL
@@ -383,7 +381,7 @@ class COM_auto_ptr
 					*/
       	{
       		if ( aRawPtr )
-	      		aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void **,&mRawPtr));
+	      		aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &mRawPtr));
 	      		// ...and |QueryInterface| does the |AddRef| for us
       	}
 
@@ -416,7 +414,7 @@ class COM_auto_ptr
 				{
       		T* rawPtr = 0;
       		if ( rhs )
-      			rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void **,&rawPtr));
+      			rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &rawPtr));
 
 					if ( mIsAwaitingAddRef )
 						mIsAwaitingAddRef = 0;
