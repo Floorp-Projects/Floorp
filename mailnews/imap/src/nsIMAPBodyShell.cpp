@@ -146,7 +146,7 @@ PRBool nsIMAPBodyShell::GetShowAttachmentsInline()
   if (!m_gotAttachmentPref)
   {
     m_showAttachmentsInline = !m_protocolConnection || m_protocolConnection->GetShowAttachmentsInline();
-    m_gotAttachmentPref = TRUE;
+    m_gotAttachmentPref = PR_TRUE;
   }
  
   return m_showAttachmentsInline;
