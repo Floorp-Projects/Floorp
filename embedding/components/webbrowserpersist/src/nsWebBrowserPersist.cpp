@@ -99,6 +99,7 @@ struct DocData
     nsCOMPtr<nsIURI> mDataPath;
     PRPackedBool mDataPathIsRelative;
     nsCString mRelativePathToData;
+    nsCString mCharset;
 };
 
 // Information about a URI
@@ -114,6 +115,7 @@ struct URIData
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mDataPath;
     nsCString mRelativePathToData;
+    nsCString mCharset;
 };
 
 // Information about the output stream
@@ -1405,9 +1407,11 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     doc->GetDocumentURL(getter_AddRefs(mURI));
 
     nsCOMPtr<nsIURI> oldBaseURI = mCurrentBaseURI;
+    nsCAutoString oldCharset(mCurrentCharset);
 
-    // Store the base URI
+    // Store the base URI and the charset
     doc->GetBaseURL(getter_AddRefs(mCurrentBaseURI));
+    doc->GetDocumentCharacterSet(mCurrentCharset);
 
     // Does the caller want to fixup the referenced URIs and save those too?
     if (aDataPath)
@@ -1494,6 +1498,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
 
         DocData *docData = new DocData;
         docData->mBaseURI = mCurrentBaseURI;
+        docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
         docData->mFile = aFile;
         docData->mRelativePathToData = mCurrentRelativePathToData;
@@ -1541,6 +1546,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
                 {
                     EndDownload(NS_ERROR_FAILURE);
                     mCurrentBaseURI = oldBaseURI;
+                    mCurrentCharset = oldCharset;
                     return NS_ERROR_FAILURE;
                 }
                 if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
@@ -1588,6 +1594,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     }
 
     mCurrentBaseURI = oldBaseURI;
+    mCurrentCharset = oldCharset;
 
     return NS_OK;
 }
@@ -1612,6 +1619,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         }
 
         mCurrentBaseURI = docData->mBaseURI;
+        mCurrentCharset = docData->mCharset;
 
         // Save the document, fixing it up with the new URIs as we do
         
@@ -1702,7 +1710,7 @@ void nsWebBrowserPersist::CleanupLocalFiles()
     int pass;
     for (pass = 0; pass < 2; pass++)
     {
-        PRUint32 i;
+        PRInt32 i;
         for (i = 0; i < mCleanupList.Count(); i++)
         {
             CleanupData *cleanupData = (CleanupData *) mCleanupList.ElementAt(i);
@@ -2382,7 +2390,10 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
 
     // Create a URI from the key
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), ((nsCStringKey *) aKey)->GetString());
+    rv = NS_NewURI(getter_AddRefs(uri), 
+                   nsDependentCString(((nsCStringKey *) aKey)->GetString(),
+                                      ((nsCStringKey *) aKey)->GetStringLength()),
+                   data->mCharset.get());
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     // Make a URI to save the data to
@@ -3086,7 +3097,8 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
 {
     // get the current location of the file (absolutized)
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aURI).get(), mCurrentBaseURI);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI, 
+                            mCurrentCharset.get(), mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
@@ -3228,7 +3240,8 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
                       ? mTargetBaseURI : mCurrentBaseURI;
         // Make a new URI to replace the current one
         nsCOMPtr<nsIURI> newURI;
-        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue.get(), relativeURI);
+        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue, 
+                       mCurrentCharset.get(), relativeURI);
         if (NS_SUCCEEDED(rv) && newURI)
         {
             newURI->SetUserPass(NS_LITERAL_CSTRING(""));
@@ -3403,7 +3416,8 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
 
     // Make a URI
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aURI, mCurrentBaseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI), 
+                   mCurrentCharset.get(), mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
@@ -3437,6 +3451,7 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     data->mDataPath = mCurrentDataPath;
     data->mDataPathIsRelative = mCurrentDataPathIsRelative;
     data->mRelativePathToData = mCurrentRelativePathToData;
+    data->mCharset = mCurrentCharset;
 
     if (aNeedsPersisting)
         mCurrentThingsToPersist++;
