@@ -1,0 +1,35 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "xulstubs.idl"
+#include "nsIRDFCompositeDataSource.idl"
+#include "nsIAbCard.idl"
+
+%{C++
+#include "nsIDOMXULElement.h"
+%}
+
+[scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
+interface nsIAddressBook : nsISupports {
+
+	void NewCard();
+/*	void NewCard(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
+				   in nsIAbCard card);*/
+};
+
