@@ -658,11 +658,8 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
 #else
   result = NS_NewURI(&dialogURL, inXULURL );
 #endif // NECKO
-  if (!NS_SUCCEEDED (result) )
-  {
-    appShellService->Release();
+  if ( !NS_SUCCEEDED (result) )
     return result;
-  }
 
   result = appShellService->CreateTopLevelWindow(nsnull, dialogURL,
                               PR_TRUE, PR_TRUE,
