@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLProcessor.cpp,v 1.2 1999/11/15 07:13:08 nisheeth%netscape.com Exp $
+ * $Id: XSLProcessor.cpp,v 1.3 1999/11/15 07:48:36 nisheeth%netscape.com Exp $
  */
 
 #include "XSLProcessor.h"
@@ -34,7 +34,7 @@
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:08 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/15 07:48:36 $
 **/
 
 /**
@@ -48,6 +48,10 @@ const String XSLProcessor::NON_TEXT_TEMPLATE_WARNING =
  * Creates a new XSLProcessor
 **/
 XSLProcessor::XSLProcessor() {
+
+#ifdef MOZILLA
+    NS_INIT_ISUPPORTS();
+#endif
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
@@ -93,6 +97,35 @@ XSLProcessor::~XSLProcessor() {
     //-- currently does nothing, but added for future use
 } //-- ~XSLProcessor
 
+#ifdef MOZILLA
+// Provide a Create method that can be called by a factory constructor:
+NS_METHOD
+XSLProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+  
+    XSLProcessor* xslp = new XSLProcessor();
+    if (xslp == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Note that Create doesn't initialize the instance -- that has to
+    // be done by the caller since the initialization args aren't passed
+    // in here.
+
+    // AddRef before calling QI -- this makes it easier to handle the QI
+    // failure case because we'll always just Release and return
+    NS_ADDREF(xslp);
+    nsresult rv = xslp->QueryInterface(aIID, aResult);
+
+    // This will free it if QI failed:
+    NS_RELEASE(xslp);
+    return rv;
+}
+
+NS_IMPL_ISUPPORTS(XSLProcessor, nsIDocumentTransformer::GetIID());
+#endif
+
 /**
  * Registers the given ErrorObserver with this ProcessorState
 **/
@@ -100,6 +133,7 @@ void XSLProcessor::addErrorObserver(ErrorObserver& errorObserver) {
     errorObservers.add(&errorObserver);
 } //-- addErrorObserver
 
+#ifndef MOZILLA
 XMLPrinter* XSLProcessor::createPrinter(Document& xslDocument, ostream& out) {
 
     //-- check result-ns of stylesheet element
@@ -130,6 +164,7 @@ XMLPrinter* XSLProcessor::createPrinter(Document& xslDocument, ostream& out) {
     else xmlPrinter = new XMLPrinter(*target);
     return xmlPrinter;
 } //-- createPrinter
+#endif
 
 String& XSLProcessor::getAppName() {
     return appName;
@@ -139,6 +174,7 @@ String& XSLProcessor::getAppVersion() {
     return appVersion;
 } //-- getAppVersion
 
+#ifndef MOZILLA
 /**
  * Parses all XML Stylesheet PIs associated with the
  * given XML document. If any stylesheet PIs are found with
@@ -170,6 +206,8 @@ void XSLProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href) 
     }
 
 } //-- getHrefFromStylesheetPI
+
+
 
 /**
  * Parses the contents of data, and returns the type and href psuedo attributes
@@ -316,6 +354,8 @@ Document* XSLProcessor::process(istream& xmlInput, String& documentBase) {
     delete xslDoc;
     return result;
 } //-- process
+#endif  // #ifndef MOZILLA
+
 
 /**
  * Processes the Top level elements for an XSL stylesheet
@@ -485,6 +525,9 @@ Document* XSLProcessor::process
     //-- return result Document
     return result;
 } //-- process
+
+
+#ifndef MOZILLA  
 /**
  * Processes the given XML Document using the given XSL document
  * and prints the results to the given ostream argument
@@ -585,6 +628,7 @@ void XSLProcessor::process
     delete xslDoc;
     delete result;
 } //-- process
+#endif  // #ifndef MOZILLA
 
   //-------------------/
  //- Private Methods -/
@@ -1416,6 +1460,17 @@ void XSLProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 
     }
 } //-- xslCopyOf
+
+#ifdef MOZILLA
+NS_IMETHODIMP
+XSLProcessor::TransformDocument(nsIDOMElement* aSourceDOM, 
+                               nsIDOMElement* aStyleDOM,
+                               nsIDOMDocument* aOutputDoc,
+                               nsIObserver* aObserver)
+{
+  return NS_OK;
+}
+#endif
 
 XSLType::XSLType() {
     this->type = LITERAL;
