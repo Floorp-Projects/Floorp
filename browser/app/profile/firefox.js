@@ -144,6 +144,7 @@ pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.opentabfor.urlbar", true);
+pref("browser.tabs.loadBookmarksInBackground", false);
 
 // Smart Browsing prefs
 pref("browser.related.enabled", true);

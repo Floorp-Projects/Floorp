@@ -577,9 +577,17 @@ var BookmarksCommand = {
       w._content.focus();
       break;
     case "tab":
+      var loadInBackground = false;
+      loadInBackground = PREF.getBoolPref("browser.tabs.loadBookmarksInBackground");
+
+      // open link in new tab
       var tab = browser.addTab(url);
-      browser.selectedTab = tab;
+
+      if (!loadInBackground)
+        browser.selectedTab = tab;
+
       browser.focus();
+
       break;
     }
   },
@@ -596,6 +604,7 @@ var BookmarksCommand = {
       var tabPanels = browser.mPanelContainer.childNodes;
       var tabCount  = tabPanels.length;
       var doReplace = PREF.getBoolPref("browser.tabs.loadFolderAndReplace");
+      var loadInBackground = PREF.getBoolPref("browser.tabs.loadBookmarksInBackground");
       var index0;
       if (doReplace)
         index0 = 0;
@@ -624,9 +633,12 @@ var BookmarksCommand = {
       if (index == index0)
         return;
 
-      // Select the first tab in the group.
-      var tabs = browser.tabContainer.childNodes;
-      browser.selectedTab = tabs[index0];
+      // focus the first tab if prefs say to
+      if (!loadInBackground || doReplace) {
+        // Select the first tab in the group.
+        var tabs = browser.mTabContainer.childNodes;
+        browser.selectedTab = tabs[index0];
+      }
 
       // Close any remaining open tabs that are left over.
       // (Always skipped when we append tabs)
