@@ -86,6 +86,27 @@ nsTextEditRules::GetFlags(PRUint32 *aFlags)
 NS_IMETHODIMP
 nsTextEditRules::SetFlags(PRUint32 aFlags)
 {
+  if (mFlags == aFlags) return NS_OK;
+  
+  // XXX - this won't work if body element already has
+  // a style attribute on it, don't know why.
+  // SetFlags() is really meant to only be called once
+  // and at editor init time.  
+  if (aFlags & TEXT_EDITOR_FLAG_PLAINTEXT)
+  {
+    if (!(mFlags & TEXT_EDITOR_FLAG_PLAINTEXT))
+    {
+      // we are converting TO a plaintext editor
+      // put a "white-space: pre" style on the body
+	  nsCOMPtr<nsIDOMElement> bodyElement;
+	  nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+	  if (NS_SUCCEEDED(res) && bodyElement)
+	  {
+	    // not going through the editor to do this.
+	    bodyElement->SetAttribute("style", "white-space: pre");
+	  }
+    }
+  }
   mFlags = aFlags;
   return NS_OK;
 }
@@ -98,16 +119,6 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
 
   *aCancel = PR_FALSE;
 
-  // no matter what we are doing, sanity check the selection and force it
-  // to be inside the PRE element
-  
-//  XXX - don't know the right way to do this test:
-//  if ( this is the kind of editor that has a mandatory PRE tag )
-//  {
-//    nsresult res = PinSelectionInPRE(aSelection);
-//    if (NS_FAILED(res)) return res;
-//  }
-  
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
     
@@ -934,104 +945,6 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   }
   return result;
 }
-
-
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-
-nsresult
-nsTextEditRules::PinSelectionInPRE(nsIDOMSelection *aSelection)
-{
-  if (!aSelection) 
-    return NS_ERROR_NULL_POINTER;
-    
-  nsCOMPtr<nsIDOMElement> preElement = mEditor->FindPreElement();
-  if (!preElement)
-    return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMNode> preNode = do_QueryInterface(preElement);
-  
-  nsCOMPtr<nsIDOMRange> preRange;
-  nsresult res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     nsIDOMRange::GetIID(),
-                                     getter_AddRefs(preRange));
-  if (NS_FAILED(res)) return res;
-  res = preRange->SelectNodeContents(preNode);
-  if (NS_FAILED(res)) return res;
-  
-  PRInt32 len;
-  nsCOMPtr<nsIDOMRange> selectionRange;
-  nsCOMPtr<nsIDOMRange> pinRange;
-
-  res = preRange->GetEndOffset(&len);
-  if (NS_FAILED(res)) return res;
-
-  // there should only be one selection range in text docs
-  res = aSelection->GetRangeAt(0, getter_AddRefs(selectionRange));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->Clone(getter_AddRefs(pinRange));
-  if (NS_FAILED(res)) return res;
-
-  PRInt32 order;
-  PRBool needToPin = PR_FALSE;
-  
-  res = preRange->CompareEndPoints(nsIDOMRange::END_TO_START, selectionRange, &order);
-  if (order > 0)
-  {
-    // start of range is after end of pre node; pin to end
-    res = pinRange->SetStart(preNode, len);
-    if (NS_FAILED(res)) return res;
-    needToPin = PR_TRUE;
-  }
-  res = preRange->CompareEndPoints(nsIDOMRange::START_TO_END, selectionRange, &order);
-  if (order < 0)
-  {
-    // end of range is before start of pre node; pin to start
-    res = pinRange->SetEnd(preNode, 0);
-    if (NS_FAILED(res)) return res;
-    needToPin = PR_TRUE;
-  }
-  res = preRange->CompareEndPoints(nsIDOMRange::START_TO_START, selectionRange, &order);
-  if (order < 0)
-  {
-    // start of range is before start of pre node; pin to start
-    res = pinRange->SetStart(preNode, 0);
-    if (NS_FAILED(res)) return res;
-    needToPin = PR_TRUE;
-  }
-  res = preRange->CompareEndPoints(nsIDOMRange::END_TO_END, selectionRange, &order);
-  if (order > 0)
-  {
-    // end of range is after end of pre node; pin to end
-    res = pinRange->SetEnd(preNode, len);
-    if (NS_FAILED(res)) return res;
-    needToPin = PR_TRUE;
-  }
-  
-  if (needToPin)
-  {
-    nsCOMPtr<nsIDOMNode> startNode;
-    nsCOMPtr<nsIDOMNode> endNode;
-    PRInt32 startOffset, endOffset;
-    res = pinRange->GetStartParent(getter_AddRefs(startNode));
-    if (NS_FAILED(res)) return res;
-    res = pinRange->GetStartOffset(&startOffset);
-    if (NS_FAILED(res)) return res;
-    res = pinRange->GetEndParent(getter_AddRefs(endNode));
-    if (NS_FAILED(res)) return res;
-    res = pinRange->GetEndOffset(&endOffset);
-    if (NS_FAILED(res)) return res;
-    res = aSelection->Collapse(startNode,startOffset);
-    if (NS_FAILED(res)) return res;
-    res = aSelection->Extend(endNode,endOffset);
-    if (NS_FAILED(res)) return res;
-  }
-  
-  return NS_OK;
-}
-
-
-
-
-
 
 
 
