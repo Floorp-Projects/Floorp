@@ -115,7 +115,12 @@ nsSSLStatus::~nsSSLStatus()
 }
 
 
-char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
+#ifdef NSS_3_4
+char* PR_CALLBACK
+#else
+char*
+#endif
+PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsresult rv = NS_OK;
   PRUnichar *password = nsnull;
   PRBool value = PR_FALSE;
