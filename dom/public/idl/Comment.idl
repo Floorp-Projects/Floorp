@@ -1,4 +1,0 @@
-      interface Comment : Node {
-        attribute wstring        data;
-      };
-
