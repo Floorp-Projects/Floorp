@@ -579,7 +579,7 @@ void nsRenderingContextGTK::UpdateGC()
   mGC = gcCache->GetGC(mSurface->GetDrawable(),
                        &values,
                        valuesMask,
-                       nsnull /*rgn*/);
+                       rgn);
 
   if (mDashes)
     ::XSetDashes(GDK_DISPLAY(), GDK_GC_XGC(mGC),
