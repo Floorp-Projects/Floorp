@@ -67,7 +67,7 @@ NS_NewPositionedInlineFrame(nsIFrame** aNewFrame)
 NS_IMETHODIMP
 nsPositionedInlineFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mAbsoluteContainer.DestroyFrames(aPresContext);
+  mAbsoluteContainer.DestroyFrames(this, aPresContext);
   return nsInlineFrame::Destroy(aPresContext);
 }
 
@@ -79,7 +79,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult  rv;
 
   if (nsLayoutAtoms::absoluteList == aListName) {
-    rv = mAbsoluteContainer.SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
   } else {
     rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
@@ -151,7 +151,7 @@ nsPositionedInlineFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) 
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::absoluteList) {
-    return mAbsoluteContainer.FirstChild(aListName, aFirstChild);
+    return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
 
   return nsInlineFrame::FirstChild(aListName, aFirstChild);
@@ -179,7 +179,7 @@ nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
     // Give the absolute positioning code a chance to handle it
     PRBool  handled;
     
-    mAbsoluteContainer.IncrementalReflow(aPresContext, aReflowState, handled);
+    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState, handled);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
@@ -200,7 +200,7 @@ nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed
   if (NS_SUCCEEDED(rv)) {
-    rv = mAbsoluteContainer.Reflow(aPresContext, aReflowState);
+    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState);
   }
 
   return rv;

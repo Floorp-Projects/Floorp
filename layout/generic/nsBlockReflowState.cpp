@@ -3843,11 +3843,6 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
     mFloaters.AppendFrames(nsnull, aFrameList);
     return NS_OK;
   }
-  else if (nsLayoutAtoms::absoluteList == aListName) {
-    // XXX temporary until area frame is updated
-    return nsFrame::AppendFrames(aPresContext, aPresShell, aListName,
-                                 aFrameList);
-  }
   else if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -3906,11 +3901,6 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
     // BuildFloaterList'ing still
     mFloaters.AppendFrames(nsnull, aFrameList);
     return NS_OK;
-  }
-  else if (nsLayoutAtoms::absoluteList == aListName) {
-    // XXX temporary until area frame and floater code is updated
-    return nsFrame::InsertFrames(aPresContext, aPresShell, aListName,
-                                 aPrevFrame, aFrameList);
   }
   else if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;
@@ -4269,11 +4259,6 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
 
     // We will reflow *after* removing the placeholder (which is done 2nd)
     return NS_OK;
-  }
-  else if (nsLayoutAtoms::absoluteList == aListName) {
-    // XXX temporary until area frame code is updated
-    return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName,
-                                aOldFrame);
   }
   else if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;

@@ -27,43 +27,71 @@ class nsIFrame;
 class nsIPresContext;
 
 /**
- * This class contains the logic for being an absolutely containing block.
+ * This class contains the logic for being an absolute containing block.
  *
  * There is no principal child list, just a named child list which contains
  * the absolutely positioned frames
+ *
+ * All functions include as the first argument the frame that is delegating
+ * the request
  *
  * @see nsLayoutAtoms::absoluteList
  */
 class nsAbsoluteContainingBlock
 {
 public:
-  nsresult FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  nsresult FirstChild(const nsIFrame* aDelegatingFrame,
+                      nsIAtom*        aListName,
+                      nsIFrame**      aFirstChild) const;
   
-  nsresult SetInitialChildList(nsIPresContext& aPresContext,
+  nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
+                               nsIPresContext& aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
+  nsresult AppendFrames(nsIFrame*       aDelegatingFrame,
+                        nsIPresContext& aPresContext,
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aFrameList);
+  nsresult InsertFrames(nsIFrame*       aDelegatingFrame,
+                        nsIPresContext& aPresContext,
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aPrevFrame,
+                        nsIFrame*       aFrameList);
+  nsresult RemoveFrame(nsIFrame*       aDelegatingFrame,
+                       nsIPresContext& aPresContext,
+                       nsIPresShell&   aPresShell,
+                       nsIAtom*        aListName,
+                       nsIFrame*       aOldFrame);
   
   // Called by the delegating frame after it has done its reflow first. This
   // function will reflow any absolutely positioned child frames that need to
   // be reflowed, e.g., because the absolutely positioned child frame has
   // 'auto' for an offset, or a percentage based width or height
-  nsresult Reflow(nsIPresContext&          aPresContext,
+  nsresult Reflow(nsIFrame*                aDelegatingFrame,
+                  nsIPresContext&          aPresContext,
                   const nsHTMLReflowState& aReflowState);
 
   // Called only for a reflow reason of eReflowReason_Incremental. The
   // aWasHandled return value indicates whether the reflow command was
   // handled (i.e., the reflow command involved an absolutely positioned
   // child element), or whether the caller should handle it
-  nsresult IncrementalReflow(nsIPresContext&          aPresContext,
+  nsresult IncrementalReflow(nsIFrame*                aDelegatingFrame,
+                             nsIPresContext&          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              PRBool&                  aWasHandled);
 
-  void DestroyFrames(nsIPresContext& aPresContext);
+  void DestroyFrames(nsIFrame*       aDelegatingFrame,
+                     nsIPresContext& aPresContext);
 
-  nsresult GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
+  nsresult GetPositionedInfo(const nsIFrame* aDelegatingFrame,
+                             nscoord&        aXMost,
+                             nscoord&        aYMost) const;
 
 protected:
-  nsresult ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
+  nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
+                               nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsIFrame*                aKidFrame,
                                PRBool                   aInitialReflow,
