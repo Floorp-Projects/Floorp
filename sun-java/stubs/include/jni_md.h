@@ -81,24 +81,13 @@
 /* DLL Entry modifiers... */
 #if defined(XP_OS2)
 #  ifdef XP_OS2_VACPP
-#    define JNI_PUBLIC_API(ResultType)          ResultType _System
-#    define JNI_PUBLIC_VAR(VarType)        VarType
-#     define JNICALL                        _Optlink
+#     define JNI_PUBLIC_API(ResultType)      ResultType _System
+#     define JNI_PUBLIC_VAR(VarType)         VarType
+#     define JNICALL                         _Optlink
 #     define JNIEXPORT
 #  else
-#    define JNI_PUBLIC_API(ResultType)          ResultType
-#    define JNI_PUBLIC_VAR(VarType)        VarType
-#     define JNICALL
-#     define JNIEXPORT
-#  endif
-#  ifdef XP_OS2_VACPP
-#	  define JNI_PUBLIC_API(ResultType)	    ResultType _System
-#	  define JNI_PUBLIC_VAR(VarType)        VarType
-#     define JNICALL
-#     define JNIEXPORT
-#  else
-#	  define JNI_PUBLIC_API(ResultType)	    ResultType
-#	  define JNI_PUBLIC_VAR(VarType)        VarType
+#     define JNI_PUBLIC_API(ResultType)	   ResultType
+#     define JNI_PUBLIC_VAR(VarType)         VarType
 #     define JNICALL
 #     define JNIEXPORT
 #  endif
