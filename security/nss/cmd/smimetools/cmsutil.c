@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.46 2003/11/25 23:26:39 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.47 2003/12/06 06:31:08 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -87,6 +87,7 @@ DigestFile(PLArenaPool *poolp, SECItem ***digests, SECItem *input,
            SECAlgorithmID **algids)
 {
     NSSCMSDigestContext *digcx;
+    SECStatus rv;
 
     digcx = NSS_CMSDigestContext_StartMultiple(algids);
     if (digcx == NULL)
@@ -94,7 +95,8 @@ DigestFile(PLArenaPool *poolp, SECItem ***digests, SECItem *input,
 
     NSS_CMSDigestContext_Update(digcx, input->data, input->len);
 
-    return NSS_CMSDigestContext_FinishMultiple(digcx, poolp, digests);
+    rv = NSS_CMSDigestContext_FinishMultiple(digcx, poolp, digests);
+    return rv;
 }
 
 
@@ -109,6 +111,7 @@ Usage(char *progName)
 "  -c content   use this detached content\n"
 "  -n           suppress output of content\n"
 "  -h num       display num levels of CMS message info as email headers\n"
+"  -k           keep decoded encryption certs in perm cert db\n"
 " -E            create a CMS enveloped data message\n"
 "  -r id,...    create envelope for these recipients,\n"
 "               where id can be a certificate nickname or email address\n"
@@ -161,6 +164,7 @@ struct decodeOptionsStr {
     PRBool suppressContent;
     NSSCMSGetDecryptKeyCallback dkcb;
     PK11SymKey *bulkkey;
+    PRBool      keepCerts;
 };
 
 struct signOptionsStr {
@@ -282,7 +286,7 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 	    if (NSS_CMSSignedData_ImportCerts(sigd, 
 	                                   decodeOptions->options->certHandle, 
 	                                   decodeOptions->options->certUsage, 
-	                                   PR_FALSE) 
+	                                   decodeOptions->keepCerts) 
 	          != SECSuccess) {
 		SECU_PrintError(progName, "cert import failed");
 		goto loser;
@@ -293,13 +297,11 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 	    if (decodeOptions->headerLevel >= 0)
 		fprintf(out, "nsigners=%d; ", nsigners);
 	    if (nsigners == 0) {
-		/* must be a cert transport message */
+		/* Might be a cert transport message
+		** or might be an invalid message, such as a QA test message
+		** or a message from an attacker.
+		*/
 		SECStatus rv;
-		/* XXX workaround for bug #54014 */
-		NSS_CMSSignedData_ImportCerts(sigd, 
-                                            decodeOptions->options->certHandle, 
-		                            decodeOptions->options->certUsage, 
-		                            PR_TRUE);
 		rv = NSS_CMSSignedData_VerifyCertsOnly(sigd, 
 		                            decodeOptions->options->certHandle, 
 		                            decodeOptions->options->certUsage);
@@ -1082,6 +1084,13 @@ main(int argc, char **argv)
     PRFileDesc *contentFile = NULL;
     PRBool      batch = PR_FALSE;
 
+#ifdef NISCC_TESTING
+    const char *ev = PR_GetEnv("NSS_DISABLE_ARENA_FREE_LIST");
+    PORT_Assert(ev); 
+    ev = PR_GetEnv("NSS_STRICT_SHUTDOWN");
+    PORT_Assert(ev); 
+#endif 
+
     progName = strrchr(argv[0], '/');
     if (!progName)
        progName = strrchr(argv[0], '\\');
@@ -1095,6 +1104,7 @@ main(int argc, char **argv)
     decodeOptions.content.len  = 0;
     decodeOptions.suppressContent = PR_FALSE;
     decodeOptions.headerLevel = -1;
+    decodeOptions.keepCerts = PR_FALSE;
     options.certUsage = certUsageEmailSigner;
     options.password = NULL;
     signOptions.nickname = NULL;
@@ -1115,7 +1125,7 @@ main(int argc, char **argv)
      * Parse command line arguments
      */
     optstate = PL_CreateOptState(argc, argv, 
-				 "CDEGH:N:OPSTY:bc:d:e:h:i:no:p:r:s:u:v");
+				 "CDEGH:N:OPSTY:bc:d:e:h:i:kno:p:r:s:u:v");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	case 'C':
@@ -1282,6 +1292,17 @@ main(int argc, char **argv)
 			progName, optstate->value);
 		exit(1);
 	    }
+	    break;
+
+	case 'k':
+	    if (mode != DECODE) {
+		fprintf(stderr, 
+		        "%s: option -k only supported with option -D.\n", 
+		        progName);
+		Usage(progName);
+		exit(1);
+	    }
+	    decodeOptions.keepCerts = PR_TRUE;
 	    break;
 
 	case 'n':
