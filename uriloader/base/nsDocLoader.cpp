@@ -470,17 +470,14 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDocumentLoader interface
-    NS_IMETHOD LoadURL(const nsString& aURLSpec, 
-                       const char *aCommand,
-                       nsIContentViewerContainer* aContainer,
-                       nsIPostData* aPostData = nsnull,
-                       nsISupports* aExtraInfo = nsnull,
-                       nsIStreamObserver* anObserver = nsnull,
-                       PRInt32 type = 0,
-                       const PRUint32 aLocalIP = 0);
-
-    NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                       nsIStreamListener* aListener);
+    NS_IMETHOD LoadDocument(const nsString& aURLSpec, 
+                            const char *aCommand,
+                            nsIContentViewerContainer* aContainer,
+                            nsIPostData* aPostData = nsnull,
+                            nsISupports* aExtraInfo = nsnull,
+                            nsIStreamObserver* anObserver = nsnull,
+                            PRInt32 type = 0,
+                            const PRUint32 aLocalIP = 0);
 
     NS_IMETHOD Stop(void);
 
@@ -523,13 +520,15 @@ public:
     nsIDocumentLoaderFactory* m_DocFactory;
 
 protected:
-    nsISupportsArray* m_LoadingDocsList;
+    nsISupportsArray*   m_LoadingDocsList;
 
-    nsVoidArray       mChildGroupList;
-    nsVoidArray       mObservers;
-    nsILoadAttribs*   m_LoadAttrib;
+    nsVoidArray         mChildGroupList;
+    nsVoidArray         mDocObservers;
+    nsILoadAttribs*     m_LoadAttrib;
+    nsIStreamObserver*  mStreamObserver;
 
-    nsDocLoaderImpl*  mParent;
+    nsDocLoaderImpl*    mParent;
+    PRInt32             mLoadingURLs;
 };
 
 
@@ -544,6 +543,8 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 #endif /* DEBUG || FORCE_PR_LOG */
 
     mParent = nsnull;
+    mStreamObserver = nsnull;
+    mLoadingURLs = 0;
 
     NS_NewISupportsArray(&m_LoadingDocsList);
     NS_NewLoadAttribs(&m_LoadAttrib);
@@ -568,6 +569,7 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   NS_IF_RELEASE(m_LoadingDocsList);
   NS_IF_RELEASE(m_DocFactory);
   NS_IF_RELEASE(m_LoadAttrib);
+  NS_IF_RELEASE(mStreamObserver);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader - DocLoader [%p] deleted.\n", this));
@@ -643,85 +645,60 @@ nsDocLoaderImpl::SetDocumentFactory(nsIDocumentLoaderFactory* aFactory)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocLoaderImpl::LoadURL(const nsString& aURLSpec, 
-                         const char* aCommand,
-                         nsIContentViewerContainer* aContainer,
-                         nsIPostData* aPostData,
-                         nsISupports* aExtraInfo,
-                         nsIStreamObserver* anObserver,
-                         PRInt32 type,
-                         const PRUint32 aLocalIP)
-{
-    nsresult rv;
-    nsDocumentBindInfo* loader = nsnull;
-
-    /* Check for initial error conditions... */
-    if (nsnull == aContainer) {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
-
-    NS_NEWXPCOM(loader, nsDocumentBindInfo);
-    if (nsnull == loader) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-    }
-    loader->Init(this,           // DocLoader
-                 aCommand,       // Command
-                 aContainer,     // Viewer Container
-                 aExtraInfo,     // Extra Info
-                 anObserver);    // Observer
-
-    /* The DocumentBindInfo reference is only held by the Array... */
-    m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
-
-    // If we've got special loading instructions, mind them.
-    if ( (type == 2) || (type == 3) ) {
-        // type 2 and 3 correspond to proxy bypas 
-        m_LoadAttrib->SetBypassProxy(PR_TRUE);
-    }
-    if ( aLocalIP ) {
-        m_LoadAttrib->SetLocalIP(aLocalIP);
-    }
-
-    rv = loader->Bind(aURLSpec, aPostData, nsnull, type);
-
-done:
-    return rv;
-}
 
 NS_IMETHODIMP
-nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
-                         nsIStreamListener* aListener)
+nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec, 
+                              const char* aCommand,
+                              nsIContentViewerContainer* aContainer,
+                              nsIPostData* aPostData,
+                              nsISupports* aExtraInfo,
+                              nsIStreamObserver* anObserver,
+                              PRInt32 type,
+                              const PRUint32 aLocalIP)
 {
-    nsresult rv;
-    nsDocumentBindInfo* loader = nsnull;
+  nsresult rv;
+  nsDocumentBindInfo* loader = nsnull;
 
-    /* Check for initial error conditions... */
-    if (nsnull == aListener) {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
+  /* Check for initial error conditions... */
+  if (nsnull == aContainer) {
+      rv = NS_ERROR_NULL_POINTER;
+      goto done;
+  }
 
-    NS_NEWXPCOM(loader, nsDocumentBindInfo);
-    if (nsnull == loader) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-    }
-    loader->Init(this,           // DocLoader
-                 nsnull,         // Command
-                 nsnull,         // Viewer Container
-                 nsnull,         // Extra Info
-                 nsnull);        // Observer
+  NS_NEWXPCOM(loader, nsDocumentBindInfo);
+  if (nsnull == loader) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+  }
+  loader->Init(this,           // DocLoader
+               aCommand,       // Command
+               aContainer,     // Viewer Container
+               aExtraInfo,     // Extra Info
+               anObserver);    // Observer
 
-    /* The DocumentBindInfo reference is only held by the Array... */
-    m_LoadingDocsList->AppendElement(((nsISupports*)(nsIStreamObserver*)loader));
+  /* The DocumentBindInfo reference is only held by the Array... */
+  m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
+  mLoadingURLs += 1;
 
-    rv = loader->Bind(aURLSpec, nsnull, aListener);
+  // If we've got special loading instructions, mind them.
+  if ( (type == 2) || (type == 3) ) {
+      // type 2 and 3 correspond to proxy bypas 
+      m_LoadAttrib->SetBypassProxy(PR_TRUE);
+  }
+  if ( aLocalIP ) {
+      m_LoadAttrib->SetLocalIP(aLocalIP);
+  }
+
+  NS_IF_RELEASE(mStreamObserver);
+  mStreamObserver = anObserver;
+  NS_IF_ADDREF(mStreamObserver);
+
+  rv = loader->Bind(aURLSpec, aPostData, nsnull, type);
+
 done:
-    return rv;
+  return rv;
 }
+
 
 NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
@@ -736,6 +713,7 @@ nsDocLoaderImpl::Stop(void)
    * the StreamListener and the DocumentBindInfo object will be deleted...
    */
   m_LoadingDocsList->Clear();
+  mLoadingURLs = 0;
 
   /*
    * Now Stop() all documents being loaded by child DocumentLoaders...
@@ -752,7 +730,7 @@ nsDocLoaderImpl::IsBusy(PRBool& aResult)
   aResult = PR_FALSE;
 
   /* If this document loader is busy? */
-  if (0 != m_LoadingDocsList->Count()) {
+  if (0 != mLoadingURLs) {
     aResult = PR_TRUE;
   } 
   /* Otherwise, check its child document loaders... */
@@ -774,8 +752,8 @@ NS_IMETHODIMP
 nsDocLoaderImpl::AddObserver(nsIDocumentLoaderObserver* aObserver)
 {
   // Make sure the observer isn't already in the list
-  if (mObservers.IndexOf(aObserver) == -1) {
-    mObservers.AppendElement(aObserver);
+  if (mDocObservers.IndexOf(aObserver) == -1) {
+    mDocObservers.AppendElement(aObserver);
   }
   return NS_OK;
 }
@@ -783,7 +761,7 @@ nsDocLoaderImpl::AddObserver(nsIDocumentLoaderObserver* aObserver)
 NS_IMETHODIMP
 nsDocLoaderImpl::RemoveObserver(nsIDocumentLoaderObserver* aObserver)
 {
-  if (PR_TRUE == mObservers.RemoveElement(aObserver)) {
+  if (PR_TRUE == mDocObservers.RemoveElement(aObserver)) {
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -825,14 +803,15 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto done;
   }
-  loader->Init(this,           // DocLoader
-               nsnull,         // Command
-               nsnull,         // Viewer Container
-               nsnull,         // Extra Info
-               nsnull);        // Observer
+  loader->Init(this,              // DocLoader
+               nsnull,            // Command
+               nsnull,            // Viewer Container
+               nsnull,            // Extra Info
+               mStreamObserver);  // Observer
 
   /* The DocumentBindInfo reference is only held by the Array... */
   m_LoadingDocsList->AppendElement(((nsISupports*)(nsIStreamObserver*)loader));
+  mLoadingURLs += 1;
 
   rv = loader->Bind(aUrl, aConsumer);
 done:
@@ -897,18 +876,19 @@ void nsDocLoaderImpl::LoadURLComplete(nsISupports* aBindInfo)
   PRBool bIsBusy;
 
   rv = m_LoadingDocsList->RemoveElement(aBindInfo);
+  mLoadingURLs -= 1;
 
   IsBusy(bIsBusy);
 
   if (! bIsBusy) {
-    PRInt32 count = mObservers.Count();
+    PRInt32 count = mDocObservers.Count();
     PRInt32 index;
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
 
     for (index = 0; index < count; index++) {
-      nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mObservers.ElementAt(index);
+      nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
       observer->OnConnectionsComplete();
     }
   }
