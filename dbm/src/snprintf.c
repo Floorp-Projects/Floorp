@@ -68,3 +68,6 @@ vsnprintf(str, n, fmt, ap)
 }
 
 #endif /* HAVE_SNPRINTF */
+
+/* Some compilers don't like an empty source file. */
+static int dummy;
