@@ -75,7 +75,7 @@ protected:
 class nsSelect : public nsInput 
 {
 public:
-  typedef nsInput super;
+  typedef nsInput nsSelectSuper;
   nsSelect (nsIAtom* aTag, nsIFormManager* aFormMan);
 
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
@@ -112,7 +112,7 @@ protected:
 class nsOption : public nsInput 
 {
 public:
-  typedef nsInput super;
+  typedef nsInput nsOptionSuper;
 
   nsOption (nsIAtom* aTag);
 
@@ -366,9 +366,7 @@ void nsSelect::SetAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::multiple) {
     mMultiple = PR_TRUE;
   }
-  else {
-    super::SetAttribute(aAttribute, aValue);
-  }
+  nsSelectSuper::SetAttribute(aAttribute, aValue);
 }
 
 nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
@@ -379,7 +377,7 @@ nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mMultiple, aResult, eHTMLUnit_Empty);
   }
   else {
-    return super::GetAttribute(aAttribute, aResult);
+    return nsSelectSuper::GetAttribute(aAttribute, aResult);
   }
 }
 
@@ -531,7 +529,7 @@ void nsOption::SetAttribute(nsIAtom* aAttribute,
     mSelected = PR_TRUE;
   }
   else {
-    super::SetAttribute(aAttribute, aValue);
+    nsOptionSuper::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -543,7 +541,7 @@ nsContentAttr nsOption::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mSelected, aResult, eHTMLUnit_Empty);
   }
   else {
-    return super::GetAttribute(aAttribute, aResult);
+    return nsOptionSuper::GetAttribute(aAttribute, aResult);
   }
 }
 
@@ -583,7 +581,7 @@ nsOption::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 
   nsString valAttr;
-  nsContentAttr stat = super::GetAttribute(nsHTMLAtoms::value, valAttr);
+  nsContentAttr stat = nsOptionSuper::GetAttribute(nsHTMLAtoms::value, valAttr);
   if (eContentAttr_HasValue == stat) {
     aValues[0] = valAttr;
     aNumValues = 1;

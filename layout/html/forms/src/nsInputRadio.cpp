@@ -32,6 +32,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIFormManager.h"
 #include "nsIView.h"
+#include "nsIStyleContext.h"
 
 class nsInputRadioFrame : public nsInputFrame {
 public:
@@ -44,8 +45,6 @@ public:
   virtual const nsIID& GetIID();
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual PRInt32 GetPadding() const;
-  NS_IMETHOD  SetRect(const nsRect& aRect);
 
 protected:
 
@@ -64,20 +63,6 @@ nsInputRadioFrame::nsInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFram
 
 nsInputRadioFrame::~nsInputRadioFrame()
 {
-}
-
-
-PRInt32 nsInputRadioFrame::GetPadding() const
-{
-  return GetDefaultPadding();
-}
-
-NS_METHOD nsInputRadioFrame::SetRect(const nsRect& aRect)
-{
-  PRInt32 padding = GetPadding();
-  MoveTo(aRect.x + padding, aRect.y);
-  SizeTo(aRect.width - (2 * padding), aRect.height);
-  return NS_OK;
 }
 
 const nsIID&
@@ -103,10 +88,7 @@ nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t = aPresContext->GetPixelsToTwips();
   aDesiredWidgetSize.width  = (int)(12 * p2t);
   aDesiredWidgetSize.height = (int)(12 * p2t);
-  PRInt32 padding = GetPadding();
-  // XXX Why is padding being added? GetDesiredSize() as defined by nsLeafFrame
-  // should return the size of the content area only...
-  aDesiredLayoutSize.width  = aDesiredWidgetSize.width  + (2 * padding);
+  aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
@@ -139,6 +121,34 @@ nsInputRadio::nsInputRadio(nsIAtom* aTag, nsIFormManager* aManager)
 
 nsInputRadio::~nsInputRadio()
 {
+}
+
+void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext, 
+                                     nsIPresContext* aPresContext)
+{
+  float p2t = aPresContext->GetPixelsToTwips();
+  nscoord pad = (int)(3 * p2t + 0.5);
+
+  // add left and right padding around the radio button via css
+  nsStyleSpacing* spacing = (nsStyleSpacing*) aContext->GetData(eStyleStruct_Spacing);
+  if (eStyleUnit_Null == spacing->mMargin.GetLeftUnit()) {
+    nsStyleCoord left(pad);
+    spacing->mMargin.SetLeft(left);
+  }
+  if (eStyleUnit_Null == spacing->mMargin.GetRightUnit()) {
+    nsStyleCoord right((int)(5 * p2t + 0.5));
+    spacing->mMargin.SetRight(right);
+  }
+  // add bottom padding if backward mode
+  // XXX why isn't this working?
+  nsIFormManager* formMan = GetFormManager();
+  if (formMan && (kBackwardMode == formMan->GetMode())) {
+    if (eStyleUnit_Null == spacing->mMargin.GetBottomUnit()) {
+      nsStyleCoord bottom(pad);
+      spacing->mMargin.SetBottom(bottom);
+    }
+    nsInput::MapAttributesInto(aContext, aPresContext);
+  }
 }
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -213,9 +223,7 @@ void nsInputRadio::SetAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::checked) {
     mChecked = PR_TRUE;
   }
-  else {
-    nsInputRadioSuper::SetAttribute(aAttribute, aValue);
-  }
+  nsInputRadioSuper::SetAttribute(aAttribute, aValue);
 }
 
 nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
