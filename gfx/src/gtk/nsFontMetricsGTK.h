@@ -57,6 +57,65 @@
 
 #undef FONT_HAS_GLYPH
 #define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
+#define WEIGHT_INDEX(weight) (((weight) / 100) - 1)
+
+#define NS_FONT_DEBUG_LOAD_FONT   0x01
+#define NS_FONT_DEBUG_CALL_TRACE  0x02
+#define NS_FONT_DEBUG_FIND_FONT   0x04
+#define NS_FONT_DEBUG_SIZE_FONT   0x08
+#define NS_FONT_DEBUG_SCALED_FONT       0x10
+#define NS_FONT_DEBUG_BANNED_FONT       0x20
+#define NS_FONT_DEBUG_FONT_CATALOG      0x100
+#define NS_FONT_DEBUG_FONT_SCAN         0x200
+#define NS_FONT_DEBUG_FREETYPE_FONT     0x400
+#define NS_FONT_DEBUG_FREETYPE_GRAPHICS 0x800
+
+#undef NS_FONT_DEBUG
+#define NS_FONT_DEBUG 1
+#ifdef NS_FONT_DEBUG
+extern PRUint32 gFontDebug;
+
+# define DEBUG_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, 0xFFFF)
+
+# define DEBUG_PRINTF_MACRO(x, type) \
+            PR_BEGIN_MACRO \
+              if (gFontDebug & (type)) { \
+                printf x ; \
+                printf(", %s %d\n", __FILE__, __LINE__); \
+              } \
+            PR_END_MACRO
+#else
+# define DEBUG_PRINTF_MACRO(x, type) \
+            PR_BEGIN_MACRO \
+            PR_END_MACRO
+#endif
+
+#define FIND_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_FIND_FONT)
+
+#define SIZE_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_SIZE_FONT)
+
+#define SCALED_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_SCALED_FONT)
+
+#define BANNED_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_BANNED_FONT)
+
+#define FONT_CATALOG_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_FONT_CATALOG)
+
+#define FONT_SCAN_PRINTF(x) \
+            PR_BEGIN_MACRO \
+              if (gFontDebug & NS_FONT_DEBUG_FONT_SCAN) { \
+                printf x ; \
+                fflush(stdout); \
+              } \
+            PR_END_MACRO
+
+#define FREETYPE_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_FREETYPE_FONT)
 
 typedef struct nsFontCharSetInfo nsFontCharSetInfo;
 
@@ -68,10 +127,89 @@ struct nsFontCharSet;
 struct nsFontFamily;
 struct nsFontNode;
 struct nsFontStretch;
+struct nsFontWeight;
 class nsXFont;
 
 class nsFontGTKUserDefined;
 class nsFontMetricsGTK;
+class nsFreeTypeFace;
+
+struct nsFontStretch
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void SortSizes(void);
+
+  nsFontGTK**        mSizes;
+  PRUint16           mSizesAlloc;
+  PRUint16           mSizesCount;
+
+  char*              mScalable;
+  PRBool             mOutlineScaled;
+  nsVoidArray        mScaledFonts;
+  nsFreeTypeFace *   mFreeTypeFaceID;
+};
+
+struct nsFontStyle
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void FillWeightHoles(void);
+
+  nsFontWeight* mWeights[9];
+};
+
+struct nsFontWeight
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void FillStretchHoles(void);
+
+  nsFontStretch* mStretches[9];
+};
+
+struct nsFontNode
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void FillStyleHoles(void);
+
+  nsCAutoString      mName;
+  nsFontCharSetInfo* mCharSetInfo;
+  nsFontStyle*       mStyles[3];
+  PRUint8            mHolesFilled;
+  PRUint8            mDummy;
+};
+
+class nsFontNodeArray : public nsAutoVoidArray
+{
+public:
+  nsFontNodeArray() {};
+
+  nsFontNode* GetElement(PRInt32 aIndex)
+  {
+    return (nsFontNode*) ElementAt(aIndex);
+  };
+};
+
+/*
+ * Font Language Groups
+ *
+ * These Font Language Groups (FLG) indicate other related
+ * encodings to look at when searching for glyphs
+ *
+ */
+typedef struct nsFontLangGroup {
+  const char *mFontLangGroupName;
+  nsIAtom*    mFontLangGroupAtom;
+} nsFontLangGroup;
+
+struct nsFontCharSetMap
+{
+  const char*        mName;
+  nsFontLangGroup*   mFontLangGroup;
+  nsFontCharSetInfo* mInfo;
+};
 
 class nsFontGTK
 {
@@ -85,11 +223,12 @@ public:
   PRBool IsEmptyFont(XFontStruct*);
 
   inline int SupportsChar(PRUnichar aChar)
-    { return mFont && CCMAP_HAS_CHAR(mCCMap, aChar); };
+    { return mCCMap && CCMAP_HAS_CHAR(mCCMap, aChar); };
 
   virtual GdkFont* GetGDKFont(void);
   virtual nsXFont* GetXFont(void);
   virtual PRBool   GetXFontIs10646(void);
+  virtual PRBool   IsFreeTypeFont(void);
   virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual gint DrawString(nsRenderingContextGTK* aContext,
                           nsDrawingSurfaceGTK* aSurface, nscoord aX,
@@ -245,5 +384,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFONTENUMERATOR
 };
+
+class nsHashKey;
+PRBool FreeNode(nsHashKey* aKey, void* aData, void* aClosure);
+nsFontCharSetInfo *GetCharSetInfo(const char *aCharSetName);
+void CharSetNameToCodeRangeBits(const char*, PRUint32*, PRUint32*);
+nsFontCharSetMap *GetCharSetMap(const char *aCharSetName);
+
+
+
 
 #endif
