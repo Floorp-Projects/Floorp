@@ -35,6 +35,7 @@ Bugs:
 - 1-minute cycles sometimes don't show up (possibly related to above)
 - .mozconfig can run arbitrary commands, maybe make it only possible to do ac_add_options from server-specified .mozconfig
 - popups should show up closer to where they do in current tbox--it looks nicer
+- popups don't work in IE
 
 Would be nice:
 - * midcheckin detection
@@ -52,7 +53,10 @@ Would be nice:
   pre-configuration of branch and .mozconfig)
 - show status as text, not number ("upgraded client" instead of 302, for example)
 - allow builds to be ftp'd up
-- allow tree to be rsync'd instead of cvs'd
+- * allow tree to be rsync'd instead of cvs'd
+- normalize patch roots so that a patch made in content/html/content will still apply
+- * allow people to register for notification when a build (or builds) fail
+- * "auto-checkin hook" when someone checks in, they are added to the hook and notified when a build they checked in to fails
 
 Test:
 - --notrust and friends
