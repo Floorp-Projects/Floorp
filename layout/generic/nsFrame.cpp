@@ -4571,14 +4571,25 @@ void DR_State::InitFrameTypeTable()
 {  
   AddFrameTypeInfo(nsLayoutAtoms::areaFrame,             "area",      "area");
   AddFrameTypeInfo(nsLayoutAtoms::blockFrame,            "block",     "block");
+  AddFrameTypeInfo(nsLayoutAtoms::boxFrame,              "box",       "box");
   AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
   AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
+  AddFrameTypeInfo(nsLayoutAtoms::comboBoxFrame,         "combo",     "comboBox");
+  AddFrameTypeInfo(nsLayoutAtoms::fieldSetFrame,         "field",     "fieldset");
+  AddFrameTypeInfo(nsLayoutAtoms::fileControlFrame,      "file",      "fileControl");
+  AddFrameTypeInfo(nsLayoutAtoms::formControlFrame,      "form",      "form"); 
   AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
+  AddFrameTypeInfo(nsLayoutAtoms::gfxCheckBoxFrame,      "check",     "gfxCheckBox");
+  AddFrameTypeInfo(nsLayoutAtoms::gfxRadioControlFrame,  "radio",     "gfxRadioControl");
   AddFrameTypeInfo(nsLayoutAtoms::hrFrame,               "hr",        "hr");
   AddFrameTypeInfo(nsLayoutAtoms::htmlFrameInnerFrame,   "frameI",    "htmlFrameInner");
   AddFrameTypeInfo(nsLayoutAtoms::htmlFrameOuterFrame,   "frameO",    "htmlFrameOuter");
   AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");
+  AddFrameTypeInfo(nsLayoutAtoms::imageControlFrame,     "imgC",      "imageControl");
   AddFrameTypeInfo(nsLayoutAtoms::inlineFrame,           "inline",    "inline");
+  AddFrameTypeInfo(nsLayoutAtoms::isIndexFrame,          "index",     "isIndex");
+  AddFrameTypeInfo(nsLayoutAtoms::labelFrame,            "label",     "label");
+  AddFrameTypeInfo(nsLayoutAtoms::legendFrame,           "legend",    "legend");
   AddFrameTypeInfo(nsLayoutAtoms::letterFrame,           "letter",    "letter");
   AddFrameTypeInfo(nsLayoutAtoms::lineFrame,             "line",      "line");
   AddFrameTypeInfo(nsLayoutAtoms::listControlFrame,      "select",    "select");
@@ -4599,6 +4610,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsLayoutAtoms::tableRowFrame,         "row",       "tableRow");
   AddFrameTypeInfo(nsLayoutAtoms::textInputFrame,        "textCtl",   "textInput");
   AddFrameTypeInfo(nsLayoutAtoms::textFrame,             "text",      "text");
+  AddFrameTypeInfo(nsLayoutAtoms::textInputFrame,        "textInp",   "textInput");
   AddFrameTypeInfo(nsLayoutAtoms::viewportFrame,         "VP",        "viewport");
   AddFrameTypeInfo(nsnull,                               "unknown",   "unknown");
 }
