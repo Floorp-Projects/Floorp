@@ -65,7 +65,7 @@ class D
 } 
 
 
-var objA1:Object = {};
+var objA1:Object = new A;
 var objA2:Object = new A;
 var objA3:Object = (new A);
 
