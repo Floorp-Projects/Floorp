@@ -1102,6 +1102,30 @@ Rights Reserved.
            oncommand="MsgViewNormalHeaders();"/>
         </menupopup>
       </menu>
+      <menu id="viewBodyMenu"
+       accesskey="&bodyMenu.accesskey;"
+       label="&bodyMenu.label;">
+        <menupopup onpopupshowing="InitViewBodyMenu()">
+          <menuitem id="bodyAllowHTML"
+           type="radio"
+           name="bodyPlaintextVsHTMLPref"
+           label="&bodyAllowHTML.label;"
+           accesskey="&bodyAllowHTML.accesskey;"
+           oncommand="MsgBodyAllowHTML()"/>
+          <menuitem id="bodySanitized"
+           type="radio"
+           name="bodyPlaintextVsHTMLPref"
+           label="&bodySanitized.label;"
+           accesskey="&bodySanitized.accesskey;"
+           oncommand="MsgBodySanitized()"/>
+          <menuitem id="bodyAsPlaintext"
+           type="radio"
+           name="bodyPlaintextVsHTMLPref"
+           label="&bodyAsPlaintext.label;"
+           accesskey="&bodyAsPlaintext.accesskey;"
+           oncommand="MsgBodyAsPlaintext()"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" key="key_stop" disabled="true" command="cmd_stop"/>
       <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
