@@ -243,11 +243,19 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		goto ErrorExit;
 	}
 #endif
-	{		
+	{
+		static IOCompletionUPP	sCompletionUPP = NULL;
+		
+		/* allocate the callback Universal Procedure Pointer (UPP). This actually allocates
+		   a 32 byte Ptr in the heap, so only do this once
+		*/
+		if (!sCompletionUPP)
+			sCompletionUPP = NewIOCompletionProc((ProcPtr)&AsyncIOCompletion);
+			
 		/* grab the thread so we know which one to post to at completion */
 		pbAsync.thread	= me;
 
-		pbAsync.pb.ioParam.ioCompletion	= NewIOCompletionProc((ProcPtr)&AsyncIOCompletion);
+		pbAsync.pb.ioParam.ioCompletion	= sCompletionUPP;
 		pbAsync.pb.ioParam.ioResult		= noErr;
 		pbAsync.pb.ioParam.ioRefNum		= refNum;
 		pbAsync.pb.ioParam.ioBuffer		= buf;
