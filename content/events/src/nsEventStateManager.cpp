@@ -4040,7 +4040,7 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     // we don't want to fire a blur.  Blurs should only be fired
     // in response to clicks or tabbing.
 
-    SendFocusBlur(mPresContext, aContent, PR_TRUE);
+    NS_RELEASE(mCurrentFocus);
   }
 
   return NS_OK;
@@ -4370,8 +4370,12 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
   // Focus an element in the current document, but don't switch document/window focus!
 
   if (gLastFocusedDocument == mDocument) { // If we're already in this document, use normal focus method
-    if (mCurrentFocus != aContent)
-      aContent->SetFocus(mPresContext);
+    if (mCurrentFocus != aContent) {
+      if (aContent) 
+        aContent->SetFocus(mPresContext);
+      else
+        SendFocusBlur(mPresContext, nsnull, PR_TRUE);
+    }
     return;
   }
   // The last focus wasn't in this document, so we may be getting our postion from the selection
@@ -4393,8 +4397,9 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
   mDocument->BeginUpdate();
   if (!lastFocusInThisDoc)
     lastFocusInThisDoc = mCurrentFocus;
-  mDocument->ContentStatesChanged(lastFocusInThisDoc, mCurrentFocus,
-                                  NS_EVENT_STATE_FOCUS);
+  if (mCurrentFocus)
+    mDocument->ContentStatesChanged(lastFocusInThisDoc, mCurrentFocus,
+                                    NS_EVENT_STATE_FOCUS);
   mDocument->EndUpdate();
   FlushPendingEvents(mPresContext);
 
@@ -4421,7 +4426,8 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
       focusController->SetFocusedElement(focusedElement);
   }
 
-  TabIndexFrom(mCurrentFocus, &mCurrentTabIndex);
+  if (mCurrentFocus)
+    TabIndexFrom(mCurrentFocus, &mCurrentTabIndex);
 }
 
 NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus)
@@ -4535,15 +4541,8 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
   }
   while (selectionNode && selectionNode != endSelectionNode);
 
-  if (aCanFocusDoc) {
-    nsCOMPtr<nsIDocument> doc;
-    selectionContent->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIContent> rootContent;
-      doc->GetRootContent(getter_AddRefs(rootContent));
-      FocusElementButNotDocument(rootContent);
-    }
-  }
+  if (aCanFocusDoc)
+    FocusElementButNotDocument(nsnull);
 
   return NS_OK; // no errors, but caret not inside focusable element other than doc itself
 }
