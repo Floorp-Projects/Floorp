@@ -104,7 +104,7 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   //XXX this works on win32 only for now. For all the other platforms call Abort
 #if defined(_WIN32)
   ::DebugBreak();
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
   fprintf(stderr, "\07");  fflush(stderr);
 #else
   Abort(aFile, aLine);

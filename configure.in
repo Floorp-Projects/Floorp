@@ -1248,9 +1248,10 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Compiler Options)
 
-MOZ_ARG_DISABLE_BOOL(asserts,
-[  --disable-asserts       Disable asserts during debugging],
-  UNIX_SKIP_ASSERTS=1)
+UNIX_CRASH_ON_ASSERT= 
+MOZ_ARG_ENABLE_BOOL(crash-on-assert,
+[  --enable-crash-on-assert       Make NS_ASSERTION crash on Unix],
+  UNIX_CRASH_ON_ASSERT=1)
 
 dnl ========================================================
 dnl =
@@ -1540,7 +1541,7 @@ dnl AC_SUBST(MOZ_LDAP)
 AC_SUBST(MOZ_EDITOR)
 AC_SUBST(MOZ_BRPROF)
 
-AC_SUBST(UNIX_SKIP_ASSERTS)
+AC_SUBST(UNIX_CRASH_ON_ASSERT)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
 AC_SUBST(NO_SHARED_LIB)
 AC_SUBST(NO_STATIC_LIB)
