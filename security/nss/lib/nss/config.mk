@@ -53,15 +53,13 @@ DLLFLAGS += -DEF:nss.def
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(DIST)/lib/freebl.lib
+CRYPTODIR=../freebl
 ifdef MOZILLA_SECURITY_BUILD
 	CRYPTOLIB=$(DIST)/lib/crypto.lib
-endif
-ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB+=$(DIST)/lib/bsafe$(BSAFEVER).lib
-	CRYPTOLIB+=$(DIST)/lib/freebl.lib
+	CRYPTODIR=../crypto
 endif
 
-EXTRA_LIBS += \
+SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/pkcs7.lib \
 	$(DIST)/lib/certhi.lib \
 	$(DIST)/lib/cryptohi.lib \
@@ -70,7 +68,28 @@ EXTRA_LIBS += \
 	$(DIST)/lib/softoken.lib \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/secutil.lib \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../pkcs7 \
+	../certhigh \
+	../cryptohi \
+	../pk11wrap \
+	../certdb \
+	../softoken \
+	$(CRYPTODIR) \
+	../util \
+	$(NULL)
+
+EXTRA_LIBS += \
 	$(DIST)/lib/dbm.lib \
+	$(NULL)
+
+ifdef MOZILLA_BSAFE_BUILD
+	EXTRA_LIBS+=$(DIST)/lib/bsafe$(BSAFEVER).lib
+endif
+
+EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \

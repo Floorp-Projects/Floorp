@@ -52,8 +52,15 @@ IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
 DLLFLAGS += -DEF:smime.def
 
-EXTRA_LIBS += \
+SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/pkcs12.lib \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../pkcs12 \
+	$(NULL)
+
+EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/nss3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
