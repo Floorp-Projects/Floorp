@@ -1501,12 +1501,18 @@ nsIMAPBodyShellCache::~nsIMAPBodyShellCache()
 // least recently used one will be in slot 0.
 PRBool nsIMAPBodyShellCache::EjectEntry()
 {
+	char UIDBuffer[30];
+
 	if (m_shellList->Count() < 1)
 		return FALSE;
 
+
+
 	nsIMAPBodyShell *removedShell = (nsIMAPBodyShell *) (m_shellList->ElementAt(0));
+
+	removedShell->GetUID().ToCString(UIDBuffer, sizeof(UIDBuffer));
 	m_shellList->RemoveElementAt(0);
-	nsCStringKey hashKey (removedShell->GetUID().GetBuffer());
+	nsCStringKey hashKey (UIDBuffer);
 	m_shellHash->Remove(&hashKey);
 	delete removedShell;
 
@@ -1515,6 +1521,7 @@ PRBool nsIMAPBodyShellCache::EjectEntry()
 
 PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 {
+	char UIDBuffer[30];
 	// If it's already in the cache, then just return.
 	// This has the side-effect of re-ordering the LRU list
 	// to put this at the top, which is good, because it's what we want.
@@ -1526,11 +1533,13 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// First, for safety sake, remove any entry with the given UID,
 	// just in case we have a collision between two messages in different
 	// folders with the same UID.
-	nsCStringKey hashKey1(shell->GetUID().GetBuffer());
+	shell->GetUID().ToCString(UIDBuffer, sizeof(UIDBuffer));
+	nsCStringKey hashKey1(UIDBuffer);
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey1);
 	if (foundShell)
 	{
-		nsCStringKey hashKey(foundShell->GetUID().GetBuffer());
+		foundShell->GetUID().ToCString(UIDBuffer, sizeof(UIDBuffer));
+		nsCStringKey hashKey(UIDBuffer);
 		m_shellHash->Remove(&hashKey);
 		m_shellList->RemoveElement(foundShell);
 	}
@@ -1538,7 +1547,8 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// Add the new one to the cache
 	m_shellList->AppendElement(shell);
 	
-	nsCStringKey hashKey2 (shell->GetUID().GetBuffer());
+	shell->GetUID().ToCString(UIDBuffer, sizeof(UIDBuffer));
+	nsCStringKey hashKey2 (UIDBuffer);
 	m_shellHash->Put(&hashKey2, shell);
 	shell->SetIsCached(TRUE);
 
@@ -1555,10 +1565,10 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 
 nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsString2 &UID, const char *mailboxName)
 {
-	if (!UID)
-		return NULL;
+	char UIDBuffer[30];
+	UID.ToCString(UIDBuffer, sizeof(UIDBuffer));
 
-	nsCStringKey hashKey(UID.GetBuffer());
+	nsCStringKey hashKey(UIDBuffer);
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey);
 
 	if (!foundShell)

@@ -384,7 +384,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 		if (fZeroLengthMessageUidString.Length())
 		{
 			// "Deleting zero length message");
-			fServerConnection.Store(fZeroLengthMessageUidString.GetBuffer(), "+Flags (\\Deleted)", PR_TRUE);
+			fServerConnection.Store(fZeroLengthMessageUidString, "+Flags (\\Deleted)", PR_TRUE);
 			if (LastCommandSuccessful())
 				fServerConnection.Expunge();
 

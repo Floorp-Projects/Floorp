@@ -163,7 +163,7 @@ public:
                                      aConvertToUtf7Imap);
 
 	// imap commands issued by the parser
-	void Store(const char * aMessageList, const char * aMessageData, PRBool
+	void Store(nsString2 &aMessageList, const char * aMessageData, PRBool
                aIdsAreUid);
 	void Expunge();
 

@@ -1042,27 +1042,32 @@ nsImapProtocol::FetchMessage(nsString2 &messageIds,
     
     if (protocolString)
     {
+		char *cCommandStr = commandString.ToNewCString();
+		char *cMessageIdsStr = messageIds.ToNewCString();
+
 		if ((whatToFetch == kMIMEPart) ||
 			(whatToFetch == kMIMEHeader))
 		{
 			PR_snprintf(protocolString,                                      // string to create
 					protocolStringSize,                                      // max size
-					commandString.GetBuffer(),                                   // format string
+					cCommandStr,                                   // format string
 					commandTag,                          // command tag
-					messageIds.GetBuffer(),
+					cMessageIdsStr,
 					part);
 		}
 		else
 		{
 			PR_snprintf(protocolString,                                      // string to create
 					protocolStringSize,                                      // max size
-					commandString.GetBuffer(),                                   // format string
+					cCommandStr,                                   // format string
 					commandTag,                          // command tag
-					messageIds.GetBuffer());
+					cMessageIdsStr);
 		}
 	            
 	    int                 ioStatus = SendData(protocolString);
 	    
+		delete [] cCommandStr;
+		delete [] cMessageIdsStr;
 
 		ParseIMAPandCheckForNewMail(protocolString);
 	    PR_Free(protocolString);
@@ -1379,12 +1384,14 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 			GetCurrentUrl()->CreateListOfMessageIdsString(&undoIds);
 	    	if (undoIds && *undoIds)
 	    	{
+				nsString2 undoIds2(undoIds + 1);
+
 	    		// if this string started with a '-', then this is an undo of a delete
 	    		// if its a '+' its a redo
 	    		if (*undoIds == '-')
-					Store(undoIds+1, "-FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
+					Store(undoIds2, "-FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
 	    		else  if (*undoIds == '+')
-					Store(undoIds+1, "+FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
+					Store(undoIds2, "+FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
 				else 
 					NS_ASSERTION(FALSE, "bogus undo Id's");
 			}
@@ -1572,6 +1579,7 @@ void nsImapProtocol::HeaderFetchCompleted()
 {
     if (m_imapMiscellaneous)
         m_imapMiscellaneous->HeaderFetchCompleted(this);
+	WaitForFEEventCompletion();
 	// need to block until this finishes - Jeff, how does that work?
 }
 
@@ -1922,7 +1930,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString, PRBool
 
 	// imap commands issued by the parser
 void
-nsImapProtocol::Store(const char * aMessageList, const char * aMessageData,
+nsImapProtocol::Store(nsString2 &aMessageList, const char * aMessageData,
                       PRBool aIdsAreUid)
 {
 }
