@@ -138,11 +138,11 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
   hostSession->SetNamespaceFromPrefForHost(aKey, personalNamespace,
                                            kPersonalNamespace);
 
-  if (publicNamespace && *publicNamespace)
+  if (publicNamespace && PL_strlen(publicNamespace))
       hostSession->SetNamespaceFromPrefForHost(aKey, publicNamespace,
                                                kPublicNamespace);
 
-  if (otherUsersNamespace && *otherUsersNamespace)
+  if (otherUsersNamespace && PL_strlen(otherUsersNamespace))
       hostSession->SetNamespaceFromPrefForHost(aKey, otherUsersNamespace,
                                                kOtherUsersNamespace);
   return rv;
