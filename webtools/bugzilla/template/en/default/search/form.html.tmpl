@@ -304,6 +304,25 @@ function doOnSelectProduct(selectmode) {
       </td>
     </tr>
   [% END %]
+
+  [%# Deadline %]
+  [% IF UserInGroup(Param("timetrackinggroup")) %]
+    <tr>
+      <th align="right">
+        Dead<u>l</u>ine:
+      </th>
+      <td>
+        from&nbsp;
+        <input name="deadlinefrom" size="10" maxlength="10" accesskey="l">&nbsp;
+        to&nbsp;
+        <input name="deadlineto" size="10" maxlength="10">
+      </td>
+      <td>
+        <small>(YYYY-MM-DD)</small>
+      </td>
+    </tr>
+  [% END %]
+  
 </table>
 
 <hr>

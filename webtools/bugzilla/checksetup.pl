@@ -1774,6 +1774,7 @@ $table{bugs} =
     cclist_accessible tinyint not null default 1,
     estimated_time decimal(5,2) not null default 0,
     remaining_time decimal(5,2) not null default 0,
+    deadline datetime,
     alias varchar(20),
     
     index (assigned_to),
@@ -2287,6 +2288,7 @@ AddFDef("cclist_accessible", "CC Accessible", 0);
 AddFDef("bug_group", "Group", 0);
 AddFDef("estimated_time", "Estimated Hours", 1);
 AddFDef("remaining_time", "Remaining Hours", 0);
+AddFDef("deadline", "Deadline", 1);
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
@@ -3354,6 +3356,7 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
 AddField("longdescs", "work_time", "decimal(5,2) not null default 0");
 AddField("bugs", "estimated_time", "decimal(5,2) not null default 0");
 AddField("bugs", "remaining_time", "decimal(5,2) not null default 0");
+AddField("bugs", "deadline", "datetime");
 
 # 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
 # 2002-05-13 preed@sigkill.com - bug 129446 patch backported to the 

@@ -380,6 +380,9 @@
         <th align="center" bgcolor="#cccccc">
           Gain
         </th>
+        <th align="center" bgcolor="#cccccc">
+          Deadline
+        </th>
       </tr>
       <tr>
         <td align="center">
@@ -410,6 +413,10 @@
         <td align="center">
           [% PROCESS formattimeunit time_unit=bug.estimated_time - (bug.actual_time + bug.remaining_time) %]
         </td>
+         <td align="center">
+           <input name="deadline" value="[% bug.deadline %]"
+                  size="10" maxlength="10">
+        </td>        
       </tr>
     </table>
   [% END %]

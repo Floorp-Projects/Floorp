@@ -358,7 +358,8 @@ sub GetBugActivity {
         # check if the user should see this field's activity
         if ($fieldname eq 'remaining_time' ||
             $fieldname eq 'estimated_time' ||
-            $fieldname eq 'work_time') {
+            $fieldname eq 'work_time' ||
+            $fieldname eq 'deadline') {
 
             if (!UserInGroup(Param('timetrackinggroup'))) {
                 $activity_visible = 0;
@@ -391,6 +392,11 @@ sub GetBugActivity {
                 $operation = {};
                 $changes = [];
             }  
+            
+            if ($fieldname eq 'deadline') {
+                $removed = time2str("%Y-%m-%d", str2time($removed));
+                $added = time2str("%Y-%m-%d", str2time($added));
+            }
         
             $operation->{'who'} = $who;
             $operation->{'when'} = $when;            

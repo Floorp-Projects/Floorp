@@ -62,7 +62,7 @@ sub fields {
     }
 
     if (Param('timetrackinggroup')) {
-        push @fields, qw(estimated_time remaining_time actual_time);
+        push @fields, qw(estimated_time remaining_time actual_time deadline);
     }
 
     return @fields;
@@ -147,7 +147,7 @@ sub initBug  {
       DATE_FORMAT(creation_ts,'%Y.%m.%d %H:%i'),
       delta_ts, COALESCE(SUM(votes.vote_count), 0),
       reporter_accessible, cclist_accessible,
-      estimated_time, remaining_time
+      estimated_time, remaining_time, DATE_FORMAT(deadline,'%Y-%m-%d')
     from bugs left join votes using(bug_id),
       classifications, products, components
     where bugs.bug_id = $bug_id
@@ -170,7 +170,7 @@ sub initBug  {
                        "target_milestone", "qa_contact", "status_whiteboard", 
                        "creation_ts", "delta_ts", "votes",
                        "reporter_accessible", "cclist_accessible",
-                       "estimated_time", "remaining_time")
+                       "estimated_time", "remaining_time", "deadline")
       {
         $fields{$field} = shift @row;
         if (defined $fields{$field}) {

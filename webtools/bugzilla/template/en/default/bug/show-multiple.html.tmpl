@@ -170,6 +170,8 @@
           [% PROCESS formattimeunit
                      time_unit=bug.estimated_time - (bug.actual_time + bug.remaining_time) %]
           &nbsp;
+          <b>Deadline:</b>&nbsp;
+          [% bug.deadline %]
         </td>
       </tr>
     [% END %]

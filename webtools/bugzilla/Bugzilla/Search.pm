@@ -301,6 +301,27 @@ sub init {
         }
     }
 
+    my $sql_deadlinefrom;
+    my $sql_deadlineto;
+    if (Bugzilla->user->in_group(Param('timetrackinggroup'))){
+      my $deadlinefrom;
+      my $deadlineto;
+            
+      if ($params->param('deadlinefrom')){
+        $deadlinefrom = $params->param('deadlinefrom');
+        Bugzilla::Util::ValidateDate($deadlinefrom, 'deadlinefrom');
+        $sql_deadlinefrom = &::SqlQuote($deadlinefrom);
+        push(@wherepart, "bugs.deadline >= $sql_deadlinefrom");
+      }
+      
+      if ($params->param('deadlineto')){
+        $deadlineto = $params->param('deadlineto');
+        Bugzilla::Util::ValidateDate($deadlineto, 'deadlineto');
+        $sql_deadlineto = &::SqlQuote($deadlineto);
+        push(@wherepart, "bugs.deadline <= $sql_deadlineto");
+      }
+    }  
+
     foreach my $f ("short_desc", "long_desc", "bug_file_loc",
                    "status_whiteboard") {
         if (defined $params->param($f)) {
@@ -545,6 +566,10 @@ sub init {
          "^content," => sub {
              ThrowUserError("search_content_without_matches");
          },
+         "^deadline,(?:lessthan|greaterthan|equals|notequals),(-|\\+)?(\\d+)([dDwWmMyY])\$" => sub {
+             $v = SqlifyDate($v);
+             $q = &::SqlQuote($v);
+        },
          "^commenter,(?:equals|anyexact),(%\\w+%)" => sub {
              my $match = pronoun($1, $user);
              my $chartseq = $chartid;
@@ -1281,9 +1306,12 @@ sub SqlifyDate {
         my ($sec, $min, $hour, $mday, $month, $year, $wday) = localtime(time());
         return sprintf("%4d-%02d-%02d 00:00:00", $year+1900, $month+1, $mday);
     }
-    if ($str =~ /^-?(\d+)([dDwWmMyY])$/) {   # relative date
-        my ($amount, $unit, $date) = ($1, lc $2, time);
+
+
+    if ($str =~ /^(-|\+)?(\d+)([dDwWmMyY])$/) {   # relative date
+        my ($sign, $amount, $unit, $date) = ($1, $2, lc $3, time);
         my ($sec, $min, $hour, $mday, $month, $year, $wday)  = localtime($date);
+        if ($sign eq '+') { $amount = -$amount; }
         if ($unit eq 'w') {                  # convert weeks to days
             $amount = 7*$amount + $wday;
             $unit = 'd';

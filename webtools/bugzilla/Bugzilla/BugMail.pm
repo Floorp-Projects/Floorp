@@ -184,6 +184,8 @@ sub ProcessOneBug($) {
     }
     $values{'estimated_time'} = format_time_decimal($values{'estimated_time'});
 
+    $values{'deadline'} = time2str("%Y-%m-%d", str2time($values{'deadline'}));
+
     my @dependslist;
     SendSQL("SELECT dependson FROM dependencies WHERE 
              blocked = $id ORDER BY dependson");
@@ -243,6 +245,10 @@ sub ProcessOneBug($) {
                      WHERE attach_id = $attachid");
             $diffpart->{'isprivate'} = FetchOneColumn();
         }
+        if( $fieldname eq 'deadline' ) {
+            $old = time2str("%Y-%m-%d", str2time($old));
+            $new = time2str("%Y-%m-%d", str2time($new));
+        }  
         $difftext = FormatTriple($what, $old, $new);
         $diffpart->{'header'} = $diffheader;
         $diffpart->{'fieldname'} = $fieldname;
@@ -741,8 +747,8 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
           next;
         }
         # Only send estimated_time if it is enabled and the user is in the group
-        if ($f ne 'estimated_time' ||
-            $user->groups->{Param('timetrackinggroup')}) {
+        if (($f ne 'estimated_time' && $f ne 'deadline') ||
+             $user->groups->{Param('timetrackinggroup')}) {
 
             my $desc = $fielddescription{$f};
             $head .= FormatDouble($desc, $value);
@@ -761,7 +767,8 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         if (exists($diff->{'fieldname'}) && 
             ($diff->{'fieldname'} eq 'estimated_time' ||
              $diff->{'fieldname'} eq 'remaining_time' ||
-             $diff->{'fieldname'} eq 'work_time')) {
+             $diff->{'fieldname'} eq 'work_time' ||
+             $diff->{'fieldname'} eq 'deadline')){
             if ($user->groups->{Param("timetrackinggroup")}) {
                 $add_diff = 1;
             }

@@ -63,7 +63,8 @@ my $generic_query = "
     bugs.keywords,
     bugs.estimated_time,
     bugs.remaining_time,
-    date_format(creation_ts,'%Y.%m.%d %H:%i')
+    date_format(creation_ts,'%Y.%m.%d %H:%i'),
+    date_format(bugs.deadline, '%Y-%m-%d')
   FROM bugs,profiles assign,profiles report, classifications, products, components
   WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter
     AND bugs.product_id=products.id AND bugs.component_id=components.id
@@ -89,7 +90,8 @@ foreach my $bug_id (split(/[:,]/, $buglist)) {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "keywords", 
-                       "estimated_time", "remaining_time", "creation_ts") 
+                       "estimated_time", "remaining_time", "creation_ts",
+                       "deadline")
     {
         $bug{$field} = shift @row;
     }

@@ -784,6 +784,17 @@ if (UserInGroup(Param('timetrackinggroup'))) {
             }
         }
     }
+
+    if (defined $::FORM{'deadline'}) {
+        DoComma();
+        $::query .= "deadline = ";
+        if ($::FORM{'deadline'}) {
+            Bugzilla::Util::ValidateDate($::FORM{'deadline'}, 'YYYY-MM-DD');
+            $::query .= SqlQuote($::FORM{'deadline'});
+        } else {
+            $::query .= "NULL" ;
+        }
+    }
 }
 
 # If the user is submitting changes from show_bug.cgi for a single bug,

@@ -681,7 +681,7 @@ sub GetFieldDefs {
     my $extra = "";
     if (!UserInGroup(Param('timetrackinggroup'))) {
         $extra = "WHERE name NOT IN ('estimated time', 'remaining_time', " .
-                 "'work_time', 'percentage_complete')";
+                 "'work_time', 'percentage_complete', 'deadline')";
     }
 
     my @fields;

@@ -337,6 +337,7 @@
 ],
 
 'bug/edit.html.tmpl' => [
+  'bug.deadline',
   'bug.remaining_time', 
   'bug.delta_ts', 
   'bug.bug_id', 
@@ -366,6 +367,7 @@
 
 'bug/show-multiple.html.tmpl' => [
   'bug.bug_id', 
+  'bug.deadline',
 ],
 
 'bug/show.xml.tmpl' => [

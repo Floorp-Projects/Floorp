@@ -36,6 +36,9 @@ use base qw(Exporter);
                              format_time format_time_decimal);
 
 use Bugzilla::Config;
+use Bugzilla::Error;
+use Date::Parse;
+use Date::Format;
 
 # This is from the perlsec page, slightly modifed to remove a warning
 # From that page:
@@ -218,6 +221,20 @@ sub format_time_decimal {
     }
 
     return $newtime;
+}
+
+sub ValidateDate {
+    my ($date, $format) = @_;
+
+    my $ts  = str2time($date);
+    my $date2 = time2str("%Y-%m-%d", $ts);
+
+    $date =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/; 
+    $date2 =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/;
+
+    if ($date ne $date2) {
+        ThrowUserError('illegal_date', {date => $date, format => $format});
+    } 
 }
 
 1;

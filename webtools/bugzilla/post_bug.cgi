@@ -325,7 +325,7 @@ if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
   "(" . join(",", @used_fields) . ", reporter, creation_ts, " .
-  "estimated_time, remaining_time) " .
+  "estimated_time, remaining_time, deadline) " .
   "VALUES (";
 
 foreach my $field (@used_fields) {
@@ -346,10 +346,19 @@ if (UserInGroup(Param("timetrackinggroup")) &&
 
     my $est_time = $::FORM{'estimated_time'};
     Bugzilla::Bug::ValidateTime($est_time, 'estimated_time');
-    $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time);
+    $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time) . ",";
 } else {
-    $sql .= "0, 0";
+    $sql .= "0, 0, ";
 }
+
+if ((UserInGroup(Param("timetrackinggroup"))) && ($::FORM{'deadline'})) {
+    Bugzilla::Util::ValidateDate($::FORM{'deadline'}, 'YYYY-MM-DD');
+    my $str = $::FORM{'deadline'};
+    $sql .= SqlQuote($::FORM{'deadline'});  
+} else {
+    $sql .= "NULL";
+}
+
 $sql .= ")";
 
 # Groups

@@ -410,6 +410,9 @@
   [% ELSIF error == "illegal_date" %]
     [% title = "Illegal Date" %]
     '<tt>[% date FILTER html %]</tt>' is not a legal date.
+    [% IF format %]
+      Please use the format '<tt>[% format FILTER html %]</tt>'.
+    [% END %]
     
   [% ELSIF error == "illegal_email_address" %]
     [% title = "Invalid Email Address" %]

@@ -77,7 +77,7 @@ if (@::legal_keywords) {
 
 if (UserInGroup(Param("timetrackinggroup"))) {
     push(@masterlist, ("estimated_time", "remaining_time", "actual_time",
-                       "percentage_complete")); 
+                       "percentage_complete", "deadline")); 
 }
 
 push(@masterlist, ("short_desc", "short_short_desc"));
