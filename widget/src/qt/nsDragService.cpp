@@ -35,6 +35,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsMime.h"
 #include "nsWidgetsCID.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
 static NS_DEFINE_IID(kIDragSessionQtIID, NS_IDRAGSESSIONQT_IID);
