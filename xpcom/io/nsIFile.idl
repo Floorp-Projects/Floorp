@@ -149,14 +149,19 @@ interface nsIFile : nsISupports
     /**
      *  moveTo[Native]
      *
-     *  This will move this file to the specified newParentDir.
-     *  If a newName is specified, the file will be renamed.
+     *  A method to move this file or directory to newParentDir.
+     *  If a newName is specified, the file or directory will be renamed.
      *  If 'this' is not created we will return an error
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
+     *  If 'this' is a file, and the destination file already exists, moveTo
+     *  will replace the old file.
      *
      *  moveTo will NOT resolve aliases/shortcuts during the copy.
-     *  moveTo will do the right thing and allow copies across
-     *  volumes.
+     *  moveTo will do the right thing and allow copies across volumes.
+     *  moveTo will return an error (NS_ERROR_FILE_DIR_NOT_EMPTY) if 'this' is
+     *  a directory and the destination directory is not empty.
+     *  moveTo will return an error (NS_ERROR_FILE_ACCESS_DENIED) if 'this' is
+     *  a directory and the destination directory is not writable.
      *
      *   @param newParentDir
      *       This param is the destination directory. If the
