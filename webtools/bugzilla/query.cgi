@@ -396,7 +396,7 @@ $jscript .= << 'ENDSCRIPT';
 
 function updateSelect( array, sel, target, sel_is_diff, single ) {
         
-    var i;
+    var i, comp;
 
     // if single, even if it's a diff (happens when you have nothing
     // selected and select one item alone), skip this.
@@ -444,9 +444,9 @@ function fake_diff_array( a, b ) {
     var newsel = new Array();
 
     // do a boring array diff to see who's new
-    for ( ia in a ) {
+    for ( var ia in a ) {
         var found = 0;
-        for ( ib in b ) {
+        for ( var ib in b ) {
             if ( a[ia] == b[ib] ) {
                 found = 1;
             }
@@ -469,6 +469,7 @@ function merge_arrays( a, b, b_is_select ) {
     var pos_a = 0;
     var pos_b = 0;
     var ret = new Array();
+    var bitem, aitem;
 
     // iterate through both arrays and add the larger item to the return
     // list. remove dupes, too. Use toLowerCase to provide
@@ -539,10 +540,10 @@ function merge_arrays( a, b, b_is_select ) {
 
 function selectProduct( f ) {
 
-    // this is to avoid events that occur before the form itself is
-    // ready. mozilla doesn't seem to trigger this, though.
+    // this is to avoid handling events that occur before the form
+    // itself is ready, which happens in buggy browsers.
 
-    if ( !f ) {
+    if ( ( !f ) || ( ! f.product ) ) {
         return;
     }
 
@@ -572,15 +573,15 @@ function selectProduct( f ) {
     var is_diff = 0;
     var single;
 
-    // is nothing selected, pick all
+    // if nothing selected, pick all
     if ( f.product.selectedIndex == -1 ) {
-        for ( i=0 ; i<f.product.length ; i++ ) {
+        for ( var i = 0 ; i < f.product.length ; i++ ) {
             sel[sel.length] = f.product.options[i].value;
         }
         single = 0;
     } else {
 
-        for ( i=0 ; i<f.product.length ; i++ ) {
+        for ( i = 0 ; i < f.product.length ; i++ ) {
             if ( f.product.options[i].selected ) {
                 sel[sel.length] = f.product.options[i].value;
             }
@@ -630,7 +631,7 @@ ENDSCRIPT
 
 PutHeader("Bugzilla Query Page", "Query", 
           "This page lets you search the database for recorded bugs.",
-          q{onLoad="selectProduct(document.forms[0]);"}, $jscript);
+          q{onLoad="selectProduct(document.forms['queryform']);"}, $jscript);
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 
@@ -639,7 +640,7 @@ my @logfields = ("[Bug creation]", @::log_columns);
 print"<P>Give me a <A HREF=\"queryhelp.cgi\">clue</A> about how to use this form.<P>";
 
 print qq{
-<FORM METHOD=GET ACTION="buglist.cgi">
+<FORM METHOD=GET ACTION="buglist.cgi" NAME="queryform">
 
 <table>
 <tr>
