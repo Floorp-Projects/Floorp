@@ -32,17 +32,18 @@
 /**************************************************************************/
 
 math {
+  direction: ltr;
   display: inline;
   font-size: inherit;
   font-style: normal;
   font-family: CMSY10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
 }
-math[mode="inline"], math[display="inline"] {
-  display: inline;
-}
 math[mode="display"], math[display="block"] {
   display: block;
   text-align: -moz-center;
+}
+math[display="inline"] {
+  display: inline;
 }
 ::-moz-math-inline {
   display: inline;
