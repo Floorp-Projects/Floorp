@@ -43,6 +43,7 @@
 #include "nsIDOMXULTreeElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
+#include "nsIRDFContainer.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
@@ -802,9 +803,20 @@ RDFTreeBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 
                 // We'll handle things a bit differently if we're
                 // tinkering with an RDF container...
-                if (rdf_IsContainer(mDB, resource) &&
-                    rdf_IsOrdinalProperty(property)) {
-                    rv = rdf_ContainerAppendElement(mDB, resource, target);
+                PRBool isContainer, isOrdinal;
+                if (NS_SUCCEEDED(gRDFContainerUtils->IsContainer(mDB, resource, &isContainer)) &&
+                    isContainer &&
+                    NS_SUCCEEDED(gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal)) &&
+                    isOrdinal)
+                {
+                    nsCOMPtr<nsIRDFContainer> container;
+                    rv = NS_NewRDFContainer(getter_AddRefs(container));
+                    if (NS_FAILED(rv)) return rv;
+                    
+                    rv = container->Init(mDB, resource);
+                    if (NS_FAILED(rv)) return rv;
+
+                    rv = container->AppendElement(target);
                 }
                 else {
                     rv = mDB->Assert(resource, property, target, PR_TRUE);
@@ -948,9 +960,20 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 
                 // We'll handle things a bit differently if we're
                 // tinkering with an RDF container...
-                if (rdf_IsContainer(mDB, resource) &&
-                    rdf_IsOrdinalProperty(property)) {
-                    rv = rdf_ContainerRemoveElement(mDB, resource, target, PR_TRUE);
+                PRBool isContainer, isOrdinal;
+                if (NS_SUCCEEDED(gRDFContainerUtils->IsContainer(mDB, resource, &isContainer)) &&
+                    isContainer &&
+                    NS_SUCCEEDED(gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal)) &&
+                    isOrdinal)
+                {
+                    nsCOMPtr<nsIRDFContainer> container;
+                    rv = NS_NewRDFContainer(getter_AddRefs(container));
+                    if (NS_FAILED(rv)) return rv;
+                    
+                    rv = container->Init(mDB, resource);
+                    if (NS_FAILED(rv)) return rv;
+
+                    rv = container->RemoveElement(target, PR_TRUE);
                 }
                 else {
                     rv = mDB->Unassert(resource, property, target);

@@ -67,11 +67,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIRDFCompositeDataSource* prop;
         if (NS_OK == a->GetDatabase(&prop)) {
           // get the js object
-#ifdef XPIDL_JS_STUBS
-          *vp = OBJECT_TO_JSVAL(nsIRDFCompositeDataSource::GetJSObject(cx, prop));
-#else
           nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFCompositeDataSource::GetIID(), cx, vp);
-#endif
         }
         else {
           return JS_FALSE;
@@ -108,9 +104,8 @@ SetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULTREEELEMENT_DATABASE:
       {
         nsIRDFCompositeDataSource* prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kIRDFCompositeDataSourceIID, "RDFCompositeDataSource",
-                                                cx, *vp)) {
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,
+                                                kIRDFCompositeDataSourceIID, cx, *vp)) {
           return JS_FALSE;
         }
       

@@ -48,6 +48,7 @@
 #include "nsIContentSink.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIRDFContainer.h"
 #include "nsIRDFContentSink.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -84,6 +85,7 @@ static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -169,6 +171,7 @@ protected:
     // pseudo constants
     static PRInt32 gRefCnt;
     static nsIRDFService* gRDFService;
+    static nsIRDFContainerUtils* gRDFContainerUtils;
     static nsIRDFResource* kRDF_type;
 
     static nsIAtom* kAboutAtom;
@@ -246,6 +249,7 @@ protected:
 
 PRInt32         RDFContentSinkImpl::gRefCnt = 0;
 nsIRDFService*  RDFContentSinkImpl::gRDFService;
+nsIRDFContainerUtils* RDFContentSinkImpl::gRDFContainerUtils;
 nsIRDFResource* RDFContentSinkImpl::kRDF_type;
 
 nsIAtom* RDFContentSinkImpl::kAboutAtom;
@@ -287,6 +291,11 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         if (NS_SUCCEEDED(rv)) {
             rv = gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
         }
+
+
+        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
+                                          nsIRDFContainerUtils::GetIID(),
+                                          (nsISupports**) &gRDFContainerUtils);
 
         kAboutAtom       = NS_NewAtom("about");
         kIdAtom          = NS_NewAtom("ID");
@@ -361,6 +370,12 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
             gRDFService = nsnull;
+        }
+
+
+        if (gRDFContainerUtils) {
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
+            gRDFContainerUtils = nsnull;
         }
 
         NS_IF_RELEASE(kRDF_type);
@@ -819,9 +834,10 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
                 nsIRDFLiteral* literal;
                 if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(value.GetUnicode(), &literal))) {
-                    rv = rdf_ContainerAppendElement(mDataSource,
-                                                    GetContextElement(1),
-                                                    literal);
+                    nsCOMPtr<nsIRDFContainer> container;
+                    NS_NewRDFContainer(getter_AddRefs(container));
+                    container->Init(mDataSource, GetContextElement(1));
+                    container->AppendElement(literal);
                     NS_RELEASE(literal);
                 }
             } break;
@@ -1161,7 +1177,10 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
     // member/property.
     switch (mState) {
     case eRDFContentSinkState_InMemberElement: {
-        rdf_ContainerAppendElement(mDataSource, GetContextElement(1), rdfResource);
+        nsCOMPtr<nsIRDFContainer> container;
+        NS_NewRDFContainer(getter_AddRefs(container));
+        container->Init(mDataSource, GetContextElement(1));
+        container->AppendElement(rdfResource);
     } break;
 
     case eRDFContentSinkState_InPropertyElement: {
@@ -1189,17 +1208,17 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
         }
         else if (tag.get() == kBagAtom) {
             // it's a bag container
-            rdf_MakeBag(mDataSource, rdfResource);
+            gRDFContainerUtils->MakeBag(mDataSource, rdfResource, nsnull);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else if (tag.get() == kSeqAtom) {
             // it's a seq container
-            rdf_MakeSeq(mDataSource, rdfResource);
+            gRDFContainerUtils->MakeSeq(mDataSource, rdfResource, nsnull);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else if (tag.get() == kAltAtom) {
             // it's an alt container
-            rdf_MakeAlt(mDataSource, rdfResource);
+            gRDFContainerUtils->MakeAlt(mDataSource, rdfResource, nsnull);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else {
@@ -1320,7 +1339,10 @@ RDFContentSinkImpl::OpenMember(const nsIParserNode& aNode)
     if (NS_SUCCEEDED(rv = GetResourceAttribute(aNode, &resource))) {
         // Okay, this node has an RDF:resource="..." attribute. That
         // means that it's a "referenced item," as covered in [6.29].
-        rv = rdf_ContainerAppendElement(mDataSource, container, resource);
+        nsCOMPtr<nsIRDFContainer> c;
+        NS_NewRDFContainer(getter_AddRefs(c));
+        c->Init(mDataSource, container);
+        c->AppendElement(resource);
 
         // XXX Technically, we should _not_ fall through here and push
         // the element onto the stack: this is supposed to be a closed
@@ -1331,7 +1353,7 @@ RDFContentSinkImpl::OpenMember(const nsIParserNode& aNode)
 
     // Change state. Pushing a null context element is a bit weird,
     // but the idea is that there really is _no_ context "property".
-    // The contained element will use rdf_ContainerAppendElement() to add
+    // The contained element will use nsIRDFContainer::AppendElement() to add
     // the element to the container, which requires only the container
     // and the element to be added.
     PushContext(nsnull, mState);

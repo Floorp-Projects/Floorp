@@ -72,16 +72,6 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
-
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
-
-////////////////////////////////////////////////////////////////////////
-
 static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
@@ -94,6 +84,7 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 
 static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
@@ -115,6 +106,7 @@ PRInt32  RDFGenericBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
 
 nsIRDFService*  RDFGenericBuilderImpl::gRDFService;
+nsIRDFContainerUtils* RDFGenericBuilderImpl::gRDFContainerUtils;
 nsINameSpaceManager* RDFGenericBuilderImpl::gNameSpaceManager;
 
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Title;
@@ -178,27 +170,21 @@ static const char kRDFNameSpaceURI[]
                                           kIRDFServiceIID,
                                           (nsISupports**) &gRDFService);
 
-        if (NS_FAILED(rv)) {
-            NS_ERROR("couldnt' get RDF service");
+        if (NS_SUCCEEDED(rv)) {
+            gRDFService->GetResource(NC_NAMESPACE_URI "Title",   &kNC_Title);
+            gRDFService->GetResource(NC_NAMESPACE_URI "child",   &kNC_child);
+            gRDFService->GetResource(NC_NAMESPACE_URI "Column",  &kNC_Column);
+            gRDFService->GetResource(NC_NAMESPACE_URI "Folder",  &kNC_Folder);
+            gRDFService->GetResource(RDF_NAMESPACE_URI "child",  &kRDF_child);
         }
 
-	rv = nsServiceManager::GetService(kXULSortServiceCID,
-		kIXULSortServiceIID, (nsISupports**) &XULSortService);
+        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
+                                          nsIRDFContainerUtils::GetIID(),
+                                          (nsISupports**) &gRDFContainerUtils);
 
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Title,  &kNC_Title)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_child,  &kNC_child)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Column, &kNC_Column)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Folder,  &kNC_Folder)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_child,  &kRDF_child)),
-                  "couldn't get resource");
+        rv = nsServiceManager::GetService(kXULSortServiceCID,
+                                          kIXULSortServiceIID,
+                                          (nsISupports**) &XULSortService);
 
     }
     ++gRefCnt;
@@ -1243,10 +1229,16 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
 {
     // XXX is this okay to _always_ treat ordinal properties as tree
     // properties? Probably not...
-    if (rdf_IsOrdinalProperty(aProperty))
+    nsresult rv;
+
+    PRBool isOrdinal;
+    rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &isOrdinal);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    if (isOrdinal)
         return PR_TRUE;
 
-    nsresult rv;
     nsXPIDLCString propertyURI;
     if (NS_FAILED(rv = aProperty->GetValue( getter_Copies(propertyURI) ))) {
         NS_ERROR("unable to get property URI");

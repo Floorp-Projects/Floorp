@@ -169,7 +169,8 @@ protected:
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
-    static nsIRDFService*       gRDFService;
+    static nsIRDFService*        gRDFService;
+    static nsIRDFContainerUtils* gRDFContainerUtils;
     static nsINameSpaceManager* gNameSpaceManager;
 
     static nsIAtom* kContainerAtom;
