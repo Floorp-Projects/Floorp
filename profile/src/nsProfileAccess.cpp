@@ -1266,8 +1266,9 @@ nsresult ProfileStruct::GetResolvedProfileDir(nsILocalFile **aDirectory)
     {
         *aDirectory = resolvedLocation;
         NS_ADDREF(*aDirectory);
+        return NS_OK;
     }
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
     
 nsresult ProfileStruct::SetResolvedProfileDir(nsILocalFile *aDirectory)
