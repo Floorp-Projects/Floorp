@@ -22,31 +22,21 @@
  *  Peter Annema <disttsc@bart.nl>
  */
 
+const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+
 var pref = null;
 var gURLBar = null;
 var bundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
 var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
-// in case we fail to get the start page, load this
-var startPageDefault = "about:blank";
-
-// in case we fail to get the home page, load this
-var homePageDefault = bundle.GetStringFromName( "homePageDefault" );
-
-try
-{
-	pref = Components.classes["@mozilla.org/preferences;1"];
-	if (pref)	pref = pref.getService();
-	if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
-}
-catch (ex)
-{
-	dump("failed to get prefs service!\n");
-	pref = null;
+try {
+  pref = Components.classes["@mozilla.org/preferences;1"]
+                   .getService(Components.interfaces.nsIPref);
+} catch (ex) {
+  debug("failed to get prefs service!\n");
 }
 
   var appCore = null;
-  var explicitURL = false;
 
   // Stored Status, Link and Loading values
   var defaultStatus = bundle.GetStringFromName( "defaultStatus" );
@@ -62,8 +52,6 @@ catch (ex)
   var stopButton = null;
   var stopMenu = null;
   var stopContext = null;
-  var backButton	= null;
-  var forwardButton = null;
 
   var useRealProgressFlag = false;
   var totalRequests = 0;
@@ -78,17 +66,17 @@ var gFocusedURL = null;
 * one listener that calls all real handlers.                                   
 */                                                                             
                                                                                  
-function loadEventHandlers(event) {                                             
-   // Filter out events that are not about the document load we are interested in
-   if (event.target == window._content.document) {                             
-      UpdateBookmarksLastVisitedDate(event);                                  
-      UpdateInternetSearchResults(event);                                     
-      checkForDirectoryListing();                                             
-      getContentAreaFrameCount();                                             
-      postURLToNativeWidget();                                                
-    
-	}                                                                           
-}                                                                               
+function loadEventHandlers(event)
+{
+  // Filter out events that are not about the document load we are interested in
+  if (event.target == _content.document) {
+    UpdateBookmarksLastVisitedDate(event);
+    UpdateInternetSearchResults(event);
+    checkForDirectoryListing();
+    getContentAreaFrameCount();
+    postURLToNativeWidget();
+  }
+}
                                                                                  
                                                                          
 
@@ -150,7 +138,7 @@ function UpdateBookmarksLastVisitedDate(event)
 		}
 		catch(ex)
 		{
-			dump("failed to update bookmark last visited date.\n");
+			debug("failed to update bookmark last visited date.\n");
 		}
 	}
 }
@@ -179,16 +167,6 @@ function UpdateInternetSearchResults(event)
 		}
 	}
 }
-
-function createBrowserInstance()
-{
-    appCore = Components
-                .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
-                  .createInstance( Components.interfaces.nsIBrowserInstance );
-    if ( !appCore ) {
-        alert( "Error creating browser instance\n" );
-    }
-  }
 
 function UpdateStatusField()
 {
@@ -401,177 +379,158 @@ function getWebNavigation()
   }
 }
 
+function getHomePage()
+{
+  var url;
+  try {
+    url = pref.getLocalizedUnicharPref("browser.startup.homepage");
+  } catch (e) {
+  }
+
+  // use this if we can't find the pref
+  if (!url)
+    url = bundle.GetStringFromName("homePageDefault");
+
+  return url;
+}
+
 function UpdateBackForwardButtons()
 {
-	if(!backButton)
-		backButton = document.getElementById("canGoBack");
-	if(!forwardButton)								  
-		forwardButton = document.getElementById("canGoForward");
-		
-	backButton.setAttribute("disabled", !appCore.canGoBack);	
-	forwardButton.setAttribute("disabled", !appCore.canGoForward);
+  var backBroadcaster = document.getElementById("canGoBack");
+  var forwardBroadcaster = document.getElementById("canGoForward");
+  var webNavigation = getWebNavigation();
+
+  backBroadcaster.setAttribute("disabled", !webNavigation.canGoBack);
+  forwardBroadcaster.setAttribute("disabled", !webNavigation.canGoForward);
 }
 
 function Startup()
-  {
-    window.XULBrowserWindow = new nsXULBrowserWindow();
-    //  TileWindow();
-    // Make sure window fits on screen initially
-    //FitToScreen();
-	
+{
+  window.XULBrowserWindow = new nsXULBrowserWindow();
+
+  var webNavigation;
+  try {
     // Create the browser instance component.
-    createBrowserInstance();
-    
-	window._content.appCore= appCore;
-    if (appCore == null) {
-        // Give up.
-        window.close();
-    }
-    // Initialize browser instance..
-    appCore.setWebShellWindow(window);
-    
-		// give urlbar focus so it'll be an active editor and d&d will work properly
-		var url_bar = document.getElementById("urlbar");
-		if ( url_bar )
-      url_bar.focus();
+    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
+                        .createInstance(Components.interfaces.nsIBrowserInstance);
+    if (!appCore)
+      throw Components.results.NS_ERROR_FAILURE;
 
-    // set the offline/online mode
-    setOfflineStatus();
-    
-    tryToSetContentWindow();
-	
-    // Add a capturing event listener to the content area
-    // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
-    //  so we'll be notified when onloads complete.
-    var contentArea = document.getElementById("appcontent");
-    if (contentArea)
-    {
-      contentArea.addEventListener("load", loadEventHandlers, true);
-      contentArea.addEventListener("focus", contentAreaFrameFocus, true);
-    }
-
-    dump("*** Pulling out the charset\n");
-    if ( window.arguments && window.arguments.length > 1 ) {
-        if (window.arguments[1].indexOf('charset=') != -1) {
-            var arrayArgComponents = window.arguments[1].split('=');
-            if (arrayArgComponents) {
-                if (appCore != null) {
-                 //we should "inherit" the charset menu setting in a new window
-                  appCore.SetDocumentCharset(arrayArgComponents[1]);
-                } 
-                dump("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
-            }
-        }
-    }
-
-    try
-    {
-    	var searchMode = pref.GetIntPref("browser.search.mode");
-    	setBrowserSearchMode(searchMode);
-    }
-    catch(ex)
-    {
-    }
-
-	 // Check for window.arguments[0].  If present, go to that url.
-    if ( window.arguments && window.arguments[0] ) {
-        // Load it using yet another psuedo-onload handler.
-        onLoadViaOpenDialog();
-    }
-    gURLBar = document.getElementById("urlbar");
-    
-    // set home button tooltip text
-    var homepage; 
-    try {
-      homepage = pref.getLocalizedUnicharPref("browser.startup.homepage");
-    }
-    catch(e) {
-      homepage = null;
-    }
-    if (homepage)
-      setTooltipText("home-button", homepage);
-
-    initConsoleListener();
-
-    // Perform default browser checking.
-    checkForDefaultBrowser();
+    webNavigation = getWebNavigation();
+    if (!webNavigation)
+      throw Components.results.NS_ERROR_FAILURE;
+  } catch (e) {
+    alert("Error creating browser instance");
+    window.close(); // Give up.
   }
 
+  _content.appCore= appCore;
+
+  // Initialize browser instance..
+  appCore.setWebShellWindow(window);
+  
+  // give urlbar focus so it'll be an active editor and d&d will work properly
+  gURLBar = document.getElementById("urlbar");
+  gURLBar.focus();
+
+  // set the offline/online mode
+  setOfflineStatus();
+  
+  debug("Setting content window\n");
+  appCore.setContentWindow(_content);
+  // Have browser app core load appropriate initial page.
+
+  /* START OF UNNECESSARY CODE */
+  /* sspitzer: I think this code is unnecessary, but I'll leave it until I prove it */
+  var startpage;
+  try {
+    var handler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
+                            .getService(Components.interfaces.nsICmdLineHandler);
+    startpage = handler.defaultArgs;
+  } catch (ex) {
+    debug("failed, reason: " + ex + "\n");
+    // we failed to get the start page, load this
+    startpage = "about:blank";
+  }
+
+  //debug("startpage = " + startpage + "\n");
+  document.getElementById("args").setAttribute("value", startpage);
+  /* END OF UNNECESSARY CODE */
+
+  appCore.loadInitialPage();
+
+  // Add a capturing event listener to the content area
+  // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
+  //  so we'll be notified when onloads complete.
+  var contentArea = document.getElementById("appcontent");
+  contentArea.addEventListener("load", loadEventHandlers, true);
+  contentArea.addEventListener("focus", contentAreaFrameFocus, true);
+
+  // set default character set if provided
+  debug("*** Pulling out the charset\n");
+  if ("arguments" in window && window.arguments.length > 1) {
+    if (window.arguments[1].indexOf("charset=") != -1) {
+      var arrayArgComponents = window.arguments[1].split("=");
+      if (arrayArgComponents) {
+        //we should "inherit" the charset menu setting in a new window
+        appCore.SetDocumentCharset(arrayArgComponents[1]);
+        debug("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
+      }
+    }
+  }
+
+  try {
+    var searchMode = pref.GetIntPref("browser.search.mode");
+    setBrowserSearchMode(searchMode);
+  } catch (ex) {
+  }
+
+  // set home button tooltip text
+  var homePage = getHomePage(); 
+  if (homePage)
+    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
+
+  // Check for window.arguments[0]. If present, go to that url.
+  if ("arguments" in window && window.arguments.length > 0) {
+
+    // See if load in progress (loading default page).
+    if (document.getElementById("navigator-throbber").getAttribute("busy") == "true") {
+      debug("Stopping load of default initial page\n");
+      getWebNavigation().stop();
+    }
+
+    debug("Loading page specified via openDialog\n");
+    loadURI(window.arguments[0]);
+  }
+
+  initConsoleListener();
+
+  // Perform default browser checking.
+  checkForDefaultBrowser();
+}
   
 function Shutdown()
 {
-	try
-	{
-		// If bookmarks are dirty, flush 'em to disk
-		var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
-		if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-		if (bmks)	bmks.Flush();
-    	}
-	catch (ex)
-	{
-	}
-	try
-	{
-		// give history a change at flushing to disk also                           
-    		var history = getService( "@mozilla.org/browser/global-history;1", "nsIRDFRemoteDataSource" );
-    		if (history)    
-      		history.Flush();   
-	}
-	catch (ex)
-	{
-	}
-	
+  try {
+    // If bookmarks are dirty, flush 'em to disk
+    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                         .getService(Components.interfaces.nsIRDFRemoteDataSource);
+    bmks.Flush();
+  } catch (ex) {
+  }
+
+  try {
+    // give history a change at flushing to disk also                           
+    var history = Components.classes["@mozilla.org/browser/global-history;1"]
+                            .getService(Components.interfaces.nsIRDFRemoteDataSource);
+    history.Flush();   
+  } catch (ex) {
+  }
+
   // Close the app core.
-  if ( appCore )
+  if (appCore)
     appCore.close();
 }
-
-  function onLoadViaOpenDialog() {
-    // See if load in progress (loading default page).
-    if ( document.getElementById("navigator-throbber").getAttribute("busy") == "true" ) {
-        dump( "Stopping load of default initial page\n" );
-        appCore.stop();
-    }
-    dump( "Loading page specified via openDialog\n" );
-    appCore.loadUrl( window.arguments[0] );
-  }
-
-  function tryToSetContentWindow() {
-    var startpage = startPageDefault;
-    if ( window._content ) {
-        dump("Setting content window\n");
-        appCore.setContentWindow( window._content );
-        // Have browser app core load appropriate initial page.
-
-/* sspitzer: I think this code is unnecessary, but I'll leave it until I prove it */
-/* START OF UNNECESSARY CODE */
-        if ( !explicitURL ) {
-            try {
-                var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
-                handler = handler.getService();
-                handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
-                if (handler) {
-                    startpage = handler.defaultArgs;
-                }
-            }
-            catch (ex) {
-                dump("failed, reason: " + ex + "\n");
-                startpage = startPageDefault;
-            }
-
-            //dump("startpage = " + startpage + "\n");
-            var args = document.getElementById("args")
-            if (args) args.setAttribute("value", startpage);
-        }
-/* END OF UNNECESSARY CODE */
-
-        appCore.loadInitialPage();
-    } else {
-        // Try again.
-        dump("Scheduling later attempt to set content window\n");
-        window.setTimeout( "tryToSetContentWindow()", 100 );
-    }
-  }
 
   function Translate()
   {
@@ -588,87 +547,72 @@ function Shutdown()
 	service += "&AlisTargetURI=" + escape(targetURI);
 
 	//window._content.location.href = service;
-	if (appCore)
-	  appCore.loadUrl(service);
-    else
-	  dump("BrowserAppCore is not initialised\n");
+	loadURI(service);
   }
 
-  function RefreshUrlbar()
-  {
-   //Refresh the urlbar bar
-    document.getElementById('urlbar').value = window._content.location.href;
+function gotoHistoryIndex(aEvent)
+{
+  var index = aEvent.target.getAttribute("index");
+  if (index) {
+    getWebNavigation().gotoIndex(index);
+    return true;
   }
-
-function gotoHistoryIndex( aEvent )
-  {
-    var index = aEvent.target.getAttribute("index");
-    if (index) {
-      appCore.gotoHistoryIndex(index);
-      return true;
-    }
-    return false;
-  }
+  return false;
+}
 
 function BrowserBack()
-  {
-    appCore.back();
-		UpdateBackForwardButtons();
-  }
-
+{
+  getWebNavigation().goBack();
+  UpdateBackForwardButtons();
+}
 
 function BrowserForward()
-  {
-    appCore.forward();
-    UpdateBackForwardButtons();
-  }
+{
+  getWebNavigation().goForward();
+  UpdateBackForwardButtons();
+}
 
 function BrowserBackMenu(event)
-  {
-    FillHistoryMenu(event.target, "back");
-  }
-
+{
+  FillHistoryMenu(event.target, "back");
+}
 
 function BrowserForwardMenu(event)
-  {
-    FillHistoryMenu(event.target, "forward");
-  }
-
-
+{
+  FillHistoryMenu(event.target, "forward");
+}
 
 function BrowserStop() 
-  {
-    appCore.stop();
-  }
- 
+{
+  getWebNavigation().stop();
+}
 
-function BrowserReallyReload(event) 
-  {
-    var nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-    // Default is no flags.
-    var reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
-    // See if the event was a shift-click.
-    if ( event.shiftKey ) {
-        // Shift key means bypass proxy and cache.
-        reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-    }
-    appCore.reload(reloadFlags);
+function BrowserReallyReload(event)
+{
+  // Default is no flags.
+  var reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
+  // See if the event was a shift-click.
+  if (event && event.shiftKey) {
+    // Shift key means bypass proxy and cache.
+    reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
   }
+  getWebNavigation().reload(reloadFlags);
+}
 
 function BrowserHome()
-  {
-   window._content.home();
-   RefreshUrlbar();
-  }
+{
+  var homePage = getHomePage();
+  loadURI(homePage);
+}
 
 function OpenBookmarkURL(event, datasources)
 {
   // what is the meaning of the return value from this function?
   var node = event.target;
-  if (node.getAttribute('container') == "true")
+  if (node.getAttribute("container") == "true")
     return null;
 
-  var url = node.getAttribute('id');
+  var url = node.getAttribute("id");
   try {
     // add support for IE favorites under Win32, and NetPositive URLs under BeOS
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
@@ -724,14 +668,14 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	catch(ex)
 	{
 	}
-    dump("Search defaultSearchURL: " + defaultSearchURL + "\n");
+    debug("Search defaultSearchURL: " + defaultSearchURL + "\n");
 	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
 	{
 		// Fallback to a Netscape default (one that we can get sidebar search results for)
 		defaultSearchURL = fallbackDefaultSearchURL;
 	}
-    dump("This is before the search " + window._content.location.href + "\n");
-	dump("This is before the search " + searchStr + "\n");
+    debug("This is before the search " + window._content.location.href + "\n");
+	debug("This is before the search " + searchStr + "\n");
 	if ((window._content.location.href == searchStr) || (searchStr == '')) 
 	{
 		//	window._content.location.href = defaultSearchURL;
@@ -740,21 +684,14 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 
       if (!(defaultSearchURL == fallbackDefaultSearchURL))
       {
-        if (appCore)
-          appCore.loadUrl(defaultSearchURL);
-        else
-          dump("BrowserAppCore is not initialised\n");
+          loadURI(defaultSearchURL);
       }
       else
       {
         //window._content.local.href = "http://home.netscape.com/bookmark/6_0/tsearch.html"
         // Call in to BrowserAppCore instead of replacing
         // the url in the content area so that B/F buttons work right
-        if (appCore)
-          appCore.loadUrl(otherSearchURL);
-        else
-          dump("BrowserAppCore is not initialised\n");
-        
+          loadURI(otherSearchURL);
       }
 	}
 	else
@@ -808,10 +745,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		//	window._content.location.href = defaultSearchURL
 		// Call in to BrowserAppCore instead of replacing 
 		// the url in the content area so that B/F buttons work right
-		    if (appCore)
-			   appCore.loadUrl(defaultSearchURL);
-			else
-			   dump("BrowserAppCore is not initialised\n");
+		   loadURI(defaultSearchURL);
 		}
 	}
 
@@ -858,26 +792,22 @@ function RevealSearchPanel()
   }
 }
 
-  function BrowserNewWindow()
-  {
-    OpenBrowserWindow();
-  }
-
 //Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
   
-  function BrowserOpenWindow()
-  {
-    //opens a window where users can select a web location to open
-    window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", appCore );
-  }
+function BrowserOpenWindow()
+{
+  //opens a window where users can select a web location to open
+  openDialog("hrome://navigator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", appCore);
+}
 
-  /* Called from the openLocation dialog. This allows that dialog to instruct
-     its opener to open a new window and then step completely out of the way.
-     Anything less byzantine is causing horrible crashes, rather believably,
-     though oddly only on Linux. */
-  function delayedOpenWindow(chrome,flags,url) {
-    setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
-  }
+/* Called from the openLocation dialog. This allows that dialog to instruct
+   its opener to open a new window and then step completely out of the way.
+   Anything less byzantine is causing horrible crashes, rather believably,
+   though oddly only on Linux. */
+function delayedOpenWindow(chrome,flags,url)
+{
+  setTimeout("openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
+}
   
   function createInstance( contractid, iidName ) {
       var iid = Components.interfaces[iidName];
@@ -899,35 +829,26 @@ function RevealSearchPanel()
       return Components.classesByID[ cid ].getService( iid );
   }
 
-  function BrowserOpenFileWindow()
-  {
-    // Get filepicker component.
-    try {
-      var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-      fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
-      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
-			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
-      if (fp.show() == nsIFilePicker.returnOK) {
-        openTopWin(fp.fileURL.spec);
-      }
-    } catch (ex) { }
+function BrowserOpenFileWindow()
+{
+  // Get filepicker component.
+  try {
+    const nsIFilePicker = Components.interfaces.nsIFilePicker;
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+    fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
+    fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText | nsIFilePicker.filterImages |
+                     nsIFilePicker.filterXML | nsIFilePicker.filterHTML);
+
+    if (fp.show() == nsIFilePicker.returnOK)
+      openTopWin(fp.fileURL.spec);
+  } catch (ex) {
   }
+}
 
   function OpenFile(url) {
     // Obsolete (called from C++ code that is no longer called).
-    dump( "OpenFile called?\n" );
+    debug("OpenFile called?\n");
     openNewWindowWith( url );
-  }
-
-  function BrowserCopy()
-  {
-    if (appCore != null) {
-	    dump("Copying\n");
-      appCore.copy();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
   }
 
   function BrowserAddBookmark(url,title)
@@ -943,25 +864,24 @@ function RevealSearchPanel()
     	title = url;
     }
     bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
-    dump("BrowserAddBookmark: " + docCharset + "\n");
+    debug("BrowserAddBookmark: " + docCharset + "\n");
   }
 
-// Set up a lame hack to avoid opening two bookmarks.
-// Could otherwise happen with two Ctrl-B's in a row.
+/ // Set up a lame hack to avoid opening two bookmarks.
+/ // Could otherwise happen with two Ctrl-B's in a row.
 var gDisableBookmarks = false;
-function enableBookmarks() {
+function enableBookmarks()
+{
   gDisableBookmarks = false;
 }
 
 function BrowserEditBookmarks()
 { 
   // Use a single sidebar bookmarks dialog
+  var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+                                .getService(Components.interfaces.nsIWindowMediator);
 
-  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  var iwindowManager = Components.interfaces.nsIWindowMediator;
-  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-
-  var bookmarksWindow = windowManager.getMostRecentWindow('bookmarks:manager');
+  var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
 
   if (bookmarksWindow) {
     //debug("Reuse existing bookmarks window");
@@ -969,37 +889,28 @@ function BrowserEditBookmarks()
   } else {
     //debug("Open a new bookmarks dialog");
 
-    if (true == gDisableBookmarks) {
-      //debug("Recently opened one. Wait a little bit.");
-      return;
-    }
-    gDisableBookmarks = true;
+    // while disabled, don't open new bookmarks window
+    if (!gDisableBookmarks) {
+      gDisableBookmarks = true;
 
-    window.open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank", "chrome,menubar,resizable,scrollbars");
-    setTimeout(enableBookmarks, 2000);
+      open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank", "chrome,menubar,resizable,scrollbars");
+      setTimeout(enableBookmarks, 2000);
+    }
   }
 }
 
-  function BrowserPrintPreview()
-  {
-    // Borrowing this method to show how to 
-    // dynamically change icons
-    dump("BrowserPrintPreview\n");
-    if (appCore != null) {
-	    dump("Changing Icons\n");
-      appCore.printPreview();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
+
+function BrowserPrintPreview()
+{
+  // this is currently a do-nothing on appCore which is going to die
+  // ???.printPreview();
+}
 
   function BrowserPrint()
   {
     // Borrowing this method to show how to 
     // dynamically change icons
-    if (appCore != null) {
-      appCore.print();
-    }
+    appCore.print();
   }
 
   function initViewMenu()
@@ -1082,23 +993,15 @@ function BrowserEditBookmarks()
     if (browserElement) {
       docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
     } else {
-      dump("no browserElement found\n");
+      debug("no browserElement found\n");
     }
     return docShell;
   }
 
   function setTextZoom() {
-    // dump("Level: "+zoomLevel+" Factor: "+zoomFactor+" Anchor: "+zoomAnchor+" Steps: "+zoomSteps+"\n");
-    if (appCore) {
-      appCore.setTextZoom(zoomFactor / 100.0);
-    }
-/* 
-    // bah, docShell.zoom doesn't work
-    var docShell = GetBrowserDocShell();
-    if (docShell) {
-      docShell.zoom = zoomFactor / 100.0;
-    }
-*/
+    // debug("Level: "+zoomLevel+" Factor: "+zoomFactor+" Anchor: "+zoomAnchor+" Steps: "+zoomSteps+"\n");
+    var markupDocumentViewer = getBrowser().markupDocumentViewer;
+    markupDocumentViewer.textZoom = zoomFactor / 100.0;
   }
 
   function initTextZoomMenu() {
@@ -1334,33 +1237,21 @@ function BrowserEditBookmarks()
     updateTextZoomOtherMenu();
   }
 
-  function BrowserSetDefaultCharacterSet(aCharset)
-  {
-    if (appCore != null) {
-      appCore.SetDocumentCharset(aCharset);
-      window._content.location.reload();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
+function BrowserSetDefaultCharacterSet(aCharset)
+{
+  appCore.SetDocumentCharset(aCharset);
+  getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
+}
 
-  function BrowserSetForcedCharacterSet(aCharset)
-  {
-    if (appCore != null) {
-      appCore.SetForcedCharset(aCharset);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
+function BrowserSetForcedCharacterSet(aCharset)
+{
+  appCore.SetForcedCharset(aCharset);
+}
 
-  function BrowserSetForcedDetector()
-  {
-    if (appCore != null) {
-      appCore.SetForcedDetector();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
+function BrowserSetForcedDetector()
+{
+  appCore.SetForcedDetector();
+}
 
   function BrowserClose()
   {
@@ -1386,36 +1277,18 @@ function BrowserEditBookmarks()
   	 window.close();
   }
 
-
-
-  function BrowserSelectAll() {
-    if (appCore != null) {
-        appCore.selectAll();
-    } else {
-        dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
   function BrowserFind() {
-    if (appCore != null) {
-        appCore.find();      
-    } else {
-        dump("BrowserAppCore has not been created!\n");
-    }
+    appCore.find();      
   }
 
   function BrowserFindAgain() {
-    if (appCore != null) {
-        appCore.findNext();      
-    } else {
-        dump("BrowserAppCore has not been created!\n");
-    }
+    appCore.findNext();      
   }
 
 function loadURI(uri)
 {
-  // window._content.location.href = uri;
-  getWebNavigation().loadURI(uri, Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE);
+  // _content.location.href = uri;
+  getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
   function BrowserLoadURL()
@@ -1423,8 +1296,8 @@ function loadURI(uri)
     // rjc: added support for URL shortcuts (3/30/1999)
     try
     {
-      var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
-      bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+      var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                           .getService(Components.interfaces.nsIBookmarksService);
 
       var text = document.getElementById('urlbar').value;
       var shortcutURL = bmks.FindShortcut(text);
@@ -1462,12 +1335,8 @@ function loadURI(uri)
       // stifle any exceptions so we're sure to load the URL.
     }
 
-    try {
-      appCore.loadUrl(gURLBar.value);
-      window._content.focus();
-    }
-    catch(e) {
-    }
+    loadURI(gURLBar.value);
+    _content.focus();
   }
 
   function readFromClipboard()
@@ -1530,13 +1399,13 @@ function loadURI(uri)
       var wnd = document.commandDispatcher.focusedWindow;
       if (window == wnd) wnd = window._content;
       docCharset = "charset="+ wnd.document.characterSet;
-      // dump("*** Current document charset: " + docCharset + "\n");
+      // debug("*** Current document charset: " + docCharset + "\n");
     }
 
     catch(ex) 
     { 
       docCharset = null;
-      dump("*** Failed to determine current document charset \n");
+      debug("*** Failed to determine current document charset \n");
     }
 
 
@@ -1553,12 +1422,12 @@ function loadURI(uri)
 
       catch(ex) 
       { 
-        dump("*** Failed to open view-source window with preset charset menu.\n");
+        debug("*** Failed to open view-source window with preset charset menu.\n");
       }
 
     } else {
         //default: forcing the view-source widow
-        dump("*** Failed to preset charset menu for the view-source window\n");
+        debug("*** Failed to preset charset menu for the view-source window\n");
         window.openDialog( "chrome://navigator/content/viewSource.xul",
 					         "_blank",
 					         "scrollbars,resizable,chrome,dialog=no",
@@ -1570,14 +1439,12 @@ function loadURI(uri)
   {
     var charsetArg = new String();
     
-    if (appCore != null) {
-      
       try 
         {
           //let's try to extract the current charset menu setting
           var DocCharset = appCore.GetDocumentCharset();
           charsetArg = "charset="+DocCharset;
-          dump("*** Current document charset: " + DocCharset + "\n");
+          debug("*** Current document charset: " + DocCharset + "\n");
           
           //we should "inherit" the charset menu setting in a new window
           window.openDialog( "chrome://navigator/content/pageInfo.xul",
@@ -1588,30 +1455,24 @@ function loadURI(uri)
       
       catch(ex) 
         { 
-          dump("*** failed to read document charset \n");
+          debug("*** failed to read document charset \n");
         }
       
-    } else {
-      //if everythig else fails, forget about the charset
-      window.openDialog( "chrome://navigator/content/pageInfo.xul",
-                         "_blank",
-                         "chrome,dialog=no",
-                         window._content.location);
-    }
   }
-
 
 function doTests() {
 }
 
-function dumpProgress() {
-    var meter       = document.getElementById("statusbar-icon");
-    dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
-    dump( "meter value=" + meter.getAttribute("value") + "\n" );
+function dumpProgress()
+{
+  var meter = document.getElementById("statusbar-icon");
+  debug("meter mode=" + meter.getAttribute("mode") + "\n");
+  debug("meter value=" + meter.getAttribute("value") + "\n");
 }
 
-function BrowserReload() {
-    dump( "Sorry, command not implemented.\n" );
+function BrowserReload()
+{
+  debug("Sorry, command not implemented.\n");
 }
 
 function hiddenWindowStartup()
@@ -1622,119 +1483,10 @@ function hiddenWindowStartup()
 						 'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
 	for ( id in disabledItems )
 	{
-         // dump("disabling "+disabledItems[id]+"\n");
+         // debug("disabling "+disabledItems[id]+"\n");
 		 var broadcaster = document.getElementById( disabledItems[id]);
 		 if (broadcaster)
            broadcaster.setAttribute("disabled","true");
-	}
-}
-
-// Tile
-function TileWindow()
-{
-	var xShift = 25;
-	var yShift = 50;
-	var done = false;
-	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-	dump("got window Manager \n");
-	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-	
-	var enumerator = windowManagerInterface.getEnumerator( null );
-	
-	var xOffset = screen.availLeft;
-	var yOffset = screen.availRight;
-	do
-	{
-		var thisWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-		if ( (thisWindow.screenX == screenX) && (thisWindow.screenY == screenY) )
-		{
-			alreadyThere = true;
-			break;
-		}	
-	} while ( enumerator.hasMoreElements() )
-	
-	if ( alreadyThere )
-	{
-		enumerator = windowManagerInterface.getEnumerator( null );
-		do
-		{
-			var thatWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-			if ( (thatWindow.screenX == screenX+xOffset*xShift+yOffset*xShift) &&
-			     (thatWindow.screenY == screenY+yShift*xOffset) &&
-			     (window != thatWindow) )
-			{
-				xOffset++;
-				if ( (screenY+outerHeight  < screen.availHeight) && (screenY+outerHeight+yShift*xOffset > screen.availHeight ) )
-				{
-					// dump(" increment yOffset");
-					yOffset++;
-					xOffset = 0;
-				}
-				enumerator = windowManagerInterface.getEnumerator( null );
-			}	
-		} while ( enumerator.hasMoreElements() )
-	}
-	
-	if ( xOffset > 0 || yOffset >0 )
-	{
-		// dump( "offsets:"+xOffset+" "+yOffset+"\n");
-		// dump("Move by ("+ xOffset*xShift + yOffset*xShift +","+ yShift*xOffset +")\n");
-		moveBy( xOffset*xShift + yOffset*xShift, yShift*xOffset );
-	}
-}
-
-// Make sure that a window fits fully on the screen. Will move to preserve size, and then shrink to fit
-function FitToScreen()
-{
-	var moveX = screenX;
-	var sizeX = outerWidth;
-	var moveY = screenY;
-	var sizeY = outerHeight;
-	
-	dump( " move to ("+moveX+","+moveY+") size to ("+sizeX+","+sizeY+") \n");
-	var totalWidth = screenX+outerWidth;
-	if ( totalWidth > screen.availWidth )
-	{	
-		if( outerWidth > screen.availWidth )
-		{
-			sizeX = screen.availWidth;
-			moveX = screen.availLeft;
-		}
-		else
-		{
-			moveX = screen.availWidth- outerWidth;
-		}
-	}
-	
-	var totalHeight = screenY+outerHeight;
-	if ( totalHeight > screen.availHeight )
-	{	
-		if( outerWidth > screen.availHeight )
-		{
-			sizeY = screen.availHeight;
-			moveY = screen.availTop;
-		}
-		else
-		{
-			moveY = screen.availHeight- outerHeight;
-		}
-	}
-	
-	
-	dump( " move to ("+moveX+","+moveY+") size to ("+sizeX+","+sizeY+") \n");
-	if ( (moveY- screenY != 0 ) ||	(moveX-screenX != 0 ) )
-		moveTo( moveX,moveY );
-	
-	// Maintain a minimum size
-	if ( sizeY< 100 )
-		sizeY = 100;
-	if ( sizeX < 100 )
-		sizeX = 100; 
-	if ( (sizeY- outerHeight != 0 ) ||	(sizeX-outerWidth != 0 ) )
-	{
-		//outerHeight = sizeY;
-		//outerWidth = sizeX;
-		resizeTo( sizeX,sizeY );	
 	}
 }
 
@@ -1744,13 +1496,13 @@ function dumpObject( anObject, prefix ) {
         prefix = anObject;
     }
     for ( prop in anObject ) {
-        dump( prefix + "." + prop + " = " + anObject[prop] + "\n" );
+        debug(prefix + "." + prop + " = " + anObject[prop] + "\n");
     }
 }
 
 // Takes JS expression and dumps "expr="+expr+"\n"
 function dumpExpr( expr ) {
-    dump( expr+"="+eval(expr)+"\n" );
+    debug(expr+"="+eval(expr)+"\n");
 }
 
 // Initialize the LeakDetector class.
@@ -1857,7 +1609,7 @@ var urlWidgetService = null;
 try {
     urlWidgetService = getService( "@mozilla.org/urlwidget;1", "nsIUrlWidget" );
 } catch( exception ) {
-    //dump( "Error getting url widget service: " + exception + "\n" );
+    //debug("Error getting url widget service: " + exception + "\n");
 }
 function postURLToNativeWidget() {
     if ( urlWidgetService ) {
@@ -1865,7 +1617,7 @@ function postURLToNativeWidget() {
         try {
             urlWidgetService.SetURLToHiddenControl( url, window );
         } catch( exception ) {
-            dump( " SetURLToHiddenControl failed: " + exception + "\n" );
+            debug(" SetURLToHiddenControl failed: " + exception + "\n");
         }
     }
 }
@@ -1931,21 +1683,20 @@ function FillInHTMLTooltip ( tipElement )
   return retVal;
 }
 
-function EnableBusyCursor(doEnable) {
+function EnableBusyCursor(doEnable)
+{
   if (doEnable) {
     // set the spinning cursor everywhere but mac, we have our own way to
     // do this thankyouverymuch.
-    if ( navigator.platform.indexOf("Mac") > 0 ) {
+    if (navigator.platform.indexOf("Mac") > 0) {
       window.setCursor("spinning");
-      window._content.setCursor("spinning");
+      _content.setCursor("spinning");
     }
-  }
-  else {
+  } else {
     window.setCursor("auto");
-    window._content.setCursor("auto");
+    _content.setCursor("auto");
   }
 }
-
 
 /**
  * Use Stylesheet functions. 
@@ -2010,27 +1761,21 @@ function stylesheetSwitch(forDocument, title) {
 
 function applyTheme(themeName)
 {
-try {
-  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
-  if ( chromeRegistry )
-    chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
-}
-catch(e) {}
+  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                                 .getService(Components.interfaces.nsIChromeRegistry);
 
-chromeRegistry.selectSkin( themeName.getAttribute('name'), true ); 
-chromeRegistry.refreshSkins();
+  chromeRegistry.selectSkin(themeName.getAttribute("name"), true); 
+  chromeRegistry.refreshSkins();
 }  
 
 function getNewThemes()
 {
-window._content.location.href = brandBundle.GetStringFromName("getNewThemesURL");
+  loadURI(brandBundle.GetStringFromName("getNewThemesURL"));
 }
-
 
 function URLBarLeftClickHandler(aEvent)
 {
-  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
-  {
+  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
     var URLBar = aEvent.target;
     URLBar.setSelectionRange(0, URLBar.value.length);
   }
@@ -2038,8 +1783,7 @@ function URLBarLeftClickHandler(aEvent)
 
 function URLBarBlurHandler(aEvent)
 {
-  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
-  {
+  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
     var URLBar = aEvent.target;
     URLBar.setSelectionRange(0, 0);
   }
@@ -2047,12 +1791,17 @@ function URLBarBlurHandler(aEvent)
 
 // This function gets the "windows hooks" service and has it check its setting
 // This will do nothing on platforms other than Windows.
-function checkForDefaultBrowser() {
-    try {
-        Components
-            .classes[ "@mozilla.org/winhooks;1"]
-                .getService( Components.interfaces.nsIWindowsHooks )
-                    .checkSettings( window );
-    } catch(e) {
-    }
+function checkForDefaultBrowser()
+{
+  try {
+    Components.classes["@mozilla.org/winhooks;1"]
+              .getService(Components.interfaces.nsIWindowsHooks)
+              .checkSettings(window);
+  } catch(e) {
+  }
+}
+ 
+function debug(message)
+{
+  dump(message);
 }
