@@ -243,18 +243,12 @@ nsComposerCommandsUpdater::Init(nsIDOMWindow* aDOMWindow)
 nsresult
 nsComposerCommandsUpdater::PrimeUpdateTimer()
 {
-  nsresult rv = NS_OK;
-    
-  if (mUpdateTimer)
+  if (!mUpdateTimer)
   {
-    // i'd love to be able to just call SetDelay on the existing timer, but
-    // i think i have to tear it down and make a new one.
-    mUpdateTimer->Cancel();
-    mUpdateTimer = NULL;      // free it
+    nsresult rv = NS_OK;
+    mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_FAILED(rv)) return rv;
   }
-  
-  mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_FAILED(rv)) return rv;
 
   const PRUint32 kUpdateTimerDelay = 150;
   return mUpdateTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
