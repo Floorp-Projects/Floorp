@@ -1649,7 +1649,7 @@ sub GetOutputFormats {
         # Loop over each file in the sub-directory looking for format files
         # (files whose name looks like SCRIPT-FORMAT.EXT.tmpl).
         foreach my $file (@files) {
-            if ($file =~ /^$script-(.+)\.(.+)\.(tmpl)$/) {
+            if ($file =~ /^\Q$script\E-(.+)\.(.+)\.(tmpl)$/) {
                 $formats->{$1} = { 
                   'template'    => $file , 
                   'extension'   => $2 , 
