@@ -103,8 +103,10 @@
 #include "rdf.h"
 
 #include "nsIDOMXULFocusTracker.h"
+#include "nsIXULFocusTracker.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventListener.h"
 
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
@@ -170,6 +172,8 @@ static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULDataSourceCID,		     NS_XULDATASOURCE_CID);
 
+static NS_DEFINE_CID(kXULFocusTrackerCID, NS_XULFOCUSTRACKER_CID);
+static NS_DEFINE_IID(kIXULFocusTrackerIID, NS_IXULFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
@@ -3855,6 +3859,22 @@ XULDocumentImpl::Init(void)
                                                     kINameSpaceManagerIID,
                                                     (void**) &mNameSpaceManager)))
         return rv;
+
+    // Create our focus tracker and hook it up.
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULFocusTrackerCID,
+                                                    nsnull,
+                                                    kIXULFocusTrackerIID,
+                                                    (void**) &mFocusTracker))) {
+        NS_ERROR("unable to create a focus tracker");
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMEventListener> focusTracker = do_QueryInterface(mFocusTracker);
+    if (focusTracker) {
+      // Take the focus tracker and add it as an event listener for focus and blur events.
+        AddEventListener("focus", focusTracker, PR_FALSE, PR_TRUE);
+        AddEventListener("blur", focusTracker, PR_FALSE, PR_TRUE);
+    }
 
     return NS_OK;
 }
